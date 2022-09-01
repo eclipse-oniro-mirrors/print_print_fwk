@@ -1,0 +1,58 @@
+{
+    "name": "@ohos/print",
+    "description": "Provide printer management and print ability for 3rd party app",
+    "version": "3.1",
+    "license": "Apache License 2.0",
+    "publishAs": "code-segment",
+    "segment": {
+      "destPath": "base/print/print"
+    },
+    "dirs": {},
+    "scripts": {},
+    "component": {
+      "name": "print",
+      "subsystem": "print",
+      "syscap": [
+        "SystemCapability.Print.Print"
+      ],
+      "features": [
+      ],
+      "adapted_system_type": [
+        "standard"
+      ],
+      "rom":"2MB",
+      "ram":"10MB",
+      "deps": {
+        "components": [
+          "ability_manager",
+          "aafwk_standard",
+          "appexecfwk_standard",
+          "common_event_service",
+          "distributeddatamgr",
+          "hisysevent_native",
+          "hiviewdfx_hilog_native",
+          "ipc",
+          "safwk",
+          "samgr_standard",
+          "startup_l2",
+          "utils_base"
+        ],
+        "third_party": [
+        ]
+      },
+      "build": {
+        "sub_component": [
+          "//base/print/print/interfaces/kits/napi:print",
+          "//base/print/print/frameworks/innerkitsimpl:printclient",		  
+          "//base/print/print/services:print_service",
+          "//base/print/print/etc/init:printservice.rc",
+          "//base/print/print/profile:print_sa_profiles"
+        ],
+        "test": [
+        ]
+      },
+      "hisysevent_config": [
+        "//base/print/print/hisysevent.yaml"
+      ]
+    }
+  }
