@@ -14,15 +14,16 @@
  */
 
 #include "print_base_notify.h"
+
 #include <uv.h>
+
 #include "print_log.h"
 #include "print_napi_utils.h"
 
 namespace OHOS::Print {
 PrintBaseNotify::PrintBaseNotify(napi_env env, const std::string &type, napi_ref ref)
-    : PrintNotifyStub(), env_(env), type_(type), ref_(ref) 
-{
-}
+    : PrintNotifyStub(), env_(env), type_(type), ref_(ref)
+{}
 
 PrintBaseNotify::~PrintBaseNotify()
 {
@@ -53,17 +54,17 @@ void PrintBaseNotify::OnCallBack(MessageParcel &data)
     uv_queue_work(
         loop, work, [](uv_work_t *work) {},
         [](uv_work_t *work, int statusInt) {
-            NotifyData *notifyData = static_cast<NotifyData*>(work->data);
+            NotifyData *notifyData = static_cast<NotifyData *>(work->data);
             if (notifyData != nullptr) {
                 napi_value undefined = 0;
                 napi_get_undefined(notifyData->env, &undefined);
                 napi_value callbackFunc = nullptr;
                 napi_get_reference_value(notifyData->env, notifyData->ref, &callbackFunc);
                 napi_value callbackResult = nullptr;
-                napi_value callbackValues[PrintNapiUtils::ONE_ARG] = {0};
+                napi_value callbackValues[PrintNapiUtils::ONE_ARG] = { 0 };
                 napi_get_undefined(notifyData->env, &callbackValues[PrintNapiUtils::FIRST_ARGV]);
-                napi_call_function(notifyData->env, nullptr, callbackFunc,
-                                   PrintNapiUtils::ONE_ARG, callbackValues, &callbackResult);
+                napi_call_function(
+                    notifyData->env, nullptr, callbackFunc, PrintNapiUtils::ONE_ARG, callbackValues, &callbackResult);
                 if (work != nullptr) {
                     delete work;
                     work = nullptr;
@@ -78,4 +79,4 @@ NotifyData *PrintBaseNotify::GetNotifyData()
 {
     return new (std::nothrow) NotifyData;
 }
-} // namespace OHOS::Request::Print
+} // namespace OHOS::Print

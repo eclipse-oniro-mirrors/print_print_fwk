@@ -19,12 +19,12 @@
 #include <mutex>
 #include <string>
 #include <vector>
+
 #include "event_handler.h"
 #include "iremote_object.h"
-#include "system_ability.h"
 #include "print_notify_interface.h"
 #include "print_service_stub.h"
-
+#include "system_ability.h"
 
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
@@ -40,29 +40,30 @@ public:
     ~PrintServiceAbility();
     static sptr<PrintServiceAbility> GetInstance();
     int32_t StartPrint() override;
-    bool On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener) override;
+    bool On(const std::string &type, uint32_t &state, PrinterInfo &info,
+        const sptr<PrintNotifyInterface> &listener) override;
     bool Off(const std::string &type) override;
-    bool AddPrinters(const std::vector<PrinterInfo>& arrayPrintInfo) override;
-    bool RemovePrinters(const std::vector<PrinterInfo>& arrayPrintInfo) override;
+    bool AddPrinters(const std::vector<PrinterInfo> &arrayPrintInfo) override;
+    bool RemovePrinters(const std::vector<PrinterInfo> &arrayPrintInfo) override;
     bool ConnectPrinter(uint32_t printerId) override;
     bool DisconnectPrinter(uint32_t printerId) override;
     bool QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo) override;
-    bool StartDiscoverPrinter(const std::vector<uint32_t>& extensionList) override;
+    bool StartDiscoverPrinter(const std::vector<uint32_t> &extensionList) override;
     bool StopDiscoverPrinter() override;
-    bool StartPrintJob(const PrintJob& jobinfo) override; 
-    bool CancelPrintJob(const PrintJob& jobinfo) override;
+    bool StartPrintJob(const PrintJob &jobinfo) override;
+    bool CancelPrintJob(const PrintJob &jobinfo) override;
     bool UpdatePrinterState(uint32_t printerId, uint32_t state) override;
     bool UpdatePrinterJobState(uint32_t jobId, uint32_t state) override;
-    bool RequestPreview(const PrintJob& jobinfo, std::string &previewResult) override;
+    bool RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override;
     bool QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability) override;
     bool CheckPermission() override;
     bool RegisterExtCallback(uint32_t callbackId, const sptr<PrintExtcbInterface> &listener) override;
     bool UnregisterAllExtCallback() override;
-    
+
     static void DataWriteInfo(PrinterInfo info, MessageParcel &data);
     static void DataWriteJob(PrintJob job, MessageParcel &data);
-    static void NotifyPrintStateHandler(const std::string& type, uint32_t state, PrinterInfo info);
-    static void NotifyJobStateHandler(const std::string& type, uint32_t state, PrintJob job);
+    static void NotifyPrintStateHandler(const std::string &type, uint32_t state, PrinterInfo info);
+    static void NotifyJobStateHandler(const std::string &type, uint32_t state, PrintJob job);
 
 protected:
     void OnStart() override;

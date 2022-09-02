@@ -14,15 +14,15 @@
  */
 
 #include "print_fail_notify.h"
+
 #include <uv.h>
+
 #include "print_log.h"
 #include "print_napi_utils.h"
 
 namespace OHOS::Print {
-PrintFailNotify::PrintFailNotify(napi_env env, const std::string &type, napi_ref ref)
-    : PrintBaseNotify(env, type, ref)  
-{
-}
+PrintFailNotify::PrintFailNotify(napi_env env, const std::string &type, napi_ref ref) : PrintBaseNotify(env, type, ref)
+{}
 
 PrintFailNotify::~PrintFailNotify()
 {
@@ -51,12 +51,12 @@ void PrintFailNotify::OnCallBack(MessageParcel &data)
     notifyData->firstArgv = data.ReadUint32();
     PRINT_HILOGD("recv error code is %{public}d", notifyData->firstArgv);
     work->data = notifyData;
-    
+
     uv_queue_work(
         loop, work, [](uv_work_t *work) {},
         [](uv_work_t *work, int statusInt) {
             PRINT_HILOGD("this is new fail callback");
-            NotifyData *notifyData = static_cast<NotifyData*>(work->data);
+            NotifyData *notifyData = static_cast<NotifyData *>(work->data);
             napi_value undefined = 0;
             napi_get_undefined(notifyData->env, &undefined);
             napi_value callbackFunc = nullptr;
@@ -64,7 +64,8 @@ void PrintFailNotify::OnCallBack(MessageParcel &data)
             napi_value result = nullptr;
             napi_value callbackValue;
             napi_create_uint32(notifyData->env, notifyData->firstArgv, &callbackValue);
-            napi_call_function(notifyData->env, nullptr, callbackFunc, PrintNapiUtils::ONE_ARG, &callbackValue, &result);
+            napi_call_function(
+                notifyData->env, nullptr, callbackFunc, PrintNapiUtils::ONE_ARG, &callbackValue, &result);
             if (work != nullptr) {
                 delete work;
                 work = nullptr;
@@ -73,4 +74,4 @@ void PrintFailNotify::OnCallBack(MessageParcel &data)
             notifyData = nullptr;
         });
 }
-} // namespace OHOS::Request::Print
+} // namespace OHOS::Print

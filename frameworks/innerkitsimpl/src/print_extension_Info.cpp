@@ -14,14 +14,14 @@
  */
 
 #include "print_extension_info.h"
+
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrinterExtensionInfo::PrinterExtensionInfo  () 
-    : extensionId_(0), vendorId_(0), vendorName_("PrinterExtensionInfo"), 
-    vendorIcon_(0), version_("PrinterExtensionInfo") {
-    
-}
+PrinterExtensionInfo::PrinterExtensionInfo()
+    : extensionId_(0), vendorId_(0), vendorName_("PrinterExtensionInfo"), vendorIcon_(0),
+      version_("PrinterExtensionInfo")
+{}
 
 void PrinterExtensionInfo::SetExtensionId(uint32_t extensionId)
 {
@@ -82,8 +82,5 @@ void PrinterExtensionInfo::Dump()
     PRINT_HILOGD("version_ = %{public}s", version_.c_str());
 }
 
-PrinterExtensionInfo::~PrinterExtensionInfo()
-{
-
-}
+PrinterExtensionInfo::~PrinterExtensionInfo() {}
 } // namespace OHOS::Print

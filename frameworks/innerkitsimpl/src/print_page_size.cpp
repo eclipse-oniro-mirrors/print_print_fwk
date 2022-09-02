@@ -14,14 +14,13 @@
  */
 
 #include "print_page_size.h"
+
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintPageSize::PrintPageSize() : id_(0), name_("PrintPageSize"), width_(0), height_(0)
-{    
-}
+PrintPageSize::PrintPageSize() : id_(0), name_("PrintPageSize"), width_(0), height_(0) {}
 
-PrintPageSize::PrintPageSize(const PrintPageSize& right)
+PrintPageSize::PrintPageSize(const PrintPageSize &right)
 {
     id_ = right.id_;
     name_ = right.name_;
@@ -29,20 +28,18 @@ PrintPageSize::PrintPageSize(const PrintPageSize& right)
     height_ = right.height_;
 }
 
-PrintPageSize& PrintPageSize::operator=(const PrintPageSize& right)
+PrintPageSize &PrintPageSize::operator=(const PrintPageSize &right)
 {
-    if(this != &right){
+    if (this != &right) {
         id_ = right.id_;
         name_ = right.name_;
         width_ = right.width_;
-        height_ = right.height_;  
+        height_ = right.height_;
     }
     return *this;
 }
 
-PrintPageSize::~PrintPageSize()
-{
-}
+PrintPageSize::~PrintPageSize() {}
 
 void PrintPageSize::SetId(uint32_t id)
 {
@@ -69,7 +66,7 @@ uint32_t PrintPageSize::GetId() const
     return id_;
 }
 
-const std::string& PrintPageSize::GetName() const
+const std::string &PrintPageSize::GetName() const
 {
     return name_;
 }

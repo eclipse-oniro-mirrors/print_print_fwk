@@ -25,7 +25,7 @@ class PrintExtcbInterface : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.PrintExtcbInterface");
     virtual bool OnCallback() = 0;
-    virtual bool OnCallback(uint32_t printerId) = 0;     
+    virtual bool OnCallback(uint32_t printerId) = 0;
     virtual bool OnCallback(const PrintJob &job) = 0;
 };
 

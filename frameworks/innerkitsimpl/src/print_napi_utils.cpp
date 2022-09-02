@@ -18,6 +18,7 @@
 #include <cstring>
 #include <initializer_list>
 #include <memory>
+
 #include "print_log.h"
 #include "securec.h"
 
@@ -183,7 +184,8 @@ std::string PrintNapiUtils::GetStringPropertyUtf8(napi_env env, napi_value objec
     return GetStringFromValueUtf8(env, value);
 }
 
-void PrintNapiUtils::SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &name, const std::string &value)
+void PrintNapiUtils::SetStringPropertyUtf8(
+    napi_env env, napi_value object, const std::string &name, const std::string &value)
 {
     napi_value jsValue = CreateStringUtf8(env, value);
     if (GetValueType(env, jsValue) != napi_string) {
@@ -200,7 +202,7 @@ bool PrintNapiUtils::ValueIsArrayBuffer(napi_env env, napi_value value)
     return isArrayBuffer;
 }
 
-void* PrintNapiUtils::GetInfoFromArrayBufferValue(napi_env env, napi_value value, size_t *length)
+void *PrintNapiUtils::GetInfoFromArrayBufferValue(napi_env env, napi_value value, size_t *length)
 {
     if (length == nullptr) {
         return nullptr;
@@ -228,7 +230,8 @@ napi_value PrintNapiUtils::GetUndefined(napi_env env)
 }
 
 /* function */
-napi_value PrintNapiUtils::CallFunction(napi_env env, napi_value recv, napi_value func, size_t argc, const napi_value *argv)
+napi_value PrintNapiUtils::CallFunction(
+    napi_env env, napi_value recv, napi_value func, size_t argc, const napi_value *argv)
 {
     napi_value res = nullptr;
     NAPI_CALL(env, napi_call_function(env, recv, func, argc, argv, &res));
@@ -317,7 +320,7 @@ napi_value PrintNapiUtils::Convert2JsObj(napi_env env, const PrintJob &job)
 
     napi_value arrFiles;
     NAPI_CALL(env, napi_create_array(env, &arrFiles));
-    for(uint32_t i = 0; i < arrFilesLength; i++) {
+    for (uint32_t i = 0; i < arrFilesLength; i++) {
         napi_value value;
         NAPI_CALL(env, napi_create_string_utf8(env, files[i].c_str(), NAPI_AUTO_LENGTH, &value));
         NAPI_CALL(env, napi_set_element(env, arrFiles, i, value));
@@ -333,16 +336,16 @@ napi_value PrintNapiUtils::Convert2JsObj(napi_env env, const PrintJob &job)
     job.GetPageRange(nativeRange);
     std::vector<uint32_t> pages;
     nativeRange.GetPages(pages);
-    
+
     napi_value pageRange;
     NAPI_CALL(env, napi_create_object(env, &pageRange));
     SetUint32Property(env, pageRange, "startPage", nativeRange.GetStartPage());
     SetUint32Property(env, pageRange, "endPage", nativeRange.GetEndPage());
     napi_value arrPages;
     NAPI_CALL(env, napi_create_array(env, &arrPages));
-    
+
     uint32_t arrPagesLength = pages.size();
-    for(uint32_t i = 0; i < arrPagesLength; i++) {
+    for (uint32_t i = 0; i < arrPagesLength; i++) {
         napi_value value;
         NAPI_CALL(env, napi_create_uint32(env, pages[i], &value));
         NAPI_CALL(env, napi_set_element(env, arrPages, i, value));
@@ -354,7 +357,7 @@ napi_value PrintNapiUtils::Convert2JsObj(napi_env env, const PrintJob &job)
 
     PrintPageSize nativePageSize;
     job.GetPageSize(nativePageSize);
-    
+
     napi_value pageSize;
     NAPI_CALL(env, napi_create_object(env, &pageSize));
     SetUint32Property(env, pageSize, "id", nativePageSize.GetId());
@@ -362,27 +365,27 @@ napi_value PrintNapiUtils::Convert2JsObj(napi_env env, const PrintJob &job)
     SetUint32Property(env, pageSize, "width", nativePageSize.GetWidth());
     SetUint32Property(env, pageSize, "height", nativePageSize.GetHeight());
     NAPI_CALL(env, napi_set_named_property(env, result, "pageSize", pageSize));
-    
+
     SetUint32Property(env, result, "isLandscape", job.GetIsLandscape());
     SetUint32Property(env, result, "colorMode", job.GetColorMode());
     SetUint32Property(env, result, "duplexMode", job.GetDuplexMode());
 
     PrintMargin nativeMargin;
     job.GetMargin(nativeMargin);
-    
+
     napi_value margin;
     NAPI_CALL(env, napi_create_object(env, &margin));
     SetUint32Property(env, margin, "top", nativeMargin.GetTop());
     SetUint32Property(env, margin, "bottom", nativeMargin.GetBottom());
     SetUint32Property(env, margin, "left", nativeMargin.GetLeft());
     SetUint32Property(env, margin, "right", nativeMargin.GetRight());
-    NAPI_CALL(env, napi_set_named_property(env, result, "margin", margin));    
+    NAPI_CALL(env, napi_set_named_property(env, result, "margin", margin));
 
     PreviewAttribute previewAttr;
     job.GetPreview(previewAttr);
     previewAttr.GetPreviewRange(nativeRange);
     nativeRange.GetPages(pages);
-    
+
     napi_value preview;
     NAPI_CALL(env, napi_create_object(env, &preview));
     SetStringPropertyUtf8(env, preview, "result", previewAttr.GetResult().c_str());
@@ -390,12 +393,12 @@ napi_value PrintNapiUtils::Convert2JsObj(napi_env env, const PrintJob &job)
     NAPI_CALL(env, napi_create_object(env, &subPageRange));
     SetUint32Property(env, subPageRange, "startPage", nativeRange.GetStartPage());
     SetUint32Property(env, subPageRange, "endPage", nativeRange.GetEndPage());
-    
+
     napi_value arrPreviewPages;
     NAPI_CALL(env, napi_create_array(env, &arrPreviewPages));
     uint32_t arrPreviewPagesLength = pages.size();
 
-    for(uint32_t i = 0; i < arrPreviewPagesLength; i++) {
+    for (uint32_t i = 0; i < arrPreviewPagesLength; i++) {
         napi_value value;
         NAPI_CALL(env, napi_create_uint32(env, pages[i], &value));
         NAPI_CALL(env, napi_set_element(env, arrPreviewPages, i, value));

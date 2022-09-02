@@ -14,6 +14,7 @@
  */
 
 #include "print_extcb_stub.h"
+
 #include "print_common.h"
 #include "print_log.h"
 
@@ -25,8 +26,7 @@ PrintExtcbStub::PrintExtcbStub() : extCb_(nullptr), jobCb_(nullptr), cb_(nullptr
     cmdMap_[PRINT_EXTCB_PRINTJOB] = &PrintExtcbStub::HandlePrintJobCallback;
 }
 
-int32_t PrintExtcbStub::OnRemoteRequest(
-    uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+int32_t PrintExtcbStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     PRINT_HILOGD("OnRemoteRequest started, code = %{public}d", code);
     auto descriptorToken = data.ReadInterfaceToken();
@@ -54,7 +54,7 @@ bool PrintExtcbStub::OnCallback()
     return false;
 }
 
-bool PrintExtcbStub::OnCallback(uint32_t printerId) 
+bool PrintExtcbStub::OnCallback(uint32_t printerId)
 {
     if (cb_ != nullptr) {
         return cb_(printerId);

@@ -14,6 +14,7 @@
  */
 
 #include "printer_capability.h"
+
 #include "print_log.h"
 
 namespace OHOS::Print {
@@ -23,43 +24,41 @@ PrinterCapability::PrinterCapability() : minMargin_(), colorMode_(0), duplexMode
     resolutionList_.clear();
 }
 
-PrinterCapability::PrinterCapability(const PrinterCapability& right)
+PrinterCapability::PrinterCapability(const PrinterCapability &right)
 {
     minMargin_ = right.minMargin_;
     colorMode_ = right.colorMode_;
-    duplexMode_ =  right.duplexMode_;
+    duplexMode_ = right.duplexMode_;
     SetPageSize(right.pageSizeList_);
     SetResolution(right.resolutionList_);
 }
 
-PrinterCapability& PrinterCapability::operator=(const PrinterCapability& right)
+PrinterCapability &PrinterCapability::operator=(const PrinterCapability &right)
 {
-    if(this != &right){
+    if (this != &right) {
         minMargin_ = right.minMargin_;
         colorMode_ = right.colorMode_;
-        duplexMode_ =  right.duplexMode_;
+        duplexMode_ = right.duplexMode_;
         SetPageSize(right.pageSizeList_);
         SetResolution(right.resolutionList_);
     }
     return *this;
 }
 
-PrinterCapability::~PrinterCapability()
-{
-}
+PrinterCapability::~PrinterCapability() {}
 
 void PrinterCapability::SetMinMargin(PrintMargin &minMargin)
 {
     minMargin_ = minMargin;
 }
 
-void PrinterCapability::SetPageSize(const std::vector<PrintPageSize>& pageSizeList)
+void PrinterCapability::SetPageSize(const std::vector<PrintPageSize> &pageSizeList)
 {
     pageSizeList_.clear();
     pageSizeList_.assign(pageSizeList.begin(), pageSizeList.end());
 }
 
-void PrinterCapability::SetResolution(const std::vector<PrintResolution>& resolutionList)
+void PrinterCapability::SetResolution(const std::vector<PrintResolution> &resolutionList)
 {
     resolutionList_.clear();
     resolutionList_.assign(resolutionList.begin(), resolutionList.end());
@@ -75,18 +74,18 @@ void PrinterCapability::SetDuplexMode(uint32_t duplexMode)
     duplexMode_ = duplexMode;
 }
 
-void PrinterCapability::GetMinMargin(PrintMargin& margin) const
+void PrinterCapability::GetMinMargin(PrintMargin &margin) const
 {
     margin = minMargin_;
 }
 
-void PrinterCapability::GetPageSize(std::vector<PrintPageSize>& pageSizeList) const
+void PrinterCapability::GetPageSize(std::vector<PrintPageSize> &pageSizeList) const
 {
     pageSizeList.clear();
     pageSizeList.assign(pageSizeList_.begin(), pageSizeList_.end());
 }
 
-void PrinterCapability::GetResolution(std::vector<PrintResolution>& resolutionList) const
+void PrinterCapability::GetResolution(std::vector<PrintResolution> &resolutionList) const
 {
     resolutionList.clear();
     resolutionList.assign(resolutionList_.begin(), resolutionList_.end());
@@ -108,7 +107,7 @@ void PrinterCapability::Dump()
     PRINT_HILOGD("duplexMode_ = %{public}d", duplexMode_);
     minMargin_.Dump();
     auto pageIt = pageSizeList_.begin();
-    while (pageIt!= pageSizeList_.end()) {
+    while (pageIt != pageSizeList_.end()) {
         pageIt->Dump();
         pageIt++;
     }

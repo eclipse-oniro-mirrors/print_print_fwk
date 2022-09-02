@@ -16,20 +16,21 @@
 #ifndef NAPI_INNER_PRINT_H
 #define NAPI_INNER_PRINT_H
 
+#include <string>
+#include <vector>
+
 #include "async_call.h"
 #include "napi/native_api.h"
-#include "printer_capability.h"
+#include "napi_print_ext.h"
+#include "noncopyable.h"
 #include "print_extension_info.h"
+#include "print_job.h"
 #include "print_notify_stub.h"
 #include "print_page_size.h"
 #include "print_resolution.h"
-#include "printer_info.h"
-#include "print_job.h"
 #include "print_task.h"
-#include "napi_print_ext.h"
-#include "noncopyable.h"
-#include <string>
-#include <vector>
+#include "printer_capability.h"
+#include "printer_info.h"
 
 namespace OHOS::Print {
 
@@ -56,9 +57,9 @@ public:
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
     static int32_t GetEventType(const std::string &type);
-	static bool ParseJob(napi_env env, napi_value jobValue, PrintJob &printJob);
+    static bool ParseJob(napi_env env, napi_value jobValue, PrintJob &printJob);
     static bool ParseJobParam(napi_env env, napi_value jobValue, PrintJob &printJob);
-	
+
 private:
     static sptr<PrintNotifyInterface> CreateNotify(napi_env env, const std::string &type, napi_ref callbackRef);
 

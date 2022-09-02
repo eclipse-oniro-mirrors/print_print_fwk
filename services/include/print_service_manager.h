@@ -16,24 +16,24 @@
 #ifndef PRINT_SERVICE_MANAGER_H
 #define PRINT_SERVICE_MANAGER_H
 
+#include <functional>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <queue>
 #include <stdint.h>
-#include <functional>
-#include <mutex>
-#include <iosfwd>
 #include <vector>
+
+#include "print_constant.h"
 #include "print_extension_info.h"
+#include "print_job.h"
 #include "print_notify_interface.h"
 #include "printer_capability.h"
-#include "print_job.h"
 #include "printer_info.h"
-#include "print_constant.h"
 
 namespace OHOS::Print {
-using PrintTaskCallback = void(*)(const std::string& type, uint32_t taskId, uint32_t argv1, uint32_t argv2);
+using PrintTaskCallback = void (*)(const std::string &type, uint32_t taskId, uint32_t argv1, uint32_t argv2);
 
 class PrintServiceManager final {
 public:
@@ -61,8 +61,7 @@ private:
 
 private:
     static std::mutex instanceLock_;
-    static PrintServiceManager* instance_;
-
+    static PrintServiceManager *instance_;
 };
-} // namespace OHOS::Request::Print
+} // namespace OHOS::Print
 #endif // PRINT_SERVICE_MANAGER_H

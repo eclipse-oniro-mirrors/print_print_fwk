@@ -17,15 +17,16 @@
 #define PRINT_EXTCB_STUB_H
 
 #include <memory>
+
 #include "iremote_stub.h"
 #include "print_extcb_interface.h"
 #include "print_job.h"
 
 namespace OHOS::Print {
 
-using PrintExtCallback = bool(*)();
-using PrintJobCallback = bool(*)(const PrintJob&);
-using PrinterCallback = bool(*)(uint32_t);
+using PrintExtCallback = bool (*)();
+using PrintJobCallback = bool (*)(const PrintJob &);
+using PrinterCallback = bool (*)(uint32_t);
 
 class PrintExtcbStub : public IRemoteStub<PrintExtcbInterface> {
 public:
@@ -42,11 +43,11 @@ public:
 
 private:
     bool HandleExtCallback(MessageParcel &data);
-    bool HandlePrinterCallback(MessageParcel &data);     
+    bool HandlePrinterCallback(MessageParcel &data);
     bool HandlePrintJobCallback(MessageParcel &data);
 
 private:
-    using PRINT_EXT_HANDLER = bool(PrintExtcbStub::*)(MessageParcel&);
+    using PRINT_EXT_HANDLER = bool (PrintExtcbStub::*)(MessageParcel &);
     PrintExtCallback extCb_;
     PrintJobCallback jobCb_;
     PrinterCallback cb_;

@@ -17,9 +17,10 @@
 #define PRINT_PROGRESS_NOTIFY_H
 
 #include <string>
-#include "print_base_notify.h"
+
 #include "napi/native_api.h"
 #include "noncopyable.h"
+#include "print_base_notify.h"
 
 namespace OHOS::Print {
 class PrintProgressNotify final : public PrintBaseNotify {

@@ -14,14 +14,13 @@
  */
 
 #include "print_margin.h"
+
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintMargin::PrintMargin() : top_(0), bottom_(0), left_(0), right_(0)
-{
-}
+PrintMargin::PrintMargin() : top_(0), bottom_(0), left_(0), right_(0) {}
 
-PrintMargin::PrintMargin(const PrintMargin& right)
+PrintMargin::PrintMargin(const PrintMargin &right)
 {
     top_ = right.top_;
     bottom_ = right.bottom_;
@@ -29,9 +28,9 @@ PrintMargin::PrintMargin(const PrintMargin& right)
     right_ = right.right_;
 }
 
-PrintMargin &PrintMargin::operator=(const PrintMargin& right)
+PrintMargin &PrintMargin::operator=(const PrintMargin &right)
 {
-    if(this != &right){
+    if (this != &right) {
         top_ = right.top_;
         bottom_ = right.bottom_;
         left_ = right.left_;
@@ -40,9 +39,7 @@ PrintMargin &PrintMargin::operator=(const PrintMargin& right)
     return *this;
 }
 
-PrintMargin::~PrintMargin()
-{
-}
+PrintMargin::~PrintMargin() {}
 
 void PrintMargin::SetTop(uint32_t top)
 {

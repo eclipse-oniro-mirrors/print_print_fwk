@@ -17,12 +17,13 @@
 #define PRINT_SERVICE_INTERFACE_H
 
 #include <string>
-#include "print_notify_interface.h"
+
+#include "iremote_broker.h"
 #include "print_extcb_interface.h"
 #include "print_extension_info.h"
-#include "printer_info.h"
 #include "print_job.h"
-#include "iremote_broker.h"
+#include "print_notify_interface.h"
+#include "printer_info.h"
 
 namespace OHOS::Print {
 class PrintServiceInterface : public IRemoteBroker {
@@ -31,19 +32,20 @@ public:
     virtual int32_t StartPrint() = 0;
     virtual bool ConnectPrinter(uint32_t printerId) = 0;
     virtual bool DisconnectPrinter(uint32_t printerId) = 0;
-    virtual bool StartDiscoverPrinter(const std::vector<uint32_t>& extensionList) = 0;
+    virtual bool StartDiscoverPrinter(const std::vector<uint32_t> &extensionList) = 0;
     virtual bool StopDiscoverPrinter() = 0;
-    virtual bool QueryAllExtension(std::vector<PrinterExtensionInfo>& arrayExtensionInfo) = 0;
-    virtual bool StartPrintJob(const PrintJob& jobinfo) = 0;
-    virtual bool CancelPrintJob(const PrintJob& jobinfo) = 0;
-    virtual bool AddPrinters(const std::vector<PrinterInfo>& arrayPrintInfo) = 0;
-    virtual bool RemovePrinters(const std::vector<PrinterInfo>& arrayPrintInfo) = 0;
+    virtual bool QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo) = 0;
+    virtual bool StartPrintJob(const PrintJob &jobinfo) = 0;
+    virtual bool CancelPrintJob(const PrintJob &jobinfo) = 0;
+    virtual bool AddPrinters(const std::vector<PrinterInfo> &arrayPrintInfo) = 0;
+    virtual bool RemovePrinters(const std::vector<PrinterInfo> &arrayPrintInfo) = 0;
     virtual bool UpdatePrinterState(uint32_t printerId, uint32_t state) = 0;
     virtual bool UpdatePrinterJobState(uint32_t jobId, uint32_t state) = 0;
-    virtual bool RequestPreview(const PrintJob& jobinfo, std::string &previewResult) = 0;
+    virtual bool RequestPreview(const PrintJob &jobinfo, std::string &previewResult) = 0;
     virtual bool QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability) = 0;
     virtual bool CheckPermission() = 0;
-    virtual bool On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener) = 0;
+    virtual bool On(
+        const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener) = 0;
     virtual bool Off(const std::string &type) = 0;
     virtual bool RegisterExtCallback(uint32_t callbackId, const sptr<PrintExtcbInterface> &listener) = 0;
     virtual bool UnregisterAllExtCallback() = 0;

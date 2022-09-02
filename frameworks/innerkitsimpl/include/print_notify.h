@@ -17,15 +17,16 @@
 #define PRINT_NOTIFY_H
 
 #include <string>
-#include "print_notify_stub.h"
+
 #include "napi/native_api.h"
 #include "noncopyable.h"
+#include "print_notify_stub.h"
 
 namespace OHOS::Print {
 class PrintNotify final : public PrintNotifyStub {
 public:
     ACE_DISALLOW_COPY_AND_MOVE(PrintNotify);
-    explicit PrintNotify(); 
+    explicit PrintNotify();
     virtual ~PrintNotify();
     void OnCallBack(MessageParcel &data) override;
 };

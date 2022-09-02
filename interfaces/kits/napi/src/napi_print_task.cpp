@@ -14,12 +14,14 @@
  */
 
 #include "napi_print_task.h"
+
 #include <mutex>
+
 #include "async_call.h"
 #include "print_log.h"
+#include "print_manager_client.h"
 #include "print_napi_utils.h"
 #include "print_task.h"
-#include "print_manager_client.h"
 
 static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";
@@ -27,7 +29,7 @@ static constexpr const char *FUNCTION_OFF = "off";
 namespace OHOS::Print {
 __thread napi_ref NapiPrintTask::globalCtor = nullptr;
 std::mutex mutex_;
-napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)//PrintTask
+napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info) // PrintTask
 {
     PRINT_HILOGD("Enter print JsMain.");
     struct ContextInfo {
@@ -66,8 +68,8 @@ napi_value NapiPrintTask::GetCtor(napi_env env)
     }
 
     napi_property_descriptor clzDes[] = {
-        {FUNCTION_ON, 0, PrintTask::On, 0, 0, 0, napi_default, 0},
-        {FUNCTION_OFF, 0, PrintTask::Off, 0, 0, 0, napi_default, 0},
+        { FUNCTION_ON, 0, PrintTask::On, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_OFF, 0, PrintTask::Off, 0, 0, 0, napi_default, 0 },
     };
     NAPI_CALL(env, napi_define_class(env, "NapiPrintTask", NAPI_AUTO_LENGTH, Initialize, nullptr,
                        sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
@@ -80,7 +82,7 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
     PRINT_HILOGD("constructor print task!");
     napi_value self = nullptr;
     size_t argc = PrintNapiUtils::MAX_ARGC;
-    napi_value argv[PrintNapiUtils::MAX_ARGC] = {nullptr};
+    napi_value argv[PrintNapiUtils::MAX_ARGC] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
 
     auto task = new PrintTask(PrintManagerClient::GetInstance()->StartPrint());

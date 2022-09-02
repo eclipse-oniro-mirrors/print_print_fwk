@@ -23,7 +23,7 @@ namespace OHOS::Print {
 class PrintNotifyInterface : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.PrintNotifyInterface");
-    virtual void OnCallBack(MessageParcel &data) = 0;	
+    virtual void OnCallBack(MessageParcel &data) = 0;
 };
 
 enum {

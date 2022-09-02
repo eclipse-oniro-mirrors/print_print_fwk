@@ -14,10 +14,11 @@
  */
 
 #include "napi_print_ext.h"
+
 #include "async_call.h"
 #include "print_log.h"
-#include "print_napi_utils.h"
 #include "print_manager_client.h"
+#include "print_napi_utils.h"
 
 static constexpr const char *PARAM_INFO_PRINTID = "printerId";
 static constexpr const char *PARAM_INFO_PRINTERNAME = "printerName";
@@ -51,10 +52,10 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
     if (!PrintManagerClient::GetInstance()->CheckPermission()) {
-    PRINT_HILOGD("no permission to access print service");
-    return nullptr;
+        PRINT_HILOGD("no permission to access print service");
+        return nullptr;
     }
-    
+
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == PrintNapiUtils::ONE_ARG, " should 1 parameter!", napi_invalid_arg);
@@ -67,14 +68,12 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
         napi_get_array_length(env, argv[PrintNapiUtils::FIRST_ARGV], &result_size);
 
         PrinterInfo info_;
-        for(uint32_t i = 0; i < result_size; i++)
-        {
+        for (uint32_t i = 0; i < result_size; i++) {
             napi_value value;
             napi_get_element(env, array, i, &value);
-            if(!ParseInfo(env, value, info_))
-            {
+            if (!ParseInfo(env, value, info_)) {
                 PRINT_HILOGD("PrinterInfo is format error!");
-            } 
+            }
             context->printAddInfoVector.push_back(info_);
         }
         return napi_ok;
@@ -98,7 +97,7 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
 napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
-	auto context = std::make_shared<NapiPrintExtContext>();
+    auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == PrintNapiUtils::ONE_ARG, " should 1 parameter!", napi_invalid_arg);
         napi_value array = argv[PrintNapiUtils::FIRST_ARGV];
@@ -110,14 +109,12 @@ napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
         napi_get_array_length(env, argv[PrintNapiUtils::FIRST_ARGV], &result_size);
 
         PrinterInfo info_;
-        for(uint32_t i = 0; i < result_size; i++)
-        {
+        for (uint32_t i = 0; i < result_size; i++) {
             napi_value value;
             napi_get_element(env, array, i, &value);
-            if(!ParseInfo(env, value, info_))
-            {
+            if (!ParseInfo(env, value, info_)) {
                 PRINT_HILOGD("PrinterInfo is format error!");
-            } 
+            }
             context->printRemoveInfoVector.push_back(info_);
         }
         return napi_ok;
@@ -141,10 +138,10 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info inf
 {
     PRINT_HILOGD("Enter ---->");
     if (!PrintManagerClient::GetInstance()->CheckPermission()) {
-    PRINT_HILOGD("no permission to access print service");
-    return nullptr;
+        PRINT_HILOGD("no permission to access print service");
+        return nullptr;
     }
-    
+
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == PrintNapiUtils::TWO_ARG, " should 2 parameter!", napi_invalid_arg);
@@ -170,7 +167,8 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info inf
         return status;
     };
     auto exec = [context](AsyncCall::Context *ctx) {
-        context->result = PrintManagerClient::GetInstance()->UpdatePrinterState(context->printerId, context->printerState);
+        context->result =
+            PrintManagerClient::GetInstance()->UpdatePrinterState(context->printerId, context->printerState);
         if (context->result == true) {
             context->status = napi_ok;
         }
@@ -183,10 +181,10 @@ napi_value NapiPrintExt::UpdatePrintJobState(napi_env env, napi_callback_info in
 {
     PRINT_HILOGD("Enter ---->");
     if (!PrintManagerClient::GetInstance()->CheckPermission()) {
-    PRINT_HILOGD("no permission to access print service");
-    return nullptr;
+        PRINT_HILOGD("no permission to access print service");
+        return nullptr;
     }
-    
+
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == PrintNapiUtils::TWO_ARG, " should 2 parameter!", napi_invalid_arg);
@@ -212,7 +210,8 @@ napi_value NapiPrintExt::UpdatePrintJobState(napi_env env, napi_callback_info in
         return status;
     };
     auto exec = [context](AsyncCall::Context *ctx) {
-        context->result = PrintManagerClient::GetInstance()->UpdatePrinterJobState(context->printerJobId, context->printerJobState);
+        context->result =
+            PrintManagerClient::GetInstance()->UpdatePrinterJobState(context->printerJobId, context->printerJobState);
         if (context->result == true) {
             context->status = napi_ok;
         }
@@ -230,7 +229,7 @@ bool NapiPrintExt::ParseInfo(napi_env env, napi_value InfoValue, PrinterInfo &in
     }
     info.SetPrinterName(PrintNapiUtils::GetStringPropertyUtf8(env, InfoValue, PARAM_INFO_PRINTERNAME));
     info.SetPrinterIcon(PrintNapiUtils::GetUint32Property(env, InfoValue, PARAM_INFO_PRINTERICON));
-    info.SetPrinterState(PrintNapiUtils::GetUint32Property(env, InfoValue, PARAM_INFO_PRINTERSTATE));  
+    info.SetPrinterState(PrintNapiUtils::GetUint32Property(env, InfoValue, PARAM_INFO_PRINTERSTATE));
     info.SetDescription(PrintNapiUtils::GetStringPropertyUtf8(env, InfoValue, PARAM_INFO_DESCRIPTION));
 
     PRINT_HILOGD("info_value printId value is: %{public}d", info.GetPrintId());
@@ -272,9 +271,9 @@ bool NapiPrintExt::ParseInfoParam(napi_env env, napi_value InfoValue, PrinterInf
     if (PrintNapiUtils::GetValueType(env, param_six) != napi_object) {
         PRINT_HILOGD("error param_six");
         return false;
-    }else{
+    } else {
         PrinterCapability capability;
-        if (!ParseCapability(env, param_six, capability)){
+        if (!ParseCapability(env, param_six, capability)) {
             PRINT_HILOGD("ParseCapability type error!");
         }
         info.SetCapability(capability);
@@ -297,9 +296,9 @@ bool NapiPrintExt::ParseCapability(napi_env env, napi_value capValue, PrinterCap
         PRINT_HILOGD("ParseCapabilityParam is error!");
         return false;
     }
-    //capability.SetMinMargin(PrintNapiUtils::GetStringPropertyUtf8(env, capValue, PARAM_CAPABILITY_MINMARGIN));
+    // capability.SetMinMargin(PrintNapiUtils::GetStringPropertyUtf8(env, capValue, PARAM_CAPABILITY_MINMARGIN));
     capability.SetColorMode(PrintNapiUtils::GetUint32Property(env, capValue, PARAM_CAPABILITY_COLORMODE));
-    capability.SetDuplexMode(PrintNapiUtils::GetUint32Property(env, capValue, PARAM_CAPABILITY_DUPLEXMODE)); 
+    capability.SetDuplexMode(PrintNapiUtils::GetUint32Property(env, capValue, PARAM_CAPABILITY_DUPLEXMODE));
     PRINT_HILOGD("capability_value colorMode value is  %{public}d", capability.GetColorMode());
     PRINT_HILOGD("capability_value duplexMode value is  %{public}d", capability.GetDuplexMode());
     return true;
@@ -310,22 +309,22 @@ bool NapiPrintExt::ParseCapabilityParam(napi_env env, napi_value capValue, Print
     if (PrintNapiUtils::GetValueType(env, param_one) != napi_object) {
         PRINT_HILOGD("error param_one");
         return false;
-    }else{
+    } else {
         PrintMargin margin;
-        if (!ParseMargin(env, param_one, margin)){
+        if (!ParseMargin(env, param_one, margin)) {
             PRINT_HILOGD("ParseCapability type error!");
         }
         capability.SetMinMargin(margin);
     }
-    
+
     napi_value param_two = PrintNapiUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_PAGESIZE);
     if (PrintNapiUtils::GetValueType(env, param_two) != napi_object) {
         PRINT_HILOGD("error param_two");
         return false;
-    }else{
+    } else {
         bool isArray = false;
         napi_is_array(env, param_two, &isArray);
-        if( !isArray ){
+        if (!isArray) {
             PRINT_HILOGD("ParsePageSize type error!");
             return false;
         }
@@ -333,12 +332,12 @@ bool NapiPrintExt::ParseCapabilityParam(napi_env env, napi_value capValue, Print
         std::vector<PrintPageSize> pageSizeList;
         uint32_t arrayLength = 0;
         napi_get_array_length(env, param_two, &arrayLength);
-        for(uint32_t i = 0; i < arrayLength; i++) {
+        for (uint32_t i = 0; i < arrayLength; i++) {
             napi_value pageSizeValue;
-            PrintPageSize pageSize;            
+            PrintPageSize pageSize;
             napi_get_element(env, param_two, i, &pageSizeValue);
-            //status = napi_get_property(env, result, param_six, &pageResult);
-            if ( !ParsePageSize(env, pageSizeValue, pageSize) ){
+            // status = napi_get_property(env, result, param_six, &pageResult);
+            if (!ParsePageSize(env, pageSizeValue, pageSize)) {
                 PRINT_HILOGD("ParsePageSize type error!");
                 return false;
             }
@@ -351,25 +350,24 @@ bool NapiPrintExt::ParseCapabilityParam(napi_env env, napi_value capValue, Print
     if (PrintNapiUtils::GetValueType(env, param_three) != napi_object) {
         PRINT_HILOGD("error param_three");
         return false;
-    }else{
+    } else {
         bool isReArray = false;
         napi_is_array(env, param_three, &isReArray);
-        if( !isReArray ){
+        if (!isReArray) {
             PRINT_HILOGD("PrintResolution type error!");
             return false;
         }
         std::vector<PrintResolution> resolutionList;
         uint32_t arrayReLength = 0;
         napi_get_array_length(env, param_three, &arrayReLength);
-        for(uint32_t i = 0; i < arrayReLength; i++)
-        {
+        for (uint32_t i = 0; i < arrayReLength; i++) {
             napi_value reValue;
             PrintResolution resolution;
             napi_get_element(env, param_three, i, &reValue);
             if (!ParseResolution(env, reValue, resolution)) {
                 PRINT_HILOGD("PrintResolution type error!");
                 return false;
-            } 
+            }
             resolutionList.push_back(resolution);
         }
         capability.SetResolution(resolutionList);
@@ -381,7 +379,7 @@ bool NapiPrintExt::ParseCapabilityParam(napi_env env, napi_value capValue, Print
     }
     napi_value param_five = PrintNapiUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_DUPLEXMODE);
     if (PrintNapiUtils::GetValueType(env, param_five) != napi_number) {
-        //ParseCapabilityParam()
+        // ParseCapabilityParam()
         PRINT_HILOGD("error param_five");
         return false;
     }
@@ -406,7 +404,7 @@ bool NapiPrintExt::ParsePageSize(napi_env env, napi_value capValue, PrintPageSiz
     }
     pageSize.SetName(PrintNapiUtils::GetStringPropertyUtf8(env, capValue, PARAM_PAGESIZE_NAME));
     pageSize.SetWidth(PrintNapiUtils::GetUint32Property(env, capValue, PARAM_PAGESIZE_WIDTH));
-    pageSize.SetHeight(PrintNapiUtils::GetUint32Property(env, capValue, PARAM_PAGESIZE_HEIGHT));  
+    pageSize.SetHeight(PrintNapiUtils::GetUint32Property(env, capValue, PARAM_PAGESIZE_HEIGHT));
 
     PRINT_HILOGD("printerPageSize_value GetId value is %{public}d", pageSize.GetId());
     PRINT_HILOGD("printerPageSize_value GetName value is %{public}s", pageSize.GetName().c_str());
@@ -417,7 +415,6 @@ bool NapiPrintExt::ParsePageSize(napi_env env, napi_value capValue, PrintPageSiz
 
 bool NapiPrintExt::ParsePageSizeParam(napi_env env, napi_value capValue, PrintPageSize &pageSize)
 {
-
     napi_value param_one = PrintNapiUtils::GetNamedProperty(env, capValue, PARAM_PAGESIZE_ID);
     if (PrintNapiUtils::GetValueType(env, param_one) != napi_number) {
         PRINT_HILOGD("error param_one");
@@ -450,7 +447,7 @@ bool NapiPrintExt::ParsePageSizeParam(napi_env env, napi_value capValue, PrintPa
     }
     return true;
 }
-bool NapiPrintExt::ParseResolution(napi_env env, napi_value reValue, PrintResolution& resolution)
+bool NapiPrintExt::ParseResolution(napi_env env, napi_value reValue, PrintResolution &resolution)
 {
     if (!ParseResolutionParam(env, reValue, resolution)) {
         PRINT_HILOGD("ParseResolutionParam is error!");
@@ -466,7 +463,7 @@ bool NapiPrintExt::ParseResolution(napi_env env, napi_value reValue, PrintResolu
     return true;
 }
 
-bool NapiPrintExt::ParseResolutionParam(napi_env env, napi_value reValue, PrintResolution& resolution)
+bool NapiPrintExt::ParseResolutionParam(napi_env env, napi_value reValue, PrintResolution &resolution)
 {
     napi_value param_one = PrintNapiUtils::GetNamedProperty(env, reValue, PARAM_RESOLUTION_ID);
     if (PrintNapiUtils::GetValueType(env, param_one) != napi_number) {
@@ -488,7 +485,7 @@ bool NapiPrintExt::ParseResolutionParam(napi_env env, napi_value reValue, PrintR
     return true;
 }
 
-bool NapiPrintExt::ParseMargin(napi_env env, napi_value marginValue, PrintMargin& margin)
+bool NapiPrintExt::ParseMargin(napi_env env, napi_value marginValue, PrintMargin &margin)
 {
     if (!ParseMarginParam(env, marginValue, margin)) {
         PRINT_HILOGD("ParseResolutionParam is error!");
@@ -507,7 +504,7 @@ bool NapiPrintExt::ParseMargin(napi_env env, napi_value marginValue, PrintMargin
     return true;
 }
 
-bool NapiPrintExt::ParseMarginParam(napi_env env, napi_value marginValue, PrintMargin& margin)
+bool NapiPrintExt::ParseMarginParam(napi_env env, napi_value marginValue, PrintMargin &margin)
 {
     //±ØÒªÊôÐÔÐ£Ñé
     napi_value param_one = PrintNapiUtils::GetNamedProperty(env, marginValue, PARAM_MARGIN_TOP);

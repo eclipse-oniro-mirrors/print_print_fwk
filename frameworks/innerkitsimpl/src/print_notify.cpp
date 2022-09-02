@@ -14,14 +14,14 @@
  */
 
 #include "print_notify.h"
+
 #include <uv.h>
+
 #include "print_log.h"
 #include "print_napi_utils.h"
 
 namespace OHOS::Print {
-PrintNotify::PrintNotify()
-{
-}
+PrintNotify::PrintNotify() {}
 
 PrintNotify::~PrintNotify()
 {
@@ -32,4 +32,4 @@ void PrintNotify::OnCallBack(MessageParcel &data)
 {
     PRINT_HILOGD("Failed callback in");
 }
-} // namespace OHOS::Request::Print
+} // namespace OHOS::Print

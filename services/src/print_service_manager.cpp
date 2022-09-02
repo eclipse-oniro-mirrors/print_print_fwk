@@ -14,38 +14,35 @@
  */
 
 #include "print_service_manager.h"
-#include <cstddef>
+
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <errno.h>
 #include <functional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <new>
 #include <queue>
-#include <mutex>
-#include <thread>
-#include <utility>
-#include "unistd.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
 #include <string.h>
 #include <sys/types.h>
+#include <thread>
 #include <time.h>
+#include <unistd.h>
+#include <utility>
+
 #include "print_log.h"
+#include "unistd.h"
 
 namespace OHOS::Print {
 std::mutex PrintServiceManager::instanceLock_;
 PrintServiceManager *PrintServiceManager::instance_ = nullptr;
-PrintServiceManager::PrintServiceManager()
-{
-}
+PrintServiceManager::PrintServiceManager() {}
 
-PrintServiceManager::~PrintServiceManager()
-{
-}
+PrintServiceManager::~PrintServiceManager() {}
 
 PrintServiceManager *PrintServiceManager::GetInstance()
 {
@@ -58,7 +55,8 @@ PrintServiceManager *PrintServiceManager::GetInstance()
     return instance_;
 }
 
-bool PrintServiceManager::On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
+bool PrintServiceManager::On(
+    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
 {
     PRINT_HILOGE("PrintServiceManager on started.");
     return true;
@@ -163,12 +161,12 @@ bool PrintServiceManager::QueryPrinterCapability(uint32_t printerId, PrinterCapa
 
     printerCapability.SetColorMode(10);
     printerCapability.SetDuplexMode(11);
-    
+
     PrintMargin PrintMargin;
     PrintMargin.SetTop(5);
     PrintMargin.SetBottom(5);
     PrintMargin.SetLeft(5);
-    PrintMargin.SetRight(5);   
+    PrintMargin.SetRight(5);
     printerCapability.SetMinMargin(PrintMargin);
 
     std::vector<PrintPageSize> pageSizeList;
@@ -178,7 +176,7 @@ bool PrintServiceManager::QueryPrinterCapability(uint32_t printerId, PrinterCapa
     pageSize.SetWidth(6);
     pageSize.SetHeight(6);
     pageSizeList.push_back(pageSize);
-    
+
     printerCapability.SetPageSize(pageSizeList);
 
     std::vector<PrintResolution> resolutionList;
@@ -198,4 +196,4 @@ void PrintServiceManager::InstallCallback(uint32_t taskId, PrintTaskCallback eve
 {
     PRINT_HILOGE("PrintServiceManager InstallCallback started.");
 }
-} // namespace OHOS::Request::Print
+} // namespace OHOS::Print

@@ -18,13 +18,13 @@
 
 #include "async_call.h"
 #include "napi/native_api.h"
-#include "print_task.h"
-#include "printer_info.h"
-#include "printer_capability.h"
-#include "print_resolution.h"
-#include "print_page_size.h"
-#include "print_margin.h"
 #include "noncopyable.h"
+#include "print_margin.h"
+#include "print_page_size.h"
+#include "print_resolution.h"
+#include "print_task.h"
+#include "printer_capability.h"
+#include "printer_info.h"
 
 namespace OHOS::Print {
 class NapiPrintExt {
@@ -43,7 +43,7 @@ public:
     static bool ParseResolutionParam(napi_env env, napi_value reValue, PrintResolution &PrintResolution);
     static bool ParseMargin(napi_env env, napi_value marginValue, PrintMargin &PrintMargin);
     static bool ParseMarginParam(napi_env env, napi_value marginValue, PrintMargin &PrintMargin);
-    
+
 private:
     struct NapiPrintExtContext : public AsyncCall::Context {
         PrintTask *task_ = nullptr;

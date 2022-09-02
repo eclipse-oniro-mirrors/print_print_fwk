@@ -18,39 +18,41 @@
 #include <mutex>
 #include <string>
 #include <vector>
+
 #include "print_margin.h"
 #include "print_page_size.h"
 #include "print_resolution.h"
 
 namespace OHOS::Print {
-class PrinterCapability  {
+class PrinterCapability {
 public:
     explicit PrinterCapability();
-    PrinterCapability(const PrinterCapability& right);
-    PrinterCapability& operator=(const PrinterCapability& right);
+    PrinterCapability(const PrinterCapability &right);
+    PrinterCapability &operator=(const PrinterCapability &right);
     ~PrinterCapability();
 
     void SetMinMargin(PrintMargin &minMargin);
 
-    void SetPageSize(const std::vector<PrintPageSize>& pageSizeList);
+    void SetPageSize(const std::vector<PrintPageSize> &pageSizeList);
 
-    void SetResolution(const std::vector<PrintResolution>& resolutionList);
+    void SetResolution(const std::vector<PrintResolution> &resolutionList);
 
     void SetColorMode(uint32_t colorMode);
 
     void SetDuplexMode(uint32_t duplexMode);
 
-    void GetMinMargin(PrintMargin& margin) const;
+    void GetMinMargin(PrintMargin &margin) const;
 
-    void GetPageSize(std::vector<PrintPageSize>& pageSizeList) const;
+    void GetPageSize(std::vector<PrintPageSize> &pageSizeList) const;
 
-    void GetResolution(std::vector<PrintResolution>& resolutionList) const;
+    void GetResolution(std::vector<PrintResolution> &resolutionList) const;
 
     [[nodiscard]] uint32_t GetColorMode() const;
 
     [[nodiscard]] uint32_t GetDuplexMode() const;
 
     void Dump();
+
 private:
     PrintMargin minMargin_;
     std::vector<PrintPageSize> pageSizeList_;

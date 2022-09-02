@@ -21,10 +21,10 @@
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
-#include "printer_info.h"
-#include "printer_capability.h"
-#include "print_resolution.h"
 #include "print_job.h"
+#include "print_resolution.h"
+#include "printer_capability.h"
+#include "printer_info.h"
 
 namespace OHOS::Print {
 class PrintNapiUtils {
@@ -34,14 +34,14 @@ public:
     static constexpr int32_t ONE_ARG = 1;
     static constexpr int32_t TWO_ARG = 2;
     static constexpr int32_t THE_ARG = 3;
-    
+
     static constexpr int32_t FIRST_ARGV = 0;
     static constexpr int32_t SECOND_ARGV = 1;
     static constexpr int32_t THIRD_ARGV = 2;
-    
+
     static constexpr int32_t MAX_NUMBER_BYTES = 8;
     static constexpr int32_t MAX_LEN = 4096;
-    
+
     static napi_valuetype GetValueType(napi_env env, napi_value value);
     static bool HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
     static napi_value GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
@@ -58,7 +58,8 @@ public:
     static napi_value CreateStringUtf8(napi_env env, const std::string &str);
     static std::string GetStringFromValueUtf8(napi_env env, napi_value value);
     static std::string GetStringPropertyUtf8(napi_env env, napi_value object, const std::string &propertyName);
-    static void SetStringPropertyUtf8(napi_env env, napi_value object, const std::string &name, const std::string &value);
+    static void SetStringPropertyUtf8(
+        napi_env env, napi_value object, const std::string &name, const std::string &value);
     static std::string GetValueString(napi_env env, napi_value value);
     static bool ValueIsArrayBuffer(napi_env env, napi_value value);
     static void *GetInfoFromArrayBufferValue(napi_env env, napi_value value, size_t *length);

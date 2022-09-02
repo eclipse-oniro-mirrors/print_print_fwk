@@ -14,9 +14,10 @@
  */
 
 #include "napi_inner_print.h"
-#include "print_manager_client.h"
+
 #include "async_call.h"
 #include "print_log.h"
+#include "print_manager_client.h"
 #include "print_napi_utils.h"
 #include "print_task.h"
 
@@ -25,7 +26,7 @@ static constexpr const char *PARAM_JOB_JOBID = "jobId";
 static constexpr const char *PARAM_JOB_PRINTERID = "printerId";
 static constexpr const char *PARAM_JOB_JOBSTATE = "jobState";
 static constexpr const char *PARAM_JOB_COPYNUMBER = "copyNumber";
-//static constexpr const char *PARAM_JOB_PAGERANGE = "pageRange";
+// static constexpr const char *PARAM_JOB_PAGERANGE = "pageRange";
 
 namespace OHOS::Print {
 napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info info)
@@ -46,22 +47,31 @@ napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info i
         PRINT_HILOGD("ouput enter---->");
         napi_status status = napi_create_array(env, result);
         uint32_t PrinterExtensionInfoLength = context->arrayPrinterExtensionInfo.size();
-        for(uint32_t i = 0; i < PrinterExtensionInfoLength; i++)
-        {
-        PRINT_HILOGD("PrintServiceProxy, ExtensionId = %{public}d", context->arrayPrinterExtensionInfo[i].GetExtensionId());
-        PRINT_HILOGD("PrintServiceProxy, VendorId = %{public}d", context->arrayPrinterExtensionInfo[i].GetVendorId());
-        PRINT_HILOGD("PrintServiceProxy, VendorName = %{public}s", context->arrayPrinterExtensionInfo[i].GetVendorName().c_str());
-        PRINT_HILOGD("PrintServiceProxy, VendorIcon = %{public}d", context->arrayPrinterExtensionInfo[i].GetVendorIcon());
-        PRINT_HILOGD("PrintServiceProxy, Version = %{public}s", context->arrayPrinterExtensionInfo[i].GetVersion().c_str());
-        napi_value PrinterInfo;
-        napi_create_object(env, &PrinterInfo);
-        PrintNapiUtils::SetUint32Property(env, PrinterInfo, "extensionId", context->arrayPrinterExtensionInfo[i].GetExtensionId());
-        PrintNapiUtils::SetUint32Property(env, PrinterInfo, "vendorId", context->arrayPrinterExtensionInfo[i].GetVendorId());
-        PrintNapiUtils::SetStringPropertyUtf8(env, PrinterInfo, "vendorName", context->arrayPrinterExtensionInfo[i].GetVendorName().c_str());
-        PrintNapiUtils::SetUint32Property(env, PrinterInfo, "vendorIcon", context->arrayPrinterExtensionInfo[i].GetVendorIcon());
-        PrintNapiUtils::SetStringPropertyUtf8(env, PrinterInfo, "version", context->arrayPrinterExtensionInfo[i].GetVersion().c_str());
-        status = napi_set_element(env, *result, i, PrinterInfo);
-        }   
+        for (uint32_t i = 0; i < PrinterExtensionInfoLength; i++) {
+            PRINT_HILOGD(
+                "PrintServiceProxy, ExtensionId = %{public}d", context->arrayPrinterExtensionInfo[i].GetExtensionId());
+            PRINT_HILOGD(
+                "PrintServiceProxy, VendorId = %{public}d", context->arrayPrinterExtensionInfo[i].GetVendorId());
+            PRINT_HILOGD("PrintServiceProxy, VendorName = %{public}s",
+                context->arrayPrinterExtensionInfo[i].GetVendorName().c_str());
+            PRINT_HILOGD(
+                "PrintServiceProxy, VendorIcon = %{public}d", context->arrayPrinterExtensionInfo[i].GetVendorIcon());
+            PRINT_HILOGD(
+                "PrintServiceProxy, Version = %{public}s", context->arrayPrinterExtensionInfo[i].GetVersion().c_str());
+            napi_value PrinterInfo;
+            napi_create_object(env, &PrinterInfo);
+            PrintNapiUtils::SetUint32Property(
+                env, PrinterInfo, "extensionId", context->arrayPrinterExtensionInfo[i].GetExtensionId());
+            PrintNapiUtils::SetUint32Property(
+                env, PrinterInfo, "vendorId", context->arrayPrinterExtensionInfo[i].GetVendorId());
+            PrintNapiUtils::SetStringPropertyUtf8(
+                env, PrinterInfo, "vendorName", context->arrayPrinterExtensionInfo[i].GetVendorName().c_str());
+            PrintNapiUtils::SetUint32Property(
+                env, PrinterInfo, "vendorIcon", context->arrayPrinterExtensionInfo[i].GetVendorIcon());
+            PrintNapiUtils::SetStringPropertyUtf8(
+                env, PrinterInfo, "version", context->arrayPrinterExtensionInfo[i].GetVersion().c_str());
+            status = napi_set_element(env, *result, i, PrinterInfo);
+        }
         PRINT_HILOGD("output ---- status[%{public}d]", status);
         PRINT_HILOGD("ouput over---->");
         return napi_ok;
@@ -96,15 +106,14 @@ napi_value NapiInnerPrint::StartDiscovery(napi_env env, napi_callback_info info)
         bool isArray = false;
         napi_is_array(env, array, &isArray);
         NAPI_ASSERT_BASE(env, isArray, " is not array!", napi_invalid_arg);
-        for (uint32_t i = 0; i < result_size; i++)
-        {
+        for (uint32_t i = 0; i < result_size; i++) {
             napi_value value;
             napi_get_element(env, array, i, &value);
             uint32_t valueNumber;
             napi_get_value_uint32(env, value, &valueNumber);
             PRINT_HILOGD("output for :---- extensionVector value is :[%{public}d]", valueNumber);
             context->extensionVector.push_back((int32_t)valueNumber);
-        }   
+        }
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
@@ -134,7 +143,7 @@ napi_value NapiInnerPrint::StopDiscovery(napi_env env, napi_callback_info info)
         PRINT_HILOGD("no permission to access print service");
         return nullptr;
     }
-    
+
     auto context = std::make_shared<OperationContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == 0, " should 0 parameter!", napi_invalid_arg);
@@ -163,7 +172,7 @@ napi_value NapiInnerPrint::ConnectPrint(napi_env env, napi_callback_info info)
         PRINT_HILOGD("no permission to access print service");
         return nullptr;
     }
-    
+
     auto context = std::make_shared<OperationContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == 1, "should 1 parameter!", napi_invalid_arg);
@@ -172,7 +181,7 @@ napi_value NapiInnerPrint::ConnectPrint(napi_env env, napi_callback_info info)
         NAPI_ASSERT_BASE(env, valuetype == napi_number, "printerId number is not a number", napi_invalid_arg);
         uint32_t printId;
         napi_get_value_uint32(env, argv[PrintNapiUtils::FIRST_ARGV], &printId);
-        PRINT_HILOGD("printId : %{public}d",printId);
+        PRINT_HILOGD("printId : %{public}d", printId);
         context->printConnId = printId;
         return napi_ok;
     };
@@ -199,7 +208,7 @@ napi_value NapiInnerPrint::DisconnectPrint(napi_env env, napi_callback_info info
         PRINT_HILOGD("no permission to access print service");
         return nullptr;
     }
-    
+
     auto context = std::make_shared<OperationContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == 1, " should 1 parameter!", napi_invalid_arg);
@@ -207,8 +216,8 @@ napi_value NapiInnerPrint::DisconnectPrint(napi_env env, napi_callback_info info
         NAPI_CALL_BASE(env, napi_typeof(env, argv[PrintNapiUtils::FIRST_ARGV], &valuetype), napi_invalid_arg);
         NAPI_ASSERT_BASE(env, valuetype == napi_number, "printerId number is not a number", napi_invalid_arg);
         uint32_t printId;
-        napi_get_value_uint32(env,argv[PrintNapiUtils::FIRST_ARGV],&printId);
-        PRINT_HILOGD("printId : %{public}d",printId);
+        napi_get_value_uint32(env, argv[PrintNapiUtils::FIRST_ARGV], &printId);
+        PRINT_HILOGD("printId : %{public}d", printId);
         context->printDisConnId = printId;
         return napi_ok;
     };
@@ -235,15 +244,15 @@ napi_value NapiInnerPrint::StartPrint(napi_env env, napi_callback_info info)
         PRINT_HILOGD("no permission to access print service");
         return nullptr;
     }
-    
+
     auto context = std::make_shared<OperationContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == 1, " should 1 parameter!", napi_invalid_arg);
         napi_value value = argv[PrintNapiUtils::FIRST_ARGV];
         PrintJob printJob;
-        if (!ParseJob(env, value, printJob) ){
+        if (!ParseJob(env, value, printJob)) {
             PRINT_HILOGD("PrintResolution type error!");
-        } 
+        }
         context->printStartJob = printJob;
         return napi_ok;
     };
@@ -274,15 +283,15 @@ napi_value NapiInnerPrint::CancelPrint(napi_env env, napi_callback_info info)
         PRINT_HILOGD("no permission to access print service");
         return nullptr;
     }
-    
+
     auto context = std::make_shared<OperationContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == 1, " should 1 parameter!", napi_invalid_arg);
         napi_value value = argv[PrintNapiUtils::FIRST_ARGV];
         PrintJob printJob;
-        if (!ParseJob(env, value, printJob) ){
+        if (!ParseJob(env, value, printJob)) {
             PRINT_HILOGD("PrintResolution type error!");
-        } 
+        }
         context->printCancelJob = printJob;
         return napi_ok;
     };
@@ -313,15 +322,15 @@ napi_value NapiInnerPrint::RequestPreview(napi_env env, napi_callback_info info)
         PRINT_HILOGD("no permission to access print service");
         return nullptr;
     }
-    
+
     auto context = std::make_shared<OperationContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == 1, " should 1 parameter!", napi_invalid_arg);
         napi_value value = argv[PrintNapiUtils::FIRST_ARGV];
         PrintJob printJob;
-        if (!ParseJob(env, value, printJob) ){
+        if (!ParseJob(env, value, printJob)) {
             PRINT_HILOGD("PrintResolution type error!");
-        } 
+        }
         context->printReqPreviewJob = printJob;
         return napi_ok;
     };
@@ -335,7 +344,8 @@ napi_value NapiInnerPrint::RequestPreview(napi_env env, napi_callback_info info)
         range.SetStartPage(1);
         range.SetEndPage(2);
         context->printReqPreviewJob.SetPageRange(range);
-        context->result = PrintManagerClient::GetInstance()->RequestPreview(context->printReqPreviewJob, context->previewResult);
+        context->result =
+            PrintManagerClient::GetInstance()->RequestPreview(context->printReqPreviewJob, context->previewResult);
         if (context->result == true) {
             context->status = napi_ok;
         }
@@ -352,7 +362,7 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env, napi_callback_info info
         PRINT_HILOGD("no permission to access print service");
         return nullptr;
     }
-    
+
     auto context = std::make_shared<OperationContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == 1, " should 1 parameter!", napi_invalid_arg);
@@ -360,8 +370,8 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env, napi_callback_info info
         NAPI_CALL_BASE(env, napi_typeof(env, argv[PrintNapiUtils::FIRST_ARGV], &valuetype), napi_invalid_arg);
         NAPI_ASSERT_BASE(env, valuetype == napi_number, "number is not a number", napi_invalid_arg);
         uint32_t number;
-        napi_get_value_uint32(env,argv[PrintNapiUtils::FIRST_ARGV],&number);
-        PRINT_HILOGD("printjob : %{public}d",number);
+        napi_get_value_uint32(env, argv[PrintNapiUtils::FIRST_ARGV], &number);
+        PRINT_HILOGD("printjob : %{public}d", number);
         context->printCapacityId = number;
         PRINT_HILOGD("input over---->");
         return napi_ok;
@@ -371,7 +381,7 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env, napi_callback_info info
         napi_value resultPrintMargin;
         napi_create_object(env, result);
         napi_create_object(env, &resultPrintMargin);
-        napi_value arrPageSize,arrResolution;
+        napi_value arrPageSize, arrResolution;
         napi_status status = napi_create_array(env, &arrPageSize);
         status = napi_create_array(env, &arrResolution);
 
@@ -389,8 +399,7 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env, napi_callback_info info
         context->printerCapability.GetPageSize(pageSize);
         uint32_t printerCapabilityLength = pageSize.size();
 
-        for(uint32_t i = 0; i < printerCapabilityLength; i++)
-        {
+        for (uint32_t i = 0; i < printerCapabilityLength; i++) {
             napi_value resultPrinterPageSize;
             napi_create_object(env, &resultPrinterPageSize);
             PrintNapiUtils::SetUint32Property(env, resultPrinterPageSize, "id", pageSize[i].GetId());
@@ -405,17 +414,18 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env, napi_callback_info info
 
         uint32_t printerCapabilityresolutionLength = resolutionList.size();
 
-        for(uint32_t i = 0; i < printerCapabilityresolutionLength; i++)
-        {
+        for (uint32_t i = 0; i < printerCapabilityresolutionLength; i++) {
             napi_value resultPrinterResolution;
             napi_create_object(env, &resultPrinterResolution);
             PrintNapiUtils::SetUint32Property(env, resultPrinterResolution, "id", resolutionList[i].GetId());
-            PrintNapiUtils::SetUint32Property(env, resultPrinterResolution, "horizontalDpi", resolutionList[i].GetHorizontalDpi());
-            PrintNapiUtils::SetUint32Property(env, resultPrinterResolution, "verticalDpi", resolutionList[i].GetVerticalDpi());
+            PrintNapiUtils::SetUint32Property(
+                env, resultPrinterResolution, "horizontalDpi", resolutionList[i].GetHorizontalDpi());
+            PrintNapiUtils::SetUint32Property(
+                env, resultPrinterResolution, "verticalDpi", resolutionList[i].GetVerticalDpi());
             status = napi_set_element(env, arrResolution, i, resultPrinterResolution);
-        }  
-        
-        status = napi_set_named_property(env, *result, "minMargin", resultPrintMargin);     
+        }
+
+        status = napi_set_named_property(env, *result, "minMargin", resultPrintMargin);
         PRINT_HILOGD("output ---- status[%{public}d]", status);
         napi_set_named_property(env, *result, "pageSize", arrPageSize);
         napi_set_named_property(env, *result, "resolution", arrResolution);
@@ -423,7 +433,8 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env, napi_callback_info info
         return napi_ok;
     };
     auto exec = [context](AsyncCall::Context *ctx) {
-        context->result = PrintManagerClient::GetInstance()->QueryPrinterCapability(context->printCapacityId, context->printerCapability);//
+        context->result = PrintManagerClient::GetInstance()->QueryPrinterCapability(
+            context->printCapacityId, context->printerCapability); //
         if (context->result == true) {
             context->status = napi_ok;
         }
@@ -437,13 +448,13 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
     if (!PrintManagerClient::GetInstance()->CheckPermission()) {
-    PRINT_HILOGD("no permission to access print service");
-    return nullptr;
+        PRINT_HILOGD("no permission to access print service");
+        return nullptr;
     }
-    
+
     napi_value result = nullptr;
     size_t argc = PrintNapiUtils::MAX_ARGC;
-    napi_value argv[PrintNapiUtils::MAX_ARGC] = {nullptr};
+    napi_value argv[PrintNapiUtils::MAX_ARGC] = { nullptr };
     napi_value thisVal = nullptr;
     void *data = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
@@ -455,29 +466,28 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
     napi_valuetype valuetype;
     NAPI_CALL(env, napi_typeof(env, argv[PrintNapiUtils::FIRST_ARGV], &valuetype));
     NAPI_ASSERT(env, valuetype == napi_string, "type is not a string");
-    char event[PrintNapiUtils::MAX_LEN] = {0};
+    char event[PrintNapiUtils::MAX_LEN] = { 0 };
     size_t len = 0;
     napi_get_value_string_utf8(env, argv[PrintNapiUtils::FIRST_ARGV], event, PrintNapiUtils::MAX_LEN, &len);
     std::string type = event;
     PRINT_HILOGD("type : %{public}s", type.c_str());
 
-
     PrintTask *task;
     PRINT_HILOGD("napi_unwrap begin.");
     NAPI_CALL(env, napi_unwrap(env, thisVal, reinterpret_cast<void **>(&task)));
     PRINT_HILOGD("state judge begin.");
-    if(task->IsSupportPrinterStateType(type)){
-        PRINT_HILOGD("State type is Printer State. value is : %{public}s",type.c_str());
-    }else if(task->IsSupportJobStateType(type)){
-        PRINT_HILOGD("State type is Print Job State. value is : %{public}s",type.c_str());
-    }else{
+    if (task->IsSupportPrinterStateType(type)) {
+        PRINT_HILOGD("State type is Printer State. value is : %{public}s", type.c_str());
+    } else if (task->IsSupportJobStateType(type)) {
+        PRINT_HILOGD("State type is Print Job State. value is : %{public}s", type.c_str());
+    } else {
         PRINT_HILOGD("state error!");
         return result;
     }
     PRINT_HILOGD("state judge end.");
     napi_ref callbackRef = nullptr;
     napi_create_reference(env, argv[argc - 1], 1, &callbackRef);
-	
+
     // sptr<PrintNotifyInterface> listener = CreateNotify(env, type, callbackRef);
     // if (listener == nullptr) {
     //     PRINT_HILOGD("PrintPause create callback object fail");
@@ -491,10 +501,10 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter Off---->");
     if (!PrintManagerClient::GetInstance()->CheckPermission()) {
-    PRINT_HILOGD("no permission to access print service");
-    return nullptr;
+        PRINT_HILOGD("no permission to access print service");
+        return nullptr;
     }
-    
+
     auto context = std::make_shared<OperationContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == PrintNapiUtils::ONE_ARG, " should 1 parameter!", napi_invalid_arg);
@@ -540,15 +550,15 @@ sptr<PrintNotifyInterface> NapiInnerPrint::CreateNotify(napi_env env, const std:
     int32_t eventType = GetEventType(type);
     switch (eventType) {
         case NO_ARG_EVENT:
-            //listener = new PrintBaseNotify(env, type, callbackRef);
+            // listener = new PrintBaseNotify(env, type, callbackRef);
             break;
 
         case ONE_ARG_EVENT:
-            //listener = new PrintPrinterStateNotify(env, type, callbackRef);
+            // listener = new PrintPrinterStateNotify(env, type, callbackRef);
             break;
 
         case TWO_ARG_EVENT:
-            //listener = new PrintPrintJobNotify(env, type, callbackRef);
+            // listener = new PrintPrintJobNotify(env, type, callbackRef);
             break;
 
         default:
@@ -568,13 +578,13 @@ bool NapiInnerPrint::ParseJob(napi_env env, napi_value jobValue, PrintJob &print
     printJob.SetPrintId(PrintNapiUtils::GetUint32Property(env, jobValue, PARAM_JOB_PRINTERID));
     printJob.SetJobState(PrintNapiUtils::GetUint32Property(env, jobValue, PARAM_JOB_JOBSTATE));
     printJob.SetCopyNumber(PrintNapiUtils::GetUint32Property(env, jobValue, PARAM_JOB_COPYNUMBER));
-    //printJob.SetPageRange(PrintNapiUtils::GetUint32Property(env, jobValue, PARAM_JOB_PAGERANGE));
+    // printJob.SetPageRange(PrintNapiUtils::GetUint32Property(env, jobValue, PARAM_JOB_PAGERANGE));
 
     PRINT_HILOGD("printJob_value GetJobId value is %{public}d", printJob.GetJobId());
     PRINT_HILOGD("printJob_value GetPrinterId value is %{public}d", printJob.GetPrinterId());
     PRINT_HILOGD("printJob_value GetJobState value is  %{public}d", printJob.GetJobState());
     PRINT_HILOGD("printJob_value GetCopyNumber value is %{public}d", printJob.GetCopyNumber());
-    //PRINT_HILOGD("printJob_value GetPageRange value is  %{public}d", printJob.GetPageRange());
+    // PRINT_HILOGD("printJob_value GetPageRange value is  %{public}d", printJob.GetPageRange());
     return true;
 }
 
@@ -583,15 +593,14 @@ bool NapiInnerPrint::ParseJobParam(napi_env env, napi_value jobValue, PrintJob &
     napi_value param_one = PrintNapiUtils::GetNamedProperty(env, jobValue, PARAM_JOB_FILES);
     bool isFileArray = false;
     napi_is_array(env, param_one, &isFileArray);
-    if( !isFileArray ){
+    if (!isFileArray) {
         PRINT_HILOGD("PrinterJobFile type error!");
         return false;
     }
     std::vector<std::string> printfiles;
     uint32_t arrayReLength = 0;
     napi_get_array_length(env, param_one, &arrayReLength);
-    for(uint32_t i = 0; i < arrayReLength; i++)
-    {
+    for (uint32_t i = 0; i < arrayReLength; i++) {
         napi_value filesValue;
         napi_get_element(env, param_one, i, &filesValue);
         std::string files = PrintNapiUtils::GetStringFromValueUtf8(env, filesValue);
@@ -627,5 +636,3 @@ bool NapiInnerPrint::ParseJobParam(napi_env env, napi_value jobValue, PrintJob &
     return true;
 }
 } // namespace OHOS::Print
-
-

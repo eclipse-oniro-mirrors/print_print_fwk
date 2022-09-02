@@ -13,7 +13,7 @@
       "name": "print",
       "subsystem": "print",
       "syscap": [
-        "SystemCapability.Print.Print"
+        "SystemCapability.MiscServices.Download"
       ],
       "features": [
       ],

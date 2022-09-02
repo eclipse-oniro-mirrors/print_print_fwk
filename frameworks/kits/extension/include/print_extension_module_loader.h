@@ -29,7 +29,7 @@ public:
      * @param runtime The runtime.
      * @return The Extension instance.
      */
-    virtual Extension *Create(const std::unique_ptr<Runtime>& runtime) const override;
+    virtual Extension *Create(const std::unique_ptr<Runtime> &runtime) const override;
 };
-}
+} // namespace OHOS::AbilityRuntime
 #endif // PRINT_EXTENSION_MODULE_LOADER_H

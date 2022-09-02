@@ -18,19 +18,20 @@
 #include <ctime>
 #include <string>
 #include <sys/time.h>
-#include <unistd.h>
 #include <thread>
+#include <unistd.h>
+
+#include "ability_manager_client.h"
+#include "accesstoken_kit.h"
 #include "core_service_client.h"
 #include "ipc_skeleton.h"
-#include "accesstoken_kit.h"
 #include "iservice_registry.h"
-#include "system_ability.h"
-#include "system_ability_definition.h"
-#include "ability_manager_client.h"
-#include "print_service_manager.h"
-#include "printer_info.h"
 #include "print_common.h"
 #include "print_log.h"
+#include "print_service_manager.h"
+#include "printer_info.h"
+#include "system_ability.h"
+#include "system_ability_definition.h"
 
 namespace OHOS::Print {
 using namespace std;
@@ -52,8 +53,7 @@ std::shared_ptr<AppExecFwk::EventHandler> PrintServiceAbility::serviceHandler_;
 
 PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START), currentTaskId_(0)
-{
-}
+{}
 
 PrintServiceAbility::~PrintServiceAbility()
 {
@@ -134,7 +134,6 @@ int32_t PrintServiceAbility::GetTaskId()
 {
     std::lock_guard<std::mutex> autoLock(instanceLock_);
     return currentTaskId_++;
-
 }
 
 void PrintServiceAbility::OnStop()
@@ -164,7 +163,7 @@ int32_t PrintServiceAbility::StartPrint()
         std::this_thread::sleep_for(std::chrono::seconds(START_ABILITY_INTERVAL));
         PRINT_HILOGD("PrintServiceAbility::StartAbility %{public}d", retry);
     }
-    if (retry >  MAX_RETRY_TIMES) {
+    if (retry > MAX_RETRY_TIMES) {
         PRINT_HILOGE("PrintServiceAbility::StartAbility --> failed ");
         return -1;
     }
@@ -182,7 +181,7 @@ bool PrintServiceAbility::ConnectPrinter(uint32_t printerId)
     if (it != extCallbackMap_.end()) {
         return it->second->OnCallback(printerId);
     }
-    PRINT_HILOGW("ConnectPrinter Not Register Yet!!!");    
+    PRINT_HILOGW("ConnectPrinter Not Register Yet!!!");
     return false;
 }
 
@@ -194,11 +193,11 @@ bool PrintServiceAbility::DisconnectPrinter(uint32_t printerId)
     if (it != extCallbackMap_.end()) {
         return it->second->OnCallback(printerId);
     }
-    PRINT_HILOGW("DisconnectPrinter Not Register Yet!!!");    
+    PRINT_HILOGW("DisconnectPrinter Not Register Yet!!!");
     return false;
 }
 
-bool PrintServiceAbility::StartDiscoverPrinter(const std::vector<uint32_t>& extensionList)
+bool PrintServiceAbility::StartDiscoverPrinter(const std::vector<uint32_t> &extensionList)
 {
     ManualStart();
     PRINT_HILOGD("StartDiscoverPrinter started.");
@@ -206,7 +205,7 @@ bool PrintServiceAbility::StartDiscoverPrinter(const std::vector<uint32_t>& exte
     if (it != extCallbackMap_.end()) {
         return it->second->OnCallback();
     }
-    PRINT_HILOGW("StartDiscoverPrinter Not Register Yet!!!");    
+    PRINT_HILOGW("StartDiscoverPrinter Not Register Yet!!!");
     return false;
 }
 
@@ -234,7 +233,7 @@ bool PrintServiceAbility::QueryAllExtension(std::vector<PrinterExtensionInfo> &a
     return instance->QueryExtensionAbilityInfos(arrayExtensionInfo);
 }
 
-bool PrintServiceAbility::StartPrintJob(const PrintJob& jobinfo) 
+bool PrintServiceAbility::StartPrintJob(const PrintJob &jobinfo)
 {
     ManualStart();
     PRINT_HILOGD("StartPrintJob started.");
@@ -246,7 +245,7 @@ bool PrintServiceAbility::StartPrintJob(const PrintJob& jobinfo)
     return false;
 }
 
-bool PrintServiceAbility::CancelPrintJob(const PrintJob& jobinfo)
+bool PrintServiceAbility::CancelPrintJob(const PrintJob &jobinfo)
 {
     ManualStart();
     PRINT_HILOGD("CancelPrintJob started.");
@@ -258,7 +257,7 @@ bool PrintServiceAbility::CancelPrintJob(const PrintJob& jobinfo)
     return false;
 }
 
-bool PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo>& arrayPrintInfo)
+bool PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &arrayPrintInfo)
 {
     ManualStart();
     auto instance = PrintServiceManager::GetInstance();
@@ -270,7 +269,7 @@ bool PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo>& arrayPrint
     return instance->AddPrinters(arrayPrintInfo);
 }
 
-bool PrintServiceAbility::RemovePrinters(const std::vector<PrinterInfo>& arrayPrintInfo)
+bool PrintServiceAbility::RemovePrinters(const std::vector<PrinterInfo> &arrayPrintInfo)
 {
     ManualStart();
     auto instance = PrintServiceManager::GetInstance();
@@ -306,7 +305,7 @@ bool PrintServiceAbility::UpdatePrinterJobState(uint32_t jobId, uint32_t state)
     return instance->UpdatePrinterJobState(jobId, state);
 }
 
-bool PrintServiceAbility::RequestPreview(const PrintJob& jobinfo, std::string &previewResult)
+bool PrintServiceAbility::RequestPreview(const PrintJob &jobinfo, std::string &previewResult)
 {
     ManualStart();
     PRINT_HILOGD("RequestPreview started.");
@@ -364,7 +363,8 @@ bool PrintServiceAbility::UnregisterAllExtCallback()
     return true;
 }
 
-bool PrintServiceAbility::On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
+bool PrintServiceAbility::On(
+    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
 {
     std::string combineType = type + "-";
     PRINT_HILOGI("PrintServiceAbility::On started. type=%{public}s", combineType.c_str());
@@ -402,45 +402,45 @@ bool PrintServiceAbility::Off(const std::string &type)
 
 void PrintServiceAbility::DataWriteInfo(PrinterInfo info, MessageParcel &data)
 {
-/*
-    data.WriteString("PrinterInfo");
-    data.WriteUint32(info.GetPrintId());
-    data.WriteString(info.GetPrinterName());
-    data.WriteUint32(info.GetPrinterIcon());
-    data.WriteUint32(info.GetPrinterState());
-    data.WriteString(info.GetDescription());
-    info.Dump();
-    uint32_t pageSizeLength = info.GetCapability().GetPageSize().size();
-    uint32_t resolutionLength = info.GetCapability().GetResolution().size();
-    data.WriteUint32(pageSizeLength);
-    data.WriteUint32(resolutionLength);
-    data.WriteUint32(info.GetCapability().GetMinMargin().GetTop());
-    data.WriteUint32(info.GetCapability().GetMinMargin().GetBottom());
-    data.WriteUint32(info.GetCapability().GetMinMargin().GetLeft());
-    data.WriteUint32(info.GetCapability().GetMinMargin().GetRight()); 
-    info.GetCapability().GetMinMargin().Dump();
-    for(uint32_t i = 0; i < pageSizeLength; i++)
-    {
-        data.WriteUint32(info.GetCapability().GetPageSize()[i].GetId());
-        data.WriteString(info.GetCapability().GetPageSize()[i].GetName());
-        data.WriteUint32(info.GetCapability().GetPageSize()[i].GetWidth());
-        data.WriteUint32(info.GetCapability().GetPageSize()[i].GetHeight());
-        info.GetCapability().GetPageSize()[i].Dump();
-    }     
-    for(uint32_t i = 0; i < resolutionLength; i++)
-    {
-        data.WriteUint32(info.GetCapability().GetResolution()[i].GetId());
-        data.WriteUint32(info.GetCapability().GetResolution()[i].GetHorizontalDpi());
-        data.WriteUint32(info.GetCapability().GetResolution()[i].GetVerticalDpi());
-        info.GetCapability().GetResolution()[i].Dump();
-    }   
-    data.WriteUint32(info.GetCapability().GetColorMode());
-    data.WriteUint32(info.GetCapability().GetDuplexMode());
-    info.GetCapability().Dump();
-*/    
+    /*
+        data.WriteString("PrinterInfo");
+        data.WriteUint32(info.GetPrintId());
+        data.WriteString(info.GetPrinterName());
+        data.WriteUint32(info.GetPrinterIcon());
+        data.WriteUint32(info.GetPrinterState());
+        data.WriteString(info.GetDescription());
+        info.Dump();
+        uint32_t pageSizeLength = info.GetCapability().GetPageSize().size();
+        uint32_t resolutionLength = info.GetCapability().GetResolution().size();
+        data.WriteUint32(pageSizeLength);
+        data.WriteUint32(resolutionLength);
+        data.WriteUint32(info.GetCapability().GetMinMargin().GetTop());
+        data.WriteUint32(info.GetCapability().GetMinMargin().GetBottom());
+        data.WriteUint32(info.GetCapability().GetMinMargin().GetLeft());
+        data.WriteUint32(info.GetCapability().GetMinMargin().GetRight());
+        info.GetCapability().GetMinMargin().Dump();
+        for(uint32_t i = 0; i < pageSizeLength; i++)
+        {
+            data.WriteUint32(info.GetCapability().GetPageSize()[i].GetId());
+            data.WriteString(info.GetCapability().GetPageSize()[i].GetName());
+            data.WriteUint32(info.GetCapability().GetPageSize()[i].GetWidth());
+            data.WriteUint32(info.GetCapability().GetPageSize()[i].GetHeight());
+            info.GetCapability().GetPageSize()[i].Dump();
+        }
+        for(uint32_t i = 0; i < resolutionLength; i++)
+        {
+            data.WriteUint32(info.GetCapability().GetResolution()[i].GetId());
+            data.WriteUint32(info.GetCapability().GetResolution()[i].GetHorizontalDpi());
+            data.WriteUint32(info.GetCapability().GetResolution()[i].GetVerticalDpi());
+            info.GetCapability().GetResolution()[i].Dump();
+        }
+        data.WriteUint32(info.GetCapability().GetColorMode());
+        data.WriteUint32(info.GetCapability().GetDuplexMode());
+        info.GetCapability().Dump();
+    */
 }
 
-void PrintServiceAbility::NotifyPrintStateHandler(const std::string& type, uint32_t state, PrinterInfo info)
+void PrintServiceAbility::NotifyPrintStateHandler(const std::string &type, uint32_t state, PrinterInfo info)
 {
     std::string combineType = type;
     PRINT_HILOGI("PrintServiceAbility::NotifyHandler combineType %{public}s [%{public}d.", combineType.c_str(), state);
@@ -491,58 +491,58 @@ void PrintServiceAbility::NotifyPrintStateHandler(const std::string& type, uint3
 
 void PrintServiceAbility::DataWriteJob(PrintJob job, MessageParcel &data)
 {
-/*
-    data.WriteString("PrintJob");
-    uint32_t fileLength = job.GetFiles().size();
-    data.WriteUint32(fileLength);
-    for(uint32_t i = 0; i < fileLength; i++)
-    {
-        data.WriteString(job.GetFiles()[i]);
+    /*
+        data.WriteString("PrintJob");
+        uint32_t fileLength = job.GetFiles().size();
+        data.WriteUint32(fileLength);
+        for(uint32_t i = 0; i < fileLength; i++)
+        {
+            data.WriteString(job.GetFiles()[i]);
 
-    }
-    data.WriteUint32(job.GetJobId());
-    data.WriteUint32(job.GetPrinterId());
-    data.WriteUint32(job.GetJobState());
-    data.WriteUint32(job.GetCopyNumber());
+        }
+        data.WriteUint32(job.GetJobId());
+        data.WriteUint32(job.GetPrinterId());
+        data.WriteUint32(job.GetJobState());
+        data.WriteUint32(job.GetCopyNumber());
 
-    data.WriteUint32(job.GetPageRange().GetStartPage());
-    data.WriteUint32(job.GetPageRange().GetEndPage());
-    uint32_t pageLength = job.GetPageRange().GetPages().size();
-    data.WriteUint32(pageLength);
-    for(uint32_t i = 0; i < pageLength; i++)
-    {
-         data.WriteUint32(job.GetPageRange().GetPages()[i]);
-    }
+        data.WriteUint32(job.GetPageRange().GetStartPage());
+        data.WriteUint32(job.GetPageRange().GetEndPage());
+        uint32_t pageLength = job.GetPageRange().GetPages().size();
+        data.WriteUint32(pageLength);
+        for(uint32_t i = 0; i < pageLength; i++)
+        {
+             data.WriteUint32(job.GetPageRange().GetPages()[i]);
+        }
 
-    data.WriteUint32(job.GetIsSequential());
+        data.WriteUint32(job.GetIsSequential());
 
-    data.WriteUint32(job.GetPageSize().GetId());
-    data.WriteString(job.GetPageSize().GetName());
-    data.WriteUint32(job.GetPageSize().GetWidth());
-    data.WriteUint32(job.GetPageSize().GetHeight());
+        data.WriteUint32(job.GetPageSize().GetId());
+        data.WriteString(job.GetPageSize().GetName());
+        data.WriteUint32(job.GetPageSize().GetWidth());
+        data.WriteUint32(job.GetPageSize().GetHeight());
 
-    data.WriteUint32(job.GetIsLandscape());
-    data.WriteUint32(job.GetColorMode());
-    data.WriteUint32(job.GetDuplexMode());
+        data.WriteUint32(job.GetIsLandscape());
+        data.WriteUint32(job.GetColorMode());
+        data.WriteUint32(job.GetDuplexMode());
 
-    data.WriteUint32(job.GetMargin().GetTop());
-    data.WriteUint32(job.GetMargin().GetBottom());
-    data.WriteUint32(job.GetMargin().GetLeft());
-    data.WriteUint32(job.GetMargin().GetRight());
+        data.WriteUint32(job.GetMargin().GetTop());
+        data.WriteUint32(job.GetMargin().GetBottom());
+        data.WriteUint32(job.GetMargin().GetLeft());
+        data.WriteUint32(job.GetMargin().GetRight());
 
-    data.WriteString(job.GetPreview().GetResult());
-    data.WriteUint32(job.GetPreview().GetPreviewRange().GetStartPage());
-    data.WriteUint32(job.GetPreview().GetPreviewRange().GetEndPage());
-    uint32_t previewPageLength = job.GetPreview().GetPreviewRange().GetPages().size();
-    data.WriteUint32(previewPageLength);
-    for(uint32_t i = 0; i < previewPageLength; i++)
-    {
-         data.WriteUint32(job.GetPreview().GetPreviewRange().GetPages()[i]);
-    }
-*/    
+        data.WriteString(job.GetPreview().GetResult());
+        data.WriteUint32(job.GetPreview().GetPreviewRange().GetStartPage());
+        data.WriteUint32(job.GetPreview().GetPreviewRange().GetEndPage());
+        uint32_t previewPageLength = job.GetPreview().GetPreviewRange().GetPages().size();
+        data.WriteUint32(previewPageLength);
+        for(uint32_t i = 0; i < previewPageLength; i++)
+        {
+             data.WriteUint32(job.GetPreview().GetPreviewRange().GetPages()[i]);
+        }
+    */
 }
 
-void PrintServiceAbility::NotifyJobStateHandler(const std::string& type, uint32_t state, PrintJob job)
+void PrintServiceAbility::NotifyJobStateHandler(const std::string &type, uint32_t state, PrintJob job)
 {
     std::string combineType = type;
     PRINT_HILOGI("PrintServiceAbility::NotifyHandler combineType %{public}s [%{public}d.", combineType.c_str(), state);
@@ -590,4 +590,4 @@ void PrintServiceAbility::NotifyJobStateHandler(const std::string& type, uint32_
         }
     }*/
 }
-} // namespace OHOS::Request::Print
+} // namespace OHOS::Print

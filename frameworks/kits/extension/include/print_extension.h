@@ -41,10 +41,8 @@ public:
      * @return The created context.
      */
     virtual std::shared_ptr<PrintExtensionContext> CreateAndInitContext(
-        const std::shared_ptr<AbilityLocalRecord> &record,
-        const std::shared_ptr<OHOSApplication> &application,
-        std::shared_ptr<AbilityHandler> &handler,
-        const sptr<IRemoteObject> &token) override;
+        const std::shared_ptr<AbilityLocalRecord> &record, const std::shared_ptr<OHOSApplication> &application,
+        std::shared_ptr<AbilityHandler> &handler, const sptr<IRemoteObject> &token) override;
 
     /**
      * @brief Init the extension.
@@ -55,8 +53,7 @@ public:
      * @param token the remote token.
      */
     virtual void Init(const std::shared_ptr<AbilityLocalRecord> &record,
-        const std::shared_ptr<OHOSApplication> &application,
-        std::shared_ptr<AbilityHandler> &handler,
+        const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
         const sptr<IRemoteObject> &token) override;
 
     /**
@@ -65,8 +62,8 @@ public:
      * @param runtime The runtime.
      * @return The PrintExtension instance.
      */
-    static PrintExtension* Create(const std::unique_ptr<Runtime>& runtime);
+    static PrintExtension *Create(const std::unique_ptr<Runtime> &runtime);
 };
-}  // namespace AbilityRuntime
-}  // namespace OHOS
-#endif  // PRINT_EXTENSION_H
+} // namespace AbilityRuntime
+} // namespace OHOS
+#endif // PRINT_EXTENSION_H

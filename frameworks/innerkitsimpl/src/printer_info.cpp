@@ -14,38 +14,38 @@
  */
 
 #include "printer_info.h"
-#include "print_log.h"
+
 #include "print_constant.h"
+#include "print_log.h"
+
 
 namespace OHOS::Print {
-PrinterInfo::PrinterInfo() : printerId_(0), printerName_(""), printerIcon_(0), printerState_(PRINTER_UNKNOWN), description_("")
-{
-}
+PrinterInfo::PrinterInfo()
+    : printerId_(0), printerName_(""), printerIcon_(0), printerState_(PRINTER_UNKNOWN), description_("")
+{}
 
-PrinterInfo::PrinterInfo(const PrinterInfo& right)
+PrinterInfo::PrinterInfo(const PrinterInfo &right)
 {
     printerId_ = right.printerId_;
     printerName_ = right.printerName_;
     printerState_ = right.printerState_;
     description_ = right.description_;
-    capability_ =  right.capability_;
+    capability_ = right.capability_;
 }
 
-PrinterInfo& PrinterInfo::operator=(PrinterInfo &right)
+PrinterInfo &PrinterInfo::operator=(PrinterInfo &right)
 {
-    if(this != &right) {
+    if (this != &right) {
         printerId_ = right.printerId_;
         printerName_ = right.printerName_;
         printerState_ = right.printerState_;
         description_ = right.description_;
-        capability_ =  right.capability_;
+        capability_ = right.capability_;
     }
     return *this;
 }
 
-PrinterInfo::~PrinterInfo()
-{
-}
+PrinterInfo::~PrinterInfo() {}
 
 void PrinterInfo::SetPrinterId(uint32_t printerId)
 {
@@ -77,7 +77,7 @@ uint32_t PrinterInfo::GetPrintId() const
     return printerId_;
 }
 
-const std::string& PrinterInfo::GetPrinterName() const
+const std::string &PrinterInfo::GetPrinterName() const
 {
     return printerName_;
 }
@@ -92,12 +92,12 @@ uint32_t PrinterInfo::GetPrinterState() const
     return printerState_;
 }
 
-const std::string& PrinterInfo::GetDescription() const
+const std::string &PrinterInfo::GetDescription() const
 {
     return description_;
 }
 
-void PrinterInfo::GetCapability(PrinterCapability& cap) const
+void PrinterInfo::GetCapability(PrinterCapability &cap) const
 {
     cap = capability_;
 }

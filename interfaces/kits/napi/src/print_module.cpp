@@ -15,11 +15,11 @@
 
 //#include "napi/native_api.h"
 //#include "napi/native_node_api.h"
-#include "napi_print_task.h"
 #include "napi_inner_print.h"
 #include "napi_print_ext.h"
-#include "print_log.h"
+#include "napi_print_task.h"
 #include "print_constant.h"
+#include "print_log.h"
 
 using namespace OHOS::Print;
 
@@ -40,7 +40,10 @@ static constexpr const char *FUNCTION_REMOVE_PRINTER = "removePrinters";
 static constexpr const char *FUNCTION_UPDATE_PRINTER_STATE = "updatePrinterState";
 static constexpr const char *FUNCTION_UPDATE_JOB_STATE = "updatePrintJobState";
 
-#define DECLARE_NAPI_METHOD(name, func) { name, 0, func, 0, 0, 0, napi_default, 0 }
+#define DECLARE_NAPI_METHOD(name, func)         \
+    {                                           \
+        name, 0, func, 0, 0, 0, napi_default, 0 \
+    }
 
 static napi_value Init(napi_env env, napi_value exports)
 {
@@ -49,8 +52,8 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
         DECLARE_NAPI_METHOD(FUNCTION_START_DISCOVERY, NapiInnerPrint::StartDiscovery),
         DECLARE_NAPI_METHOD(FUNCTION_STOP_DISCOVERY, NapiInnerPrint::StopDiscovery),
-        DECLARE_NAPI_METHOD(FUNCTION_CONNECT_PRINT, NapiInnerPrint::ConnectPrint),             
-        DECLARE_NAPI_METHOD(FUNCTION_DISCONNECT_PRINT, NapiInnerPrint::DisconnectPrint),     
+        DECLARE_NAPI_METHOD(FUNCTION_CONNECT_PRINT, NapiInnerPrint::ConnectPrint),
+        DECLARE_NAPI_METHOD(FUNCTION_DISCONNECT_PRINT, NapiInnerPrint::DisconnectPrint),
         DECLARE_NAPI_METHOD(FUNCTION_START_PRINT, NapiInnerPrint::StartPrint),
         DECLARE_NAPI_METHOD(FUNCTION_CANCEL_PRINT, NapiInnerPrint::CancelPrint),
         DECLARE_NAPI_METHOD(FUNCTION_REQUEST_PREVIEW, NapiInnerPrint::RequestPreview),
@@ -70,15 +73,13 @@ static napi_value Init(napi_env env, napi_value exports)
 
 static __attribute__((constructor)) void RegisterModule()
 {
-    static napi_module module = {
-        .nm_version = 1,
+    static napi_module module = { .nm_version = 1,
         .nm_flags = 0,
         .nm_filename = nullptr,
         .nm_register_func = Init,
         .nm_modname = "print",
         .nm_priv = ((void *)0),
-        .reserved = { 0 }
-    };
+        .reserved = { 0 } };
     napi_module_register(&module);
     PRINT_HILOGD("module register print");
 }

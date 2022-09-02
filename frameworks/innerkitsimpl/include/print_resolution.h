@@ -21,11 +21,11 @@
 #include <string>
 
 namespace OHOS::Print {
-class PrintResolution  {
+class PrintResolution {
 public:
     explicit PrintResolution();
-    PrintResolution(const PrintResolution& right);
-    PrintResolution &operator=(const PrintResolution& right);
+    PrintResolution(const PrintResolution &right);
+    PrintResolution &operator=(const PrintResolution &right);
     ~PrintResolution();
 
     void SetId(uint32_t id);
@@ -39,8 +39,9 @@ public:
     [[nodiscard]] uint32_t GetHorizontalDpi() const;
 
     [[nodiscard]] uint32_t GetVerticalDpi() const;
-    
-    void Dump();    
+
+    void Dump();
+
 private:
     uint32_t id_;
     uint32_t horizontalDpi_;

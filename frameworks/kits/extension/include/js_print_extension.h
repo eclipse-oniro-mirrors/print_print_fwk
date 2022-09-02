@@ -16,8 +16,8 @@
 #ifndef JS_PRINT_EXTENSION_H
 #define JS_PRINT_EXTENSION_H
 
-#include "print_extension.h"
 #include "napi/native_api.h"
+#include "print_extension.h"
 #include "print_job.h"
 
 class NativeReference;
@@ -31,10 +31,9 @@ class JsRuntime;
 /**
  * @brief Basic Print components.
  */
-class JsPrintExtension : public PrintExtension,
-                           public std::enable_shared_from_this<JsPrintExtension> {
+class JsPrintExtension : public PrintExtension, public std::enable_shared_from_this<JsPrintExtension> {
 public:
-    JsPrintExtension(JsRuntime& jsRuntime);
+    JsPrintExtension(JsRuntime &jsRuntime);
     virtual ~JsPrintExtension() override;
 
     /**
@@ -43,7 +42,7 @@ public:
      * @param runtime The runtime.
      * @return The JsPrintExtension instance.
      */
-    static JsPrintExtension* Create(const std::unique_ptr<Runtime>& runtime);
+    static JsPrintExtension *Create(const std::unique_ptr<Runtime> &runtime);
 
     /**
      * @brief Init the extension.
@@ -55,8 +54,7 @@ public:
      */
     virtual void Init(const std::shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
         const std::shared_ptr<AppExecFwk::OHOSApplication> &application,
-        std::shared_ptr<AppExecFwk::AbilityHandler> &handler,
-        const sptr<IRemoteObject> &token) override;
+        std::shared_ptr<AppExecFwk::AbilityHandler> &handler, const sptr<IRemoteObject> &token) override;
 
     /**
      * @brief Called when this extension is started. You must override this function if you want to perform some
@@ -106,16 +104,17 @@ public:
      * The extension in the <b>STATE_STOP</b> is being destroyed.
      * You can override this function to implement your own processing logic.
      */
-    virtual void OnStop() override;    
+    virtual void OnStop() override;
+
 private:
-    NativeValue* CallObjectMethod(const char* name, NativeValue * const *argv = nullptr, size_t argc = 0);
+    NativeValue *CallObjectMethod(const char *name, NativeValue *const *argv = nullptr, size_t argc = 0);
 
     void GetSrcPath(std::string &srcPath);
 
-    JsRuntime& jsRuntime_;
+    JsRuntime &jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
     static JsPrintExtension *jsExtension_;
 };
-}  // namespace AbilityRuntime
-}  // namespace OHOS
-#endif  // JS_PRINT_EXTENSION_H
+} // namespace AbilityRuntime
+} // namespace OHOS
+#endif // JS_PRINT_EXTENSION_H

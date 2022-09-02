@@ -14,14 +14,16 @@
  */
 
 #include "print_service_stub.h"
+
 #include <vector>
+
 #include "ipc_skeleton.h"
 #include "message_parcel.h"
-#include "print_extension_info.h"
 #include "print_common.h"
+#include "print_extension_info.h"
 #include "print_job.h"
-#include "print_service_interface.h"
 #include "print_log.h"
+#include "print_service_interface.h"
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -112,11 +114,11 @@ bool PrintServiceStub::OnStartDiscoverPrinter(MessageParcel &data, MessageParcel
     std::vector<uint32_t> extensionList;
     uint32_t extensionListLength = data.ReadUint32();
 
-    for(uint32_t i = 0; i < extensionListLength; i++) {
+    for (uint32_t i = 0; i < extensionListLength; i++) {
         extensionList.push_back(data.ReadUint32());
         PRINT_HILOGD("OnStartDiscoverPrinter = %{public}d", extensionList[i]);
     }
-    
+
     bool result = StartDiscoverPrinter(extensionList);
     if (!reply.WriteBool(result)) {
         PRINT_HILOGD("WriteBool failed");
@@ -147,7 +149,7 @@ bool PrintServiceStub::OnQueryAllExtension(MessageParcel &data, MessageParcel &r
         uint32_t printerInfoLegth = printerInfo.size();
         reply.WriteUint32(printerInfoLegth);
 
-        for(uint32_t i = 0; i < printerInfoLegth; i++) {
+        for (uint32_t i = 0; i < printerInfoLegth; i++) {
             PRINT_HILOGI("PrintServiceProxy, ExtensionId = %{public}d", printerInfo[i].GetExtensionId());
             PRINT_HILOGI("PrintServiceProxy, VendorId = %{public}d", printerInfo[i].GetVendorId());
             PRINT_HILOGI("PrintServiceProxy, VendorName = %{public}s", printerInfo[i].GetVendorName().c_str());
@@ -158,7 +160,7 @@ bool PrintServiceStub::OnQueryAllExtension(MessageParcel &data, MessageParcel &r
             reply.WriteUint32(printerInfo[i].GetVendorId());
             reply.WriteString(printerInfo[i].GetVendorName());
             reply.WriteUint32(printerInfo[i].GetVendorIcon());
-            reply.WriteString(printerInfo[i].GetVersion());  
+            reply.WriteString(printerInfo[i].GetVersion());
         }
     }
     if (!reply.WriteBool(result)) {
@@ -208,7 +210,7 @@ bool PrintServiceStub::OnAddPrinters(MessageParcel &data, MessageParcel &reply)
     uint32_t arrayPrintInfoLength = data.ReadUint32();
     PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfoLength = %{public}d", arrayPrintInfoLength);
 
-    for(uint32_t i = 0; i < arrayPrintInfoLength; i++) {
+    for (uint32_t i = 0; i < arrayPrintInfoLength; i++) {
         PrinterInfo printerInfo;
         MakePrinterInfo(data, printerInfo);
         arrayPrintInfo.push_back(printerInfo);
@@ -230,7 +232,7 @@ bool PrintServiceStub::OnRemovePrinters(MessageParcel &data, MessageParcel &repl
     uint32_t arrayPrintInfoLength = data.ReadUint32();
     PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfoLength = %{public}d", arrayPrintInfoLength);
 
-    for(uint32_t i = 0; i < arrayPrintInfoLength; i++) {
+    for (uint32_t i = 0; i < arrayPrintInfoLength; i++) {
         PrinterInfo printerInfo;
         MakePrinterInfo(data, printerInfo);
         arrayPrintInfo.push_back(printerInfo);
@@ -280,7 +282,7 @@ bool PrintServiceStub::OnUpdatePrinterJobState(MessageParcel &data, MessageParce
 bool PrintServiceStub::OnRequestPreview(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGD("PrintServiceStub::OnRequestPreview in");
-	PrintJob jobinfo;
+    PrintJob jobinfo;
     MakePrintJob(data, jobinfo);
     jobinfo.Dump();
 
@@ -319,14 +321,14 @@ bool PrintServiceStub::OnQueryPrinterCapability(MessageParcel &data, MessageParc
     reply.WriteUint32(minMargin.GetLeft());
     reply.WriteUint32(minMargin.GetRight());
 
-    for(uint32_t i = 0; i < arraypageSizeLength; i++) {
+    for (uint32_t i = 0; i < arraypageSizeLength; i++) {
         reply.WriteUint32(pageSizeList[i].GetId());
         reply.WriteString(pageSizeList[i].GetName());
         reply.WriteUint32(pageSizeList[i].GetWidth());
         reply.WriteUint32(pageSizeList[i].GetHeight());
     }
-     
-    for(uint32_t i = 0; i < resolutionLength; i++) {
+
+    for (uint32_t i = 0; i < resolutionLength; i++) {
         reply.WriteUint32(resolutionList[i].GetId());
         reply.WriteUint32(resolutionList[i].GetHorizontalDpi());
         reply.WriteUint32(resolutionList[i].GetVerticalDpi());
@@ -338,7 +340,7 @@ bool PrintServiceStub::OnQueryPrinterCapability(MessageParcel &data, MessageParc
         PRINT_HILOGD("WriteBool failed");
         return false;
     }
-    PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapability out");    
+    PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapability out");
     return true;
 }
 
@@ -450,15 +452,14 @@ bool PrintServiceStub::OnUnregisterAllExtCallback(MessageParcel &data, MessagePa
     }
     PRINT_HILOGD("PrintServiceStub::OnUnregisterAllExtCallback out");
     return true;
-
 }
 
-void PrintServiceStub::MakePrintJob(MessageParcel &data, PrintJob& printJob)
+void PrintServiceStub::MakePrintJob(MessageParcel &data, PrintJob &printJob)
 {
     uint32_t fileLength = data.ReadUint32();
     std::vector<std::string> files;
     uint32_t index = 0;
-    for(index = 0; index < fileLength; index++) {
+    for (index = 0; index < fileLength; index++) {
         files.push_back(data.ReadString());
     }
     printJob.SetFiles(files);
@@ -473,13 +474,13 @@ void PrintServiceStub::MakePrintJob(MessageParcel &data, PrintJob& printJob)
     uint32_t pageLength = data.ReadUint32();
     if (pageLength > 0) {
         std::vector<uint32_t> rangePages;
-        for(index = 0; index < pageLength; index++) {
+        for (index = 0; index < pageLength; index++) {
             rangePages.push_back(data.ReadUint32());
         }
         range.SetPages(rangePages);
     }
     printJob.SetPageRange(range);
-    
+
     printJob.SetIsSequential(data.ReadUint32());
 
     PrintPageSize pageSize;
@@ -501,24 +502,24 @@ void PrintServiceStub::MakePrintJob(MessageParcel &data, PrintJob& printJob)
     printJob.SetMargin(minMargin);
 
     PreviewAttribute previewAttr;
-    
+
     previewAttr.SetResult(data.ReadString());
     range.Reset();
     range.SetStartPage(data.ReadUint32());
     range.SetEndPage(data.ReadUint32());
     uint32_t previewPageLength = data.ReadUint32();
-    if (previewPageLength  > 0) {
+    if (previewPageLength > 0) {
         std::vector<uint32_t> previewRangePages;
-        for(index = 0; index < previewPageLength; index++) {
+        for (index = 0; index < previewPageLength; index++) {
             previewRangePages.push_back(data.ReadUint32());
         }
-        range.SetPages(previewRangePages);        
+        range.SetPages(previewRangePages);
     }
     previewAttr.SetPreviewRange(range);
     printJob.SetPreview(previewAttr);
 }
 
-void PrintServiceStub::MakePrinterInfo(MessageParcel &data, PrinterInfo& printerInfo)
+void PrintServiceStub::MakePrinterInfo(MessageParcel &data, PrinterInfo &printerInfo)
 {
     printerInfo.SetPrinterId(data.ReadUint32());
     printerInfo.SetPrinterName(data.ReadString());
@@ -531,7 +532,7 @@ void PrintServiceStub::MakePrinterInfo(MessageParcel &data, PrinterInfo& printer
     PRINT_HILOGI("OnAddPrinters resolutionLength = %{public}d", resolutionLength);
     PrinterCapability cap;
     PrintMargin minMargin;
-    
+
     minMargin.SetTop(data.ReadUint32());
     minMargin.SetBottom(data.ReadUint32());
     minMargin.SetLeft(data.ReadUint32());
@@ -540,7 +541,7 @@ void PrintServiceStub::MakePrinterInfo(MessageParcel &data, PrinterInfo& printer
 
     if (pageSizeLength > 0) {
         std::vector<PrintPageSize> pageSizeList;
-        for(uint32_t i = 0; i < pageSizeLength; i++) {   
+        for (uint32_t i = 0; i < pageSizeLength; i++) {
             PrintPageSize pageSize;
             pageSize.SetId(data.ReadUint32());
             pageSize.SetName(data.ReadString());
@@ -553,7 +554,7 @@ void PrintServiceStub::MakePrinterInfo(MessageParcel &data, PrinterInfo& printer
 
     if (resolutionLength > 0) {
         std::vector<PrintResolution> resolutionList;
-        for(uint32_t i = 0; i < resolutionLength; i++) {
+        for (uint32_t i = 0; i < resolutionLength; i++) {
             PrintResolution res;
             res.SetId(data.ReadUint32());
             res.SetHorizontalDpi(data.ReadUint32());

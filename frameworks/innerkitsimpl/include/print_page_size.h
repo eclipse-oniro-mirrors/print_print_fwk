@@ -21,11 +21,11 @@
 #include <string>
 
 namespace OHOS::Print {
-class PrintPageSize  {
+class PrintPageSize {
 public:
     explicit PrintPageSize();
-    PrintPageSize(const PrintPageSize& right);
-    PrintPageSize &operator=(const PrintPageSize& right);
+    PrintPageSize(const PrintPageSize &right);
+    PrintPageSize &operator=(const PrintPageSize &right);
     ~PrintPageSize();
 
     void SetId(uint32_t id);
@@ -43,8 +43,9 @@ public:
     [[nodiscard]] uint32_t GetWidth() const;
 
     [[nodiscard]] uint32_t GetHeight() const;
-    
+
     void Dump();
+
 private:
     uint32_t id_;
     std::string name_;

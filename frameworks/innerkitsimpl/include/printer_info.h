@@ -16,9 +16,10 @@
 #ifndef PRINT_INFO_H
 #define PRINT_INFO_H
 
-#include <string>
-#include <stdint.h>
 #include <iosfwd>
+#include <stdint.h>
+#include <string>
+
 #include "print_constant.h"
 #include "printer_capability.h"
 
@@ -26,10 +27,10 @@ namespace OHOS::Print {
 class PrinterInfo final {
 public:
     explicit PrinterInfo();
-    PrinterInfo(const PrinterInfo& right);
+    PrinterInfo(const PrinterInfo &right);
     PrinterInfo &operator=(PrinterInfo &PrinterInfo);
     ~PrinterInfo();
-    
+
     void SetPrinterId(uint32_t printerId);
 
     void SetPrinterName(std::string printerName);
@@ -44,29 +45,29 @@ public:
 
     [[nodiscard]] uint32_t GetPrintId() const;
 
-    [[nodiscard]] const std::string& GetPrinterName() const;
+    [[nodiscard]] const std::string &GetPrinterName() const;
 
     [[nodiscard]] uint32_t GetPrinterIcon() const;
 
     [[nodiscard]] uint32_t GetPrinterState() const;
 
-    [[nodiscard]] const std::string& GetDescription() const;
+    [[nodiscard]] const std::string &GetDescription() const;
 
-    void GetCapability(PrinterCapability& cap) const;
+    void GetCapability(PrinterCapability &cap) const;
 
     void Dump();
 
 private:
     uint32_t printerId_;
-    
+
     std::string printerName_;
-    
+
     uint32_t printerIcon_;
-    
+
     uint32_t printerState_;
 
     std::string description_;
-    
+
     PrinterCapability capability_;
 };
 } // namespace OHOS::Print

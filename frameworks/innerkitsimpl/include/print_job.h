@@ -18,20 +18,21 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "print_range.h"
-#include "print_page_size.h"
-#include "print_margin.h"
-#include "preview_attribute.h"
 
-namespace OHOS::Print{
+#include "preview_attribute.h"
+#include "print_margin.h"
+#include "print_page_size.h"
+#include "print_range.h"
+
+namespace OHOS::Print {
 class PrintJob {
 public:
     explicit PrintJob();
-    PrintJob(const PrintJob& right);
-    PrintJob& operator=(PrintJob& right);
+    PrintJob(const PrintJob &right);
+    PrintJob &operator=(PrintJob &right);
     ~PrintJob();
-    
-    void SetFiles(const std::vector<std::string>& files);
+
+    void SetFiles(const std::vector<std::string> &files);
 
     void SetJobId(uint32_t jobId);
 
@@ -57,7 +58,7 @@ public:
 
     void SetPreview(PreviewAttribute preview_);
 
-    void GetFiles(std::vector<std::string>& fileList) const;
+    void GetFiles(std::vector<std::string> &fileList) const;
 
     [[nodiscard]] uint32_t GetJobId() const;
 
@@ -67,11 +68,11 @@ public:
 
     [[nodiscard]] uint32_t GetCopyNumber() const;
 
-    void GetPageRange(PrintRange& range) const;
+    void GetPageRange(PrintRange &range) const;
 
     [[nodiscard]] bool GetIsSequential() const;
 
-    void GetPageSize(PrintPageSize& printPageSize) const;
+    void GetPageSize(PrintPageSize &printPageSize) const;
 
     [[nodiscard]] bool GetIsLandscape() const;
 
@@ -79,11 +80,12 @@ public:
 
     [[nodiscard]] uint32_t GetDuplexMode() const;
 
-    void GetMargin(PrintMargin& printMargin) const;
+    void GetMargin(PrintMargin &printMargin) const;
 
-    void GetPreview(PreviewAttribute& previewAttr) const;
+    void GetPreview(PreviewAttribute &previewAttr) const;
 
     void Dump();
+
 private:
     std::vector<std::string> files_;
     uint32_t jobId_;
@@ -98,27 +100,27 @@ private:
     int32_t duplexMode_;
     PrintMargin margin_;
     PreviewAttribute preview_;
-/*
-    enum PrintJobState {
-        PRINT_JOB_CREATED = 1,
-        PRINT_JOB_QUEUED = 2,
-        PRINT_JOB_PRINTING = 3,
-        PRINT_JOB_BLOCKED = 4,
-        PRINT_JOB_SUCCESS = 5,
-        PRINT_JOB_FAILED = 6,
-        PRINT_JOB_cancelled = 7,
-    };
+    /*
+        enum PrintJobState {
+            PRINT_JOB_CREATED = 1,
+            PRINT_JOB_QUEUED = 2,
+            PRINT_JOB_PRINTING = 3,
+            PRINT_JOB_BLOCKED = 4,
+            PRINT_JOB_SUCCESS = 5,
+            PRINT_JOB_FAILED = 6,
+            PRINT_JOB_cancelled = 7,
+        };
 
-    enum PrintState{
-        PRINT_CREATED = 1,
-        PRINT_QUEUED = 2,
-        PRINT_PRINTING = 3,
-        PRINT_BLOCKED = 4,
-        PRINT_SUCCESS = 5,
-        PRINT_FAILED = 6,
-        PRINT_cancelled = 7,
-    };
-*/    
+        enum PrintState{
+            PRINT_CREATED = 1,
+            PRINT_QUEUED = 2,
+            PRINT_PRINTING = 3,
+            PRINT_BLOCKED = 4,
+            PRINT_SUCCESS = 5,
+            PRINT_FAILED = 6,
+            PRINT_cancelled = 7,
+        };
+    */
 };
-}// namespace OHOS::Request::Print
+} // namespace OHOS::Print
 #endif /* PRINT_PRINT_JOB_H */

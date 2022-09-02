@@ -17,6 +17,7 @@
 #define PRINT_NOTIFY_STUB_H
 
 #include <memory>
+
 #include "iremote_stub.h"
 #include "print_notify_interface.h"
 
@@ -24,9 +25,7 @@ namespace OHOS::Print {
 class PrintNotifyStub : public IRemoteStub<PrintNotifyInterface> {
 public:
     PrintNotifyStub() = default;
-    virtual ~PrintNotifyStub()
-    {
-    }
+    virtual ~PrintNotifyStub() {}
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 };
 } // namespace OHOS::Print

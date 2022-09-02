@@ -14,6 +14,7 @@
  */
 
 #include "print_extension_module_loader.h"
+
 #include "print_extension.h"
 #include "print_log.h"
 
@@ -21,13 +22,13 @@ namespace OHOS::AbilityRuntime {
 PrintExtensionModuleLoader::PrintExtensionModuleLoader() = default;
 PrintExtensionModuleLoader::~PrintExtensionModuleLoader() = default;
 
-Extension *PrintExtensionModuleLoader::Create(const std::unique_ptr<Runtime>& runtime) const
+Extension *PrintExtensionModuleLoader::Create(const std::unique_ptr<Runtime> &runtime) const
 {
     PRINT_HILOGD("jws PrintExtension::Create runtime");
     return PrintExtension::Create(runtime);
 }
 
-extern "C" __attribute__((visibility("default"))) void* OHOS_EXTENSION_GetExtensionModule()
+extern "C" __attribute__((visibility("default"))) void *OHOS_EXTENSION_GetExtensionModule()
 {
     return &PrintExtensionModuleLoader::GetInstance();
 }

@@ -13,13 +13,12 @@
  * limitations under the License.
  */
 #include "print_extcb_proxy.h"
-#include "print_log.h"
+
 #include "message_parcel.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
-PrintExtcbProxy::PrintExtcbProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<PrintExtcbInterface>(impl)
-{
-}
+PrintExtcbProxy::PrintExtcbProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<PrintExtcbInterface>(impl) {}
 
 bool PrintExtcbProxy::OnCallback()
 {

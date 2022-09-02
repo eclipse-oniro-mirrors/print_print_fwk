@@ -13,23 +13,22 @@
  * limitations under the License.
  */
 #include "print_service_proxy.h"
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+
 #include <fcntl.h>
-#include "printer_info.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "iremote_broker.h"
-#include "print_log.h"
-#include "print_job.h"
 #include "print_common.h"
+#include "print_job.h"
+#include "print_log.h"
+#include "printer_info.h"
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
 
-PrintServiceProxy::PrintServiceProxy(const sptr<IRemoteObject> &object)
-    : IRemoteProxy<PrintServiceInterface>(object)
-{
-}
+PrintServiceProxy::PrintServiceProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<PrintServiceInterface>(object) {}
 
 int32_t PrintServiceProxy::StartPrint()
 {
@@ -92,7 +91,7 @@ bool PrintServiceProxy::QueryAllExtension(std::vector<PrinterExtensionInfo> &arr
         return false;
     }
     uint32_t replyArrayLength = reply.ReadUint32();
-    for(uint32_t i = 0; i < replyArrayLength; i++) {
+    for (uint32_t i = 0; i < replyArrayLength; i++) {
         PrinterExtensionInfo printerExtensionInfo;
         printerExtensionInfo.SetExtensionId(reply.ReadUint32());
         printerExtensionInfo.SetVendorId(reply.ReadUint32());
@@ -105,15 +104,14 @@ bool PrintServiceProxy::QueryAllExtension(std::vector<PrinterExtensionInfo> &arr
     return true;
 }
 
-bool PrintServiceProxy::StartDiscoverPrinter(const std::vector<uint32_t>& extensionList)
+bool PrintServiceProxy::StartDiscoverPrinter(const std::vector<uint32_t> &extensionList)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
     data.WriteUint32(extensionList.size());
     PRINT_HILOGD("OnStartDiscoverPrinter extensionList.size() = %{public}lu", extensionList.size());
-    for(uint32_t i = 0; i < extensionList.size(); i++)
-    {
+    for (uint32_t i = 0; i < extensionList.size(); i++) {
         data.WriteUint32(extensionList[i]);
     }
     PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
@@ -141,7 +139,7 @@ bool PrintServiceProxy::StopDiscoverPrinter()
     return true;
 }
 
-bool PrintServiceProxy::StartPrintJob(const PrintJob& jobinfo)
+bool PrintServiceProxy::StartPrintJob(const PrintJob &jobinfo)
 {
     MessageParcel data, reply;
     MessageOption option;
@@ -157,12 +155,12 @@ bool PrintServiceProxy::StartPrintJob(const PrintJob& jobinfo)
     return true;
 }
 
-bool PrintServiceProxy::CancelPrintJob(const PrintJob& jobinfo) 
+bool PrintServiceProxy::CancelPrintJob(const PrintJob &jobinfo)
 {
     MessageParcel data, reply;
     MessageOption option;
-    
-    BuildParcelFromPrintJob(data, jobinfo);    
+
+    BuildParcelFromPrintJob(data, jobinfo);
     PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
     bool ret = Remote()->SendRequest(CMD_CANCELPRINTJOB, data, reply, option);
     if (ret != ERR_NONE) {
@@ -173,15 +171,14 @@ bool PrintServiceProxy::CancelPrintJob(const PrintJob& jobinfo)
     return true;
 }
 
-bool PrintServiceProxy::AddPrinters(const std::vector<PrinterInfo>& arrayPrintInfo)
+bool PrintServiceProxy::AddPrinters(const std::vector<PrinterInfo> &arrayPrintInfo)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
     data.WriteUint32(arrayPrintInfo.size());
     PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfo.size() = %{public}lu", arrayPrintInfo.size());
-    for(uint32_t i = 0; i < arrayPrintInfo.size(); i++)
-    {
+    for (uint32_t i = 0; i < arrayPrintInfo.size(); i++) {
         BuildParcelFromPrinterInfo(data, arrayPrintInfo[i]);
     }
     PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
@@ -194,15 +191,14 @@ bool PrintServiceProxy::AddPrinters(const std::vector<PrinterInfo>& arrayPrintIn
     return true;
 }
 
-bool PrintServiceProxy::RemovePrinters(const std::vector<PrinterInfo>& arrayPrintInfo)
+bool PrintServiceProxy::RemovePrinters(const std::vector<PrinterInfo> &arrayPrintInfo)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
     data.WriteUint32(arrayPrintInfo.size());
     PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfo.size() = %{public}lu", arrayPrintInfo.size());
-    for(uint32_t i = 0; i < arrayPrintInfo.size(); i++)
-    {
+    for (uint32_t i = 0; i < arrayPrintInfo.size(); i++) {
         BuildParcelFromPrinterInfo(data, arrayPrintInfo[i]);
     }
     PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
@@ -249,11 +245,11 @@ bool PrintServiceProxy::UpdatePrinterJobState(uint32_t jobId, uint32_t state)
     return true;
 }
 
-bool PrintServiceProxy::RequestPreview(const PrintJob& jobinfo, std::string &previewResult)
+bool PrintServiceProxy::RequestPreview(const PrintJob &jobinfo, std::string &previewResult)
 {
     MessageParcel data, reply;
     MessageOption option;
-    BuildParcelFromPrintJob(data, jobinfo);    
+    BuildParcelFromPrintJob(data, jobinfo);
     PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
     bool ret = Remote()->SendRequest(CMD_REQUESTPREVIEW, data, reply, option);
     if (ret != ERR_NONE) {
@@ -291,8 +287,7 @@ bool PrintServiceProxy::QueryPrinterCapability(uint32_t printerId, PrinterCapabi
 
     if (arraypageSizeLength > 0) {
         std::vector<PrintPageSize> pageSizeList;
-        for(uint32_t i = 0; i < arraypageSizeLength; i++)
-        {
+        for (uint32_t i = 0; i < arraypageSizeLength; i++) {
             PrintPageSize pageSize;
             pageSize.SetId(reply.ReadUint32());
             pageSize.SetName(reply.ReadString());
@@ -305,7 +300,7 @@ bool PrintServiceProxy::QueryPrinterCapability(uint32_t printerId, PrinterCapabi
 
     if (resolutionLength > 0) {
         std::vector<PrintResolution> resolutionList;
-        for(uint32_t i = 0; i < resolutionLength; i++) {
+        for (uint32_t i = 0; i < resolutionLength; i++) {
             PrintResolution res;
             res.SetId(reply.ReadUint32());
             res.SetHorizontalDpi(reply.ReadUint32());
@@ -314,7 +309,7 @@ bool PrintServiceProxy::QueryPrinterCapability(uint32_t printerId, PrinterCapabi
         }
         printerCapability.SetResolution(resolutionList);
     }
-    
+
     printerCapability.SetColorMode(reply.ReadUint32());
     printerCapability.SetDuplexMode(reply.ReadUint32());
     printerCapability.Dump();
@@ -332,7 +327,7 @@ bool PrintServiceProxy::CheckPermission()
         PRINT_HILOGE(" Failed to write parcelable ");
         return false;
     }
-    
+
     int32_t result = Remote()->SendRequest(CMD_CHECKPERMISSION, data, reply, option);
     if (result != ERR_NONE) {
         PRINT_HILOGE(" PrintServiceProxy::CheckPermission fail, ret = %{public}d ", result);
@@ -343,7 +338,8 @@ bool PrintServiceProxy::CheckPermission()
     return ret;
 }
 
-bool PrintServiceProxy::On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
+bool PrintServiceProxy::On(
+    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
 {
     PRINT_HILOGD("PrintServiceProxy::On listener=%{public}p", listener.GetRefPtr());
     MessageParcel data, reply;
@@ -352,37 +348,37 @@ bool PrintServiceProxy::On(const std::string &type, uint32_t &state, PrinterInfo
         PRINT_HILOGE(" Failed to write parcelable ");
         return false;
     }
-   /* if (listener == nullptr) {
-        PRINT_HILOGE("listener is nullptr");
-        return false;
-    }
+    /* if (listener == nullptr) {
+         PRINT_HILOGE("listener is nullptr");
+         return false;
+     }
 
-    if (!data.WriteUint32(taskId)) {
-        PRINT_HILOGE("write taskId=%{public}d fail", taskId);
-        return false;
-    }
-    
-    PRINT_HILOGD("PrintServiceProxy::On type=%{public}s", type.c_str());
-    if (type.empty()) {
-        PRINT_HILOGE("PrintServiceProxy::On type is null.");
-        return false;
-    }
-    if (!data.WriteString(type)) {
-        PRINT_HILOGE("write type failed.");
-        return false;
-    }
-    if (!data.WriteRemoteObject(listener->AsObject().GetRefPtr())) {
-        PRINT_HILOGE("write parcel failed.");
-        return false;
-    }
-    int32_t result = Remote()->SendRequest(CMD_ON, data, reply, option);
-    if (result != ERR_NONE) {
-        PRINT_HILOGE(" PrintServiceProxy::On fail, result = %{public}d ", result);
-        return false;
-    }
-    bool ret = reply.ReadBool();
-    PRINT_HILOGD("PrintServiceProxy::On out [result: %{public}d]", ret);
-    return ret;*/
+     if (!data.WriteUint32(taskId)) {
+         PRINT_HILOGE("write taskId=%{public}d fail", taskId);
+         return false;
+     }
+
+     PRINT_HILOGD("PrintServiceProxy::On type=%{public}s", type.c_str());
+     if (type.empty()) {
+         PRINT_HILOGE("PrintServiceProxy::On type is null.");
+         return false;
+     }
+     if (!data.WriteString(type)) {
+         PRINT_HILOGE("write type failed.");
+         return false;
+     }
+     if (!data.WriteRemoteObject(listener->AsObject().GetRefPtr())) {
+         PRINT_HILOGE("write parcel failed.");
+         return false;
+     }
+     int32_t result = Remote()->SendRequest(CMD_ON, data, reply, option);
+     if (result != ERR_NONE) {
+         PRINT_HILOGE(" PrintServiceProxy::On fail, result = %{public}d ", result);
+         return false;
+     }
+     bool ret = reply.ReadBool();
+     PRINT_HILOGD("PrintServiceProxy::On out [result: %{public}d]", ret);
+     return ret;*/
     return true;
 }
 
@@ -400,7 +396,7 @@ bool PrintServiceProxy::Off(const std::string &type)
         PRINT_HILOGE("write taskId=%{public}d fail", taskId);
         return false;
     }
-    
+
     if (!data.WriteString(type)) {
         PRINT_HILOGE("write type=%{public}s fail", type.c_str());
         return false;
@@ -428,12 +424,12 @@ bool PrintServiceProxy::RegisterExtCallback(uint32_t callbackId, const sptr<Prin
     if (!data.WriteUint32(callbackId)) {
         PRINT_HILOGE("Failed to write callbackId=%{public}d", callbackId);
         return false;
-    }    
+    }
     if (!data.WriteRemoteObject(listener->AsObject().GetRefPtr())) {
         PRINT_HILOGE("write parcel failed.");
         return false;
     }
-    
+
     int32_t result = Remote()->SendRequest(CMD_REG_EXT_CB, data, reply, option);
     if (result != ERR_NONE) {
         PRINT_HILOGE("PrintServiceProxy::RegisterExtCallback fail, ret = %{public}d", result);
@@ -453,7 +449,7 @@ bool PrintServiceProxy::UnregisterAllExtCallback()
         PRINT_HILOGE(" Failed to write parcelable ");
         return false;
     }
-    
+
     int32_t result = Remote()->SendRequest(CMD_UNREG_EXT_CB, data, reply, option);
     if (result != ERR_NONE) {
         PRINT_HILOGE(" PrintServiceProxy::UnregisterAllExtCallback fail, ret = %{public}d ", result);
@@ -464,7 +460,7 @@ bool PrintServiceProxy::UnregisterAllExtCallback()
     return ret;
 }
 
-void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel& data, const PrintJob& jobinfo)
+void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel &data, const PrintJob &jobinfo)
 {
     data.WriteInterfaceToken(GetDescriptor());
 
@@ -472,7 +468,7 @@ void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel& data, const Print
     jobinfo.GetFiles(files);
     uint32_t fileLength = files.size();
     data.WriteUint32(fileLength);
-    for(uint32_t i = 0; i < fileLength; i++) {
+    for (uint32_t i = 0; i < fileLength; i++) {
         data.WriteString(files[i]);
     }
     data.WriteUint32(jobinfo.GetJobId());
@@ -484,13 +480,13 @@ void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel& data, const Print
     jobinfo.GetPageRange(range);
     data.WriteUint32(range.GetStartPage());
     data.WriteUint32(range.GetEndPage());
-    
+
     std::vector<uint32_t> pages;
     range.GetPages(pages);
     uint32_t pageLength = pages.size();
     data.WriteUint32(pageLength);
-    for(uint32_t i = 0; i < pageLength; i++) {
-         data.WriteUint32(pages[i]);
+    for (uint32_t i = 0; i < pageLength; i++) {
+        data.WriteUint32(pages[i]);
     }
 
     data.WriteUint32(jobinfo.GetIsSequential());
@@ -516,7 +512,7 @@ void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel& data, const Print
     PreviewAttribute preview;
     jobinfo.GetPreview(preview);
     data.WriteString(preview.GetResult());
-    
+
     range.Reset();
     preview.GetPreviewRange(range);
     data.WriteUint32(range.GetStartPage());
@@ -525,12 +521,12 @@ void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel& data, const Print
     range.GetPages(pages);
     uint32_t previewPageLength = pages.size();
     data.WriteUint32(previewPageLength);
-    for(uint32_t i = 0; i < previewPageLength; i++) {
-         data.WriteUint32(pages[i]);
+    for (uint32_t i = 0; i < previewPageLength; i++) {
+        data.WriteUint32(pages[i]);
     }
 }
 
-void PrintServiceProxy::BuildParcelFromPrinterInfo(MessageParcel& data, const PrinterInfo& printerInfo)
+void PrintServiceProxy::BuildParcelFromPrinterInfo(MessageParcel &data, const PrinterInfo &printerInfo)
 {
     data.WriteUint32(printerInfo.GetPrintId());
     data.WriteString(printerInfo.GetPrinterName());
@@ -555,19 +551,19 @@ void PrintServiceProxy::BuildParcelFromPrinterInfo(MessageParcel& data, const Pr
     data.WriteUint32(margin.GetTop());
     data.WriteUint32(margin.GetBottom());
     data.WriteUint32(margin.GetLeft());
-    data.WriteUint32(margin.GetRight()); 
+    data.WriteUint32(margin.GetRight());
 
-    for(uint32_t i = 0; i < pageSizeLength; i++) {
+    for (uint32_t i = 0; i < pageSizeLength; i++) {
         data.WriteUint32(pageSizeList[i].GetId());
         data.WriteString(pageSizeList[i].GetName());
         data.WriteUint32(pageSizeList[i].GetWidth());
         data.WriteUint32(pageSizeList[i].GetHeight());
-    }     
-    for(uint32_t i = 0; i < resolutionLength; i++) {
+    }
+    for (uint32_t i = 0; i < resolutionLength; i++) {
         data.WriteUint32(resolutionList[i].GetId());
         data.WriteUint32(resolutionList[i].GetHorizontalDpi());
         data.WriteUint32(resolutionList[i].GetVerticalDpi());
-    }   
+    }
     data.WriteUint32(cap.GetColorMode());
     data.WriteUint32(cap.GetDuplexMode());
 }

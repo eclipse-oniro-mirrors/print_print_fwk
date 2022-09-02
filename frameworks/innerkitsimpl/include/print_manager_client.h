@@ -16,17 +16,18 @@
 #ifndef PRINT_MANAGER_H
 #define PRINT_MANAGER_H
 
+#include <condition_variable>
 #include <map>
 #include <mutex>
-#include <condition_variable>
+
 #include "iremote_object.h"
-#include "refbase.h"
-#include "print_extension_info.h"
-#include "print_notify_interface.h"
-#include "print_job.h"
-#include "print_service_interface.h"
 #include "print_extcb_stub.h"
+#include "print_extension_info.h"
+#include "print_job.h"
+#include "print_notify_interface.h"
+#include "print_service_interface.h"
 #include "printer_info.h"
+#include "refbase.h"
 
 namespace OHOS::Print {
 class PrintSaDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -45,10 +46,10 @@ public:
     ~PrintManagerClient();
     static sptr<PrintManagerClient> GetInstance();
     bool CheckPermission();
-    
+
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
 
-    //Client Napi
+    // Client Napi
     int32_t StartPrint();
     bool QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo);
     bool StartDiscoverPrinter(std::vector<uint32_t> extensionList);

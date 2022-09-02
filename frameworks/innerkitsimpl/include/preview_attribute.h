@@ -15,26 +15,28 @@
 #ifndef PRINT_RESUME_H
 #define PRINT_RESUME_H
 
-#include <string>
-#include "print_range.h"
 #include <cstdint>
+#include <string>
+
+#include "print_range.h"
 namespace OHOS::Print {
 class PreviewAttribute {
 public:
     explicit PreviewAttribute();
-    PreviewAttribute(const PreviewAttribute& right);
-    PreviewAttribute& operator=(const PreviewAttribute& previewAttribute);
+    PreviewAttribute(const PreviewAttribute &right);
+    PreviewAttribute &operator=(const PreviewAttribute &previewAttribute);
     ~PreviewAttribute();
 
-    void SetResult(const std::string& result);
+    void SetResult(const std::string &result);
 
-    void SetPreviewRange(const PrintRange& previewRange);
+    void SetPreviewRange(const PrintRange &previewRange);
 
-    [[nodiscard]] const std::string& GetResult() const;
+    [[nodiscard]] const std::string &GetResult() const;
 
-    void GetPreviewRange(PrintRange& range) const;
+    void GetPreviewRange(PrintRange &range) const;
 
     void Dump();
+
 private:
     std::string result_;
     PrintRange previewRange_;

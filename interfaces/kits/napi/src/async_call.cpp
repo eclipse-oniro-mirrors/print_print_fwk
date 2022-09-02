@@ -24,9 +24,9 @@ AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Cont
     context_ = new AsyncContext();
     size_t argc = PrintNapiUtils::MAX_ARGC;
     napi_value self = nullptr;
-    napi_value argv[PrintNapiUtils::MAX_ARGC] = {nullptr};
+    napi_value argv[PrintNapiUtils::MAX_ARGC] = { nullptr };
     NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-    pos = ((pos == ASYNC_DEFAULT_POS) ? (argc - 1) : pos);   
+    pos = ((pos == ASYNC_DEFAULT_POS) ? (argc - 1) : pos);
     if (pos >= 0 && pos < argc) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, argv[pos], &valueType);
@@ -105,7 +105,7 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
     napi_value output = nullptr;
     napi_status runStatus = (*context->ctx)(env, &output);
-    napi_value result[ARG_BUTT] = {0};
+    napi_value result[ARG_BUTT] = { 0 };
     if (status == napi_ok && runStatus == napi_ok) {
         napi_get_undefined(env, &result[ARG_ERROR]);
         if (output != nullptr) {

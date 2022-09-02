@@ -14,23 +14,22 @@
  */
 
 #include "print_resolution.h"
+
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintResolution::PrintResolution() : id_(0), horizontalDpi_(0), verticalDpi_(0)
-{    
-}
+PrintResolution::PrintResolution() : id_(0), horizontalDpi_(0), verticalDpi_(0) {}
 
-PrintResolution::PrintResolution(const PrintResolution& right)
+PrintResolution::PrintResolution(const PrintResolution &right)
 {
     id_ = right.id_;
     horizontalDpi_ = right.horizontalDpi_;
     verticalDpi_ = right.verticalDpi_;
 }
 
-PrintResolution& PrintResolution::operator=(const PrintResolution& right)
+PrintResolution &PrintResolution::operator=(const PrintResolution &right)
 {
-    if(this != &right){
+    if (this != &right) {
         id_ = right.id_;
         horizontalDpi_ = right.horizontalDpi_;
         verticalDpi_ = right.verticalDpi_;
@@ -38,9 +37,7 @@ PrintResolution& PrintResolution::operator=(const PrintResolution& right)
     return *this;
 }
 
-PrintResolution::~PrintResolution()
-{
-}
+PrintResolution::~PrintResolution() {}
 
 void PrintResolution::SetId(uint32_t id)
 {

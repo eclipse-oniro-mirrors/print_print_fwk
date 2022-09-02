@@ -18,14 +18,14 @@
 #include "ability_loader.h"
 #include "connection_manager.h"
 #include "js_print_extension.h"
-#include "runtime.h"
 #include "print_extension_context.h"
 #include "print_log.h"
+#include "runtime.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
 using namespace OHOS::AppExecFwk;
-PrintExtension* PrintExtension::Create(const std::unique_ptr<Runtime>& runtime)
+PrintExtension *PrintExtension::Create(const std::unique_ptr<Runtime> &runtime)
 {
     PRINT_HILOGD("jws PrintExtension::Create runtime");
     if (!runtime) {
@@ -42,8 +42,7 @@ PrintExtension* PrintExtension::Create(const std::unique_ptr<Runtime>& runtime)
 }
 
 void PrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
-    const std::shared_ptr<OHOSApplication> &application,
-    std::shared_ptr<AbilityHandler> &handler,
+    const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
     const sptr<IRemoteObject> &token)
 {
     PRINT_HILOGD("jws PrintExtension begin init context");
@@ -52,10 +51,8 @@ void PrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
 }
 
 std::shared_ptr<PrintExtensionContext> PrintExtension::CreateAndInitContext(
-    const std::shared_ptr<AbilityLocalRecord> &record,
-    const std::shared_ptr<OHOSApplication> &application,
-    std::shared_ptr<AbilityHandler> &handler,
-    const sptr<IRemoteObject> &token)
+    const std::shared_ptr<AbilityLocalRecord> &record, const std::shared_ptr<OHOSApplication> &application,
+    std::shared_ptr<AbilityHandler> &handler, const sptr<IRemoteObject> &token)
 {
     PRINT_HILOGD("jws PrintExtension begin init context");
     std::shared_ptr<PrintExtensionContext> context =
@@ -66,5 +63,5 @@ std::shared_ptr<PrintExtensionContext> PrintExtension::CreateAndInitContext(
     }
     return context;
 }
-}
-}
+} // namespace AbilityRuntime
+} // namespace OHOS

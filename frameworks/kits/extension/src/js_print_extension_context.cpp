@@ -17,17 +17,17 @@
 
 #include <cstdint>
 
-#include "js_extension_context.h"
 #include "js_data_struct_converter.h"
+#include "js_extension_context.h"
 #include "js_runtime.h"
 #include "js_runtime_utils.h"
 #include "napi/native_api.h"
-#include "napi_common_want.h"
-#include "napi_common_util.h"
-#include "napi_remote_object.h"
 #include "napi_common_start_options.h"
-#include "start_options.h"
+#include "napi_common_util.h"
+#include "napi_common_want.h"
+#include "napi_remote_object.h"
 #include "print_log.h"
+#include "start_options.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
@@ -45,56 +45,55 @@ constexpr size_t ARGC_FOUR = 4;
 
 class JsPrintExtensionContext final {
 public:
-    explicit JsPrintExtensionContext(const std::shared_ptr<PrintExtensionContext>& context) : context_(context)
-    {
-    }
+    explicit JsPrintExtensionContext(const std::shared_ptr<PrintExtensionContext> &context) : context_(context) {}
     ~JsPrintExtensionContext() = default;
 
-    static void Finalizer(NativeEngine* engine, void* data, void* hint)
+    static void Finalizer(NativeEngine *engine, void *data, void *hint)
     {
         PRINT_HILOGD("JsAbilityContext::Finalizer is called");
-        std::unique_ptr<JsPrintExtensionContext>(static_cast<JsPrintExtensionContext*>(data));
+        std::unique_ptr<JsPrintExtensionContext>(static_cast<JsPrintExtensionContext *>(data));
     }
 
-    static NativeValue* StartAbility(NativeEngine* engine, NativeCallbackInfo* info)
+    static NativeValue *StartAbility(NativeEngine *engine, NativeCallbackInfo *info)
     {
-        JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
+        JsPrintExtensionContext *me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
         return (me != nullptr) ? me->OnStartAbility(*engine, *info) : nullptr;
     }
 
-    static NativeValue* StartAbilityWithAccount(NativeEngine* engine, NativeCallbackInfo* info)
+    static NativeValue *StartAbilityWithAccount(NativeEngine *engine, NativeCallbackInfo *info)
     {
-        JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
+        JsPrintExtensionContext *me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
         return (me != nullptr) ? me->OnStartAbilityWithAccount(*engine, *info) : nullptr;
     }
 
-    static NativeValue* ConnectAbilityWithAccount(NativeEngine* engine, NativeCallbackInfo* info)
+    static NativeValue *ConnectAbilityWithAccount(NativeEngine *engine, NativeCallbackInfo *info)
     {
-        JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
+        JsPrintExtensionContext *me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
         return (me != nullptr) ? me->OnConnectAbilityWithAccount(*engine, *info) : nullptr;
     }
 
-    static NativeValue* TerminateAbility(NativeEngine* engine, NativeCallbackInfo* info)
+    static NativeValue *TerminateAbility(NativeEngine *engine, NativeCallbackInfo *info)
     {
-        JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
+        JsPrintExtensionContext *me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
         return (me != nullptr) ? me->OnTerminateAbility(*engine, *info) : nullptr;
     }
 
-    static NativeValue* ConnectAbility(NativeEngine* engine, NativeCallbackInfo* info)
+    static NativeValue *ConnectAbility(NativeEngine *engine, NativeCallbackInfo *info)
     {
-        JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
+        JsPrintExtensionContext *me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
         return (me != nullptr) ? me->OnConnectAbility(*engine, *info) : nullptr;
     }
 
-    static NativeValue* DisconnectAbility(NativeEngine* engine, NativeCallbackInfo* info)
+    static NativeValue *DisconnectAbility(NativeEngine *engine, NativeCallbackInfo *info)
     {
-        JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
+        JsPrintExtensionContext *me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
         return (me != nullptr) ? me->OnDisconnectAbility(*engine, *info) : nullptr;
     }
+
 private:
     std::weak_ptr<PrintExtensionContext> context_;
 
-    NativeValue* OnStartAbility(NativeEngine& engine, NativeCallbackInfo& info)
+    NativeValue *OnStartAbility(NativeEngine &engine, NativeCallbackInfo &info)
     {
         PRINT_HILOGD("OnStartAbility is called");
         // only support one or two or three params
@@ -105,50 +104,48 @@ private:
 
         decltype(info.argc) unwrapArgc = 0;
         AAFwk::Want want;
-        OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[INDEX_ZERO]), want);
-        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s",
-            __func__,
-            want.GetBundle().c_str(),
+        OHOS::AppExecFwk::UnwrapWant(
+            reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[INDEX_ZERO]), want);
+        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
 
         AAFwk::StartOptions startOptions;
         if (info.argc > ARGC_ONE && info.argv[INDEX_ONE]->TypeOf() == NATIVE_OBJECT) {
             PRINT_HILOGD("OnStartAbility start options is used.");
-            AppExecFwk::UnwrapStartOptions(reinterpret_cast<napi_env>(&engine),
-                reinterpret_cast<napi_value>(info.argv[INDEX_ONE]), startOptions);
+            AppExecFwk::UnwrapStartOptions(
+                reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[INDEX_ONE]), startOptions);
             unwrapArgc++;
         }
 
-        AsyncTask::CompleteCallback complete =
-            [weak = context_, want, startOptions, unwrapArgc](NativeEngine& engine, AsyncTask& task, int32_t status) {
-                PRINT_HILOGD("startAbility begin");
-                auto context = weak.lock();
-                if (!context) {
-                    PRINT_HILOGW("context is released");
-                    task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
-                    return;
-                }
+        AsyncTask::CompleteCallback complete = [weak = context_, want, startOptions, unwrapArgc](
+                                                   NativeEngine &engine, AsyncTask &task, int32_t status) {
+            PRINT_HILOGD("startAbility begin");
+            auto context = weak.lock();
+            if (!context) {
+                PRINT_HILOGW("context is released");
+                task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
+                return;
+            }
 
-                ErrCode errcode = ERR_OK;
-                (unwrapArgc == 1) ? errcode = context->StartAbility(want) :
-                    errcode = context->StartAbility(want, startOptions);
-                if (errcode == 0) {
-                    task.Resolve(engine, engine.CreateUndefined());
-                } else {
-                    task.Reject(engine, CreateJsError(engine, errcode, "Start Ability failed."));
-                }
-            };
+            ErrCode errcode = ERR_OK;
+            (unwrapArgc == 1) ? errcode = context->StartAbility(want)
+                              : errcode = context->StartAbility(want, startOptions);
+            if (errcode == 0) {
+                task.Resolve(engine, engine.CreateUndefined());
+            } else {
+                task.Reject(engine, CreateJsError(engine, errcode, "Start Ability failed."));
+            }
+        };
 
-        NativeValue* lastParam = (info.argc == unwrapArgc) ? nullptr : info.argv[unwrapArgc];
-        NativeValue* result = nullptr;
-        AsyncTask::Schedule("PrintExtensionContext::OnStartAbility",
-            engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        NativeValue *lastParam = (info.argc == unwrapArgc) ? nullptr : info.argv[unwrapArgc];
+        NativeValue *result = nullptr;
+        AsyncTask::Schedule("PrintExtensionContext::OnStartAbility", engine,
+            CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
         return result;
     }
 
-    NativeValue* OnStartAbilityWithAccount(NativeEngine& engine, NativeCallbackInfo& info)
+    NativeValue *OnStartAbilityWithAccount(NativeEngine &engine, NativeCallbackInfo &info)
     {
         PRINT_HILOGD("OnStartAbilityWithAccount is called");
         // only support two or three or four params
@@ -159,17 +156,15 @@ private:
 
         decltype(info.argc) unwrapArgc = 0;
         AAFwk::Want want;
-        OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[INDEX_ZERO]), want);
-        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s",
-            __func__,
-            want.GetBundle().c_str(),
+        OHOS::AppExecFwk::UnwrapWant(
+            reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[INDEX_ZERO]), want);
+        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
 
         int32_t accountId = 0;
-        if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[INDEX_ONE]), accountId)) {
+        if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(
+                reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[INDEX_ONE]), accountId)) {
             PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
             return engine.CreateUndefined();
         }
@@ -179,40 +174,39 @@ private:
         AAFwk::StartOptions startOptions;
         if (info.argc > ARGC_TWO && info.argv[INDEX_TWO]->TypeOf() == NATIVE_OBJECT) {
             PRINT_HILOGD("OnStartAbilityWithAccount start options is used.");
-            AppExecFwk::UnwrapStartOptions(reinterpret_cast<napi_env>(&engine),
-                reinterpret_cast<napi_value>(info.argv[INDEX_TWO]), startOptions);
+            AppExecFwk::UnwrapStartOptions(
+                reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[INDEX_TWO]), startOptions);
             unwrapArgc++;
         }
 
-        AsyncTask::CompleteCallback complete =
-            [weak = context_, want, accountId, startOptions, unwrapArgc](
-                NativeEngine& engine, AsyncTask& task, int32_t status) {
-                    PRINT_HILOGD("startAbility begin");
-                    auto context = weak.lock();
-                    if (!context) {
-                        PRINT_HILOGW("context is released");
-                        task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
-                        return;
-                    }
+        AsyncTask::CompleteCallback complete = [weak = context_, want, accountId, startOptions, unwrapArgc](
+                                                   NativeEngine &engine, AsyncTask &task, int32_t status) {
+            PRINT_HILOGD("startAbility begin");
+            auto context = weak.lock();
+            if (!context) {
+                PRINT_HILOGW("context is released");
+                task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
+                return;
+            }
 
-                    ErrCode errcode = ERR_OK;
-                    (unwrapArgc == ARGC_TWO) ? errcode = context->StartAbilityWithAccount(want, accountId) :
-                    errcode = context->StartAbilityWithAccount(want, accountId, startOptions);
-                    if (errcode == 0) {
-                        task.Resolve(engine, engine.CreateUndefined());
-                    } else {
-                        task.Reject(engine, CreateJsError(engine, errcode, "Start Ability failed."));
-                    }
-                };
+            ErrCode errcode = ERR_OK;
+            (unwrapArgc == ARGC_TWO) ? errcode = context->StartAbilityWithAccount(want, accountId)
+                                     : errcode = context->StartAbilityWithAccount(want, accountId, startOptions);
+            if (errcode == 0) {
+                task.Resolve(engine, engine.CreateUndefined());
+            } else {
+                task.Reject(engine, CreateJsError(engine, errcode, "Start Ability failed."));
+            }
+        };
 
-        NativeValue* lastParam = (info.argc == unwrapArgc) ? nullptr : info.argv[unwrapArgc];
-        NativeValue* result = nullptr;
-        AsyncTask::Schedule("PrintExtensionContext::OnStartAbilityWithAccount",
-            engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        NativeValue *lastParam = (info.argc == unwrapArgc) ? nullptr : info.argv[unwrapArgc];
+        NativeValue *result = nullptr;
+        AsyncTask::Schedule("PrintExtensionContext::OnStartAbilityWithAccount", engine,
+            CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
         return result;
     }
 
-    NativeValue* OnTerminateAbility(NativeEngine& engine, NativeCallbackInfo& info)
+    NativeValue *OnTerminateAbility(NativeEngine &engine, NativeCallbackInfo &info)
     {
         PRINT_HILOGD("OnTerminateAbility is called");
         // only support one or zero params
@@ -221,32 +215,32 @@ private:
             return engine.CreateUndefined();
         }
 
-        AsyncTask::CompleteCallback complete =
-            [weak = context_](NativeEngine& engine, AsyncTask& task, int32_t status) {
-                PRINT_HILOGD("TerminateAbility begin");
-                auto context = weak.lock();
-                if (!context) {
-                    PRINT_HILOGW("context is released");
-                    task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
-                    return;
-                }
+        AsyncTask::CompleteCallback complete = [weak = context_](
+                                                   NativeEngine &engine, AsyncTask &task, int32_t status) {
+            PRINT_HILOGD("TerminateAbility begin");
+            auto context = weak.lock();
+            if (!context) {
+                PRINT_HILOGW("context is released");
+                task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
+                return;
+            }
 
-                auto errcode = context->TerminateAbility();
-                if (errcode == 0) {
-                    task.Resolve(engine, engine.CreateUndefined());
-                } else {
-                    task.Reject(engine, CreateJsError(engine, errcode, "Terminate Ability failed."));
-                }
-            };
+            auto errcode = context->TerminateAbility();
+            if (errcode == 0) {
+                task.Resolve(engine, engine.CreateUndefined());
+            } else {
+                task.Reject(engine, CreateJsError(engine, errcode, "Terminate Ability failed."));
+            }
+        };
 
-        NativeValue* lastParam = (info.argc == ARGC_ZERO) ? nullptr : info.argv[INDEX_ZERO];
-        NativeValue* result = nullptr;
-        AsyncTask::Schedule("PrintExtensionContext::OnTerminateAbility",
-            engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        NativeValue *lastParam = (info.argc == ARGC_ZERO) ? nullptr : info.argv[INDEX_ZERO];
+        NativeValue *result = nullptr;
+        AsyncTask::Schedule("PrintExtensionContext::OnTerminateAbility", engine,
+            CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
         return result;
     }
 
-    NativeValue* OnConnectAbility(NativeEngine& engine, NativeCallbackInfo& info)
+    NativeValue *OnConnectAbility(NativeEngine &engine, NativeCallbackInfo &info)
     {
         PRINT_HILOGD("OnConnectAbility is called");
         // only support two params
@@ -257,11 +251,9 @@ private:
 
         // unwrap want
         AAFwk::Want want;
-        OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[INDEX_ZERO]), want);
-        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s",
-            __func__,
-            want.GetBundle().c_str(),
+        OHOS::AppExecFwk::UnwrapWant(
+            reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[INDEX_ZERO]), want);
+        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         // unwarp connection
         sptr<JSPrintExtensionConnection> connection = new JSPrintExtensionConnection(engine);
@@ -277,28 +269,28 @@ private:
             serialNumber_ = 0;
         }
         PRINT_HILOGD("%{public}s not find connection, make new one:%{public}p.", __func__, connection.GetRefPtr());
-        AsyncTask::CompleteCallback complete =
-            [weak = context_, want, connection, connectId](NativeEngine& engine, AsyncTask& task, int32_t status) {
-                PRINT_HILOGD("OnConnectAbility begin");
-                auto context = weak.lock();
-                if (!context) {
-                    PRINT_HILOGW("context is released");
-                    task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
-                    return;
-                }
-                PRINT_HILOGD("context->ConnectAbility connection:%{public}d", (int32_t)connectId);
-                if (!context->ConnectAbility(want, connection)) {
-                    connection->CallJsFailed(ERROR_CODE_ONE);
-                }
-                task.Resolve(engine, engine.CreateUndefined());
-            };
-        NativeValue* result = nullptr;
-        AsyncTask::Schedule("PrintExtensionContext::OnConnectAbility",
-            engine, CreateAsyncTaskWithLastParam(engine, nullptr, nullptr, std::move(complete), &result));
+        AsyncTask::CompleteCallback complete = [weak = context_, want, connection, connectId](
+                                                   NativeEngine &engine, AsyncTask &task, int32_t status) {
+            PRINT_HILOGD("OnConnectAbility begin");
+            auto context = weak.lock();
+            if (!context) {
+                PRINT_HILOGW("context is released");
+                task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
+                return;
+            }
+            PRINT_HILOGD("context->ConnectAbility connection:%{public}d", (int32_t)connectId);
+            if (!context->ConnectAbility(want, connection)) {
+                connection->CallJsFailed(ERROR_CODE_ONE);
+            }
+            task.Resolve(engine, engine.CreateUndefined());
+        };
+        NativeValue *result = nullptr;
+        AsyncTask::Schedule("PrintExtensionContext::OnConnectAbility", engine,
+            CreateAsyncTaskWithLastParam(engine, nullptr, nullptr, std::move(complete), &result));
         return engine.CreateNumber(connectId);
     }
 
-    NativeValue* OnConnectAbilityWithAccount(NativeEngine& engine, NativeCallbackInfo& info)
+    NativeValue *OnConnectAbilityWithAccount(NativeEngine &engine, NativeCallbackInfo &info)
     {
         PRINT_HILOGD("OnConnectAbilityWithAccount is called");
         // only support three params
@@ -309,16 +301,14 @@ private:
 
         // unwrap want
         AAFwk::Want want;
-        OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[INDEX_ZERO]), want);
-        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s",
-            __func__,
-            want.GetBundle().c_str(),
+        OHOS::AppExecFwk::UnwrapWant(
+            reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[INDEX_ZERO]), want);
+        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
 
         int32_t accountId = 0;
-        if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[INDEX_ONE]), accountId)) {
+        if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(
+                reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[INDEX_ONE]), accountId)) {
             PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
             return engine.CreateUndefined();
         }
@@ -337,29 +327,28 @@ private:
             serialNumber_ = 0;
         }
         PRINT_HILOGD("%{public}s not find connection, make new one:%{public}p.", __func__, connection.GetRefPtr());
-        AsyncTask::CompleteCallback complete =
-            [weak = context_, want, accountId, connection, connectId](
-                NativeEngine& engine, AsyncTask& task, int32_t status) {
-                    PRINT_HILOGD("OnConnectAbilityWithAccount begin");
-                    auto context = weak.lock();
-                    if (!context) {
-                        PRINT_HILOGW("context is released");
-                        task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
-                        return;
-                    }
-                    PRINT_HILOGD("context->ConnectAbilityWithAccount connection:%{public}d", (int32_t)connectId);
-                    if (!context->ConnectAbilityWithAccount(want, accountId, connection)) {
-                        connection->CallJsFailed(ERROR_CODE_ONE);
-                    }
-                    task.Resolve(engine, engine.CreateUndefined());
-                };
-        NativeValue* result = nullptr;
-        AsyncTask::Schedule("PrintExtensionContext::OnConnectAbilityWithAccount",
-            engine, CreateAsyncTaskWithLastParam(engine, nullptr, nullptr, std::move(complete), &result));
+        AsyncTask::CompleteCallback complete = [weak = context_, want, accountId, connection, connectId](
+                                                   NativeEngine &engine, AsyncTask &task, int32_t status) {
+            PRINT_HILOGD("OnConnectAbilityWithAccount begin");
+            auto context = weak.lock();
+            if (!context) {
+                PRINT_HILOGW("context is released");
+                task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
+                return;
+            }
+            PRINT_HILOGD("context->ConnectAbilityWithAccount connection:%{public}d", (int32_t)connectId);
+            if (!context->ConnectAbilityWithAccount(want, accountId, connection)) {
+                connection->CallJsFailed(ERROR_CODE_ONE);
+            }
+            task.Resolve(engine, engine.CreateUndefined());
+        };
+        NativeValue *result = nullptr;
+        AsyncTask::Schedule("PrintExtensionContext::OnConnectAbilityWithAccount", engine,
+            CreateAsyncTaskWithLastParam(engine, nullptr, nullptr, std::move(complete), &result));
         return engine.CreateNumber(connectId);
     }
 
-    NativeValue* OnDisconnectAbility(NativeEngine& engine, NativeCallbackInfo& info)
+    NativeValue *OnDisconnectAbility(NativeEngine &engine, NativeCallbackInfo &info)
     {
         PRINT_HILOGD("OnDisconnectAbility is called");
         // only support one or two params
@@ -373,13 +362,12 @@ private:
         // unwrap connectId
         int64_t connectId = -1;
         sptr<JSPrintExtensionConnection> connection = nullptr;
-        napi_get_value_int64(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[INDEX_ZERO]), &connectId);
+        napi_get_value_int64(
+            reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[INDEX_ZERO]), &connectId);
         PRINT_HILOGD("OnDisconnectAbility connection:%{public}d", (int32_t)connectId);
         auto item = std::find_if(connects_.begin(), connects_.end(),
-            [&connectId](
-                const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
-                    return connectId == obj.first.id;
+            [&connectId](const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
+                return connectId == obj.first.id;
             });
         if (item != connects_.end()) {
             // match id
@@ -390,41 +378,40 @@ private:
             PRINT_HILOGD("%{public}s not find conn exist.", __func__);
         }
         // begin disconnect
-        AsyncTask::CompleteCallback complete =
-            [weak = context_, want, connection](
-                NativeEngine& engine, AsyncTask& task, int32_t status) {
-                PRINT_HILOGD("OnDisconnectAbility begin");
-                auto context = weak.lock();
-                if (!context) {
-                    PRINT_HILOGW("context is released");
-                    task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
-                    return;
-                }
-                if (connection == nullptr) {
-                    PRINT_HILOGW("connection nullptr");
-                    task.Reject(engine, CreateJsError(engine, ERROR_CODE_TWO, "not found connection"));
-                    return;
-                }
-                PRINT_HILOGD("context->DisconnectAbility");
-                auto errcode = context->DisconnectAbility(want, connection);
-                errcode == 0 ? task.Resolve(engine, engine.CreateUndefined()) :
-                    task.Reject(engine, CreateJsError(engine, errcode, "Disconnect Ability failed."));
-            };
+        AsyncTask::CompleteCallback complete = [weak = context_, want, connection](
+                                                   NativeEngine &engine, AsyncTask &task, int32_t status) {
+            PRINT_HILOGD("OnDisconnectAbility begin");
+            auto context = weak.lock();
+            if (!context) {
+                PRINT_HILOGW("context is released");
+                task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
+                return;
+            }
+            if (connection == nullptr) {
+                PRINT_HILOGW("connection nullptr");
+                task.Reject(engine, CreateJsError(engine, ERROR_CODE_TWO, "not found connection"));
+                return;
+            }
+            PRINT_HILOGD("context->DisconnectAbility");
+            auto errcode = context->DisconnectAbility(want, connection);
+            errcode == 0 ? task.Resolve(engine, engine.CreateUndefined())
+                         : task.Reject(engine, CreateJsError(engine, errcode, "Disconnect Ability failed."));
+        };
 
-        NativeValue* lastParam = (info.argc == ARGC_ONE) ? nullptr : info.argv[INDEX_ONE];
-        NativeValue* result = nullptr;
-        AsyncTask::Schedule("PrintExtensionContext::OnDisconnectAbility",
-            engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        NativeValue *lastParam = (info.argc == ARGC_ONE) ? nullptr : info.argv[INDEX_ONE];
+        NativeValue *result = nullptr;
+        AsyncTask::Schedule("PrintExtensionContext::OnDisconnectAbility", engine,
+            CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
         return result;
     }
 };
 } // namespace
 
-NativeValue* CreateJsMetadata(NativeEngine& engine, const AppExecFwk::Metadata &Info)
+NativeValue *CreateJsMetadata(NativeEngine &engine, const AppExecFwk::Metadata &Info)
 {
     PRINT_HILOGD("CreateJsMetadata");
-    NativeValue* objValue = engine.CreateObject();
-    NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
+    NativeValue *objValue = engine.CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
 
     object->SetProperty("name", CreateJsValue(engine, Info.name));
     object->SetProperty("value", CreateJsValue(engine, Info.value));
@@ -432,23 +419,23 @@ NativeValue* CreateJsMetadata(NativeEngine& engine, const AppExecFwk::Metadata &
     return objValue;
 }
 
-NativeValue* CreateJsMetadataArray(NativeEngine& engine, const std::vector<AppExecFwk::Metadata> &info)
+NativeValue *CreateJsMetadataArray(NativeEngine &engine, const std::vector<AppExecFwk::Metadata> &info)
 {
     PRINT_HILOGD("CreateJsMetadataArray");
-    NativeValue* arrayValue = engine.CreateArray(info.size());
-    NativeArray* array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    NativeValue *arrayValue = engine.CreateArray(info.size());
+    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
     uint32_t index = 0;
-    for (const auto& item : info) {
+    for (const auto &item : info) {
         array->SetElement(index++, CreateJsMetadata(engine, item));
     }
     return arrayValue;
 }
 
-NativeValue* CreateJsExtensionAbilityInfo(NativeEngine& engine, const AppExecFwk::ExtensionAbilityInfo& info)
+NativeValue *CreateJsExtensionAbilityInfo(NativeEngine &engine, const AppExecFwk::ExtensionAbilityInfo &info)
 {
     PRINT_HILOGD("CreateJsExtensionAbilityInfo");
-    NativeValue* objValue = engine.CreateObject();
-    NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
+    NativeValue *objValue = engine.CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
     object->SetProperty("bundleName", CreateJsValue(engine, info.bundleName));
     object->SetProperty("moduleName", CreateJsValue(engine, info.moduleName));
     object->SetProperty("name", CreateJsValue(engine, info.name));
@@ -474,11 +461,11 @@ NativeValue* CreateJsExtensionAbilityInfo(NativeEngine& engine, const AppExecFwk
     return objValue;
 }
 
-NativeValue* CreateJsPrintExtensionContext(NativeEngine& engine, std::shared_ptr<PrintExtensionContext> context)
+NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr<PrintExtensionContext> context)
 {
     PRINT_HILOGD("CreateJsPrintExtensionContext begin");
-    NativeValue* objValue = CreateJsExtensionContext(engine, context);
-    NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
+    NativeValue *objValue = CreateJsExtensionContext(engine, context);
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
 
     std::unique_ptr<JsPrintExtensionContext> jsContext = std::make_unique<JsPrintExtensionContext>(context);
     object->SetNativePointer(jsContext.release(), JsPrintExtensionContext::Finalizer, nullptr);
@@ -490,8 +477,7 @@ NativeValue* CreateJsPrintExtensionContext(NativeEngine& engine, std::shared_ptr
     BindNativeFunction(engine, *object, "terminateSelf", JsPrintExtensionContext::TerminateAbility);
     BindNativeFunction(engine, *object, "connectAbility", JsPrintExtensionContext::ConnectAbility);
     BindNativeFunction(engine, *object, "disconnectAbility", JsPrintExtensionContext::DisconnectAbility);
-    BindNativeFunction(
-        engine, *object, "startAbilityWithAccount", JsPrintExtensionContext::StartAbilityWithAccount);
+    BindNativeFunction(engine, *object, "startAbilityWithAccount", JsPrintExtensionContext::StartAbilityWithAccount);
     BindNativeFunction(
         engine, *object, "connectAbilityWithAccount", JsPrintExtensionContext::ConnectAbilityWithAccount);
 
@@ -504,8 +490,8 @@ NativeValue* CreateJsPrintExtensionContext(NativeEngine& engine, std::shared_ptr
                 PRINT_HILOGD("%{public}s, %{public}s", info.bundleName.c_str(), info.name.c_str());
                 return info.bundleName == abilityInfo->bundleName && info.name == abilityInfo->name;
             };
-            auto infoIter = std::find_if(
-                hapModuleInfo->extensionInfos.begin(), hapModuleInfo->extensionInfos.end(), isExist);
+            auto infoIter =
+                std::find_if(hapModuleInfo->extensionInfos.begin(), hapModuleInfo->extensionInfos.end(), isExist);
             if (infoIter == hapModuleInfo->extensionInfos.end()) {
                 PRINT_HILOGD("Get target fail.");
                 return objValue;
@@ -517,12 +503,12 @@ NativeValue* CreateJsPrintExtensionContext(NativeEngine& engine, std::shared_ptr
     return objValue;
 }
 
-JSPrintExtensionConnection::JSPrintExtensionConnection(NativeEngine& engine) : engine_(engine) {}
+JSPrintExtensionConnection::JSPrintExtensionConnection(NativeEngine &engine) : engine_(engine) {}
 
 JSPrintExtensionConnection::~JSPrintExtensionConnection() = default;
 
-void JSPrintExtensionConnection::OnAbilityConnectDone(const AppExecFwk::ElementName &element,
-    const sptr<IRemoteObject> &remoteObject, int resultCode)
+void JSPrintExtensionConnection::OnAbilityConnectDone(
+    const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode)
 {
     PRINT_HILOGD("OnAbilityConnectDone begin, resultCode:%{public}d", resultCode);
     if (handler_ == nullptr) {
@@ -541,31 +527,31 @@ void JSPrintExtensionConnection::OnAbilityConnectDone(const AppExecFwk::ElementN
     handler_->PostTask(task, "OnAbilityConnectDone");
 }
 
-void JSPrintExtensionConnection::HandleOnAbilityConnectDone(const AppExecFwk::ElementName &element,
-    const sptr<IRemoteObject> &remoteObject, int resultCode)
+void JSPrintExtensionConnection::HandleOnAbilityConnectDone(
+    const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode)
 {
     PRINT_HILOGD("HandleOnAbilityConnectDone begin, resultCode:%{public}d", resultCode);
     // wrap ElementName
     napi_value napiElementName = OHOS::AppExecFwk::WrapElementName(reinterpret_cast<napi_env>(&engine_), element);
-    NativeValue* nativeElementName = reinterpret_cast<NativeValue*>(napiElementName);
+    NativeValue *nativeElementName = reinterpret_cast<NativeValue *>(napiElementName);
 
     // wrap RemoteObject
     PRINT_HILOGD("OnAbilityConnectDone begin NAPI_ohos_rpc_CreateJsRemoteObject");
-    napi_value napiRemoteObject = NAPI_ohos_rpc_CreateJsRemoteObject(
-        reinterpret_cast<napi_env>(&engine_), remoteObject);
-    NativeValue* nativeRemoteObject = reinterpret_cast<NativeValue*>(napiRemoteObject);
-    NativeValue* argv[] = {nativeElementName, nativeRemoteObject};
+    napi_value napiRemoteObject =
+        NAPI_ohos_rpc_CreateJsRemoteObject(reinterpret_cast<napi_env>(&engine_), remoteObject);
+    NativeValue *nativeRemoteObject = reinterpret_cast<NativeValue *>(napiRemoteObject);
+    NativeValue *argv[] = { nativeElementName, nativeRemoteObject };
     if (jsConnectionObject_ == nullptr) {
         PRINT_HILOGE("jsConnectionObject_ nullptr");
         return;
     }
-    NativeValue* value = jsConnectionObject_->Get();
-    NativeObject* obj = ConvertNativeValueTo<NativeObject>(value);
+    NativeValue *value = jsConnectionObject_->Get();
+    NativeObject *obj = ConvertNativeValueTo<NativeObject>(value);
     if (obj == nullptr) {
         PRINT_HILOGE("Failed to get object");
         return;
     }
-    NativeValue* methodOnConnect = obj->GetProperty("onConnect");
+    NativeValue *methodOnConnect = obj->GetProperty("onConnect");
     if (methodOnConnect == nullptr) {
         PRINT_HILOGE("Failed to get onConnect from object");
         return;
@@ -594,25 +580,24 @@ void JSPrintExtensionConnection::OnAbilityDisconnectDone(const AppExecFwk::Eleme
     handler_->PostTask(task, "OnAbilityDisconnectDone");
 }
 
-void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk::ElementName &element,
-    int resultCode)
+void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode)
 {
     PRINT_HILOGD("HandleOnAbilityDisconnectDone begin, resultCode:%{public}d", resultCode);
     napi_value napiElementName = OHOS::AppExecFwk::WrapElementName(reinterpret_cast<napi_env>(&engine_), element);
-    NativeValue* nativeElementName = reinterpret_cast<NativeValue*>(napiElementName);
-    NativeValue* argv[] = {nativeElementName};
+    NativeValue *nativeElementName = reinterpret_cast<NativeValue *>(napiElementName);
+    NativeValue *argv[] = { nativeElementName };
     if (jsConnectionObject_ == nullptr) {
         PRINT_HILOGE("jsConnectionObject_ nullptr");
         return;
     }
-    NativeValue* value = jsConnectionObject_->Get();
-    NativeObject* obj = ConvertNativeValueTo<NativeObject>(value);
+    NativeValue *value = jsConnectionObject_->Get();
+    NativeObject *obj = ConvertNativeValueTo<NativeObject>(value);
     if (obj == nullptr) {
         PRINT_HILOGE("Failed to get object");
         return;
     }
 
-    NativeValue* method = obj->GetProperty("onDisconnect");
+    NativeValue *method = obj->GetProperty("onDisconnect");
     if (method == nullptr) {
         PRINT_HILOGE("Failed to get onDisconnect from object");
         return;
@@ -622,10 +607,8 @@ void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk:
     PRINT_HILOGD("OnAbilityDisconnectDone connects_.size:%{public}zu", connects_.size());
     std::string bundleName = element.GetBundleName();
     std::string abilityName = element.GetAbilityName();
-    auto item = std::find_if(connects_.begin(),
-        connects_.end(),
-        [bundleName, abilityName](
-            const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
+    auto item = std::find_if(connects_.begin(), connects_.end(),
+        [bundleName, abilityName](const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
             return (bundleName == obj.first.want.GetBundle()) &&
                    (abilityName == obj.first.want.GetElement().GetAbilityName());
         });
@@ -638,7 +621,7 @@ void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk:
     engine_.CallFunction(value, method, argv, ARGC_ONE);
 }
 
-void JSPrintExtensionConnection::SetJsConnectionObject(NativeValue* jsConnectionObject)
+void JSPrintExtensionConnection::SetJsConnectionObject(NativeValue *jsConnectionObject)
 {
     jsConnectionObject_ = std::unique_ptr<NativeReference>(engine_.CreateReference(jsConnectionObject, 1));
 }
@@ -650,22 +633,22 @@ void JSPrintExtensionConnection::CallJsFailed(int32_t errorCode)
         PRINT_HILOGE("jsConnectionObject_ nullptr");
         return;
     }
-    NativeValue* value = jsConnectionObject_->Get();
-    NativeObject* obj = ConvertNativeValueTo<NativeObject>(value);
+    NativeValue *value = jsConnectionObject_->Get();
+    NativeObject *obj = ConvertNativeValueTo<NativeObject>(value);
     if (obj == nullptr) {
         PRINT_HILOGE("Failed to get object");
         return;
     }
 
-    NativeValue* method = obj->GetProperty("onFailed");
+    NativeValue *method = obj->GetProperty("onFailed");
     if (method == nullptr) {
         PRINT_HILOGE("Failed to get onFailed from object");
         return;
     }
-    NativeValue* argv[] = {engine_.CreateNumber(errorCode)};
+    NativeValue *argv[] = { engine_.CreateNumber(errorCode) };
     PRINT_HILOGD("CallJsFailed CallFunction success");
     engine_.CallFunction(value, method, argv, ARGC_ONE);
     PRINT_HILOGD("CallJsFailed end");
 }
-}  // namespace AbilityRuntime
-}  // namespace OHOS
+} // namespace AbilityRuntime
+} // namespace OHOS

@@ -13,13 +13,12 @@
  * limitations under the License.
  */
 #include "print_notify_proxy.h"
-#include "print_log.h"
+
 #include "message_parcel.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
-PrintNotifyProxy::PrintNotifyProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<PrintNotifyInterface>(impl)
-{
-}
+PrintNotifyProxy::PrintNotifyProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<PrintNotifyInterface>(impl) {}
 
 void PrintNotifyProxy::OnCallBack(MessageParcel &data)
 {

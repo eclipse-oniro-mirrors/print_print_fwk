@@ -21,7 +21,7 @@
 #include <string>
 
 namespace OHOS::Print {
-class PrinterExtensionInfo  {
+class PrinterExtensionInfo {
 public:
     PrinterExtensionInfo();
 
@@ -43,12 +43,12 @@ public:
 
     [[nodiscard]] uint32_t GetVendorIcon() const;
 
-    [[nodiscard]] std::string & GetVersion();
-    
+    [[nodiscard]] std::string &GetVersion();
+
     void Dump();
 
     ~PrinterExtensionInfo();
-    
+
 private:
     uint32_t extensionId_;
     uint32_t vendorId_;

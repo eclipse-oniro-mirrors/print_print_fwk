@@ -33,7 +33,7 @@ private:
     bool OnFindPrinterExtension(MessageParcel &data, MessageParcel &reply);
     bool OnRegisterEvent(MessageParcel &data, MessageParcel &reply);
     bool OnQueryAllExtension(MessageParcel &data, MessageParcel &reply);
-    bool OnLoadExtension (MessageParcel &data, MessageParcel &reply);
+    bool OnLoadExtension(MessageParcel &data, MessageParcel &reply);
     bool OnStartDiscoverPrinter(MessageParcel &data, MessageParcel &reply);
     bool OnStopDiscoverPrint(MessageParcel &data, MessageParcel &reply);
     bool OnAddPrinters(MessageParcel &data, MessageParcel &reply);
@@ -50,11 +50,11 @@ private:
     bool OnRegisterExtCallback(MessageParcel &data, MessageParcel &reply);
     bool OnUnregisterAllExtCallback(MessageParcel &data, MessageParcel &reply);
 
-    void MakePrintJob(MessageParcel &data, PrintJob& printJob);
-    void MakePrinterInfo(MessageParcel &data, PrinterInfo& printerInfo);
+    void MakePrintJob(MessageParcel &data, PrintJob &printJob);
+    void MakePrinterInfo(MessageParcel &data, PrinterInfo &printerInfo);
 
 private:
-    using PrintCmdHandler = bool(PrintServiceStub::*)(MessageParcel&, MessageParcel&);
+    using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);
     std::map<uint32_t, PrintCmdHandler> cmdMap_;
 };
 } // namespace OHOS::Print

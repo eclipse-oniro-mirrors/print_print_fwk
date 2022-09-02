@@ -17,11 +17,13 @@
 #define PRINT_BASE_NOTIFY_H
 
 #include <string>
-#include "print_notify_stub.h"
-#include "printer_info.h"
-#include "print_job.h"
+
 #include "napi/native_api.h"
 #include "noncopyable.h"
+#include "print_job.h"
+#include "print_notify_stub.h"
+#include "printer_info.h"
+
 
 namespace OHOS::Print {
 struct NotifyData {
@@ -42,7 +44,7 @@ public:
     void OnCallBack(MessageParcel &data) override;
 
 protected:
-	NotifyData *GetNotifyData();
+    NotifyData *GetNotifyData();
 
 protected:
     napi_env env_;

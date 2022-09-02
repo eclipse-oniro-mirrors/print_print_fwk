@@ -14,21 +14,19 @@
  */
 
 #include "print_manager_client.h"
-#include "system_ability_definition.h"
+
 #include "iservice_registry.h"
 #include "print_extcb_stub.h"
 #include "print_log.h"
+#include "system_ability_definition.h"
 
 namespace OHOS::Print {
 std::mutex PrintManagerClient::instanceLock_;
 sptr<PrintManagerClient> PrintManagerClient::instance_ = nullptr;
 
-PrintManagerClient::PrintManagerClient() : printServiceProxy_(nullptr), deathRecipient_(nullptr) {
-}
+PrintManagerClient::PrintManagerClient() : printServiceProxy_(nullptr), deathRecipient_(nullptr) {}
 
-PrintManagerClient::~PrintManagerClient()
-{
-}
+PrintManagerClient::~PrintManagerClient() {}
 
 sptr<PrintManagerClient> PrintManagerClient::GetInstance()
 {
@@ -41,7 +39,8 @@ sptr<PrintManagerClient> PrintManagerClient::GetInstance()
     return instance_;
 }
 
-bool PrintManagerClient::On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
+bool PrintManagerClient::On(
+    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
 {
     if (printServiceProxy_ == nullptr) {
         PRINT_HILOGW("Redo GetPrintServiceProxy");
@@ -53,7 +52,7 @@ bool PrintManagerClient::On(const std::string &type, uint32_t &state, PrinterInf
     }
     PRINT_HILOGD("PrintManagerClient On succeeded.");
     return true;
-    //return printServiceProxy_->On(type, state, info);  
+    // return printServiceProxy_->On(type, state, info);
 }
 
 bool PrintManagerClient::Off(const std::string &type)
@@ -67,7 +66,7 @@ bool PrintManagerClient::Off(const std::string &type)
         return false;
     }
     PRINT_HILOGD("PrintManagerClient Off succeeded.");
-    return printServiceProxy_->Off(type);   
+    return printServiceProxy_->Off(type);
 }
 
 bool PrintManagerClient::RegisterExtCallback(uint32_t callbackId, PrintExtCallback cb)
@@ -83,7 +82,7 @@ bool PrintManagerClient::RegisterExtCallback(uint32_t callbackId, PrintExtCallba
 
     if (callbackId >= PRINT_EXTCB_MAX) {
         PRINT_HILOGE("Invalid callback id [%{public}d].", callbackId);
-        return false;        
+        return false;
     }
     sptr<PrintExtcbStub> callbackStub = nullptr;
     auto it = extCallbackMap_.find(callbackId);
@@ -99,7 +98,7 @@ bool PrintManagerClient::RegisterExtCallback(uint32_t callbackId, PrintExtCallba
         callbackStub = it->second;
         callbackStub->SetExtCallback(cb);
     }
-    
+
     bool ret = printServiceProxy_->RegisterExtCallback(callbackId, callbackStub);
     PRINT_HILOGD("PrintManagerClient RegisterExtCallback %{public}s.", ret ? "success" : "failed");
     return ret;
@@ -118,7 +117,7 @@ bool PrintManagerClient::RegisterExtCallback(uint32_t callbackId, PrintJobCallba
 
     if (callbackId >= PRINT_EXTCB_MAX) {
         PRINT_HILOGE("Invalid callback id [%{public}d].", callbackId);
-        return false;        
+        return false;
     }
     sptr<PrintExtcbStub> callbackStub = nullptr;
     auto it = extCallbackMap_.find(callbackId);
@@ -134,7 +133,7 @@ bool PrintManagerClient::RegisterExtCallback(uint32_t callbackId, PrintJobCallba
         callbackStub = it->second;
         callbackStub->SetPrintJobCallback(cb);
     }
-    
+
     bool ret = printServiceProxy_->RegisterExtCallback(callbackId, callbackStub);
     PRINT_HILOGD("PrintManagerClient RegisterExtCallback %{public}s.", ret ? "success" : "failed");
     return ret;
@@ -153,7 +152,7 @@ bool PrintManagerClient::RegisterExtCallback(uint32_t callbackId, PrinterCallbac
 
     if (callbackId >= PRINT_EXTCB_MAX) {
         PRINT_HILOGE("Invalid callback id [%{public}d].", callbackId);
-        return false;        
+        return false;
     }
     sptr<PrintExtcbStub> callbackStub = nullptr;
     auto it = extCallbackMap_.find(callbackId);
@@ -223,9 +222,7 @@ void PrintManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
     printServiceProxy_ = GetPrintServiceProxy();
 }
 
-PrintSaDeathRecipient::PrintSaDeathRecipient()
-{
-}
+PrintSaDeathRecipient::PrintSaDeathRecipient() {}
 
 void PrintSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
@@ -234,10 +231,10 @@ void PrintSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 }
 
 int32_t PrintManagerClient::StartPrint()
-{  
+{
     PRINT_HILOGD("PrintManagerClient EnqueueTask start.");
 
-   if (printServiceProxy_ == nullptr) {
+    if (printServiceProxy_ == nullptr) {
         PRINT_HILOGW("Redo GetPrintServiceProxy");
         printServiceProxy_ = GetPrintServiceProxy();
     }
@@ -333,7 +330,7 @@ bool PrintManagerClient::StartPrintJob(PrintJob jobinfo)
     return printServiceProxy_->StartPrintJob(jobinfo);
 }
 
-bool PrintManagerClient::CancelPrintJob(PrintJob jobinfo) 
+bool PrintManagerClient::CancelPrintJob(PrintJob jobinfo)
 {
     if (printServiceProxy_ == nullptr) {
         PRINT_HILOGW("Redo GetPrintServiceProxy");
@@ -345,7 +342,7 @@ bool PrintManagerClient::CancelPrintJob(PrintJob jobinfo)
     }
     PRINT_HILOGD("PrintManagerClient CancelPrintJob succeeded.");
     return printServiceProxy_->CancelPrintJob(jobinfo);
-}////
+} ////
 
 bool PrintManagerClient::AddPrinters(std::vector<PrinterInfo> arrayPrintInfo)
 {
@@ -417,7 +414,7 @@ bool PrintManagerClient::RequestPreview(PrintJob jobinfo, std::string &previewRe
     return printServiceProxy_->RequestPreview(jobinfo, previewResult);
 }
 
-bool PrintManagerClient::QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability) 
+bool PrintManagerClient::QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability)
 {
     if (printServiceProxy_ == nullptr) {
         PRINT_HILOGW("Redo GetPrintServiceProxy");

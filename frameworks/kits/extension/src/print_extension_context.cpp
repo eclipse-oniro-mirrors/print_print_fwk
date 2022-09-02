@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace AbilityRuntime {
-const size_t PrintExtensionContext::CONTEXT_TYPE_ID(std::hash<const char*> {} ("PrintExtensionContext"));
+const size_t PrintExtensionContext::CONTEXT_TYPE_ID(std::hash<const char *> {}("PrintExtensionContext"));
 int PrintExtensionContext::ILLEGAL_REQUEST_CODE(-1);
 
 ErrCode PrintExtensionContext::StartAbility(const AAFwk::Want &want) const
@@ -38,8 +38,8 @@ ErrCode PrintExtensionContext::StartAbility(const AAFwk::Want &want) const
 ErrCode PrintExtensionContext::StartAbility(const AAFwk::Want &want, const AAFwk::StartOptions &startOptions) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, startOptions, token_,
-        ILLEGAL_REQUEST_CODE);
+    ErrCode err =
+        AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, startOptions, token_, ILLEGAL_REQUEST_CODE);
     PRINT_HILOGD("%{public}s. End calling StartAbility. ret=%{public}d", __func__, err);
     if (err != ERR_OK) {
         PRINT_HILOGE("PrintExtensionContext::StartAbility is failed %{public}d", err);
@@ -51,8 +51,7 @@ bool PrintExtensionContext::ConnectAbility(
     const AAFwk::Want &want, const sptr<AbilityConnectCallback> &connectCallback) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    ErrCode ret =
-        ConnectionManager::GetInstance().ConnectAbility(token_, want, connectCallback);
+    ErrCode ret = ConnectionManager::GetInstance().ConnectAbility(token_, want, connectCallback);
     PRINT_HILOGD("PrintExtensionContext::ConnectAbility ErrorCode = %{public}d", ret);
     return ret == ERR_OK;
 }
@@ -61,8 +60,8 @@ ErrCode PrintExtensionContext::StartAbilityWithAccount(const AAFwk::Want &want, 
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
     PRINT_HILOGD("%{public}d accountId:", accountId);
-    ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(
-        want, token_, ILLEGAL_REQUEST_CODE, accountId);
+    ErrCode err =
+        AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, token_, ILLEGAL_REQUEST_CODE, accountId);
     PRINT_HILOGD("%{public}s. End calling StartAbilityWithAccount. ret=%{public}d", __func__, err);
     if (err != ERR_OK) {
         PRINT_HILOGE("PrintExtensionContext::StartAbilityWithAccount is failed %{public}d", err);
@@ -74,8 +73,8 @@ ErrCode PrintExtensionContext::StartAbilityWithAccount(
     const AAFwk::Want &want, int accountId, const AAFwk::StartOptions &startOptions) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, startOptions, token_,
-        ILLEGAL_REQUEST_CODE, accountId);
+    ErrCode err = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(
+        want, startOptions, token_, ILLEGAL_REQUEST_CODE, accountId);
     PRINT_HILOGD("%{public}s. End calling StartAbilityWithAccount. ret=%{public}d", __func__, err);
     if (err != ERR_OK) {
         PRINT_HILOGE("PrintExtensionContext::StartAbilityWithAccount is failed %{public}d", err);
@@ -87,8 +86,7 @@ bool PrintExtensionContext::ConnectAbilityWithAccount(
     const AAFwk::Want &want, int accountId, const sptr<AbilityConnectCallback> &connectCallback) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    ErrCode ret =
-        ConnectionManager::GetInstance().ConnectAbilityWithAccount(token_, want, accountId, connectCallback);
+    ErrCode ret = ConnectionManager::GetInstance().ConnectAbilityWithAccount(token_, want, accountId, connectCallback);
     PRINT_HILOGD("PrintExtensionContext::ConnectAbilityWithAccount ErrorCode = %{public}d", ret);
     return ret == ERR_OK;
 }
@@ -97,8 +95,7 @@ ErrCode PrintExtensionContext::DisconnectAbility(
     const AAFwk::Want &want, const sptr<AbilityConnectCallback> &connectCallback) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    ErrCode ret =
-        ConnectionManager::GetInstance().DisconnectAbility(token_, want.GetElement(), connectCallback);
+    ErrCode ret = ConnectionManager::GetInstance().DisconnectAbility(token_, want.GetElement(), connectCallback);
     if (ret != ERR_OK) {
         PRINT_HILOGE("%{public}s end DisconnectAbility error, ret=%{public}d", __func__, ret);
     }
@@ -127,5 +124,5 @@ AppExecFwk::AbilityType PrintExtensionContext::GetAbilityInfoType() const
 
     return info->type;
 }
-}  // namespace AbilityRuntime
-}  // namespace OHOS
+} // namespace AbilityRuntime
+} // namespace OHOS
