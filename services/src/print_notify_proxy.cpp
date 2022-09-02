@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 #include "print_notify_proxy.h"
-#include "log.h"
+#include "print_log.h"
 #include "message_parcel.h"
 
 namespace OHOS::Print {

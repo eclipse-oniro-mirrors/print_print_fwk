@@ -19,7 +19,11 @@
 #include "async_call.h"
 #include "napi/native_api.h"
 #include "print_task.h"
-#include "print_info.h"
+#include "printer_info.h"
+#include "printer_capability.h"
+#include "print_resolution.h"
+#include "print_page_size.h"
+#include "print_margin.h"
 #include "noncopyable.h"
 
 namespace OHOS::Print {
@@ -29,21 +33,29 @@ public:
     static napi_value RemovePrinters(napi_env env, napi_callback_info info);
     static napi_value UpdatePrinterState(napi_env env, napi_callback_info info);
     static napi_value UpdatePrintJobState(napi_env env, napi_callback_info info);
-    static bool ParseInfo(napi_env env, napi_value InfoValue, PrintInfo &Info);
-    static bool ParseInfoParam(napi_env env, napi_value InfoValue, PrintInfo &info);
+    static bool ParseInfo(napi_env env, napi_value InfoValue, PrinterInfo &Info);
+    static bool ParseInfoParam(napi_env env, napi_value InfoValue, PrinterInfo &info);
     static bool ParseCapability(napi_env env, napi_value InfoValue, PrinterCapability &capability);
+    static bool ParseCapabilityParam(napi_env env, napi_value InfoValue, PrinterCapability &capability);
+    static bool ParsePageSize(napi_env env, napi_value capValue, PrintPageSize &PrintPageSize);
+    static bool ParsePageSizeParam(napi_env env, napi_value capValue, PrintPageSize &PrintPageSize);
+    static bool ParseResolution(napi_env env, napi_value reValue, PrintResolution &PrintResolution);
+    static bool ParseResolutionParam(napi_env env, napi_value reValue, PrintResolution &PrintResolution);
+    static bool ParseMargin(napi_env env, napi_value marginValue, PrintMargin &PrintMargin);
+    static bool ParseMarginParam(napi_env env, napi_value marginValue, PrintMargin &PrintMargin);
+    
 private:
     struct NapiPrintExtContext : public AsyncCall::Context {
         PrintTask *task_ = nullptr;
-        PrintInfo info_;
-        std::vector<PrintInfo> arrayPrintInfo;
+        PrinterInfo info_;
         bool result = false;
         uint32_t printerId = 0;
         uint32_t printerJobId = 0;
         uint32_t printerState = 0;
         uint32_t printerJobState = 0;
         napi_status status = napi_generic_failure;
-        std::vector<PrintInfo> printInfoVector;
+        std::vector<PrinterInfo> printAddInfoVector;
+        std::vector<PrinterInfo> printRemoveInfoVector;
         NapiPrintExtContext() : Context(nullptr, nullptr) {};
         NapiPrintExtContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
         virtual ~NapiPrintExtContext() {};

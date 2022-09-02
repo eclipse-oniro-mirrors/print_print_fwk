@@ -26,7 +26,6 @@
 #include <thread>
 #include <utility>
 #include "unistd.h"
-#include "log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -35,6 +34,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <time.h>
+#include "print_log.h"
 
 namespace OHOS::Print {
 std::mutex PrintServiceManager::instanceLock_;
@@ -58,10 +58,16 @@ PrintServiceManager *PrintServiceManager::GetInstance()
     return instance_;
 }
 
-int32_t PrintServiceManager::Dummy()
+bool PrintServiceManager::On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
 {
-    int32_t taskId = -1;
-    return taskId;
+    PRINT_HILOGE("PrintServiceManager on started.");
+    return true;
+}
+
+bool PrintServiceManager::Off(const std::string &type)
+{
+    PRINT_HILOGE("PrintServiceManager on started.");
+    return true;
 }
 
 bool PrintServiceManager::ConnectPrinter(uint32_t printerId)
@@ -116,13 +122,13 @@ bool PrintServiceManager::CancelPrintJob(PrintJob jobinfo)
     return true;
 }
 
-bool PrintServiceManager::AddPrinters(std::vector<PrintInfo> arrayPrintInfo)
+bool PrintServiceManager::AddPrinters(std::vector<PrinterInfo> arrayPrintInfo)
 {
     PRINT_HILOGE("PrintServiceManager AddPrinters started.");
     return true;
 }
 
-bool PrintServiceManager::RemovePrinters(std::vector<PrintInfo> arrayPrintInfo)
+bool PrintServiceManager::RemovePrinters(std::vector<PrinterInfo> arrayPrintInfo)
 {
     PRINT_HILOGE("PrintServiceManager RemovePrinters started.");
     return true;
@@ -158,31 +164,38 @@ bool PrintServiceManager::QueryPrinterCapability(uint32_t printerId, PrinterCapa
     printerCapability.SetColorMode(10);
     printerCapability.SetDuplexMode(11);
     
-    PrintMargin printMargin;
-    printMargin.SetTop(5);
-    printMargin.SetBottom(5);
-    printMargin.SetLeft(5);
-    printMargin.SetRight(5);   
-    printerCapability.SetMinMargin(printMargin);
+    PrintMargin PrintMargin;
+    PrintMargin.SetTop(5);
+    PrintMargin.SetBottom(5);
+    PrintMargin.SetLeft(5);
+    PrintMargin.SetRight(5);   
+    printerCapability.SetMinMargin(PrintMargin);
 
-    PrinterPageSize printerPageSize;
-    printerPageSize.SetId(6);
-    printerPageSize.SetName("name");
-    printerPageSize.SetWidth(6);
-    printerPageSize.SetHeight(6);
-    printerCapability.SetPageSize(printerPageSize);
+    std::vector<PrintPageSize> pageSizeList;
+    PrintPageSize pageSize;
+    pageSize.SetId(6);
+    pageSize.SetName("name");
+    pageSize.SetWidth(6);
+    pageSize.SetHeight(6);
+    pageSizeList.push_back(pageSize);
+    
+    printerCapability.SetPageSize(pageSizeList);
 
-    PrinterResolution printerResolution;
-    printerResolution.SetId(6);
-    printerResolution.SetHorizontalDpi(6);
-    printerResolution.SetVerticalDpi(6);
-    printerCapability.SetResolution(printerResolution);
+    std::vector<PrintResolution> resolutionList;
+    PrintResolution res;
+    res.SetId(6);
+    res.SetHorizontalDpi(6);
+    res.SetVerticalDpi(6);
+    resolutionList.push_back(res);
+    printerCapability.SetResolution(resolutionList);
 
     printerCapability.Dump();
-    printerCapability.GetMinMargin().Dump();
-    printerCapability.GetPageSize()[0].Dump();
-    printerCapability.GetResolution()[0].Dump();
     PRINT_HILOGE("PrintServiceManager RequestPreview started.");
     return true;
+}
+
+void PrintServiceManager::InstallCallback(uint32_t taskId, PrintTaskCallback eventCb)
+{
+    PRINT_HILOGE("PrintServiceManager InstallCallback started.");
 }
 } // namespace OHOS::Request::Print

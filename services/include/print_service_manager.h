@@ -25,18 +25,21 @@
 #include <mutex>
 #include <iosfwd>
 #include <vector>
-#include "print_extension_Info.h"
-#include "print_cap_ability.h"
+#include "print_extension_info.h"
+#include "print_notify_interface.h"
+#include "printer_capability.h"
 #include "print_job.h"
-#include "print_info.h"
-
-#include "constant.h"
+#include "printer_info.h"
+#include "print_constant.h"
 
 namespace OHOS::Print {
+using PrintTaskCallback = void(*)(const std::string& type, uint32_t taskId, uint32_t argv1, uint32_t argv2);
+
 class PrintServiceManager final {
 public:
     static PrintServiceManager *GetInstance();
-    int32_t Dummy();
+    bool On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener);
+    bool Off(const std::string &type);
     bool ConnectPrinter(uint32_t printerId);
     bool DisconnectPrinter(uint32_t printerId);
     bool QueryExtensionAbilityInfos(std::vector<PrinterExtensionInfo> &arrayExtensionInfo);
@@ -44,12 +47,13 @@ public:
     bool StopDiscoverPrinter();
     bool StartPrintJob(PrintJob jobinfo);
     bool CancelPrintJob(PrintJob jobinfo);
-    bool AddPrinters(std::vector<PrintInfo> arrayPrintInfo);
-    bool RemovePrinters(std::vector<PrintInfo> arrayPrintInfo);
+    bool AddPrinters(std::vector<PrinterInfo> arrayPrintInfo);
+    bool RemovePrinters(std::vector<PrinterInfo> arrayPrintInfo);
     bool UpdatePrinterState(uint32_t printerId, uint32_t state);
     bool UpdatePrinterJobState(uint32_t jobId, uint32_t state);
     bool RequestPreview(PrintJob jobinfo, std::string &previewResult);
     bool QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability);
+    void InstallCallback(uint32_t taskId, PrintTaskCallback eventCb);
 
 private:
     explicit PrintServiceManager();

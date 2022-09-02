@@ -21,11 +21,12 @@
 #include <condition_variable>
 #include "iremote_object.h"
 #include "refbase.h"
-#include "print_extension_Info.h"
-#include "print_notify_stub.h"
+#include "print_extension_info.h"
+#include "print_notify_interface.h"
 #include "print_job.h"
 #include "print_service_interface.h"
-#include "print_info.h"
+#include "print_extcb_stub.h"
+#include "printer_info.h"
 
 namespace OHOS::Print {
 class PrintSaDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -35,26 +36,25 @@ public:
     void OnRemoteDied(const wptr<IRemoteObject> &object) override;
 };
 
-class PrintManager : public RefBase {
+class PrintManagerClient : public RefBase {
 public:
-    PrintManager();
+    PrintManagerClient();
     bool LoadPrintServer();
     void LoadServerSuccess();
     void LoadServerFail();
-    ~PrintManager();
-    static sptr<PrintManager> GetInstance();
+    ~PrintManagerClient();
+    static sptr<PrintManagerClient> GetInstance();
     bool CheckPermission();
     
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
 
     //Client Napi
-    int32_t Dummy();
-    bool Print(uint32_t taskId);
+    int32_t StartPrint();
     bool QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo);
     bool StartDiscoverPrinter(std::vector<uint32_t> extensionList);
     bool StopDiscoverPrinter();
-    bool AddPrinters(std::vector<PrintInfo> arrayPrintInfo);
-    bool RemovePrinters(std::vector<PrintInfo> arrayPrintInfo);
+    bool AddPrinters(std::vector<PrinterInfo> arrayPrintInfo);
+    bool RemovePrinters(std::vector<PrinterInfo> arrayPrintInfo);
     bool ConnectPrinter(uint32_t printerId);
     bool DisconnectPrinter(uint32_t printerId);
     bool StartPrintJob(PrintJob jobinfo);
@@ -64,17 +64,24 @@ public:
     bool RequestPreview(PrintJob jobinfo, std::string &previewResult);
     bool QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability);
 
-    bool On(uint32_t taskId, const std::string& type, const sptr<PrintNotifyInterface>& listener);
-    bool Off(uint32_t taskId, const std::string& type);
+    bool On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener);
+    bool Off(const std::string &type);
+
+    bool RegisterExtCallback(uint32_t callbackId, PrintExtCallback cb);
+    bool RegisterExtCallback(uint32_t callbackId, PrintJobCallback cb);
+    bool RegisterExtCallback(uint32_t callbackId, PrinterCallback cb);
+    bool UnregisterAllExtCallback();
 
 private:
     sptr<PrintServiceInterface> GetPrintServiceProxy();
 
 private:
     static std::mutex instanceLock_;
-    static sptr<PrintManager> instance_;
+    static sptr<PrintManagerClient> instance_;
     sptr<PrintServiceInterface> printServiceProxy_;
     sptr<PrintSaDeathRecipient> deathRecipient_;
+
+    std::map<uint32_t, sptr<PrintExtcbStub>> extCallbackMap_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_MANAGER_H

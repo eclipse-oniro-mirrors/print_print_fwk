@@ -18,8 +18,9 @@
 
 #include <string>
 #include "print_notify_interface.h"
-#include "print_extension_Info.h"
-#include "print_info.h"
+#include "print_extcb_interface.h"
+#include "print_extension_info.h"
+#include "printer_info.h"
 #include "print_job.h"
 #include "iremote_broker.h"
 
@@ -27,27 +28,29 @@ namespace OHOS::Print {
 class PrintServiceInterface : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.PrintServiceInterface");
-    virtual int32_t Dummy() = 0;
+    virtual int32_t StartPrint() = 0;
     virtual bool ConnectPrinter(uint32_t printerId) = 0;
     virtual bool DisconnectPrinter(uint32_t printerId) = 0;
-    virtual bool StartDiscoverPrinter(std::vector<uint32_t> extensionList) = 0;
+    virtual bool StartDiscoverPrinter(const std::vector<uint32_t>& extensionList) = 0;
     virtual bool StopDiscoverPrinter() = 0;
-    virtual bool QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo) = 0;
-    virtual bool StartPrintJob(PrintJob jobinfo) = 0;
-    virtual bool CancelPrintJob(PrintJob jobinfo) = 0;
-    virtual bool AddPrinters(std::vector<PrintInfo> arrayPrintInfo) = 0;
-    virtual bool RemovePrinters(std::vector<PrintInfo> arrayPrintInfo) = 0;
+    virtual bool QueryAllExtension(std::vector<PrinterExtensionInfo>& arrayExtensionInfo) = 0;
+    virtual bool StartPrintJob(const PrintJob& jobinfo) = 0;
+    virtual bool CancelPrintJob(const PrintJob& jobinfo) = 0;
+    virtual bool AddPrinters(const std::vector<PrinterInfo>& arrayPrintInfo) = 0;
+    virtual bool RemovePrinters(const std::vector<PrinterInfo>& arrayPrintInfo) = 0;
     virtual bool UpdatePrinterState(uint32_t printerId, uint32_t state) = 0;
     virtual bool UpdatePrinterJobState(uint32_t jobId, uint32_t state) = 0;
-    virtual bool RequestPreview(PrintJob jobinfo, std::string &previewResult) = 0;
+    virtual bool RequestPreview(const PrintJob& jobinfo, std::string &previewResult) = 0;
     virtual bool QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability) = 0;
     virtual bool CheckPermission() = 0;
-    virtual bool On(uint32_t taskId, const std::string &type, const sptr<PrintNotifyInterface> &listener) = 0;
-    virtual bool Off(uint32_t taskId, const std::string &type) = 0;
+    virtual bool On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener) = 0;
+    virtual bool Off(const std::string &type) = 0;
+    virtual bool RegisterExtCallback(uint32_t callbackId, const sptr<PrintExtcbInterface> &listener) = 0;
+    virtual bool UnregisterAllExtCallback() = 0;
 };
 
 enum {
-    CMD_DUMMY,
+    CMD_START_PRINT,
     CMD_CONNECTPRINTER,
     CMD_DISCONNECTPRINTER,
     CMD_STARTDISCOVERPRINTER,
@@ -64,6 +67,8 @@ enum {
     CMD_CHECKPERMISSION,
     CMD_ON,
     CMD_OFF,
+    CMD_REG_EXT_CB,
+    CMD_UNREG_EXT_CB,
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

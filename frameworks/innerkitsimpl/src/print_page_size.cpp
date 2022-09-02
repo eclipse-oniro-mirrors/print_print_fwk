@@ -14,76 +14,82 @@
  */
 
 #include "print_page_size.h"
-#include "log.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
-PrinterPageSize::PrinterPageSize () 
-: id_(0), name_("PrinterPageSize"), width_(0), height_(0) {
-    
+PrintPageSize::PrintPageSize() : id_(0), name_("PrintPageSize"), width_(0), height_(0)
+{    
 }
 
-void PrinterPageSize::SetId(uint32_t id)
+PrintPageSize::PrintPageSize(const PrintPageSize& right)
 {
-    id_ = id;
+    id_ = right.id_;
+    name_ = right.name_;
+    width_ = right.width_;
+    height_ = right.height_;
 }
 
-void PrinterPageSize::SetName(const std::string &name)
+PrintPageSize& PrintPageSize::operator=(const PrintPageSize& right)
 {
-    name_ = name;
-}
-
-void PrinterPageSize::SetWidth(uint32_t width)
-{
-    width_ = width;
-}
-
-void PrinterPageSize::SetHeight(uint32_t height)
-{
-    height_ = height;
-}
-
-uint32_t PrinterPageSize::GetId() const
-{
-    return id_;
-}
-
-std::string &PrinterPageSize::GetName()
-{
-    return name_;
-}
-
-uint32_t PrinterPageSize::GetWidth() const
-{
-    return width_;
-}
-
-uint32_t PrinterPageSize::GetHeight() const
-{
-    return height_;
-}
-
-PrinterPageSize &PrinterPageSize::operator=(const PrinterPageSize &printerPageSize)
-{
-    if(this != &printerPageSize){
-        this->id_ = printerPageSize.id_;
-        this->name_ = printerPageSize.name_;
-        this->width_ = printerPageSize.width_;
-        this->height_ = printerPageSize.height_;  
+    if(this != &right){
+        id_ = right.id_;
+        name_ = right.name_;
+        width_ = right.width_;
+        height_ = right.height_;  
     }
     return *this;
 }
 
-void PrinterPageSize::Dump()
+PrintPageSize::~PrintPageSize()
+{
+}
+
+void PrintPageSize::SetId(uint32_t id)
+{
+    id_ = id;
+}
+
+void PrintPageSize::SetName(const std::string &name)
+{
+    name_ = name;
+}
+
+void PrintPageSize::SetWidth(uint32_t width)
+{
+    width_ = width;
+}
+
+void PrintPageSize::SetHeight(uint32_t height)
+{
+    height_ = height;
+}
+
+uint32_t PrintPageSize::GetId() const
+{
+    return id_;
+}
+
+const std::string& PrintPageSize::GetName() const
+{
+    return name_;
+}
+
+uint32_t PrintPageSize::GetWidth() const
+{
+    return width_;
+}
+
+uint32_t PrintPageSize::GetHeight() const
+{
+    return height_;
+}
+
+void PrintPageSize::Dump()
 {
     PRINT_HILOGD("top_ = %{public}d", id_);
     PRINT_HILOGD("name_ = %{public}s", name_.c_str());
     PRINT_HILOGD("width_ = %{public}d", width_);
     PRINT_HILOGD("height_ = %{public}d", height_);
-}
-
-PrinterPageSize ::~PrinterPageSize ()
-{
-
 }
 
 } // namespace OHOS::Print

@@ -19,7 +19,7 @@ config("print_interfaces_kits_napi_config") {
 
   cflags_cc = [ "-fexceptions" ]
 }
-ohos_shared_library("printclient") {
+ohos_shared_library("print_client") {
   include_dirs = [
     "//foundation/arkui/ace_engine/frameworks/base/utils",
     "//foundation/arkui/napi",
@@ -40,23 +40,28 @@ ohos_shared_library("printclient") {
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
   sources = [
-    "src/print_manager.cpp",
+    "src/print_manager_client.cpp",
     "src/print_notify_stub.cpp",
     "src/print_service_proxy.cpp",
-    "src/print_cap_ability.cpp",
+    "src/printer_capability.cpp",
     "src/print_margin.cpp",
     "src/print_page_size.cpp",
     "src/print_resolution.cpp",
-    "src/print_extension_Info.cpp",
-    "src/print_info.cpp",
+    "src/print_extension_info.cpp",
+    "src/printer_info.cpp",
     "src/print_range.cpp",
     "src/preview_attribute.cpp",
     "src/print_job.cpp",
+    "src/print_base_notify.cpp",
+    "src/print_fail_notify.cpp",
+    "src/print_notify.cpp",
+    "src/print_progress_notify.cpp",
+    "src/print_extcb_stub.cpp",
+    "src/print_napi_utils.cpp",
   ]
   deps = [
     "//foundation/arkui/napi:ace_napi",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-    "//third_party/curl:curl",
   ]
   external_deps = [
     "ability_base:want",

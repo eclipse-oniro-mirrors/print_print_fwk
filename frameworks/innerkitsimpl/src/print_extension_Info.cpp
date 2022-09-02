@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include "print_extension_Info.h"
-#include "log.h"
+#include "print_extension_info.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
 PrinterExtensionInfo::PrinterExtensionInfo  () 

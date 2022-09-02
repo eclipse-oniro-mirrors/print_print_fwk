@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PRINT_CAP_ABILITY_H
-#define PRINT_CAP_ABILITY_H
+#ifndef PRINTER_CAPABILITY_H
+#define PRINTER_CAPABILITY_H
 
 #include <mutex>
 #include <string>
@@ -25,38 +25,38 @@
 namespace OHOS::Print {
 class PrinterCapability  {
 public:
-    PrinterCapability ();
+    explicit PrinterCapability();
+    PrinterCapability(const PrinterCapability& right);
+    PrinterCapability& operator=(const PrinterCapability& right);
+    ~PrinterCapability();
 
     void SetMinMargin(PrintMargin &minMargin);
 
-    void SetPageSize(PrinterPageSize pageSize);
+    void SetPageSize(const std::vector<PrintPageSize>& pageSizeList);
 
-    void SetResolution(PrinterResolution resolution);
+    void SetResolution(const std::vector<PrintResolution>& resolutionList);
 
     void SetColorMode(uint32_t colorMode);
 
     void SetDuplexMode(uint32_t duplexMode);
 
-    [[nodiscard]] PrintMargin &GetMinMargin();
+    void GetMinMargin(PrintMargin& margin) const;
 
-    [[nodiscard]] std::vector<PrinterPageSize> &GetPageSize();
+    void GetPageSize(std::vector<PrintPageSize>& pageSizeList) const;
 
-    [[nodiscard]] std::vector<PrinterResolution> &GetResolution();
+    void GetResolution(std::vector<PrintResolution>& resolutionList) const;
 
-    [[nodiscard]] uint32_t GetColorMode();
+    [[nodiscard]] uint32_t GetColorMode() const;
 
-    [[nodiscard]] uint32_t GetDuplexMode();
-    
+    [[nodiscard]] uint32_t GetDuplexMode() const;
+
     void Dump();
-
-    ~PrinterCapability();
-    
 private:
     PrintMargin minMargin_;
-    std::vector<PrinterPageSize> pageSize_;
-    std::vector<PrinterResolution> resolution_;
+    std::vector<PrintPageSize> pageSizeList_;
+    std::vector<PrintResolution> resolutionList_;
     uint32_t colorMode_;
     uint32_t duplexMode_;
 };
 } // namespace OHOS::Print
-#endif // PRINT_CAP_ABILITY_H
+#endif // PRINTER_CAPABILITY_H

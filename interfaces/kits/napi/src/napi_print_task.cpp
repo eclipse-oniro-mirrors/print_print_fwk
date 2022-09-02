@@ -16,10 +16,10 @@
 #include "napi_print_task.h"
 #include <mutex>
 #include "async_call.h"
-#include "log.h"
-#include "napi_utils.h"
+#include "print_log.h"
+#include "print_napi_utils.h"
 #include "print_task.h"
-#include "print_manager.h"
+#include "print_manager_client.h"
 
 static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";
@@ -79,11 +79,11 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("constructor print task!");
     napi_value self = nullptr;
-    size_t argc = NapiUtils::MAX_ARGC;
-    napi_value argv[NapiUtils::MAX_ARGC] = {nullptr};
+    size_t argc = PrintNapiUtils::MAX_ARGC;
+    napi_value argv[PrintNapiUtils::MAX_ARGC] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
 
-    auto task = new PrintTask(PrintManager::GetInstance()->Dummy());
+    auto task = new PrintTask(PrintManagerClient::GetInstance()->StartPrint());
     if (task == nullptr) {
         PRINT_HILOGE("print task fail");
         return nullptr;

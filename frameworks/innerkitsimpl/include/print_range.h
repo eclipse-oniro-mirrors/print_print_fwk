@@ -20,25 +20,28 @@
 #include <vector>
 
 namespace OHOS::Print {
-class PrinterRange{
+class PrintRange{
 public:
-    PrinterRange();
+    explicit PrintRange();
+    PrintRange(const PrintRange& right);
+    PrintRange &operator=(const PrintRange& right);
+    ~PrintRange();
 
     void SetStartPage(uint32_t startPage);
 
     void SetEndPage(uint32_t endPage);
 
-    void SetPages(uint32_t pages);
+    void SetPages(const std::vector<uint32_t>& pages);
+
+    void Reset();
 
     [[nodiscard]]uint32_t GetStartPage() const;
 
     [[nodiscard]]uint32_t GetEndPage() const;
         
-    [[nodiscard]]std::vector<uint32_t> &GetPages();
+    void GetPages(std::vector<uint32_t>& pages) const;
 
     void Dump();
-
-    ~PrinterRange();
 private:
     uint32_t startPage_;
     uint32_t endPage_;

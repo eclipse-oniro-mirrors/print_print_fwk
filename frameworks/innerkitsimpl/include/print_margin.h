@@ -23,7 +23,10 @@
 namespace OHOS::Print {
 class PrintMargin  {
 public:
-    PrintMargin();
+    explicit PrintMargin();
+    PrintMargin(const PrintMargin& right);
+    PrintMargin &operator=(const PrintMargin& right);
+    ~PrintMargin();
 
     void SetTop(uint32_t top);
 
@@ -41,12 +44,7 @@ public:
 
     [[nodiscard]] uint32_t GetRight() const;
     
-    PrintMargin &operator=(const PrintMargin &printMargin);
-
     void Dump();
-
-    ~PrintMargin ();
-    
 private:
     uint32_t top_;
     uint32_t bottom_;

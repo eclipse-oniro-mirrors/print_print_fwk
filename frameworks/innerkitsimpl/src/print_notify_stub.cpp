@@ -15,7 +15,7 @@
 
 #include "print_notify_stub.h"
 #include "print_common.h"
-#include "log.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
 int32_t PrintNotifyStub::OnRemoteRequest(
@@ -24,7 +24,7 @@ int32_t PrintNotifyStub::OnRemoteRequest(
     auto descriptorToken = data.ReadInterfaceToken();
     if (descriptorToken != GetDescriptor()) {
         PRINT_HILOGE("Remote descriptor not the same as local descriptor.");
-        return E_PRINT_TRANSACT_ERROR;
+        return E_PRINT_IPC_ERROR;
     }
     PRINT_HILOGD("PrintNotifyStub  code----> %{public}u", code);
     switch (code) {

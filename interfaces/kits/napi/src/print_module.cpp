@@ -18,8 +18,8 @@
 #include "napi_print_task.h"
 #include "napi_inner_print.h"
 #include "napi_print_ext.h"
-#include "log.h"
-#include "constant.h"
+#include "print_log.h"
+#include "print_constant.h"
 
 using namespace OHOS::Print;
 

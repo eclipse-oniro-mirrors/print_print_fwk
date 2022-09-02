@@ -14,23 +14,64 @@
  */
 
 #include "print_job.h"
-#include "log.h"
+#include "print_log.h"
 
 namespace OHOS::Print{
-PrintJob::PrintJob()
-: jobId_(0), jobState_(1), copyNumber_(1), isSequential_(true),
-isLandscape_(1), colorMode_(1), duplexMode_(1) {   
-
+PrintJob::PrintJob() : jobId_(0), jobState_(1), copyNumber_(1), isSequential_(true), 
+    isLandscape_(1), colorMode_(1), duplexMode_(1)
+{
 }
+
+PrintJob::PrintJob(const PrintJob& right)
+{
+    files_.clear();
+    files_.assign(right.files_.begin(), right.files_.end());
+    
+    printerId_ = right.printerId_;
+    jobId_ = right.jobId_;
+    jobState_ = right.jobState_;
+    copyNumber_ = right.copyNumber_;
+    pageRange_ = right.pageRange_;
+    isSequential_ = right.isSequential_;
+    pageSize_ = right.pageSize_;
+    isLandscape_ = right.isLandscape_;
+    colorMode_ = right.colorMode_;
+    duplexMode_ = right.duplexMode_;
+    margin_ = right.margin_;
+    preview_ = right.preview_;
+}
+
+PrintJob& PrintJob::operator=(PrintJob& right)
+{
+    if(this != &right){
+        files_.clear();
+        files_.assign(right.files_.begin(), right.files_.end());
+
+        printerId_ = right.printerId_;
+        jobId_ = right.jobId_;
+        jobState_ = right.jobState_;
+        copyNumber_ = right.copyNumber_;
+        pageRange_ = right.pageRange_;
+        isSequential_ = right.isSequential_;
+        pageSize_ = right.pageSize_;
+        isLandscape_ = right.isLandscape_;
+        colorMode_ = right.colorMode_;
+        duplexMode_ = right.duplexMode_;
+        margin_ = right.margin_;
+        preview_ = right.preview_;
+    }
+    return *this;
+}
+
 
 PrintJob::~PrintJob()
 {
-
 }
 
-void PrintJob::SetFiles(std::string files)
+void PrintJob::SetFiles(const std::vector<std::string>& files)
 {
-    files_.push_back(files);
+    files_.clear();
+    files_.assign(files.begin(), files.end());
 }
 
 void PrintJob::SetJobId(uint32_t jobId)
@@ -47,97 +88,115 @@ void PrintJob::SetJobState(uint32_t jobState)
 {
     jobState_ = jobState;
 }
+
 void PrintJob::SetCopyNumber(uint32_t copyNumber)
 {
     copyNumber_ = copyNumber;
 }
-void PrintJob::SetPageRange(PrinterRange pageRange)
+
+void PrintJob::SetPageRange(PrintRange pageRange)
 {
     pageRange_ = pageRange;
 }
+
 void PrintJob::SetIsSequential(bool isSequential)
 {
     isSequential_ = isSequential;
 }
-void PrintJob::SetPageSize(PrinterPageSize pageSize)
+
+void PrintJob::SetPageSize(PrintPageSize pageSize)
 {
     pageSize_ = pageSize;
 }
+
 void PrintJob::SetIsLandscape(bool isLandscape)
 {
     isLandscape_ = isLandscape;
 }
+
 void PrintJob::SetColorMode(uint32_t colorMode)
 {
     colorMode_ = colorMode;
 }
+
 void PrintJob::SetDuplexMode(uint32_t duplexmode)
 {
     duplexMode_ = duplexmode;
 }
+
 void PrintJob::SetMargin(PrintMargin margin)
 {
     margin_ = margin;
 }
+
 void PrintJob::SetPreview(PreviewAttribute preview)
 {
     preview_ = preview;
 }
 
-std::vector<std::string> &PrintJob::GetFiles()
+void PrintJob::GetFiles(std::vector<std::string>& files) const
 {
-    return files_;
+    files.clear();
+    files.assign(files_.begin(), files_.end());
 }
-uint32_t PrintJob::GetJobId()
+
+uint32_t PrintJob::GetJobId() const
 {
     return jobId_;
 }
 
-uint32_t PrintJob::GetPrinterId()
+uint32_t PrintJob::GetPrinterId() const
 {
     return printerId_;
 }
 
-uint32_t PrintJob::GetJobState()
+uint32_t PrintJob::GetJobState() const
 {
     return jobState_;
 }
 
-uint32_t PrintJob::GetCopyNumber()
+uint32_t PrintJob::GetCopyNumber() const
 {
     return copyNumber_;
 }
-PrinterRange &PrintJob::GetPageRange()
+
+void PrintJob::GetPageRange(PrintRange& range) const
 {
-    return pageRange_;
+    range = pageRange_;
 }
-bool PrintJob::GetIsSequential()
+
+bool PrintJob::GetIsSequential() const
 {
     return isSequential_;
 }
-PrinterPageSize &PrintJob::GetPageSize()
+void PrintJob::GetPageSize(PrintPageSize& pageSize) const
 {
-    return pageSize_;
+    pageSize = pageSize_;
 }
-bool PrintJob::GetIsLandscape()
+
+bool PrintJob::GetIsLandscape() const
 {
     return isLandscape_;
 }
-uint32_t PrintJob::GetColorMode()
+
+uint32_t PrintJob::GetColorMode() const
 {
     return colorMode_;
 }
-uint32_t PrintJob::GetDuplexMode()
+
+uint32_t PrintJob::GetDuplexMode() const
 {
     return duplexMode_;
 }
-PrintMargin &PrintJob::GetMargin()
+
+void PrintJob::GetMargin(PrintMargin& margin) const
 {
-    return margin_;
+    margin = margin_;
 }
-PreviewAttribute &PrintJob::GetPreview()
+
+void PrintJob::GetPreview(PreviewAttribute& previewAttr) const
 {
-    return preview_;
+    previewAttr = preview_;
 }
 
 void PrintJob::Dump()
@@ -156,5 +215,10 @@ void PrintJob::Dump()
     PRINT_HILOGD("isLandscape_ = %{public}d", isLandscape_);
     PRINT_HILOGD("colorMode_ = %{public}d", colorMode_);
     PRINT_HILOGD("duplexMode_ = %{public}d", duplexMode_);
+
+    pageRange_.Dump();
+    pageSize_.Dump();
+    margin_.Dump();
+    preview_.Dump();
 }
 }

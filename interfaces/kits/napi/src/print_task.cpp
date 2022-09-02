@@ -15,7 +15,7 @@
 
 #include "print_task.h"
 #include "async_call.h"
-#include "log.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
 PrintTask::PrintTask(uint32_t taskId) : taskId_(taskId)

@@ -19,13 +19,17 @@
 #include <string>
 #include <stdint.h>
 #include <iosfwd>
-#include "constant.h"
-#include "print_cap_ability.h"
+#include "print_constant.h"
+#include "printer_capability.h"
 
 namespace OHOS::Print {
-class PrintInfo final {
+class PrinterInfo final {
 public:
-    PrintInfo();
+    explicit PrinterInfo();
+    PrinterInfo(const PrinterInfo& right);
+    PrinterInfo &operator=(PrinterInfo &PrinterInfo);
+    ~PrinterInfo();
+    
     void SetPrinterId(uint32_t printerId);
 
     void SetPrinterName(std::string printerName);
@@ -40,26 +44,15 @@ public:
 
     [[nodiscard]] uint32_t GetPrintId() const;
 
-    [[nodiscard]] std::string &GetPrinterName();
+    [[nodiscard]] const std::string& GetPrinterName() const;
 
     [[nodiscard]] uint32_t GetPrinterIcon() const;
 
     [[nodiscard]] uint32_t GetPrinterState() const;
 
-    [[nodiscard]] std::string &GetDescription();
+    [[nodiscard]] const std::string& GetDescription() const;
 
-    [[nodiscard]] PrinterCapability &GetCapability();
-
-    enum PrinterState
-    {
-        PRINTER_ADDED = 1,
-        PRINTER_REMOVED = 2,
-        PRINTER_IDLE = 3,
-        PRINTER_PRINTING = 4,
-        PRINTER_BLOCKED = 5,
-        PRINTER_BUSY = 6,
-        PRINTER_FAILED = 7,
-    };
+    void GetCapability(PrinterCapability& cap) const;
 
     void Dump();
 

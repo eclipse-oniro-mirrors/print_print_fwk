@@ -26,9 +26,12 @@
 namespace OHOS::Print{
 class PrintJob {
 public:
-    PrintJob();
-
-    void SetFiles(std::string files);
+    explicit PrintJob();
+    PrintJob(const PrintJob& right);
+    PrintJob& operator=(PrintJob& right);
+    ~PrintJob();
+    
+    void SetFiles(const std::vector<std::string>& files);
 
     void SetJobId(uint32_t jobId);
 
@@ -38,11 +41,11 @@ public:
 
     void SetCopyNumber(uint32_t copyNumber);
 
-    void SetPageRange(PrinterRange pageRange_);
+    void SetPageRange(PrintRange pageRange_);
 
     void SetIsSequential(bool isSequential_);
 
-    void SetPageSize(PrinterPageSize pageSize_);
+    void SetPageSize(PrintPageSize pageSize_);
 
     void SetIsLandscape(bool isLandscape_);
 
@@ -54,50 +57,48 @@ public:
 
     void SetPreview(PreviewAttribute preview_);
 
-    std::vector<std::string>&GetFiles();
+    void GetFiles(std::vector<std::string>& fileList) const;
 
-    uint32_t GetJobId();
+    [[nodiscard]] uint32_t GetJobId() const;
 
-    uint32_t GetPrinterId();
+    [[nodiscard]] uint32_t GetPrinterId() const;
 
-    uint32_t GetJobState();
+    [[nodiscard]] uint32_t GetJobState() const;
 
-    uint32_t GetCopyNumber();
+    [[nodiscard]] uint32_t GetCopyNumber() const;
 
-    PrinterRange &GetPageRange();
+    void GetPageRange(PrintRange& range) const;
 
-    bool GetIsSequential();
+    [[nodiscard]] bool GetIsSequential() const;
 
-    PrinterPageSize &GetPageSize();
+    void GetPageSize(PrintPageSize& printPageSize) const;
 
-    bool GetIsLandscape();
+    [[nodiscard]] bool GetIsLandscape() const;
 
-    uint32_t GetColorMode();
+    [[nodiscard]] uint32_t GetColorMode() const;
 
-    uint32_t GetDuplexMode();
+    [[nodiscard]] uint32_t GetDuplexMode() const;
 
-    PrintMargin &GetMargin();
+    void GetMargin(PrintMargin& printMargin) const;
 
-    PreviewAttribute &GetPreview();
-    
+    void GetPreview(PreviewAttribute& previewAttr) const;
+
     void Dump();
-
-    ~PrintJob();
 private:
     std::vector<std::string> files_;
     uint32_t jobId_;
     uint32_t printerId_;
     uint32_t jobState_;
     uint32_t copyNumber_;
-    PrinterRange pageRange_;
+    PrintRange pageRange_;
     bool isSequential_;
-    PrinterPageSize pageSize_;
+    PrintPageSize pageSize_;
     bool isLandscape_;
     int32_t colorMode_;
     int32_t duplexMode_;
     PrintMargin margin_;
     PreviewAttribute preview_;
-
+/*
     enum PrintJobState {
         PRINT_JOB_CREATED = 1,
         PRINT_JOB_QUEUED = 2,
@@ -117,6 +118,7 @@ private:
         PRINT_FAILED = 6,
         PRINT_cancelled = 7,
     };
+*/    
 };
 }// namespace OHOS::Request::Print
 #endif /* PRINT_PRINT_JOB_H */

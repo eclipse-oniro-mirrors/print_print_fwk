@@ -21,22 +21,23 @@
 namespace OHOS::Print {
 class PreviewAttribute {
 public:
-    PreviewAttribute();
+    explicit PreviewAttribute();
+    PreviewAttribute(const PreviewAttribute& right);
+    PreviewAttribute& operator=(const PreviewAttribute& previewAttribute);
+    ~PreviewAttribute();
 
-    void SetResult(const std::string& result_);
+    void SetResult(const std::string& result);
 
-    void SetPreviewRange(PrinterRange previewRange);
+    void SetPreviewRange(const PrintRange& previewRange);
 
     [[nodiscard]] const std::string& GetResult() const;
 
-    [[nodiscard]] PrinterRange GetPreviewRange() const;
+    void GetPreviewRange(PrintRange& range) const;
 
     void Dump();
-
-    ~PreviewAttribute();
 private:
     std::string result_;
-    PrinterRange previewRange_;
+    PrintRange previewRange_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_RESUME_H

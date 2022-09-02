@@ -17,15 +17,9 @@ config("print_service_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
-    "//third_party/curl/include",
-    "//third_party/openssl/include",
   ]
 
-  ldflags = [ "-Wl,--exclude-libs,libcrypto_static.a" ]
-  ldflags += [ "-Wl,--exclude-libs,libcurl.a" ]
-
   cflags_cc = [ "-fexceptions" ]
-  cflags = [ "-DOPENSSL_ARM64_PLATFORM" ]
 }
 
 ohos_shared_library("print_service") {
@@ -34,6 +28,7 @@ ohos_shared_library("print_service") {
     "src/print_service_stub.cpp",
     "src/print_notify_proxy.cpp",
     "src/print_service_manager.cpp",
+    "src/print_extcb_proxy.cpp",
   ]
 
   public_configs = [
@@ -56,15 +51,15 @@ ohos_shared_library("print_service") {
     "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient:net_conn_manager_if",
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-    "//base/print/print/frameworks/innerkitsimpl:printclient",
+    "//base/print/print/frameworks/innerkitsimpl:print_client",
   ]
-
-  defines = [ "NO_SSL_CERTIFICATION=1" ]
 
   external_deps = [
     "ability_base:base",
     "ability_base:want",
     "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
