@@ -17,7 +17,6 @@
 #define PRINT_PAGESIZE_H
 
 #include <map>
-#include <mutex>
 #include <string>
 
 namespace OHOS::Print {

@@ -370,21 +370,6 @@ bool PrintServiceAbility::On(
 {
     std::string combineType = type + "-";
     PRINT_HILOGI("PrintServiceAbility::On started. type=%{public}s", combineType.c_str());
-    /*auto iter = registeredListeners_.find(combineType);
-    if (iter == registeredListeners_.end()) {
-        std::lock_guard<std::mutex> lck(listenerMapMutex_);
-        std::pair<std::string, sptr<IPrintCallback>> newObj(combineType, listener);
-        const auto temp = registeredListeners_.insert(newObj);
-        if (!temp.second) {
-            PRINT_HILOGE("PrintServiceAbility::On insert type=%{public}s object fail.", combineType.c_str());
-            return false;
-        }
-    } else {
-        std::lock_guard<std::mutex> lck(listenerMapMutex_);
-        PRINT_HILOGI("PrintServiceAbility::On Replace listener.");
-        registeredListeners_[combineType] = listener;
-    }
-    PRINT_HILOGI("PrintServiceAbility::On end.");*/
     return true;
 }
 
@@ -392,204 +377,28 @@ bool PrintServiceAbility::Off(const std::string &type)
 {
     std::string combineType = type + "-";
     PRINT_HILOGI("PrintServiceAbility::Off started.type=%{public}s", combineType.c_str());
-    /*auto iter = registeredListeners_.find(combineType);
-    if (iter != registeredListeners_.end()) {
-        PRINT_HILOGE("PrintServiceAbility::Off delete type=%{public}s object message.", combineType.c_str());
-        std::lock_guard<std::mutex> lck(listenerMapMutex_);
-        registeredListeners_.erase(iter);
-        return true;
-    }*/
     return false;
 }
 
 void PrintServiceAbility::DataWriteInfo(PrinterInfo info, MessageParcel &data)
 {
-    /*
-        data.WriteString("PrinterInfo");
-        data.WriteUint32(info.GetPrintId());
-        data.WriteString(info.GetPrinterName());
-        data.WriteUint32(info.GetPrinterIcon());
-        data.WriteUint32(info.GetPrinterState());
-        data.WriteString(info.GetDescription());
-        info.Dump();
-        uint32_t pageSizeLength = info.GetCapability().GetPageSize().size();
-        uint32_t resolutionLength = info.GetCapability().GetResolution().size();
-        data.WriteUint32(pageSizeLength);
-        data.WriteUint32(resolutionLength);
-        data.WriteUint32(info.GetCapability().GetMinMargin().GetTop());
-        data.WriteUint32(info.GetCapability().GetMinMargin().GetBottom());
-        data.WriteUint32(info.GetCapability().GetMinMargin().GetLeft());
-        data.WriteUint32(info.GetCapability().GetMinMargin().GetRight());
-        info.GetCapability().GetMinMargin().Dump();
-        for(uint32_t i = 0; i < pageSizeLength; i++)
-        {
-            data.WriteUint32(info.GetCapability().GetPageSize()[i].GetId());
-            data.WriteString(info.GetCapability().GetPageSize()[i].GetName());
-            data.WriteUint32(info.GetCapability().GetPageSize()[i].GetWidth());
-            data.WriteUint32(info.GetCapability().GetPageSize()[i].GetHeight());
-            info.GetCapability().GetPageSize()[i].Dump();
-        }
-        for(uint32_t i = 0; i < resolutionLength; i++)
-        {
-            data.WriteUint32(info.GetCapability().GetResolution()[i].GetId());
-            data.WriteUint32(info.GetCapability().GetResolution()[i].GetHorizontalDpi());
-            data.WriteUint32(info.GetCapability().GetResolution()[i].GetVerticalDpi());
-            info.GetCapability().GetResolution()[i].Dump();
-        }
-        data.WriteUint32(info.GetCapability().GetColorMode());
-        data.WriteUint32(info.GetCapability().GetDuplexMode());
-        info.GetCapability().Dump();
-    */
+
 }
 
 void PrintServiceAbility::NotifyPrintStateHandler(const std::string &type, uint32_t state, PrinterInfo info)
 {
     std::string combineType = type;
     PRINT_HILOGI("PrintServiceAbility::NotifyHandler combineType %{public}s [%{public}d.", combineType.c_str(), state);
-    /*auto iter = registeredListeners_.find(combineType);
-    if (iter != registeredListeners_.end()) {
-        PRINT_HILOGE("PrintServiceAbility::NotifyHandler type=%{public}s object message.", combineType.c_str());
-        MessageParcel data;
-        DataWrite(info, data);
-        iter->second->OnCallBack(data);
-    }
-    if (type == "blocked") {
-        std::string notifyType = "notify-block";
-        auto iter2 = registeredListeners_.find(notifyType);
-        if (iter2 != registeredListeners_.end()) {
-            MessageParcel data;
-            DataWrite(info, data);
-            iter2->second->OnCallBack(data);
-        }
-    }
-    if (type == "success") {
-        std::string notifyType = "notify-success";
-        auto iter2 = registeredListeners_.find(notifyType);
-        if (iter2 != registeredListeners_.end()) {
-            MessageParcel data;
-            DataWrite(info, data);
-            iter2->second->OnCallBack(data);
-        }
-    }
-     if (type == "failed") {
-        std::string notifyType = "notify-success";
-        auto iter2 = registeredListeners_.find(notifyType);
-        if (iter2 != registeredListeners_.end()) {
-            MessageParcel data;
-            DataWrite(info, data);
-            iter2->second->OnCallBack(data);
-        }
-    }
-     if (type == "cancelled") {
-        std::string notifyType = "notify-success";
-        auto iter2 = registeredListeners_.find(notifyType);
-        if (iter2 != registeredListeners_.end()) {
-            MessageParcel data;
-            DataWrite(info, data);
-            iter2->second->OnCallBack(data);
-        }
-    }*/
 }
 
 void PrintServiceAbility::DataWriteJob(PrintJob job, MessageParcel &data)
 {
-    /*
-        data.WriteString("PrintJob");
-        uint32_t fileLength = job.GetFiles().size();
-        data.WriteUint32(fileLength);
-        for(uint32_t i = 0; i < fileLength; i++)
-        {
-            data.WriteString(job.GetFiles()[i]);
 
-        }
-        data.WriteUint32(job.GetJobId());
-        data.WriteUint32(job.GetPrinterId());
-        data.WriteUint32(job.GetJobState());
-        data.WriteUint32(job.GetCopyNumber());
-
-        data.WriteUint32(job.GetPageRange().GetStartPage());
-        data.WriteUint32(job.GetPageRange().GetEndPage());
-        uint32_t pageLength = job.GetPageRange().GetPages().size();
-        data.WriteUint32(pageLength);
-        for(uint32_t i = 0; i < pageLength; i++)
-        {
-             data.WriteUint32(job.GetPageRange().GetPages()[i]);
-        }
-
-        data.WriteUint32(job.GetIsSequential());
-
-        data.WriteUint32(job.GetPageSize().GetId());
-        data.WriteString(job.GetPageSize().GetName());
-        data.WriteUint32(job.GetPageSize().GetWidth());
-        data.WriteUint32(job.GetPageSize().GetHeight());
-
-        data.WriteUint32(job.GetIsLandscape());
-        data.WriteUint32(job.GetColorMode());
-        data.WriteUint32(job.GetDuplexMode());
-
-        data.WriteUint32(job.GetMargin().GetTop());
-        data.WriteUint32(job.GetMargin().GetBottom());
-        data.WriteUint32(job.GetMargin().GetLeft());
-        data.WriteUint32(job.GetMargin().GetRight());
-
-        data.WriteString(job.GetPreview().GetResult());
-        data.WriteUint32(job.GetPreview().GetPreviewRange().GetStartPage());
-        data.WriteUint32(job.GetPreview().GetPreviewRange().GetEndPage());
-        uint32_t previewPageLength = job.GetPreview().GetPreviewRange().GetPages().size();
-        data.WriteUint32(previewPageLength);
-        for(uint32_t i = 0; i < previewPageLength; i++)
-        {
-             data.WriteUint32(job.GetPreview().GetPreviewRange().GetPages()[i]);
-        }
-    */
 }
 
 void PrintServiceAbility::NotifyJobStateHandler(const std::string &type, uint32_t state, PrintJob job)
 {
     std::string combineType = type;
     PRINT_HILOGI("PrintServiceAbility::NotifyHandler combineType %{public}s [%{public}d.", combineType.c_str(), state);
-    /*auto iter = registeredListeners_.find(combineType);
-    if (iter != registeredListeners_.end()) {
-        PRINT_HILOGE("PrintServiceAbility::NotifyHandler type=%{public}s object message.", combineType.c_str());
-        MessageParcel data;
-        DataWriteJob(job, data);
-        iter->second->OnCallBack(data);
-    }
-    if (type == "blocked") {
-        std::string notifyType = "notify-block";
-        auto iter2 = registeredListeners_.find(notifyType);
-        if (iter2 != registeredListeners_.end()) {
-            MessageParcel data;
-            DataWriteJob(job, data);
-            iter2->second->OnCallBack(data);
-        }
-    }
-    if (type == "success") {
-        std::string notifyType = "notify-success";
-        auto iter2 = registeredListeners_.find(notifyType);
-        if (iter2 != registeredListeners_.end()) {
-            MessageParcel data;
-            DataWriteJob(job, data);
-            iter2->second->OnCallBack(data);
-        }
-    }
-     if (type == "failed") {
-        std::string notifyType = "notify-success";
-        auto iter2 = registeredListeners_.find(notifyType);
-        if (iter2 != registeredListeners_.end()) {
-            MessageParcel data;
-            DataWriteJob(job, data);
-            iter2->second->OnCallBack(data);
-        }
-    }
-     if (type == "cancelled") {
-        std::string notifyType = "notify-success";
-        auto iter2 = registeredListeners_.find(notifyType);
-        if (iter2 != registeredListeners_.end()) {
-            MessageParcel data;
-            DataWriteJob(job, data);
-            iter2->second->OnCallBack(data);
-        }
-    }*/
 }
 } // namespace OHOS::Print

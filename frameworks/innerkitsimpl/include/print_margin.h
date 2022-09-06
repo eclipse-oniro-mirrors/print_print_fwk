@@ -16,10 +16,6 @@
 #ifndef PRINT_MARGIN_H
 #define PRINT_MARGIN_H
 
-#include <map>
-#include <mutex>
-#include <string>
-
 namespace OHOS::Print {
 class PrintMargin {
 public:

@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-//#include "napi/native_api.h"
-//#include "napi/native_node_api.h"
 #include "napi_inner_print.h"
 #include "napi_print_ext.h"
 #include "napi_print_task.h"

@@ -17,27 +17,24 @@
 #define PRINT_CONSTANT_H
 
 namespace OHOS::Print {
-
 enum PrinterState {
-    PRINTER_ADD = 1,  // new printers arrival
-    PRINTER_REMOVED = 2, // printers lost
-    PRINTER_IDLE = 3,  // printer idle
+    PRINTER_ADD = 1,      // new printers arrival
+    PRINTER_REMOVED = 2,  // printers lost
+    PRINTER_IDLE = 3,     // printer idle
     PRINTER_PRINTING = 4, // printer is working
-    PRINTER_BLOCK = 5,	 // printer has been blocked
-    PRINTER_BUSY = 6,	// printer is busy
-    PRINTER_FAULT = 7,	// printer failure
+    PRINTER_BLOCK = 5,    // printer has been blocked
+    PRINTER_BUSY = 6,     // printer is busy
+    PRINTER_FAULT = 7,    // printer failure
     PRINTER_UNKNOWN,
 };
 
 enum PrintJobState {
-    PRINT_JOB_INIT = 1,		// initial state of print job
-    PRINT_JOB_START = 2,	// start print job
-    PRINT_JOB_PRINTING = 3,	// printing
-    PRINT_JOB_BLOCK = 4,	// print job has been blocked
-    PRINT_JOB_COMPLETE = 5,	// print completed
-    PRINT_JOB_CANCEL = 6,	// print job has been cancelled
+    PRINT_JOB_INIT = 1,     // initial state of print job
+    PRINT_JOB_START = 2,    // start print job
+    PRINT_JOB_PRINTING = 3, // printing
+    PRINT_JOB_BLOCK = 4,    // print job has been blocked
+    PRINT_JOB_COMPLETE = 5, // print completed
+    PRINT_JOB_CANCEL = 6,   // print job has been cancelled
 };
-
 } // namespace OHOS::Print
-
 #endif // PRINT_CONSTANT_H

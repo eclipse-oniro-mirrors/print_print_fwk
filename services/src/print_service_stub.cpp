@@ -302,39 +302,6 @@ bool PrintServiceStub::OnQueryPrinterCapability(MessageParcel &data, MessageParc
     PrinterCapability printerCapability;
     bool result = QueryPrinterCapability(data.ReadUint32(), printerCapability);
     printerCapability.ConvertToParcel(reply);
-    /*
-    std::vector<PrintPageSize> pageSizeList;
-    std::vector<PrintResolution> resolutionList;
-
-    printerCapability.GetPageSize(pageSizeList);
-    printerCapability.GetResolution(resolutionList);
-    uint32_t arraypageSizeLength = pageSizeList.size();
-    reply.WriteUint32(arraypageSizeLength);
-    uint32_t resolutionLength = resolutionList.size();
-    reply.WriteUint32(resolutionLength);
-
-    PrintMargin minMargin;
-    printerCapability.GetMinMargin(minMargin);
-    reply.WriteUint32(minMargin.GetTop());
-    reply.WriteUint32(minMargin.GetBottom());
-    reply.WriteUint32(minMargin.GetLeft());
-    reply.WriteUint32(minMargin.GetRight());
-
-    for(uint32_t i = 0; i < arraypageSizeLength; i++) {
-        reply.WriteString(pageSizeList[i].GetId());
-        reply.WriteString(pageSizeList[i].GetName());
-        reply.WriteUint32(pageSizeList[i].GetWidth());
-        reply.WriteUint32(pageSizeList[i].GetHeight());
-    }
-
-    for(uint32_t i = 0; i < resolutionLength; i++) {
-        reply.WriteUint32(resolutionList[i].GetId());
-        reply.WriteUint32(resolutionList[i].GetHorizontalDpi());
-        reply.WriteUint32(resolutionList[i].GetVerticalDpi());
-    }
-
-    reply.WriteUint32(printerCapability.GetColorMode());
-    reply.WriteUint32(printerCapability.GetDuplexMode());*/
     if (!reply.WriteBool(result)) {
         PRINT_HILOGD("WriteBool failed");
         return false;
@@ -363,26 +330,6 @@ bool PrintServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply)
         PRINT_HILOGE("PrintServiceStub::OnEventOn type is null.");
         return false;
     }
-    /*sptr<IRemoteObject> remote = data.ReadRemoteObject();
-    if (remote == nullptr) {
-        PRINT_HILOGD("PrintServiceStub::OnEventOn remote is nullptr");
-        if (!reply.WriteInt32(ERR_NONE)) {
-            return false;
-        }
-        return true;
-    }
-    sptr<IPrintCallback> listener = iface_cast<IPrintCallback>(remote);
-    if (listener.GetRefPtr() == nullptr) {
-        PRINT_HILOGD("PrintServiceStub::OnEventOn listener is null");
-        return false;
-    }
-    PrinterInfo info;
-    bool result = On(type, 2, info, listener);
-    if (!reply.WriteBool(result)) {
-        PRINT_HILOGD("PrintServiceStub::OnEventOn 4444");
-        return false;
-    }
-    PRINT_HILOGD("PrintServiceStub::OnEventOn out");*/
     return true;
 }
 
@@ -466,54 +413,43 @@ void PrintServiceStub::MakePrintJob(MessageParcel &data, PrintJob &printJob)
     printJob.SetPrintId(data.ReadUint32());
     printJob.SetJobState(data.ReadUint32());
     printJob.SetCopyNumber(data.ReadUint32());
-
     PrintRange range;
     range.SetStartPage(data.ReadUint32());
     range.SetEndPage(data.ReadUint32());
     uint32_t pageLength = data.ReadUint32();
-    if (pageLength > 0) {
-        std::vector<uint32_t> rangePages;
-        for (index = 0; index < pageLength; index++) {
-            rangePages.push_back(data.ReadUint32());
-        }
-        range.SetPages(rangePages);
+    std::vector<uint32_t> rangePages;
+    for (index = 0; index < pageLength; index++) {
+        rangePages.push_back(data.ReadUint32());
     }
+    range.SetPages(rangePages);
     printJob.SetPageRange(range);
-
     printJob.SetIsSequential(data.ReadUint32());
-
     PrintPageSize pageSize;
     pageSize.SetId(data.ReadString());
     pageSize.SetName(data.ReadString());
     pageSize.SetWidth(data.ReadUint32());
     pageSize.SetHeight(data.ReadUint32());
     printJob.SetPageSize(pageSize);
-
     printJob.SetIsLandscape(data.ReadUint32());
     printJob.SetColorMode(data.ReadUint32());
     printJob.SetDuplexMode(data.ReadUint32());
-
     PrintMargin minMargin;
     minMargin.SetTop(data.ReadUint32());
     minMargin.SetBottom(data.ReadUint32());
     minMargin.SetLeft(data.ReadUint32());
     minMargin.SetRight(data.ReadUint32());
     printJob.SetMargin(minMargin);
-
     PreviewAttribute previewAttr;
-
     previewAttr.SetResult(data.ReadString());
     range.Reset();
     range.SetStartPage(data.ReadUint32());
     range.SetEndPage(data.ReadUint32());
     uint32_t previewPageLength = data.ReadUint32();
-    if (previewPageLength > 0) {
-        std::vector<uint32_t> previewRangePages;
-        for (index = 0; index < previewPageLength; index++) {
-            previewRangePages.push_back(data.ReadUint32());
-        }
-        range.SetPages(previewRangePages);
+    std::vector<uint32_t> previewRangePages;
+    for (index = 0; index < previewPageLength; index++) {
+        previewRangePages.push_back(data.ReadUint32());
     }
+    range.SetPages(previewRangePages);
     previewAttr.SetPreviewRange(range);
     printJob.SetPreview(previewAttr);
 }
@@ -568,5 +504,4 @@ void PrintServiceStub::MakePrinterInfo(MessageParcel &data, PrinterInfo &printer
     printerInfo.SetCapability(cap);
     printerInfo.Dump();
 }
-
 } // namespace OHOS::Print

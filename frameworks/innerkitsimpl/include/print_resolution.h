@@ -16,10 +16,6 @@
 #ifndef PRINT_RESOLUTION_H
 #define PRINT_RESOLUTION_H
 
-#include <map>
-#include <mutex>
-#include <string>
-
 namespace OHOS::Print {
 class PrintResolution {
 public:

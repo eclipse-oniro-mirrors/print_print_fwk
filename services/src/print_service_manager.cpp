@@ -15,16 +15,11 @@
 
 #include "print_service_manager.h"
 
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <errno.h>
 #include <functional>
-#include <map>
-#include <memory>
-#include <mutex>
 #include <new>
-#include <queue>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
