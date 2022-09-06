@@ -88,5 +88,4 @@ void PrintMargin::Dump()
     PRINT_HILOGD("left_ = %{public}d", left_);
     PRINT_HILOGD("right_ = %{public}d", right_);
 }
-
 } // namespace OHOS::Print

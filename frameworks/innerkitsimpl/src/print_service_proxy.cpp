@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 #include "print_service_proxy.h"
-
-#include <fcntl.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -347,37 +345,6 @@ bool PrintServiceProxy::On(
         PRINT_HILOGE(" Failed to write parcelable ");
         return false;
     }
-    /* if (listener == nullptr) {
-         PRINT_HILOGE("listener is nullptr");
-         return false;
-     }
-
-     if (!data.WriteUint32(taskId)) {
-         PRINT_HILOGE("write taskId=%{public}d fail", taskId);
-         return false;
-     }
-
-     PRINT_HILOGD("PrintServiceProxy::On type=%{public}s", type.c_str());
-     if (type.empty()) {
-         PRINT_HILOGE("PrintServiceProxy::On type is null.");
-         return false;
-     }
-     if (!data.WriteString(type)) {
-         PRINT_HILOGE("write type failed.");
-         return false;
-     }
-     if (!data.WriteRemoteObject(listener->AsObject().GetRefPtr())) {
-         PRINT_HILOGE("write parcel failed.");
-         return false;
-     }
-     int32_t result = Remote()->SendRequest(CMD_ON, data, reply, option);
-     if (result != ERR_NONE) {
-         PRINT_HILOGE(" PrintServiceProxy::On fail, result = %{public}d ", result);
-         return false;
-     }
-     bool ret = reply.ReadBool();
-     PRINT_HILOGD("PrintServiceProxy::On out [result: %{public}d]", ret);
-     return ret;*/
     return true;
 }
 
@@ -390,24 +357,6 @@ bool PrintServiceProxy::Off(const std::string &type)
         PRINT_HILOGE(" Failed to write parcelable ");
         return false;
     }
-    /*
-    if (!data.WriteUint32(taskId)) {
-        PRINT_HILOGE("write taskId=%{public}d fail", taskId);
-        return false;
-    }
-
-    if (!data.WriteString(type)) {
-        PRINT_HILOGE("write type=%{public}s fail", type.c_str());
-        return false;
-    }
-    int32_t result = Remote()->SendRequest(CMD_OFF, data, reply, option);
-    if (result != ERR_NONE) {
-        PRINT_HILOGE(" PrintServiceProxy::Off fail, ret = %{public}d ", result);
-        return false;
-    }
-    bool ret = reply.ReadBool();
-    PRINT_HILOGD("PrintServiceProxy::Off out [ret: %{public}d]", ret);
-    return ret;*/
     return true;
 }
 

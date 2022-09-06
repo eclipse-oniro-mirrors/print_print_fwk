@@ -15,10 +15,6 @@
 
 #include "napi_print_utils.h"
 
-#include <cstring>
-#include <initializer_list>
-#include <memory>
-
 #include "print_log.h"
 #include "securec.h"
 

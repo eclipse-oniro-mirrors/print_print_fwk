@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_EXTENSION_CALLBACK_STUB_H
-#define PRINT_EXTENSION_CALLBACK_STUB_H
+#ifndef printer_extension_callback_stub_H
+#define printer_extension_callback_stub_H
 
 #include <memory>
 

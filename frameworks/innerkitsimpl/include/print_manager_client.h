@@ -23,7 +23,7 @@
 #include "iprint_callback.h"
 #include "iprint_service.h"
 #include "iremote_object.h"
-#include "print_extension_callback_stub.h"
+#include "printer_extension_callback_stub.h"
 #include "print_extension_info.h"
 #include "print_job.h"
 #include "print_sa_death_recipient.h"

@@ -93,11 +93,10 @@ bool ParseType::ParseInfo(napi_env env, napi_value InfoValue, PrinterInfo &info)
 
 bool ParseType::ParseCapability(napi_env env, napi_value capValue, PrinterCapability &capability)
 {
-    if (!ParseCapabilityParam(env, capValue, capability)) {
-        PRINT_HILOGD("ParseCapabilityParam is error!");
+    if (!ParseCapParam(env, capValue, capability)) {
+        PRINT_HILOGD("ParseCapParam is error!");
         return false;
     }
-    // capability.SetMinMargin(PrintNapiUtils::GetStringPropertyUtf8(env, capValue, PARAM_CAPABILITY_MINMARGIN));
     capability.SetColorMode(PrintNapiUtils::GetUint32Property(env, capValue, PARAM_CAPABILITY_COLORMODE));
     capability.SetDuplexMode(PrintNapiUtils::GetUint32Property(env, capValue, PARAM_CAPABILITY_DUPLEXMODE));
     PRINT_HILOGD("capability_value colorMode value is  %{public}d", capability.GetColorMode());
@@ -242,7 +241,7 @@ bool ParseType::ParseInfoParam(napi_env env, napi_value InfoValue, PrinterInfo &
     return true;
 }
 
-bool ParseType::ParseCapabilityParam(napi_env env, napi_value capValue, PrinterCapability &capability)
+bool ParseType::ParseCapParam(napi_env env, napi_value capValue, PrinterCapability &capability)
 {
     napi_value param_one = PrintNapiUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_MINMARGIN);
     if (PrintNapiUtils::GetValueType(env, param_one) != napi_object) {
@@ -318,7 +317,7 @@ bool ParseType::ParseCapabilityParam(napi_env env, napi_value capValue, PrinterC
     }
     napi_value param_five = PrintNapiUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_DUPLEXMODE);
     if (PrintNapiUtils::GetValueType(env, param_five) != napi_number) {
-        // ParseCapabilityParam()
+        // ParseCapParam()
         PRINT_HILOGD("error param_five");
         return false;
     }
@@ -429,7 +428,6 @@ bool ParseType::ParseJobParam(napi_env env, napi_value jobValue, PrintJob &print
         return false;
     }
     napi_value param_four = PrintNapiUtils::GetNamedProperty(env, jobValue, PARAM_JOB_JOBSTATE);
-    // napi_value jobState = PrintNapiUtils::GetNamedProperty(env, param_four, PARAM_JOB_PRINTERSTATE);
     if (PrintNapiUtils::GetValueType(env, param_four) != napi_number) {
         PRINT_HILOGD("error param_four");
         return false;

@@ -30,10 +30,10 @@ namespace OHOS {
 namespace AbilityRuntime {
 NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr<PrintExtensionContext> context);
 
-class JSPrintExtensionConnection : public AbilityConnectCallback {
+class JSPrintExtensionContext : public AbilityConnectCallback {
 public:
-    explicit JSPrintExtensionConnection(NativeEngine &engine);
-    ~JSPrintExtensionConnection();
+    explicit JSPrintExtensionContext(NativeEngine &engine);
+    ~JSPrintExtensionContext();
     void OnAbilityConnectDone(
         const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode) override;
     void OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode) override;
@@ -63,7 +63,7 @@ struct key_compare {
     }
 };
 
-static std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>, key_compare> connects_;
+static std::map<ConnecttionKey, sptr<JSPrintExtensionContext>, key_compare> connects_;
 static int64_t serialNumber_ = 0;
 static std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
 } // namespace AbilityRuntime

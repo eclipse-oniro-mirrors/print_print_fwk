@@ -256,7 +256,7 @@ private:
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         // unwarp connection
-        sptr<JSPrintExtensionConnection> connection = new JSPrintExtensionConnection(engine);
+        sptr<JSPrintExtensionContext> connection = new JSPrintExtensionContext(engine);
         connection->SetJsConnectionObject(info.argv[1]);
         int64_t connectId = serialNumber_;
         ConnecttionKey key;
@@ -314,7 +314,7 @@ private:
         }
 
         // unwarp connection
-        sptr<JSPrintExtensionConnection> connection = new JSPrintExtensionConnection(engine);
+        sptr<JSPrintExtensionContext> connection = new JSPrintExtensionContext(engine);
         connection->SetJsConnectionObject(info.argv[1]);
         int64_t connectId = serialNumber_;
         ConnecttionKey key;
@@ -361,12 +361,12 @@ private:
         AAFwk::Want want;
         // unwrap connectId
         int64_t connectId = -1;
-        sptr<JSPrintExtensionConnection> connection = nullptr;
+        sptr<JSPrintExtensionContext> connection = nullptr;
         napi_get_value_int64(
             reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[INDEX_ZERO]), &connectId);
         PRINT_HILOGD("OnDisconnectAbility connection:%{public}d", (int32_t)connectId);
         auto item = std::find_if(connects_.begin(), connects_.end(),
-            [&connectId](const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
+            [&connectId](const std::map<ConnecttionKey, sptr<JSPrintExtensionContext>>::value_type &obj) {
                 return connectId == obj.first.id;
             });
         if (item != connects_.end()) {
@@ -503,11 +503,11 @@ NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr
     return objValue;
 }
 
-JSPrintExtensionConnection::JSPrintExtensionConnection(NativeEngine &engine) : engine_(engine) {}
+JSPrintExtensionContext::JSPrintExtensionContext(NativeEngine &engine) : engine_(engine) {}
 
-JSPrintExtensionConnection::~JSPrintExtensionConnection() = default;
+JSPrintExtensionContext::~JSPrintExtensionContext() = default;
 
-void JSPrintExtensionConnection::OnAbilityConnectDone(
+void JSPrintExtensionContext::OnAbilityConnectDone(
     const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode)
 {
     PRINT_HILOGD("OnAbilityConnectDone begin, resultCode:%{public}d", resultCode);
@@ -515,9 +515,9 @@ void JSPrintExtensionConnection::OnAbilityConnectDone(
         PRINT_HILOGD("handler_ nullptr");
         return;
     }
-    wptr<JSPrintExtensionConnection> connection = this;
+    wptr<JSPrintExtensionContext> connection = this;
     auto task = [connection, element, remoteObject, resultCode]() {
-        sptr<JSPrintExtensionConnection> connectionSptr = connection.promote();
+        sptr<JSPrintExtensionContext> connectionSptr = connection.promote();
         if (!connectionSptr) {
             PRINT_HILOGD("connectionSptr nullptr");
             return;
@@ -527,7 +527,7 @@ void JSPrintExtensionConnection::OnAbilityConnectDone(
     handler_->PostTask(task, "OnAbilityConnectDone");
 }
 
-void JSPrintExtensionConnection::HandleOnAbilityConnectDone(
+void JSPrintExtensionContext::HandleOnAbilityConnectDone(
     const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode)
 {
     PRINT_HILOGD("HandleOnAbilityConnectDone begin, resultCode:%{public}d", resultCode);
@@ -556,21 +556,21 @@ void JSPrintExtensionConnection::HandleOnAbilityConnectDone(
         PRINT_HILOGE("Failed to get onConnect from object");
         return;
     }
-    PRINT_HILOGD("JSPrintExtensionConnection::CallFunction onConnect, success");
+    PRINT_HILOGD("JSPrintExtensionContext::CallFunction onConnect, success");
     engine_.CallFunction(value, methodOnConnect, argv, ARGC_TWO);
     PRINT_HILOGD("OnAbilityConnectDone end");
 }
 
-void JSPrintExtensionConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode)
+void JSPrintExtensionContext::OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode)
 {
     PRINT_HILOGD("OnAbilityDisconnectDone begin, resultCode:%{public}d", resultCode);
     if (handler_ == nullptr) {
         PRINT_HILOGD("handler_ nullptr");
         return;
     }
-    wptr<JSPrintExtensionConnection> connection = this;
+    wptr<JSPrintExtensionContext> connection = this;
     auto task = [connection, element, resultCode]() {
-        sptr<JSPrintExtensionConnection> connectionSptr = connection.promote();
+        sptr<JSPrintExtensionContext> connectionSptr = connection.promote();
         if (!connectionSptr) {
             PRINT_HILOGD("connectionSptr nullptr");
             return;
@@ -580,7 +580,7 @@ void JSPrintExtensionConnection::OnAbilityDisconnectDone(const AppExecFwk::Eleme
     handler_->PostTask(task, "OnAbilityDisconnectDone");
 }
 
-void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode)
+void JSPrintExtensionContext::HandleOnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode)
 {
     PRINT_HILOGD("HandleOnAbilityDisconnectDone begin, resultCode:%{public}d", resultCode);
     napi_value napiElementName = OHOS::AppExecFwk::WrapElementName(reinterpret_cast<napi_env>(&engine_), element);
@@ -608,7 +608,7 @@ void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk:
     std::string bundleName = element.GetBundleName();
     std::string abilityName = element.GetAbilityName();
     auto item = std::find_if(connects_.begin(), connects_.end(),
-        [bundleName, abilityName](const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
+        [bundleName, abilityName](const std::map<ConnecttionKey, sptr<JSPrintExtensionContext>>::value_type &obj) {
             return (bundleName == obj.first.want.GetBundle()) &&
                    (abilityName == obj.first.want.GetElement().GetAbilityName());
         });
@@ -621,12 +621,12 @@ void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk:
     engine_.CallFunction(value, method, argv, ARGC_ONE);
 }
 
-void JSPrintExtensionConnection::SetJsConnectionObject(NativeValue *jsConnectionObject)
+void JSPrintExtensionContext::SetJsConnectionObject(NativeValue *jsConnectionObject)
 {
     jsConnectionObject_ = std::unique_ptr<NativeReference>(engine_.CreateReference(jsConnectionObject, 1));
 }
 
-void JSPrintExtensionConnection::CallJsFailed(int32_t errorCode)
+void JSPrintExtensionContext::CallJsFailed(int32_t errorCode)
 {
     PRINT_HILOGD("CallJsFailed begin");
     if (jsConnectionObject_ == nullptr) {

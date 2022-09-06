@@ -16,7 +16,7 @@
 #include "print_manager_client.h"
 
 #include "iservice_registry.h"
-#include "print_extension_callback_stub.h"
+#include "printer_extension_callback_stub.h"
 #include "print_log.h"
 #include "print_sync_load_callback.h"
 #include "system_ability_definition.h"

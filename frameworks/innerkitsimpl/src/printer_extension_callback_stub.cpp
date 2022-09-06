@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "print_extension_callback_stub.h"
+#include "printer_extension_callback_stub.h"
 
 #include "print_common.h"
 #include "print_log.h"

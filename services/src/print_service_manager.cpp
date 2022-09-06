@@ -16,7 +16,6 @@
 #include "print_service_manager.h"
 
 #include <cstddef>
-#include <cstdint>
 #include <errno.h>
 #include <functional>
 #include <new>

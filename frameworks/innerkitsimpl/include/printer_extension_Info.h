@@ -17,7 +17,6 @@
 #define PRINT_EXTENSION_INFO_H
 
 #include <map>
-#include <mutex>
 #include <string>
 
 namespace OHOS::Print {

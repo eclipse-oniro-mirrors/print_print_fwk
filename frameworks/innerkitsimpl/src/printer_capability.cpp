@@ -264,8 +264,8 @@ void PrinterCapability::BuildFromJs(napi_env env, napi_value capValue)
 
 bool PrinterCapability::ParseCapability(napi_env env, napi_value capValue)
 {
-    if (!ParseCapabilityParam(env, capValue)) {
-        PRINT_HILOGD("ParseCapabilityParam is error!");
+    if (!ParseCapParam(env, capValue)) {
+        PRINT_HILOGD("ParseCapParam is error!");
         return false;
     }
     SetColorMode(PrintNapiUtils::GetUint32Property(env, capValue, PARAM_CAPABILITY_COLORMODE));
@@ -275,7 +275,7 @@ bool PrinterCapability::ParseCapability(napi_env env, napi_value capValue)
     return true;
 }
 
-bool PrinterCapability::ParseCapabilityParam(napi_env env, napi_value capValue)
+bool PrinterCapability::ParseCapParam(napi_env env, napi_value capValue)
 {
     napi_value param_one = PrintNapiUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_MINMARGIN);
     if (PrintNapiUtils::GetValueType(env, param_one) != napi_object) {

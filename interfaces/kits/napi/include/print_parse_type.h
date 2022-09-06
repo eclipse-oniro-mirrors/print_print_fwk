@@ -42,7 +42,7 @@ public:
     static bool ParseRange(napi_env env, napi_value preAttValue, PrintRange &range);
 
     static bool ParseInfoParam(napi_env env, napi_value InfoValue, PrinterInfo &info);
-    static bool ParseCapabilityParam(napi_env env, napi_value InfoValue, PrinterCapability &capability);
+    static bool ParseCapParam(napi_env env, napi_value InfoValue, PrinterCapability &capability);
     static bool ParsePageSizeParam(napi_env env, napi_value capValue, PrintPageSize &PrintPageSize);
     static bool ParseResolutionParam(napi_env env, napi_value reValue, PrintResolution &PrintResolution);
     static bool ParseMarginParam(napi_env env, napi_value marginValue, PrintMargin &PrintMargin);

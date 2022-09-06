@@ -1,8 +1,5 @@
 #include "print_preview_attribute.h"
 
-#include <cstdint>
-#include <string>
-
 #include "print_log.h"
 namespace OHOS::Print {
 PreviewAttribute::PreviewAttribute() : result_("") {}
