@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -98,7 +98,6 @@ void PrintServiceAbility::OnStart()
         return;
     }
     InitServiceHandler();
-
     int32_t ret = Init();
     if (ret != ERR_OK) {
         auto callback = [=]() { Init(); };
@@ -322,11 +321,14 @@ bool PrintServiceAbility::QueryPrinterCapability(uint32_t printerId, PrinterCapa
     ManualStart();
     PRINT_HILOGD("QueryPrinterCapability started.");
     auto it = extCallbackMap_.find(PRINT_EXTCB_REQUEST_CAP);
+    bool result = false;
+    MessageParcel reply;
     if (it != extCallbackMap_.end()) {
-        return it->second->OnCallback(printerId);
+        result = it->second->OnCallback(printerId, reply);
+        printerCapability.BuildFromParcel(reply);
     }
     PRINT_HILOGW("QueryPrinterCapability Not Register Yet!!!");
-    return false;
+    return result;
 }
 
 bool PrintServiceAbility::CheckPermission()
@@ -334,7 +336,7 @@ bool PrintServiceAbility::CheckPermission()
     return true;
 }
 
-bool PrintServiceAbility::RegisterExtCallback(uint32_t callbackId, const sptr<PrintExtcbInterface> &listener)
+bool PrintServiceAbility::RegisterExtCallback(uint32_t callbackId, const sptr<IPrintExtensionCallback> &listener)
 {
     PRINT_HILOGD("PrintServiceAbility::RegisterExtCallback started. callbackId=%{public}d", callbackId);
     if (callbackId >= PRINT_EXTCB_MAX) {
@@ -364,14 +366,14 @@ bool PrintServiceAbility::UnregisterAllExtCallback()
 }
 
 bool PrintServiceAbility::On(
-    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
+    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener)
 {
     std::string combineType = type + "-";
     PRINT_HILOGI("PrintServiceAbility::On started. type=%{public}s", combineType.c_str());
     /*auto iter = registeredListeners_.find(combineType);
     if (iter == registeredListeners_.end()) {
         std::lock_guard<std::mutex> lck(listenerMapMutex_);
-        std::pair<std::string, sptr<PrintNotifyInterface>> newObj(combineType, listener);
+        std::pair<std::string, sptr<IPrintCallback>> newObj(combineType, listener);
         const auto temp = registeredListeners_.insert(newObj);
         if (!temp.second) {
             PRINT_HILOGE("PrintServiceAbility::On insert type=%{public}s object fail.", combineType.c_str());

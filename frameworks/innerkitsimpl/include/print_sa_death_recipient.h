@@ -13,24 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_EXTCB_PROXY_H
-#define PRINT_EXTCB_PROXY_H
+#ifndef PRINT_SA_DEATH_RECIPIENT_H
+#define PRINT_SA_DEATH_RECIPIENT_H
 
-#include "iremote_proxy.h"
-#include "print_extcb_interface.h"
+#include "iremote_object.h"
+#include "refbase.h"
 
 namespace OHOS::Print {
-class PrintExtcbProxy : public IRemoteProxy<PrintExtcbInterface> {
+class PrintSaDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
-    explicit PrintExtcbProxy(const sptr<IRemoteObject> &impl);
-    ~PrintExtcbProxy() = default;
-    bool OnCallback() override;
-    bool OnCallback(uint32_t printerId) override;
-    bool OnCallback(const PrintJob &job) override;
-
-private:
-    static inline BrokerDelegator<PrintExtcbProxy> delegator_;
+    explicit PrintSaDeathRecipient();
+    ~PrintSaDeathRecipient() = default;
+    void OnRemoteDied(const wptr<IRemoteObject> &object) override;
 };
 } // namespace OHOS::Print
-
-#endif // PRINT_EXTCB_PROXY_H
+#endif // PRINT_SA_DEATH_RECIPIENT_H

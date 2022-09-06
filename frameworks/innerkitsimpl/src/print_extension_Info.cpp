@@ -58,7 +58,7 @@ uint32_t PrinterExtensionInfo::GetVendorId() const
     return vendorId_;
 }
 
-std::string &PrinterExtensionInfo::GetVendorName()
+const std::string &PrinterExtensionInfo::GetVendorName() const
 {
     return vendorName_;
 }
@@ -68,7 +68,7 @@ uint32_t PrinterExtensionInfo::GetVendorIcon() const
     return vendorIcon_;
 }
 
-std::string &PrinterExtensionInfo::GetVersion()
+const std::string &PrinterExtensionInfo::GetVersion() const
 {
     return version_;
 }

@@ -13,22 +13,17 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_NOTIFY_PROXY_H
-#define PRINT_NOTIFY_PROXY_H
+#include "print_sa_death_recipient.h"
 
-#include "iremote_proxy.h"
-#include "print_notify_interface.h"
+#include "print_log.h"
+#include "print_manager_client.h"
 
 namespace OHOS::Print {
-class PrintNotifyProxy : public IRemoteProxy<PrintNotifyInterface> {
-public:
-    explicit PrintNotifyProxy(const sptr<IRemoteObject> &impl);
-    ~PrintNotifyProxy() = default;
-    void OnCallBack(MessageParcel &data) override;
+PrintSaDeathRecipient::PrintSaDeathRecipient() {}
 
-private:
-    static inline BrokerDelegator<PrintNotifyProxy> delegator_;
-};
+void PrintSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
+{
+    PRINT_HILOGE("PrintSaDeathRecipient on remote systemAbility died.");
+    PrintManagerClient::GetInstance()->OnRemoteSaDied(object);
+}
 } // namespace OHOS::Print
-
-#endif // PRINT_NOTIFY_PROXY_H

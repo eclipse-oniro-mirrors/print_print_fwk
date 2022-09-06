@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,17 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "print_extcb_proxy.h"
+#include "print_extension_callback_proxy.h"
 
 #include "message_parcel.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintExtcbProxy::PrintExtcbProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<PrintExtcbInterface>(impl) {}
+PrintExtensionCallbackProxy::PrintExtensionCallbackProxy(const sptr<IRemoteObject> &impl)
+    : IRemoteProxy<IPrintExtensionCallback>(impl)
+{}
 
-bool PrintExtcbProxy::OnCallback()
+bool PrintExtensionCallbackProxy::OnCallback()
 {
-    PRINT_HILOGD("PrintExtcbProxy::OnCallBack Start");
+    PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack Start");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -33,13 +35,13 @@ bool PrintExtcbProxy::OnCallback()
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
     }
-    PRINT_HILOGD("PrintExtcbProxy::OnCallBack End");
+    PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack End");
     return true;
 }
 
-bool PrintExtcbProxy::OnCallback(uint32_t printerId)
+bool PrintExtensionCallbackProxy::OnCallback(uint32_t printerId)
 {
-    PRINT_HILOGD("PrintExtcbProxy::OnCallBack Start");
+    PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack Start");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -51,19 +53,34 @@ bool PrintExtcbProxy::OnCallback(uint32_t printerId)
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
     }
-    PRINT_HILOGD("PrintExtcbProxy::OnCallBack End");
+    PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack End");
     return true;
 }
 
-bool PrintExtcbProxy::OnCallback(const PrintJob &job)
+bool PrintExtensionCallbackProxy::OnCallback(const PrintJob &job)
 {
-    PRINT_HILOGD("PrintExtcbProxy::OnCallBack Start");
+    PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack Start");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
-
+    job.ConvertToParcel(data);
     int error = Remote()->SendRequest(PRINT_EXTCB_PRINTJOB, data, reply, option);
+    if (error != 0) {
+        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+        return false;
+    }
+    PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack End");
+    return true;
+}
+
+bool PrintExtensionCallbackProxy::OnCallback(uint32_t printerId, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintExtcbProxy::OnCallBack Start");
+    MessageParcel data;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    int error = Remote()->SendRequest(PRINT_EXTCB_PRINTCAPABILITY, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;

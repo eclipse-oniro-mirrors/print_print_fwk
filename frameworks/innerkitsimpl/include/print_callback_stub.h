@@ -13,23 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_NOTIFY_H
-#define PRINT_NOTIFY_H
+#ifndef PRINT_CALLBACK_STUB_H
+#define PRINT_CALLBACK_STUB_H
 
-#include <string>
+#include <memory>
 
-#include "napi/native_api.h"
-#include "noncopyable.h"
-#include "print_callback_stub.h"
+#include "iprint_callback.h"
+#include "iremote_stub.h"
 
 namespace OHOS::Print {
-class PrintNotify final : public PrintCallbackStub {
+class PrintCallbackStub : public IRemoteStub<IPrintCallback> {
 public:
-    ACE_DISALLOW_COPY_AND_MOVE(PrintNotify);
-    explicit PrintNotify();
-    virtual ~PrintNotify();
-    void OnCallBack(MessageParcel &data) override;
+    PrintCallbackStub() = default;
+    virtual ~PrintCallbackStub() {}
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 };
 } // namespace OHOS::Print
-
-#endif // PRINT_NOTIFY_H
+#endif // PRINT_CALLBACK_STUB_H

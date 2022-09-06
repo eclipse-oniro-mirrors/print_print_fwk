@@ -18,9 +18,9 @@
 #include <mutex>
 
 #include "async_call.h"
+#include "napi_print_utils.h"
 #include "print_log.h"
 #include "print_manager_client.h"
-#include "print_napi_utils.h"
 #include "print_task.h"
 
 static constexpr const char *FUNCTION_ON = "on";
@@ -32,6 +32,10 @@ std::mutex mutex_;
 napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info) // PrintTask
 {
     PRINT_HILOGD("Enter print JsMain.");
+    if (!PrintManagerClient::GetInstance()->LoadServer()) {
+        PRINT_HILOGE("load print server fail");
+        return nullptr;
+    }
     struct ContextInfo {
         napi_ref ref = nullptr;
     };

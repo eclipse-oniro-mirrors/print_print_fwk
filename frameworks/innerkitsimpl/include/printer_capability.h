@@ -19,6 +19,9 @@
 #include <string>
 #include <vector>
 
+#include "iremote_broker.h"
+#include "iremote_proxy.h"
+#include "napi/native_api.h"
 #include "print_margin.h"
 #include "print_page_size.h"
 #include "print_resolution.h"
@@ -31,7 +34,7 @@ public:
     PrinterCapability &operator=(const PrinterCapability &right);
     ~PrinterCapability();
 
-    void SetMinMargin(PrintMargin &minMargin);
+    void SetMinMargin(const PrintMargin &minMargin);
 
     void SetPageSize(const std::vector<PrintPageSize> &pageSizeList);
 
@@ -51,7 +54,32 @@ public:
 
     [[nodiscard]] uint32_t GetDuplexMode() const;
 
+    void ConvertToParcel(MessageParcel &reply) const;
+
+    void BuildFromParcel(MessageParcel &data);
+
+    void ConvertToJs(napi_env env, napi_value *result) const;
+
+    void BuildFromJs(napi_env env, napi_value capValue);
+
     void Dump();
+
+private:
+    bool ParseResolution(napi_env env, napi_value reValue, PrintResolution &resolution);
+
+    bool ParseResolutionParam(napi_env env, napi_value reValue, PrintResolution &resolution);
+
+    bool ParsePageSize(napi_env env, napi_value capValue, PrintPageSize &pageSize);
+
+    bool ParseMargin(napi_env env, napi_value marginValue, PrintMargin &margin);
+
+    bool ParseMarginParam(napi_env env, napi_value marginValue, PrintMargin &margin);
+
+    bool ParseCapabilityParam(napi_env env, napi_value capValue);
+
+    bool ParseCapability(napi_env env, napi_value capValue);
+
+    bool ParsePageSizeParam(napi_env env, napi_value capValue, PrintPageSize &pageSize);
 
 private:
     PrintMargin minMargin_;

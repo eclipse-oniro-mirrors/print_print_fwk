@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,7 @@
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
 
-PrintServiceProxy::PrintServiceProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<PrintServiceInterface>(object) {}
+PrintServiceProxy::PrintServiceProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IPrintService>(object) {}
 
 int32_t PrintServiceProxy::StartPrint()
 {
@@ -289,7 +289,7 @@ bool PrintServiceProxy::QueryPrinterCapability(uint32_t printerId, PrinterCapabi
         std::vector<PrintPageSize> pageSizeList;
         for (uint32_t i = 0; i < arraypageSizeLength; i++) {
             PrintPageSize pageSize;
-            pageSize.SetId(reply.ReadUint32());
+            pageSize.SetId(reply.ReadString());
             pageSize.SetName(reply.ReadString());
             pageSize.SetWidth(reply.ReadUint32());
             pageSize.SetHeight(reply.ReadUint32());
@@ -339,7 +339,7 @@ bool PrintServiceProxy::CheckPermission()
 }
 
 bool PrintServiceProxy::On(
-    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
+    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener)
 {
     PRINT_HILOGD("PrintServiceProxy::On listener=%{public}p", listener.GetRefPtr());
     MessageParcel data, reply;
@@ -412,7 +412,7 @@ bool PrintServiceProxy::Off(const std::string &type)
     return true;
 }
 
-bool PrintServiceProxy::RegisterExtCallback(uint32_t callbackId, const sptr<PrintExtcbInterface> &listener)
+bool PrintServiceProxy::RegisterExtCallback(uint32_t callbackId, const sptr<IPrintExtensionCallback> &listener)
 {
     PRINT_HILOGD("PrintServiceProxy::RegisterExtCallback in");
     MessageParcel data, reply;
@@ -493,7 +493,7 @@ void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel &data, const Print
 
     PrintPageSize pageSize;
     jobinfo.GetPageSize(pageSize);
-    data.WriteUint32(pageSize.GetId());
+    data.WriteString(pageSize.GetId());
     data.WriteString(pageSize.GetName());
     data.WriteUint32(pageSize.GetWidth());
     data.WriteUint32(pageSize.GetHeight());
@@ -554,7 +554,7 @@ void PrintServiceProxy::BuildParcelFromPrinterInfo(MessageParcel &data, const Pr
     data.WriteUint32(margin.GetRight());
 
     for (uint32_t i = 0; i < pageSizeLength; i++) {
-        data.WriteUint32(pageSizeList[i].GetId());
+        data.WriteString(pageSizeList[i].GetId());
         data.WriteString(pageSizeList[i].GetName());
         data.WriteUint32(pageSizeList[i].GetWidth());
         data.WriteUint32(pageSizeList[i].GetHeight());

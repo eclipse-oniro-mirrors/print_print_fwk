@@ -13,21 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_NOTIFY_INTERFACE_H
-#define PRINT_NOTIFY_INTERFACE_H
+#ifndef PRINT_NOTIFY_PROXY_H
+#define PRINT_NOTIFY_PROXY_H
 
-#include "iremote_broker.h"
-#include "iremote_object.h"
+#include "iprint_callback.h"
+#include "iremote_proxy.h"
 
 namespace OHOS::Print {
-class PrintNotifyInterface : public IRemoteBroker {
+class PrintCallbackProxy : public IRemoteProxy<IPrintCallback> {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.PrintNotifyInterface");
-    virtual void OnCallBack(MessageParcel &data) = 0;
-};
+    explicit PrintCallbackProxy(const sptr<IRemoteObject> &impl);
+    ~PrintCallbackProxy() = default;
+    void OnCallBack(MessageParcel &data) override;
 
-enum {
-    PRINT_NOTIFY,
+private:
+    static inline BrokerDelegator<PrintCallbackProxy> delegator_;
 };
 } // namespace OHOS::Print
-#endif // PRINT_NOTIFY_INTERFACE_H
+
+#endif // PRINT_NOTIFY_PROXY_H

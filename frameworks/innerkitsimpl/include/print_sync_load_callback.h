@@ -13,23 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_NOTIFY_H
-#define PRINT_NOTIFY_H
+#ifndef PRINT_SYNC_LOAD_CALLBACK_H
+#define PRINT_SYNC_LOAD_CALLBACK_H
 
-#include <string>
-
-#include "napi/native_api.h"
-#include "noncopyable.h"
-#include "print_callback_stub.h"
+#include "system_ability_load_callback_stub.h"
 
 namespace OHOS::Print {
-class PrintNotify final : public PrintCallbackStub {
+class PrintSyncLoadCallback : public SystemAbilityLoadCallbackStub {
 public:
-    ACE_DISALLOW_COPY_AND_MOVE(PrintNotify);
-    explicit PrintNotify();
-    virtual ~PrintNotify();
-    void OnCallBack(MessageParcel &data) override;
+    void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) override;
+    void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
 };
 } // namespace OHOS::Print
-
-#endif // PRINT_NOTIFY_H
+#endif // PRINT_SYNC_LOAD_CALLBACK_H

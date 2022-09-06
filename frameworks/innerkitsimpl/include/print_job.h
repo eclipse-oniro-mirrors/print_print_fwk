@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,9 +19,12 @@
 #include <string>
 #include <vector>
 
-#include "preview_attribute.h"
+#include "iremote_broker.h"
+#include "iremote_proxy.h"
+#include "napi/native_api.h"
 #include "print_margin.h"
 #include "print_page_size.h"
+#include "print_preview_attribute.h"
 #include "print_range.h"
 
 namespace OHOS::Print {
@@ -42,21 +45,21 @@ public:
 
     void SetCopyNumber(uint32_t copyNumber);
 
-    void SetPageRange(PrintRange pageRange_);
+    void SetPageRange(const PrintRange &pageRange);
 
-    void SetIsSequential(bool isSequential_);
+    void SetIsSequential(bool isSequential);
 
-    void SetPageSize(PrintPageSize pageSize_);
+    void SetPageSize(const PrintPageSize &pageSize);
 
-    void SetIsLandscape(bool isLandscape_);
+    void SetIsLandscape(bool isLandscape);
 
-    void SetColorMode(uint32_t colorMode_);
+    void SetColorMode(uint32_t colorMode);
 
     void SetDuplexMode(uint32_t duplexmode);
 
-    void SetMargin(PrintMargin margin_);
+    void SetMargin(const PrintMargin &margin);
 
-    void SetPreview(PreviewAttribute preview_);
+    void SetPreview(const PreviewAttribute &preview);
 
     void GetFiles(std::vector<std::string> &fileList) const;
 
@@ -84,7 +87,19 @@ public:
 
     void GetPreview(PreviewAttribute &previewAttr) const;
 
+    void ConvertToParcel(MessageParcel &reply) const;
+
+    void BuildFromParcel(MessageParcel &data);
+
+    void ConvertToJs(napi_env env, napi_value *result) const;
+
+    void BuildFromJs(napi_env env, napi_value capValue);
+
     void Dump();
+
+private:
+    bool ParseJob(napi_env env, napi_value jobValue, PrintJob &printJob);
+    bool ParseJobParam(napi_env env, napi_value jobValue, PrintJob &printJob);
 
 private:
     std::vector<std::string> files_;
@@ -100,27 +115,6 @@ private:
     int32_t duplexMode_;
     PrintMargin margin_;
     PreviewAttribute preview_;
-    /*
-        enum PrintJobState {
-            PRINT_JOB_CREATED = 1,
-            PRINT_JOB_QUEUED = 2,
-            PRINT_JOB_PRINTING = 3,
-            PRINT_JOB_BLOCKED = 4,
-            PRINT_JOB_SUCCESS = 5,
-            PRINT_JOB_FAILED = 6,
-            PRINT_JOB_cancelled = 7,
-        };
-
-        enum PrintState{
-            PRINT_CREATED = 1,
-            PRINT_QUEUED = 2,
-            PRINT_PRINTING = 3,
-            PRINT_BLOCKED = 4,
-            PRINT_SUCCESS = 5,
-            PRINT_FAILED = 6,
-            PRINT_cancelled = 7,
-        };
-    */
 };
 } // namespace OHOS::Print
 #endif /* PRINT_PRINT_JOB_H */

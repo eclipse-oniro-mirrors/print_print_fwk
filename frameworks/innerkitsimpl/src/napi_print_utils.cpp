@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "print_napi_utils.h"
+#include "napi_print_utils.h"
 
 #include <cstring>
 #include <initializer_list>
@@ -360,7 +360,7 @@ napi_value PrintNapiUtils::Convert2JsObj(napi_env env, const PrintJob &job)
 
     napi_value pageSize;
     NAPI_CALL(env, napi_create_object(env, &pageSize));
-    SetUint32Property(env, pageSize, "id", nativePageSize.GetId());
+    SetStringPropertyUtf8(env, pageSize, "id", nativePageSize.GetId().c_str());
     SetStringPropertyUtf8(env, pageSize, "name", nativePageSize.GetName().c_str());
     SetUint32Property(env, pageSize, "width", nativePageSize.GetWidth());
     SetUint32Property(env, pageSize, "height", nativePageSize.GetHeight());

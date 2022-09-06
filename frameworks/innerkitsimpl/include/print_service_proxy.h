@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,11 +16,11 @@
 #ifndef PRINT_SERVICE_PROXY_H
 #define PRINT_SERVICE_PROXY_H
 
+#include "iprint_service.h"
 #include "iremote_proxy.h"
-#include "print_service_interface.h"
 
 namespace OHOS::Print {
-class PrintServiceProxy : public IRemoteProxy<PrintServiceInterface> {
+class PrintServiceProxy : public IRemoteProxy<IPrintService> {
 public:
     explicit PrintServiceProxy(const sptr<IRemoteObject> &object);
     ~PrintServiceProxy() = default;
@@ -40,10 +40,9 @@ public:
     bool RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override;
     bool QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability) override;
     bool CheckPermission() override;
-    bool On(const std::string &type, uint32_t &state, PrinterInfo &info,
-        const sptr<PrintNotifyInterface> &listener) override;
+    bool On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener) override;
     bool Off(const std::string &type) override;
-    bool RegisterExtCallback(uint32_t callbackId, const sptr<PrintExtcbInterface> &listener) override;
+    bool RegisterExtCallback(uint32_t callbackId, const sptr<IPrintExtensionCallback> &listener) override;
     bool UnregisterAllExtCallback() override;
 
 private:

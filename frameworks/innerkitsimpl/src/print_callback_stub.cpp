@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include "print_notify_stub.h"
+#include "print_callback_stub.h"
 
 #include "print_common.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
-int32_t PrintNotifyStub::OnRemoteRequest(
+int32_t PrintCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     auto descriptorToken = data.ReadInterfaceToken();
@@ -27,7 +27,7 @@ int32_t PrintNotifyStub::OnRemoteRequest(
         PRINT_HILOGE("Remote descriptor not the same as local descriptor.");
         return E_PRINT_IPC_ERROR;
     }
-    PRINT_HILOGD("PrintNotifyStub  code----> %{public}u", code);
+    PRINT_HILOGD("PrintCallbackStub  code----> %{public}u", code);
     switch (code) {
         case PRINT_NOTIFY: {
             OnCallBack(data);

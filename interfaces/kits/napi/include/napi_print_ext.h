@@ -33,16 +33,6 @@ public:
     static napi_value RemovePrinters(napi_env env, napi_callback_info info);
     static napi_value UpdatePrinterState(napi_env env, napi_callback_info info);
     static napi_value UpdatePrintJobState(napi_env env, napi_callback_info info);
-    static bool ParseInfo(napi_env env, napi_value InfoValue, PrinterInfo &Info);
-    static bool ParseInfoParam(napi_env env, napi_value InfoValue, PrinterInfo &info);
-    static bool ParseCapability(napi_env env, napi_value InfoValue, PrinterCapability &capability);
-    static bool ParseCapabilityParam(napi_env env, napi_value InfoValue, PrinterCapability &capability);
-    static bool ParsePageSize(napi_env env, napi_value capValue, PrintPageSize &PrintPageSize);
-    static bool ParsePageSizeParam(napi_env env, napi_value capValue, PrintPageSize &PrintPageSize);
-    static bool ParseResolution(napi_env env, napi_value reValue, PrintResolution &PrintResolution);
-    static bool ParseResolutionParam(napi_env env, napi_value reValue, PrintResolution &PrintResolution);
-    static bool ParseMargin(napi_env env, napi_value marginValue, PrintMargin &PrintMargin);
-    static bool ParseMarginParam(napi_env env, napi_value marginValue, PrintMargin &PrintMargin);
 
 private:
     struct NapiPrintExtContext : public AsyncCall::Context {

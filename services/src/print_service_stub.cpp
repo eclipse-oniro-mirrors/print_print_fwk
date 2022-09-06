@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,12 +18,12 @@
 #include <vector>
 
 #include "ipc_skeleton.h"
+#include "iprint_service.h"
 #include "message_parcel.h"
 #include "print_common.h"
 #include "print_extension_info.h"
 #include "print_job.h"
 #include "print_log.h"
-#include "print_service_interface.h"
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -175,9 +175,8 @@ bool PrintServiceStub::OnStartPrintJob(MessageParcel &data, MessageParcel &reply
 {
     PRINT_HILOGD("PrintServiceStub::OnStartPrintJob in");
     PrintJob jobinfo;
-    MakePrintJob(data, jobinfo);
+    jobinfo.BuildFromParcel(data);
     jobinfo.Dump();
-
     bool result = StartPrintJob(jobinfo);
     if (!reply.WriteBool(result)) {
         PRINT_HILOGD("WriteBool failed");
@@ -191,7 +190,7 @@ bool PrintServiceStub::OnCancelPrintJob(MessageParcel &data, MessageParcel &repl
 {
     PRINT_HILOGD("PrintServiceStub::OnCancelPrintJob in");
     PrintJob jobinfo;
-    MakePrintJob(data, jobinfo);
+    jobinfo.BuildFromParcel(data);
     jobinfo.Dump();
 
     bool result = CancelPrintJob(jobinfo);
@@ -302,8 +301,8 @@ bool PrintServiceStub::OnQueryPrinterCapability(MessageParcel &data, MessageParc
     PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapability in");
     PrinterCapability printerCapability;
     bool result = QueryPrinterCapability(data.ReadUint32(), printerCapability);
-    printerCapability.Dump();
-
+    printerCapability.ConvertToParcel(reply);
+    /*
     std::vector<PrintPageSize> pageSizeList;
     std::vector<PrintResolution> resolutionList;
 
@@ -321,21 +320,21 @@ bool PrintServiceStub::OnQueryPrinterCapability(MessageParcel &data, MessageParc
     reply.WriteUint32(minMargin.GetLeft());
     reply.WriteUint32(minMargin.GetRight());
 
-    for (uint32_t i = 0; i < arraypageSizeLength; i++) {
-        reply.WriteUint32(pageSizeList[i].GetId());
+    for(uint32_t i = 0; i < arraypageSizeLength; i++) {
+        reply.WriteString(pageSizeList[i].GetId());
         reply.WriteString(pageSizeList[i].GetName());
         reply.WriteUint32(pageSizeList[i].GetWidth());
         reply.WriteUint32(pageSizeList[i].GetHeight());
     }
 
-    for (uint32_t i = 0; i < resolutionLength; i++) {
+    for(uint32_t i = 0; i < resolutionLength; i++) {
         reply.WriteUint32(resolutionList[i].GetId());
         reply.WriteUint32(resolutionList[i].GetHorizontalDpi());
         reply.WriteUint32(resolutionList[i].GetVerticalDpi());
     }
 
     reply.WriteUint32(printerCapability.GetColorMode());
-    reply.WriteUint32(printerCapability.GetDuplexMode());
+    reply.WriteUint32(printerCapability.GetDuplexMode());*/
     if (!reply.WriteBool(result)) {
         PRINT_HILOGD("WriteBool failed");
         return false;
@@ -372,7 +371,7 @@ bool PrintServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply)
         }
         return true;
     }
-    sptr<PrintNotifyInterface> listener = iface_cast<PrintNotifyInterface>(remote);
+    sptr<IPrintCallback> listener = iface_cast<IPrintCallback>(remote);
     if (listener.GetRefPtr() == nullptr) {
         PRINT_HILOGD("PrintServiceStub::OnEventOn listener is null");
         return false;
@@ -413,7 +412,7 @@ bool PrintServiceStub::OnRegisterExtCallback(MessageParcel &data, MessageParcel 
         }
         return true;
     }
-    sptr<PrintExtcbInterface> listener = iface_cast<PrintExtcbInterface>(remote);
+    sptr<IPrintExtensionCallback> listener = iface_cast<IPrintExtensionCallback>(remote);
     if (listener.GetRefPtr() == nullptr) {
         PRINT_HILOGD("PrintServiceStub::OnRegisterExtCallback listener is null");
         return false;
@@ -439,7 +438,7 @@ bool PrintServiceStub::OnUnregisterAllExtCallback(MessageParcel &data, MessagePa
         }
         return true;
     }
-    sptr<PrintExtcbInterface> listener = iface_cast<PrintExtcbInterface>(remote);
+    sptr<IPrintExtensionCallback> listener = iface_cast<IPrintExtensionCallback>(remote);
     if (listener.GetRefPtr() == nullptr) {
         PRINT_HILOGD("PrintServiceStub::OnUnregisterAllExtCallback listener is null");
         return false;
@@ -484,7 +483,7 @@ void PrintServiceStub::MakePrintJob(MessageParcel &data, PrintJob &printJob)
     printJob.SetIsSequential(data.ReadUint32());
 
     PrintPageSize pageSize;
-    pageSize.SetId(data.ReadUint32());
+    pageSize.SetId(data.ReadString());
     pageSize.SetName(data.ReadString());
     pageSize.SetWidth(data.ReadUint32());
     pageSize.SetHeight(data.ReadUint32());
@@ -543,7 +542,7 @@ void PrintServiceStub::MakePrinterInfo(MessageParcel &data, PrinterInfo &printer
         std::vector<PrintPageSize> pageSizeList;
         for (uint32_t i = 0; i < pageSizeLength; i++) {
             PrintPageSize pageSize;
-            pageSize.SetId(data.ReadUint32());
+            pageSize.SetId(data.ReadString());
             pageSize.SetName(data.ReadString());
             pageSize.SetWidth(data.ReadUint32());
             pageSize.SetHeight(data.ReadUint32());

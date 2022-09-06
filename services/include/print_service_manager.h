@@ -25,10 +25,10 @@
 #include <stdint.h>
 #include <vector>
 
+#include "iprint_callback.h"
 #include "print_constant.h"
 #include "print_extension_info.h"
 #include "print_job.h"
-#include "print_notify_interface.h"
 #include "printer_capability.h"
 #include "printer_info.h"
 
@@ -38,7 +38,7 @@ using PrintTaskCallback = void (*)(const std::string &type, uint32_t taskId, uin
 class PrintServiceManager final {
 public:
     static PrintServiceManager *GetInstance();
-    bool On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener);
+    bool On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener);
     bool Off(const std::string &type);
     bool ConnectPrinter(uint32_t printerId);
     bool DisconnectPrinter(uint32_t printerId);

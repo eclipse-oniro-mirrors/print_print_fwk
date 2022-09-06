@@ -13,26 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_EXTCB_INTERFACE_H
-#define PRINT_EXTCB_INTERFACE_H
+#ifndef IPRINT_EXTENSION_CALLBACK_H
+#define IPRINT_EXTENSION_CALLBACK_H
 
 #include "iremote_broker.h"
 #include "iremote_object.h"
 #include "print_job.h"
 
 namespace OHOS::Print {
-class PrintExtcbInterface : public IRemoteBroker {
+class IPrintExtensionCallback : public IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.PrintExtcbInterface");
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.IPrintExtensionCallback");
     virtual bool OnCallback() = 0;
     virtual bool OnCallback(uint32_t printerId) = 0;
     virtual bool OnCallback(const PrintJob &job) = 0;
+    virtual bool OnCallback(uint32_t printerId, MessageParcel &reply) = 0;
 };
 
 enum {
     PRINT_EXTCB,
     PRINT_EXTCB_PRINTER,
     PRINT_EXTCB_PRINTJOB,
+    PRINT_EXTCB_PRINTCAPABILITY,
 };
 
 enum {
@@ -47,4 +49,4 @@ enum {
     PRINT_EXTCB_MAX,
 };
 } // namespace OHOS::Print
-#endif // PRINT_EXTCB_INTERFACE_H
+#endif // IPRINT_EXTCB_H

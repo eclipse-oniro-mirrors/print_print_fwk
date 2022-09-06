@@ -56,7 +56,7 @@ PrintServiceManager *PrintServiceManager::GetInstance()
 }
 
 bool PrintServiceManager::On(
-    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
+    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener)
 {
     PRINT_HILOGE("PrintServiceManager on started.");
     return true;
@@ -171,7 +171,7 @@ bool PrintServiceManager::QueryPrinterCapability(uint32_t printerId, PrinterCapa
 
     std::vector<PrintPageSize> pageSizeList;
     PrintPageSize pageSize;
-    pageSize.SetId(6);
+    pageSize.SetId("6");
     pageSize.SetName("name");
     pageSize.SetWidth(6);
     pageSize.SetHeight(6);

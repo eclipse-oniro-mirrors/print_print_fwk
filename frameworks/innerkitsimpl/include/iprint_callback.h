@@ -13,20 +13,21 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_NOTIFY_STUB_H
-#define PRINT_NOTIFY_STUB_H
+#ifndef IPRINT_CALLBACK_H
+#define IPRINT_CALLBACK_H
 
-#include <memory>
-
-#include "iremote_stub.h"
-#include "print_notify_interface.h"
+#include "iremote_broker.h"
+#include "iremote_object.h"
 
 namespace OHOS::Print {
-class PrintNotifyStub : public IRemoteStub<PrintNotifyInterface> {
+class IPrintCallback : public IRemoteBroker {
 public:
-    PrintNotifyStub() = default;
-    virtual ~PrintNotifyStub() {}
-    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.IPrintCallback");
+    virtual void OnCallBack(MessageParcel &data) = 0;
+};
+
+enum {
+    PRINT_NOTIFY,
 };
 } // namespace OHOS::Print
-#endif // PRINT_NOTIFY_STUB_H
+#endif // IPRINT_CALLBACK_H

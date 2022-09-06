@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_NAPI_UTILS_H
-#define PRINT_NAPI_UTILS_H
+#ifndef NAPI_PRINT_UTILS_H
+#define NAPI_PRINT_UTILS_H
 
 #include <string>
 #include <vector>
@@ -79,4 +79,4 @@ public:
     static napi_value Convert2JsObj(napi_env env, const PrintJob &job);
 };
 } // namespace OHOS::Print
-#endif /* PRINT_NAPI_UTILS_H */
+#endif /* NAPI_PRINT_UTILS_H */

@@ -39,11 +39,11 @@ public:
 
     [[nodiscard]] uint32_t GetVendorId() const;
 
-    [[nodiscard]] std::string &GetVendorName();
+    [[nodiscard]] const std::string &GetVendorName() const;
 
     [[nodiscard]] uint32_t GetVendorIcon() const;
 
-    [[nodiscard]] std::string &GetVersion();
+    [[nodiscard]] const std::string &GetVersion() const;
 
     void Dump();
 

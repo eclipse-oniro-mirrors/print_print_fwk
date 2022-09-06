@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,11 +16,11 @@
 #ifndef PRINT_SERVICE_STUB_H
 #define PRINT_SERVICE_STUB_H
 
+#include "iprint_service.h"
 #include "iremote_stub.h"
-#include "print_service_interface.h"
 
 namespace OHOS::Print {
-class PrintServiceStub : public IRemoteStub<PrintServiceInterface> {
+class PrintServiceStub : public IRemoteStub<IPrintService> {
 public:
     explicit PrintServiceStub();
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;

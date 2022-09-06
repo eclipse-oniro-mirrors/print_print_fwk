@@ -15,8 +15,8 @@
 
 #include "async_call.h"
 
+#include "napi_print_utils.h"
 #include "print_log.h"
-#include "print_napi_utils.h"
 
 namespace OHOS::Print {
 AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context, size_t pos) : env_(env)

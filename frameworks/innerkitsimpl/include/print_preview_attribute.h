@@ -12,24 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef PRINT_PREVIEW_ATTRIBUTE_H
+#define PRINT_PREVIEW_ATTRIBUTE_H
 
-#ifndef PRINT_NOTIFY_H
-#define PRINT_NOTIFY_H
-
+#include <cstdint>
 #include <string>
 
-#include "napi/native_api.h"
-#include "noncopyable.h"
-#include "print_callback_stub.h"
-
+#include "print_range.h"
 namespace OHOS::Print {
-class PrintNotify final : public PrintCallbackStub {
+class PreviewAttribute {
 public:
-    ACE_DISALLOW_COPY_AND_MOVE(PrintNotify);
-    explicit PrintNotify();
-    virtual ~PrintNotify();
-    void OnCallBack(MessageParcel &data) override;
+    explicit PreviewAttribute();
+    PreviewAttribute(const PreviewAttribute &right);
+    PreviewAttribute &operator=(const PreviewAttribute &previewAttribute);
+    ~PreviewAttribute();
+
+    void SetResult(const std::string &result);
+
+    void SetPreviewRange(const PrintRange &previewRange);
+
+    [[nodiscard]] const std::string &GetResult() const;
+
+    void GetPreviewRange(PrintRange &range) const;
+
+    void Dump();
+
+private:
+    std::string result_;
+    PrintRange previewRange_;
 };
 } // namespace OHOS::Print
-
-#endif // PRINT_NOTIFY_H
+#endif // PRINT_PREVIEW_ATTRIBUTE_H

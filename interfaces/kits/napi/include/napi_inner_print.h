@@ -20,12 +20,12 @@
 #include <vector>
 
 #include "async_call.h"
+#include "iprint_callback.h"
 #include "napi/native_api.h"
 #include "napi_print_ext.h"
 #include "noncopyable.h"
 #include "print_extension_info.h"
 #include "print_job.h"
-#include "print_notify_stub.h"
 #include "print_page_size.h"
 #include "print_resolution.h"
 #include "print_task.h"
@@ -50,18 +50,16 @@ public:
     static napi_value StopDiscovery(napi_env env, napi_callback_info info);
     static napi_value ConnectPrint(napi_env env, napi_callback_info info);
     static napi_value DisconnectPrint(napi_env env, napi_callback_info info);
-    static napi_value StartPrint(napi_env env, napi_callback_info info);
-    static napi_value CancelPrint(napi_env env, napi_callback_info info);
+    static napi_value StartPrintJob(napi_env env, napi_callback_info info);
+    static napi_value CancelPrintJob(napi_env env, napi_callback_info info);
     static napi_value RequestPreview(napi_env env, napi_callback_info info);
     static napi_value QueryCapability(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
     static int32_t GetEventType(const std::string &type);
-    static bool ParseJob(napi_env env, napi_value jobValue, PrintJob &printJob);
-    static bool ParseJobParam(napi_env env, napi_value jobValue, PrintJob &printJob);
 
 private:
-    static sptr<PrintNotifyInterface> CreateNotify(napi_env env, const std::string &type, napi_ref callbackRef);
+    static sptr<IPrintCallback> CreateNotify(napi_env env, const std::string &type, napi_ref callbackRef);
 
     struct OperationContext : public AsyncCall::Context {
         int32_t dummy = 0;

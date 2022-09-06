@@ -12,34 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PRINT_RESUME_H
-#define PRINT_RESUME_H
 
-#include <cstdint>
-#include <string>
+#ifndef PRINT_EXTENSION_CALLBACK_PROXY_H
+#define PRINT_EXTENSION_CALLBACK_PROXY_H
 
-#include "print_range.h"
+#include "iprint_extension_callback.h"
+#include "iremote_proxy.h"
+
 namespace OHOS::Print {
-class PreviewAttribute {
+class PrintExtensionCallbackProxy : public IRemoteProxy<IPrintExtensionCallback> {
 public:
-    explicit PreviewAttribute();
-    PreviewAttribute(const PreviewAttribute &right);
-    PreviewAttribute &operator=(const PreviewAttribute &previewAttribute);
-    ~PreviewAttribute();
-
-    void SetResult(const std::string &result);
-
-    void SetPreviewRange(const PrintRange &previewRange);
-
-    [[nodiscard]] const std::string &GetResult() const;
-
-    void GetPreviewRange(PrintRange &range) const;
-
-    void Dump();
+    explicit PrintExtensionCallbackProxy(const sptr<IRemoteObject> &impl);
+    ~PrintExtensionCallbackProxy() = default;
+    bool OnCallback() override;
+    bool OnCallback(uint32_t printerId) override;
+    bool OnCallback(const PrintJob &job) override;
+    bool OnCallback(uint32_t printerId, MessageParcel &reply) override;
 
 private:
-    std::string result_;
-    PrintRange previewRange_;
+    static inline BrokerDelegator<PrintExtensionCallbackProxy> delegator_;
 };
 } // namespace OHOS::Print
-#endif // PRINT_RESUME_H
+
+#endif // PRINT_EXTENSION_CALLBACK_PROXY_H

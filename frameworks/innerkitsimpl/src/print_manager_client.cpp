@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,8 +16,9 @@
 #include "print_manager_client.h"
 
 #include "iservice_registry.h"
-#include "print_extcb_stub.h"
+#include "print_extension_callback_stub.h"
 #include "print_log.h"
+#include "print_sync_load_callback.h"
 #include "system_ability_definition.h"
 
 namespace OHOS::Print {
@@ -40,7 +41,7 @@ sptr<PrintManagerClient> PrintManagerClient::GetInstance()
 }
 
 bool PrintManagerClient::On(
-    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener)
+    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener)
 {
     if (printServiceProxy_ == nullptr) {
         PRINT_HILOGW("Redo GetPrintServiceProxy");
@@ -52,7 +53,6 @@ bool PrintManagerClient::On(
     }
     PRINT_HILOGD("PrintManagerClient On succeeded.");
     return true;
-    // return printServiceProxy_->On(type, state, info);
 }
 
 bool PrintManagerClient::Off(const std::string &type)
@@ -84,10 +84,10 @@ bool PrintManagerClient::RegisterExtCallback(uint32_t callbackId, PrintExtCallba
         PRINT_HILOGE("Invalid callback id [%{public}d].", callbackId);
         return false;
     }
-    sptr<PrintExtcbStub> callbackStub = nullptr;
+    sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
     auto it = extCallbackMap_.find(callbackId);
     if (it == extCallbackMap_.end()) {
-        callbackStub = new PrintExtcbStub;
+        callbackStub = new PrintExtensionCallbackStub;
         if (callbackStub == nullptr) {
             PRINT_HILOGE("Invalid callback stub object.");
             return false;
@@ -119,10 +119,10 @@ bool PrintManagerClient::RegisterExtCallback(uint32_t callbackId, PrintJobCallba
         PRINT_HILOGE("Invalid callback id [%{public}d].", callbackId);
         return false;
     }
-    sptr<PrintExtcbStub> callbackStub = nullptr;
+    sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
     auto it = extCallbackMap_.find(callbackId);
     if (it == extCallbackMap_.end()) {
-        callbackStub = new PrintExtcbStub;
+        callbackStub = new PrintExtensionCallbackStub;
         if (callbackStub == nullptr) {
             PRINT_HILOGE("Invalid callback stub object.");
             return false;
@@ -132,6 +132,41 @@ bool PrintManagerClient::RegisterExtCallback(uint32_t callbackId, PrintJobCallba
     } else {
         callbackStub = it->second;
         callbackStub->SetPrintJobCallback(cb);
+    }
+
+    bool ret = printServiceProxy_->RegisterExtCallback(callbackId, callbackStub);
+    PRINT_HILOGD("PrintManagerClient RegisterExtCallback %{public}s.", ret ? "success" : "failed");
+    return ret;
+}
+
+bool PrintManagerClient::RegisterExtCallback(uint32_t callbackId, PrinterCapabilityCallback cb)
+{
+    if (printServiceProxy_ == nullptr) {
+        PRINT_HILOGW("Redo GetPrintServiceProxy");
+        printServiceProxy_ = GetPrintServiceProxy();
+    }
+    if (printServiceProxy_ == nullptr) {
+        PRINT_HILOGE("Resume quit because redoing GetPrintServiceProxy failed.");
+        return false;
+    }
+
+    if (callbackId >= PRINT_EXTCB_MAX) {
+        PRINT_HILOGE("Invalid callback id [%{public}d].", callbackId);
+        return false;
+    }
+    sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
+    auto it = extCallbackMap_.find(callbackId);
+    if (it == extCallbackMap_.end()) {
+        callbackStub = new PrintExtensionCallbackStub;
+        if (callbackStub == nullptr) {
+            PRINT_HILOGE("Invalid callback stub object.");
+            return false;
+        }
+        callbackStub->SetCapabilityCallback(cb);
+        extCallbackMap_.insert(std::make_pair(callbackId, callbackStub));
+    } else {
+        callbackStub = it->second;
+        callbackStub->SetCapabilityCallback(cb);
     }
 
     bool ret = printServiceProxy_->RegisterExtCallback(callbackId, callbackStub);
@@ -154,10 +189,10 @@ bool PrintManagerClient::RegisterExtCallback(uint32_t callbackId, PrinterCallbac
         PRINT_HILOGE("Invalid callback id [%{public}d].", callbackId);
         return false;
     }
-    sptr<PrintExtcbStub> callbackStub = nullptr;
+    sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
     auto it = extCallbackMap_.find(callbackId);
     if (it == extCallbackMap_.end()) {
-        callbackStub = new PrintExtcbStub;
+        callbackStub = new PrintExtensionCallbackStub;
         if (callbackStub == nullptr) {
             PRINT_HILOGE("Invalid callback stub object.");
             return false;
@@ -193,7 +228,7 @@ bool PrintManagerClient::UnregisterAllExtCallback()
     return ret;
 }
 
-sptr<PrintServiceInterface> PrintManagerClient::GetPrintServiceProxy()
+sptr<IPrintService> PrintManagerClient::GetPrintServiceProxy()
 {
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -208,7 +243,7 @@ sptr<PrintServiceInterface> PrintManagerClient::GetPrintServiceProxy()
     }
     deathRecipient_ = new PrintSaDeathRecipient();
     systemAbility->AddDeathRecipient(deathRecipient_);
-    sptr<PrintServiceInterface> serviceProxy = iface_cast<PrintServiceInterface>(systemAbility);
+    sptr<IPrintService> serviceProxy = iface_cast<IPrintService>(systemAbility);
     if (serviceProxy == nullptr) {
         PRINT_HILOGE("Get PrintManagerClientProxy from SA failed.");
         return nullptr;
@@ -222,14 +257,6 @@ void PrintManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
     printServiceProxy_ = GetPrintServiceProxy();
 }
 
-PrintSaDeathRecipient::PrintSaDeathRecipient() {}
-
-void PrintSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
-{
-    PRINT_HILOGE("PrintSaDeathRecipient on remote systemAbility died.");
-    PrintManagerClient::GetInstance()->OnRemoteSaDied(object);
-}
-
 int32_t PrintManagerClient::StartPrint()
 {
     PRINT_HILOGD("PrintManagerClient EnqueueTask start.");
@@ -239,10 +266,10 @@ int32_t PrintManagerClient::StartPrint()
         printServiceProxy_ = GetPrintServiceProxy();
     }
     if (printServiceProxy_ == nullptr) {
-        PRINT_HILOGE("AddPrinters quit because redoing GetPrintServiceProxy failed.");
+        PRINT_HILOGE("StartPrint quit because redoing GetPrintServiceProxy failed.");
         return false;
     }
-    PRINT_HILOGD("PrintManagerClient AddPrinters succeeded.");
+    PRINT_HILOGD("PrintManagerClient StartPrint succeeded.");
     return printServiceProxy_->StartPrint();
 }
 
@@ -316,7 +343,7 @@ bool PrintManagerClient::StopDiscoverPrinter()
     return printServiceProxy_->StopDiscoverPrinter();
 }
 
-bool PrintManagerClient::StartPrintJob(PrintJob jobinfo)
+bool PrintManagerClient::StartPrintJob(const PrintJob &jobinfo)
 {
     if (printServiceProxy_ == nullptr) {
         PRINT_HILOGW("Redo GetPrintServiceProxy");
@@ -330,7 +357,7 @@ bool PrintManagerClient::StartPrintJob(PrintJob jobinfo)
     return printServiceProxy_->StartPrintJob(jobinfo);
 }
 
-bool PrintManagerClient::CancelPrintJob(PrintJob jobinfo)
+bool PrintManagerClient::CancelPrintJob(const PrintJob &jobinfo)
 {
     if (printServiceProxy_ == nullptr) {
         PRINT_HILOGW("Redo GetPrintServiceProxy");
@@ -342,7 +369,7 @@ bool PrintManagerClient::CancelPrintJob(PrintJob jobinfo)
     }
     PRINT_HILOGD("PrintManagerClient CancelPrintJob succeeded.");
     return printServiceProxy_->CancelPrintJob(jobinfo);
-} ////
+} 
 
 bool PrintManagerClient::AddPrinters(std::vector<PrinterInfo> arrayPrintInfo)
 {
@@ -400,7 +427,7 @@ bool PrintManagerClient::UpdatePrinterJobState(uint32_t jobId, uint32_t state)
     return printServiceProxy_->UpdatePrinterJobState(jobId, state);
 }
 
-bool PrintManagerClient::RequestPreview(PrintJob jobinfo, std::string &previewResult)
+bool PrintManagerClient::RequestPreview(const PrintJob &jobinfo, std::string &previewResult)
 {
     if (printServiceProxy_ == nullptr) {
         PRINT_HILOGW("Redo GetPrintServiceProxy");
@@ -441,5 +468,59 @@ bool PrintManagerClient::CheckPermission()
     PRINT_HILOGD("PrintManagerClient CheckPermission succeeded.");
     PRINT_HILOGD("Check Permission enable");
     return printServiceProxy_->CheckPermission();
+}
+
+bool PrintManagerClient::LoadServer()
+{
+    if (ready_) {
+        return true;
+    }
+    std::lock_guard<std::mutex> lock(loadMutex_);
+    if (ready_) {
+        return true;
+    }
+
+    auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sm == nullptr) {
+        PRINT_HILOGE("GetSystemAbilityManager return null");
+        return false;
+    }
+
+    sptr<PrintSyncLoadCallback> loadCallback_ = new (std::nothrow) PrintSyncLoadCallback();
+    if (loadCallback_ == nullptr) {
+        PRINT_HILOGE("new PrintSyncLoadCallback fail");
+        return false;
+    }
+
+    int32_t result = sm->LoadSystemAbility(PRINT_SERVICE_ID, loadCallback_);
+    if (result != ERR_OK) {
+        PRINT_HILOGE("LoadSystemAbility %{public}d failed, result: %{public}d", PRINT_SERVICE_ID, result);
+        return false;
+    }
+
+    {
+        std::unique_lock<std::mutex> conditionLock(conditionMutex_);
+        auto waitStatus = syncCon_.wait_for(
+            conditionLock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS), [this]() { return ready_; });
+        if (!waitStatus) {
+            PRINT_HILOGE("print server load sa timeout");
+            return false;
+        }
+    }
+    return true;
+}
+
+void PrintManagerClient::LoadServerSuccess()
+{
+    std::unique_lock<std::mutex> lock(conditionMutex_);
+    ready_ = true;
+    syncCon_.notify_one();
+    PRINT_HILOGE("load print server success");
+}
+
+void PrintManagerClient::LoadServerFail()
+{
+    ready_ = false;
+    PRINT_HILOGE("load print server fail");
 }
 } // namespace OHOS::Print

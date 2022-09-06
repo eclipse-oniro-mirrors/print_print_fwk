@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,23 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "print_notify_proxy.h"
+#include "print_callback_proxy.h"
 
 #include "message_parcel.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintNotifyProxy::PrintNotifyProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<PrintNotifyInterface>(impl) {}
+PrintCallbackProxy::PrintCallbackProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IPrintCallback>(impl) {}
 
-void PrintNotifyProxy::OnCallBack(MessageParcel &data)
+void PrintCallbackProxy::OnCallBack(MessageParcel &data)
 {
-    PRINT_HILOGD("PrintNotifyProxy::OnCallBack Start");
+    PRINT_HILOGD("PrintCallbackProxy::OnCallBack Start");
     PRINT_HILOGD("data should be filled within service module");
     MessageParcel realData;
     MessageParcel reply;
     MessageOption option;
 
-    if (!realData.WriteInterfaceToken(PrintNotifyProxy::GetDescriptor())) {
+    if (!realData.WriteInterfaceToken(PrintCallbackProxy::GetDescriptor())) {
         PRINT_HILOGE("write descriptor failed");
         return;
     }
@@ -42,6 +42,6 @@ void PrintNotifyProxy::OnCallBack(MessageParcel &data)
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
     }
-    PRINT_HILOGD("PrintNotifyProxy::OnCallBack End");
+    PRINT_HILOGD("PrintCallbackProxy::OnCallBack End");
 }
 } // namespace OHOS::Print

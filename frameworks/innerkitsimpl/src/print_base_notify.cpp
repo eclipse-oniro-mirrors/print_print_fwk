@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,12 +17,12 @@
 
 #include <uv.h>
 
+#include "napi_print_utils.h"
 #include "print_log.h"
-#include "print_napi_utils.h"
 
 namespace OHOS::Print {
 PrintBaseNotify::PrintBaseNotify(napi_env env, const std::string &type, napi_ref ref)
-    : PrintNotifyStub(), env_(env), type_(type), ref_(ref)
+    : PrintCallbackStub(), env_(env), type_(type), ref_(ref)
 {}
 
 PrintBaseNotify::~PrintBaseNotify()

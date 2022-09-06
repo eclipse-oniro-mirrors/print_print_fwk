@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,8 +20,7 @@ extern const char _binary_print_extension_js_end[];
 extern const char _binary_print_extension_abc_start[];
 extern const char _binary_print_extension_abc_end[];
 
-extern "C" __attribute__((constructor))
-void NAPI_PrintExtension_AutoRegister()
+extern "C" __attribute__((constructor)) void NAPI_PrintExtension_AutoRegister()
 {
     auto moduleManager = NativeModuleManager::GetInstance();
     NativeModule newModuleInfo = {
@@ -32,8 +31,7 @@ void NAPI_PrintExtension_AutoRegister()
     moduleManager->Register(&newModuleInfo);
 }
 
-extern "C" __attribute__((visibility("default")))
-void NAPI_PrintExtension_GetJSCode(const char **buf, int *bufLen)
+extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtension_GetJSCode(const char **buf, int *bufLen)
 {
     if (buf != nullptr) {
         *buf = _binary_print_extension_js_start;
@@ -45,8 +43,7 @@ void NAPI_PrintExtension_GetJSCode(const char **buf, int *bufLen)
 }
 
 // print_extension JS register
-extern "C" __attribute__((visibility("default")))
-void NAPI_PrintExtension_GetABCCode(const char **buf, int *buflen)
+extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtension_GetABCCode(const char **buf, int *buflen)
 {
     if (buf != nullptr) {
         *buf = _binary_print_extension_abc_start;

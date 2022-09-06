@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,17 +18,17 @@
 
 #include <string>
 
+#include "iprint_callback.h"
+#include "iprint_extension_callback.h"
 #include "iremote_broker.h"
-#include "print_extcb_interface.h"
 #include "print_extension_info.h"
 #include "print_job.h"
-#include "print_notify_interface.h"
 #include "printer_info.h"
 
 namespace OHOS::Print {
-class PrintServiceInterface : public IRemoteBroker {
+class IPrintService : public IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.PrintServiceInterface");
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print. IPrintService");
     virtual int32_t StartPrint() = 0;
     virtual bool ConnectPrinter(uint32_t printerId) = 0;
     virtual bool DisconnectPrinter(uint32_t printerId) = 0;
@@ -45,9 +45,9 @@ public:
     virtual bool QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability) = 0;
     virtual bool CheckPermission() = 0;
     virtual bool On(
-        const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<PrintNotifyInterface> &listener) = 0;
+        const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener) = 0;
     virtual bool Off(const std::string &type) = 0;
-    virtual bool RegisterExtCallback(uint32_t callbackId, const sptr<PrintExtcbInterface> &listener) = 0;
+    virtual bool RegisterExtCallback(uint32_t callbackId, const sptr<IPrintExtensionCallback> &listener) = 0;
     virtual bool UnregisterAllExtCallback() = 0;
 };
 

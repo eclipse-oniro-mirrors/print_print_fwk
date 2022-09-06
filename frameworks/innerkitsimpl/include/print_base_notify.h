@@ -1,5 +1,5 @@
 /*NotifyHandler
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,10 +20,9 @@
 
 #include "napi/native_api.h"
 #include "noncopyable.h"
+#include "print_callback_stub.h"
 #include "print_job.h"
-#include "print_notify_stub.h"
 #include "printer_info.h"
-
 
 namespace OHOS::Print {
 struct NotifyData {
@@ -36,7 +35,7 @@ struct NotifyData {
     PrintJob thirdArgv;
 };
 
-class PrintBaseNotify : public PrintNotifyStub {
+class PrintBaseNotify : public PrintCallbackStub {
 public:
     ACE_DISALLOW_COPY_AND_MOVE(PrintBaseNotify);
     explicit PrintBaseNotify(napi_env env, const std::string &type, napi_ref ref);
