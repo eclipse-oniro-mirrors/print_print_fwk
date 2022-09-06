@@ -31,7 +31,6 @@
 
 namespace OHOS {
 namespace AbilityRuntime {
-
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Print;
 

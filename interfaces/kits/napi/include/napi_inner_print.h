@@ -33,13 +33,11 @@
 #include "printer_info.h"
 
 namespace OHOS::Print {
-
 enum EventType {
     NO_ARG_EVENT,
     ONE_ARG_EVENT,
     TWO_ARG_EVENT,
 };
-
 class NapiInnerPrint {
 public:
     explicit NapiInnerPrint(uint32_t taskId);

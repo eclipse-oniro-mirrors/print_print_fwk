@@ -17,14 +17,12 @@
 
 #include <cstddef>
 #include <errno.h>
-#include <functional>
 #include <new>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <thread>
-#include <time.h>
 #include <unistd.h>
 #include <utility>
 
