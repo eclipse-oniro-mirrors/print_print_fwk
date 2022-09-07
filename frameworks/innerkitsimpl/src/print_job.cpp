@@ -201,9 +201,8 @@ void PrintJob::ConvertToParcel(MessageParcel &reply) const
 {
     std::vector<std::string> files;
     GetFiles(files);
-    uint32_t fileLength = files.size();
-    reply.WriteUint32(fileLength);
-    for (uint32_t i = 0; i < fileLength; i++) {
+    reply.WriteUint32((uint32_t)files.size());
+    for (uint32_t i = 0; i < (uint32_t)files.size(); i++) {
         reply.WriteString(files[i]);
     }
     reply.WriteUint32(GetJobId());
@@ -218,9 +217,8 @@ void PrintJob::ConvertToParcel(MessageParcel &reply) const
 
     std::vector<uint32_t> pages;
     range.GetPages(pages);
-    uint32_t pageLength = pages.size();
-    reply.WriteUint32(pageLength);
-    for (uint32_t i = 0; i < pageLength; i++) {
+    reply.WriteUint32((uint32_t)pages.size());
+    for (uint32_t i = 0; i < (uint32_t)pages.size(); i++) {
         reply.WriteUint32(pages[i]);
     }
 
@@ -254,11 +252,31 @@ void PrintJob::ConvertToParcel(MessageParcel &reply) const
     reply.WriteUint32(range.GetEndPage());
 
     range.GetPages(pages);
-    uint32_t previewPageLength = pages.size();
-    reply.WriteUint32(previewPageLength);
-    for (uint32_t i = 0; i < previewPageLength; i++) {
+    reply.WriteUint32((uint32_t)pages.size());
+    for (uint32_t i = 0; i < (uint32_t)pages.size(); i++) {
         reply.WriteUint32(pages[i]);
     }
+}
+
+void PrintJob::SetBuild(MessageParcel &data)
+{
+    PrintPageSize pageSize;
+    pageSize.SetId(data.ReadString());
+    pageSize.SetName(data.ReadString());
+    pageSize.SetWidth(data.ReadUint32());
+    pageSize.SetHeight(data.ReadUint32());
+    SetPageSize(pageSize);
+
+    SetIsLandscape(data.ReadUint32());
+    SetColorMode(data.ReadUint32());
+    SetDuplexMode(data.ReadUint32());
+
+    PrintMargin minMargin;
+    minMargin.SetTop(data.ReadUint32());
+    minMargin.SetBottom(data.ReadUint32());
+    minMargin.SetLeft(data.ReadUint32());
+    minMargin.SetRight(data.ReadUint32());
+    SetMargin(minMargin);
 }
 
 void PrintJob::BuildFromParcel(MessageParcel &data)
@@ -279,35 +297,16 @@ void PrintJob::BuildFromParcel(MessageParcel &data)
     range.SetStartPage(data.ReadUint32());
     range.SetEndPage(data.ReadUint32());
     uint32_t pageLength = data.ReadUint32();
-    if (pageLength > 0) {
-        std::vector<uint32_t> rangePages;
-        for (index = 0; index < pageLength; index++) {
-            rangePages.push_back(data.ReadUint32());
-        }
-        range.SetPages(rangePages);
+    std::vector<uint32_t> rangePages;
+    for (index = 0; index < pageLength; index++) {
+        rangePages.push_back(data.ReadUint32());
     }
+    range.SetPages(rangePages);
     SetPageRange(range);
 
     SetIsSequential(data.ReadUint32());
 
-    PrintPageSize pageSize;
-    pageSize.SetId(data.ReadString());
-    pageSize.SetName(data.ReadString());
-    pageSize.SetWidth(data.ReadUint32());
-    pageSize.SetHeight(data.ReadUint32());
-    SetPageSize(pageSize);
-
-    SetIsLandscape(data.ReadUint32());
-    SetColorMode(data.ReadUint32());
-    SetDuplexMode(data.ReadUint32());
-
-    PrintMargin minMargin;
-    minMargin.SetTop(data.ReadUint32());
-    minMargin.SetBottom(data.ReadUint32());
-    minMargin.SetLeft(data.ReadUint32());
-    minMargin.SetRight(data.ReadUint32());
-    SetMargin(minMargin);
-
+    SetBuild(data);
     PreviewAttribute previewAttr;
 
     previewAttr.SetResult(data.ReadString());
@@ -315,16 +314,51 @@ void PrintJob::BuildFromParcel(MessageParcel &data)
     range.SetStartPage(data.ReadUint32());
     range.SetEndPage(data.ReadUint32());
     uint32_t previewPageLength = data.ReadUint32();
-    if (previewPageLength > 0) {
-        std::vector<uint32_t> previewRangePages;
-        for (index = 0; index < previewPageLength; index++) {
-            previewRangePages.push_back(data.ReadUint32());
-        }
-        range.SetPages(previewRangePages);
+    std::vector<uint32_t> previewRangePages;
+    for (index = 0; index < previewPageLength; index++) {
+        previewRangePages.push_back(data.ReadUint32());
     }
+    range.SetPages(previewRangePages);
     previewAttr.SetPreviewRange(range);
     SetPreview(previewAttr);
     Dump();
+}
+
+void PrintJob::SetSubPageRange(napi_env env, napi_value &subPageRange)
+{
+    napi_create_object(env, &subPageRange);
+    NapiPrintUtils::SetUint32Property(env, subPageRange, "startPage", pageRange_.GetStartPage());
+    NapiPrintUtils::SetUint32Property(env, subPageRange, "endPage", pageRange_.GetEndPage());
+    napi_value arrPreviewPages;
+    status = napi_create_array(env, &arrPreviewPages);
+    PrintRange previewPrintRange;
+    std::vector<uint32_t> previewRangePages;
+    preview_.GetPreviewRange(previewPrintRange);
+    previewPrintRange.GetPages(previewRangePages);
+    uint32_t arrPreviewPagesLength = previewRangePages.size();
+
+    for (uint32_t i = 0; i < arrPreviewPagesLength; i++) {
+        napi_value value;
+        napi_create_uint32(env, previewRangePages[i], &value);
+        status = napi_set_element(env, arrPreviewPages, i, value);
+    }
+    napi_set_named_property(env, subPageRange, "files", arrPreviewPages);
+}
+
+void PrintJob::SetPageSize(napi_env env, napi_value &pageSize)
+{
+    NapiPrintUtils::SetStringPropertyUtf8(env, pageSize, "id", pageSize_.GetId());
+    NapiPrintUtils::SetStringPropertyUtf8(env, pageSize, "name", pageSize_.GetName().c_str());
+    NapiPrintUtils::SetUint32Property(env, pageSize, "width", pageSize_.GetWidth());
+    NapiPrintUtils::SetUint32Property(env, pageSize, "height", pageSize_.GetHeight());
+}
+
+void PrintJob::SetMargin(napi_env env, napi_value &margin)
+{
+    NapiPrintUtils::SetUint32Property(env, margin, "top", margin_.GetTop());
+    NapiPrintUtils::SetUint32Property(env, margin, "bottom", margin_.GetBottom());
+    NapiPrintUtils::SetUint32Property(env, margin, "left", margin_.GetLeft());
+    NapiPrintUtils::SetUint32Property(env, margin, "right", margin_.GetRight());
 }
 
 void PrintJob::ConvertToJs(napi_env env, napi_value *result) const
@@ -364,10 +398,7 @@ void PrintJob::ConvertToJs(napi_env env, napi_value *result) const
     NapiPrintUtils::SetUint32Property(env, *result, "isSequential", GetIsSequential());
     napi_value pageSize;
     napi_create_object(env, &pageSize);
-    NapiPrintUtils::SetStringPropertyUtf8(env, pageSize, "id", pageSize_.GetId());
-    NapiPrintUtils::SetStringPropertyUtf8(env, pageSize, "name", pageSize_.GetName().c_str());
-    NapiPrintUtils::SetUint32Property(env, pageSize, "width", pageSize_.GetWidth());
-    NapiPrintUtils::SetUint32Property(env, pageSize, "height", pageSize_.GetHeight());
+    SetPageSize(env, pageSize);
 
     NapiPrintUtils::SetUint32Property(env, *result, "isLandscape", GetIsLandscape());
     NapiPrintUtils::SetUint32Property(env, *result, "colorMode", GetColorMode());
@@ -375,34 +406,16 @@ void PrintJob::ConvertToJs(napi_env env, napi_value *result) const
 
     napi_value margin;
     napi_create_object(env, &margin);
-    NapiPrintUtils::SetUint32Property(env, margin, "top", margin_.GetTop());
-    NapiPrintUtils::SetUint32Property(env, margin, "bottom", margin_.GetBottom());
-    NapiPrintUtils::SetUint32Property(env, margin, "left", margin_.GetLeft());
-    NapiPrintUtils::SetUint32Property(env, margin, "right", margin_.GetRight());
+    SetMargin(env, margin);
 
     napi_value preview;
     napi_create_object(env, &preview);
     NapiPrintUtils::SetStringPropertyUtf8(env, preview, "result", preview_.GetResult().c_str());
+    
     napi_value subPageRange;
     napi_create_object(env, &subPageRange);
-    NapiPrintUtils::SetUint32Property(env, subPageRange, "startPage", pageRange_.GetStartPage());
-    NapiPrintUtils::SetUint32Property(env, subPageRange, "endPage", pageRange_.GetEndPage());
-    napi_value arrPreviewPages;
-    status = napi_create_array(env, &arrPreviewPages);
-    PrintRange previewPrintRange;
-    std::vector<uint32_t> previewRangePages;
-    preview_.GetPreviewRange(previewPrintRange);
-    previewPrintRange.GetPages(previewRangePages);
-    uint32_t arrPreviewPagesLength = previewRangePages.size();
-
-    for (uint32_t i = 0; i < arrPreviewPagesLength; i++) {
-        napi_value value;
-        napi_create_uint32(env, previewRangePages[i], &value);
-        status = napi_set_element(env, arrPreviewPages, i, value);
-    }
-    napi_set_named_property(env, subPageRange, "files", arrPreviewPages);
+    SetSubPageRange(env, subPageRange);
     napi_set_named_property(env, preview, "pageRange", subPageRange);
-
     napi_set_named_property(env, *result, "pageRange", pageRange);
     napi_set_named_property(env, *result, "pageSize", pageSize);
     napi_set_named_property(env, *result, "margin", margin);

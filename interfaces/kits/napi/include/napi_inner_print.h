@@ -61,7 +61,7 @@ private:
 
     struct OperationContext : public AsyncCall::Context {
         int32_t dummy = 0;
-        std::vector<PrintExtensionInfo> arrayPrinterExtensionInfo;
+        std::vector<PrintExtensionInfo> arrExtInfo;
         std::vector<uint32_t> extensionList;
         uint32_t state;
         PrinterInfo info;

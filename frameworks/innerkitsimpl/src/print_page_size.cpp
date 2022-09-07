@@ -116,5 +116,4 @@ void PrintPageSize::Dump()
     PRINT_HILOGD("width_ = %{public}d", width_);
     PRINT_HILOGD("height_ = %{public}d", height_);
 }
-
 } // namespace OHOS::Print

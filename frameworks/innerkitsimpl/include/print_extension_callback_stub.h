@@ -24,7 +24,6 @@
 #include "printer_capability.h"
 
 namespace OHOS::Print {
-
 using PrintExtCallback = bool (*)();
 using PrintJobCallback = bool (*)(const PrintJob &);
 using PrinterCallback = bool (*)(uint32_t);

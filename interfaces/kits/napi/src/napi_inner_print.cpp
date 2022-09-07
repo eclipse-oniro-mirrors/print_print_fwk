@@ -38,45 +38,33 @@ napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info i
     auto context = std::make_shared<OperationContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         NAPI_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
-        PRINT_HILOGD("input over---->");
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGD("ouput enter---->");
         napi_status status = napi_create_array(env, result);
-        uint32_t PrinterExtensionInfoLength = context->arrayPrinterExtensionInfo.size();
-        for (uint32_t i = 0; i < PrinterExtensionInfoLength; i++) {
-            PRINT_HILOGD(
-                "PrintServiceProxy, ExtensionId = %{public}d", context->arrayPrinterExtensionInfo[i].GetExtensionId());
-            PRINT_HILOGD(
-                "PrintServiceProxy, VendorId = %{public}d", context->arrayPrinterExtensionInfo[i].GetVendorId());
-            PRINT_HILOGD("PrintServiceProxy, VendorName = %{public}s",
-                context->arrayPrinterExtensionInfo[i].GetVendorName().c_str());
-            PRINT_HILOGD(
-                "PrintServiceProxy, VendorIcon = %{public}d", context->arrayPrinterExtensionInfo[i].GetVendorIcon());
-            PRINT_HILOGD(
-                "PrintServiceProxy, Version = %{public}s", context->arrayPrinterExtensionInfo[i].GetVersion().c_str());
+        uint32_t extInfoLength = context->arrExtInfo.size();
+        for (uint32_t i = 0; i < extInfoLength; i++) {
+            PRINT_HILOGD("ExtInfo, ExtensionId = %{public}d", context->arrExtInfo[i].GetExtensionId());
+            PRINT_HILOGD("ExtInfo, VendorId = %{public}d", context->arrExtInfo[i].GetVendorId());
+            PRINT_HILOGD("ExtInfo, VendorName = %{public}s",context->arrExtInfo[i].GetVendorName().c_str());
+            PRINT_HILOGD("ExtInfo, VendorIcon = %{public}d", context->arrExtInfo[i].GetVendorIcon());
+            PRINT_HILOGD("ExtInfo, Version = %{public}s", context->arrExtInfo[i].GetVersion().c_str());
+
             napi_value PrinterInfo;
             napi_create_object(env, &PrinterInfo);
-            NapiPrintUtils::SetUint32Property(
-                env, PrinterInfo, "extensionId", context->arrayPrinterExtensionInfo[i].GetExtensionId());
-            NapiPrintUtils::SetUint32Property(
-                env, PrinterInfo, "vendorId", context->arrayPrinterExtensionInfo[i].GetVendorId());
-            NapiPrintUtils::SetStringPropertyUtf8(
-                env, PrinterInfo, "vendorName", context->arrayPrinterExtensionInfo[i].GetVendorName().c_str());
-            NapiPrintUtils::SetUint32Property(
-                env, PrinterInfo, "vendorIcon", context->arrayPrinterExtensionInfo[i].GetVendorIcon());
-            NapiPrintUtils::SetStringPropertyUtf8(
-                env, PrinterInfo, "version", context->arrayPrinterExtensionInfo[i].GetVersion().c_str());
+            NapiPrintUtils::SetUint32Property(env, PrinterInfo, "extensionId", context->arrExtInfo[i].GetExtensionId());
+            NapiPrintUtils::SetUint32Property(env, PrinterInfo, "vendorId", context->arrExtInfo[i].GetVendorId());
+            NapiPrintUtils::SetStringPropertyUtf8(env, PrinterInfo, "vendorName", context->arrExtInfo[i].GetVendorName().c_str());
+            NapiPrintUtils::SetUint32Property(env, PrinterInfo, "vendorIcon", context->arrExtInfo[i].GetVendorIcon());
+            NapiPrintUtils::SetStringPropertyUtf8(env, PrinterInfo, "version", context->arrExtInfo[i].GetVersion().c_str());
             status = napi_set_element(env, *result, i, PrinterInfo);
         }
-        PRINT_HILOGD("output ---- status[%{public}d]", status);
-        PRINT_HILOGD("ouput over---->");
         return napi_ok;
     };
     auto exec = [context](AsyncCall::Context *ctx) {
         PRINT_HILOGD("exec enter---->");
-        context->result = PrintManagerClient::GetInstance()->QueryAllExtension(context->arrayPrinterExtensionInfo);
+        context->result = PrintManagerClient::GetInstance()->QueryAllExtension(context->arrExtInfo);
         if (context->result == true) {
             PRINT_HILOGD("exec over---->");
             context->status = napi_ok;
@@ -264,7 +252,7 @@ napi_value NapiInnerPrint::StartPrintJob(napi_env env, napi_callback_info info)
         NAPI_ASSERT_BASE(env, argc == 1, " should 1 parameter!", napi_invalid_arg);
         napi_value value = argv[NapiPrintUtils::INDEX_ZERO];
         PrintJob printJob;
-        if (!ParseType::ParseJob(env, value, printJob)) {
+        if (!PrintParseType::ParseJob(env, value, printJob)) {
             PRINT_HILOGD("ParseJob type error!");
         }
         context->printStartJob = printJob;
@@ -303,7 +291,7 @@ napi_value NapiInnerPrint::CancelPrintJob(napi_env env, napi_callback_info info)
         NAPI_ASSERT_BASE(env, argc == 1, " should 1 parameter!", napi_invalid_arg);
         napi_value value = argv[NapiPrintUtils::INDEX_ZERO];
         PrintJob printJob;
-        if (!ParseType::ParseJob(env, value, printJob)) {
+        if (!PrintParseType::ParseJob(env, value, printJob)) {
             PRINT_HILOGD("ParseJob type error!");
         }
         context->printCancelJob = printJob;
@@ -342,7 +330,7 @@ napi_value NapiInnerPrint::RequestPreview(napi_env env, napi_callback_info info)
         NAPI_ASSERT_BASE(env, argc == 1, " should 1 parameter!", napi_invalid_arg);
         napi_value value = argv[NapiPrintUtils::INDEX_ZERO];
         PrintJob printJob;
-        if (!ParseType::ParseJob(env, value, printJob)) {
+        if (!PrintParseType::ParseJob(env, value, printJob)) {
             PRINT_HILOGD("ParseJob type error!");
         }
         context->printReqPreviewJob = printJob;

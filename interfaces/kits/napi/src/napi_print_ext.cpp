@@ -49,7 +49,7 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
         for (uint32_t i = 0; i < result_size; i++) {
             napi_value value;
             napi_get_element(env, array, i, &value);
-            if (!ParseType::ParseInfo(env, value, info_)) {
+            if (!PrintParseType::ParseInfo(env, value, info_)) {
                 PRINT_HILOGD("PrinterInfo is format error!");
             }
             context->printAddInfoVector.push_back(info_);
@@ -99,7 +99,7 @@ napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
         for (uint32_t i = 0; i < result_size; i++) {
             napi_value value;
             napi_get_element(env, array, i, &value);
-            if (!ParseType::ParseInfo(env, value, info_)) {
+            if (!PrintParseType::ParseInfo(env, value, info_)) {
                 PRINT_HILOGD("PrinterInfo is format error!");
             }
             context->printRemoveInfoVector.push_back(info_);

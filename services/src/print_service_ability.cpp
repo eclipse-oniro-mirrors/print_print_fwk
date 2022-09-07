@@ -382,7 +382,7 @@ bool PrintServiceAbility::Off(const std::string &type)
 
 void PrintServiceAbility::DataWriteInfo(PrinterInfo info, MessageParcel &data)
 {
-
+    PRINT_HILOGI();
 }
 
 void PrintServiceAbility::NotifyPrintStateHandler(const std::string &type, uint32_t state, PrinterInfo info)
@@ -393,7 +393,7 @@ void PrintServiceAbility::NotifyPrintStateHandler(const std::string &type, uint3
 
 void PrintServiceAbility::DataWriteJob(PrintJob job, MessageParcel &data)
 {
-
+    PRINT_HILOGI();
 }
 
 void PrintServiceAbility::NotifyJobStateHandler(const std::string &type, uint32_t state, PrintJob job)

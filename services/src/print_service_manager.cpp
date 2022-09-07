@@ -15,16 +15,6 @@
 
 #include "print_service_manager.h"
 
-#include <cstddef>
-#include <errno.h>
-#include <new>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <thread>
-#include <unistd.h>
-
 #include "print_log.h"
 
 namespace OHOS::Print {

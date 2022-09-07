@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "print_service_proxy.h"
+#include "napi_print_utils.h"
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -80,7 +81,7 @@ bool PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &array
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
-    data.WriteUint32(5);
+    data.WriteUint32(NapiPrintUtil::ARGC_FIVE);
     PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
     bool ret = Remote()->SendRequest(CMD_QUERYALLEXTENSION, data, reply, option);
     if (ret != ERR_NONE) {
@@ -414,9 +415,8 @@ void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel &data, const Print
 
     std::vector<std::string> files;
     jobinfo.GetFiles(files);
-    uint32_t fileLength = files.size();
-    data.WriteUint32(fileLength);
-    for (uint32_t i = 0; i < fileLength; i++) {
+    data.WriteUint32(files.size());
+    for (uint32_t i = 0; i < files.size(); i++) {
         data.WriteString(files[i]);
     }
     data.WriteUint32(jobinfo.GetJobId());
@@ -431,8 +431,7 @@ void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel &data, const Print
 
     std::vector<uint32_t> pages;
     range.GetPages(pages);
-    uint32_t pageLength = pages.size();
-    data.WriteUint32(pageLength);
+    data.WriteUint32(pages.size());
     for (uint32_t i = 0; i < pageLength; i++) {
         data.WriteUint32(pages[i]);
     }
@@ -467,9 +466,8 @@ void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel &data, const Print
     data.WriteUint32(range.GetEndPage());
 
     range.GetPages(pages);
-    uint32_t previewPageLength = pages.size();
-    data.WriteUint32(previewPageLength);
-    for (uint32_t i = 0; i < previewPageLength; i++) {
+    data.WriteUint32(pages.size());
+    for (uint32_t i = 0; i < pages.size(); i++) {
         data.WriteUint32(pages[i]);
     }
 }

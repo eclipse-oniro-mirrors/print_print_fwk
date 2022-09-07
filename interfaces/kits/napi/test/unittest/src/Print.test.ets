@@ -129,22 +129,17 @@ export default function requestPrintJsunit() {
          * @tc.level   Level 0
          */
         it('requestPrint_test_0100', 0, async function (done) {
-            console.info("------------start requestPrint_test_0100-------------");
             TAG = "requestPrint_test_0100";
-            let details;
             await print.addPrinters(PrinterInfoArray).then((data) => {
-                details = data;
                 console.info(TAG + " result: " + JSON.stringify(data));
+                expect(typeof (data)).assertEqual('boolean');
+                expect(data).assertEqual(true);
+                done();
             }).catch((error) => {
                 console.info(TAG + " err: " + JSON.stringify(error));
-            });
-            setTimeout(function () {
-                console.info(TAG + " result details: " + JSON.stringify(details));
-                expect(typeof (details)).assertEqual('boolean');
-                expect(details).assertEqual(true);
-                console.info("------------end requestPrint_test_0100-------------");
+                expect(false).assertTrue();
                 done();
-            }, 4000);
+            });
         });
 
         /**
@@ -154,458 +149,141 @@ export default function requestPrintJsunit() {
          * @tc.level   Level 0
          */
         it('requestPrint_test_0200', 0, async function (done) {
-            console.info("------------start requestPrint_test_0200-------------");
             TAG = "requestPrint_test_0200";
-            let details;
             await print.addPrinters(PrinterInfoArray, (err, data) => {
                 if (err) {
                     console.info(TAG + " err: " + JSON.stringify(err));
+                    expect(false).assertTrue();
                 } else {
-                    details = data;
                     console.info(TAG + " result: " + JSON.stringify(data));
+                    expect(typeof (data)).assertEqual('boolean');
+                    expect(data).assertEqual(true);
+                    done();
                 }
             });
-            setTimeout(function () {
-                console.info(TAG + " result details: " + JSON.stringify(details));
-                expect(typeof (details)).assertEqual('boolean');
-                expect(details).assertEqual(true);
-                console.info("------------end requestPrint_test_0200-------------");
-                done();
-            }, 4000);
         });
 
         /**
          * @tc.number  requestPrint_test_0300
-         * @tc.name    addPrinters: New printers have been found and notify Print SA
-             ('PrinterInfo' missing Required Arguments)
-         * @tc.desc    Function test
-         * @tc.level   Level 1
-         */
-        it('requestPrint_test_0300', 0, async function (done) {
-            console.info("------------start requestPrint_test_0300-------------");
-            TAG = "requestPrint_test_0300";
-            try {
-                await print.addPrinters(PrinterInfo2).then((data) => {
-                    console.info(TAG + " result: " + JSON.stringify(data));
-                }).catch((error) => {
-                    console.info(TAG + " err: " + JSON.stringify(error));
-                });
-            } catch (exception) {
-                console.log(TAG + " failed due to execute timeout 5s");
-                expect(true).assertTrue();
-                console.info("------------end requestPrint_test_0300-------------");
-                done();
-            }
-        });
-
-        /**
-         * @tc.number  requestPrint_test_0400
-         * @tc.name    addPrinters: New printers have been found and notify Print SA
-            ('PrinterInfo' parameter type is wrong)
-         * @tc.desc    Function test
-         * @tc.level   Level 1
-         */
-        it('requestPrint_test_0400', 0, async function (done) {
-            console.info("------------start requestPrint_test_0400-------------");
-            TAG = "requestPrint_test_0400";
-            try {
-                await print.addPrinters(123).then((data) => {
-                    console.info(TAG + " result: " + JSON.stringify(data));
-                }).catch((error) => {
-                    console.info(TAG + " err: " + JSON.stringify(error));
-                });
-            } catch (exception) {
-                console.log(TAG + " failed due to execute timeout 5s");
-                expect(true).assertTrue();
-                console.info("------------end requestPrint_test_0400-------------");
-                done();
-            }
-        });
-
-        /**
-         * @tc.number  requestPrint_test_0500
-         * @tc.name    addPrinters: New printers have been found and notify Print SA
-            ('PrinterInfo' parameter is empty)
-         * @tc.desc    Function test
-         * @tc.level   Level 1
-         */
-        it('requestPrint_test_0500', 0, async function (done) {
-            console.info("------------start requestPrint_test_0500-------------");
-            TAG = "requestPrint_test_0500";
-            let flag = 0;
-            await print.addPrinters([{}]).then((data) => {
-                console.info(TAG + " result: " + JSON.stringify(data));
-            }).catch((error) => {
-                console.info(TAG + " err: " + JSON.stringify(error));
-                flag = 1;
-                expect(flag == 1).assertTrue();
-            });
-            console.info("------------end requestPrint_test_0500-------------");
-            done();
-        });
-
-        /**
-         * @tc.number  requestPrint_test_0600
          * @tc.name    removePrinters: Printers have been lost and notify Print SA (by Promise)
          * @tc.desc    Function test
          * @tc.level   Level 0
          */
-        it('requestPrint_test_0600', 0, async function (done) {
-            console.info("------------start requestPrint_test_0600-------------");
-            TAG = "requestPrint_test_0600";
-            let details;
+        it('requestPrint_test_0300', 0, async function (done) {
+            TAG = "requestPrint_test_0300";
             await print.removePrinters(PrinterInfoArray).then((data) => {
-                details = data;
                 console.info(TAG + " removePrinters result: " + JSON.stringify(data));
+                expect(typeof (data)).assertEqual('boolean');
+                expect(data).assertEqual(true);
+                done();
             }).catch((error) => {
                 console.info(TAG + " removePrinters err: " + JSON.stringify(error));
-            });
-            setTimeout(function () {
-                console.info(TAG + " result details: " + JSON.stringify(details));
-                expect(typeof (details)).assertEqual('boolean');
-                expect(details).assertEqual(true);
-                console.info("------------end requestPrint_test_0600-------------");
+                expect(false).assertTrue();
                 done();
-            }, 4000);
+            });
         });
 
         /**
-         * @tc.number  requestPrint_test_0700
+         * @tc.number  requestPrint_test_0400
          * @tc.name    removePrinters: Printers have been lost and notify Print SA (by callback)
          * @tc.desc    Function test
          * @tc.level   Level 0
          */
-        it('requestPrint_test_0700', 0, async function (done) {
-            console.info("------------start requestPrint_test_0700-------------");
-            TAG = "requestPrint_test_0700";
-            let details;
+        it('requestPrint_test_0400', 0, async function (done) {
+            TAG = "requestPrint_test_0400";
             await print.removePrinters(PrinterInfoArray, (err, data) => {
                 if (err) {
                     console.info(TAG + " removePrinters err: " + JSON.stringify(err));
+                    expect(false).assertTrue();
                 } else {
-                    details = data;
                     console.info(TAG + " removePrinters result: " + JSON.stringify(data));
+                    expect(typeof (data)).assertEqual('boolean');
+                    expect(data).assertEqual(true);
+                    done();
                 }
             });
-            setTimeout(function () {
-                console.info(TAG + " result details: " + JSON.stringify(details));
-                expect(typeof (details)).assertEqual('boolean');
-                expect(details).assertEqual(true);
-                console.info("------------end requestPrint_test_0700-------------");
-                done();
-            }, 4000);
         });
 
         /**
-         * @tc.number  requestPrint_test_0800
-         * @tc.name    removePrinters: Printers have been lost and notify Print SA
-            ('PrinterInfo' missing Required Arguments)
-         * @tc.desc    Function test
-         * @tc.level   Level 1
-         */
-        it('requestPrint_test_0800', 0, async function (done) {
-            console.info("------------start requestPrint_test_0800-------------");
-            TAG = "requestPrint_test_0800";
-            try {
-                await print.removePrinters(PrinterInfo2).then((data) => {
-                    console.info(TAG + " removePrinters result: " + JSON.stringify(data));
-                }).catch((error) => {
-                    console.info(TAG + " removePrinters err: " + JSON.stringify(error));
-                });
-            } catch (exception) {
-                console.log(TAG + " failed due to execute timeout 5s");
-                expect(true).assertTrue();
-                console.info("------------end requestPrint_test_0800-------------");
-                done();
-            }
-        });
-
-        /**
-         * @tc.number  requestPrint_test_0900
-         * @tc.name    removePrinters: Printers have been lost and notify Print SA
-             ('PrinterInfo' parameter type is wrong)
-         * @tc.desc    Function test
-         * @tc.level   Level 1
-         */
-        it('requestPrint_test_0900', 0, async function (done) {
-            console.info("------------start requestPrint_test_0900-------------");
-            TAG = "requestPrint_test_0900";
-            try {
-                await print.removePrinters(PrinterInfo2).then((data) => {
-                    console.info(TAG + " removePrinters result: " + JSON.stringify(data));
-                }).catch((error) => {
-                    console.info(TAG + " removePrinters err: " + JSON.stringify(error));
-                });
-            } catch (exception) {
-                console.log(TAG + " failed due to execute timeout 5s");
-                expect(true).assertTrue();
-                console.info("------------end requestPrint_test_0900-------------");
-                done();
-            }
-        });
-
-        /**
-         * @tc.number  requestPrint_test_1000
-         * @tc.name    removePrinters: Printers have been lost and notify Print SA
-             ('PrinterInfo' parameter is empty)
-         * @tc.desc    Function test
-         * @tc.level   Level 1
-         */
-        it('requestPrint_test_1000', 0, async function (done) {
-            console.info("------------start requestPrint_test_1000-------------");
-            TAG = "requestPrint_test_1000";
-            let flag = 0;
-            await print.removePrinters([{}]).then((data) => {
-                console.info(TAG + " removePrinters result: " + JSON.stringify(data));
-            }).catch((error) => {
-                console.info(TAG + " removePrinters err: " + JSON.stringify(error));
-                flag = 1;
-                expect(flag == 1).assertTrue();
-            });
-            console.info("------------end requestPrint_test_1000-------------");
-            done();
-        });
-
-        /**
-         * @tc.number  requestPrint_test_1100
+         * @tc.number  requestPrint_test_0500
          * @tc.name    updatePrinterState: Notify Print SA the state of printer has been changed (by Promise)
          * @tc.desc    Function test
          * @tc.level   Level 0
          */
-        it('requestPrint_test_1100', 0, async function (done) {
-            console.info("------------start requestPrint_test_1100-------------");
-            TAG = "requestPrint_test_1100";
-            let details;
+        it('requestPrint_test_0500', 0, async function (done) {
+            TAG = "requestPrint_test_0500";
             await print.updatePrinterState(printerId, PrinterState).then((data) => {
-                details = data;
                 console.info(TAG + " result: " + JSON.stringify(data));
+                expect(typeof (data)).assertEqual('boolean');
+                expect(data).assertEqual(true);
+                done();
             }).catch((error) => {
                 console.info(TAG + " err: " + JSON.stringify(error));
-            });
-            setTimeout(function () {
-                console.info(TAG + " result details: " + JSON.stringify(details));
-                expect(typeof (details)).assertEqual('boolean');
-                expect(details).assertEqual(true);
-                console.info("------------end requestPrint_test_1100-------------");
+                expect(false).assertTrue();
                 done();
-            }, 4000);
+            });
         });
 
         /**
-         * @tc.number  requestPrint_test_1200
+         * @tc.number  requestPrint_test_0600
          * @tc.name    updatePrinterState: Notify Print SA the state of printer has been changed (by callback)
          * @tc.desc    Function test
          * @tc.level   Level 0
          */
-        it('requestPrint_test_1200', 0, async function (done) {
-            console.info("------------start requestPrint_test_1200-------------");
-            TAG = "requestPrint_test_1200";
-            let details;
+        it('requestPrint_test_0600', 0, async function (done) {
+            TAG = "requestPrint_test_0600";
             await print.updatePrinterState(printerId, PrinterState, (err, data) => {
                 if (err) {
                     console.info(TAG + " err: " + JSON.stringify(err));
+                    expect(false).assertTrue();
                 } else {
-                    details = data;
                     console.info(TAG + " result: " + JSON.stringify(data));
+                    expect(typeof (data)).assertEqual('boolean');
+                    expect(data).assertEqual(true);
+                    done();
                 }
             });
-            setTimeout(function () {
-                console.info(TAG + " result details: " + JSON.stringify(details));
-                expect(typeof (details)).assertEqual('boolean');
-                expect(details).assertEqual(true);
-                console.info("------------end requestPrint_test_1200-------------");
-                done();
-            }, 4000);
         });
 
         /**
-         * @tc.number  requestPrint_test_1300
-         * @tc.name    updatePrinterState: Notify Print SA the state of printer has been changed (parameter is wrong)
-         * @tc.desc    Function test
-         * @tc.level   Level 1
-         */
-        it('requestPrint_test_1300', 0, async function (done) {
-            console.info("------------start requestPrint_test_1300-------------");
-            TAG = "requestPrint_test_1300";
-            try {
-                await print.updatePrinterState(printerId).then((data) => {
-                    console.info(TAG + " result: " + JSON.stringify(data));
-                }).catch((error) => {
-                    console.info(TAG + " err: " + JSON.stringify(error));
-                });
-            } catch (exception) {
-                console.log(TAG + " failed due to execute timeout 5s");
-                expect(true).assertTrue();
-                console.info("------------end requestPrint_test_1300-------------");
-                done();
-            }
-        });
-
-        /**
-         * @tc.number  requestPrint_test_1400
-         * @tc.name  updatePrinterState: Notify Print SA the state of printer has been changed (parameter type is wrong)
-         * @tc.desc    Function test
-         * @tc.level   Level 1
-         */
-        it('requestPrint_test_1400', 0, async function (done) {
-            console.info("------------start requestPrint_test_1400-------------");
-            TAG = "requestPrint_test_1400";
-            try {
-                await print.updatePrinterState('1000', '2000').then((data) => {
-                    console.info(TAG + " result: " + JSON.stringify(data));
-                }).catch((error) => {
-                    console.info(TAG + " err: " + JSON.stringify(error));
-                });
-            } catch (exception) {
-                console.log(TAG + " failed due to execute timeout 5s");
-                expect(true).assertTrue();
-                console.info("------------end requestPrint_test_1400-------------");
-                done();
-            }
-        });
-
-        /**
-         * @tc.number  requestPrint_test_1500
-         * @tc.name  updatePrinterState: Notify Print SA the state of printer has been changed (parameter is null)
-         * @tc.desc    Function test
-         * @tc.level   Level 1
-         */
-        it('requestPrint_test_1500', 0, async function (done) {
-            console.info("------------start requestPrint_test_1500-------------");
-            TAG = "requestPrint_test_1500";
-            try {
-                await print.updatePrinterState().then((data) => {
-                    console.info(TAG + " result: " + JSON.stringify(data));
-                }).catch((error) => {
-                    console.info(TAG + " err: " + JSON.stringify(error));
-                });
-            } catch (exception) {
-                console.log(TAG + " failed due to execute timeout 5s");
-                expect(true).assertTrue();
-                console.info("------------end requestPrint_test_1500-------------");
-                done();
-            }
-        });
-
-        /**
-         * @tc.number  requestPrint_test_1600
+         * @tc.number  requestPrint_test_0700
          * @tc.name    updatePrintJobState: Notify Print SA the state of print job has been changed (by Promise)
          * @tc.desc    Function test
          * @tc.level   Level 0
          */
-        it('requestPrint_test_1600', 0, async function (done) {
-            console.info("------------start requestPrint_test_1600-------------");
-            TAG = "requestPrint_test_1600";
-            let details;
+        it('requestPrint_test_0700', 0, async function (done) {
+            TAG = "requestPrint_test_0700";
             await print.updatePrintJobState(jobId, PrintJobState).then((data) => {
-                details = data;
                 console.info(TAG + " result: " + JSON.stringify(data));
+                expect(typeof (data)).assertEqual('boolean');
+                expect(data).assertEqual(true);
+                done();
             }).catch((error) => {
                 console.info(TAG + " err: " + JSON.stringify(error));
-            });
-            setTimeout(function () {
-                console.info(TAG + " result details: " + JSON.stringify(details));
-                expect(typeof (details)).assertEqual('boolean');
-                expect(details).assertEqual(true);
-                console.info("------------end requestPrint_test_1600-------------");
+                expect(false).assertTrue();
                 done();
-            }, 4000);
+            });
         });
 
         /**
-         * @tc.number  requestPrint_test_1700
+         * @tc.number  requestPrint_test_0800
          * @tc.name    updatePrintJobState: Notify Print SA the state of print job has been changed (by callback)
          * @tc.desc    Function test
          * @tc.level   Level 0
          */
-        it('requestPrint_test_1700', 0, async function (done) {
-            console.info("------------start requestPrint_test_1700-------------");
-            TAG = "requestPrint_test_1700";
-            let details;
+        it('requestPrint_test_0800', 0, async function (done) {
+            TAG = "requestPrint_test_0800";
             await print.updatePrintJobState(jobId, PrintJobState, (err, data) => {
                 if (err) {
                     console.info(TAG + " err: " + JSON.stringify(err));
+                    expect(false).assertTrue();
                 } else {
-                    details = data;
                     console.info(TAG + " result: " + JSON.stringify(data));
+                    expect(typeof (data)).assertEqual('boolean');
+                    expect(data).assertEqual(true);
+                    done();
                 }
             });
-            setTimeout(function () {
-                console.info(TAG + " result details: " + JSON.stringify(details));
-                expect(typeof (details)).assertEqual('boolean');
-                expect(details).assertEqual(true);
-                console.info("------------end requestPrint_test_1700-------------");
-                done();
-            }, 4000);
-        });
-
-        /**
-         * @tc.number  requestPrint_test_1800
-         * @tc.name    updatePrintJobState: Notify Print SA the state of print job has been changed (parameter is wrong)
-         * @tc.desc    Function test
-         * @tc.level   Level 1
-         */
-        it('requestPrint_test_1800', 0, async function (done) {
-            console.info("------------start requestPrint_test_1800-------------");
-            TAG = "requestPrint_test_1800";
-            try {
-                await print.updatePrintJobState(jobId).then((data) => {
-                    console.info(TAG + " result: " + JSON.stringify(data));
-                }).catch((error) => {
-                    console.info(TAG + " err: " + JSON.stringify(error));
-                });
-            } catch (exception) {
-                console.log(TAG + " failed due to execute timeout 5s");
-                expect(true).assertTrue();
-                console.info("------------end requestPrint_test_1800-------------");
-                done();
-            }
-        });
-
-        /**
-        * @tc.number  requestPrint_test_1900
-        * @tc.name updatePrintJobState: Notify Print SA the state of print job has been changed(parameter type is wrong)
-        * @tc.desc    Function test
-        * @tc.level   Level 1
-        */
-        it('requestPrint_test_1900', 0, async function (done) {
-            console.info("------------start requestPrint_test_1900-------------");
-            TAG = "requestPrint_test_1900";
-            try {
-                await print.updatePrintJobState('1000', '2000').then((data) => {
-                    console.info(TAG + " result: " + JSON.stringify(data));
-                }).catch((error) => {
-                    console.info(TAG + " err: " + JSON.stringify(error));
-                });
-            } catch (exception) {
-                console.log(TAG + " failed due to execute timeout 5s");
-                expect(true).assertTrue();
-                console.info("------------end requestPrint_test_1900-------------");
-                done();
-            }
-        });
-
-        /**
-        * @tc.number  requestPrint_test_2000
-        * @tc.name updatePrintJobState: Notify Print SA the state of print job has been changed(parameter is null)
-        * @tc.desc    Function test
-        * @tc.level   Level 1
-        */
-        it('requestPrint_test_2000', 0, async function (done) {
-            console.info("------------start requestPrint_test_2000-------------");
-            TAG = "requestPrint_test_2000";
-            try {
-                await print.updatePrintJobState().then((data) => {
-                    console.info(TAG + " result: " + JSON.stringify(data));
-                }).catch((error) => {
-                    console.info(TAG + " err: " + JSON.stringify(error));
-                });
-            } catch (exception) {
-                console.log(TAG + " failed due to execute timeout 5s");
-                expect(true).assertTrue();
-                console.info("------------end requestPrint_test_2000-------------");
-                done();
-            }
         });
     })
 }

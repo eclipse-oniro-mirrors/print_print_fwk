@@ -177,16 +177,12 @@ bool PrintExtensionCallbackStub::HandlePrintJobCallback(MessageParcel &data, Mes
 {
     PrintJob job;
     job.BuildFromParcel(data);
-    // dataReadJob(data, job);
     return OnCallback(job);
 }
 
 bool PrintExtensionCallbackStub::HandleCapabilityCallback(MessageParcel &data, MessageParcel &reply)
 {
     uint32_t printerId = data.ReadUint32();
-    // PrinterCapability cap;
-    // OnCallabck(printerId, cap);
-    // cap.BuildParcel(reply);
     return OnCallback(printerId, reply);
 }
 } // namespace OHOS::Print

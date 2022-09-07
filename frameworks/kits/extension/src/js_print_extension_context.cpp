@@ -32,7 +32,6 @@ using namespace OHOS::Print;
 
 namespace OHOS {
 namespace AbilityRuntime {
-
 class JsPrintExtensionContext final {
 public:
     explicit JsPrintExtensionContext(const std::shared_ptr<PrintExtensionContext> &context) : context_(context) {}
@@ -302,12 +301,13 @@ private:
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(
             reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), want);
-        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
-            want.GetElement().GetAbilityName().c_str());
+        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, 
+            want.GetBundle().c_str(),want.GetElement().GetAbilityName().c_str());
 
         int32_t accountId = 0;
         if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(
-                reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ONE]), accountId)) {
+                reinterpret_cast<napi_env>(&engine), 
+                reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ONE]), accountId)) {
             PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
             return engine.CreateUndefined();
         }
@@ -397,7 +397,8 @@ private:
                          : task.Reject(engine, CreateJsError(engine, errcode, "Disconnect Ability failed."));
         };
 
-        NativeValue *lastParam = (info.argc == NapiPrintUtils::ARGC_ONE) ? nullptr : info.argv[NapiPrintUtils::INDEX_ONE];
+        NativeValue *lastParam = (info.argc == 
+                                NapiPrintUtils::ARGC_ONE) ? nullptr : info.argv[NapiPrintUtils::INDEX_ONE];
         NativeValue *result = nullptr;
         AsyncTask::Schedule("PrintExtensionContext::OnDisconnectAbility", engine,
             CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
