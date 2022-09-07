@@ -25,15 +25,17 @@
 namespace OHOS::Print {
 class PrintProgressNotify final : public PrintBaseNotify {
 public:
-    ACE_DISALLOW_COPY_AND_MOVE(PrintProgressNotify);
+  ACE_DISALLOW_COPY_AND_MOVE(PrintProgressNotify);
 
-    explicit PrintProgressNotify(napi_env env, const std::string &type, napi_ref ref);
-    virtual ~PrintProgressNotify();
-    static void DataReadInfo(PrinterInfo &info, MessageParcel &data);
-    static void DataReadJob(PrintJob &job, MessageParcel &data);
-    static void WriteInfoJsObject(napi_env env, PrinterInfo info, napi_value *result);
-    static void WriteJobJsObject(napi_env env, PrintJob job, napi_value *result);
-    void OnCallBack(MessageParcel &data) override;
+  explicit PrintProgressNotify(napi_env env, const std::string &type,
+                               napi_ref ref);
+  virtual ~PrintProgressNotify();
+  static void DataReadInfo(PrinterInfo &info, MessageParcel &data);
+  static void DataReadJob(PrintJob &job, MessageParcel &data);
+  static void WriteInfoJsObject(napi_env env, PrinterInfo info,
+                                napi_value *result);
+  static void WriteJobJsObject(napi_env env, PrintJob job, napi_value *result);
+  void OnCallBack(MessageParcel &data) override;
 };
 } // namespace OHOS::Print
 

@@ -23,7 +23,7 @@
 #include "iprint_callback.h"
 #include "iprint_service.h"
 #include "iremote_object.h"
-#include "printer_extension_callback_stub.h"
+#include "print_extension_callback_stub.h"
 #include "print_extension_info.h"
 #include "print_job.h"
 #include "print_sa_death_recipient.h"
@@ -33,57 +33,59 @@
 namespace OHOS::Print {
 class PrintManagerClient : public RefBase {
 public:
-    PrintManagerClient();
-    ~PrintManagerClient();
-    static sptr<PrintManagerClient> GetInstance();
-    bool CheckPermission();
+  PrintManagerClient();
+  ~PrintManagerClient();
+  static sptr<PrintManagerClient> GetInstance();
+  bool CheckPermission();
 
-    void OnRemoteSaDied(const wptr<IRemoteObject> &object);
+  void OnRemoteSaDied(const wptr<IRemoteObject> &object);
 
-    // Client Napi
-    int32_t StartPrint();
-    bool QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo);
-    bool StartDiscoverPrinter(std::vector<uint32_t> extensionList);
-    bool StopDiscoverPrinter();
-    bool AddPrinters(std::vector<PrinterInfo> arrayPrintInfo);
-    bool RemovePrinters(std::vector<PrinterInfo> arrayPrintInfo);
-    bool ConnectPrinter(uint32_t printerId);
-    bool DisconnectPrinter(uint32_t printerId);
-    bool StartPrintJob(const PrintJob &jobinfo);
-    bool CancelPrintJob(const PrintJob &jobinfo);
-    bool UpdatePrinterState(uint32_t printerId, uint32_t state);
-    bool UpdatePrinterJobState(uint32_t jobId, uint32_t state);
-    bool RequestPreview(const PrintJob &jobinfo, std::string &previewResult);
-    bool QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability);
+  // Client Napi
+  int32_t StartPrint();
+  bool QueryAllExtension(std::vector<PrintExtensionInfo> &arrayExtensionInfo);
+  bool StartDiscoverPrinter(std::vector<uint32_t> extensionList);
+  bool StopDiscoverPrinter();
+  bool AddPrinters(std::vector<PrinterInfo> arrayPrintInfo);
+  bool RemovePrinters(std::vector<PrinterInfo> arrayPrintInfo);
+  bool ConnectPrinter(uint32_t printerId);
+  bool DisconnectPrinter(uint32_t printerId);
+  bool StartPrintJob(const PrintJob &jobinfo);
+  bool CancelPrintJob(const PrintJob &jobinfo);
+  bool UpdatePrinterState(uint32_t printerId, uint32_t state);
+  bool UpdatePrinterJobState(uint32_t jobId, uint32_t state);
+  bool RequestPreview(const PrintJob &jobinfo, std::string &previewResult);
+  bool QueryPrinterCapability(uint32_t printerId,
+                              PrinterCapability &printerCapability);
 
-    bool On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener);
-    bool Off(const std::string &type);
+  bool On(const std::string &type, uint32_t &state, PrinterInfo &info,
+          const sptr<IPrintCallback> &listener);
+  bool Off(const std::string &type);
 
-    bool RegisterExtCallback(uint32_t callbackId, PrintExtCallback cb);
-    bool RegisterExtCallback(uint32_t callbackId, PrintJobCallback cb);
-    bool RegisterExtCallback(uint32_t callbackId, PrinterCallback cb);
-    bool RegisterExtCallback(uint32_t callbackId, PrinterCapabilityCallback cb);
-    bool UnregisterAllExtCallback();
-    bool LoadServer();
-    void LoadServerSuccess();
-    void LoadServerFail();
+  bool RegisterExtCallback(uint32_t callbackId, PrintExtCallback cb);
+  bool RegisterExtCallback(uint32_t callbackId, PrintJobCallback cb);
+  bool RegisterExtCallback(uint32_t callbackId, PrinterCallback cb);
+  bool RegisterExtCallback(uint32_t callbackId, PrinterCapabilityCallback cb);
+  bool UnregisterAllExtCallback();
+  bool LoadServer();
+  void LoadServerSuccess();
+  void LoadServerFail();
 
 private:
-    sptr<IPrintService> GetPrintServiceProxy();
+  sptr<IPrintService> GetPrintServiceProxy();
 
 private:
-    static std::mutex instanceLock_;
-    static sptr<PrintManagerClient> instance_;
-    sptr<IPrintService> printServiceProxy_;
-    sptr<PrintSaDeathRecipient> deathRecipient_;
+  static std::mutex instanceLock_;
+  static sptr<PrintManagerClient> instance_;
+  sptr<IPrintService> printServiceProxy_;
+  sptr<PrintSaDeathRecipient> deathRecipient_;
 
-    std::map<uint32_t, sptr<PrintExtensionCallbackStub>> extCallbackMap_;
+  std::map<uint32_t, sptr<PrintExtensionCallbackStub>> extCallbackMap_;
 
-    std::mutex loadMutex_;
-    std::mutex conditionMutex_;
-    std::condition_variable syncCon_;
-    bool ready_ = false;
-    static constexpr int LOAD_SA_TIMEOUT_MS = 15000;
+  std::mutex loadMutex_;
+  std::mutex conditionMutex_;
+  std::condition_variable syncCon_;
+  bool ready_ = false;
+  static constexpr int LOAD_SA_TIMEOUT_MS = 15000;
 };
 } // namespace OHOS::Print
 #endif // PRINT_MANAGER_CLIENT_H

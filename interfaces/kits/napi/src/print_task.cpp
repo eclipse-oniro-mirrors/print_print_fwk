@@ -19,65 +19,53 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintTask::PrintTask(uint32_t taskId) : taskId_(taskId)
-{
-    supportEvents_[EVENT_BLOCK] = true;
-    supportEvents_[EVENT_SUCCESS] = true;
-    supportEvents_[EVENT_FAIL] = true;
-    supportEvents_[EVENT_CANCEL] = true;
+PrintTask::PrintTask(uint32_t taskId) : taskId_(taskId) {
+  supportEvents_[EVENT_BLOCK] = true;
+  supportEvents_[EVENT_SUCCESS] = true;
+  supportEvents_[EVENT_FAIL] = true;
+  supportEvents_[EVENT_CANCEL] = true;
 
-    supportPrinterState_[PRINTER_STATE_ADD] = true;
-    supportPrinterState_[PRINTER_STATE_REMOVED] = true;
-    supportPrinterState_[PRINTER_STATE_IDLE] = true;
-    supportPrinterState_[PRINTER_STATE_PRINTING] = true;
-    supportPrinterState_[PRINTER_STATE_BLOCKED] = true;
-    supportPrinterState_[PRINTER_STATE_BUSY] = true;
-    supportPrinterState_[PRINTER_STATE_FAILED] = true;
+  supportPrinterState_[PRINTER_STATE_ADD] = true;
+  supportPrinterState_[PRINTER_STATE_REMOVED] = true;
+  supportPrinterState_[PRINTER_STATE_IDLE] = true;
+  supportPrinterState_[PRINTER_STATE_PRINTING] = true;
+  supportPrinterState_[PRINTER_STATE_BLOCKED] = true;
+  supportPrinterState_[PRINTER_STATE_BUSY] = true;
+  supportPrinterState_[PRINTER_STATE_FAILED] = true;
 
-    supportJobState_[PRINTJOB_STATE_CREATED] = true;
-    supportJobState_[PRINTJOB_STATE_QUEUED] = true;
-    supportJobState_[PRINTJOB_STATE_PRINTING] = true;
-    supportJobState_[PRINTJOB_STATE_BLOCKED] = true;
-    supportJobState_[PRINTJOB_STATE_SUCCESS] = true;
-    supportJobState_[PRINTJOB_STATE_FAILED] = true;
-    supportJobState_[PRINTJOB_STATE_cancelled] = true;
+  supportJobState_[PRINTJOB_STATE_CREATED] = true;
+  supportJobState_[PRINTJOB_STATE_QUEUED] = true;
+  supportJobState_[PRINTJOB_STATE_PRINTING] = true;
+  supportJobState_[PRINTJOB_STATE_BLOCKED] = true;
+  supportJobState_[PRINTJOB_STATE_SUCCESS] = true;
+  supportJobState_[PRINTJOB_STATE_FAILED] = true;
+  supportJobState_[PRINTJOB_STATE_cancelled] = true;
 }
 
-PrintTask::~PrintTask()
-{
-    supportEvents_.clear();
+PrintTask::~PrintTask() { supportEvents_.clear(); }
+
+uint32_t PrintTask::GetId() const { return taskId_; }
+
+napi_value PrintTask::On(napi_env env, napi_callback_info info) {
+  PRINT_HILOGD("Enter ---->");
+  return nullptr;
 }
 
-uint32_t PrintTask::GetId() const
-{
-    return taskId_;
+napi_value PrintTask::Off(napi_env env, napi_callback_info info) {
+  PRINT_HILOGD("Enter ---->");
+  return nullptr;
 }
 
-napi_value PrintTask::On(napi_env env, napi_callback_info info)
-{
-    PRINT_HILOGD("Enter ---->");
-    return nullptr;
+bool PrintTask::IsSupportType(const std::string &type) {
+  return supportEvents_.find(type) != supportEvents_.end();
 }
 
-napi_value PrintTask::Off(napi_env env, napi_callback_info info)
-{
-    PRINT_HILOGD("Enter ---->");
-    return nullptr;
+bool PrintTask::IsSupportPrinterStateType(const std::string &type) {
+  return supportPrinterState_.find(type) != supportPrinterState_.end();
 }
 
-bool PrintTask::IsSupportType(const std::string &type)
-{
-    return supportEvents_.find(type) != supportEvents_.end();
-}
-
-bool PrintTask::IsSupportPrinterStateType(const std::string &type)
-{
-    return supportPrinterState_.find(type) != supportPrinterState_.end();
-}
-
-bool PrintTask::IsSupportJobStateType(const std::string &type)
-{
-    PRINT_HILOGD("Enter IsSupportJobStateType.");
-    return supportJobState_.find(type) != supportJobState_.end();
+bool PrintTask::IsSupportJobStateType(const std::string &type) {
+  PRINT_HILOGD("Enter IsSupportJobStateType.");
+  return supportJobState_.find(type) != supportJobState_.end();
 }
 } // namespace OHOS::Print

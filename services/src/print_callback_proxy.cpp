@@ -18,30 +18,31 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintCallbackProxy::PrintCallbackProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IPrintCallback>(impl) {}
+PrintCallbackProxy::PrintCallbackProxy(const sptr<IRemoteObject> &impl)
+    : IRemoteProxy<IPrintCallback>(impl) {}
 
-void PrintCallbackProxy::OnCallBack(MessageParcel &data)
-{
-    PRINT_HILOGD("PrintCallbackProxy::OnCallBack Start");
-    PRINT_HILOGD("data should be filled within service module");
-    MessageParcel realData;
-    MessageParcel reply;
-    MessageOption option;
+void PrintCallbackProxy::OnCallBack(MessageParcel &data) {
+  PRINT_HILOGD("PrintCallbackProxy::OnCallBack Start");
+  PRINT_HILOGD("data should be filled within service module");
+  MessageParcel realData;
+  MessageParcel reply;
+  MessageOption option;
 
-    if (!realData.WriteInterfaceToken(PrintCallbackProxy::GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return;
-    }
-    uint32_t argv1 = data.ReadUint32();
-    uint32_t argv2 = data.ReadUint32();
-    PRINT_HILOGD("notification's argument:[%{public}d, %{public}d]", argv1, argv2);
-    realData.WriteUint32(argv1);
-    realData.WriteUint32(argv2);
+  if (!realData.WriteInterfaceToken(PrintCallbackProxy::GetDescriptor())) {
+    PRINT_HILOGE("write descriptor failed");
+    return;
+  }
+  uint32_t argv1 = data.ReadUint32();
+  uint32_t argv2 = data.ReadUint32();
+  PRINT_HILOGD("notification's argument:[%{public}d, %{public}d]", argv1,
+               argv2);
+  realData.WriteUint32(argv1);
+  realData.WriteUint32(argv2);
 
-    int error = Remote()->SendRequest(PRINT_NOTIFY, realData, reply, option);
-    if (error != 0) {
-        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
-    }
-    PRINT_HILOGD("PrintCallbackProxy::OnCallBack End");
+  int error = Remote()->SendRequest(PRINT_NOTIFY, realData, reply, option);
+  if (error != 0) {
+    PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+  }
+  PRINT_HILOGD("PrintCallbackProxy::OnCallBack End");
 }
 } // namespace OHOS::Print

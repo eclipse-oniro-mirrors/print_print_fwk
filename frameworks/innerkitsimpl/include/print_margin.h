@@ -16,37 +16,39 @@
 #ifndef PRINT_MARGIN_H
 #define PRINT_MARGIN_H
 
+#include <cstdint>
+
 namespace OHOS::Print {
 class PrintMargin {
 public:
-    explicit PrintMargin();
-    PrintMargin(const PrintMargin &right);
-    PrintMargin &operator=(const PrintMargin &right);
-    ~PrintMargin();
+  explicit PrintMargin();
+  PrintMargin(const PrintMargin &right);
+  PrintMargin &operator=(const PrintMargin &right);
+  ~PrintMargin();
 
-    void SetTop(uint32_t top);
+  void SetTop(uint32_t top);
 
-    void SetBottom(uint32_t bottom);
+  void SetBottom(uint32_t bottom);
 
-    void SetLeft(uint32_t left);
+  void SetLeft(uint32_t left);
 
-    void SetRight(uint32_t right);
+  void SetRight(uint32_t right);
 
-    [[nodiscard]] uint32_t GetTop() const;
+  [[nodiscard]] uint32_t GetTop() const;
 
-    [[nodiscard]] uint32_t GetBottom() const;
+  [[nodiscard]] uint32_t GetBottom() const;
 
-    [[nodiscard]] uint32_t GetLeft() const;
+  [[nodiscard]] uint32_t GetLeft() const;
 
-    [[nodiscard]] uint32_t GetRight() const;
+  [[nodiscard]] uint32_t GetRight() const;
 
-    void Dump();
+  void Dump();
 
 private:
-    uint32_t top_;
-    uint32_t bottom_;
-    uint32_t left_;
-    uint32_t right_;
+  uint32_t top_;
+  uint32_t bottom_;
+  uint32_t left_;
+  uint32_t right_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_MARGIN_H
