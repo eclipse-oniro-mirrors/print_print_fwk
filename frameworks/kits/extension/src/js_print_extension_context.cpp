@@ -160,7 +160,6 @@ private:
             PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
             return engine.CreateUndefined();
         }
-        PRINT_HILOGD("%{public}d accountId:", accountId);
         unwrapArgc++;
 
         AAFwk::StartOptions startOptions;
@@ -176,7 +175,6 @@ private:
             PRINT_HILOGD("startAbility begin");
             auto context = weak.lock();
             if (!context) {
-                PRINT_HILOGW("context is released");
                 task.Reject(engine, CreateJsError(engine, NapiPrintUtils::ERROR_CODE_ONE, "Context is released"));
                 return;
             }
@@ -466,7 +464,6 @@ NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr
 
     // make handler
     handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
-#if 0
     const char *moduleName = "JsPrintExtensionContext";
     BindNativeFunction(engine, *object, "startAbility", moduleName, JsPrintExtensionContext::StartAbility);
     BindNativeFunction(engine, *object, "terminateSelf", moduleName, JsPrintExtensionContext::TerminateAbility);
@@ -476,15 +473,7 @@ NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr
         engine, *object, "startAbilityWithAccount", moduleName, JsPrintExtensionContext::StartAbilityWithAccount);
     BindNativeFunction(
         engine, *object, "connectAbilityWithAccount", moduleName, JsPrintExtensionContext::ConnectAbilityWithAccount);
-#else
-    BindNativeFunction(engine, *object, "startAbility", JsPrintExtensionContext::StartAbility);
-    BindNativeFunction(engine, *object, "terminateSelf", JsPrintExtensionContext::TerminateAbility);
-    BindNativeFunction(engine, *object, "connectAbility", JsPrintExtensionContext::ConnectAbility);
-    BindNativeFunction(engine, *object, "disconnectAbility", JsPrintExtensionContext::DisconnectAbility);
-    BindNativeFunction(engine, *object, "startAbilityWithAccount", JsPrintExtensionContext::StartAbilityWithAccount);
-    BindNativeFunction(
-        engine, *object, "connectAbilityWithAccount", JsPrintExtensionContext::ConnectAbilityWithAccount);
-#endif
+
     if (context) {
         PRINT_HILOGD("Set ExtensionAbilityInfo Property");
         auto abilityInfo = context->GetAbilityInfo();

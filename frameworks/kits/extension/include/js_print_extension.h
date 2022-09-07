@@ -109,7 +109,8 @@ public:
 private:
     NativeValue *CallObjectMethod(const char *name, NativeValue *const *argv = nullptr, size_t argc = 0);
     void RegisterAllCallback();
-
+    void RegisterAllCallbackSecond();
+    void RegisterAllCallbackThird()
     void GetSrcPath(std::string &srcPath);
 
     JsRuntime &jsRuntime_;

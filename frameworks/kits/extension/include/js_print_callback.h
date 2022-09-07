@@ -36,6 +36,7 @@ public:
     ~JsPrintCallback() = default;
     NativeValue *Exec(NativeValue *jsObj, const std::string &name, NativeValue *const *argv = nullptr, size_t argc = 0,
         bool isSync = true);
+    void SetContainer(uv_work_t& jsWorker,JsPrintCallback::Container container);
 
 private:
     struct Container {
