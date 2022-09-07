@@ -14,19 +14,20 @@
  */
 
 #include "js_print_extension_context.h"
+
+#include "js_data_struct_converter.h"
 #include "js_extension_context.h"
 #include "js_print_extension_connection.h"
-#include "js_data_struct_converter.h"
 #include "js_runtime.h"
 #include "js_runtime_utils.h"
 #include "napi/native_api.h"
-#include "napi_common_want.h"
-#include "napi_common_util.h"
-#include "napi_remote_object.h"
 #include "napi_common_start_options.h"
-#include "start_options.h"
+#include "napi_common_util.h"
+#include "napi_common_want.h"
 #include "napi_print_utils.h"
+#include "napi_remote_object.h"
 #include "print_log.h"
+#include "start_options.h"
 
 using namespace OHOS::Print;
 
@@ -86,9 +87,8 @@ private:
     {
         PRINT_HILOGD("OnStartAbility is called");
         // only support one or two or three params
-        if (info.argc != NapiPrintUtils::ARGC_ONE
-        && info.argc != NapiPrintUtils::ARGC_TWO
-        && info.argc != NapiPrintUtils::ARGC_THREE) {
+        if (info.argc != NapiPrintUtils::ARGC_ONE && info.argc != NapiPrintUtils::ARGC_TWO &&
+            info.argc != NapiPrintUtils::ARGC_THREE) {
             PRINT_HILOGE("Not enough params");
             return engine.CreateUndefined();
         }
@@ -97,9 +97,7 @@ private:
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
             reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), want);
-        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s",
-            __func__,
-            want.GetBundle().c_str(),
+        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
 
@@ -142,9 +140,8 @@ private:
     {
         PRINT_HILOGD("OnStartAbilityWithAccount is called");
         // only support two or three or four params
-        if (info.argc != NapiPrintUtils::ARGC_TWO
-        && info.argc != NapiPrintUtils::ARGC_THREE
-        && info.argc != NapiPrintUtils::ARGC_FOUR) {
+        if (info.argc != NapiPrintUtils::ARGC_TWO && info.argc != NapiPrintUtils::ARGC_THREE &&
+            info.argc != NapiPrintUtils::ARGC_FOUR) {
             PRINT_HILOGE("Not enough params");
             return engine.CreateUndefined();
         }
@@ -153,15 +150,13 @@ private:
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
             reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), want);
-        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s",
-            __func__,
-            want.GetBundle().c_str(),
+        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
 
         int32_t accountId = 0;
         if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ONE]), accountId)) {
+                reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ONE]), accountId)) {
             PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
             return engine.CreateUndefined();
         }
@@ -187,8 +182,9 @@ private:
             }
 
             ErrCode errcode = ERR_OK;
-            (unwrapArgc == NapiPrintUtils::ARGC_TWO) ? errcode = context->StartAbilityWithAccount(want, accountId)
-                                     : errcode = context->StartAbilityWithAccount(want, accountId, startOptions);
+            (unwrapArgc == NapiPrintUtils::ARGC_TWO)
+                ? errcode = context->StartAbilityWithAccount(want, accountId)
+                : errcode = context->StartAbilityWithAccount(want, accountId, startOptions);
             if (errcode == 0) {
                 task.Resolve(engine, engine.CreateUndefined());
             } else {
@@ -230,8 +226,8 @@ private:
             }
         };
 
-        NativeValue *lastParam = 
-		    (info.argc == NapiPrintUtils::ARGC_ZERO) ? nullptr : info.argv[NapiPrintUtils::INDEX_ZERO];
+        NativeValue *lastParam =
+            (info.argc == NapiPrintUtils::ARGC_ZERO) ? nullptr : info.argv[NapiPrintUtils::INDEX_ZERO];
         NativeValue *result = nullptr;
         AsyncTask::Schedule("PrintExtensionContext::OnTerminateAbility", engine,
             CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
@@ -299,14 +295,13 @@ private:
 
         // unwrap want
         AAFwk::Want want;
-        OHOS::AppExecFwk::UnwrapWant(
-            reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), want);
-        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, 
-            want.GetBundle().c_str(),want.GetElement().GetAbilityName().c_str());
+        OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
+            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), want);
+        PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
+            want.GetElement().GetAbilityName().c_str());
 
         int32_t accountId = 0;
-        if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(
-                reinterpret_cast<napi_env>(&engine), 
+        if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(reinterpret_cast<napi_env>(&engine),
                 reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ONE]), accountId)) {
             PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
             return engine.CreateUndefined();
@@ -397,8 +392,8 @@ private:
                          : task.Reject(engine, CreateJsError(engine, errcode, "Disconnect Ability failed."));
         };
 
-        NativeValue *lastParam = (info.argc == 
-                                NapiPrintUtils::ARGC_ONE) ? nullptr : info.argv[NapiPrintUtils::INDEX_ONE];
+        NativeValue *lastParam =
+            (info.argc == NapiPrintUtils::ARGC_ONE) ? nullptr : info.argv[NapiPrintUtils::INDEX_ONE];
         NativeValue *result = nullptr;
         AsyncTask::Schedule("PrintExtensionContext::OnDisconnectAbility", engine,
             CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
@@ -486,8 +481,7 @@ NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr
     BindNativeFunction(engine, *object, "terminateSelf", JsPrintExtensionContext::TerminateAbility);
     BindNativeFunction(engine, *object, "connectAbility", JsPrintExtensionContext::ConnectAbility);
     BindNativeFunction(engine, *object, "disconnectAbility", JsPrintExtensionContext::DisconnectAbility);
-    BindNativeFunction(
-        engine, *object, "startAbilityWithAccount", JsPrintExtensionContext::StartAbilityWithAccount);
+    BindNativeFunction(engine, *object, "startAbilityWithAccount", JsPrintExtensionContext::StartAbilityWithAccount);
     BindNativeFunction(
         engine, *object, "connectAbilityWithAccount", JsPrintExtensionContext::ConnectAbilityWithAccount);
 #endif
@@ -512,5 +506,5 @@ NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr
 
     return objValue;
 }
-}  // namespace AbilityRuntime
-}  // namespace OHOS
+} // namespace AbilityRuntime
+} // namespace OHOS

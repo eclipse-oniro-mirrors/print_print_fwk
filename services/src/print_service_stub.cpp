@@ -14,6 +14,7 @@
  */
 
 #include "print_service_stub.h"
+
 #include "ipc_skeleton.h"
 #include "iprint_service.h"
 #include "message_parcel.h"
@@ -279,7 +280,7 @@ bool PrintServiceStub::OnRequestPreview(MessageParcel &data, MessageParcel &repl
 {
     PRINT_HILOGD("PrintServiceStub::OnRequestPreview in");
     PrintJob jobinfo;
-    MakePrintJob(data, jobinfo);
+    jobinfo.BuildFromParcel(data);
     jobinfo.Dump();
 
     std::string previewResult = "";
@@ -296,8 +297,10 @@ bool PrintServiceStub::OnRequestPreview(MessageParcel &data, MessageParcel &repl
 bool PrintServiceStub::OnQueryPrinterCapability(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapability in");
+    uint32_t printerId = data.ReadUint32();
+    PRINT_HILOGD("printerId : %{public}d", printerId);
     PrinterCapability printerCapability;
-    bool result = QueryPrinterCapability(data.ReadUint32(), printerCapability);
+    bool result = QueryPrinterCapability(printerId, printerCapability);
     printerCapability.ConvertToParcel(reply);
     if (!reply.WriteBool(result)) {
         PRINT_HILOGD("WriteBool failed");

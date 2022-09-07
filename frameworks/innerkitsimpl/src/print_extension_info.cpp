@@ -19,8 +19,7 @@
 
 namespace OHOS::Print {
 PrintExtensionInfo::PrintExtensionInfo()
-    : extensionId_(0), vendorId_(0), vendorName_("PrintExtensionInfo"), vendorIcon_(0),
-      version_("PrintExtensionInfo")
+    : extensionId_(0), vendorId_(0), vendorName_("PrintExtensionInfo"), vendorIcon_(0), version_("PrintExtensionInfo")
 {}
 
 void PrintExtensionInfo::SetExtensionId(uint32_t extensionId)

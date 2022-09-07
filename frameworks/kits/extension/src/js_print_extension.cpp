@@ -27,9 +27,9 @@
 #include "napi_common_want.h"
 #include "napi_print_utils.h"
 #include "napi_remote_object.h"
+#include "print_log.h"
 #include "print_manager_client.h"
 #include "printer_capability.h"
-#include "print_log.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
@@ -340,26 +340,26 @@ void JsPrintExtension::RegisterAllCallback()
         callback->Exec(value, "onCancelPrintJob", arg, NapiPrintUtils::ARGC_ONE);
         return true;
     });
-    PrintManagerClient::GetInstance()->RegisterExtCallback(PRINT_EXTCB_REQUEST_CAP,
-        [](uint32_t printId, PrinterCapability &cap) -> bool {
-        PRINT_HILOGD("Request Capability");
-        HandleScope handleScope(jsExtension_->jsRuntime_);
-        NativeEngine *nativeEng = &(jsExtension_->jsRuntime_).GetNativeEngine();
-        napi_value jsPrintId =
-            OHOS::AppExecFwk::WrapInt32ToJS(reinterpret_cast<napi_env>(nativeEng), static_cast<int32_t>(printId));
-        NativeValue *nativePrintId = reinterpret_cast<NativeValue *>(jsPrintId);
-        NativeValue *arg[] = { nativePrintId };
-        auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
-        NativeValue *value = jsExtension_->jsObj_->Get();
-        NativeValue* result = callback->Exec(value, "onRequestPrinterCapability", arg, NapiPrintUtils::ARGC_ONE);
-        if (result != nullptr) {
-            PRINT_HILOGD("Request Capability Success");
-            cap.BuildFromJs(reinterpret_cast<napi_env>(nativeEng), reinterpret_cast<napi_value>(result));
-            return true;
-        }
-        PRINT_HILOGD("Request Capability Failed!!!");
-        return false;
-    });
+    PrintManagerClient::GetInstance()->RegisterExtCallback(
+        PRINT_EXTCB_REQUEST_CAP, [](uint32_t printId, PrinterCapability &cap) -> bool {
+            PRINT_HILOGD("Request Capability");
+            HandleScope handleScope(jsExtension_->jsRuntime_);
+            NativeEngine *nativeEng = &(jsExtension_->jsRuntime_).GetNativeEngine();
+            napi_value jsPrintId =
+                OHOS::AppExecFwk::WrapInt32ToJS(reinterpret_cast<napi_env>(nativeEng), static_cast<int32_t>(printId));
+            NativeValue *nativePrintId = reinterpret_cast<NativeValue *>(jsPrintId);
+            NativeValue *arg[] = { nativePrintId };
+            auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
+            NativeValue *value = jsExtension_->jsObj_->Get();
+            NativeValue *result = callback->Exec(value, "onRequestPrinterCapability", arg, NapiPrintUtils::ARGC_ONE);
+            if (result != nullptr) {
+                PRINT_HILOGD("Request Capability Success");
+                cap.BuildFromJs(reinterpret_cast<napi_env>(nativeEng), reinterpret_cast<napi_value>(result));
+                return true;
+            }
+            PRINT_HILOGD("Request Capability Failed!!!");
+            return false;
+        });
     PrintManagerClient::GetInstance()->RegisterExtCallback(
         PRINT_EXTCB_REQUEST_PREVIEW, [](const PrintJob &job) -> bool {
             PRINT_HILOGD("Requet preview");

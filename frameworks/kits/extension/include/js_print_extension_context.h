@@ -19,8 +19,8 @@
 #include <memory>
 
 #include "ability_connect_callback.h"
-#include "print_extension_context.h"
 #include "event_handler.h"
+#include "print_extension_context.h"
 
 class NativeEngine;
 class NativeValue;
@@ -28,9 +28,8 @@ class NativeReference;
 
 namespace OHOS {
 namespace AbilityRuntime {
-NativeValue* CreateJsPrintExtensionContext(NativeEngine& engine,
-    std::shared_ptr<PrintExtensionContext> context);
-    
-}  // namespace AbilityRuntime
-}  // namespace OHOS
-#endif  // JS_PRINT_EXTENSION_CONTEXT_H
+NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr<PrintExtensionContext> context);
+
+} // namespace AbilityRuntime
+} // namespace OHOS
+#endif // JS_PRINT_EXTENSION_CONTEXT_H

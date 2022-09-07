@@ -14,6 +14,7 @@
  */
 
 #include "print_resolution.h"
+
 #include "print_log.h"
 
 namespace OHOS::Print {

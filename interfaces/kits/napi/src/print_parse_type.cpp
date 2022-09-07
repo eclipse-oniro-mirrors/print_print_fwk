@@ -172,10 +172,8 @@ bool PrintParseType::ParseJob(napi_env env, napi_value jobValue, PrintJob &print
     PRINT_HILOGD("printJob_value GetPrinterId value is %{public}d", printJob.GetPrinterId());
     PRINT_HILOGD("printJob_value GetJobState value is  %{public}d", printJob.GetJobState());
     PRINT_HILOGD("printJob_value GetCopyNumber value is %{public}d", printJob.GetCopyNumber());
-    PRINT_HILOGD(
-                "printJob_value SetIsLandscape value is %{public}s", printJob.GetIsLandscape() ? "true" : "false");
-    PRINT_HILOGD(
-                "printJob_value SetIsLandscape value is %{public}s", printJob.GetIsLandscape() ? "true" : "false");
+    PRINT_HILOGD("printJob_value SetIsLandscape value is %{public}s", printJob.GetIsLandscape() ? "true" : "false");
+    PRINT_HILOGD("printJob_value SetIsLandscape value is %{public}s", printJob.GetIsLandscape() ? "true" : "false");
     PRINT_HILOGD("printJob_value ColorMode value is %{public}d", printJob.GetIsSequential());
     PRINT_HILOGD("printJob_value DuplexMode value is %{public}d", printJob.GetDuplexMode());
     return true;
@@ -290,7 +288,7 @@ bool PrintParseType::ParseCapParam(napi_env env, napi_value capValue, PrinterCap
         capability.SetPageSize(pageSizeList);
     }
 
-    if(!ParseArrPrintResolution(env, capValue, capability)){
+    if (!ParseArrPrintResolution(env, capValue, capability)) {
         PRINT_HILOGD("error Arr PrintResolution");
         return false;
     }
@@ -343,7 +341,7 @@ bool PrintParseType::ParseArrPrintResolution(napi_env env, napi_value capValue, 
 bool PrintParseType::ParsePageSizeParam(napi_env env, napi_value capValue, PrintPageSize &pageSize)
 {
     napi_value param_one = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_PAGESIZE_ID);
-    if (NapiPrintUtils::GetValueType(env, param_one) != napi_number) {
+    if (NapiPrintUtils::GetValueType(env, param_one) != napi_string) {
         PRINT_HILOGD("error param_one");
         return false;
     }
@@ -535,7 +533,7 @@ bool PrintParseType::ParseHasObj(napi_env env, napi_value jobValue, PrintJob &pr
 
 bool PrintParseType::ParseJobParam(napi_env env, napi_value jobValue, PrintJob &printJob)
 {
-    if(!ParseArrFiles(env, jobValue, printJob)){
+    if (!ParseArrFiles(env, jobValue, printJob)) {
         PRINT_HILOGD("ParseArrFiles error");
         return false;
     }
@@ -573,7 +571,7 @@ bool PrintParseType::ParseJobParam(napi_env env, napi_value jobValue, PrintJob &
         printJob.SetPageRange(range);
     }
 
-    if(!ParseHasObj(env, jobValue, printJob) && !ParseHasNum(env, jobValue, printJob)){
+    if (!ParseHasObj(env, jobValue, printJob) && !ParseHasNum(env, jobValue, printJob)) {
         PRINT_HILOGD("default-value has error!");
         return false;
     }

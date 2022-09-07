@@ -80,6 +80,7 @@ bool PrintExtensionCallbackProxy::OnCallback(uint32_t printerId, MessageParcel &
     MessageParcel data;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
+    data.WriteUint32(printerId);
     int error = Remote()->SendRequest(PRINT_EXTCB_PRINTCAPABILITY, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);

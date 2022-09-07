@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 #include "print_service_proxy.h"
-#include "napi_print_utils.h"
+
 #include <sys/types.h>
 #include <unistd.h>
 
 #include "iremote_broker.h"
+#include "napi_print_utils.h"
 #include "print_common.h"
 #include "print_job.h"
 #include "print_log.h"
@@ -264,6 +265,7 @@ bool PrintServiceProxy::QueryPrinterCapability(uint32_t printerId, PrinterCapabi
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
+    PRINT_HILOGD("printerId : %{public}d", printerId);
     data.WriteUint32(printerId);
     PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
     bool ret = Remote()->SendRequest(CMD_QUERYPRINTERCAPABILITY, data, reply, option);

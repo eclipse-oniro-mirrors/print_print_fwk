@@ -81,7 +81,7 @@ bool PrintExtensionCallbackStub::OnCallback(uint32_t printerId, MessageParcel &r
             capability.ConvertToParcel(reply);
             return true;
         }
-    }    
+    }
     return false;
 }
 

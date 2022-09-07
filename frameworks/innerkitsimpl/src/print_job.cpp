@@ -411,7 +411,7 @@ void PrintJob::ConvertToJs(napi_env env, napi_value *result) const
     napi_value preview;
     napi_create_object(env, &preview);
     NapiPrintUtils::SetStringPropertyUtf8(env, preview, "result", preview_.GetResult().c_str());
-    
+
     napi_value subPageRange;
     napi_create_object(env, &subPageRange);
     SetSubPageRange(env, subPageRange);

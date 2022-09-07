@@ -369,7 +369,7 @@ bool PrintManagerClient::CancelPrintJob(const PrintJob &jobinfo)
     }
     PRINT_HILOGD("PrintManagerClient CancelPrintJob succeeded.");
     return printServiceProxy_->CancelPrintJob(jobinfo);
-} 
+}
 
 bool PrintManagerClient::AddPrinters(std::vector<PrinterInfo> arrayPrintInfo)
 {
