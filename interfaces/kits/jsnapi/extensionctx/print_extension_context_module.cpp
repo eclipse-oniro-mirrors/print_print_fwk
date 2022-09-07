@@ -20,37 +20,37 @@ extern const char _binary_print_extension_context_js_end[];
 extern const char _binary_print_extension_context_abc_start[];
 extern const char _binary_print_extension_context_abc_end[];
 
-extern "C" __attribute__((constructor)) void
-NAPI_PrintExtensionContext_AutoRegister() {
-  auto moduleManager = NativeModuleManager::GetInstance();
-  NativeModule newModuleInfo = {
-      .name = "PrintExtensionContext",
-      .fileName = "libprintextensioncontext_napi.so/PrintExtensionContext.js",
-  };
+extern "C" __attribute__((constructor)) void NAPI_PrintExtensionContext_AutoRegister()
+{
+    auto moduleManager = NativeModuleManager::GetInstance();
+    NativeModule newModuleInfo = {
+        .name = "PrintExtensionContext",
+        .fileName = "libprintextensioncontext_napi.so/PrintExtensionContext.js",
+    };
 
-  moduleManager->Register(&newModuleInfo);
+    moduleManager->Register(&newModuleInfo);
 }
 
-extern "C" __attribute__((visibility("default"))) void
-NAPI_PrintExtensionContext_GetJSCode(const char **buf, int *bufLen) {
-  if (buf != nullptr) {
-    *buf = _binary_print_extension_context_js_start;
-  }
+extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtensionContext_GetJSCode(
+    const char **buf, int *bufLen)
+{
+    if (buf != nullptr) {
+        *buf = _binary_print_extension_context_js_start;
+    }
 
-  if (bufLen != nullptr) {
-    *bufLen = _binary_print_extension_context_js_end -
-              _binary_print_extension_context_js_start;
-  }
+    if (bufLen != nullptr) {
+        *bufLen = _binary_print_extension_context_js_end - _binary_print_extension_context_js_start;
+    }
 }
 
 // print_extension_context JS register
-extern "C" __attribute__((visibility("default"))) void
-NAPI_PrintExtensionContext_GetABCCode(const char **buf, int *buflen) {
-  if (buf != nullptr) {
-    *buf = _binary_print_extension_context_abc_start;
-  }
-  if (buflen != nullptr) {
-    *buflen = _binary_print_extension_context_abc_end -
-              _binary_print_extension_context_abc_start;
-  }
+extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtensionContext_GetABCCode(
+    const char **buf, int *buflen)
+{
+    if (buf != nullptr) {
+        *buf = _binary_print_extension_context_abc_start;
+    }
+    if (buflen != nullptr) {
+        *buflen = _binary_print_extension_context_abc_end - _binary_print_extension_context_abc_start;
+    }
 }

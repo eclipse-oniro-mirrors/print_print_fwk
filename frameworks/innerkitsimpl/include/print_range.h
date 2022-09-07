@@ -22,31 +22,31 @@
 namespace OHOS::Print {
 class PrintRange {
 public:
-  explicit PrintRange();
-  PrintRange(const PrintRange &right);
-  PrintRange &operator=(const PrintRange &right);
-  ~PrintRange();
+    explicit PrintRange();
+    PrintRange(const PrintRange &right);
+    PrintRange &operator=(const PrintRange &right);
+    ~PrintRange();
 
-  void SetStartPage(uint32_t startPage);
+    void SetStartPage(uint32_t startPage);
 
-  void SetEndPage(uint32_t endPage);
+    void SetEndPage(uint32_t endPage);
 
-  void SetPages(const std::vector<uint32_t> &pages);
+    void SetPages(const std::vector<uint32_t> &pages);
 
-  void Reset();
+    void Reset();
 
-  [[nodiscard]] uint32_t GetStartPage() const;
+    [[nodiscard]] uint32_t GetStartPage() const;
 
-  [[nodiscard]] uint32_t GetEndPage() const;
+    [[nodiscard]] uint32_t GetEndPage() const;
 
-  void GetPages(std::vector<uint32_t> &pages) const;
+    void GetPages(std::vector<uint32_t> &pages) const;
 
-  void Dump();
+    void Dump();
 
 private:
-  uint32_t startPage_;
-  uint32_t endPage_;
-  std::vector<uint32_t> pages_;
+    uint32_t startPage_;
+    uint32_t endPage_;
+    std::vector<uint32_t> pages_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_RANGE_H

@@ -22,12 +22,12 @@
 namespace OHOS::Print {
 class IPrintCallback : public IRemoteBroker {
 public:
-  DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.IPrintCallback");
-  virtual void OnCallBack(MessageParcel &data) = 0;
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.IPrintCallback");
+    virtual void OnCallBack(MessageParcel &data) = 0;
 };
 
 enum {
-  PRINT_NOTIFY,
+    PRINT_NOTIFY,
 };
 } // namespace OHOS::Print
 #endif // IPRINT_CALLBACK_H

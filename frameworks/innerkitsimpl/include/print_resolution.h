@@ -16,34 +16,32 @@
 #ifndef PRINT_RESOLUTION_H
 #define PRINT_RESOLUTION_H
 
-#include <cstdint>
-
 namespace OHOS::Print {
 class PrintResolution {
 public:
-  explicit PrintResolution();
-  PrintResolution(const PrintResolution &right);
-  PrintResolution &operator=(const PrintResolution &right);
-  ~PrintResolution();
+    explicit PrintResolution();
+    PrintResolution(const PrintResolution &right);
+    PrintResolution &operator=(const PrintResolution &right);
+    ~PrintResolution();
 
-  void SetId(uint32_t id);
+    void SetId(uint32_t id);
 
-  void SetHorizontalDpi(uint32_t horizontalDpi);
+    void SetHorizontalDpi(uint32_t horizontalDpi);
 
-  void SetVerticalDpi(uint32_t verticalDpi);
+    void SetVerticalDpi(uint32_t verticalDpi);
 
-  [[nodiscard]] uint32_t GetId() const;
+    [[nodiscard]] uint32_t GetId() const;
 
-  [[nodiscard]] uint32_t GetHorizontalDpi() const;
+    [[nodiscard]] uint32_t GetHorizontalDpi() const;
 
-  [[nodiscard]] uint32_t GetVerticalDpi() const;
+    [[nodiscard]] uint32_t GetVerticalDpi() const;
 
-  void Dump();
+    void Dump();
 
 private:
-  uint32_t id_;
-  uint32_t horizontalDpi_;
-  uint32_t verticalDpi_;
+    uint32_t id_;
+    uint32_t horizontalDpi_;
+    uint32_t verticalDpi_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_RESOLUTION_H

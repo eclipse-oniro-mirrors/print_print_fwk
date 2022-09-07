@@ -30,74 +30,71 @@ typedef void (*AsyncWorkCallback)(napi_env env, napi_status status, void *data);
 
 class BaseContext {
 public:
-  ACE_DISALLOW_COPY_AND_MOVE(BaseContext);
+    ACE_DISALLOW_COPY_AND_MOVE(BaseContext);
 
-  BaseContext() = delete;
+    BaseContext() = delete;
 
-  explicit BaseContext(napi_env env, napi_callback_info info,
-                       EventManager *manager);
+    explicit BaseContext(napi_env env, napi_callback_info info, EventManager *manager);
 
-  virtual ~BaseContext();
+    virtual ~BaseContext();
 
-  virtual void ParseParams(napi_value *params, size_t paramsCount);
+    virtual void ParseParams(napi_value *params, size_t paramsCount);
 
-  void SetParseOK(bool parseOK);
+    void SetParseOK(bool parseOK);
 
-  void SetExecOK(bool execOK);
+    void SetExecOK(bool execOK);
 
-  void SetErrorCode(int32_t errorCode);
+    void SetErrorCode(int32_t errorCode);
 
-  napi_status SetCallback(napi_value callback);
+    napi_status SetCallback(napi_value callback);
 
-  void DeleteCallback();
+    void DeleteCallback();
 
-  void CreateAsyncWork(const std::string &name, AsyncWorkExecutor executor,
-                       AsyncWorkCallback callback);
+    void CreateAsyncWork(const std::string &name, AsyncWorkExecutor executor, AsyncWorkCallback callback);
 
-  void DeleteAsyncWork();
+    void DeleteAsyncWork();
 
-  napi_value CreatePromise();
+    napi_value CreatePromise();
 
-  [[nodiscard]] bool IsParseOK() const;
+    [[nodiscard]] bool IsParseOK() const;
 
-  [[nodiscard]] bool IsExecOK() const;
+    [[nodiscard]] bool IsExecOK() const;
 
-  [[nodiscard]] napi_env GetEnv() const;
+    [[nodiscard]] napi_env GetEnv() const;
 
-  [[nodiscard]] napi_callback_info GetInfo() const;
+    [[nodiscard]] napi_callback_info GetInfo() const;
 
-  [[nodiscard]] int32_t GetErrorCode() const;
+    [[nodiscard]] int32_t GetErrorCode() const;
 
-  [[nodiscard]] napi_value GetCallback() const;
+    [[nodiscard]] napi_value GetCallback() const;
 
-  [[nodiscard]] napi_deferred GetDeferred() const;
+    [[nodiscard]] napi_deferred GetDeferred() const;
 
-  [[nodiscard]] const std::string &GetAsyncWorkName() const;
+    [[nodiscard]] const std::string &GetAsyncWorkName() const;
 
-  void Emit(const std::string &type,
-            const std::pair<napi_value, napi_value> &argv);
+    void Emit(const std::string &type, const std::pair<napi_value, napi_value> &argv);
 
 protected:
-  EventManager *manager_;
+    EventManager *manager_;
 
 private:
-  napi_env env_;
+    napi_env env_;
 
-  napi_callback_info info_;
+    napi_callback_info info_;
 
-  bool parseOK_;
+    bool parseOK_;
 
-  bool execOK_;
+    bool execOK_;
 
-  int32_t errorCode_;
+    int32_t errorCode_;
 
-  napi_ref callback_;
+    napi_ref callback_;
 
-  napi_async_work asyncWork_;
+    napi_async_work asyncWork_;
 
-  napi_deferred deferred_;
+    napi_deferred deferred_;
 
-  std::string asyncWorkName_;
+    std::string asyncWorkName_;
 };
 } // namespace OHOS::Request::Print
 

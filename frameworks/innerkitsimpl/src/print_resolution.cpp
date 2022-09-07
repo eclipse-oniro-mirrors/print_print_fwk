@@ -14,48 +14,65 @@
  */
 
 #include "print_resolution.h"
+
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintResolution::PrintResolution()
-    : id_(0), horizontalDpi_(0), verticalDpi_(0) {}
+PrintResolution::PrintResolution() : id_(0), horizontalDpi_(0), verticalDpi_(0) {}
 
-PrintResolution::PrintResolution(const PrintResolution &right) {
-  id_ = right.id_;
-  horizontalDpi_ = right.horizontalDpi_;
-  verticalDpi_ = right.verticalDpi_;
-}
-
-PrintResolution &PrintResolution::operator=(const PrintResolution &right) {
-  if (this != &right) {
+PrintResolution::PrintResolution(const PrintResolution &right)
+{
     id_ = right.id_;
     horizontalDpi_ = right.horizontalDpi_;
     verticalDpi_ = right.verticalDpi_;
-  }
-  return *this;
+}
+
+PrintResolution &PrintResolution::operator=(const PrintResolution &right)
+{
+    if (this != &right) {
+        id_ = right.id_;
+        horizontalDpi_ = right.horizontalDpi_;
+        verticalDpi_ = right.verticalDpi_;
+    }
+    return *this;
 }
 
 PrintResolution::~PrintResolution() {}
 
-void PrintResolution::SetId(uint32_t id) { id_ = id; }
-
-void PrintResolution::SetHorizontalDpi(uint32_t horizontalDpi) {
-  horizontalDpi_ = horizontalDpi;
+void PrintResolution::SetId(uint32_t id)
+{
+    id_ = id;
 }
 
-void PrintResolution::SetVerticalDpi(uint32_t verticalDpi) {
-  verticalDpi_ = verticalDpi;
+void PrintResolution::SetHorizontalDpi(uint32_t horizontalDpi)
+{
+    horizontalDpi_ = horizontalDpi;
 }
 
-uint32_t PrintResolution::GetId() const { return id_; }
+void PrintResolution::SetVerticalDpi(uint32_t verticalDpi)
+{
+    verticalDpi_ = verticalDpi;
+}
 
-uint32_t PrintResolution::GetHorizontalDpi() const { return horizontalDpi_; }
+uint32_t PrintResolution::GetId() const
+{
+    return id_;
+}
 
-uint32_t PrintResolution::GetVerticalDpi() const { return verticalDpi_; }
+uint32_t PrintResolution::GetHorizontalDpi() const
+{
+    return horizontalDpi_;
+}
 
-void PrintResolution::Dump() {
-  PRINT_HILOGD("id_ = %{public}d", id_);
-  PRINT_HILOGD("horizontalDpi_ = %{public}d", horizontalDpi_);
-  PRINT_HILOGD("verticalDpi_ = %{public}d", verticalDpi_);
+uint32_t PrintResolution::GetVerticalDpi() const
+{
+    return verticalDpi_;
+}
+
+void PrintResolution::Dump()
+{
+    PRINT_HILOGD("id_ = %{public}d", id_);
+    PRINT_HILOGD("horizontalDpi_ = %{public}d", horizontalDpi_);
+    PRINT_HILOGD("verticalDpi_ = %{public}d", verticalDpi_);
 }
 } // namespace OHOS::Print

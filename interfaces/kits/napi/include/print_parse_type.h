@@ -32,40 +32,26 @@
 namespace OHOS::Print {
 class ParseType {
 public:
-  static bool ParseInfo(napi_env env, napi_value InfoValue, PrinterInfo &Info);
-  static bool ParseCapability(napi_env env, napi_value InfoValue,
-                              PrinterCapability &capability);
-  static bool ParsePageSize(napi_env env, napi_value capValue,
-                            PrintPageSize &PrintPageSize);
-  static bool ParseResolution(napi_env env, napi_value reValue,
-                              PrintResolution &PrintResolution);
-  static bool ParseMargin(napi_env env, napi_value marginValue,
-                          PrintMargin &PrintMargin);
-  static bool ParseJob(napi_env env, napi_value jobValue, PrintJob &printJob);
-  static bool ParsePreviewAttribute(napi_env env, napi_value preAttValue,
-                                    PreviewAttribute &preAtt);
-  static bool ParseRange(napi_env env, napi_value preAttValue,
-                         PrintRange &range);
+    static bool ParseInfo(napi_env env, napi_value InfoValue, PrinterInfo &Info);
+    static bool ParseCapability(napi_env env, napi_value InfoValue, PrinterCapability &capability);
+    static bool ParsePageSize(napi_env env, napi_value capValue, PrintPageSize &PrintPageSize);
+    static bool ParseResolution(napi_env env, napi_value reValue, PrintResolution &PrintResolution);
+    static bool ParseMargin(napi_env env, napi_value marginValue, PrintMargin &PrintMargin);
+    static bool ParseJob(napi_env env, napi_value jobValue, PrintJob &printJob);
+    static bool ParsePreviewAttribute(napi_env env, napi_value preAttValue, PreviewAttribute &preAtt);
+    static bool ParseRange(napi_env env, napi_value preAttValue, PrintRange &range);
 
-  static bool ParseInfoParam(napi_env env, napi_value InfoValue,
-                             PrinterInfo &info);
-  static bool ParseCapParam(napi_env env, napi_value InfoValue,
-                            PrinterCapability &capability);
-  static bool ParsePageSizeParam(napi_env env, napi_value capValue,
-                                 PrintPageSize &PrintPageSize);
-  static bool ParseResolutionParam(napi_env env, napi_value reValue,
-                                   PrintResolution &PrintResolution);
-  static bool ParseMarginParam(napi_env env, napi_value marginValue,
-                               PrintMargin &PrintMargin);
-  static bool ParseJobParam(napi_env env, napi_value jobValue,
-                            PrintJob &printJob);
-  static bool ParsePreviewAttributeParam(napi_env env, napi_value preAttValue,
-                                         PreviewAttribute &preAtt);
-  static bool ParseRangeParam(napi_env env, napi_value preAttValue,
-                              PrintRange &range);
+    static bool ParseInfoParam(napi_env env, napi_value InfoValue, PrinterInfo &info);
+    static bool ParseCapParam(napi_env env, napi_value InfoValue, PrinterCapability &capability);
+    static bool ParsePageSizeParam(napi_env env, napi_value capValue, PrintPageSize &PrintPageSize);
+    static bool ParseResolutionParam(napi_env env, napi_value reValue, PrintResolution &PrintResolution);
+    static bool ParseMarginParam(napi_env env, napi_value marginValue, PrintMargin &PrintMargin);
+    static bool ParseJobParam(napi_env env, napi_value jobValue, PrintJob &printJob);
+    static bool ParsePreviewAttributeParam(napi_env env, napi_value preAttValue, PreviewAttribute &preAtt);
+    static bool ParseRangeParam(napi_env env, napi_value preAttValue, PrintRange &range);
 
 private:
-  struct ParseTypeContext : public AsyncCall::Context {};
+    struct ParseTypeContext : public AsyncCall::Context {};
 };
 } // namespace OHOS::Print
 #endif // PARSE_TYPE_H

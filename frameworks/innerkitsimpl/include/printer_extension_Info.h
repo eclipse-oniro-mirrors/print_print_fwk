@@ -20,40 +20,40 @@
 #include <string>
 
 namespace OHOS::Print {
-class PrintExtensionInfo {
+class PrinterExtensionInfo {
 public:
-  PrintExtensionInfo();
+    PrinterExtensionInfo();
 
-  void SetExtensionId(uint32_t extensionId);
+    void SetExtensionId(uint32_t extensionId);
 
-  void SetVendorId(uint32_t vendorId);
+    void SetVendorId(uint32_t vendorId);
 
-  void SetVendorName(const std::string &vendorName);
+    void SetVendorName(const std::string &vendorName);
 
-  void SetVendorIcon(uint32_t vendorIcon);
+    void SetVendorIcon(uint32_t vendorIcon);
 
-  void SetVersion(const std::string &version);
+    void SetVersion(const std::string &version);
 
-  [[nodiscard]] uint32_t GetExtensionId() const;
+    [[nodiscard]] uint32_t GetExtensionId() const;
 
-  [[nodiscard]] uint32_t GetVendorId() const;
+    [[nodiscard]] uint32_t GetVendorId() const;
 
-  [[nodiscard]] const std::string &GetVendorName() const;
+    [[nodiscard]] const std::string &GetVendorName() const;
 
-  [[nodiscard]] uint32_t GetVendorIcon() const;
+    [[nodiscard]] uint32_t GetVendorIcon() const;
 
-  [[nodiscard]] const std::string &GetVersion() const;
+    [[nodiscard]] const std::string &GetVersion() const;
 
-  void Dump();
+    void Dump();
 
-  ~PrintExtensionInfo();
+    ~PrinterExtensionInfo();
 
 private:
-  uint32_t extensionId_;
-  uint32_t vendorId_;
-  std::string vendorName_;
-  uint32_t vendorIcon_;
-  std::string version_;
+    uint32_t extensionId_;
+    uint32_t vendorId_;
+    std::string vendorName_;
+    uint32_t vendorIcon_;
+    std::string version_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_EXTENSION_INFO_H

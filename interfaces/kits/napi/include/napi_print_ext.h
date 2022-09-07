@@ -29,28 +29,27 @@
 namespace OHOS::Print {
 class NapiPrintExt {
 public:
-  static napi_value AddPrinters(napi_env env, napi_callback_info info);
-  static napi_value RemovePrinters(napi_env env, napi_callback_info info);
-  static napi_value UpdatePrinterState(napi_env env, napi_callback_info info);
-  static napi_value UpdatePrintJobState(napi_env env, napi_callback_info info);
+    static napi_value AddPrinters(napi_env env, napi_callback_info info);
+    static napi_value RemovePrinters(napi_env env, napi_callback_info info);
+    static napi_value UpdatePrinterState(napi_env env, napi_callback_info info);
+    static napi_value UpdatePrintJobState(napi_env env, napi_callback_info info);
 
 private:
-  struct NapiPrintExtContext : public AsyncCall::Context {
-    PrintTask *task_ = nullptr;
-    PrinterInfo info_;
-    bool result = false;
-    uint32_t printerId = 0;
-    uint32_t printerJobId = 0;
-    uint32_t printerState = 0;
-    uint32_t printerJobState = 0;
-    napi_status status = napi_generic_failure;
-    std::vector<PrinterInfo> printAddInfoVector;
-    std::vector<PrinterInfo> printRemoveInfoVector;
-    NapiPrintExtContext() : Context(nullptr, nullptr){};
-    NapiPrintExtContext(InputAction input, OutputAction output)
-        : Context(std::move(input), std::move(output)){};
-    virtual ~NapiPrintExtContext(){};
-  };
+    struct NapiPrintExtContext : public AsyncCall::Context {
+        PrintTask *task_ = nullptr;
+        PrinterInfo info_;
+        bool result = false;
+        uint32_t printerId = 0;
+        uint32_t printerJobId = 0;
+        uint32_t printerState = 0;
+        uint32_t printerJobState = 0;
+        napi_status status = napi_generic_failure;
+        std::vector<PrinterInfo> printAddInfoVector;
+        std::vector<PrinterInfo> printRemoveInfoVector;
+        NapiPrintExtContext() : Context(nullptr, nullptr) {};
+        NapiPrintExtContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
+        virtual ~NapiPrintExtContext() {};
+    };
 };
 } // namespace OHOS::Print
 #endif // NAPI_PRINT_EXT_H

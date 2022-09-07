@@ -25,10 +25,10 @@
 namespace OHOS::Print {
 class PrintFailNotify final : public PrintBaseNotify {
 public:
-  ACE_DISALLOW_COPY_AND_MOVE(PrintFailNotify);
-  explicit PrintFailNotify(napi_env env, const std::string &type, napi_ref ref);
-  virtual ~PrintFailNotify();
-  void OnCallBack(MessageParcel &data) override;
+    ACE_DISALLOW_COPY_AND_MOVE(PrintFailNotify);
+    explicit PrintFailNotify(napi_env env, const std::string &type, napi_ref ref);
+    virtual ~PrintFailNotify();
+    void OnCallBack(MessageParcel &data) override;
 };
 } // namespace OHOS::Print
 

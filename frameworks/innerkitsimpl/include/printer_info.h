@@ -26,53 +26,53 @@
 namespace OHOS::Print {
 class PrinterInfo final {
 public:
-  explicit PrinterInfo();
-  PrinterInfo(const PrinterInfo &right);
-  PrinterInfo &operator=(PrinterInfo &PrinterInfo);
-  ~PrinterInfo();
+    explicit PrinterInfo();
+    PrinterInfo(const PrinterInfo &right);
+    PrinterInfo &operator=(PrinterInfo &PrinterInfo);
+    ~PrinterInfo();
 
-  void SetPrinterId(uint32_t printerId);
+    void SetPrinterId(uint32_t printerId);
 
-  void SetPrinterName(std::string printerName);
+    void SetPrinterName(std::string printerName);
 
-  void SetPrinterIcon(uint32_t printIcon);
+    void SetPrinterIcon(uint32_t printIcon);
 
-  void SetPrinterState(uint32_t printerState);
+    void SetPrinterState(uint32_t printerState);
 
-  void SetDescription(std::string description);
+    void SetDescription(std::string description);
 
-  void SetCapability(PrinterCapability capability);
+    void SetCapability(PrinterCapability capability);
 
-  [[nodiscard]] uint32_t GetPrintId() const;
+    [[nodiscard]] uint32_t GetPrintId() const;
 
-  [[nodiscard]] const std::string &GetPrinterName() const;
+    [[nodiscard]] const std::string &GetPrinterName() const;
 
-  [[nodiscard]] uint32_t GetPrinterIcon() const;
+    [[nodiscard]] uint32_t GetPrinterIcon() const;
 
-  [[nodiscard]] uint32_t GetPrinterState() const;
+    [[nodiscard]] uint32_t GetPrinterState() const;
 
-  [[nodiscard]] const std::string &GetDescription() const;
+    [[nodiscard]] const std::string &GetDescription() const;
 
-  void GetCapability(PrinterCapability &cap) const;
+    void GetCapability(PrinterCapability &cap) const;
 
-  void Dump();
-
-private:
-  bool ParseInfo(napi_env env, napi_value InfoValue, PrinterInfo &Info);
-  bool ParseInfoParam(napi_env env, napi_value InfoValue, PrinterInfo &info);
+    void Dump();
 
 private:
-  uint32_t printerId_;
+    bool ParseInfo(napi_env env, napi_value InfoValue, PrinterInfo &Info);
+    bool ParseInfoParam(napi_env env, napi_value InfoValue, PrinterInfo &info);
 
-  std::string printerName_;
+private:
+    uint32_t printerId_;
 
-  uint32_t printerIcon_;
+    std::string printerName_;
 
-  uint32_t printerState_;
+    uint32_t printerIcon_;
 
-  std::string description_;
+    uint32_t printerState_;
 
-  PrinterCapability capability_;
+    std::string description_;
+
+    PrinterCapability capability_;
 };
 } // namespace OHOS::Print
 #endif /* PRINT_INFO_H */

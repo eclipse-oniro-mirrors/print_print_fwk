@@ -21,56 +21,57 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintFailNotify::PrintFailNotify(napi_env env, const std::string &type,
-                                 napi_ref ref)
-    : PrintBaseNotify(env, type, ref) {}
+PrintFailNotify::PrintFailNotify(napi_env env, const std::string &type, napi_ref ref) : PrintBaseNotify(env, type, ref)
+{}
 
-PrintFailNotify::~PrintFailNotify() { PRINT_HILOGD(""); }
+PrintFailNotify::~PrintFailNotify()
+{
+    PRINT_HILOGD("");
+}
 
-void PrintFailNotify::OnCallBack(MessageParcel &data) {
-  PRINT_HILOGD("Failed callback in");
-  uv_loop_s *loop = nullptr;
-  napi_get_uv_event_loop(env_, &loop);
-  if (loop == nullptr) {
-    PRINT_HILOGE("Failed to get uv event loop");
-    return;
-  }
-  uv_work_t *work = new (std::nothrow) uv_work_t;
-  if (work == nullptr) {
-    PRINT_HILOGE("Failed to create uv work");
-    return;
-  }
+void PrintFailNotify::OnCallBack(MessageParcel &data)
+{
+    PRINT_HILOGD("Failed callback in");
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env_, &loop);
+    if (loop == nullptr) {
+        PRINT_HILOGE("Failed to get uv event loop");
+        return;
+    }
+    uv_work_t *work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        PRINT_HILOGE("Failed to create uv work");
+        return;
+    }
 
-  NotifyData *notifyData = GetNotifyData();
-  notifyData->env = env_;
-  notifyData->ref = ref_;
-  notifyData->type = type_;
-  notifyData->firstArgv = data.ReadUint32();
-  PRINT_HILOGD("recv error code is %{public}d", notifyData->firstArgv);
-  work->data = notifyData;
+    NotifyData *notifyData = GetNotifyData();
+    notifyData->env = env_;
+    notifyData->ref = ref_;
+    notifyData->type = type_;
+    notifyData->firstArgv = data.ReadUint32();
+    PRINT_HILOGD("recv error code is %{public}d", notifyData->firstArgv);
+    work->data = notifyData;
 
-  uv_queue_work(
-      loop, work, [](uv_work_t *work) {},
-      [](uv_work_t *work, int statusInt) {
-        PRINT_HILOGD("this is new fail callback");
-        NotifyData *notifyData = static_cast<NotifyData *>(work->data);
-        napi_value undefined = 0;
-        napi_get_undefined(notifyData->env, &undefined);
-        napi_value callbackFunc = nullptr;
-        napi_get_reference_value(notifyData->env, notifyData->ref,
-                                 &callbackFunc);
-        napi_value result = nullptr;
-        napi_value callbackValue;
-        napi_create_uint32(notifyData->env, notifyData->firstArgv,
-                           &callbackValue);
-        napi_call_function(notifyData->env, nullptr, callbackFunc,
-                           NapiPrintUtils::ARGC_ONE, &callbackValue, &result);
-        if (work != nullptr) {
-          delete work;
-          work = nullptr;
-        }
-        delete notifyData;
-        notifyData = nullptr;
-      });
+    uv_queue_work(
+        loop, work, [](uv_work_t *work) {},
+        [](uv_work_t *work, int statusInt) {
+            PRINT_HILOGD("this is new fail callback");
+            NotifyData *notifyData = static_cast<NotifyData *>(work->data);
+            napi_value undefined = 0;
+            napi_get_undefined(notifyData->env, &undefined);
+            napi_value callbackFunc = nullptr;
+            napi_get_reference_value(notifyData->env, notifyData->ref, &callbackFunc);
+            napi_value result = nullptr;
+            napi_value callbackValue;
+            napi_create_uint32(notifyData->env, notifyData->firstArgv, &callbackValue);
+            napi_call_function(
+                notifyData->env, nullptr, callbackFunc, PrintNapiUtils::ONE_ARG, &callbackValue, &result);
+            if (work != nullptr) {
+                delete work;
+                work = nullptr;
+            }
+            delete notifyData;
+            notifyData = nullptr;
+        });
 }
 } // namespace OHOS::Print

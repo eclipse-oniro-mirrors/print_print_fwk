@@ -24,10 +24,9 @@
 namespace OHOS::Print {
 class PrintCallbackStub : public IRemoteStub<IPrintCallback> {
 public:
-  PrintCallbackStub() = default;
-  virtual ~PrintCallbackStub() {}
-  int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,
-                          MessageParcel &reply, MessageOption &option) override;
+    PrintCallbackStub() = default;
+    virtual ~PrintCallbackStub() {}
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 };
 } // namespace OHOS::Print
 #endif // PRINT_CALLBACK_STUB_H

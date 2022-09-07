@@ -26,29 +26,29 @@
 
 namespace OHOS::Print {
 struct NotifyData {
-  napi_env env;
-  napi_ref ref;
-  std::string objectType;
-  std::string type;
-  uint32_t firstArgv;
-  PrinterInfo secondArgv;
-  PrintJob thirdArgv;
+    napi_env env;
+    napi_ref ref;
+    std::string objectType;
+    std::string type;
+    uint32_t firstArgv;
+    PrinterInfo secondArgv;
+    PrintJob thirdArgv;
 };
 
 class PrintBaseNotify : public PrintCallbackStub {
 public:
-  ACE_DISALLOW_COPY_AND_MOVE(PrintBaseNotify);
-  explicit PrintBaseNotify(napi_env env, const std::string &type, napi_ref ref);
-  virtual ~PrintBaseNotify();
-  void OnCallBack(MessageParcel &data) override;
+    ACE_DISALLOW_COPY_AND_MOVE(PrintBaseNotify);
+    explicit PrintBaseNotify(napi_env env, const std::string &type, napi_ref ref);
+    virtual ~PrintBaseNotify();
+    void OnCallBack(MessageParcel &data) override;
 
 protected:
-  NotifyData *GetNotifyData();
+    NotifyData *GetNotifyData();
 
 protected:
-  napi_env env_;
-  std::string type_;
-  napi_ref ref_;
+    napi_env env_;
+    std::string type_;
+    napi_ref ref_;
 };
 } // namespace OHOS::Print
 

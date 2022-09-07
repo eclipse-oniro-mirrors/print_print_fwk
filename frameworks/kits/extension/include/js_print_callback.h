@@ -32,32 +32,31 @@ class JsRuntime;
 
 class JsPrintCallback : public std::enable_shared_from_this<JsPrintCallback> {
 public:
-  explicit JsPrintCallback(JsRuntime &jsRutime);
-  ~JsPrintCallback() = default;
-  NativeValue *Exec(NativeValue *jsObj, const std::string &name,
-                    NativeValue *const *argv = nullptr, size_t argc = 0,
-                    bool isSync = true);
+    explicit JsPrintCallback(JsRuntime &jsRutime);
+    ~JsPrintCallback() = default;
+    NativeValue *Exec(NativeValue *jsObj, const std::string &name, NativeValue *const *argv = nullptr, size_t argc = 0,
+        bool isSync = true);
 
 private:
-  struct Container {
-    std::shared_ptr<JsPrintCallback> self;
-    NativeEngine *nativeEngine;
-    NativeValue *jsObj;
-    NativeValue *jsMethod;
-    NativeValue *const *argv;
-    size_t argc;
-    NativeValue *jsResult;
-    bool isSync;
-    bool isCompleted;
-  };
-  JsRuntime &jsRuntime_;
-  uv_work_t *jsWorker_;
+    struct Container {
+        std::shared_ptr<JsPrintCallback> self;
+        NativeEngine *nativeEngine;
+        NativeValue *jsObj;
+        NativeValue *jsMethod;
+        NativeValue *const *argv;
+        size_t argc;
+        NativeValue *jsResult;
+        bool isSync;
+        bool isCompleted;
+    };
+    JsRuntime &jsRuntime_;
+    uv_work_t *jsWorker_;
 
-  JsPrintCallback::Container container_;
+    JsPrintCallback::Container container_;
 
-  std::mutex conditionMutex_;
-  std::condition_variable syncCon_;
-  static constexpr int SYNC_TIME_OUT = 1000;
+    std::mutex conditionMutex_;
+    std::condition_variable syncCon_;
+    static constexpr int SYNC_TIME_OUT = 1000;
 };
 } // namespace AbilityRuntime
 } // namespace OHOS

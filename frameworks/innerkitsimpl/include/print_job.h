@@ -30,91 +30,91 @@
 namespace OHOS::Print {
 class PrintJob {
 public:
-  explicit PrintJob();
-  PrintJob(const PrintJob &right);
-  PrintJob &operator=(PrintJob &right);
-  ~PrintJob();
+    explicit PrintJob();
+    PrintJob(const PrintJob &right);
+    PrintJob &operator=(PrintJob &right);
+    ~PrintJob();
 
-  void SetFiles(const std::vector<std::string> &files);
+    void SetFiles(const std::vector<std::string> &files);
 
-  void SetJobId(uint32_t jobId);
+    void SetJobId(uint32_t jobId);
 
-  void SetPrintId(uint32_t printerid);
+    void SetPrintId(uint32_t printerid);
 
-  void SetJobState(uint32_t jobState);
+    void SetJobState(uint32_t jobState);
 
-  void SetCopyNumber(uint32_t copyNumber);
+    void SetCopyNumber(uint32_t copyNumber);
 
-  void SetPageRange(const PrintRange &pageRange);
+    void SetPageRange(const PrintRange &pageRange);
 
-  void SetIsSequential(bool isSequential);
+    void SetIsSequential(bool isSequential);
 
-  void SetPageSize(const PrintPageSize &pageSize);
+    void SetPageSize(const PrintPageSize &pageSize);
 
-  void SetIsLandscape(bool isLandscape);
+    void SetIsLandscape(bool isLandscape);
 
-  void SetColorMode(uint32_t colorMode);
+    void SetColorMode(uint32_t colorMode);
 
-  void SetDuplexMode(uint32_t duplexmode);
+    void SetDuplexMode(uint32_t duplexmode);
 
-  void SetMargin(const PrintMargin &margin);
+    void SetMargin(const PrintMargin &margin);
 
-  void SetPreview(const PreviewAttribute &preview);
+    void SetPreview(const PreviewAttribute &preview);
 
-  void GetFiles(std::vector<std::string> &fileList) const;
+    void GetFiles(std::vector<std::string> &fileList) const;
 
-  [[nodiscard]] uint32_t GetJobId() const;
+    [[nodiscard]] uint32_t GetJobId() const;
 
-  [[nodiscard]] uint32_t GetPrinterId() const;
+    [[nodiscard]] uint32_t GetPrinterId() const;
 
-  [[nodiscard]] uint32_t GetJobState() const;
+    [[nodiscard]] uint32_t GetJobState() const;
 
-  [[nodiscard]] uint32_t GetCopyNumber() const;
+    [[nodiscard]] uint32_t GetCopyNumber() const;
 
-  void GetPageRange(PrintRange &range) const;
+    void GetPageRange(PrintRange &range) const;
 
-  [[nodiscard]] bool GetIsSequential() const;
+    [[nodiscard]] bool GetIsSequential() const;
 
-  void GetPageSize(PrintPageSize &printPageSize) const;
+    void GetPageSize(PrintPageSize &printPageSize) const;
 
-  [[nodiscard]] bool GetIsLandscape() const;
+    [[nodiscard]] bool GetIsLandscape() const;
 
-  [[nodiscard]] uint32_t GetColorMode() const;
+    [[nodiscard]] uint32_t GetColorMode() const;
 
-  [[nodiscard]] uint32_t GetDuplexMode() const;
+    [[nodiscard]] uint32_t GetDuplexMode() const;
 
-  void GetMargin(PrintMargin &printMargin) const;
+    void GetMargin(PrintMargin &printMargin) const;
 
-  void GetPreview(PreviewAttribute &previewAttr) const;
+    void GetPreview(PreviewAttribute &previewAttr) const;
 
-  void ConvertToParcel(MessageParcel &reply) const;
+    void ConvertToParcel(MessageParcel &reply) const;
 
-  void BuildFromParcel(MessageParcel &data);
+    void BuildFromParcel(MessageParcel &data);
 
-  void ConvertToJs(napi_env env, napi_value *result) const;
+    void ConvertToJs(napi_env env, napi_value *result) const;
 
-  void BuildFromJs(napi_env env, napi_value capValue);
+    void BuildFromJs(napi_env env, napi_value capValue);
 
-  void Dump();
-
-private:
-  bool ParseJob(napi_env env, napi_value jobValue, PrintJob &printJob);
-  bool ParseJobParam(napi_env env, napi_value jobValue, PrintJob &printJob);
+    void Dump();
 
 private:
-  std::vector<std::string> files_;
-  uint32_t jobId_;
-  uint32_t printerId_;
-  uint32_t jobState_;
-  uint32_t copyNumber_;
-  PrintRange pageRange_;
-  bool isSequential_;
-  PrintPageSize pageSize_;
-  bool isLandscape_;
-  int32_t colorMode_;
-  int32_t duplexMode_;
-  PrintMargin margin_;
-  PreviewAttribute preview_;
+    bool ParseJob(napi_env env, napi_value jobValue, PrintJob &printJob);
+    bool ParseJobParam(napi_env env, napi_value jobValue, PrintJob &printJob);
+
+private:
+    std::vector<std::string> files_;
+    uint32_t jobId_;
+    uint32_t printerId_;
+    uint32_t jobState_;
+    uint32_t copyNumber_;
+    PrintRange pageRange_;
+    bool isSequential_;
+    PrintPageSize pageSize_;
+    bool isLandscape_;
+    int32_t colorMode_;
+    int32_t duplexMode_;
+    PrintMargin margin_;
+    PreviewAttribute preview_;
 };
 } // namespace OHOS::Print
 #endif /* PRINT_PRINT_JOB_H */

@@ -20,18 +20,17 @@
 #include "iremote_proxy.h"
 
 namespace OHOS::Print {
-class PrintExtensionCallbackProxy
-    : public IRemoteProxy<IPrintExtensionCallback> {
+class PrintExtensionCallbackProxy : public IRemoteProxy<IPrintExtensionCallback> {
 public:
-  explicit PrintExtensionCallbackProxy(const sptr<IRemoteObject> &impl);
-  ~PrintExtensionCallbackProxy() = default;
-  bool OnCallback() override;
-  bool OnCallback(uint32_t printerId) override;
-  bool OnCallback(const PrintJob &job) override;
-  bool OnCallback(uint32_t printerId, MessageParcel &reply) override;
+    explicit PrintExtensionCallbackProxy(const sptr<IRemoteObject> &impl);
+    ~PrintExtensionCallbackProxy() = default;
+    bool OnCallback() override;
+    bool OnCallback(uint32_t printerId) override;
+    bool OnCallback(const PrintJob &job) override;
+    bool OnCallback(uint32_t printerId, MessageParcel &reply) override;
 
 private:
-  static inline BrokerDelegator<PrintExtensionCallbackProxy> delegator_;
+    static inline BrokerDelegator<PrintExtensionCallbackProxy> delegator_;
 };
 } // namespace OHOS::Print
 

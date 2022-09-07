@@ -34,63 +34,61 @@
 
 namespace OHOS::Print {
 enum EventType {
-  NO_ARG_EVENT,
-  ONE_ARG_EVENT,
-  TWO_ARG_EVENT,
+    NO_ARG_EVENT,
+    ONE_ARG_EVENT,
+    TWO_ARG_EVENT,
 };
 class NapiInnerPrint {
 public:
-  explicit NapiInnerPrint(uint32_t taskId);
-  ~NapiInnerPrint();
+    explicit NapiInnerPrint(uint32_t taskId);
+    ~NapiInnerPrint();
 
-  static napi_value QueryExtensionInfo(napi_env env, napi_callback_info info);
-  static napi_value StartDiscovery(napi_env env, napi_callback_info info);
-  static napi_value StopDiscovery(napi_env env, napi_callback_info info);
-  static napi_value ConnectPrint(napi_env env, napi_callback_info info);
-  static napi_value DisconnectPrint(napi_env env, napi_callback_info info);
-  static napi_value StartPrintJob(napi_env env, napi_callback_info info);
-  static napi_value CancelPrintJob(napi_env env, napi_callback_info info);
-  static napi_value RequestPreview(napi_env env, napi_callback_info info);
-  static napi_value QueryCapability(napi_env env, napi_callback_info info);
-  static napi_value On(napi_env env, napi_callback_info info);
-  static napi_value Off(napi_env env, napi_callback_info info);
-  static int32_t GetEventType(const std::string &type);
+    static napi_value QueryExtensionInfo(napi_env env, napi_callback_info info);
+    static napi_value StartDiscovery(napi_env env, napi_callback_info info);
+    static napi_value StopDiscovery(napi_env env, napi_callback_info info);
+    static napi_value ConnectPrint(napi_env env, napi_callback_info info);
+    static napi_value DisconnectPrint(napi_env env, napi_callback_info info);
+    static napi_value StartPrintJob(napi_env env, napi_callback_info info);
+    static napi_value CancelPrintJob(napi_env env, napi_callback_info info);
+    static napi_value RequestPreview(napi_env env, napi_callback_info info);
+    static napi_value QueryCapability(napi_env env, napi_callback_info info);
+    static napi_value On(napi_env env, napi_callback_info info);
+    static napi_value Off(napi_env env, napi_callback_info info);
+    static int32_t GetEventType(const std::string &type);
 
 private:
-  static sptr<IPrintCallback>
-  CreateNotify(napi_env env, const std::string &type, napi_ref callbackRef);
+    static sptr<IPrintCallback> CreateNotify(napi_env env, const std::string &type, napi_ref callbackRef);
 
-  struct OperationContext : public AsyncCall::Context {
-    int32_t dummy = 0;
-    std::vector<PrintExtensionInfo> arrayPrinterExtensionInfo;
-    std::vector<uint32_t> extensionList;
-    uint32_t state;
-    PrinterInfo info;
-    std::string previewResult = "";
-    std::string type = "";
-    PrintJob jobinfo;
-    PrintTask *task_ = nullptr;
-    std::string title_ = "";
-    std::string description_ = "";
-    std::string filePath_ = "";
-    uint32_t speedLimit_ = 0;
-    uint32_t priority_ = 0;
-    PrinterCapability printerCapability;
-    bool result = false;
-    std::string stateType_ = "";
-    PrintJob printStartJob;
-    PrintJob printCancelJob;
-    PrintJob printReqPreviewJob;
-    uint32_t printCapacityId = 0;
-    uint32_t printConnId = 0;
-    uint32_t printDisConnId = 0;
-    std::vector<uint32_t> extensionVector;
-    napi_status status = napi_generic_failure;
-    OperationContext() : Context(nullptr, nullptr){};
-    OperationContext(InputAction input, OutputAction output)
-        : Context(std::move(input), std::move(output)){};
-    virtual ~OperationContext(){};
-  };
+    struct OperationContext : public AsyncCall::Context {
+        int32_t dummy = 0;
+        std::vector<PrinterExtensionInfo> arrayPrinterExtensionInfo;
+        std::vector<uint32_t> extensionList;
+        uint32_t state;
+        PrinterInfo info;
+        std::string previewResult = "";
+        std::string type = "";
+        PrintJob jobinfo;
+        PrintTask *task_ = nullptr;
+        std::string title_ = "";
+        std::string description_ = "";
+        std::string filePath_ = "";
+        uint32_t speedLimit_ = 0;
+        uint32_t priority_ = 0;
+        PrinterCapability printerCapability;
+        bool result = false;
+        std::string stateType_ = "";
+        PrintJob printStartJob;
+        PrintJob printCancelJob;
+        PrintJob printReqPreviewJob;
+        uint32_t printCapacityId = 0;
+        uint32_t printConnId = 0;
+        uint32_t printDisConnId = 0;
+        std::vector<uint32_t> extensionVector;
+        napi_status status = napi_generic_failure;
+        OperationContext() : Context(nullptr, nullptr) {};
+        OperationContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
+        virtual ~OperationContext() {};
+    };
 };
 } // namespace OHOS::Print
 #endif // NAPI_INNER_PRINT_H

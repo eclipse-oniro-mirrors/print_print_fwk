@@ -46,23 +46,23 @@ static constexpr const char *PRINTJOB_STATE_cancelled = "PRINT_JOB_cancelled";
 namespace OHOS::Print {
 class PrintTask {
 public:
-  explicit PrintTask(uint32_t taskId);
-  ~PrintTask();
+    explicit PrintTask(uint32_t taskId);
+    ~PrintTask();
 
-  uint32_t GetId() const;
-  static napi_value On(napi_env env, napi_callback_info info);
-  static napi_value Off(napi_env env, napi_callback_info info);
+    uint32_t GetId() const;
+    static napi_value On(napi_env env, napi_callback_info info);
+    static napi_value Off(napi_env env, napi_callback_info info);
 
-  bool IsSupportType(const std::string &type);
-  bool IsSupportPrinterStateType(const std::string &type);
-  bool IsSupportJobStateType(const std::string &type);
+    bool IsSupportType(const std::string &type);
+    bool IsSupportPrinterStateType(const std::string &type);
+    bool IsSupportJobStateType(const std::string &type);
 
 private:
-  int taskId_;
-  std::mutex mutex_;
-  std::map<std::string, bool> supportEvents_;
-  std::map<std::string, bool> supportPrinterState_;
-  std::map<std::string, bool> supportJobState_;
+    int taskId_;
+    std::mutex mutex_;
+    std::map<std::string, bool> supportEvents_;
+    std::map<std::string, bool> supportPrinterState_;
+    std::map<std::string, bool> supportJobState_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_TASK_H

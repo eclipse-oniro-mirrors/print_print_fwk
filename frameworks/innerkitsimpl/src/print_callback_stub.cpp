@@ -19,24 +19,24 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-int32_t PrintCallbackStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
-                                           MessageParcel &reply,
-                                           MessageOption &option) {
-  auto descriptorToken = data.ReadInterfaceToken();
-  if (descriptorToken != GetDescriptor()) {
-    PRINT_HILOGE("Remote descriptor not the same as local descriptor.");
-    return E_PRINT_IPC_ERROR;
-  }
-  PRINT_HILOGD("PrintCallbackStub  code----> %{public}u", code);
-  switch (code) {
-  case PRINT_NOTIFY: {
-    OnCallBack(data);
-    break;
-  }
-  default: {
-    return OHOS::UNKNOWN_TRANSACTION;
-  }
-  }
-  return E_PRINT_OK;
+int32_t PrintCallbackStub::OnRemoteRequest(
+    uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    auto descriptorToken = data.ReadInterfaceToken();
+    if (descriptorToken != GetDescriptor()) {
+        PRINT_HILOGE("Remote descriptor not the same as local descriptor.");
+        return E_PRINT_IPC_ERROR;
+    }
+    PRINT_HILOGD("PrintCallbackStub  code----> %{public}u", code);
+    switch (code) {
+        case PRINT_NOTIFY: {
+            OnCallBack(data);
+            break;
+        }
+        default: {
+            return OHOS::UNKNOWN_TRANSACTION;
+        }
+    }
+    return E_PRINT_OK;
 }
 } // namespace OHOS::Print
