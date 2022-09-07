@@ -11,15 +11,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
+import("//build/test.gni")
 
-################################################################################
-group("print_packages") {
-  if (is_standard_system) {
-    deps = [
-      "etc/init:printservice.rc",
-      "profile:print_sa_profiles",
-      "services:print_service",
-    ]
-  }
+#################################group#########################################
+group("unittest") {
+  testonly = true
+  deps = []
+
+  deps += [ "unittest/src:unittest" ]
 }
+###############################################################################

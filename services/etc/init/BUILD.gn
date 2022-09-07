@@ -14,12 +14,10 @@
 import("//build/ohos.gni")
 
 ################################################################################
-group("print_packages") {
-  if (is_standard_system) {
-    deps = [
-      "etc/init:printservice.rc",
-      "profile:print_sa_profiles",
-      "services:print_service",
-    ]
-  }
+
+ohos_prebuilt_etc("printservice.rc") {
+  source = "printservice.cfg"
+  relative_install_dir = "init"
+  part_name = "print"
+  subsystem_name = "print"
 }

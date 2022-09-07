@@ -11,15 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
-
-################################################################################
-group("print_packages") {
-  if (is_standard_system) {
-    deps = [
-      "etc/init:printservice.rc",
-      "profile:print_sa_profiles",
-      "services:print_service",
-    ]
-  }
-}
+on boot
+    start print_service
+service print_service /system/bin/sa_main /system/profile/print_service.xml
+    class z_core
+    user system
+    group system shell
+    seclabel u:r:print_service:s0
