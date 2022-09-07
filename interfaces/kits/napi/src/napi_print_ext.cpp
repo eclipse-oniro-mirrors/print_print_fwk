@@ -36,14 +36,14 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
 
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        NAPI_ASSERT_BASE(env, argc == PrintNapiUtils::ONE_ARG, " should 1 parameter!", napi_invalid_arg);
-        napi_value array = argv[PrintNapiUtils::FIRST_ARGV];
+        NAPI_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+        napi_value array = argv[NapiPrintUtils::INDEX_ZERO];
         bool isArray = false;
         napi_is_array(env, array, &isArray);
         NAPI_ASSERT_BASE(env, isArray, " is not array!", napi_invalid_arg);
 
         uint32_t result_size;
-        napi_get_array_length(env, argv[PrintNapiUtils::FIRST_ARGV], &result_size);
+        napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &result_size);
 
         PrinterInfo info_;
         for (uint32_t i = 0; i < result_size; i++) {
@@ -86,14 +86,14 @@ napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
 
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        NAPI_ASSERT_BASE(env, argc == PrintNapiUtils::ONE_ARG, " should 1 parameter!", napi_invalid_arg);
-        napi_value array = argv[PrintNapiUtils::FIRST_ARGV];
+        NAPI_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+        napi_value array = argv[NapiPrintUtils::INDEX_ZERO];
         bool isArray = false;
         napi_is_array(env, array, &isArray);
         NAPI_ASSERT_BASE(env, isArray, " is not array!", napi_invalid_arg);
 
         uint32_t result_size;
-        napi_get_array_length(env, argv[PrintNapiUtils::FIRST_ARGV], &result_size);
+        napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &result_size);
 
         PrinterInfo info_;
         for (uint32_t i = 0; i < result_size; i++) {
@@ -135,19 +135,19 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info inf
 
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        NAPI_ASSERT_BASE(env, argc == PrintNapiUtils::TWO_ARG, " should 2 parameter!", napi_invalid_arg);
+        NAPI_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        NAPI_CALL_BASE(env, napi_typeof(env, argv[PrintNapiUtils::FIRST_ARGV], &valuetype), napi_invalid_arg);
+        NAPI_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         NAPI_ASSERT_BASE(env, valuetype == napi_number, "valuetype is not a number", napi_invalid_arg);
         uint32_t printerId = 0;
-        napi_get_value_uint32(env, argv[PrintNapiUtils::FIRST_ARGV], &printerId);
+        napi_get_value_uint32(env, argv[NapiPrintUtils::INDEX_ZERO], &printerId);
         PRINT_HILOGD("printerId : %{public}d", printerId);
         context->printerId = printerId;
         napi_valuetype valueSecondtype;
-        NAPI_CALL_BASE(env, napi_typeof(env, argv[PrintNapiUtils::SECOND_ARGV], &valueSecondtype), napi_invalid_arg);
+        NAPI_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valueSecondtype), napi_invalid_arg);
         NAPI_ASSERT_BASE(env, valueSecondtype == napi_number, "valueSecondtype is not a string", napi_invalid_arg);
         uint32_t printerState = 0;
-        napi_get_value_uint32(env, argv[PrintNapiUtils::SECOND_ARGV], &printerState);
+        napi_get_value_uint32(env, argv[NapiPrintUtils::INDEX_ONE], &printerState);
         PRINT_HILOGD("printerState : %{public}d", printerState);
         context->printerState = printerState;
         return napi_ok;
@@ -182,19 +182,19 @@ napi_value NapiPrintExt::UpdatePrintJobState(napi_env env, napi_callback_info in
 
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        NAPI_ASSERT_BASE(env, argc == PrintNapiUtils::TWO_ARG, " should 2 parameter!", napi_invalid_arg);
+        NAPI_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        NAPI_CALL_BASE(env, napi_typeof(env, argv[PrintNapiUtils::FIRST_ARGV], &valuetype), napi_invalid_arg);
+        NAPI_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         NAPI_ASSERT_BASE(env, valuetype == napi_number, "printerJobState is not a number", napi_invalid_arg);
         uint32_t printerJobId = 0;
-        napi_get_value_uint32(env, argv[PrintNapiUtils::FIRST_ARGV], &printerJobId);
+        napi_get_value_uint32(env, argv[NapiPrintUtils::INDEX_ZERO], &printerJobId);
         PRINT_HILOGD("printerJobId : %{public}d", printerJobId);
         context->printerJobId = printerJobId;
         napi_valuetype valueSecondtype;
-        NAPI_CALL_BASE(env, napi_typeof(env, argv[PrintNapiUtils::SECOND_ARGV], &valueSecondtype), napi_invalid_arg);
+        NAPI_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valueSecondtype), napi_invalid_arg);
         NAPI_ASSERT_BASE(env, valueSecondtype == napi_number, "valueSecondtype is not a string", napi_invalid_arg);
         uint32_t printerJobState = 0;
-        napi_get_value_uint32(env, argv[PrintNapiUtils::SECOND_ARGV], &printerJobState);
+        napi_get_value_uint32(env, argv[NapiPrintUtils::INDEX_ONE], &printerJobState);
         PRINT_HILOGD("printerJobState : %{public}d", printerJobState);
         context->printerJobState = printerJobState;
         return napi_ok;

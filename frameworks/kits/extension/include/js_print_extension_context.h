@@ -19,8 +19,8 @@
 #include <memory>
 
 #include "ability_connect_callback.h"
-#include "event_handler.h"
 #include "print_extension_context.h"
+#include "event_handler.h"
 
 class NativeEngine;
 class NativeValue;
@@ -28,44 +28,10 @@ class NativeReference;
 
 namespace OHOS {
 namespace AbilityRuntime {
-NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr<PrintExtensionContext> context);
+NativeValue* CreateJsPrintExtensionContext(NativeEngine& engine,
+    std::shared_ptr<PrintExtensionContext> context);
 
-class JSPrintExtensionContext : public AbilityConnectCallback {
-public:
-    explicit JSPrintExtensionContext(NativeEngine &engine);
-    ~JSPrintExtensionContext();
-    void OnAbilityConnectDone(
-        const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode) override;
-    void OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode) override;
-    void HandleOnAbilityConnectDone(
-        const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode);
-    void HandleOnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode);
-    void SetJsConnectionObject(NativeValue *jsConnectionObject);
-    void CallJsFailed(int32_t errorCode);
 
-private:
-    NativeEngine &engine_;
-    std::unique_ptr<NativeReference> jsConnectionObject_ = nullptr;
-};
-
-struct ConnecttionKey {
-    AAFwk::Want want;
-    int64_t id;
-};
-
-struct key_compare {
-    bool operator()(const ConnecttionKey &key1, const ConnecttionKey &key2) const
-    {
-        if (key1.id < key2.id) {
-            return true;
-        }
-        return false;
-    }
-};
-
-static std::map<ConnecttionKey, sptr<JSPrintExtensionContext>, key_compare> connects_;
-static int64_t serialNumber_ = 0;
-static std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
-} // namespace AbilityRuntime
-} // namespace OHOS
-#endif // JS_PRINT_EXTENSION_CONTEXT_H
+}  // namespace AbilityRuntime
+}  // namespace OHOS
+#endif  // JS_PRINT_EXTENSION_CONTEXT_H

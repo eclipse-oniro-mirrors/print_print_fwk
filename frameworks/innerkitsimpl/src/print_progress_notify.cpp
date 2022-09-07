@@ -50,6 +50,11 @@ void PrintProgressNotify::WriteInfoJsObject(napi_env env, PrinterInfo info, napi
     PRINT_HILOGD("");
 }
 
+void PrintProgressNotify::WriteJobJsObject(napi_env env, PrintJob job, napi_value *result)
+{
+    PRINT_HILOGD("");
+}
+
 void PrintProgressNotify::OnCallBack(MessageParcel &data)
 {
     PRINT_HILOGD("Progress callback in");
@@ -92,16 +97,16 @@ void PrintProgressNotify::OnCallBack(MessageParcel &data)
                 napi_value callbackFunc = nullptr;
                 napi_get_reference_value(notifyData->env, notifyData->ref, &callbackFunc);
                 napi_value result = nullptr;
-                napi_value callbackVal[PrintNapiUtils::TWO_ARG] = { 0 };
-                napi_create_uint32(notifyData->env, notifyData->firstArgv, &callbackVal[PrintNapiUtils::FIRST_ARGV]);
+                napi_value callbackVal[NapiPrintUtils::ARGC_TWO] = { 0 };
+                napi_create_uint32(notifyData->env, notifyData->firstArgv, &callbackVal[NapiPrintUtils::INDEX_ZERO]);
                 if ("PrinterInfo" == notifyData->objectType) {
                     WriteInfoJsObject(
-                        notifyData->env, notifyData->secondArgv, &callbackVal[PrintNapiUtils::SECOND_ARGV]);
+                        notifyData->env, notifyData->secondArgv, &callbackVal[NapiPrintUtils::INDEX_ONE]);
                 } else if ("PrintJob" == notifyData->objectType) {
-                    WriteJobJsObject(notifyData->env, notifyData->thirdArgv, &callbackVal[PrintNapiUtils::SECOND_ARGV]);
+                    WriteJobJsObject(notifyData->env, notifyData->thirdArgv, &callbackVal[NapiPrintUtils::INDEX_ONE]);
                 }
                 napi_call_function(
-                    notifyData->env, nullptr, callbackFunc, PrintNapiUtils::TWO_ARG, callbackVal, &result);
+                    notifyData->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO, callbackVal, &result);
                 if (work != nullptr) {
                     delete work;
                     work = nullptr;

@@ -42,7 +42,7 @@ public:
     bool Off(const std::string &type);
     bool ConnectPrinter(uint32_t printerId);
     bool DisconnectPrinter(uint32_t printerId);
-    bool QueryExtensionAbilityInfos(std::vector<PrinterExtensionInfo> &arrayExtensionInfo);
+    bool QueryExtensionAbilityInfos(std::vector<PrintExtensionInfo> &arrayExtensionInfo);
     bool StartDiscoverPrinter(std::vector<uint32_t> extensionList);
     bool StopDiscoverPrinter();
     bool StartPrintJob(PrintJob jobinfo);

@@ -61,10 +61,10 @@ void PrintBaseNotify::OnCallBack(MessageParcel &data)
                 napi_value callbackFunc = nullptr;
                 napi_get_reference_value(notifyData->env, notifyData->ref, &callbackFunc);
                 napi_value callbackResult = nullptr;
-                napi_value callbackValues[PrintNapiUtils::ONE_ARG] = { 0 };
-                napi_get_undefined(notifyData->env, &callbackValues[PrintNapiUtils::FIRST_ARGV]);
+                napi_value callbackValues[NapiPrintUtils::ARGC_ONE] = { 0 };
+                napi_get_undefined(notifyData->env, &callbackValues[NapiPrintUtils::INDEX_ZERO]);
                 napi_call_function(
-                    notifyData->env, nullptr, callbackFunc, PrintNapiUtils::ONE_ARG, callbackValues, &callbackResult);
+                    notifyData->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_ONE, callbackValues, &callbackResult);
                 if (work != nullptr) {
                     delete work;
                     work = nullptr;

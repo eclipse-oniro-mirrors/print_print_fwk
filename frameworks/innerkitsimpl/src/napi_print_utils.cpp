@@ -21,7 +21,7 @@
 namespace OHOS::Print {
 static constexpr const int MAX_STRING_LENGTH = 65536;
 
-napi_valuetype PrintNapiUtils::GetValueType(napi_env env, napi_value value)
+napi_valuetype NapiPrintUtils::GetValueType(napi_env env, napi_value value)
 {
     if (value == nullptr) {
         return napi_undefined;
@@ -33,14 +33,14 @@ napi_valuetype PrintNapiUtils::GetValueType(napi_env env, napi_value value)
 }
 
 /* named property */
-bool PrintNapiUtils::HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName)
+bool NapiPrintUtils::HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
     bool hasProperty = false;
     NAPI_CALL_BASE(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty), false);
     return hasProperty;
 }
 
-napi_value PrintNapiUtils::GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName)
+napi_value NapiPrintUtils::GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
     napi_value value = nullptr;
     bool hasProperty = false;
@@ -52,12 +52,12 @@ napi_value PrintNapiUtils::GetNamedProperty(napi_env env, napi_value object, con
     return value;
 }
 
-void PrintNapiUtils::SetNamedProperty(napi_env env, napi_value object, const std::string &name, napi_value value)
+void NapiPrintUtils::SetNamedProperty(napi_env env, napi_value object, const std::string &name, napi_value value)
 {
     (void)napi_set_named_property(env, object, name.c_str(), value);
 }
 
-std::vector<std::string> PrintNapiUtils::GetPropertyNames(napi_env env, napi_value object)
+std::vector<std::string> NapiPrintUtils::GetPropertyNames(napi_env env, napi_value object)
 {
     std::vector<std::string> ret;
     napi_value names = nullptr;
@@ -78,7 +78,7 @@ std::vector<std::string> PrintNapiUtils::GetPropertyNames(napi_env env, napi_val
 }
 
 /* UINT32 */
-napi_value PrintNapiUtils::CreateUint32(napi_env env, uint32_t code)
+napi_value NapiPrintUtils::CreateUint32(napi_env env, uint32_t code)
 {
     napi_value value = nullptr;
     if (napi_create_uint32(env, code, &value) != napi_ok) {
@@ -87,14 +87,14 @@ napi_value PrintNapiUtils::CreateUint32(napi_env env, uint32_t code)
     return value;
 }
 
-uint32_t PrintNapiUtils::GetUint32FromValue(napi_env env, napi_value value)
+uint32_t NapiPrintUtils::GetUint32FromValue(napi_env env, napi_value value)
 {
     uint32_t ret = 0;
     NAPI_CALL_BASE(env, napi_get_value_uint32(env, value, &ret), 0);
     return ret;
 }
 
-uint32_t PrintNapiUtils::GetUint32Property(napi_env env, napi_value object, const std::string &propertyName)
+uint32_t NapiPrintUtils::GetUint32Property(napi_env env, napi_value object, const std::string &propertyName)
 {
     if (!HasNamedProperty(env, object, propertyName)) {
         return 0;
@@ -103,7 +103,7 @@ uint32_t PrintNapiUtils::GetUint32Property(napi_env env, napi_value object, cons
     return GetUint32FromValue(env, value);
 }
 
-void PrintNapiUtils::SetUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value)
+void NapiPrintUtils::SetUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value)
 {
     napi_value jsValue = CreateUint32(env, value);
     if (GetValueType(env, jsValue) != napi_number) {
@@ -114,7 +114,7 @@ void PrintNapiUtils::SetUint32Property(napi_env env, napi_value object, const st
 }
 
 /* INT32 */
-napi_value PrintNapiUtils::CreateInt32(napi_env env, int32_t code)
+napi_value NapiPrintUtils::CreateInt32(napi_env env, int32_t code)
 {
     napi_value value = nullptr;
     if (napi_create_int32(env, code, &value) != napi_ok) {
@@ -123,14 +123,14 @@ napi_value PrintNapiUtils::CreateInt32(napi_env env, int32_t code)
     return value;
 }
 
-int32_t PrintNapiUtils::GetInt32FromValue(napi_env env, napi_value value)
+int32_t NapiPrintUtils::GetInt32FromValue(napi_env env, napi_value value)
 {
     int32_t ret = 0;
     NAPI_CALL_BASE(env, napi_get_value_int32(env, value, &ret), 0);
     return ret;
 }
 
-int32_t PrintNapiUtils::GetInt32Property(napi_env env, napi_value object, const std::string &propertyName)
+int32_t NapiPrintUtils::GetInt32Property(napi_env env, napi_value object, const std::string &propertyName)
 {
     if (!HasNamedProperty(env, object, propertyName)) {
         return 0;
@@ -139,7 +139,7 @@ int32_t PrintNapiUtils::GetInt32Property(napi_env env, napi_value object, const 
     return GetInt32FromValue(env, value);
 }
 
-void PrintNapiUtils::SetInt32Property(napi_env env, napi_value object, const std::string &name, int32_t value)
+void NapiPrintUtils::SetInt32Property(napi_env env, napi_value object, const std::string &name, int32_t value)
 {
     napi_value jsValue = CreateInt32(env, value);
     if (GetValueType(env, jsValue) != napi_number) {
@@ -150,7 +150,7 @@ void PrintNapiUtils::SetInt32Property(napi_env env, napi_value object, const std
 }
 
 /* String UTF8 */
-napi_value PrintNapiUtils::CreateStringUtf8(napi_env env, const std::string &str)
+napi_value NapiPrintUtils::CreateStringUtf8(napi_env env, const std::string &str)
 {
     napi_value value = nullptr;
     if (napi_create_string_utf8(env, str.c_str(), strlen(str.c_str()), &value) != napi_ok) {
@@ -159,7 +159,7 @@ napi_value PrintNapiUtils::CreateStringUtf8(napi_env env, const std::string &str
     return value;
 }
 
-std::string PrintNapiUtils::GetStringFromValueUtf8(napi_env env, napi_value value)
+std::string NapiPrintUtils::GetStringFromValueUtf8(napi_env env, napi_value value)
 {
     std::string result;
     std::vector<char> str(MAX_STRING_LENGTH + 1, '\0');
@@ -171,7 +171,7 @@ std::string PrintNapiUtils::GetStringFromValueUtf8(napi_env env, napi_value valu
     return result;
 }
 
-std::string PrintNapiUtils::GetStringPropertyUtf8(napi_env env, napi_value object, const std::string &propertyName)
+std::string NapiPrintUtils::GetStringPropertyUtf8(napi_env env, napi_value object, const std::string &propertyName)
 {
     if (!HasNamedProperty(env, object, propertyName)) {
         return "";
@@ -180,7 +180,7 @@ std::string PrintNapiUtils::GetStringPropertyUtf8(napi_env env, napi_value objec
     return GetStringFromValueUtf8(env, value);
 }
 
-void PrintNapiUtils::SetStringPropertyUtf8(
+void NapiPrintUtils::SetStringPropertyUtf8(
     napi_env env, napi_value object, const std::string &name, const std::string &value)
 {
     napi_value jsValue = CreateStringUtf8(env, value);
@@ -191,14 +191,14 @@ void PrintNapiUtils::SetStringPropertyUtf8(
 }
 
 /* array buffer */
-bool PrintNapiUtils::ValueIsArrayBuffer(napi_env env, napi_value value)
+bool NapiPrintUtils::ValueIsArrayBuffer(napi_env env, napi_value value)
 {
     bool isArrayBuffer = false;
     NAPI_CALL_BASE(env, napi_is_arraybuffer(env, value, &isArrayBuffer), false);
     return isArrayBuffer;
 }
 
-void *PrintNapiUtils::GetInfoFromArrayBufferValue(napi_env env, napi_value value, size_t *length)
+void *NapiPrintUtils::GetInfoFromArrayBufferValue(napi_env env, napi_value value, size_t *length)
 {
     if (length == nullptr) {
         return nullptr;
@@ -210,7 +210,7 @@ void *PrintNapiUtils::GetInfoFromArrayBufferValue(napi_env env, napi_value value
 }
 
 /* object */
-napi_value PrintNapiUtils::CreateObject(napi_env env)
+napi_value NapiPrintUtils::CreateObject(napi_env env)
 {
     napi_value object = nullptr;
     NAPI_CALL(env, napi_create_object(env, &object));
@@ -218,7 +218,7 @@ napi_value PrintNapiUtils::CreateObject(napi_env env)
 }
 
 /* undefined */
-napi_value PrintNapiUtils::GetUndefined(napi_env env)
+napi_value NapiPrintUtils::GetUndefined(napi_env env)
 {
     napi_value undefined = nullptr;
     NAPI_CALL(env, napi_get_undefined(env, &undefined));
@@ -226,7 +226,7 @@ napi_value PrintNapiUtils::GetUndefined(napi_env env)
 }
 
 /* function */
-napi_value PrintNapiUtils::CallFunction(
+napi_value NapiPrintUtils::CallFunction(
     napi_env env, napi_value recv, napi_value func, size_t argc, const napi_value *argv)
 {
     napi_value res = nullptr;
@@ -235,27 +235,27 @@ napi_value PrintNapiUtils::CallFunction(
 }
 
 /* reference */
-napi_ref PrintNapiUtils::CreateReference(napi_env env, napi_value callback)
+napi_ref NapiPrintUtils::CreateReference(napi_env env, napi_value callback)
 {
     napi_ref callbackRef = nullptr;
     NAPI_CALL(env, napi_create_reference(env, callback, 1, &callbackRef));
     return callbackRef;
 }
 
-napi_value PrintNapiUtils::GetReference(napi_env env, napi_ref callbackRef)
+napi_value NapiPrintUtils::GetReference(napi_env env, napi_ref callbackRef)
 {
     napi_value callback = nullptr;
     NAPI_CALL(env, napi_get_reference_value(env, callbackRef, &callback));
     return callback;
 }
 
-void PrintNapiUtils::DeleteReference(napi_env env, napi_ref callbackRef)
+void NapiPrintUtils::DeleteReference(napi_env env, napi_ref callbackRef)
 {
     (void)napi_delete_reference(env, callbackRef);
 }
 
 /* boolean */
-bool PrintNapiUtils::GetBooleanProperty(napi_env env, napi_value object, const std::string &propertyName)
+bool NapiPrintUtils::GetBooleanProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
     if (!HasNamedProperty(env, object, propertyName)) {
         return false;
@@ -266,7 +266,7 @@ bool PrintNapiUtils::GetBooleanProperty(napi_env env, napi_value object, const s
     return ret;
 }
 
-void PrintNapiUtils::SetBooleanProperty(napi_env env, napi_value object, const std::string &name, bool value)
+void NapiPrintUtils::SetBooleanProperty(napi_env env, napi_value object, const std::string &name, bool value)
 {
     napi_value jsValue = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, value, &jsValue));
@@ -278,7 +278,7 @@ void PrintNapiUtils::SetBooleanProperty(napi_env env, napi_value object, const s
 }
 
 /* define properties */
-void PrintNapiUtils::DefineProperties(
+void NapiPrintUtils::DefineProperties(
     napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties)
 {
     napi_property_descriptor descriptors[properties.size()];
@@ -287,14 +287,14 @@ void PrintNapiUtils::DefineProperties(
     (void)napi_define_properties(env, object, properties.size(), descriptors);
 }
 
-std::string PrintNapiUtils::ToLower(const std::string &s)
+std::string NapiPrintUtils::ToLower(const std::string &s)
 {
     std::string res = s;
     std::transform(res.begin(), res.end(), res.begin(), tolower);
     return res;
 }
 
-std::string PrintNapiUtils::GetValueString(napi_env env, napi_value value)
+std::string NapiPrintUtils::GetValueString(napi_env env, napi_value value)
 {
     std::string resultValue = "";
     char value_string[256];
@@ -305,7 +305,7 @@ std::string PrintNapiUtils::GetValueString(napi_env env, napi_value value)
     return resultValue;
 }
 
-napi_value PrintNapiUtils::Convert2JsObj(napi_env env, const PrintJob &job)
+napi_value NapiPrintUtils::Convert2JsObj(napi_env env, const PrintJob &job)
 {
     napi_value result;
     NAPI_CALL(env, napi_create_object(env, &result));

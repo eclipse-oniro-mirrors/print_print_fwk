@@ -220,7 +220,7 @@ bool PrintServiceAbility::StopDiscoverPrinter()
     return false;
 }
 
-bool PrintServiceAbility::QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo)
+bool PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &arrayExtensionInfo)
 {
     ManualStart();
     auto instance = PrintServiceManager::GetInstance();

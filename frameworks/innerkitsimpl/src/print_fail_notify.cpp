@@ -65,7 +65,7 @@ void PrintFailNotify::OnCallBack(MessageParcel &data)
             napi_value callbackValue;
             napi_create_uint32(notifyData->env, notifyData->firstArgv, &callbackValue);
             napi_call_function(
-                notifyData->env, nullptr, callbackFunc, PrintNapiUtils::ONE_ARG, &callbackValue, &result);
+                notifyData->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_ONE, &callbackValue, &result);
             if (work != nullptr) {
                 delete work;
                 work = nullptr;

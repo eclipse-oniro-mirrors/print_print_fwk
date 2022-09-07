@@ -20,9 +20,9 @@
 #include <string>
 
 namespace OHOS::Print {
-class PrinterExtensionInfo {
+class PrintExtensionInfo {
 public:
-    PrinterExtensionInfo();
+    PrintExtensionInfo();
 
     void SetExtensionId(uint32_t extensionId);
 
@@ -46,7 +46,7 @@ public:
 
     void Dump();
 
-    ~PrinterExtensionInfo();
+    ~PrintExtensionInfo();
 
 private:
     uint32_t extensionId_;

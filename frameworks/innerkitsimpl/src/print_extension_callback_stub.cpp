@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "printer_extension_callback_stub.h"
+#include "print_extension_callback_stub.h"
 
 #include "print_common.h"
 #include "print_log.h"
@@ -75,10 +75,14 @@ bool PrintExtensionCallbackStub::OnCallback(const PrintJob &job)
 
 bool PrintExtensionCallbackStub::OnCallback(uint32_t printerId, MessageParcel &reply) // PrinterCapability& reply
 {
-    PrinterCapability capability;
-    capability.ConvertToParcel(reply);
-    
-    return true;
+    if (capability_ != nullptr) {
+        PrinterCapability capability;
+        if (capability_(printerId, capability)) {
+            capability.ConvertToParcel(reply);
+            return true;
+        }
+    }    
+    return false;
 }
 
 void PrintExtensionCallbackStub::SetExtCallback(PrintExtCallback cb)

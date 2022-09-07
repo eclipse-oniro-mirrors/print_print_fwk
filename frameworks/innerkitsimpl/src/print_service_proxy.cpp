@@ -75,7 +75,7 @@ bool PrintServiceProxy::DisconnectPrinter(uint32_t printerId)
     return true;
 }
 
-bool PrintServiceProxy::QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo)
+bool PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &arrayExtensionInfo)
 {
     MessageParcel data, reply;
     MessageOption option;
@@ -89,13 +89,13 @@ bool PrintServiceProxy::QueryAllExtension(std::vector<PrinterExtensionInfo> &arr
     }
     uint32_t replyArrayLength = reply.ReadUint32();
     for (uint32_t i = 0; i < replyArrayLength; i++) {
-        PrinterExtensionInfo printerExtensionInfo;
-        printerExtensionInfo.SetExtensionId(reply.ReadUint32());
-        printerExtensionInfo.SetVendorId(reply.ReadUint32());
-        printerExtensionInfo.SetVendorName(reply.ReadString());
-        printerExtensionInfo.SetVendorIcon(reply.ReadUint32());
-        printerExtensionInfo.SetVersion(reply.ReadString());
-        arrayExtensionInfo.push_back(printerExtensionInfo);
+        PrintExtensionInfo printeExtensionInfo;
+        printeExtensionInfo.SetExtensionId(reply.ReadUint32());
+        printeExtensionInfo.SetVendorId(reply.ReadUint32());
+        printeExtensionInfo.SetVendorName(reply.ReadString());
+        printeExtensionInfo.SetVendorIcon(reply.ReadUint32());
+        printeExtensionInfo.SetVersion(reply.ReadString());
+        arrayExtensionInfo.push_back(printeExtensionInfo);
         arrayExtensionInfo[i].Dump();
     }
     return true;

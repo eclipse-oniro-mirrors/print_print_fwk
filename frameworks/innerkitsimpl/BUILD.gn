@@ -43,7 +43,7 @@ ohos_shared_library("print_client") {
     "src/napi_print_utils.cpp",
     "src/print_base_notify.cpp",
     "src/print_callback_stub.cpp",
-    "src/printer_extension_callback_stub.cpp",
+    "src/print_extension_callback_stub.cpp",
     "src/print_extension_info.cpp",
     "src/print_fail_notify.cpp",
     "src/print_job.cpp",

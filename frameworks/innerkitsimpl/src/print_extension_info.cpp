@@ -18,62 +18,62 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrinterExtensionInfo::PrinterExtensionInfo()
-    : extensionId_(0), vendorId_(0), vendorName_("PrinterExtensionInfo"), vendorIcon_(0),
-      version_("PrinterExtensionInfo")
+PrintExtensionInfo::PrintExtensionInfo()
+    : extensionId_(0), vendorId_(0), vendorName_("PrintExtensionInfo"), vendorIcon_(0),
+      version_("PrintExtensionInfo")
 {}
 
-void PrinterExtensionInfo::SetExtensionId(uint32_t extensionId)
+void PrintExtensionInfo::SetExtensionId(uint32_t extensionId)
 {
     extensionId_ = extensionId;
 }
 
-void PrinterExtensionInfo::SetVendorId(uint32_t vendorId)
+void PrintExtensionInfo::SetVendorId(uint32_t vendorId)
 {
     vendorId_ = vendorId;
 }
 
-void PrinterExtensionInfo::SetVendorName(const std::string &vendorName)
+void PrintExtensionInfo::SetVendorName(const std::string &vendorName)
 {
     vendorName_ = vendorName;
 }
 
-void PrinterExtensionInfo::SetVendorIcon(uint32_t vendorIcon)
+void PrintExtensionInfo::SetVendorIcon(uint32_t vendorIcon)
 {
     vendorIcon_ = vendorIcon;
 }
 
-void PrinterExtensionInfo::SetVersion(const std::string &version)
+void PrintExtensionInfo::SetVersion(const std::string &version)
 {
     version_ = version;
 }
 
-uint32_t PrinterExtensionInfo::GetExtensionId() const
+uint32_t PrintExtensionInfo::GetExtensionId() const
 {
     return extensionId_;
 }
 
-uint32_t PrinterExtensionInfo::GetVendorId() const
+uint32_t PrintExtensionInfo::GetVendorId() const
 {
     return vendorId_;
 }
 
-const std::string &PrinterExtensionInfo::GetVendorName() const
+const std::string &PrintExtensionInfo::GetVendorName() const
 {
     return vendorName_;
 }
 
-uint32_t PrinterExtensionInfo::GetVendorIcon() const
+uint32_t PrintExtensionInfo::GetVendorIcon() const
 {
     return vendorIcon_;
 }
 
-const std::string &PrinterExtensionInfo::GetVersion() const
+const std::string &PrintExtensionInfo::GetVersion() const
 {
     return version_;
 }
 
-void PrinterExtensionInfo::Dump()
+void PrintExtensionInfo::Dump()
 {
     PRINT_HILOGD("extensionId = %{public}d", extensionId_);
     PRINT_HILOGD("vendorId_ = %{public}d", vendorId_);
@@ -82,5 +82,5 @@ void PrinterExtensionInfo::Dump()
     PRINT_HILOGD("version_ = %{public}s", version_.c_str());
 }
 
-PrinterExtensionInfo::~PrinterExtensionInfo() {}
+PrintExtensionInfo::~PrintExtensionInfo() {}
 } // namespace OHOS::Print

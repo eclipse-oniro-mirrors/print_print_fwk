@@ -27,14 +27,13 @@
 #include "napi_common_want.h"
 #include "napi_print_utils.h"
 #include "napi_remote_object.h"
-#include "print_log.h"
 #include "print_manager_client.h"
+#include "printer_capability.h"
+#include "print_log.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
-namespace {
-constexpr size_t ARGC_ONE = 1;
-}
+
 JsPrintExtension *JsPrintExtension::jsExtension_ = nullptr;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Print;
@@ -87,7 +86,7 @@ void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
     }
     PRINT_HILOGD("JsPrintExtension::Init CreateJsPrintExtensionContext.");
     NativeValue *contextObj = CreateJsPrintExtensionContext(engine, context);
-    auto shellContextRef = jsRuntime_.LoadSystemModule("PrintExtensionContext", &contextObj, ARGC_ONE);
+    auto shellContextRef = jsRuntime_.LoadSystemModule("PrintExtensionContext", &contextObj, NapiPrintUtils::ARGC_ONE);
     contextObj = shellContextRef->Get();
     PRINT_HILOGD("JsPrintExtension::Init Bind.");
     context->Bind(jsRuntime_, shellContextRef.release());
@@ -122,7 +121,7 @@ void JsPrintExtension::OnStart(const AAFwk::Want &want)
     napi_value napiWant = OHOS::AppExecFwk::WrapWant(reinterpret_cast<napi_env>(nativeEngine), want);
     NativeValue *nativeWant = reinterpret_cast<NativeValue *>(napiWant);
     NativeValue *argv[] = { nativeWant };
-    CallObjectMethod("onCreated", argv, ARGC_ONE);
+    CallObjectMethod("onCreated", argv, NapiPrintUtils::ARGC_ONE);
     PRINT_HILOGD("%{public}s end.", __func__);
     RegisterAllCallback();
 }
@@ -168,7 +167,7 @@ sptr<IRemoteObject> JsPrintExtension::OnConnect(const AAFwk::Want &want)
         return nullptr;
     }
     PRINT_HILOGD("JsPrintExtension::CallFunction onConnect, success");
-    NativeValue *remoteNative = nativeEngine->CallFunction(value, method, argv, ARGC_ONE);
+    NativeValue *remoteNative = nativeEngine->CallFunction(value, method, argv, NapiPrintUtils::ARGC_ONE);
     if (remoteNative == nullptr) {
         PRINT_HILOGE("remoteNative nullptr.");
     }
@@ -207,7 +206,7 @@ void JsPrintExtension::OnDisconnect(const AAFwk::Want &want)
         PRINT_HILOGE("Failed to get onDisconnect from PrintExtension object");
         return;
     }
-    nativeEngine->CallFunction(value, method, argv, ARGC_ONE);
+    nativeEngine->CallFunction(value, method, argv, NapiPrintUtils::ARGC_ONE);
     PRINT_HILOGD("%{public}s end.", __func__);
 }
 
@@ -299,7 +298,7 @@ void JsPrintExtension::RegisterAllCallback()
         NativeValue *arg[] = { nativePrintId };
         auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
         NativeValue *value = jsExtension_->jsObj_->Get();
-        callback->Exec(value, "onConnectPrinter", arg, ARGC_ONE);
+        callback->Exec(value, "onConnectPrinter", arg, NapiPrintUtils::ARGC_ONE);
         return true;
     });
     PrintManagerClient::GetInstance()->RegisterExtCallback(
@@ -313,36 +312,37 @@ void JsPrintExtension::RegisterAllCallback()
             NativeValue *arg[] = { nativePrintId };
             auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
             NativeValue *value = jsExtension_->jsObj_->Get();
-            callback->Exec(value, "onDisconnectPrinter", arg, ARGC_ONE);
+            callback->Exec(value, "onDisconnectPrinter", arg, NapiPrintUtils::ARGC_ONE);
             return true;
         });
     PrintManagerClient::GetInstance()->RegisterExtCallback(PRINT_EXTCB_START_PRINT, [](const PrintJob &job) -> bool {
         PRINT_HILOGD("Start Print Job");
         HandleScope handleScope(jsExtension_->jsRuntime_);
         NativeEngine *nativeEng = &(jsExtension_->jsRuntime_).GetNativeEngine();
-        napi_value jobObject = PrintNapiUtils::Convert2JsObj(reinterpret_cast<napi_env>(nativeEng), job);
+        napi_value jobObject = NapiPrintUtils::Convert2JsObj(reinterpret_cast<napi_env>(nativeEng), job);
         NativeValue *nativeJob = reinterpret_cast<NativeValue *>(jobObject);
         NativeValue *arg[] = { nativeJob };
 
         auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
         NativeValue *value = jsExtension_->jsObj_->Get();
-        callback->Exec(value, "onStartPrint", arg, ARGC_ONE);
+        callback->Exec(value, "onStartPrintJob", arg, NapiPrintUtils::ARGC_ONE);
         return true;
     });
     PrintManagerClient::GetInstance()->RegisterExtCallback(PRINT_EXTCB_CANCEL_PRINT, [](const PrintJob &job) -> bool {
         PRINT_HILOGD("Cancel Print Job");
         HandleScope handleScope(jsExtension_->jsRuntime_);
         NativeEngine *nativeEng = &(jsExtension_->jsRuntime_).GetNativeEngine();
-        napi_value jobObject = PrintNapiUtils::Convert2JsObj(reinterpret_cast<napi_env>(nativeEng), job);
+        napi_value jobObject = NapiPrintUtils::Convert2JsObj(reinterpret_cast<napi_env>(nativeEng), job);
         NativeValue *nativeJob = reinterpret_cast<NativeValue *>(jobObject);
         NativeValue *arg[] = { nativeJob };
 
         auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
         NativeValue *value = jsExtension_->jsObj_->Get();
-        callback->Exec(value, "onCancelPrintJob", arg, ARGC_ONE);
+        callback->Exec(value, "onCancelPrintJob", arg, NapiPrintUtils::ARGC_ONE);
         return true;
     });
-    PrintManagerClient::GetInstance()->RegisterExtCallback(PRINT_EXTCB_REQUEST_CAP, [](uint32_t printId) -> bool {
+    PrintManagerClient::GetInstance()->RegisterExtCallback(PRINT_EXTCB_REQUEST_CAP,
+        [](uint32_t printId, PrinterCapability &cap) -> bool {
         PRINT_HILOGD("Request Capability");
         HandleScope handleScope(jsExtension_->jsRuntime_);
         NativeEngine *nativeEng = &(jsExtension_->jsRuntime_).GetNativeEngine();
@@ -352,21 +352,27 @@ void JsPrintExtension::RegisterAllCallback()
         NativeValue *arg[] = { nativePrintId };
         auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
         NativeValue *value = jsExtension_->jsObj_->Get();
-        callback->Exec(value, "onRequestPrinterCapability", arg, ARGC_ONE);
-        return true;
+        NativeValue* result = callback->Exec(value, "onRequestPrinterCapability", arg, NapiPrintUtils::ARGC_ONE);
+        if (result != nullptr) {
+            PRINT_HILOGD("Request Capability Success");
+            cap.BuildFromJs(reinterpret_cast<napi_env>(nativeEng), reinterpret_cast<napi_value>(result));
+            return true;
+        }
+        PRINT_HILOGD("Request Capability Failed!!!");
+        return false;
     });
     PrintManagerClient::GetInstance()->RegisterExtCallback(
         PRINT_EXTCB_REQUEST_PREVIEW, [](const PrintJob &job) -> bool {
             PRINT_HILOGD("Requet preview");
             HandleScope handleScope(jsExtension_->jsRuntime_);
             NativeEngine *nativeEng = &(jsExtension_->jsRuntime_).GetNativeEngine();
-            napi_value jobObject = PrintNapiUtils::Convert2JsObj(reinterpret_cast<napi_env>(nativeEng), job);
+            napi_value jobObject = NapiPrintUtils::Convert2JsObj(reinterpret_cast<napi_env>(nativeEng), job);
             NativeValue *nativeJob = reinterpret_cast<NativeValue *>(jobObject);
             NativeValue *arg[] = { nativeJob };
 
             auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
             NativeValue *value = jsExtension_->jsObj_->Get();
-            callback->Exec(value, "onRequestPreview", arg, ARGC_ONE);
+            callback->Exec(value, "onRequestPreview", arg, NapiPrintUtils::ARGC_ONE);
             return true;
         });
 }

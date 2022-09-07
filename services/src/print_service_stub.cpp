@@ -140,7 +140,7 @@ bool PrintServiceStub::OnStopDiscoverPrint(MessageParcel &data, MessageParcel &r
 bool PrintServiceStub::OnQueryAllExtension(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGD("PrintServiceStub::OnQueryAllExtension in");
-    std::vector<PrinterExtensionInfo> printerInfo;
+    std::vector<PrintExtensionInfo> printerInfo;
     bool result = QueryAllExtension(printerInfo);
     if (result) {
         uint32_t printerInfoLegth = printerInfo.size();

@@ -341,14 +341,14 @@ void PrintJob::ConvertToJs(napi_env env, napi_value *result) const
     }
     napi_set_named_property(env, *result, "files", arrFiles);
 
-    PrintNapiUtils::SetUint32Property(env, *result, "jobId", GetJobId());
-    PrintNapiUtils::SetUint32Property(env, *result, "printerId", GetPrinterId());
-    PrintNapiUtils::SetUint32Property(env, *result, "jobState", GetJobState());
-    PrintNapiUtils::SetUint32Property(env, *result, "copyNumber", GetCopyNumber());
+    NapiPrintUtils::SetUint32Property(env, *result, "jobId", GetJobId());
+    NapiPrintUtils::SetUint32Property(env, *result, "printerId", GetPrinterId());
+    NapiPrintUtils::SetUint32Property(env, *result, "jobState", GetJobState());
+    NapiPrintUtils::SetUint32Property(env, *result, "copyNumber", GetCopyNumber());
     napi_value pageRange;
     napi_create_object(env, &pageRange);
-    PrintNapiUtils::SetUint32Property(env, pageRange, "startPage", pageRange_.GetStartPage());
-    PrintNapiUtils::SetUint32Property(env, pageRange, "endPage", pageRange_.GetEndPage());
+    NapiPrintUtils::SetUint32Property(env, pageRange, "startPage", pageRange_.GetStartPage());
+    NapiPrintUtils::SetUint32Property(env, pageRange, "endPage", pageRange_.GetEndPage());
     napi_value arrPages;
     status = napi_create_array(env, &arrPages);
     std::vector<uint32_t> pages;
@@ -361,32 +361,32 @@ void PrintJob::ConvertToJs(napi_env env, napi_value *result) const
     }
     napi_set_named_property(env, pageRange, "files", arrPages);
 
-    PrintNapiUtils::SetUint32Property(env, *result, "isSequential", GetIsSequential());
+    NapiPrintUtils::SetUint32Property(env, *result, "isSequential", GetIsSequential());
     napi_value pageSize;
     napi_create_object(env, &pageSize);
-    PrintNapiUtils::SetStringPropertyUtf8(env, pageSize, "id", pageSize_.GetId());
-    PrintNapiUtils::SetStringPropertyUtf8(env, pageSize, "name", pageSize_.GetName().c_str());
-    PrintNapiUtils::SetUint32Property(env, pageSize, "width", pageSize_.GetWidth());
-    PrintNapiUtils::SetUint32Property(env, pageSize, "height", pageSize_.GetHeight());
+    NapiPrintUtils::SetStringPropertyUtf8(env, pageSize, "id", pageSize_.GetId());
+    NapiPrintUtils::SetStringPropertyUtf8(env, pageSize, "name", pageSize_.GetName().c_str());
+    NapiPrintUtils::SetUint32Property(env, pageSize, "width", pageSize_.GetWidth());
+    NapiPrintUtils::SetUint32Property(env, pageSize, "height", pageSize_.GetHeight());
 
-    PrintNapiUtils::SetUint32Property(env, *result, "isLandscape", GetIsLandscape());
-    PrintNapiUtils::SetUint32Property(env, *result, "colorMode", GetColorMode());
-    PrintNapiUtils::SetUint32Property(env, *result, "duplexMode", GetDuplexMode());
+    NapiPrintUtils::SetUint32Property(env, *result, "isLandscape", GetIsLandscape());
+    NapiPrintUtils::SetUint32Property(env, *result, "colorMode", GetColorMode());
+    NapiPrintUtils::SetUint32Property(env, *result, "duplexMode", GetDuplexMode());
 
     napi_value margin;
     napi_create_object(env, &margin);
-    PrintNapiUtils::SetUint32Property(env, margin, "top", margin_.GetTop());
-    PrintNapiUtils::SetUint32Property(env, margin, "bottom", margin_.GetBottom());
-    PrintNapiUtils::SetUint32Property(env, margin, "left", margin_.GetLeft());
-    PrintNapiUtils::SetUint32Property(env, margin, "right", margin_.GetRight());
+    NapiPrintUtils::SetUint32Property(env, margin, "top", margin_.GetTop());
+    NapiPrintUtils::SetUint32Property(env, margin, "bottom", margin_.GetBottom());
+    NapiPrintUtils::SetUint32Property(env, margin, "left", margin_.GetLeft());
+    NapiPrintUtils::SetUint32Property(env, margin, "right", margin_.GetRight());
 
     napi_value preview;
     napi_create_object(env, &preview);
-    PrintNapiUtils::SetStringPropertyUtf8(env, preview, "result", preview_.GetResult().c_str());
+    NapiPrintUtils::SetStringPropertyUtf8(env, preview, "result", preview_.GetResult().c_str());
     napi_value subPageRange;
     napi_create_object(env, &subPageRange);
-    PrintNapiUtils::SetUint32Property(env, subPageRange, "startPage", pageRange_.GetStartPage());
-    PrintNapiUtils::SetUint32Property(env, subPageRange, "endPage", pageRange_.GetEndPage());
+    NapiPrintUtils::SetUint32Property(env, subPageRange, "startPage", pageRange_.GetStartPage());
+    NapiPrintUtils::SetUint32Property(env, subPageRange, "endPage", pageRange_.GetEndPage());
     napi_value arrPreviewPages;
     status = napi_create_array(env, &arrPreviewPages);
     PrintRange previewPrintRange;

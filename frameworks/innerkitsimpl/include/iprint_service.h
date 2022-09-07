@@ -34,7 +34,7 @@ public:
     virtual bool DisconnectPrinter(uint32_t printerId) = 0;
     virtual bool StartDiscoverPrinter(const std::vector<uint32_t> &extensionList) = 0;
     virtual bool StopDiscoverPrinter() = 0;
-    virtual bool QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo) = 0;
+    virtual bool QueryAllExtension(std::vector<PrintExtensionInfo> &arrayExtensionInfo) = 0;
     virtual bool StartPrintJob(const PrintJob &jobinfo) = 0;
     virtual bool CancelPrintJob(const PrintJob &jobinfo) = 0;
     virtual bool AddPrinters(const std::vector<PrinterInfo> &arrayPrintInfo) = 0;

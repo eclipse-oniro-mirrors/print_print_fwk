@@ -28,7 +28,7 @@ public:
     int32_t StartPrint() override;
     bool ConnectPrinter(uint32_t printerId) override;
     bool DisconnectPrinter(uint32_t printerId) override;
-    bool QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo) override;
+    bool QueryAllExtension(std::vector<PrintExtensionInfo> &arrayExtensionInfo) override;
     bool StartDiscoverPrinter(const std::vector<uint32_t> &extensionList) override;
     bool StopDiscoverPrinter() override;
     bool StartPrintJob(const PrintJob &jobinfo) override;

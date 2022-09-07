@@ -23,7 +23,7 @@
 #include "iprint_callback.h"
 #include "iprint_service.h"
 #include "iremote_object.h"
-#include "printer_extension_callback_stub.h"
+#include "print_extension_callback_stub.h"
 #include "print_extension_info.h"
 #include "print_job.h"
 #include "print_sa_death_recipient.h"
@@ -42,7 +42,7 @@ public:
 
     // Client Napi
     int32_t StartPrint();
-    bool QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo);
+    bool QueryAllExtension(std::vector<PrintExtensionInfo> &arrayExtensionInfo);
     bool StartDiscoverPrinter(std::vector<uint32_t> extensionList);
     bool StopDiscoverPrinter();
     bool AddPrinters(std::vector<PrinterInfo> arrayPrintInfo);

@@ -85,8 +85,8 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("constructor print task!");
     napi_value self = nullptr;
-    size_t argc = PrintNapiUtils::MAX_ARGC;
-    napi_value argv[PrintNapiUtils::MAX_ARGC] = { nullptr };
+    size_t argc = NapiPrintUtils::MAX_ARGC;
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
 
     auto task = new PrintTask(PrintManagerClient::GetInstance()->StartPrint());

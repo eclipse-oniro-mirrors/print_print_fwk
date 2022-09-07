@@ -16,7 +16,7 @@
 #include "print_manager_client.h"
 
 #include "iservice_registry.h"
-#include "printer_extension_callback_stub.h"
+#include "print_extension_callback_stub.h"
 #include "print_log.h"
 #include "print_sync_load_callback.h"
 #include "system_ability_definition.h"
@@ -301,7 +301,7 @@ bool PrintManagerClient::DisconnectPrinter(uint32_t printerId)
     return printServiceProxy_->DisconnectPrinter(printerId);
 }
 
-bool PrintManagerClient::QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo)
+bool PrintManagerClient::QueryAllExtension(std::vector<PrintExtensionInfo> &arrayExtensionInfo)
 {
     if (printServiceProxy_ == nullptr) {
         PRINT_HILOGW("Redo GetPrintServiceProxy");

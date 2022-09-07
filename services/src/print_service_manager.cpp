@@ -24,10 +24,8 @@
 #include <sys/types.h>
 #include <thread>
 #include <unistd.h>
-#include <utility>
 
 #include "print_log.h"
-#include "unistd.h"
 
 namespace OHOS::Print {
 std::mutex PrintServiceManager::instanceLock_;
@@ -84,11 +82,11 @@ bool PrintServiceManager::StopDiscoverPrinter()
     return true;
 }
 
-bool PrintServiceManager::QueryExtensionAbilityInfos(std::vector<PrinterExtensionInfo> &arrayExtensionInfo)
+bool PrintServiceManager::QueryExtensionAbilityInfos(std::vector<PrintExtensionInfo> &arrayExtensionInfo)
 {
     PRINT_HILOGE("PrintServiceManager QueryAllExtension enter.");
-    PrinterExtensionInfo printerExtensionInfo;
-    arrayExtensionInfo.push_back(printerExtensionInfo);
+    PrintExtensionInfo printExtensionInfo;
+    arrayExtensionInfo.push_back(printExtensionInfo);
     arrayExtensionInfo[0].SetExtensionId(5);
     arrayExtensionInfo[0].SetVendorId(55);
     std::string vendorName = "vendorName = print 1.0";

@@ -27,17 +27,26 @@
 #include "printer_info.h"
 
 namespace OHOS::Print {
-class PrintNapiUtils {
+class NapiPrintUtils {
 public:
-    static constexpr int32_t MAX_ARGC = 6;
-    static constexpr int32_t NO_ARG = 0;
-    static constexpr int32_t ONE_ARG = 1;
-    static constexpr int32_t TWO_ARG = 2;
-    static constexpr int32_t THE_ARG = 3;
+    static constexpr size_t MAX_ARGC = 6;
+    static constexpr size_t ARGC_ZERO = 0;
+    static constexpr size_t ARGC_ONE = 1;
+    static constexpr size_t ARGC_TWO = 2;
+    static constexpr size_t ARGC_THREE = 3;
+    static constexpr size_t ARGC_FOUR = 4;
+    static constexpr size_t ARGC_FIVE = 5;
+    static constexpr size_t ARGC_SIX = 6;
 
-    static constexpr int32_t FIRST_ARGV = 0;
-    static constexpr int32_t SECOND_ARGV = 1;
-    static constexpr int32_t THIRD_ARGV = 2;
+    static constexpr int32_t INDEX_ZERO = 0;
+    static constexpr int32_t INDEX_ONE = 1;
+    static constexpr int32_t INDEX_TWO = 2;
+    static constexpr int32_t INDEX_TRHEE = 3;
+    static constexpr int32_t INDEX_FOUR = 4;
+    static constexpr int32_t INDEX_FIVE = 5;
+
+    static constexpr int32_t ERROR_CODE_ONE = 1;
+    static constexpr int32_t ERROR_CODE_TWO = 2;
 
     static constexpr int32_t MAX_NUMBER_BYTES = 8;
     static constexpr int32_t MAX_LEN = 4096;
