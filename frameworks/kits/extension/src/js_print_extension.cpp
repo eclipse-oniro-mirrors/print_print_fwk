@@ -47,7 +47,7 @@ JsPrintExtension *JsPrintExtension::Create(const std::unique_ptr<Runtime> &runti
 JsPrintExtension::JsPrintExtension(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
 JsPrintExtension::~JsPrintExtension() = default;
 
-void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
+void JsPrintExtension::InitData(const std::shared_ptr<AbilityLocalRecord> &record,
     const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
     const sptr<IRemoteObject> &token)
 {
@@ -77,6 +77,13 @@ void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
         PRINT_HILOGE("Failed to get JsPrintExtension object");
         return;
     }
+}
+
+void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
+    const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
+    const sptr<IRemoteObject> &token)
+{
+    InitData(record, application, application, handler, token);
 
     auto context = GetContext();
     if (context == nullptr) {
@@ -268,9 +275,8 @@ void JsPrintExtension::GetSrcPath(std::string &srcPath)
     }
 }
 
-void JsPrintExtension::RegisterAllCallback()
+void JsPrintExtension::RegisterAllCallbackPartOne()
 {
-    PRINT_HILOGD("Register Print Extension Callback");
     PrintManagerClient::GetInstance()->RegisterExtCallback(PRINT_EXTCB_START_DISCOVERY, []() -> bool {
         PRINT_HILOGD("Start Print Discovery");
         HandleScope handleScope(jsExtension_->jsRuntime_);
@@ -300,6 +306,10 @@ void JsPrintExtension::RegisterAllCallback()
         callback->Exec(value, "onConnectPrinter", arg, NapiPrintUtils::ARGC_ONE);
         return true;
     });
+}
+
+void JsPrintExtension::RegisterAllCallbackPartTwo()
+{
     PrintManagerClient::GetInstance()->RegisterExtCallback(
         PRINT_EXTCB_DISCONNECT_PRINTER, [](uint32_t printId) -> bool {
             PRINT_HILOGD("Disconnect Printer");
@@ -340,6 +350,13 @@ void JsPrintExtension::RegisterAllCallback()
         callback->Exec(value, "onCancelPrintJob", arg, NapiPrintUtils::ARGC_ONE);
         return true;
     });
+}
+
+void JsPrintExtension::RegisterAllCallback()
+{
+    PRINT_HILOGD("Register Print Extension Callback");
+    RegisterAllCallbackPartOne();
+    RegisterAllCallbackPartTwo();
     PrintManagerClient::GetInstance()->RegisterExtCallback(
         PRINT_EXTCB_REQUEST_CAP, [](uint32_t printId, PrinterCapability &cap) -> bool {
             PRINT_HILOGD("Request Capability");

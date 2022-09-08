@@ -136,7 +136,7 @@ private:
         return result;
     }
 
-    NativeValue *OnStartAbilityWithAccount(NativeEngine &engine, NativeCallbackInfo &info)
+    static void CheckInfo(NativeEngine &engine, NativeCallbackInfo &info)
     {
         PRINT_HILOGD("OnStartAbilityWithAccount is called");
         // only support two or three or four params
@@ -145,7 +145,11 @@ private:
             PRINT_HILOGE("Not enough params");
             return engine.CreateUndefined();
         }
+    }
 
+    NativeValue *OnStartAbilityWithAccount(NativeEngine &engine, NativeCallbackInfo &info)
+    {
+        CheckInfo(engine, info);
         decltype(info.argc) unwrapArgc = 0;
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),

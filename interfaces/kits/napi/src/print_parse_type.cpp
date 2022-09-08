@@ -275,7 +275,7 @@ bool PrintParseType::ParseCapParam(napi_env env, napi_value capValue, PrinterCap
         PRINT_HILOGE("error param_four");
         return false;
     }
-    
+
     napi_value param_five = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_DUPLEXMODE);
     if (NapiPrintUtils::GetValueType(env, param_five) != napi_number) {
         PRINT_HILOGE("error param_five");
@@ -287,7 +287,7 @@ bool PrintParseType::ParseCapParam(napi_env env, napi_value capValue, PrinterCap
 
 void PrintPaeseType::CoversePriotResolutionObject(napi_env env, napi_value capValue, PrinterCapability &capability)
 {
-     napi_value param_two = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_PAGESIZE);
+    napi_value param_two = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_PAGESIZE);
     if (NapiPrintUtils::GetValueType(env, param_two) != napi_object) {
         PRINT_HILOGE("error param_two");
         return false;

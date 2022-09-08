@@ -44,6 +44,10 @@ public:
      */
     static JsPrintExtension *Create(const std::unique_ptr<Runtime> &runtime);
 
+    void InitData(const std::shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
+    const std::shared_ptr<AppExecFwk::OHOSApplication> &application,
+    std::shared_ptr<AppExecFwk::AbilityHandler> &handler, const sptr<IRemoteObject> &token);
+
     /**
      * @brief Init the extension.
      *
@@ -108,6 +112,8 @@ public:
 
 private:
     NativeValue *CallObjectMethod(const char *name, NativeValue *const *argv = nullptr, size_t argc = 0);
+    void RegisterAllCallbackPartOne();
+    void RegisterAllCallbackPartTwo();
     void RegisterAllCallback();
 
     void GetSrcPath(std::string &srcPath);
