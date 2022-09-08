@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,17 +18,20 @@
 #include <ctime>
 #include <string>
 #include <sys/time.h>
+#include <thread>
 #include <unistd.h>
 
+#include "ability_manager_client.h"
+#include "accesstoken_kit.h"
 #include "core_service_client.h"
 #include "ipc_skeleton.h"
-#include "accesstoken_kit.h"
 #include "iservice_registry.h"
+#include "print_common.h"
+#include "print_log.h"
+#include "print_service_manager.h"
+#include "printer_info.h"
 #include "system_ability.h"
 #include "system_ability_definition.h"
-#include "print_service_manager.h"
-#include "print_common.h"
-#include "log.h"
 
 namespace OHOS::Print {
 using namespace std;
@@ -37,7 +40,10 @@ using namespace Security::AccessToken;
 
 static const std::string PRINT_PERMISSION_NAME_INTERNET = "ohos.permission.PRINT";
 static const std::string PRINT_PERMISSION_NAME_SESSION = "ohos.permission.PRINT_SESSION_MANAGER";
-
+static const std::string PRINTEXT_BUNDLE_NAME = "com.open.harmony.packagemag";
+static const std::string PRINTEXT_ABILITY_NAME = "com.open.harmony.packagemag.ServiceAbility2";
+const uint32_t MAX_RETRY_TIMES = 10;
+const uint32_t START_ABILITY_INTERVAL = 6;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
 const std::int64_t INIT_INTERVAL = 5000L;
@@ -46,9 +52,8 @@ sptr<PrintServiceAbility> PrintServiceAbility::instance_;
 std::shared_ptr<AppExecFwk::EventHandler> PrintServiceAbility::serviceHandler_;
 
 PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCreate)
-    : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START)
-{
-}
+    : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START), currentTaskId_(0)
+{}
 
 PrintServiceAbility::~PrintServiceAbility()
 {
@@ -93,7 +98,6 @@ void PrintServiceAbility::OnStart()
         return;
     }
     InitServiceHandler();
-
     int32_t ret = Init();
     if (ret != ERR_OK) {
         auto callback = [=]() { Init(); };
@@ -125,6 +129,12 @@ void PrintServiceAbility::ManualStart()
     }
 }
 
+int32_t PrintServiceAbility::GetTaskId()
+{
+    std::lock_guard<std::mutex> autoLock(instanceLock_);
+    return currentTaskId_++;
+}
+
 void PrintServiceAbility::OnStop()
 {
     PRINT_HILOGI("OnStop started.");
@@ -136,62 +146,81 @@ void PrintServiceAbility::OnStop()
     PRINT_HILOGI("OnStop end.");
 }
 
-int32_t PrintServiceAbility::Dummy()
+int32_t PrintServiceAbility::StartPrint()
 {
     ManualStart();
-    int32_t taskId = -1;
+    AAFwk::Want want;
+    want.SetElementName(PRINTEXT_BUNDLE_NAME, PRINTEXT_ABILITY_NAME);
+    AAFwk::AbilityManagerClient::GetInstance()->Connect();
+    uint32_t retry = 0;
+    while (retry++ < MAX_RETRY_TIMES) {
+        PRINT_HILOGD("PrintServiceAbility::StartAbility");
+        if (AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want) == 0) {
+            break;
+        }
+        break;
+        std::this_thread::sleep_for(std::chrono::seconds(START_ABILITY_INTERVAL));
+        PRINT_HILOGD("PrintServiceAbility::StartAbility %{public}d", retry);
+    }
+    if (retry > MAX_RETRY_TIMES) {
+        PRINT_HILOGE("PrintServiceAbility::StartAbility --> failed ");
+        return -1;
+    }
+
+    int32_t taskId = GetTaskId();
+    PRINT_HILOGI("PrintServiceAbility Allocatejjjjjj Task[%{public}d] started.", taskId);
     return taskId;
 }
 
 bool PrintServiceAbility::ConnectPrinter(uint32_t printerId)
 {
     ManualStart();
-    auto instance = PrintServiceManager::GetInstance();
-    if (instance == nullptr) {
-        PRINT_HILOGE("PrintServiceManager is null");
-        return false;
+    PRINT_HILOGD("ConnectPrinter started.");
+    auto it = extCallbackMap_.find(PRINT_EXTCB_CONNECT_PRINTER);
+    if (it != extCallbackMap_.end()) {
+        return it->second->OnCallback(printerId);
     }
-    PRINT_HILOGE("PrintServiceAbility ConnectPrinter started.");
-    return instance->ConnectPrinter(printerId);
+    PRINT_HILOGW("ConnectPrinter Not Register Yet!!!");
+    return false;
 }
 
 bool PrintServiceAbility::DisconnectPrinter(uint32_t printerId)
 {
     ManualStart();
-    auto instance = PrintServiceManager::GetInstance();
-    if (instance == nullptr) {
-        PRINT_HILOGE("PrintServiceManager is null");
-        return false;
+    PRINT_HILOGD("DisconnectPrinter started.");
+    auto it = extCallbackMap_.find(PRINT_EXTCB_DISCONNECT_PRINTER);
+    if (it != extCallbackMap_.end()) {
+        return it->second->OnCallback(printerId);
     }
-    PRINT_HILOGE("DisconnectPrinter ConnectPrinter started.");
-    return instance->DisconnectPrinter(printerId);
+    PRINT_HILOGW("DisconnectPrinter Not Register Yet!!!");
+    return false;
 }
 
-bool PrintServiceAbility::StartDiscoverPrinter(std::vector<uint32_t> extensionList)
+bool PrintServiceAbility::StartDiscoverPrinter(const std::vector<uint32_t> &extensionList)
 {
-     ManualStart();
-    auto instance = PrintServiceManager::GetInstance();
-    if (instance == nullptr) {
-        PRINT_HILOGE("PrintServiceManager is null");
-        return false;
+    ManualStart();
+    PRINT_HILOGD("StartDiscoverPrinter started.");
+    auto it = extCallbackMap_.find(PRINT_EXTCB_START_DISCOVERY);
+    if (it != extCallbackMap_.end()) {
+        return it->second->OnCallback();
     }
-    PRINT_HILOGE("StartDiscoverPrinter ConnectPrinter started.");
-    return instance->StartDiscoverPrinter(extensionList);
+    PRINT_HILOGW("StartDiscoverPrinter Not Register Yet!!!");
+    return false;
 }
 
 bool PrintServiceAbility::StopDiscoverPrinter()
 {
     ManualStart();
-    auto instance = PrintServiceManager::GetInstance();
-    if (instance == nullptr) {
-        PRINT_HILOGE("PrintServiceManager is null");
-        return false;
+    PRINT_HILOGD("StopDiscoverPrinter started.");
+    auto it = extCallbackMap_.find(PRINT_EXTCB_STOP_DISCOVERY);
+    if (it != extCallbackMap_.end()) {
+        return it->second->OnCallback();
     }
-    PRINT_HILOGE("StopDiscoverPrinter ConnectPrinter started.");
-    return instance->StopDiscoverPrinter();
+    PRINT_HILOGW("StopDiscoverPrinter Not Register Yet!!!");
+    return false;
 }
 
-bool PrintServiceAbility::QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo)
+bool PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &arrayExtensionInfo)
 {
     ManualStart();
     auto instance = PrintServiceManager::GetInstance();
@@ -199,35 +228,35 @@ bool PrintServiceAbility::QueryAllExtension(std::vector<PrinterExtensionInfo> &a
         PRINT_HILOGE("PrintServiceManager is null");
         return false;
     }
-    PRINT_HILOGE("QueryAllExtension ConnectPrinter started.");
+    PRINT_HILOGE("QueryAllExtension started.");
     return instance->QueryExtensionAbilityInfos(arrayExtensionInfo);
 }
 
-bool PrintServiceAbility::StartPrintJob(PrintJob jobinfo) 
+bool PrintServiceAbility::StartPrintJob(const PrintJob &jobinfo)
 {
     ManualStart();
-    auto instance = PrintServiceManager::GetInstance();
-    if (instance == nullptr) {
-        PRINT_HILOGE("PrintServiceManager is null");
-        return false;
+    PRINT_HILOGD("StartPrintJob started.");
+    auto it = extCallbackMap_.find(PRINT_EXTCB_START_PRINT);
+    if (it != extCallbackMap_.end()) {
+        return it->second->OnCallback(jobinfo);
     }
-    PRINT_HILOGE("StartPrintJob ConnectPrinter started.");
-    return instance->StartPrintJob(jobinfo);
+    PRINT_HILOGW("StartPrintJob Not Register Yet!!!");
+    return false;
 }
 
-bool PrintServiceAbility::CancelPrintJob(PrintJob jobinfo)
+bool PrintServiceAbility::CancelPrintJob(const PrintJob &jobinfo)
 {
     ManualStart();
-    auto instance = PrintServiceManager::GetInstance();
-    if (instance == nullptr) {
-        PRINT_HILOGE("PrintServiceManager is null");
-        return false;
+    PRINT_HILOGD("CancelPrintJob started.");
+    auto it = extCallbackMap_.find(PRINT_EXTCB_CANCEL_PRINT);
+    if (it != extCallbackMap_.end()) {
+        return it->second->OnCallback(jobinfo);
     }
-    PRINT_HILOGE("CancelPrintJob ConnectPrinter started.");
-    return instance->CancelPrintJob(jobinfo);
+    PRINT_HILOGW("CancelPrintJob Not Register Yet!!!");
+    return false;
 }
 
-bool PrintServiceAbility::AddPrinters(std::vector<PrintInfo> arrayPrintInfo)
+bool PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &arrayPrintInfo)
 {
     ManualStart();
     auto instance = PrintServiceManager::GetInstance();
@@ -235,11 +264,11 @@ bool PrintServiceAbility::AddPrinters(std::vector<PrintInfo> arrayPrintInfo)
         PRINT_HILOGE("PrintServiceManager is null");
         return false;
     }
-    PRINT_HILOGE("CancelPrintJob ConnectPrinter started.");
+    PRINT_HILOGE("AddPrinters started.");
     return instance->AddPrinters(arrayPrintInfo);
 }
 
-bool PrintServiceAbility::RemovePrinters(std::vector<PrintInfo> arrayPrintInfo)
+bool PrintServiceAbility::RemovePrinters(const std::vector<PrinterInfo> &arrayPrintInfo)
 {
     ManualStart();
     auto instance = PrintServiceManager::GetInstance();
@@ -247,7 +276,7 @@ bool PrintServiceAbility::RemovePrinters(std::vector<PrintInfo> arrayPrintInfo)
         PRINT_HILOGE("PrintServiceManager is null");
         return false;
     }
-    PRINT_HILOGE("CancelPrintJob ConnectPrinter started.");
+    PRINT_HILOGE("RemovePrinters started.");
     return instance->RemovePrinters(arrayPrintInfo);
 }
 
@@ -259,7 +288,7 @@ bool PrintServiceAbility::UpdatePrinterState(uint32_t printerId, uint32_t state)
         PRINT_HILOGE("PrintServiceManager is null");
         return false;
     }
-    PRINT_HILOGE("CancelPrintJob ConnectPrinter started.");
+    PRINT_HILOGE("UpdatePrinterState started.");
     return instance->UpdatePrinterState(printerId, state);
 }
 
@@ -271,32 +300,35 @@ bool PrintServiceAbility::UpdatePrinterJobState(uint32_t jobId, uint32_t state)
         PRINT_HILOGE("PrintServiceManager is null");
         return false;
     }
-    PRINT_HILOGE("CancelPrintJob ConnectPrinter started.");
+    PRINT_HILOGE("UpdatePrinterJobState started.");
     return instance->UpdatePrinterJobState(jobId, state);
 }
 
-bool PrintServiceAbility::RequestPreview(PrintJob jobinfo, std::string &previewResult)
+bool PrintServiceAbility::RequestPreview(const PrintJob &jobinfo, std::string &previewResult)
 {
     ManualStart();
-    auto instance = PrintServiceManager::GetInstance();
-    if (instance == nullptr) {
-        PRINT_HILOGE("PrintServiceManager is null");
-        return false;
+    PRINT_HILOGD("RequestPreview started.");
+    auto it = extCallbackMap_.find(PRINT_EXTCB_REQUEST_PREVIEW);
+    if (it != extCallbackMap_.end()) {
+        return it->second->OnCallback(jobinfo);
     }
-    PRINT_HILOGE("CancelPrintJob RequestPreview started.");
-    return instance->RequestPreview(jobinfo, previewResult);
+    PRINT_HILOGW("RequestPreview Not Register Yet!!!");
+    return false;
 }
 
 bool PrintServiceAbility::QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability)
 {
     ManualStart();
-    auto instance = PrintServiceManager::GetInstance();
-    if (instance == nullptr) {
-        PRINT_HILOGE("PrintServiceManager is null");
-        return false;
+    PRINT_HILOGD("QueryPrinterCapability started.");
+    auto it = extCallbackMap_.find(PRINT_EXTCB_REQUEST_CAP);
+    bool result = false;
+    MessageParcel reply;
+    if (it != extCallbackMap_.end()) {
+        result = it->second->OnCallback(printerId, reply);
+        printerCapability.BuildFromParcel(reply);
     }
-    PRINT_HILOGE("CancelPrintJob RequestPreview started.");
-    return instance->QueryPrinterCapability(printerId, printerCapability);
+    PRINT_HILOGW("QueryPrinterCapability Not Register Yet!!!");
+    return result;
 }
 
 bool PrintServiceAbility::CheckPermission()
@@ -304,54 +336,69 @@ bool PrintServiceAbility::CheckPermission()
     return true;
 }
 
-bool PrintServiceAbility::On(uint32_t taskId, const std::string &type, const sptr<PrintNotifyInterface> &listener)
+bool PrintServiceAbility::RegisterExtCallback(uint32_t callbackId, const sptr<IPrintExtensionCallback> &listener)
 {
-    std::string combineType = type + "-" + std::to_string(taskId);
-    PRINT_HILOGI("PrintServiceAbility::On started. type=%{public}s", combineType.c_str());
-    auto iter = registeredListeners_.find(combineType);
-    if (iter == registeredListeners_.end()) {
-        std::lock_guard<std::mutex> lck(listenerMapMutex_);
-        std::pair<std::string, sptr<PrintNotifyInterface>> newObj(combineType, listener);
-        const auto temp = registeredListeners_.insert(newObj);
-        if (!temp.second) {
-            PRINT_HILOGE("PrintServiceAbility::On insert type=%{public}s object fail.", combineType.c_str());
-            return false;
-        }
-    } else {
-        std::lock_guard<std::mutex> lck(listenerMapMutex_);
-        PRINT_HILOGI("PrintServiceAbility::On Replace listener.");
-        registeredListeners_[combineType] = listener;
+    PRINT_HILOGD("PrintServiceAbility::RegisterExtCallback started. callbackId=%{public}d", callbackId);
+    if (callbackId >= PRINT_EXTCB_MAX) {
+        PRINT_HILOGE("Invalid callback id");
+        return false;
     }
-    PRINT_HILOGI("PrintServiceAbility::On end.");
+    auto it = extCallbackMap_.find(callbackId);
+    if (it == extCallbackMap_.end()) {
+        std::lock_guard<std::mutex> lock(listenerMapMutex_);
+        extCallbackMap_.insert(std::make_pair(callbackId, listener));
+    } else {
+        std::lock_guard<std::mutex> lock(listenerMapMutex_);
+        PRINT_HILOGD("PrintServiceAbility::RegisterExtCallback Replace listener.");
+        extCallbackMap_[callbackId] = listener;
+    }
+    PRINT_HILOGD("PrintServiceAbility::RegisterExtCallback end.");
     return true;
 }
 
-bool PrintServiceAbility::Off(uint32_t taskId, const std::string &type)
+bool PrintServiceAbility::UnregisterAllExtCallback()
 {
-    std::string combineType = type + "-" + std::to_string(taskId);
-    PRINT_HILOGI("PrintServiceAbility::Off started.");
-    auto iter = registeredListeners_.find(combineType);
-    if (iter != registeredListeners_.end()) {
-        PRINT_HILOGE("PrintServiceAbility::Off delete type=%{public}s object message.", combineType.c_str());
-        std::lock_guard<std::mutex> lck(listenerMapMutex_);
-        registeredListeners_.erase(iter);
-        return true;
-    }
+    PRINT_HILOGD("PrintServiceAbility::RegisterExtCallback started.");
+    std::lock_guard<std::mutex> lock(listenerMapMutex_);
+    extCallbackMap_.clear();
+    PRINT_HILOGD("PrintServiceAbility::UnregisterAllExtCallback end.");
+    return true;
+}
+
+bool PrintServiceAbility::On(
+    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener)
+{
+    std::string combineType = type + "-";
+    PRINT_HILOGI("PrintServiceAbility::On started. type=%{public}s", combineType.c_str());
+    return true;
+}
+
+bool PrintServiceAbility::Off(const std::string &type)
+{
+    std::string combineType = type + "-";
+    PRINT_HILOGI("PrintServiceAbility::Off started.type=%{public}s", combineType.c_str());
     return false;
 }
 
-void PrintServiceAbility::NotifyHandler(const std::string& type, uint32_t taskId, uint32_t argv1, uint32_t argv2)
+void PrintServiceAbility::DataWriteInfo(PrinterInfo info, MessageParcel &data)
 {
-    std::string combineType = type + "-" + std::to_string(taskId);
-    PRINT_HILOGI("PrintServiceAbility::NotifyHandler started %{public}s [%{public}d, %{public}d].",
-                    combineType.c_str(), argv1, argv2);
-    auto iter = PrintServiceAbility::GetInstance()->registeredListeners_.find(combineType);
-    if (iter != PrintServiceAbility::GetInstance()->registeredListeners_.end()) {
-        PRINT_HILOGE("PrintServiceAbility::NotifyHandler type=%{public}s object message.", combineType.c_str());
-        MessageParcel data;
-        data.WriteUint32(argv1);
-        data.WriteUint32(argv2);
-        iter->second->OnCallBack(data);
-    }
+    PRINT_HILOGI();
 }
-} // namespace OHOS::Request::Print
+
+void PrintServiceAbility::NotifyPrintStateHandler(const std::string &type, uint32_t state, PrinterInfo info)
+{
+    std::string combineType = type;
+    PRINT_HILOGI("PrintServiceAbility::NotifyHandler combineType %{public}s [%{public}d.", combineType.c_str(), state);
+}
+
+void PrintServiceAbility::DataWriteJob(PrintJob job, MessageParcel &data)
+{
+    PRINT_HILOGI();
+}
+
+void PrintServiceAbility::NotifyJobStateHandler(const std::string &type, uint32_t state, PrintJob job)
+{
+    std::string combineType = type;
+    PRINT_HILOGI("PrintServiceAbility::NotifyHandler combineType %{public}s [%{public}d.", combineType.c_str(), state);
+}
+} // namespace OHOS::Print

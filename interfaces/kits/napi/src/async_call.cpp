@@ -15,18 +15,18 @@
 
 #include "async_call.h"
 
-#include "log.h"
-#include "napi_utils.h"
+#include "napi_print_utils.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
 AsyncCall::AsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context, size_t pos) : env_(env)
 {
     context_ = new AsyncContext();
-    size_t argc = NapiUtils::MAX_ARGC;
+    size_t argc = NapiPrintUtils::MAX_ARGC;
     napi_value self = nullptr;
-    napi_value argv[NapiUtils::MAX_ARGC] = {nullptr};
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
     NAPI_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-    pos = ((pos == ASYNC_DEFAULT_POS) ? (argc - 1) : pos);   
+    pos = ((pos == ASYNC_DEFAULT_POS) ? (argc - 1) : pos);
     if (pos >= 0 && pos < argc) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, argv[pos], &valueType);
@@ -105,7 +105,7 @@ void AsyncCall::OnComplete(napi_env env, napi_status status, void *data)
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
     napi_value output = nullptr;
     napi_status runStatus = (*context->ctx)(env, &output);
-    napi_value result[ARG_BUTT] = {0};
+    napi_value result[ARG_BUTT] = { 0 };
     if (status == napi_ok && runStatus == napi_ok) {
         napi_get_undefined(env, &result[ARG_ERROR]);
         if (output != nullptr) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,23 +16,24 @@
 #ifndef PRINT_SERVICE_STUB_H
 #define PRINT_SERVICE_STUB_H
 
+#include "iprint_service.h"
 #include "iremote_stub.h"
-#include "print_service_interface.h"
 
 namespace OHOS::Print {
-class PrintServiceStub : public IRemoteStub<PrintServiceInterface> {
+class PrintServiceStub : public IRemoteStub<IPrintService> {
 public:
+    explicit PrintServiceStub();
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
-    bool OnDummy(MessageParcel &data, MessageParcel &reply);
+    bool OnStartPrint(MessageParcel &data, MessageParcel &reply);
     bool OnEventOn(MessageParcel &data, MessageParcel &reply);
     bool OnEventOff(MessageParcel &data, MessageParcel &reply);
     bool OnCheckPermission(MessageParcel &data, MessageParcel &reply);
     bool OnFindPrinterExtension(MessageParcel &data, MessageParcel &reply);
     bool OnRegisterEvent(MessageParcel &data, MessageParcel &reply);
     bool OnQueryAllExtension(MessageParcel &data, MessageParcel &reply);
-    bool OnLoadExtension (MessageParcel &data, MessageParcel &reply);
+    bool OnLoadExtension(MessageParcel &data, MessageParcel &reply);
     bool OnStartDiscoverPrinter(MessageParcel &data, MessageParcel &reply);
     bool OnStopDiscoverPrint(MessageParcel &data, MessageParcel &reply);
     bool OnAddPrinters(MessageParcel &data, MessageParcel &reply);
@@ -46,6 +47,15 @@ private:
     bool OnUpdatePrinterJobState(MessageParcel &data, MessageParcel &reply);
     bool OnRequestPreview(MessageParcel &data, MessageParcel &reply);
     bool OnQueryPrinterCapability(MessageParcel &data, MessageParcel &reply);
+    bool OnRegisterExtCallback(MessageParcel &data, MessageParcel &reply);
+    bool OnUnregisterAllExtCallback(MessageParcel &data, MessageParcel &reply);
+
+    void MakePrintJob(MessageParcel &data, PrintJob &printJob);
+    void MakePrinterInfo(MessageParcel &data, PrinterInfo &printerInfo);
+
+private:
+    using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);
+    std::map<uint32_t, PrintCmdHandler> cmdMap_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_STUB_H

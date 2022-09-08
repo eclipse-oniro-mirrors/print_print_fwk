@@ -18,9 +18,13 @@
 
 #include "async_call.h"
 #include "napi/native_api.h"
-#include "print_task.h"
-#include "print_info.h"
 #include "noncopyable.h"
+#include "print_margin.h"
+#include "print_page_size.h"
+#include "print_resolution.h"
+#include "print_task.h"
+#include "printer_capability.h"
+#include "printer_info.h"
 
 namespace OHOS::Print {
 class NapiPrintExt {
@@ -29,21 +33,19 @@ public:
     static napi_value RemovePrinters(napi_env env, napi_callback_info info);
     static napi_value UpdatePrinterState(napi_env env, napi_callback_info info);
     static napi_value UpdatePrintJobState(napi_env env, napi_callback_info info);
-    static bool ParseInfo(napi_env env, napi_value InfoValue, PrintInfo &Info);
-    static bool ParseInfoParam(napi_env env, napi_value InfoValue, PrintInfo &info);
-    static bool ParseCapability(napi_env env, napi_value InfoValue, PrinterCapability &capability);
+
 private:
     struct NapiPrintExtContext : public AsyncCall::Context {
         PrintTask *task_ = nullptr;
-        PrintInfo info_;
-        std::vector<PrintInfo> arrayPrintInfo;
+        PrinterInfo info_;
         bool result = false;
         uint32_t printerId = 0;
         uint32_t printerJobId = 0;
         uint32_t printerState = 0;
         uint32_t printerJobState = 0;
         napi_status status = napi_generic_failure;
-        std::vector<PrintInfo> printInfoVector;
+        std::vector<PrinterInfo> printAddInfoVector;
+        std::vector<PrinterInfo> printRemoveInfoVector;
         NapiPrintExtContext() : Context(nullptr, nullptr) {};
         NapiPrintExtContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
         virtual ~NapiPrintExtContext() {};

@@ -14,76 +14,78 @@
  */
 
 #include "print_margin.h"
-#include "log.h"
+
+#include "print_log.h"
 
 namespace OHOS::Print {
-    PrintMargin::PrintMargin () 
-        : top_(0), bottom_(0), left_(0), right_(0) {
-        
-    }
+PrintMargin::PrintMargin() : top_(0), bottom_(0), left_(0), right_(0) {}
 
-    void PrintMargin::SetTop(uint32_t top)
-    {
-        top_ = top;
-    }
-
-    void PrintMargin::SetBottom(uint32_t bottom)
-    {
-        bottom_ = bottom;
-    }
-
-    void PrintMargin::SetLeft(uint32_t left)
-    {
-        left_ = left;
-    }
-
-    void PrintMargin::SetRight(uint32_t right)
-    {
-        right_ = right;
-    }
-
-    uint32_t PrintMargin::GetTop() const
-    {
-        return top_;
-    }
-
-    uint32_t PrintMargin::GetBottom() const
-    {
-        return bottom_;
-    }
-
-    uint32_t PrintMargin::GetLeft() const
-    {
-        return left_;
-    }
-
-    uint32_t PrintMargin::GetRight() const
-    {
-        return right_;
-    }
-
-    PrintMargin &PrintMargin::operator=(const PrintMargin &printMargin)
-    {
-        if(this != &printMargin){
-            this->top_ = printMargin.top_;
-            this->bottom_ = printMargin.bottom_;
-            this->left_ = printMargin.left_;
-            this->right_ = printMargin.right_;  
-        }
-        return *this;
-    }
-
-   void PrintMargin::Dump()
-    {
-        PRINT_HILOGD("top_ = %{public}d", top_);
-        PRINT_HILOGD("bottom_ = %{public}d", bottom_);
-        PRINT_HILOGD("left_ = %{public}d", left_);
-        PRINT_HILOGD("right_ = %{public}d", right_);
-    }
-
-PrintMargin ::~PrintMargin ()
+PrintMargin::PrintMargin(const PrintMargin &right)
 {
-
+    top_ = right.top_;
+    bottom_ = right.bottom_;
+    left_ = right.left_;
+    right_ = right.right_;
 }
 
+PrintMargin &PrintMargin::operator=(const PrintMargin &right)
+{
+    if (this != &right) {
+        top_ = right.top_;
+        bottom_ = right.bottom_;
+        left_ = right.left_;
+        right_ = right.right_;
+    }
+    return *this;
+}
+
+PrintMargin::~PrintMargin() {}
+
+void PrintMargin::SetTop(uint32_t top)
+{
+    top_ = top;
+}
+
+void PrintMargin::SetBottom(uint32_t bottom)
+{
+    bottom_ = bottom;
+}
+
+void PrintMargin::SetLeft(uint32_t left)
+{
+    left_ = left;
+}
+
+void PrintMargin::SetRight(uint32_t right)
+{
+    right_ = right;
+}
+
+uint32_t PrintMargin::GetTop() const
+{
+    return top_;
+}
+
+uint32_t PrintMargin::GetBottom() const
+{
+    return bottom_;
+}
+
+uint32_t PrintMargin::GetLeft() const
+{
+    return left_;
+}
+
+uint32_t PrintMargin::GetRight() const
+{
+    return right_;
+}
+
+void PrintMargin::Dump()
+{
+    PRINT_HILOGD("top_ = %{public}d", top_);
+    PRINT_HILOGD("bottom_ = %{public}d", bottom_);
+    PRINT_HILOGD("left_ = %{public}d", left_);
+    PRINT_HILOGD("right_ = %{public}d", right_);
+}
 } // namespace OHOS::Print

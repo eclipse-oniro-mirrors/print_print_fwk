@@ -14,38 +14,15 @@
  */
 
 #include "print_service_manager.h"
-#include <cstddef>
-#include <algorithm>
-#include <cstdint>
-#include <functional>
-#include <map>
-#include <memory>
-#include <new>
-#include <queue>
-#include <mutex>
-#include <thread>
-#include <utility>
-#include "unistd.h"
-#include "log.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/types.h>
-#include <time.h>
+#include "napi_print_utils.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
 std::mutex PrintServiceManager::instanceLock_;
 PrintServiceManager *PrintServiceManager::instance_ = nullptr;
-PrintServiceManager::PrintServiceManager()
-{
-}
+PrintServiceManager::PrintServiceManager() {}
 
-PrintServiceManager::~PrintServiceManager()
-{
-}
+PrintServiceManager::~PrintServiceManager() {}
 
 PrintServiceManager *PrintServiceManager::GetInstance()
 {
@@ -58,10 +35,17 @@ PrintServiceManager *PrintServiceManager::GetInstance()
     return instance_;
 }
 
-int32_t PrintServiceManager::Dummy()
+bool PrintServiceManager::On(
+    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener)
 {
-    int32_t taskId = -1;
-    return taskId;
+    PRINT_HILOGE("PrintServiceManager on started.");
+    return true;
+}
+
+bool PrintServiceManager::Off(const std::string &type)
+{
+    PRINT_HILOGE("PrintServiceManager on started.");
+    return true;
 }
 
 bool PrintServiceManager::ConnectPrinter(uint32_t printerId)
@@ -88,18 +72,18 @@ bool PrintServiceManager::StopDiscoverPrinter()
     return true;
 }
 
-bool PrintServiceManager::QueryExtensionAbilityInfos(std::vector<PrinterExtensionInfo> &arrayExtensionInfo)
+bool PrintServiceManager::QueryExtensionAbilityInfos(std::vector<PrintExtensionInfo> &arrayExtensionInfo)
 {
     PRINT_HILOGE("PrintServiceManager QueryAllExtension enter.");
-    PrinterExtensionInfo printerExtensionInfo;
-    arrayExtensionInfo.push_back(printerExtensionInfo);
-    arrayExtensionInfo[0].SetExtensionId(5);
-    arrayExtensionInfo[0].SetVendorId(55);
+    PrintExtensionInfo printExtensionInfo;
+    arrayExtensionInfo.push_back(printExtensionInfo);
+    arrayExtensionInfo[NapiPrintUtils::ARGC_ZERO].SetExtensionId(NapiPrintUtils::MAX_ARGC);
+    arrayExtensionInfo[NapiPrintUtils::ARGC_ZERO].SetVendorId(NapiPrintUtils::MAX_ARGC);
     std::string vendorName = "vendorName = print 1.0";
     std::string version = "version = 1.0.0";
-    arrayExtensionInfo[0].SetVendorName(vendorName);
-    arrayExtensionInfo[0].SetVendorIcon(555);
-    arrayExtensionInfo[0].SetVersion(version);
+    arrayExtensionInfo[NapiPrintUtils::ARGC_ZERO].SetVendorName(vendorName);
+    arrayExtensionInfo[NapiPrintUtils::ARGC_ZERO].SetVendorIcon(NapiPrintUtils::MAX_ARGC);
+    arrayExtensionInfo[NapiPrintUtils::ARGC_ZERO].SetVersion(version);
     PRINT_HILOGE("PrintServiceManager QueryAllExtension started.");
     return true;
 }
@@ -116,13 +100,13 @@ bool PrintServiceManager::CancelPrintJob(PrintJob jobinfo)
     return true;
 }
 
-bool PrintServiceManager::AddPrinters(std::vector<PrintInfo> arrayPrintInfo)
+bool PrintServiceManager::AddPrinters(std::vector<PrinterInfo> arrayPrintInfo)
 {
     PRINT_HILOGE("PrintServiceManager AddPrinters started.");
     return true;
 }
 
-bool PrintServiceManager::RemovePrinters(std::vector<PrintInfo> arrayPrintInfo)
+bool PrintServiceManager::RemovePrinters(std::vector<PrinterInfo> arrayPrintInfo)
 {
     PRINT_HILOGE("PrintServiceManager RemovePrinters started.");
     return true;
@@ -155,34 +139,41 @@ bool PrintServiceManager::QueryPrinterCapability(uint32_t printerId, PrinterCapa
         return false;
     }
 
-    printerCapability.SetColorMode(10);
-    printerCapability.SetDuplexMode(11);
-    
-    PrintMargin printMargin;
-    printMargin.SetTop(5);
-    printMargin.SetBottom(5);
-    printMargin.SetLeft(5);
-    printMargin.SetRight(5);   
-    printerCapability.SetMinMargin(printMargin);
+    printerCapability.SetColorMode(NapiPrintUtils::MAX_ARGC);
+    printerCapability.SetDuplexMode(NapiPrintUtils::MAX_ARGC);
 
-    PrinterPageSize printerPageSize;
-    printerPageSize.SetId(6);
-    printerPageSize.SetName("name");
-    printerPageSize.SetWidth(6);
-    printerPageSize.SetHeight(6);
-    printerCapability.SetPageSize(printerPageSize);
+    PrintMargin PrintMargin;
+    PrintMargin.SetTop(NapiPrintUtils::MAX_ARGC);
+    PrintMargin.SetBottom(NapiPrintUtils::MAX_ARGC);
+    PrintMargin.SetLeft(NapiPrintUtils::MAX_ARGC);
+    PrintMargin.SetRight(NapiPrintUtils::MAX_ARGC);
+    printerCapability.SetMinMargin(PrintMargin);
 
-    PrinterResolution printerResolution;
-    printerResolution.SetId(6);
-    printerResolution.SetHorizontalDpi(6);
-    printerResolution.SetVerticalDpi(6);
-    printerCapability.SetResolution(printerResolution);
+    std::vector<PrintPageSize> pageSizeList;
+    PrintPageSize pageSize;
+    pageSize.SetId("6");
+    pageSize.SetName("name");
+    pageSize.SetWidth(NapiPrintUtils::MAX_ARGC);
+    pageSize.SetHeight(NapiPrintUtils::MAX_ARGC);
+    pageSizeList.push_back(pageSize);
+
+    printerCapability.SetPageSize(pageSizeList);
+
+    std::vector<PrintResolution> resolutionList;
+    PrintResolution res;
+    res.SetId(NapiPrintUtils::MAX_ARGC);
+    res.SetHorizontalDpi(NapiPrintUtils::MAX_ARGC);
+    res.SetVerticalDpi(NapiPrintUtils::MAX_ARGC);
+    resolutionList.push_back(res);
+    printerCapability.SetResolution(resolutionList);
 
     printerCapability.Dump();
-    printerCapability.GetMinMargin().Dump();
-    printerCapability.GetPageSize()[0].Dump();
-    printerCapability.GetResolution()[0].Dump();
     PRINT_HILOGE("PrintServiceManager RequestPreview started.");
     return true;
 }
-} // namespace OHOS::Request::Print
+
+void PrintServiceManager::InstallCallback(uint32_t taskId, PrintTaskCallback eventCb)
+{
+    PRINT_HILOGE("PrintServiceManager InstallCallback started.");
+}
+} // namespace OHOS::Print

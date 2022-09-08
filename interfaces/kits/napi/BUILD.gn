@@ -19,7 +19,7 @@ config("print_interfaces_kits_napi_config") {
 
   cflags_cc = [ "-fexceptions" ]
 }
-ohos_shared_library("print") {
+ohos_shared_library("print_napi") {
   include_dirs = [
     "//foundation/arkui/ace_engine/frameworks/base/utils",
     "//foundation/arkui/napi",
@@ -47,12 +47,12 @@ ohos_shared_library("print") {
     "src/napi_print_ext.cpp",
     "src/async_call.cpp",
     "src/print_task.cpp",
-    "src/napi_utils.cpp"
+    "src/print_parse_type.cpp",
   ]
   deps = [
     "//foundation/arkui/napi:ace_napi",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-    "//base/print/print/frameworks/innerkitsimpl:printclient",
+    "//base/print/print/frameworks/innerkitsimpl:print_client",
   ]
   external_deps = [
     "ability_base:want",

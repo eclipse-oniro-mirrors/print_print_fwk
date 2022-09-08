@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,7 +23,7 @@ enum PrintError {
     E_PRINT_READ_PARCEL_ERROR,
     E_PRINT_WRITE_PARCEL_ERROR,
     E_PRINT_PUBLISH_FAIL,
-    E_PRINT_TRANSACT_ERROR,
+    E_PRINT_IPC_ERROR,
     E_PRINT_DEAL_FAILED,
     E_PRINT_PARAMETERS_INVALID,
     E_PRINT_SET_RTC_FAILED,

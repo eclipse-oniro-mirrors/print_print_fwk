@@ -53,17 +53,13 @@ public:
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
 
-    //bool AddListener(const std::string &type, sptr<PrintNotifyInterface> listener);
-    //void RemoveListener(const std::string &type, sptr<PrintNotifyInterface> listener);
-    //void RemoveListener(const std::string &type);
-
     bool IsSupportType(const std::string &type);
     bool IsSupportPrinterStateType(const std::string &type);
     bool IsSupportJobStateType(const std::string &type);
+
 private:
     int taskId_;
     std::mutex mutex_;
-    //std::map<std::string, sptr<PrintNotifyInterface>> listenerMap_;
     std::map<std::string, bool> supportEvents_;
     std::map<std::string, bool> supportPrinterState_;
     std::map<std::string, bool> supportJobState_;

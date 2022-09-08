@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,33 +16,38 @@
 #ifndef PRINT_SERVICE_PROXY_H
 #define PRINT_SERVICE_PROXY_H
 
+#include "iprint_service.h"
 #include "iremote_proxy.h"
-#include "print_notify_interface.h"
-#include "print_service_interface.h"
 
 namespace OHOS::Print {
-class PrintServiceProxy : public IRemoteProxy<PrintServiceInterface> {
+class PrintServiceProxy : public IRemoteProxy<IPrintService> {
 public:
     explicit PrintServiceProxy(const sptr<IRemoteObject> &object);
     ~PrintServiceProxy() = default;
     DISALLOW_COPY_AND_MOVE(PrintServiceProxy);
-    int32_t Dummy() override;
+    int32_t StartPrint() override;
     bool ConnectPrinter(uint32_t printerId) override;
     bool DisconnectPrinter(uint32_t printerId) override;
-    bool QueryAllExtension(std::vector<PrinterExtensionInfo> &arrayExtensionInfo) override;
-    bool StartDiscoverPrinter(std::vector<uint32_t> extensionList) override;
+    bool QueryAllExtension(std::vector<PrintExtensionInfo> &arrayExtensionInfo) override;
+    bool StartDiscoverPrinter(const std::vector<uint32_t> &extensionList) override;
     bool StopDiscoverPrinter() override;
-    bool StartPrintJob(PrintJob jobinfo) override;
-    bool CancelPrintJob(PrintJob jobinfo) override;
-    bool AddPrinters(std::vector<PrintInfo> arrayPrintInfo) override;
-    bool RemovePrinters(std::vector<PrintInfo> arrayPrintInfo) override;
+    bool StartPrintJob(const PrintJob &jobinfo) override;
+    bool CancelPrintJob(const PrintJob &jobinfo) override;
+    bool AddPrinters(const std::vector<PrinterInfo> &arrayPrintInfo) override;
+    bool RemovePrinters(const std::vector<PrinterInfo> &arrayPrintInfo) override;
     bool UpdatePrinterState(uint32_t printerId, uint32_t state) override;
     bool UpdatePrinterJobState(uint32_t jobId, uint32_t state) override;
-    bool RequestPreview(PrintJob jobinfo, std::string &previewResult) override;
+    bool RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override;
     bool QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability) override;
     bool CheckPermission() override;
-    bool On(uint32_t taskId, const std::string &type, const sptr<PrintNotifyInterface> &listener) override;
-    bool Off(uint32_t taskId, const std::string &type) override;
+    bool On(const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener) override;
+    bool Off(const std::string &type) override;
+    bool RegisterExtCallback(uint32_t callbackId, const sptr<IPrintExtensionCallback> &listener) override;
+    bool UnregisterAllExtCallback() override;
+
+private:
+    void BuildParcelFromPrintJob(MessageParcel &data, const PrintJob &jobinfo);
+    void BuildParcelFromPrinterInfo(MessageParcel &data, const PrinterInfo &printerInfo);
 
 private:
     static inline BrokerDelegator<PrintServiceProxy> delegator_;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,17 +18,24 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "print_range.h"
-#include "print_page_size.h"
-#include "print_margin.h"
-#include "preview_attribute.h"
 
-namespace OHOS::Print{
+#include "iremote_broker.h"
+#include "iremote_proxy.h"
+#include "napi/native_api.h"
+#include "print_margin.h"
+#include "print_page_size.h"
+#include "print_preview_attribute.h"
+#include "print_range.h"
+
+namespace OHOS::Print {
 class PrintJob {
 public:
-    PrintJob();
+    explicit PrintJob();
+    PrintJob(const PrintJob &right);
+    PrintJob &operator=(PrintJob &right);
+    ~PrintJob();
 
-    void SetFiles(std::string files);
+    void SetFiles(const std::vector<std::string> &files);
 
     void SetJobId(uint32_t jobId);
 
@@ -38,85 +45,76 @@ public:
 
     void SetCopyNumber(uint32_t copyNumber);
 
-    void SetPageRange(PrinterRange pageRange_);
+    void SetPageRange(const PrintRange &pageRange);
 
-    void SetIsSequential(bool isSequential_);
+    void SetIsSequential(bool isSequential);
 
-    void SetPageSize(PrinterPageSize pageSize_);
+    void SetPageSize(const PrintPageSize &pageSize);
 
-    void SetIsLandscape(bool isLandscape_);
+    void SetIsLandscape(bool isLandscape);
 
-    void SetColorMode(uint32_t colorMode_);
+    void SetColorMode(uint32_t colorMode);
 
     void SetDuplexMode(uint32_t duplexmode);
 
-    void SetMargin(PrintMargin margin_);
+    void SetMargin(const PrintMargin &margin);
 
-    void SetPreview(PreviewAttribute preview_);
+    void SetPreview(const PreviewAttribute &preview);
 
-    std::vector<std::string>&GetFiles();
+    void GetFiles(std::vector<std::string> &fileList) const;
 
-    uint32_t GetJobId();
+    [[nodiscard]] uint32_t GetJobId() const;
 
-    uint32_t GetPrinterId();
+    [[nodiscard]] uint32_t GetPrinterId() const;
 
-    uint32_t GetJobState();
+    [[nodiscard]] uint32_t GetJobState() const;
 
-    uint32_t GetCopyNumber();
+    [[nodiscard]] uint32_t GetCopyNumber() const;
 
-    PrinterRange &GetPageRange();
+    void GetPageRange(PrintRange &range) const;
 
-    bool GetIsSequential();
+    [[nodiscard]] bool GetIsSequential() const;
 
-    PrinterPageSize &GetPageSize();
+    void GetPageSize(PrintPageSize &printPageSize) const;
 
-    bool GetIsLandscape();
+    [[nodiscard]] bool GetIsLandscape() const;
 
-    uint32_t GetColorMode();
+    [[nodiscard]] uint32_t GetColorMode() const;
 
-    uint32_t GetDuplexMode();
+    [[nodiscard]] uint32_t GetDuplexMode() const;
 
-    PrintMargin &GetMargin();
+    void GetMargin(PrintMargin &printMargin) const;
 
-    PreviewAttribute &GetPreview();
-    
+    void GetPreview(PreviewAttribute &previewAttr) const;
+
+    void ConvertToParcel(MessageParcel &reply) const;
+
+    void BuildFromParcel(MessageParcel &data);
+
+    void ConvertToJs(napi_env env, napi_value *result) const;
+
+    void BuildFromJs(napi_env env, napi_value capValue);
+
     void Dump();
 
-    ~PrintJob();
+private:
+    bool ParseJob(napi_env env, napi_value jobValue, PrintJob &printJob);
+    bool ParseJobParam(napi_env env, napi_value jobValue, PrintJob &printJob);
+
 private:
     std::vector<std::string> files_;
     uint32_t jobId_;
     uint32_t printerId_;
     uint32_t jobState_;
     uint32_t copyNumber_;
-    PrinterRange pageRange_;
+    PrintRange pageRange_;
     bool isSequential_;
-    PrinterPageSize pageSize_;
+    PrintPageSize pageSize_;
     bool isLandscape_;
     int32_t colorMode_;
     int32_t duplexMode_;
     PrintMargin margin_;
     PreviewAttribute preview_;
-
-    enum PrintJobState {
-        PRINT_JOB_CREATED = 1,
-        PRINT_JOB_QUEUED = 2,
-        PRINT_JOB_PRINTING = 3,
-        PRINT_JOB_BLOCKED = 4,
-        PRINT_JOB_SUCCESS = 5,
-        PRINT_JOB_FAILED = 6,
-        PRINT_JOB_cancelled = 7,
-    };
-
-    enum PrintState{
-        PRINT_CREATED = 1,
-        PRINT_QUEUED = 2,
-        PRINT_PRINTING = 3,
-        PRINT_BLOCKED = 4,
-        PRINT_SUCCESS = 5,
-        PRINT_FAILED = 6,
-        PRINT_cancelled = 7,
-    };
 };
-}// namespace OHOS::Request::Print
+} // namespace OHOS::Print
 #endif /* PRINT_PRINT_JOB_H */
