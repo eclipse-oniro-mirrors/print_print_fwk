@@ -156,10 +156,11 @@ private:
 
         int32_t accountId = 0;
         if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(reinterpret_cast<napi_env>(&engine),
-                reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ONE]), accountId)) {
+            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ONE]), accountId)) {
             PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
             return engine.CreateUndefined();
         }
+        PRINT_HILOGD("%{public}d accountId:", accountId);
         unwrapArgc++;
 
         AAFwk::StartOptions startOptions;
@@ -175,6 +176,7 @@ private:
             PRINT_HILOGD("startAbility begin");
             auto context = weak.lock();
             if (!context) {
+                PRINT_HILOGW("context is released");
                 task.Reject(engine, CreateJsError(engine, NapiPrintUtils::ERROR_CODE_ONE, "Context is released"));
                 return;
             }
@@ -300,7 +302,7 @@ private:
 
         int32_t accountId = 0;
         if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(reinterpret_cast<napi_env>(&engine),
-                reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ONE]), accountId)) {
+            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ONE]), accountId)) {
             PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
             return engine.CreateUndefined();
         }
@@ -473,7 +475,6 @@ NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr
         engine, *object, "startAbilityWithAccount", moduleName, JsPrintExtensionContext::StartAbilityWithAccount);
     BindNativeFunction(
         engine, *object, "connectAbilityWithAccount", moduleName, JsPrintExtensionContext::ConnectAbilityWithAccount);
-
     if (context) {
         PRINT_HILOGD("Set ExtensionAbilityInfo Property");
         auto abilityInfo = context->GetAbilityInfo();

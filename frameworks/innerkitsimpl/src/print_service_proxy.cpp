@@ -13,10 +13,6 @@
  * limitations under the License.
  */
 #include "print_service_proxy.h"
-
-#include <sys/types.h>
-#include <unistd.h>
-
 #include "iremote_broker.h"
 #include "napi_print_utils.h"
 #include "print_common.h"

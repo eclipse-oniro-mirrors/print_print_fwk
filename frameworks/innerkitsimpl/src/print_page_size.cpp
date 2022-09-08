@@ -38,7 +38,8 @@ PrintPageSize PrintPageSize::GetPageSize(PageSizeId id)
 {
     uint32_t pageSizeId = (uint32_t)id;
     if (pageSizeId < (uint32_t)sizeof(PAGE_SIZE_TABLE)) {
-        auto iter = pageSize_.find(PAGE_SIZE_TABLE[pageSizeId]);
+        std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>>::iterator iter;
+        iter = pageSize_.find(PAGE_SIZE_TABLE[pageSizeId]);
         if (iter != pageSize_.end()) {
             return *(iter->second);
         }

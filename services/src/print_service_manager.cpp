@@ -14,7 +14,7 @@
  */
 
 #include "print_service_manager.h"
-
+#include "napi_print_utils.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
@@ -77,13 +77,13 @@ bool PrintServiceManager::QueryExtensionAbilityInfos(std::vector<PrintExtensionI
     PRINT_HILOGE("PrintServiceManager QueryAllExtension enter.");
     PrintExtensionInfo printExtensionInfo;
     arrayExtensionInfo.push_back(printExtensionInfo);
-    arrayExtensionInfo[0].SetExtensionId(5);
-    arrayExtensionInfo[0].SetVendorId(55);
+    arrayExtensionInfo[NapiPrintUtils::ARGC_ZERO].SetExtensionId(NapiPrintUtils::MAX_ARGC);
+    arrayExtensionInfo[NapiPrintUtils::ARGC_ZERO].SetVendorId(NapiPrintUtils::MAX_ARGC);
     std::string vendorName = "vendorName = print 1.0";
     std::string version = "version = 1.0.0";
-    arrayExtensionInfo[0].SetVendorName(vendorName);
-    arrayExtensionInfo[0].SetVendorIcon(555);
-    arrayExtensionInfo[0].SetVersion(version);
+    arrayExtensionInfo[NapiPrintUtils::ARGC_ZERO].SetVendorName(vendorName);
+    arrayExtensionInfo[NapiPrintUtils::ARGC_ZERO].SetVendorIcon(NapiPrintUtils::MAX_ARGC);
+    arrayExtensionInfo[NapiPrintUtils::ARGC_ZERO].SetVersion(version);
     PRINT_HILOGE("PrintServiceManager QueryAllExtension started.");
     return true;
 }
@@ -139,31 +139,31 @@ bool PrintServiceManager::QueryPrinterCapability(uint32_t printerId, PrinterCapa
         return false;
     }
 
-    printerCapability.SetColorMode(10);
-    printerCapability.SetDuplexMode(11);
+    printerCapability.SetColorMode(NapiPrintUtils::MAX_ARGC);
+    printerCapability.SetDuplexMode(NapiPrintUtils::MAX_ARGC);
 
     PrintMargin PrintMargin;
-    PrintMargin.SetTop(5);
-    PrintMargin.SetBottom(5);
-    PrintMargin.SetLeft(5);
-    PrintMargin.SetRight(5);
+    PrintMargin.SetTop(NapiPrintUtils::MAX_ARGC);
+    PrintMargin.SetBottom(NapiPrintUtils::MAX_ARGC);
+    PrintMargin.SetLeft(NapiPrintUtils::MAX_ARGC);
+    PrintMargin.SetRight(NapiPrintUtils::MAX_ARGC);
     printerCapability.SetMinMargin(PrintMargin);
 
     std::vector<PrintPageSize> pageSizeList;
     PrintPageSize pageSize;
     pageSize.SetId("6");
     pageSize.SetName("name");
-    pageSize.SetWidth(6);
-    pageSize.SetHeight(6);
+    pageSize.SetWidth(NapiPrintUtils::MAX_ARGC);
+    pageSize.SetHeight(NapiPrintUtils::MAX_ARGC);
     pageSizeList.push_back(pageSize);
 
     printerCapability.SetPageSize(pageSizeList);
 
     std::vector<PrintResolution> resolutionList;
     PrintResolution res;
-    res.SetId(6);
-    res.SetHorizontalDpi(6);
-    res.SetVerticalDpi(6);
+    res.SetId(NapiPrintUtils::MAX_ARGC);
+    res.SetHorizontalDpi(NapiPrintUtils::MAX_ARGC);
+    res.SetVerticalDpi(NapiPrintUtils::MAX_ARGC);
     resolutionList.push_back(res);
     printerCapability.SetResolution(resolutionList);
 

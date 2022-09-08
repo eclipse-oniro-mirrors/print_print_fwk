@@ -305,70 +305,23 @@ std::string NapiPrintUtils::GetValueString(napi_env env, napi_value value)
     return resultValue;
 }
 
-napi_value NapiPrintUtils::Convert2JsObj(napi_env env, const PrintJob &job)
+void NapiPrintUtils::CovertPageSize(napi_env env, napi_value &result, const PrintJob &job)
 {
-    napi_value result;
-    NAPI_CALL(env, napi_create_object(env, &result));
-
-    std::vector<std::string> files;
-    job.GetFiles(files);
-    uint32_t arrFilesLength = files.size();
-
-    napi_value arrFiles;
-    NAPI_CALL(env, napi_create_array(env, &arrFiles));
-    for (uint32_t i = 0; i < arrFilesLength; i++) {
-        napi_value value;
-        NAPI_CALL(env, napi_create_string_utf8(env, files[i].c_str(), NAPI_AUTO_LENGTH, &value));
-        NAPI_CALL(env, napi_set_element(env, arrFiles, i, value));
-    }
-    NAPI_CALL(env, napi_set_named_property(env, result, "files", arrFiles));
-
-    SetUint32Property(env, result, "jobId", job.GetJobId());
-    SetUint32Property(env, result, "printerId", job.GetPrinterId());
-    SetUint32Property(env, result, "jobState", job.GetJobState());
-    SetUint32Property(env, result, "copyNumber", job.GetCopyNumber());
-
-    PrintRange nativeRange;
-    job.GetPageRange(nativeRange);
-    std::vector<uint32_t> pages;
-    nativeRange.GetPages(pages);
-
-    napi_value pageRange;
-    NAPI_CALL(env, napi_create_object(env, &pageRange));
-    SetUint32Property(env, pageRange, "startPage", nativeRange.GetStartPage());
-    SetUint32Property(env, pageRange, "endPage", nativeRange.GetEndPage());
-    napi_value arrPages;
-    NAPI_CALL(env, napi_create_array(env, &arrPages));
-
-    uint32_t arrPagesLength = pages.size();
-    for (uint32_t i = 0; i < arrPagesLength; i++) {
-        napi_value value;
-        NAPI_CALL(env, napi_create_uint32(env, pages[i], &value));
-        NAPI_CALL(env, napi_set_element(env, arrPages, i, value));
-    }
-    NAPI_CALL(env, napi_set_named_property(env, pageRange, "pages", arrPages));
-    NAPI_CALL(env, napi_set_named_property(env, result, "pageRange", pageRange));
-
-    SetUint32Property(env, result, "isSequential", job.GetIsSequential());
-
-    PrintPageSize nativePageSize;
-    job.GetPageSize(nativePageSize);
-
     napi_value pageSize;
     NAPI_CALL(env, napi_create_object(env, &pageSize));
+    PrintPageSize nativePageSize;
+    job.GetPageSize(nativePageSize);
     SetStringPropertyUtf8(env, pageSize, "id", nativePageSize.GetId().c_str());
     SetStringPropertyUtf8(env, pageSize, "name", nativePageSize.GetName().c_str());
     SetUint32Property(env, pageSize, "width", nativePageSize.GetWidth());
     SetUint32Property(env, pageSize, "height", nativePageSize.GetHeight());
     NAPI_CALL(env, napi_set_named_property(env, result, "pageSize", pageSize));
+}
 
-    SetUint32Property(env, result, "isLandscape", job.GetIsLandscape());
-    SetUint32Property(env, result, "colorMode", job.GetColorMode());
-    SetUint32Property(env, result, "duplexMode", job.GetDuplexMode());
-
+void NapiPrintUtils::CovertMargin(napi_env env, napi_value &result, const PrintJob &job)
+{
     PrintMargin nativeMargin;
     job.GetMargin(nativeMargin);
-
     napi_value margin;
     NAPI_CALL(env, napi_create_object(env, &margin));
     SetUint32Property(env, margin, "top", nativeMargin.GetTop());
@@ -376,7 +329,12 @@ napi_value NapiPrintUtils::Convert2JsObj(napi_env env, const PrintJob &job)
     SetUint32Property(env, margin, "left", nativeMargin.GetLeft());
     SetUint32Property(env, margin, "right", nativeMargin.GetRight());
     NAPI_CALL(env, napi_set_named_property(env, result, "margin", margin));
+}
 
+
+void NapiPrintUtils::CovertPreviewAttribute(napi_env env, napi_value &result, const PrintJob &job)
+{
+    PrintRange nativeRange;
     PreviewAttribute previewAttr;
     job.GetPreview(previewAttr);
     previewAttr.GetPreviewRange(nativeRange);
@@ -402,6 +360,58 @@ napi_value NapiPrintUtils::Convert2JsObj(napi_env env, const PrintJob &job)
     NAPI_CALL(env, napi_set_named_property(env, subPageRange, "pages", arrPreviewPages));
     NAPI_CALL(env, napi_set_named_property(env, preview, "pageRange", subPageRange));
     NAPI_CALL(env, napi_set_named_property(env, result, "preview", preview));
+}
+
+napi_value NapiPrintUtils::Convert2JsObj(napi_env env, const PrintJob &job)
+{
+    napi_value result;
+    NAPI_CALL(env, napi_create_object(env, &result));
+
+    std::vector<std::string> files;
+    job.GetFiles(files);
+    napi_value arrFiles;
+    NAPI_CALL(env, napi_create_array(env, &arrFiles));
+    for (uint32_t i = 0; i < (uint32_t)files.size(); i++) {
+        napi_value value;
+        NAPI_CALL(env, napi_create_string_utf8(env, files[i].c_str(), NAPI_AUTO_LENGTH, &value));
+        NAPI_CALL(env, napi_set_element(env, arrFiles, i, value));
+    }
+    NAPI_CALL(env, napi_set_named_property(env, result, "files", arrFiles));
+    SetUint32Property(env, result, "jobId", job.GetJobId());
+    SetUint32Property(env, result, "printerId", job.GetPrinterId());
+    SetUint32Property(env, result, "jobState", job.GetJobState());
+    SetUint32Property(env, result, "copyNumber", job.GetCopyNumber());
+
+    PrintRange nativeRange;
+    job.GetPageRange(nativeRange);
+    std::vector<uint32_t> pages;
+    nativeRange.GetPages(pages);
+    napi_value pageRange;
+    NAPI_CALL(env, napi_create_object(env, &pageRange));
+    SetUint32Property(env, pageRange, "startPage", nativeRange.GetStartPage());
+    SetUint32Property(env, pageRange, "endPage", nativeRange.GetEndPage());
+    napi_value arrPages;
+    NAPI_CALL(env, napi_create_array(env, &arrPages));
+
+    for (uint32_t i = 0; i < (uint32_t)pages.size(); i++) {
+        napi_value value;
+        NAPI_CALL(env, napi_create_uint32(env, pages[i], &value));
+        NAPI_CALL(env, napi_set_element(env, arrPages, i, value));
+    }
+    NAPI_CALL(env, napi_set_named_property(env, pageRange, "pages", arrPages));
+    NAPI_CALL(env, napi_set_named_property(env, result, "pageRange", pageRange));
+
+    SetUint32Property(env, result, "isSequential", job.GetIsSequential());
+
+    CovertPageSize(env, result, job);
+
+    SetUint32Property(env, result, "isLandscape", job.GetIsLandscape());
+    SetUint32Property(env, result, "colorMode", job.GetColorMode());
+    SetUint32Property(env, result, "duplexMode", job.GetDuplexMode());
+
+    CovertMargin(env, result, job);
+    CovertPreviewAttribute(env, result, job);
+    
     return result;
 }
 } // namespace OHOS::Print

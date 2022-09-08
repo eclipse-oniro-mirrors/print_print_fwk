@@ -43,6 +43,7 @@ public:
 
     static bool ParseInfoParam(napi_env env, napi_value InfoValue, PrinterInfo &info);
     static bool ParseCapParam(napi_env env, napi_value InfoValue, PrinterCapability &capability);
+    static void CoversePriotResolutionObject(napi_env env, napi_value capValue, PrinterCapability &capability);
     static bool ParseArrPrintResolution(
         napi_env env, napi_value capValue, PrinterCapability &capability) static bool ParsePageSizeParam(napi_env env,
         napi_value capValue, PrintPageSize &PrintPageSize);

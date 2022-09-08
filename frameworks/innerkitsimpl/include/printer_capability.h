@@ -75,6 +75,8 @@ private:
 
     bool ParseMarginParam(napi_env env, napi_value marginValue, PrintMargin &margin);
 
+    void ParseCapabilityObject(napi_env env, napi_value capValue);
+
     bool ParseCapabilityParam(napi_env env, napi_value capValue);
 
     bool ParseCapability(napi_env env, napi_value capValue);

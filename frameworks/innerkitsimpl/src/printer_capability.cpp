@@ -265,7 +265,7 @@ void PrinterCapability::BuildFromJs(napi_env env, napi_value capValue)
 bool PrinterCapability::ParseCapability(napi_env env, napi_value capValue)
 {
     if (!ParseCapabilityParam(env, capValue)) {
-        PRINT_HILOGD("ParseCapParam is error!");
+        PRINT_HILOGE("ParseCapParam is error!");
         return false;
     }
     SetColorMode(NapiPrintUtils::GetUint32Property(env, capValue, PARAM_CAPABILITY_COLORMODE));
@@ -275,16 +275,56 @@ bool PrinterCapability::ParseCapability(napi_env env, napi_value capValue)
     return true;
 }
 
+void PrinterCapability::ParseCapabilityObject(napi_env env, napi_value capValue)
+{
+    napi_value param_three = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_RESOLUTION);
+    if (NapiPrintUtils::GetValueType(env, param_three) != napi_object) {
+        PRINT_HILOGE("error param_three");
+        return false;
+    } else {
+        bool isReArray = false;
+        napi_is_array(env, param_three, &isReArray);
+        if (!isReArray) {
+            PRINT_HILOGE("PrintResolution type error!");
+            return false;
+        }
+        std::vector<PrintResolution> resolutionList;
+        uint32_t arrayReLength = 0;
+        napi_get_array_length(env, param_three, &arrayReLength);
+        for (uint32_t i = 0; i < arrayReLength; i++) {
+            napi_value reValue;
+            PrintResolution resolution;
+            napi_get_element(env, param_three, i, &reValue);
+            if (!ParseResolution(env, reValue, resolution)) {
+                PRINT_HILOGE("PrintResolution type error!");
+                return false;
+            }
+            resolutionList.push_back(resolution);
+        }
+        SetResolution(resolutionList);
+    }
+    napi_value param_four = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_COLORMODE);
+    if (NapiPrintUtils::GetValueType(env, param_four) != napi_number) {
+        PRINT_HILOGE("error param_four");
+        return false;
+    }
+    napi_value param_five = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_DUPLEXMODE);
+    if (NapiPrintUtils::GetValueType(env, param_five) != napi_number) {
+        PRINT_HILOGE("error param_five");
+        return false;
+    }
+}
+
 bool PrinterCapability::ParseCapabilityParam(napi_env env, napi_value capValue)
 {
     napi_value param_one = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_MINMARGIN);
     if (NapiPrintUtils::GetValueType(env, param_one) != napi_object) {
-        PRINT_HILOGD("error param_one");
+        PRINT_HILOGE("error param_one");
         return false;
     } else {
         PrintMargin margin;
         if (!ParseMargin(env, param_one, margin)) {
-            PRINT_HILOGD("ParseCapability type error!");
+            PRINT_HILOGE("ParseCapability type error!");
             return false;
         }
         SetMinMargin(margin);
@@ -292,13 +332,13 @@ bool PrinterCapability::ParseCapabilityParam(napi_env env, napi_value capValue)
 
     napi_value param_two = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_PAGESIZE);
     if (NapiPrintUtils::GetValueType(env, param_two) != napi_object) {
-        PRINT_HILOGD("error param_two");
+        PRINT_HILOGE("error param_two");
         return false;
     } else {
         bool isArray = false;
         napi_is_array(env, param_two, &isArray);
         if (!isArray) {
-            PRINT_HILOGD("ParsePageSize type error!");
+            PRINT_HILOGE("ParsePageSize type error!");
             return false;
         }
 
@@ -310,50 +350,15 @@ bool PrinterCapability::ParseCapabilityParam(napi_env env, napi_value capValue)
             PrintPageSize pageSize;
             napi_get_element(env, param_two, i, &pageSizeValue);
             if (!ParsePageSize(env, pageSizeValue, pageSize)) {
-                PRINT_HILOGD("ParsePageSize type error!");
+                PRINT_HILOGE("ParsePageSize type error!");
                 return false;
             }
             pageSizeList.push_back(pageSize);
         }
         SetPageSize(pageSizeList);
     }
-
-    napi_value param_three = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_RESOLUTION);
-    if (NapiPrintUtils::GetValueType(env, param_three) != napi_object) {
-        PRINT_HILOGD("error param_three");
-        return false;
-    } else {
-        bool isReArray = false;
-        napi_is_array(env, param_three, &isReArray);
-        if (!isReArray) {
-            PRINT_HILOGD("PrintResolution type error!");
-            return false;
-        }
-        std::vector<PrintResolution> resolutionList;
-        uint32_t arrayReLength = 0;
-        napi_get_array_length(env, param_three, &arrayReLength);
-        for (uint32_t i = 0; i < arrayReLength; i++) {
-            napi_value reValue;
-            PrintResolution resolution;
-            napi_get_element(env, param_three, i, &reValue);
-            if (!ParseResolution(env, reValue, resolution)) {
-                PRINT_HILOGD("PrintResolution type error!");
-                return false;
-            }
-            resolutionList.push_back(resolution);
-        }
-        SetResolution(resolutionList);
-    }
-    napi_value param_four = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_COLORMODE);
-    if (NapiPrintUtils::GetValueType(env, param_four) != napi_number) {
-        PRINT_HILOGD("error param_four");
-        return false;
-    }
-    napi_value param_five = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_DUPLEXMODE);
-    if (NapiPrintUtils::GetValueType(env, param_five) != napi_number) {
-        PRINT_HILOGD("error param_five");
-        return false;
-    }
+    
+    ParseCapabilityObject(env, capValue);
     auto names = NapiPrintUtils::GetPropertyNames(env, capValue);
     return true;
 }
@@ -361,7 +366,7 @@ bool PrinterCapability::ParseCapabilityParam(napi_env env, napi_value capValue)
 bool PrinterCapability::ParseMargin(napi_env env, napi_value marginValue, PrintMargin &margin)
 {
     if (!ParseMarginParam(env, marginValue, margin)) {
-        PRINT_HILOGD("ParseResolutionParam is error!");
+        PRINT_HILOGE("ParseResolutionParam is error!");
         return false;
     }
     margin.SetTop(NapiPrintUtils::GetUint32Property(env, marginValue, PARAM_MARGIN_TOP));
@@ -381,22 +386,22 @@ bool PrinterCapability::ParseMarginParam(napi_env env, napi_value marginValue, P
 {
     napi_value param_one = NapiPrintUtils::GetNamedProperty(env, marginValue, PARAM_MARGIN_TOP);
     if (NapiPrintUtils::GetValueType(env, param_one) != napi_number) {
-        PRINT_HILOGD("error param_one");
+        PRINT_HILOGE("error param_one");
         return false;
     }
     napi_value param_two = NapiPrintUtils::GetNamedProperty(env, marginValue, PARAM_MARGIN_BOTTOM);
     if (NapiPrintUtils::GetValueType(env, param_two) != napi_number) {
-        PRINT_HILOGD("error param_two");
+        PRINT_HILOGE("error param_two");
         return false;
     }
     napi_value param_three = NapiPrintUtils::GetNamedProperty(env, marginValue, PARAM_MARGIN_LEFT);
     if (NapiPrintUtils::GetValueType(env, param_three) != napi_number) {
-        PRINT_HILOGD("error param_three");
+        PRINT_HILOGE("error param_three");
         return false;
     }
     napi_value param_four = NapiPrintUtils::GetNamedProperty(env, marginValue, PARAM_MARGIN_RIGHT);
     if (NapiPrintUtils::GetValueType(env, param_four) != napi_number) {
-        PRINT_HILOGD("error param_four");
+        PRINT_HILOGE("error param_four");
         return false;
     }
     auto names = NapiPrintUtils::GetPropertyNames(env, marginValue);
@@ -407,7 +412,7 @@ bool PrinterCapability::ParseMarginParam(napi_env env, napi_value marginValue, P
 bool PrinterCapability::ParsePageSize(napi_env env, napi_value capValue, PrintPageSize &pageSize)
 {
     if (!ParsePageSizeParam(env, capValue, pageSize)) {
-        PRINT_HILOGD("ParsePageSizeParam is error!");
+        PRINT_HILOGE("ParsePageSizeParam is error!");
         return false;
     }
     pageSize.SetId(NapiPrintUtils::GetStringPropertyUtf8(env, capValue, PARAM_PAGESIZE_ID));
@@ -426,22 +431,22 @@ bool PrinterCapability::ParsePageSizeParam(napi_env env, napi_value capValue, Pr
 {
     napi_value param_one = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_PAGESIZE_ID);
     if (NapiPrintUtils::GetValueType(env, param_one) != napi_number) {
-        PRINT_HILOGD("error param_one");
+        PRINT_HILOGE("error param_one");
         return false;
     }
     napi_value param_two = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_PAGESIZE_NAME);
     if (NapiPrintUtils::GetValueType(env, param_two) != napi_string) {
-        PRINT_HILOGD("error param_two");
+        PRINT_HILOGE("error param_two");
         return false;
     }
     napi_value param_three = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_PAGESIZE_WIDTH);
     if (NapiPrintUtils::GetValueType(env, param_three) != napi_number) {
-        PRINT_HILOGD("error param_three");
+        PRINT_HILOGE("error param_three");
         return false;
     }
     napi_value param_four = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_PAGESIZE_HEIGHT);
     if (NapiPrintUtils::GetValueType(env, param_four) != napi_number) {
-        PRINT_HILOGD("error param_four");
+        PRINT_HILOGE("error param_four");
         return false;
     }
     return true;
@@ -450,7 +455,7 @@ bool PrinterCapability::ParsePageSizeParam(napi_env env, napi_value capValue, Pr
 bool PrinterCapability::ParseResolution(napi_env env, napi_value reValue, PrintResolution &resolution)
 {
     if (!ParseResolutionParam(env, reValue, resolution)) {
-        PRINT_HILOGD("ParseResolutionParam is error!");
+        PRINT_HILOGE("ParseResolutionParam is error!");
         return false;
     }
     resolution.SetId(NapiPrintUtils::GetUint32Property(env, reValue, PARAM_RESOLUTION_ID));
@@ -467,17 +472,17 @@ bool PrinterCapability::ParseResolutionParam(napi_env env, napi_value reValue, P
 {
     napi_value param_one = NapiPrintUtils::GetNamedProperty(env, reValue, PARAM_RESOLUTION_ID);
     if (NapiPrintUtils::GetValueType(env, param_one) != napi_number) {
-        PRINT_HILOGD("error param_one");
+        PRINT_HILOGE("error param_one");
         return false;
     }
     napi_value param_two = NapiPrintUtils::GetNamedProperty(env, reValue, PARAM_RESOLUTION_HORIZONTALDPI);
     if (NapiPrintUtils::GetValueType(env, param_two) != napi_number) {
-        PRINT_HILOGD("error param_two");
+        PRINT_HILOGE("error param_two");
         return false;
     }
     napi_value param_three = NapiPrintUtils::GetNamedProperty(env, reValue, PARAM_RESOLUTION_VERTICALDPI);
     if (NapiPrintUtils::GetValueType(env, param_three) != napi_number) {
-        PRINT_HILOGD("error param_three");
+        PRINT_HILOGE("error param_three");
         return false;
     }
     return true;

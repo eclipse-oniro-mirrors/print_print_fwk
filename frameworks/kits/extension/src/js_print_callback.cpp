@@ -36,7 +36,7 @@ using namespace OHOS::Print;
 
 JsPrintCallback::JsPrintCallback(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
 
-NativeValue *JsPrintCallback::Exec(
+void JsPrintCallback::SetjsWorker(
     NativeValue *jsObj, const std::string &name, NativeValue *const *argv, size_t argc, bool isSync)
 {
     HandleScope handleScope(jsRuntime_);
@@ -52,6 +52,8 @@ NativeValue *JsPrintCallback::Exec(
         return nullptr;
     }
 
+    PRINT_HILOGD("%{public}s callback in", name.c_str());
+
     NativeEngine *nativeEngine = &jsRuntime_.GetNativeEngine();
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(reinterpret_cast<napi_env>(nativeEngine), &loop);
@@ -64,7 +66,23 @@ NativeValue *JsPrintCallback::Exec(
         PRINT_HILOGE("Failed to create uv work");
         return nullptr;
     }
-    SetContainer(jsWorker_, container_);
+
+    container_.self = shared_from_this();
+    container_.nativeEngine = nativeEngine;
+    container_.jsObj = jsObj;
+    container_.jsMethod = method;
+    container_.argv = argv;
+    container_.argc = argc;
+    container_.jsResult = nullptr;
+    container_.isSync = isSync;
+    container_.isCompleted = false;
+    jsWorker_->data = &container_;
+}
+
+NativeValue *JsPrintCallback::Exec(
+    NativeValue *jsObj, const std::string &name, NativeValue *const *argv, size_t argc, bool isSync)
+{
+    SetjsWorker(jsObj, name, argv, argc, isSync);
     uv_queue_work(
         loop, jsWorker_, [](uv_work_t *work) {},
         [](uv_work_t *work, int statusInt) {
@@ -92,19 +110,6 @@ NativeValue *JsPrintCallback::Exec(
         return container_.jsResult;
     }
     return nullptr;
-}
-void JsPrintCallback::SetContainer(uv_work_t& jsWorker,JsPrintCallback::Container container) 
-{
-    container.self = shared_from_this();
-    container.nativeEngine = nativeEngine;
-    container.jsObj = jsObj;
-    container.jsMethod = method;
-    container.argv = argv;
-    container.argc = argc;
-    container.jsResult = nullptr;
-    container.isSync = isSync;
-    container.isCompleted = false;
-    jsWorker_->data = &container;
 }
 } // namespace AbilityRuntime
 } // namespace OHOS

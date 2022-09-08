@@ -85,6 +85,9 @@ public:
     static void DefineProperties(
         napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties);
     static std::string ToLower(const std::string &s);
+    static void CovertPageSize(napi_env env, napi_value &result, const PrintJob &job);
+    static void CovertMargin(napi_env env, napi_value &result, const PrintJob &job);
+    static void CovertPreviewAttribute(napi_env env, napi_value &result, const PrintJob &job);
     static napi_value Convert2JsObj(napi_env env, const PrintJob &job);
 };
 } // namespace OHOS::Print
