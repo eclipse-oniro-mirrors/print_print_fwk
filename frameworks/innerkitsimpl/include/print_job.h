@@ -98,6 +98,10 @@ public:
     void Dump();
 
 private:
+    void SetConvertPageSize(napi_env env, napi_value &pageSize) const;
+    void SetConvertMargin(napi_env env, napi_value &margin) const;
+    void SetSubPageRange(napi_env env, napi_value &subPageRange) const;
+    void SetBuild(MessageParcel &data);
     bool ParseJob(napi_env env, napi_value jobValue, PrintJob &printJob);
     bool ParseJobParam(napi_env env, napi_value jobValue, PrintJob &printJob);
 

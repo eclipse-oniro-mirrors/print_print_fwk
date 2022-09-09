@@ -16,6 +16,8 @@
 #ifndef PRINT_RESOLUTION_H
 #define PRINT_RESOLUTION_H
 
+#include <cstdint>
+
 namespace OHOS::Print {
 class PrintResolution {
 public:

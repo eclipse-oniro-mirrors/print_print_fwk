@@ -49,23 +49,30 @@ JsPrintExtension::~JsPrintExtension() = default;
 
 void JsPrintExtension::InitData(const std::shared_ptr<AbilityLocalRecord> &record,
     const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
-    const sptr<IRemoteObject> &token)
+    const sptr<IRemoteObject> &token, std::string &srcPath, std::string &moduleName)
 {
     PRINT_HILOGD("jws JsPrintExtension begin Init");
     PrintExtension::Init(record, application, handler, token);
-    std::string srcPath = "";
     GetSrcPath(srcPath);
     if (srcPath.empty()) {
         PRINT_HILOGE("Failed to get srcPath");
         return;
     }
 
-    std::string moduleName(Extension::abilityInfo_->moduleName);
     moduleName.append("::").append(abilityInfo_->name);
     PRINT_HILOGD("JsPrintExtension::Init module:%{public}s,srcPath:%{public}s.", moduleName.c_str(), srcPath.c_str());
     HandleScope handleScope(jsRuntime_);
-    auto &engine = jsRuntime_.GetNativeEngine();
+}
 
+void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
+    const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
+    const sptr<IRemoteObject> &token)
+{
+    std::string srcPath = "";
+    std::string moduleName(Extension::abilityInfo_->moduleName);
+    InitData(record, application, handler, token, srcPath, moduleName);
+    auto &engine = jsRuntime_.GetNativeEngine();
+    //jsObj_ = jsRuntime_.LoadModule(moduleName, srcPath, abilityInfo_->hapPath);
     jsObj_ = jsRuntime_.LoadModule(moduleName, srcPath);
     if (jsObj_ == nullptr) {
         PRINT_HILOGE("Failed to get jsObj_");
@@ -77,14 +84,6 @@ void JsPrintExtension::InitData(const std::shared_ptr<AbilityLocalRecord> &recor
         PRINT_HILOGE("Failed to get JsPrintExtension object");
         return;
     }
-}
-
-void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
-    const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
-    const sptr<IRemoteObject> &token)
-{
-    InitData(record, application, application, handler, token);
-
     auto context = GetContext();
     if (context == nullptr) {
         PRINT_HILOGE("Failed to get context");

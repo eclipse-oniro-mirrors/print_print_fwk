@@ -172,8 +172,7 @@ bool PrintParseType::ParseJob(napi_env env, napi_value jobValue, PrintJob &print
     PRINT_HILOGD("printJob_value GetPrinterId value is %{public}d", printJob.GetPrinterId());
     PRINT_HILOGD("printJob_value GetJobState value is  %{public}d", printJob.GetJobState());
     PRINT_HILOGD("printJob_value GetCopyNumber value is %{public}d", printJob.GetCopyNumber());
-    PRINT_HILOGD("printJob_value SetIsLandscape value is %{public}s", printJob.GetIsLandscape() ? "true" : "false");
-    PRINT_HILOGD("printJob_value SetIsLandscape value is %{public}s", printJob.GetIsLandscape() ? "true" : "false");
+    PRINT_HILOGD("printJob_value SetIsLandscape value is %{public}d", printJob.GetIsLandscape());
     PRINT_HILOGD("printJob_value ColorMode value is %{public}d", printJob.GetIsSequential());
     PRINT_HILOGD("printJob_value DuplexMode value is %{public}d", printJob.GetDuplexMode());
     return true;
@@ -260,7 +259,7 @@ bool PrintParseType::ParseCapParam(napi_env env, napi_value capValue, PrinterCap
         capability.SetMinMargin(margin);
     }
 
-    if (!CoversePriotResolutionObject(env, capValue, capability)) {
+    if (!CoversePrintPageSizeObject(env, capValue, capability)) {
         PRINT_HILOGE("error Arr ParsePageSize");
         return false;
     }
@@ -285,7 +284,7 @@ bool PrintParseType::ParseCapParam(napi_env env, napi_value capValue, PrinterCap
     return true;
 }
 
-void PrintPaeseType::CoversePriotResolutionObject(napi_env env, napi_value capValue, PrinterCapability &capability)
+bool PrintParseType::CoversePrintPageSizeObject(napi_env env, napi_value capValue, PrinterCapability &capability)
 {
     napi_value param_two = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_PAGESIZE);
     if (NapiPrintUtils::GetValueType(env, param_two) != napi_object) {
@@ -313,6 +312,7 @@ void PrintPaeseType::CoversePriotResolutionObject(napi_env env, napi_value capVa
             pageSizeList.push_back(pageSize);
         }
         capability.SetPageSize(pageSizeList);
+        return true;
     }
 }
 
@@ -346,6 +346,7 @@ bool PrintParseType::ParseArrPrintResolution(napi_env env, napi_value capValue, 
     }
     return true;
 }
+
 bool PrintParseType::ParsePageSizeParam(napi_env env, napi_value capValue, PrintPageSize &pageSize)
 {
     napi_value param_one = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_PAGESIZE_ID);

@@ -35,48 +35,48 @@ namespace OHOS {
 namespace AbilityRuntime {
 class JsPrintExtensionContext final {
 public:
-    explicit JsPrintExtensionContext(const std::shared_ptr<PrintExtensionContext> &context) : context_(context) {}
+    explicit JsPrintExtensionContext(const std::shared_ptr<PrintExtensionContext>& context) : context_(context){}
     ~JsPrintExtensionContext() = default;
 
     static void Finalizer(NativeEngine *engine, void *data, void *hint)
     {
         PRINT_HILOGD("JsAbilityContext::Finalizer is called");
-        std::unique_ptr<JsPrintExtensionContext>(static_cast<JsPrintExtensionContext *>(data));
+        std::unique_ptr<JsPrintExtensionContext>(static_cast<JsPrintExtensionContext*>(data));
     }
 
     static NativeValue *StartAbility(NativeEngine *engine, NativeCallbackInfo *info)
     {
-        JsPrintExtensionContext *me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
+        JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
         return (me != nullptr) ? me->OnStartAbility(*engine, *info) : nullptr;
     }
 
     static NativeValue *StartAbilityWithAccount(NativeEngine *engine, NativeCallbackInfo *info)
     {
-        JsPrintExtensionContext *me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
+        JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
         return (me != nullptr) ? me->OnStartAbilityWithAccount(*engine, *info) : nullptr;
     }
 
     static NativeValue *ConnectAbilityWithAccount(NativeEngine *engine, NativeCallbackInfo *info)
     {
-        JsPrintExtensionContext *me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
+        JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
         return (me != nullptr) ? me->OnConnectAbilityWithAccount(*engine, *info) : nullptr;
     }
 
     static NativeValue *TerminateAbility(NativeEngine *engine, NativeCallbackInfo *info)
     {
-        JsPrintExtensionContext *me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
+        JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
         return (me != nullptr) ? me->OnTerminateAbility(*engine, *info) : nullptr;
     }
 
     static NativeValue *ConnectAbility(NativeEngine *engine, NativeCallbackInfo *info)
     {
-        JsPrintExtensionContext *me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
+        JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
         return (me != nullptr) ? me->OnConnectAbility(*engine, *info) : nullptr;
     }
 
     static NativeValue *DisconnectAbility(NativeEngine *engine, NativeCallbackInfo *info)
     {
-        JsPrintExtensionContext *me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
+        JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
         return (me != nullptr) ? me->OnDisconnectAbility(*engine, *info) : nullptr;
     }
 
@@ -115,7 +115,7 @@ private:
             auto context = weak.lock();
             if (!context) {
                 PRINT_HILOGW("context is released");
-                task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
+                    task.Reject(engine, CreateJsError(engine, NapiPrintUtils::ERROR_CODE_ONE, "Context is released"));
                 return;
             }
 
@@ -136,7 +136,7 @@ private:
         return result;
     }
 
-    static void CheckInfo(NativeEngine &engine, NativeCallbackInfo &info)
+    NativeValue *CheckInfo(NativeEngine &engine, NativeCallbackInfo &info)
     {
         PRINT_HILOGD("OnStartAbilityWithAccount is called");
         // only support two or three or four params
@@ -145,6 +145,7 @@ private:
             PRINT_HILOGE("Not enough params");
             return engine.CreateUndefined();
         }
+        return nullptr;
     }
 
     NativeValue *OnStartAbilityWithAccount(NativeEngine &engine, NativeCallbackInfo &info)
@@ -250,11 +251,11 @@ private:
         // unwrap want
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(
-            reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[INDEX_ZERO]), want);
+            reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), want);
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         // unwarp connection
-        sptr<JSPrintExtensionContext> connection = new JSPrintExtensionContext(engine);
+        sptr<JSPrintExtensionConnection> connection = new JSPrintExtensionConnection(engine);
         connection->SetJsConnectionObject(info.argv[1]);
         int64_t connectId = serialNumber_;
         ConnecttionKey key;
@@ -273,12 +274,12 @@ private:
             auto context = weak.lock();
             if (!context) {
                 PRINT_HILOGW("context is released");
-                task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
+                    task.Reject(engine, CreateJsError(engine, NapiPrintUtils::ERROR_CODE_ONE, "Context is released"));
                 return;
             }
             PRINT_HILOGD("context->ConnectAbility connection:%{public}d", (int32_t)connectId);
             if (!context->ConnectAbility(want, connection)) {
-                connection->CallJsFailed(ERROR_CODE_ONE);
+                    connection->CallJsFailed(NapiPrintUtils::ERROR_CODE_ONE);
             }
             task.Resolve(engine, engine.CreateUndefined());
         };
@@ -331,12 +332,12 @@ private:
             auto context = weak.lock();
             if (!context) {
                 PRINT_HILOGW("context is released");
-                task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
+                task.Reject(engine, CreateJsError(engine, NapiPrintUtils::ERROR_CODE_ONE, "Context is released"));
                 return;
             }
             PRINT_HILOGD("context->ConnectAbilityWithAccount connection:%{public}d", (int32_t)connectId);
             if (!context->ConnectAbilityWithAccount(want, accountId, connection)) {
-                connection->CallJsFailed(ERROR_CODE_ONE);
+                connection->CallJsFailed(NapiPrintUtils::ERROR_CODE_ONE);
             }
             task.Resolve(engine, engine.CreateUndefined());
         };
@@ -470,6 +471,7 @@ NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr
 
     // make handler
     handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+#if 0
     const char *moduleName = "JsPrintExtensionContext";
     BindNativeFunction(engine, *object, "startAbility", moduleName, JsPrintExtensionContext::StartAbility);
     BindNativeFunction(engine, *object, "terminateSelf", moduleName, JsPrintExtensionContext::TerminateAbility);
@@ -479,6 +481,16 @@ NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr
         engine, *object, "startAbilityWithAccount", moduleName, JsPrintExtensionContext::StartAbilityWithAccount);
     BindNativeFunction(
         engine, *object, "connectAbilityWithAccount", moduleName, JsPrintExtensionContext::ConnectAbilityWithAccount);
+#else
+    BindNativeFunction(engine, *object, "startAbility", JsPrintExtensionContext::StartAbility);
+    BindNativeFunction(engine, *object, "terminateSelf", JsPrintExtensionContext::TerminateAbility);
+    BindNativeFunction(engine, *object, "connectAbility", JsPrintExtensionContext::ConnectAbility);
+    BindNativeFunction(engine, *object, "disconnectAbility", JsPrintExtensionContext::DisconnectAbility);
+    BindNativeFunction(
+        engine, *object, "startAbilityWithAccount", JsPrintExtensionContext::StartAbilityWithAccount);
+    BindNativeFunction(
+        engine, *object, "connectAbilityWithAccount", JsPrintExtensionContext::ConnectAbilityWithAccount);
+#endif
     if (context) {
         PRINT_HILOGD("Set ExtensionAbilityInfo Property");
         auto abilityInfo = context->GetAbilityInfo();

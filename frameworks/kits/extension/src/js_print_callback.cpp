@@ -37,34 +37,34 @@ using namespace OHOS::Print;
 JsPrintCallback::JsPrintCallback(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
 
 void JsPrintCallback::SetjsWorker(
-    NativeValue *jsObj, const std::string &name, NativeValue *const *argv, size_t argc, bool isSync)
+    NativeValue *jsObj, const std::string &name,
+    uv_loop_s *loop, NativeValue *const *argv, size_t argc, bool isSync)
 {
     HandleScope handleScope(jsRuntime_);
     NativeObject *obj = ConvertNativeValueTo<NativeObject>(jsObj);
     if (obj == nullptr) {
         PRINT_HILOGE("Failed to get PrintExtension object");
-        return nullptr;
+        return;
     }
 
     NativeValue *method = obj->GetProperty(name.c_str());
     if (method == nullptr) {
         PRINT_HILOGE("Failed to get '%{public}s' from PrintExtension object", name.c_str());
-        return nullptr;
+        return;
     }
 
     PRINT_HILOGD("%{public}s callback in", name.c_str());
 
     NativeEngine *nativeEngine = &jsRuntime_.GetNativeEngine();
-    uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(reinterpret_cast<napi_env>(nativeEngine), &loop);
     if (loop == nullptr) {
         PRINT_HILOGE("Failed to get uv event loop");
-        return nullptr;
+        return;
     }
     jsWorker_ = new (std::nothrow) uv_work_t;
     if (jsWorker_ == nullptr) {
         PRINT_HILOGE("Failed to create uv work");
-        return nullptr;
+        return;
     }
 
     container_.self = shared_from_this();
@@ -82,7 +82,8 @@ void JsPrintCallback::SetjsWorker(
 NativeValue *JsPrintCallback::Exec(
     NativeValue *jsObj, const std::string &name, NativeValue *const *argv, size_t argc, bool isSync)
 {
-    SetjsWorker(jsObj, name, argv, argc, isSync);
+    uv_loop_s *loop = nullptr;
+    SetjsWorker(jsObj, name, loop, argv, argc, isSync);
     uv_queue_work(
         loop, jsWorker_, [](uv_work_t *work) {},
         [](uv_work_t *work, int statusInt) {

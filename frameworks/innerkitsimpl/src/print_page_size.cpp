@@ -110,7 +110,7 @@ uint32_t PrintPageSize::GetHeight() const
 
 void PrintPageSize::Dump()
 {
-    PRINT_HILOGD("top_ = %{public}s", id_.c_str());
+    PRINT_HILOGD("id_ = %{public}s", id_.c_str());
     PRINT_HILOGD("name_ = %{public}s", name_.c_str());
     PRINT_HILOGD("width_ = %{public}d", width_);
     PRINT_HILOGD("height_ = %{public}d", height_);

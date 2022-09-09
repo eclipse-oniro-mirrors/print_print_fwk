@@ -50,66 +50,8 @@ void PrintProgressNotify::WriteInfoJsObject(napi_env env, PrinterInfo info, napi
     PRINT_HILOGD("");
 }
 
-void PrintProgressNotify::notifyDataBase(NotifyData *notifyData, MessageParcel &data)
-{
-    PRINT_HILOGD("Progress callback in");
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        PRINT_HILOGE("Failed to get uv event loop");
-        return;
-    }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        PRINT_HILOGE("Failed to create uv work");
-        return;
-    }
-
-    notifyData = GetNotifyData();
-    notifyData->env = env_;
-    notifyData->ref = ref_;
-    notifyData->type = type_;
-    notifyData->objectType = data.ReadString();
-    notifyData->firstArgv = data.ReadUint32();
-    if (notifyData->objectType == "PrinterInfo") {
-        DataReadInfo(notifyData->secondArgv, data);
-    } else if (notifyData->objectType == "PrintJob") {
-        DataReadJob(notifyData->thirdArgv, data);
-    }
-}
-
 void PrintProgressNotify::OnCallBack(MessageParcel &data)
 {
-    NotifyData *notifyData = nullptr;
-    notifyDataBase(notifyData, data);
-    work->data = notifyData;
-    uv_queue_work(
-        loop, work, [](uv_work_t *work) {},
-        [](uv_work_t *work, int statusInt) {
-            NotifyData *notifyData = static_cast<NotifyData *>(work->data);
-            if (notifyData != nullptr) {
-                napi_value undefined = 0;
-                napi_get_undefined(notifyData->env, &undefined);
-                napi_value callbackFunc = nullptr;
-                napi_get_reference_value(notifyData->env, notifyData->ref, &callbackFunc);
-                napi_value result = nullptr;
-                napi_value callbackVal[NapiPrintUtils::TWO_ARG] = { 0 };
-                napi_create_uint32(notifyData->env, notifyData->firstArgv, &callbackVal[NapiPrintUtils::FIRST_ARGV]);
-                if (notifyData->objectType == "PrinterInfo") {
-                    WriteInfoJsObject(
-                        notifyData->env, notifyData->secondArgv, &callbackVal[NapiPrintUtils::SECOND_ARGV]);
-                } else if (notifyData->objectType == "PrintJob") {
-                    WriteJobJsObject(notifyData->env, notifyData->thirdArgv, &callbackVal[NapiPrintUtils::SECOND_ARGV]);
-                }
-                napi_call_function(
-                    notifyData->env, nullptr, callbackFunc, NapiPrintUtils::TWO_ARG, callbackVal, &result);
-                if (work != nullptr) {
-                    delete work;
-                    work = nullptr;
-                }
-                delete notifyData;
-                notifyData = nullptr;
-            }
-        });
+    PRINT_HILOGD("");
 }
 } // namespace OHOS::Print
