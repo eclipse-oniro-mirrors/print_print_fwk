@@ -22,6 +22,7 @@
 
 class NativeReference;
 class NativeValue;
+class NativeObject;
 
 namespace OHOS {
 namespace AbilityRuntime {
@@ -43,11 +44,6 @@ public:
      * @return The JsPrintExtension instance.
      */
     static JsPrintExtension *Create(const std::unique_ptr<Runtime> &runtime);
-
-    void InitData(const std::shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
-    const std::shared_ptr<AppExecFwk::OHOSApplication> &application,
-    std::shared_ptr<AppExecFwk::AbilityHandler> &handler, const sptr<IRemoteObject> &token,
-    std::string &srcPath, std::string &moduleName);
 
     /**
      * @brief Init the extension.
@@ -113,9 +109,13 @@ public:
 
 private:
     NativeValue *CallObjectMethod(const char *name, NativeValue *const *argv = nullptr, size_t argc = 0);
-    void RegisterAllCallbackPartOne();
-    void RegisterAllCallbackPartTwo();
-    void RegisterAllCallback();
+    bool InitExtensionObj(JsRuntime &jsRuntime);
+    bool InitContextObj(JsRuntime &jsRuntime, NativeObject *&extObj);
+    void RegisterDiscoveryCb();
+    void RegisterConnectionCb();
+    void RegisterPrintJobCb();
+    void RegisterPreviewCb();
+    void RegisterQueryCapCb();
 
     void GetSrcPath(std::string &srcPath);
 

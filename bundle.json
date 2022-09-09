@@ -53,7 +53,6 @@
           "//base/print/print/profile:print_sa_profiles"
         ],
         "test": [
-          "//base/print/print/interfaces/kits/napi/test:unittest"
         ]
       },
       "hisysevent_config": [

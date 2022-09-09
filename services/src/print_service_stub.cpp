@@ -14,7 +14,6 @@
  */
 
 #include "print_service_stub.h"
-
 #include "ipc_skeleton.h"
 #include "iprint_service.h"
 #include "message_parcel.h"

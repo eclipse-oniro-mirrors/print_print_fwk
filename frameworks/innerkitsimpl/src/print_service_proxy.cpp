@@ -105,7 +105,7 @@ bool PrintServiceProxy::StartDiscoverPrinter(const std::vector<uint32_t> &extens
     MessageOption option;
     data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
     data.WriteUint32(extensionList.size());
-    PRINT_HILOGD("OnStartDiscoverPrinter extensionList.size() = %{public}lu", extensionList.size());
+    PRINT_HILOGD("OnStartDiscoverPrinter extensionList.size() = %{public}zu", extensionList.size());
     for (uint32_t i = 0; i < extensionList.size(); i++) {
         data.WriteUint32(extensionList[i]);
     }
@@ -172,7 +172,7 @@ bool PrintServiceProxy::AddPrinters(const std::vector<PrinterInfo> &arrayPrintIn
     MessageOption option;
     data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
     data.WriteUint32(arrayPrintInfo.size());
-    PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfo.size() = %{public}lu", arrayPrintInfo.size());
+    PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfo.size() = %{public}zu", arrayPrintInfo.size());
     for (uint32_t i = 0; i < arrayPrintInfo.size(); i++) {
         BuildParcelFromPrinterInfo(data, arrayPrintInfo[i]);
     }
@@ -192,7 +192,7 @@ bool PrintServiceProxy::RemovePrinters(const std::vector<PrinterInfo> &arrayPrin
     MessageOption option;
     data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
     data.WriteUint32(arrayPrintInfo.size());
-    PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfo.size() = %{public}lu", arrayPrintInfo.size());
+    PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfo.size() = %{public}zu", arrayPrintInfo.size());
     for (uint32_t i = 0; i < arrayPrintInfo.size(); i++) {
         BuildParcelFromPrinterInfo(data, arrayPrintInfo[i]);
     }
