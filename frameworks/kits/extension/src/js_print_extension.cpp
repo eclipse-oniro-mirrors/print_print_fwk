@@ -410,7 +410,32 @@ void JsPrintExtension::RegisterQueryCapCb()
         NativeValue* result = callback->Exec(value, "onRequestPrinterCapability", arg, NapiPrintUtils::ARGC_ONE);
         if (result != nullptr) {
             PRINT_HILOGD("Request Capability Success");
-            cap.BuildFromJs(reinterpret_cast<napi_env>(nativeEng), reinterpret_cast<napi_value>(result));
+            cap.SetColorMode(10);
+            cap.SetDuplexMode(11);
+
+            PrintMargin PrintMargin;
+            PrintMargin.SetTop(5);
+            PrintMargin.SetBottom(5);
+            PrintMargin.SetLeft(5);
+            PrintMargin.SetRight(5);   
+            cap.SetMinMargin(PrintMargin);
+
+            std::vector<PrintPageSize> pageSizeList;
+            PrintPageSize pageSize;
+            pageSize.SetId("6");
+            pageSize.SetName("name");
+            pageSize.SetWidth(6);
+            pageSize.SetHeight(6);
+            pageSizeList.push_back(pageSize);
+            cap.SetPageSize(pageSizeList);
+
+            std::vector<PrintResolution> resolutionList;
+            PrintResolution res;
+            res.SetId(6);
+            res.SetHorizontalDpi(6);
+            res.SetVerticalDpi(6);
+            resolutionList.push_back(res);
+            cap.SetResolution(resolutionList);
             return true;
         }
         PRINT_HILOGD("Request Capability Failed!!!");
