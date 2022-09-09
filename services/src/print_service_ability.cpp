@@ -320,15 +320,19 @@ bool PrintServiceAbility::QueryPrinterCapability(uint32_t printerId, PrinterCapa
 {
     ManualStart();
     PRINT_HILOGD("QueryPrinterCapability started.");
+    PRINT_HILOGD("printerId : %{public}d", printerId);
     auto it = extCallbackMap_.find(PRINT_EXTCB_REQUEST_CAP);
     bool result = false;
     MessageParcel reply;
     if (it != extCallbackMap_.end()) {
+        PRINT_HILOGD("QueryPrinterCapability OnCallback.");
         result = it->second->OnCallback(printerId, reply);
         printerCapability.BuildFromParcel(reply);
+        printerCapability.Dump();
+        return result;
     }
     PRINT_HILOGW("QueryPrinterCapability Not Register Yet!!!");
-    return result;
+    return false;
 }
 
 bool PrintServiceAbility::CheckPermission()

@@ -34,11 +34,16 @@ class JsPrintCallback : public std::enable_shared_from_this<JsPrintCallback> {
 public:
     explicit JsPrintCallback(JsRuntime &jsRutime);
     ~JsPrintCallback() = default;
-    void SetjsWorker(NativeValue *jsObj, const std::string &name, NativeValue *const *argv, size_t argc, bool isSync);
     NativeValue *Exec(NativeValue *jsObj, const std::string &name, NativeValue *const *argv = nullptr, size_t argc = 0,
         bool isSync = true);
+
 private:
-    struct Container {
+    uv_loop_s *GetJsLoop(JsRuntime &jsRuntime);
+    bool BuildJsWorker(NativeValue *jsObj, const std::string &name,
+        NativeValue *const *argv, size_t argc, bool isSync);
+
+private:
+    struct JsWorkParam {
         std::shared_ptr<JsPrintCallback> self;
         NativeEngine *nativeEngine;
         NativeValue *jsObj;
@@ -52,7 +57,7 @@ private:
     JsRuntime &jsRuntime_;
     uv_work_t *jsWorker_;
 
-    JsPrintCallback::Container container_;
+    JsPrintCallback::JsWorkParam jsParam_;
 
     std::mutex conditionMutex_;
     std::condition_variable syncCon_;

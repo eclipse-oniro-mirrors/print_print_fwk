@@ -36,78 +36,90 @@ using namespace OHOS::Print;
 
 JsPrintCallback::JsPrintCallback(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
 
-void JsPrintCallback::SetjsWorker(
-    NativeValue *jsObj, const std::string &name, NativeValue *const *argv, size_t argc, bool isSync)
+uv_loop_s* JsPrintCallback::GetJsLoop(JsRuntime &jsRuntime)
 {
-    HandleScope handleScope(jsRuntime_);
+    NativeEngine *nativeEngine = &jsRuntime_.GetNativeEngine();
+    uv_loop_s* loop = nullptr;
+    napi_get_uv_event_loop(reinterpret_cast<napi_env>(nativeEngine), &loop);
+    if (loop == nullptr) {
+        return nullptr;
+    }
+    return loop;
+}
+
+bool JsPrintCallback::BuildJsWorker(NativeValue *jsObj, const std::string &name,
+    NativeValue *const *argv, size_t argc, bool isSync)
+{
     NativeObject *obj = ConvertNativeValueTo<NativeObject>(jsObj);
     if (obj == nullptr) {
         PRINT_HILOGE("Failed to get PrintExtension object");
-        return nullptr;
+        return false;
     }
 
     NativeValue *method = obj->GetProperty(name.c_str());
     if (method == nullptr) {
         PRINT_HILOGE("Failed to get '%{public}s' from PrintExtension object", name.c_str());
-        return nullptr;
+        return false;
     }
 
-    PRINT_HILOGD("%{public}s callback in", name.c_str());
-
-    NativeEngine *nativeEngine = &jsRuntime_.GetNativeEngine();
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(reinterpret_cast<napi_env>(nativeEngine), &loop);
-    if (loop == nullptr) {
-        PRINT_HILOGE("Failed to get uv event loop");
-        return nullptr;
-    }
     jsWorker_ = new (std::nothrow) uv_work_t;
     if (jsWorker_ == nullptr) {
         PRINT_HILOGE("Failed to create uv work");
-        return nullptr;
+        return false;
     }
 
-    container_.self = shared_from_this();
-    container_.nativeEngine = nativeEngine;
-    container_.jsObj = jsObj;
-    container_.jsMethod = method;
-    container_.argv = argv;
-    container_.argc = argc;
-    container_.jsResult = nullptr;
-    container_.isSync = isSync;
-    container_.isCompleted = false;
-    jsWorker_->data = &container_;
+    jsParam_.self = shared_from_this();
+    jsParam_.nativeEngine = &jsRuntime_.GetNativeEngine();
+    jsParam_.jsObj = jsObj;
+    jsParam_.jsMethod = method;
+    jsParam_.argv = argv;
+    jsParam_.argc = argc;
+    jsParam_.jsResult = nullptr;
+    jsParam_.isSync = isSync;
+    jsParam_.isCompleted = false;
+    jsWorker_->data = &jsParam_;
+    return true;
 }
 
 NativeValue *JsPrintCallback::Exec(
     NativeValue *jsObj, const std::string &name, NativeValue *const *argv, size_t argc, bool isSync)
 {
-    SetjsWorker(jsObj, name, argv, argc, isSync);
+    PRINT_HILOGD("%{public}s callback in", name.c_str());
+    HandleScope handleScope(jsRuntime_);    
+    uv_loop_s *loop = GetJsLoop(jsRuntime_);
+    if (loop == nullptr) {
+        PRINT_HILOGE("Failed to acquire js event loop");
+        return nullptr;
+    }
+    if (!BuildJsWorker(jsObj, name, argv, argc, isSync)) {
+        PRINT_HILOGE("Failed to build JS worker");
+        return nullptr;
+    }
     uv_queue_work(
         loop, jsWorker_, [](uv_work_t *work) {},
         [](uv_work_t *work, int statusInt) {
-            auto container = reinterpret_cast<JsPrintCallback::Container *>(work->data);
-            if (container != nullptr) {
-                container->jsResult = container->nativeEngine->CallFunction(
-                    container->jsObj, container->jsMethod, container->argv, container->argc);
-                container->isCompleted = true;
-                if (container->isSync) {
-                    container->self = nullptr;
+            auto jsWorkParam = reinterpret_cast<JsPrintCallback::JsWorkParam*>(work->data);
+            if (jsWorkParam != nullptr) {
+                jsWorkParam->jsResult = jsWorkParam->nativeEngine->CallFunction(
+                    jsWorkParam->jsObj, jsWorkParam->jsMethod, jsWorkParam->argv, jsWorkParam->argc);
+                jsWorkParam->isCompleted = true;
+                if (jsWorkParam->isSync) {
+                    jsWorkParam->self = nullptr;
                 } else {
-                    std::unique_lock<std::mutex> lock(container->self->conditionMutex_);
-                    container->self->syncCon_.notify_one();
+                    std::unique_lock<std::mutex> lock(jsWorkParam->self->conditionMutex_);
+                    jsWorkParam->self->syncCon_.notify_one();
                 }
             }
         });
     if (isSync) {
         std::unique_lock<std::mutex> conditionLock(conditionMutex_);
         auto waitStatus = syncCon_.wait_for(
-            conditionLock, std::chrono::milliseconds(SYNC_TIME_OUT), [this]() { return container_.isCompleted; });
+            conditionLock, std::chrono::milliseconds(SYNC_TIME_OUT), [this]() { return jsParam_.isCompleted; });
         if (!waitStatus) {
             PRINT_HILOGE("print server load sa timeout");
             return nullptr;
         }
-        return container_.jsResult;
+        return jsParam_.jsResult;
     }
     return nullptr;
 }

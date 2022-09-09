@@ -73,7 +73,7 @@ bool PrintExtensionCallbackStub::OnCallback(const PrintJob &job)
     return false;
 }
 
-bool PrintExtensionCallbackStub::OnCallback(uint32_t printerId, MessageParcel &reply) // PrinterCapability& reply
+bool PrintExtensionCallbackStub::OnCallback(uint32_t printerId, MessageParcel &reply)
 {
     if (capability_ != nullptr) {
         PrinterCapability capability;

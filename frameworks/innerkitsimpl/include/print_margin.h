@@ -16,6 +16,8 @@
 #ifndef PRINT_MARGIN_H
 #define PRINT_MARGIN_H
 
+#include <cstdint>
+
 namespace OHOS::Print {
 class PrintMargin {
 public:

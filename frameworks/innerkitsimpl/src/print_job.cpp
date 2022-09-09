@@ -324,13 +324,13 @@ void PrintJob::BuildFromParcel(MessageParcel &data)
     Dump();
 }
 
-void PrintJob::SetSubPageRange(napi_env env, napi_value &subPageRange)
+void PrintJob::SetSubPageRange(napi_env env, napi_value &subPageRange) const
 {
     napi_create_object(env, &subPageRange);
     NapiPrintUtils::SetUint32Property(env, subPageRange, "startPage", pageRange_.GetStartPage());
     NapiPrintUtils::SetUint32Property(env, subPageRange, "endPage", pageRange_.GetEndPage());
     napi_value arrPreviewPages;
-    status = napi_create_array(env, &arrPreviewPages);
+    napi_status status = napi_create_array(env, &arrPreviewPages);
     PrintRange previewPrintRange;
     std::vector<uint32_t> previewRangePages;
     preview_.GetPreviewRange(previewPrintRange);
@@ -345,7 +345,7 @@ void PrintJob::SetSubPageRange(napi_env env, napi_value &subPageRange)
     napi_set_named_property(env, subPageRange, "files", arrPreviewPages);
 }
 
-void PrintJob::SetPageSize(napi_env env, napi_value &pageSize)
+void PrintJob::SetConvertPageSize(napi_env env, napi_value &pageSize) const
 {
     NapiPrintUtils::SetStringPropertyUtf8(env, pageSize, "id", pageSize_.GetId());
     NapiPrintUtils::SetStringPropertyUtf8(env, pageSize, "name", pageSize_.GetName().c_str());
@@ -353,7 +353,7 @@ void PrintJob::SetPageSize(napi_env env, napi_value &pageSize)
     NapiPrintUtils::SetUint32Property(env, pageSize, "height", pageSize_.GetHeight());
 }
 
-void PrintJob::SetMargin(napi_env env, napi_value &margin)
+void PrintJob::SetConvertMargin(napi_env env, napi_value &margin) const
 {
     NapiPrintUtils::SetUint32Property(env, margin, "top", margin_.GetTop());
     NapiPrintUtils::SetUint32Property(env, margin, "bottom", margin_.GetBottom());
@@ -398,7 +398,7 @@ void PrintJob::ConvertToJs(napi_env env, napi_value *result) const
     NapiPrintUtils::SetUint32Property(env, *result, "isSequential", GetIsSequential());
     napi_value pageSize;
     napi_create_object(env, &pageSize);
-    SetPageSize(env, pageSize);
+    SetConvertPageSize(env, pageSize);
 
     NapiPrintUtils::SetUint32Property(env, *result, "isLandscape", GetIsLandscape());
     NapiPrintUtils::SetUint32Property(env, *result, "colorMode", GetColorMode());
@@ -406,7 +406,7 @@ void PrintJob::ConvertToJs(napi_env env, napi_value *result) const
 
     napi_value margin;
     napi_create_object(env, &margin);
-    SetMargin(env, margin);
+    SetConvertMargin(env, margin);
 
     napi_value preview;
     napi_create_object(env, &preview);

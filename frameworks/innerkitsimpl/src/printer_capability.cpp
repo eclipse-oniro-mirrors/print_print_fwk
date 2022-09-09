@@ -280,13 +280,13 @@ void PrinterCapability::ParseCapabilityObject(napi_env env, napi_value capValue)
     napi_value param_three = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_RESOLUTION);
     if (NapiPrintUtils::GetValueType(env, param_three) != napi_object) {
         PRINT_HILOGE("error param_three");
-        return false;
+        return;
     } else {
         bool isReArray = false;
         napi_is_array(env, param_three, &isReArray);
         if (!isReArray) {
             PRINT_HILOGE("PrintResolution type error!");
-            return false;
+            return;
         }
         std::vector<PrintResolution> resolutionList;
         uint32_t arrayReLength = 0;
@@ -297,7 +297,7 @@ void PrinterCapability::ParseCapabilityObject(napi_env env, napi_value capValue)
             napi_get_element(env, param_three, i, &reValue);
             if (!ParseResolution(env, reValue, resolution)) {
                 PRINT_HILOGE("PrintResolution type error!");
-                return false;
+                return;
             }
             resolutionList.push_back(resolution);
         }
@@ -306,12 +306,12 @@ void PrinterCapability::ParseCapabilityObject(napi_env env, napi_value capValue)
     napi_value param_four = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_COLORMODE);
     if (NapiPrintUtils::GetValueType(env, param_four) != napi_number) {
         PRINT_HILOGE("error param_four");
-        return false;
+        return;
     }
     napi_value param_five = NapiPrintUtils::GetNamedProperty(env, capValue, PARAM_CAPABILITY_DUPLEXMODE);
     if (NapiPrintUtils::GetValueType(env, param_five) != napi_number) {
         PRINT_HILOGE("error param_five");
-        return false;
+        return;
     }
 }
 

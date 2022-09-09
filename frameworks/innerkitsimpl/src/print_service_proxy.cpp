@@ -78,7 +78,7 @@ bool PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &array
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
-    data.WriteUint32(NapiPrintUtil::ARGC_FIVE);
+    data.WriteUint32(NapiPrintUtils::ARGC_FIVE);
     PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
     bool ret = Remote()->SendRequest(CMD_QUERYALLEXTENSION, data, reply, option);
     if (ret != ERR_NONE) {
@@ -105,7 +105,7 @@ bool PrintServiceProxy::StartDiscoverPrinter(const std::vector<uint32_t> &extens
     MessageOption option;
     data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
     data.WriteUint32(extensionList.size());
-    PRINT_HILOGD("OnStartDiscoverPrinter extensionList.size() = %{public}lu", extensionList.size());
+    PRINT_HILOGD("OnStartDiscoverPrinter extensionList.size() = %{public}zu", extensionList.size());
     for (uint32_t i = 0; i < extensionList.size(); i++) {
         data.WriteUint32(extensionList[i]);
     }
@@ -172,7 +172,7 @@ bool PrintServiceProxy::AddPrinters(const std::vector<PrinterInfo> &arrayPrintIn
     MessageOption option;
     data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
     data.WriteUint32(arrayPrintInfo.size());
-    PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfo.size() = %{public}lu", arrayPrintInfo.size());
+    PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfo.size() = %{public}zu", arrayPrintInfo.size());
     for (uint32_t i = 0; i < arrayPrintInfo.size(); i++) {
         BuildParcelFromPrinterInfo(data, arrayPrintInfo[i]);
     }
@@ -192,7 +192,7 @@ bool PrintServiceProxy::RemovePrinters(const std::vector<PrinterInfo> &arrayPrin
     MessageOption option;
     data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
     data.WriteUint32(arrayPrintInfo.size());
-    PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfo.size() = %{public}lu", arrayPrintInfo.size());
+    PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfo.size() = %{public}zu", arrayPrintInfo.size());
     for (uint32_t i = 0; i < arrayPrintInfo.size(); i++) {
         BuildParcelFromPrinterInfo(data, arrayPrintInfo[i]);
     }
@@ -413,8 +413,8 @@ void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel &data, const Print
 
     std::vector<std::string> files;
     jobinfo.GetFiles(files);
-    data.WriteUint32(files.size());
-    for (uint32_t i = 0; i < files.size(); i++) {
+    data.WriteUint32((uint32_t)files.size());
+    for (uint32_t i = 0; i < (uint32_t)files.size(); i++) {
         data.WriteString(files[i]);
     }
     data.WriteUint32(jobinfo.GetJobId());
@@ -429,8 +429,8 @@ void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel &data, const Print
 
     std::vector<uint32_t> pages;
     range.GetPages(pages);
-    data.WriteUint32(pages.size());
-    for (uint32_t i = 0; i < pageLength; i++) {
+    data.WriteUint32((uint32_t)pages.size());
+    for (uint32_t i = 0; i < (uint32_t)pages.size(); i++) {
         data.WriteUint32(pages[i]);
     }
 
@@ -464,8 +464,8 @@ void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel &data, const Print
     data.WriteUint32(range.GetEndPage());
 
     range.GetPages(pages);
-    data.WriteUint32(pages.size());
-    for (uint32_t i = 0; i < pages.size(); i++) {
+    data.WriteUint32((uint32_t)pages.size());
+    for (uint32_t i = 0; i < (uint32_t)pages.size(); i++) {
         data.WriteUint32(pages[i]);
     }
 }

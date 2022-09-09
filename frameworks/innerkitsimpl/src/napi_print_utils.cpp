@@ -305,8 +305,9 @@ std::string NapiPrintUtils::GetValueString(napi_env env, napi_value value)
     return resultValue;
 }
 
-void NapiPrintUtils::CovertPageSize(napi_env env, napi_value &result, const PrintJob &job)
+napi_value NapiPrintUtils::CovertPageSize(napi_env env, napi_value &result, const PrintJob &job)
 {
+    napi_value backData = nullptr;
     napi_value pageSize;
     NAPI_CALL(env, napi_create_object(env, &pageSize));
     PrintPageSize nativePageSize;
@@ -316,10 +317,12 @@ void NapiPrintUtils::CovertPageSize(napi_env env, napi_value &result, const Prin
     SetUint32Property(env, pageSize, "width", nativePageSize.GetWidth());
     SetUint32Property(env, pageSize, "height", nativePageSize.GetHeight());
     NAPI_CALL(env, napi_set_named_property(env, result, "pageSize", pageSize));
+    return backData;
 }
 
-void NapiPrintUtils::CovertMargin(napi_env env, napi_value &result, const PrintJob &job)
+napi_value NapiPrintUtils::CovertMargin(napi_env env, napi_value &result, const PrintJob &job)
 {
+    napi_value backData = nullptr;
     PrintMargin nativeMargin;
     job.GetMargin(nativeMargin);
     napi_value margin;
@@ -329,14 +332,17 @@ void NapiPrintUtils::CovertMargin(napi_env env, napi_value &result, const PrintJ
     SetUint32Property(env, margin, "left", nativeMargin.GetLeft());
     SetUint32Property(env, margin, "right", nativeMargin.GetRight());
     NAPI_CALL(env, napi_set_named_property(env, result, "margin", margin));
+    return backData;
 }
 
 
-void NapiPrintUtils::CovertPreviewAttribute(napi_env env, napi_value &result, const PrintJob &job)
+napi_value NapiPrintUtils::CovertPreviewAttribute(napi_env env, napi_value &result, const PrintJob &job)
 {
+    napi_value backData = nullptr;
     PrintRange nativeRange;
     PreviewAttribute previewAttr;
     job.GetPreview(previewAttr);
+    std::vector<uint32_t> pages;
     previewAttr.GetPreviewRange(nativeRange);
     nativeRange.GetPages(pages);
 
@@ -360,6 +366,7 @@ void NapiPrintUtils::CovertPreviewAttribute(napi_env env, napi_value &result, co
     NAPI_CALL(env, napi_set_named_property(env, subPageRange, "pages", arrPreviewPages));
     NAPI_CALL(env, napi_set_named_property(env, preview, "pageRange", subPageRange));
     NAPI_CALL(env, napi_set_named_property(env, result, "preview", preview));
+    return backData;
 }
 
 napi_value NapiPrintUtils::Convert2JsObj(napi_env env, const PrintJob &job)
@@ -403,14 +410,14 @@ napi_value NapiPrintUtils::Convert2JsObj(napi_env env, const PrintJob &job)
 
     SetUint32Property(env, result, "isSequential", job.GetIsSequential());
 
-    CovertPageSize(env, result, job);
+    napi_value covertValue = CovertPageSize(env, result, job);
 
     SetUint32Property(env, result, "isLandscape", job.GetIsLandscape());
     SetUint32Property(env, result, "colorMode", job.GetColorMode());
     SetUint32Property(env, result, "duplexMode", job.GetDuplexMode());
 
-    CovertMargin(env, result, job);
-    CovertPreviewAttribute(env, result, job);
+    covertValue = CovertMargin(env, result, job);
+    covertValue = CovertPreviewAttribute(env, result, job);
     
     return result;
 }
