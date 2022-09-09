@@ -72,8 +72,7 @@ void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
     std::string moduleName(Extension::abilityInfo_->moduleName);
     InitData(record, application, handler, token, srcPath, moduleName);
     auto &engine = jsRuntime_.GetNativeEngine();
-    //jsObj_ = jsRuntime_.LoadModule(moduleName, srcPath, abilityInfo_->hapPath);
-    jsObj_ = jsRuntime_.LoadModule(moduleName, srcPath);
+    jsObj_ = jsRuntime_.LoadModule(moduleName, srcPath, abilityInfo_->hapPath);
     if (jsObj_ == nullptr) {
         PRINT_HILOGE("Failed to get jsObj_");
         return;
