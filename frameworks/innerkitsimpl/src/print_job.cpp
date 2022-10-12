@@ -14,17 +14,55 @@
  */
 
 #include "print_job.h"
-
 #include "napi_print_utils.h"
+#include "print_constant.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintJob::PrintJob()
-    : jobId_(0), jobState_(1), copyNumber_(1), isSequential_(true), isLandscape_(1), colorMode_(1), duplexMode_(1)
-{}
 
-PrintJob::PrintJob(const PrintJob &right)
-{
+static constexpr const char *PARAM_JOB_FILES = "files";
+static constexpr const char *PARAM_JOB_JOBID = "jobId";
+static constexpr const char *PARAM_JOB_PRINTERID = "printerId";
+static constexpr const char *PARAM_JOB_JOBSTATE = "jobState";
+static constexpr const char *PARAM_JOB_SUBSTATE = "jobSubState";
+static constexpr const char *PARAM_JOB_COPYNUMBER = "copyNumber";
+static constexpr const char *PARAM_JOB_PAGERANGE = "pageRange";
+static constexpr const char *PARAM_JOB_ISSEQUENTIAL = "isSequential";
+static constexpr const char *PARAM_JOB_PAGESIZE = "pageSize";
+static constexpr const char *PARAM_JOB_ISLANDSCAPE = "isLandscape";
+static constexpr const char *PARAM_JOB_COLORMODE = "colorMode";
+static constexpr const char *PARAM_JOB_DUPLEXMODE = "duplexMode";
+static constexpr const char *PARAM_JOB_MARGIN = "margin";
+static constexpr const char *PARAM_JOB_PREVIEW = "preview";
+static constexpr const char *PARAM_JOB_OPTION = "option";
+
+PrintJob::PrintJob()
+    : jobId_(""), printerId_(""), jobState_(PRINT_JOB_PREPARED),
+      subState_(PRINT_JOB_BLOCKED_UNKNOWN), copyNumber_(0),
+      isSequential_(false), isLandscape_(false), colorMode_(0), duplexMode_(0),
+      option_("") {}
+
+PrintJob::PrintJob(const PrintJob &right) {
+  files_.clear();
+  files_.assign(right.files_.begin(), right.files_.end());
+
+  printerId_ = right.printerId_;
+  jobId_ = right.jobId_;
+  jobState_ = right.jobState_;
+  copyNumber_ = right.copyNumber_;
+  pageRange_ = right.pageRange_;
+  isSequential_ = right.isSequential_;
+  pageSize_ = right.pageSize_;
+  isLandscape_ = right.isLandscape_;
+  colorMode_ = right.colorMode_;
+  duplexMode_ = right.duplexMode_;
+  margin_ = right.margin_;
+  preview_ = right.preview_;
+  option_ = right.option_;
+}
+
+PrintJob &PrintJob::operator=(const PrintJob &right) {
+  if (this != &right) {
     files_.clear();
     files_.assign(right.files_.begin(), right.files_.end());
 
@@ -40,409 +78,489 @@ PrintJob::PrintJob(const PrintJob &right)
     duplexMode_ = right.duplexMode_;
     margin_ = right.margin_;
     preview_ = right.preview_;
-}
-
-PrintJob &PrintJob::operator=(PrintJob &right)
-{
-    if (this != &right) {
-        files_.clear();
-        files_.assign(right.files_.begin(), right.files_.end());
-
-        printerId_ = right.printerId_;
-        jobId_ = right.jobId_;
-        jobState_ = right.jobState_;
-        copyNumber_ = right.copyNumber_;
-        pageRange_ = right.pageRange_;
-        isSequential_ = right.isSequential_;
-        pageSize_ = right.pageSize_;
-        isLandscape_ = right.isLandscape_;
-        colorMode_ = right.colorMode_;
-        duplexMode_ = right.duplexMode_;
-        margin_ = right.margin_;
-        preview_ = right.preview_;
-    }
-    return *this;
+    option_ = right.option_;
+  }
+  return *this;
 }
 
 PrintJob::~PrintJob() {}
 
-void PrintJob::SetFiles(const std::vector<std::string> &files)
-{
-    files_.clear();
-    files_.assign(files.begin(), files.end());
+void PrintJob::SetFiles(const std::vector<std::string> &files) {
+  files_.clear();
+  files_.assign(files.begin(), files.end());
 }
 
-void PrintJob::SetJobId(uint32_t jobId)
-{
-    jobId_ = jobId;
+void PrintJob::SetJobId(const std::string &jobId) { jobId_ = jobId; }
+
+void PrintJob::SetPrinterId(const std::string &printerid) {
+  printerId_ = printerid;
 }
 
-void PrintJob::SetPrintId(uint32_t printerid)
-{
-    printerId_ = printerid;
-}
-
-void PrintJob::SetJobState(uint32_t jobState)
-{
+void PrintJob::SetJobState(uint32_t jobState) {
+  if (jobState < PRINT_JOB_UNKNOWN) {
     jobState_ = jobState;
+  }
 }
 
-void PrintJob::SetCopyNumber(uint32_t copyNumber)
-{
-    copyNumber_ = copyNumber;
+void PrintJob::SetSubState(uint32_t subState) {
+  if (jobState_ == PRINT_JOB_COMPLETED &&
+      subState <= PRINT_JOB_COMPLETED_FILE_CORRUPT) {
+    subState_ = subState;
+  }
+  if (jobState_ == PRINT_JOB_BLOCKED &&
+      (subState < PRINT_JOB_BLOCKED_UNKNOWN &&
+       subState > PRINT_JOB_COMPLETED_FILE_CORRUPT)) {
+    subState_ = subState;
+  }
 }
 
-void PrintJob::SetPageRange(const PrintRange &pageRange)
-{
-    pageRange_ = pageRange;
+void PrintJob::SetCopyNumber(uint32_t copyNumber) { copyNumber_ = copyNumber; }
+
+void PrintJob::SetPageRange(const PrintRange &pageRange) {
+  pageRange_ = pageRange;
 }
 
-void PrintJob::SetIsSequential(bool isSequential)
-{
-    isSequential_ = isSequential;
+void PrintJob::SetIsSequential(bool isSequential) {
+  isSequential_ = isSequential;
 }
 
-void PrintJob::SetPageSize(const PrintPageSize &pageSize)
-{
-    pageSize_ = pageSize;
+void PrintJob::SetPageSize(const PrintPageSize &pageSize) {
+  pageSize_ = pageSize;
 }
 
-void PrintJob::SetIsLandscape(bool isLandscape)
-{
-    isLandscape_ = isLandscape;
+void PrintJob::SetIsLandscape(bool isLandscape) { isLandscape_ = isLandscape; }
+
+void PrintJob::SetColorMode(uint32_t colorMode) { colorMode_ = colorMode; }
+
+void PrintJob::SetDuplexMode(uint32_t duplexmode) { duplexMode_ = duplexmode; }
+
+void PrintJob::SetMargin(const PrintMargin &margin) { margin_ = margin; }
+
+void PrintJob::SetOption(const std::string &option) { option_ = option; }
+
+void PrintJob::SetPreview(const PrintPreviewAttribute &preview) {
+  preview_ = preview;
 }
 
-void PrintJob::SetColorMode(uint32_t colorMode)
-{
-    colorMode_ = colorMode;
+void PrintJob::GetFiles(std::vector<std::string> &files) const {
+  files.clear();
+  files.assign(files_.begin(), files_.end());
 }
 
-void PrintJob::SetDuplexMode(uint32_t duplexmode)
-{
-    duplexMode_ = duplexmode;
+const std::string &PrintJob::GetJobId() const { return jobId_; }
+
+const std::string &PrintJob::GetPrinterId() const { return printerId_; }
+
+uint32_t PrintJob::GetJobState() const { return jobState_; }
+
+uint32_t PrintJob::GetSubState() const { return subState_; }
+
+uint32_t PrintJob::GetCopyNumber() const { return copyNumber_; }
+
+void PrintJob::GetPageRange(PrintRange &range) const { range = pageRange_; }
+
+bool PrintJob::GetIsSequential() const { return isSequential_; }
+void PrintJob::GetPageSize(PrintPageSize &pageSize) const {
+  pageSize = pageSize_;
 }
 
-void PrintJob::SetMargin(const PrintMargin &margin)
-{
-    margin_ = margin;
+bool PrintJob::GetIsLandscape() const { return isLandscape_; }
+
+uint32_t PrintJob::GetColorMode() const { return colorMode_; }
+
+uint32_t PrintJob::GetDuplexMode() const { return duplexMode_; }
+
+void PrintJob::GetMargin(PrintMargin &margin) const { margin = margin_; }
+
+void PrintJob::GetPreview(PrintPreviewAttribute &previewAttr) const {
+  previewAttr = preview_;
 }
 
-void PrintJob::SetPreview(const PreviewAttribute &preview)
-{
-    preview_ = preview;
+const std::string &PrintJob::GetOption() const { return option_; }
+
+bool PrintJob::ReadFromParcel(Parcel &parcel) {
+  if (!parcel.ReadStringVector(&files_)) {
+    PRINT_HILOGE("Failed to restore file list");
+    return false;
+  }
+  SetJobId(parcel.ReadString());
+  SetPrinterId(parcel.ReadString());
+  SetJobState(parcel.ReadUint32());
+  SetSubState(parcel.ReadUint32());
+  SetCopyNumber(parcel.ReadUint32());
+  auto rangePtr = PrintRange::Unmarshalling(parcel);
+  if (rangePtr == nullptr) {
+    PRINT_HILOGE("Failed to restore page range");
+    return false;
+  }
+  SetPageRange(*rangePtr);
+
+  SetIsSequential(parcel.ReadBool());
+
+  auto pageSizePtr = PrintPageSize::Unmarshalling(parcel);
+  if (pageSizePtr == nullptr) {
+    PRINT_HILOGE("Failed to restore page size");
+    return false;
+  }
+  SetPageSize(*pageSizePtr);
+
+  SetIsLandscape(parcel.ReadBool());
+  SetColorMode(parcel.ReadUint32());
+  SetDuplexMode(parcel.ReadUint32());
+
+  auto marginPtr = PrintMargin::Unmarshalling(parcel);
+  if (marginPtr == nullptr) {
+    PRINT_HILOGE("Failed to restore margin");
+    return false;
+  }
+  SetMargin(*marginPtr);
+
+  auto previewPtr = PrintPreviewAttribute::Unmarshalling(parcel);
+  if (previewPtr == nullptr) {
+    PRINT_HILOGE("Failed to restore preview attribute");
+    return false;
+  }
+  SetPreview(*previewPtr);
+
+  if (parcel.ReadBool()) {
+    SetOption(parcel.ReadString());
+  } else {
+    SetOption("");
+  }
+  return true;
 }
 
-void PrintJob::GetFiles(std::vector<std::string> &files) const
-{
-    files.clear();
-    files.assign(files_.begin(), files_.end());
+bool PrintJob::Marshalling(Parcel &parcel) const {
+  if (!parcel.WriteStringVector(files_)) {
+    PRINT_HILOGE("Failed to save file list");
+    return false;
+  }
+
+  if (!parcel.WriteString(GetJobId())) {
+    PRINT_HILOGE("Failed to save job id");
+    return false;
+  }
+
+  if (!parcel.WriteString(GetPrinterId())) {
+    PRINT_HILOGE("Failed to save printer id");
+    return false;
+  }
+
+  if (!parcel.WriteUint32(GetJobState())) {
+    PRINT_HILOGE("Failed to save job state");
+    return false;
+  }
+
+  if (!parcel.WriteUint32(GetSubState())) {
+    PRINT_HILOGE("Failed to save job substate");
+    return false;
+  }
+
+  if (!parcel.WriteUint32(GetCopyNumber())) {
+    PRINT_HILOGE("Failed to save copy number");
+    return false;
+  }
+
+  if (!pageRange_.Marshalling(parcel)) {
+    PRINT_HILOGE("Failed to save page range");
+    return false;
+  }
+
+  if (!parcel.WriteBool(GetIsSequential())) {
+    PRINT_HILOGE("Failed to save sequential mode");
+    return false;
+  }
+
+  if (!pageSize_.Marshalling(parcel)) {
+    PRINT_HILOGE("Failed to save page size");
+    return false;
+  }
+
+  if (!parcel.WriteBool(GetIsLandscape())) {
+    PRINT_HILOGE("Failed to save printer id");
+    return false;
+  }
+
+  if (!parcel.WriteUint32(GetColorMode())) {
+    PRINT_HILOGE("Failed to save color mode");
+    return false;
+  }
+
+  if (!parcel.WriteUint32(GetDuplexMode())) {
+    PRINT_HILOGE("Failed to save duplex mode");
+    return false;
+  }
+
+  if (!margin_.Marshalling(parcel)) {
+    PRINT_HILOGE("Failed to save margin");
+    return false;
+  }
+
+  if (!preview_.Marshalling(parcel)) {
+    PRINT_HILOGE("Failed to save preview");
+    return false;
+  }
+
+  if (GetOption() != "") {
+    parcel.WriteBool(true);
+    parcel.WriteString(GetOption());
+  } else {
+    parcel.WriteBool(false);
+  }
+
+  return true;
 }
 
-uint32_t PrintJob::GetJobId() const
-{
-    return jobId_;
+std::shared_ptr<PrintJob> PrintJob::Unmarshalling(Parcel &parcel) {
+  auto nativeObj = std::make_shared<PrintJob>();
+  if (nativeObj == nullptr) {
+    PRINT_HILOGE("Failed to create print job object");
+    return nullptr;
+  }
+  if (!nativeObj->ReadFromParcel(parcel)) {
+    PRINT_HILOGE("Failed to unmarshalling printjob");
+    return nullptr;
+  }
+  return nativeObj;
 }
 
-uint32_t PrintJob::GetPrinterId() const
-{
-    return printerId_;
+bool PrintJob::CreateFileList(napi_env env, napi_value &jsPrintJob) const {
+  napi_value arrFiles = nullptr;
+  NAPI_CALL_BASE(env, napi_create_array(env, &arrFiles), false);
+  uint32_t arrFilesLength = files_.size();
+
+  for (uint32_t i = 0; i < arrFilesLength; i++) {
+    napi_value value;
+    NAPI_CALL_BASE(env,
+                   napi_create_string_utf8(env, files_[i].c_str(),
+                                           NAPI_AUTO_LENGTH, &value),
+                   false);
+    NAPI_CALL_BASE(env, napi_set_element(env, arrFiles, i, value), false);
+  }
+  NAPI_CALL_BASE(
+      env, napi_set_named_property(env, jsPrintJob, PARAM_JOB_FILES, arrFiles),
+      false);
+  return true;
 }
 
-uint32_t PrintJob::GetJobState() const
-{
-    return jobState_;
+bool PrintJob::CreatePageRange(napi_env env, napi_value &jsPrintJob) const {
+  napi_value jsPageRange = pageRange_.ToJsObject(env);
+  NAPI_CALL_BASE(env,
+                 napi_set_named_property(env, jsPrintJob, PARAM_JOB_PAGERANGE,
+                                         jsPageRange),
+                 false);
+  return true;
 }
 
-uint32_t PrintJob::GetCopyNumber() const
-{
-    return copyNumber_;
+bool PrintJob::CreatePageSize(napi_env env, napi_value &jsPrintJob) const {
+  napi_value jsPageSize = pageSize_.ToJsObject(env);
+  NAPI_CALL_BASE(
+      env,
+      napi_set_named_property(env, jsPrintJob, PARAM_JOB_PAGESIZE, jsPageSize),
+      false);
+  return true;
 }
 
-void PrintJob::GetPageRange(PrintRange &range) const
-{
-    range = pageRange_;
+bool PrintJob::CreateMargin(napi_env env, napi_value &jsPrintJob) const {
+  napi_value jsMargin = margin_.ToJsObject(env);
+  NAPI_CALL_BASE(
+      env, napi_set_named_property(env, jsPrintJob, PARAM_JOB_MARGIN, jsMargin),
+      false);
+  return true;
 }
 
-bool PrintJob::GetIsSequential() const
-{
-    return isSequential_;
-}
-void PrintJob::GetPageSize(PrintPageSize &pageSize) const
-{
-    pageSize = pageSize_;
-}
-
-bool PrintJob::GetIsLandscape() const
-{
-    return isLandscape_;
+bool PrintJob::CreatePreview(napi_env env, napi_value &jsPrintJob) const {
+  napi_value jsPreview = preview_.ToJsObject(env);
+  NAPI_CALL_BASE(
+      env,
+      napi_set_named_property(env, jsPrintJob, PARAM_JOB_PREVIEW, jsPreview),
+      false);
+  return true;
 }
 
-uint32_t PrintJob::GetColorMode() const
-{
-    return colorMode_;
+napi_value PrintJob::ToJsObject(napi_env env) const {
+  napi_value jsObj = nullptr;
+  NAPI_CALL(env, napi_create_object(env, &jsObj));
+  if (!CreateFileList(env, jsObj)) {
+    PRINT_HILOGE("Failed to create files property of print job");
+    return nullptr;
+  }
+  NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_JOB_JOBID,
+                                        GetJobId());
+  NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_JOB_PRINTERID,
+                                        GetPrinterId());
+  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_JOBSTATE,
+                                    GetJobState());
+  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_SUBSTATE,
+                                    GetSubState());
+  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_COPYNUMBER,
+                                    GetCopyNumber());
+
+  if (!CreatePageRange(env, jsObj)) {
+    PRINT_HILOGE("Failed to create page range property of print job");
+    return nullptr;
+  }
+
+  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_ISSEQUENTIAL,
+                                    GetIsSequential());
+
+  if (!CreatePageSize(env, jsObj)) {
+    PRINT_HILOGE("Failed to create page size property of print job");
+    return nullptr;
+  }
+
+  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_ISLANDSCAPE,
+                                    GetIsLandscape());
+  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_COLORMODE,
+                                    GetColorMode());
+  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_DUPLEXMODE,
+                                    GetDuplexMode());
+
+  if (!CreateMargin(env, jsObj)) {
+    PRINT_HILOGE("Failed to create margin property of print job");
+    return nullptr;
+  }
+
+  if (!CreatePreview(env, jsObj)) {
+    PRINT_HILOGE("Failed to create preview property of print job");
+    return nullptr;
+  }
+
+  if (GetOption() != "") {
+    NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_JOB_OPTION,
+                                          GetOption());
+  }
+  return jsObj;
 }
 
-uint32_t PrintJob::GetDuplexMode() const
-{
-    return duplexMode_;
-}
+std::shared_ptr<PrintJob> PrintJob::BuildFromJs(napi_env env,
+                                                napi_value jsValue) {
+  auto nativeObj = std::make_shared<PrintJob>();
+  if (nativeObj == nullptr) {
+    PRINT_HILOGE("Failed to create print job object");
+    return nullptr;
+  }
 
-void PrintJob::GetMargin(PrintMargin &margin) const
-{
-    margin = margin_;
-}
+  auto names = NapiPrintUtils::GetPropertyNames(env, jsValue);
+  for (auto name : names) {
+    PRINT_HILOGD("Property: %{public}s", name.c_str());
+  }
 
-void PrintJob::GetPreview(PreviewAttribute &previewAttr) const
-{
-    previewAttr = preview_;
-}
-
-void PrintJob::ConvertToParcel(MessageParcel &reply) const
-{
-    std::vector<std::string> files;
-    GetFiles(files);
-    reply.WriteUint32((uint32_t)files.size());
-    for (uint32_t i = 0; i < (uint32_t)files.size(); i++) {
-        reply.WriteString(files[i]);
+  napi_value jsFiles =
+      NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_FILES);
+  bool isFileArray = false;
+  napi_is_array(env, jsFiles, &isFileArray);
+  if (isFileArray) {
+    std::vector<std::string> printFiles;
+    uint32_t arrayReLength = 0;
+    napi_get_array_length(env, jsFiles, &arrayReLength);
+    for (uint32_t index = 0; index < arrayReLength; index++) {
+      napi_value filesValue;
+      napi_get_element(env, jsFiles, index, &filesValue);
+      std::string files =
+          NapiPrintUtils::GetStringFromValueUtf8(env, filesValue);
+      PRINT_HILOGD("printJob_value jsFiles %{public}s", files.c_str());
+      printFiles.emplace_back(files);
     }
-    reply.WriteUint32(GetJobId());
-    reply.WriteUint32(GetPrinterId());
-    reply.WriteUint32(GetJobState());
-    reply.WriteUint32(GetCopyNumber());
+    nativeObj->SetFiles(printFiles);
+  }
 
-    PrintRange range;
-    GetPageRange(range);
-    reply.WriteUint32(range.GetStartPage());
-    reply.WriteUint32(range.GetEndPage());
+  std::string jobId =
+      NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_JOBID);
+  std::string printerId =
+      NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_PRINTERID);
+  uint32_t jobState =
+      NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_JOBSTATE);
+  uint32_t subState =
+      NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_SUBSTATE);
+  uint32_t copyNumber =
+      NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_COPYNUMBER);
+  bool isSequential =
+      NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_JOB_ISSEQUENTIAL);
+  bool isLandscape =
+      NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_JOB_ISLANDSCAPE);
+  uint32_t colorMode =
+      NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_COLORMODE);
+  uint32_t duplexMode =
+      NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_DUPLEXMODE);
+  nativeObj->SetJobId(jobId);
+  nativeObj->SetPrinterId(printerId);
+  nativeObj->SetJobState(jobState);
+  nativeObj->SetSubState(subState);
+  nativeObj->SetCopyNumber(copyNumber);
+  nativeObj->SetIsSequential(isSequential);
+  nativeObj->SetIsLandscape(isLandscape);
+  nativeObj->SetColorMode(colorMode);
+  nativeObj->SetDuplexMode(duplexMode);
 
-    std::vector<uint32_t> pages;
-    range.GetPages(pages);
-    reply.WriteUint32((uint32_t)pages.size());
-    for (uint32_t i = 0; i < (uint32_t)pages.size(); i++) {
-        reply.WriteUint32(pages[i]);
-    }
+  napi_value jsPageRange =
+      NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PAGERANGE);
+  auto pageRangePtr = PrintRange::BuildFromJs(env, jsPageRange);
+  if (pageRangePtr == nullptr) {
+    PRINT_HILOGE("Failed to build print job object from js");
+    return nullptr;
+  }
+  nativeObj->SetPageRange(*pageRangePtr);
 
-    reply.WriteUint32(GetIsSequential());
+  napi_value jsPageSize =
+      NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PAGESIZE);
+  auto pageSizePtr = PrintPageSize::BuildFromJs(env, jsPageSize);
+  if (pageSizePtr == nullptr) {
+    PRINT_HILOGE("Failed to build print job object from js");
+    return nullptr;
+  }
+  nativeObj->SetPageSize(*pageSizePtr);
 
-    PrintPageSize pageSize;
-    GetPageSize(pageSize);
-    reply.WriteString(pageSize.GetId());
-    reply.WriteString(pageSize.GetName());
-    reply.WriteUint32(pageSize.GetWidth());
-    reply.WriteUint32(pageSize.GetHeight());
+  napi_value jsMargin =
+      NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_MARGIN);
+  auto marginPtr = PrintMargin::BuildFromJs(env, jsMargin);
+  if (marginPtr == nullptr) {
+    PRINT_HILOGE("Failed to build print job object from js");
+    return nullptr;
+  }
+  nativeObj->SetMargin(*marginPtr);
 
-    reply.WriteUint32(GetIsLandscape());
-    reply.WriteUint32(GetColorMode());
-    reply.WriteUint32(GetDuplexMode());
+  napi_value jsPreview =
+      NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PREVIEW);
+  auto previewPtr = PrintPreviewAttribute::BuildFromJs(env, jsPreview);
+  if (previewPtr == nullptr) {
+    PRINT_HILOGE("Failed to build print job object from js");
+    return nullptr;
+  }
+  nativeObj->SetPreview(*previewPtr);
 
-    PrintMargin margin;
-    GetMargin(margin);
-    reply.WriteUint32(margin.GetTop());
-    reply.WriteUint32(margin.GetBottom());
-    reply.WriteUint32(margin.GetLeft());
-    reply.WriteUint32(margin.GetRight());
-
-    PreviewAttribute preview;
-    GetPreview(preview);
-    reply.WriteString(preview.GetResult());
-
-    range.Reset();
-    preview.GetPreviewRange(range);
-    reply.WriteUint32(range.GetStartPage());
-    reply.WriteUint32(range.GetEndPage());
-
-    range.GetPages(pages);
-    reply.WriteUint32((uint32_t)pages.size());
-    for (uint32_t i = 0; i < (uint32_t)pages.size(); i++) {
-        reply.WriteUint32(pages[i]);
-    }
+  napi_value jsOption =
+      NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_OPTION);
+  if (jsOption != nullptr) {
+    nativeObj->SetOption(
+        NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION));
+  }
+  nativeObj->Dump();
+  return nativeObj;
 }
 
-void PrintJob::SetBuild(MessageParcel &data)
-{
-    PrintPageSize pageSize;
-    pageSize.SetId(data.ReadString());
-    pageSize.SetName(data.ReadString());
-    pageSize.SetWidth(data.ReadUint32());
-    pageSize.SetHeight(data.ReadUint32());
-    SetPageSize(pageSize);
+void PrintJob::Dump() {
+  uint32_t fileLength = files_.size();
+  for (uint32_t i = 0; i < fileLength; i++) {
+    PRINT_HILOGD("files_ = %{public}s", files_[i].c_str());
+  }
 
-    SetIsLandscape(data.ReadUint32());
-    SetColorMode(data.ReadUint32());
-    SetDuplexMode(data.ReadUint32());
+  PRINT_HILOGD("jobId_ = %{public}s", jobId_.c_str());
+  PRINT_HILOGD("printerId_ = %{public}s", printerId_.c_str());
+  PRINT_HILOGD("jobState_ = %{public}d", jobState_);
+  PRINT_HILOGD("subState_ = %{public}d", subState_);
+  PRINT_HILOGD("copyNumber_ = %{public}d", copyNumber_);
+  PRINT_HILOGD("isSequential_ = %{public}d", isSequential_);
+  PRINT_HILOGD("isLandscape_ = %{public}d", isLandscape_);
+  PRINT_HILOGD("colorMode_ = %{public}d", colorMode_);
+  PRINT_HILOGD("duplexMode_ = %{public}d", duplexMode_);
 
-    PrintMargin minMargin;
-    minMargin.SetTop(data.ReadUint32());
-    minMargin.SetBottom(data.ReadUint32());
-    minMargin.SetLeft(data.ReadUint32());
-    minMargin.SetRight(data.ReadUint32());
-    SetMargin(minMargin);
-}
-
-void PrintJob::BuildFromParcel(MessageParcel &data)
-{
-    uint32_t fileLength = data.ReadUint32();
-    std::vector<std::string> files;
-    uint32_t index = 0;
-    for (index = 0; index < fileLength; index++) {
-        files.push_back(data.ReadString());
-    }
-    SetFiles(files);
-    SetJobId(data.ReadUint32());
-    SetPrintId(data.ReadUint32());
-    SetJobState(data.ReadUint32());
-    SetCopyNumber(data.ReadUint32());
-
-    PrintRange range;
-    range.SetStartPage(data.ReadUint32());
-    range.SetEndPage(data.ReadUint32());
-    uint32_t pageLength = data.ReadUint32();
-    std::vector<uint32_t> rangePages;
-    for (index = 0; index < pageLength; index++) {
-        rangePages.push_back(data.ReadUint32());
-    }
-    range.SetPages(rangePages);
-    SetPageRange(range);
-
-    SetIsSequential(data.ReadUint32());
-
-    SetBuild(data);
-    PreviewAttribute previewAttr;
-
-    previewAttr.SetResult(data.ReadString());
-    range.Reset();
-    range.SetStartPage(data.ReadUint32());
-    range.SetEndPage(data.ReadUint32());
-    uint32_t previewPageLength = data.ReadUint32();
-    std::vector<uint32_t> previewRangePages;
-    for (index = 0; index < previewPageLength; index++) {
-        previewRangePages.push_back(data.ReadUint32());
-    }
-    range.SetPages(previewRangePages);
-    previewAttr.SetPreviewRange(range);
-    SetPreview(previewAttr);
-    Dump();
-}
-
-void PrintJob::SetSubPageRange(napi_env env, napi_value &subPageRange) const
-{
-    napi_create_object(env, &subPageRange);
-    NapiPrintUtils::SetUint32Property(env, subPageRange, "startPage", pageRange_.GetStartPage());
-    NapiPrintUtils::SetUint32Property(env, subPageRange, "endPage", pageRange_.GetEndPage());
-    napi_value arrPreviewPages;
-    napi_status status = napi_create_array(env, &arrPreviewPages);
-    PrintRange previewPrintRange;
-    std::vector<uint32_t> previewRangePages;
-    preview_.GetPreviewRange(previewPrintRange);
-    previewPrintRange.GetPages(previewRangePages);
-    uint32_t arrPreviewPagesLength = previewRangePages.size();
-
-    for (uint32_t i = 0; i < arrPreviewPagesLength; i++) {
-        napi_value value;
-        napi_create_uint32(env, previewRangePages[i], &value);
-        status = napi_set_element(env, arrPreviewPages, i, value);
-    }
-    napi_set_named_property(env, subPageRange, "files", arrPreviewPages);
-}
-
-void PrintJob::SetConvertPageSize(napi_env env, napi_value &pageSize) const
-{
-    NapiPrintUtils::SetStringPropertyUtf8(env, pageSize, "id", pageSize_.GetId());
-    NapiPrintUtils::SetStringPropertyUtf8(env, pageSize, "name", pageSize_.GetName().c_str());
-    NapiPrintUtils::SetUint32Property(env, pageSize, "width", pageSize_.GetWidth());
-    NapiPrintUtils::SetUint32Property(env, pageSize, "height", pageSize_.GetHeight());
-}
-
-void PrintJob::SetConvertMargin(napi_env env, napi_value &margin) const
-{
-    NapiPrintUtils::SetUint32Property(env, margin, "top", margin_.GetTop());
-    NapiPrintUtils::SetUint32Property(env, margin, "bottom", margin_.GetBottom());
-    NapiPrintUtils::SetUint32Property(env, margin, "left", margin_.GetLeft());
-    NapiPrintUtils::SetUint32Property(env, margin, "right", margin_.GetRight());
-}
-
-void PrintJob::ConvertToJs(napi_env env, napi_value *result) const
-{
-    napi_create_object(env, result);
-    napi_value arrFiles;
-    napi_status status = napi_create_array(env, &arrFiles);
-    uint32_t arrFilesLength = files_.size();
-
-    for (uint32_t i = 0; i < arrFilesLength; i++) {
-        napi_value value;
-        status = napi_create_string_utf8(env, files_[i].c_str(), NAPI_AUTO_LENGTH, &value);
-        status = napi_set_element(env, arrFiles, i, value);
-    }
-    napi_set_named_property(env, *result, "files", arrFiles);
-
-    NapiPrintUtils::SetUint32Property(env, *result, "jobId", GetJobId());
-    NapiPrintUtils::SetUint32Property(env, *result, "printerId", GetPrinterId());
-    NapiPrintUtils::SetUint32Property(env, *result, "jobState", GetJobState());
-    NapiPrintUtils::SetUint32Property(env, *result, "copyNumber", GetCopyNumber());
-    napi_value pageRange;
-    napi_create_object(env, &pageRange);
-    NapiPrintUtils::SetUint32Property(env, pageRange, "startPage", pageRange_.GetStartPage());
-    NapiPrintUtils::SetUint32Property(env, pageRange, "endPage", pageRange_.GetEndPage());
-    napi_value arrPages;
-    status = napi_create_array(env, &arrPages);
-    std::vector<uint32_t> pages;
-    pageRange_.GetPages(pages);
-    uint32_t arrPagesLength = pages.size();
-    for (uint32_t i = 0; i < arrPagesLength; i++) {
-        napi_value value;
-        napi_create_uint32(env, pages[i], &value);
-        status = napi_set_element(env, arrPages, i, value);
-    }
-    napi_set_named_property(env, pageRange, "files", arrPages);
-
-    NapiPrintUtils::SetUint32Property(env, *result, "isSequential", GetIsSequential());
-    napi_value pageSize;
-    napi_create_object(env, &pageSize);
-    SetConvertPageSize(env, pageSize);
-
-    NapiPrintUtils::SetUint32Property(env, *result, "isLandscape", GetIsLandscape());
-    NapiPrintUtils::SetUint32Property(env, *result, "colorMode", GetColorMode());
-    NapiPrintUtils::SetUint32Property(env, *result, "duplexMode", GetDuplexMode());
-
-    napi_value margin;
-    napi_create_object(env, &margin);
-    SetConvertMargin(env, margin);
-
-    napi_value preview;
-    napi_create_object(env, &preview);
-    NapiPrintUtils::SetStringPropertyUtf8(env, preview, "result", preview_.GetResult().c_str());
-
-    napi_value subPageRange;
-    napi_create_object(env, &subPageRange);
-    SetSubPageRange(env, subPageRange);
-    napi_set_named_property(env, preview, "pageRange", subPageRange);
-    napi_set_named_property(env, *result, "pageRange", pageRange);
-    napi_set_named_property(env, *result, "pageSize", pageSize);
-    napi_set_named_property(env, *result, "margin", margin);
-    napi_set_named_property(env, *result, "preview", preview);
-}
-
-void PrintJob::BuildFromJs(napi_env env, napi_value capValue) {}
-
-void PrintJob::Dump()
-{
-    uint32_t fileLength = files_.size();
-    for (uint32_t i = 0; i < fileLength; i++) {
-        PRINT_HILOGD("files_ = %{public}s", files_[i].c_str());
-    }
-
-    PRINT_HILOGD("jobId_ = %{public}d", jobId_);
-    PRINT_HILOGD("printerId_ = %{public}d", printerId_);
-    PRINT_HILOGD("jobState_ = %{public}d", jobState_);
-    PRINT_HILOGD("copyNumber_ = %{public}d", copyNumber_);
-    PRINT_HILOGD("isSequential_ = %{public}d", isSequential_);
-    PRINT_HILOGD("isLandscape_ = %{public}d", isLandscape_);
-    PRINT_HILOGD("colorMode_ = %{public}d", colorMode_);
-    PRINT_HILOGD("duplexMode_ = %{public}d", duplexMode_);
-
-    pageRange_.Dump();
-    pageSize_.Dump();
-    margin_.Dump();
-    preview_.Dump();
+  pageRange_.Dump();
+  pageSize_.Dump();
+  margin_.Dump();
+  preview_.Dump();
+  if (option_ != "") {
+    PRINT_HILOGD("option: %{public}s", option_.c_str());
+  }
 }
 } // namespace OHOS::Print

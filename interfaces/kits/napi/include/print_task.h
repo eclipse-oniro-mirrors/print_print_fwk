@@ -19,50 +19,43 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include <vector>
 
+#include "iprint_callback.h"
 #include "napi/native_api.h"
-
-static constexpr const char *EVENT_BLOCK = "blocked";
-static constexpr const char *EVENT_SUCCESS = "success";
-static constexpr const char *EVENT_FAIL = "failed";
-static constexpr const char *EVENT_CANCEL = "cancelled";
-
-static constexpr const char *PRINTER_STATE_ADD = "PRINTER_ADDED";
-static constexpr const char *PRINTER_STATE_REMOVED = "PRINTER_REMOVED";
-static constexpr const char *PRINTER_STATE_IDLE = "PRINTER_IDLE";
-static constexpr const char *PRINTER_STATE_PRINTING = "PRINTER_PRINTING";
-static constexpr const char *PRINTER_STATE_BLOCKED = "PRINTER_BLOCKED";
-static constexpr const char *PRINTER_STATE_BUSY = "PRINTER_BUSY";
-static constexpr const char *PRINTER_STATE_FAILED = "PRINTER_FAILED";
-
-static constexpr const char *PRINTJOB_STATE_CREATED = "PRINT_JOB_CREATED";
-static constexpr const char *PRINTJOB_STATE_QUEUED = "PRINT_JOB_QUEUED";
-static constexpr const char *PRINTJOB_STATE_PRINTING = "PRINT_JOB_PRINTING";
-static constexpr const char *PRINTJOB_STATE_BLOCKED = "PRINT_JOB_BLOCKED";
-static constexpr const char *PRINTJOB_STATE_SUCCESS = "PRINT_JOB_SUCCESS";
-static constexpr const char *PRINTJOB_STATE_FAILED = "PRINT_JOB_FAILED";
-static constexpr const char *PRINTJOB_STATE_cancelled = "PRINT_JOB_cancelled";
+#include "napi/native_common.h"
+#include "print_async_call.h"
 
 namespace OHOS::Print {
 class PrintTask {
 public:
-    explicit PrintTask(uint32_t taskId);
-    ~PrintTask();
+  explicit PrintTask(const std::vector<std::string> &fileList);
+  ~PrintTask();
 
-    uint32_t GetId() const;
-    static napi_value On(napi_env env, napi_callback_info info);
-    static napi_value Off(napi_env env, napi_callback_info info);
+  uint32_t Start();
+  void Stop();
+  const std::string &GetId() const;
+  static napi_value On(napi_env env, napi_callback_info info);
+  static napi_value Off(napi_env env, napi_callback_info info);
 
-    bool IsSupportType(const std::string &type);
-    bool IsSupportPrinterStateType(const std::string &type);
-    bool IsSupportJobStateType(const std::string &type);
+  bool IsSupportType(const std::string &type) const;
 
 private:
-    int taskId_;
-    std::mutex mutex_;
-    std::map<std::string, bool> supportEvents_;
-    std::map<std::string, bool> supportPrinterState_;
-    std::map<std::string, bool> supportJobState_;
+  struct TaskEventContext : public PrintAsyncCall::Context {
+    std::string type = "";
+    std::string taskId = "";
+    sptr<IPrintCallback> callback = nullptr;
+    bool result = false;
+    napi_status status = napi_generic_failure;
+    TaskEventContext() : Context(nullptr, nullptr){};
+    TaskEventContext(InputAction input, OutputAction output)
+        : Context(std::move(input), std::move(output)){};
+    virtual ~TaskEventContext(){};
+  };
+
+  std::string taskId_;
+  std::vector<std::string> fileList_;
+  std::map<std::string, bool> supportEvents_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_TASK_H

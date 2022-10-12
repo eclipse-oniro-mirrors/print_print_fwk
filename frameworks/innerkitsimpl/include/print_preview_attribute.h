@@ -15,31 +15,44 @@
 #ifndef PRINT_PREVIEW_ATTRIBUTE_H
 #define PRINT_PREVIEW_ATTRIBUTE_H
 
-#include <cstdint>
-#include <string>
-
+#include "napi/native_api.h"
+#include "parcel.h"
 #include "print_range.h"
+
 namespace OHOS::Print {
-class PreviewAttribute {
+class PrintPreviewAttribute final : public Parcelable {
 public:
-    explicit PreviewAttribute();
-    PreviewAttribute(const PreviewAttribute &right);
-    PreviewAttribute &operator=(const PreviewAttribute &previewAttribute);
-    ~PreviewAttribute();
+  explicit PrintPreviewAttribute();
+  PrintPreviewAttribute(const PrintPreviewAttribute &right);
+  PrintPreviewAttribute &
+  operator=(const PrintPreviewAttribute &PrintPreviewAttribute);
+  ~PrintPreviewAttribute();
 
-    void SetResult(const std::string &result);
+  void SetResult(const std::string &result);
 
-    void SetPreviewRange(const PrintRange &previewRange);
+  void SetPreviewRange(const PrintRange &previewRange);
 
-    [[nodiscard]] const std::string &GetResult() const;
+  [[nodiscard]] const std::string &GetResult() const;
 
-    void GetPreviewRange(PrintRange &range) const;
+  void GetPreviewRange(PrintRange &previewRange) const;
 
-    void Dump();
+  virtual bool Marshalling(Parcel &parcel) const override;
+
+  static std::shared_ptr<PrintPreviewAttribute> Unmarshalling(Parcel &parcel);
+
+  napi_value ToJsObject(napi_env env) const;
+
+  static std::shared_ptr<PrintPreviewAttribute> BuildFromJs(napi_env env,
+                                                            napi_value jsValue);
+
+  void Dump();
 
 private:
-    std::string result_;
-    PrintRange previewRange_;
+  bool ReadFromParcel(Parcel &parcel);
+
+private:
+  std::string result_;
+  PrintRange previewRange_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_PREVIEW_ATTRIBUTE_H

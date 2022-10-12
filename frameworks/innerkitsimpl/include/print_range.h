@@ -16,37 +16,49 @@
 #ifndef PRINT_RANGE_H
 #define PRINT_RANGE_H
 
-#include <string>
-#include <vector>
+#include "napi/native_api.h"
+#include "parcel.h"
 
 namespace OHOS::Print {
-class PrintRange {
+class PrintRange final : public Parcelable {
 public:
-    explicit PrintRange();
-    PrintRange(const PrintRange &right);
-    PrintRange &operator=(const PrintRange &right);
-    ~PrintRange();
+  explicit PrintRange();
+  PrintRange(const PrintRange &right);
+  PrintRange &operator=(const PrintRange &right);
+  ~PrintRange();
 
-    void SetStartPage(uint32_t startPage);
+  void SetStartPage(uint32_t startPage);
 
-    void SetEndPage(uint32_t endPage);
+  void SetEndPage(uint32_t endPage);
 
-    void SetPages(const std::vector<uint32_t> &pages);
+  void SetPages(const std::vector<uint32_t> &pages);
 
-    void Reset();
+  void Reset();
 
-    [[nodiscard]] uint32_t GetStartPage() const;
+  [[nodiscard]] uint32_t GetStartPage() const;
 
-    [[nodiscard]] uint32_t GetEndPage() const;
+  [[nodiscard]] uint32_t GetEndPage() const;
 
-    void GetPages(std::vector<uint32_t> &pages) const;
+  void GetPages(std::vector<uint32_t> &pages) const;
 
-    void Dump();
+  virtual bool Marshalling(Parcel &parcel) const override;
+
+  static std::shared_ptr<PrintRange> Unmarshalling(Parcel &parcel);
+
+  napi_value ToJsObject(napi_env env) const;
+
+  static std::shared_ptr<PrintRange> BuildFromJs(napi_env env,
+                                                 napi_value jsValue);
+
+  void Dump();
 
 private:
-    uint32_t startPage_;
-    uint32_t endPage_;
-    std::vector<uint32_t> pages_;
+  bool ReadFromParcel(Parcel &parcel);
+
+private:
+  uint32_t startPage_;
+  uint32_t endPage_;
+  std::vector<uint32_t> pages_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_RANGE_H

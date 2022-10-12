@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,16 +13,26 @@
  * limitations under the License.
  */
 
-#include "print_sa_death_recipient.h"
-
+#include "print_bms_death_recipient.h"
+#include "print_bms_helper.h"
 #include "print_log.h"
-#include "print_manager_client.h"
 
 namespace OHOS::Print {
-PrintSaDeathRecipient::PrintSaDeathRecipient() {}
+void PrintBMSDeathRecipient::OnRemoteDied(
+    const wptr<IRemoteObject> &wptrDeath) {
+  PRINT_HILOGD("bundle manager service died, remove the proxy object");
 
-void PrintSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object) {
-  PRINT_HILOGE("PrintSaDeathRecipient on remote systemAbility died.");
-  PrintManagerClient::GetInstance()->OnRemoteSaDied(object);
+  if (wptrDeath == nullptr) {
+    PRINT_HILOGE("wptrDeath is null");
+    return;
+  }
+
+  sptr<IRemoteObject> object = wptrDeath.promote();
+  if (!object) {
+    PRINT_HILOGE("object is null");
+    return;
+  }
+
+  DelayedSingleton<PrintBMSHelper>::GetInstance()->ResetProxy();
 }
 } // namespace OHOS::Print

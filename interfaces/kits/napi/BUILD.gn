@@ -45,9 +45,8 @@ ohos_shared_library("print_napi") {
     "src/napi_print_task.cpp",
     "src/napi_inner_print.cpp",
     "src/napi_print_ext.cpp",
-    "src/async_call.cpp",
+    "src/print_async_call.cpp",
     "src/print_task.cpp",
-    "src/print_parse_type.cpp",
   ]
   deps = [
     "//foundation/arkui/napi:ace_napi",

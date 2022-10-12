@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,16 +13,21 @@
  * limitations under the License.
  */
 
-#include "print_sa_death_recipient.h"
+#ifndef PRINT_BMS_DEATH_RECIPIENT_H
+#define PRINT_BMS_DEATH_RECIPIENT_H
 
-#include "print_log.h"
-#include "print_manager_client.h"
+#include "iremote_object.h"
 
 namespace OHOS::Print {
-PrintSaDeathRecipient::PrintSaDeathRecipient() {}
-
-void PrintSaDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object) {
-  PRINT_HILOGE("PrintSaDeathRecipient on remote systemAbility died.");
-  PrintManagerClient::GetInstance()->OnRemoteSaDied(object);
-}
+class PrintBMSDeathRecipient : public IRemoteObject::DeathRecipient {
+public:
+  /**
+   * Called back when the remote object is died..
+   *
+   * @param wptrDeath Indicates the died object.
+   */
+  virtual void OnRemoteDied(const wptr<IRemoteObject> &wptrDeath);
+};
 } // namespace OHOS::Print
+
+#endif // PRINT_BMS_DEATH_RECIPIENT_H

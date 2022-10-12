@@ -18,30 +18,104 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintCallbackProxy::PrintCallbackProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IPrintCallback>(impl) {}
+PrintCallbackProxy::PrintCallbackProxy(const sptr<IRemoteObject> &impl)
+    : IRemoteProxy<IPrintCallback>(impl) {}
 
-void PrintCallbackProxy::OnCallBack(MessageParcel &data)
-{
-    PRINT_HILOGD("PrintCallbackProxy::OnCallBack Start");
-    PRINT_HILOGD("data should be filled within service module");
-    MessageParcel realData;
-    MessageParcel reply;
-    MessageOption option;
+bool PrintCallbackProxy::OnCallback() {
+  PRINT_HILOGD("PrintCallbackProxy::OnCallback Start");
+  MessageParcel data;
+  MessageParcel reply;
+  MessageOption option;
 
-    if (!realData.WriteInterfaceToken(PrintCallbackProxy::GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return;
-    }
-    uint32_t argv1 = data.ReadUint32();
-    uint32_t argv2 = data.ReadUint32();
-    PRINT_HILOGD("notification's argument:[%{public}d, %{public}d]", argv1, argv2);
-    realData.WriteUint32(argv1);
-    realData.WriteUint32(argv2);
+  if (!data.WriteInterfaceToken(GetDescriptor())) {
+    PRINT_HILOGE("write descriptor failed");
+    return false;
+  }
 
-    int error = Remote()->SendRequest(PRINT_NOTIFY, realData, reply, option);
-    if (error != 0) {
-        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
-    }
-    PRINT_HILOGD("PrintCallbackProxy::OnCallBack End");
+  int error = Remote()->SendRequest(PRINT_CALLBACK_TASK, data, reply, option);
+  if (error != 0) {
+    PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+    return false;
+  }
+  PRINT_HILOGD("PrintCallbackProxy::OnCallback End");
+  return true;
 }
+
+bool PrintCallbackProxy::OnCallback(uint32_t state, const PrinterInfo &info) {
+  PRINT_HILOGD("PrintCallbackProxy::OnCallback Start");
+  MessageParcel data;
+  MessageParcel reply;
+  MessageOption option;
+
+  if (!data.WriteInterfaceToken(GetDescriptor())) {
+    PRINT_HILOGE("write descriptor failed");
+    return false;
+  }
+
+  PRINT_HILOGD("Printer Event argument:[%{public}d], printerId [%{public}s]",
+               state, info.GetPrinterId().c_str());
+  data.WriteUint32(state);
+  info.Marshalling(data);
+
+  int error =
+      Remote()->SendRequest(PRINT_CALLBACK_PRINTER, data, reply, option);
+  if (error != 0) {
+    PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+    return false;
+  }
+  PRINT_HILOGD("PrintCallbackProxy::OnCallback End");
+  return true;
+}
+
+bool PrintCallbackProxy::OnCallback(uint32_t state, const PrintJob &info) {
+  PRINT_HILOGD("PrintCallbackProxy::OnCallback Start");
+  MessageParcel data;
+  MessageParcel reply;
+  MessageOption option;
+
+  if (!data.WriteInterfaceToken(GetDescriptor())) {
+    PRINT_HILOGE("write descriptor failed");
+    return false;
+  }
+
+  PRINT_HILOGD("PrintJob Event argument:[%{public}d], printerId [%{public}s]",
+               state, info.GetJobId().c_str());
+  data.WriteUint32(state);
+  info.Marshalling(data);
+
+  int error =
+      Remote()->SendRequest(PRINT_CALLBACK_PRINT_JOB, data, reply, option);
+  if (error != 0) {
+    PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+    return false;
+  }
+  PRINT_HILOGD("PrintCallbackProxy::OnCallback End");
+  return true;
+}
+
+bool PrintCallbackProxy::OnCallback(const std::string &extensionId,
+                                    const std::string &info) {
+  PRINT_HILOGD("PrintCallbackProxy::OnCallback Start");
+  MessageParcel data;
+  MessageParcel reply;
+  MessageOption option;
+
+  if (!data.WriteInterfaceToken(GetDescriptor())) {
+    PRINT_HILOGE("write descriptor failed");
+    return false;
+  }
+
+  data.WriteString(extensionId);
+  data.WriteString(info);
+
+  int error =
+      Remote()->SendRequest(PRINT_CALLBACK_EXTINFO, data, reply, option);
+  if (error != 0) {
+    PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+    return false;
+  }
+  PRINT_HILOGD("PrintCallbackProxy::OnCallback End");
+  return true;
+}
+
 } // namespace OHOS::Print

@@ -26,38 +26,42 @@
 namespace OHOS::Print {
 using PrintExtCallback = bool (*)();
 using PrintJobCallback = bool (*)(const PrintJob &);
-using PrinterCallback = bool (*)(uint32_t);
-using PrinterCapabilityCallback = bool (*)(uint32_t, PrinterCapability &cap);
+using PrinterCallback = bool (*)(const std::string &);
+using PrinterCapabilityCallback = bool (*)(const std::string &,
+                                           PrinterCapability &);
 
 class PrintExtensionCallbackStub : public IRemoteStub<IPrintExtensionCallback> {
 public:
-    explicit PrintExtensionCallbackStub();
-    virtual ~PrintExtensionCallbackStub() = default;
-    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
-    bool OnCallback() override;
-    bool OnCallback(uint32_t printerId) override;
-    bool OnCallback(const PrintJob &job) override;
-    bool OnCallback(uint32_t printerId, MessageParcel &reply) override;
+  explicit PrintExtensionCallbackStub();
+  virtual ~PrintExtensionCallbackStub() = default;
+  int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,
+                          MessageParcel &reply, MessageOption &option) override;
+  bool OnCallback() override;
+  bool OnCallback(const std::string &printerId) override;
+  bool OnCallback(const PrintJob &job) override;
+  bool OnCallback(const std::string &printerId,
+                  PrinterCapability &cap) override;
 
-    void SetExtCallback(PrintExtCallback cb);
-    void SetPrintJobCallback(PrintJobCallback cb);
-    void SetPrinterCallback(PrinterCallback cb);
-    void SetCapabilityCallback(PrinterCapabilityCallback cb);
-
-private:
-    bool HandleExtCallback(MessageParcel &data, MessageParcel &reply);
-    bool HandlePrinterCallback(MessageParcel &data, MessageParcel &reply);
-    bool HandlePrintJobCallback(MessageParcel &data, MessageParcel &reply);
-    bool HandleCapabilityCallback(MessageParcel &data, MessageParcel &reply);
-    void dataReadJob(MessageParcel &data, PrintJob &job);
+  void SetExtCallback(PrintExtCallback cb);
+  void SetPrintJobCallback(PrintJobCallback cb);
+  void SetPrinterCallback(PrinterCallback cb);
+  void SetCapabilityCallback(PrinterCapabilityCallback cb);
 
 private:
-    using PRINT_EXT_HANDLER = bool (PrintExtensionCallbackStub::*)(MessageParcel &, MessageParcel &);
-    PrintExtCallback extCb_;
-    PrintJobCallback jobCb_;
-    PrinterCallback cb_;
-    PrinterCapabilityCallback capability_;
-    std::map<uint32_t, PRINT_EXT_HANDLER> cmdMap_;
+  bool HandleExtCallback(MessageParcel &data, MessageParcel &reply);
+  bool HandlePrinterCallback(MessageParcel &data, MessageParcel &reply);
+  bool HandlePrintJobCallback(MessageParcel &data, MessageParcel &reply);
+  bool HandleCapabilityCallback(MessageParcel &data, MessageParcel &reply);
+  void dataReadJob(MessageParcel &data, PrintJob &job);
+
+private:
+  using PRINT_EXT_HANDLER =
+      bool (PrintExtensionCallbackStub::*)(MessageParcel &, MessageParcel &);
+  PrintExtCallback extCb_;
+  PrintJobCallback jobCb_;
+  PrinterCallback cb_;
+  PrinterCapabilityCallback capability_;
+  std::map<uint32_t, PRINT_EXT_HANDLER> cmdMap_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_EXTCB_STUB_H

@@ -16,34 +16,47 @@
 #ifndef PRINT_RESOLUTION_H
 #define PRINT_RESOLUTION_H
 
-#include <cstdint>
+#include "napi/native_api.h"
+#include "parcel.h"
 
 namespace OHOS::Print {
-class PrintResolution {
+class PrintResolution final : public Parcelable {
 public:
-    explicit PrintResolution();
-    PrintResolution(const PrintResolution &right);
-    PrintResolution &operator=(const PrintResolution &right);
-    ~PrintResolution();
+  explicit PrintResolution();
+  PrintResolution(const PrintResolution &right);
+  PrintResolution &operator=(const PrintResolution &right);
+  ~PrintResolution();
 
-    void SetId(uint32_t id);
+  void SetId(const std::string &id);
 
-    void SetHorizontalDpi(uint32_t horizontalDpi);
+  void SetHorizontalDpi(uint32_t horizontalDpi);
 
-    void SetVerticalDpi(uint32_t verticalDpi);
+  void SetVerticalDpi(uint32_t verticalDpi);
 
-    [[nodiscard]] uint32_t GetId() const;
+  [[nodiscard]] const std::string &GetId() const;
 
-    [[nodiscard]] uint32_t GetHorizontalDpi() const;
+  [[nodiscard]] uint32_t GetHorizontalDpi() const;
 
-    [[nodiscard]] uint32_t GetVerticalDpi() const;
+  [[nodiscard]] uint32_t GetVerticalDpi() const;
 
-    void Dump();
+  virtual bool Marshalling(Parcel &parcel) const override;
+
+  static std::shared_ptr<PrintResolution> Unmarshalling(Parcel &parcel);
+
+  napi_value ToJsObject(napi_env env) const;
+
+  static std::shared_ptr<PrintResolution> BuildFromJs(napi_env env,
+                                                      napi_value jsValue);
+
+  void Dump();
 
 private:
-    uint32_t id_;
-    uint32_t horizontalDpi_;
-    uint32_t verticalDpi_;
+  bool ReadFromParcel(Parcel &parcel);
+
+private:
+  std::string id_;
+  uint32_t horizontalDpi_;
+  uint32_t verticalDpi_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_RESOLUTION_H

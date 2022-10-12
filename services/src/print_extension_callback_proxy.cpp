@@ -18,75 +18,80 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintExtensionCallbackProxy::PrintExtensionCallbackProxy(const sptr<IRemoteObject> &impl)
-    : IRemoteProxy<IPrintExtensionCallback>(impl)
-{}
+PrintExtensionCallbackProxy::PrintExtensionCallbackProxy(
+    const sptr<IRemoteObject> &impl)
+    : IRemoteProxy<IPrintExtensionCallback>(impl) {}
 
-bool PrintExtensionCallbackProxy::OnCallback()
-{
-    PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack Start");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+bool PrintExtensionCallbackProxy::OnCallback() {
+  PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack Start");
+  MessageParcel data;
+  MessageParcel reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
 
-    int error = Remote()->SendRequest(PRINT_EXTCB, data, reply, option);
-    if (error != 0) {
-        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
-        return false;
-    }
-    PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack End");
-    return true;
+  int error = Remote()->SendRequest(PRINT_EXTCB, data, reply, option);
+  if (error != 0) {
+    PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+    return false;
+  }
+  PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack End");
+  return true;
 }
 
-bool PrintExtensionCallbackProxy::OnCallback(uint32_t printerId)
-{
-    PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack Start");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteUint32(printerId);
+bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId) {
+  PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack Start");
+  MessageParcel data;
+  MessageParcel reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(printerId);
 
-    int error = Remote()->SendRequest(PRINT_EXTCB_PRINTER, data, reply, option);
-    if (error != 0) {
-        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
-        return false;
-    }
-    PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack End");
-    return true;
+  int error = Remote()->SendRequest(PRINT_EXTCB_PRINTER, data, reply, option);
+  if (error != 0) {
+    PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+    return false;
+  }
+  PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack End");
+  return true;
 }
 
-bool PrintExtensionCallbackProxy::OnCallback(const PrintJob &job)
-{
-    PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack Start");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    job.ConvertToParcel(data);
-    int error = Remote()->SendRequest(PRINT_EXTCB_PRINTJOB, data, reply, option);
-    if (error != 0) {
-        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
-        return false;
-    }
-    PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack End");
-    return true;
+bool PrintExtensionCallbackProxy::OnCallback(const PrintJob &job) {
+  PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack Start");
+  MessageParcel data;
+  MessageParcel reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  job.Marshalling(data);
+  int error = Remote()->SendRequest(PRINT_EXTCB_PRINTJOB, data, reply, option);
+  if (error != 0) {
+    PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+    return false;
+  }
+  PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack End");
+  return true;
 }
 
-bool PrintExtensionCallbackProxy::OnCallback(uint32_t printerId, MessageParcel &reply)
-{
-    PRINT_HILOGD("PrintExtcbProxy::OnCallBack Start");
-    MessageParcel data;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteUint32(printerId);
-    int error = Remote()->SendRequest(PRINT_EXTCB_PRINTCAPABILITY, data, reply, option);
-    if (error != 0) {
-        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
-        return false;
-    }
-    PRINT_HILOGD("PrintExtcbProxy::OnCallBack End");
-    return true;
+bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId,
+                                             PrinterCapability &cap) {
+  PRINT_HILOGD("PrintExtcbProxy::OnCallBack Start");
+  MessageParcel data;
+  MessageParcel reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(printerId);
+  int error =
+      Remote()->SendRequest(PRINT_EXTCB_PRINTCAPABILITY, data, reply, option);
+  if (error != 0) {
+    PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+    return false;
+  }
+  auto capPtr = PrinterCapability::Unmarshalling(reply);
+  if (capPtr == nullptr) {
+    PRINT_HILOGE("Failed to create printer capability object");
+    return false;
+  }
+  cap = *capPtr;
+  PRINT_HILOGD("PrintExtcbProxy::OnCallBack End");
+  return true;
 }
 } // namespace OHOS::Print

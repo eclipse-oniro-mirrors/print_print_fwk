@@ -13,27 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_EXTENSION_CALLBACK_PROXY_H
-#define PRINT_EXTENSION_CALLBACK_PROXY_H
+#ifndef PRINT_CALLBACK_H
+#define PRINT_CALLBACK_H
 
-#include "iprint_extension_callback.h"
-#include "iremote_proxy.h"
+#include "napi/native_api.h"
+#include "print_callback_stub.h"
+#include <mutex>
 
 namespace OHOS::Print {
-class PrintExtensionCallbackProxy
-    : public IRemoteProxy<IPrintExtensionCallback> {
+class PrintCallback : public PrintCallbackStub {
 public:
-  explicit PrintExtensionCallbackProxy(const sptr<IRemoteObject> &impl);
-  ~PrintExtensionCallbackProxy() = default;
+  PrintCallback(napi_env env, napi_ref ref);
+  virtual ~PrintCallback();
   bool OnCallback() override;
-  bool OnCallback(const std::string &printerId) override;
-  bool OnCallback(const PrintJob &job) override;
-  bool OnCallback(const std::string &printerId,
-                  PrinterCapability &cap) override;
+  bool OnCallback(uint32_t state, const PrinterInfo &info) override;
+  bool OnCallback(uint32_t state, const PrintJob &info) override;
+  bool OnCallback(const std::string &extensionId,
+                  const std::string &info) override;
 
 private:
-  static inline BrokerDelegator<PrintExtensionCallbackProxy> delegator_;
+  napi_env env_;
+  napi_ref ref_;
+  std::mutex mutex_;
 };
 } // namespace OHOS::Print
-
-#endif // PRINT_EXTENSION_CALLBACK_PROXY_H
+#endif // IPRINT_CALLBACK_H
