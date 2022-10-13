@@ -1,4 +1,4 @@
-# 分布式打印部件<a name="ZH-CN_TOPIC_0000001124232845"></a>
+# 分布式打印服务<a name="ZH-CN_TOPIC_0000001124232845"></a>
 
 -   [简介](#section11660541593)
 -   [目录](#section161941989596)
@@ -35,7 +35,7 @@
 ## 目录<a name="section161941989596"></a>
 
 ```
-/base/print/print
+foundation/print_print_fwk        #分布式打印服务
 ├── frameworks       
 │   └── innerkitsimpl             # Native接口
     └── kits\extension            # 打印扩展管理
@@ -87,6 +87,6 @@
 
 元能力子系统
 
-ability_runtime
+[**ability_runtime**](https://gitee.com/openharmony/ability_ability_runtime)
 
 

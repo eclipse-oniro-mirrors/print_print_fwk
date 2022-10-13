@@ -14,70 +14,139 @@
  */
 
 #include "print_task.h"
-
-#include "async_call.h"
+#include "napi/native_common.h"
+#include "napi_print_utils.h"
+#include "print_callback.h"
 #include "print_log.h"
+#include "print_manager_client.h"
 
 namespace OHOS::Print {
-PrintTask::PrintTask(uint32_t taskId) : taskId_(taskId)
-{
-    supportEvents_[EVENT_BLOCK] = true;
-    supportEvents_[EVENT_SUCCESS] = true;
-    supportEvents_[EVENT_FAIL] = true;
-    supportEvents_[EVENT_CANCEL] = true;
 
-    supportPrinterState_[PRINTER_STATE_ADD] = true;
-    supportPrinterState_[PRINTER_STATE_REMOVED] = true;
-    supportPrinterState_[PRINTER_STATE_IDLE] = true;
-    supportPrinterState_[PRINTER_STATE_PRINTING] = true;
-    supportPrinterState_[PRINTER_STATE_BLOCKED] = true;
-    supportPrinterState_[PRINTER_STATE_BUSY] = true;
-    supportPrinterState_[PRINTER_STATE_FAILED] = true;
-
-    supportJobState_[PRINTJOB_STATE_CREATED] = true;
-    supportJobState_[PRINTJOB_STATE_QUEUED] = true;
-    supportJobState_[PRINTJOB_STATE_PRINTING] = true;
-    supportJobState_[PRINTJOB_STATE_BLOCKED] = true;
-    supportJobState_[PRINTJOB_STATE_SUCCESS] = true;
-    supportJobState_[PRINTJOB_STATE_FAILED] = true;
-    supportJobState_[PRINTJOB_STATE_cancelled] = true;
+const std::string EVENT_BLOCK = "blocked";
+const std::string EVENT_SUCCESS = "success";
+const std::string EVENT_FAIL = "failed";
+const std::string EVENT_CANCEL = "cancelled";
+PrintTask::PrintTask(const std::vector<std::string> &fileList) : taskId_("") {
+  fileList_.assign(fileList.begin(), fileList.end());
+  supportEvents_[EVENT_BLOCK] = true;
+  supportEvents_[EVENT_SUCCESS] = true;
+  supportEvents_[EVENT_FAIL] = true;
+  supportEvents_[EVENT_CANCEL] = true;
 }
 
-PrintTask::~PrintTask()
-{
-    supportEvents_.clear();
+PrintTask::~PrintTask() {
+  supportEvents_.clear();
+  Stop();
 }
 
-uint32_t PrintTask::GetId() const
-{
-    return taskId_;
+uint32_t PrintTask::Start() {
+  return PrintManagerClient::GetInstance()->StartPrint(fileList_, taskId_);
 }
 
-napi_value PrintTask::On(napi_env env, napi_callback_info info)
-{
-    PRINT_HILOGD("Enter ---->");
+void PrintTask::Stop() {
+  PrintManagerClient::GetInstance()->StopPrint(taskId_);
+  taskId_ = "";
+}
+
+const std::string &PrintTask::GetId() const { return taskId_; }
+
+napi_value PrintTask::On(napi_env env, napi_callback_info info) {
+  PRINT_HILOGD("Enter ---->");
+  size_t argc = NapiPrintUtils::MAX_ARGC;
+  napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
+  napi_value thisVal = nullptr;
+  void *data = nullptr;
+  PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
+  PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_TWO, "need 2 parameter!");
+
+  napi_valuetype valuetype;
+  PRINT_CALL(env,
+             napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype));
+  PRINT_ASSERT(env, valuetype == napi_string, "type is not a string");
+  std::string type = NapiPrintUtils::GetStringFromValueUtf8(
+      env, argv[NapiPrintUtils::INDEX_ZERO]);
+  PRINT_HILOGD("type : %{public}s", type.c_str());
+
+  valuetype = napi_undefined;
+  napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype);
+  PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
+
+  PrintTask *task;
+  PRINT_CALL(env, napi_unwrap(env, thisVal, reinterpret_cast<void **>(&task)));
+  if (task == nullptr || !task->IsSupportType(type)) {
+    PRINT_HILOGE("Event On type : %{public}s not support", type.c_str());
     return nullptr;
-}
+  }
 
-napi_value PrintTask::Off(napi_env env, napi_callback_info info)
-{
-    PRINT_HILOGD("Enter ---->");
+  napi_ref callbackRef =
+      NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_ONE]);
+  sptr<IPrintCallback> callback =
+      new (std::nothrow) PrintCallback(env, callbackRef);
+  if (callback == nullptr) {
+    PRINT_HILOGE("create print callback object fail");
     return nullptr;
+  }
+  int32_t ret =
+      PrintManagerClient::GetInstance()->On(task->taskId_, type, callback);
+  if (ret != ERROR_NONE) {
+    PRINT_HILOGE("Failed to register event");
+    return nullptr;
+  }
+  return nullptr;
 }
 
-bool PrintTask::IsSupportType(const std::string &type)
-{
-    return supportEvents_.find(type) != supportEvents_.end();
+napi_value PrintTask::Off(napi_env env, napi_callback_info info) {
+  PRINT_HILOGD("Enter ---->");
+  auto context = std::make_shared<TaskEventContext>();
+  auto input = [context](napi_env env, size_t argc, napi_value *argv,
+                         napi_value self) -> napi_status {
+    PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE,
+                      "need 1 parameter!", napi_invalid_arg);
+    napi_valuetype valuetype;
+    PRINT_CALL_BASE(
+        env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype),
+        napi_invalid_arg);
+    PRINT_ASSERT_BASE(env, valuetype == napi_string, "type is not a string",
+                      napi_string_expected);
+    std::string type = NapiPrintUtils::GetStringFromValueUtf8(
+        env, argv[NapiPrintUtils::INDEX_ZERO]);
+    PrintTask *task;
+    PRINT_CALL_BASE(env,
+                    napi_unwrap(env, self, reinterpret_cast<void **>(&task)),
+                    napi_invalid_arg);
+    if (task == nullptr || !task->IsSupportType(type)) {
+      PRINT_HILOGE("Event On type : %{public}s not support", type.c_str());
+      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+      return napi_invalid_arg;
+    }
+
+    context->type = type;
+    context->taskId = task->taskId_;
+    PRINT_HILOGD("event type : %{public}s", context->type.c_str());
+    return napi_ok;
+  };
+  auto output = [context](napi_env env, napi_value *result) -> napi_status {
+    napi_status status = napi_get_boolean(env, context->result, result);
+    PRINT_HILOGD("context->result = %{public}d, result = %{public}p",
+                 context->result, result);
+    return status;
+  };
+  auto exec = [context](PrintAsyncCall::Context *ctx) {
+    int32_t ret =
+        PrintManagerClient::GetInstance()->Off(context->taskId, context->type);
+    context->result = ret == ERROR_NONE;
+    if (ret != ERROR_NONE) {
+      PRINT_HILOGE("Failed to unregistered event");
+      context->SetErrorIndex(ret);
+    }
+  };
+  context->SetAction(std::move(input), std::move(output));
+  PrintAsyncCall asyncCall(
+      env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+  return asyncCall.Call(env, exec);
 }
 
-bool PrintTask::IsSupportPrinterStateType(const std::string &type)
-{
-    return supportPrinterState_.find(type) != supportPrinterState_.end();
-}
-
-bool PrintTask::IsSupportJobStateType(const std::string &type)
-{
-    PRINT_HILOGD("Enter IsSupportJobStateType.");
-    return supportJobState_.find(type) != supportJobState_.end();
+bool PrintTask::IsSupportType(const std::string &type) const {
+  return supportEvents_.find(type) != supportEvents_.end();
 }
 } // namespace OHOS::Print

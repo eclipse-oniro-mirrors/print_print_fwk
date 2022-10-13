@@ -16,44 +16,59 @@
 #ifndef PRINT_EXTENSION_INFO_H
 #define PRINT_EXTENSION_INFO_H
 
-#include <map>
-#include <string>
+#include "napi/native_api.h"
+#include "parcel.h"
 
 namespace OHOS::Print {
-class PrintExtensionInfo {
+
+class PrintExtensionInfo final : public Parcelable {
 public:
-    PrintExtensionInfo();
+  explicit PrintExtensionInfo();
+  PrintExtensionInfo(const PrintExtensionInfo &right);
+  ~PrintExtensionInfo() = default;
 
-    void SetExtensionId(uint32_t extensionId);
+  PrintExtensionInfo &operator=(const PrintExtensionInfo &right);
 
-    void SetVendorId(uint32_t vendorId);
+  void SetExtensionId(const std::string &extensionId);
 
-    void SetVendorName(const std::string &vendorName);
+  void SetVendorId(const std::string &vendorId);
 
-    void SetVendorIcon(uint32_t vendorIcon);
+  void SetVendorName(const std::string &vendorName);
 
-    void SetVersion(const std::string &version);
+  void SetVendorIcon(uint32_t vendorIcon);
 
-    [[nodiscard]] uint32_t GetExtensionId() const;
+  void SetVersion(const std::string &version);
 
-    [[nodiscard]] uint32_t GetVendorId() const;
+  [[nodiscard]] const std::string &GetExtensionId() const;
 
-    [[nodiscard]] const std::string &GetVendorName() const;
+  [[nodiscard]] const std::string &GetVendorId() const;
 
-    [[nodiscard]] uint32_t GetVendorIcon() const;
+  [[nodiscard]] const std::string &GetVendorName() const;
 
-    [[nodiscard]] const std::string &GetVersion() const;
+  [[nodiscard]] uint32_t GetVendorIcon() const;
 
-    void Dump();
+  [[nodiscard]] const std::string &GetVersion() const;
 
-    ~PrintExtensionInfo();
+  virtual bool Marshalling(Parcel &parcel) const override;
+
+  static std::shared_ptr<PrintExtensionInfo> Unmarshalling(Parcel &parcel);
+
+  napi_value ToJsObject(napi_env env) const;
+
+  static std::shared_ptr<PrintExtensionInfo> BuildFromJs(napi_env env,
+                                                         napi_value jsValue);
+
+  void Dump();
 
 private:
-    uint32_t extensionId_;
-    uint32_t vendorId_;
-    std::string vendorName_;
-    uint32_t vendorIcon_;
-    std::string version_;
+  bool ReadFromParcel(Parcel &parcel);
+
+private:
+  std::string extensionId_;
+  std::string vendorId_;
+  std::string vendorName_;
+  uint32_t vendorIcon_;
+  std::string version_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_EXTENSION_INFO_H

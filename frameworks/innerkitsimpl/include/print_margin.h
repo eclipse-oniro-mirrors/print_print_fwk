@@ -16,39 +16,52 @@
 #ifndef PRINT_MARGIN_H
 #define PRINT_MARGIN_H
 
-#include <cstdint>
+#include "napi/native_api.h"
+#include "parcel.h"
 
 namespace OHOS::Print {
-class PrintMargin {
+class PrintMargin final : public Parcelable {
 public:
-    explicit PrintMargin();
-    PrintMargin(const PrintMargin &right);
-    PrintMargin &operator=(const PrintMargin &right);
-    ~PrintMargin();
+  explicit PrintMargin();
+  PrintMargin(const PrintMargin &right);
+  PrintMargin &operator=(const PrintMargin &right);
+  ~PrintMargin();
 
-    void SetTop(uint32_t top);
+  void SetTop(uint32_t top);
 
-    void SetBottom(uint32_t bottom);
+  void SetBottom(uint32_t bottom);
 
-    void SetLeft(uint32_t left);
+  void SetLeft(uint32_t left);
 
-    void SetRight(uint32_t right);
+  void SetRight(uint32_t right);
 
-    [[nodiscard]] uint32_t GetTop() const;
+  [[nodiscard]] uint32_t GetTop() const;
 
-    [[nodiscard]] uint32_t GetBottom() const;
+  [[nodiscard]] uint32_t GetBottom() const;
 
-    [[nodiscard]] uint32_t GetLeft() const;
+  [[nodiscard]] uint32_t GetLeft() const;
 
-    [[nodiscard]] uint32_t GetRight() const;
+  [[nodiscard]] uint32_t GetRight() const;
 
-    void Dump();
+  virtual bool Marshalling(Parcel &parcel) const override;
+
+  static std::shared_ptr<PrintMargin> Unmarshalling(Parcel &parcel);
+
+  napi_value ToJsObject(napi_env env) const;
+
+  static std::shared_ptr<PrintMargin> BuildFromJs(napi_env env,
+                                                  napi_value jsValue);
+
+  void Dump();
 
 private:
-    uint32_t top_;
-    uint32_t bottom_;
-    uint32_t left_;
-    uint32_t right_;
+  bool ReadFromParcel(Parcel &parcel);
+
+private:
+  uint32_t top_;
+  uint32_t bottom_;
+  uint32_t left_;
+  uint32_t right_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_MARGIN_H

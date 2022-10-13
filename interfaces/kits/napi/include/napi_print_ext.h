@@ -16,9 +16,9 @@
 #ifndef NAPI_PRINT_EXT_H
 #define NAPI_PRINT_EXT_H
 
-#include "async_call.h"
 #include "napi/native_api.h"
 #include "noncopyable.h"
+#include "print_async_call.h"
 #include "print_margin.h"
 #include "print_page_size.h"
 #include "print_resolution.h"
@@ -29,27 +29,39 @@
 namespace OHOS::Print {
 class NapiPrintExt {
 public:
-    static napi_value AddPrinters(napi_env env, napi_callback_info info);
-    static napi_value RemovePrinters(napi_env env, napi_callback_info info);
-    static napi_value UpdatePrinterState(napi_env env, napi_callback_info info);
-    static napi_value UpdatePrintJobState(napi_env env, napi_callback_info info);
+  static napi_value AddPrinters(napi_env env, napi_callback_info info);
+  static napi_value RemovePrinters(napi_env env, napi_callback_info info);
+  static napi_value UpdatePrinters(napi_env env, napi_callback_info info);
+  static napi_value UpdatePrinterState(napi_env env, napi_callback_info info);
+  static napi_value UpdatePrintJobState(napi_env env, napi_callback_info info);
+  static napi_value UpdateExtensionInfo(napi_env env, napi_callback_info info);
 
 private:
-    struct NapiPrintExtContext : public AsyncCall::Context {
-        PrintTask *task_ = nullptr;
-        PrinterInfo info_;
-        bool result = false;
-        uint32_t printerId = 0;
-        uint32_t printerJobId = 0;
-        uint32_t printerState = 0;
-        uint32_t printerJobState = 0;
-        napi_status status = napi_generic_failure;
-        std::vector<PrinterInfo> printAddInfoVector;
-        std::vector<PrinterInfo> printRemoveInfoVector;
-        NapiPrintExtContext() : Context(nullptr, nullptr) {};
-        NapiPrintExtContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
-        virtual ~NapiPrintExtContext() {};
-    };
+  static bool IsValidPrinterState(uint32_t state);
+  static bool IsValidPrintJobState(uint32_t state);
+  static bool IsValidPrintJobSubState(uint32_t subState);
+
+private:
+  struct NapiPrintExtContext : public PrintAsyncCall::Context {
+    bool result = true;
+    std::vector<PrinterInfo> printerInfos;
+    std::vector<std::string> printerIds;
+
+    std::string printerId = "";
+    uint32_t printerState = 0;
+
+    std::string printJobId = "";
+    uint32_t printJobState = 0;
+    uint32_t jobSubState = 0;
+
+    std::string extensionId = "";
+    std::string extInfo = "";
+
+    NapiPrintExtContext() : Context(nullptr, nullptr){};
+    NapiPrintExtContext(InputAction input, OutputAction output)
+        : Context(std::move(input), std::move(output)){};
+    virtual ~NapiPrintExtContext(){};
+  };
 };
 } // namespace OHOS::Print
 #endif // NAPI_PRINT_EXT_H

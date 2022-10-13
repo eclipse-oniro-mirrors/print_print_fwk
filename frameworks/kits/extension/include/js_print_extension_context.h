@@ -28,7 +28,10 @@ class NativeReference;
 
 namespace OHOS {
 namespace AbilityRuntime {
-NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine, std::shared_ptr<PrintExtensionContext> context);
+NativeValue *
+CreateJsPrintExtensionContext(NativeEngine &engine,
+                              std::shared_ptr<PrintExtensionContext> context,
+                              std::string &extensionId);
 } // namespace AbilityRuntime
 } // namespace OHOS
 #endif // JS_PRINT_EXTENSION_CONTEXT_H

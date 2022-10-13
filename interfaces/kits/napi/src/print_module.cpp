@@ -16,13 +16,13 @@
 #include "napi_inner_print.h"
 #include "napi_print_ext.h"
 #include "napi_print_task.h"
-#include "print_constant.h"
 #include "print_log.h"
 
 using namespace OHOS::Print;
 
 static constexpr const char *FUNCTION_PRINT = "print";
-static constexpr const char *FUNCTION_QUERY_EXT = "queryExtensionAbilityInfos";
+static constexpr const char *FUNCTION_QUERY_EXT =
+    "queryAllPrinterExtensionInfos";
 static constexpr const char *FUNCTION_START_DISCOVERY = "startDiscoverPrinter";
 static constexpr const char *FUNCTION_STOP_DISCOVERY = "stopDiscoverPrinter";
 static constexpr const char *FUNCTION_CONNECT_PRINT = "connectPrinter";
@@ -30,54 +30,73 @@ static constexpr const char *FUNCTION_DISCONNECT_PRINT = "disconnectPrinter";
 static constexpr const char *FUNCTION_START_PRINT = "startPrintJob";
 static constexpr const char *FUNCTION_CANCEL_PRINT = "cancelPrintJob";
 static constexpr const char *FUNCTION_REQUEST_PREVIEW = "requestPrintPreview";
-static constexpr const char *FUNCTION_QUERY_CAPABILITY = "queryPrinterCapability";
+static constexpr const char *FUNCTION_QUERY_CAPABILITY =
+    "queryPrinterCapability";
 static constexpr const char *FUNCTION_REGISTER_EVENT = "on";
 static constexpr const char *FUNCTION_UNREGISTER_EVENT = "off";
 static constexpr const char *FUNCTION_ADD_PRINTER = "addPrinters";
 static constexpr const char *FUNCTION_REMOVE_PRINTER = "removePrinters";
-static constexpr const char *FUNCTION_UPDATE_PRINTER_STATE = "updatePrinterState";
+static constexpr const char *FUNCTION_UPDATE_PRINTER = "updatePrinters";
+static constexpr const char *FUNCTION_UPDATE_PRINTER_STATE =
+    "updatePrinterState";
 static constexpr const char *FUNCTION_UPDATE_JOB_STATE = "updatePrintJobState";
+static constexpr const char *FUNCTION_UPDATE_EXTENSION_INFO =
+    "updateExtensionInfo";
+static constexpr const char *FUNCTION_READ_FILE = "readFile";
 
-#define DECLARE_NAPI_METHOD(name, func)         \
-    {                                           \
-        name, 0, func, 0, 0, 0, napi_default, 0 \
-    }
+#define DECLARE_NAPI_METHOD(name, func)                                        \
+  { name, 0, func, 0, 0, 0, napi_default, 0 }
 
-static napi_value Init(napi_env env, napi_value exports)
-{
-    napi_property_descriptor desc[] = {
-        DECLARE_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
-        DECLARE_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
-        DECLARE_NAPI_METHOD(FUNCTION_START_DISCOVERY, NapiInnerPrint::StartDiscovery),
-        DECLARE_NAPI_METHOD(FUNCTION_STOP_DISCOVERY, NapiInnerPrint::StopDiscovery),
-        DECLARE_NAPI_METHOD(FUNCTION_CONNECT_PRINT, NapiInnerPrint::ConnectPrint),
-        DECLARE_NAPI_METHOD(FUNCTION_DISCONNECT_PRINT, NapiInnerPrint::DisconnectPrint),
-        DECLARE_NAPI_METHOD(FUNCTION_START_PRINT, NapiInnerPrint::StartPrintJob),
-        DECLARE_NAPI_METHOD(FUNCTION_CANCEL_PRINT, NapiInnerPrint::CancelPrintJob),
-        DECLARE_NAPI_METHOD(FUNCTION_REQUEST_PREVIEW, NapiInnerPrint::RequestPreview),
-        DECLARE_NAPI_METHOD(FUNCTION_QUERY_CAPABILITY, NapiInnerPrint::QueryCapability),
-        DECLARE_NAPI_METHOD(FUNCTION_REGISTER_EVENT, NapiInnerPrint::On),
-        DECLARE_NAPI_METHOD(FUNCTION_UNREGISTER_EVENT, NapiInnerPrint::Off),
-        DECLARE_NAPI_METHOD(FUNCTION_ADD_PRINTER, NapiPrintExt::AddPrinters),
-        DECLARE_NAPI_METHOD(FUNCTION_REMOVE_PRINTER, NapiPrintExt::RemovePrinters),
-        DECLARE_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_STATE, NapiPrintExt::UpdatePrinterState),
-        DECLARE_NAPI_METHOD(FUNCTION_UPDATE_JOB_STATE, NapiPrintExt::UpdatePrintJobState),
-    };
+static napi_value Init(napi_env env, napi_value exports) {
+  napi_property_descriptor desc[] = {
+      DECLARE_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
+      DECLARE_NAPI_METHOD(FUNCTION_QUERY_EXT,
+                          NapiInnerPrint::QueryExtensionInfo),
+      DECLARE_NAPI_METHOD(FUNCTION_START_DISCOVERY,
+                          NapiInnerPrint::StartDiscovery),
+      DECLARE_NAPI_METHOD(FUNCTION_STOP_DISCOVERY,
+                          NapiInnerPrint::StopDiscovery),
+      DECLARE_NAPI_METHOD(FUNCTION_CONNECT_PRINT,
+                          NapiInnerPrint::ConnectPrinter),
+      DECLARE_NAPI_METHOD(FUNCTION_DISCONNECT_PRINT,
+                          NapiInnerPrint::DisconnectPrinter),
+      DECLARE_NAPI_METHOD(FUNCTION_START_PRINT, NapiInnerPrint::StartPrintJob),
+      DECLARE_NAPI_METHOD(FUNCTION_CANCEL_PRINT,
+                          NapiInnerPrint::CancelPrintJob),
+      DECLARE_NAPI_METHOD(FUNCTION_REQUEST_PREVIEW,
+                          NapiInnerPrint::RequestPreview),
+      DECLARE_NAPI_METHOD(FUNCTION_QUERY_CAPABILITY,
+                          NapiInnerPrint::QueryCapability),
+      DECLARE_NAPI_METHOD(FUNCTION_REGISTER_EVENT, NapiInnerPrint::On),
+      DECLARE_NAPI_METHOD(FUNCTION_UNREGISTER_EVENT, NapiInnerPrint::Off),
+      DECLARE_NAPI_METHOD(FUNCTION_READ_FILE, NapiInnerPrint::ReadFile),
+      DECLARE_NAPI_METHOD(FUNCTION_ADD_PRINTER, NapiPrintExt::AddPrinters),
+      DECLARE_NAPI_METHOD(FUNCTION_REMOVE_PRINTER,
+                          NapiPrintExt::RemovePrinters),
+      DECLARE_NAPI_METHOD(FUNCTION_UPDATE_PRINTER,
+                          NapiPrintExt::UpdatePrinters),
+      DECLARE_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_STATE,
+                          NapiPrintExt::UpdatePrinterState),
+      DECLARE_NAPI_METHOD(FUNCTION_UPDATE_JOB_STATE,
+                          NapiPrintExt::UpdatePrintJobState),
+      DECLARE_NAPI_METHOD(FUNCTION_UPDATE_EXTENSION_INFO,
+                          NapiPrintExt::UpdateExtensionInfo),
+  };
 
-    napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
-    PRINT_HILOGD("init upload %{public}d", status);
-    return exports;
+  napi_status status = napi_define_properties(
+      env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
+  PRINT_HILOGD("init print module %{public}d", status);
+  return exports;
 }
 
-static __attribute__((constructor)) void RegisterModule()
-{
-    static napi_module module = { .nm_version = 1,
-        .nm_flags = 0,
-        .nm_filename = nullptr,
-        .nm_register_func = Init,
-        .nm_modname = "print",
-        .nm_priv = ((void *)0),
-        .reserved = { 0 } };
-    napi_module_register(&module);
-    PRINT_HILOGD("module register print");
+static __attribute__((constructor)) void RegisterModule() {
+  static napi_module module = {.nm_version = 1,
+                               .nm_flags = 0,
+                               .nm_filename = nullptr,
+                               .nm_register_func = Init,
+                               .nm_modname = "print",
+                               .nm_priv = ((void *)0),
+                               .reserved = {0}};
+  napi_module_register(&module);
+  PRINT_HILOGD("module register print");
 }

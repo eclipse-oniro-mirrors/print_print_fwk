@@ -15,7 +15,7 @@
 #include "print_service_proxy.h"
 #include "iremote_broker.h"
 #include "napi_print_utils.h"
-#include "print_common.h"
+#include "print_constant.h"
 #include "print_job.h"
 #include "print_log.h"
 #include "printer_info.h"
@@ -23,492 +23,511 @@
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
 
-PrintServiceProxy::PrintServiceProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IPrintService>(object) {}
+PrintServiceProxy::PrintServiceProxy(const sptr<IRemoteObject> &object)
+    : IRemoteProxy<IPrintService>(object) {}
 
-int32_t PrintServiceProxy::StartPrint()
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    PRINT_HILOGD("PrintServiceProxy StartPrint started.");
-    bool ret = Remote()->SendRequest(CMD_START_PRINT, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGE("StartPrint, ret = %{public}d", ret);
-        return -1;
-    }
-    int32_t taskId = reply.ReadInt32();
-    PRINT_HILOGD("PrintServiceProxy StartPrint succeeded. TaskId = %{public}d", taskId);
-    return taskId;
+int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
+                                      std::string &taskId) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  PRINT_HILOGD("Current file is %{public}d", fileList.size());
+  for (auto file : fileList) {
+    PRINT_HILOGD("file is %{public}s", file.c_str());
+  }
+  data.WriteStringVector(fileList);
+  PRINT_HILOGD("PrintServiceProxy StartPrint started.");
+  int32_t ret = Remote()->SendRequest(CMD_START_PRINT, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("StartPrint, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+  ret = reply.ReadInt32();
+  taskId = reply.ReadString();
+  PRINT_HILOGD(
+      "PrintServiceProxy StartPrint ret = [%{public}d] TaskId = %{public}s",
+      ret, taskId.c_str());
+  return ret;
 }
 
-bool PrintServiceProxy::ConnectPrinter(uint32_t printerId)
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
-    data.WriteUint32(printerId);
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_CONNECTPRINTER, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    PRINT_HILOGD("PrintServiceProxy ConnectPrinter succeeded.");
-    return true;
+int32_t PrintServiceProxy::StopPrint(const std::string &taskId) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(taskId);
+  PRINT_HILOGD("PrintServiceProxy StopPrint started.");
+  int32_t ret = Remote()->SendRequest(CMD_STOP_PRINT, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("StopPrint, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy StopPrint out. ret = [%{public}d]", ret);
+  return ret;
 }
 
-bool PrintServiceProxy::DisconnectPrinter(uint32_t printerId)
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
-    data.WriteUint32(printerId);
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_DISCONNECTPRINTER, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    PRINT_HILOGD("PrintServiceProxy DisconnectPrinter succeeded.");
-    return true;
+int32_t PrintServiceProxy::ConnectPrinter(const std::string &printerId) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(printerId);
+  PRINT_HILOGD("PrintServiceProxy ConnectPrinter started.");
+  int32_t ret = Remote()->SendRequest(CMD_CONNECTPRINTER, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("ConnectPrinter, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy ConnectPrinter out. ret = [%{public}d]", ret);
+  return ret;
 }
 
-bool PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &arrayExtensionInfo)
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
-    data.WriteUint32(NapiPrintUtils::ARGC_FIVE);
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_QUERYALLEXTENSION, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    uint32_t replyArrayLength = reply.ReadUint32();
-    for (uint32_t i = 0; i < replyArrayLength; i++) {
-        PrintExtensionInfo printeExtensionInfo;
-        printeExtensionInfo.SetExtensionId(reply.ReadUint32());
-        printeExtensionInfo.SetVendorId(reply.ReadUint32());
-        printeExtensionInfo.SetVendorName(reply.ReadString());
-        printeExtensionInfo.SetVendorIcon(reply.ReadUint32());
-        printeExtensionInfo.SetVersion(reply.ReadString());
-        arrayExtensionInfo.push_back(printeExtensionInfo);
-        arrayExtensionInfo[i].Dump();
-    }
-    return true;
+int32_t PrintServiceProxy::DisconnectPrinter(const std::string &printerId) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(printerId);
+  PRINT_HILOGD("PrintServiceProxy DisconnectPrinter started.");
+  int32_t ret =
+      Remote()->SendRequest(CMD_DISCONNECTPRINTER, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("DisconnectPrinter, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy DisconnectPrinter out. ret = [%{public}d]",
+               ret);
+  return ret;
 }
 
-bool PrintServiceProxy::StartDiscoverPrinter(const std::vector<uint32_t> &extensionList)
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
-    data.WriteUint32(extensionList.size());
-    PRINT_HILOGD("OnStartDiscoverPrinter extensionList.size() = %{public}zu", extensionList.size());
-    for (uint32_t i = 0; i < extensionList.size(); i++) {
-        data.WriteUint32(extensionList[i]);
+int32_t PrintServiceProxy::QueryAllExtension(
+    std::vector<PrintExtensionInfo> &extensionInfos) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  PRINT_HILOGD("PrintServiceProxy QueryAllExtension started.");
+  int32_t ret =
+      Remote()->SendRequest(CMD_QUERYALLEXTENSION, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("QueryAllExtension, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  if (ret != ERROR_NONE) {
+    PRINT_HILOGD("PrintServiceProxy QueryAllExtension Failed.");
+    return ERROR_SERVER_FAIL;
+  }
+
+  uint32_t len = reply.ReadUint32();
+  for (uint32_t i = 0; i < len; i++) {
+    auto infoPtr = PrintExtensionInfo::Unmarshalling(reply);
+    if (infoPtr == nullptr) {
+      PRINT_HILOGE("wrong information from data");
+      return ERROR_GENERIC_FAIL;
     }
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_STARTDISCOVERPRINTER, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    PRINT_HILOGD("PrintServiceProxy StartDiscoverPrinter succeeded.");
-    return true;
+    extensionInfos.emplace_back(*infoPtr);
+  }
+  PRINT_HILOGD("PrintServiceProxy QueryAllExtension succeeded.");
+  return ERROR_NONE;
 }
 
-bool PrintServiceProxy::StopDiscoverPrinter()
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_STOPDISCOVERPRINTER, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    PRINT_HILOGD("PrintServiceProxy StopDiscoverPrinter succeeded.");
-    return true;
+int32_t PrintServiceProxy::StartDiscoverPrinter(
+    const std::vector<std::string> &extensionList) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteStringVector(extensionList);
+  PRINT_HILOGD("PrintServiceProxy StartDiscoverPrinter started.");
+  int32_t ret =
+      Remote()->SendRequest(CMD_STARTDISCOVERPRINTER, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("StartDiscoverPrinter, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy StartDiscoverPrinter out. ret = [%{public}d]",
+               ret);
+  return ret;
 }
 
-bool PrintServiceProxy::StartPrintJob(const PrintJob &jobinfo)
-{
-    MessageParcel data, reply;
-    MessageOption option;
+int32_t PrintServiceProxy::StopDiscoverPrinter() {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  PRINT_HILOGD("PrintServiceProxy StopDiscoverPrinter started.");
+  int32_t ret =
+      Remote()->SendRequest(CMD_STOPDISCOVERPRINTER, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("StopDiscoverPrinter, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
 
-    BuildParcelFromPrintJob(data, jobinfo);
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_STARTPRINTJOB, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    PRINT_HILOGD("PrintServiceProxy StartPrintJob succeeded.");
-    return true;
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy StopDiscoverPrinter out. ret = [%{public}d]",
+               ret);
+  return ret;
 }
 
-bool PrintServiceProxy::CancelPrintJob(const PrintJob &jobinfo)
-{
-    MessageParcel data, reply;
-    MessageOption option;
+int32_t PrintServiceProxy::StartPrintJob(const PrintJob &jobinfo) {
+  MessageParcel data, reply;
+  MessageOption option;
 
-    BuildParcelFromPrintJob(data, jobinfo);
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_CANCELPRINTJOB, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    PRINT_HILOGD("PrintServiceProxy CancelPrintJob succeeded.");
-    return true;
+  data.WriteInterfaceToken(GetDescriptor());
+  jobinfo.Marshalling(data);
+  PRINT_HILOGD("PrintServiceProxy StartPrintJob started.");
+  int32_t ret = Remote()->SendRequest(CMD_STARTPRINTJOB, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("StartPrintJob, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy StartPrintJob out. ret = [%{public}d]", ret);
+  return ret;
 }
 
-bool PrintServiceProxy::AddPrinters(const std::vector<PrinterInfo> &arrayPrintInfo)
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
-    data.WriteUint32(arrayPrintInfo.size());
-    PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfo.size() = %{public}zu", arrayPrintInfo.size());
-    for (uint32_t i = 0; i < arrayPrintInfo.size(); i++) {
-        BuildParcelFromPrinterInfo(data, arrayPrintInfo[i]);
-    }
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_ADDPRINTERS, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    PRINT_HILOGD("PrintServiceProxy AddPrinters succeeded.");
-    return true;
+int32_t PrintServiceProxy::CancelPrintJob(const PrintJob &jobinfo) {
+  MessageParcel data, reply;
+  MessageOption option;
+
+  data.WriteInterfaceToken(GetDescriptor());
+  jobinfo.Marshalling(data);
+  PRINT_HILOGD("PrintServiceProxy CancelPrintJob started.");
+  int32_t ret = Remote()->SendRequest(CMD_CANCELPRINTJOB, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("CancelPrintJob, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy CancelPrintJob out. ret = [%{public}d]", ret);
+  return ret;
 }
 
-bool PrintServiceProxy::RemovePrinters(const std::vector<PrinterInfo> &arrayPrintInfo)
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
-    data.WriteUint32(arrayPrintInfo.size());
-    PRINT_HILOGD("OnStartDiscoverPrinter arrayPrintInfo.size() = %{public}zu", arrayPrintInfo.size());
-    for (uint32_t i = 0; i < arrayPrintInfo.size(); i++) {
-        BuildParcelFromPrinterInfo(data, arrayPrintInfo[i]);
-    }
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_REMOVEPRINTERS, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    PRINT_HILOGD("PrintServiceProxy RemovePrinters succeeded.");
-    return true;
+int32_t
+PrintServiceProxy::AddPrinters(const std::vector<PrinterInfo> &printerInfos) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteUint32(printerInfos.size());
+  PRINT_HILOGD("AddPrinters printerInfos.size() = %{public}zu",
+               printerInfos.size());
+  for (uint32_t i = 0; i < printerInfos.size(); i++) {
+    printerInfos[i].Marshalling(data);
+  }
+  PRINT_HILOGD("PrintServiceProxy AddPrinters started.");
+  int32_t ret = Remote()->SendRequest(CMD_ADDPRINTERS, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("AddPrinters, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy AddPrinters out. ret = [%{public}d]", ret);
+  return ret;
 }
 
-bool PrintServiceProxy::UpdatePrinterState(uint32_t printerId, uint32_t state)
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
-    data.WriteUint32(printerId);
-    data.WriteUint32(state);
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_UPDATEPRINTERSTATE, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    PRINT_HILOGD("PrintServiceProxy UpdatePrinterState succeeded.");
-    return true;
+int32_t
+PrintServiceProxy::RemovePrinters(const std::vector<std::string> &printerIds) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteStringVector(printerIds);
+
+  PRINT_HILOGD("PrintServiceProxy RemovePrinters started.");
+  int32_t ret = Remote()->SendRequest(CMD_REMOVEPRINTERS, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("RemovePrinters, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy RemovePrinters out. ret = [%{public}d]", ret);
+  return ret;
 }
 
-bool PrintServiceProxy::UpdatePrinterJobState(uint32_t jobId, uint32_t state)
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
-    data.WriteUint32(jobId);
-    data.WriteUint32(state);
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_UPDATEPRINTERJOBSTATE, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    PRINT_HILOGD("PrintServiceProxy UpdatePrinterJobState succeeded.");
-    return true;
+int32_t PrintServiceProxy::UpdatePrinters(
+    const std::vector<PrinterInfo> &printerInfos) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteUint32(printerInfos.size());
+  PRINT_HILOGD("UpdatePrinters printerInfos.size() = %{public}zu",
+               printerInfos.size());
+  for (uint32_t i = 0; i < printerInfos.size(); i++) {
+    printerInfos[i].Marshalling(data);
+  }
+  PRINT_HILOGD("PrintServiceProxy UpdatePrinters started.");
+  int32_t ret = Remote()->SendRequest(CMD_UPDATEPRINTERS, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("UpdatePrinters, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy UpdatePrinters out. ret = [%{public}d]", ret);
+  return ret;
 }
 
-bool PrintServiceProxy::RequestPreview(const PrintJob &jobinfo, std::string &previewResult)
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    BuildParcelFromPrintJob(data, jobinfo);
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_REQUESTPREVIEW, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    previewResult = reply.ReadString();
-    PRINT_HILOGD("PrintServiceProxy RequestPreview succeeded.");
-    return true;
+int32_t PrintServiceProxy::UpdatePrinterState(const std::string &printerId,
+                                              uint32_t state) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(printerId);
+  data.WriteUint32(state);
+  PRINT_HILOGD("PrintServiceProxy UpdatePrinterState started.");
+  int32_t ret =
+      Remote()->SendRequest(CMD_UPDATEPRINTERSTATE, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("UpdatePrinterState, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy UpdatePrinterState out. ret = [%{public}d]",
+               ret);
+  return ret;
 }
 
-bool PrintServiceProxy::QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability)
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(PrintServiceProxy::GetDescriptor());
-    PRINT_HILOGD("printerId : %{public}d", printerId);
-    data.WriteUint32(printerId);
-    PRINT_HILOGD("PrintServiceProxy ChangeTaskPriority started.");
-    bool ret = Remote()->SendRequest(CMD_QUERYPRINTERCAPABILITY, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGD("PrintServiceProxy, ret = %{public}d", ret);
-        return false;
-    }
-    uint32_t arraypageSizeLength = reply.ReadUint32();
-    uint32_t resolutionLength = reply.ReadUint32();
-    PRINT_HILOGD("PrintServiceProxy, arraypageSizeLength = %{public}d", arraypageSizeLength);
-    PRINT_HILOGD("PrintServiceProxy, resolutionLength = %{public}d", resolutionLength);
+int32_t PrintServiceProxy::UpdatePrintJobState(const std::string &jobId,
+                                               uint32_t state,
+                                               uint32_t subState) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(jobId);
+  data.WriteUint32(state);
+  data.WriteUint32(subState);
+  PRINT_HILOGD("PrintServiceProxy UpdatePrintJobState started.");
+  int32_t ret =
+      Remote()->SendRequest(CMD_UPDATEPRINTJOBSTATE, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("UpdatePrintJobState, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
 
-    PrintMargin margin;
-    margin.SetTop(reply.ReadUint32());
-    margin.SetBottom(reply.ReadUint32());
-    margin.SetLeft(reply.ReadUint32());
-    margin.SetRight(reply.ReadUint32());
-    printerCapability.SetMinMargin(margin);
-
-    if (arraypageSizeLength > 0) {
-        std::vector<PrintPageSize> pageSizeList;
-        for (uint32_t i = 0; i < arraypageSizeLength; i++) {
-            PrintPageSize pageSize;
-            pageSize.SetId(reply.ReadString());
-            pageSize.SetName(reply.ReadString());
-            pageSize.SetWidth(reply.ReadUint32());
-            pageSize.SetHeight(reply.ReadUint32());
-            pageSizeList.push_back(pageSize);
-        }
-        printerCapability.SetPageSize(pageSizeList);
-    }
-
-    if (resolutionLength > 0) {
-        std::vector<PrintResolution> resolutionList;
-        for (uint32_t i = 0; i < resolutionLength; i++) {
-            PrintResolution res;
-            res.SetId(reply.ReadUint32());
-            res.SetHorizontalDpi(reply.ReadUint32());
-            res.SetVerticalDpi(reply.ReadUint32());
-            resolutionList.push_back(res);
-        }
-        printerCapability.SetResolution(resolutionList);
-    }
-
-    printerCapability.SetColorMode(reply.ReadUint32());
-    printerCapability.SetDuplexMode(reply.ReadUint32());
-    printerCapability.Dump();
-
-    PRINT_HILOGD("PrintServiceProxy QueryPrinterCapability succeeded.");
-    return true;
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy UpdatePrintJobState out. ret = [%{public}d]",
+               ret);
+  return ret;
 }
 
-bool PrintServiceProxy::CheckPermission()
-{
-    PRINT_HILOGD("PrintServiceProxy::CheckPermission in");
-    MessageParcel data, reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE(" Failed to write parcelable ");
-        return false;
-    }
+int32_t PrintServiceProxy::UpdateExtensionInfo(const std::string &extensionId,
+                                               const std::string &extInfo) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(extensionId);
+  data.WriteString(extInfo);
+  PRINT_HILOGD("PrintServiceProxy UpdateExtensionInfo started.");
+  int32_t ret =
+      Remote()->SendRequest(CMD_UPDATEEXTENSIONINFO, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("UpdateExtensionInfo, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
 
-    int32_t result = Remote()->SendRequest(CMD_CHECKPERMISSION, data, reply, option);
-    if (result != ERR_NONE) {
-        PRINT_HILOGE(" PrintServiceProxy::CheckPermission fail, ret = %{public}d ", result);
-        return false;
-    }
-    bool ret = reply.ReadBool();
-    PRINT_HILOGD("PrintServiceProxy::CheckPermission out [ret: %{public}d]", ret);
-    return ret;
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy UpdateExtensionInfo out. ret = [%{public}d]",
+               ret);
+  return ret;
 }
 
-bool PrintServiceProxy::On(
-    const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener)
-{
-    PRINT_HILOGD("PrintServiceProxy::On listener=%{public}p", listener.GetRefPtr());
-    MessageParcel data, reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE(" Failed to write parcelable ");
-        return false;
-    }
-    return true;
+int32_t PrintServiceProxy::RequestPreview(const PrintJob &jobinfo,
+                                          std::string &previewResult) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  jobinfo.Marshalling(data);
+  PRINT_HILOGD("PrintServiceProxy RequestPreview started.");
+  int32_t ret = Remote()->SendRequest(CMD_REQUESTPREVIEW, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("RequestPreview, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  previewResult = reply.ReadString();
+  PRINT_HILOGD("PrintServiceProxy RequestPreview ret = [%{public}d] "
+               "previewResult = %{public}s",
+               ret, previewResult.c_str());
+  return ret;
 }
 
-bool PrintServiceProxy::Off(const std::string &type)
-{
-    PRINT_HILOGD("PrintServiceProxy::Off in");
-    MessageParcel data, reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE(" Failed to write parcelable ");
-        return false;
+int32_t PrintServiceProxy::QueryPrinterCapability(
+    const std::string &printerId, PrinterCapability &printerCapability) {
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(printerId);
+  PRINT_HILOGD("PrintServiceProxy QueryPrinterCapability started.");
+  int32_t ret =
+      Remote()->SendRequest(CMD_QUERYPRINTERCAPABILITY, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("QueryPrinterCapability, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD(
+      "PrintServiceProxy QueryPrinterCapability out. ret = [%{public}d]", ret);
+  if (ret == ERROR_NONE) {
+    auto capPtr = PrinterCapability::Unmarshalling(reply);
+    if (capPtr == nullptr) {
+      PRINT_HILOGE("invalid printer capability object");
+      return ERROR_GENERIC_FAIL;
     }
-    return true;
+    printerCapability = *capPtr;
+  }
+  return ret;
 }
 
-bool PrintServiceProxy::RegisterExtCallback(uint32_t callbackId, const sptr<IPrintExtensionCallback> &listener)
-{
-    PRINT_HILOGD("PrintServiceProxy::RegisterExtCallback in");
-    MessageParcel data, reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("Failed to write parcelable");
-        return false;
-    }
-    if (!data.WriteUint32(callbackId)) {
-        PRINT_HILOGE("Failed to write callbackId=%{public}d", callbackId);
-        return false;
-    }
-    if (!data.WriteRemoteObject(listener->AsObject().GetRefPtr())) {
-        PRINT_HILOGE("write parcel failed.");
-        return false;
-    }
+int32_t PrintServiceProxy::On(const std::string taskId, const std::string &type,
+                              const sptr<IPrintCallback> &listener) {
+  PRINT_HILOGD("PrintServiceProxy::On listener=%{public}p",
+               listener.GetRefPtr());
+  if (listener == nullptr) {
+    PRINT_HILOGE("listener is nullptr");
+    return ERROR_INVALID_PARAMETER;
+  }
 
-    int32_t result = Remote()->SendRequest(CMD_REG_EXT_CB, data, reply, option);
-    if (result != ERR_NONE) {
-        PRINT_HILOGE("PrintServiceProxy::RegisterExtCallback fail, ret = %{public}d", result);
-        return false;
-    }
-    bool ret = reply.ReadBool();
-    PRINT_HILOGD("PrintServiceProxy::RegisterExtCallback out [ret: %{public}d]", ret);
-    return ret;
+  if (type.empty()) {
+    PRINT_HILOGE("PrintServiceProxy::On type is null.");
+    return ERROR_INVALID_PARAMETER;
+  }
+
+  MessageParcel data, reply;
+  MessageOption option;
+
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(taskId);
+  data.WriteString(type);
+  data.WriteRemoteObject(listener->AsObject().GetRefPtr());
+  int32_t ret = Remote()->SendRequest(CMD_ON, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("On, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy On out. ret = [%{public}d]", ret);
+  return ret;
 }
 
-bool PrintServiceProxy::UnregisterAllExtCallback()
-{
-    PRINT_HILOGD("PrintServiceProxy::UnregisterAllExtCallback in");
-    MessageParcel data, reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE(" Failed to write parcelable ");
-        return false;
-    }
+int32_t PrintServiceProxy::Off(const std::string taskId,
+                               const std::string &type) {
+  PRINT_HILOGD("PrintServiceProxy::Off in");
+  if (type.empty()) {
+    PRINT_HILOGE("PrintServiceProxy::On type is null.");
+    return ERROR_INVALID_PARAMETER;
+  }
 
-    int32_t result = Remote()->SendRequest(CMD_UNREG_EXT_CB, data, reply, option);
-    if (result != ERR_NONE) {
-        PRINT_HILOGE(" PrintServiceProxy::UnregisterAllExtCallback fail, ret = %{public}d ", result);
-        return false;
-    }
-    bool ret = reply.ReadBool();
-    PRINT_HILOGD("PrintServiceProxy::UnregisterAllExtCallback out [ret: %{public}d]", ret);
-    return ret;
+  MessageParcel data, reply;
+  MessageOption option;
+
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(taskId);
+  data.WriteString(type);
+  int32_t ret = Remote()->SendRequest(CMD_OFF, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("On, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy Off out. ret = [%{public}d]", ret);
+  return ret;
 }
 
-void PrintServiceProxy::BuildParcelFromPrintJob(MessageParcel &data, const PrintJob &jobinfo)
-{
-    data.WriteInterfaceToken(GetDescriptor());
+int32_t PrintServiceProxy::RegisterExtCallback(
+    const std::string &extensionCID,
+    const sptr<IPrintExtensionCallback> &listener) {
+  PRINT_HILOGD("PrintServiceProxy::RegisterExtCallback in: %{public}s",
+               extensionCID.c_str());
+  MessageParcel data, reply;
+  MessageOption option;
 
-    std::vector<std::string> files;
-    jobinfo.GetFiles(files);
-    data.WriteUint32((uint32_t)files.size());
-    for (uint32_t i = 0; i < (uint32_t)files.size(); i++) {
-        data.WriteString(files[i]);
-    }
-    data.WriteUint32(jobinfo.GetJobId());
-    data.WriteUint32(jobinfo.GetPrinterId());
-    data.WriteUint32(jobinfo.GetJobState());
-    data.WriteUint32(jobinfo.GetCopyNumber());
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(extensionCID);
+  data.WriteRemoteObject(listener->AsObject().GetRefPtr());
 
-    PrintRange range;
-    jobinfo.GetPageRange(range);
-    data.WriteUint32(range.GetStartPage());
-    data.WriteUint32(range.GetEndPage());
+  int32_t ret = Remote()->SendRequest(CMD_REG_EXT_CB, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("RegisterExtCallback, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
 
-    std::vector<uint32_t> pages;
-    range.GetPages(pages);
-    data.WriteUint32((uint32_t)pages.size());
-    for (uint32_t i = 0; i < (uint32_t)pages.size(); i++) {
-        data.WriteUint32(pages[i]);
-    }
-
-    data.WriteUint32(jobinfo.GetIsSequential());
-
-    PrintPageSize pageSize;
-    jobinfo.GetPageSize(pageSize);
-    data.WriteString(pageSize.GetId());
-    data.WriteString(pageSize.GetName());
-    data.WriteUint32(pageSize.GetWidth());
-    data.WriteUint32(pageSize.GetHeight());
-
-    data.WriteUint32(jobinfo.GetIsLandscape());
-    data.WriteUint32(jobinfo.GetColorMode());
-    data.WriteUint32(jobinfo.GetDuplexMode());
-
-    PrintMargin margin;
-    jobinfo.GetMargin(margin);
-    data.WriteUint32(margin.GetTop());
-    data.WriteUint32(margin.GetBottom());
-    data.WriteUint32(margin.GetLeft());
-    data.WriteUint32(margin.GetRight());
-
-    PreviewAttribute preview;
-    jobinfo.GetPreview(preview);
-    data.WriteString(preview.GetResult());
-
-    range.Reset();
-    preview.GetPreviewRange(range);
-    data.WriteUint32(range.GetStartPage());
-    data.WriteUint32(range.GetEndPage());
-
-    range.GetPages(pages);
-    data.WriteUint32((uint32_t)pages.size());
-    for (uint32_t i = 0; i < (uint32_t)pages.size(); i++) {
-        data.WriteUint32(pages[i]);
-    }
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy RegisterExtCallback out. ret = [%{public}d]",
+               ret);
+  return ret;
 }
 
-void PrintServiceProxy::BuildParcelFromPrinterInfo(MessageParcel &data, const PrinterInfo &printerInfo)
-{
-    data.WriteUint32(printerInfo.GetPrintId());
-    data.WriteString(printerInfo.GetPrinterName());
-    data.WriteUint32(printerInfo.GetPrinterIcon());
-    data.WriteUint32(printerInfo.GetPrinterState());
-    data.WriteString(printerInfo.GetDescription());
+int32_t
+PrintServiceProxy::UnregisterAllExtCallback(const std::string &extensionId) {
+  PRINT_HILOGD("PrintServiceProxy::UnregisterAllExtCallback in");
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(extensionId);
+  int32_t ret = Remote()->SendRequest(CMD_UNREG_EXT_CB, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("UnregisterAllExtCallback, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
 
-    PrinterCapability cap;
-    printerInfo.GetCapability(cap);
-    std::vector<PrintPageSize> pageSizeList;
-    cap.GetPageSize(pageSizeList);
+  ret = reply.ReadInt32();
+  PRINT_HILOGD(
+      "PrintServiceProxy UnregisterAllExtCallback out. ret = [%{public}d]",
+      ret);
+  return ret;
+}
 
-    std::vector<PrintResolution> resolutionList;
-    cap.GetResolution(resolutionList);
-    uint32_t pageSizeLength = pageSizeList.size();
-    uint32_t resolutionLength = resolutionList.size();
-    data.WriteUint32(pageSizeLength);
-    data.WriteUint32(resolutionLength);
+int32_t PrintServiceProxy::LoadExtSuccess(const std::string &extensionId) {
+  PRINT_HILOGD("PrintServiceProxy::LoadExtSuccess in");
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(extensionId);
+  int32_t ret = Remote()->SendRequest(CMD_LOAD_EXT, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("LoadExtSuccess, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
 
-    PrintMargin margin;
-    cap.GetMinMargin(margin);
-    data.WriteUint32(margin.GetTop());
-    data.WriteUint32(margin.GetBottom());
-    data.WriteUint32(margin.GetLeft());
-    data.WriteUint32(margin.GetRight());
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy LoadExtSuccess out. ret = [%{public}d]", ret);
+  return ret;
+}
 
-    for (uint32_t i = 0; i < pageSizeLength; i++) {
-        data.WriteString(pageSizeList[i].GetId());
-        data.WriteString(pageSizeList[i].GetName());
-        data.WriteUint32(pageSizeList[i].GetWidth());
-        data.WriteUint32(pageSizeList[i].GetHeight());
-    }
-    for (uint32_t i = 0; i < resolutionLength; i++) {
-        data.WriteUint32(resolutionList[i].GetId());
-        data.WriteUint32(resolutionList[i].GetHorizontalDpi());
-        data.WriteUint32(resolutionList[i].GetVerticalDpi());
-    }
-    data.WriteUint32(cap.GetColorMode());
-    data.WriteUint32(cap.GetDuplexMode());
+int32_t PrintServiceProxy::Read(std::vector<uint8_t> &fileRead,
+                                const std::string &uri, uint32_t offset,
+                                uint32_t max) {
+  PRINT_HILOGD("PrintServiceProxy::Read in");
+  MessageParcel data, reply;
+  MessageOption option;
+  data.WriteInterfaceToken(GetDescriptor());
+  data.WriteString(uri);
+  data.WriteUint32(offset);
+  data.WriteUint32(max);
+  int32_t ret = Remote()->SendRequest(CMD_READ_DATA, data, reply, option);
+  if (ret != ERR_NONE) {
+    PRINT_HILOGE("Read, rpc error code = %{public}d", ret);
+    return ERROR_RPC_FAIL;
+  }
+
+  ret = reply.ReadInt32();
+  PRINT_HILOGD("PrintServiceProxy Read out. ret = [%{public}d]", ret);
+  if (ret == ERROR_NONE) {
+    reply.ReadUInt8Vector(&fileRead);
+    PRINT_HILOGD("PrintServiceProxy Read succeeded.");
+  }
+  return ret;
 }
 } // namespace OHOS::Print

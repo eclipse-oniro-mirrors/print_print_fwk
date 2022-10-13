@@ -17,6 +17,7 @@
 #define PRINT_SERVICE_INTERFACE_H
 
 #include <string>
+#include <vector>
 
 #include "iprint_callback.h"
 #include "iprint_extension_callback.h"
@@ -28,49 +29,71 @@
 namespace OHOS::Print {
 class IPrintService : public IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print. IPrintService");
-    virtual int32_t StartPrint() = 0;
-    virtual bool ConnectPrinter(uint32_t printerId) = 0;
-    virtual bool DisconnectPrinter(uint32_t printerId) = 0;
-    virtual bool StartDiscoverPrinter(const std::vector<uint32_t> &extensionList) = 0;
-    virtual bool StopDiscoverPrinter() = 0;
-    virtual bool QueryAllExtension(std::vector<PrintExtensionInfo> &arrayExtensionInfo) = 0;
-    virtual bool StartPrintJob(const PrintJob &jobinfo) = 0;
-    virtual bool CancelPrintJob(const PrintJob &jobinfo) = 0;
-    virtual bool AddPrinters(const std::vector<PrinterInfo> &arrayPrintInfo) = 0;
-    virtual bool RemovePrinters(const std::vector<PrinterInfo> &arrayPrintInfo) = 0;
-    virtual bool UpdatePrinterState(uint32_t printerId, uint32_t state) = 0;
-    virtual bool UpdatePrinterJobState(uint32_t jobId, uint32_t state) = 0;
-    virtual bool RequestPreview(const PrintJob &jobinfo, std::string &previewResult) = 0;
-    virtual bool QueryPrinterCapability(uint32_t printerId, PrinterCapability &printerCapability) = 0;
-    virtual bool CheckPermission() = 0;
-    virtual bool On(
-        const std::string &type, uint32_t &state, PrinterInfo &info, const sptr<IPrintCallback> &listener) = 0;
-    virtual bool Off(const std::string &type) = 0;
-    virtual bool RegisterExtCallback(uint32_t callbackId, const sptr<IPrintExtensionCallback> &listener) = 0;
-    virtual bool UnregisterAllExtCallback() = 0;
+  DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.IPrintService");
+  virtual int32_t StartPrint(const std::vector<std::string> &fileList,
+                             std::string &taskId) = 0;
+  virtual int32_t StopPrint(const std::string &taskId) = 0;
+  virtual int32_t ConnectPrinter(const std::string &printerId) = 0;
+  virtual int32_t DisconnectPrinter(const std::string &printerId) = 0;
+  virtual int32_t
+  StartDiscoverPrinter(const std::vector<std::string> &extensionList) = 0;
+  virtual int32_t StopDiscoverPrinter() = 0;
+  virtual int32_t
+  QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos) = 0;
+  virtual int32_t StartPrintJob(const PrintJob &jobInfo) = 0;
+  virtual int32_t CancelPrintJob(const PrintJob &jobInfo) = 0;
+  virtual int32_t AddPrinters(const std::vector<PrinterInfo> &printerInfos) = 0;
+  virtual int32_t
+  RemovePrinters(const std::vector<std::string> &printerIds) = 0;
+  virtual int32_t
+  UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) = 0;
+  virtual int32_t UpdatePrinterState(const std::string &printerId,
+                                     uint32_t state) = 0;
+  virtual int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state,
+                                      uint32_t subState) = 0;
+  virtual int32_t UpdateExtensionInfo(const std::string &extensionId,
+                                      const std::string &extInfo) = 0;
+  virtual int32_t RequestPreview(const PrintJob &jobinfo,
+                                 std::string &previewResult) = 0;
+  virtual int32_t
+  QueryPrinterCapability(const std::string &printerId,
+                         PrinterCapability &printerCapability) = 0;
+  virtual int32_t On(const std::string taskId, const std::string &type,
+                     const sptr<IPrintCallback> &listener) = 0;
+  virtual int32_t Off(const std::string taskId, const std::string &type) = 0;
+  virtual int32_t
+  RegisterExtCallback(const std::string &extensionCID,
+                      const sptr<IPrintExtensionCallback> &listener) = 0;
+  virtual int32_t UnregisterAllExtCallback(const std::string &extensionId) = 0;
+  virtual int32_t LoadExtSuccess(const std::string &extensionId) = 0;
+  virtual int32_t Read(std::vector<uint8_t> &fileRead, const std::string &uri,
+                       uint32_t offset, uint32_t max) = 0;
 };
 
 enum {
-    CMD_START_PRINT,
-    CMD_CONNECTPRINTER,
-    CMD_DISCONNECTPRINTER,
-    CMD_STARTDISCOVERPRINTER,
-    CMD_STOPDISCOVERPRINTER,
-    CMD_QUERYALLEXTENSION,
-    CMD_STARTPRINTJOB,
-    CMD_CANCELPRINTJOB,
-    CMD_ADDPRINTERS,
-    CMD_REMOVEPRINTERS,
-    CMD_UPDATEPRINTERSTATE,
-    CMD_UPDATEPRINTERJOBSTATE,
-    CMD_REQUESTPREVIEW,
-    CMD_QUERYPRINTERCAPABILITY,
-    CMD_CHECKPERMISSION,
-    CMD_ON,
-    CMD_OFF,
-    CMD_REG_EXT_CB,
-    CMD_UNREG_EXT_CB,
+  CMD_START_PRINT,
+  CMD_STOP_PRINT,
+  CMD_CONNECTPRINTER,
+  CMD_DISCONNECTPRINTER,
+  CMD_STARTDISCOVERPRINTER,
+  CMD_STOPDISCOVERPRINTER,
+  CMD_QUERYALLEXTENSION,
+  CMD_STARTPRINTJOB,
+  CMD_CANCELPRINTJOB,
+  CMD_ADDPRINTERS,
+  CMD_REMOVEPRINTERS,
+  CMD_UPDATEPRINTERS,
+  CMD_UPDATEPRINTERSTATE,
+  CMD_UPDATEPRINTJOBSTATE,
+  CMD_UPDATEEXTENSIONINFO,
+  CMD_REQUESTPREVIEW,
+  CMD_QUERYPRINTERCAPABILITY,
+  CMD_ON,
+  CMD_OFF,
+  CMD_REG_EXT_CB,
+  CMD_UNREG_EXT_CB,
+  CMD_LOAD_EXT,
+  CMD_READ_DATA,
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H
