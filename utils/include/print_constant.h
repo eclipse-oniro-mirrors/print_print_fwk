@@ -22,6 +22,34 @@ namespace OHOS::Print {
 
 const std::string INVALID_PRINT_TASK = "invalid_print_task";
 
+#define PRINT_RET_NONE
+
+#define PRINT_ASSERT_BASE(env, assertion, message, retVal)                     \
+  do {                                                                         \
+    if (!(assertion)) {                                                        \
+      PRINT_HILOGE(message);                                                   \
+      return retVal;                                                           \
+    }                                                                          \
+  } while (0)
+
+#define PRINT_ASSERT(env, assertion, message)                                  \
+  PRINT_ASSERT_BASE(env, assertion, message, nullptr)
+
+#define PRINT_ASSERT_RETURN_VOID(env, assertion, message)                      \
+  PRINT_ASSERT_BASE(env, assertion, message, PRINT_RET_NONE)
+
+#define PRINT_CALL_BASE(env, theCall, retVal)                                  \
+  do {                                                                         \
+    if ((theCall) != napi_ok) {                                                \
+      return retVal;                                                           \
+    }                                                                          \
+  } while (0)
+
+#define PRINT_CALL(env, theCall) PRINT_CALL_BASE(env, theCall, nullptr)
+
+#define PRINT_CALL_RETURN_VOID(env, theCall)                                   \
+  PRINT_CALL_BASE(env, theCall, PRINT_RET_NONE)
+
 enum PrintErrorCode {
   ERROR_NONE = 0,
   ERROR_GENERIC_FAIL = 1,
@@ -94,7 +122,6 @@ enum PrintExtensionState {
   PRINT_EXTENSION_UNLOAD,
   PRINT_EXTENSION_LOADING,
   PRINT_EXTENSION_LOADED,
-  PRINT_EXTENSION_RUNNING,
 };
 } // namespace OHOS::Print
 #endif // PRINT_CONSTANT_H

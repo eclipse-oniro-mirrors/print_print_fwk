@@ -64,6 +64,8 @@ public:
 
   void SetPreview(const PrintPreviewAttribute &preview);
 
+  void UpdateParams(const PrintJob &jobInfo);
+
   void GetFiles(std::vector<std::string> &fileList) const;
 
   [[nodiscard]] const std::string &GetJobId() const;

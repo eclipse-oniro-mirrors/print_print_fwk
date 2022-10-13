@@ -88,13 +88,13 @@ PrintPreviewAttribute::Unmarshalling(Parcel &parcel) {
 
 napi_value PrintPreviewAttribute::ToJsObject(napi_env env) const {
   napi_value jsObj = nullptr;
-  NAPI_CALL(env, napi_create_object(env, &jsObj));
+  PRINT_CALL(env, napi_create_object(env, &jsObj));
   NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_PREATTRIBUTE_RESULT,
                                         GetResult());
 
   napi_value jsPreviewRange = previewRange_.ToJsObject(env);
-  NAPI_CALL(env, napi_set_named_property(env, jsObj, PARAM_PREATTRIBUTE_RANGE,
-                                         jsPreviewRange));
+  PRINT_CALL(env, napi_set_named_property(env, jsObj, PARAM_PREATTRIBUTE_RANGE,
+                                          jsPreviewRange));
   return jsObj;
 }
 

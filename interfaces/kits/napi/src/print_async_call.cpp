@@ -26,7 +26,7 @@ PrintAsyncCall::PrintAsyncCall(napi_env env, napi_callback_info info,
   size_t argc = NapiPrintUtils::MAX_ARGC;
   napi_value self = nullptr;
   napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
-  NAPI_CALL_RETURN_VOID(
+  PRINT_CALL_RETURN_VOID(
       env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
   pos = ((pos == ASYNC_DEFAULT_POS) ? (argc - 1) : pos);
   if (pos >= 0 && pos < argc) {
@@ -38,10 +38,10 @@ PrintAsyncCall::PrintAsyncCall(napi_env env, napi_callback_info info,
     }
   }
   context_->paramStatus = (*context)(env, argc, argv, self);
-  NAPI_ASSERT_RETURN_VOID(env, context_->paramStatus == napi_ok,
-                          "invalid parameter");
-  context_->ctx = std::move(context);
-  napi_create_reference(env, self, 1, &context_->self);
+  if (context_->paramStatus == napi_ok) {
+    context_->ctx = std::move(context);
+    napi_create_reference(env, self, 1, &context_->self);
+  }
 }
 
 PrintAsyncCall::~PrintAsyncCall() {
@@ -136,10 +136,10 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data) {
     } else {
       errorIndex = context->ctx->GetErrorIndex();
     }
-    PRINT_HILOGD("ErrorMessage: [%{public}s], ErrorIndex:[%{public}d]",
+    PRINT_HILOGE("ErrorMessage: [%{public}s], ErrorIndex:[%{public}d]",
                  ErrorMessage[errorIndex].c_str(), errorIndex);
     napi_create_uint32(env, errorIndex, &message);
-    PRINT_HILOGD("async call failed. creating errors...");
+    PRINT_HILOGE("async call failed. creating errors...");
     result[ARG_ERROR] = message;
     napi_get_undefined(env, &result[ARG_DATA]);
   }

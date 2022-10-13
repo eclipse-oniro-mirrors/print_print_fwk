@@ -165,7 +165,7 @@ std::shared_ptr<PrinterInfo> PrinterInfo::Unmarshalling(Parcel &parcel) {
 
 napi_value PrinterInfo::ToJsObject(napi_env env) const {
   napi_value jsObj = nullptr;
-  NAPI_CALL(env, napi_create_object(env, &jsObj));
+  PRINT_CALL(env, napi_create_object(env, &jsObj));
   NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_PRINTERID,
                                         GetPrinterId());
   NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_PRINTERNAME,
@@ -179,8 +179,8 @@ napi_value PrinterInfo::ToJsObject(napi_env env) const {
 
   if (capability_ != nullptr) {
     napi_value jsCapability = capability_->ToJsObject(env);
-    NAPI_CALL(env, napi_set_named_property(env, jsObj, PARAM_INFO_CAPABILITY,
-                                           jsCapability));
+    PRINT_CALL(env, napi_set_named_property(env, jsObj, PARAM_INFO_CAPABILITY,
+                                            jsCapability));
   }
 
   if (GetOption() != "") {
@@ -236,7 +236,6 @@ std::shared_ptr<PrinterInfo> PrinterInfo::BuildFromJs(napi_env env,
     nativeObj->SetOption(
         NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION));
   }
-  nativeObj->Dump();
   return nativeObj;
 }
 

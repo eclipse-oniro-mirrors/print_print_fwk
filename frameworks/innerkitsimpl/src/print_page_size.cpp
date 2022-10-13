@@ -115,7 +115,7 @@ std::shared_ptr<PrintPageSize> PrintPageSize::Unmarshalling(Parcel &parcel) {
 
 napi_value PrintPageSize::ToJsObject(napi_env env) const {
   napi_value jsObj = nullptr;
-  NAPI_CALL(env, napi_create_object(env, &jsObj));
+  PRINT_CALL(env, napi_create_object(env, &jsObj));
 
   NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_PAGESIZE_ID, GetId());
   NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_PAGESIZE_NAME,

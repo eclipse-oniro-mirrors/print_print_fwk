@@ -169,47 +169,48 @@ PrinterCapability::Unmarshalling(Parcel &parcel) {
 bool PrinterCapability::CreatePageSizeList(napi_env env,
                                            napi_value &jsPrinterCap) const {
   napi_value jsPageSizes = nullptr;
-  NAPI_CALL_BASE(env, napi_create_array(env, &jsPageSizes), false);
+  PRINT_CALL_BASE(env, napi_create_array(env, &jsPageSizes), false);
   uint32_t arrLength = pageSizeList_.size();
 
   for (uint32_t index = 0; index < arrLength; index++) {
     napi_value value = pageSizeList_[index].ToJsObject(env);
-    NAPI_CALL_BASE(env, napi_set_element(env, jsPageSizes, index, value),
-                   false);
+    PRINT_CALL_BASE(env, napi_set_element(env, jsPageSizes, index, value),
+                    false);
   }
-  NAPI_CALL_BASE(env,
-                 napi_set_named_property(
-                     env, jsPrinterCap, PARAM_CAPABILITY_PAGESIZE, jsPageSizes),
-                 false);
+  PRINT_CALL_BASE(env,
+                  napi_set_named_property(env, jsPrinterCap,
+                                          PARAM_CAPABILITY_PAGESIZE,
+                                          jsPageSizes),
+                  false);
   return true;
 }
 
 bool PrinterCapability::CreateResolutionList(napi_env env,
                                              napi_value &jsPrinterCap) const {
   napi_value jsResolutionList = nullptr;
-  NAPI_CALL_BASE(env, napi_create_array(env, &jsResolutionList), false);
+  PRINT_CALL_BASE(env, napi_create_array(env, &jsResolutionList), false);
   uint32_t arrLength = resolutionList_.size();
 
   for (uint32_t index = 0; index < arrLength; index++) {
     napi_value value = resolutionList_[index].ToJsObject(env);
-    NAPI_CALL_BASE(env, napi_set_element(env, jsResolutionList, index, value),
-                   false);
+    PRINT_CALL_BASE(env, napi_set_element(env, jsResolutionList, index, value),
+                    false);
   }
-  NAPI_CALL_BASE(env,
-                 napi_set_named_property(env, jsPrinterCap,
-                                         PARAM_CAPABILITY_RESOLUTION,
-                                         jsResolutionList),
-                 false);
+  PRINT_CALL_BASE(env,
+                  napi_set_named_property(env, jsPrinterCap,
+                                          PARAM_CAPABILITY_RESOLUTION,
+                                          jsResolutionList),
+                  false);
   return true;
 }
 
 napi_value PrinterCapability::ToJsObject(napi_env env) const {
   napi_value jsObj = nullptr;
-  NAPI_CALL(env, napi_create_object(env, &jsObj));
+  PRINT_CALL(env, napi_create_object(env, &jsObj));
 
   napi_value jsMargin = minMargin_.ToJsObject(env);
-  NAPI_CALL(env, napi_set_named_property(env, jsObj, PARAM_CAPABILITY_MINMARGIN,
-                                         jsMargin));
+  PRINT_CALL(env, napi_set_named_property(
+                      env, jsObj, PARAM_CAPABILITY_MINMARGIN, jsMargin));
 
   if (!CreatePageSizeList(env, jsObj)) {
     PRINT_HILOGE(

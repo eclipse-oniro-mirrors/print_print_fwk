@@ -46,15 +46,15 @@ napi_value NapiPrintTask::Print(napi_env env,
                          napi_value self) -> napi_status {
     PRINT_HILOGD("print parser to native params %{public}d!",
                  static_cast<int>(argc));
-    NAPI_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, "need 1 parameter!",
-                     napi_invalid_arg);
+    PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE,
+                      "need 1 parameter!", napi_invalid_arg);
     bool isFileArray = false;
     napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isFileArray);
-    NAPI_ASSERT_BASE(env, isFileArray == true, "files isn't list",
-                     napi_invalid_arg);
+    PRINT_ASSERT_BASE(env, isFileArray == true, "files isn't list",
+                      napi_invalid_arg);
 
     uint32_t len = 0;
-    NAPI_CALL_BASE(
+    PRINT_CALL_BASE(
         env, napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len),
         napi_invalid_arg);
 
@@ -73,9 +73,9 @@ napi_value NapiPrintTask::Print(napi_env env,
     }
 
     PrintTask *task;
-    NAPI_CALL_BASE(env,
-                   napi_unwrap(env, proxy, reinterpret_cast<void **>(&task)),
-                   napi_invalid_arg);
+    PRINT_CALL_BASE(env,
+                    napi_unwrap(env, proxy, reinterpret_cast<void **>(&task)),
+                    napi_invalid_arg);
     uint32_t ret = ERROR_GENERIC_FAIL;
     if (task != nullptr) {
       ret = task->Start();
@@ -107,7 +107,7 @@ napi_value NapiPrintTask::GetCtor(napi_env env) {
   std::lock_guard<std::mutex> lock(printTaskMutex_);
   napi_value cons;
   if (globalCtor != nullptr) {
-    NAPI_CALL(env, napi_get_reference_value(env, globalCtor, &cons));
+    PRINT_CALL(env, napi_get_reference_value(env, globalCtor, &cons));
     return cons;
   }
 
@@ -115,11 +115,12 @@ napi_value NapiPrintTask::GetCtor(napi_env env) {
       {FUNCTION_ON, 0, PrintTask::On, 0, 0, 0, napi_default, 0},
       {FUNCTION_OFF, 0, PrintTask::Off, 0, 0, 0, napi_default, 0},
   };
-  NAPI_CALL(env, napi_define_class(
-                     env, "NapiPrintTask", NAPI_AUTO_LENGTH, Initialize,
-                     nullptr, sizeof(clzDes) / sizeof(napi_property_descriptor),
-                     clzDes, &cons));
-  NAPI_CALL(env, napi_create_reference(env, cons, 1, &globalCtor));
+  PRINT_CALL(
+      env, napi_define_class(env, "NapiPrintTask", NAPI_AUTO_LENGTH, Initialize,
+                             nullptr,
+                             sizeof(clzDes) / sizeof(napi_property_descriptor),
+                             clzDes, &cons));
+  PRINT_CALL(env, napi_create_reference(env, cons, 1, &globalCtor));
   return cons;
 }
 
@@ -128,12 +129,12 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info) {
   napi_value self = nullptr;
   size_t argc = NapiPrintUtils::MAX_ARGC;
   napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
-  NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
+  PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
 
   std::vector<std::string> printfiles;
   uint32_t arrayReLength = 0;
-  NAPI_CALL(env, napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO],
-                                       &arrayReLength));
+  PRINT_CALL(env, napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO],
+                                        &arrayReLength));
   for (uint32_t index = 0; index < arrayReLength; index++) {
     napi_value filesValue;
     napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &filesValue);

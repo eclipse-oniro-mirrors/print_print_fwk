@@ -88,7 +88,7 @@ PrintResolution::Unmarshalling(Parcel &parcel) {
 
 napi_value PrintResolution::ToJsObject(napi_env env) const {
   napi_value jsObj = nullptr;
-  NAPI_CALL(env, napi_create_object(env, &jsObj));
+  PRINT_CALL(env, napi_create_object(env, &jsObj));
   NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_RESOLUTION_ID,
                                         GetId());
   NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_RESOLUTION_HORIZONTALDPI,

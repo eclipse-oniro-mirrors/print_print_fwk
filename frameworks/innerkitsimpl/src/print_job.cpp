@@ -142,6 +142,20 @@ void PrintJob::SetPreview(const PrintPreviewAttribute &preview) {
   preview_ = preview;
 }
 
+void PrintJob::UpdateParams(const PrintJob &jobInfo) {
+  printerId_ = jobInfo.printerId_;
+  copyNumber_ = jobInfo.copyNumber_;
+  pageRange_ = jobInfo.pageRange_;
+  isSequential_ = jobInfo.isSequential_;
+  pageSize_ = jobInfo.pageSize_;
+  isLandscape_ = jobInfo.isLandscape_;
+  colorMode_ = jobInfo.colorMode_;
+  duplexMode_ = jobInfo.duplexMode_;
+  margin_ = jobInfo.margin_;
+  preview_ = jobInfo.preview_;
+  option_ = jobInfo.option_;
+}
+
 void PrintJob::GetFiles(std::vector<std::string> &files) const {
   files.clear();
   files.assign(files_.begin(), files_.end());
@@ -326,18 +340,18 @@ std::shared_ptr<PrintJob> PrintJob::Unmarshalling(Parcel &parcel) {
 
 bool PrintJob::CreateFileList(napi_env env, napi_value &jsPrintJob) const {
   napi_value arrFiles = nullptr;
-  NAPI_CALL_BASE(env, napi_create_array(env, &arrFiles), false);
+  PRINT_CALL_BASE(env, napi_create_array(env, &arrFiles), false);
   uint32_t arrFilesLength = files_.size();
 
   for (uint32_t i = 0; i < arrFilesLength; i++) {
     napi_value value;
-    NAPI_CALL_BASE(env,
-                   napi_create_string_utf8(env, files_[i].c_str(),
-                                           NAPI_AUTO_LENGTH, &value),
-                   false);
-    NAPI_CALL_BASE(env, napi_set_element(env, arrFiles, i, value), false);
+    PRINT_CALL_BASE(env,
+                    napi_create_string_utf8(env, files_[i].c_str(),
+                                            NAPI_AUTO_LENGTH, &value),
+                    false);
+    PRINT_CALL_BASE(env, napi_set_element(env, arrFiles, i, value), false);
   }
-  NAPI_CALL_BASE(
+  PRINT_CALL_BASE(
       env, napi_set_named_property(env, jsPrintJob, PARAM_JOB_FILES, arrFiles),
       false);
   return true;
@@ -345,16 +359,16 @@ bool PrintJob::CreateFileList(napi_env env, napi_value &jsPrintJob) const {
 
 bool PrintJob::CreatePageRange(napi_env env, napi_value &jsPrintJob) const {
   napi_value jsPageRange = pageRange_.ToJsObject(env);
-  NAPI_CALL_BASE(env,
-                 napi_set_named_property(env, jsPrintJob, PARAM_JOB_PAGERANGE,
-                                         jsPageRange),
-                 false);
+  PRINT_CALL_BASE(env,
+                  napi_set_named_property(env, jsPrintJob, PARAM_JOB_PAGERANGE,
+                                          jsPageRange),
+                  false);
   return true;
 }
 
 bool PrintJob::CreatePageSize(napi_env env, napi_value &jsPrintJob) const {
   napi_value jsPageSize = pageSize_.ToJsObject(env);
-  NAPI_CALL_BASE(
+  PRINT_CALL_BASE(
       env,
       napi_set_named_property(env, jsPrintJob, PARAM_JOB_PAGESIZE, jsPageSize),
       false);
@@ -363,7 +377,7 @@ bool PrintJob::CreatePageSize(napi_env env, napi_value &jsPrintJob) const {
 
 bool PrintJob::CreateMargin(napi_env env, napi_value &jsPrintJob) const {
   napi_value jsMargin = margin_.ToJsObject(env);
-  NAPI_CALL_BASE(
+  PRINT_CALL_BASE(
       env, napi_set_named_property(env, jsPrintJob, PARAM_JOB_MARGIN, jsMargin),
       false);
   return true;
@@ -371,7 +385,7 @@ bool PrintJob::CreateMargin(napi_env env, napi_value &jsPrintJob) const {
 
 bool PrintJob::CreatePreview(napi_env env, napi_value &jsPrintJob) const {
   napi_value jsPreview = preview_.ToJsObject(env);
-  NAPI_CALL_BASE(
+  PRINT_CALL_BASE(
       env,
       napi_set_named_property(env, jsPrintJob, PARAM_JOB_PREVIEW, jsPreview),
       false);
@@ -380,7 +394,7 @@ bool PrintJob::CreatePreview(napi_env env, napi_value &jsPrintJob) const {
 
 napi_value PrintJob::ToJsObject(napi_env env) const {
   napi_value jsObj = nullptr;
-  NAPI_CALL(env, napi_create_object(env, &jsObj));
+  PRINT_CALL(env, napi_create_object(env, &jsObj));
   if (!CreateFileList(env, jsObj)) {
     PRINT_HILOGE("Failed to create files property of print job");
     return nullptr;

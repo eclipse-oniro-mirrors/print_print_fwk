@@ -42,7 +42,7 @@ PrintCallback::~PrintCallback() {
 }
 
 bool PrintCallback::OnCallback() {
-  PRINT_HILOGD("Print Task callback in");
+  PRINT_HILOGD("PrintTask Notification in");
   uv_loop_s *loop = nullptr;
   napi_get_uv_event_loop(env_, &loop);
   if (loop == nullptr) {
@@ -93,7 +93,7 @@ bool PrintCallback::OnCallback() {
 }
 
 bool PrintCallback::OnCallback(uint32_t state, const PrinterInfo &info) {
-  PRINT_HILOGD("Print Task callback in");
+  PRINT_HILOGD("Printer Notification in");
   uv_loop_s *loop = nullptr;
   napi_get_uv_event_loop(env_, &loop);
   if (loop == nullptr) {
@@ -148,7 +148,7 @@ bool PrintCallback::OnCallback(uint32_t state, const PrinterInfo &info) {
 }
 
 bool PrintCallback::OnCallback(uint32_t state, const PrintJob &info) {
-  PRINT_HILOGD("Print Task callback in");
+  PRINT_HILOGD("PrintJob Notification in");
   uv_loop_s *loop = nullptr;
   napi_get_uv_event_loop(env_, &loop);
   if (loop == nullptr) {
@@ -204,7 +204,7 @@ bool PrintCallback::OnCallback(uint32_t state, const PrintJob &info) {
 
 bool PrintCallback::OnCallback(const std::string &extensionId,
                                const std::string &info) {
-  PRINT_HILOGD("Ext Info callback in");
+  PRINT_HILOGD("ExtensionInfo Notification in");
   uv_loop_s *loop = nullptr;
   napi_get_uv_event_loop(env_, &loop);
   if (loop == nullptr) {
@@ -258,5 +258,4 @@ bool PrintCallback::OnCallback(const std::string &extensionId,
       });
   return true;
 }
-
 } // namespace OHOS::Print

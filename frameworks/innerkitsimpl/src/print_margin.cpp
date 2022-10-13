@@ -91,7 +91,7 @@ std::shared_ptr<PrintMargin> PrintMargin::Unmarshalling(Parcel &parcel) {
 
 napi_value PrintMargin::ToJsObject(napi_env env) const {
   napi_value jsObj = nullptr;
-  NAPI_CALL(env, napi_create_object(env, &jsObj));
+  PRINT_CALL(env, napi_create_object(env, &jsObj));
   NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_MARGIN_TOP, GetTop());
   NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_MARGIN_BOTTOM,
                                     GetBottom());

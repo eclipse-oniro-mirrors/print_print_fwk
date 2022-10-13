@@ -104,22 +104,22 @@ std::shared_ptr<PrintRange> PrintRange::Unmarshalling(Parcel &parcel) {
 
 napi_value PrintRange::ToJsObject(napi_env env) const {
   napi_value jsObj = nullptr;
-  NAPI_CALL(env, napi_create_object(env, &jsObj));
+  PRINT_CALL(env, napi_create_object(env, &jsObj));
   NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_RANGE_STARTPAGE,
                                     GetStartPage());
   NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_RANGE_ENDPAGE,
                                     GetEndPage());
 
   napi_value arrPages = nullptr;
-  NAPI_CALL(env, napi_create_array(env, &arrPages));
+  PRINT_CALL(env, napi_create_array(env, &arrPages));
   uint32_t arrPagesLength = pages_.size();
   for (uint32_t i = 0; i < arrPagesLength; i++) {
     napi_value value;
-    NAPI_CALL(env, napi_create_uint32(env, pages_[i], &value));
-    NAPI_CALL(env, napi_set_element(env, arrPages, i, value));
+    PRINT_CALL(env, napi_create_uint32(env, pages_[i], &value));
+    PRINT_CALL(env, napi_set_element(env, arrPages, i, value));
   }
-  NAPI_CALL(env,
-            napi_set_named_property(env, jsObj, PARAM_RANGE_PAGES, arrPages));
+  PRINT_CALL(env,
+             napi_set_named_property(env, jsObj, PARAM_RANGE_PAGES, arrPages));
   return jsObj;
 }
 
@@ -151,17 +151,17 @@ std::shared_ptr<PrintRange> PrintRange::BuildFromJs(napi_env env,
     return nullptr;
   }
   bool isArray = false;
-  NAPI_CALL(env, napi_is_array(env, jsPages, &isArray));
+  PRINT_CALL(env, napi_is_array(env, jsPages, &isArray));
 
   std::vector<uint32_t> pages;
   if (isArray) {
     uint32_t arrayLength = 0;
-    NAPI_CALL(env, napi_get_array_length(env, jsPages, &arrayLength));
+    PRINT_CALL(env, napi_get_array_length(env, jsPages, &arrayLength));
     for (uint32_t index = 0; index < arrayLength; index++) {
       napi_value jsPage;
       uint32_t pageNo;
-      NAPI_CALL(env, napi_get_element(env, jsPages, index, &jsPage));
-      NAPI_CALL(env, napi_get_value_uint32(env, jsPage, &pageNo));
+      PRINT_CALL(env, napi_get_element(env, jsPages, index, &jsPage));
+      PRINT_CALL(env, napi_get_value_uint32(env, jsPage, &pageNo));
       pages.push_back(pageNo);
     }
     nativeObj->SetPages(pages);

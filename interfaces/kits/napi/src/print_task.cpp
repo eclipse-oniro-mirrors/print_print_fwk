@@ -56,23 +56,23 @@ napi_value PrintTask::On(napi_env env, napi_callback_info info) {
   napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
   napi_value thisVal = nullptr;
   void *data = nullptr;
-  NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
-  NAPI_ASSERT(env, argc == NapiPrintUtils::ARGC_TWO, "need 2 parameter!");
+  PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
+  PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_TWO, "need 2 parameter!");
 
   napi_valuetype valuetype;
-  NAPI_CALL(env,
-            napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype));
-  NAPI_ASSERT(env, valuetype == napi_string, "type is not a string");
+  PRINT_CALL(env,
+             napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype));
+  PRINT_ASSERT(env, valuetype == napi_string, "type is not a string");
   std::string type = NapiPrintUtils::GetStringFromValueUtf8(
       env, argv[NapiPrintUtils::INDEX_ZERO]);
   PRINT_HILOGD("type : %{public}s", type.c_str());
 
   valuetype = napi_undefined;
   napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype);
-  NAPI_ASSERT(env, valuetype == napi_function, "callback is not a function");
+  PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
 
   PrintTask *task;
-  NAPI_CALL(env, napi_unwrap(env, thisVal, reinterpret_cast<void **>(&task)));
+  PRINT_CALL(env, napi_unwrap(env, thisVal, reinterpret_cast<void **>(&task)));
   if (task == nullptr || !task->IsSupportType(type)) {
     PRINT_HILOGE("Event On type : %{public}s not support", type.c_str());
     return nullptr;
@@ -100,20 +100,20 @@ napi_value PrintTask::Off(napi_env env, napi_callback_info info) {
   auto context = std::make_shared<TaskEventContext>();
   auto input = [context](napi_env env, size_t argc, napi_value *argv,
                          napi_value self) -> napi_status {
-    NAPI_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, "need 1 parameter!",
-                     napi_invalid_arg);
+    PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE,
+                      "need 1 parameter!", napi_invalid_arg);
     napi_valuetype valuetype;
-    NAPI_CALL_BASE(
+    PRINT_CALL_BASE(
         env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype),
         napi_invalid_arg);
-    NAPI_ASSERT_BASE(env, valuetype == napi_string, "type is not a string",
-                     napi_string_expected);
+    PRINT_ASSERT_BASE(env, valuetype == napi_string, "type is not a string",
+                      napi_string_expected);
     std::string type = NapiPrintUtils::GetStringFromValueUtf8(
         env, argv[NapiPrintUtils::INDEX_ZERO]);
     PrintTask *task;
-    NAPI_CALL_BASE(env,
-                   napi_unwrap(env, self, reinterpret_cast<void **>(&task)),
-                   napi_invalid_arg);
+    PRINT_CALL_BASE(env,
+                    napi_unwrap(env, self, reinterpret_cast<void **>(&task)),
+                    napi_invalid_arg);
     if (task == nullptr || !task->IsSupportType(type)) {
       PRINT_HILOGE("Event On type : %{public}s not support", type.c_str());
       context->SetErrorIndex(ERROR_INVALID_PARAMETER);

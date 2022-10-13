@@ -21,6 +21,7 @@
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
+#include "print_constant.h"
 #include "print_job.h"
 #include "print_resolution.h"
 #include "printer_capability.h"
@@ -117,4 +118,4 @@ public:
                                     const std::string &type);
 };
 } // namespace OHOS::Print
-#endif /* NAPI_PRINT_UTILS_H */
+#endif // NAPI_PRINT_UTILS_H

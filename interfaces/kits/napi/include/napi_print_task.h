@@ -32,4 +32,4 @@ private:
   static __thread napi_ref globalCtor;
 };
 } // namespace OHOS::Print
-#endif // NAPI_PRINT_TASK_H
+#endif // _NAPI_PRINT_TASK_H

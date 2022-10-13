@@ -40,7 +40,7 @@ using namespace Security::AccessToken;
 
 const uint32_t MAX_RETRY_TIMES = 10;
 const uint32_t START_ABILITY_INTERVAL = 6;
-const uint32_t START_DISCOVERY_DELAY = 100;
+const uint32_t START_DISCOVERY_DELAY = 10;
 const int64_t INIT_INTERVAL = 5000L;
 
 static const std::string PRINTEXT_BUNDLE_NAME = "com.open.harmony.packagemag";
@@ -161,12 +161,13 @@ int32_t
 PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList,
                                 std::string &taskId) {
   ManualStart();
-  PRINT_HILOGD("PrintServiceAbility StartPrint started.");
-
   if (!CheckPermission(PERMISSION_NAME_PRINT)) {
     PRINT_HILOGE("no permission to access print service");
     return ERROR_NO_PERMISSION;
   }
+
+  PRINT_HILOGD("PrintServiceAbility StartPrint started.");
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
   if (fileList.empty()) {
     PRINT_HILOGE("to be printed file list is empty");
@@ -216,34 +217,23 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId) {
   }
 
   PRINT_HILOGD("ConnectPrinter started.");
-  auto printerInfoIt = printerInfoList_.find(printerId);
-  if (printerInfoIt == printerInfoList_.end()) {
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
+  if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
     PRINT_HILOGE("Invalid printer id");
     return ERROR_INVALID_PRINTER;
   }
 
   std::string extensionId = NapiPrintUtils::GetExtensionId(printerId);
-  auto extensionStateIt = extensionStateList_.find(extensionId);
-  if (extensionStateIt == extensionStateList_.end()) {
-    PRINT_HILOGE("Invalid extension id");
-    return ERROR_INVALID_PRINTER;
-  }
-
-  if (extensionStateIt->second != PRINT_EXTENSION_RUNNING) {
-    PRINT_HILOGE("Invalid Extension State");
-    return ERROR_INVALID_PRINTER;
-  }
-
   std::string cid = NapiPrintUtils::EncodeExtensionCid(
       extensionId, PRINT_EXTCB_CONNECT_PRINTER);
-  auto callbackIt = extCallbackMap_.find(cid);
-  if (callbackIt == extCallbackMap_.end()) {
+  if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
     PRINT_HILOGW("ConnectPrinter Not Register Yet!!!");
     return ERROR_SERVER_FAIL;
   }
 
   int32_t ret = ERROR_SERVER_FAIL;
-  if (callbackIt->second->OnCallback(printerId)) {
+  if (extCallbackMap_[cid]->OnCallback(printerId)) {
     ret = ERROR_NONE;
   }
   return ret;
@@ -257,34 +247,23 @@ int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId) {
   }
 
   PRINT_HILOGD("DisconnectPrinter started.");
-  auto printerInfoIt = printerInfoList_.find(printerId);
-  if (printerInfoIt == printerInfoList_.end()) {
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
+  if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
     PRINT_HILOGE("Invalid printer id");
     return ERROR_INVALID_PRINTER;
   }
 
   std::string extensionId = NapiPrintUtils::GetExtensionId(printerId);
-  auto extensionStateIt = extensionStateList_.find(extensionId);
-  if (extensionStateIt == extensionStateList_.end()) {
-    PRINT_HILOGE("Invalid extension id");
-    return ERROR_INVALID_PRINTER;
-  }
-
-  if (extensionStateIt->second != PRINT_EXTENSION_RUNNING) {
-    PRINT_HILOGE("Invalid Extension State");
-    return ERROR_INVALID_PRINTER;
-  }
-
   std::string cid = NapiPrintUtils::EncodeExtensionCid(
       extensionId, PRINT_EXTCB_DISCONNECT_PRINTER);
-  auto callbackIt = extCallbackMap_.find(cid);
-  if (callbackIt == extCallbackMap_.end()) {
+  if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
     PRINT_HILOGW("DisconnectPrinter Not Register Yet!!!");
     return ERROR_SERVER_FAIL;
   }
 
   int32_t ret = ERROR_SERVER_FAIL;
-  if (callbackIt->second->OnCallback(printerId)) {
+  if (extCallbackMap_[cid]->OnCallback(printerId)) {
     ret = ERROR_NONE;
   }
   return ret;
@@ -299,6 +278,7 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(
   }
 
   PRINT_HILOGD("StartDiscoverPrinter started.");
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
   printerInfoList_.clear();
   std::map<std::string, AppExecFwk::ExtensionAbilityInfo> abilityList;
   for (auto extensionId : extensionIds) {
@@ -307,14 +287,17 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(
           std::make_pair(extensionId, extensionList_[extensionId]));
     }
   }
-  if (abilityList.empty()) {
-    for (auto extension : extensionList_) {
-      abilityList.insert(std::make_pair(extension.first, extension.second));
-    }
+
+  if (abilityList.empty() && extensionIds.size() > 0) {
+    PRINT_HILOGW("No valid extension found");
+    return ERROR_INVALID_EXTENSION;
+  }
+  for (auto extension : extensionList_) {
+    abilityList.insert(std::make_pair(extension.first, extension.second));
   }
 
   if (abilityList.empty()) {
-    PRINT_HILOGW("No valid extension found");
+    PRINT_HILOGW("No extension found");
     return ERROR_INVALID_EXTENSION;
   }
 
@@ -326,45 +309,37 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(
                    ability.second.name.c_str());
       continue;
     }
-    auto extensionState = extensionStateList_.find(ability.first);
-    if (extensionState == extensionStateList_.end()) {
-      PRINT_HILOGE("extension has been removed");
-      return ERROR_SERVER_FAIL;
-    }
-    extensionState->second = PRINT_EXTENSION_LOADING;
+    extensionStateList_[ability.second.bundleName] = PRINT_EXTENSION_LOADING;
   }
 
-  auto callback = [=]() { DelayStartDiscovery(); };
-  serviceHandler_->PostTask(callback, START_DISCOVERY_DELAY);
   PRINT_HILOGD("StartDiscoverPrinter end.");
   return ERROR_NONE;
 }
 
-bool PrintServiceAbility::DelayStartDiscovery() {
-  PRINT_HILOGD("DelayStartDiscovery started.");
-  uint32_t loadingCount = 0;
-  for (auto extension : extensionStateList_) {
-    if (extension.second == PRINT_EXTENSION_LOADED) {
-      std::string cid = NapiPrintUtils::EncodeExtensionCid(
-          extension.first, PRINT_EXTCB_START_DISCOVERY);
-      auto callbackIt = extCallbackMap_.find(cid);
-      if (callbackIt == extCallbackMap_.end()) {
-        PRINT_HILOGE("StartDiscoverPrinter Not Register, BUT State is LOADED");
-        continue;
-      }
-      callbackIt->second->OnCallback();
-      extension.second = PRINT_EXTENSION_RUNNING;
-    } else if (extension.second == PRINT_EXTENSION_LOADING) {
-      loadingCount++;
-    }
+bool PrintServiceAbility::DelayStartDiscovery(const std::string &extensionId) {
+  PRINT_HILOGD("DelayStartDiscovery started. %{public}s", extensionId.c_str());
+  if (extensionStateList_.find(extensionId) == extensionStateList_.end()) {
+    PRINT_HILOGE("invalid extension id");
+    return false;
   }
 
-  if (loadingCount > 0) {
-    auto callback = [=]() { DelayStartDiscovery(); };
-    serviceHandler_->PostTask(callback, START_DISCOVERY_DELAY);
+  if (extensionStateList_[extensionId] != PRINT_EXTENSION_LOADED) {
+    PRINT_HILOGE("invalid extension state");
+    return false;
   }
-  PRINT_HILOGD("[%{public}d] extension need to discover printer", loadingCount);
-  return true;
+
+  std::string cid = NapiPrintUtils::EncodeExtensionCid(
+      extensionId, PRINT_EXTCB_START_DISCOVERY);
+  if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
+    PRINT_HILOGE("StartDiscoverPrinter Not Register, BUT State is LOADED");
+    return false;
+  }
+
+  int32_t ret = ERROR_SERVER_FAIL;
+  if (extCallbackMap_[cid]->OnCallback()) {
+    ret = ERROR_NONE;
+  }
+  return ret == ERROR_NONE;
 }
 
 int32_t PrintServiceAbility::StopDiscoverPrinter() {
@@ -374,16 +349,18 @@ int32_t PrintServiceAbility::StopDiscoverPrinter() {
     return ERROR_NO_PERMISSION;
   }
   PRINT_HILOGD("StopDiscoverPrinter started.");
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
   for (auto extension : extensionStateList_) {
-    if (extension.second >= PRINT_EXTENSION_LOADING) {
+    if (extension.second >= PRINT_EXTENSION_LOADED) {
+      extension.second = PRINT_EXTENSION_UNLOAD;
       std::string cid = NapiPrintUtils::EncodeExtensionCid(
           extension.first, PRINT_EXTCB_STOP_DISCOVERY);
-      auto callbackIt = extCallbackMap_.find(cid);
-      if (callbackIt == extCallbackMap_.end()) {
+      if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
+        PRINT_HILOGE("StopDiscoverPrinter Not Register, BUT State is LOADED");
         continue;
       }
-      callbackIt->second->OnCallback();
-      extension.second = PRINT_EXTENSION_UNLOAD;
+      extCallbackMap_[cid]->OnCallback();
     }
   }
   PRINT_HILOGW("StopDiscoverPrinter out.");
@@ -398,12 +375,15 @@ int32_t PrintServiceAbility::QueryAllExtension(
     return ERROR_NO_PERMISSION;
   }
   PRINT_HILOGD("QueryAllExtension started.");
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
   std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfo;
   if (!DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryExtensionInfos(
           extensionInfo)) {
     PRINT_HILOGE("Failed to query extension");
     return ERROR_SERVER_FAIL;
   }
+
   extensionList_.clear();
   extensionStateList_.clear();
   for (auto extInfo : extensionInfo) {
@@ -427,51 +407,43 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo) {
     PRINT_HILOGE("no permission to access print service");
     return ERROR_NO_PERMISSION;
   }
-  std::lock_guard<std::mutex> lock(mapMutex_);
+
   PRINT_HILOGD("StartPrintJob started.");
-  if (printJobList_.find(jobInfo.GetJobId()) == printJobList_.end()) {
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
+  auto jobId = jobInfo.GetJobId();
+  auto printerId = jobInfo.GetPrinterId();
+  auto extensionId = NapiPrintUtils::GetExtensionId(printerId);
+
+  auto jobIt = printJobList_.find(jobId);
+  if (jobIt == printJobList_.end()) {
     PRINT_HILOGD("invalid job id");
     return ERROR_INVALID_PRINTJOB;
   }
 
-  if (jobInfo.GetJobState() != PRINT_JOB_PREPARED) {
-    PRINT_HILOGD(
-        "invalid job state, only prepare state support to start print job");
+  if (printJobList_[jobId]->GetJobState() > PRINT_JOB_PREPARED) {
+    PRINT_HILOGD("invalid job state [%{public}d]",
+                 printJobList_[jobId]->GetJobState());
     return ERROR_INVALID_PRINTJOB;
   }
 
-  if (printerInfoList_.find(jobInfo.GetPrinterId()) == printerInfoList_.end()) {
+  if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
     PRINT_HILOGD("invalid printer of the print job");
-    return ERROR_INVALID_PRINTJOB;
-  }
-
-  std::string extensionId =
-      NapiPrintUtils::GetExtensionId(jobInfo.GetPrinterId());
-  auto extensionStateIt = extensionStateList_.find(extensionId);
-  if (extensionStateIt == extensionStateList_.end()) {
-    PRINT_HILOGE("Invalid extension id");
-    return ERROR_INVALID_PRINTJOB;
-  }
-
-  if (extensionStateIt->second != PRINT_EXTENSION_RUNNING) {
-    PRINT_HILOGE("Invalid Extension State");
     return ERROR_INVALID_PRINTJOB;
   }
 
   std::string cid =
       NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
-  auto callbackIt = extCallbackMap_.find(cid);
-  if (callbackIt == extCallbackMap_.end()) {
+  if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
     PRINT_HILOGW("StartPrintJob Not Register Yet!!!");
     return ERROR_SERVER_FAIL;
   }
 
   int32_t ret = ERROR_SERVER_FAIL;
-  if (callbackIt->second->OnCallback(jobInfo)) {
-    *printJobList_[jobInfo.GetJobId()] = jobInfo;
-    printJobList_[jobInfo.GetJobId()]->SetJobState(PRINT_JOB_QUEUED);
-    UpdatePrintJobState(jobInfo.GetJobId(), PRINT_JOB_QUEUED,
-                        PRINT_JOB_BLOCKED_UNKNOWN);
+  printJobList_[jobId]->UpdateParams(jobInfo);
+  if (extCallbackMap_[cid]->OnCallback(*printJobList_[jobId])) {
+    printJobList_[jobId]->SetJobState(PRINT_JOB_QUEUED);
+    UpdatePrintJobState(jobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
     ret = ERROR_NONE;
   }
   return ret;
@@ -484,43 +456,32 @@ int32_t PrintServiceAbility::CancelPrintJob(const PrintJob &jobInfo) {
     return ERROR_NO_PERMISSION;
   }
   PRINT_HILOGD("CancelPrintJob started.");
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
-  if (printJobList_.find(jobInfo.GetJobId()) == printJobList_.end()) {
+  auto jobId = jobInfo.GetJobId();
+  if (printJobList_.find(jobId) == printJobList_.end()) {
     PRINT_HILOGD("invalid job id");
     return ERROR_INVALID_PRINTJOB;
   }
 
-  auto printJob = printJobList_[jobInfo.GetJobId()];
-
-  if (printJob->GetJobState() < PRINT_JOB_RUNNING) {
-    PRINT_HILOGD(
-        "invalid job state, only prepare state support to start print job");
+  if (printJobList_[jobId]->GetJobState() < PRINT_JOB_RUNNING ||
+      printJobList_[jobId]->GetJobState() >= PRINT_JOB_COMPLETED) {
+    PRINT_HILOGD("invalid job state [%{public}d]",
+                 printJobList_[jobId]->GetJobState());
     return ERROR_INVALID_PRINTJOB;
   }
 
   std::string extensionId =
-      NapiPrintUtils::GetExtensionId(printJob->GetPrinterId());
-  auto extensionStateIt = extensionStateList_.find(extensionId);
-  if (extensionStateIt == extensionStateList_.end()) {
-    PRINT_HILOGE("Invalid extension id");
-    return ERROR_INVALID_PRINTJOB;
-  }
-
-  if (extensionStateIt->second != PRINT_EXTENSION_RUNNING) {
-    PRINT_HILOGE("Invalid Extension State");
-    return ERROR_INVALID_PRINTJOB;
-  }
-
+      NapiPrintUtils::GetExtensionId(printJobList_[jobId]->GetPrinterId());
   std::string cid =
       NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CANCEL_PRINT);
-  auto callbackIt = extCallbackMap_.find(cid);
-  if (callbackIt == extCallbackMap_.end()) {
+  if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
     PRINT_HILOGW("CancelPrintJob Not Register Yet!!!");
     return ERROR_SERVER_FAIL;
   }
 
   int32_t ret = ERROR_SERVER_FAIL;
-  if (callbackIt->second->OnCallback(jobInfo)) {
+  if (extCallbackMap_[cid]->OnCallback(*printJobList_[jobId])) {
     ret = ERROR_NONE;
   }
   return ret;
@@ -533,9 +494,10 @@ PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printerInfos) {
     PRINT_HILOGE("no permission to access print service");
     return ERROR_NO_PERMISSION;
   }
-  std::lock_guard<std::mutex> lock(mapMutex_);
   PRINT_HILOGD("AddPrinters started. Total size is %{public}d",
                printerInfoList_.size());
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
   for (auto info : printerInfos) {
     if (printerInfoList_.find(info.GetPrinterId()) != printerInfoList_.end()) {
       PRINT_HILOGE("duplicate printer id, ingore it");
@@ -563,9 +525,11 @@ int32_t PrintServiceAbility::RemovePrinters(
     PRINT_HILOGE("no permission to access print service");
     return ERROR_NO_PERMISSION;
   }
-  std::lock_guard<std::mutex> lock(mapMutex_);
+
   PRINT_HILOGD("RemovePrinters started. Total size is %{public}d",
                printerInfoList_.size());
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
   for (auto printerId : printerIds) {
     auto printerIt = printerInfoList_.find(printerId);
     if (printerIt == printerInfoList_.end()) {
@@ -589,9 +553,11 @@ int32_t PrintServiceAbility::UpdatePrinters(
     PRINT_HILOGE("no permission to access print service");
     return ERROR_NO_PERMISSION;
   }
-  std::lock_guard<std::mutex> lock(mapMutex_);
+
   PRINT_HILOGD("UpdatePrinters started. Total size is %{public}d",
                printerInfoList_.size());
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
   for (auto info : printerInfos) {
     auto printerIt = printerInfoList_.find(info.GetPrinterId());
     if (printerIt == printerInfoList_.end()) {
@@ -619,16 +585,17 @@ int32_t PrintServiceAbility::UpdatePrinterState(const std::string &printerId,
     return ERROR_INVALID_PARAMETER;
   }
 
-  std::lock_guard<std::mutex> lock(mapMutex_);
   PRINT_HILOGD("UpdatePrinterState started. %{printerId}s, state [%{public}d]",
                printerId.c_str(), state);
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
   if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
+    PRINT_HILOGD("Invalid printer id");
     return ERROR_INVALID_PRINTER;
   }
 
-  auto printerInfo = printerInfoList_[printerId];
-  printerInfo->SetPrinterState(state);
-  SendPrinterEvent(*printerInfo);
+  printerInfoList_[printerId]->SetPrinterState(state);
+  SendPrinterEvent(*printerInfoList_[printerId]);
   PRINT_HILOGD("UpdatePrinterState end.");
   return ERROR_NONE;
 }
@@ -655,17 +622,18 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId,
     return ERROR_INVALID_PARAMETER;
   }
 
-  std::lock_guard<std::mutex> lock(mapMutex_);
   PRINT_HILOGD("UpdatePrintJobState started. %{public}s, state [%{public}d]",
                jobId.c_str(), state);
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
   if (printJobList_.find(jobId) == printJobList_.end()) {
+    PRINT_HILOGD("Invalid print job id");
     return ERROR_INVALID_PRINTJOB;
   }
 
-  auto printJob = printJobList_[jobId];
-  printJob->SetJobState(state);
-  printJob->SetSubState(subState);
-  SendPrintJobEvent(*printJob);
+  printJobList_[jobId]->SetJobState(state);
+  printJobList_[jobId]->SetSubState(subState);
+  SendPrintJobEvent(*printJobList_[jobId]);
   PRINT_HILOGD("UpdatePrintJobState end.");
   return ERROR_NONE;
 }
@@ -677,10 +645,12 @@ int32_t PrintServiceAbility::UpdateExtensionInfo(const std::string &extensionId,
     PRINT_HILOGE("no permission to access print service");
     return ERROR_NO_PERMISSION;
   }
-  std::lock_guard<std::mutex> lock(mapMutex_);
+
   PRINT_HILOGD("UpdateExtensionInfo started. %{public}s, extInfo [%{public}s]",
                extensionId.c_str(), extInfo.c_str());
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
   if (extensionList_.find(extensionId) == extensionList_.end()) {
+    PRINT_HILOGD("Invalid eztension id");
     return ERROR_INVALID_EXTENSION;
   }
   SendExtensionEvent(extensionId, extInfo);
@@ -696,45 +666,39 @@ int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo,
     return ERROR_NO_PERMISSION;
   }
   PRINT_HILOGD("RequestPreview started.");
-  if (printJobList_.find(jobInfo.GetJobId()) == printJobList_.end()) {
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
+  auto jobId = jobInfo.GetJobId();
+  auto printerId = jobInfo.GetPrinterId();
+  auto extensionId = NapiPrintUtils::GetExtensionId(printerId);
+
+  auto jobIt = printJobList_.find(jobId);
+  if (jobIt == printJobList_.end()) {
     PRINT_HILOGD("invalid job id");
     return ERROR_INVALID_PRINTJOB;
   }
 
-  if (jobInfo.GetJobState() != PRINT_JOB_PREPARED) {
-    PRINT_HILOGD(
-        "invalid job state, only prepared state support to request previe");
+  if (printJobList_[jobId]->GetJobState() < PRINT_JOB_QUEUED) {
+    PRINT_HILOGD("invalid job state [%{public}d]",
+                 printJobList_[jobId]->GetJobState());
     return ERROR_INVALID_PRINTJOB;
   }
 
-  if (printerInfoList_.find(jobInfo.GetPrinterId()) == printerInfoList_.end()) {
+  if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
     PRINT_HILOGD("invalid printer of the print job");
     return ERROR_INVALID_PRINTJOB;
   }
 
-  std::string extensionId =
-      NapiPrintUtils::GetExtensionId(jobInfo.GetPrinterId());
-  auto extensionStateIt = extensionStateList_.find(extensionId);
-  if (extensionStateIt == extensionStateList_.end()) {
-    PRINT_HILOGE("Invalid extension id");
-    return ERROR_INVALID_PRINTJOB;
-  }
-
-  if (extensionStateIt->second != PRINT_EXTENSION_RUNNING) {
-    PRINT_HILOGE("Invalid Extension State");
-    return ERROR_INVALID_PRINTJOB;
-  }
-
-  std::string cid = NapiPrintUtils::EncodeExtensionCid(
-      extensionId, PRINT_EXTCB_REQUEST_PREVIEW);
-  auto callbackIt = extCallbackMap_.find(cid);
-  if (callbackIt == extCallbackMap_.end()) {
-    PRINT_HILOGW("RequestPreview Not Register Yet!!!");
+  std::string cid =
+      NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
+  if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
+    PRINT_HILOGW("StartPrintJob Not Register Yet!!!");
     return ERROR_SERVER_FAIL;
   }
 
   int32_t ret = ERROR_SERVER_FAIL;
-  if (callbackIt->second->OnCallback(jobInfo)) {
+  printJobList_[jobId]->UpdateParams(jobInfo);
+  if (extCallbackMap_[cid]->OnCallback(*printJobList_[jobId])) {
     ret = ERROR_NONE;
   }
   return ret;
@@ -747,37 +711,23 @@ int32_t PrintServiceAbility::QueryPrinterCapability(
     PRINT_HILOGE("no permission to access print service");
     return ERROR_NO_PERMISSION;
   }
-  PRINT_HILOGD("QueryPrinterCapability started.");
-  PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
-  auto printerInfoIt = printerInfoList_.find(printerId);
-  if (printerInfoIt == printerInfoList_.end()) {
+  PRINT_HILOGD("QueryPrinterCapability started %{public}s", printerId.c_str());
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+  if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
     PRINT_HILOGE("Invalid printer id");
     return ERROR_INVALID_PRINTER;
   }
 
   std::string extensionId = NapiPrintUtils::GetExtensionId(printerId);
-  auto extensionStateIt = extensionStateList_.find(extensionId);
-  if (extensionStateIt == extensionStateList_.end()) {
-    PRINT_HILOGE("Invalid extension id");
-    return ERROR_INVALID_PRINTER;
-  }
-
-  if (extensionStateIt->second != PRINT_EXTENSION_RUNNING) {
-    PRINT_HILOGE("Invalid Extension State");
-    return ERROR_INVALID_PRINTER;
-  }
-
   std::string cid =
       NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_REQUEST_CAP);
-  auto callbackIt = extCallbackMap_.find(cid);
-  if (callbackIt == extCallbackMap_.end()) {
+  if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
     PRINT_HILOGW("QueryPrinterCapability Not Register Yet!!!");
     return ERROR_SERVER_FAIL;
   }
 
   int32_t ret = ERROR_SERVER_FAIL;
-  MessageParcel reply;
-  if (callbackIt->second->OnCallback(printerId, printerCapability)) {
+  if (extCallbackMap_[cid]->OnCallback(printerId, printerCapability)) {
     ret = ERROR_NONE;
     printerCapability.Dump();
   }
@@ -826,20 +776,18 @@ int32_t PrintServiceAbility::RegisterExtCallback(
   }
 
   if (extensionStateIt->second != PRINT_EXTENSION_LOADING) {
-    PRINT_HILOGE("Invalid Extension State");
+    PRINT_HILOGE("Invalid Extension State [%{public}d]",
+                 extensionStateIt->second);
     return ERROR_INVALID_EXTENSION;
   }
 
-  PRINT_HILOGD(
-      "PrintServiceAbility::RegisterExtCallback started. callbackId=%{public}d",
-      callbackId);
+  PRINT_HILOGD("PrintServiceAbility::RegisterExtCallback started.");
   if (callbackId >= PRINT_EXTCB_MAX) {
-    PRINT_HILOGE("Invalid callback id");
+    PRINT_HILOGE("Invalid callback id [%{public}d]", callbackId);
     return ERROR_INVALID_PARAMETER;
   }
-  std::lock_guard<std::mutex> lock(mapMutex_);
-  auto it = extCallbackMap_.find(extensionCID);
-  if (it == extCallbackMap_.end()) {
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+  if (extCallbackMap_.find(extensionCID) == extCallbackMap_.end()) {
     extCallbackMap_.insert(std::make_pair(extensionCID, listener));
   } else {
     PRINT_HILOGD("PrintServiceAbility::RegisterExtCallback Replace listener.");
@@ -858,7 +806,7 @@ PrintServiceAbility::UnregisterAllExtCallback(const std::string &extensionId) {
   }
 
   PRINT_HILOGD("PrintServiceAbility::UnregisterAllExtCallback started.");
-  std::lock_guard<std::mutex> lock(mapMutex_);
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
   for (uint32_t callbackId = PRINT_EXTCB_START_DISCOVERY;
        callbackId < PRINT_EXTCB_MAX; callbackId++) {
     std::string cid =
@@ -879,18 +827,21 @@ int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId) {
   }
 
   PRINT_HILOGD("PrintServiceAbility::LoadExtSuccess started.");
-  auto extensionStateIt = extensionStateList_.find(extensionId);
-  if (extensionStateIt == extensionStateList_.end()) {
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+  if (extensionStateList_.find(extensionId) == extensionStateList_.end()) {
     PRINT_HILOGE("Invalid extension id");
     return ERROR_INVALID_EXTENSION;
   }
 
-  if (extensionStateIt->second != PRINT_EXTENSION_LOADING) {
+  if (extensionStateList_[extensionId] != PRINT_EXTENSION_LOADING) {
     PRINT_HILOGE("Invalid Extension State");
     return ERROR_INVALID_EXTENSION;
   }
+  extensionStateList_[extensionId] = PRINT_EXTENSION_LOADED;
 
-  extensionStateIt->second = PRINT_EXTENSION_LOADED;
+  PRINT_HILOGD("Auto Stat Printer Discovery");
+  auto callback = [=]() { DelayStartDiscovery(extensionId); };
+  serviceHandler_->PostTask(callback, START_DISCOVERY_DELAY);
   PRINT_HILOGD("PrintServiceAbility::LoadExtSuccess end.");
   return ERROR_NONE;
 }
@@ -920,11 +871,10 @@ int32_t PrintServiceAbility::On(const std::string taskId,
     return ERROR_NO_PERMISSION;
   }
 
-  std::lock_guard<std::mutex> lock(mapMutex_);
   PRINT_HILOGD("PrintServiceAbility::On started. type=%{public}s",
                eventType.c_str());
-  auto iter = registeredListeners_.find(eventType);
-  if (iter == registeredListeners_.end()) {
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+  if (registeredListeners_.find(eventType) == registeredListeners_.end()) {
     const auto temp =
         registeredListeners_.insert(std::make_pair(eventType, listener));
     if (!temp.second) {
@@ -954,8 +904,8 @@ int32_t PrintServiceAbility::Off(const std::string taskId,
     return ERROR_NO_PERMISSION;
   }
 
-  std::lock_guard<std::mutex> lock(mapMutex_);
   PRINT_HILOGD("PrintServiceAbility::Off started.");
+  std::lock_guard<std::recursive_mutex> lock(apiMutex_);
   auto iter = registeredListeners_.find(eventType);
   if (iter != registeredListeners_.end()) {
     PRINT_HILOGD(

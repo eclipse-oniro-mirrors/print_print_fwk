@@ -90,7 +90,7 @@ private:
   bool StartAbility(const AAFwk::Want &want);
   PrintExtensionInfo
   ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo);
-  bool DelayStartDiscovery();
+  bool DelayStartDiscovery(const std::string &extensionId);
   void SendPrinterEvent(const PrinterInfo &info);
   void SendPrintJobEvent(const PrintJob &jobInfo);
   void SendExtensionEvent(const std::string &extensionId,
@@ -103,7 +103,7 @@ private:
   static sptr<PrintServiceAbility> instance_;
   static std::shared_ptr<AppExecFwk::EventHandler> serviceHandler_;
 
-  std::mutex mapMutex_;
+  std::recursive_mutex apiMutex_;
   std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
   std::map<std::string, sptr<IPrintExtensionCallback>> extCallbackMap_;
 
