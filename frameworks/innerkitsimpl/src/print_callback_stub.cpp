@@ -33,7 +33,7 @@ int32_t PrintCallbackStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
   auto descriptorToken = data.ReadInterfaceToken();
   if (descriptorToken != GetDescriptor()) {
     PRINT_HILOGE("Remote descriptor not the same as local descriptor.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   auto itFunc = cmdMap_.find(code);

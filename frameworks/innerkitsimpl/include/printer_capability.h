@@ -27,19 +27,14 @@ namespace OHOS::Print {
 class PrinterCapability final : public Parcelable {
 public:
   explicit PrinterCapability();
+
   PrinterCapability(const PrinterCapability &right);
+
   PrinterCapability &operator=(const PrinterCapability &right);
-  ~PrinterCapability();
 
-  void SetMinMargin(const PrintMargin &minMargin);
+  virtual ~PrinterCapability();
 
-  void SetPageSize(const std::vector<PrintPageSize> &pageSizeList);
-
-  void SetResolution(const std::vector<PrintResolution> &resolutionList);
-
-  void SetColorMode(uint32_t colorMode);
-
-  void SetDuplexMode(uint32_t duplexMode);
+  void Reset();
 
   void GetMinMargin(PrintMargin &margin) const;
 
@@ -63,18 +58,30 @@ public:
   void Dump();
 
 private:
+  void SetMinMargin(const PrintMargin &minMargin);
+
+  void SetPageSize(const std::vector<PrintPageSize> &pageSizeList);
+
+  void SetResolution(const std::vector<PrintResolution> &resolutionList);
+
+  void SetColorMode(uint32_t colorMode);
+
+  void SetDuplexMode(uint32_t duplexMode);
+
   bool ReadFromParcel(Parcel &parcel);
 
   bool CreatePageSizeList(napi_env env, napi_value &jsPrinterCap) const;
 
   bool CreateResolutionList(napi_env env, napi_value &jsPrinterCap) const;
 
+  static bool ValidateProperty(napi_env env, napi_value object);
+
 private:
-  PrintMargin minMargin_;
-  std::vector<PrintPageSize> pageSizeList_;
-  std::vector<PrintResolution> resolutionList_;
   uint32_t colorMode_;
   uint32_t duplexMode_;
+  std::vector<PrintPageSize> pageSizeList_;
+  std::vector<PrintResolution> resolutionList_;
+  std::shared_ptr<PrintMargin> minMargin_;
 };
 } // namespace OHOS::Print
 #endif // PRINTER_CAPABILITY_H

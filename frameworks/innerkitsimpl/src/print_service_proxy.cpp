@@ -40,7 +40,7 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
   int32_t ret = Remote()->SendRequest(CMD_START_PRINT, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("StartPrint, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   ret = reply.ReadInt32();
   taskId = reply.ReadString();
@@ -59,7 +59,7 @@ int32_t PrintServiceProxy::StopPrint(const std::string &taskId) {
   int32_t ret = Remote()->SendRequest(CMD_STOP_PRINT, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("StopPrint, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -76,7 +76,7 @@ int32_t PrintServiceProxy::ConnectPrinter(const std::string &printerId) {
   int32_t ret = Remote()->SendRequest(CMD_CONNECTPRINTER, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("ConnectPrinter, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -94,7 +94,7 @@ int32_t PrintServiceProxy::DisconnectPrinter(const std::string &printerId) {
       Remote()->SendRequest(CMD_DISCONNECTPRINTER, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("DisconnectPrinter, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -113,13 +113,13 @@ int32_t PrintServiceProxy::QueryAllExtension(
       Remote()->SendRequest(CMD_QUERYALLEXTENSION, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("QueryAllExtension, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
-  if (ret != ERROR_NONE) {
+  if (ret != E_PRINT_NONE) {
     PRINT_HILOGD("PrintServiceProxy QueryAllExtension Failed.");
-    return ERROR_SERVER_FAIL;
+    return ret;
   }
 
   uint32_t len = reply.ReadUint32();
@@ -127,12 +127,12 @@ int32_t PrintServiceProxy::QueryAllExtension(
     auto infoPtr = PrintExtensionInfo::Unmarshalling(reply);
     if (infoPtr == nullptr) {
       PRINT_HILOGE("wrong information from data");
-      return ERROR_GENERIC_FAIL;
+      return E_PRINT_GENERIC_FAILURE;
     }
     extensionInfos.emplace_back(*infoPtr);
   }
   PRINT_HILOGD("PrintServiceProxy QueryAllExtension succeeded.");
-  return ERROR_NONE;
+  return E_PRINT_NONE;
 }
 
 int32_t PrintServiceProxy::StartDiscoverPrinter(
@@ -146,7 +146,7 @@ int32_t PrintServiceProxy::StartDiscoverPrinter(
       Remote()->SendRequest(CMD_STARTDISCOVERPRINTER, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("StartDiscoverPrinter, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -164,7 +164,7 @@ int32_t PrintServiceProxy::StopDiscoverPrinter() {
       Remote()->SendRequest(CMD_STOPDISCOVERPRINTER, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("StopDiscoverPrinter, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -183,7 +183,7 @@ int32_t PrintServiceProxy::StartPrintJob(const PrintJob &jobinfo) {
   int32_t ret = Remote()->SendRequest(CMD_STARTPRINTJOB, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("StartPrintJob, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -191,17 +191,17 @@ int32_t PrintServiceProxy::StartPrintJob(const PrintJob &jobinfo) {
   return ret;
 }
 
-int32_t PrintServiceProxy::CancelPrintJob(const PrintJob &jobinfo) {
+int32_t PrintServiceProxy::CancelPrintJob(const std::string &jobId) {
   MessageParcel data, reply;
   MessageOption option;
 
   data.WriteInterfaceToken(GetDescriptor());
-  jobinfo.Marshalling(data);
+  data.WriteString(jobId);
   PRINT_HILOGD("PrintServiceProxy CancelPrintJob started.");
   int32_t ret = Remote()->SendRequest(CMD_CANCELPRINTJOB, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("CancelPrintJob, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -224,7 +224,7 @@ PrintServiceProxy::AddPrinters(const std::vector<PrinterInfo> &printerInfos) {
   int32_t ret = Remote()->SendRequest(CMD_ADDPRINTERS, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("AddPrinters, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -243,7 +243,7 @@ PrintServiceProxy::RemovePrinters(const std::vector<std::string> &printerIds) {
   int32_t ret = Remote()->SendRequest(CMD_REMOVEPRINTERS, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("RemovePrinters, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -266,7 +266,7 @@ int32_t PrintServiceProxy::UpdatePrinters(
   int32_t ret = Remote()->SendRequest(CMD_UPDATEPRINTERS, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("UpdatePrinters, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -286,7 +286,7 @@ int32_t PrintServiceProxy::UpdatePrinterState(const std::string &printerId,
       Remote()->SendRequest(CMD_UPDATEPRINTERSTATE, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("UpdatePrinterState, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -309,7 +309,7 @@ int32_t PrintServiceProxy::UpdatePrintJobState(const std::string &jobId,
       Remote()->SendRequest(CMD_UPDATEPRINTJOBSTATE, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("UpdatePrintJobState, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -330,7 +330,7 @@ int32_t PrintServiceProxy::UpdateExtensionInfo(const std::string &extensionId,
       Remote()->SendRequest(CMD_UPDATEEXTENSIONINFO, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("UpdateExtensionInfo, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -349,7 +349,7 @@ int32_t PrintServiceProxy::RequestPreview(const PrintJob &jobinfo,
   int32_t ret = Remote()->SendRequest(CMD_REQUESTPREVIEW, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("RequestPreview, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -360,8 +360,8 @@ int32_t PrintServiceProxy::RequestPreview(const PrintJob &jobinfo,
   return ret;
 }
 
-int32_t PrintServiceProxy::QueryPrinterCapability(
-    const std::string &printerId, PrinterCapability &printerCapability) {
+int32_t
+PrintServiceProxy::QueryPrinterCapability(const std::string &printerId) {
   MessageParcel data, reply;
   MessageOption option;
   data.WriteInterfaceToken(GetDescriptor());
@@ -371,20 +371,12 @@ int32_t PrintServiceProxy::QueryPrinterCapability(
       Remote()->SendRequest(CMD_QUERYPRINTERCAPABILITY, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("QueryPrinterCapability, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
   PRINT_HILOGD(
       "PrintServiceProxy QueryPrinterCapability out. ret = [%{public}d]", ret);
-  if (ret == ERROR_NONE) {
-    auto capPtr = PrinterCapability::Unmarshalling(reply);
-    if (capPtr == nullptr) {
-      PRINT_HILOGE("invalid printer capability object");
-      return ERROR_GENERIC_FAIL;
-    }
-    printerCapability = *capPtr;
-  }
   return ret;
 }
 
@@ -394,12 +386,12 @@ int32_t PrintServiceProxy::On(const std::string taskId, const std::string &type,
                listener.GetRefPtr());
   if (listener == nullptr) {
     PRINT_HILOGE("listener is nullptr");
-    return ERROR_INVALID_PARAMETER;
+    return E_PRINT_INVALID_PARAMETER;
   }
 
   if (type.empty()) {
     PRINT_HILOGE("PrintServiceProxy::On type is null.");
-    return ERROR_INVALID_PARAMETER;
+    return E_PRINT_INVALID_PARAMETER;
   }
 
   MessageParcel data, reply;
@@ -412,7 +404,7 @@ int32_t PrintServiceProxy::On(const std::string taskId, const std::string &type,
   int32_t ret = Remote()->SendRequest(CMD_ON, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("On, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -425,7 +417,7 @@ int32_t PrintServiceProxy::Off(const std::string taskId,
   PRINT_HILOGD("PrintServiceProxy::Off in");
   if (type.empty()) {
     PRINT_HILOGE("PrintServiceProxy::On type is null.");
-    return ERROR_INVALID_PARAMETER;
+    return E_PRINT_INVALID_PARAMETER;
   }
 
   MessageParcel data, reply;
@@ -437,7 +429,7 @@ int32_t PrintServiceProxy::Off(const std::string taskId,
   int32_t ret = Remote()->SendRequest(CMD_OFF, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("On, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -460,7 +452,7 @@ int32_t PrintServiceProxy::RegisterExtCallback(
   int32_t ret = Remote()->SendRequest(CMD_REG_EXT_CB, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("RegisterExtCallback, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -479,7 +471,7 @@ PrintServiceProxy::UnregisterAllExtCallback(const std::string &extensionId) {
   int32_t ret = Remote()->SendRequest(CMD_UNREG_EXT_CB, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("UnregisterAllExtCallback, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -498,7 +490,7 @@ int32_t PrintServiceProxy::LoadExtSuccess(const std::string &extensionId) {
   int32_t ret = Remote()->SendRequest(CMD_LOAD_EXT, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("LoadExtSuccess, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
@@ -519,12 +511,12 @@ int32_t PrintServiceProxy::Read(std::vector<uint8_t> &fileRead,
   int32_t ret = Remote()->SendRequest(CMD_READ_DATA, data, reply, option);
   if (ret != ERR_NONE) {
     PRINT_HILOGE("Read, rpc error code = %{public}d", ret);
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   ret = reply.ReadInt32();
   PRINT_HILOGD("PrintServiceProxy Read out. ret = [%{public}d]", ret);
-  if (ret == ERROR_NONE) {
+  if (ret == E_PRINT_NONE) {
     reply.ReadUInt8Vector(&fileRead);
     PRINT_HILOGD("PrintServiceProxy Read succeeded.");
   }

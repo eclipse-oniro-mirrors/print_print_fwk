@@ -40,7 +40,7 @@ PrintJob::PrintJob()
     : jobId_(""), printerId_(""), jobState_(PRINT_JOB_PREPARED),
       subState_(PRINT_JOB_BLOCKED_UNKNOWN), copyNumber_(0),
       isSequential_(false), isLandscape_(false), colorMode_(0), duplexMode_(0),
-      option_("") {}
+      margin_(nullptr), preview_(nullptr), option_("") {}
 
 PrintJob::PrintJob(const PrintJob &right) {
   files_.clear();
@@ -49,6 +49,7 @@ PrintJob::PrintJob(const PrintJob &right) {
   printerId_ = right.printerId_;
   jobId_ = right.jobId_;
   jobState_ = right.jobState_;
+  subState_ = right.subState_;
   copyNumber_ = right.copyNumber_;
   pageRange_ = right.pageRange_;
   isSequential_ = right.isSequential_;
@@ -69,6 +70,7 @@ PrintJob &PrintJob::operator=(const PrintJob &right) {
     printerId_ = right.printerId_;
     jobId_ = right.jobId_;
     jobState_ = right.jobState_;
+    subState_ = right.subState_;
     copyNumber_ = right.copyNumber_;
     pageRange_ = right.pageRange_;
     isSequential_ = right.isSequential_;
@@ -134,15 +136,28 @@ void PrintJob::SetColorMode(uint32_t colorMode) { colorMode_ = colorMode; }
 
 void PrintJob::SetDuplexMode(uint32_t duplexmode) { duplexMode_ = duplexmode; }
 
-void PrintJob::SetMargin(const PrintMargin &margin) { margin_ = margin; }
+void PrintJob::SetMargin(const PrintMargin &margin) {
+  if (margin_ != nullptr) {
+    *margin_ = margin;
+    return;
+  }
+  margin_ = std::make_shared<PrintMargin>(margin);
+}
 
 void PrintJob::SetOption(const std::string &option) { option_ = option; }
 
 void PrintJob::SetPreview(const PrintPreviewAttribute &preview) {
-  preview_ = preview;
+  if (preview_ != nullptr) {
+    *preview_ = preview;
+    return;
+  }
+  preview_ = std::make_shared<PrintPreviewAttribute>(preview);
 }
 
 void PrintJob::UpdateParams(const PrintJob &jobInfo) {
+  files_.clear();
+  files_.assign(jobInfo.files_.begin(), jobInfo.files_.end());
+
   printerId_ = jobInfo.printerId_;
   copyNumber_ = jobInfo.copyNumber_;
   pageRange_ = jobInfo.pageRange_;
@@ -184,10 +199,18 @@ uint32_t PrintJob::GetColorMode() const { return colorMode_; }
 
 uint32_t PrintJob::GetDuplexMode() const { return duplexMode_; }
 
-void PrintJob::GetMargin(PrintMargin &margin) const { margin = margin_; }
+void PrintJob::GetMargin(PrintMargin &margin) const {
+  if (margin_ != nullptr) {
+    margin = *margin_;
+  }
+  margin.Reset();
+}
 
 void PrintJob::GetPreview(PrintPreviewAttribute &previewAttr) const {
-  previewAttr = preview_;
+  if (preview_ != nullptr) {
+    previewAttr = *preview_;
+  }
+  previewAttr.Reset();
 }
 
 const std::string &PrintJob::GetOption() const { return option_; }
@@ -222,24 +245,28 @@ bool PrintJob::ReadFromParcel(Parcel &parcel) {
   SetColorMode(parcel.ReadUint32());
   SetDuplexMode(parcel.ReadUint32());
 
-  auto marginPtr = PrintMargin::Unmarshalling(parcel);
-  if (marginPtr == nullptr) {
-    PRINT_HILOGE("Failed to restore margin");
-    return false;
+  // check capability
+  margin_ = nullptr;
+  if (parcel.ReadBool()) {
+    margin_ = PrintMargin::Unmarshalling(parcel);
+    if (margin_ == nullptr) {
+      PRINT_HILOGE("Failed to restore margin");
+      return false;
+    }
   }
-  SetMargin(*marginPtr);
 
-  auto previewPtr = PrintPreviewAttribute::Unmarshalling(parcel);
-  if (previewPtr == nullptr) {
-    PRINT_HILOGE("Failed to restore preview attribute");
-    return false;
+  preview_ = nullptr;
+  if (parcel.ReadBool()) {
+    preview_ = PrintPreviewAttribute::Unmarshalling(parcel);
+    if (preview_ == nullptr) {
+      PRINT_HILOGE("Failed to restore preview attribute");
+      return false;
+    }
   }
-  SetPreview(*previewPtr);
 
+  SetOption("");
   if (parcel.ReadBool()) {
     SetOption(parcel.ReadString());
-  } else {
-    SetOption("");
   }
   return true;
 }
@@ -305,14 +332,18 @@ bool PrintJob::Marshalling(Parcel &parcel) const {
     return false;
   }
 
-  if (!margin_.Marshalling(parcel)) {
-    PRINT_HILOGE("Failed to save margin");
-    return false;
+  if (margin_ != nullptr) {
+    parcel.WriteBool(true);
+    margin_->Marshalling(parcel);
+  } else {
+    parcel.WriteBool(false);
   }
 
-  if (!preview_.Marshalling(parcel)) {
-    PRINT_HILOGE("Failed to save preview");
-    return false;
+  if (preview_ != nullptr) {
+    parcel.WriteBool(true);
+    preview_->Marshalling(parcel);
+  } else {
+    parcel.WriteBool(false);
   }
 
   if (GetOption() != "") {
@@ -376,19 +407,24 @@ bool PrintJob::CreatePageSize(napi_env env, napi_value &jsPrintJob) const {
 }
 
 bool PrintJob::CreateMargin(napi_env env, napi_value &jsPrintJob) const {
-  napi_value jsMargin = margin_.ToJsObject(env);
-  PRINT_CALL_BASE(
-      env, napi_set_named_property(env, jsPrintJob, PARAM_JOB_MARGIN, jsMargin),
-      false);
+  if (margin_ != nullptr) {
+    napi_value jsMargin = margin_->ToJsObject(env);
+    PRINT_CALL_BASE(
+        env,
+        napi_set_named_property(env, jsPrintJob, PARAM_JOB_MARGIN, jsMargin),
+        false);
+  }
   return true;
 }
 
 bool PrintJob::CreatePreview(napi_env env, napi_value &jsPrintJob) const {
-  napi_value jsPreview = preview_.ToJsObject(env);
-  PRINT_CALL_BASE(
-      env,
-      napi_set_named_property(env, jsPrintJob, PARAM_JOB_PREVIEW, jsPreview),
-      false);
+  if (preview_ != nullptr) {
+    napi_value jsPreview = preview_->ToJsObject(env);
+    PRINT_CALL_BASE(
+        env,
+        napi_set_named_property(env, jsPrintJob, PARAM_JOB_PREVIEW, jsPreview),
+        false);
+  }
   return true;
 }
 
@@ -455,29 +491,30 @@ std::shared_ptr<PrintJob> PrintJob::BuildFromJs(napi_env env,
     return nullptr;
   }
 
-  auto names = NapiPrintUtils::GetPropertyNames(env, jsValue);
-  for (auto name : names) {
-    PRINT_HILOGD("Property: %{public}s", name.c_str());
+  if (!ValidateProperty(env, jsValue)) {
+    PRINT_HILOGE("Invalid property of print job");
+    return nullptr;
   }
 
   napi_value jsFiles =
       NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_FILES);
   bool isFileArray = false;
   napi_is_array(env, jsFiles, &isFileArray);
-  if (isFileArray) {
-    std::vector<std::string> printFiles;
-    uint32_t arrayReLength = 0;
-    napi_get_array_length(env, jsFiles, &arrayReLength);
-    for (uint32_t index = 0; index < arrayReLength; index++) {
-      napi_value filesValue;
-      napi_get_element(env, jsFiles, index, &filesValue);
-      std::string files =
-          NapiPrintUtils::GetStringFromValueUtf8(env, filesValue);
-      PRINT_HILOGD("printJob_value jsFiles %{public}s", files.c_str());
-      printFiles.emplace_back(files);
-    }
-    nativeObj->SetFiles(printFiles);
+  if (!isFileArray) {
+    PRINT_HILOGE("Invalid file list of print job");
+    return nullptr;
   }
+  std::vector<std::string> printFiles;
+  uint32_t arrayReLength = 0;
+  napi_get_array_length(env, jsFiles, &arrayReLength);
+  for (uint32_t index = 0; index < arrayReLength; index++) {
+    napi_value filesValue;
+    napi_get_element(env, jsFiles, index, &filesValue);
+    std::string files = NapiPrintUtils::GetStringFromValueUtf8(env, filesValue);
+    PRINT_HILOGD("printJob_value jsFiles %{public}s", files.c_str());
+    printFiles.emplace_back(files);
+  }
+  nativeObj->SetFiles(printFiles);
 
   std::string jobId =
       NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_JOBID);
@@ -507,6 +544,17 @@ std::shared_ptr<PrintJob> PrintJob::BuildFromJs(napi_env env,
   nativeObj->SetColorMode(colorMode);
   nativeObj->SetDuplexMode(duplexMode);
 
+  if (jobId == "") {
+    PRINT_HILOGE("Invalid job id");
+    return nullptr;
+  }
+
+  if (jobState >= PRINT_JOB_UNKNOWN || subState > PRINT_JOB_BLOCKED_UNKNOWN) {
+    PRINT_HILOGE("Invalid job state[%{public}d] or sub state [%{public}d]",
+                 jobState, subState);
+    return nullptr;
+  }
+
   napi_value jsPageRange =
       NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PAGERANGE);
   auto pageRangePtr = PrintRange::BuildFromJs(env, jsPageRange);
@@ -527,21 +575,25 @@ std::shared_ptr<PrintJob> PrintJob::BuildFromJs(napi_env env,
 
   napi_value jsMargin =
       NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_MARGIN);
-  auto marginPtr = PrintMargin::BuildFromJs(env, jsMargin);
-  if (marginPtr == nullptr) {
-    PRINT_HILOGE("Failed to build print job object from js");
-    return nullptr;
+  if (jsMargin != nullptr) {
+    auto marginPtr = PrintMargin::BuildFromJs(env, jsMargin);
+    if (marginPtr == nullptr) {
+      PRINT_HILOGE("Failed to build print job object from js");
+      return nullptr;
+    }
+    nativeObj->SetMargin(*marginPtr);
   }
-  nativeObj->SetMargin(*marginPtr);
 
   napi_value jsPreview =
       NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PREVIEW);
-  auto previewPtr = PrintPreviewAttribute::BuildFromJs(env, jsPreview);
-  if (previewPtr == nullptr) {
-    PRINT_HILOGE("Failed to build print job object from js");
-    return nullptr;
+  if (jsPreview != nullptr) {
+    auto previewPtr = PrintPreviewAttribute::BuildFromJs(env, jsPreview);
+    if (previewPtr == nullptr) {
+      PRINT_HILOGE("Failed to build print job object from js");
+      return nullptr;
+    }
+    nativeObj->SetPreview(*previewPtr);
   }
-  nativeObj->SetPreview(*previewPtr);
 
   napi_value jsOption =
       NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_OPTION);
@@ -551,6 +603,43 @@ std::shared_ptr<PrintJob> PrintJob::BuildFromJs(napi_env env,
   }
   nativeObj->Dump();
   return nativeObj;
+}
+
+bool PrintJob::ValidateProperty(napi_env env, napi_value object) {
+  std::map<std::string, PrintParamStatus> propertyList = {
+      {PARAM_JOB_FILES, PRINT_PARAM_NOT_SET},
+      {PARAM_JOB_JOBID, PRINT_PARAM_NOT_SET},
+      {PARAM_JOB_PRINTERID, PRINT_PARAM_NOT_SET},
+      {PARAM_JOB_JOBSTATE, PRINT_PARAM_OPT},
+      {PARAM_JOB_SUBSTATE, PRINT_PARAM_OPT},
+      {PARAM_JOB_COPYNUMBER, PRINT_PARAM_NOT_SET},
+      {PARAM_JOB_PAGERANGE, PRINT_PARAM_NOT_SET},
+      {PARAM_JOB_ISSEQUENTIAL, PRINT_PARAM_NOT_SET},
+      {PARAM_JOB_PAGESIZE, PRINT_PARAM_NOT_SET},
+      {PARAM_JOB_ISLANDSCAPE, PRINT_PARAM_NOT_SET},
+      {PARAM_JOB_COLORMODE, PRINT_PARAM_NOT_SET},
+      {PARAM_JOB_DUPLEXMODE, PRINT_PARAM_NOT_SET},
+      {PARAM_JOB_MARGIN, PRINT_PARAM_OPT},
+      {PARAM_JOB_PREVIEW, PRINT_PARAM_OPT},
+      {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
+  };
+
+  auto names = NapiPrintUtils::GetPropertyNames(env, object);
+  for (auto name : names) {
+    if (propertyList.find(name) == propertyList.end()) {
+      PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
+      return false;
+    }
+    propertyList[name] = PRINT_PARAM_SET;
+  }
+
+  for (auto propertypItem : propertyList) {
+    if (propertypItem.second == PRINT_PARAM_NOT_SET) {
+      PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
+      return false;
+    }
+  }
+  return true;
 }
 
 void PrintJob::Dump() {
@@ -571,8 +660,12 @@ void PrintJob::Dump() {
 
   pageRange_.Dump();
   pageSize_.Dump();
-  margin_.Dump();
-  preview_.Dump();
+  if (margin_ != nullptr) {
+    margin_->Dump();
+  }
+  if (preview_ != nullptr) {
+    preview_->Dump();
+  }
   if (option_ != "") {
     PRINT_HILOGD("option: %{public}s", option_.c_str());
   }

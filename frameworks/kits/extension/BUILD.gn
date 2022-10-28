@@ -159,7 +159,7 @@ ohos_shared_library("print_extension_module") {
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
   ]
-
+  relative_install_dir = "extensionability"
   subsystem_name = "print"
   part_name = "print"
 }

@@ -78,7 +78,7 @@ public:
     InputAction input_ = nullptr;
     OutputAction output_ = nullptr;
     ExecAction exec_ = nullptr;
-    uint32_t errorIndex_ = ERROR_NONE;
+    uint32_t errorIndex_ = E_PRINT_NONE;
   };
 
   // The default AsyncCallback in the parameters is at the end position.
@@ -94,13 +94,13 @@ private:
   enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
   static void OnExecute(napi_env env, void *data);
   static void OnComplete(napi_env env, napi_status status, void *data);
+  static std::string GetErrorText(uint32_t code);
   struct AsyncContext {
     std::shared_ptr<Context> ctx = nullptr;
     napi_ref callback = nullptr;
     napi_ref self = nullptr;
     napi_deferred defer = nullptr;
     napi_async_work work = nullptr;
-    napi_status paramStatus = napi_ok;
   };
   static void DeleteContext(napi_env env, AsyncContext *context);
 

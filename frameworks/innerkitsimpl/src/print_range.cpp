@@ -53,8 +53,8 @@ void PrintRange::SetPages(const std::vector<uint32_t> &pages) {
 }
 
 void PrintRange::Reset() {
-  startPage_ = 0;
-  endPage_ = 0;
+  SetStartPage(0);
+  SetEndPage(0);
   pages_.clear();
 }
 
@@ -105,21 +105,27 @@ std::shared_ptr<PrintRange> PrintRange::Unmarshalling(Parcel &parcel) {
 napi_value PrintRange::ToJsObject(napi_env env) const {
   napi_value jsObj = nullptr;
   PRINT_CALL(env, napi_create_object(env, &jsObj));
-  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_RANGE_STARTPAGE,
-                                    GetStartPage());
-  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_RANGE_ENDPAGE,
-                                    GetEndPage());
-
-  napi_value arrPages = nullptr;
-  PRINT_CALL(env, napi_create_array(env, &arrPages));
-  uint32_t arrPagesLength = pages_.size();
-  for (uint32_t i = 0; i < arrPagesLength; i++) {
-    napi_value value;
-    PRINT_CALL(env, napi_create_uint32(env, pages_[i], &value));
-    PRINT_CALL(env, napi_set_element(env, arrPages, i, value));
+  if (GetStartPage() > 0) {
+    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_RANGE_STARTPAGE,
+                                      GetStartPage());
   }
-  PRINT_CALL(env,
-             napi_set_named_property(env, jsObj, PARAM_RANGE_PAGES, arrPages));
+  if (GetEndPage() > 0) {
+    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_RANGE_ENDPAGE,
+                                      GetEndPage());
+  }
+
+  if (GetStartPage() == 0 && GetEndPage() == 0 && pages_.size() > 0) {
+    napi_value arrPages = nullptr;
+    PRINT_CALL(env, napi_create_array(env, &arrPages));
+    uint32_t arrPagesLength = pages_.size();
+    for (uint32_t i = 0; i < arrPagesLength; i++) {
+      napi_value value;
+      PRINT_CALL(env, napi_create_uint32(env, pages_[i], &value));
+      PRINT_CALL(env, napi_set_element(env, arrPages, i, value));
+    }
+    PRINT_CALL(
+        env, napi_set_named_property(env, jsObj, PARAM_RANGE_PAGES, arrPages));
+  }
   return jsObj;
 }
 
@@ -131,30 +137,32 @@ std::shared_ptr<PrintRange> PrintRange::BuildFromJs(napi_env env,
     return nullptr;
   }
 
-  auto names = NapiPrintUtils::GetPropertyNames(env, jsValue);
-  for (auto name : names) {
-    PRINT_HILOGD("Property: %{public}s", name.c_str());
+  if (!ValidateProperty(env, jsValue)) {
+    PRINT_HILOGE("Invalid property of print range");
+    return nullptr;
   }
 
   uint32_t startPage =
       NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_RANGE_STARTPAGE);
   uint32_t endPage =
       NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_RANGE_ENDPAGE);
-
+  if (endPage != 0 && endPage < startPage) {
+    PRINT_HILOGE("Start and end page conflict");
+    return nullptr;
+  }
   nativeObj->SetStartPage(startPage);
   nativeObj->SetEndPage(endPage);
 
   napi_value jsPages =
       NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_RANGE_PAGES);
-  if (jsPages == nullptr) {
-    PRINT_HILOGE("invalid pages object");
-    return nullptr;
-  }
-  bool isArray = false;
-  PRINT_CALL(env, napi_is_array(env, jsPages, &isArray));
-
   std::vector<uint32_t> pages;
-  if (isArray) {
+  if (jsPages != nullptr) {
+    bool isArray = false;
+    PRINT_CALL(env, napi_is_array(env, jsPages, &isArray));
+    if (!isArray) {
+      PRINT_HILOGE("Invalid pages of page range");
+      return nullptr;
+    }
     uint32_t arrayLength = 0;
     PRINT_CALL(env, napi_get_array_length(env, jsPages, &arrayLength));
     for (uint32_t index = 0; index < arrayLength; index++) {
@@ -164,15 +172,45 @@ std::shared_ptr<PrintRange> PrintRange::BuildFromJs(napi_env env,
       PRINT_CALL(env, napi_get_value_uint32(env, jsPage, &pageNo));
       pages.push_back(pageNo);
     }
-    nativeObj->SetPages(pages);
   }
+  nativeObj->SetPages(pages);
   PRINT_HILOGE("Build Page Range succeed");
   return nativeObj;
 }
 
+bool PrintRange::ValidateProperty(napi_env env, napi_value object) {
+  std::map<std::string, PrintParamStatus> propertyList = {
+      {PARAM_RANGE_STARTPAGE, PRINT_PARAM_OPT},
+      {PARAM_RANGE_ENDPAGE, PRINT_PARAM_OPT},
+      {PARAM_RANGE_PAGES, PRINT_PARAM_OPT},
+  };
+
+  auto names = NapiPrintUtils::GetPropertyNames(env, object);
+  for (auto name : names) {
+    if (propertyList.find(name) == propertyList.end()) {
+      PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
+      return false;
+    }
+    propertyList[name] = PRINT_PARAM_SET;
+  }
+  bool hasStartPage = propertyList[PARAM_RANGE_STARTPAGE] == PRINT_PARAM_SET;
+  bool hasEndPage = propertyList[PARAM_RANGE_ENDPAGE] == PRINT_PARAM_SET;
+  bool hasPages = propertyList[PARAM_RANGE_PAGES] == PRINT_PARAM_SET;
+  if ((hasStartPage || hasEndPage) && hasPages) {
+    return false;
+  }
+  return true;
+}
+
 void PrintRange::Dump() {
-  PRINT_HILOGD("startPage_ = %{public}d", startPage_);
-  PRINT_HILOGD("endPage_ = %{public}d", endPage_);
+  if (startPage_ > 0) {
+    PRINT_HILOGD("startPage_ = %{public}d", startPage_);
+  }
+
+  if (endPage_ > 0) {
+    PRINT_HILOGD("endPage_ = %{public}d", endPage_);
+  }
+
   uint32_t pageLength = pages_.size();
   for (uint32_t i = 0; i < pageLength; i++) {
     PRINT_HILOGD("pages_ = %{public}d", pages_[i]);

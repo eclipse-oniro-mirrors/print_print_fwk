@@ -41,7 +41,7 @@ public:
   virtual int32_t
   QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos) = 0;
   virtual int32_t StartPrintJob(const PrintJob &jobInfo) = 0;
-  virtual int32_t CancelPrintJob(const PrintJob &jobInfo) = 0;
+  virtual int32_t CancelPrintJob(const std::string &jobId) = 0;
   virtual int32_t AddPrinters(const std::vector<PrinterInfo> &printerInfos) = 0;
   virtual int32_t
   RemovePrinters(const std::vector<std::string> &printerIds) = 0;
@@ -55,9 +55,7 @@ public:
                                       const std::string &extInfo) = 0;
   virtual int32_t RequestPreview(const PrintJob &jobinfo,
                                  std::string &previewResult) = 0;
-  virtual int32_t
-  QueryPrinterCapability(const std::string &printerId,
-                         PrinterCapability &printerCapability) = 0;
+  virtual int32_t QueryPrinterCapability(const std::string &printerId) = 0;
   virtual int32_t On(const std::string taskId, const std::string &type,
                      const sptr<IPrintCallback> &listener) = 0;
   virtual int32_t Off(const std::string taskId, const std::string &type) = 0;

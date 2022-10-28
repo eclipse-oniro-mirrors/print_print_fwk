@@ -30,9 +30,12 @@ namespace OHOS::Print {
 class PrintJob final : public Parcelable {
 public:
   explicit PrintJob();
+
   PrintJob(const PrintJob &right);
+
   PrintJob &operator=(const PrintJob &right);
-  ~PrintJob();
+
+  virtual ~PrintJob();
 
   void SetFiles(const std::vector<std::string> &files);
 
@@ -115,8 +118,7 @@ private:
   bool CreateMargin(napi_env env, napi_value &jsPrintJob) const;
   bool CreatePreview(napi_env env, napi_value &jsPrintJob) const;
 
-  bool ParseJob(napi_env env, napi_value jsPrintJob, PrintJob &printJob);
-  bool ParseJobParam(napi_env env, napi_value jsPrintJob, PrintJob &printJob);
+  static bool ValidateProperty(napi_env env, napi_value object);
 
 private:
   std::vector<std::string> files_;
@@ -131,9 +133,8 @@ private:
   bool isLandscape_;
   int32_t colorMode_;
   int32_t duplexMode_;
-  PrintMargin margin_;
-  PrintPreviewAttribute preview_;
-  bool hasOption_;
+  std::shared_ptr<PrintMargin> margin_;
+  std::shared_ptr<PrintPreviewAttribute> preview_;
   std::string option_;
 };
 } // namespace OHOS::Print

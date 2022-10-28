@@ -68,6 +68,13 @@ PrintPageSize &PrintPageSize::operator=(const PrintPageSize &right) {
 
 PrintPageSize::~PrintPageSize() {}
 
+void PrintPageSize::Reset() {
+  SetId("");
+  SetName("");
+  SetWidth(0);
+  SetHeight(0);
+}
+
 void PrintPageSize::SetId(const std::string &id) { id_ = id; }
 
 void PrintPageSize::SetName(const std::string &name) { name_ = name; }
@@ -135,9 +142,9 @@ std::shared_ptr<PrintPageSize> PrintPageSize::BuildFromJs(napi_env env,
     return nullptr;
   }
 
-  auto names = NapiPrintUtils::GetPropertyNames(env, jsValue);
-  for (auto name : names) {
-    PRINT_HILOGD("Property: %{public}s", name.c_str());
+  if (!ValidateProperty(env, jsValue)) {
+    PRINT_HILOGE("Invalid property of print page size");
+    return nullptr;
   }
 
   std::string id =
@@ -149,12 +156,44 @@ std::shared_ptr<PrintPageSize> PrintPageSize::BuildFromJs(napi_env env,
   uint32_t height =
       NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PAGESIZE_HEIGHT);
 
+  if (id == "") {
+    PRINT_HILOGE("Invalid resolution id");
+    return nullptr;
+  }
+
   nativeObj->SetId(id);
   nativeObj->SetName(name);
   nativeObj->SetWidth(width);
   nativeObj->SetHeight(height);
   PRINT_HILOGE("Build Page Size succeed");
   return nativeObj;
+}
+
+bool PrintPageSize::ValidateProperty(napi_env env, napi_value object) {
+  std::map<std::string, PrintParamStatus> propertyList = {
+      {PARAM_PAGESIZE_ID, PRINT_PARAM_NOT_SET},
+      {PARAM_PAGESIZE_NAME, PRINT_PARAM_NOT_SET},
+      {PARAM_PAGESIZE_WIDTH, PRINT_PARAM_NOT_SET},
+      {PARAM_PAGESIZE_HEIGHT, PRINT_PARAM_NOT_SET},
+  };
+
+  auto names = NapiPrintUtils::GetPropertyNames(env, object);
+  for (auto name : names) {
+    if (propertyList.find(name) == propertyList.end()) {
+      PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
+      return false;
+    }
+    propertyList[name] = PRINT_PARAM_SET;
+  }
+
+  for (auto propertypItem : propertyList) {
+    if (propertypItem.second == PRINT_PARAM_NOT_SET) {
+      PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
+      return false;
+    }
+  }
+
+  return true;
 }
 
 void PrintPageSize::Dump() {

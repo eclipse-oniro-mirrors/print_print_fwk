@@ -40,6 +40,10 @@ PrintTask::~PrintTask() {
 }
 
 uint32_t PrintTask::Start() {
+  if (fileList_.empty()) {
+    PRINT_HILOGE("file list is empty");
+    return E_PRINT_INVALID_PARAMETER;
+  }
   return PrintManagerClient::GetInstance()->StartPrint(fileList_, taskId_);
 }
 
@@ -88,7 +92,7 @@ napi_value PrintTask::On(napi_env env, napi_callback_info info) {
   }
   int32_t ret =
       PrintManagerClient::GetInstance()->On(task->taskId_, type, callback);
-  if (ret != ERROR_NONE) {
+  if (ret != E_PRINT_NONE) {
     PRINT_HILOGE("Failed to register event");
     return nullptr;
   }
@@ -116,7 +120,7 @@ napi_value PrintTask::Off(napi_env env, napi_callback_info info) {
                     napi_invalid_arg);
     if (task == nullptr || !task->IsSupportType(type)) {
       PRINT_HILOGE("Event On type : %{public}s not support", type.c_str());
-      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       return napi_invalid_arg;
     }
 
@@ -134,8 +138,8 @@ napi_value PrintTask::Off(napi_env env, napi_callback_info info) {
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret =
         PrintManagerClient::GetInstance()->Off(context->taskId, context->type);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to unregistered event");
       context->SetErrorIndex(ret);
     }

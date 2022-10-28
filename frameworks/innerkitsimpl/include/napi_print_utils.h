@@ -46,9 +46,6 @@ public:
   static constexpr int32_t INDEX_FOUR = 4;
   static constexpr int32_t INDEX_FIVE = 5;
 
-  static constexpr int32_t ERROR_CODE_ONE = 1;
-  static constexpr int32_t ERROR_CODE_TWO = 2;
-
   static constexpr int32_t MAX_NUMBER_BYTES = 8;
   static constexpr int32_t MAX_LEN = 4096;
   static constexpr int32_t MAX_JOBSTRING_LENGTH = 10;

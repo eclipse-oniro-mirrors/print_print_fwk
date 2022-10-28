@@ -23,13 +23,9 @@
 namespace OHOS::Print {
 PrintNotify::PrintNotify() {}
 
-PrintNotify::~PrintNotify()
-{
-    PRINT_HILOGD("");
-}
+PrintNotify::~PrintNotify() { PRINT_HILOGD(""); }
 
-void PrintNotify::OnCallBack(MessageParcel &data)
-{
-    PRINT_HILOGD("Failed callback in");
+void PrintNotify::OnCallBack(MessageParcel &data) {
+  PRINT_HILOGD("Failed callback in");
 }
 } // namespace OHOS::Print

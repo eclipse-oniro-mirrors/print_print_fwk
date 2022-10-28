@@ -42,6 +42,12 @@ PrintResolution &PrintResolution::operator=(const PrintResolution &right) {
 
 PrintResolution::~PrintResolution() {}
 
+void PrintResolution::Reset() {
+  SetId("");
+  SetHorizontalDpi(0);
+  SetVerticalDpi(0);
+}
+
 void PrintResolution::SetId(const std::string &id) { id_ = id; }
 
 void PrintResolution::SetHorizontalDpi(uint32_t horizontalDpi) {
@@ -106,6 +112,11 @@ PrintResolution::BuildFromJs(napi_env env, napi_value jsValue) {
     return nullptr;
   }
 
+  if (!ValidateProperty(env, jsValue)) {
+    PRINT_HILOGE("Invalid property of print resolution");
+    return nullptr;
+  }
+
   std::string id =
       NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_RESOLUTION_ID);
   uint32_t horizontalDpi = NapiPrintUtils::GetUint32Property(
@@ -113,10 +124,41 @@ PrintResolution::BuildFromJs(napi_env env, napi_value jsValue) {
   uint32_t verticalDpi = NapiPrintUtils::GetUint32Property(
       env, jsValue, PARAM_RESOLUTION_VERTICALDPI);
 
+  if (id == "") {
+    PRINT_HILOGE("Invalid resolution id");
+    return nullptr;
+  }
+
   nativeObj->SetId(id);
   nativeObj->SetHorizontalDpi(horizontalDpi);
   nativeObj->SetVerticalDpi(verticalDpi);
   return nativeObj;
+}
+
+bool PrintResolution::ValidateProperty(napi_env env, napi_value object) {
+  std::map<std::string, PrintParamStatus> propertyList = {
+      {PARAM_RESOLUTION_ID, PRINT_PARAM_NOT_SET},
+      {PARAM_RESOLUTION_HORIZONTALDPI, PRINT_PARAM_NOT_SET},
+      {PARAM_RESOLUTION_VERTICALDPI, PRINT_PARAM_NOT_SET},
+  };
+
+  auto names = NapiPrintUtils::GetPropertyNames(env, object);
+  for (auto name : names) {
+    if (propertyList.find(name) == propertyList.end()) {
+      PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
+      return false;
+    }
+    propertyList[name] = PRINT_PARAM_SET;
+  }
+
+  for (auto propertypItem : propertyList) {
+    if (propertypItem.second == PRINT_PARAM_NOT_SET) {
+      PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
+      return false;
+    }
+  }
+
+  return true;
 }
 
 void PrintResolution::Dump() {

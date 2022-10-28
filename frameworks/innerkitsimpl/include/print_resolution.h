@@ -23,15 +23,14 @@ namespace OHOS::Print {
 class PrintResolution final : public Parcelable {
 public:
   explicit PrintResolution();
+
   PrintResolution(const PrintResolution &right);
+
   PrintResolution &operator=(const PrintResolution &right);
-  ~PrintResolution();
 
-  void SetId(const std::string &id);
+  virtual ~PrintResolution();
 
-  void SetHorizontalDpi(uint32_t horizontalDpi);
-
-  void SetVerticalDpi(uint32_t verticalDpi);
+  void Reset();
 
   [[nodiscard]] const std::string &GetId() const;
 
@@ -51,7 +50,15 @@ public:
   void Dump();
 
 private:
+  void SetId(const std::string &id);
+
+  void SetHorizontalDpi(uint32_t horizontalDpi);
+
+  void SetVerticalDpi(uint32_t verticalDpi);
+
   bool ReadFromParcel(Parcel &parcel);
+
+  static bool ValidateProperty(napi_env env, napi_value object);
 
 private:
   std::string id_;

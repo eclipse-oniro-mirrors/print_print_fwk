@@ -34,8 +34,9 @@ bool PrintExtensionCallbackProxy::OnCallback() {
     PRINT_HILOGE("SendRequest failed, error %{public}d", error);
     return false;
   }
-  PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack End");
-  return true;
+  bool ret = reply.ReadBool();
+  PRINT_HILOGD("PrintExtcbProxy::OnCallBack End, ret = %{public}d", ret);
+  return ret;
 }
 
 bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId) {
@@ -51,8 +52,9 @@ bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId) {
     PRINT_HILOGE("SendRequest failed, error %{public}d", error);
     return false;
   }
-  PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack End");
-  return true;
+  bool ret = reply.ReadBool();
+  PRINT_HILOGD("PrintExtcbProxy::OnCallBack End, ret = %{public}d", ret);
+  return ret;
 }
 
 bool PrintExtensionCallbackProxy::OnCallback(const PrintJob &job) {
@@ -67,8 +69,9 @@ bool PrintExtensionCallbackProxy::OnCallback(const PrintJob &job) {
     PRINT_HILOGE("SendRequest failed, error %{public}d", error);
     return false;
   }
-  PRINT_HILOGD("PrintExtensionCallbackProxy::OnCallBack End");
-  return true;
+  bool ret = reply.ReadBool();
+  PRINT_HILOGD("PrintExtcbProxy::OnCallBack End, ret = %{public}d", ret);
+  return ret;
 }
 
 bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId,
@@ -85,13 +88,17 @@ bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId,
     PRINT_HILOGE("SendRequest failed, error %{public}d", error);
     return false;
   }
-  auto capPtr = PrinterCapability::Unmarshalling(reply);
-  if (capPtr == nullptr) {
-    PRINT_HILOGE("Failed to create printer capability object");
-    return false;
+  bool ret = reply.ReadBool();
+  if (ret) {
+    auto capPtr = PrinterCapability::Unmarshalling(reply);
+    if (capPtr == nullptr) {
+      PRINT_HILOGE("Failed to create printer capability object");
+      return false;
+    }
+    cap = *capPtr;
   }
-  cap = *capPtr;
-  PRINT_HILOGD("PrintExtcbProxy::OnCallBack End");
-  return true;
+
+  PRINT_HILOGD("PrintExtcbProxy::OnCallBack End, ret = %{public}d", ret);
+  return ret;
 }
 } // namespace OHOS::Print

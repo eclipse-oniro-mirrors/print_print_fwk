@@ -42,7 +42,7 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info) {
       napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
       auto printerInfoPtr = PrinterInfo::BuildFromJs(env, value);
       if (printerInfoPtr == nullptr) {
-        context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+        context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
         PRINT_HILOGE("PrinterInfo format error!");
         return napi_invalid_arg;
       }
@@ -53,7 +53,7 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info) {
       context->printerInfos.emplace_back(*printerInfoPtr);
     }
     if (context->printerInfos.empty()) {
-      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       PRINT_HILOGE("no valid printer info exists!");
       return napi_invalid_arg;
     }
@@ -68,8 +68,8 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info) {
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret =
         PrintManagerClient::GetInstance()->AddPrinters(context->printerInfos);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to add printers");
       context->SetErrorIndex(ret);
     }
@@ -108,7 +108,7 @@ napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info) {
       }
     }
     if (context->printerIds.empty()) {
-      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       PRINT_HILOGE("no valid printer info exists!");
       return napi_invalid_arg;
     }
@@ -123,8 +123,8 @@ napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info) {
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret =
         PrintManagerClient::GetInstance()->RemovePrinters(context->printerIds);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to remove printers");
       context->SetErrorIndex(ret);
     }
@@ -157,7 +157,7 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info) {
       napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
       auto printerInfoPtr = PrinterInfo::BuildFromJs(env, value);
       if (printerInfoPtr == nullptr) {
-        context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+        context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
         PRINT_HILOGE("PrinterInfo format error!");
         return napi_invalid_arg;
       }
@@ -166,7 +166,7 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info) {
       context->printerInfos.emplace_back(*printerInfoPtr);
     }
     if (context->printerInfos.empty()) {
-      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       PRINT_HILOGE("no valid printer info exists!");
       return napi_invalid_arg;
     }
@@ -181,8 +181,8 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info) {
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinters(
         context->printerInfos);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to update printers");
       context->SetErrorIndex(ret);
     }
@@ -227,7 +227,7 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env,
 
     if (printerId == "" || !IsValidPrinterState(printerState)) {
       PRINT_HILOGE("invalid printer id or printer state");
-      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       return napi_invalid_arg;
     }
 
@@ -245,8 +245,8 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env,
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterState(
         context->printerId, context->printerState);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to update state of printer");
       context->SetErrorIndex(ret);
     }
@@ -299,7 +299,7 @@ napi_value NapiPrintExt::UpdatePrintJobState(napi_env env,
     if (printJobId == "" || !IsValidPrintJobState(printJobState) ||
         !IsValidPrintJobSubState(jobSubState)) {
       PRINT_HILOGE("invalid job id, job state or job substate");
-      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       return napi_invalid_arg;
     }
 
@@ -317,8 +317,8 @@ napi_value NapiPrintExt::UpdatePrintJobState(napi_env env,
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobState(
         context->printJobId, context->printJobState, context->jobSubState);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to update state of print job");
       context->SetErrorIndex(ret);
     }
@@ -353,7 +353,7 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env,
 
     if (extensionId == "" || extInfo == "") {
       PRINT_HILOGE("invalid extension id or extension information");
-      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       return napi_invalid_arg;
     }
     context->extensionId = extensionId;
@@ -369,8 +369,8 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env,
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret = PrintManagerClient::GetInstance()->UpdateExtensionInfo(
         context->extensionId, context->extInfo);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to update extension information");
       context->SetErrorIndex(ret);
     }

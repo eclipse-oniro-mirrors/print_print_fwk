@@ -24,9 +24,12 @@ namespace OHOS::Print {
 class PrinterInfo final : public Parcelable {
 public:
   explicit PrinterInfo();
+
   PrinterInfo(const PrinterInfo &right);
+
   PrinterInfo &operator=(const PrinterInfo &PrinterInfo);
-  ~PrinterInfo();
+
+  virtual ~PrinterInfo();
 
   void SetPrinterId(const std::string &printerId);
 
@@ -38,7 +41,7 @@ public:
 
   void SetDescription(std::string description);
 
-  void SetCapability(PrinterCapability capability);
+  void SetCapability(const PrinterCapability &capability);
 
   void SetOption(const std::string &option);
 
@@ -70,14 +73,16 @@ public:
 private:
   bool ReadFromParcel(Parcel &parcel);
 
+  static bool ValidateProperty(napi_env env, napi_value object);
+
 private:
   std::string printerId_;
 
   std::string printerName_;
 
-  uint32_t printerIcon_;
-
   uint32_t printerState_;
+
+  uint32_t printerIcon_;
 
   std::string description_;
 

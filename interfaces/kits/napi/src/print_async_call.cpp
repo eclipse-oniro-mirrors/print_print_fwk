@@ -37,11 +37,9 @@ PrintAsyncCall::PrintAsyncCall(napi_env env, napi_callback_info info,
       argc = pos;
     }
   }
-  context_->paramStatus = (*context)(env, argc, argv, self);
-  if (context_->paramStatus == napi_ok) {
-    context_->ctx = std::move(context);
-    napi_create_reference(env, self, 1, &context_->self);
-  }
+  (*context)(env, argc, argv, self);
+  context_->ctx = std::move(context);
+  napi_create_reference(env, self, 1, &context_->self);
 }
 
 PrintAsyncCall::~PrintAsyncCall() {
@@ -99,7 +97,7 @@ void PrintAsyncCall::OnExecute(napi_env env, void *data) {
   }
 
   PRINT_HILOGD("run the async runnable");
-  if (context->ctx->GetErrorIndex() == ERROR_NONE) {
+  if (context->ctx->GetErrorIndex() == E_PRINT_NONE) {
     context->ctx->Exec();
   }
 }
@@ -107,7 +105,8 @@ void PrintAsyncCall::OnExecute(napi_env env, void *data) {
 void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data) {
   AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
   PRINT_HILOGD("run the js callback function");
-  if (context->ctx == nullptr || context->ctx->GetErrorIndex() != ERROR_NONE) {
+  if (context->ctx == nullptr ||
+      context->ctx->GetErrorIndex() != E_PRINT_NONE) {
     status = napi_generic_failure;
   }
   napi_value output = nullptr;
@@ -130,14 +129,10 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data) {
     }
   } else {
     napi_value message = nullptr;
-    uint32_t errorIndex = ERROR_NONE;
-    if (context->paramStatus != napi_ok) {
-      errorIndex = ERROR_INVALID_PARAMETER;
-    } else {
-      errorIndex = context->ctx->GetErrorIndex();
-    }
+    uint32_t errorIndex = E_PRINT_NONE;
+    errorIndex = context->ctx->GetErrorIndex();
     PRINT_HILOGE("ErrorMessage: [%{public}s], ErrorIndex:[%{public}d]",
-                 ErrorMessage[errorIndex].c_str(), errorIndex);
+                 GetErrorText(errorIndex).c_str(), errorIndex);
     napi_create_uint32(env, errorIndex, &message);
     PRINT_HILOGE("async call failed. creating errors...");
     result[ARG_ERROR] = message;
@@ -169,5 +164,55 @@ void PrintAsyncCall::DeleteContext(napi_env env, AsyncContext *context) {
     napi_delete_async_work(env, context->work);
   }
   delete context;
+}
+
+std::string PrintAsyncCall::GetErrorText(uint32_t code) {
+  std::string errorText = "E_PRINT_NONE";
+
+  switch (code) {
+  case E_PRINT_NO_PERMISSION:
+    errorText = "E_PRINT_NO_PERMISSION";
+    break;
+
+  case E_PRINT_INVALID_PARAMETER:
+    errorText = "E_PRINT_INVALID_PARAMETER";
+    break;
+
+  case E_PRINT_GENERIC_FAILURE:
+    errorText = "E_PRINT_GENERIC_FAILURE";
+    break;
+
+  case E_PRINT_RPC_FAILURE:
+    errorText = "E_PRINT_RPC_FAILURE";
+    break;
+
+  case E_PRINT_SERVER_FAILURE:
+    errorText = "E_PRINT_SERVER_FAILURE";
+    break;
+
+  case E_PRINT_INVALID_EXTENSION:
+    errorText = "E_PRINT_INVALID_EXTENSION";
+    break;
+
+  case E_PRINT_INVALID_PRINTER:
+    errorText = "E_PRINT_INVALID_PRINTER";
+    break;
+
+  case E_PRINT_INVALID_PRINTJOB:
+    errorText = "E_PRINT_INVALID_PRINTJOB";
+    break;
+
+  case E_PRINT_FILE_IO:
+    errorText = "E_PRINT_FILE_IO";
+    break;
+
+  case E_PRINT_UNKNOWN:
+    errorText = "E_PRINT_UNKNOWN";
+    break;
+
+  default:
+    break;
+  }
+  return errorText;
 }
 } // namespace OHOS::Print

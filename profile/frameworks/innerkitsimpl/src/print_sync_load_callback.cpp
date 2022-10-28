@@ -22,21 +22,20 @@
 #include "system_ability_definition.h"
 
 namespace OHOS::Print {
-void PrintSyncLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject)
-{
-    if (systemAbilityId != PRINT_SERVICE_ID) {
-        PRINT_HILOGE("start systemAbilityId is not print server");
-        return;
-    }
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+void PrintSyncLoadCallback::OnLoadSystemAbilitySuccess(
+    int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) {
+  if (systemAbilityId != PRINT_SERVICE_ID) {
+    PRINT_HILOGE("start systemAbilityId is not print server");
+    return;
+  }
+  PrintManagerClient::GetInstance()->LoadServerSuccess();
 }
 
-void PrintSyncLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
-{
-    if (systemAbilityId != PRINT_SERVICE_ID) {
-        PRINT_HILOGE("start systemAbilityId is not print server");
-        return;
-    }
-    PrintManagerClient::GetInstance()->LoadServerFail();
+void PrintSyncLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId) {
+  if (systemAbilityId != PRINT_SERVICE_ID) {
+    PRINT_HILOGE("start systemAbilityId is not print server");
+    return;
+  }
+  PrintManagerClient::GetInstance()->LoadServerFail();
 }
 } // namespace OHOS::Print

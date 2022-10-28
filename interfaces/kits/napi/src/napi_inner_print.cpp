@@ -55,8 +55,8 @@ napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env,
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret = PrintManagerClient::GetInstance()->QueryAllExtension(
         context->allExtensionInfos);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to query all ext info");
       context->SetErrorIndex(ret);
     }
@@ -104,8 +104,8 @@ napi_value NapiInnerPrint::StartDiscovery(napi_env env,
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret = PrintManagerClient::GetInstance()->StartDiscoverPrinter(
         context->extensionList);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to start discover printer");
       context->SetErrorIndex(ret);
     }
@@ -134,8 +134,8 @@ napi_value NapiInnerPrint::StopDiscovery(napi_env env,
   };
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret = PrintManagerClient::GetInstance()->StopDiscoverPrinter();
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to stop discover printer");
       context->SetErrorIndex(ret);
     }
@@ -175,8 +175,8 @@ napi_value NapiInnerPrint::ConnectPrinter(napi_env env,
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret =
         PrintManagerClient::GetInstance()->ConnectPrinter(context->printerId);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to connect the printer");
       context->SetErrorIndex(ret);
     }
@@ -216,8 +216,8 @@ napi_value NapiInnerPrint::DisconnectPrinter(napi_env env,
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret = PrintManagerClient::GetInstance()->DisconnectPrinter(
         context->printerId);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to connect the printer");
       context->SetErrorIndex(ret);
     }
@@ -240,7 +240,7 @@ napi_value NapiInnerPrint::StartPrintJob(napi_env env,
         PrintJob::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
     if (printJobPtr == nullptr) {
       PRINT_HILOGE("ParseJob type error!");
-      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       return napi_invalid_arg;
     }
     context->printJob = *printJobPtr;
@@ -256,8 +256,8 @@ napi_value NapiInnerPrint::StartPrintJob(napi_env env,
     context->printJob.Dump();
     int32_t ret =
         PrintManagerClient::GetInstance()->StartPrintJob(context->printJob);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to start print job");
       context->SetErrorIndex(ret);
     }
@@ -276,14 +276,20 @@ napi_value NapiInnerPrint::CancelPrintJob(napi_env env,
                          napi_value self) -> napi_status {
     PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE,
                       " should 1 parameter!", napi_invalid_arg);
-    auto printJobPtr =
-        PrintJob::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
-    if (printJobPtr == nullptr) {
-      PRINT_HILOGE("ParseJob type error!");
-      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+    napi_valuetype valuetype;
+    PRINT_CALL_BASE(
+        env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype),
+        napi_invalid_arg);
+    PRINT_ASSERT_BASE(env, valuetype == napi_string, "jobId is not a string",
+                      napi_string_expected);
+    std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(
+        env, argv[NapiPrintUtils::INDEX_ZERO]);
+    if (jobId == "") {
+      PRINT_HILOGE("Parse JobId error!");
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       return napi_invalid_arg;
     }
-    context->printJob = *printJobPtr;
+    context->jobId = jobId;
     return napi_ok;
   };
   auto output = [context](napi_env env, napi_value *result) -> napi_status {
@@ -295,9 +301,9 @@ napi_value NapiInnerPrint::CancelPrintJob(napi_env env,
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     context->printJob.Dump();
     int32_t ret =
-        PrintManagerClient::GetInstance()->CancelPrintJob(context->printJob);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+        PrintManagerClient::GetInstance()->CancelPrintJob(context->jobId);
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to start print job");
       context->SetErrorIndex(ret);
     }
@@ -320,7 +326,7 @@ napi_value NapiInnerPrint::RequestPreview(napi_env env,
         PrintJob::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
     if (printJobPtr == nullptr) {
       PRINT_HILOGE("ParseJob type error!");
-      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       return napi_invalid_arg;
     }
     context->printJob = *printJobPtr;
@@ -338,8 +344,8 @@ napi_value NapiInnerPrint::RequestPreview(napi_env env,
     context->printJob.Dump();
     int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(
         context->printJob, context->previewResult);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to request preview of print job");
       context->SetErrorIndex(ret);
     }
@@ -371,14 +377,16 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env,
     return napi_ok;
   };
   auto output = [context](napi_env env, napi_value *result) -> napi_status {
-    *result = context->printerCapability.ToJsObject(env);
-    return napi_ok;
+    napi_status status = napi_get_boolean(env, context->result, result);
+    PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]",
+                 context->result ? "true" : "false", status);
+    return status;
   };
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapability(
-        context->printerId, context->printerCapability);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+        context->printerId);
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to query capability of printer");
       context->SetErrorIndex(ret);
     }
@@ -424,7 +432,7 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info) {
     return nullptr;
   }
   int32_t ret = PrintManagerClient::GetInstance()->On("", type, callback);
-  if (ret != ERROR_NONE) {
+  if (ret != E_PRINT_NONE) {
     PRINT_HILOGE("Failed to register event");
     return nullptr;
   }
@@ -449,7 +457,7 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info) {
     if (!NapiInnerPrint::IsSupportType(type)) {
       PRINT_HILOGE("Event Off type : %{public}s not support",
                    context->type.c_str());
-      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       return napi_invalid_arg;
     }
     context->type = type;
@@ -464,8 +472,8 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info) {
   };
   auto exec = [context](PrintAsyncCall::Context *ctx) {
     int32_t ret = PrintManagerClient::GetInstance()->Off("", context->type);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to unregister event");
       context->SetErrorIndex(ret);
     }
@@ -511,8 +519,8 @@ napi_value NapiInnerPrint::ReadFile(napi_env env, napi_callback_info info) {
     int32_t ret = PrintManagerClient::GetInstance()->Read(
         context->fileRead, context->fileUri, context->fileOffset,
         context->fileMaxRead);
-    context->result = ret == ERROR_NONE;
-    if (ret != ERROR_NONE) {
+    context->result = ret == E_PRINT_NONE;
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to read file");
       context->SetErrorIndex(ret);
     }

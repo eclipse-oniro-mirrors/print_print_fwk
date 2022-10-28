@@ -78,8 +78,8 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrintJob &info) {
     return false;
   }
 
-  PRINT_HILOGD("PrintJob Event argument:[%{public}d], printerId [%{public}s]",
-               state, info.GetJobId().c_str());
+  PRINT_HILOGD("PrintJob Event argument:[%{public}d], subState [%{public}d]",
+               state, info.GetSubState());
   data.WriteUint32(state);
   info.Marshalling(data);
 
