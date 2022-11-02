@@ -18,6 +18,7 @@
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
+#include <string>
 
 namespace OHOS::Print {
 class NapiPrintTask {
@@ -27,6 +28,7 @@ public:
 private:
   static napi_value GetCtor(napi_env env);
   static napi_value Initialize(napi_env env, napi_callback_info info);
+  static bool IsValidFile(const std::string &fileName);
 
 private:
   static __thread napi_ref globalCtor;

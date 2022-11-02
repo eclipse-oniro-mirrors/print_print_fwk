@@ -140,7 +140,9 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info) {
     napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &filesValue);
     std::string files = NapiPrintUtils::GetStringFromValueUtf8(env, filesValue);
     PRINT_HILOGD("file[%{public}d] %{public}s", index, files.c_str());
-    printfiles.emplace_back(files);
+    if (IsValidFile(files)) {
+      printfiles.emplace_back(files);
+    }
   }
 
   auto task = new PrintTask(printfiles);
@@ -159,5 +161,20 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info) {
   }
   PRINT_HILOGD("Succeed to allocate print task");
   return self;
+}
+
+bool NapiPrintTask::IsValidFile(const std::string &fileName) {
+  if (fileName == "") {
+    PRINT_HILOGE("invalid file name");
+    return false;
+  }
+
+  FILE *file = fopen(fileName.c_str(), "rb");
+  if (file == nullptr) {
+    PRINT_HILOGE("invalid file path");
+    return false;
+  }
+  fclose(file);
+  return true;
 }
 } // namespace OHOS::Print
