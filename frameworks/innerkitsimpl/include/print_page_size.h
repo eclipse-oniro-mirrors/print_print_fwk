@@ -146,22 +146,21 @@ using PAGE_SIZE_ID = std::string;
 class PrintPageSize final : public Parcelable {
 public:
   static void BuildPageSizeMap();
+
   static PrintPageSize GetPageSize(PageSizeId id);
+
   explicit PrintPageSize();
+
   PrintPageSize(PAGE_SIZE_ID id, DiscretePageName name, uint32_t width,
                 uint32_t height);
 
   PrintPageSize(const PrintPageSize &right);
+
   PrintPageSize &operator=(const PrintPageSize &right);
-  ~PrintPageSize();
 
-  void SetId(const std::string &id);
+  virtual ~PrintPageSize();
 
-  void SetName(const std::string &name);
-
-  void SetWidth(uint32_t width);
-
-  void SetHeight(uint32_t height);
+  void Reset();
 
   [[nodiscard]] const std::string &GetId() const;
 
@@ -183,7 +182,17 @@ public:
   void Dump();
 
 private:
+  void SetId(const std::string &id);
+
+  void SetName(const std::string &name);
+
+  void SetWidth(uint32_t width);
+
+  void SetHeight(uint32_t height);
+
   bool ReadFromParcel(Parcel &parcel);
+
+  static bool ValidateProperty(napi_env env, napi_value object);
 
 private:
   std::string id_;

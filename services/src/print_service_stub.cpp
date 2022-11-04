@@ -59,7 +59,7 @@ int32_t PrintServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
   auto descriptorToken = data.ReadInterfaceToken();
   if (descriptorToken != GetDescriptor()) {
     PRINT_HILOGE("Remote descriptor not the same as local descriptor.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   auto itFunc = cmdMap_.find(code);
@@ -86,7 +86,7 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply) {
   reply.WriteInt32(ret);
   reply.WriteString(result);
   PRINT_HILOGD("PrintServiceStub::OnStartPrint out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnStopPrint(MessageParcel &data, MessageParcel &reply) {
@@ -95,7 +95,7 @@ bool PrintServiceStub::OnStopPrint(MessageParcel &data, MessageParcel &reply) {
   int32_t ret = StopPrint(taskId);
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnStopPrint out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnConnectPrinter(MessageParcel &data,
@@ -104,7 +104,7 @@ bool PrintServiceStub::OnConnectPrinter(MessageParcel &data,
   int32_t ret = ConnectPrinter(data.ReadString());
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnConnectPrinter out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnDisconnectPrinter(MessageParcel &data,
@@ -113,7 +113,7 @@ bool PrintServiceStub::OnDisconnectPrinter(MessageParcel &data,
   int32_t ret = DisconnectPrinter(data.ReadString());
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnDisconnectPrinter out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnStartDiscoverPrinter(MessageParcel &data,
@@ -124,7 +124,7 @@ bool PrintServiceStub::OnStartDiscoverPrinter(MessageParcel &data,
   int32_t ret = StartDiscoverPrinter(extensionList);
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnStartDiscoverPrinter out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnStopDiscoverPrint(MessageParcel &data,
@@ -133,7 +133,7 @@ bool PrintServiceStub::OnStopDiscoverPrint(MessageParcel &data,
   int32_t ret = StopDiscoverPrinter();
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnStopDiscoverPrint out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnQueryAllExtension(MessageParcel &data,
@@ -142,7 +142,7 @@ bool PrintServiceStub::OnQueryAllExtension(MessageParcel &data,
   std::vector<PrintExtensionInfo> printerInfo;
   int32_t ret = QueryAllExtension(printerInfo);
   reply.WriteInt32(ret);
-  if (ret == ERROR_NONE) {
+  if (ret == E_PRINT_NONE) {
     uint32_t size = static_cast<uint32_t>(printerInfo.size());
     reply.WriteUint32(size);
     for (uint32_t index = 0; index < size; index++) {
@@ -150,13 +150,13 @@ bool PrintServiceStub::OnQueryAllExtension(MessageParcel &data,
     }
   }
   PRINT_HILOGD("PrintServiceStub::OnQueryAllExtension out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnStartPrintJob(MessageParcel &data,
                                        MessageParcel &reply) {
   PRINT_HILOGD("PrintServiceStub::OnStartPrintJob in");
-  int32_t ret = ERROR_RPC_FAIL;
+  int32_t ret = E_PRINT_RPC_FAILURE;
   auto jobInfoPtr = PrintJob::Unmarshalling(data);
   if (jobInfoPtr != nullptr) {
     jobInfoPtr->Dump();
@@ -164,21 +164,16 @@ bool PrintServiceStub::OnStartPrintJob(MessageParcel &data,
   }
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnStartPrintJob out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnCancelPrintJob(MessageParcel &data,
                                         MessageParcel &reply) {
   PRINT_HILOGD("PrintServiceStub::OnCancelPrintJob in");
-  int32_t ret = ERROR_RPC_FAIL;
-  auto jobInfoPtr = PrintJob::Unmarshalling(data);
-  if (jobInfoPtr != nullptr) {
-    jobInfoPtr->Dump();
-    ret = CancelPrintJob(*jobInfoPtr);
-  }
+  int32_t ret = CancelPrintJob(data.ReadString());
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnStartPrintJob out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnAddPrinters(MessageParcel &data,
@@ -197,13 +192,13 @@ bool PrintServiceStub::OnAddPrinters(MessageParcel &data,
     infoPtr->Dump();
     printerInfos.emplace_back(*infoPtr);
   }
-  int32_t ret = ERROR_RPC_FAIL;
+  int32_t ret = E_PRINT_RPC_FAILURE;
   if (printerInfos.size() > 0) {
     ret = AddPrinters(printerInfos);
   }
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnAddPrinters out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnRemovePrinters(MessageParcel &data,
@@ -216,7 +211,7 @@ bool PrintServiceStub::OnRemovePrinters(MessageParcel &data,
   reply.WriteInt32(ret);
 
   PRINT_HILOGD("PrintServiceStub::OnRemovePrinters out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnUpdatePrinters(MessageParcel &data,
@@ -235,13 +230,13 @@ bool PrintServiceStub::OnUpdatePrinters(MessageParcel &data,
     infoPtr->Dump();
     printerInfos.emplace_back(*infoPtr);
   }
-  int32_t ret = ERROR_RPC_FAIL;
+  int32_t ret = E_PRINT_RPC_FAILURE;
   if (printerInfos.size() > 0) {
     ret = UpdatePrinters(printerInfos);
   }
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnUpdatePrinters out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnUpdatePrinterState(MessageParcel &data,
@@ -252,7 +247,7 @@ bool PrintServiceStub::OnUpdatePrinterState(MessageParcel &data,
   int32_t ret = UpdatePrinterState(printerId, state);
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnUpdatePrinterState out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnUpdatePrintJobState(MessageParcel &data,
@@ -268,7 +263,7 @@ bool PrintServiceStub::OnUpdatePrintJobState(MessageParcel &data,
   int32_t ret = UpdatePrintJobState(jobId, state, subState);
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnUpdatePrintJobState out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnUpdateExtensionInfo(MessageParcel &data,
@@ -283,13 +278,13 @@ bool PrintServiceStub::OnUpdateExtensionInfo(MessageParcel &data,
   int32_t ret = UpdateExtensionInfo(extensionId, extInfo);
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnUpdateExtensionInfo out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnRequestPreview(MessageParcel &data,
                                         MessageParcel &reply) {
   PRINT_HILOGD("PrintServiceStub::OnRequestPreview in");
-  int32_t ret = ERROR_RPC_FAIL;
+  int32_t ret = E_PRINT_RPC_FAILURE;
   std::string previewResult = "";
   auto jobInfoPtr = PrintJob::Unmarshalling(data);
   if (jobInfoPtr != nullptr) {
@@ -299,7 +294,7 @@ bool PrintServiceStub::OnRequestPreview(MessageParcel &data,
   reply.WriteInt32(ret);
   reply.WriteString(previewResult);
   PRINT_HILOGD("PrintServiceStub::OnRequestPreview out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnQueryPrinterCapability(MessageParcel &data,
@@ -307,12 +302,10 @@ bool PrintServiceStub::OnQueryPrinterCapability(MessageParcel &data,
   PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapability in");
   std::string printerId = data.ReadString();
   PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
-  PrinterCapability printerCapability;
-  int32_t ret = QueryPrinterCapability(printerId, printerCapability);
+  int32_t ret = QueryPrinterCapability(printerId);
   reply.WriteInt32(ret);
-  printerCapability.Marshalling(reply);
   PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapability out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply) {
@@ -321,25 +314,25 @@ bool PrintServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply) {
   PRINT_HILOGD("PrintServiceStub::OnEventOn type=%{public}s ", type.c_str());
   if (type.empty()) {
     PRINT_HILOGE("PrintServiceStub::OnEventOn type is null.");
-    reply.WriteInt32(ERROR_RPC_FAIL);
+    reply.WriteInt32(E_PRINT_RPC_FAILURE);
     return false;
   }
   sptr<IRemoteObject> remote = data.ReadRemoteObject();
   if (remote == nullptr) {
     PRINT_HILOGE("PrintServiceStub::OnEventOn remote is nullptr");
-    reply.WriteInt32(ERROR_RPC_FAIL);
+    reply.WriteInt32(E_PRINT_RPC_FAILURE);
     return false;
   }
   sptr<IPrintCallback> listener = iface_cast<IPrintCallback>(remote);
   if (listener.GetRefPtr() == nullptr) {
     PRINT_HILOGE("PrintServiceStub::OnEventOn listener is null");
-    reply.WriteInt32(ERROR_RPC_FAIL);
+    reply.WriteInt32(E_PRINT_RPC_FAILURE);
     return false;
   }
   int32_t ret = On(taskId, type, listener);
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnEventOn out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnEventOff(MessageParcel &data, MessageParcel &reply) {
@@ -350,7 +343,7 @@ bool PrintServiceStub::OnEventOff(MessageParcel &data, MessageParcel &reply) {
   int32_t ret = Off(taskId, type);
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnEventOff out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnRegisterExtCallback(MessageParcel &data,
@@ -360,21 +353,21 @@ bool PrintServiceStub::OnRegisterExtCallback(MessageParcel &data,
   sptr<IRemoteObject> remote = data.ReadRemoteObject();
   if (remote == nullptr) {
     PRINT_HILOGD("PrintServiceStub::OnRegisterExtCallback remote is nullptr");
-    reply.WriteInt32(ERROR_RPC_FAIL);
+    reply.WriteInt32(E_PRINT_RPC_FAILURE);
     return false;
   }
   sptr<IPrintExtensionCallback> listener =
       iface_cast<IPrintExtensionCallback>(remote);
   if (listener.GetRefPtr() == nullptr) {
     PRINT_HILOGD("PrintServiceStub::OnRegisterExtCallback listener is null");
-    reply.WriteInt32(ERROR_RPC_FAIL);
+    reply.WriteInt32(E_PRINT_RPC_FAILURE);
     return false;
   }
 
   int32_t ret = RegisterExtCallback(extensionCID, listener);
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnRegisterExtCallback out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnUnregisterAllExtCallback(MessageParcel &data,
@@ -385,7 +378,7 @@ bool PrintServiceStub::OnUnregisterAllExtCallback(MessageParcel &data,
   if (remote == nullptr) {
     PRINT_HILOGD(
         "PrintServiceStub::OnUnregisterAllExtCallback remote is nullptr");
-    reply.WriteInt32(ERROR_RPC_FAIL);
+    reply.WriteInt32(E_PRINT_RPC_FAILURE);
     return true;
   }
   sptr<IPrintExtensionCallback> listener =
@@ -393,14 +386,14 @@ bool PrintServiceStub::OnUnregisterAllExtCallback(MessageParcel &data,
   if (listener.GetRefPtr() == nullptr) {
     PRINT_HILOGD(
         "PrintServiceStub::OnUnregisterAllExtCallback listener is null");
-    reply.WriteInt32(ERROR_RPC_FAIL);
+    reply.WriteInt32(E_PRINT_RPC_FAILURE);
     return false;
   }
 
   int32_t ret = UnregisterAllExtCallback(extensionId);
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnUnregisterAllExtCallback out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnLoadExtSuccess(MessageParcel &data,
@@ -410,7 +403,7 @@ bool PrintServiceStub::OnLoadExtSuccess(MessageParcel &data,
   int32_t ret = LoadExtSuccess(extensionId);
   reply.WriteInt32(ret);
   PRINT_HILOGD("PrintServiceStub::OnLoadExtSuccess out");
-  return ret == ERROR_NONE;
+  return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnRead(MessageParcel &data, MessageParcel &reply) {

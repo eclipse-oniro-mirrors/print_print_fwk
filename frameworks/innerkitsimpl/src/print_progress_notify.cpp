@@ -26,32 +26,24 @@
 #include "printer_info.h"
 
 namespace OHOS::Print {
-PrintProgressNotify::PrintProgressNotify(napi_env env, const std::string &type, napi_ref ref)
-    : PrintBaseNotify(env, type, ref)
-{}
+PrintProgressNotify::PrintProgressNotify(napi_env env, const std::string &type,
+                                         napi_ref ref)
+    : PrintBaseNotify(env, type, ref) {}
 
-PrintProgressNotify::~PrintProgressNotify()
-{
-    PRINT_HILOGD("");
+PrintProgressNotify::~PrintProgressNotify() { PRINT_HILOGD(""); }
+
+void PrintProgressNotify::DataReadInfo(PrinterInfo &info, MessageParcel &data) {
+  PRINT_HILOGD("");
 }
 
-void PrintProgressNotify::DataReadInfo(PrinterInfo &info, MessageParcel &data)
-{
-    PRINT_HILOGD("");
+void PrintProgressNotify::DataReadJob(PrintJob &job, MessageParcel &data) {
+  PRINT_HILOGD("");
 }
 
-void PrintProgressNotify::DataReadJob(PrintJob &job, MessageParcel &data)
-{
-    PRINT_HILOGD("");
+void PrintProgressNotify::WriteInfoJsObject(napi_env env, PrinterInfo info,
+                                            napi_value *result) {
+  PRINT_HILOGD("");
 }
 
-void PrintProgressNotify::WriteInfoJsObject(napi_env env, PrinterInfo info, napi_value *result)
-{
-    PRINT_HILOGD("");
-}
-
-void PrintProgressNotify::OnCallBack(MessageParcel &data)
-{
-    PRINT_HILOGD("");
-}
+void PrintProgressNotify::OnCallBack(MessageParcel &data) { PRINT_HILOGD(""); }
 } // namespace OHOS::Print

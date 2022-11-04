@@ -23,17 +23,14 @@ namespace OHOS::Print {
 class PrintMargin final : public Parcelable {
 public:
   explicit PrintMargin();
+
   PrintMargin(const PrintMargin &right);
+
   PrintMargin &operator=(const PrintMargin &right);
-  ~PrintMargin();
 
-  void SetTop(uint32_t top);
+  virtual ~PrintMargin();
 
-  void SetBottom(uint32_t bottom);
-
-  void SetLeft(uint32_t left);
-
-  void SetRight(uint32_t right);
+  void Reset();
 
   [[nodiscard]] uint32_t GetTop() const;
 
@@ -55,7 +52,17 @@ public:
   void Dump();
 
 private:
+  void SetTop(uint32_t top);
+
+  void SetBottom(uint32_t bottom);
+
+  void SetLeft(uint32_t left);
+
+  void SetRight(uint32_t right);
+
   bool ReadFromParcel(Parcel &parcel);
+
+  static bool ValidateProperty(napi_env env, napi_value object);
 
 private:
   uint32_t top_;

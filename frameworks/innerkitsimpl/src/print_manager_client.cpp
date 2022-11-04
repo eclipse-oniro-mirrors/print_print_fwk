@@ -75,7 +75,7 @@ int32_t PrintManagerClient::StartPrint(const std::vector<std::string> &fileList,
   PRINT_HILOGD("PrintManagerClient StartPrint start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -85,7 +85,7 @@ int32_t PrintManagerClient::StartPrint(const std::vector<std::string> &fileList,
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE(
         "StartPrint quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->StartPrint(fileList, taskId);
   PRINT_HILOGD("PrintManagerClient StartPrint out ret = [%{public}d].", ret);
@@ -96,7 +96,7 @@ int32_t PrintManagerClient::StopPrint(const std::string &taskId) {
   PRINT_HILOGD("PrintManagerClient StopPrint start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -105,7 +105,7 @@ int32_t PrintManagerClient::StopPrint(const std::string &taskId) {
   }
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("StopPrint quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->StopPrint(taskId);
   PRINT_HILOGD("PrintManagerClient StopPrint out ret = [%{public}d].", ret);
@@ -116,7 +116,7 @@ int32_t PrintManagerClient::ConnectPrinter(const std::string &printerId) {
   PRINT_HILOGD("PrintManagerClient ConnectPrinter start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -126,7 +126,7 @@ int32_t PrintManagerClient::ConnectPrinter(const std::string &printerId) {
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE(
         "ConnectPrinter quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->ConnectPrinter(printerId);
   PRINT_HILOGD("PrintManagerClient ConnectPrinter out ret = [%{public}d].",
@@ -138,7 +138,7 @@ int32_t PrintManagerClient::DisconnectPrinter(const std::string &printerId) {
   PRINT_HILOGD("PrintManagerClient DisconnectPrinter start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -148,7 +148,7 @@ int32_t PrintManagerClient::DisconnectPrinter(const std::string &printerId) {
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE(
         "DisconnectPrinter quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->DisconnectPrinter(printerId);
   PRINT_HILOGD("PrintManagerClient DisconnectPrinter out ret = [%{public}d].",
@@ -161,7 +161,7 @@ int32_t PrintManagerClient::QueryAllExtension(
   PRINT_HILOGD("PrintManagerClient QueryAllExtension start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -171,7 +171,7 @@ int32_t PrintManagerClient::QueryAllExtension(
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE(
         "QueryAllExtension quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->QueryAllExtension(extensionInfos);
   PRINT_HILOGD("PrintManagerClient QueryAllExtension out ret = [%{public}d].",
@@ -184,7 +184,7 @@ int32_t PrintManagerClient::StartDiscoverPrinter(
   PRINT_HILOGD("PrintManagerClient StartDiscoverPrinter start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -194,7 +194,7 @@ int32_t PrintManagerClient::StartDiscoverPrinter(
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("StartDiscoverPrinter quit because redoing "
                  "GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->StartDiscoverPrinter(extensionList);
   PRINT_HILOGD(
@@ -206,7 +206,7 @@ int32_t PrintManagerClient::StopDiscoverPrinter() {
   PRINT_HILOGD("PrintManagerClient StopDiscoverPrinter start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -216,7 +216,7 @@ int32_t PrintManagerClient::StopDiscoverPrinter() {
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("StopDiscoverPrinter quit because redoing "
                  "GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->StopDiscoverPrinter();
   PRINT_HILOGD("PrintManagerClient StopDiscoverPrinter out ret = [%{public}d].",
@@ -228,7 +228,7 @@ int32_t PrintManagerClient::StartPrintJob(const PrintJob &jobinfo) {
   PRINT_HILOGD("PrintManagerClient StartPrintJob start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -238,18 +238,18 @@ int32_t PrintManagerClient::StartPrintJob(const PrintJob &jobinfo) {
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE(
         "StartPrintJob quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->StartPrintJob(jobinfo);
   PRINT_HILOGD("PrintManagerClient StartPrintJob out ret = [%{public}d].", ret);
   return ret;
 }
 
-int32_t PrintManagerClient::CancelPrintJob(const PrintJob &jobinfo) {
+int32_t PrintManagerClient::CancelPrintJob(const std::string &jobId) {
   PRINT_HILOGD("PrintManagerClient CancelPrintJob start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -259,9 +259,9 @@ int32_t PrintManagerClient::CancelPrintJob(const PrintJob &jobinfo) {
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE(
         "CancelPrintJob quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
-  int32_t ret = printServiceProxy_->CancelPrintJob(jobinfo);
+  int32_t ret = printServiceProxy_->CancelPrintJob(jobId);
   PRINT_HILOGD("PrintManagerClient CancelPrintJob out ret = [%{public}d].",
                ret);
   return ret;
@@ -272,7 +272,7 @@ PrintManagerClient::AddPrinters(const std::vector<PrinterInfo> &printerInfos) {
   PRINT_HILOGD("PrintManagerClient AddPrinters start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -282,7 +282,7 @@ PrintManagerClient::AddPrinters(const std::vector<PrinterInfo> &printerInfos) {
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE(
         "AddPrinters quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->AddPrinters(printerInfos);
   PRINT_HILOGD("PrintManagerClient AddPrinters out ret = [%{public}d].", ret);
@@ -294,7 +294,7 @@ PrintManagerClient::RemovePrinters(const std::vector<std::string> &printerIds) {
   PRINT_HILOGD("PrintManagerClient RemovePrinters start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -304,7 +304,7 @@ PrintManagerClient::RemovePrinters(const std::vector<std::string> &printerIds) {
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE(
         "RemovePrinters quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->RemovePrinters(printerIds);
   PRINT_HILOGD("PrintManagerClient RemovePrinters out ret = [%{public}d].",
@@ -317,7 +317,7 @@ int32_t PrintManagerClient::UpdatePrinters(
   PRINT_HILOGD("PrintManagerClient UpdatePrinters start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -327,7 +327,7 @@ int32_t PrintManagerClient::UpdatePrinters(
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE(
         "UpdatePrinters quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->UpdatePrinters(printerInfos);
   PRINT_HILOGD("PrintManagerClient UpdatePrinters out ret = [%{public}d].",
@@ -340,7 +340,7 @@ int32_t PrintManagerClient::UpdatePrinterState(const std::string &printerId,
   PRINT_HILOGD("PrintManagerClient UpdatePrinterState start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -350,7 +350,7 @@ int32_t PrintManagerClient::UpdatePrinterState(const std::string &printerId,
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE(
         "UpdatePrinterState quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->UpdatePrinterState(printerId, state);
   PRINT_HILOGD("PrintManagerClient UpdatePrinterState out ret = [%{public}d].",
@@ -364,7 +364,7 @@ int32_t PrintManagerClient::UpdatePrintJobState(const std::string &jobId,
   PRINT_HILOGD("PrintManagerClient UpdatePrintJobState start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -374,7 +374,7 @@ int32_t PrintManagerClient::UpdatePrintJobState(const std::string &jobId,
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("UpdatePrintJobState quit because redoing "
                  "GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->UpdatePrintJobState(jobId, state, subState);
   PRINT_HILOGD("PrintManagerClient UpdatePrintJobState out ret = [%{public}d].",
@@ -387,7 +387,7 @@ int32_t PrintManagerClient::UpdateExtensionInfo(const std::string &extensionId,
   PRINT_HILOGD("PrintManagerClient UpdateExtensionInfo start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -397,7 +397,7 @@ int32_t PrintManagerClient::UpdateExtensionInfo(const std::string &extensionId,
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("UpdateExtensionInfo quit because redoing "
                  "GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->UpdateExtensionInfo(extensionId, extInfo);
   PRINT_HILOGD("PrintManagerClient UpdateExtensionInfo out ret = [%{public}d].",
@@ -410,7 +410,7 @@ int32_t PrintManagerClient::RequestPreview(const PrintJob &jobinfo,
   PRINT_HILOGD("PrintManagerClient RequestPreview start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -420,7 +420,7 @@ int32_t PrintManagerClient::RequestPreview(const PrintJob &jobinfo,
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE(
         "RequestPreview quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->RequestPreview(jobinfo, previewResult);
   PRINT_HILOGD("PrintManagerClient RequestPreview out ret = [%{public}d].",
@@ -428,12 +428,12 @@ int32_t PrintManagerClient::RequestPreview(const PrintJob &jobinfo,
   return ret;
 }
 
-int32_t PrintManagerClient::QueryPrinterCapability(
-    const std::string &printerId, PrinterCapability &printerCapability) {
+int32_t
+PrintManagerClient::QueryPrinterCapability(const std::string &printerId) {
   PRINT_HILOGD("PrintManagerClient QueryPrinterCapability start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -443,10 +443,9 @@ int32_t PrintManagerClient::QueryPrinterCapability(
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("QueryPrinterCapability quit because redoing "
                  "GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
-  int32_t ret =
-      printServiceProxy_->QueryPrinterCapability(printerId, printerCapability);
+  int32_t ret = printServiceProxy_->QueryPrinterCapability(printerId);
   PRINT_HILOGD(
       "PrintManagerClient QueryPrinterCapability out ret = [%{public}d].", ret);
   return ret;
@@ -458,7 +457,7 @@ int32_t PrintManagerClient::On(const std::string &taskId,
   PRINT_HILOGD("PrintManagerClient On start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -467,7 +466,7 @@ int32_t PrintManagerClient::On(const std::string &taskId,
   }
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("On quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->On(taskId, type, listener);
   PRINT_HILOGD("PrintManagerClient On out ret = [%{public}d].", ret);
@@ -479,7 +478,7 @@ int32_t PrintManagerClient::Off(const std::string &taskId,
   PRINT_HILOGD("PrintManagerClient Off start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -488,7 +487,7 @@ int32_t PrintManagerClient::Off(const std::string &taskId,
   }
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("Off quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->Off(taskId, type);
   PRINT_HILOGD("PrintManagerClient Off out ret = [%{public}d].", ret);
@@ -501,7 +500,7 @@ int32_t PrintManagerClient::Read(std::vector<uint8_t> &fileRead,
   PRINT_HILOGD("PrintManagerClient Read start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -510,7 +509,7 @@ int32_t PrintManagerClient::Read(std::vector<uint8_t> &fileRead,
   }
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("Read quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
   int32_t ret = printServiceProxy_->Read(fileRead, uri, offset, max);
   PRINT_HILOGD("PrintManagerClient Read out ret = [%{public}d].", ret);
@@ -523,7 +522,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
   PRINT_HILOGD("PrintManagerClient RegisterExtCallback start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -533,12 +532,12 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("RegisterExtCallback quit because redoing "
                  "GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (callbackId >= PRINT_EXTCB_MAX) {
     PRINT_HILOGE("Invalid callback id [%{public}d].", callbackId);
-    return ERROR_INVALID_PARAMETER;
+    return E_PRINT_INVALID_PARAMETER;
   }
   sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
   std::string extensionCID =
@@ -548,7 +547,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
     if (callbackStub == nullptr) {
       PRINT_HILOGE("Invalid callback stub object.");
-      return ERROR_GENERIC_FAIL;
+      return E_PRINT_GENERIC_FAILURE;
     }
     callbackStub->SetExtCallback(cb);
     extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
@@ -570,7 +569,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
   PRINT_HILOGD("PrintManagerClient RegisterExtCallback start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -580,12 +579,12 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("RegisterExtCallback quit because redoing "
                  "GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (callbackId >= PRINT_EXTCB_MAX) {
     PRINT_HILOGE("Invalid callback id [%{public}d].", callbackId);
-    return ERROR_INVALID_PARAMETER;
+    return E_PRINT_INVALID_PARAMETER;
   }
 
   sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
@@ -596,7 +595,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
     if (callbackStub == nullptr) {
       PRINT_HILOGE("Invalid callback stub object.");
-      return ERROR_GENERIC_FAIL;
+      return E_PRINT_GENERIC_FAILURE;
     }
     callbackStub->SetPrintJobCallback(cb);
     extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
@@ -618,7 +617,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
   PRINT_HILOGD("PrintManagerClient RegisterExtCallback start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -628,12 +627,12 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("RegisterExtCallback quit because redoing "
                  "GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (callbackId >= PRINT_EXTCB_MAX) {
     PRINT_HILOGE("Invalid callback id [%{public}d].", callbackId);
-    return ERROR_INVALID_PARAMETER;
+    return E_PRINT_INVALID_PARAMETER;
   }
 
   sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
@@ -644,7 +643,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
     if (callbackStub == nullptr) {
       PRINT_HILOGE("Invalid callback stub object.");
-      return ERROR_GENERIC_FAIL;
+      return E_PRINT_GENERIC_FAILURE;
     }
     callbackStub->SetCapabilityCallback(cb);
     extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
@@ -666,7 +665,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
   PRINT_HILOGD("PrintManagerClient RegisterExtCallback start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -676,12 +675,12 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("RegisterExtCallback quit because redoing "
                  "GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (callbackId >= PRINT_EXTCB_MAX) {
     PRINT_HILOGE("Invalid callback id [%{public}d].", callbackId);
-    return ERROR_INVALID_PARAMETER;
+    return E_PRINT_INVALID_PARAMETER;
   }
 
   sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
@@ -692,7 +691,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
     if (callbackStub == nullptr) {
       PRINT_HILOGE("Invalid callback stub object.");
-      return ERROR_GENERIC_FAIL;
+      return E_PRINT_GENERIC_FAILURE;
     }
     callbackStub->SetPrinterCallback(cb);
     extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
@@ -713,7 +712,7 @@ PrintManagerClient::UnregisterAllExtCallback(const std::string &extensionId) {
   PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -723,7 +722,7 @@ PrintManagerClient::UnregisterAllExtCallback(const std::string &extensionId) {
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE("UnregisterAllExtCallback quit because redoing "
                  "GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   int32_t ret = printServiceProxy_->UnregisterAllExtCallback(extensionId);
@@ -738,7 +737,7 @@ int32_t PrintManagerClient::LoadExtSuccess(const std::string &extensionId) {
   PRINT_HILOGD("PrintManagerClient LoadExtSuccess start.");
   if (!LoadServer()) {
     PRINT_HILOGE("load print server fail");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   if (printServiceProxy_ == nullptr) {
@@ -748,7 +747,7 @@ int32_t PrintManagerClient::LoadExtSuccess(const std::string &extensionId) {
   if (printServiceProxy_ == nullptr) {
     PRINT_HILOGE(
         "LoadExtSuccess quit because redoing GetPrintServiceProxy failed.");
-    return ERROR_RPC_FAIL;
+    return E_PRINT_RPC_FAILURE;
   }
 
   int32_t ret = printServiceProxy_->LoadExtSuccess(extensionId);

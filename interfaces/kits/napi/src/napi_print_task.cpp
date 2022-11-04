@@ -59,7 +59,7 @@ napi_value NapiPrintTask::Print(napi_env env,
         napi_invalid_arg);
 
     if (!isFileArray || len == 0) {
-      context->SetErrorIndex(ERROR_INVALID_PARAMETER);
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       return napi_invalid_arg;
     }
 
@@ -68,7 +68,7 @@ napi_value NapiPrintTask::Print(napi_env env,
         napi_new_instance(env, GetCtor(env), argc, argv, &proxy);
     if ((proxy == nullptr) || (status != napi_ok)) {
       PRINT_HILOGE("Failed to create print task");
-      context->SetErrorIndex(ERROR_GENERIC_FAIL);
+      context->SetErrorIndex(E_PRINT_GENERIC_FAILURE);
       return napi_generic_failure;
     }
 
@@ -76,11 +76,11 @@ napi_value NapiPrintTask::Print(napi_env env,
     PRINT_CALL_BASE(env,
                     napi_unwrap(env, proxy, reinterpret_cast<void **>(&task)),
                     napi_invalid_arg);
-    uint32_t ret = ERROR_GENERIC_FAIL;
+    uint32_t ret = E_PRINT_GENERIC_FAILURE;
     if (task != nullptr) {
       ret = task->Start();
     }
-    if (ret != ERROR_NONE) {
+    if (ret != E_PRINT_NONE) {
       PRINT_HILOGE("Failed to start print task");
       context->SetErrorIndex(ret);
       return napi_generic_failure;
@@ -140,7 +140,9 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info) {
     napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &filesValue);
     std::string files = NapiPrintUtils::GetStringFromValueUtf8(env, filesValue);
     PRINT_HILOGD("file[%{public}d] %{public}s", index, files.c_str());
-    printfiles.emplace_back(files);
+    if (IsValidFile(files)) {
+      printfiles.emplace_back(files);
+    }
   }
 
   auto task = new PrintTask(printfiles);
@@ -159,5 +161,20 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info) {
   }
   PRINT_HILOGD("Succeed to allocate print task");
   return self;
+}
+
+bool NapiPrintTask::IsValidFile(const std::string &fileName) {
+  if (fileName == "") {
+    PRINT_HILOGE("invalid file name");
+    return false;
+  }
+
+  FILE *file = fopen(fileName.c_str(), "rb");
+  if (file == nullptr) {
+    PRINT_HILOGE("invalid file path");
+    return false;
+  }
+  fclose(file);
+  return true;
 }
 } // namespace OHOS::Print

@@ -33,6 +33,9 @@ using namespace OHOS::Print;
 
 namespace OHOS {
 namespace AbilityRuntime {
+static constexpr int32_t E_PRINT_INVALID_CONTEXT = 1;
+static constexpr int32_t E_PRINT_INVALID_CONNECTION = 2;
+
 class JsPrintExtensionContext final {
 public:
   explicit JsPrintExtensionContext(
@@ -133,9 +136,8 @@ private:
       auto context = weak.lock();
       if (!context) {
         PRINT_HILOGW("context is released");
-        task.Reject(engine,
-                    CreateJsError(engine, NapiPrintUtils::ERROR_CODE_ONE,
-                                  "Context is released"));
+        task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT,
+                                          "Context is released"));
         return;
       }
 
@@ -216,9 +218,8 @@ private:
           auto context = weak.lock();
           if (!context) {
             PRINT_HILOGW("context is released");
-            task.Reject(engine,
-                        CreateJsError(engine, NapiPrintUtils::ERROR_CODE_ONE,
-                                      "Context is released"));
+            task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT,
+                                              "Context is released"));
             return;
           }
 
@@ -262,9 +263,8 @@ private:
           auto context = weak.lock();
           if (!context) {
             PRINT_HILOGW("context is released");
-            task.Reject(engine,
-                        CreateJsError(engine, NapiPrintUtils::ERROR_CODE_ONE,
-                                      "Context is released"));
+            task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT,
+                                              "Context is released"));
             return;
           }
 
@@ -329,15 +329,14 @@ private:
           auto context = weak.lock();
           if (!context) {
             PRINT_HILOGW("context is released");
-            task.Reject(engine,
-                        CreateJsError(engine, NapiPrintUtils::ERROR_CODE_ONE,
-                                      "Context is released"));
+            task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT,
+                                              "Context is released"));
             return;
           }
           PRINT_HILOGD("context->ConnectAbility connection:%{public}d",
                        (int32_t)connectId);
           if (!context->ConnectAbility(want, connection)) {
-            connection->CallJsFailed(NapiPrintUtils::ERROR_CODE_ONE);
+            connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
           }
           task.Resolve(engine, engine.CreateUndefined());
         };
@@ -403,15 +402,14 @@ private:
       auto context = weak.lock();
       if (!context) {
         PRINT_HILOGW("context is released");
-        task.Reject(engine,
-                    CreateJsError(engine, NapiPrintUtils::ERROR_CODE_ONE,
-                                  "Context is released"));
+        task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT,
+                                          "Context is released"));
         return;
       }
       PRINT_HILOGD("context->ConnectAbilityWithAccount connection:%{public}d",
                    (int32_t)connectId);
       if (!context->ConnectAbilityWithAccount(want, accountId, connection)) {
-        connection->CallJsFailed(NapiPrintUtils::ERROR_CODE_ONE);
+        connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
       }
       task.Resolve(engine, engine.CreateUndefined());
     };
@@ -469,16 +467,14 @@ private:
       auto context = weak.lock();
       if (!context) {
         PRINT_HILOGW("context is released");
-        task.Reject(engine,
-                    CreateJsError(engine, NapiPrintUtils::ERROR_CODE_ONE,
-                                  "Context is released"));
+        task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT,
+                                          "Context is released"));
         return;
       }
       if (connection == nullptr) {
         PRINT_HILOGW("connection nullptr");
-        task.Reject(engine,
-                    CreateJsError(engine, NapiPrintUtils::ERROR_CODE_TWO,
-                                  "not found connection"));
+        task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONNECTION,
+                                          "not found connection"));
         return;
       }
       PRINT_HILOGD("context->DisconnectAbility");

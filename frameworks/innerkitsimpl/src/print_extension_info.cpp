@@ -161,7 +161,6 @@ PrintExtensionInfo::BuildFromJs(napi_env env, napi_value jsValue) {
   nativeObj->SetVendorIcon(iconId);
   nativeObj->SetVersion(version);
 
-  nativeObj->Dump();
   return nativeObj;
 }
 

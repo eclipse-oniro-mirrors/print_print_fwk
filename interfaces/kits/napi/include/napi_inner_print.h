@@ -62,6 +62,7 @@ private:
     bool result = false;
     std::string stateType_ = "";
     PrintJob printJob;
+    std::string jobId = "";
     std::string printerId = "";
     std::vector<std::string> extensionList;
 

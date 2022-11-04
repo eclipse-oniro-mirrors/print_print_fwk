@@ -246,8 +246,13 @@ void JsPrintExtension::OnCommand(const AAFwk::Want &want, bool restart,
                                  int startId) {
   PRINT_HILOGD("jws JsPrintExtension OnCommand begin.");
   Extension::OnCommand(want, restart, startId);
-  PRINT_HILOGD("%{public}s begin restart=%{public}s,startId=%{public}d.",
-               __func__, restart ? "true" : "false", startId);
+  PRINT_HILOGD("begin restart=%{public}s,startId=%{public}d.",
+               restart ? "true" : "false", startId);
+  if (startId <= 1) {
+    PRINT_HILOGD("%{public}s ignore.", __func__);
+    return;
+  }
+  PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
   PRINT_HILOGD("%{public}s end.", __func__);
 }
 
@@ -426,7 +431,7 @@ void JsPrintExtension::RegisterPreviewCb() {
 void JsPrintExtension::RegisterQueryCapCb() {
   PrintManagerClient::GetInstance()->RegisterExtCallback(
       extensionId_, PRINT_EXTCB_REQUEST_CAP,
-      [](const std::string &printId, PrinterCapability &cap) -> bool {
+      [](const std::string &printId) -> bool {
         PRINT_HILOGD("Request Capability");
         std::string realPrinterId =
             NapiPrintUtils::GetLocalId(printId, jsExtension_->extensionId_);
@@ -439,40 +444,10 @@ void JsPrintExtension::RegisterQueryCapCb() {
         auto callback =
             std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
         NativeValue *value = jsExtension_->jsObj_->Get();
-        NativeValue *result = callback->Exec(
-            value, "onRequestPrinterCapability", arg, NapiPrintUtils::ARGC_ONE);
-        if (result != nullptr) {
-          PRINT_HILOGD("Request Capability Success");
-          cap.SetColorMode(10);
-          cap.SetDuplexMode(11);
-
-          PrintMargin PrintMargin;
-          PrintMargin.SetTop(5);
-          PrintMargin.SetBottom(5);
-          PrintMargin.SetLeft(5);
-          PrintMargin.SetRight(5);
-          cap.SetMinMargin(PrintMargin);
-
-          std::vector<PrintPageSize> pageSizeList;
-          PrintPageSize pageSize;
-          pageSize.SetId("6");
-          pageSize.SetName("name");
-          pageSize.SetWidth(6);
-          pageSize.SetHeight(6);
-          pageSizeList.emplace_back(pageSize);
-          cap.SetPageSize(pageSizeList);
-
-          std::vector<PrintResolution> resolutionList;
-          PrintResolution res;
-          res.SetId("6");
-          res.SetHorizontalDpi(6);
-          res.SetVerticalDpi(6);
-          resolutionList.emplace_back(res);
-          cap.SetResolution(resolutionList);
-          return true;
-        }
-        PRINT_HILOGD("Request Capability Failed!!!");
-        return false;
+        callback->Exec(value, "onRequestPrinterCapability", arg,
+                       NapiPrintUtils::ARGC_ONE);
+        PRINT_HILOGD("Request Capability Success");
+        return true;
       });
 }
 } // namespace AbilityRuntime

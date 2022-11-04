@@ -23,15 +23,12 @@ namespace OHOS::Print {
 class PrintRange final : public Parcelable {
 public:
   explicit PrintRange();
+
   PrintRange(const PrintRange &right);
+
   PrintRange &operator=(const PrintRange &right);
-  ~PrintRange();
 
-  void SetStartPage(uint32_t startPage);
-
-  void SetEndPage(uint32_t endPage);
-
-  void SetPages(const std::vector<uint32_t> &pages);
+  virtual ~PrintRange();
 
   void Reset();
 
@@ -53,7 +50,15 @@ public:
   void Dump();
 
 private:
+  void SetStartPage(uint32_t startPage);
+
+  void SetEndPage(uint32_t endPage);
+
+  void SetPages(const std::vector<uint32_t> &pages);
+
   bool ReadFromParcel(Parcel &parcel);
+
+  static bool ValidateProperty(napi_env env, napi_value object);
 
 private:
   uint32_t startPage_;

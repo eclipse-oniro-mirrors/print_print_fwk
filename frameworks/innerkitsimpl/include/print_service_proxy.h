@@ -36,7 +36,7 @@ public:
   int32_t
   QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos) override;
   int32_t StartPrintJob(const PrintJob &jobinfo) override;
-  int32_t CancelPrintJob(const PrintJob &jobinfo) override;
+  int32_t CancelPrintJob(const std::string &jobId) override;
   int32_t AddPrinters(const std::vector<PrinterInfo> &printerInfos) override;
   int32_t RemovePrinters(const std::vector<std::string> &printerIds) override;
   int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;
@@ -48,8 +48,7 @@ public:
                               const std::string &extInfo) override;
   int32_t RequestPreview(const PrintJob &jobinfo,
                          std::string &previewResult) override;
-  int32_t QueryPrinterCapability(const std::string &printerId,
-                                 PrinterCapability &printerCapability) override;
+  int32_t QueryPrinterCapability(const std::string &printerId) override;
   int32_t On(const std::string taskId, const std::string &type,
              const sptr<IPrintCallback> &listener) override;
   int32_t Off(const std::string taskId, const std::string &type) override;

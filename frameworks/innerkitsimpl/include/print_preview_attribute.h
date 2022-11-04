@@ -23,14 +23,15 @@ namespace OHOS::Print {
 class PrintPreviewAttribute final : public Parcelable {
 public:
   explicit PrintPreviewAttribute();
+
   PrintPreviewAttribute(const PrintPreviewAttribute &right);
+
   PrintPreviewAttribute &
   operator=(const PrintPreviewAttribute &PrintPreviewAttribute);
-  ~PrintPreviewAttribute();
 
-  void SetResult(const std::string &result);
+  virtual ~PrintPreviewAttribute();
 
-  void SetPreviewRange(const PrintRange &previewRange);
+  void Reset();
 
   [[nodiscard]] const std::string &GetResult() const;
 
@@ -48,7 +49,13 @@ public:
   void Dump();
 
 private:
+  void SetResult(const std::string &result);
+
+  void SetPreviewRange(const PrintRange &previewRange);
+
   bool ReadFromParcel(Parcel &parcel);
+
+  static bool ValidateProperty(napi_env env, napi_value object);
 
 private:
   std::string result_;

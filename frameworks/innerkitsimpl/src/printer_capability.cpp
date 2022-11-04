@@ -18,42 +18,55 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-static constexpr const char *PARAM_CAPABILITY_MINMARGIN = "minMargin";
-static constexpr const char *PARAM_CAPABILITY_PAGESIZE = "pageSize";
-static constexpr const char *PARAM_CAPABILITY_RESOLUTION = "resolution";
+
 static constexpr const char *PARAM_CAPABILITY_COLORMODE = "colorMode";
 static constexpr const char *PARAM_CAPABILITY_DUPLEXMODE = "duplexMode";
+static constexpr const char *PARAM_CAPABILITY_PAGESIZE = "pageSize";
+static constexpr const char *PARAM_CAPABILITY_RESOLUTION = "resolution";
+static constexpr const char *PARAM_CAPABILITY_MINMARGIN = "minMargin";
 
 PrinterCapability::PrinterCapability()
-    : minMargin_(), colorMode_(0), duplexMode_(0) {
+    : colorMode_(0), duplexMode_(0), minMargin_(nullptr) {
   pageSizeList_.clear();
   resolutionList_.clear();
 }
 
 PrinterCapability::PrinterCapability(const PrinterCapability &right) {
-  minMargin_ = right.minMargin_;
   colorMode_ = right.colorMode_;
   duplexMode_ = right.duplexMode_;
   SetPageSize(right.pageSizeList_);
   SetResolution(right.resolutionList_);
+  minMargin_ = right.minMargin_;
 }
 
 PrinterCapability &
 PrinterCapability::operator=(const PrinterCapability &right) {
   if (this != &right) {
-    minMargin_ = right.minMargin_;
     colorMode_ = right.colorMode_;
     duplexMode_ = right.duplexMode_;
     SetPageSize(right.pageSizeList_);
     SetResolution(right.resolutionList_);
+    minMargin_ = right.minMargin_;
   }
   return *this;
 }
 
 PrinterCapability::~PrinterCapability() {}
 
+void PrinterCapability::Reset() {
+  SetColorMode(0);
+  SetDuplexMode(0);
+  pageSizeList_.clear();
+  resolutionList_.clear();
+  minMargin_ = nullptr;
+}
+
 void PrinterCapability::SetMinMargin(const PrintMargin &minMargin) {
-  minMargin_ = minMargin;
+  if (minMargin_ != nullptr) {
+    *minMargin_ = minMargin;
+    return;
+  }
+  minMargin_ = std::make_shared<PrintMargin>(minMargin);
 }
 
 void PrinterCapability::SetPageSize(
@@ -77,7 +90,11 @@ void PrinterCapability::SetDuplexMode(uint32_t duplexMode) {
 }
 
 void PrinterCapability::GetMinMargin(PrintMargin &margin) const {
-  margin = minMargin_;
+  if (minMargin_ != nullptr) {
+    margin = *minMargin_;
+    return;
+  }
+  margin.Reset();
 }
 
 void PrinterCapability::GetPageSize(
@@ -97,15 +114,11 @@ uint32_t PrinterCapability::GetColorMode() const { return colorMode_; }
 uint32_t PrinterCapability::GetDuplexMode() const { return duplexMode_; }
 
 bool PrinterCapability::ReadFromParcel(Parcel &parcel) {
-  auto marginPtr = PrintMargin::Unmarshalling(parcel);
-  if (marginPtr == nullptr) {
-    PRINT_HILOGE("Failed to read page margin from parcel");
-    return false;
-  }
-  SetMinMargin(*marginPtr);
-  std::vector<PrintPageSize> pageSizeList;
-  std::vector<PrintResolution> resolutionList;
+  SetColorMode(parcel.ReadUint32());
+  SetDuplexMode(parcel.ReadUint32());
+
   uint32_t vecSize = parcel.ReadUint32();
+  std::vector<PrintPageSize> pageSizeList;
   for (uint32_t index = 0; index < vecSize; index++) {
     auto pageSizePtr = PrintPageSize::Unmarshalling(parcel);
     if (pageSizePtr == nullptr) {
@@ -116,6 +129,7 @@ bool PrinterCapability::ReadFromParcel(Parcel &parcel) {
   }
   SetPageSize(pageSizeList);
 
+  std::vector<PrintResolution> resolutionList;
   vecSize = parcel.ReadUint32();
   for (uint32_t index = 0; index < vecSize; index++) {
     auto resolutionPtr = PrintResolution::Unmarshalling(parcel);
@@ -126,15 +140,20 @@ bool PrinterCapability::ReadFromParcel(Parcel &parcel) {
     resolutionList.emplace_back(*resolutionPtr);
   }
   SetResolution(resolutionList);
-  SetColorMode(parcel.ReadUint32());
-  SetDuplexMode(parcel.ReadUint32());
+
+  minMargin_ = nullptr;
+  if (parcel.ReadBool()) {
+    minMargin_ = PrintMargin::Unmarshalling(parcel);
+    if (minMargin_ == nullptr) {
+      return false;
+    }
+  }
   return true;
 }
 
 bool PrinterCapability::Marshalling(Parcel &parcel) const {
-  if (!minMargin_.Marshalling(parcel)) {
-    return false;
-  }
+  parcel.WriteUint32(GetColorMode());
+  parcel.WriteUint32(GetDuplexMode());
 
   uint32_t vecSize = static_cast<uint32_t>(pageSizeList_.size());
   parcel.WriteUint32(vecSize);
@@ -147,8 +166,13 @@ bool PrinterCapability::Marshalling(Parcel &parcel) const {
   for (uint32_t index = 0; index < vecSize; index++) {
     resolutionList_[index].Marshalling(parcel);
   }
-  parcel.WriteUint32(GetColorMode());
-  parcel.WriteUint32(GetDuplexMode());
+
+  if (minMargin_ != nullptr) {
+    parcel.WriteBool(true);
+    minMargin_->Marshalling(parcel);
+  } else {
+    parcel.WriteBool(false);
+  }
   return true;
 }
 
@@ -208,9 +232,10 @@ napi_value PrinterCapability::ToJsObject(napi_env env) const {
   napi_value jsObj = nullptr;
   PRINT_CALL(env, napi_create_object(env, &jsObj));
 
-  napi_value jsMargin = minMargin_.ToJsObject(env);
-  PRINT_CALL(env, napi_set_named_property(
-                      env, jsObj, PARAM_CAPABILITY_MINMARGIN, jsMargin));
+  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_CAPABILITY_COLORMODE,
+                                    GetColorMode());
+  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_CAPABILITY_DUPLEXMODE,
+                                    GetDuplexMode());
 
   if (!CreatePageSizeList(env, jsObj)) {
     PRINT_HILOGE(
@@ -223,10 +248,12 @@ napi_value PrinterCapability::ToJsObject(napi_env env) const {
         "Failed to create resolution list property of printer capability");
     return nullptr;
   }
-  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_CAPABILITY_COLORMODE,
-                                    GetColorMode());
-  NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_CAPABILITY_DUPLEXMODE,
-                                    GetDuplexMode());
+
+  if (minMargin_ != nullptr) {
+    napi_value jsMargin = minMargin_->ToJsObject(env);
+    PRINT_CALL(env, napi_set_named_property(
+                        env, jsObj, PARAM_CAPABILITY_MINMARGIN, jsMargin));
+  }
   return jsObj;
 }
 
@@ -238,46 +265,52 @@ PrinterCapability::BuildFromJs(napi_env env, napi_value jsValue) {
     return nullptr;
   }
 
-  auto names = NapiPrintUtils::GetPropertyNames(env, jsValue);
-  for (auto name : names) {
-    PRINT_HILOGD("Property: %{public}s", name.c_str());
-  }
-
-  napi_value jsMargin = NapiPrintUtils::GetNamedProperty(
-      env, jsValue, PARAM_CAPABILITY_MINMARGIN);
-  auto marginPtr = PrintMargin::BuildFromJs(env, jsMargin);
-  if (marginPtr == nullptr) {
-    PRINT_HILOGE("Failed to build printer capability object from js");
+  if (!ValidateProperty(env, jsValue)) {
+    PRINT_HILOGE("Invalid property of printer capability");
     return nullptr;
   }
-  nativeObj->SetMinMargin(*marginPtr);
+
+  uint32_t colorMode = NapiPrintUtils::GetUint32Property(
+      env, jsValue, PARAM_CAPABILITY_COLORMODE);
+  uint32_t duplexMode = NapiPrintUtils::GetUint32Property(
+      env, jsValue, PARAM_CAPABILITY_DUPLEXMODE);
+  nativeObj->SetColorMode(colorMode);
+  nativeObj->SetDuplexMode(duplexMode);
 
   napi_value jsPageSizes =
       NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_CAPABILITY_PAGESIZE);
   bool isArray = false;
   napi_is_array(env, jsPageSizes, &isArray);
-  if (isArray) {
-    std::vector<PrintPageSize> pageSizes;
-    uint32_t arrayLength = 0;
-    napi_get_array_length(env, jsPageSizes, &arrayLength);
-    for (uint32_t index = 0; index < arrayLength; index++) {
-      napi_value jsPageSize;
-      napi_get_element(env, jsPageSizes, index, &jsPageSize);
-      auto pageSizePtr = PrintPageSize::BuildFromJs(env, jsPageSize);
-      if (pageSizePtr == nullptr) {
-        PRINT_HILOGE("Failed to build printer capability object from js");
-        return nullptr;
-      }
-      pageSizes.emplace_back(*pageSizePtr);
-    }
-    nativeObj->SetPageSize(pageSizes);
+  if (!isArray) {
+    PRINT_HILOGE("Invalid list of page size");
+    return nullptr;
   }
+
+  std::vector<PrintPageSize> pageSizes;
+  uint32_t arrayLength = 0;
+  napi_get_array_length(env, jsPageSizes, &arrayLength);
+  for (uint32_t index = 0; index < arrayLength; index++) {
+    napi_value jsPageSize;
+    napi_get_element(env, jsPageSizes, index, &jsPageSize);
+    auto pageSizePtr = PrintPageSize::BuildFromJs(env, jsPageSize);
+    if (pageSizePtr == nullptr) {
+      PRINT_HILOGE("Failed to build printer capability object from js");
+      return nullptr;
+    }
+    pageSizes.emplace_back(*pageSizePtr);
+  }
+  nativeObj->SetPageSize(pageSizes);
 
   napi_value jsResolutionList = NapiPrintUtils::GetNamedProperty(
       env, jsValue, PARAM_CAPABILITY_RESOLUTION);
-  isArray = false;
-  napi_is_array(env, jsResolutionList, &isArray);
-  if (isArray) {
+  std::vector<PrintResolution> resolutionList;
+  if (jsResolutionList != nullptr) {
+    isArray = false;
+    napi_is_array(env, jsResolutionList, &isArray);
+    if (!isArray) {
+      PRINT_HILOGE("Invalid list of print resolution");
+      return nullptr;
+    }
     std::vector<PrintResolution> resolutionList;
     uint32_t arrayLength = 0;
     napi_get_array_length(env, jsPageSizes, &arrayLength);
@@ -291,33 +324,66 @@ PrinterCapability::BuildFromJs(napi_env env, napi_value jsValue) {
       }
       resolutionList.emplace_back(*resolutionPtr);
     }
-    nativeObj->SetResolution(resolutionList);
   }
+  nativeObj->SetResolution(resolutionList);
 
-  uint32_t colorMode = NapiPrintUtils::GetUint32Property(
-      env, jsValue, PARAM_CAPABILITY_COLORMODE);
-  uint32_t duplexMode = NapiPrintUtils::GetUint32Property(
-      env, jsValue, PARAM_CAPABILITY_DUPLEXMODE);
-  nativeObj->SetColorMode(colorMode);
-  nativeObj->SetDuplexMode(duplexMode);
+  napi_value jsMargin = NapiPrintUtils::GetNamedProperty(
+      env, jsValue, PARAM_CAPABILITY_MINMARGIN);
+  PrintMargin minMargin;
+  if (jsMargin != nullptr) {
+    auto marginPtr = PrintMargin::BuildFromJs(env, jsMargin);
+    if (marginPtr == nullptr) {
+      PRINT_HILOGE("Failed to build printer capability object from js");
+      return nullptr;
+    }
+    minMargin = *marginPtr;
+  }
+  nativeObj->SetMinMargin(minMargin);
+
   PRINT_HILOGE("Build Print Capability succeed");
   return nativeObj;
+}
+
+bool PrinterCapability::ValidateProperty(napi_env env, napi_value object) {
+  std::map<std::string, PrintParamStatus> propertyList = {
+      {PARAM_CAPABILITY_COLORMODE, PRINT_PARAM_NOT_SET},
+      {PARAM_CAPABILITY_DUPLEXMODE, PRINT_PARAM_NOT_SET},
+      {PARAM_CAPABILITY_PAGESIZE, PRINT_PARAM_NOT_SET},
+      {PARAM_CAPABILITY_RESOLUTION, PRINT_PARAM_OPT},
+      {PARAM_CAPABILITY_MINMARGIN, PRINT_PARAM_OPT},
+  };
+
+  auto names = NapiPrintUtils::GetPropertyNames(env, object);
+  for (auto name : names) {
+    if (propertyList.find(name) == propertyList.end()) {
+      PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
+      return false;
+    }
+    propertyList[name] = PRINT_PARAM_SET;
+  }
+
+  for (auto propertypItem : propertyList) {
+    if (propertypItem.second == PRINT_PARAM_NOT_SET) {
+      PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
+      return false;
+    }
+  }
+  return true;
 }
 
 void PrinterCapability::Dump() {
   PRINT_HILOGD("colorMode_ = %{public}d", colorMode_);
   PRINT_HILOGD("duplexMode_ = %{public}d", duplexMode_);
-  minMargin_.Dump();
-  auto pageIt = pageSizeList_.begin();
-  while (pageIt != pageSizeList_.end()) {
-    pageIt->Dump();
-    pageIt++;
+
+  for (auto pageItem : pageSizeList_) {
+    pageItem.Dump();
   }
 
-  auto resIt = resolutionList_.begin();
-  while (resIt != resolutionList_.end()) {
-    resIt->Dump();
-    resIt++;
+  for (auto resolutionItem : resolutionList_) {
+    resolutionItem.Dump();
+  }
+  if (minMargin_ != nullptr) {
+    minMargin_->Dump();
   }
 }
 } // namespace OHOS::Print

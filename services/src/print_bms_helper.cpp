@@ -52,12 +52,10 @@ bool PrintBMSHelper::QueryExtensionInfos(
   }
   for (auto userId : osAccountIds) {
     PRINT_HILOGE("active userId = %{public}d", userId);
-
     AppExecFwk::ExtensionAbilityInfo extInfo;
     extInfo.bundleName = "com.open.harmony.packagemag";
     extInfo.name = "com.open.harmony.packagemag.ServiceAbility2";
     extensionInfos.emplace_back(extInfo);
-
     // sptrBundleMgr_->QueryExtensionAbilityInfos(AppExecFwk::ExtensionAbilityType::PRINT,
     //    userId, extensionInfos);
   }
@@ -65,29 +63,29 @@ bool PrintBMSHelper::QueryExtensionInfos(
 }
 
 bool PrintBMSHelper::GetProxy() {
-  if (!sptrBundleMgr_) {
+  if (sptrBundleMgr_ == nullptr) {
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (!systemAbilityManager) {
+    if (systemAbilityManager == nullptr) {
       PRINT_HILOGE("Failed to get system ability mgr.");
       return false;
     }
 
     sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(
         BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (!remoteObject) {
+    if (remoteObject == nullptr) {
       PRINT_HILOGE("Failed to get bundle manager service.");
       return false;
     }
 
-    sptrBundleMgr_ = iface_cast<IBundleMgr>(remoteObject);
-    if ((!sptrBundleMgr_) || (!sptrBundleMgr_->AsObject())) {
+    sptrBundleMgr_ = iface_cast<AppExecFwk::IBundleMgr>(remoteObject);
+    if (sptrBundleMgr_ == nullptr) {
       PRINT_HILOGE("Failed to get system bundle manager services ability");
       return false;
     }
 
     printBMSDeath_ = new PrintBMSDeathRecipient();
-    if (!printBMSDeath_) {
+    if (printBMSDeath_ == nullptr) {
       PRINT_HILOGE("Failed to create death Recipient ptr BMSDeathRecipient");
       return false;
     }

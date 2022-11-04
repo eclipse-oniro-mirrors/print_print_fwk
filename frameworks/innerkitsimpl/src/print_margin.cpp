@@ -44,6 +44,13 @@ PrintMargin &PrintMargin::operator=(const PrintMargin &right) {
 
 PrintMargin::~PrintMargin() {}
 
+void PrintMargin::Reset() {
+  SetTop(0);
+  SetBottom(0);
+  SetLeft(0);
+  SetRight(0);
+}
+
 void PrintMargin::SetTop(uint32_t top) { top_ = top; }
 
 void PrintMargin::SetBottom(uint32_t bottom) { bottom_ = bottom; }
@@ -108,9 +115,9 @@ std::shared_ptr<PrintMargin> PrintMargin::BuildFromJs(napi_env env,
     return nullptr;
   }
 
-  auto names = NapiPrintUtils::GetPropertyNames(env, jsValue);
-  for (auto name : names) {
-    PRINT_HILOGD("Property: %{public}s", name.c_str());
+  if (!ValidateProperty(env, jsValue)) {
+    PRINT_HILOGE("Invalid property of print margin");
+    return nullptr;
   }
 
   uint32_t top =
@@ -128,6 +135,26 @@ std::shared_ptr<PrintMargin> PrintMargin::BuildFromJs(napi_env env,
   nativeObj->SetRight(right);
   PRINT_HILOGE("Build Print Margin succeed");
   return nativeObj;
+}
+
+bool PrintMargin::ValidateProperty(napi_env env, napi_value object) {
+  std::map<std::string, PrintParamStatus> propertyList = {
+      {PARAM_MARGIN_TOP, PRINT_PARAM_OPT},
+      {PARAM_MARGIN_BOTTOM, PRINT_PARAM_OPT},
+      {PARAM_MARGIN_LEFT, PRINT_PARAM_OPT},
+      {PARAM_MARGIN_RIGHT, PRINT_PARAM_OPT},
+  };
+
+  auto names = NapiPrintUtils::GetPropertyNames(env, object);
+  for (auto name : names) {
+    if (propertyList.find(name) == propertyList.end()) {
+      PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
+      return false;
+    }
+    propertyList[name] = PRINT_PARAM_SET;
+  }
+
+  return true;
 }
 
 void PrintMargin::Dump() {

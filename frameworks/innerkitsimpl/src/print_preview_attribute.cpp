@@ -39,6 +39,11 @@ PrintPreviewAttribute::operator=(const PrintPreviewAttribute &right) {
 
 PrintPreviewAttribute::~PrintPreviewAttribute() {}
 
+void PrintPreviewAttribute::Reset() {
+  SetResult("");
+  previewRange_.Reset();
+}
+
 void PrintPreviewAttribute::SetResult(const std::string &result) {
   result_ = result;
 }
@@ -106,9 +111,9 @@ PrintPreviewAttribute::BuildFromJs(napi_env env, napi_value jsValue) {
     return nullptr;
   }
 
-  auto names = NapiPrintUtils::GetPropertyNames(env, jsValue);
-  for (auto name : names) {
-    PRINT_HILOGD("Property: %{public}s", name.c_str());
+  if (!ValidateProperty(env, jsValue)) {
+    PRINT_HILOGE("Invalid property of print preview attribute");
+    return nullptr;
   }
 
   napi_value jsPreviewRange =
@@ -125,6 +130,31 @@ PrintPreviewAttribute::BuildFromJs(napi_env env, napi_value jsValue) {
   nativeObj->SetResult(result);
   PRINT_HILOGE("Build Print Preview Attribute succeed");
   return nativeObj;
+}
+
+bool PrintPreviewAttribute::ValidateProperty(napi_env env, napi_value object) {
+  std::map<std::string, PrintParamStatus> propertyList = {
+      {PARAM_PREATTRIBUTE_RANGE, PRINT_PARAM_NOT_SET},
+      {PARAM_PREATTRIBUTE_RESULT, PRINT_PARAM_OPT},
+  };
+
+  auto names = NapiPrintUtils::GetPropertyNames(env, object);
+  for (auto name : names) {
+    if (propertyList.find(name) == propertyList.end()) {
+      PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
+      return false;
+    }
+    propertyList[name] = PRINT_PARAM_SET;
+  }
+
+  for (auto propertypItem : propertyList) {
+    if (propertypItem.second == PRINT_PARAM_NOT_SET) {
+      PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
+      return false;
+    }
+  }
+
+  return true;
 }
 
 void PrintPreviewAttribute::Dump() {
