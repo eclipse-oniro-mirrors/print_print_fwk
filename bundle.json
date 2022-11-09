@@ -53,6 +53,7 @@
           "//base/print/print/profile:print_sa_profiles"
         ],
         "test": [
+          "//base/print/print/test/unittest/fwk_inner_napi_test:print_fwk_inner_napi_test"
         ]
       },
       "hisysevent_config": [
