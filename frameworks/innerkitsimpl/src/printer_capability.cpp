@@ -311,7 +311,6 @@ PrinterCapability::BuildFromJs(napi_env env, napi_value jsValue) {
       PRINT_HILOGE("Invalid list of print resolution");
       return nullptr;
     }
-    std::vector<PrintResolution> resolutionList;
     uint32_t arrayLength = 0;
     napi_get_array_length(env, jsPageSizes, &arrayLength);
     for (uint32_t index = 0; index < arrayLength; index++) {
