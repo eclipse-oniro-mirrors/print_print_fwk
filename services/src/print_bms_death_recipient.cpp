@@ -18,21 +18,21 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-void PrintBMSDeathRecipient::OnRemoteDied(
-    const wptr<IRemoteObject> &wptrDeath) {
-  PRINT_HILOGD("bundle manager service died, remove the proxy object");
+void PrintBMSDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &wptrDeath)
+{
+    PRINT_HILOGD("bundle manager service died, remove the proxy object");
 
-  if (wptrDeath == nullptr) {
-    PRINT_HILOGE("wptrDeath is null");
-    return;
-  }
+    if (wptrDeath == nullptr) {
+        PRINT_HILOGE("wptrDeath is null");
+        return;
+    }
 
-  sptr<IRemoteObject> object = wptrDeath.promote();
-  if (!object) {
-    PRINT_HILOGE("object is null");
-    return;
-  }
+    sptr<IRemoteObject> object = wptrDeath.promote();
+    if (!object) {
+        PRINT_HILOGE("object is null");
+        return;
+    }
 
-  DelayedSingleton<PrintBMSHelper>::GetInstance()->ResetProxy();
+    DelayedSingleton<PrintBMSHelper>::GetInstance()->ResetProxy();
 }
-} // namespace OHOS::Print
+}  // namespace OHOS

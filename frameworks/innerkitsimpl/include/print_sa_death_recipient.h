@@ -22,9 +22,9 @@
 namespace OHOS::Print {
 class PrintSaDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
-  explicit PrintSaDeathRecipient();
-  ~PrintSaDeathRecipient() = default;
-  void OnRemoteDied(const wptr<IRemoteObject> &object) override;
+    explicit PrintSaDeathRecipient();
+    ~PrintSaDeathRecipient() = default;
+    void OnRemoteDied(const wptr<IRemoteObject> &object) override;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SA_DEATH_RECIPIENT_H

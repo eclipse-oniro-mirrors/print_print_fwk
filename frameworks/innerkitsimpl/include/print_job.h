@@ -29,113 +29,112 @@
 namespace OHOS::Print {
 class PrintJob final : public Parcelable {
 public:
-  explicit PrintJob();
+    explicit PrintJob();
 
-  PrintJob(const PrintJob &right);
+    PrintJob(const PrintJob &right);
 
-  PrintJob &operator=(const PrintJob &right);
+    PrintJob &operator=(const PrintJob &right);
 
-  virtual ~PrintJob();
+    virtual ~PrintJob();
 
-  void SetFiles(const std::vector<std::string> &files);
+    void SetFiles(const std::vector<std::string> &files);
 
-  void SetJobId(const std::string &jobId);
+    void SetJobId(const std::string &jobId);
 
-  void SetPrinterId(const std::string &printerid);
+    void SetPrinterId(const std::string &printerid);
 
-  void SetJobState(uint32_t jobState);
+    void SetJobState(uint32_t jobState);
 
-  void SetSubState(uint32_t jobSubState);
+    void SetSubState(uint32_t jobSubState);
 
-  void SetCopyNumber(uint32_t copyNumber);
+    void SetCopyNumber(uint32_t copyNumber);
 
-  void SetPageRange(const PrintRange &pageRange);
+    void SetPageRange(const PrintRange &pageRange);
 
-  void SetIsSequential(bool isSequential);
+    void SetIsSequential(bool isSequential);
 
-  void SetPageSize(const PrintPageSize &pageSize);
+    void SetPageSize(const PrintPageSize &pageSize);
 
-  void SetIsLandscape(bool isLandscape);
+    void SetIsLandscape(bool isLandscape);
 
-  void SetColorMode(uint32_t colorMode);
+    void SetColorMode(uint32_t colorMode);
 
-  void SetDuplexMode(uint32_t duplexmode);
+    void SetDuplexMode(uint32_t duplexmode);
 
-  void SetMargin(const PrintMargin &margin);
+    void SetMargin(const PrintMargin &margin);
 
-  void SetOption(const std::string &option);
+    void SetOption(const std::string &option);
 
-  void SetPreview(const PrintPreviewAttribute &preview);
+    void SetPreview(const PrintPreviewAttribute &preview);
 
-  void UpdateParams(const PrintJob &jobInfo);
+    void UpdateParams(const PrintJob& jobInfo);
 
-  void GetFiles(std::vector<std::string> &fileList) const;
+    void GetFiles(std::vector<std::string> &fileList) const;
 
-  [[nodiscard]] const std::string &GetJobId() const;
+    [[nodiscard]] const std::string &GetJobId() const;
 
-  [[nodiscard]] const std::string &GetPrinterId() const;
+    [[nodiscard]] const std::string &GetPrinterId() const;
 
-  [[nodiscard]] uint32_t GetJobState() const;
+    [[nodiscard]] uint32_t GetJobState() const;
 
-  [[nodiscard]] uint32_t GetSubState() const;
+    [[nodiscard]] uint32_t GetSubState() const;    
 
-  [[nodiscard]] uint32_t GetCopyNumber() const;
+    [[nodiscard]] uint32_t GetCopyNumber() const;
 
-  void GetPageRange(PrintRange &range) const;
+    void GetPageRange(PrintRange &range) const;
 
-  [[nodiscard]] bool GetIsSequential() const;
+    [[nodiscard]] bool GetIsSequential() const;
 
-  void GetPageSize(PrintPageSize &printPageSize) const;
+    void GetPageSize(PrintPageSize &printPageSize) const;
 
-  [[nodiscard]] bool GetIsLandscape() const;
+    [[nodiscard]] bool GetIsLandscape() const;
 
-  [[nodiscard]] uint32_t GetColorMode() const;
+    [[nodiscard]] uint32_t GetColorMode() const;
 
-  [[nodiscard]] uint32_t GetDuplexMode() const;
+    [[nodiscard]] uint32_t GetDuplexMode() const;
 
-  void GetMargin(PrintMargin &printMargin) const;
+    void GetMargin(PrintMargin &printMargin) const;
 
-  void GetPreview(PrintPreviewAttribute &previewAttr) const;
+    void GetPreview(PrintPreviewAttribute &previewAttr) const;
 
-  [[nodiscard]] const std::string &GetOption() const;
+    [[nodiscard]] const std::string &GetOption() const;
 
-  virtual bool Marshalling(Parcel &parcel) const override;
+    virtual bool Marshalling(Parcel &parcel) const override;
 
-  static std::shared_ptr<PrintJob> Unmarshalling(Parcel &parcel);
+    static std::shared_ptr<PrintJob> Unmarshalling(Parcel &parcel);
 
-  napi_value ToJsObject(napi_env env) const;
+    napi_value ToJsObject(napi_env env) const;
 
-  static std::shared_ptr<PrintJob> BuildFromJs(napi_env env,
-                                               napi_value jsValue);
+    static std::shared_ptr<PrintJob> BuildFromJs(napi_env env, napi_value jsValue);
 
-  void Dump();
-
-private:
-  bool ReadFromParcel(Parcel &parcel);
-  bool CreateFileList(napi_env env, napi_value &jsPrintJob) const;
-  bool CreatePageRange(napi_env env, napi_value &jsPrintJob) const;
-  bool CreatePageSize(napi_env env, napi_value &jsPrintJob) const;
-  bool CreateMargin(napi_env env, napi_value &jsPrintJob) const;
-  bool CreatePreview(napi_env env, napi_value &jsPrintJob) const;
-
-  static bool ValidateProperty(napi_env env, napi_value object);
+    void Dump();
 
 private:
-  std::vector<std::string> files_;
-  std::string jobId_;
-  std::string printerId_;
-  uint32_t jobState_;
-  uint32_t subState_;
-  uint32_t copyNumber_;
-  PrintRange pageRange_;
-  bool isSequential_;
-  PrintPageSize pageSize_;
-  bool isLandscape_;
-  int32_t colorMode_;
-  int32_t duplexMode_;
-  std::shared_ptr<PrintMargin> margin_;
-  std::shared_ptr<PrintPreviewAttribute> preview_;
-  std::string option_;
+    bool ReadFromParcel(Parcel &parcel);
+    bool CreateFileList(napi_env env, napi_value &jsPrintJob) const;
+    bool CreatePageRange(napi_env env, napi_value &jsPrintJob) const;
+    bool CreatePageSize(napi_env env, napi_value &jsPrintJob) const;
+    bool CreateMargin(napi_env env, napi_value &jsPrintJob) const;
+    bool CreatePreview(napi_env env, napi_value &jsPrintJob) const;
+
+    static bool ValidateProperty(napi_env env, napi_value object);
+
+private:
+    std::vector<std::string> files_;
+    std::string jobId_;
+    std::string printerId_;
+    uint32_t jobState_;
+    uint32_t subState_;
+    uint32_t copyNumber_;
+    PrintRange pageRange_;
+    bool isSequential_;
+    PrintPageSize pageSize_;
+    bool isLandscape_;
+    int32_t colorMode_;
+    int32_t duplexMode_;
+    std::shared_ptr<PrintMargin> margin_;
+    std::shared_ptr<PrintPreviewAttribute> preview_;
+    std::string option_;
 };
 } // namespace OHOS::Print
 #endif /* PRINT_PRINT_JOB_H */

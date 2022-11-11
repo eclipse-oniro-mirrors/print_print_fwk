@@ -23,72 +23,71 @@
 namespace OHOS::Print {
 class PrinterInfo final : public Parcelable {
 public:
-  explicit PrinterInfo();
+    explicit PrinterInfo();
 
-  PrinterInfo(const PrinterInfo &right);
+    PrinterInfo(const PrinterInfo &right);
 
-  PrinterInfo &operator=(const PrinterInfo &PrinterInfo);
+    PrinterInfo &operator=(const PrinterInfo &PrinterInfo);
 
-  virtual ~PrinterInfo();
+    virtual ~PrinterInfo();
 
-  void SetPrinterId(const std::string &printerId);
+    void SetPrinterId(const std::string &printerId);
 
-  void SetPrinterName(std::string printerName);
+    void SetPrinterName(std::string printerName);
 
-  void SetPrinterIcon(uint32_t printIcon);
+    void SetPrinterIcon(uint32_t printIcon);
 
-  void SetPrinterState(uint32_t printerState);
+    void SetPrinterState(uint32_t printerState);
 
-  void SetDescription(std::string description);
+    void SetDescription(std::string description);
 
-  void SetCapability(const PrinterCapability &capability);
+    void SetCapability(const PrinterCapability &capability);
 
-  void SetOption(const std::string &option);
+    void SetOption(const std::string &option);
 
-  [[nodiscard]] const std::string &GetPrinterId() const;
+    [[nodiscard]] const std::string &GetPrinterId() const;
 
-  [[nodiscard]] const std::string &GetPrinterName() const;
+    [[nodiscard]] const std::string &GetPrinterName() const;
 
-  [[nodiscard]] uint32_t GetPrinterIcon() const;
+    [[nodiscard]] uint32_t GetPrinterIcon() const;
 
-  [[nodiscard]] uint32_t GetPrinterState() const;
+    [[nodiscard]] uint32_t GetPrinterState() const;
 
-  [[nodiscard]] const std::string &GetDescription() const;
+    [[nodiscard]] const std::string &GetDescription() const;
 
-  void GetCapability(PrinterCapability &cap) const;
+    void GetCapability(PrinterCapability &cap) const;
 
-  [[nodiscard]] std::string GetOption() const;
+    [[nodiscard]] std::string GetOption() const;
 
-  virtual bool Marshalling(Parcel &parcel) const override;
+    virtual bool Marshalling(Parcel &parcel) const override;
 
-  static std::shared_ptr<PrinterInfo> Unmarshalling(Parcel &parcel);
+    static std::shared_ptr<PrinterInfo> Unmarshalling(Parcel &parcel);
 
-  napi_value ToJsObject(napi_env env) const;
+    napi_value ToJsObject(napi_env env) const;
 
-  static std::shared_ptr<PrinterInfo> BuildFromJs(napi_env env,
-                                                  napi_value jsValue);
-
-  void Dump();
-
-private:
-  bool ReadFromParcel(Parcel &parcel);
-
-  static bool ValidateProperty(napi_env env, napi_value object);
+    static std::shared_ptr<PrinterInfo> BuildFromJs(napi_env env, napi_value jsValue);
+    
+    void Dump();
 
 private:
-  std::string printerId_;
+    bool ReadFromParcel(Parcel &parcel);
 
-  std::string printerName_;
+    static bool ValidateProperty(napi_env env, napi_value object);
 
-  uint32_t printerState_;
+private:
+    std::string printerId_;
 
-  uint32_t printerIcon_;
+    std::string printerName_;
 
-  std::string description_;
+    uint32_t printerState_;
 
-  std::shared_ptr<PrinterCapability> capability_;
+    uint32_t printerIcon_;    
 
-  std::string option_;
+    std::string description_;
+
+    std::shared_ptr<PrinterCapability> capability_;
+
+    std::string option_;
 };
 } // namespace OHOS::Print
 #endif // PRINTER_INFO_H

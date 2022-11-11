@@ -16,22 +16,22 @@
 #ifndef NAPI_PRINT_TASK_H
 #define NAPI_PRINT_TASK_H
 
-#include "napi/native_api.h"
-#include "napi/native_common.h"
 #include <string>
+#include "napi/native_common.h"
+#include "napi/native_api.h"
 
 namespace OHOS::Print {
 class NapiPrintTask {
 public:
-  static napi_value Print(napi_env env, napi_callback_info info);
+    static napi_value Print(napi_env env, napi_callback_info info);
 
 private:
-  static napi_value GetCtor(napi_env env);
-  static napi_value Initialize(napi_env env, napi_callback_info info);
-  static bool IsValidFile(const std::string &fileName);
+    static napi_value GetCtor(napi_env env);
+    static napi_value Initialize(napi_env env, napi_callback_info info);
+    static bool IsValidFile(const std::string &fileName);
 
 private:
-  static __thread napi_ref globalCtor;
+    static __thread napi_ref globalCtor;
 };
 } // namespace OHOS::Print
 #endif // _NAPI_PRINT_TASK_H

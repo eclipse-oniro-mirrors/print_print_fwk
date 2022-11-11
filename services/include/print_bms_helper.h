@@ -19,10 +19,10 @@
 #include <string>
 #include <vector>
 
+#include "print_bms_death_recipient.h"
 #include "bundle_mgr_interface.h"
 #include "extension_ability_info.h"
 #include "iremote_object.h"
-#include "print_bms_death_recipient.h"
 #include "refbase.h"
 #include "singleton.h"
 #include "want.h"
@@ -31,25 +31,24 @@ namespace OHOS::Print {
 
 class PrintBMSHelper : public DelayedSingleton<PrintBMSHelper> {
 public:
-  using IBundleMgr = OHOS::AppExecFwk::IBundleMgr;
+    using IBundleMgr = OHOS::AppExecFwk::IBundleMgr;
 
-  explicit PrintBMSHelper();
+    explicit PrintBMSHelper();
 
-  virtual ~PrintBMSHelper();
+    virtual ~PrintBMSHelper();
 
-  bool QueryExtensionInfos(
-      std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfo);
+    bool QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfo);
 
-  void ResetProxy();
-
-private:
-  bool GetProxy();
+    void ResetProxy();
 
 private:
-  sptr<IBundleMgr> sptrBundleMgr_;
-  std::mutex mutex_;
-  sptr<PrintBMSDeathRecipient> printBMSDeath_;
+    bool GetProxy();
+
+private:
+    sptr<IBundleMgr> sptrBundleMgr_;
+    std::mutex mutex_;
+    sptr<PrintBMSDeathRecipient> printBMSDeath_;
 };
-} // namespace OHOS::Print
+}  // namespace OHOS
 
-#endif // PRINT_BMS_HELPER_H
+#endif  // PRINT_BMS_HELPER_H

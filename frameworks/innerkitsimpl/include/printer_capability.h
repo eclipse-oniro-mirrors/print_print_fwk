@@ -26,62 +26,61 @@
 namespace OHOS::Print {
 class PrinterCapability final : public Parcelable {
 public:
-  explicit PrinterCapability();
+    explicit PrinterCapability();
 
-  PrinterCapability(const PrinterCapability &right);
+    PrinterCapability(const PrinterCapability &right);
 
-  PrinterCapability &operator=(const PrinterCapability &right);
+    PrinterCapability &operator=(const PrinterCapability &right);
 
-  virtual ~PrinterCapability();
+    virtual ~PrinterCapability();
 
-  void Reset();
+    void Reset();
 
-  void GetMinMargin(PrintMargin &margin) const;
+    void GetMinMargin(PrintMargin &margin) const;
 
-  void GetPageSize(std::vector<PrintPageSize> &pageSizeList) const;
+    void GetPageSize(std::vector<PrintPageSize> &pageSizeList) const;
 
-  void GetResolution(std::vector<PrintResolution> &resolutionList) const;
+    void GetResolution(std::vector<PrintResolution> &resolutionList) const;
 
-  [[nodiscard]] uint32_t GetColorMode() const;
+    [[nodiscard]] uint32_t GetColorMode() const;
 
-  [[nodiscard]] uint32_t GetDuplexMode() const;
+    [[nodiscard]] uint32_t GetDuplexMode() const;
 
-  virtual bool Marshalling(Parcel &parcel) const override;
+    virtual bool Marshalling(Parcel &parcel) const override;
 
-  static std::shared_ptr<PrinterCapability> Unmarshalling(Parcel &parcel);
+    static std::shared_ptr<PrinterCapability> Unmarshalling(Parcel &parcel);
 
-  napi_value ToJsObject(napi_env env) const;
+    napi_value ToJsObject(napi_env env) const;
 
-  static std::shared_ptr<PrinterCapability> BuildFromJs(napi_env env,
-                                                        napi_value jsValue);
+    static std::shared_ptr<PrinterCapability> BuildFromJs(napi_env env, napi_value jsValue);
 
-  void Dump();
-
-private:
-  void SetMinMargin(const PrintMargin &minMargin);
-
-  void SetPageSize(const std::vector<PrintPageSize> &pageSizeList);
-
-  void SetResolution(const std::vector<PrintResolution> &resolutionList);
-
-  void SetColorMode(uint32_t colorMode);
-
-  void SetDuplexMode(uint32_t duplexMode);
-
-  bool ReadFromParcel(Parcel &parcel);
-
-  bool CreatePageSizeList(napi_env env, napi_value &jsPrinterCap) const;
-
-  bool CreateResolutionList(napi_env env, napi_value &jsPrinterCap) const;
-
-  static bool ValidateProperty(napi_env env, napi_value object);
+    void Dump();
 
 private:
-  uint32_t colorMode_;
-  uint32_t duplexMode_;
-  std::vector<PrintPageSize> pageSizeList_;
-  std::vector<PrintResolution> resolutionList_;
-  std::shared_ptr<PrintMargin> minMargin_;
+    void SetMinMargin(const PrintMargin &minMargin);
+
+    void SetPageSize(const std::vector<PrintPageSize> &pageSizeList);
+
+    void SetResolution(const std::vector<PrintResolution> &resolutionList);
+
+    void SetColorMode(uint32_t colorMode);
+
+    void SetDuplexMode(uint32_t duplexMode);
+
+    bool ReadFromParcel(Parcel &parcel);
+
+    bool CreatePageSizeList(napi_env env, napi_value &jsPrinterCap) const;
+
+    bool CreateResolutionList(napi_env env, napi_value &jsPrinterCap) const;
+
+    static bool ValidateProperty(napi_env env, napi_value object);
+
+private:
+    uint32_t colorMode_;
+    uint32_t duplexMode_;
+    std::vector<PrintPageSize> pageSizeList_;
+    std::vector<PrintResolution> resolutionList_;
+    std::shared_ptr<PrintMargin> minMargin_;
 };
 } // namespace OHOS::Print
 #endif // PRINTER_CAPABILITY_H

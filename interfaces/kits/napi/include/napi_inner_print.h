@@ -22,55 +22,54 @@
 #include "iprint_callback.h"
 #include "napi/native_api.h"
 #include "print_async_call.h"
-#include "print_extension_info.h"
 #include "print_job.h"
 #include "print_task.h"
 #include "printer_info.h"
+#include "print_extension_info.h"
 
 namespace OHOS::Print {
 
 class NapiInnerPrint {
 public:
-  static napi_value QueryExtensionInfo(napi_env env, napi_callback_info info);
-  static napi_value StartDiscovery(napi_env env, napi_callback_info info);
-  static napi_value StopDiscovery(napi_env env, napi_callback_info info);
-  static napi_value ConnectPrinter(napi_env env, napi_callback_info info);
-  static napi_value DisconnectPrinter(napi_env env, napi_callback_info info);
-  static napi_value StartPrintJob(napi_env env, napi_callback_info info);
-  static napi_value CancelPrintJob(napi_env env, napi_callback_info info);
-  static napi_value RequestPreview(napi_env env, napi_callback_info info);
-  static napi_value QueryCapability(napi_env env, napi_callback_info info);
-  static napi_value On(napi_env env, napi_callback_info info);
-  static napi_value Off(napi_env env, napi_callback_info info);
-  static napi_value ReadFile(napi_env env, napi_callback_info info);
+    static napi_value QueryExtensionInfo(napi_env env, napi_callback_info info);
+    static napi_value StartDiscovery(napi_env env, napi_callback_info info);
+    static napi_value StopDiscovery(napi_env env, napi_callback_info info);
+    static napi_value ConnectPrinter(napi_env env, napi_callback_info info);
+    static napi_value DisconnectPrinter(napi_env env, napi_callback_info info);
+    static napi_value StartPrintJob(napi_env env, napi_callback_info info);
+    static napi_value CancelPrintJob(napi_env env, napi_callback_info info);
+    static napi_value RequestPreview(napi_env env, napi_callback_info info);
+    static napi_value QueryCapability(napi_env env, napi_callback_info info);
+    static napi_value On(napi_env env, napi_callback_info info);
+    static napi_value Off(napi_env env, napi_callback_info info);
+    static napi_value ReadFile(napi_env env, napi_callback_info info);    
 
 private:
-  static bool IsSupportType(const std::string &type);
+    static bool IsSupportType(const std::string& type);
 
 private:
-  struct InnerPrintContext : public PrintAsyncCall::Context {
-    std::vector<PrintExtensionInfo> allExtensionInfos;
-    uint32_t state;
-    std::string previewResult = "";
-    std::string type = "";
-    sptr<IPrintCallback> callback = nullptr;
-    std::string fileUri = "";
-    uint32_t fileOffset = 0;
-    uint32_t fileMaxRead = -1;
-    std::vector<uint8_t> fileRead;
-    PrinterCapability printerCapability;
-    bool result = false;
-    std::string stateType_ = "";
-    PrintJob printJob;
-    std::string jobId = "";
-    std::string printerId = "";
-    std::vector<std::string> extensionList;
+    struct InnerPrintContext : public PrintAsyncCall::Context {
+        std::vector<PrintExtensionInfo> allExtensionInfos;
+        uint32_t state;
+        std::string previewResult = "";
+        std::string type = "";
+        sptr<IPrintCallback> callback = nullptr;
+        std::string fileUri = "";
+        uint32_t fileOffset = 0;
+        uint32_t fileMaxRead = -1;
+        std::vector<uint8_t> fileRead;
+        PrinterCapability printerCapability;
+        bool result = false;
+        std::string stateType_ = "";
+        PrintJob printJob;
+        std::string jobId = "";
+        std::string printerId = "";
+        std::vector<std::string> extensionList;
 
-    InnerPrintContext() : Context(nullptr, nullptr){};
-    InnerPrintContext(InputAction input, OutputAction output)
-        : Context(std::move(input), std::move(output)){};
-    virtual ~InnerPrintContext(){};
-  };
+        InnerPrintContext() : Context(nullptr, nullptr) {};
+        InnerPrintContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
+        virtual ~InnerPrintContext() {};
+    };
 };
 } // namespace OHOS::Print
 #endif // NAPI_INNER_PRINT_H

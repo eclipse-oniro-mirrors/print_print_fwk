@@ -22,53 +22,52 @@
 namespace OHOS::Print {
 class PrintMargin final : public Parcelable {
 public:
-  explicit PrintMargin();
+    explicit PrintMargin();
 
-  PrintMargin(const PrintMargin &right);
+    PrintMargin(const PrintMargin &right);
 
-  PrintMargin &operator=(const PrintMargin &right);
+    PrintMargin &operator=(const PrintMargin &right);
 
-  virtual ~PrintMargin();
+    virtual ~PrintMargin();
 
-  void Reset();
+    void Reset();
 
-  [[nodiscard]] uint32_t GetTop() const;
+    [[nodiscard]] uint32_t GetTop() const;
 
-  [[nodiscard]] uint32_t GetBottom() const;
+    [[nodiscard]] uint32_t GetBottom() const;
 
-  [[nodiscard]] uint32_t GetLeft() const;
+    [[nodiscard]] uint32_t GetLeft() const;
 
-  [[nodiscard]] uint32_t GetRight() const;
+    [[nodiscard]] uint32_t GetRight() const;
 
-  virtual bool Marshalling(Parcel &parcel) const override;
+    virtual bool Marshalling(Parcel &parcel) const override;
 
-  static std::shared_ptr<PrintMargin> Unmarshalling(Parcel &parcel);
+    static std::shared_ptr<PrintMargin> Unmarshalling(Parcel &parcel);
 
-  napi_value ToJsObject(napi_env env) const;
+    napi_value ToJsObject(napi_env env) const;
 
-  static std::shared_ptr<PrintMargin> BuildFromJs(napi_env env,
-                                                  napi_value jsValue);
+    static std::shared_ptr<PrintMargin> BuildFromJs(napi_env env, napi_value jsValue);
 
-  void Dump();
-
-private:
-  void SetTop(uint32_t top);
-
-  void SetBottom(uint32_t bottom);
-
-  void SetLeft(uint32_t left);
-
-  void SetRight(uint32_t right);
-
-  bool ReadFromParcel(Parcel &parcel);
-
-  static bool ValidateProperty(napi_env env, napi_value object);
+    void Dump();
 
 private:
-  uint32_t top_;
-  uint32_t bottom_;
-  uint32_t left_;
-  uint32_t right_;
+    void SetTop(uint32_t top);
+
+    void SetBottom(uint32_t bottom);
+
+    void SetLeft(uint32_t left);
+
+    void SetRight(uint32_t right);
+
+    bool ReadFromParcel(Parcel &parcel);
+
+    static bool ValidateProperty(napi_env env, napi_value object);
+
+private:
+    uint32_t top_;
+    uint32_t bottom_;
+    uint32_t left_;
+    uint32_t right_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_MARGIN_H
