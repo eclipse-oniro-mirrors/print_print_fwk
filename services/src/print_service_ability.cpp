@@ -337,7 +337,7 @@ bool PrintServiceAbility::DelayStartDiscovery(const std::string &extensionId) {
   if (extCallbackMap_[cid]->OnCallback()) {
     ret = E_PRINT_NONE;
   }
-  return E_PRINT_NONE;
+  return ret;
 }
 
 int32_t PrintServiceAbility::StopDiscoverPrinter() {
