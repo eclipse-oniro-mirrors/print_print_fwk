@@ -19,18 +19,21 @@
 #include "extension_module_loader.h"
 
 namespace OHOS::AbilityRuntime {
-class PrintExtensionModuleLoader : public ExtensionModuleLoader, public Singleton<PrintExtensionModuleLoader> {
-    DECLARE_SINGLETON(PrintExtensionModuleLoader);
+class PrintExtensionModuleLoader
+    : public ExtensionModuleLoader,
+      public Singleton<PrintExtensionModuleLoader> {
+  DECLARE_SINGLETON(PrintExtensionModuleLoader);
 
 public:
-    /**
-     * @brief Create Extension.
-     *
-     * @param runtime The runtime.
-     * @return The Extension instance.
-     */
-    virtual Extension *Create(const std::unique_ptr<Runtime> &runtime) const override;
-    virtual std::map<std::string, std::string> GetParams() override;
+  /**
+   * @brief Create Extension.
+   *
+   * @param runtime The runtime.
+   * @return The Extension instance.
+   */
+  virtual Extension *
+  Create(const std::unique_ptr<Runtime> &runtime) const override;
+  virtual std::map<std::string, std::string> GetParams() override;
 };
 } // namespace OHOS::AbilityRuntime
 #endif // PRINT_EXTENSION_MODULE_LOADER_H

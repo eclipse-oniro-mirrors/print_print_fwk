@@ -13,41 +13,35 @@
  * limitations under the License.
  */
 
-#include "printer_capability.h"
 #include "napi/native_api.h"
+#include "printer_capability.h"
 #include <gtest/gtest.h>
 
 using namespace testing::ext;
 
 class PrinterCapabilityTest : public testing::Test {
 public:
-    static void SetUpTestCase(void);
-    static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
+  static void SetUpTestCase(void);
+  static void TearDownTestCase(void);
+  void SetUp();
+  void TearDown();
 };
 
-void PrinterCapabilityTest::SetUpTestCase(void)
-{
-    // step 2: input testsuit setup step
+void PrinterCapabilityTest::SetUpTestCase(void) {
+  // step 2: input testsuit setup step
 }
 
-void PrinterCapabilityTest::TearDownTestCase(void)
-{
-    // step 2: input testsuit teardown step
+void PrinterCapabilityTest::TearDownTestCase(void) {
+  // step 2: input testsuit teardown step
 }
 
-void PrinterCapabilityTest::SetUp(void)
-{
-    // step 3: input testcase setup step
+void PrinterCapabilityTest::SetUp(void) {
+  // step 3: input testcase setup step
 }
 
-void PrinterCapabilityTest::TearDown(void)
-{
-    // step 3: input testcase teardown step
+void PrinterCapabilityTest::TearDown(void) {
+  // step 3: input testcase teardown step
 }
-
-
 
 /**
  * @tc.name: PrinterCapabilityTest_001
@@ -55,11 +49,10 @@ void PrinterCapabilityTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_001, TestSize.Level1)
-{
-    OHOS::Print::PrinterCapability capability;
-    capability.Reset();
-    EXPECT_EQ(0, capability.GetColorMode());
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_001, TestSize.Level1) {
+  OHOS::Print::PrinterCapability capability;
+  capability.Reset();
+  EXPECT_EQ(0, capability.GetColorMode());
 }
 
 /**
@@ -68,12 +61,8 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_002, TestSize.Level1)
-{
-    OHOS::Print::PrinterCapability capability;
-    capability.Reset();
-    EXPECT_EQ(0, capability.GetDuplexMode());
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_002, TestSize.Level1) {
+  OHOS::Print::PrinterCapability capability;
+  capability.Reset();
+  EXPECT_EQ(0, capability.GetDuplexMode());
 }
-
-
-

@@ -22,15 +22,16 @@
 namespace OHOS::Print {
 class PrintCallbackProxy : public IRemoteProxy<IPrintCallback> {
 public:
-    explicit PrintCallbackProxy(const sptr<IRemoteObject> &impl);
-    ~PrintCallbackProxy() = default;
-    bool OnCallback() override;
-    bool OnCallback(uint32_t state, const PrinterInfo &info) override;
-    bool OnCallback(uint32_t state, const PrintJob &info) override;
-    bool OnCallback(const std::string &extensionId, const std::string &info) override;
+  explicit PrintCallbackProxy(const sptr<IRemoteObject> &impl);
+  ~PrintCallbackProxy() = default;
+  bool OnCallback() override;
+  bool OnCallback(uint32_t state, const PrinterInfo &info) override;
+  bool OnCallback(uint32_t state, const PrintJob &info) override;
+  bool OnCallback(const std::string &extensionId,
+                  const std::string &info) override;
 
 private:
-    static inline BrokerDelegator<PrintCallbackProxy> delegator_;
+  static inline BrokerDelegator<PrintCallbackProxy> delegator_;
 };
 } // namespace OHOS::Print
 

@@ -21,13 +21,13 @@
 namespace OHOS::Print {
 class PrintBMSDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
-    /**
-     * Called back when the remote object is died..
-     *
-     * @param wptrDeath Indicates the died object.
-     */
-    virtual void OnRemoteDied(const wptr<IRemoteObject> &wptrDeath);
+  /**
+   * Called back when the remote object is died..
+   *
+   * @param wptrDeath Indicates the died object.
+   */
+  virtual void OnRemoteDied(const wptr<IRemoteObject> &wptrDeath);
 };
-}  // namespace OHOS
+} // namespace OHOS::Print
 
-#endif  // PRINT_BMS_DEATH_RECIPIENT_H
+#endif // PRINT_BMS_DEATH_RECIPIENT_H

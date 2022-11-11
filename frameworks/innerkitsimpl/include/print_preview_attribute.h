@@ -22,42 +22,44 @@
 namespace OHOS::Print {
 class PrintPreviewAttribute final : public Parcelable {
 public:
-    explicit PrintPreviewAttribute();
+  explicit PrintPreviewAttribute();
 
-    PrintPreviewAttribute(const PrintPreviewAttribute &right);
+  PrintPreviewAttribute(const PrintPreviewAttribute &right);
 
-    PrintPreviewAttribute &operator=(const PrintPreviewAttribute &PrintPreviewAttribute);
+  PrintPreviewAttribute &
+  operator=(const PrintPreviewAttribute &PrintPreviewAttribute);
 
-    virtual ~PrintPreviewAttribute();
+  virtual ~PrintPreviewAttribute();
 
-    void Reset();
+  void Reset();
 
-    [[nodiscard]] const std::string &GetResult() const;
+  [[nodiscard]] const std::string &GetResult() const;
 
-    void GetPreviewRange(PrintRange &previewRange) const;
+  void GetPreviewRange(PrintRange &previewRange) const;
 
-    virtual bool Marshalling(Parcel &parcel) const override;
+  virtual bool Marshalling(Parcel &parcel) const override;
 
-    static std::shared_ptr<PrintPreviewAttribute> Unmarshalling(Parcel &parcel);
+  static std::shared_ptr<PrintPreviewAttribute> Unmarshalling(Parcel &parcel);
 
-    napi_value ToJsObject(napi_env env) const;
+  napi_value ToJsObject(napi_env env) const;
 
-    static std::shared_ptr<PrintPreviewAttribute> BuildFromJs(napi_env env, napi_value jsValue);
+  static std::shared_ptr<PrintPreviewAttribute> BuildFromJs(napi_env env,
+                                                            napi_value jsValue);
 
-    void Dump();
-
-private:
-    void SetResult(const std::string &result);
-
-    void SetPreviewRange(const PrintRange &previewRange);
-
-    bool ReadFromParcel(Parcel &parcel);
-
-    static bool ValidateProperty(napi_env env, napi_value object);
+  void Dump();
 
 private:
-    std::string result_;
-    PrintRange previewRange_;
+  void SetResult(const std::string &result);
+
+  void SetPreviewRange(const PrintRange &previewRange);
+
+  bool ReadFromParcel(Parcel &parcel);
+
+  static bool ValidateProperty(napi_env env, napi_value object);
+
+private:
+  std::string result_;
+  PrintRange previewRange_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_PREVIEW_ATTRIBUTE_H

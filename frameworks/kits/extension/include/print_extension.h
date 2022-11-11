@@ -28,41 +28,44 @@ class Runtime;
 class PrintExtension : public ExtensionBase<PrintExtensionContext>,
                        public std::enable_shared_from_this<PrintExtension> {
 public:
-    PrintExtension() = default;
-    virtual ~PrintExtension() = default;
+  PrintExtension() = default;
+  virtual ~PrintExtension() = default;
 
-    /**
-     * @brief Create and init context.
-     *
-     * @param record the extension record.
-     * @param application the application info.
-     * @param handler the extension handler.
-     * @param token the remote token.
-     * @return The created context.
-     */
-    virtual std::shared_ptr<PrintExtensionContext> CreateAndInitContext(
-        const std::shared_ptr<AbilityLocalRecord> &record, const std::shared_ptr<OHOSApplication> &application,
-        std::shared_ptr<AbilityHandler> &handler, const sptr<IRemoteObject> &token) override;
+  /**
+   * @brief Create and init context.
+   *
+   * @param record the extension record.
+   * @param application the application info.
+   * @param handler the extension handler.
+   * @param token the remote token.
+   * @return The created context.
+   */
+  virtual std::shared_ptr<PrintExtensionContext>
+  CreateAndInitContext(const std::shared_ptr<AbilityLocalRecord> &record,
+                       const std::shared_ptr<OHOSApplication> &application,
+                       std::shared_ptr<AbilityHandler> &handler,
+                       const sptr<IRemoteObject> &token) override;
 
-    /**
-     * @brief Init the extension.
-     *
-     * @param record the extension record.
-     * @param application the application info.
-     * @param handler the extension handler.
-     * @param token the remote token.
-     */
-    virtual void Init(const std::shared_ptr<AbilityLocalRecord> &record,
-        const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
-        const sptr<IRemoteObject> &token) override;
+  /**
+   * @brief Init the extension.
+   *
+   * @param record the extension record.
+   * @param application the application info.
+   * @param handler the extension handler.
+   * @param token the remote token.
+   */
+  virtual void Init(const std::shared_ptr<AbilityLocalRecord> &record,
+                    const std::shared_ptr<OHOSApplication> &application,
+                    std::shared_ptr<AbilityHandler> &handler,
+                    const sptr<IRemoteObject> &token) override;
 
-    /**
-     * @brief Create Extension.
-     *
-     * @param runtime The runtime.
-     * @return The PrintExtension instance.
-     */
-    static PrintExtension *Create(const std::unique_ptr<Runtime> &runtime);
+  /**
+   * @brief Create Extension.
+   *
+   * @param runtime The runtime.
+   * @return The PrintExtension instance.
+   */
+  static PrintExtension *Create(const std::unique_ptr<Runtime> &runtime);
 };
 } // namespace AbilityRuntime
 } // namespace OHOS

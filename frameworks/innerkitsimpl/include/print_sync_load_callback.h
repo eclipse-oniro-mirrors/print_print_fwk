@@ -21,8 +21,10 @@
 namespace OHOS::Print {
 class PrintSyncLoadCallback : public SystemAbilityLoadCallbackStub {
 public:
-    void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) override;
-    void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
+  void
+  OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
+                             const sptr<IRemoteObject> &remoteObject) override;
+  void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SYNC_LOAD_CALLBACK_H

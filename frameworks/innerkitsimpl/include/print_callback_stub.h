@@ -16,27 +16,28 @@
 #ifndef PRINT_CALLBACK_STUB_H
 #define PRINT_CALLBACK_STUB_H
 
-#include <map>
 #include "iprint_callback.h"
 #include "iremote_stub.h"
+#include <map>
 
 namespace OHOS::Print {
 class PrintCallbackStub : public IRemoteStub<IPrintCallback> {
 public:
-    PrintCallbackStub();
-    virtual ~PrintCallbackStub() = default;
-    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+  PrintCallbackStub();
+  virtual ~PrintCallbackStub() = default;
+  int32_t OnRemoteRequest(uint32_t code, MessageParcel &data,
+                          MessageParcel &reply, MessageOption &option) override;
 
 private:
-    bool HandlePrintTaskEvent(MessageParcel &data, MessageParcel &reply);
-    bool HandlePrinterEvent(MessageParcel &data, MessageParcel &reply);
-    bool HandlePrintJobEvent(MessageParcel &data, MessageParcel &reply);
-    bool HandleExtEvent(MessageParcel &data, MessageParcel &reply);    
+  bool HandlePrintTaskEvent(MessageParcel &data, MessageParcel &reply);
+  bool HandlePrinterEvent(MessageParcel &data, MessageParcel &reply);
+  bool HandlePrintJobEvent(MessageParcel &data, MessageParcel &reply);
+  bool HandleExtEvent(MessageParcel &data, MessageParcel &reply);
 
 private:
-    using PRINT_EVENT_HANDLER = bool (PrintCallbackStub::*)(MessageParcel &, MessageParcel &);
-    std::map<uint32_t, PRINT_EVENT_HANDLER> cmdMap_;
-
+  using PRINT_EVENT_HANDLER = bool (PrintCallbackStub::*)(MessageParcel &,
+                                                          MessageParcel &);
+  std::map<uint32_t, PRINT_EVENT_HANDLER> cmdMap_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_CALLBACK_STUB_H

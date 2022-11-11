@@ -42,29 +42,37 @@
 
 #define PRINT_LOG_TAG "printkit"
 #define PRINT_LOG_DOMAIN 0xD001C00
-static constexpr OHOS::HiviewDFX::HiLogLabel PRINT_LOG_LABEL = {LOG_CORE, PRINT_LOG_DOMAIN, PRINT_LOG_TAG};
+static constexpr OHOS::HiviewDFX::HiLogLabel PRINT_LOG_LABEL = {
+    LOG_CORE, PRINT_LOG_DOMAIN, PRINT_LOG_TAG};
 
-#define MAKE_FILE_NAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#define MAKE_FILE_NAME                                                         \
+  (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1     \
+                                    : __FILE__)
 
-#define PRINT_HILOGF(fmt, ...)                                        								\
-    (void)OHOS::HiviewDFX::HiLog::Fatal(PRINT_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
-    MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define PRINT_HILOGF(fmt, ...)                                                 \
+  (void)OHOS::HiviewDFX::HiLog::Fatal(                                         \
+      PRINT_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,              \
+      MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
-#define PRINT_HILOGE(fmt, ...)                                      									\
-    (void)OHOS::HiviewDFX::HiLog::Error(PRINT_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
-    MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define PRINT_HILOGE(fmt, ...)                                                 \
+  (void)OHOS::HiviewDFX::HiLog::Error(                                         \
+      PRINT_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,              \
+      MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
-#define PRINT_HILOGW(fmt, ...)                                                        				\
-    (void)OHOS::HiviewDFX::HiLog::Warn(PRINT_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
-    MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define PRINT_HILOGW(fmt, ...)                                                 \
+  (void)OHOS::HiviewDFX::HiLog::Warn(                                          \
+      PRINT_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,              \
+      MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
-#define PRINT_HILOGD(fmt, ...)                                                            			\
-    (void)OHOS::HiviewDFX::HiLog::Debug(PRINT_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
-    MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define PRINT_HILOGD(fmt, ...)                                                 \
+  (void)OHOS::HiviewDFX::HiLog::Debug(                                         \
+      PRINT_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,              \
+      MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
-#define PRINT_HILOGI(fmt, ...)                                                     					\
-    (void)OHOS::HiviewDFX::HiLog::Info(PRINT_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,	\
-    MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define PRINT_HILOGI(fmt, ...)                                                 \
+  (void)OHOS::HiviewDFX::HiLog::Info(                                          \
+      PRINT_LOG_LABEL, "[%{public}s %{public}s %{public}d] " fmt,              \
+      MAKE_FILE_NAME, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 #else
 

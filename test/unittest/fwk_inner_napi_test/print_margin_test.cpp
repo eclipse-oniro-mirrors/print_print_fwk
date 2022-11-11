@@ -13,38 +13,34 @@
  * limitations under the License.
  */
 
-#include "print_margin.h"
 #include "napi/native_api.h"
+#include "print_margin.h"
 #include <gtest/gtest.h>
 
 using namespace testing::ext;
 
 class PrintMarginTest : public testing::Test {
 public:
-    static void SetUpTestCase(void);
-    static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
+  static void SetUpTestCase(void);
+  static void TearDownTestCase(void);
+  void SetUp();
+  void TearDown();
 };
 
-void PrintMarginTest::SetUpTestCase(void)
-{
-    // step 2: input testsuit setup step
+void PrintMarginTest::SetUpTestCase(void) {
+  // step 2: input testsuit setup step
 }
 
-void PrintMarginTest::TearDownTestCase(void)
-{
-    // step 2: input testsuit teardown step
+void PrintMarginTest::TearDownTestCase(void) {
+  // step 2: input testsuit teardown step
 }
 
-void PrintMarginTest::SetUp(void)
-{
-    // step 3: input testcase setup step
+void PrintMarginTest::SetUp(void) {
+  // step 3: input testcase setup step
 }
 
-void PrintMarginTest::TearDown(void)
-{
-    // step 3: input testcase teardown step
+void PrintMarginTest::TearDown(void) {
+  // step 3: input testcase teardown step
 }
 
 /**
@@ -53,10 +49,9 @@ void PrintMarginTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: AR00000000 SR00000000
  */
-HWTEST_F(PrintMarginTest, PrintMarginTest_001, TestSize.Level1)
-{
-    OHOS::Print::PrintMargin margin;
-    EXPECT_EQ(0, margin.GetTop());
+HWTEST_F(PrintMarginTest, PrintMarginTest_001, TestSize.Level1) {
+  OHOS::Print::PrintMargin margin;
+  EXPECT_EQ(0, margin.GetTop());
 }
 
 /**
@@ -65,10 +60,9 @@ HWTEST_F(PrintMarginTest, PrintMarginTest_001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintMarginTest, PrintMarginTest_002, TestSize.Level1)
-{
-    OHOS::Print::PrintMargin margin;
-    EXPECT_EQ(0, margin.GetBottom());
+HWTEST_F(PrintMarginTest, PrintMarginTest_002, TestSize.Level1) {
+  OHOS::Print::PrintMargin margin;
+  EXPECT_EQ(0, margin.GetBottom());
 }
 
 /**
@@ -77,73 +71,66 @@ HWTEST_F(PrintMarginTest, PrintMarginTest_002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintMarginTest, PrintMarginTest_003, TestSize.Level1)
-{
-    OHOS::Print::PrintMargin margin;
-    EXPECT_EQ(0, margin.GetLeft());
+HWTEST_F(PrintMarginTest, PrintMarginTest_003, TestSize.Level1) {
+  OHOS::Print::PrintMargin margin;
+  EXPECT_EQ(0, margin.GetLeft());
 }
 
 /**
  * @tc.name: PrintMarginTest_004
  * @tc.desc: Verify the bottom function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require:
  */
-HWTEST_F(PrintMarginTest, PrintMarginTest_004, TestSize.Level1)
-{
-    OHOS::Print::PrintMargin margin;
-    EXPECT_EQ(0, margin.GetRight());
+HWTEST_F(PrintMarginTest, PrintMarginTest_004, TestSize.Level1) {
+  OHOS::Print::PrintMargin margin;
+  EXPECT_EQ(0, margin.GetRight());
 }
 
 /**
  * @tc.name: PrintMarginTest_005
  * @tc.desc: Verify the Reset function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require:
  */
-HWTEST_F(PrintMarginTest, PrintMarginTest_005, TestSize.Level1)
-{
-    OHOS::Print::PrintMargin margin;
-    margin.Reset();
-    EXPECT_EQ(0, margin.GetTop());
+HWTEST_F(PrintMarginTest, PrintMarginTest_005, TestSize.Level1) {
+  OHOS::Print::PrintMargin margin;
+  margin.Reset();
+  EXPECT_EQ(0, margin.GetTop());
 }
 
 /**
  * @tc.name: PrintMarginTest_006
  * @tc.desc: Verify the Reset function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require:
  */
-HWTEST_F(PrintMarginTest, PrintMarginTest_006, TestSize.Level1)
-{
-    OHOS::Print::PrintMargin margin;
-    margin.Reset();
-    EXPECT_EQ(0, margin.GetBottom());
+HWTEST_F(PrintMarginTest, PrintMarginTest_006, TestSize.Level1) {
+  OHOS::Print::PrintMargin margin;
+  margin.Reset();
+  EXPECT_EQ(0, margin.GetBottom());
 }
 
 /**
  * @tc.name: PrintMarginTest_007
  * @tc.desc: Verify the Reset function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require:
  */
-HWTEST_F(PrintMarginTest, PrintMarginTest_007, TestSize.Level1)
-{
-    OHOS::Print::PrintMargin margin;
-    margin.Reset();
-    EXPECT_EQ(0, margin.GetLeft());
+HWTEST_F(PrintMarginTest, PrintMarginTest_007, TestSize.Level1) {
+  OHOS::Print::PrintMargin margin;
+  margin.Reset();
+  EXPECT_EQ(0, margin.GetLeft());
 }
 
 /**
  * @tc.name: PrintMarginTest_008
  * @tc.desc: Verify the Reset function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require:
  */
-HWTEST_F(PrintMarginTest, PrintMarginTest_008, TestSize.Level1)
-{
-    OHOS::Print::PrintMargin margin;
-    margin.Reset();
-    EXPECT_EQ(0, margin.GetRight());
+HWTEST_F(PrintMarginTest, PrintMarginTest_008, TestSize.Level1) {
+  OHOS::Print::PrintMargin margin;
+  margin.Reset();
+  EXPECT_EQ(0, margin.GetRight());
 }
-

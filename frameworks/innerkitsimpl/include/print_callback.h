@@ -15,25 +15,26 @@
 
 #ifndef PRINT_CALLBACK_H
 #define PRINT_CALLBACK_H
-
-#include <mutex>
-#include "print_callback_stub.h"
+
 #include "napi/native_api.h"
+#include "print_callback_stub.h"
+#include <mutex>
 
 namespace OHOS::Print {
 class PrintCallback : public PrintCallbackStub {
 public:
-    PrintCallback(napi_env env, napi_ref ref);
-    virtual ~PrintCallback();
-    bool OnCallback() override;
-    bool OnCallback(uint32_t state, const PrinterInfo &info) override;
-    bool OnCallback(uint32_t state, const PrintJob &info) override;
-    bool OnCallback(const std::string &extensionId, const std::string &info) override;
+  PrintCallback(napi_env env, napi_ref ref);
+  virtual ~PrintCallback();
+  bool OnCallback() override;
+  bool OnCallback(uint32_t state, const PrinterInfo &info) override;
+  bool OnCallback(uint32_t state, const PrintJob &info) override;
+  bool OnCallback(const std::string &extensionId,
+                  const std::string &info) override;
 
 private:
-    napi_env env_;
-    napi_ref ref_;
-    std::mutex mutex_;
+  napi_env env_;
+  napi_ref ref_;
+  std::mutex mutex_;
 };
 } // namespace OHOS::Print
 #endif // IPRINT_CALLBACK_H

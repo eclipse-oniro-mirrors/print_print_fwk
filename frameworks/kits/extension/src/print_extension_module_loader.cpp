@@ -22,22 +22,21 @@ namespace OHOS::AbilityRuntime {
 PrintExtensionModuleLoader::PrintExtensionModuleLoader() = default;
 PrintExtensionModuleLoader::~PrintExtensionModuleLoader() = default;
 
-Extension *PrintExtensionModuleLoader::Create(const std::unique_ptr<Runtime> &runtime) const
-{
-    PRINT_HILOGD("jws PrintExtension::Create runtime");
-    return PrintExtension::Create(runtime);
+Extension *PrintExtensionModuleLoader::Create(
+    const std::unique_ptr<Runtime> &runtime) const {
+  PRINT_HILOGD("jws PrintExtension::Create runtime");
+  return PrintExtension::Create(runtime);
 }
 
-std::map<std::string, std::string> PrintExtensionModuleLoader::GetParams()
-{
-    std::map<std::string, std::string> params;
-    params.insert(std::pair<std::string, std::string>("type", "15"));
-    params.insert(std::pair<std::string, std::string>("name", "PrintExtension"));
-    return params;
+std::map<std::string, std::string> PrintExtensionModuleLoader::GetParams() {
+  std::map<std::string, std::string> params;
+  params.insert(std::pair<std::string, std::string>("type", "15"));
+  params.insert(std::pair<std::string, std::string>("name", "PrintExtension"));
+  return params;
 }
 
-extern "C" __attribute__((visibility("default"))) void *OHOS_EXTENSION_GetExtensionModule()
-{
-    return &PrintExtensionModuleLoader::GetInstance();
+extern "C" __attribute__((visibility("default"))) void *
+OHOS_EXTENSION_GetExtensionModule() {
+  return &PrintExtensionModuleLoader::GetInstance();
 }
 } // namespace OHOS::AbilityRuntime

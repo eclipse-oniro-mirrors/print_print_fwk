@@ -22,47 +22,48 @@
 namespace OHOS::Print {
 class PrintResolution final : public Parcelable {
 public:
-    explicit PrintResolution();
+  explicit PrintResolution();
 
-    PrintResolution(const PrintResolution &right);
+  PrintResolution(const PrintResolution &right);
 
-    PrintResolution &operator=(const PrintResolution &right);
+  PrintResolution &operator=(const PrintResolution &right);
 
-    virtual ~PrintResolution();
+  virtual ~PrintResolution();
 
-    void Reset();
+  void Reset();
 
-    [[nodiscard]] const std::string &GetId() const;
+  [[nodiscard]] const std::string &GetId() const;
 
-    [[nodiscard]] uint32_t GetHorizontalDpi() const;
+  [[nodiscard]] uint32_t GetHorizontalDpi() const;
 
-    [[nodiscard]] uint32_t GetVerticalDpi() const;
+  [[nodiscard]] uint32_t GetVerticalDpi() const;
 
-    virtual bool Marshalling(Parcel &parcel) const override;
+  virtual bool Marshalling(Parcel &parcel) const override;
 
-    static std::shared_ptr<PrintResolution> Unmarshalling(Parcel &parcel);
+  static std::shared_ptr<PrintResolution> Unmarshalling(Parcel &parcel);
 
-    napi_value ToJsObject(napi_env env) const;
+  napi_value ToJsObject(napi_env env) const;
 
-    static std::shared_ptr<PrintResolution> BuildFromJs(napi_env env, napi_value jsValue);
-    
-    void Dump();
+  static std::shared_ptr<PrintResolution> BuildFromJs(napi_env env,
+                                                      napi_value jsValue);
 
-private:
-    void SetId(const std::string &id);
-
-    void SetHorizontalDpi(uint32_t horizontalDpi);
-
-    void SetVerticalDpi(uint32_t verticalDpi);
-
-    bool ReadFromParcel(Parcel &parcel);
-
-    static bool ValidateProperty(napi_env env, napi_value object);
+  void Dump();
 
 private:
-    std::string id_;
-    uint32_t horizontalDpi_;
-    uint32_t verticalDpi_;
+  void SetId(const std::string &id);
+
+  void SetHorizontalDpi(uint32_t horizontalDpi);
+
+  void SetVerticalDpi(uint32_t verticalDpi);
+
+  bool ReadFromParcel(Parcel &parcel);
+
+  static bool ValidateProperty(napi_env env, napi_value object);
+
+private:
+  std::string id_;
+  uint32_t horizontalDpi_;
+  uint32_t verticalDpi_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_RESOLUTION_H

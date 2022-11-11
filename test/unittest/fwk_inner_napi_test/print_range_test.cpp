@@ -13,38 +13,34 @@
  * limitations under the License.
  */
 
-#include "print_range.h"
 #include "napi/native_api.h"
+#include "print_range.h"
 #include <gtest/gtest.h>
 
 using namespace testing::ext;
 
 class PrintRangeTest : public testing::Test {
 public:
-    static void SetUpTestCase(void);
-    static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
+  static void SetUpTestCase(void);
+  static void TearDownTestCase(void);
+  void SetUp();
+  void TearDown();
 };
 
-void PrintRangeTest::SetUpTestCase(void)
-{
-    // step 2: input testsuit setup step
+void PrintRangeTest::SetUpTestCase(void) {
+  // step 2: input testsuit setup step
 }
 
-void PrintRangeTest::TearDownTestCase(void)
-{
-    // step 2: input testsuit teardown step
+void PrintRangeTest::TearDownTestCase(void) {
+  // step 2: input testsuit teardown step
 }
 
-void PrintRangeTest::SetUp(void)
-{
-    // step 3: input testcase setup step
+void PrintRangeTest::SetUp(void) {
+  // step 3: input testcase setup step
 }
 
-void PrintRangeTest::TearDown(void)
-{
-    // step 3: input testcase teardown step
+void PrintRangeTest::TearDown(void) {
+  // step 3: input testcase teardown step
 }
 
 /**
@@ -53,20 +49,18 @@ void PrintRangeTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require: AR00000000 SR00000000
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_001, TestSize.Level1)
-{
-    OHOS::Print::PrintRange range;
-    EXPECT_EQ(0, range.GetStartPage());
+HWTEST_F(PrintRangeTest, PrintRangeTest_001, TestSize.Level1) {
+  OHOS::Print::PrintRange range;
+  EXPECT_EQ(0, range.GetStartPage());
 }
 
 /**
  * @tc.name: PrintRangeTest_002
  * @tc.desc: Verify the EndPage function.
  * @tc.type: FUNC
- * @tc.require: 
+ * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_002, TestSize.Level1)
-{
-    OHOS::Print::PrintRange range;
-    EXPECT_EQ(0, range.GetEndPage());
+HWTEST_F(PrintRangeTest, PrintRangeTest_002, TestSize.Level1) {
+  OHOS::Print::PrintRange range;
+  EXPECT_EQ(0, range.GetEndPage());
 }
