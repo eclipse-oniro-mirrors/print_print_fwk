@@ -46,7 +46,7 @@
           "//base/print/print/interfaces/kits/jsnapi/extension:printextension_napi",
           "//base/print/print/interfaces/kits/jsnapi/extensionctx:printextensioncontext_napi",
           "//base/print/print/frameworks/innerkitsimpl:print_client",
-          "//base/print/print/frameworks/kits/extension:print_extension",
+          "//base/print/print/frameworks/kits/extension:print_extension_framework",
           "//base/print/print/frameworks/kits/extension:print_extension_module",
           "//base/print/print/services:print_service",
           "//base/print/print/etc/init:printservice.rc",

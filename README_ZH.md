@@ -1,4 +1,4 @@
-# 分布式打印服务<a name="ZH-CN_TOPIC_0000001124232845"></a>
+# 打印框架服务<a name="ZH-CN_TOPIC_0000001124232845"></a>
 
 -   [简介](#section11660541593)
 -   [目录](#section161941989596)
@@ -8,10 +8,10 @@
 
 ## 简介<a name="section11660541593"></a>
 
-分布式打印服务（Distributed Print Service，DPS） 支持三方应用创建打印任务，拉起后台打印任务管理，管理打印扩展和打印任务。
+打印框架服务（Distributed Print Service，DPS） 支持三方应用创建打印任务，拉起后台打印任务管理，管理打印扩展和打印任务。
 提供打印扩展框架，实现三方打印扩展的接入，管理打印任务与打印机之间的关系，启动、暂停/恢复、取消打印任务，查询打印进度等。
 
-分布式打印服务覆盖范围包含：打印管理、打印管理服务和打印扩展管理：
+打印框架服务覆盖范围包含：打印管理、打印管理服务和打印扩展管理：
 
 -   **打印管理**
 
@@ -35,7 +35,7 @@
 ## 目录<a name="section161941989596"></a>
 
 ```
-foundation/print_print_fwk        #分布式打印服务
+foundation/print_print_fwk        #打印框架服务
 ├── frameworks       
 │   └── innerkitsimpl             # Native接口
     └── kits\extension            # 打印扩展管理
@@ -50,7 +50,7 @@ foundation/print_print_fwk        #分布式打印服务
 
 ## 约束<a name="section119744591305"></a>
 
--   如需使用分布式打印服务完整功能，需要申请code ohos.permission.PRINT、ohos.permission.MANAGE_PRINT_JOB权限。
+-   如需使用打印框架服务完整功能，需要申请code ohos.permission.PRINT、ohos.permission.MANAGE_PRINT_JOB权限。
 
 ## 说明<a name="section1312121216216"></a>
 部件内子模块职责说明：
