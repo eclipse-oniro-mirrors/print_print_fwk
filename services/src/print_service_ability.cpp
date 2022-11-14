@@ -163,6 +163,7 @@ PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList,
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -202,6 +203,7 @@ int32_t PrintServiceAbility::StopPrint(const std::string &taskId) {
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -213,6 +215,7 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId) {
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -232,17 +235,17 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId) {
     return E_PRINT_SERVER_FAILURE;
   }
 
-  int32_t ret = E_PRINT_SERVER_FAILURE;
-  if (extCallbackMap_[cid]->OnCallback(printerId)) {
-    ret = E_PRINT_NONE;
-  }
-  return ret;
+  auto cbFunc = extCallbackMap_[cid];
+  auto callback = [=]() { cbFunc->OnCallback(printerId); };
+  serviceHandler_->PostTask(callback, START_DISCOVERY_DELAY);
+  return E_PRINT_NONE;
 }
 
 int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId) {
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -262,11 +265,10 @@ int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId) {
     return E_PRINT_SERVER_FAILURE;
   }
 
-  int32_t ret = E_PRINT_SERVER_FAILURE;
-  if (extCallbackMap_[cid]->OnCallback(printerId)) {
-    ret = E_PRINT_NONE;
-  }
-  return ret;
+  auto cbFunc = extCallbackMap_[cid];
+  auto callback = [=]() { cbFunc->OnCallback(printerId); };
+  serviceHandler_->PostTask(callback, START_DISCOVERY_DELAY);
+  return E_PRINT_NONE;
 }
 
 int32_t PrintServiceAbility::StartDiscoverPrinter(
@@ -274,6 +276,7 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -339,13 +342,14 @@ bool PrintServiceAbility::DelayStartDiscovery(const std::string &extensionId) {
   if (extCallbackMap_[cid]->OnCallback()) {
     ret = E_PRINT_NONE;
   }
-  return ret == E_PRINT_NONE;
+  return ret;
 }
 
 int32_t PrintServiceAbility::StopDiscoverPrinter() {
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
   PRINT_HILOGD("StopDiscoverPrinter started.");
@@ -360,7 +364,10 @@ int32_t PrintServiceAbility::StopDiscoverPrinter() {
         PRINT_HILOGE("StopDiscoverPrinter Not Register, BUT State is LOADED");
         continue;
       }
-      extCallbackMap_[cid]->OnCallback();
+      // extCallbackMap_[cid]->OnCallback();
+      auto cbFunc = extCallbackMap_[cid];
+      auto callback = [=]() { cbFunc->OnCallback(); };
+      serviceHandler_->PostTask(callback, START_DISCOVERY_DELAY);
     }
   }
   PRINT_HILOGW("StopDiscoverPrinter out.");
@@ -372,6 +379,7 @@ int32_t PrintServiceAbility::QueryAllExtension(
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
   PRINT_HILOGD("QueryAllExtension started.");
@@ -405,6 +413,7 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo) {
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -439,20 +448,23 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo) {
     return E_PRINT_SERVER_FAILURE;
   }
 
-  int32_t ret = E_PRINT_SERVER_FAILURE;
   printJobList_[jobId]->UpdateParams(jobInfo);
-  if (extCallbackMap_[cid]->OnCallback(*printJobList_[jobId])) {
+  auto cbFunc = extCallbackMap_[cid];
+  auto callback = [=]() {
+    PRINT_HILOGD("auto callback IN");
     printJobList_[jobId]->SetJobState(PRINT_JOB_QUEUED);
     UpdatePrintJobState(jobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
-    ret = E_PRINT_NONE;
-  }
-  return ret;
+    cbFunc->OnCallback(*printJobList_[jobId]);
+  };
+  serviceHandler_->PostTask(callback, START_DISCOVERY_DELAY);
+  return E_PRINT_NONE;
 }
 
 int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId) {
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
   PRINT_HILOGD("CancelPrintJob started.");
@@ -479,11 +491,10 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId) {
     return E_PRINT_SERVER_FAILURE;
   }
 
-  int32_t ret = E_PRINT_SERVER_FAILURE;
-  if (extCallbackMap_[cid]->OnCallback(*printJobList_[jobId])) {
-    ret = E_PRINT_NONE;
-  }
-  return ret;
+  auto cbFunc = extCallbackMap_[cid];
+  auto callback = [=]() { cbFunc->OnCallback(*printJobList_[jobId]); };
+  serviceHandler_->PostTask(callback, START_DISCOVERY_DELAY);
+  return E_PRINT_NONE;
 }
 
 int32_t
@@ -491,6 +502,7 @@ PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printerInfos) {
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
   PRINT_HILOGD("AddPrinters started. Total size is %{public}d",
@@ -522,6 +534,7 @@ int32_t PrintServiceAbility::RemovePrinters(
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -554,6 +567,7 @@ int32_t PrintServiceAbility::UpdatePrinters(
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -581,6 +595,7 @@ int32_t PrintServiceAbility::UpdatePrinterState(const std::string &printerId,
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -609,6 +624,7 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId,
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -646,6 +662,7 @@ int32_t PrintServiceAbility::UpdateExtensionInfo(const std::string &extensionId,
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -666,6 +683,7 @@ int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo,
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
   PRINT_HILOGD("RequestPreview started.");
@@ -699,12 +717,10 @@ int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo,
     return E_PRINT_SERVER_FAILURE;
   }
 
-  int32_t ret = E_PRINT_SERVER_FAILURE;
   printJobList_[jobId]->UpdateParams(jobInfo);
-  if (extCallbackMap_[cid]->OnCallback(*printJobList_[jobId])) {
-    ret = E_PRINT_NONE;
-  }
-  return ret;
+  auto cbFunc = extCallbackMap_[cid];
+  auto callback = [=]() { cbFunc->OnCallback(*printJobList_[jobId]); };
+  return E_PRINT_NONE;
 }
 
 int32_t
@@ -712,6 +728,7 @@ PrintServiceAbility::QueryPrinterCapability(const std::string &printerId) {
   ManualStart();
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
   PRINT_HILOGD("QueryPrinterCapability started %{public}s", printerId.c_str());
@@ -729,11 +746,10 @@ PrintServiceAbility::QueryPrinterCapability(const std::string &printerId) {
     return E_PRINT_SERVER_FAILURE;
   }
 
-  int32_t ret = E_PRINT_SERVER_FAILURE;
-  if (extCallbackMap_[cid]->OnCallback(printerId)) {
-    ret = E_PRINT_NONE;
-  }
-  return ret;
+  auto cbFunc = extCallbackMap_[cid];
+  auto callback = [=]() { cbFunc->OnCallback(printerId); };
+  serviceHandler_->PostTask(callback, START_DISCOVERY_DELAY);
+  return E_PRINT_NONE;
 }
 
 bool PrintServiceAbility::CheckPermission(const std::string &permissionName) {
@@ -755,6 +771,7 @@ int32_t PrintServiceAbility::RegisterExtCallback(
     const sptr<IPrintExtensionCallback> &listener) {
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
   std::string extensionId = "";
@@ -801,6 +818,7 @@ int32_t
 PrintServiceAbility::UnregisterAllExtCallback(const std::string &extensionId) {
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -822,6 +840,7 @@ PrintServiceAbility::UnregisterAllExtCallback(const std::string &extensionId) {
 int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId) {
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -850,6 +869,7 @@ int32_t PrintServiceAbility::Read(std::vector<uint8_t> &fileRead,
                                   uint32_t max) {
   if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -867,6 +887,7 @@ int32_t PrintServiceAbility::On(const std::string taskId,
   }
   if (!CheckPermission(permission)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 
@@ -900,6 +921,7 @@ int32_t PrintServiceAbility::Off(const std::string taskId,
   }
   if (!CheckPermission(permission)) {
     PRINT_HILOGE("no permission to access print service");
+    PRINT_HILOGD("ErrorMessage: [E_PRINT_NO_PERMISSION], ErrorIndex:[%{public}d]", E_PRINT_NO_PERMISSION);
     return E_PRINT_NO_PERMISSION;
   }
 

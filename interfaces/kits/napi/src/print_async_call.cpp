@@ -37,7 +37,7 @@ PrintAsyncCall::PrintAsyncCall(napi_env env, napi_callback_info info,
       argc = pos;
     }
   }
-  (*context)(env, argc, argv, self);
+  context_->paramStatus = (*context)(env, argc, argv, self);
   context_->ctx = std::move(context);
   napi_create_reference(env, self, 1, &context_->self);
 }
@@ -130,7 +130,11 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data) {
   } else {
     napi_value message = nullptr;
     uint32_t errorIndex = E_PRINT_NONE;
-    errorIndex = context->ctx->GetErrorIndex();
+    if (context->paramStatus != napi_ok) {
+      errorIndex = E_PRINT_INVALID_PARAMETER;
+    } else {
+      errorIndex = context->ctx->GetErrorIndex();
+    }
     PRINT_HILOGE("ErrorMessage: [%{public}s], ErrorIndex:[%{public}d]",
                  GetErrorText(errorIndex).c_str(), errorIndex);
     napi_create_uint32(env, errorIndex, &message);

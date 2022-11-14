@@ -101,6 +101,7 @@ private:
     napi_ref self = nullptr;
     napi_deferred defer = nullptr;
     napi_async_work work = nullptr;
+    napi_status paramStatus = napi_ok;
   };
   static void DeleteContext(napi_env env, AsyncContext *context);
 

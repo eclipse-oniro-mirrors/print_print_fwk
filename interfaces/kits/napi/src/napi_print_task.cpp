@@ -164,17 +164,12 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info) {
 }
 
 bool NapiPrintTask::IsValidFile(const std::string &fileName) {
-  if (fileName == "") {
+  PRINT_HILOGE("fileName: %{public}s", fileName.c_str());
+  if (fileName == "" || fileName.find("datashare://") != 0) {
     PRINT_HILOGE("invalid file name");
     return false;
   }
 
-  FILE *file = fopen(fileName.c_str(), "rb");
-  if (file == nullptr) {
-    PRINT_HILOGE("invalid file path");
-    return false;
-  }
-  fclose(file);
   return true;
 }
 } // namespace OHOS::Print

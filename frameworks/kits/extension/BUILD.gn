@@ -84,7 +84,7 @@ config("ability_public_config") {
   ]
 }
 
-ohos_shared_library("print_extension") {
+ohos_shared_library("print_extension_framework") {
   include_dirs = [
     "//base/print/print/frameworks/innerkitsimpl/include",
     "//base/print/print/frameworks/kits/extension/include",
@@ -145,7 +145,7 @@ ohos_shared_library("print_extension_module") {
   public_configs = [ ":ability_public_config" ]
 
   deps = [
-    ":print_extension",
+    ":print_extension_framework",
     "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
   ]
 

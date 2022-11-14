@@ -77,8 +77,11 @@ napi_value NapiInnerPrint::StartDiscovery(napi_env env,
                       " should 1 parameter!", napi_invalid_arg);
     bool isArray = false;
     napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
-    PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
-
+    if (!isArray) {
+      PRINT_HILOGE("Parse is not array!");
+      context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+      return napi_invalid_arg;
+    }
     uint32_t len = 0;
     napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
 
@@ -285,6 +288,7 @@ napi_value NapiInnerPrint::CancelPrintJob(napi_env env,
     std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(
         env, argv[NapiPrintUtils::INDEX_ZERO]);
     if (jobId == "") {
+
       PRINT_HILOGE("Parse JobId error!");
       context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
       return napi_invalid_arg;
