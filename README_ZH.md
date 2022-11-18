@@ -13,7 +13,7 @@
 
 逻辑流程如下：
 
-首先，从应用端发起打印请求到PrintManager，再从打印系统管理PrintSA发送到PrinterSpooler打印服务，拉起打印预览界面到应用层。由PrintSpooler向PrintSA发送开启发现能力指令，再由PrintSA向打印扩展接口PrintExtension发送开启发现能力指令，再由PrintExtension向华为打印扩展接口HwPrintExtension发送开启发现能力发现打印机。再由HwPrintExtension向PrintSA上报发现打印机信息，最后返回到PrintSpooler。最后由PrintSpooler发送打印任务到PrintSA，再发送到PrintExtension后发送到HwPrintExtension，最后发送给打印机。
+首先，从应用端发起打印请求到PrintManager，再从打印系统管理PrintSA发送到PrinterSpooler打印服务，拉起打印预览界面到应用层。由PrintSpooler向PrintSA发送开启发现能力指令，再由PrintSA向打印扩展接口PrintExtension发送开启发现能力指令，再由PrintExtension向华为打印扩展接口PrintPA发送开启发现能力发现打印机。再由PrintPA向PrintSA上报发现打印机信息，最后返回到PrintSpooler。最后由PrintSpooler发送打印任务到PrintSA，再发送到PrintExtension后发送到PrintPA，最后发送给打印机。
 
 **图 1**  部件架构图<a name="fig371116145419"></a>
 
@@ -61,7 +61,7 @@ foundation/print_print_fwk        #打印框架
 
 - **打印拓展（Print Extension）**
 
-    提供打印拓展框架，提供打印机的标准接入能力，负责定义打印拓展应用的生命周期管理，定义打印扩展与打印管理服务之间的接口；定义打印任务，管理打印任务与打印机之间的关系，启动、暂停/恢复、取消打印任务，查询打印进度；定义打印文档信息，用于应用向打印扩展传输打印数据；定义打印机信息，用于打印任务UI界面呈现
+    打印扩展部分需要三方厂商定制
 
 - **三方打印扩展（PrintPA）**
 
