@@ -13,7 +13,7 @@
 
 逻辑流程如下：
 
-首先，从应用端发起打印请求到PrintManager，再从打印系统管理PrintSA发送到PrinterSpooler打印服务，拉起打印预览界面到应用层。由PrintSpooler向PrintSA发送开启发现能力指令，再由PrintSA向打印扩展接口PrintExtension发送开启发现能力指令，再由PrintExtension向华为打印扩展接口PrintPA发送开启发现能力发现打印机。再由PrintPA向PrintSA上报发现打印机信息，最后返回到PrintSpooler。最后由PrintSpooler发送打印任务到PrintSA，再发送到PrintExtension后发送到PrintPA，最后发送给打印机。
+首先，从应用端发起打印请求到PrintManager，再从打印系统管理PrintSA发送到PrinterSpooler打印服务，拉起打印预览界面到应用层。由PrintSpooler向PrintSA发送开启发现能力指令，再由PrintSA向打印扩展接口PrintExtension发送开启发现能力指令，然后PrintExtension向华为打印扩展接口PrintPA发送开启发现能力发现打印机。接着PrintPA向PrintSA上报发现打印机信息并返回到PrintSpooler。最后由PrintSpooler发送打印任务到PrintSA，再发送到PrintExtension，之后发送给PrintPA，最后发送给打印机。
 
 **图 1**  部件架构图<a name="fig371116145419"></a>
 
@@ -55,7 +55,7 @@ foundation/print_print_fwk        #打印框架
 
     负责打印服务在客户端的接口实现，对外(JS应用或者Native应用）提供统一的打印服务能力
 
-- **打印管理客户端（Print Manager Client）**
+- **打印管理服务端（Print Manager Server）**
 
     对接打印管理，接受应用的打印任务相关请求，执行权限校验，并拉起后台打印任务管理；管理系统中打印扩展。包括打印扩展的新增、移除、修改属性（已安装的、默认的、当前使用的）、查询状态、监听变化等；管理打印任务队列。包括：打印格式化数据的传递、打印任务的数据缓存等；对接使用中的打印扩展，分发和管理打印任务
 
