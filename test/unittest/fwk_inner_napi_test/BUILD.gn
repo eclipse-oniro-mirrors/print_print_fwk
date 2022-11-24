@@ -63,5 +63,5 @@ ohos_unittest("print_fwk_inner_napi_test") {
 group("unittest") {
   testonly = true
 
-  deps += [ ":print_fwk_inner_napi_test" ]
+  deps = [":print_fwk_inner_napi_test"]
 }
