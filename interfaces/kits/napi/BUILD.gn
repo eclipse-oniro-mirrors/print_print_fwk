@@ -35,8 +35,8 @@ ohos_shared_library("print_napi") {
     "${ability_runtime_inner_api_path}/ability_manager/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/Isamgr",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
-    "//base/print/print/utils/include",
-    "//base/print/print/frameworks/innerkitsimpl/include",
+    "//base/print/print_fwk/utils/include",
+    "//base/print/print_fwk/frameworks/innerkitsimpl/include",
   ]
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
@@ -51,7 +51,7 @@ ohos_shared_library("print_napi") {
   deps = [
     "//foundation/arkui/napi:ace_napi",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-    "//base/print/print/frameworks/innerkitsimpl:print_client",
+    "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
   ]
   external_deps = [
     "ability_base:want",

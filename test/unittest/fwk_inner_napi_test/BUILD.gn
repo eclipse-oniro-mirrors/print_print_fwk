@@ -18,7 +18,7 @@ module_output_path = "print/print"
 ohos_unittest("print_fwk_inner_napi_test") {
   module_out_path = module_output_path
   include_dirs = [
-    "//base/print/print/frameworks/innerkitsimpl/include",
+    "//base/print/print_fwk/frameworks/innerkitsimpl/include",
     "//foundation/arkui/ace_engine/frameworks/base/utils",
     "//foundation/arkui/napi",
     "//foundation/arkui/napi/interfaces/kits",
@@ -28,7 +28,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "//utils/system/safwk/native/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/Isamgr",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
-    "//base/print/print/utils/include",
+    "//base/print/print_fwk/utils/include",
   ]
 
   sources = [
@@ -43,15 +43,15 @@ ohos_unittest("print_fwk_inner_napi_test") {
 
   
   deps = [
-    "//base/print/print/interfaces/kits/napi:print_napi",
-    "//base/print/print/interfaces/kits/jsnapi/extension:printextension_napi",
-    "//base/print/print/interfaces/kits/jsnapi/extensionctx:printextensioncontext_napi",
-    "//base/print/print/frameworks/innerkitsimpl:print_client",
-    "//base/print/print/frameworks/kits/extension:print_extension_framework",
-    "//base/print/print/frameworks/kits/extension:print_extension_module",
-    "//base/print/print/services:print_service",
-    "//base/print/print/etc/init:printservice.rc",
-    "//base/print/print/profile:print_sa_profiles",
+    "//base/print/print_fwk/interfaces/kits/napi:print_napi",
+    "//base/print/print_fwk/interfaces/kits/jsnapi/extension:printextension_napi",
+    "//base/print/print_fwk/interfaces/kits/jsnapi/extensionctx:printextensioncontext_napi",
+    "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
+    "//base/print/print_fwk/frameworks/kits/extension:print_extension_framework",
+    "//base/print/print_fwk/frameworks/kits/extension:print_extension_module",
+    "//base/print/print_fwk/services:print_service",
+    "//base/print/print_fwk/etc/init:printservice.rc",
+    "//base/print/print_fwk/profile:print_sa_profiles",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
     "//third_party/zlib:libz",
@@ -62,8 +62,6 @@ ohos_unittest("print_fwk_inner_napi_test") {
 
 group("unittest") {
   testonly = true
-
-  deps = []
 
   deps += [ ":print_fwk_inner_napi_test" ]
 }

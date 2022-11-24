@@ -5,7 +5,7 @@
     "license": "Apache License 2.0",
     "publishAs": "code-segment",
     "segment": {
-      "destPath": "base/print/print"
+      "destPath": "base/print/print_fwk"
     },
     "dirs": {},
     "scripts": {},
@@ -42,22 +42,22 @@
       },
       "build": {
         "sub_component": [
-          "//base/print/print/interfaces/kits/napi:print_napi",
-          "//base/print/print/interfaces/kits/jsnapi/extension:printextension_napi",
-          "//base/print/print/interfaces/kits/jsnapi/extensionctx:printextensioncontext_napi",
-          "//base/print/print/frameworks/innerkitsimpl:print_client",
-          "//base/print/print/frameworks/kits/extension:print_extension_framework",
-          "//base/print/print/frameworks/kits/extension:print_extension_module",
-          "//base/print/print/services:print_service",
-          "//base/print/print/etc/init:printservice.rc",
-          "//base/print/print/profile:print_sa_profiles"
+          "//base/print/print_fwk/interfaces/kits/napi:print_napi",
+          "//base/print/print_fwk/interfaces/kits/jsnapi/extension:printextension_napi",
+          "//base/print/print_fwk/interfaces/kits/jsnapi/extensionctx:printextensioncontext_napi",
+          "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
+          "//base/print/print_fwk/frameworks/kits/extension:print_extension_framework",
+          "//base/print/print_fwk/frameworks/kits/extension:print_extension_module",
+          "//base/print/print_fwk/services:print_service",
+          "//base/print/print_fwk/etc/init:printservice.rc",
+          "//base/print/print_fwk/profile:print_sa_profiles"
         ],
         "test": [
-          "//base/print/print/test/unittest/fwk_inner_napi_test:print_fwk_inner_napi_test"
+          "//base/print/print_fwk/test/unittest/fwk_inner_napi_test:print_fwk_inner_napi_test"
         ]
       },
       "hisysevent_config": [
-        "//base/print/print/hisysevent.yaml"
+        "//base/print/print_fwk/hisysevent.yaml"
       ]
     }
   }
