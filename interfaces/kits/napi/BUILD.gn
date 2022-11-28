@@ -43,18 +43,18 @@ ohos_shared_library("print_napi") {
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
   sources = [
-    "src/print_module.cpp",
-    "src/napi_print_task.cpp",
     "src/napi_inner_print.cpp",
     "src/napi_print_ext.cpp",
+    "src/napi_print_task.cpp",
     "src/print_async_call.cpp",
+    "src/print_module.cpp",
     "src/print_task.cpp",
   ]
 
   deps = [
+    "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-    "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
   ]
 
   external_deps = [
