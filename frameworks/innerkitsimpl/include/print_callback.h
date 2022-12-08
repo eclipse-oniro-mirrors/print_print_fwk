@@ -23,18 +23,17 @@
 namespace OHOS::Print {
 class PrintCallback : public PrintCallbackStub {
 public:
-  PrintCallback(napi_env env, napi_ref ref);
-  virtual ~PrintCallback();
-  bool OnCallback() override;
-  bool OnCallback(uint32_t state, const PrinterInfo &info) override;
-  bool OnCallback(uint32_t state, const PrintJob &info) override;
-  bool OnCallback(const std::string &extensionId,
-                  const std::string &info) override;
+    PrintCallback(napi_env env, napi_ref ref);
+    virtual ~PrintCallback();
+    bool OnCallback() override;
+    bool OnCallback(uint32_t state, const PrinterInfo &info) override;
+    bool OnCallback(uint32_t state, const PrintJob &info) override;
+    bool OnCallback(const std::string &extensionId, const std::string &info) override;
 
 private:
-  napi_env env_;
-  napi_ref ref_;
-  std::mutex mutex_;
+    napi_env env_;
+    napi_ref ref_;
+    std::mutex mutex_;
 };
 } // namespace OHOS::Print
 #endif // IPRINT_CALLBACK_H

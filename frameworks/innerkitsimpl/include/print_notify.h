@@ -25,10 +25,10 @@
 namespace OHOS::Print {
 class PrintNotify final : public PrintCallbackStub {
 public:
-  ACE_DISALLOW_COPY_AND_MOVE(PrintNotify);
-  explicit PrintNotify();
-  virtual ~PrintNotify();
-  void OnCallBack(MessageParcel &data) override;
+    ACE_DISALLOW_COPY_AND_MOVE(PrintNotify);
+    explicit PrintNotify();
+    virtual ~PrintNotify();
+    void OnCallBack(MessageParcel &data) override;
 };
 } // namespace OHOS::Print
 

@@ -25,46 +25,43 @@
 namespace OHOS {
 namespace AbilityRuntime {
 using namespace OHOS::AppExecFwk;
-PrintExtension *
-PrintExtension::Create(const std::unique_ptr<Runtime> &runtime) {
-  PRINT_HILOGD("jws PrintExtension::Create runtime");
-  if (!runtime) {
-    return new PrintExtension();
-  }
-  PRINT_HILOGD("jws PrintExtension::Create runtime");
-  switch (runtime->GetLanguage()) {
-  case Runtime::Language::JS:
-    return JsPrintExtension::Create(runtime);
+PrintExtension *PrintExtension::Create(const std::unique_ptr<Runtime> &runtime)
+{
+    PRINT_HILOGD("jws PrintExtension::Create runtime");
+    if (!runtime) {
+        return new PrintExtension();
+    }
+    PRINT_HILOGD("jws PrintExtension::Create runtime");
+    switch (runtime->GetLanguage()) {
+        case Runtime::Language::JS:
+            return JsPrintExtension::Create(runtime);
 
-  default:
-    return new PrintExtension();
-  }
+        default:
+            return new PrintExtension();
+    }
 }
 
 void PrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
-                          const std::shared_ptr<OHOSApplication> &application,
-                          std::shared_ptr<AbilityHandler> &handler,
-                          const sptr<IRemoteObject> &token) {
-  PRINT_HILOGD("jws PrintExtension begin init context");
-  ExtensionBase<PrintExtensionContext>::Init(record, application, handler,
-                                             token);
-  PRINT_HILOGD("PrintExtension begin init context");
+    const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
+    const sptr<IRemoteObject> &token)
+{
+    PRINT_HILOGD("jws PrintExtension begin init context");
+    ExtensionBase<PrintExtensionContext>::Init(record, application, handler, token);
+    PRINT_HILOGD("PrintExtension begin init context");
 }
 
 std::shared_ptr<PrintExtensionContext> PrintExtension::CreateAndInitContext(
-    const std::shared_ptr<AbilityLocalRecord> &record,
-    const std::shared_ptr<OHOSApplication> &application,
-    std::shared_ptr<AbilityHandler> &handler,
-    const sptr<IRemoteObject> &token) {
-  PRINT_HILOGD("jws PrintExtension begin init context");
-  std::shared_ptr<PrintExtensionContext> context =
-      ExtensionBase<PrintExtensionContext>::CreateAndInitContext(
-          record, application, handler, token);
-  if (context == nullptr) {
-    PRINT_HILOGE("PrintExtension::CreateAndInitContext context is nullptr");
+    const std::shared_ptr<AbilityLocalRecord> &record, const std::shared_ptr<OHOSApplication> &application,
+    std::shared_ptr<AbilityHandler> &handler, const sptr<IRemoteObject> &token)
+{
+    PRINT_HILOGD("jws PrintExtension begin init context");
+    std::shared_ptr<PrintExtensionContext> context =
+        ExtensionBase<PrintExtensionContext>::CreateAndInitContext(record, application, handler, token);
+    if (context == nullptr) {
+        PRINT_HILOGE("PrintExtension::CreateAndInitContext context is nullptr");
+        return context;
+    }
     return context;
-  }
-  return context;
 }
 } // namespace AbilityRuntime
 } // namespace OHOS

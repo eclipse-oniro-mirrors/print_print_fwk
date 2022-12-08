@@ -24,19 +24,18 @@
 namespace OHOS::Print {
 class IPrintCallback : public IRemoteBroker {
 public:
-  DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.IPrintCallback");
-  virtual bool OnCallback() = 0;
-  virtual bool OnCallback(uint32_t state, const PrinterInfo &info) = 0;
-  virtual bool OnCallback(uint32_t state, const PrintJob &info) = 0;
-  virtual bool OnCallback(const std::string &extensionId,
-                          const std::string &info) = 0;
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.IPrintCallback");
+    virtual bool OnCallback() = 0;
+    virtual bool OnCallback(uint32_t state, const PrinterInfo &info) = 0;
+    virtual bool OnCallback(uint32_t state, const PrintJob &info) = 0;
+    virtual bool OnCallback(const std::string &extensionId, const std::string &info) = 0;
 };
 
 enum {
-  PRINT_CALLBACK_TASK,
-  PRINT_CALLBACK_PRINTER,
-  PRINT_CALLBACK_PRINT_JOB,
-  PRINT_CALLBACK_EXTINFO,
+    PRINT_CALLBACK_TASK,
+    PRINT_CALLBACK_PRINTER,
+    PRINT_CALLBACK_PRINT_JOB,
+    PRINT_CALLBACK_EXTINFO,    
 };
 } // namespace OHOS::Print
 #endif // IPRINT_CALLBACK_H

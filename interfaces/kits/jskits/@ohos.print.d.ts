@@ -13,11 +13,10 @@
  * limitations under the License.
  */
 import {AsyncCallback} from './basic';
-import {ExtensionAbilityInfo} from './bundle/extensionAbilityInfo';
 
 /**
  * System print
- * @sysCap SystemCapability.Print.print
+ * @sysCap SystemCapability.Print.PrintFramework
  * @import import print from '@ohos.app.print';
  * @since 9
  */
@@ -77,7 +76,7 @@ declare namespace print {
 
     interface PreviewAttribute {
         previewRange: PrinterRange;  // preview page range
-        result?: string;        // preview file
+        result?: number;        // preview file
     }
 
     interface PrintResolution {
@@ -113,7 +112,7 @@ declare namespace print {
     }
 
     interface PrintJob {
-        files: Array<string>;    // document list to be printed
+        fdList: Array<number>;    // document fd list to be printed
         jobId: string;          // job id
         printerId: string;      // printer id to take charge of printing
         jobState: PrintJobState;  // current print job state
@@ -303,8 +302,8 @@ declare namespace print {
      * @systemapi Hide this for inner system use.
      * @return -
      */
-    function requestPrintPreview(jobInfo: PrintJob, callback: (result: string) => void): void;
-    function requestPrintPreview(jobInfo: PrintJob): Promise<string>;
+    function requestPrintPreview(jobInfo: PrintJob, callback: (result: number) => void): void;
+    function requestPrintPreview(jobInfo: PrintJob): Promise<number>;
 
     /**
      * Register event callback for the state change of printer.
@@ -459,25 +458,6 @@ declare namespace print {
      */
     function updateExtensionInfo(info: string, callback: AsyncCallback<boolean>): void;
     function updateExtensionInfo(info: string): Promise<boolean>;
-
-	interface ReadConfig {
-		file: string;		// file uri
-		offset?: number;	// offset from the head of file
-		max?: number;		// max size of read operation
-	};
-	
-    /**
-     * Read file content of the specific file.
-     *
-     * @since 9
-     * @param config Indicates read configuration.
-     * @param callback The callback function for indcating the result of API execution.
-     * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
-     * @systemapi Hide this for inner system use.
-     * @return -
-     */
-     function readFile(config: ReadConfig, callback: AsyncCallback<ArrayBuffer>): void;
-     function readFile(config: ReadConfig): Promise<ArrayBuffer>;
 }
 
 export default print;

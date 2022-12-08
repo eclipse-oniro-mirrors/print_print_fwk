@@ -43,13 +43,13 @@ void PrintJobTest::TearDown(void) {}
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1) {
   OHOS::Print::PrintJob job;
-  std::vector<std::string> files = {"file1", "file2"};
-  std::vector<std::string> getFiles;
-  job.SetFiles(files);
-  job.GetFiles(getFiles);
+  std::vector<uint32_t> fdList = {1, 2};
+  std::vector<uint32_t> getFdList;
+  job.SetFdList(fdList);
+  job.GetFdList(getFdList);
   // nativeObj->SetTop(1);
   // int actual = nativeObj->GetTop();
-  EXPECT_EQ("file1", getFiles[0]);
+  EXPECT_EQ("file1", getFdList[0]);
 }
 
 /**
@@ -60,13 +60,13 @@ HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1) {
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1) {
   OHOS::Print::PrintJob job;
-  std::vector<std::string> files = {"file1", "file2"};
-  std::vector<std::string> getFiles;
-  job.SetFiles(files);
-  job.GetFiles(getFiles);
+  std::vector<uint32_t> fdList = {1, 2};
+  std::vector<uint32_t> getFdList;
+  job.SetFdList(fdList);
+  job.GetFdList(getFdList);
   // nativeObj->SetTop(1);
   // int actual = nativeObj->GetTop();
-  EXPECT_EQ("file2", getFiles[1]);
+  EXPECT_EQ("file2", getFdList[1]);
 }
 
 /**
@@ -77,13 +77,13 @@ HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1) {
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0003, TestSize.Level1) {
   OHOS::Print::PrintJob job;
-  std::vector<std::string> files = {"file1", "file2", "file3"};
-  std::vector<std::string> getFiles;
-  job.SetFiles(files);
-  job.GetFiles(getFiles);
+  std::vector<uint32_t> fdList = {1, 2, 3};
+  std::vector<uint32_t> getFdList;
+  job.SetFdList(fdList);
+  job.GetFdList(getFdList);
   // nativeObj->SetTop(1);
   // int actual = nativeObj->GetTop();
-  EXPECT_EQ("file3", getFiles[2]);
+  EXPECT_EQ("file3", getFdList[2]);
 }
 
 /**
@@ -94,13 +94,13 @@ HWTEST_F(PrintJobTest, PrintJobTest_0003, TestSize.Level1) {
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0004, TestSize.Level1) {
   OHOS::Print::PrintJob job;
-  std::vector<std::string> files = {"file1", "file2", "file3", "file4"};
-  std::vector<std::string> getFiles;
-  job.SetFiles(files);
-  job.GetFiles(getFiles);
+  std::vector<uint32_t> fdList = {1, 2, 3, 4};
+  std::vector<uint32_t> getFdList;
+  job.SetFdList(fdList);
+  job.GetFdList(getFdList);
   // nativeObj->SetTop(1);
   // int actual = nativeObj->GetTop();
-  EXPECT_EQ("file4", getFiles[3]);
+  EXPECT_EQ("file4", getFdList[3]);
 }
 
 /**

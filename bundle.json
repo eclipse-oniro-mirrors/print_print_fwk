@@ -1,5 +1,5 @@
 {
-    "name": "@ohos/print",
+    "name": "@ohos/print_fwk",
     "description": "Provide printer management and print ability for 3rd party app",
     "version": "3.1",
     "license": "Apache License 2.0",
@@ -10,10 +10,10 @@
     "dirs": {},
     "scripts": {},
     "component": {
-      "name": "print",
+      "name": "print_fwk",
       "subsystem": "print",
       "syscap": [
-        "SystemCapability.Print.Print"
+        "SystemCapability.Print.PrintFramework"
       ],
       "features": [
       ],

@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_output_path = "print/print"
+module_output_path = "print/print_fwk"
 
 ohos_unittest("print_fwk_inner_napi_test") {
   module_out_path = module_output_path
@@ -32,6 +32,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
   ]
 
   sources = [
+    "print_extension_info_test.cpp",
     "print_job_test.cpp",
     "print_margin_test.cpp",
     "print_range_test.cpp",
@@ -61,5 +62,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
 group("unittest") {
   testonly = true
 
-  deps = [ ":print_fwk_inner_napi_test" ]
+  deps = []
+
+  deps += [ ":print_fwk_inner_napi_test" ]
 }

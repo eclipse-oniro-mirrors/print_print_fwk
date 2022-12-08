@@ -27,82 +27,83 @@ namespace OHOS::Print {
 
 using namespace OHOS::AppExecFwk::Constants;
 
-PrintBMSHelper::PrintBMSHelper()
-    : sptrBundleMgr_(nullptr), printBMSDeath_(nullptr) {}
+PrintBMSHelper::PrintBMSHelper() : sptrBundleMgr_(nullptr), printBMSDeath_(nullptr)
+{}
 
-PrintBMSHelper::~PrintBMSHelper() {}
+PrintBMSHelper::~PrintBMSHelper()
+{}
 
-bool PrintBMSHelper::QueryExtensionInfos(
-    std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  /*
-  if (!GetProxy()) {
-      return false;
-  }
-  */
-  std::vector<int> osAccountIds;
-  if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(osAccountIds) !=
-      ERR_OK) {
-    PRINT_HILOGE("failed to QueryActiveOsAccountIds!");
-    return false;
-  }
-  if (osAccountIds.size() == 0) {
-    PRINT_HILOGE("no os account acquired!");
-    return false;
-  }
-  for (auto userId : osAccountIds) {
-    PRINT_HILOGE("active userId = %{public}d", userId);
-    AppExecFwk::ExtensionAbilityInfo extInfo;
-    extInfo.bundleName = "com.open.harmony.packagemag";
-    extInfo.name = "com.open.harmony.packagemag.ServiceAbility2";
-    extensionInfos.emplace_back(extInfo);
-    // sptrBundleMgr_->QueryExtensionAbilityInfos(AppExecFwk::ExtensionAbilityType::PRINT,
-    //    userId, extensionInfos);
-  }
-  return true;
+bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    /*
+    if (!GetProxy()) {
+        return false;
+    }
+    */
+    std::vector<int> osAccountIds;
+    if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(osAccountIds) != ERR_OK) {
+        PRINT_HILOGE("failed to QueryActiveOsAccountIds!");
+        return false;
+    }
+    if (osAccountIds.size() == 0) {
+        PRINT_HILOGE("no os account acquired!");
+        return false;
+    }
+    for (auto userId : osAccountIds) {
+        PRINT_HILOGE("active userId = %{public}d", userId);
+        AppExecFwk::ExtensionAbilityInfo extInfo;
+        extInfo.bundleName = "com.open.harmony.packagemag";
+        extInfo.name = "com.open.harmony.packagemag.ServiceAbility2";
+        extensionInfos.emplace_back(extInfo);
+        //sptrBundleMgr_->QueryExtensionAbilityInfos(AppExecFwk::ExtensionAbilityType::PRINT,
+        //    userId, extensionInfos);
+    }
+    return true;
 }
 
-bool PrintBMSHelper::GetProxy() {
-  if (sptrBundleMgr_ == nullptr) {
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (systemAbilityManager == nullptr) {
-      PRINT_HILOGE("Failed to get system ability mgr.");
-      return false;
-    }
-
-    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(
-        BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (remoteObject == nullptr) {
-      PRINT_HILOGE("Failed to get bundle manager service.");
-      return false;
-    }
-
-    sptrBundleMgr_ = iface_cast<AppExecFwk::IBundleMgr>(remoteObject);
+bool PrintBMSHelper::GetProxy()
+{
     if (sptrBundleMgr_ == nullptr) {
-      PRINT_HILOGE("Failed to get system bundle manager services ability");
-      return false;
+        sptr<ISystemAbilityManager> systemAbilityManager =
+            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (systemAbilityManager == nullptr) {
+            PRINT_HILOGE("Failed to get system ability mgr.");
+            return false;
+        }
+
+        sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+        if (remoteObject == nullptr) {
+            PRINT_HILOGE("Failed to get bundle manager service.");
+            return false;
+        }
+
+        sptrBundleMgr_ = iface_cast<AppExecFwk::IBundleMgr>(remoteObject);
+        if (sptrBundleMgr_ == nullptr) {
+            PRINT_HILOGE("Failed to get system bundle manager services ability");
+            return false;
+        }
+
+        printBMSDeath_ = new PrintBMSDeathRecipient();
+        if (printBMSDeath_ == nullptr) {
+            PRINT_HILOGE("Failed to create death Recipient ptr BMSDeathRecipient");
+            return false;
+        }
+        if (!sptrBundleMgr_->AsObject()->AddDeathRecipient(printBMSDeath_)) {
+            PRINT_HILOGW("Failed to add death recipient");
+        }
     }
 
-    printBMSDeath_ = new PrintBMSDeathRecipient();
-    if (printBMSDeath_ == nullptr) {
-      PRINT_HILOGE("Failed to create death Recipient ptr BMSDeathRecipient");
-      return false;
-    }
-    if (!sptrBundleMgr_->AsObject()->AddDeathRecipient(printBMSDeath_)) {
-      PRINT_HILOGW("Failed to add death recipient");
-    }
-  }
-
-  return true;
+    return true;
 }
 
-void PrintBMSHelper::ResetProxy() {
-  std::lock_guard<std::mutex> lock(mutex_);
+void PrintBMSHelper::ResetProxy()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
 
-  if ((sptrBundleMgr_ != nullptr) && (sptrBundleMgr_->AsObject() != nullptr)) {
-    sptrBundleMgr_->AsObject()->RemoveDeathRecipient(printBMSDeath_);
-  }
-  sptrBundleMgr_ = nullptr;
+    if ((sptrBundleMgr_ != nullptr) && (sptrBundleMgr_->AsObject() != nullptr)) {
+        sptrBundleMgr_->AsObject()->RemoveDeathRecipient(printBMSDeath_);
+    }
+    sptrBundleMgr_ = nullptr;
 }
-} // namespace OHOS::Print
+}  // namespace OHOS

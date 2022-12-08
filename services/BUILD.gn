@@ -74,5 +74,5 @@ ohos_shared_library("print_service") {
     "relational_store:native_rdb",
   ]
   subsystem_name = "print"
-  part_name = "print"
+  part_name = "print_fwk"
 }
