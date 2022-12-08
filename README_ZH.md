@@ -9,11 +9,11 @@
 ## 简介<a name="section11660541593"></a>
 
 打印框架支持三方应用创建打印任务，拉起后台打印任务管理，管理打印扩展和打印任务。
-提供打印扩展框架，实现三方打印扩展的接入，管理打印任务与打印机之间的关系，启动、暂停/恢复、取消打印任务，查询打印进度等。
+提供打印扩展框架，实现三方打印扩展的接入，管理打印任务与打印机之间的关系，启动、取消打印任务，查询打印进度等。
 
 逻辑流程如下：
 
-首先，从应用端发起打印请求到PrintManager，再从打印系统管理PrintSA发送到PrinterSpooler打印服务，拉起打印预览界面到应用层。由PrintSpooler向PrintSA发送开启发现能力指令，再由PrintSA向打印扩展接口PrintExtension发送开启发现能力指令，然后PrintExtension向华为打印扩展接口PrintPA发送开启发现能力发现打印机。接着PrintPA向PrintSA上报发现打印机信息并返回到PrintSpooler。最后由PrintSpooler发送打印任务到PrintSA，再发送到PrintExtension，之后发送给PrintPA，最后发送给打印机。
+首先，打印请求到打印框架，再从打印系统框架发送到打印预览界面（PrintSpooler），拉起打印预览界面到应用层。由PrintSpooler向打印服务(PrintSA)发送开启发现能力指令，再由PrintSA向打印扩展接口(PrintExtension)发送开启发现能力指令，然后PrintExtension向第三方打印扩展接口(CustomPrintExtension)发送开启发现能力发现打印机。CustomPrintExtension向打印服务（PrintServiceAbility）上报发现打印机信息并返回到PrintSpooler。最后由打印预览界面（PrintSpooler）发送打印任务到打印服务（PrintServiceAbility），再发送到打印扩展(PrintExtension)，之后发送给第三方打印扩展（CustomPrintExtension），最后发送给打印机。
 
 **图 1**  部件架构图<a name="fig371116145419"></a>
 
@@ -63,7 +63,7 @@ foundation/print_print_fwk        #打印框架
 
     打印扩展部分需要三方厂商定制
 
-- **三方打印扩展（PrintPA）**
+- **三方打印扩展（Custom Print Extension）**
 
     打印机厂商实现具体打印功能提供
 
