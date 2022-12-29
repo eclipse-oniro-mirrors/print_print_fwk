@@ -28,6 +28,12 @@ const std::string EVENT_FAIL = "failed";
 const std::string EVENT_CANCEL = "cancelled";
 PrintTask::PrintTask(const std::vector<std::string> &fileList) : taskId_("") {
     fileList_.assign(fileList.begin(), fileList.end());
+    isNormalFilePath_ = true;
+    if (fileList_.size() > 0) {
+        if (fileList_.begin()->find("datashare://") == 0) {
+            isNormalFilePath_ = false;
+        }
+    }
     supportEvents_[EVENT_BLOCK] = true;
     supportEvents_[EVENT_SUCCESS] = true;
     supportEvents_[EVENT_FAIL] = true;
@@ -47,13 +53,15 @@ uint32_t PrintTask::Start()
         return E_PRINT_INVALID_PARAMETER;
     }
     std::vector<uint32_t> fdList;
-    for (auto file : fileList_) {
-        int32_t fd = NapiPrintUtils::OpenFile(file);
-        if (fd < 0) {
-            PRINT_HILOGE("file[%{public}s] is invalid", file.c_str());
-            return E_PRINT_INVALID_PARAMETER;
+    if (isNormalFilePath_) {
+        for (auto file : fileList_) {
+            int32_t fd = NapiPrintUtils::OpenFile(file);
+            if (fd < 0) {
+                PRINT_HILOGE("file[%{public}s] is invalid", file.c_str());
+                return E_PRINT_INVALID_PARAMETER;
+            }
+            fdList.emplace_back(fd);
         }
-        fdList.emplace_back(fd);
     }
     return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList, taskId_);
 }

@@ -39,7 +39,6 @@ static constexpr const char *FUNCTION_UPDATE_PRINTER = "updatePrinters";
 static constexpr const char *FUNCTION_UPDATE_PRINTER_STATE = "updatePrinterState";
 static constexpr const char *FUNCTION_UPDATE_JOB_STATE = "updatePrintJobState";
 static constexpr const char *FUNCTION_UPDATE_EXTENSION_INFO = "updateExtensionInfo";
-static constexpr const char *FUNCTION_READ_FILE = "readFile";
 
 static constexpr const char *PROPERTY_PRINTER_ADD = "PRINTER_ADDED";
 static constexpr const char *PROPERTY_PRINTER_REMOVE = "PRINTER_REMOVED";
@@ -246,7 +245,6 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_QUERY_CAPABILITY, NapiInnerPrint::QueryCapability),
         PRINT_NAPI_METHOD(FUNCTION_REGISTER_EVENT, NapiInnerPrint::On),
         PRINT_NAPI_METHOD(FUNCTION_UNREGISTER_EVENT, NapiInnerPrint::Off),
-        PRINT_NAPI_METHOD(FUNCTION_READ_FILE, NapiInnerPrint::ReadFile),
         PRINT_NAPI_METHOD(FUNCTION_ADD_PRINTER, NapiPrintExt::AddPrinters),
         PRINT_NAPI_METHOD(FUNCTION_REMOVE_PRINTER, NapiPrintExt::RemovePrinters),
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER, NapiPrintExt::UpdatePrinters),

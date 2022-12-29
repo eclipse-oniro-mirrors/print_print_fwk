@@ -44,6 +44,7 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info) // PrintT
         PRINT_HILOGD("print parser to native params %{public}d!", static_cast<int>(argc));
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, "need 1 parameter!", napi_invalid_arg);
         bool isFileArray = false;
+
         napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isFileArray);
         PRINT_ASSERT_BASE(env, isFileArray == true, "files isn't list", napi_invalid_arg);
 
@@ -131,7 +132,7 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
         }
     }
 
-    auto task = new PrintTask(printfiles);
+    auto task = new (std::nothrow) PrintTask(printfiles);
     if (task == nullptr) {
         PRINT_HILOGE("print task fail");
         return nullptr;

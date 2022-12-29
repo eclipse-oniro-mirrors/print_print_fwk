@@ -39,12 +39,12 @@ public:
     static constexpr size_t ARGC_FIVE = 5;
     static constexpr size_t ARGC_SIX = 6;
 
-    static constexpr int32_t INDEX_ZERO = 0;
-    static constexpr int32_t INDEX_ONE = 1;
-    static constexpr int32_t INDEX_TWO = 2;
-    static constexpr int32_t INDEX_THREE = 3;
-    static constexpr int32_t INDEX_FOUR = 4;
-    static constexpr int32_t INDEX_FIVE = 5;
+    static constexpr uint32_t INDEX_ZERO = 0;
+    static constexpr uint32_t INDEX_ONE = 1;
+    static constexpr uint32_t INDEX_TWO = 2;
+    static constexpr uint32_t INDEX_THREE = 3;
+    static constexpr uint32_t INDEX_FOUR = 4;
+    static constexpr uint32_t INDEX_FIVE = 5;
 
     static constexpr int32_t MAX_NUMBER_BYTES = 8;
     static constexpr int32_t MAX_LEN = 4096;

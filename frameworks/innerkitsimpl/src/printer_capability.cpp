@@ -243,7 +243,7 @@ napi_value PrinterCapability::ToJsObject(napi_env env) const
     PRINT_CALL(env, napi_create_object(env, &jsObj));
 
     NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_CAPABILITY_COLORMODE, GetColorMode());
-    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_CAPABILITY_DUPLEXMODE, GetDuplexMode()); 
+    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_CAPABILITY_DUPLEXMODE, GetDuplexMode());
 
     if (!CreatePageSizeList(env, jsObj)) {
         PRINT_HILOGE("Failed to create page size list property of printer capability");

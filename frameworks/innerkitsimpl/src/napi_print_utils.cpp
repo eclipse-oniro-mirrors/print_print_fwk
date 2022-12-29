@@ -388,7 +388,7 @@ bool NapiPrintUtils::DecodeExtensionCid(const std::string &cid, std::string &ext
         return false;
     }
     extensionId = cid.substr(0, pos);
-    callbackId = atoi(cid.substr(pos + 1).c_str());
+    callbackId = static_cast<uint32_t>(atoi(cid.substr(pos + 1).c_str()));
     return true;
 }
 
@@ -421,5 +421,5 @@ bool NapiPrintUtils::IsPathValid(const std::string &filePath)
         return false;
     }
     return true;
-}
+}
 } // namespace OHOS::Print

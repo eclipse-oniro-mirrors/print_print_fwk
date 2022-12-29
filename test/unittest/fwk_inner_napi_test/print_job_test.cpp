@@ -47,8 +47,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1) {
   std::vector<uint32_t> getFdList;
   job.SetFdList(fdList);
   job.GetFdList(getFdList);
-  // nativeObj->SetTop(1);
-  // int actual = nativeObj->GetTop();
   EXPECT_EQ("file1", getFdList[0]);
 }
 
@@ -64,8 +62,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1) {
   std::vector<uint32_t> getFdList;
   job.SetFdList(fdList);
   job.GetFdList(getFdList);
-  // nativeObj->SetTop(1);
-  // int actual = nativeObj->GetTop();
   EXPECT_EQ("file2", getFdList[1]);
 }
 
@@ -81,8 +77,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0003, TestSize.Level1) {
   std::vector<uint32_t> getFdList;
   job.SetFdList(fdList);
   job.GetFdList(getFdList);
-  // nativeObj->SetTop(1);
-  // int actual = nativeObj->GetTop();
   EXPECT_EQ("file3", getFdList[2]);
 }
 
@@ -98,8 +92,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0004, TestSize.Level1) {
   std::vector<uint32_t> getFdList;
   job.SetFdList(fdList);
   job.GetFdList(getFdList);
-  // nativeObj->SetTop(1);
-  // int actual = nativeObj->GetTop();
   EXPECT_EQ("file4", getFdList[3]);
 }
 

@@ -92,12 +92,12 @@ ohos_shared_library("print_extension_framework") {
   ]
 
   sources = [
-    "src/js_print_callback.cpp",
     "src/js_print_extension.cpp",
-    "src/js_print_extension_connection.cpp",
     "src/js_print_extension_context.cpp",
     "src/print_extension.cpp",
     "src/print_extension_context.cpp",
+    "src/js_print_callback.cpp",
+    "src/js_print_extension_connection.cpp",
   ]
   configs = [ ":ability_config" ]
   public_configs = [

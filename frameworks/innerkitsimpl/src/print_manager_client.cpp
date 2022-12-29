@@ -471,28 +471,6 @@ int32_t PrintManagerClient::Off(const std::string &taskId, const std::string &ty
     return ret;
 }
 
-int32_t PrintManagerClient::Read(std::vector<uint8_t> &fileRead,
-    const std::string &uri, uint32_t offset, uint32_t max)
-{
-    PRINT_HILOGD("PrintManagerClient Read start.");
-    if (!LoadServer()) {
-        PRINT_HILOGE("load print server fail");
-        return E_PRINT_RPC_FAILURE;
-    }
-
-    if (printServiceProxy_ == nullptr) {
-        PRINT_HILOGW("Redo GetPrintServiceProxy");
-        printServiceProxy_ = GetPrintServiceProxy();
-    }
-    if (printServiceProxy_ == nullptr) {
-        PRINT_HILOGE("Read quit because redoing GetPrintServiceProxy failed.");
-        return E_PRINT_RPC_FAILURE;
-    }
-    int32_t ret = printServiceProxy_->Read(fileRead, uri, offset, max);
-    PRINT_HILOGD("PrintManagerClient Read out ret = [%{public}d].", ret);
-    return ret;
-}
-
 int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     uint32_t callbackId, PrintExtCallback cb)
 {

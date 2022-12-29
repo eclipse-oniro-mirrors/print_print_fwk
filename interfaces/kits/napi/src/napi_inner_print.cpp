@@ -409,42 +409,6 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
-napi_value NapiInnerPrint::ReadFile(napi_env env, napi_callback_info info)
-{
-    PRINT_HILOGD("Enter ---->");
-    auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);    
-        napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_object, "type is not an object", napi_object_expected);
-        context->fileUri = NapiPrintUtils::GetStringPropertyUtf8(env, argv[NapiPrintUtils::INDEX_ZERO], "file");
-        context->fileOffset = NapiPrintUtils::GetUint32Property(env, argv[NapiPrintUtils::INDEX_ZERO], "offset");
-        context->fileMaxRead = NapiPrintUtils::GetUint32Property(env, argv[NapiPrintUtils::INDEX_ZERO], "max");
-        PRINT_HILOGD("file uri : %{public}s", context->fileUri.c_str());
-        return napi_ok;
-    };
-    auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        void* data = nullptr;
-        *result = NapiPrintUtils::CreateArrayBuffer(env, context->fileRead.size(), &data);
-        memcpy(data, &context->fileRead[0], context->fileRead.size());
-        PRINT_HILOGD("context->result = %{public}d, result = %{public}p", context->result, result);
-        return napi_ok;
-    };
-    auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->Read(context->fileRead, context->fileUri,
-            context->fileOffset, context->fileMaxRead);
-        context->result = ret == E_PRINT_NONE;
-        if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("Failed to read file");
-            context->SetErrorIndex(ret);
-        }
-    };
-    context->SetAction(std::move(input), std::move(output));
-    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
-    return asyncCall.Call(env, exec);
-}
-
 bool NapiInnerPrint::IsSupportType(const std::string& type)
 {
     if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE) {

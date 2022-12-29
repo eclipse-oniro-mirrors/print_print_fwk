@@ -119,10 +119,6 @@ bool PrintCallback::OnCallback(uint32_t state, const PrinterInfo &info)
         param->state = state;
         param->printerInfo = info;
     }
-
-    PRINT_HILOGD("info dump ans is:");
-    info.Dump();
-
     work->data = param;
     uv_queue_work(
         loop, work, [](uv_work_t *work) {},

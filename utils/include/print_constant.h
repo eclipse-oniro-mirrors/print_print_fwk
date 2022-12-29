@@ -63,42 +63,42 @@ const uint32_t PRINT_INVALID_ID = 0xFFFFFFFF;   // -1
 
 enum PrinterState {
     PRINTER_ADDED = 0,          // new printers arrival
-    PRINTER_REMOVED = 1,    	// printers lost
-    PRINTER_UPDATE_CAP = 2,    	// printers update
-    PRINTER_CONNECTED = 3,		// printer has been connected
-    PRINTER_DISCONNECTED = 4,	// printer has been disconnected
-    PRINTER_RUNNING = 5,   		// printer is working
-    PRINTER_UNKNOWN = 6,		// unknown printer state
+    PRINTER_REMOVED = 1,        // printers lost
+    PRINTER_UPDATE_CAP = 2,     // printers update
+    PRINTER_CONNECTED = 3,      // printer has been connected
+    PRINTER_DISCONNECTED = 4,   // printer has been disconnected
+    PRINTER_RUNNING = 5,        // printer is working
+    PRINTER_UNKNOWN = 6,        // unknown printer state
 };
 
 enum PrintJobState {
     PRINT_JOB_PREPARED = 0,     // initial state of print job
-    PRINT_JOB_QUEUED = 1,  		// deliver print job to the printer
-    PRINT_JOB_RUNNING = 2,  	// executing print job
-    PRINT_JOB_BLOCKED = 3,  	// print job has been blocked
-    PRINT_JOB_COMPLETED = 4,  	// print job ocmpleted
-    PRINT_JOB_UNKNOWN = 5,  	// unknown state of print job
+    PRINT_JOB_QUEUED = 1,       // deliver print job to the printer
+    PRINT_JOB_RUNNING = 2,      // executing print job
+    PRINT_JOB_BLOCKED = 3,      // print job has been blocked
+    PRINT_JOB_COMPLETED = 4,    // print job ocmpleted
+    PRINT_JOB_UNKNOWN = 5,      // unknown state of print job
 };
 
 enum PrintJobSubState {
-    PRINT_JOB_COMPLETED_SUCCESS = 0,		// print job succeed
-    PRINT_JOB_COMPLETED_FAILED = 1,			// print job fail
-    PRINT_JOB_COMPLETED_CANCELLED = 2,		// print job has been cancelled
-    PRINT_JOB_COMPLETED_FILE_CORRUPT = 3,	// print job has been corrupted
-    PRINT_JOB_BLOCKED_OFFLINE = 4,			// printer is offline
-    PRINT_JOB_BLOCKED_BUSY = 5,				// printer is occupied by other process
-    PRINT_JOB_BLOCKED_CANCELLED = 6,	    // print job has been canncelled
-    PRINT_JOB_BLOCKED_OUT_OF_PAPER = 7,		// out of paper
-    PRINT_JOB_BLOCKED_OUT_OF_INK = 8,	    // out of ink
-    PRINT_JOB_BLOCKED_OUT_OF_TONER = 9,		// out of toner
-    PRINT_JOB_BLOCKED_JAMMED = 10,			// paper jam
-    PRINT_JOB_BLOCKED_DOOR_OPEN = 11,	    // cover open
-    PRINT_JOB_BLOCKED_SERVICE_REQUEST = 12,	// service request
-    PRINT_JOB_BLOCKED_LOW_ON_INK = 13,		// low on ink
-    PRINT_JOB_BLOCKED_LOW_ON_TONER = 14,    // low on toner
+    PRINT_JOB_COMPLETED_SUCCESS = 0,            // print job succeed
+    PRINT_JOB_COMPLETED_FAILED = 1,             // print job fail
+    PRINT_JOB_COMPLETED_CANCELLED = 2,          // print job has been cancelled
+    PRINT_JOB_COMPLETED_FILE_CORRUPT = 3,       // print job has been corrupted
+    PRINT_JOB_BLOCKED_OFFLINE = 4,              // printer is offline
+    PRINT_JOB_BLOCKED_BUSY = 5,                 // printer is occupied by other process
+    PRINT_JOB_BLOCKED_CANCELLED = 6,            // print job has been canncelled
+    PRINT_JOB_BLOCKED_OUT_OF_PAPER = 7,         // out of paper
+    PRINT_JOB_BLOCKED_OUT_OF_INK = 8,           // out of ink
+    PRINT_JOB_BLOCKED_OUT_OF_TONER = 9,         // out of toner
+    PRINT_JOB_BLOCKED_JAMMED = 10,              // paper jam
+    PRINT_JOB_BLOCKED_DOOR_OPEN = 11,           // cover open
+    PRINT_JOB_BLOCKED_SERVICE_REQUEST = 12,     // service request
+    PRINT_JOB_BLOCKED_LOW_ON_INK = 13,          // low on ink
+    PRINT_JOB_BLOCKED_LOW_ON_TONER = 14,        // low on toner
     PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK = 15,   // really low on ink
-    PRINT_JOB_BLOCKED_BAD_CERTIFICATE = 16,	// bad certification
-    PRINT_JOB_BLOCKED_UNKNOWN = 17,			// unknown issue
+    PRINT_JOB_BLOCKED_BAD_CERTIFICATE = 16,     // bad certification
+    PRINT_JOB_BLOCKED_UNKNOWN = 17,             // unknown issue
 };
 
 enum PrintExtensionState {

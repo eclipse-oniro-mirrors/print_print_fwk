@@ -46,7 +46,7 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
                 return napi_invalid_arg;
             }
             printerInfoPtr->SetPrinterId(NapiPrintUtils::GetGlobalId(extensionId, printerInfoPtr->GetPrinterId()));
-            PRINT_HILOGD("printerInfoPtr->GetPrinterId().c_str() = %{public}s", printerInfoPtr->GetPrinterId().c_str());
+            PRINT_HILOGD("printerInfoPtr->GetPrinterId() = %{public}s", printerInfoPtr->GetPrinterId().c_str());
             context->printerInfos.emplace_back(*printerInfoPtr);
         }
         if (context->printerInfos.empty()) {
@@ -149,9 +149,6 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info)
                 return napi_invalid_arg;
             }
             printerInfoPtr->SetPrinterId(NapiPrintUtils::GetGlobalId(extensionId, printerInfoPtr->GetPrinterId()));
-            PRINT_HILOGD("info dump ans is:");
-            PrinterInfo info = *printerInfoPtr;
-            info.Dump();
             context->printerInfos.emplace_back(*printerInfoPtr);
         }
         if (context->printerInfos.empty()) {
@@ -346,7 +343,7 @@ bool NapiPrintExt::IsValidPrintJobState(uint32_t state)
 
 bool NapiPrintExt::IsValidPrintJobSubState(uint32_t subState)
 {
-    if (subState >= PRINT_JOB_COMPLETED_SUCCESS && subState <= PRINT_JOB_BLOCKED_UNKNOWN ) {
+    if (subState >= PRINT_JOB_COMPLETED_SUCCESS && subState <= PRINT_JOB_BLOCKED_UNKNOWN) {
         return true;
     }    
     return false;

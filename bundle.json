@@ -13,7 +13,7 @@
       "name": "print_fwk",
       "subsystem": "print",
       "syscap": [
-        "SystemCapability.Print.PrintFramework"
+        "SystemCapability.Print.Print"
       ],
       "features": [
       ],

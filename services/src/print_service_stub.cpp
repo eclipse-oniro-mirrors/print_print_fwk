@@ -48,8 +48,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[CMD_OFF] = &PrintServiceStub::OnEventOff;
     cmdMap_[CMD_REG_EXT_CB] = &PrintServiceStub::OnRegisterExtCallback;
     cmdMap_[CMD_UNREG_EXT_CB] = &PrintServiceStub::OnUnregisterAllExtCallback;
-    cmdMap_[CMD_LOAD_EXT] = &PrintServiceStub::OnLoadExtSuccess;    
-    cmdMap_[CMD_READ_DATA] = &PrintServiceStub::OnRead;
+    cmdMap_[CMD_LOAD_EXT] = &PrintServiceStub::OnLoadExtSuccess;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -413,40 +412,5 @@ bool PrintServiceStub::OnLoadExtSuccess(MessageParcel &data, MessageParcel &repl
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnLoadExtSuccess out");
     return ret == E_PRINT_NONE;
-}
-
-bool PrintServiceStub::OnRead(MessageParcel &data, MessageParcel &reply)
-{
-    PRINT_HILOGD("PrintServiceStub::OnRead in");
-    std::string fileUrl = data.ReadString();
-    uint32_t offset = data.ReadUint32();
-    uint32_t max = data.ReadUint32();
-
-    FILE *file = fopen(fileUrl.c_str(), "rb");
-    if (file == nullptr) {
-        PRINT_HILOGD("PrintServiceStub::OnRead no permission");
-        if (!reply.WriteBool(false)) {
-            return false;
-        }
-        return true;
-    }
-    fseek(file, 0, SEEK_END);
-    uint32_t totalSize = static_cast<uint32_t>(ftell(file));
-    uint32_t size = totalSize - offset;
-    if (size > max) {
-        size = max;
-    }
-
-    std::vector<uint8_t> fileRead;
-    fileRead.resize(size);
-    fread(&fileRead[0], 1, size, file);
-
-    if (!reply.WriteBool(true)) {
-        PRINT_HILOGD("PrintServiceStub::OnRead failed to write response");
-        return false;
-    }
-    reply.WriteUInt8Vector(fileRead);
-    PRINT_HILOGD("PrintServiceStub::OnRead out");
-    return true;    
 }
 } // namespace OHOS::Print

@@ -29,33 +29,33 @@
 namespace OHOS::Print {
 class PrintTask {
 public:
-  explicit PrintTask(const std::vector<std::string> &fileList);
-  ~PrintTask();
+    explicit PrintTask(const std::vector<std::string> &fileList);
+    ~PrintTask();
 
-  uint32_t Start();
-  void Stop();
-  const std::string &GetId() const;
-  static napi_value On(napi_env env, napi_callback_info info);
-  static napi_value Off(napi_env env, napi_callback_info info);
+    uint32_t Start();
+    void Stop();
+    const std::string &GetId() const;
+    static napi_value On(napi_env env, napi_callback_info info);
+    static napi_value Off(napi_env env, napi_callback_info info);
 
-  bool IsSupportType(const std::string &type) const;
+    bool IsSupportType(const std::string &type) const;
 
 private:
-  struct TaskEventContext : public PrintAsyncCall::Context {
-    std::string type = "";
-    std::string taskId = "";
-    sptr<IPrintCallback> callback = nullptr;
-    bool result = false;
-    napi_status status = napi_generic_failure;
-    TaskEventContext() : Context(nullptr, nullptr){};
-    TaskEventContext(InputAction input, OutputAction output)
-        : Context(std::move(input), std::move(output)){};
-    virtual ~TaskEventContext(){};
-  };
+    struct TaskEventContext : public PrintAsyncCall::Context {
+        std::string type = "";
+        std::string taskId = "";
+        sptr<IPrintCallback> callback = nullptr;
+        bool result = false;
+        napi_status status = napi_generic_failure;
+        TaskEventContext() : Context(nullptr, nullptr) {};
+        TaskEventContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
+        virtual ~TaskEventContext() {};
+    };
 
-  std::string taskId_;
-  std::vector<std::string> fileList_;
-  std::map<std::string, bool> supportEvents_;
+    std::string taskId_;
+    std::vector<std::string> fileList_;
+    std::map<std::string, bool> supportEvents_;
+    bool isNormalFilePath_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_TASK_H

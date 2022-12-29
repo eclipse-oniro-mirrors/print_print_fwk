@@ -75,8 +75,9 @@ void PrintPreviewAttribute::GetPreviewRange(PrintRange &previewRange) const
 bool PrintPreviewAttribute::ReadFromParcel(Parcel &parcel)
 {
     hasResult_ = parcel.ReadBool();
-    if (hasResult_) {
-        SetResult(parcel.ReadUint32());
+    auto msgParcel = static_cast<MessageParcel*>(&parcel);
+    if (hasResult_ && msgParcel != nullptr) {
+        SetResult(msgParcel->ReadFileDescriptor());
     }
     auto rangePtr = PrintRange::Unmarshalling(parcel);
     if (rangePtr == nullptr) {
@@ -89,8 +90,9 @@ bool PrintPreviewAttribute::ReadFromParcel(Parcel &parcel)
 bool PrintPreviewAttribute::Marshalling(Parcel &parcel) const
 {
     parcel.WriteBool(hasResult_);
-    if (hasResult_) {
-        parcel.WriteUint32(GetResult());
+    auto msgParcel = static_cast<MessageParcel*>(&parcel);
+    if (hasResult_ && msgParcel != nullptr) {
+        msgParcel->WriteFileDescriptor(GetResult());
     }
     if (!previewRange_.Marshalling(parcel)) {
         PRINT_HILOGE("Failed to marshalling preview attribute object");
@@ -148,7 +150,7 @@ std::shared_ptr<PrintPreviewAttribute> PrintPreviewAttribute::BuildFromJs(napi_e
     }
     nativeObj->SetPreviewRange(*previewRangePtr);
 
-    napi_value jsResult = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREATTRIBUTE_RANGE);
+    napi_value jsResult = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREATTRIBUTE_RESULT);
     if (jsResult != nullptr) {
         auto result = NapiPrintUtils::GetUint32FromValue(env, jsResult);
         nativeObj->SetResult(result);

@@ -37,6 +37,7 @@ PrinterInfo::PrinterInfo(const PrinterInfo &right)
     printerId_ = right.printerId_;
     printerName_ = right.printerName_;
     printerState_ = right.printerState_;
+    printerIcon_ = right.printerIcon_;
     description_ = right.description_;
     hasCapability_ = right.hasCapability_;
     capability_ = right.capability_;
@@ -50,6 +51,7 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         printerId_ = right.printerId_;
         printerName_ = right.printerName_;
         printerState_ = right.printerState_;
+        printerIcon_ = right.printerIcon_;
         description_ = right.description_;
         hasCapability_ = right.hasCapability_;
         capability_ = right.capability_;

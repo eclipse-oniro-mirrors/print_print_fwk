@@ -36,7 +36,6 @@ private:
 private:
     using PRINT_EVENT_HANDLER = bool (PrintCallbackStub::*)(MessageParcel &, MessageParcel &);
     std::map<uint32_t, PRINT_EVENT_HANDLER> cmdMap_;
-
 };
 } // namespace OHOS::Print
 #endif // PRINT_CALLBACK_STUB_H

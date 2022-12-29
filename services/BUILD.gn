@@ -15,19 +15,21 @@ import("//build/ohos.gni")
 
 config("print_service_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+  ]
 
   cflags_cc = [ "-fexceptions" ]
 }
 
 ohos_shared_library("print_service") {
   sources = [
-    "src/print_bms_death_recipient.cpp",
-    "src/print_bms_helper.cpp",
-    "src/print_callback_proxy.cpp",
-    "src/print_extension_callback_proxy.cpp",
     "src/print_service_ability.cpp",
     "src/print_service_stub.cpp",
+    "src/print_callback_proxy.cpp",
+    "src/print_extension_callback_proxy.cpp",
+    "src/print_bms_death_recipient.cpp",
+    "src/print_bms_helper.cpp",
   ]
 
   public_configs = [
@@ -46,11 +48,11 @@ ohos_shared_library("print_service") {
   ]
   deps = [
     "//base/notification/distributed_notification_service/frameworks/ans:ans_innerkits",
-    "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
     "//base/telephony/core_service/interfaces/innerkits:tel_core_service_api",
     "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient:net_conn_manager_if",
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
   ]
 
   external_deps = [

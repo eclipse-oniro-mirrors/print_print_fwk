@@ -54,7 +54,6 @@ public:
         const sptr<IPrintExtensionCallback> &listener) = 0;
     virtual int32_t UnregisterAllExtCallback(const std::string &extensionId) = 0;
     virtual int32_t LoadExtSuccess(const std::string &extensionId) = 0;
-    virtual int32_t Read(std::vector<uint8_t> &fileRead, const std::string &uri, uint32_t offset, uint32_t max) = 0;
 };
 
 enum {
@@ -69,10 +68,10 @@ enum {
     CMD_CANCELPRINTJOB,
     CMD_ADDPRINTERS,
     CMD_REMOVEPRINTERS,
-    CMD_UPDATEPRINTERS,    
+    CMD_UPDATEPRINTERS,
     CMD_UPDATEPRINTERSTATE,
     CMD_UPDATEPRINTJOBSTATE,
-    CMD_UPDATEEXTENSIONINFO,    
+    CMD_UPDATEEXTENSIONINFO,
     CMD_REQUESTPREVIEW,
     CMD_QUERYPRINTERCAPABILITY,
     CMD_ON,
@@ -80,7 +79,6 @@ enum {
     CMD_REG_EXT_CB,
     CMD_UNREG_EXT_CB,
     CMD_LOAD_EXT,
-    CMD_READ_DATA,
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

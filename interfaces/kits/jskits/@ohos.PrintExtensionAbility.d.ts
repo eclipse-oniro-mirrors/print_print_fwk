@@ -18,7 +18,7 @@
 *
 * @systemapi Hide this for inner system use.
 * @since 9
-* @sysCap SystemCapability.Print.PrintFramework
+* @sysCap SystemCapability.Print.print
 * @StageModelOnly
 */
 declare class PrintExtensionAbility {
@@ -28,7 +28,7 @@ declare class PrintExtensionAbility {
      *
      * @systemapi Hide this for inner system use.
      * @since 9
-     * @sysCap SystemCapability.Print.PrintFramework
+     * @sysCap SystemCapability.Print.print
      * @return -
      * @StageModelOnly
      */
@@ -39,7 +39,7 @@ declare class PrintExtensionAbility {
      *
      * @systemapi Hide this for inner system use.
      * @since 9
-     * @sysCap SystemCapability.Print.PrintFramework
+     * @sysCap SystemCapability.Print.print
      * @return -
      * @StageModelOnly
      */
@@ -50,7 +50,7 @@ declare class PrintExtensionAbility {
      *
      * @systemapi Hide this for inner system use.
      * @since 9
-     * @sysCap SystemCapability.Print.PrintFramework
+     * @sysCap SystemCapability.Print.print
      * @return -
      * @StageModelOnly
      */	
@@ -61,7 +61,7 @@ declare class PrintExtensionAbility {
      *
      * @systemapi Hide this for inner system use.
      * @since 9
-     * @sysCap SystemCapability.Print.PrintFramework
+     * @sysCap SystemCapability.Print.print
      * @return -
      * @StageModelOnly
      */	
@@ -72,7 +72,7 @@ declare class PrintExtensionAbility {
      *
      * @systemapi Hide this for inner system use.
      * @since 9
-     * @sysCap SystemCapability.Print.PrintFramework
+     * @sysCap SystemCapability.Print.print
      * @return -
      * @StageModelOnly
      */
@@ -83,7 +83,7 @@ declare class PrintExtensionAbility {
      *
      * @systemapi Hide this for inner system use.
      * @since 9
-     * @sysCap SystemCapability.Print.PrintFramework
+     * @sysCap SystemCapability.Print.print
      * @return -
      * @StageModelOnly
      */
@@ -94,7 +94,7 @@ declare class PrintExtensionAbility {
      *
      * @systemapi Hide this for inner system use.
      * @since 9
-     * @sysCap SystemCapability.Print.PrintFramework
+     * @sysCap SystemCapability.Print.print
      * @return -
      * @StageModelOnly
      */	
@@ -105,7 +105,7 @@ declare class PrintExtensionAbility {
      *
      * @systemapi Hide this for inner system use.
      * @since 9
-     * @sysCap SystemCapability.Print.PrintFramework
+     * @sysCap SystemCapability.Print.print
      * @return -
      * @StageModelOnly
      */
@@ -116,7 +116,7 @@ declare class PrintExtensionAbility {
      *
      * @systemapi Hide this for inner system use.
      * @since 9
-     * @sysCap SystemCapability.Print.PrintFramework
+     * @sysCap SystemCapability.Print.print
      * @return -
      * @StageModelOnly
      */	
@@ -127,7 +127,7 @@ declare class PrintExtensionAbility {
      *
      * @systemapi Hide this for inner system use.
      * @since 9
-     * @sysCap SystemCapability.Print.PrintFramework
+     * @sysCap SystemCapability.Print.print
      * @return -
      * @StageModelOnly
      */	

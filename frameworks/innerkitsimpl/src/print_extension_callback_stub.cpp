@@ -20,7 +20,7 @@
 #include "print_resolution.h"
 
 namespace OHOS::Print {
-PrintExtensionCallbackStub::PrintExtensionCallbackStub() : extCb_(nullptr), jobCb_(nullptr), cb_(nullptr)
+PrintExtensionCallbackStub::PrintExtensionCallbackStub() : extCb_(nullptr), jobCb_(nullptr), cb_(nullptr), capability_(nullptr)
 {
     cmdMap_[PRINT_EXTCB] = &PrintExtensionCallbackStub::HandleExtCallback;
     cmdMap_[PRINT_EXTCB_PRINTER] = &PrintExtensionCallbackStub::HandlePrinterCallback;

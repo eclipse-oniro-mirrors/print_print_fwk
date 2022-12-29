@@ -62,8 +62,6 @@ public:
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);
 
-    int32_t Read(std::vector<uint8_t> &fileRead, const std::string &uri, uint32_t offset, uint32_t max);
-
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrintExtCallback cb);
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrintJobCallback cb);
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrinterCallback cb);

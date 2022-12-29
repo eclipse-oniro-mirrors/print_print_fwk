@@ -28,7 +28,6 @@ namespace OHOS {
 namespace AbilityRuntime {
 class PrintExtension;
 class JsRuntime;
-
 /**
  * @brief Basic Print components.
  */

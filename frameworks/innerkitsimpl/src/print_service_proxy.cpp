@@ -349,7 +349,6 @@ int32_t PrintServiceProxy::RequestPreview(const PrintJob &jobinfo, std::string &
     PRINT_HILOGD("PrintServiceProxy RequestPreview ret = [%{public}d] previewResult = %{public}s",
         ret, previewResult.c_str());
     return ret;
-
 }
 
 int32_t PrintServiceProxy::QueryPrinterCapability(const std::string &printerId)
@@ -481,30 +480,6 @@ int32_t PrintServiceProxy::LoadExtSuccess(const std::string &extensionId)
 
     ret = reply.ReadInt32();
     PRINT_HILOGD("PrintServiceProxy LoadExtSuccess out. ret = [%{public}d]", ret);
-    return ret;
-}
-
-int32_t PrintServiceProxy::Read(std::vector<uint8_t> &fileRead, const std::string &uri, uint32_t offset, uint32_t max)
-{
-    PRINT_HILOGD("PrintServiceProxy::Read in");
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(uri);
-    data.WriteUint32(offset);
-    data.WriteUint32(max);
-    int32_t ret = Remote()->SendRequest(CMD_READ_DATA, data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGE("Read, rpc error code = %{public}d", ret);
-        return E_PRINT_RPC_FAILURE;
-    }
-
-    ret = reply.ReadInt32();
-    PRINT_HILOGD("PrintServiceProxy Read out. ret = [%{public}d]", ret);
-    if (ret == E_PRINT_NONE) {
-        reply.ReadUInt8Vector(&fileRead);
-        PRINT_HILOGD("PrintServiceProxy Read succeeded.");    
-    }
     return ret;
 }
 } // namespace OHOS::Print

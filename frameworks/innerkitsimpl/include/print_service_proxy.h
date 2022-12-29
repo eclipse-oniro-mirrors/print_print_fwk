@@ -49,7 +49,6 @@ public:
         const sptr<IPrintExtensionCallback> &listener) override;
     int32_t UnregisterAllExtCallback(const std::string &extensionId) override;
     int32_t LoadExtSuccess(const std::string &extensionId) override;
-    int32_t Read(std::vector<uint8_t> &fileRead, const std::string &uri, uint32_t offset, uint32_t max) override;
 
 private:
     static inline BrokerDelegator<PrintServiceProxy> delegator_;

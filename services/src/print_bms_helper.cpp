@@ -14,7 +14,7 @@
  */
 
 #include "print_bms_helper.h"
-
+#include "bundle_mgr_proxy.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_client.h"
 #include "iservice_registry.h"
@@ -36,11 +36,9 @@ PrintBMSHelper::~PrintBMSHelper()
 bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    /*
     if (!GetProxy()) {
         return false;
     }
-    */
     std::vector<int> osAccountIds;
     if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(osAccountIds) != ERR_OK) {
         PRINT_HILOGE("failed to QueryActiveOsAccountIds!");
@@ -52,12 +50,8 @@ bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilit
     }
     for (auto userId : osAccountIds) {
         PRINT_HILOGE("active userId = %{public}d", userId);
-        AppExecFwk::ExtensionAbilityInfo extInfo;
-        extInfo.bundleName = "com.open.harmony.packagemag";
-        extInfo.name = "com.open.harmony.packagemag.ServiceAbility2";
-        extensionInfos.emplace_back(extInfo);
-        //sptrBundleMgr_->QueryExtensionAbilityInfos(AppExecFwk::ExtensionAbilityType::PRINT,
-        //    userId, extensionInfos);
+        sptrBundleMgr_->QueryExtensionAbilityInfos(AppExecFwk::ExtensionAbilityType::PRINT,
+            userId, extensionInfos);
     }
     return true;
 }

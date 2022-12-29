@@ -29,7 +29,6 @@ class NativeEngine;
 namespace OHOS {
 namespace AbilityRuntime {
 class JsRuntime;
-
 class JsPrintCallback : public std::enable_shared_from_this<JsPrintCallback> {
 public:
     explicit JsPrintCallback(JsRuntime &jsRutime);
@@ -53,7 +52,19 @@ private:
         NativeValue *jsResult;
         bool isSync;
         bool isCompleted;
+        JsWorkParam() {
+            self = nullptr;
+            nativeEngine = nullptr;
+            jsObj = nullptr;
+            jsMethod = nullptr;
+            argv = nullptr;
+            argc = 0;
+            jsResult = nullptr;
+            isSync = false;
+            isCompleted = false;
+        }
     };
+    
     JsRuntime &jsRuntime_;
     uv_work_t *jsWorker_;
 

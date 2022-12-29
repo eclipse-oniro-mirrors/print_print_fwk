@@ -19,7 +19,6 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-
 static constexpr const char *PARAM_JOB_FDLIST = "fdList";
 static constexpr const char *PARAM_JOB_JOBID = "jobId";
 static constexpr const char *PARAM_JOB_PRINTERID = "printerId";
@@ -92,7 +91,6 @@ PrintJob &PrintJob::operator=(const PrintJob &right)
         preview_ = right.preview_;
         hasOption_ = right.hasOption_;
         option_ = right.option_;
-
     }
     return *this;
 }
@@ -193,6 +191,7 @@ void PrintJob::UpdateParams(const PrintJob &jobInfo)
     fdList_.clear();
     fdList_.assign(jobInfo.fdList_.begin(), jobInfo.fdList_.end());
 
+    jobId_ = jobInfo.jobId_;
     printerId_ = jobInfo.printerId_;
     copyNumber_ = jobInfo.copyNumber_;
     pageRange_ = jobInfo.pageRange_;
@@ -286,9 +285,13 @@ const std::string &PrintJob::GetOption() const
 
 bool PrintJob::ReadFromParcel(Parcel &parcel)
 {
-    if (!parcel.ReadUInt32Vector(&fdList_)) {
-        PRINT_HILOGE("Failed to restore file list");
-        return false;    
+    int32_t fdSize = parcel.ReadUint32();
+    fdList_.clear();
+    auto msgParcel = static_cast<MessageParcel*>(&parcel);
+    for (int32_t index = 0; index < fdSize; index++) {
+        auto fd = msgParcel->ReadFileDescriptor();
+        PRINT_HILOGD("fd[%{public}d] = %{public}d", index, fd);
+        fdList_.emplace_back(fd);
     }
     SetJobId(parcel.ReadString());
     SetPrinterId(parcel.ReadString());
@@ -301,21 +304,16 @@ bool PrintJob::ReadFromParcel(Parcel &parcel)
         return false;
     }
     SetPageRange(*rangePtr);
-    
     SetIsSequential(parcel.ReadBool());
-
     auto pageSizePtr = PrintPageSize::Unmarshalling(parcel);
     if (pageSizePtr == nullptr) {
         PRINT_HILOGE("Failed to restore page size");    
         return false;
     }
     SetPageSize(*pageSizePtr);
-
     SetIsLandscape(parcel.ReadBool());
     SetColorMode(parcel.ReadUint32());
     SetDuplexMode(parcel.ReadUint32());
-
-    // check capability
     hasMargin_ = parcel.ReadBool();
     if (hasMargin_) {
         auto marginPtr = PrintMargin::Unmarshalling(parcel);
@@ -325,7 +323,6 @@ bool PrintJob::ReadFromParcel(Parcel &parcel)
         }
         margin_ = *marginPtr;
     }
-
     hasPreview_ = parcel.ReadBool();
     if (hasPreview_) {
         auto previewPtr = PrintPreviewAttribute::Unmarshalling(parcel);
@@ -335,7 +332,6 @@ bool PrintJob::ReadFromParcel(Parcel &parcel)
         }
         preview_ = *previewPtr;
     }
-
     hasOption_ = parcel.ReadBool();
     if (hasOption_) {
         SetOption(parcel.ReadString());
@@ -345,9 +341,12 @@ bool PrintJob::ReadFromParcel(Parcel &parcel)
 
 bool PrintJob::Marshalling(Parcel &parcel) const
 {
-    if (!parcel.WriteUInt32Vector(fdList_)) {
-        PRINT_HILOGE("Failed to save fd list");
-        return false;
+    parcel.WriteUint32(fdList_.size());
+    auto msgParcel = static_cast<MessageParcel*>(&parcel);
+    if (msgParcel != nullptr) {
+        for (auto fd : fdList_) {
+            msgParcel->WriteFileDescriptor(fd);
+        }
     }
 
     if (!parcel.WriteString(GetJobId())) {

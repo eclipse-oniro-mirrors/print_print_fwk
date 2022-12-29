@@ -31,25 +31,24 @@ namespace OHOS::Print {
 
 class PrintBMSHelper : public DelayedSingleton<PrintBMSHelper> {
 public:
-  using IBundleMgr = OHOS::AppExecFwk::IBundleMgr;
+    using IBundleMgr = OHOS::AppExecFwk::IBundleMgr;
 
-  explicit PrintBMSHelper();
+    explicit PrintBMSHelper();
 
-  virtual ~PrintBMSHelper();
+    virtual ~PrintBMSHelper();
 
-  bool QueryExtensionInfos(
-      std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfo);
+    bool QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfo);
 
-  void ResetProxy();
-
-private:
-  bool GetProxy();
+    void ResetProxy();
 
 private:
-  sptr<IBundleMgr> sptrBundleMgr_;
-  std::mutex mutex_;
-  sptr<PrintBMSDeathRecipient> printBMSDeath_;
+    bool GetProxy();
+
+private:
+    sptr<IBundleMgr> sptrBundleMgr_;
+    std::mutex mutex_;
+    sptr<PrintBMSDeathRecipient> printBMSDeath_;
 };
-} // namespace OHOS::Print
+}  // namespace OHOS
 
-#endif // PRINT_BMS_HELPER_H
+#endif  // PRINT_BMS_HELPER_H

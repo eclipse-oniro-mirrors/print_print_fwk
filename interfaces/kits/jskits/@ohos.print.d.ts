@@ -16,7 +16,7 @@ import {AsyncCallback} from './basic';
 
 /**
  * System print
- * @sysCap SystemCapability.Print.PrintFramework
+ * @sysCap SystemCapability.Print.print
  * @import import print from '@ohos.app.print';
  * @since 9
  */
