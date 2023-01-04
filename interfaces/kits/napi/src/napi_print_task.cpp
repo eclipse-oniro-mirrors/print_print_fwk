@@ -45,11 +45,11 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info) // PrintT
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, "need 1 parameter!", napi_invalid_arg);
         bool isFileArray = false;
 
-        napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isFileArray);
+        napi_is_array(env, argv[NapiPrintUtils::0], &isFileArray);
         PRINT_ASSERT_BASE(env, isFileArray == true, "files isn't list", napi_invalid_arg);
 
         uint32_t len = 0;
-        PRINT_CALL_BASE(env, napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_get_array_length(env, argv[NapiPrintUtils::0], &len), napi_invalid_arg);
 
         if (!isFileArray || len == 0) {
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
@@ -121,10 +121,10 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
 
     std::vector<std::string> printfiles;
     uint32_t arrayReLength = 0;
-    PRINT_CALL(env, napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &arrayReLength));
+    PRINT_CALL(env, napi_get_array_length(env, argv[NapiPrintUtils::0], &arrayReLength));
     for (uint32_t index = 0; index < arrayReLength; index++) {
         napi_value filesValue;
-        napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &filesValue);
+        napi_get_element(env, argv[NapiPrintUtils::0], index, &filesValue);
         std::string files = NapiPrintUtils::GetStringFromValueUtf8(env, filesValue);
         PRINT_HILOGD("file[%{public}d] %{public}s", index, files.c_str());
         if (IsValidFile(files)) {

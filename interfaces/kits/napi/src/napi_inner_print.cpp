@@ -69,15 +69,15 @@ napi_value NapiInnerPrint::StartDiscovery(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         bool isArray = false;
-        napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
+        napi_is_array(env, argv[0], &isArray);
         PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
 
         uint32_t len = 0;
-        napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
+        napi_get_array_length(env, argv[0], &len);
 
         for (uint32_t index = 0; index < len; index++) {
             napi_value value;
-            napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+            napi_get_element(env, argv[0], index, &value);
             std::string extensionId = NapiPrintUtils::GetStringFromValueUtf8(env, value);
             PRINT_HILOGD("output for :---- extensionList value is :[%{public}s]", extensionId.c_str());
             if (extensionId != "") {
@@ -137,9 +137,9 @@ napi_value NapiInnerPrint::ConnectPrinter(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
-        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
         context->printerId = printerId;
         return napi_ok;
@@ -169,9 +169,9 @@ napi_value NapiInnerPrint::DisconnectPrinter(napi_env env, napi_callback_info in
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
-        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
         context->printerId = printerId;
         return napi_ok;
@@ -200,7 +200,7 @@ napi_value NapiInnerPrint::StartPrintJob(napi_env env, napi_callback_info info)
     auto context = std::make_shared<InnerPrintContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
-        auto printJobPtr = PrintJob::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        auto printJobPtr = PrintJob::BuildFromJs(env, argv[0]);
         if (printJobPtr == nullptr) {
             PRINT_HILOGE("ParseJob type error!");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
@@ -235,9 +235,9 @@ napi_value NapiInnerPrint::CancelPrintJob(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "jobId is not a string", napi_string_expected);
-        std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         if (jobId == "") {
 
             PRINT_HILOGE("Parse JobId error!");
@@ -272,7 +272,7 @@ napi_value NapiInnerPrint::RequestPreview(napi_env env, napi_callback_info info)
     auto context = std::make_shared<InnerPrintContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
-        auto printJobPtr = PrintJob::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        auto printJobPtr = PrintJob::BuildFromJs(env, argv[0]);
         if (printJobPtr == nullptr) {
             PRINT_HILOGE("ParseJob type error!");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
@@ -308,9 +308,9 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env, napi_callback_info info
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId number is not a string", napi_string_expected);
-        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
         context->printerId = printerId;
         return napi_ok;
@@ -345,9 +345,9 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
     PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_TWO, "need 2 parameter!");
 
     napi_valuetype valuetype;
-    PRINT_CALL(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype));
+    PRINT_CALL(env, napi_typeof(env, argv[0], &valuetype));
     PRINT_ASSERT(env, valuetype == napi_string, "type is not a string");
-    std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+    std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
     PRINT_HILOGD("type : %{public}s", type.c_str());
 
     if (!NapiInnerPrint::IsSupportType(type)) {
@@ -356,10 +356,10 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
     }
 
     valuetype = napi_undefined;
-    napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype);
+    napi_typeof(env, argv[1], &valuetype);
     PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
 
-    napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_ONE]);
+    napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[1]);
     sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
     if (callback == nullptr) {
         PRINT_HILOGE("create print callback object fail");
@@ -380,9 +380,9 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "type is not a string", napi_string_expected);
-        std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         if (!NapiInnerPrint::IsSupportType(type)) {
             PRINT_HILOGE("Event Off type : %{public}s not support", context->type.c_str());
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);

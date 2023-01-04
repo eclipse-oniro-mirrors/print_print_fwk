@@ -99,16 +99,16 @@ private:
         decltype(info.argc) unwrapArgc = 0;
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), want);
+            reinterpret_cast<napi_value>(info.argv[0]), want);
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
 
         AAFwk::StartOptions startOptions;
-        if (info.argc > NapiPrintUtils::ARGC_ONE && info.argv[NapiPrintUtils::INDEX_ONE]->TypeOf() == NATIVE_OBJECT) {
+        if (info.argc > NapiPrintUtils::ARGC_ONE && info.argv[1]->TypeOf() == NATIVE_OBJECT) {
             PRINT_HILOGD("OnStartAbility start options is used.");
             AppExecFwk::UnwrapStartOptions(reinterpret_cast<napi_env>(&engine),
-                reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ONE]), startOptions);
+                reinterpret_cast<napi_value>(info.argv[1]), startOptions);
             unwrapArgc++;
         }
 
@@ -157,14 +157,14 @@ private:
         decltype(info.argc) unwrapArgc = 0;
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), want);
+            reinterpret_cast<napi_value>(info.argv[0]), want);
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
 
         int32_t accountId = 0;
         if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ONE]), accountId)) {
+            reinterpret_cast<napi_value>(info.argv[1]), accountId)) {
             PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
             return engine.CreateUndefined();
         }
@@ -235,7 +235,7 @@ private:
         };
 
         NativeValue *lastParam =
-            (info.argc == NapiPrintUtils::ARGC_ZERO) ? nullptr : info.argv[NapiPrintUtils::INDEX_ZERO];
+            (info.argc == NapiPrintUtils::ARGC_ZERO) ? nullptr : info.argv[0];
         NativeValue *result = nullptr;
         AsyncTask::Schedule("PrintExtensionContext::OnTerminateAbility", engine,
             CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
@@ -255,7 +255,7 @@ private:
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(
             reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(
-                info.argv[NapiPrintUtils::INDEX_ZERO]), want);
+                info.argv[0]), want);
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         // unwarp connection
@@ -305,13 +305,13 @@ private:
         // unwrap want
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), want);
+            reinterpret_cast<napi_value>(info.argv[0]), want);
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
 
         int32_t accountId = 0;
         if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ONE]), accountId)) {
+            reinterpret_cast<napi_value>(info.argv[1]), accountId)) {
             PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
             return engine.CreateUndefined();
         }
@@ -366,7 +366,7 @@ private:
         int64_t connectId = -1;
         sptr<JSPrintExtensionConnection> connection = nullptr;
         napi_get_value_int64(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), &connectId);
+            reinterpret_cast<napi_value>(info.argv[0]), &connectId);
         PRINT_HILOGD("OnDisconnectAbility connection:%{public}d", (int32_t)connectId);
         auto item = std::find_if(connects_.begin(), connects_.end(),
             [&connectId](const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
@@ -402,7 +402,7 @@ private:
         };
 
         NativeValue *lastParam =
-            (info.argc == NapiPrintUtils::ARGC_ONE) ? nullptr : info.argv[NapiPrintUtils::INDEX_ONE];
+            (info.argc == NapiPrintUtils::ARGC_ONE) ? nullptr : info.argv[1];
         NativeValue *result = nullptr;
         AsyncTask::Schedule("PrintExtensionContext::OnDisconnectAbility", engine,
             CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));

@@ -131,8 +131,8 @@ private:
     bool isSequential_;
     PrintPageSize pageSize_;
     bool isLandscape_;
-    int32_t colorMode_;
-    int32_t duplexMode_;
+    uint32_t colorMode_;
+    uint32_t duplexMode_;
     bool hasMargin_;
     PrintMargin margin_;
     bool hasPreview_;

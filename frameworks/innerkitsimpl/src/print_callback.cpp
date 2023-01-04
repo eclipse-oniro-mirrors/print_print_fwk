@@ -129,8 +129,8 @@ bool PrintCallback::OnCallback(uint32_t state, const PrinterInfo &info)
                 napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
                 napi_value callbackResult = nullptr;
                 napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
-                callbackValues[NapiPrintUtils::INDEX_ZERO] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
-                callbackValues[NapiPrintUtils::INDEX_ONE] = cbParam->printerInfo.ToJsObject(cbParam->env);
+                callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
+                callbackValues[1] = cbParam->printerInfo.ToJsObject(cbParam->env);
                 napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
                     callbackValues, &callbackResult);
                 if (work != nullptr) {
@@ -181,8 +181,8 @@ bool PrintCallback::OnCallback(uint32_t state, const PrintJob &info)
                 napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
                 napi_value callbackResult = nullptr;
                 napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
-                callbackValues[NapiPrintUtils::INDEX_ZERO] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
-                callbackValues[NapiPrintUtils::INDEX_ONE] = cbParam->jobInfo.ToJsObject(cbParam->env);
+                callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
+                callbackValues[1] = cbParam->jobInfo.ToJsObject(cbParam->env);
                 napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
                     callbackValues, &callbackResult);
                 if (work != nullptr) {
@@ -233,9 +233,9 @@ bool PrintCallback::OnCallback(const std::string &extensionId, const std::string
                 napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
                 napi_value callbackResult = nullptr;
                 napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
-                callbackValues[NapiPrintUtils::INDEX_ZERO] =
+                callbackValues[0] =
                     NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->extensionId);
-                callbackValues[NapiPrintUtils::INDEX_ONE] =
+                callbackValues[1] =
                     NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->info);
                 napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
                     callbackValues, &callbackResult);

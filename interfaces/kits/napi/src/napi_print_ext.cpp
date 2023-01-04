@@ -30,15 +30,15 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
 
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         bool isArray = false;
-        napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
+        napi_is_array(env, argv[0], &isArray);
         PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
 
         uint32_t len = 0;
-        napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
+        napi_get_array_length(env, argv[0], &len);
 
         for (uint32_t index = 0; index < len; index++) {
             napi_value value;
-            napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+            napi_get_element(env, argv[0], index, &value);
             auto printerInfoPtr = PrinterInfo::BuildFromJs(env, value);
             if (printerInfoPtr == nullptr) {
                 context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
@@ -84,15 +84,15 @@ napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
 
         bool isArray = false;
-        napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
+        napi_is_array(env, argv[0], &isArray);
         PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
 
         uint32_t len = 0;
-        napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
+        napi_get_array_length(env, argv[0], &len);
 
         for (uint32_t index = 0; index < len; index++) {
             napi_value value;
-            napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+            napi_get_element(env, argv[0], index, &value);
             std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, value);
             if (printerId != "") {
                 context->printerIds.emplace_back(NapiPrintUtils::GetGlobalId(extensionId, printerId));
@@ -133,15 +133,15 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info)
         
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         bool isArray = false;
-        napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
+        napi_is_array(env, argv[0], &isArray);
         PRINT_ASSERT_BASE(env, isArray, " is not array!", napi_array_expected);
 
         uint32_t len = 0;
-        napi_get_array_length(env, argv[NapiPrintUtils::INDEX_ZERO], &len);
+        napi_get_array_length(env, argv[0], &len);
 
         for (uint32_t index = 0; index < len; index++) {
             napi_value value;
-            napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
+            napi_get_element(env, argv[0], index, &value);
             auto printerInfoPtr = PrinterInfo::BuildFromJs(env, value);
             if (printerInfoPtr == nullptr) {
                 context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
@@ -186,16 +186,16 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info inf
         
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
         
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[1], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_number, "printerStateis not a number", napi_number_expected);
 
-        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
 
-        uint32_t printerState = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_ONE]);
+        uint32_t printerState = NapiPrintUtils::GetUint32FromValue(env, argv[1]);
         PRINT_HILOGD("printerState : %{public}d", printerState);
 
         if (printerId == "" || !IsValidPrinterState(printerState)) {
@@ -234,19 +234,19 @@ napi_value NapiPrintExt::UpdatePrintJobState(napi_env env, napi_callback_info in
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printJobId is not a string", napi_string_expected);
 
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[1], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_number, "printJobState is not a number", napi_number_expected);
 
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_number, "reason is not a number", napi_number_expected);
 
-        std::string printJobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        std::string printJobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         PRINT_HILOGD("printJobId : %{public}s", printJobId.c_str());
         
-        uint32_t printJobState = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_ONE]);
+        uint32_t printJobState = NapiPrintUtils::GetUint32FromValue(env, argv[1]);
         PRINT_HILOGD("printerJobState : %{public}d", printJobState);
 
         uint32_t jobSubState = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_TWO]);
@@ -292,10 +292,10 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info in
         
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "extInfo is not a string", napi_string_expected);
 
-        std::string extInfo = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        std::string extInfo = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         PRINT_HILOGD("extInfo : %{public}s", extInfo.c_str());
 
         if (extensionId == "" || extInfo == "") {

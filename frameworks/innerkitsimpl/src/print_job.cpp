@@ -285,7 +285,7 @@ const std::string &PrintJob::GetOption() const
 
 void PrintJob::ReadParcelFD(Parcel &parcel)
 {
-    int32_t fdSize = parcel.ReadUint32();
+    uint32_t fdSize = parcel.ReadUint32();
     fdList_.clear();
     auto msgParcel = static_cast<MessageParcel*>(&parcel);
     for (int32_t index = 0; index < fdSize; index++) {
