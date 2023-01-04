@@ -91,7 +91,7 @@ public:
 
     // The default AsyncCallback in the parameters is at the end position.
     static constexpr size_t ASYNC_DEFAULT_POS = -1;
-    PrintAsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context, 
+    PrintAsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context,
             size_t pos = ASYNC_DEFAULT_POS);
     ~PrintAsyncCall();
     napi_value Call(napi_env env, Context::ExecAction exec = nullptr);

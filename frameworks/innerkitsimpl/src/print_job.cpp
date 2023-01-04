@@ -283,7 +283,7 @@ const std::string &PrintJob::GetOption() const
     return option_;
 }
 
-bool PrintJob::ReadFromParcel(Parcel &parcel)
+void PrintJob::ReadParcelFD(Parcel &parcel)
 {
     int32_t fdSize = parcel.ReadUint32();
     fdList_.clear();
@@ -293,6 +293,11 @@ bool PrintJob::ReadFromParcel(Parcel &parcel)
         PRINT_HILOGD("fd[%{public}d] = %{public}d", index, fd);
         fdList_.emplace_back(fd);
     }
+}
+
+bool PrintJob::ReadFromParcel(Parcel &parcel)
+{
+    ReadParcelFD(parcel);
     SetJobId(parcel.ReadString());
     SetPrinterId(parcel.ReadString());
     SetJobState(parcel.ReadUint32());

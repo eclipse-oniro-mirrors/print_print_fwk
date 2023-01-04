@@ -84,6 +84,7 @@ private:
     void SendExtensionEvent(const std::string &extensionId, const std::string &extInfo);
     bool CheckPermission(const std::string &permissionName);
     void SendQueuePrintJob(const std::string &printerId);
+    void BuildFDParam(const std::vector<uint32_t> &fdList, AAFwk::Want &want);
 
 private:
     ServiceRunningState state_;

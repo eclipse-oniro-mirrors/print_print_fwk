@@ -118,6 +118,7 @@ private:
     bool CreatePreview(napi_env env, napi_value &jsPrintJob) const;
 
     static bool ValidateProperty(napi_env env, napi_value object);
+    void ReadParcelFD(Parcel &parcel);
 
 private:
     std::vector<uint32_t> fdList_;

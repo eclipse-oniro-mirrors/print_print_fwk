@@ -202,6 +202,29 @@ void PrintServiceAbility::OnStop()
     PRINT_HILOGI("OnStop end.");
 }
 
+void PrintServiceAbility::BuildFDParam(const std::vector<uint32_t> &fdList, AAFwk::Want &want)
+{
+    if (fdList.empty()) {
+        return;
+    }
+    AAFwk::WantParams wantParams = want.GetParams();
+    sptr<AAFwk::IArray> ao = new (std::nothrow) AAFwk::Array(fdList.size(), AAFwk::g_IID_IWantParams);
+    if (ao == nullptr) {
+        PRINT_HILOGE("fail to create param");
+        return;
+    }
+    int32_t index = 0;
+    for (auto fd : fdList) {
+        AAFwk::WantParams wp;
+        wp.SetParam(TYPE_PROPERTY, AAFwk::String::Box(FD));
+        wp.SetParam(VALUE_PROPERTY, AAFwk::Integer::Box(fd));
+        PRINT_HILOGD("fd[%{public}d] = %{public}d", index, fd);
+        ao->Set(index++, AAFwk::WantParamWrapper::Box(wp));
+    }
+    wantParams.SetParam(LAUNCH_PARAMETER_FD_LIST, ao);
+    want.SetParams(wantParams);
+}
+
 int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList,
     const std::vector<uint32_t> &fdList, std::string &taskId)
 {
@@ -228,26 +251,7 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     want.SetElementName(spoolerBundleName_, spoolerAbilityName_);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, jobId);
     want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList);
-    if (fdList.size() > 0) {
-        AAFwk::WantParams wantParams = want.GetParams();
-        sptr<AAFwk::IArray> ao = new (std::nothrow) AAFwk::Array(fdList.size(), AAFwk::g_IID_IWantParams);
-        if (ao == nullptr) {
-            PRINT_HILOGE("fail to create param");
-            return E_PRINT_GENERIC_FAILURE;
-        }
-        if (ao != nullptr) {
-            int32_t index = 0;
-            for (auto fd : fdList) {
-                AAFwk::WantParams wp;
-                wp.SetParam(TYPE_PROPERTY, AAFwk::String::Box(FD));
-                wp.SetParam(VALUE_PROPERTY, AAFwk::Integer::Box(fd));
-                PRINT_HILOGD("fd[%{public}d] = %{public}d", index, fd);
-                ao->Set(index++, AAFwk::WantParamWrapper::Box(wp));
-            }
-            wantParams.SetParam(LAUNCH_PARAMETER_FD_LIST, ao);
-        }
-        want.SetParams(wantParams);
-    }
+    BuildFDParam(fdList, want);
     if (!StartAbility(want)) {
         PRINT_HILOGE("Failed to start spooler ability");
         return E_PRINT_SERVER_FAILURE;

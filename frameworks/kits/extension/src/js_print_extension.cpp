@@ -301,7 +301,7 @@ void JsPrintExtension::RegisterDiscoveryCb()
 {
     PRINT_HILOGD("Register Print Extension Callback");
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_DISCOVERY,
-    []() -> bool {
+        []() -> bool {
             PRINT_HILOGD("Start Print Discovery");
             HandleScope handleScope(jsExtension_->jsRuntime_);
             auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
@@ -310,7 +310,7 @@ void JsPrintExtension::RegisterDiscoveryCb()
             return true;
     });
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_STOP_DISCOVERY,
-    []() -> bool {
+        []() -> bool {
             PRINT_HILOGD("Stop Print Discovery");
             HandleScope handleScope(jsExtension_->jsRuntime_);
             auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
@@ -323,7 +323,7 @@ void JsPrintExtension::RegisterDiscoveryCb()
 void JsPrintExtension::RegisterConnectionCb()
 {
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CONNECT_PRINTER,
-    [](const std::string &printId) -> bool {
+        [](const std::string &printId) -> bool {
             PRINT_HILOGD("Connect Printer");
             std::string realPrinterId = NapiPrintUtils::GetLocalId(printId, jsExtension_->extensionId_);
             HandleScope handleScope(jsExtension_->jsRuntime_);
@@ -338,7 +338,7 @@ void JsPrintExtension::RegisterConnectionCb()
             return true;
     });
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER,
-    [](const std::string &printId) -> bool {
+        [](const std::string &printId) -> bool {
             PRINT_HILOGD("Disconnect Printer");
             std::string realPrinterId = NapiPrintUtils::GetLocalId(printId, jsExtension_->extensionId_);
             HandleScope handleScope(jsExtension_->jsRuntime_);
@@ -357,7 +357,7 @@ void JsPrintExtension::RegisterConnectionCb()
 void JsPrintExtension::RegisterPrintJobCb()
 {
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_PRINT,
-    [](const PrintJob &job) -> bool {
+        [](const PrintJob &job) -> bool {
             PRINT_HILOGD("Start Print Job");
             HandleScope handleScope(jsExtension_->jsRuntime_);
             NativeEngine *nativeEng = &(jsExtension_->jsRuntime_).GetNativeEngine();
@@ -371,7 +371,7 @@ void JsPrintExtension::RegisterPrintJobCb()
             return true;
     });
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CANCEL_PRINT,
-    [](const PrintJob &job) -> bool {
+        [](const PrintJob &job) -> bool {
             PRINT_HILOGD("Cancel Print Job");
             HandleScope handleScope(jsExtension_->jsRuntime_);
             NativeEngine *nativeEng = &(jsExtension_->jsRuntime_).GetNativeEngine();
@@ -389,7 +389,7 @@ void JsPrintExtension::RegisterPrintJobCb()
 void JsPrintExtension::RegisterPreviewCb()
 {
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_PREVIEW,
-    [](const PrintJob &job) -> bool {
+        [](const PrintJob &job) -> bool {
             PRINT_HILOGD("Requet preview");
             HandleScope handleScope(jsExtension_->jsRuntime_);
             NativeEngine *nativeEng = &(jsExtension_->jsRuntime_).GetNativeEngine();
@@ -407,7 +407,7 @@ void JsPrintExtension::RegisterPreviewCb()
 void JsPrintExtension::RegisterQueryCapCb()
 {
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_CAP,
-    [](const std::string &printId) -> bool {
+        [](const std::string &printId) -> bool {
             PRINT_HILOGD("Request Capability");
             std::string realPrinterId = NapiPrintUtils::GetLocalId(printId, jsExtension_->extensionId_);
             HandleScope handleScope(jsExtension_->jsRuntime_);
