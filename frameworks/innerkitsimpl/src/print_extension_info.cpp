@@ -158,12 +158,12 @@ std::shared_ptr<PrintExtensionInfo> PrintExtensionInfo::BuildFromJs(napi_env env
     auto names = NapiPrintUtils::GetPropertyNames(env, jsValue);
     for (auto name : names) {
         PRINT_HILOGD("Property: %{public}s", name.c_str());
-    }    
+    }
 
     std::string extensionId = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_EXTINFO_EXTENSION_ID);
     std::string vendorId = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_EXTINFO_VENDOR_ID);
     std::string vendorName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_EXTINFO_VENDOR_NAME);
-    uint32_t iconId = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_EXTINFO_ICON);    
+    uint32_t iconId = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_EXTINFO_ICON);
     std::string version = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_EXTINFO_VERSION);
     nativeObj->SetExtensionId(extensionId);
     nativeObj->SetVendorId(vendorId);
@@ -171,7 +171,7 @@ std::shared_ptr<PrintExtensionInfo> PrintExtensionInfo::BuildFromJs(napi_env env
     nativeObj->SetVendorIcon(iconId);
     nativeObj->SetVersion(version);
 
-    return nativeObj;    
+    return nativeObj;
 }
 
 void PrintExtensionInfo::Dump()

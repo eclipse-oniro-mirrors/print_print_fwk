@@ -69,7 +69,7 @@ uint32_t PrintTask::Start()
 void PrintTask::Stop()
 {
     PrintManagerClient::GetInstance()->StopPrint(taskId_);
-    taskId_ = "";    
+    taskId_ = "";
 }
 
 const std::string &PrintTask::GetId() const

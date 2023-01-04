@@ -80,7 +80,7 @@ void PrintPageSize::Reset()
     SetId("");
     SetName("");
     SetWidth(0);
-    SetHeight(0);    
+    SetHeight(0);
 }
 
 void PrintPageSize::SetId(const std::string &id)
@@ -138,7 +138,7 @@ bool PrintPageSize::Marshalling(Parcel &parcel) const
     parcel.WriteString(GetName());
     parcel.WriteUint32(GetWidth());
     parcel.WriteUint32(GetHeight());
-    return true;    
+    return true;
 }
 
 std::shared_ptr<PrintPageSize> PrintPageSize::Unmarshalling(Parcel &parcel)

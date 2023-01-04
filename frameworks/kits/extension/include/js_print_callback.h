@@ -52,7 +52,8 @@ private:
         NativeValue *jsResult;
         bool isSync;
         bool isCompleted;
-        JsWorkParam() {
+        JsWorkParam()
+        {
             self = nullptr;
             nativeEngine = nullptr;
             jsObj = nullptr;

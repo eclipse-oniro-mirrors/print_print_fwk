@@ -81,11 +81,11 @@ private:
 
     uint32_t printerState_;
 
-    uint32_t printerIcon_;    
+    uint32_t printerIcon_;
 
     std::string description_;
 
-    bool hasCapability_;    
+    bool hasCapability_;
 
     PrinterCapability capability_;
 

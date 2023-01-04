@@ -195,7 +195,7 @@ napi_value PrintMargin::ToJsObject(napi_env env) const
     if (hasRight_) {
         NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_MARGIN_RIGHT, GetRight());
     }
-    return jsObj;    
+    return jsObj;
 }
 
 std::shared_ptr<PrintMargin> PrintMargin::BuildFromJs(napi_env env, napi_value jsValue)
@@ -231,7 +231,7 @@ std::shared_ptr<PrintMargin> PrintMargin::BuildFromJs(napi_env env, napi_value j
         nativeObj->SetRight(NapiPrintUtils::GetUint32FromValue(env, jsRight));
     }
 
-    PRINT_HILOGE("Build Print Margin succeed");    
+    PRINT_HILOGE("Build Print Margin succeed");
     return nativeObj;
 }
 

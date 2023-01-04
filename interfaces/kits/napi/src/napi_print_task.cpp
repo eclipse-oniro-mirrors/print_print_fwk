@@ -89,7 +89,7 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info) // PrintT
     };
     context->SetAction(std::move(input), std::move(output));
     PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
-    return asyncCall.Call(env);    
+    return asyncCall.Call(env);
 }
 
 napi_value NapiPrintTask::GetCtor(napi_env env)

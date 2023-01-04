@@ -28,19 +28,15 @@ public:
 };
 
 void PrintRangeTest::SetUpTestCase(void) {
-  // step 2: input testsuit setup step
 }
 
 void PrintRangeTest::TearDownTestCase(void) {
-  // step 2: input testsuit teardown step
 }
 
 void PrintRangeTest::SetUp(void) {
-  // step 3: input testcase setup step
 }
 
 void PrintRangeTest::TearDown(void) {
-  // step 3: input testcase teardown step
 }
 
 /**
@@ -50,8 +46,8 @@ void PrintRangeTest::TearDown(void) {
  * @tc.require: AR00000000 SR00000000
  */
 HWTEST_F(PrintRangeTest, PrintRangeTest_001, TestSize.Level1) {
-  OHOS::Print::PrintRange range;
-  EXPECT_EQ(0, range.GetStartPage());
+    OHOS::Print::PrintRange range;
+    EXPECT_EQ(0, range.GetStartPage());
 }
 
 /**
@@ -61,6 +57,6 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_001, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrintRangeTest, PrintRangeTest_002, TestSize.Level1) {
-  OHOS::Print::PrintRange range;
-  EXPECT_EQ(0, range.GetEndPage());
+    OHOS::Print::PrintRange range;
+    EXPECT_EQ(0, range.GetEndPage());
 }

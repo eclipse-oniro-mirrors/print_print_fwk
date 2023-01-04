@@ -210,9 +210,9 @@ std::shared_ptr<PrintRange> PrintRange::BuildFromJs(napi_env env, napi_value jsV
         return nullptr;
     }
 
-    napi_value jsPages = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_RANGE_PAGES);   
+    napi_value jsPages = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_RANGE_PAGES);
     if (jsPages != nullptr) {
-        std::vector<uint32_t> pages; 
+        std::vector<uint32_t> pages;
         bool isArray = false;
         PRINT_CALL(env, napi_is_array(env, jsPages, &isArray));
         if (!isArray) {

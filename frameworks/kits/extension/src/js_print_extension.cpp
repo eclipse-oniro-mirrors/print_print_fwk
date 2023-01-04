@@ -89,7 +89,7 @@ bool JsPrintExtension::InitExtensionObj(JsRuntime &jsRuntime)
     PRINT_HILOGD("Init module:%{public}s,srcPath:%{public}s.", moduleName.c_str(), srcPath.c_str());
     HandleScope handleScope(jsRuntime_);
 
-    jsObj_ = jsRuntime.LoadModule(moduleName, srcPath, abilityInfo_->hapPath);  
+    jsObj_ = jsRuntime.LoadModule(moduleName, srcPath, abilityInfo_->hapPath);
     if (jsObj_ == nullptr) {
         PRINT_HILOGE("Failed to get jsObj_");
         return false;

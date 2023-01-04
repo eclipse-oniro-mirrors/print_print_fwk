@@ -85,9 +85,9 @@ public:
         napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties);
     static std::string ToLower(const std::string &s);
     static std::string GetExtensionId(napi_env env, napi_value *argv);
-    static std::string GetExtensionId(const std::string &globalId);    
+    static std::string GetExtensionId(const std::string &globalId);
     static std::string GetGlobalId(const std::string& extensionId, const std::string& localId);
-    static std::string GetLocalId(const std::string& globalId, const std::string& extensionId);    
+    static std::string GetLocalId(const std::string& globalId, const std::string& extensionId);
     static std::string EncodeExtensionCid(const std::string &extensionId, uint32_t callbackId);
     static bool DecodeExtensionCid(const std::string &cid, std::string &extensionId, uint32_t &callbackId);
     static std::string GetTaskEventId(const std::string &taskId, const std::string &type);

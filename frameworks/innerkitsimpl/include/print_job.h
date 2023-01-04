@@ -77,7 +77,7 @@ public:
 
     [[nodiscard]] uint32_t GetJobState() const;
 
-    [[nodiscard]] uint32_t GetSubState() const;    
+    [[nodiscard]] uint32_t GetSubState() const;
 
     [[nodiscard]] uint32_t GetCopyNumber() const;
 

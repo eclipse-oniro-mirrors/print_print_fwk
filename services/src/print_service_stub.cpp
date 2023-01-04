@@ -28,7 +28,7 @@ using namespace OHOS::HiviewDFX;
 PrintServiceStub::PrintServiceStub()
 {
     cmdMap_[CMD_START_PRINT] = &PrintServiceStub::OnStartPrint;
-    cmdMap_[CMD_STOP_PRINT] = &PrintServiceStub::OnStopPrint;    
+    cmdMap_[CMD_STOP_PRINT] = &PrintServiceStub::OnStopPrint;
     cmdMap_[CMD_CONNECTPRINTER] = &PrintServiceStub::OnConnectPrinter;
     cmdMap_[CMD_DISCONNECTPRINTER] = &PrintServiceStub::OnDisconnectPrinter;
     cmdMap_[CMD_STARTDISCOVERPRINTER] = &PrintServiceStub::OnStartDiscoverPrinter;
@@ -41,7 +41,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[CMD_UPDATEPRINTERS] = &PrintServiceStub::OnUpdatePrinters;
     cmdMap_[CMD_UPDATEPRINTERSTATE] = &PrintServiceStub::OnUpdatePrinterState;
     cmdMap_[CMD_UPDATEPRINTJOBSTATE] = &PrintServiceStub::OnUpdatePrintJobState;
-    cmdMap_[CMD_UPDATEEXTENSIONINFO] = &PrintServiceStub::OnUpdateExtensionInfo;    
+    cmdMap_[CMD_UPDATEEXTENSIONINFO] = &PrintServiceStub::OnUpdateExtensionInfo;
     cmdMap_[CMD_REQUESTPREVIEW] = &PrintServiceStub::OnRequestPreview;
     cmdMap_[CMD_QUERYPRINTERCAPABILITY] = &PrintServiceStub::OnQueryPrinterCapability;
     cmdMap_[CMD_ON] = &PrintServiceStub::OnEventOn;
@@ -214,7 +214,7 @@ bool PrintServiceStub::OnAddPrinters(MessageParcel &data, MessageParcel &reply)
 
 bool PrintServiceStub::OnRemovePrinters(MessageParcel &data, MessageParcel &reply)
 {
-    PRINT_HILOGD("PrintServiceStub::OnRemovePrinters in");   
+    PRINT_HILOGD("PrintServiceStub::OnRemovePrinters in");
     std::vector<std::string> printerIds;
     data.ReadStringVector(&printerIds);
     PRINT_HILOGD("OnStartDiscoverPrinter len = %{public}zd", printerIds.size());
@@ -227,7 +227,7 @@ bool PrintServiceStub::OnRemovePrinters(MessageParcel &data, MessageParcel &repl
 
 bool PrintServiceStub::OnUpdatePrinters(MessageParcel &data, MessageParcel &reply)
 {
-    PRINT_HILOGD("PrintServiceStub::OnUpdatePrinters in");  
+    PRINT_HILOGD("PrintServiceStub::OnUpdatePrinters in");
     std::vector<PrinterInfo> printerInfos;
     uint32_t len = data.ReadUint32();
     PRINT_HILOGD("OnStartDiscoverPrinter len = %{public}d", len);
@@ -269,7 +269,7 @@ bool PrintServiceStub::OnUpdatePrintJobState(MessageParcel &data, MessageParcel 
     uint32_t subState = data.ReadUint32();
     PRINT_HILOGD("OnUpdatePrintJobState jobId = %{public}s", jobId.c_str());
     PRINT_HILOGD("OnUpdatePrintJobState state = %{public}d", state);
-    PRINT_HILOGD("OnUpdatePrintJobState subState = %{public}d", subState);    
+    PRINT_HILOGD("OnUpdatePrintJobState subState = %{public}d", subState);
 
     int32_t ret = UpdatePrintJobState(jobId, state, subState);
     reply.WriteInt32(ret);
@@ -384,7 +384,7 @@ bool PrintServiceStub::OnRegisterExtCallback(MessageParcel &data, MessageParcel 
 bool PrintServiceStub::OnUnregisterAllExtCallback(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGD("PrintServiceStub::OnUnregisterAllExtCallback in");
-    std::string extensionId = data.ReadString();    
+    std::string extensionId = data.ReadString();
     sptr<IRemoteObject> remote = data.ReadRemoteObject();
     if (remote == nullptr) {
         PRINT_HILOGD("PrintServiceStub::OnUnregisterAllExtCallback remote is nullptr");

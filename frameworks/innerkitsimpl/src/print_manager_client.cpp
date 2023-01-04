@@ -174,7 +174,7 @@ int32_t PrintManagerClient::QueryAllExtension(std::vector<PrintExtensionInfo> &e
     }
     int32_t ret = printServiceProxy_->QueryAllExtension(extensionInfos);
     PRINT_HILOGD("PrintManagerClient QueryAllExtension out ret = [%{public}d].", ret);
-    return ret;    
+    return ret;
 }
 
 int32_t PrintManagerClient::StartDiscoverPrinter(const std::vector<std::string> &extensionList)
@@ -558,7 +558,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     return ret;
 }
 
-int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId, 
+int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     uint32_t callbackId, PrinterCapabilityCallback cb)
 {
     PRINT_HILOGD("PrintManagerClient RegisterExtCallback start.");

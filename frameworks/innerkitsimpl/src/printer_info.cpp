@@ -141,7 +141,7 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
 {
     SetPrinterId(parcel.ReadString());
     SetPrinterName(parcel.ReadString());
-    SetPrinterState(parcel.ReadUint32());   
+    SetPrinterState(parcel.ReadUint32());
 
     uint32_t iconId = PRINT_INVALID_ID;
     if (parcel.ReadBool()) {
@@ -262,16 +262,16 @@ std::shared_ptr<PrinterInfo> PrinterInfo::BuildFromJs(napi_env env, napi_value j
     }
 
     std::string printerId = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_PRINTERID);
-    std::string printerName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_PRINTERNAME);   
+    std::string printerName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_PRINTERNAME);
     if (printerId == "" || printerName == "") {
-        PRINT_HILOGE("Invalid printer id[%{public}s] or printer name[%{public}s]", 
+        PRINT_HILOGE("Invalid printer id[%{public}s] or printer name[%{public}s]",
             printerId.c_str(), printerName.c_str());
         return nullptr;
     }
     nativeObj->SetPrinterId(printerId);
     nativeObj->SetPrinterName(printerName);
 
-    uint32_t printerState = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_INFO_PRINTERSTATE); 
+    uint32_t printerState = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_INFO_PRINTERSTATE);
     if (printerState >= PRINTER_UNKNOWN) {
         PRINT_HILOGE("Invalid printer state");
         return nullptr;
@@ -286,7 +286,7 @@ std::shared_ptr<PrinterInfo> PrinterInfo::BuildFromJs(napi_env env, napi_value j
     auto jsDesc = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_DESCRIPTION);
     if (jsDesc != nullptr) {
         nativeObj->SetDescription(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_DESCRIPTION));
-    }    
+    }
 
     auto jsCapability = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_CAPABILITY);
     if (jsCapability != nullptr) {

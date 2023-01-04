@@ -107,7 +107,6 @@ void PrintAsyncCall::OnExecute(napi_env env, void *data)
 void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
 {
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
-    PRINT_HILOGD("run the js callback function");
     if (context->ctx == nullptr || context->ctx->GetErrorIndex() != E_PRINT_NONE) {
         status = napi_generic_failure;
     }
@@ -139,11 +138,11 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         PRINT_HILOGE("ErrorMessage: [%{public}s], ErrorIndex:[%{public}d]",
             GetErrorText(errorIndex).c_str(), errorIndex);
         napi_create_uint32(env, errorIndex, &message);
-        PRINT_HILOGE("async call failed. creating errors...");
         result[ARG_ERROR] = message;
         napi_get_undefined(env, &result[ARG_DATA]);
     }
     if (context->defer != nullptr) {
+        // promise
         if (status == napi_ok && runStatus == napi_ok) {
             PRINT_HILOGD("async_call napi_resolve_deferred is running.");
             napi_resolve_deferred(env, context->defer, result[ARG_DATA]);
@@ -152,6 +151,7 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
             napi_reject_deferred(env, context->defer, result[ARG_ERROR]);
         }
     } else {
+        // callback
         napi_value callback = nullptr;
         PRINT_HILOGD("async_call napi_get_reference_value is running.");
         napi_get_reference_value(env, context->callback, &callback);

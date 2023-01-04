@@ -408,7 +408,7 @@ int32_t NapiPrintUtils::OpenFile(const std::string &filePath)
         PRINT_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
         return PRINT_INVALID_ID;
     }
-    return fd;  
+    return fd;
 }
 
 bool NapiPrintUtils::IsPathValid(const std::string &filePath)

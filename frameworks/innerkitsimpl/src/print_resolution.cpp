@@ -42,7 +42,7 @@ PrintResolution &PrintResolution::operator=(const PrintResolution &right)
     return *this;
 }
 
-PrintResolution::~PrintResolution() 
+PrintResolution::~PrintResolution()
 {
 }
 

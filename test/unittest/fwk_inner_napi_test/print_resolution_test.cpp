@@ -21,26 +21,22 @@ using namespace testing::ext;
 
 class PrintResolutionTest : public testing::Test {
 public:
-  static void SetUpTestCase(void);
-  static void TearDownTestCase(void);
-  void SetUp();
-  void TearDown();
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintResolutionTest::SetUpTestCase(void) {
-  // step 2: input testsuit setup step
 }
 
 void PrintResolutionTest::TearDownTestCase(void) {
-  // step 2: input testsuit teardown step
 }
 
 void PrintResolutionTest::SetUp(void) {
-  // step 3: input testcase setup step
 }
 
 void PrintResolutionTest::TearDown(void) {
-  // step 3: input testcase teardown step
 }
 
 /**
@@ -50,9 +46,9 @@ void PrintResolutionTest::TearDown(void) {
  * @tc.require:
  */
 HWTEST_F(PrintResolutionTest, PrintResolutionTest_001, TestSize.Level1) {
-  OHOS::Print::PrintResolution resolution;
-  resolution.Reset();
-  EXPECT_EQ("", resolution.GetId());
+    OHOS::Print::PrintResolution resolution;
+    resolution.Reset();
+    EXPECT_EQ("", resolution.GetId());
 }
 
 /**
@@ -62,9 +58,9 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_001, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrintResolutionTest, PrintResolutionTest_002, TestSize.Level1) {
-  OHOS::Print::PrintResolution resolution;
-  resolution.Reset();
-  EXPECT_EQ(0, resolution.GetHorizontalDpi());
+    OHOS::Print::PrintResolution resolution;
+    resolution.Reset();
+    EXPECT_EQ(0, resolution.GetHorizontalDpi());
 }
 
 /**
@@ -74,7 +70,7 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_002, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrintResolutionTest, PrintResolutionTest_003, TestSize.Level1) {
-  OHOS::Print::PrintResolution resolution;
-  resolution.Reset();
-  EXPECT_EQ(0, resolution.GetVerticalDpi());
+    OHOS::Print::PrintResolution resolution;
+    resolution.Reset();
+    EXPECT_EQ(0, resolution.GetVerticalDpi());
 }

@@ -21,26 +21,22 @@ using namespace testing::ext;
 
 class PrinterInfoTest : public testing::Test {
 public:
-  static void SetUpTestCase(void);
-  static void TearDownTestCase(void);
-  void SetUp();
-  void TearDown();
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrinterInfoTest::SetUpTestCase(void) {
-  // step 2: input testsuit setup step
 }
 
 void PrinterInfoTest::TearDownTestCase(void) {
-  // step 2: input testsuit teardown step
 }
 
 void PrinterInfoTest::SetUp(void) {
-  // step 3: input testcase setup step
 }
 
 void PrinterInfoTest::TearDown(void) {
-  // step 3: input testcase teardown step
 }
 
 /**
@@ -50,9 +46,9 @@ void PrinterInfoTest::TearDown(void) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0001, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterId("001");
-  EXPECT_EQ("001", info.GetPrinterId());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    EXPECT_EQ("001", info.GetPrinterId());
 }
 
 /**
@@ -62,9 +58,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0001, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0002, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterId("@@@111");
-  EXPECT_EQ("@@@111", info.GetPrinterId());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("@@@111");
+    EXPECT_EQ("@@@111", info.GetPrinterId());
 }
 
 /**
@@ -74,9 +70,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0002, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0003, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterId("#￥1aa");
-  EXPECT_EQ("#￥1aa", info.GetPrinterId());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("#￥1aa");
+    EXPECT_EQ("#￥1aa", info.GetPrinterId());
 }
 
 /**
@@ -86,9 +82,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0003, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0004, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterId("……&**/1a");
-  EXPECT_EQ("……&**/1a", info.GetPrinterId());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("……&**/1a");
+    EXPECT_EQ("……&**/1a", info.GetPrinterId());
 }
 
 /**
@@ -98,9 +94,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0004, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0005, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterName("OpenHarmony");
-  EXPECT_EQ("OpenHarmony", info.GetPrinterName());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterName("OpenHarmony");
+    EXPECT_EQ("OpenHarmony", info.GetPrinterName());
 }
 
 /**
@@ -110,9 +106,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0005, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0006, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterName("OpenHarmony@1a/*");
-  EXPECT_EQ("OpenHarmony@1a/*", info.GetPrinterName());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterName("OpenHarmony@1a/*");
+    EXPECT_EQ("OpenHarmony@1a/*", info.GetPrinterName());
 }
 
 /**
@@ -122,9 +118,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0006, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0007, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterName("OpenHarmony￥%……5a1");
-  EXPECT_EQ("OpenHarmony￥%……5a1", info.GetPrinterName());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterName("OpenHarmony￥%……5a1");
+    EXPECT_EQ("OpenHarmony￥%……5a1", info.GetPrinterName());
 }
 
 /**
@@ -134,9 +130,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0007, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0008, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterName("OpenHarmony（*…………+.");
-  EXPECT_EQ("OpenHarmony（*…………+.", info.GetPrinterName());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterName("OpenHarmony（*…………+.");
+    EXPECT_EQ("OpenHarmony（*…………+.", info.GetPrinterName());
 }
 
 /**
@@ -146,9 +142,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0008, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0009, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterIcon(0);
-  EXPECT_EQ(0, info.GetPrinterIcon());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterIcon(0);
+    EXPECT_EQ(0, info.GetPrinterIcon());
 }
 
 /**
@@ -158,9 +154,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0009, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0010, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterIcon(10000);
-  EXPECT_EQ(10000, info.GetPrinterIcon());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterIcon(10000);
+    EXPECT_EQ(10000, info.GetPrinterIcon());
 }
 
 /**
@@ -170,9 +166,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0010, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0011, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterIcon(10000000);
-  EXPECT_EQ(10000000, info.GetPrinterIcon());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterIcon(10000000);
+    EXPECT_EQ(10000000, info.GetPrinterIcon());
 }
 
 /**
@@ -182,9 +178,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0011, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0012, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterIcon(1000000000);
-  EXPECT_EQ(1000000000, info.GetPrinterIcon());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterIcon(1000000000);
+    EXPECT_EQ(1000000000, info.GetPrinterIcon());
 }
 
 /**
@@ -194,9 +190,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0012, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0013, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterState(0);
-  EXPECT_EQ(0, info.GetPrinterState());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterState(0);
+    EXPECT_EQ(0, info.GetPrinterState());
 }
 
 /**
@@ -206,9 +202,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0013, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0014, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterState(10000);
-  EXPECT_EQ(10000, info.GetPrinterState());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterState(10000);
+    EXPECT_EQ(10000, info.GetPrinterState());
 }
 
 /**
@@ -218,9 +214,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0014, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0015, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterState(10000000);
-  EXPECT_EQ(10000000, info.GetPrinterState());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterState(10000000);
+    EXPECT_EQ(10000000, info.GetPrinterState());
 }
 
 /**
@@ -230,9 +226,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0015, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0016, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetPrinterState(1000000000);
-  EXPECT_EQ(1000000000, info.GetPrinterState());
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterState(1000000000);
+    EXPECT_EQ(1000000000, info.GetPrinterState());
 }
 
 /**
@@ -242,9 +238,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0016, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0017, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetDescription("normal");
-  EXPECT_EQ("normal", info.GetDescription());
+    OHOS::Print::PrinterInfo info;
+    info.SetDescription("normal");
+    EXPECT_EQ("normal", info.GetDescription());
 }
 
 /**
@@ -254,9 +250,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0017, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0018, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetDescription("false1a%……");
-  EXPECT_EQ("false1a%……", info.GetDescription());
+    OHOS::Print::PrinterInfo info;
+    info.SetDescription("false1a%……");
+    EXPECT_EQ("false1a%……", info.GetDescription());
 }
 
 /**
@@ -266,9 +262,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0018, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0019, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetDescription("error1￥qq");
-  EXPECT_EQ("error1￥qq", info.GetDescription());
+    OHOS::Print::PrinterInfo info;
+    info.SetDescription("error1￥qq");
+    EXPECT_EQ("error1￥qq", info.GetDescription());
 }
 
 /**
@@ -278,9 +274,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0019, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0020, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetDescription("success55aa￥%……");
-  EXPECT_EQ("success55aa￥%……", info.GetDescription());
+    OHOS::Print::PrinterInfo info;
+    info.SetDescription("success55aa￥%……");
+    EXPECT_EQ("success55aa￥%……", info.GetDescription());
 }
 
 /**
@@ -290,9 +286,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0020, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0021, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetOption("开始：start1a@#");
-  EXPECT_EQ("开始：start1a@#", info.GetOption());
+    OHOS::Print::PrinterInfo info;
+    info.SetOption("开始：start1a@#");
+    EXPECT_EQ("开始：start1a@#", info.GetOption());
 }
 
 /**
@@ -302,9 +298,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0021, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0022, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetOption("find error，stop work");
-  EXPECT_EQ("find error，stop work", info.GetOption());
+    OHOS::Print::PrinterInfo info;
+    info.SetOption("find error，stop work");
+    EXPECT_EQ("find error，stop work", info.GetOption());
 }
 
 /**
@@ -314,9 +310,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0022, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0023, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetOption("乱码：￥%……4aaa");
-  EXPECT_EQ("乱码：￥%……4aaa", info.GetOption());
+    OHOS::Print::PrinterInfo info;
+    info.SetOption("乱码：￥%……4aaa");
+    EXPECT_EQ("乱码：￥%……4aaa", info.GetOption());
 }
 
 /**
@@ -326,9 +322,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0023, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0024, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  info.SetOption("运行成功:success");
-  EXPECT_EQ("运行成功:success", info.GetOption());
+    OHOS::Print::PrinterInfo info;
+    info.SetOption("运行成功:success");
+    EXPECT_EQ("运行成功:success", info.GetOption());
 }
 
 /**
@@ -338,11 +334,11 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0024, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0025, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  OHOS::Print::PrinterCapability capability, getCapabillity;
-  info.SetCapability(capability);
-  info.GetCapability(getCapabillity);
-  EXPECT_EQ(0, getCapabillity.GetColorMode());
+    OHOS::Print::PrinterInfo info;
+    OHOS::Print::PrinterCapability capability, getCapabillity;
+    info.SetCapability(capability);
+    info.GetCapability(getCapabillity);
+    EXPECT_EQ(0, getCapabillity.GetColorMode());
 }
 
 /**
@@ -352,9 +348,9 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0025, TestSize.Level1) {
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0026, TestSize.Level1) {
-  OHOS::Print::PrinterInfo info;
-  OHOS::Print::PrinterCapability capability, getCapabillity;
-  info.SetCapability(capability);
-  info.GetCapability(getCapabillity);
-  EXPECT_EQ(0, getCapabillity.GetDuplexMode());
+    OHOS::Print::PrinterInfo info;
+    OHOS::Print::PrinterCapability capability, getCapabillity;
+    info.SetCapability(capability);
+    info.GetCapability(getCapabillity);
+    EXPECT_EQ(0, getCapabillity.GetDuplexMode());
 }

@@ -151,7 +151,7 @@ static void NapiCreateEnum(napi_env env)
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_QUEUED), &print_job_queued);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_RUNNING), &print_job_running);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED), &print_job_blocked);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_COMPLETED), &print_job_completed);     
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_COMPLETED), &print_job_completed);
 
     // create print job sub-state enum
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_COMPLETED_SUCCESS), &completed_success);
@@ -171,7 +171,7 @@ static void NapiCreateEnum(napi_env env)
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_LOW_ON_TONER), &block_low_on_toner);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK), &block_really_low_on_ink);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE), &block_bad_certificate);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_UNKNOWN), &block_unknown);    
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_UNKNOWN), &block_unknown);
 
     // create error code of js api
     napi_create_int32(env, static_cast<int32_t>(E_PRINT_NONE), &err_none);

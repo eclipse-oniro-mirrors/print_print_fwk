@@ -85,7 +85,7 @@ NativeValue *JsPrintCallback::Exec(
     NativeValue *jsObj, const std::string &name, NativeValue *const *argv, size_t argc, bool isSync)
 {
     PRINT_HILOGD("%{public}s callback in", name.c_str());
-    HandleScope handleScope(jsRuntime_);    
+    HandleScope handleScope(jsRuntime_);
     uv_loop_s *loop = GetJsLoop(jsRuntime_);
     if (loop == nullptr) {
         PRINT_HILOGE("Failed to acquire js event loop");

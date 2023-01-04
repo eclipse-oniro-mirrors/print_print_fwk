@@ -25,7 +25,7 @@ class PrintExtensionInfo final : public Parcelable {
 public:
     explicit PrintExtensionInfo();
     PrintExtensionInfo(const PrintExtensionInfo &right);
-    ~PrintExtensionInfo() = default;    
+    ~PrintExtensionInfo() = default;
     
     PrintExtensionInfo &operator=(const PrintExtensionInfo &right);
 

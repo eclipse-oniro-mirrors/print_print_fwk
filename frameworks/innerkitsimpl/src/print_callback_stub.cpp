@@ -45,7 +45,7 @@ int32_t PrintCallbackStub::OnRemoteRequest(
         }
     }
     PRINT_HILOGW("default case, need check.");
-    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);    
+    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
 bool PrintCallbackStub::HandlePrintTaskEvent(MessageParcel &data, MessageParcel &reply)

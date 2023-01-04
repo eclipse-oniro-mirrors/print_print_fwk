@@ -82,7 +82,7 @@ sptr<PrintServiceAbility> PrintServiceAbility::instance_;
 std::shared_ptr<AppExecFwk::EventHandler> PrintServiceAbility::serviceHandler_;
 
 PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCreate)
-    : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START), 
+    : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START),
     spoolerBundleName_(SPOOLER_BUNDLE_NAME), spoolerAbilityName_(SPOOLER_ABILITY_NAME), currentJobId_(0)
 {}
 
@@ -396,7 +396,7 @@ bool PrintServiceAbility::DelayStartDiscovery(const std::string &extensionId)
 
     if (extensionStateList_[extensionId] != PRINT_EXTENSION_LOADED) {
         PRINT_HILOGE("invalid extension state");
-        return false;    
+        return false;
     }
     
     std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_DISCOVERY);
@@ -434,13 +434,13 @@ int32_t PrintServiceAbility::StopDiscoverPrinter()
         }
 
         auto cbFunc = extCallbackMap_[cid];
-        auto callback = [=]() { 
+        auto callback = [=]() {
             if (cbFunc != nullptr) {
                 cbFunc->OnCallback();
             }
         };
         serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
-    } 
+    }
     PRINT_HILOGW("StopDiscoverPrinter out.");
     return E_PRINT_NONE;
 }
@@ -519,8 +519,8 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
 
     auto cbFunc = extCallbackMap_[cid];
-	auto callback = [=]() {
-        PRINT_HILOGD("Start PrintJob %{public}s", jobId.c_str());        
+    auto callback = [=]() {
+        PRINT_HILOGD("Start PrintJob %{public}s", jobId.c_str());
         if (cbFunc != nullptr && cbFunc->OnCallback(*printJob)) {
             printJob->SetJobState(PRINT_JOB_QUEUED);
             UpdatePrintJobState(jobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
@@ -536,7 +536,7 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
-    }    
+    }
     PRINT_HILOGD("CancelPrintJob started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
@@ -628,7 +628,7 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
         auto printerInfo = std::make_shared<PrinterInfo>(info);
         if (printerInfo == nullptr) {
             PRINT_HILOGE("fail to create printer info object");
-            continue;            
+            continue;
         }
         printerInfo->SetPrinterState(PRINTER_ADDED);
         printerInfoList_.insert(std::make_pair(printerInfo->GetPrinterId(), printerInfo));
@@ -777,7 +777,7 @@ int32_t PrintServiceAbility::UpdateExtensionInfo(const std::string &extensionId,
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
-    }    
+    }
 
     PRINT_HILOGD("UpdateExtensionInfo started. %{public}s, extInfo [%{public}s]",
         extensionId.c_str(), extInfo.c_str());
@@ -1002,7 +1002,7 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
 int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &type)
 {
     std::string permission = PERMISSION_NAME_PRINT_JOB;
-    std::string eventType = type;    
+    std::string eventType = type;
     if (taskId != "") {
         permission = PERMISSION_NAME_PRINT;
         eventType = NapiPrintUtils::GetTaskEventId(taskId, type);

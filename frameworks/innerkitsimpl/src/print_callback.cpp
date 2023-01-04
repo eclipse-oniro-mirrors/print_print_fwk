@@ -60,7 +60,7 @@ bool PrintCallback::OnCallback()
     CallbackParam *param = new (std::nothrow) CallbackParam;
     if (param == nullptr) {
         PRINT_HILOGE("Failed to create callback parameter");
-        return false;    
+        return false;
     }
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -109,7 +109,7 @@ bool PrintCallback::OnCallback(uint32_t state, const PrinterInfo &info)
     CallbackParam *param = new (std::nothrow) CallbackParam;
     if (param == nullptr) {
         PRINT_HILOGE("Failed to create callback parameter");
-        return false;    
+        return false;
     }
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -161,7 +161,7 @@ bool PrintCallback::OnCallback(uint32_t state, const PrintJob &info)
     CallbackParam *param = new (std::nothrow) CallbackParam;
     if (param == nullptr) {
         PRINT_HILOGE("Failed to create callback parameter");
-        return false;    
+        return false;
     }
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -213,7 +213,7 @@ bool PrintCallback::OnCallback(const std::string &extensionId, const std::string
     CallbackParam *param = new (std::nothrow) CallbackParam;
     if (param == nullptr) {
         PRINT_HILOGE("Failed to create callback parameter");
-        return false;    
+        return false;
     }
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -235,7 +235,7 @@ bool PrintCallback::OnCallback(const std::string &extensionId, const std::string
                 napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
                 callbackValues[NapiPrintUtils::INDEX_ZERO] =
                     NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->extensionId);
-                callbackValues[NapiPrintUtils::INDEX_ONE] = 
+                callbackValues[NapiPrintUtils::INDEX_ONE] =
                     NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->info);
                 napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
                     callbackValues, &callbackResult);

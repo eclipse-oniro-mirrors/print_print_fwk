@@ -69,7 +69,7 @@ private:
 
     void SetDuplexMode(uint32_t duplexMode);
 
-	void SetIsEmpty(bool isEmpty);
+    void SetIsEmpty(bool isEmpty);
 
     bool ReadFromParcel(Parcel &parcel);
 
@@ -88,7 +88,7 @@ private:
     std::vector<PrintResolution> resolutionList_;
 
     bool hasMargin_;
-	PrintMargin minMargin_;
+    PrintMargin minMargin_;
 };
 } // namespace OHOS::Print
 #endif // PRINTER_CAPABILITY_H

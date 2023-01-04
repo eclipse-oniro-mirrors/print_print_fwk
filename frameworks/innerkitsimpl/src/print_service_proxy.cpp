@@ -34,7 +34,7 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
     PRINT_HILOGD("Current file is %{public}d", fileList.size());
     for (auto file : fileList) {
         PRINT_HILOGD("file is %{public}s", file.c_str());
-    }    
+    }
     data.WriteStringVector(fileList);
     PRINT_HILOGD("PrintServiceProxy StartPrint started.");
     data.WriteBool(fdList.size() > 0);
@@ -236,7 +236,7 @@ int32_t PrintServiceProxy::RemovePrinters(const std::vector<std::string> &printe
 {
     MessageParcel data, reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());  
+    data.WriteInterfaceToken(GetDescriptor());
     data.WriteStringVector(printerIds);
 
     PRINT_HILOGD("PrintServiceProxy RemovePrinters started.");
@@ -255,7 +255,7 @@ int32_t PrintServiceProxy::UpdatePrinters(const std::vector<PrinterInfo> &printe
 {
     MessageParcel data, reply;
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());  
+    data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(printerInfos.size());
     PRINT_HILOGD("UpdatePrinters printerInfos.size() = %{public}zu", printerInfos.size());
     for (uint32_t i = 0; i < printerInfos.size(); i++) {
@@ -425,7 +425,7 @@ int32_t PrintServiceProxy::Off(const std::string taskId, const std::string &type
     return ret;
 }
 
-int32_t PrintServiceProxy::RegisterExtCallback(const std::string &extensionCID, 
+int32_t PrintServiceProxy::RegisterExtCallback(const std::string &extensionCID,
     const sptr<IPrintExtensionCallback> &listener)
 {
     PRINT_HILOGD("PrintServiceProxy::RegisterExtCallback in: %{public}s", extensionCID.c_str());

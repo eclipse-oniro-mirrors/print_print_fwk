@@ -80,7 +80,7 @@ napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         auto extensionId = NapiPrintUtils::GetExtensionId(env, argv);
-        PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());   
+        PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
 
         bool isArray = false;
@@ -129,7 +129,7 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info)
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         auto extensionId = NapiPrintUtils::GetExtensionId(env, argv);
-        PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str()); 
+        PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
         
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         bool isArray = false;
@@ -218,7 +218,7 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info inf
         int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterState(context->printerId, context->printerState);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("Failed to update state of printer");        
+            PRINT_HILOGE("Failed to update state of printer");
             context->SetErrorIndex(ret);
         }
     };
@@ -231,7 +231,7 @@ napi_value NapiPrintExt::UpdatePrintJobState(napi_env env, napi_callback_info in
 {
     PRINT_HILOGD("Enter ---->");
     auto context = std::make_shared<NapiPrintExtContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {       
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
@@ -241,7 +241,7 @@ napi_value NapiPrintExt::UpdatePrintJobState(napi_env env, napi_callback_info in
         PRINT_ASSERT_BASE(env, valuetype == napi_number, "printJobState is not a number", napi_number_expected);
 
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_number, "reason is not a number", napi_number_expected);        
+        PRINT_ASSERT_BASE(env, valuetype == napi_number, "reason is not a number", napi_number_expected);
 
         std::string printJobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         PRINT_HILOGD("printJobId : %{public}s", printJobId.c_str());
@@ -288,7 +288,7 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info in
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         auto extensionId = NapiPrintUtils::GetExtensionId(env, argv);
-        PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str()); 
+        PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
         
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
@@ -345,7 +345,7 @@ bool NapiPrintExt::IsValidPrintJobSubState(uint32_t subState)
 {
     if (subState >= PRINT_JOB_COMPLETED_SUCCESS && subState <= PRINT_JOB_BLOCKED_UNKNOWN) {
         return true;
-    }    
+    }
     return false;
 }
 } // namespace OHOS::Print

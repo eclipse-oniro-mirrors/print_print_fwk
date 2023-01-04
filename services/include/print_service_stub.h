@@ -38,7 +38,7 @@ private:
     bool OnStopDiscoverPrint(MessageParcel &data, MessageParcel &reply);
     bool OnAddPrinters(MessageParcel &data, MessageParcel &reply);
     bool OnRemovePrinters(MessageParcel &data, MessageParcel &reply);
-    bool OnUpdatePrinters(MessageParcel &data, MessageParcel &reply);    
+    bool OnUpdatePrinters(MessageParcel &data, MessageParcel &reply);
     bool OnConnectPrinter(MessageParcel &data, MessageParcel &reply);
     bool OnDisconnectPrinter(MessageParcel &data, MessageParcel &reply);
     bool OnRequestCapability(MessageParcel &data, MessageParcel &reply);
@@ -46,7 +46,7 @@ private:
     bool OnCancelPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnUpdatePrinterState(MessageParcel &data, MessageParcel &reply);
     bool OnUpdatePrintJobState(MessageParcel &data, MessageParcel &reply);
-    bool OnUpdateExtensionInfo(MessageParcel &data, MessageParcel &reply);    
+    bool OnUpdateExtensionInfo(MessageParcel &data, MessageParcel &reply);
     bool OnRequestPreview(MessageParcel &data, MessageParcel &reply);
     bool OnQueryPrinterCapability(MessageParcel &data, MessageParcel &reply);
     bool OnRegisterExtCallback(MessageParcel &data, MessageParcel &reply);

@@ -270,7 +270,7 @@ uint32_t PrintJob::GetDuplexMode() const
 
 void PrintJob::GetMargin(PrintMargin &margin) const
 {
-    margin = margin_;   
+    margin = margin_;
 }
 
 void PrintJob::GetPreview(PrintPreviewAttribute &previewAttr) const
@@ -312,7 +312,7 @@ bool PrintJob::ReadFromParcel(Parcel &parcel)
     SetIsSequential(parcel.ReadBool());
     auto pageSizePtr = PrintPageSize::Unmarshalling(parcel);
     if (pageSizePtr == nullptr) {
-        PRINT_HILOGE("Failed to restore page size");    
+        PRINT_HILOGE("Failed to restore page size");
         return false;
     }
     SetPageSize(*pageSizePtr);
@@ -372,7 +372,7 @@ bool PrintJob::Marshalling(Parcel &parcel) const
     if (!parcel.WriteUint32(GetSubState())) {
         PRINT_HILOGE("Failed to save job substate");
         return false;
-    }    
+    }
 
     if (!parcel.WriteUint32(GetCopyNumber())) {
         PRINT_HILOGE("Failed to save copy number");
@@ -467,7 +467,7 @@ bool PrintJob::CreatePageSize(napi_env env, napi_value &jsPrintJob) const
 {
     napi_value jsPageSize = pageSize_.ToJsObject(env);
     PRINT_CALL_BASE(env, napi_set_named_property(env, jsPrintJob, PARAM_JOB_PAGESIZE, jsPageSize), false);
-    return true;    
+    return true;
 }
 
 bool PrintJob::CreateMargin(napi_env env, napi_value &jsPrintJob) const
@@ -495,8 +495,8 @@ napi_value PrintJob::ToJsObject(napi_env env) const
     NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_JOB_JOBID, GetJobId());
     NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_JOB_PRINTERID, GetPrinterId());
     NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_JOBSTATE, GetJobState());
-    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_SUBSTATE, GetSubState());    
-    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_COPYNUMBER, GetCopyNumber());    
+    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_SUBSTATE, GetSubState());
+    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_COPYNUMBER, GetCopyNumber());
 
     if (!CreatePageRange(env, jsObj)) {
         PRINT_HILOGE("Failed to create page range property of print job");
@@ -565,7 +565,7 @@ std::shared_ptr<PrintJob> PrintJob::BuildFromJs(napi_env env, napi_value jsValue
     std::string jobId = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_JOBID);
     std::string printerId = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_PRINTERID);
     uint32_t jobState = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_JOBSTATE);
-    uint32_t subState = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_SUBSTATE);    
+    uint32_t subState = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_SUBSTATE);
     uint32_t copyNumber = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_JOB_COPYNUMBER);
     bool isSequential = NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_JOB_ISSEQUENTIAL);
     bool isLandscape = NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_JOB_ISLANDSCAPE);
@@ -574,16 +574,16 @@ std::shared_ptr<PrintJob> PrintJob::BuildFromJs(napi_env env, napi_value jsValue
     nativeObj->SetJobId(jobId);
     nativeObj->SetPrinterId(printerId);
     nativeObj->SetJobState(jobState);
-    nativeObj->SetSubState(subState);    
+    nativeObj->SetSubState(subState);
     nativeObj->SetCopyNumber(copyNumber);
     nativeObj->SetIsSequential(isSequential);
     nativeObj->SetIsLandscape(isLandscape);
-    nativeObj->SetColorMode(colorMode);    
+    nativeObj->SetColorMode(colorMode);
     nativeObj->SetDuplexMode(duplexMode);
 
     if (jobId == "") {
         PRINT_HILOGE("Invalid job id");
-        return nullptr;    
+        return nullptr;
     }
 
     if (jobState >= PRINT_JOB_UNKNOWN || subState > PRINT_JOB_BLOCKED_UNKNOWN) {
@@ -597,7 +597,7 @@ std::shared_ptr<PrintJob> PrintJob::BuildFromJs(napi_env env, napi_value jsValue
         PRINT_HILOGE("Failed to build print job object from js");
         return nullptr;
     }
-    nativeObj->SetPageRange(*pageRangePtr);   
+    nativeObj->SetPageRange(*pageRangePtr);
 
     napi_value jsPageSize = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PAGESIZE);
     auto pageSizePtr = PrintPageSize::BuildFromJs(env, jsPageSize);
@@ -615,7 +615,7 @@ std::shared_ptr<PrintJob> PrintJob::BuildFromJs(napi_env env, napi_value jsValue
             return nullptr;
         }
         nativeObj->SetMargin(*marginPtr);
-    }    
+    }
 
     napi_value jsPreview = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PREVIEW);
     if (jsPreview != nullptr) {
@@ -683,7 +683,7 @@ void PrintJob::Dump()
     PRINT_HILOGD("jobId_ = %{public}s", jobId_.c_str());
     PRINT_HILOGD("printerId_ = %{public}s", printerId_.c_str());
     PRINT_HILOGD("jobState_ = %{public}d", jobState_);
-    PRINT_HILOGD("subState_ = %{public}d", subState_);    
+    PRINT_HILOGD("subState_ = %{public}d", subState_);
     PRINT_HILOGD("copyNumber_ = %{public}d", copyNumber_);
     PRINT_HILOGD("isSequential_ = %{public}d", isSequential_);
     PRINT_HILOGD("isLandscape_ = %{public}d", isLandscape_);
