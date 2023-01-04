@@ -600,7 +600,7 @@ void PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
 
     auto cbFunc = extCallbackMap_[cid];
     auto printJob = jobIt->second;
-	auto callback = [=]() {
+    auto callback = [=]() {
         PRINT_HILOGD("Start Next Print Job %{public}s", jobId.c_str());
         if (cbFunc != nullptr && cbFunc->OnCallback(*printJob)) {
             printJob->SetJobState(PRINT_JOB_QUEUED);
