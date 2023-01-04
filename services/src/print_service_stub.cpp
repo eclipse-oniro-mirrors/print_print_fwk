@@ -272,7 +272,7 @@ bool PrintServiceStub::OnUpdatePrintJobState(MessageParcel &data, MessageParcel 
     PRINT_HILOGD("OnUpdatePrintJobState subState = %{public}d", subState);    
 
     int32_t ret = UpdatePrintJobState(jobId, state, subState);
-    reply.WriteInt32(ret);    
+    reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnUpdatePrintJobState out");
     return ret == E_PRINT_NONE;
 }
@@ -286,7 +286,7 @@ bool PrintServiceStub::OnUpdateExtensionInfo(MessageParcel &data, MessageParcel 
     PRINT_HILOGD("OnUpdateExtensionInfo extInfo = %{public}s", extInfo.c_str());
 
     int32_t ret = UpdateExtensionInfo(extensionId, extInfo);
-    reply.WriteInt32(ret);    
+    reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnUpdateExtensionInfo out");
     return ret == E_PRINT_NONE;
 }

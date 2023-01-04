@@ -418,7 +418,7 @@ int32_t PrintServiceAbility::StopDiscoverPrinter()
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
-    }    
+    }
     PRINT_HILOGD("StopDiscoverPrinter started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
@@ -451,7 +451,7 @@ int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
-    }    
+    }
     PRINT_HILOGD("QueryAllExtension started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
@@ -676,8 +676,8 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
-    }    
- 
+    }
+
     PRINT_HILOGD("UpdatePrinters started. Total size is %{public}d", printerInfoList_.size());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
@@ -737,7 +737,7 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
     }
     
     if (state == PRINT_JOB_COMPLETED && subState > PRINT_JOB_COMPLETED_FILE_CORRUPT) {
-        return E_PRINT_INVALID_PARAMETER;        
+        return E_PRINT_INVALID_PARAMETER;
     }
 
     PRINT_HILOGD("UpdatePrintJobState started. %{public}s, state [%{public}d]", jobId.c_str(), state);
@@ -797,7 +797,7 @@ int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo, std::string
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
-    }    
+    }
     PRINT_HILOGD("RequestPreview started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
@@ -839,7 +839,7 @@ int32_t PrintServiceAbility::QueryPrinterCapability(const std::string &printerId
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
-    }    
+    }
     PRINT_HILOGD("QueryPrinterCapability started %{public}s", printerId.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
@@ -893,11 +893,11 @@ int32_t PrintServiceAbility::RegisterExtCallback(const std::string &extensionCID
         return E_PRINT_INVALID_PARAMETER;
     }
 
-    PRINT_HILOGD("extensionCID = %{public}s, extensionId = %{public}s", extensionCID.c_str(), extensionId.c_str());    
+    PRINT_HILOGD("extensionCID = %{public}s, extensionId = %{public}s", extensionCID.c_str(), extensionId.c_str());
 
     auto extensionStateIt = extensionStateList_.find(extensionId);
     if (extensionStateIt == extensionStateList_.end()) {
-        PRINT_HILOGE("Invalid extension id");        
+        PRINT_HILOGE("Invalid extension id");
         return E_PRINT_INVALID_EXTENSION;
     }
 
@@ -953,12 +953,12 @@ int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId)
     PRINT_HILOGD("PrintServiceAbility::LoadExtSuccess started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (extensionStateList_.find(extensionId) == extensionStateList_.end()) {
-        PRINT_HILOGE("Invalid extension id");        
+        PRINT_HILOGE("Invalid extension id");
         return E_PRINT_INVALID_EXTENSION;
     }
 
     if (extensionStateList_[extensionId] != PRINT_EXTENSION_LOADING) {
-        PRINT_HILOGE("Invalid Extension State");        
+        PRINT_HILOGE("Invalid Extension State");
         return E_PRINT_INVALID_EXTENSION;
     }
     extensionStateList_[extensionId] = PRINT_EXTENSION_LOADED;
@@ -1044,29 +1044,7 @@ bool PrintServiceAbility::StartAbility(const AAFwk::Want &want)
     }
     return true;
 }
-/*
-bool PrintServiceAbility::StopAbility(const AAFwk::Want &want)
-{
-    AppExecFwk::ElementName element = want.GetElement();
-    AAFwk::AbilityManagerClient::GetInstance()->Connect();
-    uint32_t retry = 0;
-    while (retry++ < MAX_RETRY_TIMES) {
-        PRINT_HILOGD("PrintServiceAbility::StopAbility %{public}s %{public}s",
-            element.GetBundleName().c_str(), element.GetAbilityName().c_str());
-        if (AAFwk::AbilityManagerClient::GetInstance()->StopAbility(want) == 0) {
-            break;
-        }
-        break;
-        std::this_thread::sleep_for(std::chrono::seconds(START_ABILITY_INTERVAL));
-        PRINT_HILOGD("PrintServiceAbility::StopAbility %{public}d", retry);
-    }
-    if (retry > MAX_RETRY_TIMES) {
-        PRINT_HILOGE("PrintServiceAbility::StopAbility --> failed ");
-        return false;
-    }   
-    return true;
-}
-*/
+
 PrintExtensionInfo PrintServiceAbility::ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo)
 {
     PrintExtensionInfo printExtInfo;

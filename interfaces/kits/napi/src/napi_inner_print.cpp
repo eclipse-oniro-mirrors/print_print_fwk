@@ -82,7 +82,7 @@ napi_value NapiInnerPrint::StartDiscovery(napi_env env, napi_callback_info info)
             PRINT_HILOGD("output for :---- extensionList value is :[%{public}s]", extensionId.c_str());
             if (extensionId != "") {
                 context->extensionList.emplace_back(extensionId);
-            }            
+            }
         }
         return napi_ok;
     };
@@ -232,16 +232,17 @@ napi_value NapiInnerPrint::CancelPrintJob(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter CancelPrintJob---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {       
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "jobId is not a string", napi_string_expected);
         std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        if (jobId == "") {
+        if (jobId == "") {
+
             PRINT_HILOGE("Parse JobId error!");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-            return napi_invalid_arg;        
+            return napi_invalid_arg;
         }
         context->jobId = jobId;
         return napi_ok;
@@ -377,7 +378,7 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
     PRINT_HILOGD("Enter ---->");
     auto context = std::make_shared<InnerPrintContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);    
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "type is not a string", napi_string_expected);
@@ -386,7 +387,7 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
             PRINT_HILOGE("Event Off type : %{public}s not support", context->type.c_str());
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
-        }        
+        }
         context->type = type;
         PRINT_HILOGD("event type : %{public}s", context->type.c_str());
         return napi_ok;

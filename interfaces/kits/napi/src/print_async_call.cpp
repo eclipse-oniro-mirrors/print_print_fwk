@@ -144,7 +144,6 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         napi_get_undefined(env, &result[ARG_DATA]);
     }
     if (context->defer != nullptr) {
-        // promise
         if (status == napi_ok && runStatus == napi_ok) {
             PRINT_HILOGD("async_call napi_resolve_deferred is running.");
             napi_resolve_deferred(env, context->defer, result[ARG_DATA]);
@@ -153,7 +152,6 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
             napi_reject_deferred(env, context->defer, result[ARG_ERROR]);
         }
     } else {
-        // callback
         napi_value callback = nullptr;
         PRINT_HILOGD("async_call napi_get_reference_value is running.");
         napi_get_reference_value(env, context->callback, &callback);

@@ -81,7 +81,7 @@ bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId, Print
 {
     PRINT_HILOGD("PrintExtcbProxy::OnCallBack Start");
     MessageParcel data;
-    MessageParcel reply;    
+    MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);

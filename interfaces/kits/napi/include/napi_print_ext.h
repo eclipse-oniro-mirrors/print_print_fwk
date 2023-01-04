@@ -31,10 +31,10 @@ class NapiPrintExt {
 public:
     static napi_value AddPrinters(napi_env env, napi_callback_info info);
     static napi_value RemovePrinters(napi_env env, napi_callback_info info);
-    static napi_value UpdatePrinters(napi_env env, napi_callback_info info);    
+    static napi_value UpdatePrinters(napi_env env, napi_callback_info info);
     static napi_value UpdatePrinterState(napi_env env, napi_callback_info info);
     static napi_value UpdatePrintJobState(napi_env env, napi_callback_info info);
-    static napi_value UpdateExtensionInfo(napi_env env, napi_callback_info info);    
+    static napi_value UpdateExtensionInfo(napi_env env, napi_callback_info info);
 
 private:
     static bool IsValidPrinterState(uint32_t state);

@@ -169,7 +169,7 @@ declare namespace print {
     enum PrintErrorCode {
         E_PRINT_NONE = 0,						// no error
         E_PRINT_NO_PERMISSION = 201,			// no permission
-        E_PRINT_INVALID_PARAMETER = 401,    	// invalid parameter
+        E_PRINT_INVALID_PARAMETER = 401,		// invalid parameter
         E_PRINT_GENERIC_FAILURE = 13100001,		// generic failure of print
         E_PRINT_RPC_FAILURE = 13100002,			// RPC failure
         E_PRINT_SERVER_FAILURE = 13100003,		// failure of print service

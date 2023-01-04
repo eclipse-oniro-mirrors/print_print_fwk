@@ -54,7 +54,7 @@ public:
     int32_t CancelPrintJob(const std::string &jobId) override;
     int32_t AddPrinters(const std::vector<PrinterInfo> &printerInfos) override;
     int32_t RemovePrinters(const std::vector<std::string> &printerIds) override;
-    int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;    
+    int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) override;
     int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdateExtensionInfo(const std::string &extensionId, const std::string &extInfo) override;

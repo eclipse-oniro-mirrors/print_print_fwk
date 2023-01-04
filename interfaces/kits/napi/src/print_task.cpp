@@ -120,7 +120,7 @@ napi_value PrintTask::On(napi_env env, napi_callback_info info)
 
 napi_value PrintTask::Off(napi_env env, napi_callback_info info)
 {
-    PRINT_HILOGD("Enter ---->"); 
+    PRINT_HILOGD("Enter ---->");
     auto context = std::make_shared<TaskEventContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, "need 1 parameter!", napi_invalid_arg);

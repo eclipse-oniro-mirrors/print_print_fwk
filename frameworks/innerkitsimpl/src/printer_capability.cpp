@@ -25,7 +25,8 @@ static constexpr const char *PARAM_CAPABILITY_PAGESIZE = "pageSize";
 static constexpr const char *PARAM_CAPABILITY_RESOLUTION = "resolution";
 static constexpr const char *PARAM_CAPABILITY_MINMARGIN = "minMargin";
 
-PrinterCapability::PrinterCapability() : colorMode_(0), duplexMode_(0), hasResolution_(false), hasMargin_(false) {
+PrinterCapability::PrinterCapability() : colorMode_(0), duplexMode_(0),
+    hasResolution_(false), hasMargin_(false) {
     pageSizeList_.clear();
     resolutionList_.clear();
     minMargin_.Reset();
@@ -256,9 +257,9 @@ napi_value PrinterCapability::ToJsObject(napi_env env) const
     }
 
     if (hasMargin_) {
-        napi_value jsMargin = minMargin_.ToJsObject(env);   
+        napi_value jsMargin = minMargin_.ToJsObject(env);
         PRINT_CALL(env, napi_set_named_property(env, jsObj, PARAM_CAPABILITY_MINMARGIN, jsMargin));
-    } 
+    }
     return jsObj;
 }
 
