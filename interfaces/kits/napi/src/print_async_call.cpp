@@ -116,7 +116,6 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         runStatus = (*context->ctx)(env, &output);
     }
     PRINT_HILOGD("runStatus: [%{public}d], status: [%{public}d]", runStatus, status);
-
     napi_value result[ARG_BUTT] = { 0 };
     if (status == napi_ok && runStatus == napi_ok) {
         napi_get_undefined(env, &result[ARG_ERROR]);
@@ -125,7 +124,6 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
             PRINT_HILOGD("async call napi_ok.");
         } else {
             napi_get_undefined(env, &result[ARG_DATA]);
-            PRINT_HILOGD("async call napi_ok, but output is nullptr.");
         }
     } else {
         napi_value message = nullptr;
@@ -142,24 +140,20 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         napi_get_undefined(env, &result[ARG_DATA]);
     }
     if (context->defer != nullptr) {
-        // promise
         if (status == napi_ok && runStatus == napi_ok) {
-            PRINT_HILOGD("async_call napi_resolve_deferred is running.");
             napi_resolve_deferred(env, context->defer, result[ARG_DATA]);
         } else {
-            PRINT_HILOGD("async_call napi_reject_deferred is running.");
             napi_reject_deferred(env, context->defer, result[ARG_ERROR]);
         }
     } else {
-        // callback
         napi_value callback = nullptr;
-        PRINT_HILOGD("async_call napi_get_reference_value is running.");
         napi_get_reference_value(env, context->callback, &callback);
         napi_value returnValue;
         napi_call_function(env, nullptr, callback, ARG_BUTT, result, &returnValue);
     }
     DeleteContext(env, context);
 }
+
 void PrintAsyncCall::DeleteContext(napi_env env, AsyncContext *context)
 {
     if (env != nullptr) {

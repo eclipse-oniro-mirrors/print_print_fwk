@@ -58,7 +58,6 @@ private:
 private:
     bool hasResult_;
     uint32_t result_;
-
     PrintRange previewRange_;
 };
 } // namespace OHOS::Print

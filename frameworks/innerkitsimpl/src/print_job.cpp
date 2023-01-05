@@ -288,7 +288,7 @@ void PrintJob::ReadParcelFD(Parcel &parcel)
     uint32_t fdSize = parcel.ReadUint32();
     fdList_.clear();
     auto msgParcel = static_cast<MessageParcel*>(&parcel);
-    for (int32_t index = 0; index < fdSize; index++) {
+    for (uint32_t index = 0; index < fdSize; index++) {
         auto fd = msgParcel->ReadFileDescriptor();
         PRINT_HILOGD("fd[%{public}d] = %{public}d", index, fd);
         fdList_.emplace_back(fd);
@@ -364,6 +364,21 @@ bool PrintJob::Marshalling(Parcel &parcel) const
         return false;
     }
 
+    if (!pageRange_.Marshalling(parcel)) {
+        PRINT_HILOGE("Failed to save page range");
+        return false;
+    }
+
+    if (!pageSize_.Marshalling(parcel)) {
+        PRINT_HILOGE("Failed to save page size");
+        return false;
+    }
+
+    return MarshallingSecond(parcel);
+}
+
+bool PrintJob::MarshallingSecond(Parcel &parcel) const
+{
     if (!parcel.WriteUint32(GetJobState())) {
         PRINT_HILOGE("Failed to save job state");
         return false;
@@ -379,18 +394,8 @@ bool PrintJob::Marshalling(Parcel &parcel) const
         return false;
     }
 
-    if (!pageRange_.Marshalling(parcel)) {
-        PRINT_HILOGE("Failed to save page range");
-        return false;
-    }
-
     if (!parcel.WriteBool(GetIsSequential())) {
         PRINT_HILOGE("Failed to save sequential mode");
-        return false;
-    }
-
-    if (!pageSize_.Marshalling(parcel)) {
-        PRINT_HILOGE("Failed to save page size");
         return false;
     }
 
@@ -581,6 +586,15 @@ std::shared_ptr<PrintJob> PrintJob::BuildFromJs(napi_env env, napi_value jsValue
     nativeObj->SetColorMode(colorMode);
     nativeObj->SetDuplexMode(duplexMode);
 
+    auto ans = std::make_shared<PrintJob>();
+    ans = BuildJsWorkerIsLegal(env, jsValue, jobId, jobState, subState, nativeObj);
+    nativeObj->Dump();
+    return ans;
+}
+
+std::shared_ptr<PrintJob> PrintJob::BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::string jobId,
+    uint32_t jobState, uint32_t subState, std::shared_ptr<PrintJob> &nativeObj)
+{
     if (jobId == "") {
         PRINT_HILOGE("Invalid job id");
         return nullptr;
@@ -631,7 +645,6 @@ std::shared_ptr<PrintJob> PrintJob::BuildFromJs(napi_env env, napi_value jsValue
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION));
     }
-    nativeObj->Dump();
     return nativeObj;
 }
 

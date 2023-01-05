@@ -19,6 +19,8 @@
 
 using namespace testing::ext;
 
+namespace OHOS {
+namespace Print {
 class PrintResolutionTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -74,3 +76,5 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_003, TestSize.Level1) {
     resolution.Reset();
     EXPECT_EQ(0, resolution.GetVerticalDpi());
 }
+} // namespace Print
+} // namespace OHOS

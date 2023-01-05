@@ -101,11 +101,16 @@ public:
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
+    virtual bool MarshallingSecond(Parcel &parcel) const;
+
     static std::shared_ptr<PrintJob> Unmarshalling(Parcel &parcel);
 
     napi_value ToJsObject(napi_env env) const;
 
     static std::shared_ptr<PrintJob> BuildFromJs(napi_env env, napi_value jsValue);
+
+    static std::shared_ptr<PrintJob> BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::string jobId,
+        uint32_t jobState, uint32_t subState, std::shared_ptr<PrintJob> &nativeObj);
 
     void Dump();
 

@@ -19,6 +19,8 @@
 
 using namespace testing::ext;
 
+namespace OHOS {
+namespace Print {
 class PrintRangeTest : public testing::Test {
 public:
   static void SetUpTestCase(void);
@@ -60,3 +62,5 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_002, TestSize.Level1) {
     OHOS::Print::PrintRange range;
     EXPECT_EQ(0, range.GetEndPage());
 }
+} // namespace Print
+} // namespace OHOS

@@ -90,7 +90,7 @@ napi_value PrintTask::On(napi_env env, napi_callback_info info)
     napi_valuetype valuetype;
     PRINT_CALL(env, napi_typeof(env, argv[0], &valuetype));
     PRINT_ASSERT(env, valuetype == napi_string, "type is not a string");
-    std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
+    std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
     PRINT_HILOGD("type : %{public}s", type.c_str());
 
     valuetype = napi_undefined;
@@ -125,7 +125,7 @@ napi_value PrintTask::Off(napi_env env, napi_callback_info info)
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, "need 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "type is not a string", napi_string_expected);
         std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         PrintTask *task;

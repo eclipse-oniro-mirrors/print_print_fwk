@@ -304,9 +304,16 @@ std::shared_ptr<PrinterCapability> PrinterCapability::BuildFromJs(napi_env env, 
     }
     nativeObj->SetPageSize(pageSizes);
 
+    PRINT_HILOGE("Build Print Capability succeed");
+    return BuildFromJsSecond(env, jsValue, jsPageSizes, nativeObj);
+}
+
+std::shared_ptr<PrinterCapability> PrinterCapability::BuildFromJsSecond(napi_env env, napi_value jsValue,
+    napi_value jsPageSizes, std::shared_ptr<PrinterCapability> nativeObj)
+{
     napi_value jsResolutionList = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_CAPABILITY_RESOLUTION);
     if (jsResolutionList != nullptr) {
-        isArray = false;
+        bool isArray = false;
         napi_is_array(env, jsResolutionList, &isArray);
         if (!isArray) {
             PRINT_HILOGE("Invalid list of print resolution");
@@ -337,8 +344,6 @@ std::shared_ptr<PrinterCapability> PrinterCapability::BuildFromJs(napi_env env, 
         }
         nativeObj->SetMinMargin(*marginPtr);
     }
-
-    PRINT_HILOGE("Build Print Capability succeed");
     return nativeObj;
 }
 

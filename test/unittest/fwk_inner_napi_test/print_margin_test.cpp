@@ -19,6 +19,8 @@
 
 using namespace testing::ext;
 
+namespace OHOS {
+namespace Print {
 class PrintMarginTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -130,3 +132,5 @@ HWTEST_F(PrintMarginTest, PrintMarginTest_008, TestSize.Level1) {
     margin.Reset();
     EXPECT_EQ(0, margin.GetRight());
 }
+} // namespace Print
+} // namespace OHOS

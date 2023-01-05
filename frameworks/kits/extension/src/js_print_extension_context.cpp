@@ -99,7 +99,7 @@ private:
         decltype(info.argc) unwrapArgc = 0;
         AAFwk::Want want;
         OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[0]), want);
+            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), want);
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
@@ -366,7 +366,7 @@ private:
         int64_t connectId = -1;
         sptr<JSPrintExtensionConnection> connection = nullptr;
         napi_get_value_int64(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[0]), &connectId);
+            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), &connectId);
         PRINT_HILOGD("OnDisconnectAbility connection:%{public}d", (int32_t)connectId);
         auto item = std::find_if(connects_.begin(), connects_.end(),
             [&connectId](const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {

@@ -189,20 +189,7 @@ static void NapiCreateEnum(napi_env env)
 static napi_value Init(napi_env env, napi_value exports)
 {
     NapiCreateEnum(env);
-    napi_property_descriptor desc[] = {
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_ADD, printer_add),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_REMOVE, printer_removed),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_UPDATE_CAP, printer_updatecap),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_CONNECTED, printer_connected),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_DISCONNECTED, printer_disconnected),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_RUNNING, printer_running),
-
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_PREPARE, print_job_prepare),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_QUEUED, print_job_queued),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_RUNNING, print_job_running),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_BLOCKED, print_job_blocked),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_COMPLETED, print_job_completed),
-
+    std::vector<napi_property_descriptor> desc[] = {
         PRINT_NAPI_PROPERTY(PROPERTY_COMPLETED_SUCCESS, completed_success),
         PRINT_NAPI_PROPERTY(PROPERTY_COMPLETED_FAILED, completed_failed),
         PRINT_NAPI_PROPERTY(PROPERTY_COMPLETED_CANCELLED, completed_cancelled),
@@ -222,17 +209,6 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_BAD_CERTIFICATE, block_bad_certificate),
         PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_UNKNOWN, block_unknown),
 
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_NONE, err_none),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_NO_PERMISSION, err_no_permission),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PARAMETER, err_invalid_parameter),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_GENERIC_FAILURE, err_generic_failure),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_RPC_FAILURE, err_rpc_failure),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_SERVER_FAILURE, err_server_failure),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_EXTENSION, err_invalid_extension),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTER, err_invalid_printer),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTJOB, err_invalid_printjob),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_FILE_IO, err_file_io),
-        
         PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
         PRINT_NAPI_METHOD(FUNCTION_START_DISCOVERY, NapiInnerPrint::StartDiscovery),
@@ -253,9 +229,38 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_EXTENSION_INFO, NapiPrintExt::UpdateExtensionInfo),
     };
 
+    InitProperty(desc);
+
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
     PRINT_HILOGD("init print module %{public}d", status);
     return exports;
+}
+
+static void InitProperty(std::vector<napi_property_descriptor> &desc[])
+{
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_ERR_NONE, err_none));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_ERR_NO_PERMISSION, err_no_permission));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PARAMETER, err_invalid_parameter));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_ERR_GENERIC_FAILURE, err_generic_failure));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_ERR_RPC_FAILURE, err_rpc_failure));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_ERR_SERVER_FAILURE, err_server_failure));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_EXTENSION, err_invalid_extension));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTER, err_invalid_printer));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTJOB, err_invalid_printjob));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_ERR_FILE_IO, err_file_io));
+
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_UPDATE_CAP, printer_updatecap));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_CONNECTED, printer_connected));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_DISCONNECTED, printer_disconnected));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_RUNNING, printer_running));
+
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_PREPARE, print_job_prepare));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_QUEUED, print_job_queued));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_RUNNING, print_job_running));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_BLOCKED, print_job_blocked));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_COMPLETED, print_job_completed));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_ADD, printer_add));
+    desc.emplace_back(PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_REMOVE, printer_removed));
 }
 
 static __attribute__((constructor)) void RegisterModule()

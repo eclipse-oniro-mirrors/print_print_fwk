@@ -19,6 +19,8 @@
 
 using namespace testing::ext;
 
+namespace OHOS {
+namespace Print {
 class PrinterCapabilityTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -62,3 +64,5 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_002, TestSize.Level1) {
     capability.Reset();
     EXPECT_EQ(0, capability.GetDuplexMode());
 }
+} // namespace Print
+} // namespace OHOS

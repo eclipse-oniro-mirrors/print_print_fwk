@@ -20,7 +20,7 @@ namespace OHOS::Print {
 static constexpr const char *PARAM_PREATTRIBUTE_RANGE = "previewRange";
 static constexpr const char *PARAM_PREATTRIBUTE_RESULT = "result";
 
-PrintPreviewAttribute::PrintPreviewAttribute() : result_(PRINT_INVALID_ID) {
+PrintPreviewAttribute::PrintPreviewAttribute() : result_(PRINT_INVALID_ID), hasResult_(false) {
 }
 
 PrintPreviewAttribute::PrintPreviewAttribute(const PrintPreviewAttribute &right)

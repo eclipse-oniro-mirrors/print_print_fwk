@@ -19,6 +19,8 @@
 
 using namespace testing::ext;
 
+namespace OHOS {
+namespace Print {
 class PrintJobTest : public testing::Test {
 public:
   static void SetUpTestCase(void);
@@ -672,3 +674,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0050, TestSize.Level1) {
     job.UpdateParams(jobInfo);
     EXPECT_EQ(17, job.GetSubState());
 }
+} // namespace Print
+} // namespace OHOS
+

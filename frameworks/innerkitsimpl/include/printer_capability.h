@@ -56,6 +56,9 @@ public:
 
     static std::shared_ptr<PrinterCapability> BuildFromJs(napi_env env, napi_value jsValue);
 
+    static std::shared_ptr<PrinterCapability> BuildFromJsSecond(napi_env env, napi_value jsValue,
+        napi_value jsPageSizes, std::shared_ptr<PrinterCapability> nativeObj);
+
     void Dump();
 
 private:
