@@ -15,12 +15,12 @@
 
 #include "native_engine/native_engine.h"
 
-extern const char _binary_print_extension_context_js_start[];
-extern const char _binary_print_extension_context_js_end[];
-extern const char _binary_print_extension_context_abc_start[];
-extern const char _binary_print_extension_context_abc_end[];
+extern const char BINARY_PRINT_EXTENSION_CONTEXT_JS_START[];
+extern const char BINARY_PRINT_EXTENSION_CONTEXT_JS_END[];
+extern const char BINARY_PRINT_EXTENSION_CONTEXT_ABC_START[];
+extern const char BINARY_PRINT_EXTENSION_CONTEXT_ABC_END[];
 
-extern "C" __attribute__((constructor)) void NAPI_PrintExtensionContext_AutoRegister()
+extern "C" __attribute__((constructor)) void NapiPrintExtensionContextAutoRegister()
 {
     auto moduleManager = NativeModuleManager::GetInstance();
     NativeModule newModuleInfo = {
@@ -31,26 +31,26 @@ extern "C" __attribute__((constructor)) void NAPI_PrintExtensionContext_AutoRegi
     moduleManager->Register(&newModuleInfo);
 }
 
-extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtensionContext_GetJSCode(
+extern "C" __attribute__((visibility("default"))) void NapiPrintExtensionContextGetJsCode(
     const char **buf, int *bufLen)
 {
     if (buf != nullptr) {
-        *buf = _binary_print_extension_context_js_start;
+        *buf = BINARY_PRINT_EXTENSION_CONTEXT_JS_START;
     }
 
     if (bufLen != nullptr) {
-        *bufLen = _binary_print_extension_context_js_end - _binary_print_extension_context_js_start;
+        *bufLen = BINARY_PRINT_EXTENSION_CONTEXT_JS_END - BINARY_PRINT_EXTENSION_CONTEXT_JS_START;
     }
 }
 
 // print_extension_context JS register
-extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtensionContext_GetABCCode(
+extern "C" __attribute__((visibility("default"))) void NapiPrintExtensionContextGetAbcCode(
     const char **buf, int *buflen)
 {
     if (buf != nullptr) {
-        *buf = _binary_print_extension_context_abc_start;
+        *buf = BINARY_PRINT_EXTENSION_CONTEXT_ABC_START;
     }
     if (buflen != nullptr) {
-        *buflen = _binary_print_extension_context_abc_end - _binary_print_extension_context_abc_start;
+        *buflen = BINARY_PRINT_EXTENSION_CONTEXT_ABC_END - BINARY_PRINT_EXTENSION_CONTEXT_ABC_START;
     }
 }

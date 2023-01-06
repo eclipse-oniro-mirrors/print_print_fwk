@@ -15,12 +15,12 @@
 
 #include "native_engine/native_engine.h"
 
-extern const char _binary_print_extension_js_start[];
-extern const char _binary_print_extension_js_end[];
-extern const char _binary_print_extension_abc_start[];
-extern const char _binary_print_extension_abc_end[];
+extern const char BINARY_PRINT_EXTENSION_JS_START[];
+extern const char BINARY_PRINT_EXTENSION_JS_END[];
+extern const char BINARY_PRINT_EXTENSION_ABC_START[];
+extern const char BINARY_PRINT_EXTENSION_ABC_END[];
 
-extern "C" __attribute__((constructor)) void NAPI_PrintExtension_AutoRegister()
+extern "C" __attribute__((constructor)) void NAPIPrintExtensionAutoRegister()
 {
     auto moduleManager = NativeModuleManager::GetInstance();
     NativeModule newModuleInfo = {
@@ -31,24 +31,24 @@ extern "C" __attribute__((constructor)) void NAPI_PrintExtension_AutoRegister()
     moduleManager->Register(&newModuleInfo);
 }
 
-extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtension_GetJSCode(const char **buf, int *bufLen)
+extern "C" __attribute__((visibility("default"))) void NapiPrintExtensionGetJsCode(const char **buf, int *bufLen)
 {
     if (buf != nullptr) {
-        *buf = _binary_print_extension_js_start;
+        *buf = BINARY_PRINT_EXTENSION_JS_START;
     }
 
     if (bufLen != nullptr) {
-        *bufLen = _binary_print_extension_js_end - _binary_print_extension_js_start;
+        *bufLen = BINARY_PRINT_EXTENSION_JS_END - BINARY_PRINT_EXTENSION_JS_START;
     }
 }
 
 // print_extension JS register
-extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtension_GetABCCode(const char **buf, int *buflen)
+extern "C" __attribute__((visibility("default"))) void NapiPrintExtensionGetAbcCode(const char **buf, int *buflen)
 {
     if (buf != nullptr) {
-        *buf = _binary_print_extension_abc_start;
+        *buf = BINARY_PRINT_EXTENSION_ABC_START;
     }
     if (buflen != nullptr) {
-        *buflen = _binary_print_extension_abc_end - _binary_print_extension_abc_start;
+        *buflen = BINARY_PRINT_EXTENSION_ABC_END - BINARY_PRINT_EXTENSION_ABC_START;
     }
 }
