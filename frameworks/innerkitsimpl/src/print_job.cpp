@@ -586,10 +586,9 @@ std::shared_ptr<PrintJob> PrintJob::BuildFromJs(napi_env env, napi_value jsValue
     nativeObj->SetColorMode(colorMode);
     nativeObj->SetDuplexMode(duplexMode);
 
-    auto ans = std::make_shared<PrintJob>();
-    ans = BuildJsWorkerIsLegal(env, jsValue, jobId, jobState, subState, nativeObj);
+    BuildJsWorkerIsLegal(env, jsValue, jobId, jobState, subState, nativeObj);
     nativeObj->Dump();
-    return ans;
+    return nativeObj;
 }
 
 std::shared_ptr<PrintJob> PrintJob::BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::string jobId,
