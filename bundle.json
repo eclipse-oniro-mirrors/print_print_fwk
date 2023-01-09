@@ -13,7 +13,7 @@
       "name": "print_fwk",
       "subsystem": "print",
       "syscap": [
-        "SystemCapability.Print.Print"
+        "SystemCapability.Print.PrintFramework"
       ],
       "features": [
       ],
@@ -41,23 +41,38 @@
         ]
       },
       "build": {
-        "sub_component": [
-          "//base/print/print_fwk/interfaces/kits/napi:print_napi",
-          "//base/print/print_fwk/interfaces/kits/jsnapi/extension:printextension_napi",
-          "//base/print/print_fwk/interfaces/kits/jsnapi/extensionctx:printextensioncontext_napi",
-          "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
-          "//base/print/print_fwk/frameworks/kits/extension:print_extension_framework",
-          "//base/print/print_fwk/frameworks/kits/extension:print_extension_module",
-          "//base/print/print_fwk/services:print_service",
-          "//base/print/print_fwk/etc/init:printservice.rc",
-          "//base/print/print_fwk/profile:print_sa_profiles"
+      "group_type":{
+         "base_group": [],
+         "fwk_group":[
+           "//base/print/print_fwk/interfaces/kits/napi:print_napi",
+           "//base/print/print_fwk/interfaces/kits/jsnapi/extension:printextension_napi",
+           "//base/print/print_fwk/interfaces/kits/jsnapi/extensionctx:printextensioncontext_napi",
+           "//base/print/print_fwk/frameworks/kits/extension:print_extension_framework",
+           "//base/print/print_fwk/frameworks/kits/extension:print_extension_module",
+           "//base/print/print_fwk/frameworks/innerkitsimpl:print_client"
         ],
-        "test": [
-          "//base/print/print_fwk/test/unittest/fwk_inner_napi_test:print_fwk_inner_napi_test"
+        "service_group":[
+           "//base/print/print_fwk/services:print_service",
+           "//base/print/print_fwk/etc/init:printservice.rc",
+           "//base/print/print_fwk/profile:print_sa_profiles"
         ]
+      },
+      "inner_kits": [
+      {
+          "name": "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
+          "header": {
+            "header_files": [
+            ],
+            "header_base":"//base/print/print_fwk/frameworks/innerkitsimpl/include"
+          }
+        }
+      ],
+      "test": [
+        "//base/print/print_fwk/test/unittest/fwk_inner_napi_test:print_fwk_inner_napi_test"
+      ]
       },
       "hisysevent_config": [
         "//base/print/print_fwk/hisysevent.yaml"
       ]
     }
-  }
+}

@@ -78,7 +78,7 @@ bool PrintCallback::OnCallback()
                 napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
                 napi_value callbackResult = nullptr;
                 napi_value callbackValues[NapiPrintUtils::ARGC_ONE] = { 0 };
-                callbackValues[NapiPrintUtils::ARGC_ZERO] = NapiPrintUtils::GetUndefined(cbParam->env);
+                callbackValues[0] = NapiPrintUtils::GetUndefined(cbParam->env);
                 napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_ZERO,
                     callbackValues, &callbackResult);
                 if (work != nullptr) {

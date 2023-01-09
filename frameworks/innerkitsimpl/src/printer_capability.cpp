@@ -26,7 +26,8 @@ static constexpr const char *PARAM_CAPABILITY_RESOLUTION = "resolution";
 static constexpr const char *PARAM_CAPABILITY_MINMARGIN = "minMargin";
 
 PrinterCapability::PrinterCapability() : colorMode_(0), duplexMode_(0),
-    hasResolution_(false), hasMargin_(false) {
+    hasResolution_(false), hasMargin_(false)
+{
     pageSizeList_.clear();
     resolutionList_.clear();
     minMargin_.Reset();
@@ -356,7 +357,7 @@ bool PrinterCapability::ValidateProperty(napi_env env, napi_value object)
         {PARAM_CAPABILITY_RESOLUTION, PRINT_PARAM_OPT},
         {PARAM_CAPABILITY_MINMARGIN, PRINT_PARAM_OPT},
     };
-    
+
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
     for (auto name : names) {
         if (propertyList.find(name) == propertyList.end()) {

@@ -31,7 +31,7 @@ bool PrintCallbackProxy::OnCallback()
         PRINT_HILOGE("write descriptor failed");
         return false;
     }
-    
+
     int error = Remote()->SendRequest(PRINT_CALLBACK_TASK, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
@@ -52,8 +52,8 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrinterInfo &info)
         PRINT_HILOGE("write descriptor failed");
         return false;
     }
-    
-    PRINT_HILOGD("Printer Event argument:[%{public}d], printerId [%{public}s]", state, info.GetPrinterId().c_str());
+
+    PRINT_HILOGD("Printer Event argument:[%{public}d], printerId [%{private}s]", state, info.GetPrinterId().c_str());
     data.WriteUint32(state);
     info.Marshalling(data);
 
@@ -77,7 +77,7 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrintJob &info)
         PRINT_HILOGE("write descriptor failed");
         return false;
     }
-    
+
     PRINT_HILOGD("PrintJob Event argument:[%{public}d], subState [%{public}d]", state, info.GetSubState());
     data.WriteUint32(state);
     info.Marshalling(data);

@@ -23,23 +23,19 @@ namespace OHOS {
 namespace Print {
 class PrintRangeTest : public testing::Test {
 public:
-  static void SetUpTestCase(void);
-  static void TearDownTestCase(void);
-  void SetUp();
-  void TearDown();
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
-void PrintRangeTest::SetUpTestCase(void) {
-}
+void PrintRangeTest::SetUpTestCase(void) {}
 
-void PrintRangeTest::TearDownTestCase(void) {
-}
+void PrintRangeTest::TearDownTestCase(void) {}
 
-void PrintRangeTest::SetUp(void) {
-}
+void PrintRangeTest::SetUp(void) {}
 
-void PrintRangeTest::TearDown(void) {
-}
+void PrintRangeTest::TearDown(void) {}
 
 /**
  * @tc.name: PrintRangeTest_001
@@ -47,7 +43,8 @@ void PrintRangeTest::TearDown(void) {
  * @tc.type: FUNC
  * @tc.require: AR00000000 SR00000000
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_001, TestSize.Level1) {
+HWTEST_F(PrintRangeTest, PrintRangeTest_001, TestSize.Level1)
+{
     OHOS::Print::PrintRange range;
     EXPECT_EQ(0, range.GetStartPage());
 }
@@ -58,7 +55,8 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_001, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_002, TestSize.Level1) {
+HWTEST_F(PrintRangeTest, PrintRangeTest_002, TestSize.Level1)
+{
     OHOS::Print::PrintRange range;
     EXPECT_EQ(0, range.GetEndPage());
 }

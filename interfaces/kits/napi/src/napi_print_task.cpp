@@ -27,7 +27,7 @@ static constexpr const char *FUNCTION_OFF = "off";
 
 namespace OHOS::Print {
 __thread napi_ref NapiPrintTask::globalCtor = nullptr;
-std::mutex g_printTaskMutex_;
+std::mutex g_printTaskMutex;
 
 struct PrintTaskContext : public PrintAsyncCall::Context {
     napi_ref ref = nullptr;
@@ -55,7 +55,7 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info) // PrintT
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
         }
-        
+
         napi_value proxy = nullptr;
         napi_status status = napi_new_instance(env, GetCtor(env), argc, argv, &proxy);
         if ((proxy == nullptr) || (status != napi_ok)) {
@@ -94,7 +94,7 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info) // PrintT
 
 napi_value NapiPrintTask::GetCtor(napi_env env)
 {
-    std::lock_guard<std::mutex> lock(g_printTaskMutex_);
+    std::lock_guard<std::mutex> lock(g_printTaskMutex);
     napi_value cons;
     if (globalCtor != nullptr) {
         PRINT_CALL(env, napi_get_reference_value(env, globalCtor, &cons));
@@ -126,7 +126,7 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
         napi_value filesValue;
         napi_get_element(env, argv[0], index, &filesValue);
         std::string files = NapiPrintUtils::GetStringFromValueUtf8(env, filesValue);
-        PRINT_HILOGD("file[%{public}d] %{public}s", index, files.c_str());
+        PRINT_HILOGD("file[%{public}d] %{private}s", index, files.c_str());
         if (IsValidFile(files)) {
             printfiles.emplace_back(files);
         }
@@ -152,7 +152,7 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
 
 bool NapiPrintTask::IsValidFile(const std::string &fileName)
 {
-    PRINT_HILOGE("fileName: %{public}s", fileName.c_str());
+    PRINT_HILOGE("fileName: %{private}s", fileName.c_str());
     if (fileName == "") {
         PRINT_HILOGE("invalid file name");
         return false;

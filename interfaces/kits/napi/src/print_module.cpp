@@ -232,7 +232,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTER, err_invalid_printer),
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTJOB, err_invalid_printjob),
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_FILE_IO, err_file_io),
-        
+
         PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
         PRINT_NAPI_METHOD(FUNCTION_START_DISCOVERY, NapiInnerPrint::StartDiscovery),

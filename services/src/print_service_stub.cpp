@@ -78,9 +78,9 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     std::vector<std::string> fileList;
     data.ReadStringVector(&fileList);
     std::string result = "";
-    PRINT_HILOGD("Current file is %{public}d", fileList.size());
+    PRINT_HILOGD("Current file is %{public}zd", fileList.size());
     for (auto file : fileList) {
-        PRINT_HILOGD("file is %{public}s", file.c_str());
+        PRINT_HILOGD("file is %{private}s", file.c_str());
     }
 
     std::vector<uint32_t> fdList;
@@ -280,12 +280,10 @@ bool PrintServiceStub::OnUpdatePrintJobState(MessageParcel &data, MessageParcel 
 bool PrintServiceStub::OnUpdateExtensionInfo(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGD("PrintServiceStub::OnUpdateExtensionInfo in");
-    std::string extensionId = data.ReadString();
     std::string extInfo = data.ReadString();
-    PRINT_HILOGD("OnUpdateExtensionInfo extensionId = %{public}s", extensionId.c_str());
     PRINT_HILOGD("OnUpdateExtensionInfo extInfo = %{public}s", extInfo.c_str());
 
-    int32_t ret = UpdateExtensionInfo(extensionId, extInfo);
+    int32_t ret = UpdateExtensionInfo(extInfo);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnUpdateExtensionInfo out");
     return ret == E_PRINT_NONE;
@@ -311,7 +309,7 @@ bool PrintServiceStub::OnQueryPrinterCapability(MessageParcel &data, MessageParc
 {
     PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapability in");
     std::string printerId = data.ReadString();
-    PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
+    PRINT_HILOGD("printerId : %{private}s", printerId.c_str());
     int32_t ret = QueryPrinterCapability(printerId);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapability out");

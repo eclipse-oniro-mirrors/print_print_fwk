@@ -65,7 +65,7 @@ private:
             isCompleted = false;
         }
     };
-    
+
     JsRuntime &jsRuntime_;
     uv_work_t *jsWorker_;
 

@@ -20,7 +20,7 @@ extern const char _binary_print_extension_context_js_end[];
 extern const char _binary_print_extension_context_abc_start[];
 extern const char _binary_print_extension_context_abc_end[];
 
-extern "C" __attribute__((constructor)) void NapiPrintExtensionContextAutoRegister()
+extern "C" __attribute__((constructor)) void NAPI_PrintExtensionContext_AutoRegister()
 {
     auto moduleManager = NativeModuleManager::GetInstance();
     NativeModule newModuleInfo = {
@@ -31,7 +31,7 @@ extern "C" __attribute__((constructor)) void NapiPrintExtensionContextAutoRegist
     moduleManager->Register(&newModuleInfo);
 }
 
-extern "C" __attribute__((visibility("default"))) void NapiPrintExtensionContextGetJsCode(
+extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtensionContext_GetJSCode(
     const char **buf, int *bufLen)
 {
     if (buf != nullptr) {
@@ -44,7 +44,7 @@ extern "C" __attribute__((visibility("default"))) void NapiPrintExtensionContext
 }
 
 // print_extension_context JS register
-extern "C" __attribute__((visibility("default"))) void NapiPrintExtensionContextGetAbcCode(
+extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtensionContext_GetABCCode(
     const char **buf, int *buflen)
 {
     if (buf != nullptr) {

@@ -29,17 +29,13 @@ public:
     void TearDown();
 };
 
-void PrintResolutionTest::SetUpTestCase(void) {
-}
+void PrintResolutionTest::SetUpTestCase(void) {}
 
-void PrintResolutionTest::TearDownTestCase(void) {
-}
+void PrintResolutionTest::TearDownTestCase(void) {}
 
-void PrintResolutionTest::SetUp(void) {
-}
+void PrintResolutionTest::SetUp(void) {}
 
-void PrintResolutionTest::TearDown(void) {
-}
+void PrintResolutionTest::TearDown(void) {}
 
 /**
  * @tc.name: PrintResolutionTest_001
@@ -47,7 +43,8 @@ void PrintResolutionTest::TearDown(void) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintResolutionTest, PrintResolutionTest_001, TestSize.Level1) {
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_001, TestSize.Level1)
+{
     OHOS::Print::PrintResolution resolution;
     resolution.Reset();
     EXPECT_EQ("", resolution.GetId());
@@ -59,7 +56,8 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_001, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintResolutionTest, PrintResolutionTest_002, TestSize.Level1) {
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_002, TestSize.Level1)
+{
     OHOS::Print::PrintResolution resolution;
     resolution.Reset();
     EXPECT_EQ(0, resolution.GetHorizontalDpi());
@@ -71,7 +69,8 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_002, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintResolutionTest, PrintResolutionTest_003, TestSize.Level1) {
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_003, TestSize.Level1)
+{
     OHOS::Print::PrintResolution resolution;
     resolution.Reset();
     EXPECT_EQ(0, resolution.GetVerticalDpi());

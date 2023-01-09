@@ -23,10 +23,10 @@ namespace OHOS {
 namespace Print {
 class PrintJobTest : public testing::Test {
 public:
-  static void SetUpTestCase(void);
-  static void TearDownTestCase(void);
-  void SetUp();
-  void TearDown();
+    static void SetUpTestCase(void);
+    static void TearDownTestCase(void);
+    void SetUp();
+    void TearDown();
 };
 
 void PrintJobTest::SetUpTestCase(void) {}
@@ -43,7 +43,8 @@ void PrintJobTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     std::vector<uint32_t> fdList = {1, 2};
     std::vector<uint32_t> getFdList;
@@ -58,7 +59,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     std::vector<uint32_t> fdList = {1, 2};
     std::vector<uint32_t> getFdList;
@@ -73,7 +75,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0003, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0003, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     std::vector<uint32_t> fdList = {1, 2, 3};
     std::vector<uint32_t> getFdList;
@@ -88,7 +91,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0003, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0004, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0004, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     std::vector<uint32_t> fdList = {1, 2, 3, 4};
     std::vector<uint32_t> getFdList;
@@ -103,7 +107,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0004, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0005, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0005, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetJobId("10010");
     EXPECT_EQ("10010", job.GetJobId());
@@ -115,7 +120,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0005, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0006, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0006, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetJobId("abs1711");
     EXPECT_EQ("abs1711", job.GetJobId());
@@ -127,7 +133,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0006, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0007, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0007, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetJobId("*123#$%");
     EXPECT_EQ("*123#$%", job.GetJobId());
@@ -139,7 +146,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0007, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0008, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0008, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetJobId("");
     EXPECT_EQ("", job.GetJobId());
@@ -151,7 +159,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0008, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0009, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0009, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetPrinterId("20221104");
     EXPECT_EQ("20221104", job.GetPrinterId());
@@ -163,7 +172,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0009, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0010, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0010, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetPrinterId("abs1711");
     EXPECT_EQ("abs1711", job.GetPrinterId());
@@ -175,7 +185,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0010, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0011, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0011, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetPrinterId("*123#$%");
     EXPECT_EQ("*123#$%", job.GetPrinterId());
@@ -187,7 +198,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0011, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0012, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0012, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetPrinterId("/123");
     EXPECT_EQ("/123", job.GetPrinterId());
@@ -199,7 +211,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0012, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0013, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0013, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetJobState(1);
     EXPECT_EQ(1, job.GetJobState());
@@ -211,7 +224,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0013, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0014, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0014, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetJobState(0);
     EXPECT_EQ(0, job.GetJobState());
@@ -223,7 +237,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0014, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0015, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0015, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetJobState(10);
     EXPECT_EQ(0, job.GetJobState());
@@ -235,7 +250,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0015, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0016, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0016, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetJobState(3);
     EXPECT_EQ(3, job.GetJobState());
@@ -247,7 +263,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0016, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0017, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0017, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetJobState(4);
     job.SetSubState(2);
@@ -260,7 +277,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0017, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0018, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0018, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetJobState(4);
     job.SetSubState(5);
@@ -273,7 +291,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0018, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0019, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0019, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetJobState(3);
     job.SetSubState(5);
@@ -286,7 +305,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0019, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0020, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0020, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetJobState(3);
     job.SetSubState(2);
@@ -299,7 +319,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0020, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0021, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0021, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetCopyNumber(3);
     EXPECT_EQ(3, job.GetCopyNumber());
@@ -311,7 +332,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0021, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0022, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0022, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetCopyNumber(3);
     EXPECT_EQ(3, job.GetCopyNumber());
@@ -323,7 +345,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0022, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0023, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0023, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetCopyNumber(001122);
     EXPECT_EQ(001122, job.GetCopyNumber());
@@ -335,7 +358,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0023, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0024, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0024, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetCopyNumber(00000000000000000);
     EXPECT_EQ(00000000000000000, job.GetCopyNumber());
@@ -347,7 +371,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0024, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0025, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0025, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     OHOS::Print::PrintRange range;
     OHOS::Print::PrintRange getRange;
@@ -362,7 +387,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0025, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0026, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0026, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     OHOS::Print::PrintRange range;
     OHOS::Print::PrintRange getRange;
@@ -377,7 +403,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0026, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0027, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0027, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetIsLandscape(true);
     EXPECT_EQ(true, job.GetIsLandscape());
@@ -389,7 +416,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0027, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0028, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0028, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetIsLandscape(false);
     EXPECT_EQ(false, job.GetIsLandscape());
@@ -401,7 +429,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0028, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0029, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0029, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetColorMode(1);
     EXPECT_EQ(1, job.GetColorMode());
@@ -413,7 +442,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0029, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0030, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0030, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetColorMode(0);
     EXPECT_EQ(0, job.GetColorMode());
@@ -425,7 +455,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0030, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0031, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0031, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetColorMode(000000000);
     EXPECT_EQ(000000000, job.GetColorMode());
@@ -437,7 +468,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0031, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0032, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0032, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetColorMode(2345);
     EXPECT_EQ(2345, job.GetColorMode());
@@ -449,7 +481,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0032, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0033, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0033, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetDuplexMode(0);
     EXPECT_EQ(0, job.GetDuplexMode());
@@ -461,7 +494,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0033, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0034, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0034, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetDuplexMode(23);
     EXPECT_EQ(23, job.GetDuplexMode());
@@ -473,7 +507,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0034, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0035, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0035, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetDuplexMode(11001100);
     EXPECT_EQ(11001100, job.GetDuplexMode());
@@ -485,7 +520,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0035, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0036, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0036, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetDuplexMode(0000000000);
     EXPECT_EQ(0000000000, job.GetDuplexMode());
@@ -497,7 +533,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0036, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0037, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0037, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     OHOS::Print::PrintMargin margin, getMargin;
     job.SetMargin(margin);
@@ -511,7 +548,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0037, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0038, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0038, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     OHOS::Print::PrintMargin margin, getMargin;
     job.SetMargin(margin);
@@ -525,7 +563,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0038, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0039, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0039, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     OHOS::Print::PrintMargin margin, getMargin;
     job.SetMargin(margin);
@@ -539,7 +578,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0039, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0040, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0040, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     OHOS::Print::PrintMargin margin, getMargin;
     job.SetMargin(margin);
@@ -553,7 +593,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0040, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0041, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0041, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetOption("option!");
     EXPECT_EQ("option!", job.GetOption());
@@ -565,7 +606,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0041, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0042, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0042, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetOption("%^&");
     EXPECT_EQ("%^&", job.GetOption());
@@ -577,7 +619,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0042, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0043, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0043, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetOption("*/526dfg");
     EXPECT_EQ("*/526dfg", job.GetOption());
@@ -589,7 +632,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0043, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0044, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0044, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     job.SetOption("@#$56");
     EXPECT_EQ("@#$56", job.GetOption());
@@ -601,7 +645,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0044, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0045, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0045, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     OHOS::Print::PrintPreviewAttribute preview, getPreview;
     job.SetPreview(preview);
@@ -615,7 +660,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0045, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0046, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0046, TestSize.Level1)
+{
     OHOS::Print::PrintJob job;
     OHOS::Print::PrintPreviewAttribute preview, getPreview;
     job.SetPreview(preview);
@@ -629,7 +675,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0046, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0047, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0047, TestSize.Level1)
+{
     OHOS::Print::PrintJob job, jobInfo;
     OHOS::Print::PrintPreviewAttribute preview, getPreview;
     job.UpdateParams(jobInfo);
@@ -642,7 +689,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0047, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0048, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0048, TestSize.Level1)
+{
     OHOS::Print::PrintJob job, jobInfo;
     OHOS::Print::PrintPreviewAttribute preview, getPreview;
     job.UpdateParams(jobInfo);
@@ -655,7 +703,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0048, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0049, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0049, TestSize.Level1)
+{
     OHOS::Print::PrintJob job, jobInfo;
     OHOS::Print::PrintPreviewAttribute preview, getPreview;
     job.UpdateParams(jobInfo);
@@ -668,7 +717,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0049, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0050, TestSize.Level1) {
+HWTEST_F(PrintJobTest, PrintJobTest_0050, TestSize.Level1)
+{
     OHOS::Print::PrintJob job, jobInfo;
     OHOS::Print::PrintPreviewAttribute preview, getPreview;
     job.UpdateParams(jobInfo);

@@ -66,7 +66,7 @@ public:
     napi_value ToJsObject(napi_env env) const;
 
     static std::shared_ptr<PrinterInfo> BuildFromJs(napi_env env, napi_value jsValue);
-    
+
     void Dump();
 
 private:

@@ -141,7 +141,7 @@ std::shared_ptr<PrintPreviewAttribute> PrintPreviewAttribute::BuildFromJs(napi_e
         PRINT_HILOGE("Invalid property of print preview attribute");
         return nullptr;
     }
-    
+
     napi_value jsPreviewRange = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREATTRIBUTE_RANGE);
     auto previewRangePtr = PrintRange::BuildFromJs(env, jsPreviewRange);
     if (previewRangePtr == nullptr) {
@@ -165,7 +165,7 @@ bool PrintPreviewAttribute::ValidateProperty(napi_env env, napi_value object)
         {PARAM_PREATTRIBUTE_RANGE, PRINT_PARAM_NOT_SET},
         {PARAM_PREATTRIBUTE_RESULT, PRINT_PARAM_OPT},
     };
-    
+
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
     for (auto name : names) {
         if (propertyList.find(name) == propertyList.end()) {

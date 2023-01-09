@@ -364,21 +364,6 @@ bool PrintJob::Marshalling(Parcel &parcel) const
         return false;
     }
 
-    if (!pageRange_.Marshalling(parcel)) {
-        PRINT_HILOGE("Failed to save page range");
-        return false;
-    }
-
-    if (!pageSize_.Marshalling(parcel)) {
-        PRINT_HILOGE("Failed to save page size");
-        return false;
-    }
-
-    return MarshallingSecond(parcel);
-}
-
-bool PrintJob::MarshallingSecond(Parcel &parcel) const
-{
     if (!parcel.WriteUint32(GetJobState())) {
         PRINT_HILOGE("Failed to save job state");
         return false;
@@ -387,15 +372,30 @@ bool PrintJob::MarshallingSecond(Parcel &parcel) const
     if (!parcel.WriteUint32(GetSubState())) {
         PRINT_HILOGE("Failed to save job substate");
         return false;
-    }
+    }    
 
     if (!parcel.WriteUint32(GetCopyNumber())) {
         PRINT_HILOGE("Failed to save copy number");
         return false;
     }
 
+    if (!pageRange_.Marshalling(parcel)) {
+        PRINT_HILOGE("Failed to save page range");
+        return false;
+    }
+
     if (!parcel.WriteBool(GetIsSequential())) {
         PRINT_HILOGE("Failed to save sequential mode");
+        return false;
+    }
+
+    return MarshallingSecond(parcel);
+}
+
+bool PrintJob::MarshallingSecond(Parcel &parcel) const
+{
+    if (!pageSize_.Marshalling(parcel)) {
+        PRINT_HILOGE("Failed to save page size");
         return false;
     }
 
@@ -693,7 +693,7 @@ void PrintJob::Dump()
     }
 
     PRINT_HILOGD("jobId_ = %{public}s", jobId_.c_str());
-    PRINT_HILOGD("printerId_ = %{public}s", printerId_.c_str());
+    PRINT_HILOGD("printerId_ = %{private}s", printerId_.c_str());
     PRINT_HILOGD("jobState_ = %{public}d", jobState_);
     PRINT_HILOGD("subState_ = %{public}d", subState_);
     PRINT_HILOGD("copyNumber_ = %{public}d", copyNumber_);
@@ -711,7 +711,7 @@ void PrintJob::Dump()
         preview_.Dump();
     }
     if (hasOption_) {
-        PRINT_HILOGD("option: %{public}s", option_.c_str());
+        PRINT_HILOGD("option: %{private}s", option_.c_str());
     }
 }
 } // namespace OHOS::Print

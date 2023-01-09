@@ -39,6 +39,8 @@ public:
 
     bool QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfo);
 
+    std::string QueryCallerBundleName();
+
     void ResetProxy();
 
 private:

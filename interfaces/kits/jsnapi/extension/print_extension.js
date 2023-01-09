@@ -48,7 +48,7 @@ class PrintExtension {
 
     onRequestPreview(jobInfo) {
         console.log('onRequestPreview');
-    }	
+    }
 
     onDestroy() {
         console.log('onDestroy');

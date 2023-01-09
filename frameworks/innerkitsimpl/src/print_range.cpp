@@ -23,7 +23,8 @@ static constexpr const char *PARAM_RANGE_ENDPAGE = "endPage";
 static constexpr const char *PARAM_RANGE_PAGES = "pages";
 
 PrintRange::PrintRange() : hasStartPage_(false), startPage_(0), hasEndPage_(false),
-    endPage_(0), hasPages_(false) {
+    endPage_(0), hasPages_(false)
+{
     pages_.clear();
 }
 

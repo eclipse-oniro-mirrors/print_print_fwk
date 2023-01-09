@@ -57,7 +57,7 @@ public:
     int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) override;
     int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState) override;
-    int32_t UpdateExtensionInfo(const std::string &extensionId, const std::string &extInfo) override;
+    int32_t UpdateExtensionInfo(const std::string &extInfo) override;
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override;
     int32_t QueryPrinterCapability(const std::string &printerId) override;
     int32_t On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener) override;
@@ -100,13 +100,13 @@ private:
     std::map<std::string, PrintExtensionState> extensionStateList_;
     std::map<std::string, std::shared_ptr<PrintJob>> printJobList_;
     std::map<std::string, std::shared_ptr<PrintJob>> queuedJobList_;
-    
+
     std::map<std::string, std::shared_ptr<PrinterInfo>> printerInfoList_;
     std::map<std::string, std::unordered_map<std::string, bool>> printerJobMap_;
 
     std::string spoolerBundleName_;
     std::string spoolerAbilityName_;
-    
+
     std::mutex lock_;
     uint64_t currentJobId_;
 };

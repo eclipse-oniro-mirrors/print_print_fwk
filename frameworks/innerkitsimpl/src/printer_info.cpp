@@ -155,7 +155,6 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
     }
     SetDescription(desc);
 
-    // check capability
     hasCapability_ = parcel.ReadBool();
     if (hasCapability_) {
         auto capPtr = PrinterCapability::Unmarshalling(parcel);
@@ -166,7 +165,6 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
         capability_ = *capPtr;
     }
 
-    // check option
     hasOption_ = parcel.ReadBool();
     if (hasOption_) {
         SetOption(parcel.ReadString());
@@ -180,7 +178,7 @@ bool PrinterInfo::Marshalling(Parcel &parcel) const
     parcel.WriteString(GetPrinterId());
     parcel.WriteString(GetPrinterName());
     parcel.WriteUint32(GetPrinterState());
-    
+
     if (GetPrinterIcon() != PRINT_INVALID_ID) {
         parcel.WriteBool(true);
         parcel.WriteUint32(GetPrinterIcon());
@@ -194,7 +192,7 @@ bool PrinterInfo::Marshalling(Parcel &parcel) const
     } else {
         parcel.WriteBool(false);
     }
-    
+
     parcel.WriteBool(hasCapability_);
     if (hasCapability_) {
         capability_.Marshalling(parcel);
@@ -220,7 +218,7 @@ std::shared_ptr<PrinterInfo> PrinterInfo::Unmarshalling(Parcel &parcel)
     }
     return nativeObj;
 }
-    
+
 napi_value PrinterInfo::ToJsObject(napi_env env) const
 {
     napi_value jsObj = nullptr;
@@ -232,7 +230,7 @@ napi_value PrinterInfo::ToJsObject(napi_env env) const
     if (GetPrinterIcon() != PRINT_INVALID_ID) {
         NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_INFO_PRINTERICON, GetPrinterIcon());
     }
-    
+
     if (GetDescription() != "") {
         NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_DESCRIPTION, GetDescription());
     }
@@ -316,7 +314,7 @@ bool PrinterInfo::ValidateProperty(napi_env env, napi_value object)
         {PARAM_INFO_CAPABILITY, PRINT_PARAM_OPT},
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
     };
-    
+
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
     for (auto name : names) {
         if (propertyList.find(name) == propertyList.end()) {
@@ -337,19 +335,19 @@ bool PrinterInfo::ValidateProperty(napi_env env, napi_value object)
 
 void PrinterInfo::Dump()
 {
-    PRINT_HILOGD("printerId: %{public}s", printerId_.c_str());
-    PRINT_HILOGD("printerName: %{public}s", printerName_.c_str());
+    PRINT_HILOGD("printerId: %{private}s", printerId_.c_str());
+    PRINT_HILOGD("printerName: %{private}s", printerName_.c_str());
     PRINT_HILOGD("printerIcon: %{public}d", printerIcon_);
     PRINT_HILOGD("printerState: %{public}d", printerState_);
     if (description_ != "") {
-        PRINT_HILOGD("description: %{public}s", description_.c_str());
+        PRINT_HILOGD("description: %{private}s", description_.c_str());
     }
-    PRINT_HILOGD("description: %{public}s", description_.c_str());
+    PRINT_HILOGD("description: %{private}s", description_.c_str());
     if (hasCapability_) {
         capability_.Dump();
     }
     if (hasOption_) {
-        PRINT_HILOGD("option: %{public}s", option_.c_str());
+        PRINT_HILOGD("option: %{private}s", option_.c_str());
     }
 }
 } // namespace OHOS::Print

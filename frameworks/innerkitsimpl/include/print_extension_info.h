@@ -26,7 +26,7 @@ public:
     explicit PrintExtensionInfo();
     PrintExtensionInfo(const PrintExtensionInfo &right);
     ~PrintExtensionInfo() = default;
-    
+
     PrintExtensionInfo &operator=(const PrintExtensionInfo &right);
 
     void SetExtensionId(const std::string &extensionId);

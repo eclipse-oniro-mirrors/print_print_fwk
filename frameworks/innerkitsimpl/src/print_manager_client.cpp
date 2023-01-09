@@ -366,7 +366,7 @@ int32_t PrintManagerClient::UpdatePrintJobState(const std::string &jobId, uint32
     return ret;
 }
 
-int32_t PrintManagerClient::UpdateExtensionInfo(const std::string &extensionId, const std::string &extInfo)
+int32_t PrintManagerClient::UpdateExtensionInfo(const std::string &extInfo)
 {
     PRINT_HILOGD("PrintManagerClient UpdateExtensionInfo start.");
     if (!LoadServer()) {
@@ -382,7 +382,7 @@ int32_t PrintManagerClient::UpdateExtensionInfo(const std::string &extensionId, 
         PRINT_HILOGE("UpdateExtensionInfo quit because redoing GetPrintServiceProxy failed.");
         return E_PRINT_RPC_FAILURE;
     }
-    int32_t ret = printServiceProxy_->UpdateExtensionInfo(extensionId, extInfo);
+    int32_t ret = printServiceProxy_->UpdateExtensionInfo(extInfo);
     PRINT_HILOGD("PrintManagerClient UpdateExtensionInfo out ret = [%{public}d].", ret);
     return ret;
 }

@@ -25,9 +25,6 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
     PRINT_HILOGD("Enter ---->");
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        auto extensionId = NapiPrintUtils::GetExtensionId(env, argv);
-        PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
-
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         bool isArray = false;
         napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
@@ -45,7 +42,7 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
                 PRINT_HILOGE("PrinterInfo format error!");
                 return napi_invalid_arg;
             }
-            printerInfoPtr->SetPrinterId(NapiPrintUtils::GetGlobalId(extensionId, printerInfoPtr->GetPrinterId()));
+            printerInfoPtr->SetPrinterId(printerInfoPtr->GetPrinterId());
             PRINT_HILOGD("printerInfoPtr->GetPrinterId() = %{public}s", printerInfoPtr->GetPrinterId().c_str());
             context->printerInfos.emplace_back(*printerInfoPtr);
         }
@@ -79,8 +76,6 @@ napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
     PRINT_HILOGD("Enter ---->");
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        auto extensionId = NapiPrintUtils::GetExtensionId(env, argv);
-        PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
 
         bool isArray = false;
@@ -95,7 +90,7 @@ napi_value NapiPrintExt::RemovePrinters(napi_env env, napi_callback_info info)
             napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
             std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, value);
             if (printerId != "") {
-                context->printerIds.emplace_back(NapiPrintUtils::GetGlobalId(extensionId, printerId));
+                context->printerIds.emplace_back(printerId);
             }
         }
         if (context->printerIds.empty()) {
@@ -128,9 +123,6 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info)
     PRINT_HILOGD("Enter ---->");
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        auto extensionId = NapiPrintUtils::GetExtensionId(env, argv);
-        PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
-        
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         bool isArray = false;
         napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
@@ -148,7 +140,6 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info)
                 PRINT_HILOGE("PrinterInfo format error!");
                 return napi_invalid_arg;
             }
-            printerInfoPtr->SetPrinterId(NapiPrintUtils::GetGlobalId(extensionId, printerInfoPtr->GetPrinterId()));
             context->printerInfos.emplace_back(*printerInfoPtr);
         }
         if (context->printerInfos.empty()) {
@@ -181,14 +172,11 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info inf
     PRINT_HILOGD("Enter ---->");
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        auto extensionId = NapiPrintUtils::GetExtensionId(env, argv);
-        PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
-        
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
-        
+
         PRINT_CALL_BASE(env, napi_typeof(env, argv[1], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_number, "printerStateis not a number", napi_number_expected);
 
@@ -203,9 +191,9 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info inf
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
         }
-        
-        context->printerId = NapiPrintUtils::GetGlobalId(extensionId, printerId);
-        PRINT_HILOGD("context->printerId : %{public}s", context->printerId.c_str());
+
+        context->printerId = printerId;
+        PRINT_HILOGD("context->printerId : %{private}s", context->printerId.c_str());
         context->printerState = printerState;
         return napi_ok;
     };
@@ -245,7 +233,7 @@ napi_value NapiPrintExt::UpdatePrintJobState(napi_env env, napi_callback_info in
 
         std::string printJobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         PRINT_HILOGD("printJobId : %{public}s", printJobId.c_str());
-        
+
         uint32_t printJobState = NapiPrintUtils::GetUint32FromValue(env, argv[1]);
         PRINT_HILOGD("printerJobState : %{public}d", printJobState);
 
@@ -257,7 +245,7 @@ napi_value NapiPrintExt::UpdatePrintJobState(napi_env env, napi_callback_info in
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
         }
-    
+
         context->printJobId = printJobId;
         context->printJobState = printJobState;
         context->jobSubState = jobSubState;
@@ -286,10 +274,7 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info in
 {
     PRINT_HILOGD("Enter ---->");
     auto context = std::make_shared<NapiPrintExtContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        auto extensionId = NapiPrintUtils::GetExtensionId(env, argv);
-        PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
-        
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {       
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
@@ -298,12 +283,11 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info in
         std::string extInfo = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         PRINT_HILOGD("extInfo : %{public}s", extInfo.c_str());
 
-        if (extensionId == "" || extInfo == "") {
+        if (extInfo == "") {
             PRINT_HILOGE("invalid extension id or extension information");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
         }
-        context->extensionId = extensionId;
         context->extInfo = extInfo;
         return napi_ok;
     };
@@ -313,7 +297,7 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info in
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->UpdateExtensionInfo(context->extensionId, context->extInfo);
+        int32_t ret = PrintManagerClient::GetInstance()->UpdateExtensionInfo(context->extInfo);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to update extension information");

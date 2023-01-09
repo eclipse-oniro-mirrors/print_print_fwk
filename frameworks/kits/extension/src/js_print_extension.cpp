@@ -141,7 +141,7 @@ void JsPrintExtension::OnStart(const AAFwk::Want &want)
     napi_value napiWant = OHOS::AppExecFwk::WrapWant(reinterpret_cast<napi_env>(nativeEngine), want);
     NativeValue *nativeWant = reinterpret_cast<NativeValue *>(napiWant);
     NativeValue *argv[] = { nativeWant };
-    CallObjectMethod("onCreated", argv, NapiPrintUtils::ARGC_ONE);
+    CallObjectMethod("onCreate", argv, NapiPrintUtils::ARGC_ONE);
     RegisterDiscoveryCb();
     RegisterConnectionCb();
     RegisterPrintJobCb();

@@ -49,7 +49,7 @@ private:
 
         std::string printerId = "";
         uint32_t printerState = 0;
-        
+
         std::string printJobId = "";
         uint32_t printJobState = 0;
         uint32_t jobSubState = 0;

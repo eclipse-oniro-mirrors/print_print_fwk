@@ -76,7 +76,7 @@ declare namespace print {
 
     interface PreviewAttribute {
         previewRange: PrinterRange;  // preview page range
-        result?: string;        // preview file
+        result?: number;        // preview file
     }
 
     interface PrintResolution {
@@ -112,29 +112,29 @@ declare namespace print {
     }
 
     interface PrintJob {
-        fdList: Array<number>;    // document fd list to be printed
-        jobId: string;          // job id
-        printerId: string;      // printer id to take charge of printing
-        jobState: PrintJobState;  // current print job state
-        copyNumber: number;      // copies of document list
-        pageRange: PrinterRange;  // range size to be printed
-        isSequential: boolean;    // sequential print
-        pageSize: PrintPageSize;  // the selected page size
-        isLandscape: boolean;      // vertical printing
-        colorMode: number;      // color mode
-        duplexMode: number;    // duplex mode
+        fdList: Array<number>;       // document fd list to be printed
+        jobId: string;               // job id
+        printerId: string;           // printer id to take charge of printing
+        jobState: PrintJobState;     // current print job state
+        copyNumber: number;          // copies of document list
+        pageRange: PrinterRange;     // range size to be printed
+        isSequential: boolean;       // sequential print
+        pageSize: PrintPageSize;     // the selected page size
+        isLandscape: boolean;        // vertical printing
+        colorMode: number;           // color mode
+        duplexMode: number;          // duplex mode
         margin?: PrintMargin;        // current margin setting
         preview?: PreviewAttribute;  // preview setting
         option?:string;              // json object string
     }
 
     enum PrinterState {
-        PRINTER_ADDED = 0,      	// new printers arrival
-        PRINTER_REMOVED = 1,    	// printers lost
-        PRINTER_UPDATE_CAP = 2,  	// printers update
-        PRINTER_CONNECTED = 3,		// printer has been connected
-        PRINTER_DISCONNECTED = 4,	// printer has been disconnected
-        PRINTER_RUNNING = 5,   		// printer is working
+        PRINTER_ADDED = 0,          // new printers arrival
+        PRINTER_REMOVED = 1,        // printers lost
+        PRINTER_UPDATE_CAP = 2,     // printers update
+        PRINTER_CONNECTED = 3,      // printer has been connected
+        PRINTER_DISCONNECTED = 4,   // printer has been disconnected
+        PRINTER_RUNNING = 5,        // printer is working
     }
 
     enum PrintJobState {
@@ -142,49 +142,49 @@ declare namespace print {
         PRINT_JOB_QUEUED = 1,       // deliver print job to the printer
         PRINT_JOB_RUNNING = 2,      // executing print job
         PRINT_JOB_BLOCKED = 3,      // print job has been blocked
-        PRINT_JOB_COMPLETED = 4,    // print job cmpleted
+        PRINT_JOB_COMPLETED = 4,    // print job completed
     }
 
     enum PrintJobSubState {
-        PRINT_JOB_COMPLETED_SUCCESS = 0,		// print job succeed
-        PRINT_JOB_COMPLETED_FAILED = 1,			// print job fail
-        PRINT_JOB_COMPLETED_CANCELLED = 2,		// print job has been cancelled
-        PRINT_JOB_COMPLETED_FILE_CORRUPT = 3,	// print job has been corrupted
-        PRINT_JOB_BLOCK_OFFLINE = 4,			// printer is offline
-        PRINT_JOB_BLOCK_BUSY = 5,				// printer is occupied by other process
-        PRINT_JOB_BLOCK_CANCELLED = 6,			// print job has been cancelled
-        PRINT_JOB_BLOCK_OUT_OF_PAPER = 7,		// out of paper
-        PRINT_JOB_BLOCK_OUT_OF_INK = 8,			// out of ink
-        PRINT_JOB_BLOCK_OUT_OF_TONER = 9,		// out of toner
-        PRINT_JOB_BLOCK_JAMMED = 10,			// paper jam
-        PRINT_JOB_BLOCK_DOOR_OPEN = 11,			// cover open
-        PRINT_JOB_BLOCK_SERVICE_REQUEST = 12,	// service request
-        PRINT_JOB_BLOCK_LOW_ON_INK = 13,		// low on ink
-        PRINT_JOB_BLOCK_LOW_ON_TONER = 14,		// low on toner
-        PRINT_JOB_BLOCK_REALLY_LOW_ON_INK = 15,	// really low on ink
-        PRINT_JOB_BLOCK_BAD_CERTIFICATE = 16,	// bad certification
-        PRINT_JOB_BLOCK_UNKNOWN = 17,			// unknown issue
+        PRINT_JOB_COMPLETED_SUCCESS = 0,        // print job succeed
+        PRINT_JOB_COMPLETED_FAILED = 1,         // print job fail
+        PRINT_JOB_COMPLETED_CANCELLED = 2,      // print job has been cancelled
+        PRINT_JOB_COMPLETED_FILE_CORRUPT = 3,   // print job has been corrupted
+        PRINT_JOB_BLOCK_OFFLINE = 4,            // printer is offline
+        PRINT_JOB_BLOCK_BUSY = 5,               // printer is occupied by other process
+        PRINT_JOB_BLOCK_CANCELLED = 6,          // print job has been cancelled
+        PRINT_JOB_BLOCK_OUT_OF_PAPER = 7,       // out of paper
+        PRINT_JOB_BLOCK_OUT_OF_INK = 8,         // out of ink
+        PRINT_JOB_BLOCK_OUT_OF_TONER = 9,       // out of toner
+        PRINT_JOB_BLOCK_JAMMED = 10,            // paper jam
+        PRINT_JOB_BLOCK_DOOR_OPEN = 11,         // cover open
+        PRINT_JOB_BLOCK_SERVICE_REQUEST = 12,   // service request
+        PRINT_JOB_BLOCK_LOW_ON_INK = 13,        // low on ink
+        PRINT_JOB_BLOCK_LOW_ON_TONER = 14,      // low on toner
+        PRINT_JOB_BLOCK_REALLY_LOW_ON_INK = 15, // really low on ink
+        PRINT_JOB_BLOCK_BAD_CERTIFICATE = 16,   // bad certification
+        PRINT_JOB_BLOCK_UNKNOWN = 17,           // unknown issue
     }
 
     enum PrintErrorCode {
-        E_PRINT_NONE = 0,						// no error
-        E_PRINT_NO_PERMISSION = 201,			// no permission
-        E_PRINT_INVALID_PARAMETER = 401,		// invalid parameter
-        E_PRINT_GENERIC_FAILURE = 13100001,		// generic failure of print
-        E_PRINT_RPC_FAILURE = 13100002,			// RPC failure
-        E_PRINT_SERVER_FAILURE = 13100003,		// failure of print service
-        E_PRINT_INVALID_EXTENSION = 13100004,	// invalid print extension
-        E_PRINT_INVALID_PRINTER = 13100005,		// invalid printer
-        E_PRINT_INVALID_PRINTJOB = 13100006,	// invalid print job
-        E_PRINT_FILE_IO = 13100007,				// file i/o error
+        E_PRINT_NONE = 0,                       // no error
+        E_PRINT_NO_PERMISSION = 201,            // no permission
+        E_PRINT_INVALID_PARAMETER = 401,        // invalid parameter
+        E_PRINT_GENERIC_FAILURE = 13100001,     // generic failure of print
+        E_PRINT_RPC_FAILURE = 13100002,         // RPC failure
+        E_PRINT_SERVER_FAILURE = 13100003,      // failure of print service
+        E_PRINT_INVALID_EXTENSION = 13100004,   // invalid print extension
+        E_PRINT_INVALID_PRINTER = 13100005,     // invalid printer
+        E_PRINT_INVALID_PRINTJOB = 13100006,    // invalid print job
+        E_PRINT_FILE_IO = 13100007,             // file i/o error
     }
 
     interface PrinterExtensionInfo {
         extensionId: string;    // extension id of printer extension
-        vendorId: string;      // vendor id of extension
-        vendorName: string;      // vendor name
-        vendorIcon: number;      // resource id of vendor
-        version: string;      // version of current printer extension
+        vendorId: string;       // vendor id of extension
+        vendorName: string;     // vendor name
+        vendorIcon: number;     // resource id of vendor
+        version: string;        // version of current printer extension
     }
 
     /**

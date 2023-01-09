@@ -17,6 +17,7 @@
 #include "bundle_mgr_proxy.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_client.h"
+#include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "nlohmann/json.hpp"
 #include "os_account_manager.h"
@@ -54,6 +55,21 @@ bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilit
             userId, extensionInfos);
     }
     return true;
+}
+
+std::string PrintBMSHelper::QueryCallerBundleName()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!GetProxy()) {
+        return "";
+    }
+    int32_t callerUid = IPCSkeleton::GetCallingUid();
+    std::string bundleName = "";
+    if (sptrBundleMgr_ != nullptr) {
+        sptrBundleMgr_->GetBundleNameForUid(callerUid, bundleName);
+    }
+    PRINT_HILOGD("callerUid = %{public}d, bundleName = %{public}s", callerUid, bundleName.c_str());
+    return bundleName;
 }
 
 bool PrintBMSHelper::GetProxy()

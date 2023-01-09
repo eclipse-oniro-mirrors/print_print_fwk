@@ -26,7 +26,8 @@ const std::string EVENT_BLOCK = "blocked";
 const std::string EVENT_SUCCESS = "success";
 const std::string EVENT_FAIL = "failed";
 const std::string EVENT_CANCEL = "cancelled";
-PrintTask::PrintTask(const std::vector<std::string> &fileList) : taskId_("") {
+PrintTask::PrintTask(const std::vector<std::string> &fileList) : taskId_("")
+{
     fileList_.assign(fileList.begin(), fileList.end());
     isNormalFilePath_ = true;
     if (fileList_.size() > 0) {

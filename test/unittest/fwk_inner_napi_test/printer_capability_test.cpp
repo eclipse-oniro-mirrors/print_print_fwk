@@ -29,17 +29,13 @@ public:
     void TearDown();
 };
 
-void PrinterCapabilityTest::SetUpTestCase(void) {
-}
+void PrinterCapabilityTest::SetUpTestCase(void) {}
 
-void PrinterCapabilityTest::TearDownTestCase(void) {
-}
+void PrinterCapabilityTest::TearDownTestCase(void) {}
 
-void PrinterCapabilityTest::SetUp(void) {
-}
+void PrinterCapabilityTest::SetUp(void) {}
 
-void PrinterCapabilityTest::TearDown(void) {
-}
+void PrinterCapabilityTest::TearDown(void) {}
 
 /**
  * @tc.name: PrinterCapabilityTest_001
@@ -47,7 +43,8 @@ void PrinterCapabilityTest::TearDown(void) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_001, TestSize.Level1) {
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_001, TestSize.Level1)
+{
     OHOS::Print::PrinterCapability capability;
     capability.Reset();
     EXPECT_EQ(0, capability.GetColorMode());
@@ -59,7 +56,8 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_001, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_002, TestSize.Level1) {
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_002, TestSize.Level1)
+{
     OHOS::Print::PrinterCapability capability;
     capability.Reset();
     EXPECT_EQ(0, capability.GetDuplexMode());

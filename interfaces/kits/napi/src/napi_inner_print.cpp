@@ -140,7 +140,7 @@ napi_value NapiInnerPrint::ConnectPrinter(napi_env env, napi_callback_info info)
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
         std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
+        PRINT_HILOGD("printerId : %{private}s", printerId.c_str());
         context->printerId = printerId;
         return napi_ok;
     };
@@ -172,7 +172,7 @@ napi_value NapiInnerPrint::DisconnectPrinter(napi_env env, napi_callback_info in
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
         std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
+        PRINT_HILOGD("printerId : %{private}s", printerId.c_str());
         context->printerId = printerId;
         return napi_ok;
     };
@@ -239,7 +239,6 @@ napi_value NapiInnerPrint::CancelPrintJob(napi_env env, napi_callback_info info)
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "jobId is not a string", napi_string_expected);
         std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         if (jobId == "") {
-
             PRINT_HILOGE("Parse JobId error!");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
@@ -311,7 +310,7 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env, napi_callback_info info
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId number is not a string", napi_string_expected);
         std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
+        PRINT_HILOGD("printerId : %{private}s", printerId.c_str());
         context->printerId = printerId;
         return napi_ok;
     };
@@ -319,7 +318,6 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env, napi_callback_info info
         napi_status status = napi_get_boolean(env, context->result, result);
         PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
         return status;
-
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapability(context->printerId);

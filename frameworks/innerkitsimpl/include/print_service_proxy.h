@@ -40,7 +40,7 @@ public:
     int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) override;
     int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState) override;
-    int32_t UpdateExtensionInfo(const std::string &extensionId, const std::string &extInfo) override;
+    int32_t UpdateExtensionInfo(const std::string &extensionId) override;
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override;
     int32_t QueryPrinterCapability(const std::string &printerId) override;
     int32_t On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener) override;

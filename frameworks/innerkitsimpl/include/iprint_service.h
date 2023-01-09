@@ -45,7 +45,7 @@ public:
     virtual int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) = 0;
     virtual int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) = 0;
     virtual int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState) = 0;
-    virtual int32_t UpdateExtensionInfo(const std::string &extensionId, const std::string &extInfo) = 0;
+    virtual int32_t UpdateExtensionInfo(const std::string &extensionId) = 0;
     virtual int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult) = 0;
     virtual int32_t QueryPrinterCapability(const std::string &printerId) = 0;
     virtual int32_t On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener) = 0;

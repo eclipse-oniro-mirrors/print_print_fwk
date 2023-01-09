@@ -31,9 +31,9 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
-    PRINT_HILOGD("Current file is %{public}d", fileList.size());
+    PRINT_HILOGD("Current file is %{public}zd", fileList.size());
     for (auto file : fileList) {
-        PRINT_HILOGD("file is %{public}s", file.c_str());
+        PRINT_HILOGD("file is %{private}s", file.c_str());
     }
     data.WriteStringVector(fileList);
     PRINT_HILOGD("PrintServiceProxy StartPrint started.");
@@ -312,12 +312,11 @@ int32_t PrintServiceProxy::UpdatePrintJobState(const std::string &jobId, uint32_
     return ret;
 }
 
-int32_t PrintServiceProxy::UpdateExtensionInfo(const std::string &extensionId, const std::string &extInfo)
+int32_t PrintServiceProxy::UpdateExtensionInfo(const std::string &extInfo)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(extensionId);
     data.WriteString(extInfo);
     PRINT_HILOGD("PrintServiceProxy UpdateExtensionInfo started.");
     int32_t ret = Remote()->SendRequest(CMD_UPDATEEXTENSIONINFO, data, reply, option);
@@ -381,7 +380,7 @@ int32_t PrintServiceProxy::On(const std::string taskId, const std::string &type,
         PRINT_HILOGE("PrintServiceProxy::On type is null.");
         return E_PRINT_INVALID_PARAMETER;
     }
-    
+
     MessageParcel data, reply;
     MessageOption option;
 

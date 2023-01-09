@@ -120,12 +120,12 @@ bool PrintMargin::ReadFromParcel(Parcel &parcel)
     if (hasTop_) {
         SetTop(parcel.ReadUint32());
     }
-    
+
     hasBottom_ = parcel.ReadBool();
     if (hasBottom_) {
         SetBottom(parcel.ReadUint32());
     }
-    
+
     hasLeft_ = parcel.ReadBool();
     if (hasLeft_) {
         SetLeft(parcel.ReadUint32());
