@@ -274,7 +274,7 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info in
 {
     PRINT_HILOGD("Enter ---->");
     auto context = std::make_shared<NapiPrintExtContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {       
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
