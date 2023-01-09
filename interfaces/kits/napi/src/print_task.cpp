@@ -58,7 +58,7 @@ uint32_t PrintTask::Start()
         for (auto file : fileList_) {
             int32_t fd = NapiPrintUtils::OpenFile(file);
             if (fd < 0) {
-                PRINT_HILOGE("file[%{public}s] is invalid", file.c_str());
+                PRINT_HILOGE("file[%{private}s] is invalid", file.c_str());
                 return E_PRINT_INVALID_PARAMETER;
             }
             fdList.emplace_back(fd);

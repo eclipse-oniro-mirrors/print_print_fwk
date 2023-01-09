@@ -372,7 +372,7 @@ bool PrintJob::Marshalling(Parcel &parcel) const
     if (!parcel.WriteUint32(GetSubState())) {
         PRINT_HILOGE("Failed to save job substate");
         return false;
-    }    
+    }
 
     if (!parcel.WriteUint32(GetCopyNumber())) {
         PRINT_HILOGE("Failed to save copy number");
@@ -666,7 +666,7 @@ bool PrintJob::ValidateProperty(napi_env env, napi_value object)
         {PARAM_JOB_PREVIEW, PRINT_PARAM_OPT},
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
     };
-    
+
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
     for (auto name : names) {
         if (propertyList.find(name) == propertyList.end()) {

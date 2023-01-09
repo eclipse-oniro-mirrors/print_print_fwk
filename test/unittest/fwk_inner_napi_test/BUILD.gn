@@ -40,7 +40,6 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "printer_info_test.cpp",
   ]
 
-  
   deps = [
     "//base/print/print_fwk/interfaces/kits/napi:print_napi",
     "//base/print/print_fwk/interfaces/kits/jsnapi/extension:printextension_napi",

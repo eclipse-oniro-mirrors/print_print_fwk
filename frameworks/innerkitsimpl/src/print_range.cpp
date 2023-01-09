@@ -232,7 +232,7 @@ std::shared_ptr<PrintRange> PrintRange::BuildFromJs(napi_env env, napi_value jsV
         }
         nativeObj->SetPages(pages);
     }
-    
+
     PRINT_HILOGE("Build Page Range succeed");
     return nativeObj;
 }

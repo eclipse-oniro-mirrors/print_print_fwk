@@ -866,7 +866,7 @@ int32_t PrintServiceAbility::QueryPrinterCapability(const std::string &printerId
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    PRINT_HILOGD("QueryPrinterCapability started %{public}s", printerId.c_str());
+    PRINT_HILOGD("QueryPrinterCapability started %{private}s", printerId.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
         PRINT_HILOGE("Invalid printer id");
@@ -1084,7 +1084,7 @@ PrintExtensionInfo PrintServiceAbility::ConvertToPrintExtensionInfo(const AppExe
 
 void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info)
 {
-    PRINT_HILOGD("PrintServiceAbility::SendPrinterEvent type %{public}s, %{public}d",
+    PRINT_HILOGD("PrintServiceAbility::SendPrinterEvent type %{private}s, %{public}d",
         info.GetPrinterId().c_str(), info.GetPrinterState());
     auto eventIt = registeredListeners_.find(PRINTER_EVENT_TYPE);
     if (eventIt != registeredListeners_.end()) {

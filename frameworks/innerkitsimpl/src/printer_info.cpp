@@ -262,7 +262,7 @@ std::shared_ptr<PrinterInfo> PrinterInfo::BuildFromJs(napi_env env, napi_value j
     std::string printerId = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_PRINTERID);
     std::string printerName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_PRINTERNAME);
     if (printerId == "" || printerName == "") {
-        PRINT_HILOGE("Invalid printer id[%{public}s] or printer name[%{public}s]",
+        PRINT_HILOGE("Invalid printer id[%{private}s] or printer name[%{private}s]",
             printerId.c_str(), printerName.c_str());
         return nullptr;
     }
