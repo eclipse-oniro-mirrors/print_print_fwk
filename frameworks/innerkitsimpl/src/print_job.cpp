@@ -389,10 +389,10 @@ bool PrintJob::Marshalling(Parcel &parcel) const
         return false;
     }
 
-    return MarshallingSecond(parcel);
+    return MarshallingParam(parcel);
 }
 
-bool PrintJob::MarshallingSecond(Parcel &parcel) const
+bool PrintJob::MarshallingParam(Parcel &parcel) const
 {
     if (!pageSize_.Marshalling(parcel)) {
         PRINT_HILOGE("Failed to save page size");

@@ -101,7 +101,7 @@ public:
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
-    virtual bool MarshallingSecond(Parcel &parcel) const;
+    virtual bool MarshallingParam(Parcel &parcel) const;
 
     static std::shared_ptr<PrintJob> Unmarshalling(Parcel &parcel);
 

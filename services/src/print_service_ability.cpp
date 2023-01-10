@@ -728,7 +728,7 @@ int32_t PrintServiceAbility::UpdatePrinterState(const std::string &printerId, ui
 
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
-    NapiPrintUtils::GetGlobalId(extensionId, printerId);
+    printerId = NapiPrintUtils::GetGlobalId(extensionId, printerId);
     PRINT_HILOGD("UpdatePrinterState started. %{printerId}s, state [%{public}d]", printerId.c_str(), state);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
