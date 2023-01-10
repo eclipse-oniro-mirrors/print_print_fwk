@@ -71,7 +71,6 @@ void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
         PRINT_HILOGE("Failed to init extension context object");
         return;
     }
-
     PRINT_HILOGD("JsPrintExtension::Init end.");
 }
 

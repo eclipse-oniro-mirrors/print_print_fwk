@@ -47,8 +47,6 @@ const uint32_t START_ABILITY_INTERVAL = 6;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t INIT_INTERVAL = 5000L;
 
-static const std::string PRINTEXT_BUNDLE_NAME = "com.open.harmony.packagemag";
-static const std::string PRINTEXT_ABILITY_NAME = "com.open.harmony.packagemag.ServiceAbility2";
 static const std::string PRINT_XML_PATH = "/system/profile/print_service.xml";
 static const std::string SPOOLER_BUNDLE_BEGIN_TAG = "<spooler-bundle>";
 static const std::string SPOOLER_BUNDLE_END_TAG = "</spooler-bundle>";
@@ -728,17 +726,17 @@ int32_t PrintServiceAbility::UpdatePrinterState(const std::string &printerId, ui
 
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
-    printerId = NapiPrintUtils::GetGlobalId(extensionId, printerId);
-    PRINT_HILOGD("UpdatePrinterState started. %{printerId}s, state [%{public}d]", printerId.c_str(), state);
+    std::string printerExtId = NapiPrintUtils::GetGlobalId(extensionId, printerId);
+    PRINT_HILOGD("UpdatePrinterState started. %{private}s, state [%{public}d]", printerExtId.c_str(), state);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
-    if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
+    if (printerInfoList_.find(printerExtId) == printerInfoList_.end()) {
         PRINT_HILOGD("Invalid printer id");
         return E_PRINT_INVALID_PRINTER;
     }
 
-    printerInfoList_[printerId]->SetPrinterState(state);
-    SendPrinterEvent(*printerInfoList_[printerId]);
+    printerInfoList_[printerExtId]->SetPrinterState(state);
+    SendPrinterEvent(*printerInfoList_[printerExtId]);
     PRINT_HILOGD("UpdatePrinterState end.");
     return E_PRINT_NONE;
 }

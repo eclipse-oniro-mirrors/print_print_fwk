@@ -318,37 +318,6 @@ std::string NapiPrintUtils::GetValueString(napi_env env, napi_value value)
     return resultValue;
 }
 
-std::string NapiPrintUtils::GetExtensionId(napi_env env, napi_value *argv)
-{
-    std::string defaultExtId = "com.open.harmony.packagemag";
-    if (argv == nullptr) {
-        return defaultExtId;
-    }
-    bool stageMode = false;
-    std::shared_ptr<OHOS::AbilityRuntime::Context> context = nullptr;
-    napi_status status = OHOS::AbilityRuntime::IsStageContext(env, argv[0], stageMode);
-    PRINT_HILOGE("status = %{public}d, stageMode = %{public}d", status == napi_ok, stageMode);
-    if (status != napi_ok || !stageMode) {
-        auto ability = OHOS::AbilityRuntime::GetCurrentAbility(env);
-        if (ability == nullptr) {
-            PRINT_HILOGE("GetCurrentAbility ability == nullptr.");
-            return defaultExtId;
-        }
-        context = ability->GetAbilityContext();
-    } else {
-        context = OHOS::AbilityRuntime::GetStageModeContext(env, argv[0]);
-        if (context == nullptr) {
-            PRINT_HILOGE("GetStageModeContext contextRtm == nullptr.");
-            return defaultExtId;
-        }
-    }
-    if (context == nullptr) {
-        PRINT_HILOGE("GetContext failed. context is nullptr.");
-        return defaultExtId;
-    }
-    return context->GetBundleName();
-}
-
 std::string NapiPrintUtils::GetExtensionId(const std::string &globalId)
 {
     auto pos = globalId.find(GLOBAL_ID_DELIMITER);
