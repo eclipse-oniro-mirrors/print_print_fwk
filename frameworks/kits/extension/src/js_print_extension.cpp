@@ -45,7 +45,8 @@ JsPrintExtension *JsPrintExtension::Create(const std::unique_ptr<Runtime> &runti
     return jsExtension_;
 }
 
-JsPrintExtension::JsPrintExtension(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime), extensionId_(""), hasDestroyed_(false) {}
+JsPrintExtension::JsPrintExtension(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime),
+    extensionId_(""),hasDestroyed_(false) {}
 JsPrintExtension::~JsPrintExtension() = default;
 
 void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,

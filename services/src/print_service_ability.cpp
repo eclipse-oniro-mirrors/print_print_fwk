@@ -795,7 +795,7 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
     SendPrintJobEvent(*jobIt->second);
 
     auto printerId = jobIt->second->GetPrinterId();
-    PRINT_HILOGD("printerId = %{public}s", printerId.c_str());    
+    PRINT_HILOGD("printerId = %{public}s", printerId.c_str());
     if (state == PRINT_JOB_COMPLETED) {
         if (jobInQueue) {
             printerJobMap_[printerId].erase(jobId);
