@@ -429,6 +429,27 @@ int32_t PrintManagerClient::QueryPrinterCapability(const std::string &printerId)
     return ret;
 }
 
+int32_t PrintManagerClient::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
+{
+    PRINT_HILOGD("PrintManagerClient QueryAllPrintJob start.");
+    if (!LoadServer()) {
+        PRINT_HILOGE("load print server fail");
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    if (printServiceProxy_ == nullptr) {
+        PRINT_HILOGW("Redo GetPrintServiceProxy");
+        printServiceProxy_ = GetPrintServiceProxy();
+    }
+    if (printServiceProxy_ == nullptr) {
+        PRINT_HILOGE("QueryAllPrintJob quit because redoing GetPrintServiceProxy failed.");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = printServiceProxy_->QueryAllPrintJob(printJobs);
+    PRINT_HILOGD("PrintManagerClient QueryAllPrintJob out ret = [%{public}d].", ret);
+    return ret;
+}
+
 int32_t PrintManagerClient::On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener)
 {
     PRINT_HILOGD("PrintManagerClient On start.");

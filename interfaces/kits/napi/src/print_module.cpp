@@ -31,6 +31,7 @@ static constexpr const char *FUNCTION_START_PRINT = "startPrintJob";
 static constexpr const char *FUNCTION_CANCEL_PRINT = "cancelPrintJob";
 static constexpr const char *FUNCTION_REQUEST_PREVIEW = "requestPrintPreview";
 static constexpr const char *FUNCTION_QUERY_CAPABILITY = "queryPrinterCapability";
+static constexpr const char *FUNCTION_QUERY_ALL_PRINTJOB = "queryAllPrintJobs";
 static constexpr const char *FUNCTION_REGISTER_EVENT = "on";
 static constexpr const char *FUNCTION_UNREGISTER_EVENT = "off";
 static constexpr const char *FUNCTION_ADD_PRINTER = "addPrinters";
@@ -243,6 +244,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_CANCEL_PRINT, NapiInnerPrint::CancelPrintJob),
         PRINT_NAPI_METHOD(FUNCTION_REQUEST_PREVIEW, NapiInnerPrint::RequestPreview),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_CAPABILITY, NapiInnerPrint::QueryCapability),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_ALL_PRINTJOB, NapiInnerPrint::QueryAllPrintJob),
         PRINT_NAPI_METHOD(FUNCTION_REGISTER_EVENT, NapiInnerPrint::On),
         PRINT_NAPI_METHOD(FUNCTION_UNREGISTER_EVENT, NapiInnerPrint::Off),
         PRINT_NAPI_METHOD(FUNCTION_ADD_PRINTER, NapiPrintExt::AddPrinters),

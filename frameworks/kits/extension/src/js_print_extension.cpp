@@ -45,7 +45,7 @@ JsPrintExtension *JsPrintExtension::Create(const std::unique_ptr<Runtime> &runti
     return jsExtension_;
 }
 
-JsPrintExtension::JsPrintExtension(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime), extensionId_("") {}
+JsPrintExtension::JsPrintExtension(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime), extensionId_(""), hasDestroyed_(false) {}
 JsPrintExtension::~JsPrintExtension() = default;
 
 void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
@@ -146,6 +146,7 @@ void JsPrintExtension::OnStart(const AAFwk::Want &want)
     RegisterPrintJobCb();
     RegisterPreviewCb();
     RegisterQueryCapCb();
+    RegisterExtensionCb();
     PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
     PRINT_HILOGD("%{public}s end.", __func__);
 }
@@ -154,7 +155,9 @@ void JsPrintExtension::OnStop()
 {
     PrintExtension::OnStop();
     PRINT_HILOGD("jws JsPrintExtension OnStop begin.");
-    CallObjectMethod("onDestroy");
+    if (!hasDestroyed_) {
+        CallObjectMethod("onDestroy");
+    }
     bool ret = ConnectionManager::GetInstance().DisconnectCaller(GetContext()->GetToken());
     if (ret) {
         PRINT_HILOGD("The Print extension connection is not disconnected.");
@@ -419,6 +422,22 @@ void JsPrintExtension::RegisterQueryCapCb()
             NativeValue *value = jsExtension_->jsObj_->Get();
             callback->Exec(value, "onRequestPrinterCapability", arg, NapiPrintUtils::ARGC_ONE);
             PRINT_HILOGD("Request Capability Success");
+            return true;
+    });
+}
+
+void JsPrintExtension::RegisterExtensionCb()
+{
+    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DESTROY_EXTENSION,
+        []() -> bool {
+            PRINT_HILOGD("Stop Extension");
+            HandleScope handleScope(jsExtension_->jsRuntime_);
+            NativeValue *arg[] = { };
+            auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
+            NativeValue *value = jsExtension_->jsObj_->Get();
+            callback->Exec(value, "onDestroy", arg, NapiPrintUtils::ARGC_ZERO);
+            jsExtension_->hasDestroyed_ = true;
+            PRINT_HILOGD("Destroy Extension Success");
             return true;
     });
 }

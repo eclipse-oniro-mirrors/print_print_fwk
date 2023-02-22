@@ -39,7 +39,6 @@ public:
 
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
 
-    // Client Napi
     int32_t StartPrint(const std::vector<std::string> &fileList,
         const std::vector<uint32_t> &fdList, std::string &taskId);
     int32_t StopPrint(const std::string &taskId);
@@ -58,6 +57,7 @@ public:
     int32_t UpdateExtensionInfo(const std::string &extensionId);
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult);
     int32_t QueryPrinterCapability(const std::string &printerId);
+    int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs);
 
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);

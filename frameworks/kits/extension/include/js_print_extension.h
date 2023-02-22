@@ -115,6 +115,7 @@ private:
     void RegisterPrintJobCb();
     void RegisterPreviewCb();
     void RegisterQueryCapCb();
+    void RegisterExtensionCb();
 
     void GetSrcPath(std::string &srcPath);
 
@@ -122,6 +123,7 @@ private:
     std::unique_ptr<NativeReference> jsObj_;
     static JsPrintExtension *jsExtension_;
     std::string extensionId_;
+    bool hasDestroyed_;
 };
 } // namespace AbilityRuntime
 } // namespace OHOS

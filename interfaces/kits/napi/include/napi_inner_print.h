@@ -40,6 +40,7 @@ public:
     static napi_value CancelPrintJob(napi_env env, napi_callback_info info);
     static napi_value RequestPreview(napi_env env, napi_callback_info info);
     static napi_value QueryCapability(napi_env env, napi_callback_info info);
+    static napi_value QueryAllPrintJob(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
 
@@ -49,6 +50,7 @@ private:
 private:
     struct InnerPrintContext : public PrintAsyncCall::Context {
         std::vector<PrintExtensionInfo> allExtensionInfos;
+        std::vector<PrintJob> allPrintJobs;
         std::string previewResult = "";
         std::string type = "";
         sptr<IPrintCallback> callback = nullptr;

@@ -54,6 +54,7 @@ public:
         const sptr<IPrintExtensionCallback> &listener) = 0;
     virtual int32_t UnregisterAllExtCallback(const std::string &extensionId) = 0;
     virtual int32_t LoadExtSuccess(const std::string &extensionId) = 0;
+    virtual int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) = 0;
 };
 
 enum {
@@ -79,6 +80,7 @@ enum {
     CMD_REG_EXT_CB,
     CMD_UNREG_EXT_CB,
     CMD_LOAD_EXT,
+    CMD_QUERYALLPRINTJOB,
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

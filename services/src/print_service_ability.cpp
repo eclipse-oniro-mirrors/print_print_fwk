@@ -480,6 +480,23 @@ int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceAbility::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGD("QueryAllPrintJob started.");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    printJobs.clear();
+    for (auto printJob : printJobList_) {
+        printJobs.emplace_back(*printJob.second);
+    }
+    PRINT_HILOGE("QueryAllPrintJob End.");
+    return E_PRINT_NONE;
+}
+
 int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
 {
     ManualStart();
@@ -777,19 +794,46 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
     jobIt->second->SetSubState(subState);
     SendPrintJobEvent(*jobIt->second);
 
-    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
-    auto printerId = NapiPrintUtils::GetGlobalId(extensionId, jobIt->second->GetPrinterId());
+    auto printerId = jobIt->second->GetPrinterId();
+    PRINT_HILOGD("printerId = %{public}s", printerId.c_str());    
     if (state == PRINT_JOB_COMPLETED) {
         if (jobInQueue) {
             printerJobMap_[printerId].erase(jobId);
             queuedJobList_.erase(jobIt);
+        }
+        if (queuedJobList_.find(printerId) == queuedJobList_.end()) {
+            PRINT_HILOGD("no print job exists, destroy extension");
+            DestroyExtension(printerId);
         }
         SendQueuePrintJob(printerId);
     }
 
     PRINT_HILOGD("UpdatePrintJobState end.");
     return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::DestroyExtension(const std::string &printerId)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
+        PRINT_HILOGE("Invalid printer id");
+        return;
+    }
+
+    std::string extensionId = NapiPrintUtils::GetExtensionId(printerId);
+    std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_DESTROY_EXTENSION);
+    if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
+        PRINT_HILOGW("DestroyExtension Not Register Yet!!!");
+        return;
+    }
+
+    auto cbFunc = extCallbackMap_[cid];
+    auto callback = [=]() {
+        if (cbFunc != nullptr) {
+            cbFunc->OnCallback();
+        }
+    };
+    serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
 }
 
 int32_t PrintServiceAbility::UpdateExtensionInfo(const std::string &extInfo)

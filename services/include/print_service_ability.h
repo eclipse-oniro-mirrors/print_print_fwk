@@ -66,6 +66,7 @@ public:
         const sptr<IPrintExtensionCallback> &listener) override;
     int32_t UnregisterAllExtCallback(const std::string &extensionId) override;
     int32_t LoadExtSuccess(const std::string &extensionId) override;
+    int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override;
 
 protected:
     void OnStart() override;
@@ -85,6 +86,7 @@ private:
     bool CheckPermission(const std::string &permissionName);
     void SendQueuePrintJob(const std::string &printerId);
     void BuildFDParam(const std::vector<uint32_t> &fdList, AAFwk::Want &want);
+    void DestroyExtension(const std::string &printerId);
 
 private:
     ServiceRunningState state_;

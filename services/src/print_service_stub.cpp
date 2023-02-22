@@ -49,6 +49,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[CMD_REG_EXT_CB] = &PrintServiceStub::OnRegisterExtCallback;
     cmdMap_[CMD_UNREG_EXT_CB] = &PrintServiceStub::OnUnregisterAllExtCallback;
     cmdMap_[CMD_LOAD_EXT] = &PrintServiceStub::OnLoadExtSuccess;
+    cmdMap_[CMD_QUERYALLPRINTJOB] = &PrintServiceStub::OnQueryAllPrintJob;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -313,6 +314,24 @@ bool PrintServiceStub::OnQueryPrinterCapability(MessageParcel &data, MessageParc
     int32_t ret = QueryPrinterCapability(printerId);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapability out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnQueryAllPrintJob(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnQueryAllPrintJob in");
+    std::vector<PrintJob> printJob;
+    printJob.clear();
+    int32_t ret = QueryAllPrintJob(printJob);
+    reply.WriteInt32(ret);
+    if (ret == E_PRINT_NONE) {
+        uint32_t size = static_cast<uint32_t>(printJob.size());
+        reply.WriteUint32(size);
+        for (uint32_t index = 0; index < size; index++) {
+            printJob[index].Marshalling(reply);
+        }
+    }
+    PRINT_HILOGD("PrintServiceStub::OnQueryAllPrintJob out");
     return ret == E_PRINT_NONE;
 }
 

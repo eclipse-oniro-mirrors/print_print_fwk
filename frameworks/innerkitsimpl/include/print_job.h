@@ -37,7 +37,7 @@ public:
 
     virtual ~PrintJob();
 
-    void SetFdList(const std::vector<uint32_t> &files);
+    void SetFdListFdList(const std::vector<uint32_t> &files);
 
     void SetJobId(const std::string &jobId);
 

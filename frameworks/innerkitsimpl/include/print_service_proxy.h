@@ -49,6 +49,7 @@ public:
         const sptr<IPrintExtensionCallback> &listener) override;
     int32_t UnregisterAllExtCallback(const std::string &extensionId) override;
     int32_t LoadExtSuccess(const std::string &extensionId) override;
+    int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override;
 
 private:
     static inline BrokerDelegator<PrintServiceProxy> delegator_;
