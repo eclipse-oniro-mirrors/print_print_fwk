@@ -41,10 +41,10 @@ ohos_shared_library("print_client") {
 
   sources = [
     "src/napi_print_utils.cpp",
+    "src/print_callback.cpp",
     "src/print_callback_stub.cpp",
     "src/print_extension_callback_stub.cpp",
     "src/print_extension_info.cpp",
-    "src/print_callback.cpp",
     "src/print_job.cpp",
     "src/print_manager_client.cpp",
     "src/print_margin.cpp",
@@ -78,6 +78,7 @@ ohos_shared_library("print_client") {
     "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]
+
   #relative_install_dir = "module"
   install_enable = true
   subsystem_name = "print"

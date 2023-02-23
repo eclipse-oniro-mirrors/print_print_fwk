@@ -42,20 +42,20 @@ ohos_unittest("print_fwk_inner_napi_test") {
   ]
 
   deps = [
-    "${print_path}/interfaces/kits/napi:print_napi",
-    "${print_path}/interfaces/kits/jsnapi/extension:printextension_napi",
-    "${print_path}/interfaces/kits/jsnapi/extensionctx:printextensioncontext_napi",
+    "${print_path}/etc/init:printservice.rc",
     "${print_path}/frameworks/innerkitsimpl:print_client",
     "${print_path}/frameworks/kits/extension:print_extension_framework",
     "${print_path}/frameworks/kits/extension:print_extension_module",
-    "${print_path}/services:print_service",
-    "${print_path}/etc/init:printservice.rc",
+    "${print_path}/interfaces/kits/jsnapi/extension:printextension_napi",
+    "${print_path}/interfaces/kits/jsnapi/extensionctx:printextensioncontext_napi",
+    "${print_path}/interfaces/kits/napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
+    "${print_path}/services:print_service",
+    "//foundation/arkui/napi:ace_napi",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
     "//third_party/zlib:libz",
-    "//foundation/arkui/napi:ace_napi",
-    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
 }
 
