@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
 config("print_service_config") {
@@ -43,8 +44,8 @@ ohos_shared_library("print_service") {
     "//base/notification/distributed_notification_service/interfaces/inner_api",
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
     "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
-    "//base/print/print_fwk/frameworks/innerkitsimpl/include",
-    "//base/print/print_fwk/utils/include",
+    "${print_path}/frameworks/innerkitsimpl/include",
+    "${print_path}/utils/include",
   ]
   deps = [
     "//base/notification/distributed_notification_service/frameworks/ans:ans_innerkits",
@@ -52,7 +53,7 @@ ohos_shared_library("print_service") {
     "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient:net_conn_manager_if",
     "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-    "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
+    "${print_path}/frameworks/innerkitsimpl:print_client",
   ]
 
   external_deps = [
