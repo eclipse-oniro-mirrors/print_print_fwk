@@ -21,7 +21,7 @@ config("ability_config") {
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/include",
     "${print_path}/frameworks/kits/extension/include",
-    "${print_path}/utils/include",
+    "${print_utils_path}/include",
     "//commonlibrary/c_utils/base/include",
     "${ability_runtime_path}/interfaces/kits/native/ability/native",
     "${ability_runtime_path}/interfaces/kits/native/appkit/app",
@@ -34,10 +34,10 @@ config("ability_config") {
     "${ability_runtime_path}/interfaces/kits/native/appkit/app",
     "${ability_runtime_services_path}/common/include",
 
-    "//foundation/systemabilitymgr/dmsfwk/services/dtbschedmgr/include",
+    "${system_ability_mgr_path}/dmsfwk/services/dtbschedmgr/include",
     "//base/global/resource_management/interfaces/inner_api/include",
     "${ability_runtime_napi_path}/featureAbility",
-    "//foundation/arkui/napi/interfaces/kits",
+    "${arkui_path}/napi/interfaces/kits",
     "//third_party/node/src",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     "${ability_runtime_path}/interfaces/kits/native/ability/native/continuation/remote_register_service",
@@ -127,7 +127,7 @@ ohos_shared_library("print_extension_framework") {
     "//base/global/i18n/frameworks/intl:intl_util",
     "//base/global/resource_management/frameworks/resmgr:global_resmgr",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/arkui/napi:ace_napi",
+    "${arkui_path}/napi:ace_napi",
   ]
 
   subsystem_name = "print"

@@ -21,10 +21,10 @@ config("print_interfaces_kits_napi_config") {
 }
 ohos_shared_library("print_client") {
   include_dirs = [
-    "//foundation/arkui/ace_engine/frameworks/base/utils",
-    "//foundation/arkui/napi",
-    "//foundation/arkui/napi/interfaces/kits",
-    "//foundation/arkui/napi/interfaces/inner_api",
+    "${arkui_path}/ace_engine/frameworks/base/utils",
+    "${arkui_path}/napi",
+    "${arkui_path}/napi/interfaces/kits",
+    "${arkui_path}/napi/interfaces/inner_api",
     "//third_party/node/src",
     "//third_party/curl/include",
     "${ability_runtime_services_path}/common/include",
@@ -35,7 +35,7 @@ ohos_shared_library("print_client") {
     "${ability_runtime_inner_api_path}/ability_manager/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/Isamgr",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
-    "${print_path}/utils/include",
+    "${print_utils_path}/include",
   ]
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
@@ -59,7 +59,7 @@ ohos_shared_library("print_client") {
     "src/printer_info.cpp",
   ]
   deps = [
-    "//foundation/arkui/napi:ace_napi",
+    "${arkui_path}/napi:ace_napi",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
   external_deps = [

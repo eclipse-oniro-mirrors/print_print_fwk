@@ -72,9 +72,3 @@ foundation/print_print_fwk        #打印框架
     系统打印管理应用
 
 ## 相关仓<a name="section1371113476307"></a>
-
-元能力子系统
-
-[**ability_runtime**](https://gitee.com/openharmony/ability_ability_runtime)
-
-

@@ -43,7 +43,7 @@ ohos_shared_library("print_service") {
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
     "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
     "${print_path}/frameworks/innerkitsimpl/include",
-    "${print_path}/utils/include",
+    "${print_utils_path}/include",
   ]
   deps = [
     "${print_path}/frameworks/innerkitsimpl:print_client",

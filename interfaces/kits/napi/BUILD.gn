@@ -35,7 +35,7 @@ ohos_shared_library("print_napi") {
     "${ability_runtime_inner_api_path}/ability_manager/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/Isamgr",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
-    "${print_path}/utils/include",
+    "${print_utils_path}/include",
     "${print_path}/frameworks/innerkitsimpl/include",
   ]
   public_configs = [ ":print_interfaces_kits_napi_config" ]

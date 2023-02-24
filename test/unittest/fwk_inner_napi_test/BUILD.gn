@@ -20,16 +20,16 @@ ohos_unittest("print_fwk_inner_napi_test") {
   module_out_path = module_output_path
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/include",
-    "//foundation/arkui/ace_engine/frameworks/base/utils",
-    "//foundation/arkui/napi",
-    "//foundation/arkui/napi/interfaces/kits",
-    "//foundation/arkui/napi/interfaces/inner_api",
+    "${arkui_path}/ace_engine/frameworks/base/utils",
+    "${arkui_path}/napi",
+    "${arkui_path}/napi/interfaces/kits",
+    "${arkui_path}/napi/interfaces/inner_api",
     "//third_party/node/src",
     "//third_party/curl/include",
     "//utils/system/safwk/native/include",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/Isamgr",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
-    "${print_path}/utils/include",
+    "${print_utils_path}/include",
   ]
 
   sources = [
@@ -51,8 +51,8 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "${print_path}/interfaces/kits/napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services:print_service",
-    "//foundation/arkui/napi:ace_napi",
-    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "${arkui_path}/napi:ace_napi",
+    "${system_ability_mgr_path}/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
     "//third_party/zlib:libz",
