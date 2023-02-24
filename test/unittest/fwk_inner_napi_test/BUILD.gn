@@ -42,6 +42,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
   ]
 
   deps = [
+    "${arkui_path}/napi:ace_napi",
     "${print_path}/etc/init:printservice.rc",
     "${print_path}/frameworks/innerkitsimpl:print_client",
     "${print_path}/frameworks/kits/extension:print_extension_framework",
@@ -51,7 +52,6 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "${print_path}/interfaces/kits/napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services:print_service",
-    "${arkui_path}/napi:ace_napi",
     "${system_ability_mgr_path}/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",

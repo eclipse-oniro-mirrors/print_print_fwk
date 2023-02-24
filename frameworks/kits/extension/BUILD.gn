@@ -124,10 +124,10 @@ ohos_shared_library("print_extension_framework") {
   ]
 
   public_deps = [
+    "${arkui_path}/napi:ace_napi",
     "//base/global/i18n/frameworks/intl:intl_util",
     "//base/global/resource_management/frameworks/resmgr:global_resmgr",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "${arkui_path}/napi:ace_napi",
   ]
 
   subsystem_name = "print"
