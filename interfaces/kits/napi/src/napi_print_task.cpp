@@ -36,7 +36,7 @@ struct PrintTaskContext : public PrintAsyncCall::Context {
     virtual ~PrintTaskContext() {}
 };
 
-napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info) // PrintTask
+napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter print JsMain.");
     auto context = std::make_shared<PrintTaskContext>();
