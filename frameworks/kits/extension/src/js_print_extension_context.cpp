@@ -30,7 +30,7 @@
 #include "start_options.h"
 
 using namespace OHOS::Print;
-typedef void* nonetype;
+using noneType = void*;
 
 namespace OHOS {
 namespace AbilityRuntime {
@@ -42,7 +42,7 @@ public:
     explicit JsPrintExtensionContext(const std::shared_ptr<PrintExtensionContext>& context) : context_(context) {}
     ~JsPrintExtensionContext() = default;
 
-    static void Finalizer(NativeEngine *engine, nonetype data, nonetype hint)
+    static void Finalizer(NativeEngine *engine, noneType data, noneType hint)
     {
         PRINT_HILOGD("JsAbilityContext::Finalizer is called");
         std::unique_ptr<JsPrintExtensionContext>(static_cast<JsPrintExtensionContext*>(data));
