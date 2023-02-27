@@ -21,7 +21,7 @@
 
 using namespace OHOS::Print;
 
-static int_32 DESC_MAX = 256;
+static constexpr const int32_t DESC_MAX = 256;
 static napi_property_descriptor clzDesc[DESC_MAX];
 
 static constexpr const char *FUNCTION_PRINT = "print";
