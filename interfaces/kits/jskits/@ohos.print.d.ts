@@ -13,11 +13,10 @@
  * limitations under the License.
  */
 import {AsyncCallback} from './basic';
-import {ExtensionAbilityInfo} from './bundle/extensionAbilityInfo';
 
 /**
  * System print
- * @sysCap SystemCapability.Print.print
+ * @syscap SystemCapability.Print.PrintFramework
  * @import import print from '@ohos.app.print';
  * @since 9
  */
@@ -54,7 +53,7 @@ declare namespace print {
     /**
      * Start new print task for App.
      * @since 9
-     * @param files Indicates the filepath list to be printed. Only pdf and picture filetypes are supported.
+     * @param files Indicates the filepath list to be printed. Only pdf and picture filetype are supported.
      * @param callback The callback function for print task.
      * @permission {@code ohos.permission.PRINT}
      * @return -
@@ -77,7 +76,7 @@ declare namespace print {
 
     interface PreviewAttribute {
         previewRange: PrinterRange;  // preview page range
-        result?: string;        // preview file
+        result?: number;        // preview file
     }
 
     interface PrintResolution {
@@ -89,103 +88,103 @@ declare namespace print {
     interface PrintPageSize {
         id: string;    // page size id
         name: string;  // page size name
-        width: number;  // unit: milimeter
-        height: number;  // unit: milimeter
+        width: number;  // unit: millimeter
+        height: number;  // unit: millimeter
     }
 
     interface PrinterCapability {
         /* Printer Capability */
         colorMode: number;            // color mode
-        duplexMode: number;            // duplex mode		
+        duplexMode: number;            // duplex mode
         pageSize: Array<PrintPageSize>;    // the page size list supported by the printer
-        resolution?: Array<PrintResolution>;  // the resolution list supported by the printer		
+        resolution?: Array<PrintResolution>;  // the resolution list supported by the printer
         minMargin?: PrintMargin;  // min margin of printer
     }
 
     interface PrinterInfo {
         printerId: string;      // printer id
         printerName: string;    // printer name
-        printerState: PrinterState;  // current printer state		
+        printerState: PrinterState;  // current printer state
         printerIcon?: number;    // resource id of printer icon
         description?: string;    // printer description
         capability?: PrinterCapability;  // printer capability
-		option?:string;					// json object string		
+        option?:string;    // json object string
     }
 
     interface PrintJob {
-        files: Array<string>;    // document list to be printed
-        jobId: string;          // job id
-        printerId: string;      // printer id to take charge of printing
-        jobState: PrintJobState;  // current print job state
-        copyNumber: number;      // copies of document list
-        pageRange: PrinterRange;  // range size to be printed
-        isSequential: boolean;    // sequential print
-        pageSize: PrintPageSize;  // the selected page size
-        isLandscape: boolean;      // vertical printing
-        colorMode: number;      // color mode
-        duplexMode: number;    // duplex mode
-        margin?: PrintMargin;    // current margin setting
+        fdList: Array<number>;       // document fd list to be printed
+        jobId: string;               // job id
+        printerId: string;           // printer id to take charge of printing
+        jobState: PrintJobState;     // current print job state
+        copyNumber: number;          // copies of document list
+        pageRange: PrinterRange;     // range size to be printed
+        isSequential: boolean;       // sequential print
+        pageSize: PrintPageSize;     // the selected page size
+        isLandscape: boolean;        // vertical printing
+        colorMode: number;           // color mode
+        duplexMode: number;          // duplex mode
+        margin?: PrintMargin;        // current margin setting
         preview?: PreviewAttribute;  // preview setting
-		option?:string;					// json object string
+        option?:string;              // json object string
     }
 
     enum PrinterState {
-        PRINTER_ADDED = 0,      	// new printers arrival
-        PRINTER_REMOVED = 1,    	// printers lost
-		PRINTER_UPDATE_CAP = 2,  	// printers update
-		PRINTER_CONNECTED = 3,		// printer has been connected
-		PRINTER_DISCONNECTED = 4,	// printer has been disconnected
-        PRINTER_RUNNING = 5,   		// printer is working
+        PRINTER_ADDED = 0,          // new printers arrival
+        PRINTER_REMOVED = 1,        // printers lost
+        PRINTER_UPDATE_CAP = 2,     // printers update
+        PRINTER_CONNECTED = 3,      // printer has been connected
+        PRINTER_DISCONNECTED = 4,   // printer has been disconnected
+        PRINTER_RUNNING = 5,        // printer is working
     }
 
     enum PrintJobState {
-        PRINT_JOB_PREPARE = 0, 		// initial state of print job
-        PRINT_JOB_QUEUED = 1,  		// deliver print job to the printer
-        PRINT_JOB_RUNNING = 2,  	// executing print job
-        PRINT_JOB_BLOCKED = 3,  	// print job has been blocked
-        PRINT_JOB_COMPLETED = 4,  	// print job ocmpleted
+        PRINT_JOB_PREPARE = 0,      // initial state of print job
+        PRINT_JOB_QUEUED = 1,       // deliver print job to the printer
+        PRINT_JOB_RUNNING = 2,      // executing print job
+        PRINT_JOB_BLOCKED = 3,      // print job has been blocked
+        PRINT_JOB_COMPLETED = 4,    // print job completed
     }
-	
-	enum PrintJobSubState {
-		PRINT_JOB_COMPLETED_SUCCESS = 0,		// print job succeed
-		PRINT_JOB_COMPLETED_FAILED = 1,			// print job fail
-		PRINT_JOB_COMPLETED_CANCELLED = 2,		// print job has been cancelled
-		PRINT_JOB_COMPLETED_FILE_CORRUPT = 3,	// print job has been corrupted
-		PRINT_JOB_BLOCK_OFFLINE = 4,			// printer is offline
-		PRINT_JOB_BLOCK_BUSY = 5,				// printer is occupied by other process
-		PRINT_JOB_BLOCK_CANCELLED = 6,			// print job has been canncelled
-		PRINT_JOB_BLOCK_OUT_OF_PAPER = 7,		// out of paper
-		PRINT_JOB_BLOCK_OUT_OF_INK = 8,			// out of ink
-		PRINT_JOB_BLOCK_OUT_OF_TONER = 9,		// out of toner
-		PRINT_JOB_BLOCK_JAMMED = 10,			// paper jam
-		PRINT_JOB_BLOCK_DOOR_OPEN = 11,			// cover open
-		PRINT_JOB_BLOCK_SERVICE_REQUEST = 12,	// service request
-		PRINT_JOB_BLOCK_LOW_ON_INK = 13,		// low on ink
-		PRINT_JOB_BLOCK_LOW_ON_TONER = 14,		// low on toner
-		PRINT_JOB_BLOCK_REALLY_LOW_ON_INK = 15,	// really low on ink
-		PRINT_JOB_BLOCK_BAD_CERTIFICATE = 16,	// bad certification
-		PRINT_JOB_BLOCK_UNKNOWN = 17,			// unknown issue
-	}
-	
-	enum PrintErrorCode {
-		E_PRINT_NONE = 0,						// no error
-		E_PRINT_NO_PERMISSION = 201,			// no permission
-		E_PRINT_INVALID_PARAMETER = 401,    	// invalid parameter
-		E_PRINT_GENERIC_FAILURE = 13100001,		// generic failure of print
-		E_PRINT_RPC_FAILURE = 13100002,			// RPC failure
-		E_PRINT_SERVER_FAILURE = 13100003,		// failure of print service
-		E_PRINT_INVALID_EXTENSION = 13100004,	// invalid print extension
-		E_PRINT_INVALID_PRINTER = 13100005,		// invalid printer
-		E_PRINT_INVALID_PRINTJOB = 13100006,	// invalid print job
-		E_PRINT_FILE_IO = 13100007,				// file i/o error
-	};	
+
+    enum PrintJobSubState {
+        PRINT_JOB_COMPLETED_SUCCESS = 0,        // print job succeed
+        PRINT_JOB_COMPLETED_FAILED = 1,         // print job fail
+        PRINT_JOB_COMPLETED_CANCELLED = 2,      // print job has been cancelled
+        PRINT_JOB_COMPLETED_FILE_CORRUPT = 3,   // print job has been corrupted
+        PRINT_JOB_BLOCK_OFFLINE = 4,            // printer is offline
+        PRINT_JOB_BLOCK_BUSY = 5,               // printer is occupied by other process
+        PRINT_JOB_BLOCK_CANCELLED = 6,          // print job has been cancelled
+        PRINT_JOB_BLOCK_OUT_OF_PAPER = 7,       // out of paper
+        PRINT_JOB_BLOCK_OUT_OF_INK = 8,         // out of ink
+        PRINT_JOB_BLOCK_OUT_OF_TONER = 9,       // out of toner
+        PRINT_JOB_BLOCK_JAMMED = 10,            // paper jam
+        PRINT_JOB_BLOCK_DOOR_OPEN = 11,         // cover open
+        PRINT_JOB_BLOCK_SERVICE_REQUEST = 12,   // service request
+        PRINT_JOB_BLOCK_LOW_ON_INK = 13,        // low on ink
+        PRINT_JOB_BLOCK_LOW_ON_TONER = 14,      // low on toner
+        PRINT_JOB_BLOCK_REALLY_LOW_ON_INK = 15, // really low on ink
+        PRINT_JOB_BLOCK_BAD_CERTIFICATE = 16,   // bad certification
+        PRINT_JOB_BLOCK_UNKNOWN = 17,           // unknown issue
+    }
+
+    enum PrintErrorCode {
+        E_PRINT_NONE = 0,                       // no error
+        E_PRINT_NO_PERMISSION = 201,            // no permission
+        E_PRINT_INVALID_PARAMETER = 401,        // invalid parameter
+        E_PRINT_GENERIC_FAILURE = 13100001,     // generic failure of print
+        E_PRINT_RPC_FAILURE = 13100002,         // RPC failure
+        E_PRINT_SERVER_FAILURE = 13100003,      // failure of print service
+        E_PRINT_INVALID_EXTENSION = 13100004,   // invalid print extension
+        E_PRINT_INVALID_PRINTER = 13100005,     // invalid printer
+        E_PRINT_INVALID_PRINTJOB = 13100006,    // invalid print job
+        E_PRINT_FILE_IO = 13100007,             // file i/o error
+    }
 
     interface PrinterExtensionInfo {
-        extensionId: string;    // extesion id of printer extension
-        vendorId: string;      // vendor id of extension
-        vendorName: string;      // vendor name
-        vendorIcon: number;      // resource id of vendor
-        version: string;      // version of current printer extension
+        extensionId: string;    // extension id of printer extension
+        vendorId: string;       // vendor id of extension
+        vendorName: string;     // vendor name
+        vendorIcon: number;     // resource id of vendor
+        version: string;        // version of current printer extension
     }
 
     /**
@@ -227,7 +226,7 @@ declare namespace print {
      */
      function stopDiscoverPrinter(callback: AsyncCallback<boolean>): void;
      function stopDiscoverPrinter(): Promise<boolean>;
-    
+
      /**
      * Connect the specific printer.
      *
@@ -250,7 +249,7 @@ declare namespace print {
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
      * @systemapi Hide this for inner system use.
      * @return -
-     */      
+     */
       function disconnectPrinter(printerId: string, callback: AsyncCallback<boolean>): void;
       function disconnectPrinter(printerId: string): Promise<boolean>;
 
@@ -303,8 +302,8 @@ declare namespace print {
      * @systemapi Hide this for inner system use.
      * @return -
      */
-    function requestPrintPreview(jobInfo: PrintJob, callback: (result: string) => void): void;
-    function requestPrintPreview(jobInfo: PrintJob): Promise<string>;
+    function requestPrintPreview(jobInfo: PrintJob, callback: (result: number) => void): void;
+    function requestPrintPreview(jobInfo: PrintJob): Promise<number>;
 
     /**
      * Register event callback for the state change of printer.
@@ -327,7 +326,7 @@ declare namespace print {
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
      * @systemapi Hide this for inner system use.
      * @return -
-     */    
+     */
     function off(type: 'printerStateChange', callback?: (boolean) => void): void;
 
     /**
@@ -351,9 +350,9 @@ declare namespace print {
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
      * @systemapi Hide this for inner system use.
      * @return -
-     */   
+     */
     function off(type: 'jobStateChange', callback?: (boolean) => void): void;
-	
+
     /**
      * Register event callback for the information change of print extension.
      *
@@ -375,7 +374,7 @@ declare namespace print {
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
      * @systemapi Hide this for inner system use.
      * @return -
-     */   
+     */
     function off(type: 'extInfoChange', callback?: (boolean) => void): void;
 
     /**
@@ -390,7 +389,7 @@ declare namespace print {
      */
     function addPrinters(printers: Array<PrinterInfo>, callback: AsyncCallback<boolean>): void;
     function addPrinters(printers: Array<PrinterInfo>): Promise<boolean>;
-	
+
     /**
      * Printers have been lost and notify Print SA.
      *
@@ -404,12 +403,12 @@ declare namespace print {
      */
     function removePrinters(printerIds: Array<string>, callback: AsyncCallback<boolean>): void;
     function removePrinters(printerIds: Array<string>): Promise<boolean>;
-	
+
     /**
      * Update the information of the specific printers
      *
      * @since 9
-     * @param printers Indicates to be updaetd printer lists. 
+     * @param printers Indicates to be updated printer lists.
      * @param callback The callback function for indcating the result of API execution.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
      * @systemapi Hide this for inner system use.
@@ -438,7 +437,7 @@ declare namespace print {
      * @since 9
      * @param jobId Indicates id of the print job.
      * @param state Indicates new state of print job.
-     * @param subState Indicates sub state of print job.	 
+     * @param subState Indicates sub state of print job.
      * @param callback The callback function for indcating the result of API execution.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
      * @systemapi Hide this for inner system use.
@@ -446,7 +445,7 @@ declare namespace print {
      */
     function updatePrintJobState(jobId: string, state: PrintJobState, subState: PrintJobSubState, callback: AsyncCallback<boolean>): void;
     function updatePrintJobState(jobId: string, state: PrintJobState, subState: PrintJobSubState): Promise<boolean>;
-	
+
     /**
      * Notify Print SA the state of print extension has been changed.
      *
@@ -459,25 +458,6 @@ declare namespace print {
      */
     function updateExtensionInfo(info: string, callback: AsyncCallback<boolean>): void;
     function updateExtensionInfo(info: string): Promise<boolean>;
-
-	interface ReadConfig {
-		file: string;		// file uri
-		offset?: number;	// offset from the head of file
-		max?: number;		// max size of read operation
-	};
-	
-    /**
-     * Read file content of the specific file.
-     *
-     * @since 9
-     * @param config Indicates read configuration.
-     * @param callback The callback function for indcating the result of API execution.
-     * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
-     * @systemapi Hide this for inner system use.
-     * @return -
-     */
-     function readFile(config: ReadConfig, callback: AsyncCallback<ArrayBuffer>): void;
-     function readFile(config: ReadConfig): Promise<ArrayBuffer>;
 }
 
 export default print;

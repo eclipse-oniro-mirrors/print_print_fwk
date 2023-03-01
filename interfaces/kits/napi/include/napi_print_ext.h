@@ -29,39 +29,38 @@
 namespace OHOS::Print {
 class NapiPrintExt {
 public:
-  static napi_value AddPrinters(napi_env env, napi_callback_info info);
-  static napi_value RemovePrinters(napi_env env, napi_callback_info info);
-  static napi_value UpdatePrinters(napi_env env, napi_callback_info info);
-  static napi_value UpdatePrinterState(napi_env env, napi_callback_info info);
-  static napi_value UpdatePrintJobState(napi_env env, napi_callback_info info);
-  static napi_value UpdateExtensionInfo(napi_env env, napi_callback_info info);
+    static napi_value AddPrinters(napi_env env, napi_callback_info info);
+    static napi_value RemovePrinters(napi_env env, napi_callback_info info);
+    static napi_value UpdatePrinters(napi_env env, napi_callback_info info);
+    static napi_value UpdatePrinterState(napi_env env, napi_callback_info info);
+    static napi_value UpdatePrintJobState(napi_env env, napi_callback_info info);
+    static napi_value UpdateExtensionInfo(napi_env env, napi_callback_info info);
 
 private:
-  static bool IsValidPrinterState(uint32_t state);
-  static bool IsValidPrintJobState(uint32_t state);
-  static bool IsValidPrintJobSubState(uint32_t subState);
+    static bool IsValidPrinterState(uint32_t state);
+    static bool IsValidPrintJobState(uint32_t state);
+    static bool IsValidPrintJobSubState(uint32_t subState);
 
 private:
-  struct NapiPrintExtContext : public PrintAsyncCall::Context {
-    bool result = true;
-    std::vector<PrinterInfo> printerInfos;
-    std::vector<std::string> printerIds;
+    struct NapiPrintExtContext : public PrintAsyncCall::Context {
+        bool result = true;
+        std::vector<PrinterInfo> printerInfos;
+        std::vector<std::string> printerIds;
 
-    std::string printerId = "";
-    uint32_t printerState = 0;
+        std::string printerId = "";
+        uint32_t printerState = 0;
 
-    std::string printJobId = "";
-    uint32_t printJobState = 0;
-    uint32_t jobSubState = 0;
+        std::string printJobId = "";
+        uint32_t printJobState = 0;
+        uint32_t jobSubState = 0;
 
-    std::string extensionId = "";
-    std::string extInfo = "";
+        std::string extensionId = "";
+        std::string extInfo = "";
 
-    NapiPrintExtContext() : Context(nullptr, nullptr){};
-    NapiPrintExtContext(InputAction input, OutputAction output)
-        : Context(std::move(input), std::move(output)){};
-    virtual ~NapiPrintExtContext(){};
-  };
+        NapiPrintExtContext() : Context(nullptr, nullptr) {};
+        NapiPrintExtContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
+        virtual ~NapiPrintExtContext() {};
+    };
 };
 } // namespace OHOS::Print
 #endif // NAPI_PRINT_EXT_H

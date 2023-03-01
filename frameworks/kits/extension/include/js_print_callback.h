@@ -29,40 +29,51 @@ class NativeEngine;
 namespace OHOS {
 namespace AbilityRuntime {
 class JsRuntime;
-
 class JsPrintCallback : public std::enable_shared_from_this<JsPrintCallback> {
 public:
-  explicit JsPrintCallback(JsRuntime &jsRutime);
-  ~JsPrintCallback() = default;
-  NativeValue *Exec(NativeValue *jsObj, const std::string &name,
-                    NativeValue *const *argv = nullptr, size_t argc = 0,
-                    bool isSync = true);
+    explicit JsPrintCallback(JsRuntime &jsRutime);
+    ~JsPrintCallback() = default;
+    NativeValue *Exec(NativeValue *jsObj, const std::string &name, NativeValue *const *argv = nullptr, size_t argc = 0,
+        bool isSync = true);
 
 private:
-  uv_loop_s *GetJsLoop(JsRuntime &jsRuntime);
-  bool BuildJsWorker(NativeValue *jsObj, const std::string &name,
-                     NativeValue *const *argv, size_t argc, bool isSync);
+    uv_loop_s *GetJsLoop(JsRuntime &jsRuntime);
+    bool BuildJsWorker(NativeValue *jsObj, const std::string &name,
+        NativeValue *const *argv, size_t argc, bool isSync);
 
 private:
-  struct JsWorkParam {
-    std::shared_ptr<JsPrintCallback> self;
-    NativeEngine *nativeEngine;
-    NativeValue *jsObj;
-    NativeValue *jsMethod;
-    NativeValue *const *argv;
-    size_t argc;
-    NativeValue *jsResult;
-    bool isSync;
-    bool isCompleted;
-  };
-  JsRuntime &jsRuntime_;
-  uv_work_t *jsWorker_;
+    struct JsWorkParam {
+        std::shared_ptr<JsPrintCallback> self;
+        NativeEngine *nativeEngine;
+        NativeValue *jsObj;
+        NativeValue *jsMethod;
+        NativeValue *const *argv;
+        size_t argc;
+        NativeValue *jsResult;
+        bool isSync;
+        bool isCompleted;
+        JsWorkParam()
+        {
+            self = nullptr;
+            nativeEngine = nullptr;
+            jsObj = nullptr;
+            jsMethod = nullptr;
+            argv = nullptr;
+            argc = 0;
+            jsResult = nullptr;
+            isSync = false;
+            isCompleted = false;
+        }
+    };
 
-  JsPrintCallback::JsWorkParam jsParam_;
+    JsRuntime &jsRuntime_;
+    uv_work_t *jsWorker_;
 
-  std::mutex conditionMutex_;
-  std::condition_variable syncCon_;
-  static constexpr int SYNC_TIME_OUT = 1000;
+    JsPrintCallback::JsWorkParam jsParam_;
+
+    std::mutex conditionMutex_;
+    std::condition_variable syncCon_;
+    static constexpr int SYNC_TIME_OUT = 1000;
 };
 } // namespace AbilityRuntime
 } // namespace OHOS

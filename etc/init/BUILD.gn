@@ -18,6 +18,6 @@ import("//build/ohos.gni")
 ohos_prebuilt_etc("printservice.rc") {
   source = "printservice.cfg"
   relative_install_dir = "init"
-  part_name = "print"
+  part_name = "print_fwk"
   subsystem_name = "print"
 }

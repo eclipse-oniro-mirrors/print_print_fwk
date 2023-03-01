@@ -14,8 +14,8 @@
  */
 
 class PrintExtension {
-    onCreate(want) {
-        console.log('onCreate, want:' + want.abilityName);
+    onCreated(want) {
+        console.log('onCreated, want:' + want.abilityName);
     }
 
     onStartDiscoverPrinter() {
@@ -48,7 +48,7 @@ class PrintExtension {
 
     onRequestPreview(jobInfo) {
         console.log('onRequestPreview');
-    }	
+    }
 
     onDestroy() {
         console.log('onDestroy');

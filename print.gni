@@ -12,15 +12,14 @@
 # limitations under the License.
 
 ability_runtime_path = "//foundation/ability/ability_runtime"
-
 ability_runtime_inner_api_path = "${ability_runtime_path}/interfaces/inner_api"
-
 ability_runtime_kits_path = "${ability_runtime_path}/frameworks/kits"
-
 ability_runtime_napi_path = "${ability_runtime_path}/frameworks/js/napi"
-
 ability_runtime_services_path = "${ability_runtime_path}/services"
 
-print_path = "//base/print/print"
+system_ability_mgr_path = "//foundation/systemabilitymgr"
 
-utils_path = "${print_path}/utils"
+arkui_path = "//foundation/arkui"
+
+print_path = "//base/print/print_fwk"
+print_utils_path = "${print_path}/utils"
