@@ -18,14 +18,14 @@ import {AsyncCallback} from './basic';
  * System print
  * @syscap SystemCapability.Print.PrintFramework
  * @import import print from '@ohos.app.print';
- * @since 9
+ * @since 10
  */
 declare namespace print {
 
     interface PrintTask {
         /**
          * Register event callback when the current print task is in process.
-         * @since 9
+         * @since 10
          * @param type blocked Indicates the print task has been blocked.
          *        type success Indicates the print task succeed.
          *        type failed Indicates the print task has completed with failure.
@@ -38,7 +38,7 @@ declare namespace print {
 
         /**
          * Unregister event callback when the current print task is in process.
-         * @since 9
+         * @since 10
          * @param type block Indicates the print task has been blocked.
          *        type success Indicates the print task succeed.
          *        type fail Indicates the print task has completed with failure.
@@ -52,7 +52,7 @@ declare namespace print {
 
     /**
      * Start new print task for App.
-     * @since 9
+     * @since 10
      * @param files Indicates the filepath list to be printed. Only pdf and picture filetype are supported.
      * @param callback The callback function for print task.
      * @permission {@code ohos.permission.PRINT}
@@ -142,7 +142,7 @@ declare namespace print {
         PRINT_JOB_QUEUED = 1,       // deliver print job to the printer
         PRINT_JOB_RUNNING = 2,      // executing print job
         PRINT_JOB_BLOCKED = 3,      // print job has been blocked
-        PRINT_JOB_COMPLETED = 4,    // print job completed
+        PRINT_JOB_COMPLETED = 4,    // print job cmpleted
     }
 
     enum PrintJobSubState {
@@ -190,7 +190,7 @@ declare namespace print {
     /**
      * Get all printer extension installed.
      *
-     * @since 9
+     * @since 10
      * @param callback The callback function for handling the extension list found.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
      * @systemapi Hide this for inner system use.
@@ -202,7 +202,7 @@ declare namespace print {
     /**
      * Load the specific printer extension and start to discover printer.
      *
-     * @since 9
+     * @since 10
      * @param extensionList Indicates the list of printer extension.
      *        empty list of extensionList Indicates to find printer with all installed extension.
      * @param callback The callback function for indcating the result of API execution.
@@ -216,7 +216,7 @@ declare namespace print {
     /**
      * Stop discovering the printer with specific printer extension.
      *
-     * @since 9
+     * @since 10
      * @param extensionList Indicates the list of printer extension.
      *        empty list of extensionList Indicates to find printer with all installed extension.
      * @param callback The callback function for indcating the result of API execution.
@@ -230,7 +230,7 @@ declare namespace print {
      /**
      * Connect the specific printer.
      *
-     * @since 9
+     * @since 10
      * @param printerId Indicates id of the printer.
      * @param callback The callback function for indcating the result of API execution.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -243,7 +243,7 @@ declare namespace print {
      /**
      * Disconnect the specific printer.
      *
-     * @since 9
+     * @since 10
      * @param printerId Indicates id of the printer.
      * @param callback The callback function for indcating the result of API execution.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -256,7 +256,7 @@ declare namespace print {
     /**
      * Query capability for the specific printer.
      *
-     * @since 9
+     * @since 10
      * @param printerId Indicates id of the printer.
      * @param callback The callback function for capability from printer.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -269,7 +269,7 @@ declare namespace print {
     /**
      * Start print job.
      *
-     * @since 9
+     * @since 10
      * @param jobInfo Indicates the information of print job.
      * @param callback The callback function for indcating the result of API execution.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -282,7 +282,7 @@ declare namespace print {
     /**
      * Cancel the print job has been sent to printer.
      *
-     * @since 9
+     * @since 10
      * @param jobId Indicates the specific print job.
      * @param callback The callback function for indcating the result of API execution.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -295,7 +295,7 @@ declare namespace print {
     /**
      * Request preview of the print job.
      *
-     * @since 9
+     * @since 10
      * @param jobInfo Indicates the information of print job.
      * @param callback The callback function for preview result from printer.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -308,7 +308,7 @@ declare namespace print {
     /**
      * Register event callback for the state change of printer.
      *
-     * @since 9
+     * @since 10
      * @param printerStateChange Indicates state change of printer.
      * @param callback The callback function for state change of printer.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -320,7 +320,7 @@ declare namespace print {
     /**
      * Unregister event callback for the state change of printer.
      *
-     * @since 9
+     * @since 10
      * @param printerStateChange Indicates state change of printer.
      * @param callback The callback function for state change of printer.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -332,7 +332,7 @@ declare namespace print {
     /**
      * Register event callback for the state change of print job.
      *
-     * @since 9
+     * @since 10
      * @param jobStateChange Indicates state change of print job.
      * @param callback The callback function for state change of print job.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -344,7 +344,7 @@ declare namespace print {
      /**
      * Unregister event callback for the state change of print job.
      *
-     * @since 9
+     * @since 10
      * @param printerStateChange Indicates state change of print job.
      * @param callback The callback function for state change of print job.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -356,7 +356,7 @@ declare namespace print {
     /**
      * Register event callback for the information change of print extension.
      *
-     * @since 9
+     * @since 10
      * @param extInfoChange Indicates information change of print extension.
      * @param callback The callback function for information change of print extension.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -368,7 +368,7 @@ declare namespace print {
      /**
      * Unregister event callback for the information change of print extension.
      *
-     * @since 9
+     * @since 10
      * @param extInfoChange Indicates information change of print extension.
      * @param callback The callback function for information change of print extension.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -380,7 +380,7 @@ declare namespace print {
     /**
      * New printers have been found and notify Print SA.
      *
-     * @since 9
+     * @since 10
      * @param printers Indicates new arrived printer lists.
      * @param callback The callback function for indcating the result of API execution.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -393,7 +393,7 @@ declare namespace print {
     /**
      * Printers have been lost and notify Print SA.
      *
-     * @since 9
+     * @since 10
      *
      * @param printerIds Indicates the lost printer lists.
      * @param callback The callback function for indcating the result of API execution.
@@ -407,7 +407,7 @@ declare namespace print {
     /**
      * Update the information of the specific printers
      *
-     * @since 9
+     * @since 10
      * @param printers Indicates to be updated printer lists.
      * @param callback The callback function for indcating the result of API execution.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -420,7 +420,7 @@ declare namespace print {
     /**
      * Notify Print SA the state of printer has been changed.
      *
-     * @since 9
+     * @since 10
      * @param printerId Indicates id of the printer.
      * @param state Indicates new state of printer.
      * @param callback The callback function for indcating the result of API execution.
@@ -434,7 +434,7 @@ declare namespace print {
     /**
      * Notify Print SA the state of print job has been changed.
      *
-     * @since 9
+     * @since 10
      * @param jobId Indicates id of the print job.
      * @param state Indicates new state of print job.
      * @param subState Indicates sub state of print job.
@@ -449,7 +449,7 @@ declare namespace print {
     /**
      * Notify Print SA the state of print extension has been changed.
      *
-     * @since 9
+     * @since 10
      * @param info Indicates changed information of print extension.
      * @param callback The callback function for indcating the result of API execution.
      * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
@@ -458,6 +458,32 @@ declare namespace print {
      */
     function updateExtensionInfo(info: string, callback: AsyncCallback<boolean>): void;
     function updateExtensionInfo(info: string): Promise<boolean>;
+
+    /**
+     * Get all the printJobs in the queue.
+     *
+     * @since 10
+     * @param callback The callback function for handling the printJob list found.
+     * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
+     * @systemapi Hide this for inner system use.
+     * @return -
+     */
+
+    function queryAllPrintJobs(callback: AsyncCallback<Array<PrintJob>>): void;
+    function queryAllPrintJobs(): Promise<Array<PrintJob>>
+
+   /**
+    * Get printJob by jobId.
+    *
+    * @since 10
+    * @param callback The callback function for get printJob by jobId.
+    * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
+    * @systemapi Hide this for inner system use.
+    * @return -
+    */
+
+    function queryPrintJobById(jobId: string, callback: AsyncCallback<PrintJob>): void;
+    function queryPrintJobById(jobId: string): Promise<PrintJob>
 }
 
 export default print;

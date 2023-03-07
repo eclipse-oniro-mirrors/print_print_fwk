@@ -53,6 +53,7 @@ private:
     bool OnUnregisterAllExtCallback(MessageParcel &data, MessageParcel &reply);
     bool OnLoadExtSuccess(MessageParcel &data, MessageParcel &reply);
     bool OnQueryAllPrintJob(MessageParcel &data, MessageParcel &reply);
+    bool OnQueryPrintJobById(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

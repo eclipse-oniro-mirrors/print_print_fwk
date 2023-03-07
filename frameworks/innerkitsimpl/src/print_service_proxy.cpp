@@ -399,6 +399,24 @@ int32_t PrintServiceProxy::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &printjob)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(printJobId);
+    PRINT_HILOGD("PrintServiceProxy QueryAllPrintJob started.");
+    int32_t ret = Remote()->SendRequest(CMD_QUERYPRINTJOBBYID, data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("QueryPrintJobById, rpc error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    ret = reply.ReadInt32();
+    PRINT_HILOGD("PrintServiceProxy QueryPrintJobById succeeded.");
+    return ret;
+}
+
 int32_t PrintServiceProxy::On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener)
 {
     PRINT_HILOGD("PrintServiceProxy::On listener=%{public}p", listener.GetRefPtr());

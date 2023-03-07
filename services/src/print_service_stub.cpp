@@ -50,6 +50,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[CMD_UNREG_EXT_CB] = &PrintServiceStub::OnUnregisterAllExtCallback;
     cmdMap_[CMD_LOAD_EXT] = &PrintServiceStub::OnLoadExtSuccess;
     cmdMap_[CMD_QUERYALLPRINTJOB] = &PrintServiceStub::OnQueryAllPrintJob;
+    cmdMap_[CMD_QUERYPRINTJOBBYID] = &PrintServiceStub::OnQueryPrintJobById;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -332,6 +333,18 @@ bool PrintServiceStub::OnQueryAllPrintJob(MessageParcel &data, MessageParcel &re
         }
     }
     PRINT_HILOGD("PrintServiceStub::OnQueryAllPrintJob out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnQueryPrintJobById(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnQueryPrintJobById in");
+    PrintJob printJob;
+    std::string printJobId = data.ReadString();
+    PRINT_HILOGD("printJobId : %{private}s", printJobId.c_str());
+    int32_t ret = QueryPrintJobById(printJobId, printJob);
+    reply.WriteInt32(ret);
+    PRINT_HILOGD("PrintServiceStub::OnQueryPrintJobById out");
     return ret == E_PRINT_NONE;
 }
 

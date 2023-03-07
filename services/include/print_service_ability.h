@@ -67,6 +67,7 @@ public:
     int32_t UnregisterAllExtCallback(const std::string &extensionId) override;
     int32_t LoadExtSuccess(const std::string &extensionId) override;
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override;
+    int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) override;
 
 protected:
     void OnStart() override;
