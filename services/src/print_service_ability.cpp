@@ -511,7 +511,7 @@ int32_t PrintServiceAbility::QueryPrintJobById(std::string &printJobId, PrintJob
     if (jobIt == printJobList_.end()) {
         PRINT_HILOGD("no print job exists");
         return E_PRINT_INVALID_PRINTJOB;
-    }else{
+    } else {
         printJob = *jobIt->second;
     }
     PRINT_HILOGE("QueryPrintJobById End.");
