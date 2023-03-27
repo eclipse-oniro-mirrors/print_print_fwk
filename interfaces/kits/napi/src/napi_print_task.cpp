@@ -162,7 +162,7 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
         fclose(file);
         return true;
     }
-    if (fileName.find("datashare://") == 0 || fileName.find("fd://") == 0 ) {
+    if (fileName.find("datashare://") == 0 || fileName.find("fd://") == 0) {
         return true;
     }
     PRINT_HILOGE("invalid file name");

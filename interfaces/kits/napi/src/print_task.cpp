@@ -31,7 +31,7 @@ PrintTask::PrintTask(const std::vector<std::string> &innerList) : taskId_("")
 {
     if (innerList.begin()->find("fd://") == 0) {
         PRINT_HILOGD("list type: fdlist");
-        for(auto fdPath : innerList) {
+        for (auto fdPath : innerList) {
             pathType_ = FD_PATH;
             uint32_t fd = NapiPrintUtils::GetIdFromFdPath(fdPath);
             fdList_.emplace_back(fd);
