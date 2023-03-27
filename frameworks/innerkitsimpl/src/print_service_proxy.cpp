@@ -36,10 +36,10 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
         PRINT_HILOGD("file is %{private}s", file.c_str());
     }
     bool isFileList = true;
-    if(fileList.empty())
+    if (fileList.empty())
         isFileList = false;
     data.WriteBool(isFileList);
-    if(isFileList) {
+    if (isFileList) {
         data.WriteStringVector(fileList);
         data.WriteBool(fdList.size() > 0);
         for (auto fd : fdList) {

@@ -397,7 +397,7 @@ uint32_t NapiPrintUtils::GetIdFromFdPath(const std::string &fdPath)
     std::string fd_str = fdPath.substr(fdPath.rfind('/') + 1, fdPath.length());
     std::stringstream getStrStream(fd_str);
     uint32_t fd;
-    if(!(getStrStream >> fd)) {
+    if (!(getStrStream >> fd)) {
         PRINT_HILOGD("failed to convert to uint32");
     }
     return fd;
