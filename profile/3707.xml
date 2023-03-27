@@ -21,6 +21,6 @@
         <distributed>false</distributed>
         <dump-level>1</dump-level>
         <spooler-bundle>com.ohos.spooler</spooler-bundle>
-        <spooler-ability>com.ohos.spooler.MainAbility</spooler-ability>
+        <spooler-ability>MainAbility</spooler-ability>
     </systemability>
 </info>

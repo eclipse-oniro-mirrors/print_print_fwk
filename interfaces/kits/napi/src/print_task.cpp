@@ -26,15 +26,27 @@ const std::string EVENT_BLOCK = "blocked";
 const std::string EVENT_SUCCESS = "success";
 const std::string EVENT_FAIL = "failed";
 const std::string EVENT_CANCEL = "cancelled";
-PrintTask::PrintTask(const std::vector<std::string> &fileList) : taskId_("")
+
+PrintTask::PrintTask(const std::vector<std::string> &innerList) : taskId_("")
 {
-    fileList_.assign(fileList.begin(), fileList.end());
-    isNormalFilePath_ = true;
-    if (fileList_.size() > 0) {
-        if (fileList_.begin()->find("datashare://") == 0) {
-            isNormalFilePath_ = false;
+    if (innerList.begin()->find("fd://") == 0) {
+        PRINT_HILOGD("list type: fdlist");
+        for(auto fdPath : innerList) {
+            pathType_ = FD_PATH;
+            uint32_t fd = NapiPrintUtils::GetIdFromFdPath(fdPath);
+            fdList_.emplace_back(fd);
+        }
+    } else {
+        PRINT_HILOGD("list type: filelist");
+        fileList_.assign(innerList.begin(), innerList.end());
+        pathType_ = FILE_PATH_ABSOLUTED;
+        if (fileList_.size() > 0) {
+            if (fileList_.begin()->find("datashare://") == 0) {
+                pathType_ = FILE_PATH;
+            }
         }
     }
+
     supportEvents_[EVENT_BLOCK] = true;
     supportEvents_[EVENT_SUCCESS] = true;
     supportEvents_[EVENT_FAIL] = true;
@@ -49,22 +61,21 @@ PrintTask::~PrintTask()
 
 uint32_t PrintTask::Start()
 {
-    if (fileList_.empty()) {
-        PRINT_HILOGE("file list is empty");
+    if (fileList_.empty() && fdList_.empty()) {
+        PRINT_HILOGE("fileList and fdList are both empty");
         return E_PRINT_INVALID_PARAMETER;
     }
-    std::vector<uint32_t> fdList;
-    if (isNormalFilePath_) {
+    if (pathType_ > 1) {
         for (auto file : fileList_) {
             int32_t fd = NapiPrintUtils::OpenFile(file);
             if (fd < 0) {
                 PRINT_HILOGE("file[%{private}s] is invalid", file.c_str());
                 return E_PRINT_INVALID_PARAMETER;
             }
-            fdList.emplace_back(fd);
+            fdList_.emplace_back(fd);
         }
     }
-    return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList, taskId_);
+    return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_);
 }
 
 void PrintTask::Stop()

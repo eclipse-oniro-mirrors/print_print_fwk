@@ -54,8 +54,15 @@ private:
 
     std::string taskId_;
     std::vector<std::string> fileList_;
+    std::vector<uint32_t> fdList_;
     std::map<std::string, bool> supportEvents_;
-    bool isNormalFilePath_;
+    uint32_t pathType_ = 0;
+    enum FilePathType {
+        FD_UNDEFINED,
+        FD_PATH,
+        FILE_PATH,
+        FILE_PATH_ABSOLUTED
+    };
 };
 } // namespace OHOS::Print
 #endif // PRINT_TASK_H

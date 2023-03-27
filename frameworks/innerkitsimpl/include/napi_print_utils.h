@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -92,6 +93,7 @@ public:
     static std::string GetTaskEventId(const std::string &taskId, const std::string &type);
     static int32_t OpenFile(const std::string &filePath);
     static bool IsPathValid(const std::string &filePath);
+    static uint32_t GetIdFromFdPath(const std::string &fdPath);
 };
 } // namespace OHOS::Print
 #endif // NAPI_PRINT_UTILS_H

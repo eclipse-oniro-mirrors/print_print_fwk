@@ -341,9 +341,9 @@ bool PrintServiceStub::OnQueryPrintJobById(MessageParcel &data, MessageParcel &r
     PRINT_HILOGD("PrintServiceStub::OnQueryPrintJobById in");
     PrintJob printJob;
     std::string printJobId = data.ReadString();
-    PRINT_HILOGD("printJobId : %{private}s", printJobId.c_str());
     int32_t ret = QueryPrintJobById(printJobId, printJob);
     reply.WriteInt32(ret);
+    printJob.Marshalling(reply);
     PRINT_HILOGD("PrintServiceStub::OnQueryPrintJobById out");
     return ret == E_PRINT_NONE;
 }

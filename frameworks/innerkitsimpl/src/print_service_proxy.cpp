@@ -399,7 +399,7 @@ int32_t PrintServiceProxy::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &printjob)
+int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &printJob)
 {
     MessageParcel data, reply;
     MessageOption option;
@@ -413,13 +413,15 @@ int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &
     }
 
     ret = reply.ReadInt32();
+    auto printJobPtr = PrintJob::Unmarshalling(reply);
+    printJob = *printJobPtr;
+    PRINT_HILOGD("[QueryPrintJobById] printerId : %{public}s", printJob.GetJobId().c_str());
     PRINT_HILOGD("PrintServiceProxy QueryPrintJobById succeeded.");
     return ret;
 }
 
 int32_t PrintServiceProxy::On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener)
 {
-    PRINT_HILOGD("PrintServiceProxy::On listener=%{public}p", listener.GetRefPtr());
     if (listener == nullptr) {
         PRINT_HILOGE("listener is nullptr");
         return E_PRINT_INVALID_PARAMETER;

@@ -380,7 +380,6 @@ napi_value NapiInnerPrint::QueryPrintJobById(napi_env env, napi_callback_info in
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGD("ouput enter---->");
-        context->printJob.Dump();
         *result = context->printJob.ToJsObject(env);
         return napi_ok;
     };

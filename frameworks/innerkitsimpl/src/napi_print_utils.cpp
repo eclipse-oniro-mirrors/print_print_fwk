@@ -391,4 +391,15 @@ bool NapiPrintUtils::IsPathValid(const std::string &filePath)
     }
     return true;
 }
+
+uint32_t NapiPrintUtils::GetIdFromFdPath(const std::string &fdPath)
+{
+    std::string fd_str = fdPath.substr(fdPath.rfind('/') + 1, fdPath.length());
+    std::stringstream ss(fd_str);
+    uint32_t fd;
+    if( !( ss >> fd )){
+        PRINT_HILOGD("failed to convert to uint32");
+    }
+    return fd;
+}
 } // namespace OHOS::Print

@@ -52,9 +52,9 @@ static const std::string SPOOLER_BUNDLE_BEGIN_TAG = "<spooler-bundle>";
 static const std::string SPOOLER_BUNDLE_END_TAG = "</spooler-bundle>";
 static const std::string SPOOLER_ABILITY_BEGIN_TAG = "<spooler-ability>";
 static const std::string SPOOLER_ABILITY_END_TAG = "</spooler-ability>";
-static const std::string DEFAULT_SPOOLER_ABILITY_NAME = ".MainAbility";
+static const std::string DEFAULT_SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
-static const std::string SPOOLER_ABILITY_NAME = "com.ohos.spooler.MainAbility";
+static const std::string SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
 static const std::string LAUNCH_PARAMETER_FILE_LIST = "fileList";
 static const std::string LAUNCH_PARAMETER_FD_LIST = "fdList";
@@ -506,6 +506,11 @@ int32_t PrintServiceAbility::QueryPrintJobById(std::string &printJobId, PrintJob
     }
     PRINT_HILOGD("QueryPrintJobById started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
+    if(printJobList_.empty()) {
+        PRINT_HILOGD("printJobList is empty!");
+        return E_PRINT_INVALID_PRINTJOB;
+    }
 
     auto jobIt = printJobList_.find(printJobId);
     if (jobIt == printJobList_.end()) {
