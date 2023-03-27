@@ -95,7 +95,6 @@ sptr<PrintServiceAbility> PrintServiceAbility::GetInstance()
         std::lock_guard<std::mutex> autoLock(instanceLock_);
         if (instance_ == nullptr) {
             instance_ = new PrintServiceAbility(PRINT_SERVICE_ID, true);
-            PRINT_HILOGE("PrintServiceAbility instance_ create,addr=%{public}p", instance_.GetRefPtr());
         }
     }
     return instance_;
@@ -233,8 +232,8 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     }
     PRINT_HILOGD("PrintServiceAbility StartPrint started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (fileList.empty()) {
-        PRINT_HILOGE("to be printed file list is empty");
+    if (fileList.empty() && fdList.empty()) {
+        PRINT_HILOGE("to be printed filelist and fdlist are empty");
         return E_PRINT_INVALID_PARAMETER;
     }
     std::string jobId = GetPrintJobId();

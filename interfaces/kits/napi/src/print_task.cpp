@@ -65,7 +65,7 @@ uint32_t PrintTask::Start()
         PRINT_HILOGE("fileList and fdList are both empty");
         return E_PRINT_INVALID_PARAMETER;
     }
-    if (pathType_ > 1) {
+    if (pathType_ == FILE_PATH_ABSOLUTED) {
         for (auto file : fileList_) {
             int32_t fd = NapiPrintUtils::OpenFile(file);
             if (fd < 0) {
