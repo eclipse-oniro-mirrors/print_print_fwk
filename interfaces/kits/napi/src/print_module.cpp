@@ -21,9 +21,6 @@
 
 using namespace OHOS::Print;
 
-static constexpr const int32_t DESC_MAX = 256;
-static napi_property_descriptor clzDesc[DESC_MAX];
-
 static constexpr const char *FUNCTION_PRINT = "print";
 static constexpr const char *FUNCTION_QUERY_EXT = "queryAllPrinterExtensionInfos";
 static constexpr const char *FUNCTION_START_DISCOVERY = "startDiscoverPrinter";
@@ -34,7 +31,6 @@ static constexpr const char *FUNCTION_START_PRINT = "startPrintJob";
 static constexpr const char *FUNCTION_CANCEL_PRINT = "cancelPrintJob";
 static constexpr const char *FUNCTION_REQUEST_PREVIEW = "requestPrintPreview";
 static constexpr const char *FUNCTION_QUERY_CAPABILITY = "queryPrinterCapability";
-static constexpr const char *FUNCTION_QUERY_ALL_PRINTJOB = "queryAllPrintJobs";
 static constexpr const char *FUNCTION_REGISTER_EVENT = "on";
 static constexpr const char *FUNCTION_UNREGISTER_EVENT = "off";
 static constexpr const char *FUNCTION_ADD_PRINTER = "addPrinters";
@@ -43,6 +39,8 @@ static constexpr const char *FUNCTION_UPDATE_PRINTER = "updatePrinters";
 static constexpr const char *FUNCTION_UPDATE_PRINTER_STATE = "updatePrinterState";
 static constexpr const char *FUNCTION_UPDATE_JOB_STATE = "updatePrintJobState";
 static constexpr const char *FUNCTION_UPDATE_EXTENSION_INFO = "updateExtensionInfo";
+static constexpr const char *FUNCTION_QUERY_ALL_PRINTJOB = "queryAllPrintJobs";
+static constexpr const char *FUNCTION_QUERY_PRINTJOB_BYID = "queryPrintJobById";
 
 static constexpr const char *PROPERTY_PRINTER_ADD = "PRINTER_ADDED";
 static constexpr const char *PROPERTY_PRINTER_REMOVE = "PRINTER_REMOVED";
@@ -190,36 +188,6 @@ static void NapiCreateEnum(napi_env env)
     napi_create_int32(env, static_cast<int32_t>(E_PRINT_FILE_IO), &err_file_io);
 }
 
-static int32_t InitMemberFunction(int32_t &startIndex)
-{
-    napi_property_descriptor desc[] = {
-        PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
-        PRINT_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
-        PRINT_NAPI_METHOD(FUNCTION_START_DISCOVERY, NapiInnerPrint::StartDiscovery),
-        PRINT_NAPI_METHOD(FUNCTION_STOP_DISCOVERY, NapiInnerPrint::StopDiscovery),
-        PRINT_NAPI_METHOD(FUNCTION_CONNECT_PRINT, NapiInnerPrint::ConnectPrinter),
-        PRINT_NAPI_METHOD(FUNCTION_DISCONNECT_PRINT, NapiInnerPrint::DisconnectPrinter),
-        PRINT_NAPI_METHOD(FUNCTION_START_PRINT, NapiInnerPrint::StartPrintJob),
-        PRINT_NAPI_METHOD(FUNCTION_CANCEL_PRINT, NapiInnerPrint::CancelPrintJob),
-        PRINT_NAPI_METHOD(FUNCTION_REQUEST_PREVIEW, NapiInnerPrint::RequestPreview),
-        PRINT_NAPI_METHOD(FUNCTION_QUERY_CAPABILITY, NapiInnerPrint::QueryCapability),
-        PRINT_NAPI_METHOD(FUNCTION_QUERY_ALL_PRINTJOB, NapiInnerPrint::QueryAllPrintJob),
-        PRINT_NAPI_METHOD(FUNCTION_REGISTER_EVENT, NapiInnerPrint::On),
-        PRINT_NAPI_METHOD(FUNCTION_UNREGISTER_EVENT, NapiInnerPrint::Off),
-        PRINT_NAPI_METHOD(FUNCTION_ADD_PRINTER, NapiPrintExt::AddPrinters),
-        PRINT_NAPI_METHOD(FUNCTION_REMOVE_PRINTER, NapiPrintExt::RemovePrinters),
-        PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER, NapiPrintExt::UpdatePrinters),
-        PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_STATE, NapiPrintExt::UpdatePrinterState),
-        PRINT_NAPI_METHOD(FUNCTION_UPDATE_JOB_STATE, NapiPrintExt::UpdatePrintJobState),
-        PRINT_NAPI_METHOD(FUNCTION_UPDATE_EXTENSION_INFO, NapiPrintExt::UpdateExtensionInfo),
-    };
-    int descSize = sizeof(desc) / sizeof(napi_property_descriptor);
-    for (int32_t index = 0; index < descSize; index++) {
-        clzDesc[index] = desc[index];
-    }
-    return descSize;
-}
-
 static napi_value Init(napi_env env, napi_value exports)
 {
     NapiCreateEnum(env);
@@ -266,13 +234,30 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTER, err_invalid_printer),
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTJOB, err_invalid_printjob),
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_FILE_IO, err_file_io),
+
+        PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
+        PRINT_NAPI_METHOD(FUNCTION_START_DISCOVERY, NapiInnerPrint::StartDiscovery),
+        PRINT_NAPI_METHOD(FUNCTION_STOP_DISCOVERY, NapiInnerPrint::StopDiscovery),
+        PRINT_NAPI_METHOD(FUNCTION_CONNECT_PRINT, NapiInnerPrint::ConnectPrinter),
+        PRINT_NAPI_METHOD(FUNCTION_DISCONNECT_PRINT, NapiInnerPrint::DisconnectPrinter),
+        PRINT_NAPI_METHOD(FUNCTION_START_PRINT, NapiInnerPrint::StartPrintJob),
+        PRINT_NAPI_METHOD(FUNCTION_CANCEL_PRINT, NapiInnerPrint::CancelPrintJob),
+        PRINT_NAPI_METHOD(FUNCTION_REQUEST_PREVIEW, NapiInnerPrint::RequestPreview),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_CAPABILITY, NapiInnerPrint::QueryCapability),
+        PRINT_NAPI_METHOD(FUNCTION_REGISTER_EVENT, NapiInnerPrint::On),
+        PRINT_NAPI_METHOD(FUNCTION_UNREGISTER_EVENT, NapiInnerPrint::Off),
+        PRINT_NAPI_METHOD(FUNCTION_ADD_PRINTER, NapiPrintExt::AddPrinters),
+        PRINT_NAPI_METHOD(FUNCTION_REMOVE_PRINTER, NapiPrintExt::RemovePrinters),
+        PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER, NapiPrintExt::UpdatePrinters),
+        PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_STATE, NapiPrintExt::UpdatePrinterState),
+        PRINT_NAPI_METHOD(FUNCTION_UPDATE_JOB_STATE, NapiPrintExt::UpdatePrintJobState),
+        PRINT_NAPI_METHOD(FUNCTION_UPDATE_EXTENSION_INFO, NapiPrintExt::UpdateExtensionInfo),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_ALL_PRINTJOB, NapiInnerPrint::QueryAllPrintJob),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_PRINTJOB_BYID, NapiInnerPrint::QueryPrintJobById),
     };
-    int descSize = sizeof(desc) / sizeof(napi_property_descriptor);
-    for (int32_t index = 0; index < descSize; index++) {
-        clzDesc[index] = desc[index];
-    }
-    descSize += InitMemberFunction(descSize);
-    napi_status status = napi_define_properties(env, exports, descSize, desc);
+
+    napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
     PRINT_HILOGD("init print module %{public}d", status);
     return exports;
 }

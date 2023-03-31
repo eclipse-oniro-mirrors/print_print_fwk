@@ -50,6 +50,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[CMD_UNREG_EXT_CB] = &PrintServiceStub::OnUnregisterAllExtCallback;
     cmdMap_[CMD_LOAD_EXT] = &PrintServiceStub::OnLoadExtSuccess;
     cmdMap_[CMD_QUERYALLPRINTJOB] = &PrintServiceStub::OnQueryAllPrintJob;
+    cmdMap_[CMD_QUERYPRINTJOBBYID] = &PrintServiceStub::OnQueryPrintJobById;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -77,17 +78,20 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGD("PrintServiceStub::OnStartPrint in");
     std::vector<std::string> fileList;
-    data.ReadStringVector(&fileList);
+    std::vector<uint32_t> fdList;
     std::string result = "";
-    PRINT_HILOGD("Current file is %{public}zd", fileList.size());
-    for (auto file : fileList) {
-        PRINT_HILOGD("file is %{private}s", file.c_str());
+
+    if (data.ReadBool()) {
+        data.ReadStringVector(&fileList);
+        PRINT_HILOGD("Current file is %{public}zd", fileList.size());
+        for (auto file : fileList) {
+            PRINT_HILOGD("file is %{private}s", file.c_str());
+        }
     }
 
-    std::vector<uint32_t> fdList;
     if (data.ReadBool()) {
-        for (int32_t index = 0; index < static_cast<int32_t>(fileList.size()); index++) {
-            int32_t fd = data.ReadFileDescriptor();
+        for (int32_t index = 0; index < data.ReadInt32(); index++) {
+            uint32_t fd = data.ReadFileDescriptor();
             PRINT_HILOGD("fdList[%{public}d] = %{public}d", index, fd);
             fdList.emplace_back(fd);
         }
@@ -332,6 +336,18 @@ bool PrintServiceStub::OnQueryAllPrintJob(MessageParcel &data, MessageParcel &re
         }
     }
     PRINT_HILOGD("PrintServiceStub::OnQueryAllPrintJob out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnQueryPrintJobById(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnQueryPrintJobById in");
+    PrintJob printJob;
+    std::string printJobId = data.ReadString();
+    int32_t ret = QueryPrintJobById(printJobId, printJob);
+    reply.WriteInt32(ret);
+    printJob.Marshalling(reply);
+    PRINT_HILOGD("PrintServiceStub::OnQueryPrintJobById out");
     return ret == E_PRINT_NONE;
 }
 

@@ -35,12 +35,22 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
     for (auto file : fileList) {
         PRINT_HILOGD("file is %{private}s", file.c_str());
     }
-    data.WriteStringVector(fileList);
-    PRINT_HILOGD("PrintServiceProxy StartPrint started.");
-    data.WriteBool(fdList.size() > 0);
-    for (auto fd : fdList) {
-        data.WriteFileDescriptor(fd);
+
+    data.WriteBool(fileList.size() > 0);
+    if (!fileList.empty()) {
+        data.WriteStringVector(fileList);
     }
+
+    data.WriteBool(fdList.size() > 0);
+    if (!fdList.empty()) {
+        data.WriteInt32(fdList.size());
+        for (auto fd : fdList) {
+            data.WriteFileDescriptor(fd);
+        }
+    }
+
+    PRINT_HILOGD("PrintServiceProxy StartPrint started.");
+
     int32_t ret = Remote()->SendRequest(CMD_START_PRINT, data, reply, option);
     if (ret != ERR_NONE) {
         PRINT_HILOGE("StartPrint, rpc error code = %{public}d", ret);
@@ -399,9 +409,29 @@ int32_t PrintServiceProxy::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &printJob)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(printJobId);
+    PRINT_HILOGD("PrintServiceProxy QueryAllPrintJob started.");
+    int32_t ret = Remote()->SendRequest(CMD_QUERYPRINTJOBBYID, data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("QueryPrintJobById, rpc error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    ret = reply.ReadInt32();
+    auto printJobPtr = PrintJob::Unmarshalling(reply);
+    printJob = *printJobPtr;
+    PRINT_HILOGD("[QueryPrintJobById] printerId : %{public}s", printJob.GetJobId().c_str());
+    PRINT_HILOGD("PrintServiceProxy QueryPrintJobById succeeded.");
+    return ret;
+}
+
 int32_t PrintServiceProxy::On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener)
 {
-    PRINT_HILOGD("PrintServiceProxy::On listener=%{public}p", listener.GetRefPtr());
     if (listener == nullptr) {
         PRINT_HILOGE("listener is nullptr");
         return E_PRINT_INVALID_PARAMETER;

@@ -79,7 +79,6 @@ config("ability_public_config") {
     "//base/global/resource_management/interfaces/inner_api/include",
     "${ability_runtime_path}/interfaces/kits/native/ability/native/continuation/kits",
     "${ability_runtime_kits_path}/fmskit/native/include",
-    "//third_party/jsoncpp/include",
     "//third_party/json/include",
   ]
 }

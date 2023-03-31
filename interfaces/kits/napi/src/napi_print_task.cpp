@@ -46,7 +46,7 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
         bool isFileArray = false;
 
         napi_is_array(env, argv[0], &isFileArray);
-        PRINT_ASSERT_BASE(env, isFileArray == true, "files isn't list", napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, isFileArray == true, "parameter type isn't list", napi_invalid_arg);
 
         uint32_t len = 0;
         PRINT_CALL_BASE(env, napi_get_array_length(env, argv[0], &len), napi_invalid_arg);
@@ -162,7 +162,7 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
         fclose(file);
         return true;
     }
-    if (fileName.find("datashare://") == 0) {
+    if (fileName.find("datashare://") == 0 || fileName.find("fd://") == 0) {
         return true;
     }
     PRINT_HILOGE("invalid file name");

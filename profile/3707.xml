@@ -20,7 +20,7 @@
         <run-on-create>false</run-on-create>
         <distributed>false</distributed>
         <dump-level>1</dump-level>
-        <spooler-bundle>com.example.spoolerdemo</spooler-bundle>
-        <spooler-ability>com.example.spoolerdemo.MainAbility</spooler-ability>
+        <spooler-bundle>com.ohos.spooler</spooler-bundle>
+        <spooler-ability>MainAbility</spooler-ability>
     </systemability>
 </info>

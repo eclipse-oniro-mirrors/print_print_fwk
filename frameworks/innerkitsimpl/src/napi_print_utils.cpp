@@ -15,8 +15,6 @@
 
 #include "napi_print_utils.h"
 
-#include <fcntl.h>
-
 #include "ability.h"
 #include "napi_base_context.h"
 #include "print_log.h"
@@ -392,5 +390,16 @@ bool NapiPrintUtils::IsPathValid(const std::string &filePath)
         return false;
     }
     return true;
+}
+
+uint32_t NapiPrintUtils::GetIdFromFdPath(const std::string &fdPath)
+{
+    std::string fd_str = fdPath.substr(fdPath.rfind('/') + 1, fdPath.length());
+    std::stringstream getStrStream(fd_str);
+    uint32_t fd;
+    if (!(getStrStream >> fd)) {
+        PRINT_HILOGD("failed to convert to uint32");
+    }
+    return fd;
 }
 } // namespace OHOS::Print

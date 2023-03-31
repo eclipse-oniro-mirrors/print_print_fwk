@@ -52,9 +52,9 @@ static const std::string SPOOLER_BUNDLE_BEGIN_TAG = "<spooler-bundle>";
 static const std::string SPOOLER_BUNDLE_END_TAG = "</spooler-bundle>";
 static const std::string SPOOLER_ABILITY_BEGIN_TAG = "<spooler-ability>";
 static const std::string SPOOLER_ABILITY_END_TAG = "</spooler-ability>";
-static const std::string DEFAULT_SPOOLER_ABILITY_NAME = ".MainAbility";
-static const std::string SPOOLER_BUNDLE_NAME = "com.example.spoolerdemo";
-static const std::string SPOOLER_ABILITY_NAME = "com.example.spoolerdemo.MainAbility";
+static const std::string DEFAULT_SPOOLER_ABILITY_NAME = "MainAbility";
+static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
+static const std::string SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
 static const std::string LAUNCH_PARAMETER_FILE_LIST = "fileList";
 static const std::string LAUNCH_PARAMETER_FD_LIST = "fdList";
@@ -95,7 +95,6 @@ sptr<PrintServiceAbility> PrintServiceAbility::GetInstance()
         std::lock_guard<std::mutex> autoLock(instanceLock_);
         if (instance_ == nullptr) {
             instance_ = new PrintServiceAbility(PRINT_SERVICE_ID, true);
-            PRINT_HILOGE("PrintServiceAbility instance_ create,addr=%{public}p", instance_.GetRefPtr());
         }
     }
     return instance_;
@@ -233,8 +232,8 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     }
     PRINT_HILOGD("PrintServiceAbility StartPrint started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (fileList.empty()) {
-        PRINT_HILOGE("to be printed file list is empty");
+    if (fileList.empty() && fdList.empty()) {
+        PRINT_HILOGE("to be printed filelist and fdlist are empty");
         return E_PRINT_INVALID_PARAMETER;
     }
     std::string jobId = GetPrintJobId();
@@ -494,6 +493,32 @@ int32_t PrintServiceAbility::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
         printJobs.emplace_back(*printJob.second);
     }
     PRINT_HILOGE("QueryAllPrintJob End.");
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::QueryPrintJobById(std::string &printJobId, PrintJob &printJob)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGD("QueryPrintJobById started.");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
+    if (printJobList_.empty()) {
+        PRINT_HILOGD("printJobList is empty!");
+        return E_PRINT_INVALID_PRINTJOB;
+    }
+
+    auto jobIt = printJobList_.find(printJobId);
+    if (jobIt == printJobList_.end()) {
+        PRINT_HILOGD("no print job exists");
+        return E_PRINT_INVALID_PRINTJOB;
+    } else {
+        printJob = *jobIt->second;
+    }
+    PRINT_HILOGE("QueryPrintJobById End.");
     return E_PRINT_NONE;
 }
 
