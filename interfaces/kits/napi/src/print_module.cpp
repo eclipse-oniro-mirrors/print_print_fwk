@@ -31,6 +31,8 @@ static constexpr const char *FUNCTION_START_PRINT = "startPrintJob";
 static constexpr const char *FUNCTION_CANCEL_PRINT = "cancelPrintJob";
 static constexpr const char *FUNCTION_REQUEST_PREVIEW = "requestPrintPreview";
 static constexpr const char *FUNCTION_QUERY_CAPABILITY = "queryPrinterCapability";
+static constexpr const char *FUNCTION_QUERY_ALL_PRINTJOB = "queryAllPrintJobs";
+static constexpr const char *FUNCTION_QUERY_PRINTJOB_BYID = "queryPrintJobById";
 static constexpr const char *FUNCTION_REGISTER_EVENT = "on";
 static constexpr const char *FUNCTION_UNREGISTER_EVENT = "off";
 static constexpr const char *FUNCTION_ADD_PRINTER = "addPrinters";
@@ -39,8 +41,6 @@ static constexpr const char *FUNCTION_UPDATE_PRINTER = "updatePrinters";
 static constexpr const char *FUNCTION_UPDATE_PRINTER_STATE = "updatePrinterState";
 static constexpr const char *FUNCTION_UPDATE_JOB_STATE = "updatePrintJobState";
 static constexpr const char *FUNCTION_UPDATE_EXTENSION_INFO = "updateExtensionInfo";
-static constexpr const char *FUNCTION_QUERY_ALL_PRINTJOB = "queryAllPrintJobs";
-static constexpr const char *FUNCTION_QUERY_PRINTJOB_BYID = "queryPrintJobById";
 
 static constexpr const char *PROPERTY_PRINTER_ADD = "PRINTER_ADDED";
 static constexpr const char *PROPERTY_PRINTER_REMOVE = "PRINTER_REMOVED";
@@ -245,6 +245,8 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_CANCEL_PRINT, NapiInnerPrint::CancelPrintJob),
         PRINT_NAPI_METHOD(FUNCTION_REQUEST_PREVIEW, NapiInnerPrint::RequestPreview),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_CAPABILITY, NapiInnerPrint::QueryCapability),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_ALL_PRINTJOB, NapiInnerPrint::QueryAllPrintJob),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_PRINTJOB_BYID, NapiInnerPrint::QueryPrintJobById),
         PRINT_NAPI_METHOD(FUNCTION_REGISTER_EVENT, NapiInnerPrint::On),
         PRINT_NAPI_METHOD(FUNCTION_UNREGISTER_EVENT, NapiInnerPrint::Off),
         PRINT_NAPI_METHOD(FUNCTION_ADD_PRINTER, NapiPrintExt::AddPrinters),
@@ -253,8 +255,6 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_STATE, NapiPrintExt::UpdatePrinterState),
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_JOB_STATE, NapiPrintExt::UpdatePrintJobState),
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_EXTENSION_INFO, NapiPrintExt::UpdateExtensionInfo),
-        PRINT_NAPI_METHOD(FUNCTION_QUERY_ALL_PRINTJOB, NapiInnerPrint::QueryAllPrintJob),
-        PRINT_NAPI_METHOD(FUNCTION_QUERY_PRINTJOB_BYID, NapiInnerPrint::QueryPrintJobById),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
