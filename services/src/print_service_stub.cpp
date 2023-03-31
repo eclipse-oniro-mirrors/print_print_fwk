@@ -80,23 +80,21 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     std::vector<std::string> fileList;
     std::vector<uint32_t> fdList;
     std::string result = "";
-    bool isFileList = data.ReadBool();
-    if (isFileList) {
+
+    if (data.ReadBool()) {
         data.ReadStringVector(&fileList);
         PRINT_HILOGD("Current file is %{public}zd", fileList.size());
         for (auto file : fileList) {
             PRINT_HILOGD("file is %{private}s", file.c_str());
         }
+    }
 
-        if (data.ReadBool()) {
-            for (int32_t index = 0; index < static_cast<int32_t>(fileList.size()); index++) {
-                int32_t fd = data.ReadFileDescriptor();
-                PRINT_HILOGD("fdList[%{public}d] = %{public}d", index, fd);
-                fdList.emplace_back(fd);
-            }
+    if (data.ReadBool()) {
+        for (int32_t index = 0; index < data.ReadInt32(); index++) {
+            uint32_t fd = data.ReadFileDescriptor();
+            PRINT_HILOGD("fdList[%{public}d] = %{public}d", index, fd);
+            fdList.emplace_back(fd);
         }
-    } else {
-        data.ReadUInt32Vector(&fdList);
     }
 
     int32_t ret = StartPrint(fileList, fdList, result);

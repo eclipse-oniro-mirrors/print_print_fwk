@@ -35,21 +35,22 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
     for (auto file : fileList) {
         PRINT_HILOGD("file is %{private}s", file.c_str());
     }
-    bool isFileList = true;
-    if (fileList.empty())
-        isFileList = false;
-    data.WriteBool(isFileList);
-    if (isFileList) {
+
+    data.WriteBool(fileList.size() > 0);
+    if (!fileList.empty()) {
         data.WriteStringVector(fileList);
-        data.WriteBool(fdList.size() > 0);
+    }
+
+    data.WriteBool(fdList.size() > 0);
+    if (!fdList.empty()) {
+        data.WriteInt32(fdList.size());
         for (auto fd : fdList) {
             data.WriteFileDescriptor(fd);
+        }
     }
-    } else {
-        data.WriteUInt32Vector(fdList);
-    }
+
     PRINT_HILOGD("PrintServiceProxy StartPrint started.");
-   
+
     int32_t ret = Remote()->SendRequest(CMD_START_PRINT, data, reply, option);
     if (ret != ERR_NONE) {
         PRINT_HILOGE("StartPrint, rpc error code = %{public}d", ret);
