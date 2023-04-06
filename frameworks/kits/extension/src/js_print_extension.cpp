@@ -120,8 +120,6 @@ bool JsPrintExtension::InitContextObj(JsRuntime &jsRuntime, NativeObject *&extOb
         return false;
     }
 
-    PRINT_HILOGD("Set Print extension context pointer: %{public}p", context.get());
-
     nativeObj->SetNativePointer(
         new std::weak_ptr<AbilityRuntime::Context>(context),
         [](NativeEngine *, void *data, void *) {
