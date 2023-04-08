@@ -155,7 +155,7 @@ napi_value PrintTask::Off(napi_env env, napi_callback_info info)
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("context->result = %{public}d, result = %{public}p", context->result, result);
+        PRINT_HILOGD("context->result = %{public}d", context->result);
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
