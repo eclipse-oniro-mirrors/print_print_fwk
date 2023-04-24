@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
+#include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_manager_client.h"
-#include <gtest/gtest.h>
 
 #include "iservice_registry.h"
 #include "napi_print_utils.h"
@@ -42,8 +42,6 @@ void PrintManagerClientTest::SetUpTestCase(void)
     std::vector<std::string> fileList = {"datashare://data/print/a.png",
         "datashare://data/print/b.png", "datashare://data/print/c.png"};
     const std::vector<uint32_t> fdList = {1, 2};
-    uint32_t state = 0;
-    uint32_t subState = 0;
 
     std::string previewResult = "1";
     std::string taskId = "1";
@@ -853,7 +851,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0026, TestSize.Level1)
     jobinfo.SetPageSize(pageSize);
     const PrintMargin margin;
     jobinfo.SetMargin(margin);
-    jobinfo.SetOption(option);
     const PrintPreviewAttribute preview;
     jobinfo.SetPreview(preview);
     uint32_t state = 0;
@@ -885,8 +882,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0027, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
     PrintJob jobinfo;
-    uint32_t state = 0;
-    uint32_t subState = 0;
 
     Testclient.StartPrint(fileList, fdList, taskId);
     Testclient.StartDiscoverPrinter(extensionList);
@@ -914,8 +909,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0028, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
     PrintJob jobinfo;
-    uint32_t state;
-    uint32_t subState;
 
     Testclient.StartPrint(fileList, fdList, taskId);
     Testclient.StartDiscoverPrinter(extensionList);
@@ -943,8 +936,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0029, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
     PrintJob jobinfo;
-    uint32_t state = 0;
-    uint32_t subState;
 
     Testclient.StartPrint(fileList, fdList, taskId);
     Testclient.StartDiscoverPrinter(extensionList);
@@ -1265,7 +1256,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0038, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
     PrintJob jobinfo;
-    std::vector<PrintJob> printJobs = {"1"};
+    std::vector<PrintJob> printJobs = {};
 
     Testclient.StartPrint(fileList, fdList, taskId);
     Testclient.StartDiscoverPrinter(extensionList);
@@ -1292,10 +1283,11 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0039, TestSize.Level1)
     std::vector<std::string> extensionList = {"3"};
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
+    std::string printJobId = "1";
 
-    PrintJob jobinfo;
+    PrintJob jobinfo, printjob;
     jobinfo.SetFdList(fdList);
-    jobinfo.SetJobId(jobId);
+    jobinfo.SetJobId(printJobId);
     jobinfo.SetPrinterId(printerId);
     jobinfo.SetJobState(1);
     jobinfo.SetSubState(1);
@@ -1314,7 +1306,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0039, TestSize.Level1)
     jobinfo.SetOption(option);
     const PrintPreviewAttribute preview;
     jobinfo.SetPreview(preview);
-    std::string printJobId = "1";
 
     Testclient.StartPrint(fileList, fdList, taskId);
     Testclient.StartDiscoverPrinter(extensionList);
@@ -1341,6 +1332,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0040, TestSize.Level1)
     std::vector<std::string> extensionList = {"3"};
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
+    std::string printJobId = "1";
     PrintJob jobinfo;
     PrintJob printjob;
 
@@ -1369,6 +1361,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0041, TestSize.Level1)
     std::vector<std::string> extensionList = {"3"};
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
+    std::string printJobId = "1";
     PrintJob jobinfo;
     PrintJob printjob;
 
