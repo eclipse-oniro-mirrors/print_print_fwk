@@ -46,7 +46,7 @@ ohos_shared_library("print_napi") {
     "src/napi_print_task.cpp",
     "src/print_async_call.cpp",
     "src/print_module.cpp",
-    "src/print_task.cpp",
+    "src/print_task.cpp"
   ]
   deps = [
     "${print_path}/frameworks/innerkitsimpl:print_client",
