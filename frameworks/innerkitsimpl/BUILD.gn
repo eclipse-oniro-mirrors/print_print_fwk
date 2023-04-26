@@ -37,6 +37,7 @@ ohos_shared_library("print_client") {
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "${print_utils_path}/include",
   ]
+
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
   sources = [
@@ -56,12 +57,14 @@ ohos_shared_library("print_client") {
     "src/print_service_proxy.cpp",
     "src/print_sync_load_callback.cpp",
     "src/printer_capability.cpp",
-    "src/printer_info.cpp",
+    "src/printer_info.cpp"
   ]
+
   deps = [
     "${arkui_path}/napi:ace_napi",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
+
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
@@ -79,8 +82,6 @@ ohos_shared_library("print_client") {
     "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]
-
-  #relative_install_dir = "module"
   install_enable = true
   subsystem_name = "print"
   part_name = "print_fwk"
