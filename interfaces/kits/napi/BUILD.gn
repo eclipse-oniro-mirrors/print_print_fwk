@@ -38,6 +38,7 @@ ohos_shared_library("print_napi") {
     "${print_utils_path}/include",
     "${print_path}/frameworks/innerkitsimpl/include",
   ]
+
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
   sources = [
@@ -48,11 +49,13 @@ ohos_shared_library("print_napi") {
     "src/print_module.cpp",
     "src/print_task.cpp"
   ]
+
   deps = [
     "${print_path}/frameworks/innerkitsimpl:print_client",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
+
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
