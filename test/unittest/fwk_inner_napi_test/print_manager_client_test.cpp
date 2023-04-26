@@ -804,7 +804,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0025, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
     PrintJob jobinfo;
-    uint32_t state;
+    uint32_t state = 0;
 
     Testclient.StartPrint(fileList, fdList, taskId);
     Testclient.StartDiscoverPrinter(extensionList);
@@ -882,6 +882,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0027, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
     PrintJob jobinfo;
+    uint32_t state = 0;
+    uint32_t subState = 0;
+    std::string jobId = "1";
 
     Testclient.StartPrint(fileList, fdList, taskId);
     Testclient.StartDiscoverPrinter(extensionList);
@@ -909,6 +912,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0028, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
     PrintJob jobinfo;
+    std::string jobId = "1";
+    uint32_t state = 0;
+    uint32_t subState = 0;
 
     Testclient.StartPrint(fileList, fdList, taskId);
     Testclient.StartDiscoverPrinter(extensionList);
@@ -936,6 +942,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0029, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
     PrintJob jobinfo;
+    std::string jobId = "1";
+    uint32_t state = 0;
+    uint32_t subState = 0;
 
     Testclient.StartPrint(fileList, fdList, taskId);
     Testclient.StartDiscoverPrinter(extensionList);

@@ -69,7 +69,7 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0002, TestSize.Level1)
 {
     std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
     PrintTask task(fileList);
-    uint32_t ret = task->Start();
+    uint32_t ret = task.Start();
     EXPECT_EQ(1, ret);
 }
 
@@ -83,7 +83,7 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0003, TestSize.Level1)
 {
     std::vector<std::string> fileList = {"a", "b", "c"};
     PrintTask task(fileList);
-    uint32_t ret = task->Start();
+    uint32_t ret = task.Start();
     EXPECT_EQ(0, ret);
 }
 
@@ -97,8 +97,8 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0004, TestSize.Level1)
 {
     std::vector<std::string> fileList = {"a", "b", "c"};
     PrintTask task(fileList);
-    uint32_t ret = task->Start();
-    task->Stop();
+    uint32_t ret = task.Start();
+    task.Stop();
     EXPECT_EQ(1, ret);
 }
 
@@ -111,7 +111,7 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0004, TestSize.Level1)
 HWTEST_F(PrintTaskTest, PrintTaskTest_0004, TestSize.Level1)
 {
     PrintTask task(fileList);
-    task->Stop();
+    task.Stop();
     EXPECT_TRUE(true);
 }
 } // namespace Print
