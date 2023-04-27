@@ -17,9 +17,7 @@ config("print_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc = [
-    "-fexceptions"
-  ]
+  cflags_cc = [ "-fexceptions" ]
 }
 ohos_shared_library("print_napi") {
   include_dirs = [
