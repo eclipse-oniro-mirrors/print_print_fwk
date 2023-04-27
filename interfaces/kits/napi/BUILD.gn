@@ -17,10 +17,7 @@ config("print_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc = [
-    "-fexceptions",
-    "--coverage",
-  ]
+  cflags_cc = [ "-fexceptions" ]
 }
 ohos_shared_library("print_napi") {
   include_dirs = [
@@ -30,7 +27,6 @@ ohos_shared_library("print_napi") {
     "//foundation/arkui/napi/interfaces/inner_api",
     "//third_party/node/src",
     "//third_party/curl/include",
-    "//third_party/mqtt/include",
     "${ability_runtime_services_path}/common/include",
     "//utils/system/safwk/native/include",
     "${ability_runtime_path}/interfaces/kits/native/appkit/app/",
