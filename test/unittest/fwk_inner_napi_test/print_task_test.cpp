@@ -55,7 +55,7 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0001, TestSize.Level1)
 {
     std::vector<std::string> fileList = {"datashare://data/print/a.png",
         "datashare://data/print/b.png", "datashare://data/print/c.png"};
-    PrintTask task(fileList);
+    OHOS::Print::PrintTask task(fileList);
     EXPECT_TRUE(true);
 }
 
@@ -96,7 +96,7 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0003, TestSize.Level1)
  */
 HWTEST_F(PrintTaskTest, PrintTaskTest_0004, TestSize.Level1)
 {
-    std::vector<std::string> fileList = {"a", "b", "c"};
+    std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
     OHOS::Print::PrintTask task(fileList);
     uint32_t ret = task.Start();
     task.Stop();
@@ -111,9 +111,9 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0004, TestSize.Level1)
  */
 HWTEST_F(PrintTaskTest, PrintTaskTest_0005, TestSize.Level1)
 {
-    std::vector<std::string> fileList = {"a", "b", "c"};
+    std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
     OHOS::Print::PrintTask task(fileList);
-    task.GetId();
+    std::string taskId = task.GetId();
     EXPECT_TRUE(true);
 }
 } // namespace Print
