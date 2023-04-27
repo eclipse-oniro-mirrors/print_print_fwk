@@ -81,12 +81,6 @@ config("ability_public_config") {
     "${ability_runtime_kits_path}/fmskit/native/include",
     "//third_party/json/include",
   ]
-
-  cflags_cc = [
-    "-fexceptions",
-    "--coverage",
-  ]
-  ldflags = [ "--coverage" ]
 }
 
 ohos_shared_library("print_extension_framework") {
@@ -104,9 +98,7 @@ ohos_shared_library("print_extension_framework") {
     "src/print_extension.cpp",
     "src/print_extension_context.cpp",
   ]
-
   configs = [ ":ability_config" ]
-
   public_configs = [
     ":ability_public_config",
     "${ability_runtime_path}/frameworks/native/ability:ability_context_public_config",
@@ -137,6 +129,7 @@ ohos_shared_library("print_extension_framework") {
     "//base/global/resource_management/frameworks/resmgr:global_resmgr",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
   ]
+
   subsystem_name = "print"
   part_name = "print_fwk"
 }

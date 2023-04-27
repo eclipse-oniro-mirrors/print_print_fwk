@@ -18,10 +18,8 @@ config("print_interfaces_kits_napi_config") {
   include_dirs = [ "include" ]
 
   cflags_cc = [
-    "-fexceptions",
-    "--coverage",
+    "-fexceptions"
   ]
-  ldflags = [ "--coverage" ]
 }
 ohos_shared_library("print_napi") {
   include_dirs = [
@@ -42,7 +40,6 @@ ohos_shared_library("print_napi") {
     "${print_utils_path}/include",
     "${print_path}/frameworks/innerkitsimpl/include",
   ]
-
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
   sources = [

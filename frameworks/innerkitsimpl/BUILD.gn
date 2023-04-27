@@ -17,11 +17,7 @@ config("print_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc = [
-    "-fexceptions",
-    "--coverage",
-  ]
-  ldflags = [ "--coverage" ]
+  cflags_cc = [ "-fexceptions" ]
 }
 ohos_shared_library("print_client") {
   include_dirs = [
@@ -41,7 +37,6 @@ ohos_shared_library("print_client") {
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "${print_utils_path}/include",
   ]
-
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
   sources = [
@@ -67,7 +62,6 @@ ohos_shared_library("print_client") {
     "${arkui_path}/napi:ace_napi",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
-
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
