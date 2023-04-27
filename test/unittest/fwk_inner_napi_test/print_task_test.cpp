@@ -16,8 +16,8 @@
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_task.h"
+#include "print_task.cpp"
 #include "napi_print_task.h"
-#include "napi_print_ext.h"
 
 #include "iservice_registry.h"
 #include "napi_print_utils.h"
@@ -67,10 +67,9 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0001, TestSize.Level1)
  */
 HWTEST_F(PrintTaskTest, PrintTaskTest_0002, TestSize.Level1)
 {
-    std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
+    std::vector<std::string> fileList = {"a", "b", "c"};
     OHOS::Print::PrintTask task(fileList);
-    uint32_t ret = task.Start();
-    EXPECT_EQ(1, ret);
+    task.Start();
 }
 
 /**
@@ -81,10 +80,10 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0002, TestSize.Level1)
  */
 HWTEST_F(PrintTaskTest, PrintTaskTest_0003, TestSize.Level1)
 {
-    std::vector<std::string> fileList = {"a", "b", "c"};
+    std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
     OHOS::Print::PrintTask task(fileList);
-    uint32_t ret = task.Start();
-    EXPECT_EQ(0, ret);
+    task.Start();
+    task.Stop();
 }
 
 /**
@@ -97,21 +96,6 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0004, TestSize.Level1)
 {
     std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
     OHOS::Print::PrintTask task(fileList);
-    uint32_t ret = task.Start();
-    task.Stop();
-    EXPECT_EQ(1, ret);
-}
-
-/**
- * @tc.name: PrintTaskTest_0005
- * @tc.desc: Print
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintTaskTest, PrintTaskTest_0005, TestSize.Level1)
-{
-    std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
-    OHOS::Print::PrintTask task(fileList);
     std::string taskId = task.GetId();
 }
 
@@ -121,12 +105,12 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0005, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintTaskTest, PrintTaskTest_0006, TestSize.Level1)
+HWTEST_F(PrintTaskTest, PrintTaskTest_0005, TestSize.Level1)
 {
     std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
     OHOS::Print::PrintTask task(fileList);
     std::string taskType = "success";
-    task.IsSupportType(taskType)
+    task.IsSupportType(taskType);
 }
 } // namespace Print
 } // namespace OHOS

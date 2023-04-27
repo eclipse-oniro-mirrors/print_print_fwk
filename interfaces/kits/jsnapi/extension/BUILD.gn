@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//arkcompiler/ets_frontend/ts2panda/ts2abc_config.gni")
+import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
 ts2abc_gen_abc("gen_print_extension_abc") {

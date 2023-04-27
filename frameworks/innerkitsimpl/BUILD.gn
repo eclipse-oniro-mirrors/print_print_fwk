@@ -37,6 +37,8 @@ ohos_shared_library("print_client") {
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "${print_utils_path}/include",
   ]
+
+  
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
   sources = [

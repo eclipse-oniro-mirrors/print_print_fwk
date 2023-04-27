@@ -53,11 +53,12 @@ void NapiPrintUtilTest::TearDown(void) {}
  */
 HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0001, TestSize.Level1)
 {
-    napi_value napiValue, int_value = nullptr;
-    napi_env env;
+    napi_value napiValue = nullptr;
+    napi_value int_value = nullptr;
+    napi_env env = nullptr;
     OHOS::Print::NapiPrintUtils::SetUint32Property(env, napiValue, "string", 1);
-    int_value = OHOS::Print::NapiPrintUtils::CreateInt32(env, 1)
-    int getInt = OHOS::Print::NapiPrintUtils::GetInt32FromValue(env, int_value);
+    int_value = OHOS::Print::NapiPrintUtils::CreateInt32(env, 1);
+    OHOS::Print::NapiPrintUtils::GetInt32FromValue(env, int_value);
 }
 } // namespace Print
 } // namespace OHOS
