@@ -111,23 +111,39 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0001, TestSize.Level1)
         "datashare://data/print/b.png", "datashare://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
+    std::string extensionId = "0";
+    std::vector<PrintExtensionInfo> extensionListEmpty = {};
     std::vector<std::string> extensionList = {"3"};
+    std::vector<std::string> printIdList;
     std::vector<PrinterInfo> printerInfos;
+    std::string previewResult;
     std::string printerId = "1";
-    PrintJob jobinfo;
+    std::string printJobId = "1";
+    PrintJob jobinfo, jobNull;
     std::string type = "1";
     sptr<IPrintCallback> listener;
-    std::string extensionId;
+    std::vector<PrintJob> printJobs;
 
     Testclient.On(taskId, type, listener);
+    Testclient.QueryAllExtension(extensionListEmpty);
     Testclient.StartPrint(fileList, fdList, taskId);
     Testclient.StartDiscoverPrinter(extensionList);
+    Testclient.StopDiscoverPrinter();
     Testclient.AddPrinters(printerInfos);
+    Testclient.UpdatePrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
-    Testclient.StopPrintJob(jobinfo);
-    Testclient.Off(taskId, type, listener);
-    Testclient.LoadExtSuccess(extensionId);
+    Testclient.UpdatePrintJobState(jobinfo.GetJobId(), 1, 1);
+    Testclient.UpdateExtensionInfo(extensionId);
+    Testclient.RequestPreview(jobinfo, previewResult);
+    Testclient.QueryAllPrintJob(printJobs);
+    Testclient.QueryPrintJobById(printJobId, jobNull);
+    Testclient.CancelPrintJob(jobinfo.GetJobId());
+    Testclient.UpdatePrinterState(jobinfo.GetJobId(), 1);
+    Testclient.DisconnectPrinter(printerId);
+    Testclient.RemovePrinters(printIdList);
+    Testclient.StopPrint(taskId);
+    Testclient.Off(taskId, type);
 }
 
 /**

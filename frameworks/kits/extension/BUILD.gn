@@ -82,7 +82,11 @@ config("ability_public_config") {
     "//third_party/json/include",
   ]
 
-  cflags_cc = [ "-fexceptions" ]
+  cflags_cc = [
+    "-fexceptions",
+    "--coverage",
+  ]
+  ldflags = [ "--coverage" ]
 }
 
 ohos_shared_library("print_extension_framework") {
@@ -101,9 +105,7 @@ ohos_shared_library("print_extension_framework") {
     "src/print_extension_context.cpp",
   ]
 
-  configs = [ 
-    ":ability_config",
-  ]
+  configs = [ ":ability_config" ]
 
   public_configs = [
     ":ability_public_config",
