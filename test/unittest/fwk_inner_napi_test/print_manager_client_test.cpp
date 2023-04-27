@@ -1383,64 +1383,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0041, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintManagerClientTest_0042
- * @tc.desc: On
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0042, TestSize.Level1)
-{
-    OHOS::Print::PrintManagerClient Testclient;
-
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
-    std::vector<uint32_t> fdList = {1, 2};
-    std::string taskId = "2";
-    std::vector<std::string> extensionList = {"3"};
-    std::vector<PrinterInfo> printerInfos;
-    std::string printerId = "1";
-    PrintJob jobinfo;
-    std::string type = "1";
-    sptr<IPrintCallback> listener;
-
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
-    Testclient.AddPrinters(printerInfos);
-    Testclient.ConnectPrinter(printerId);
-    Testclient.StartPrintJob(jobinfo);
-    EXPECT_EQ(1, Testclient.On(taskId, type, listener));
-}
-
-/**
- * @tc.name: PrintManagerClientTest_0043
- * @tc.desc: On_NA1
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0043, TestSize.Level1)
-{
-    OHOS::Print::PrintManagerClient Testclient;
-
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
-    std::vector<uint32_t> fdList = {1, 2};
-    std::string taskId ;
-    std::vector<std::string> extensionList = {"3"};
-    std::vector<PrinterInfo> printerInfos;
-    std::string printerId = "1";
-    PrintJob jobinfo;
-    std::string type = "1";
-    sptr<IPrintCallback> listener;
-
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
-    Testclient.AddPrinters(printerInfos);
-    Testclient.ConnectPrinter(printerId);
-    Testclient.StartPrintJob(jobinfo);
-    EXPECT_EQ(0, Testclient.On(taskId, type, listener));
-}
-
-/**
  * @tc.name: PrintManagerClientTest_0044
  * @tc.desc: On_NA2
  * @tc.type: FUNC

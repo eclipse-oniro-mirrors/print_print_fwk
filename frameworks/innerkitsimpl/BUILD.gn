@@ -57,7 +57,7 @@ ohos_shared_library("print_client") {
     "src/print_service_proxy.cpp",
     "src/print_sync_load_callback.cpp",
     "src/printer_capability.cpp",
-    "src/printer_info.cpp"
+    "src/printer_info.cpp",
   ]
 
   deps = [
