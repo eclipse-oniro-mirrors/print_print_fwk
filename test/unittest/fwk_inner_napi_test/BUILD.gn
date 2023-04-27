@@ -19,6 +19,7 @@ module_output_path = "print/print_fwk"
 ohos_unittest("print_fwk_inner_napi_test") {
   module_out_path = module_output_path
   include_dirs = [
+    "${cutil_path}/base/include",
     "${print_path}/frameworks/innerkitsimpl/include",
     "${print_path}/interfaces/kits/napi/include",
     "${arkui_path}/ace_engine/frameworks/base/utils",
