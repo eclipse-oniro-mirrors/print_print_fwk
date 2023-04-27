@@ -41,7 +41,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "print_resolution_test.cpp",
     "print_task_test.cpp",
     "printer_capability_test.cpp",
-    "printer_info_test.cpp"
+    "printer_info_test.cpp",
   ]
 
   deps = [
@@ -60,6 +60,8 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "//third_party/googletest:gtest_main",
     "//third_party/zlib:libz",
   ]
+
+  external_deps = [ "c_utils:utils" ]
 }
 
 group("unittest") {

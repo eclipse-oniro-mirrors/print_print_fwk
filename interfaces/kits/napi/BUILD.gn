@@ -17,16 +17,21 @@ config("print_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc = [ "-fexceptions" ]
+  cflags_cc = [
+    "-fexceptions",
+    "--coverage",
+  ]
 }
 ohos_shared_library("print_napi") {
   include_dirs = [
+    "//commonlibrary/c_utils/base/include",
     "//foundation/arkui/ace_engine/frameworks/base/utils",
     "//foundation/arkui/napi",
     "//foundation/arkui/napi/interfaces/kits",
     "//foundation/arkui/napi/interfaces/inner_api",
     "//third_party/node/src",
     "//third_party/curl/include",
+    "//third_party/mqtt/include",
     "${ability_runtime_services_path}/common/include",
     "//utils/system/safwk/native/include",
     "${ability_runtime_path}/interfaces/kits/native/appkit/app/",
@@ -37,9 +42,12 @@ ohos_shared_library("print_napi") {
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "${print_utils_path}/include",
     "${print_path}/frameworks/innerkitsimpl/include",
+    "${print_path}/interfaces/kit/napi/include",
   ]
-
-  public_configs = [ ":print_interfaces_kits_napi_config" ]
+  public_configs = [ 
+    "//commonlibrary/c_utils/base:utils_config",
+    ":print_interfaces_kits_napi_config" 
+  ]
 
   sources = [
     "src/napi_inner_print.cpp",
@@ -47,15 +55,13 @@ ohos_shared_library("print_napi") {
     "src/napi_print_task.cpp",
     "src/print_async_call.cpp",
     "src/print_module.cpp",
-    "src/print_task.cpp"
+    "src/print_task.cpp",
   ]
-
   deps = [
     "${print_path}/frameworks/innerkitsimpl:print_client",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
-
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
@@ -72,6 +78,7 @@ ohos_shared_library("print_napi") {
     "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]
+
   relative_install_dir = "module"
   subsystem_name = "print"
   part_name = "print_fwk"
