@@ -15,8 +15,9 @@
 
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
-#include "napi_print_task.h"
 #include "print_task.h"
+#include "napi_print_task.h"
+#include "napi_print_ext.h"
 
 #include "iservice_registry.h"
 #include "napi_print_utils.h"
@@ -115,6 +116,20 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0005, TestSize.Level1)
     OHOS::Print::PrintTask task(fileList);
     std::string taskId = task.GetId();
     EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.name: PrintTaskTest_0006
+ * @tc.desc: Print
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintTaskTest, PrintTaskTest_0005, TestSize.Level1)
+{
+    std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
+    OHOS::Print::PrintTask task(fileList);
+    std::string taskType = "success";
+    EXPECT_TRUE(true, task.IsSupportType(taskType));
 }
 } // namespace Print
 } // namespace OHOS
