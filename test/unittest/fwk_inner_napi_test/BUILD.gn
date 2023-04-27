@@ -19,7 +19,12 @@ module_output_path = "print/print_fwk"
 ohos_unittest("print_fwk_inner_napi_test") {
   module_out_path = module_output_path
   include_dirs = [
+    "${cutil_path}/base/include",
     "${print_path}/frameworks/innerkitsimpl/include",
+    "${print_path}/frameworks/innerkitsimpl/src",
+    "${print_path}/interfaces/kits/napi/include",
+    "${print_path}/interfaces/kits/napi/src",
+    "${print_path}/services/include",
     "${arkui_path}/ace_engine/frameworks/base/utils",
     "${arkui_path}/napi",
     "${arkui_path}/napi/interfaces/kits",
@@ -33,10 +38,13 @@ ohos_unittest("print_fwk_inner_napi_test") {
   ]
 
   sources = [
+    "napi_print_util_test.cpp",
     "print_job_test.cpp",
+    "print_manager_client_test.cpp",
     "print_margin_test.cpp",
     "print_range_test.cpp",
     "print_resolution_test.cpp",
+    "print_task_test.cpp",
     "printer_capability_test.cpp",
     "printer_info_test.cpp",
   ]
@@ -57,6 +65,8 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "//third_party/googletest:gtest_main",
     "//third_party/zlib:libz",
   ]
+
+  external_deps = [ "c_utils:utils" ]
 }
 
 group("unittest") {
