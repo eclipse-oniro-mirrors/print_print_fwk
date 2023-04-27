@@ -57,7 +57,6 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0001, TestSize.Level1)
     std::vector<std::string> fileList = {"datashare://data/print/a.png",
         "datashare://data/print/b.png", "datashare://data/print/c.png"};
     OHOS::Print::PrintTask task(fileList);
-    EXPECT_TRUE(true);
 }
 
 /**
@@ -71,8 +70,7 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0002, TestSize.Level1)
     std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
     OHOS::Print::PrintTask task(fileList);
     uint32_t ret = task.Start();
-    uint32_t myRet = 1;
-    EXPECT_EQ(myRet, ret);
+    EXPECT_EQ(1, ret);
 }
 
 /**
@@ -115,7 +113,6 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0005, TestSize.Level1)
     std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
     OHOS::Print::PrintTask task(fileList);
     std::string taskId = task.GetId();
-    EXPECT_TRUE(true);
 }
 
 /**
@@ -124,12 +121,12 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0005, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintTaskTest, PrintTaskTest_0005, TestSize.Level1)
+HWTEST_F(PrintTaskTest, PrintTaskTest_0006, TestSize.Level1)
 {
     std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
     OHOS::Print::PrintTask task(fileList);
     std::string taskType = "success";
-    EXPECT_TRUE(true, task.IsSupportType(taskType));
+    task.IsSupportType(taskType)
 }
 } // namespace Print
 } // namespace OHOS

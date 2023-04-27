@@ -21,7 +21,11 @@ ohos_unittest("print_fwk_inner_napi_test") {
   include_dirs = [
     "${cutil_path}/base/include",
     "${print_path}/frameworks/innerkitsimpl/include",
+    "${print_path}/frameworks/innerkitsimpl/src",
     "${print_path}/interfaces/kits/napi/include",
+    "${print_path}/interfaces/kits/napi/src",
+    "${print_path}/interfaces/kits/napi/include",
+    "${print_path}/services/include",
     "${arkui_path}/ace_engine/frameworks/base/utils",
     "${arkui_path}/napi",
     "${arkui_path}/napi/interfaces/kits",
@@ -35,6 +39,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
   ]
 
   sources = [
+    "napi_print_util_test.cpp",
     "print_job_test.cpp",
     "print_manager_client_test.cpp",
     "print_margin_test.cpp",
