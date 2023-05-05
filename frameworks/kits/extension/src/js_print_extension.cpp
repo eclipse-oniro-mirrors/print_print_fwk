@@ -47,7 +47,6 @@ JsPrintExtension *JsPrintExtension::Create(const std::unique_ptr<Runtime> &runti
 
 JsPrintExtension::JsPrintExtension(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime),
     extensionId_(""), hasDestroyed_(false) {}
-
 JsPrintExtension::~JsPrintExtension() 
 {
     jsRuntime_.FreeNativeReference(std::move(jsObj_));
