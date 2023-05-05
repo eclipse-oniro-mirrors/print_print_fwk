@@ -826,7 +826,7 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
             printerJobMap_[printerId].erase(jobId);
             queuedJobList_.erase(jobIt);
         }
-        if (queuedJobList_.find(printerId) == queuedJobList_.end()) {
+        if (printerJobMap_[printerId].empty()) {
             PRINT_HILOGD("no print job exists, destroy extension");
             DestroyExtension(printerId);
         }
