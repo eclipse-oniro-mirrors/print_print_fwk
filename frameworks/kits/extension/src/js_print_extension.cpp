@@ -47,10 +47,7 @@ JsPrintExtension *JsPrintExtension::Create(const std::unique_ptr<Runtime> &runti
 
 JsPrintExtension::JsPrintExtension(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime),
     extensionId_(""), hasDestroyed_(false) {}
-JsPrintExtension::~JsPrintExtension() 
-{
-    jsRuntime_.FreeNativeReference(std::move(jsObj_));
-}
+JsPrintExtension::~JsPrintExtension() = default;
 
 void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
     const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
