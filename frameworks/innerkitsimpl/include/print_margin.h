@@ -50,7 +50,10 @@ public:
 
     void Dump();
 
+#ifndef TDD_ENABLE
 private:
+#endif
+
     void SetTop(uint32_t top);
 
     void SetBottom(uint32_t bottom);

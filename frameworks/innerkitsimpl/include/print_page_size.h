@@ -179,7 +179,10 @@ public:
 
     void Dump();
 
+#ifndef TDD_ENABLE
 private:
+#endif
+
     void SetId(const std::string &id);
 
     void SetName(const std::string &name);

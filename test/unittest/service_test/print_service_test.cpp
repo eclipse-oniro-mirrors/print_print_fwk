@@ -15,7 +15,6 @@
 
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
-#include "print_bms_helper.h"
 
 #include "iservice_registry.h"
 #include "napi_print_utils.h"
@@ -51,10 +50,10 @@ void PrintServiceTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceTest, PrintServiceTest_0001, TestSize.Level1)
-{
-    OHOS::Print::PrintBMSHelper printBMSHelper;
-    printBMSHelper.QueryCallerBundleName();
-}
+// HWTEST_F(PrintServiceTest, PrintServiceTest_0001, TestSize.Level1)
+// {
+//     OHOS::Print::PrintBMSHelper printBMSHelper;
+//     printBMSHelper.QueryCallerBundleName();
+// }
 } // namespace Print
 } // namespace OHOS

@@ -70,6 +70,10 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0002, TestSize.Level1)
     std::vector<std::string> fileList = {"a", "b", "c"};
     OHOS::Print::PrintTask task(fileList);
     task.Start();
+    task.Stop();
+    std::string taskId = task.GetId();
+    std::string taskType = "success";
+    task.IsSupportType(taskType);
 }
 
 /**
@@ -84,33 +88,6 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0003, TestSize.Level1)
     OHOS::Print::PrintTask task(fileList);
     task.Start();
     task.Stop();
-}
-
-/**
- * @tc.name: PrintTaskTest_0004
- * @tc.desc: Print
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintTaskTest, PrintTaskTest_0004, TestSize.Level1)
-{
-    std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
-    OHOS::Print::PrintTask task(fileList);
-    std::string taskId = task.GetId();
-}
-
-/**
- * @tc.name: PrintTaskTest_0006
- * @tc.desc: Print
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintTaskTest, PrintTaskTest_0005, TestSize.Level1)
-{
-    std::vector<std::string> fileList = {"fd://1", "fd://2", "fd://3"};
-    OHOS::Print::PrintTask task(fileList);
-    std::string taskType = "success";
-    task.IsSupportType(taskType);
 }
 } // namespace Print
 } // namespace OHOS

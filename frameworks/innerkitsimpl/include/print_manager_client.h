@@ -77,7 +77,10 @@ private:
     bool LoadServer();
     sptr<IPrintService> GetPrintServiceProxy();
 
+#ifndef TDD_ENABLE
 private:
+#endif
+
     static std::mutex instanceLock_;
     static sptr<PrintManagerClient> instance_;
     sptr<IPrintService> printServiceProxy_;
