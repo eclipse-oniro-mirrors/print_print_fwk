@@ -15,13 +15,13 @@
 
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
-#include "print_extension_info.h"
+#include "print_page_size.h"
 
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Print {
-class PrintExtensionInfoTest : public testing::Test {
+class PrintPageSizeTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -29,34 +29,26 @@ public:
     void TearDown();
 };
 
-void PrintExtensionInfoTest::SetUpTestCase(void) {}
+void PrintPageSizeTest::SetUpTestCase(void) {}
 
-void PrintExtensionInfoTest::TearDownTestCase(void) {}
+void PrintPageSizeTest::TearDownTestCase(void) {}
 
-void PrintExtensionInfoTest::SetUp(void) {}
+void PrintPageSizeTest::SetUp(void) {}
 
-void PrintExtensionInfoTest::TearDown(void) {}
+void PrintPageSizeTest::TearDown(void) {}
 
 /**
- * @tc.name: PrintExtInfoTest_0001
+ * @tc.name: PrintPageSizeTest_0001
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintExtensionInfoTest, PrintExtInfoTest_0001, TestSize.Level1)
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0001, TestSize.Level1)
 {
-    OHOS::Print::PrintExtensionInfo info;
-    OHOS::Print::PrintExtensionInfo info_ = info;
-    napi_env env;
-    info.SetVendorName("vendorName");
-    info.SetExtensionId("extensionId:123");
-    info.GetExtensionId();
-    info.GetVendorIcon();
-    info.GetVendorId();
-    info.GetVendorName();
-    info.GetVersion();
-    info.ToJsObject(env);
-    info.Dump();
+    OHOS::Print::PrintPageSize printpageSize;
+    BuildPageSizeMap();
+    OHOS::Print::PrintPageSize(printpageSize) printpageSize_;
+    OHOS::Print::PageSizeId sizeId = ISO_A0;
 }
 } // namespace Print
 } // namespace OHOS
