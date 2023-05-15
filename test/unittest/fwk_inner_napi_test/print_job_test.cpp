@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_job.h"
@@ -47,6 +46,8 @@ void PrintJobTest::TearDown(void) {}
 HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
+    std::vector<uint32_t> fdList = {1, 2};
+    std::vector<uint32_t> getFdList;
     job.SetFdList(fdList);
     job.GetFdList(getFdList);
     EXPECT_EQ(1, getFdList[0]);
@@ -722,22 +723,23 @@ HWTEST_F(PrintJobTest, PrintJobTest_0050, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0050
+ * @tc.name: PrintJobTest_0051
  * @tc.desc: Verify the UpdateParams function
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0050, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0051, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    OHOS::Print::PrintJob(job) jobInfo;
+    OHOS::Print::PrintJob(job);
     OHOS::Print::PrintJob jobValue = job;
-    PrintPageSize pagesize;
+    PrintPageSize pagesize, getPagesize;
+    napi_env env;
     job.SetIsSequential(true);
     job.GetIsSequential();
     job.SetPageSize(pagesize);
-    job.GetPageSize();
-    job.ToJsObject();
+    job.GetPageSize(getPagesize);
+    job.ToJsObject(env);
     job.Dump();
 }
 } // namespace Print
