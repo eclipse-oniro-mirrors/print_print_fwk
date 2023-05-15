@@ -15,6 +15,8 @@
 
 #ifndef PRINT_PRINT_JOB_H
 #define PRINT_PRINT_JOB_H
+#define TDD_ENABLE 1 
+
 #include <map>
 
 #include "iremote_broker.h"
@@ -114,7 +116,9 @@ public:
 
     void Dump();
 
+#ifndef TDD_ENABLE
 private:
+#endif
     bool ReadFromParcel(Parcel &parcel);
     bool CreateFdList(napi_env env, napi_value &jsPrintJob) const;
     bool CreatePageRange(napi_env env, napi_value &jsPrintJob) const;
@@ -125,7 +129,9 @@ private:
     static bool ValidateProperty(napi_env env, napi_value object);
     void ReadParcelFD(Parcel &parcel);
 
+#ifndef TDD_ENABLE
 private:
+#endif
     std::vector<uint32_t> fdList_;
     std::string jobId_;
     std::string printerId_;

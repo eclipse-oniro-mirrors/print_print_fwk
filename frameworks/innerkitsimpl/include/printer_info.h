@@ -15,6 +15,7 @@
 
 #ifndef PRINTER_INFO_H
 #define PRINTER_INFO_H
+#define TDD_ENABLE 1 
 
 #include "napi/native_api.h"
 #include "parcel.h"
@@ -69,12 +70,16 @@ public:
 
     void Dump();
 
+#ifndef TDD_ENABLE
 private:
+#endif
     bool ReadFromParcel(Parcel &parcel);
 
     static bool ValidateProperty(napi_env env, napi_value object);
 
+#ifndef TDD_ENABLE
 private:
+#endif
     std::string printerId_;
 
     std::string printerName_;

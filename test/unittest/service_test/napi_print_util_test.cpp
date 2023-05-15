@@ -60,5 +60,56 @@ HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0001, TestSize.Level1)
     int_value = OHOS::Print::NapiPrintUtils::CreateInt32(env, 1);
     OHOS::Print::NapiPrintUtils::GetInt32FromValue(env, int_value);
 }
+
+/**
+ * @tc.name: NapiPrintUtilTest_0002
+ * @tc.desc: Setint32Property
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0002, TestSize.Level1)
+{
+    napi_value napiValue = nullptr;
+    napi_value int_value = nullptr;
+    napi_env env = nullptr;
+    OHOS::Print::NapiPrintUtils::SetInt32Property(env, napiValue, "string", 2);
+    OHOS::Print::NapiPrintUtils::SetUint32Property(env, napiValue, "string", 3);
+    int_value = OHOS::Print::NapiPrintUtils::CreateUint32(env, 1);
+    OHOS::Print::NapiPrintUtils::GetUint32FromValue(env, int_value);
+    OHOS::Print::NapiPrintUtils::GetUint32Property(env, int_value, "string");
+}
+
+/**
+ * @tc.name: NapiPrintUtilTest_0003
+ * @tc.desc: SetStringPropertyUtf8
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0003, TestSize.Level1)
+{
+    napi_value napiValue = nullptr;
+    napi_value int_value = nullptr;
+    napi_env env = nullptr;
+    OHOS::Print::NapiPrintUtils::SetStringPropertyUtf8(env, napiValue, "string", "001");
+    int_value = OHOS::Print::NapiPrintUtils::CreateStringUtf8(env, "002");
+    OHOS::Print::NapiPrintUtils::GetStringFromValueUtf8(env, int_value);
+    OHOS::Print::NapiPrintUtils::GetStringPropertyUtf8(env, int_value, "string");
+}
+
+/**
+ * @tc.name: NapiPrintUtilTest_0004
+ * @tc.desc: SetBooleanProperty
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0004, TestSize.Level1)
+{
+    napi_value napiValue = nullptr;
+    napi_value int_value = nullptr;
+    napi_env env = nullptr;
+    int_value = OHOS::Print::NapiPrintUtils::CreateObject(env);
+    OHOS::Print::NapiPrintUtils::SetBooleanProperty(env, napiValue, "string", 0);
+    OHOS::Print::NapiPrintUtils::GetBooleanProperty(env, int_value, "string");
+}
 } // namespace Print
 } // namespace OHOS

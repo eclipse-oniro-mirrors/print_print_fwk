@@ -44,16 +44,5 @@ void PrintServiceTest::SetUp(void) {}
 
 void PrintServiceTest::TearDown(void) {}
 
-/**
- * @tc.name: PrintServiceTest_0001
- * @tc.desc: QueryAllExtension
- * @tc.type: FUNC
- * @tc.require:
- */
-// HWTEST_F(PrintServiceTest, PrintServiceTest_0001, TestSize.Level1)
-// {
-//     OHOS::Print::PrintBMSHelper printBMSHelper;
-//     printBMSHelper.QueryCallerBundleName();
-// }
 } // namespace Print
 } // namespace OHOS

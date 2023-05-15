@@ -34,6 +34,7 @@ static constexpr const char *PARAM_JOB_DUPLEXMODE = "duplexMode";
 static constexpr const char *PARAM_JOB_MARGIN = "margin";
 static constexpr const char *PARAM_JOB_PREVIEW = "preview";
 static constexpr const char *PARAM_JOB_OPTION = "option";
+static const int PRINT_FILE_MAX_COUNT = 1000;
 
 PrintJob::PrintJob()
     : jobId_(""), printerId_(""), jobState_(PRINT_JOB_PREPARED),
@@ -287,6 +288,13 @@ void PrintJob::ReadParcelFD(Parcel &parcel)
 {
     uint32_t fdSize = parcel.ReadUint32();
     fdList_.clear();
+    PRINT_HILOGD("fdSize: %{public}d", fdSize);
+    // frzzTest fdSize may be to large
+    if (fdSize > PRINT_FILE_MAX_COUNT) {
+        PRINT_HILOGW("fdSize is bigger than mast print files number, return");
+        return;
+    }
+
     auto msgParcel = static_cast<MessageParcel*>(&parcel);
     for (uint32_t index = 0; index < fdSize; index++) {
         auto fd = msgParcel->ReadFileDescriptor();

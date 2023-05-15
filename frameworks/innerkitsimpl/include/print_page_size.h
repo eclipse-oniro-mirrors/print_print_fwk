@@ -15,6 +15,7 @@
 
 #ifndef PRINT_PAGESIZE_H
 #define PRINT_PAGESIZE_H
+#define TDD_ENABLE 1
 
 #include "napi/native_api.h"
 #include "parcel.h"
@@ -182,7 +183,6 @@ public:
 #ifndef TDD_ENABLE
 private:
 #endif
-
     void SetId(const std::string &id);
 
     void SetName(const std::string &name);
@@ -195,7 +195,9 @@ private:
 
     static bool ValidateProperty(napi_env env, napi_value object);
 
+#ifndef TDD_ENABLE
 private:
+#endif
     std::string id_;
     std::string name_;
     uint32_t width_;

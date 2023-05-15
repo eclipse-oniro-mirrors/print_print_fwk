@@ -14,7 +14,7 @@
  */
 #ifndef PRINT_PREVIEW_ATTRIBUTE_H
 #define PRINT_PREVIEW_ATTRIBUTE_H
-#define TDD_ENABLE = 1;
+#define TDD_ENABLE 1 
 
 #include "napi/native_api.h"
 #include "parcel.h"
@@ -50,7 +50,6 @@ public:
 #ifndef TDD_ENABLE
 private:
 #endif
-
     void SetResult(uint32_t result);
 
     void SetPreviewRange(const PrintRange &previewRange);

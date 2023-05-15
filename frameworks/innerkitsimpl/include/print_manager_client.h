@@ -15,6 +15,7 @@
 
 #ifndef PRINT_MANAGER_CLIENT_H
 #define PRINT_MANAGER_CLIENT_H
+#define TDD_ENABLE 1
 
 #include <condition_variable>
 #include <map>
@@ -73,14 +74,15 @@ public:
     void LoadServerSuccess();
     void LoadServerFail();
 
+#ifndef TDD_ENABLE
 private:
+#endif
     bool LoadServer();
     sptr<IPrintService> GetPrintServiceProxy();
 
 #ifndef TDD_ENABLE
 private:
 #endif
-
     static std::mutex instanceLock_;
     static sptr<PrintManagerClient> instance_;
     sptr<IPrintService> printServiceProxy_;

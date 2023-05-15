@@ -15,6 +15,7 @@
 
 #ifndef PRINT_RANGE_H
 #define PRINT_RANGE_H
+#define TDD_ENABLE 1 
 
 #include "napi/native_api.h"
 #include "parcel.h"
@@ -48,7 +49,9 @@ public:
 
     void Dump();
 
+#ifndef TDD_ENABLE
 private:
+#endif
     void SetStartPage(uint32_t startPage);
 
     void SetEndPage(uint32_t endPage);
@@ -59,7 +62,9 @@ private:
 
     static bool ValidateProperty(napi_env env, napi_value object);
 
+#ifndef TDD_ENABLE
 private:
+#endif
     bool hasStartPage_;
     uint32_t startPage_;
 
