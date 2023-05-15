@@ -53,11 +53,11 @@ void PrintManagerClientTest::TearDown(void) {}
  */
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0001, TestSize.Level1)
 {
-    OHOS::Print::PrintManagerClient Testclient; 
+    OHOS::Print::PrintManagerClient Testclient;
     std::vector<std::string> fileList = {"datashare://data/print/a.png",
         "datashare://data/print/b.png", "datashare://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
-    std::string taskId = "2"; 
+    std::string taskId = "2";
     PrintExtensionInfo printExtensionInfo;
     printExtensionInfo.SetExtensionId("1");
     printExtensionInfo.SetVendorIcon(1);
@@ -65,7 +65,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0001, TestSize.Level1)
     printExtensionInfo.SetExtensionId("1");
     printExtensionInfo.SetVendorId("1");
     std::vector<PrintExtensionInfo> extensionInfos;
-    extensionInfos.emplace_back(printExtensionInfo); 
+    extensionInfos.emplace_back(printExtensionInfo);
     Testclient.StartPrint(fileList, fdList, taskId);
     Testclient.QueryAllExtension(extensionInfos);
 }
