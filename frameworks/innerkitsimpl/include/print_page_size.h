@@ -17,9 +17,9 @@
 #define PRINT_PAGESIZE_H
 #define TDD_ENABLE 1
 
+#include <map>
 #include "napi/native_api.h"
 #include "parcel.h"
-#include <map>
 
 namespace OHOS::Print {
 enum PageSizeId {

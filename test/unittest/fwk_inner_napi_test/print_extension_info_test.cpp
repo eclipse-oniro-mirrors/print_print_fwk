@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
+#include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_extension_info.h"
-#include <gtest/gtest.h>
 
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Print {
-class PrinterInfoTest : public testing::Test {
+class PrintExtensionInfoTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);

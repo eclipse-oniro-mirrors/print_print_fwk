@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
+#include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_job.h"
 #include "print_page_size.h"
-#include <gtest/gtest.h>
 
 using namespace testing::ext;
 
@@ -265,6 +265,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0017, TestSize.Level1)
     job.SetJobState(4);
     job.SetSubState(2);
     EXPECT_EQ(2, job.GetSubState());
+}
 
 /**
  * @tc.name: PrintJobTest_0018

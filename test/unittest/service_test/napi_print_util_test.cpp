@@ -200,5 +200,5 @@ HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0009, TestSize.Level1)
     OHOS::Print::NapiPrintUtils::DecodeExtensionCid(cid, extensionId, callbackId);
     OHOS::Print::NapiPrintUtils::DecodeExtensionCid(cid, extensionId_err, callbackId);
 }
-}// namespace Print
+} // namespace Print
 } // namespace OHOS

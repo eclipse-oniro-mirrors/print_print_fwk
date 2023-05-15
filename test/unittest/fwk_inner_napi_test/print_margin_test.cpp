@@ -133,8 +133,16 @@ HWTEST_F(PrintMarginTest, PrintMarginTest_007, TestSize.Level1)
 HWTEST_F(PrintMarginTest, PrintMarginTest_008, TestSize.Level1)
 {
     OHOS::Print::PrintMargin margin;
+    napi_env env = nullptr;
     margin.Reset();
     EXPECT_EQ(0, margin.GetRight());
+    OHOS::Print::PrintMargin(margin) margin_;
+    margin.SetTop(1);
+    margin.SetLeft(2);
+    margin.SetRight(3);
+    margin.SetBottom(4);
+    margin.ToJsObject(env);
+    margin.Dump();
 }
 } // namespace Print
 } // namespace OHOS
