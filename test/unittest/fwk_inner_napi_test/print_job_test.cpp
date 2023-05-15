@@ -15,6 +15,7 @@
 
 #include "napi/native_api.h"
 #include "print_job.h"
+#include "print_page_size.h"
 #include <gtest/gtest.h>
 
 using namespace testing::ext;
@@ -46,8 +47,6 @@ void PrintJobTest::TearDown(void) {}
 HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    std::vector<uint32_t> fdList = {1, 2};
-    std::vector<uint32_t> getFdList;
     job.SetFdList(fdList);
     job.GetFdList(getFdList);
     EXPECT_EQ(1, getFdList[0]);
@@ -64,8 +63,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1)
     OHOS::Print::PrintJob job;
     std::vector<uint32_t> fdList = {1, 2};
     std::vector<uint32_t> getFdList;
-    job.SetFdList(fdList);
-    job.GetFdList(getFdList);
     EXPECT_EQ(2, getFdList[1]);
 }
 
@@ -214,7 +211,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0012, TestSize.Level1)
 HWTEST_F(PrintJobTest, PrintJobTest_0013, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    job.SetJobState(1);
     EXPECT_EQ(1, job.GetJobState());
 }
 
@@ -269,7 +265,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0017, TestSize.Level1)
     job.SetJobState(4);
     job.SetSubState(2);
     EXPECT_EQ(2, job.GetSubState());
-}
 
 /**
  * @tc.name: PrintJobTest_0018
@@ -724,6 +719,25 @@ HWTEST_F(PrintJobTest, PrintJobTest_0050, TestSize.Level1)
     job.UpdateParams(jobInfo);
     EXPECT_EQ(17, job.GetSubState());
 }
+
+/**
+ * @tc.name: PrintJobTest_0050
+ * @tc.desc: Verify the UpdateParams function
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_0050, TestSize.Level1)
+{
+    OHOS::Print::PrintJob job;
+    OHOS::Print::PrintJob(job) jobInfo;
+    OHOS::Print::PrintJob jobValue = job;
+    PrintPageSize pagesize;
+    job.SetIsSequential(true);
+    job.GetIsSequential();
+    job.SetPageSize(pagesize);
+    job.GetPageSize();
+    job.ToJsObject();
+    job.Dump();
+}
 } // namespace Print
 } // namespace OHOS
-

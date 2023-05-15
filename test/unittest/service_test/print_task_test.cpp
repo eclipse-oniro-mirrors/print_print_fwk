@@ -18,6 +18,7 @@
 #include "print_task.h"
 #include "print_task.cpp"
 #include "napi_print_task.h"
+#include "napi_print_utils.h"
 
 #include "iservice_registry.h"
 #include "napi_print_utils.h"
@@ -72,6 +73,7 @@ HWTEST_F(PrintTaskTest, PrintTaskTest_0002, TestSize.Level1)
     task.Start();
     task.Stop();
     std::string taskId = task.GetId();
+    OHOS::Print::NapiPrintUtils::GetTaskEventId(taskId, "success");
     std::string taskType = "success";
     task.IsSupportType(taskType);
 }

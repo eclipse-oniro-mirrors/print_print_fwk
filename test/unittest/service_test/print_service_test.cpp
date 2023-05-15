@@ -43,6 +43,5 @@ void PrintServiceTest::TearDownTestCase(void) {}
 void PrintServiceTest::SetUp(void) {}
 
 void PrintServiceTest::TearDown(void) {}
-
 } // namespace Print
 } // namespace OHOS
