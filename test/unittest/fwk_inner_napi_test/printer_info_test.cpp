@@ -374,7 +374,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0026, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     OHOS::Print::PrinterCapability capability, getCapabillity;
-    napi_env env;
+    napi_env env = nullptr;
     info.SetCapability(capability);
     info.GetCapability(getCapabillity);
     EXPECT_EQ(0, getCapabillity.GetDuplexMode());

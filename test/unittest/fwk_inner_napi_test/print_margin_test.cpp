@@ -136,7 +136,7 @@ HWTEST_F(PrintMarginTest, PrintMarginTest_008, TestSize.Level1)
     napi_env env = nullptr;
     margin.Reset();
     EXPECT_EQ(0, margin.GetRight());
-    OHOS::Print::PrintMargin(margin) margin_;
+    OHOS::Print::PrintMargin(margin_);
     margin.SetTop(1);
     margin.SetLeft(2);
     margin.SetRight(3);
