@@ -47,7 +47,7 @@ HWTEST_F(PrintExtensionInfoTest, PrintExtInfoTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintExtensionInfo info;
     OHOS::Print::PrintExtensionInfo info_ = info;
-    napi_env env;
+    napi_env env = nullptr;
     info.SetVendorName("vendorName");
     info.SetExtensionId("extensionId:123");
     info.GetExtensionId();

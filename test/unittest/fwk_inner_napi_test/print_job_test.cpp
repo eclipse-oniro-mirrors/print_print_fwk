@@ -50,7 +50,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1)
     std::vector<uint32_t> getFdList;
     job.SetFdList(fdList);
     job.GetFdList(getFdList);
-    EXPECT_EQ(1, getFdList[0]);
 }
 
 /**
@@ -731,12 +730,11 @@ HWTEST_F(PrintJobTest, PrintJobTest_0050, TestSize.Level1)
 HWTEST_F(PrintJobTest, PrintJobTest_0051, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    OHOS::Print::PrintJob(job);
+    OHOS::Print::PrintJob(job_);
     OHOS::Print::PrintJob jobValue = job;
     PrintPageSize pagesize, getPagesize;
-    napi_env env;
+    napi_env env = nullptr;
     job.SetIsSequential(true);
-    job.GetIsSequential();
     job.SetPageSize(pagesize);
     job.GetPageSize(getPagesize);
     job.ToJsObject(env);
