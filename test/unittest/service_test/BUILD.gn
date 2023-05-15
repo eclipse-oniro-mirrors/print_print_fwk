@@ -31,9 +31,6 @@ ohos_unittest("print_service_test") {
     "${arkui_path}/napi/interfaces/inner_api",
     "//third_party/node/src",
     "//third_party/curl/include",
-    "//utils/system/safwk/native/include",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/Isamgr",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "${print_utils_path}/include",
   ]
 

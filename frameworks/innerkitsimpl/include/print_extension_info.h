@@ -15,7 +15,7 @@
 
 #ifndef PRINT_EXTENSION_INFO_H
 #define PRINT_EXTENSION_INFO_H
-#define TDD_ENABLE 1 
+#define TDD_ENABLE 1
 
 #include "napi/native_api.h"
 #include "parcel.h"

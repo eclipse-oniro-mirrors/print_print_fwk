@@ -14,7 +14,7 @@
  */
 #ifndef PRINTER_CAPABILITY_H
 #define PRINTER_CAPABILITY_H
-#define TDD_ENABLE 1 
+#define TDD_ENABLE 1
 
 
 #include "iremote_broker.h"
