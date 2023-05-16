@@ -46,6 +46,11 @@ void PrintResolutionTest::TearDown(void) {}
 HWTEST_F(PrintResolutionTest, PrintResolutionTest_001, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
+    OHOS::Print::PrintResolution(resolution_);
+    OHOS::Print::PrintResolution resolution_value = resolution;
+    napi_env env = nullptr;
+    resolution.ToJsObject(env);
+    resolution.Dump();
     resolution.Reset();
     EXPECT_EQ("", resolution.GetId());
 }

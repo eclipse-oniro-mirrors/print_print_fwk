@@ -14,6 +14,7 @@
  */
 
 #include "napi/native_api.h"
+#include "print_preview_attribute.h"
 #include "print_range.h"
 #include <gtest/gtest.h>
 
@@ -21,7 +22,7 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Print {
-class PrintRangeTest : public testing::Test {
+class PrintPreviewAttributeTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -29,46 +30,28 @@ public:
     void TearDown();
 };
 
-void PrintRangeTest::SetUpTestCase(void) {}
+void PrintPreviewAttributeTest::SetUpTestCase(void) {}
 
-void PrintRangeTest::TearDownTestCase(void) {}
+void PrintPreviewAttributeTest::TearDownTestCase(void) {}
 
-void PrintRangeTest::SetUp(void) {}
+void PrintPreviewAttributeTest::SetUp(void) {}
 
-void PrintRangeTest::TearDown(void) {}
+void PrintPreviewAttributeTest::TearDown(void) {}
 
 /**
- * @tc.name: PrintRangeTest_001
+ * @tc.name: PrintPreviewAttributeTest_0001
  * @tc.desc: Verify the StartPag function.
  * @tc.type: FUNC
  * @tc.require: AR00000000 SR00000000
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_001, TestSize.Level1)
+HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0001, TestSize.Level1)
 {
+    OHOS::Print::PrintPreviewAttribute attribute;
+    OHOS::Print::PrintPreviewAttribute(attribute_);
     OHOS::Print::PrintRange range;
-    OHOS::Print::PrintRange(range_);
-    std::vector<uint32_t> pages = {0, 1};
-    std::vector<uint32_t> getPages;
-    napi_env env = nullptr;
-    range.SetStartPage(0);
-    range.SetEndPage(1);
-    range.SetPages(pages);
-    range.GetPages(getPages);
-    range.ToJsObject(env);
-    range.Dump();
-    EXPECT_EQ(0, range.GetStartPage());
-}
-
-/**
- * @tc.name: PrintRangeTest_002
- * @tc.desc: Verify the EndPage function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintRangeTest, PrintRangeTest_002, TestSize.Level1)
-{
-    OHOS::Print::PrintRange range;
-    EXPECT_EQ(0, range.GetEndPage());
+    attribute.SetResult(0);
+    attribute.GetPreviewRange(range);
+    attribute.Dump();
 }
 } // namespace Print
 } // namespace OHOS

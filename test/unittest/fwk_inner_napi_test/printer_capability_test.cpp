@@ -15,6 +15,7 @@
 
 #include "napi/native_api.h"
 #include "printer_capability.h"
+#include "print_margin.h"
 #include <gtest/gtest.h>
 
 using namespace testing::ext;
@@ -46,6 +47,16 @@ void PrinterCapabilityTest::TearDown(void) {}
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_001, TestSize.Level1)
 {
     OHOS::Print::PrinterCapability capability;
+    OHOS::Print::PrinterCapability(capability_);
+    OHOS::Print::PrintMargin margin, getMargin;
+    napi_env env = nullptr;
+    std::vector<PrintPageSize> pagesize, getPagesize;
+    capability.SetMinMargin(margin);
+    capability.SetPageSize(pagesize);
+    capability.GetMinMargin(getMargin);
+    capability.GetPageSize(getPagesize);
+    capability.ToJsObject(env);
+    capability.Dump();
     capability.Reset();
     EXPECT_EQ(0, capability.GetColorMode());
 }
