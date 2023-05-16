@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_extension_info.h"
+#include "print_log.h"
 
 using namespace testing::ext;
 
@@ -50,11 +51,11 @@ HWTEST_F(PrintExtensionInfoTest, PrintExtInfoTest_0001, TestSize.Level1)
     napi_env env = nullptr;
     info.SetVendorName("vendorName");
     info.SetExtensionId("extensionId:123");
-    PRINT_HILOGD("%{public}d", info.GetExtensionId());
+    PRINT_HILOGD("%{public}s", info.GetExtensionId().c_str());
     PRINT_HILOGD("%{public}d", info.GetVendorIcon());
-    PRINT_HILOGD("%{public}d", info.GetVendorId());
-    PRINT_HILOGD("%{public}d", info.GetVendorName());
-    PRINT_HILOGD("%{public}d", info.GetVersion());
+    PRINT_HILOGD("%{public}s", info.GetVendorId().c_str());
+    PRINT_HILOGD("%{public}s", info.GetVendorName().c_str());
+    PRINT_HILOGD("%{public}s", info.GetVersion().c_str());
     info.ToJsObject(env);
     info.Dump();
 }
