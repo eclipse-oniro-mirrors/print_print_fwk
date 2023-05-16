@@ -14,6 +14,8 @@
  */
 #ifndef PRINTER_CAPABILITY_H
 #define PRINTER_CAPABILITY_H
+#define TDD_ENABLE 1
+
 
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
@@ -61,7 +63,9 @@ public:
 
     void Dump();
 
+#ifndef TDD_ENABLE
 private:
+#endif
     void SetMinMargin(const PrintMargin &minMargin);
 
     void SetPageSize(const std::vector<PrintPageSize> &pageSizeList);
@@ -82,7 +86,9 @@ private:
 
     static bool ValidateProperty(napi_env env, napi_value object);
 
+#ifndef TDD_ENABLE
 private:
+#endif
     uint32_t colorMode_;
     uint32_t duplexMode_;
     std::vector<PrintPageSize> pageSizeList_;

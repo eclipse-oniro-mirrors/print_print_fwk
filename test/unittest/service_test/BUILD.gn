@@ -16,7 +16,7 @@ import("//build/test.gni")
 
 module_output_path = "print/print_fwk"
 
-ohos_unittest("print_fwk_inner_napi_test") {
+ohos_unittest("print_service_test") {
   module_out_path = module_output_path
   include_dirs = [
     "${cutil_path}/base/include",
@@ -31,20 +31,14 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "${arkui_path}/napi/interfaces/inner_api",
     "//third_party/node/src",
     "//third_party/curl/include",
-    "//utils/system/safwk/native/include",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/Isamgr",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "${print_utils_path}/include",
   ]
 
   sources = [
-    "print_extension_info_test.cpp",
-    "print_job_test.cpp",
-    "print_margin_test.cpp",
-    "print_range_test.cpp",
-    "print_resolution_test.cpp",
-    "printer_capability_test.cpp",
-    "printer_info_test.cpp",
+    "napi_print_util_test.cpp",
+    "print_manager_client_test.cpp",
+    "print_service_test.cpp",
+    "print_task_test.cpp",
   ]
 
   deps = [
@@ -72,5 +66,5 @@ group("unittest") {
 
   deps = []
 
-  deps += [ ":print_fwk_inner_napi_test" ]
+  deps += [ ":print_service_test" ]
 }

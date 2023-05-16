@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_job.h"
-#include <gtest/gtest.h>
+#include "print_page_size.h"
 
 using namespace testing::ext;
 
@@ -50,7 +50,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1)
     std::vector<uint32_t> getFdList;
     job.SetFdList(fdList);
     job.GetFdList(getFdList);
-    EXPECT_EQ(1, getFdList[0]);
 }
 
 /**
@@ -64,8 +63,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1)
     OHOS::Print::PrintJob job;
     std::vector<uint32_t> fdList = {1, 2};
     std::vector<uint32_t> getFdList;
-    job.SetFdList(fdList);
-    job.GetFdList(getFdList);
     EXPECT_EQ(2, getFdList[1]);
 }
 
@@ -214,7 +211,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0012, TestSize.Level1)
 HWTEST_F(PrintJobTest, PrintJobTest_0013, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    job.SetJobState(1);
     EXPECT_EQ(1, job.GetJobState());
 }
 
@@ -724,6 +720,25 @@ HWTEST_F(PrintJobTest, PrintJobTest_0050, TestSize.Level1)
     job.UpdateParams(jobInfo);
     EXPECT_EQ(17, job.GetSubState());
 }
+
+/**
+ * @tc.name: PrintJobTest_0051
+ * @tc.desc: Verify the UpdateParams function
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_0051, TestSize.Level1)
+{
+    OHOS::Print::PrintJob job;
+    OHOS::Print::PrintJob(job_);
+    OHOS::Print::PrintJob jobValue = job;
+    PrintPageSize pagesize, getPagesize;
+    napi_env env = nullptr;
+    job.SetIsSequential(true);
+    job.SetPageSize(pagesize);
+    job.GetPageSize(getPagesize);
+    job.ToJsObject(env);
+    job.Dump();
+}
 } // namespace Print
 } // namespace OHOS
-

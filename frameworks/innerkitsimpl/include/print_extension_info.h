@@ -15,6 +15,7 @@
 
 #ifndef PRINT_EXTENSION_INFO_H
 #define PRINT_EXTENSION_INFO_H
+#define TDD_ENABLE 1
 
 #include "napi/native_api.h"
 #include "parcel.h"
@@ -59,10 +60,15 @@ public:
 
     void Dump();
 
+#ifndef TDD_ENABLE
 private:
+#endif
+
     bool ReadFromParcel(Parcel &parcel);
 
+#ifndef TDD_ENABLE
 private:
+#endif
     std::string extensionId_;
     std::string vendorId_;
     std::string vendorName_;

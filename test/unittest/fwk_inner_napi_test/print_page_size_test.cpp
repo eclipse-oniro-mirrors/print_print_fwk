@@ -15,21 +15,13 @@
 
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
-#include "print_bms_helper.h"
-
-#include "iservice_registry.h"
-#include "napi_print_utils.h"
-#include "print_constant.h"
-#include "print_extension_callback_stub.h"
-#include "print_log.h"
-#include "print_sync_load_callback.h"
-#include "system_ability_definition.h"
+#include "print_page_size.h"
 
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Print {
-class PrintServiceTest : public testing::Test {
+class PrintPageSizeTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -37,24 +29,26 @@ public:
     void TearDown();
 };
 
-void PrintServiceTest::SetUpTestCase(void) {}
+void PrintPageSizeTest::SetUpTestCase(void) {}
 
-void PrintServiceTest::TearDownTestCase(void) {}
+void PrintPageSizeTest::TearDownTestCase(void) {}
 
-void PrintServiceTest::SetUp(void) {}
+void PrintPageSizeTest::SetUp(void) {}
 
-void PrintServiceTest::TearDown(void) {}
+void PrintPageSizeTest::TearDown(void) {}
 
 /**
- * @tc.name: PrintServiceTest_0001
- * @tc.desc: QueryAllExtension
+ * @tc.name: PrintPageSizeTest_0001
+ * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceTest, PrintServiceTest_0001, TestSize.Level1)
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0001, TestSize.Level1)
 {
-    OHOS::Print::PrintBMSHelper printBMSHelper;
-    printBMSHelper.QueryCallerBundleName();
+    OHOS::Print::PrintPageSize printpageSize;
+    BuildPageSizeMap();
+    OHOS::Print::PrintPageSize(printpageSize) printpageSize_;
+    OHOS::Print::PageSizeId sizeId = ISO_A0;
 }
 } // namespace Print
 } // namespace OHOS

@@ -15,6 +15,7 @@
 
 #ifndef PRINT_MARGIN_H
 #define PRINT_MARGIN_H
+#define TDD_ENABLE 1
 
 #include "napi/native_api.h"
 #include "parcel.h"
@@ -50,7 +51,9 @@ public:
 
     void Dump();
 
+#ifndef TDD_ENABLE
 private:
+#endif
     void SetTop(uint32_t top);
 
     void SetBottom(uint32_t bottom);
@@ -63,7 +66,9 @@ private:
 
     static bool ValidateProperty(napi_env env, napi_value object);
 
+#ifndef TDD_ENABLE
 private:
+#endif
     bool hasTop_;
     uint32_t top_;
 

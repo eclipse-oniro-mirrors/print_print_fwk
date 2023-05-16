@@ -15,21 +15,14 @@
 
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
-#include "print_manager_client.h"
-
-#include "iservice_registry.h"
-#include "napi_print_utils.h"
-#include "print_constant.h"
-#include "print_extension_callback_stub.h"
+#include "print_extension_info.h"
 #include "print_log.h"
-#include "print_sync_load_callback.h"
-#include "system_ability_definition.h"
 
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Print {
-class NapiPrintUtilTest : public testing::Test {
+class PrintExtensionInfoTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -37,28 +30,34 @@ public:
     void TearDown();
 };
 
-void NapiPrintUtilTest::SetUpTestCase(void) {}
+void PrintExtensionInfoTest::SetUpTestCase(void) {}
 
-void NapiPrintUtilTest::TearDownTestCase(void) {}
+void PrintExtensionInfoTest::TearDownTestCase(void) {}
 
-void NapiPrintUtilTest::SetUp(void) {}
+void PrintExtensionInfoTest::SetUp(void) {}
 
-void NapiPrintUtilTest::TearDown(void) {}
+void PrintExtensionInfoTest::TearDown(void) {}
 
 /**
- * @tc.name: NapiPrintUtilTest_0001
- * @tc.desc: SetUint32Property
+ * @tc.name: PrintExtInfoTest_0001
+ * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0001, TestSize.Level1)
+HWTEST_F(PrintExtensionInfoTest, PrintExtInfoTest_0001, TestSize.Level1)
 {
-    napi_value napiValue = nullptr;
-    napi_value int_value = nullptr;
+    OHOS::Print::PrintExtensionInfo info;
+    OHOS::Print::PrintExtensionInfo info_ = info;
     napi_env env = nullptr;
-    OHOS::Print::NapiPrintUtils::SetUint32Property(env, napiValue, "string", 1);
-    int_value = OHOS::Print::NapiPrintUtils::CreateInt32(env, 1);
-    OHOS::Print::NapiPrintUtils::GetInt32FromValue(env, int_value);
+    info.SetVendorName("vendorName");
+    info.SetExtensionId("extensionId:123");
+    PRINT_HILOGD("%{public}s", info.GetExtensionId().c_str());
+    PRINT_HILOGD("%{public}d", info.GetVendorIcon());
+    PRINT_HILOGD("%{public}s", info.GetVendorId().c_str());
+    PRINT_HILOGD("%{public}s", info.GetVendorName().c_str());
+    PRINT_HILOGD("%{public}s", info.GetVersion().c_str());
+    info.ToJsObject(env);
+    info.Dump();
 }
 } // namespace Print
 } // namespace OHOS

@@ -14,6 +14,7 @@
  */
 #ifndef PRINT_PREVIEW_ATTRIBUTE_H
 #define PRINT_PREVIEW_ATTRIBUTE_H
+#define TDD_ENABLE 1
 
 #include "napi/native_api.h"
 #include "parcel.h"
@@ -46,7 +47,9 @@ public:
 
     void Dump();
 
+#ifndef TDD_ENABLE
 private:
+#endif
     void SetResult(uint32_t result);
 
     void SetPreviewRange(const PrintRange &previewRange);
@@ -55,7 +58,9 @@ private:
 
     static bool ValidateProperty(napi_env env, napi_value object);
 
+#ifndef TDD_ENABLE
 private:
+#endif
     bool hasResult_;
     uint32_t result_;
     PrintRange previewRange_;
