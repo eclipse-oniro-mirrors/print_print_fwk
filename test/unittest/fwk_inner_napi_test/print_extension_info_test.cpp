@@ -50,11 +50,11 @@ HWTEST_F(PrintExtensionInfoTest, PrintExtInfoTest_0001, TestSize.Level1)
     napi_env env = nullptr;
     info.SetVendorName("vendorName");
     info.SetExtensionId("extensionId:123");
-    info.GetExtensionId();
-    info.GetVendorIcon();
-    info.GetVendorId();
-    info.GetVendorName();
-    info.GetVersion();
+    PRINT_HILOGD("%{public}d", info.GetExtensionId());
+    PRINT_HILOGD("%{public}d", info.GetVendorIcon());
+    PRINT_HILOGD("%{public}d", info.GetVendorId());
+    PRINT_HILOGD("%{public}d", info.GetVendorName());
+    PRINT_HILOGD("%{public}d", info.GetVersion());
     info.ToJsObject(env);
     info.Dump();
 }
