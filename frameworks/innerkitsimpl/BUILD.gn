@@ -83,5 +83,6 @@ ohos_shared_library("print_client") {
   #relative_install_dir = "module"
   install_enable = true
   subsystem_name = "print"
+  innerapi_tags = [ "platformsdk" ]
   part_name = "print_fwk"
 }
