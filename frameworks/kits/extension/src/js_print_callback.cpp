@@ -34,7 +34,7 @@ namespace AbilityRuntime {
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Print;
 
-JsPrintCallback::JsPrintCallback(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime), jsWorker_(nullptr) {}  
+JsPrintCallback::JsPrintCallback(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime), jsWorker_(nullptr) {}
 
 uv_loop_s* JsPrintCallback::GetJsLoop(JsRuntime &jsRuntime)
 {
