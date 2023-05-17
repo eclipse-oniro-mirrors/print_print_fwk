@@ -32,7 +32,10 @@ class JsRuntime;
 class JsPrintCallback : public std::enable_shared_from_this<JsPrintCallback> {
 public:
     explicit JsPrintCallback(JsRuntime &jsRutime);
-    ~JsPrintCallback() = default;
+    ~JsPrintCallback()
+    {
+        jsRuntime_.FreeNativeReference(std::move(jsObj_));
+    }
     NativeValue *Exec(NativeValue *jsObj, const std::string &name, NativeValue *const *argv = nullptr, size_t argc = 0,
         bool isSync = true);
 
