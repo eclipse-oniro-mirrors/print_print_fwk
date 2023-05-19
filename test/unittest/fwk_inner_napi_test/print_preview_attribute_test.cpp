@@ -48,10 +48,17 @@ HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0001, TestSize.Lev
 {
     OHOS::Print::PrintPreviewAttribute attribute;
     OHOS::Print::PrintPreviewAttribute(attribute_);
-    OHOS::Print::PrintRange range;
+    OHOS::Print::PrintRange range, getRange;
+    napi_env env = nullptr;
+    napi_value val = nullptr;
     attribute.SetResult(0);
-    attribute.GetPreviewRange(range);
+    attribute.SetPreviewRange(range);
+    attribute.GetPreviewRange(getRange);
     attribute.Dump();
+    attribute.ToJsObject(env);
+    OHOS::Print::PrintPreviewAttribute::ValidateProperty(env, val);
+    OHOS::Print::PrintPreviewAttribute::BuildFromJs(env, val);
+    OHOS::Print::PrintPreviewAttribute attributeVal = attribute;
 }
 } // namespace Print
 } // namespace OHOS

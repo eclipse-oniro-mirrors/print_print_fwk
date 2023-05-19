@@ -53,6 +53,7 @@ HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0001, TestSize.Level1)
     PAGE_SIZE_ID id = "id";
     OHOS::Print::PrintPageSize(id, name, 1, 1);
     napi_env env = nullptr;
+    napi_value val = nullptr;
     printpageSize.Reset();
     printpageSize.SetId("string");
     printpageSize.SetHeight(1);
@@ -63,6 +64,9 @@ HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0001, TestSize.Level1)
     PRINT_HILOGD("%{public}d", printpageSize.GetHeight());
     printpageSize.ToJsObject(env);
     printpageSize.Dump();
+    OHOS::Print::PrintPageSize::ValidateProperty(env, val);
+    OHOS::Print::PrintPageSize::BuildFromJs(env, val);
+    OHOS::Print::PrintPageSize pageSizeValue = printpageSize;
 }
 } // namespace Print
 } // namespace OHOS

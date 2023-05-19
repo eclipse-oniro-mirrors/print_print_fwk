@@ -50,12 +50,16 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_001, TestSize.Level1)
     std::vector<uint32_t> pages = {0, 1};
     std::vector<uint32_t> getPages;
     napi_env env = nullptr;
+    napi_value val = nullptr;
     range.SetStartPage(0);
     range.SetEndPage(1);
     range.SetPages(pages);
     range.GetPages(getPages);
     range.ToJsObject(env);
     range.Dump();
+    OHOS::Print::PrintRange range_val = range;
+    OHOS::Print::PrintRange::ValidateProperty(env, val);
+    OHOS::Print::PrintRange::BuildFromJs(env, val);
     EXPECT_EQ(0, range.GetStartPage());
 }
 
