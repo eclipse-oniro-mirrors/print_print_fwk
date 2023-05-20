@@ -375,11 +375,15 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0026, TestSize.Level1)
     OHOS::Print::PrinterInfo info;
     OHOS::Print::PrinterCapability capability, getCapabillity;
     napi_env env = nullptr;
+    napi_value val = nullptr;
+    capability.SetColorMode(1);
     info.SetCapability(capability);
     info.GetCapability(getCapabillity);
     EXPECT_EQ(0, getCapabillity.GetDuplexMode());
     OHOS::Print::PrinterInfo(info_);
     OHOS::Print::PrinterInfo info_value = info;
+    OHOS::Print::PrinterInfo::ValidateProperty(env, val);
+    OHOS::Print::PrinterInfo::BuildFromJs(env, val);
     info.ToJsObject(env);
     info.Dump();
 }

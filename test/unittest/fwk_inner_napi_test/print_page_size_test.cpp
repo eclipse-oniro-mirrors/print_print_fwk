@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_page_size.h"
+#include "print_log.h"
 
 using namespace testing::ext;
 
@@ -46,9 +47,26 @@ void PrintPageSizeTest::TearDown(void) {}
 HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintPageSize printpageSize;
-    BuildPageSizeMap();
-    OHOS::Print::PrintPageSize(printpageSize) printpageSize_;
-    OHOS::Print::PageSizeId sizeId = ISO_A0;
+    OHOS::Print::PrintPageSize::BuildPageSizeMap();
+    OHOS::Print::PrintPageSize(printpageSize_);
+    DiscretePageName name = "name";
+    PAGE_SIZE_ID id = "id";
+    OHOS::Print::PrintPageSize(id, name, 1, 1);
+    napi_env env = nullptr;
+    napi_value val = nullptr;
+    printpageSize.Reset();
+    printpageSize.SetId("string");
+    printpageSize.SetHeight(1);
+    printpageSize.SetWidth(2);
+    printpageSize.SetName("name");
+    PRINT_HILOGD("%{public}s", printpageSize.GetId().c_str());
+    PRINT_HILOGD("%{public}s", printpageSize.GetName().c_str());
+    PRINT_HILOGD("%{public}d", printpageSize.GetHeight());
+    printpageSize.ToJsObject(env);
+    printpageSize.Dump();
+    OHOS::Print::PrintPageSize::ValidateProperty(env, val);
+    OHOS::Print::PrintPageSize::BuildFromJs(env, val);
+    OHOS::Print::PrintPageSize pageSizeValue = printpageSize;
 }
 } // namespace Print
 } // namespace OHOS

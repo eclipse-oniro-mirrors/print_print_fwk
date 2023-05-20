@@ -175,8 +175,11 @@ HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0008, TestSize.Level1)
     std::string lower = OHOS::Print::NapiPrintUtils::ToLower(higher);
     napi_value val = nullptr;
     napi_env env = nullptr;
+    std::initializer_list<napi_property_descriptor> properties;
     napi_create_string_utf8(env, "val", NAPI_AUTO_LENGTH, &val);
     OHOS::Print::NapiPrintUtils::GetValueString(env, val);
+    OHOS::Print::NapiPrintUtils::ValueIsArrayBuffer(env, val);
+    OHOS::Print::NapiPrintUtils::DefineProperties(env, val, properties);
 }
 
 /**

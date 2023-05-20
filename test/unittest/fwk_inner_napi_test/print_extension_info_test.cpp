@@ -47,15 +47,20 @@ void PrintExtensionInfoTest::TearDown(void) {}
 HWTEST_F(PrintExtensionInfoTest, PrintExtInfoTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintExtensionInfo info;
-    OHOS::Print::PrintExtensionInfo info_ = info;
     napi_env env = nullptr;
+    napi_value val = nullptr;
     info.SetVendorName("vendorName");
     info.SetExtensionId("extensionId:123");
+    info.SetVendorId("vendorId");
+    info.SetVendorIcon(123);
+    info.SetVersion("version");
     PRINT_HILOGD("%{public}s", info.GetExtensionId().c_str());
     PRINT_HILOGD("%{public}d", info.GetVendorIcon());
     PRINT_HILOGD("%{public}s", info.GetVendorId().c_str());
     PRINT_HILOGD("%{public}s", info.GetVendorName().c_str());
     PRINT_HILOGD("%{public}s", info.GetVersion().c_str());
+    OHOS::Print::PrintExtensionInfo info_ = info;
+    OHOS::Print::PrintExtensionInfo::BuildFromJs(env, val);
     info.ToJsObject(env);
     info.Dump();
 }

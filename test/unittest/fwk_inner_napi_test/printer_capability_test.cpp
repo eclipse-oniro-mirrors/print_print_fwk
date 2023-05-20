@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
+#include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "printer_capability.h"
-#include <gtest/gtest.h>
+#include "print_margin.h"
+#include "print_resolution.h"
 
 using namespace testing::ext;
 
@@ -46,7 +48,23 @@ void PrinterCapabilityTest::TearDown(void) {}
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_001, TestSize.Level1)
 {
     OHOS::Print::PrinterCapability capability;
+    OHOS::Print::PrinterCapability(capability_);
+    OHOS::Print::PrintMargin margin, getMargin;
+    std::vector<OHOS::Print::PrintResolution> resolutionList;
+    napi_env env = nullptr;
+    napi_value val = nullptr;
+    std::vector<PrintPageSize> pagesize, getPagesize;
+    capability.SetMinMargin(margin);
+    capability.SetPageSize(pagesize);
+    capability.SetResolution(resolutionList);
+    capability.GetMinMargin(getMargin);
+    capability.GetPageSize(getPagesize);
+    capability.ToJsObject(env);
+    capability.Dump();
     capability.Reset();
+    OHOS::Print::PrinterCapability capability_val = capability;
+    OHOS::Print::PrinterCapability::BuildFromJs(env, val);
+    OHOS::Print::PrinterCapability::ValidateProperty(env, val);
     EXPECT_EQ(0, capability.GetColorMode());
 }
 
