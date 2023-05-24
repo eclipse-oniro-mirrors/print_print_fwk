@@ -12,19 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
 
-#include <uv.h>
-#include "print_callback.h"
+#include "iservice_registry.h"
 #include "napi_print_utils.h"
+#include "print_constant.h"
+#include "print_extension_callback_stub.h"
 #include "print_log.h"
+#include "print_sync_load_callback.h"
+#include "system_ability_definition.h"
 
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Print {
-class PrintCallbackTest : public testing::Test {
+class PrintServiceAbilityTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
@@ -32,33 +36,12 @@ public:
     void TearDown();
 };
 
-void PrintCallbackTest::SetUpTestCase(void) {}
+void PrintServiceAbilityTest::SetUpTestCase(void) {}
 
-void PrintCallbackTest::TearDownTestCase(void) {}
+void PrintServiceAbilityTest::TearDownTestCase(void) {}
 
-void PrintCallbackTest::SetUp(void) {}
+void PrintServiceAbilityTest::SetUp(void) {}
 
-void PrintCallbackTest::TearDown(void) {}
-
-/**
- * @tc.name: PrintCallbackTest_0001
- * @tc.desc: Verify the Setfile function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCallbackTest, PrintCallbackTest_0001, TestSize.Level1)
-{
-    napi_env env = nullptr;
-    napi_ref ref = nullptr;
-    OHOS::Print::PrintCallback callback(env, ref);
-    uint32_t state = 1;
-    const OHOS::Print::PrinterInfo info;
-    const OHOS::Print::PrintJob job;
-    bool cb = callback.OnCallback();
-    cb = callback.OnCallback(state, info);
-    cb = callback.OnCallback(state, job);
-    const std::string extensionId, strInfo;
-    cb = callback.OnCallback(extensionId, strInfo);
-}
+void PrintServiceAbilityTest::TearDown(void) {}
 } // namespace Print
 } // namespace OHOS
