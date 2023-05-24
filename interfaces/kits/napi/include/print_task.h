@@ -15,6 +15,7 @@
 
 #ifndef PRINT_TASK_H
 #define PRINT_TASK_H
+#define TDD_ENABLE 1
 
 #include <map>
 #include <mutex>
@@ -40,7 +41,9 @@ public:
 
     bool IsSupportType(const std::string &type) const;
 
+#ifndef TDD_ENABLE
 private:
+#endif
     struct TaskEventContext : public PrintAsyncCall::Context {
         std::string type = "";
         std::string taskId = "";

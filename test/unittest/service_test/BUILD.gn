@@ -35,6 +35,7 @@ ohos_unittest("print_service_test") {
 
   sources = [
     "napi_print_util_test.cpp",
+    "napi_test.cpp",
     "print_manager_client_test.cpp",
     "print_service_test.cpp",
     "print_task_test.cpp",

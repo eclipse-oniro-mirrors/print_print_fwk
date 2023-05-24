@@ -22,6 +22,7 @@
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 #include "print_constant.h"
+#define TDD_ENABLE 1
 
 namespace OHOS::Print {
 
@@ -80,8 +81,9 @@ public:
         {
             return errorIndex_;
         }
-
+    #ifndef TDD_ENABLE
     protected:
+    #endif
         friend class PrintAsyncCall;
         InputAction input_ = nullptr;
         OutputAction output_ = nullptr;
@@ -97,7 +99,9 @@ public:
     napi_value Call(napi_env env, Context::ExecAction exec = nullptr);
     napi_value SyncCall(napi_env env, Context::ExecAction exec = nullptr);
 
+#ifndef TDD_ENABLE
 private:
+#endif
     enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
     static void OnExecute(napi_env env, void *data);
     static void OnComplete(napi_env env, napi_status status, void *data);
