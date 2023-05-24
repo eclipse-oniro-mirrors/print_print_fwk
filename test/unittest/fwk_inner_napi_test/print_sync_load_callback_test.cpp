@@ -57,6 +57,5 @@ HWTEST_F(PrintSyncLoadCallbackTest, PrintSyncLoadCallbackTest_0001, TestSize.Lev
     printSyncLoadCallback.OnLoadSystemAbilitySuccess(systemAbilityId, remoteObject);
     printSyncLoadCallback.OnLoadSystemAbilityFail(systemAbilityId);
 }
-
 } // namespace Print
 } // namespace OHOS

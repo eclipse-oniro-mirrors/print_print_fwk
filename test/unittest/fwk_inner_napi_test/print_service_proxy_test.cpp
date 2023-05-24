@@ -58,6 +58,5 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0001, TestSize.Level1)
     PRINT_HILOGD("%{public}s", info.GetExtensionId().c_str());
     info.ToJsObject(env);
 }
-
 } // namespace Print
 } // namespace OHOS

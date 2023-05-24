@@ -211,15 +211,5 @@ HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0009, TestSize.Level1)
     OHOS::Print::NapiPrintUtils::DecodeExtensionCid(cid, extensionId_err, callbackId);
 }
 
-/**
- * @tc.name: NapiPrintUtilTest_0010
- * @tc.desc: GetValueType, GetNamedProperty
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0010, TestSize.Level1)
-{
-
-}
 } // namespace Print
 } // namespace OHOS

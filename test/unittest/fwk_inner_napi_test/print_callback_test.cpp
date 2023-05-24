@@ -60,6 +60,5 @@ HWTEST_F(PrintCallbackTest, PrintCallbackTest_0001, TestSize.Level1)
     const std::string extensionId, strInfo;
     cb = callback.OnCallback(extensionId, strInfo);
 }
-
 } // namespace Print
 } // namespace OHOS
