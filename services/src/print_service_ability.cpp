@@ -257,7 +257,7 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_PID, callerPid);
     if (!StartAbility(want)) {
         PRINT_HILOGE("Failed to start spooler ability");
-    return E_PRINT_SERVER_FAILURE;
+        return E_PRINT_SERVER_FAILURE;
     }
     printJobList_.insert(std::make_pair(jobId, printJob));
     taskId = jobId;

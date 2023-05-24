@@ -37,6 +37,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
   ]
 
   sources = [
+    "print_callback_test.cpp",
     "print_extension_info_test.cpp",
     "print_job_test.cpp",
     "print_margin_test.cpp",

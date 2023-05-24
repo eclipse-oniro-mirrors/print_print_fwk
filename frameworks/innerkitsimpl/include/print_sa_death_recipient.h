@@ -15,6 +15,7 @@
 
 #ifndef PRINT_SA_DEATH_RECIPIENT_H
 #define PRINT_SA_DEATH_RECIPIENT_H
+#define TDD_ENABLE 1
 
 #include "iremote_object.h"
 #include "refbase.h"

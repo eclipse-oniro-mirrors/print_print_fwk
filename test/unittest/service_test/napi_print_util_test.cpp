@@ -71,12 +71,14 @@ HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0002, TestSize.Level1)
 {
     napi_value napiValue = nullptr;
     napi_value int_value = nullptr;
+    napi_value int_value_prop = nullptr;
     napi_env env = nullptr;
     OHOS::Print::NapiPrintUtils::SetInt32Property(env, napiValue, "string", 2);
     OHOS::Print::NapiPrintUtils::SetUint32Property(env, napiValue, "string", 3);
     int_value = OHOS::Print::NapiPrintUtils::CreateUint32(env, 1);
     OHOS::Print::NapiPrintUtils::GetUint32FromValue(env, int_value);
-    OHOS::Print::NapiPrintUtils::GetUint32Property(env, int_value, "string");
+    OHOS::Print::NapiPrintUtils::SetUint32Property(env, int_value_prop, "int", 1);
+    OHOS::Print::NapiPrintUtils::GetUint32Property(env, int_value_prop, "int");
 }
 
 /**
@@ -125,6 +127,7 @@ HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0005, TestSize.Level1)
     napi_env env = nullptr;
     OHOS::Print::NapiPrintUtils::SetNamedProperty(env, napiValue, "string", string_value);
     OHOS::Print::NapiPrintUtils::GetNamedProperty(env, string_value, "string");
+    OHOS::Print::NapiPrintUtils::GetNamedProperty(env, string_value, "int");
 }
 
 /**
@@ -139,6 +142,7 @@ HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0006, TestSize.Level1)
     size_t num = 1;
     void **vec = nullptr;
     napi_value array_value = OHOS::Print::NapiPrintUtils::CreateArrayBuffer(env, 1, vec);
+    OHOS::Print::NapiPrintUtils::ValueIsArrayBuffer(env, array_value);
     OHOS::Print::NapiPrintUtils::GetInfoFromArrayBufferValue(env, array_value, &num);
     OHOS::Print::NapiPrintUtils::GetPropertyNames(env, array_value);
     OHOS::Print::NapiPrintUtils::GetUndefined(env);
@@ -178,7 +182,7 @@ HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0008, TestSize.Level1)
     std::initializer_list<napi_property_descriptor> properties;
     napi_create_string_utf8(env, "val", NAPI_AUTO_LENGTH, &val);
     OHOS::Print::NapiPrintUtils::GetValueString(env, val);
-    OHOS::Print::NapiPrintUtils::ValueIsArrayBuffer(env, val);
+    PRINT_HILOGD("%{public}d", OHOS::Print::NapiPrintUtils::ValueIsArrayBuffer(env, val));
     OHOS::Print::NapiPrintUtils::DefineProperties(env, val, properties);
 }
 
@@ -198,9 +202,12 @@ HWTEST_F(NapiPrintUtilTest, NapiPrintUtilTest_0009, TestSize.Level1)
     OHOS::Print::NapiPrintUtils::GetExtensionId(extensionId_err);
     std::string globalId = OHOS::Print::NapiPrintUtils::GetGlobalId(extensionId, localId);
     std::string localId_ = OHOS::Print::NapiPrintUtils::GetLocalId(globalId, extensionId);
-    std::string localId_err = OHOS::Print::NapiPrintUtils::GetLocalId(globalId, extensionId_err);
+    std::string globalId_error = "globalId_error";
+    std::string localId_err = OHOS::Print::NapiPrintUtils::GetLocalId(globalId_error, extensionId_err);
+    std::string localId_err_branch = OHOS::Print::NapiPrintUtils::GetLocalId(globalId, extensionId_err);
     std::string cid = OHOS::Print::NapiPrintUtils::EncodeExtensionCid(extensionId, callbackId);
-    OHOS::Print::NapiPrintUtils::DecodeExtensionCid(cid, extensionId, callbackId);
+    std::string cid_err = "cid_error";
+    OHOS::Print::NapiPrintUtils::DecodeExtensionCid(cid_err, extensionId, callbackId);
     OHOS::Print::NapiPrintUtils::DecodeExtensionCid(cid, extensionId_err, callbackId);
 }
 } // namespace Print

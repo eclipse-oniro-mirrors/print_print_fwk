@@ -15,6 +15,7 @@
 
 #ifndef PRINT_EXTENSION_CALLBACK_STUB_H
 #define PRINT_EXTENSION_CALLBACK_STUB_H
+#define TDD_ENABLE 1
 
 #include <memory>
 
@@ -44,14 +45,18 @@ public:
     void SetPrinterCallback(PrinterCallback cb);
     void SetCapabilityCallback(PrinterCapabilityCallback cb);
 
+#ifndef TDD_ENABLE
 private:
+#endif
     bool HandleExtCallback(MessageParcel &data, MessageParcel &reply);
     bool HandlePrinterCallback(MessageParcel &data, MessageParcel &reply);
     bool HandlePrintJobCallback(MessageParcel &data, MessageParcel &reply);
     bool HandleCapabilityCallback(MessageParcel &data, MessageParcel &reply);
     void dataReadJob(MessageParcel &data, PrintJob &job);
 
+#ifndef TDD_ENABLE
 private:
+#endif
     using PRINT_EXT_HANDLER = bool (PrintExtensionCallbackStub::*)(MessageParcel &, MessageParcel &);
     PrintExtCallback extCb_;
     PrintJobCallback jobCb_;

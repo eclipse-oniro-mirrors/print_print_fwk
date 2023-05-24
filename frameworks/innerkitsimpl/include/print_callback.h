@@ -15,6 +15,7 @@
 
 #ifndef PRINT_CALLBACK_H
 #define PRINT_CALLBACK_H
+#define TDD_ENABLE 1
 
 #include "napi/native_api.h"
 #include "print_callback_stub.h"
@@ -30,7 +31,9 @@ public:
     bool OnCallback(uint32_t state, const PrintJob &info) override;
     bool OnCallback(const std::string &extensionId, const std::string &info) override;
 
+#ifndef TDD_ENABLE
 private:
+#endif
     napi_env env_;
     napi_ref ref_;
     std::mutex mutex_;
