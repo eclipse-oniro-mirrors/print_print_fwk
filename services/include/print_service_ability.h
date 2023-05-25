@@ -28,6 +28,7 @@
 #include "print_constant.h"
 #include "print_service_stub.h"
 #include "system_ability.h"
+#define TDD_ENABLE 1
 
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
@@ -69,11 +70,15 @@ public:
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override;
     int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) override;
 
+#ifndef TDD_ENABLE
 protected:
+#endif
     void OnStart() override;
     void OnStop() override;
 
+#ifndef TDD_ENABLE
 private:
+#endif
     int32_t Init();
     void InitServiceHandler();
     void ManualStart();
@@ -89,7 +94,9 @@ private:
     void BuildFDParam(const std::vector<uint32_t> &fdList, AAFwk::Want &want);
     void DestroyExtension(const std::string &printerId);
 
+#ifndef TDD_ENABLE
 private:
+#endif
     ServiceRunningState state_;
     static std::mutex instanceLock_;
     static sptr<PrintServiceAbility> instance_;
