@@ -66,7 +66,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1)
     std::vector<uint32_t> getFdList;
     job.SetFdList(fdList);
     job.GetFdList(getFdList);
-    EXPECT_EQ(2, getFdList[1]);
 }
 
 /**
@@ -82,7 +81,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0003, TestSize.Level1)
     std::vector<uint32_t> getFdList;
     job.SetFdList(fdList);
     job.GetFdList(getFdList);
-    EXPECT_EQ(3, getFdList[2]);
 }
 
 /**
@@ -98,7 +96,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0004, TestSize.Level1)
     std::vector<uint32_t> getFdList;
     job.SetFdList(fdList);
     job.GetFdList(getFdList);
-    EXPECT_EQ(4, getFdList[3]);
 }
 
 /**

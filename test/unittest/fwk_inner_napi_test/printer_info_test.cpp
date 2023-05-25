@@ -365,7 +365,7 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0025, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrinterInfoTest_0025
+ * @tc.name: PrinterInfoTest_0026
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
  * @tc.require:
@@ -386,6 +386,25 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0026, TestSize.Level1)
     OHOS::Print::PrinterInfo::BuildFromJs(env, val);
     info.ToJsObject(env);
     info.Dump();
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0027
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0027, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    OHOS::Print::PrinterCapability capability, getCapabillity;
+    capability.SetColorMode(1);
+    info.SetCapability(capability);
+    info.GetCapability(getCapabillity);
+    Parcel parcel;
+    capability.Marshalling(parcel);
+    capability.ReadFromParcel(parcel);
+    capability.Unmarshalling(parcel);
 }
 } // namespace Print
 } // namespace OHOS

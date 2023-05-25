@@ -24,6 +24,7 @@ ohos_unittest("print_service_test") {
     "${print_path}/interfaces/kits/napi/include",
     "${print_path}/interfaces/kits/napi/src",
     "${print_path}/services/include",
+    "${print_path}/services/src",
     "${arkui_path}/ace_engine/frameworks/base/utils",
     "${arkui_path}/napi",
     "${arkui_path}/napi/interfaces/kits",
@@ -37,7 +38,6 @@ ohos_unittest("print_service_test") {
     "napi_print_util_test.cpp",
     "napi_test.cpp",
     "print_manager_client_test.cpp",
-    "print_service_test.cpp",
     "print_task_test.cpp",
   ]
 

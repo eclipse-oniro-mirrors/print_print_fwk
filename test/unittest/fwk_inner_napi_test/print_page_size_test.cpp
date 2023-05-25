@@ -68,5 +68,28 @@ HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0001, TestSize.Level1)
     OHOS::Print::PrintPageSize::BuildFromJs(env, val);
     OHOS::Print::PrintPageSize pageSizeValue = printpageSize;
 }
+
+/**
+ * @tc.name: PrintPageSizeTest_0002
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0002, TestSize.Level1)
+{
+    OHOS::Print::PrintPageSize printpageSize;
+    DiscretePageName name = "name";
+    PAGE_SIZE_ID id = "id";
+    OHOS::Print::PrintPageSize(id, name, 1, 1);
+    printpageSize.Reset();
+    printpageSize.SetId("string");
+    printpageSize.SetHeight(1);
+    printpageSize.SetWidth(2);
+    printpageSize.SetName("name");
+    Parcel parcel;
+    printpageSize.Marshalling(parcel);
+    printpageSize.ReadFromParcel(parcel);
+    printpageSize.Unmarshalling(parcel);
+}
 } // namespace Print
 } // namespace OHOS

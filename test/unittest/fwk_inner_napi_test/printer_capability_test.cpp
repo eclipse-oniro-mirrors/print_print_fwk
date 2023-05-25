@@ -80,5 +80,28 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_002, TestSize.Level1)
     capability.Reset();
     EXPECT_EQ(0, capability.GetDuplexMode());
 }
+
+/**
+ * @tc.name: PrinterCapabilityTest_003
+ * @tc.desc: Verify the colormode function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_003, TestSize.Level1)
+{
+    OHOS::Print::PrinterCapability capability;
+    OHOS::Print::PrintMargin margin, getMargin;
+    std::vector<OHOS::Print::PrintResolution> resolutionList;
+    std::vector<PrintPageSize> pagesize, getPagesize;
+    capability.SetMinMargin(margin);
+    capability.SetPageSize(pagesize);
+    capability.SetResolution(resolutionList);
+    capability.GetMinMargin(getMargin);
+    capability.GetPageSize(getPagesize);
+    Parcel parcel;
+    capability.Marshalling(parcel);
+    capability.ReadFromParcel(parcel);
+    capability.Unmarshalling(parcel);
+}
 } // namespace Print
 } // namespace OHOS

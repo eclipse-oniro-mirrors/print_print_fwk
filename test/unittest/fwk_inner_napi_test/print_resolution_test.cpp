@@ -83,5 +83,21 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_003, TestSize.Level1)
     resolution.Reset();
     EXPECT_EQ(0, resolution.GetVerticalDpi());
 }
+
+/**
+ * @tc.name: PrintResolutionTest_004
+ * @tc.desc: Verify the id function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_004, TestSize.Level1)
+{
+    OHOS::Print::PrintResolution resolution;
+    resolution.Reset();
+    Parcel parcel;
+    resolution.Marshalling(parcel);
+    resolution.ReadFromParcel(parcel);
+    resolution.Unmarshalling(parcel);
+}
 } // namespace Print
 } // namespace OHOS

@@ -147,5 +147,25 @@ HWTEST_F(PrintMarginTest, PrintMarginTest_008, TestSize.Level1)
     OHOS::Print::PrintMargin::BuildFromJs(env, val);
     OHOS::Print::PrintMargin::ValidateProperty(env, val);
 }
+
+/**
+ * @tc.name: PrintMarginTest_009
+ * @tc.desc: Verify the Reset function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_009, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.Reset();
+    margin.SetTop(1);
+    margin.SetLeft(2);
+    margin.SetRight(3);
+    margin.SetBottom(4);
+    Parcel parcel;
+    margin.Marshalling(parcel);
+    margin.ReadFromParcel(parcel);
+    margin.Unmarshalling(parcel);
+}
 } // namespace Print
 } // namespace OHOS

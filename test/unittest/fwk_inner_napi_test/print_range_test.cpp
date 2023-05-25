@@ -74,5 +74,26 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_002, TestSize.Level1)
     OHOS::Print::PrintRange range;
     EXPECT_EQ(0, range.GetEndPage());
 }
+
+/**
+ * @tc.name: PrintRangeTest_003
+ * @tc.desc: Verify the StartPag function.
+ * @tc.type: FUNC
+ * @tc.require: AR00000000 SR00000000
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_003, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    std::vector<uint32_t> pages = {0, 1};
+    std::vector<uint32_t> getPages;
+    range.SetStartPage(0);
+    range.SetEndPage(1);
+    range.SetPages(pages);
+    range.GetPages(getPages);
+    Parcel parcel;
+    range.Marshalling(parcel);
+    range.ReadFromParcel(parcel);
+    range.Unmarshalling(parcel);
+}
 } // namespace Print
 } // namespace OHOS
