@@ -236,11 +236,10 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0008, TestSize.Level1)
  */
 HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0009, TestSize.Level1)
 {
-    //OHOS::Print::PrintServiceProxy printServiceProxy;
     const std::string extensionCID = "1";
     const std::string extensionId = "1";
     const sptr<IPrintExtensionCallback> listener;
-    
+
     OHOS::Print::PrintManagerClient client;
     client.printServiceProxy_ = client.GetPrintServiceProxy();
     client.printServiceProxy_->RegisterExtCallback(extensionCID, listener);
