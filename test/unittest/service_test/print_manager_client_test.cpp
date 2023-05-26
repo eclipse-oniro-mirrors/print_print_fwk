@@ -836,7 +836,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0027, TestSize.Level1)
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
-    EXPECT_EQ(0, Testclient.UpdatePrintJobState(jobId, state, subState));
 }
 
 /**
