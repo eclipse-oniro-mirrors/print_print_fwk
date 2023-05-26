@@ -13,7 +13,7 @@
 
 on boot
     start print_service
-service print_service /system/bin/sa_main /system/profile/print_service.xml
+service print_service /system/bin/sa_main /system/profile/print_service.json
     class z_core
     user system
     group system shell

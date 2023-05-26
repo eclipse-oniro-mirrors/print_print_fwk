@@ -47,12 +47,6 @@ const uint32_t START_ABILITY_INTERVAL = 6;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t INIT_INTERVAL = 5000L;
 
-static const std::string PRINT_XML_PATH = "/system/profile/print_service.xml";
-static const std::string SPOOLER_BUNDLE_BEGIN_TAG = "<spooler-bundle>";
-static const std::string SPOOLER_BUNDLE_END_TAG = "</spooler-bundle>";
-static const std::string SPOOLER_ABILITY_BEGIN_TAG = "<spooler-ability>";
-static const std::string SPOOLER_ABILITY_END_TAG = "</spooler-ability>";
-static const std::string DEFAULT_SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
@@ -122,33 +116,6 @@ void PrintServiceAbility::OnStart()
     if (state_ == ServiceRunningState::STATE_RUNNING) {
         PRINT_HILOGI("PrintServiceAbility is already running.");
         return;
-    }
-
-    if (spoolerBundleName_ == SPOOLER_BUNDLE_NAME) {
-        FILE *file = fopen(PRINT_XML_PATH.c_str(), "rt");
-        if (file != nullptr) {
-            std::vector<char> buffer;
-            fseek(file, 0, SEEK_END);
-            int32_t fileSize = static_cast<int32_t>(ftell(file));
-            buffer.resize(fileSize + 1);
-            fseek(file, 0, SEEK_SET);
-            fread(&buffer[0], 1, fileSize, file);
-            buffer[fileSize] = '\0';
-            std::string config = &buffer[0];
-            auto pos = config.find(SPOOLER_BUNDLE_BEGIN_TAG);
-            if (pos != std::string::npos) {
-                spoolerBundleName_ = config.substr(pos + SPOOLER_BUNDLE_BEGIN_TAG.size());
-                spoolerBundleName_ = spoolerBundleName_.substr(0, spoolerBundleName_.find(SPOOLER_BUNDLE_END_TAG));
-            }
-            pos = config.find(SPOOLER_ABILITY_BEGIN_TAG);
-            if (pos != std::string::npos) {
-                spoolerAbilityName_ = config.substr(pos + SPOOLER_ABILITY_BEGIN_TAG.size());
-                spoolerAbilityName_ = spoolerAbilityName_.substr(0, spoolerAbilityName_.find(SPOOLER_ABILITY_END_TAG));
-            } else if (spoolerBundleName_ != SPOOLER_BUNDLE_NAME) {
-                spoolerAbilityName_ = spoolerBundleName_ + DEFAULT_SPOOLER_ABILITY_NAME;
-            }
-        }
-        fclose(file);
     }
     InitServiceHandler();
     int32_t ret = Init();
@@ -245,7 +212,7 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     printJob->SetJobId(jobId);
     printJob->SetJobState(PRINT_JOB_PREPARED);
     AAFwk::Want want;
-    want.SetElementName(spoolerBundleName_, spoolerAbilityName_);
+    want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_ABILITY_NAME);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, jobId);
     want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList);
     BuildFDParam(fdList, want);
