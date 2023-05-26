@@ -52,6 +52,7 @@ ohos_unittest("print_service_test") {
     "${print_path}/interfaces/kits/napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services:print_service",
+    "${system_ability_mgr_path}/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "${system_ability_mgr_path}/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",

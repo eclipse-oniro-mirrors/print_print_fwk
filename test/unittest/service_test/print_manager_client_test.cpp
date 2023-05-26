@@ -827,8 +827,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0027, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
     PrintJob jobinfo;
-    uint32_t state = 0;
-    uint32_t subState = 0;
     std::string jobId = "1";
 
     Testclient.StartPrint(fileList, fdList, taskId);

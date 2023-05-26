@@ -15,7 +15,7 @@
 
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
-#include "print_service_ability.cpp"
+#include "print_service_ability.h"
 #include "print_constant.h"
 #include "print_log.h"
 
