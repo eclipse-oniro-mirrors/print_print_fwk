@@ -85,7 +85,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
-  ]
+    ]
 }
 
 group("unittest") {

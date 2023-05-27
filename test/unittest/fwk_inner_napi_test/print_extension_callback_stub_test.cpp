@@ -53,7 +53,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0001, Te
 {
     OHOS::Print::PrintExtensionCallbackStub printExtensionCallbackStub;
     uint32_t code = 0;
-    MessageParcel data, reply; 
+    MessageParcel data, reply;
     MessageOption option;
     const std::string printerId = "1";
     uint32_t state = 0;
