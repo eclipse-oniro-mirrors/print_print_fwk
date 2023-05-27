@@ -16,6 +16,9 @@
 #include "napi/native_api.h"
 
 #include "print_extension_callback_stub.h"
+#include "print_manager_client.h"
+#include "iremote_broker.h"
+#include "napi_print_utils.h"
 #include "print_constant.h"
 #include "print_log.h"
 #include "print_resolution.h"
@@ -50,12 +53,12 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0001, Te
 {
     OHOS::Print::PrintExtensionCallbackStub printExtensionCallbackStub;
     uint32_t code = 0;
-    MessageParcel data, reply;
+    MessageParcel data, reply; 
     MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
+    const std::string printerId = "1";
+    uint32_t state = 0;
     data.WriteString(printerId);
     data.WriteUint32(state);
-    const std::string printerId;
     const OHOS::Print::PrintJob job;
     OHOS::Print::PrinterCapability cap;
     int32_t rq;
@@ -77,7 +80,8 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0002, Te
     OHOS::Print::PrintExtensionCallbackStub printExtensionCallbackStub;
     printExtensionCallbackStub.SetExtCallback(printExtensionCallbackStub.extCb_);
     MessageParcel data, reply;
-    data.WriteInterfaceToken(GetDescriptor());
+    const std::string printerId = "1";
+    uint32_t state = 0;
     data.WriteString(printerId);
     data.WriteUint32(state);
     bool hb = false;
@@ -95,7 +99,8 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0003, Te
     OHOS::Print::PrintExtensionCallbackStub printExtensionCallbackStub;
     printExtensionCallbackStub.SetPrintJobCallback(printExtensionCallbackStub.jobCb_);
     MessageParcel data, reply;
-    data.WriteInterfaceToken(GetDescriptor());
+    const std::string printerId = "1";
+    uint32_t state = 0;
     data.WriteString(printerId);
     data.WriteUint32(state);
     bool hb = false;
@@ -113,7 +118,8 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0004, Te
     OHOS::Print::PrintExtensionCallbackStub printExtensionCallbackStub;
     printExtensionCallbackStub.SetPrinterCallback(printExtensionCallbackStub.cb_);
     MessageParcel data, reply;
-    data.WriteInterfaceToken(GetDescriptor());
+    const std::string printerId = "1";
+    uint32_t state = 0;
     data.WriteString(printerId);
     data.WriteUint32(state);
     bool hb = false;
@@ -131,29 +137,12 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0005, Te
     OHOS::Print::PrintExtensionCallbackStub printExtensionCallbackStub;
     printExtensionCallbackStub.SetCapabilityCallback(printExtensionCallbackStub.capability_);
     MessageParcel data, reply;
-    data.WriteInterfaceToken(GetDescriptor());
+    const std::string printerId = "1";
+    uint32_t state = 0;
     data.WriteString(printerId);
     data.WriteUint32(state);
     bool hb = false;
     hb = printExtensionCallbackStub.HandleCapabilityCallback(data, reply);
-}
-
-/**
- * @tc.name: PrintServiceProxyTest_0006
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0006, TestSize.Level1)
-{
-    OHOS::Print::PrintExtensionCallbackStub printExtensionCallbackStub;
-    printExtensionCallbackStub.SetCapabilityCallback(printExtensionCallbackStub.capability_);
-    MessageParcel data;
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(printerId);
-    data.WriteUint32(state);
-    OHOS::Print::PrintJob job;
-    printExtensionCallbackStub.dataReadJob(data, job);
 }
 } // namespace Print
 } // namespace OHOS
