@@ -15,7 +15,7 @@
 
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
-#include "print_service_ability.cpp"
+#include "print_service_ability.h"
 #include "print_constant.h"
 #include "print_log.h"
 
@@ -47,9 +47,10 @@ void PrintServiceAbilityTest::TearDown(void) {}
 */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001, TestSize.Level1)
 {
-    PrintServiceAbility::PrintServiceAbility();
-    PrintServiceAbility::PrintServiceAbility(32, true);
-    ~PrintServiceAbility();
+    OHOS::Print::PrintServiceAbility::PrintServiceAbility printSA;
+    OHOS::Print::PrintServiceAbility::PrintServiceAbility printSA_init(32, true);
+    printSA.~PrintServiceAbility();
+    printSA_init.~PrintServiceAbility();
 }
 
 /**
@@ -61,12 +62,12 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001, TestSize.Level1)
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002, TestSize.Level1)
 {
     std::vector<std::string> fileList = {"50", "51", "52"};
-    std::vector<uint32_t> fdList = {"1", "2", "3"};
+    std::vector<uint32_t> fdList = {1, 2, 3};
     std::vector<std::string> fileList_err = {};
     std::vector<uint32_t> fdList_err = {};
     std::string taskId = "taskId_1";
-    PrintServiceAbility::StartPrint(fileList, fdList, taskId);
-    PrintServiceAbility::StartPrint(fileList_err, fdList_err, taskId);
+    OHOS::Print::PrintServiceAbility::StartPrint(fileList, fdList, taskId);
+    OHOS::Print::PrintServiceAbility::StartPrint(fileList_err, fdList_err, taskId);
 }
 } // namespace Print
 } // namespace OHOS

@@ -18,7 +18,7 @@ config("print_service_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc = [ "-fexceptions" ]
+  cflags_cc = [ "-fno-exceptions" ]
 }
 
 ohos_shared_library("print_service") {

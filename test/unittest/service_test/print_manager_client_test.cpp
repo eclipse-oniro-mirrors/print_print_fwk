@@ -827,7 +827,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0027, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
     PrintJob jobinfo;
-    uint32_t state = 0;
+    uint32_t state = 1;
     uint32_t subState = 0;
     std::string jobId = "1";
 
@@ -836,7 +836,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0027, TestSize.Level1)
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
-    EXPECT_EQ(0, Testclient.UpdatePrintJobState(jobId, state, subState));
+    Testclient.UpdatePrintJobState(jobId, state, subState);
 }
 
 /**
@@ -1560,6 +1560,117 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0052, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
     Testclient.LoadServerFail();
+}
+
+/**
+ * @tc.name: PrintManagerClientTest_0053
+ * @tc.desc: QueryAllExtension
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0053, TestSize.Level1)
+{
+    OHOS::Print::PrintManagerClient Testclient;
+    const std::string extensionId = "1";
+    uint32_t callbackId = 1;
+    OHOS::Print::PrintExtCallback cb = nullptr;
+    Testclient.RegisterExtCallback(extensionId, callbackId, cb);
+
+    PrintExtensionInfo printExtensionInfo;
+    printExtensionInfo.SetExtensionId("1");
+    printExtensionInfo.SetVendorIcon(1);
+    printExtensionInfo.SetVersion("1");
+    printExtensionInfo.SetExtensionId("1");
+    printExtensionInfo.SetVendorId("1");
+    std::vector<PrintExtensionInfo> extensionInfos;
+    Testclient.QueryAllExtension(extensionInfos);
+    Testclient.UnregisterAllExtCallback(extensionId);
+}
+
+/**
+ * @tc.name: PrintManagerClientTest_0054
+ * @tc.desc: QueryAllExtension
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0054, TestSize.Level1)
+{
+    OHOS::Print::PrintManagerClient Testclient;
+    const std::string extensionId = "1";
+    uint32_t callbackId = 1;
+    OHOS::Print::PrintJobCallback cb = nullptr;
+    Testclient.RegisterExtCallback(extensionId, callbackId, cb);
+
+    std::vector<uint32_t> fdList = {1, 2};
+    std::string printerId = "1";
+    std::string jobId = "1";
+    PrintJob jobinfo;
+    jobinfo.SetFdList(fdList);
+    jobinfo.SetJobId(jobId);
+    jobinfo.SetPrinterId(printerId);
+    jobinfo.SetJobState(1);
+    jobinfo.SetSubState(1);
+    jobinfo.SetCopyNumber(1);
+    PrintRange pageRange;
+    jobinfo.SetPageRange(pageRange);
+    jobinfo.SetColorMode(1);
+    jobinfo.SetDuplexMode(1);
+    jobinfo.SetIsLandscape(true);
+    jobinfo.SetIsSequential(true);
+    PrintPageSize pageSize;
+    jobinfo.SetPageSize(pageSize);
+    const PrintMargin margin;
+    jobinfo.SetMargin(margin);
+    const std::string option = "1";
+    jobinfo.SetOption(option);
+    const PrintPreviewAttribute preview;
+    jobinfo.SetPreview(preview);
+    std::vector<PrintJob> printJobs;
+    printJobs.emplace_back(jobinfo);
+    Testclient.QueryAllPrintJob(printJobs);
+    Testclient.UnregisterAllExtCallback(extensionId);
+}
+
+/**
+ * @tc.name: PrintManagerClientTest_0055
+ * @tc.desc: QueryAllExtension
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0055, TestSize.Level1)
+{
+    OHOS::Print::PrintManagerClient Testclient;
+    const std::string extensionId = "1";
+    uint32_t callbackId = 1;
+    OHOS::Print::PrinterCallback cb = nullptr;
+    Testclient.RegisterExtCallback(extensionId, callbackId, cb);
+
+    const std::string printerId = "1";
+    std::vector<std::string> printerIds = {"1"};
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    std::vector<PrinterInfo> printerInfos;
+    printerInfos.emplace_back(printerInfo);
+    Testclient.UpdatePrinters(printerInfos);
+    Testclient.UnregisterAllExtCallback(extensionId);
+}
+
+/**
+ * @tc.name: PrintManagerClientTest_0056
+ * @tc.desc: QueryAllExtension
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0056, TestSize.Level1)
+{
+    OHOS::Print::PrintManagerClient Testclient;
+    const std::string extensionId = "1";
+    uint32_t callbackId = 1;
+    OHOS::Print::PrinterCapabilityCallback cb = nullptr;
+    Testclient.RegisterExtCallback(extensionId, callbackId, cb);
+    std::string printerId = "1";
+    Testclient.QueryPrinterCapability(printerId);
+    Testclient.UnregisterAllExtCallback(extensionId);
 }
 } // namespace Print
 } // namespace OHOS

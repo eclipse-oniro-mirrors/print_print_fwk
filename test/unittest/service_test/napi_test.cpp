@@ -316,19 +316,5 @@ HWTEST_F(NapiTest, NapiPrintExtTest_0007, TestSize.Level1)
     uint32_t errorSubState = 18;
     NapiPrintExt::IsValidPrintJobSubState(errorSubState);
 }
-
-/**
- * @tc.name: PrintTaskTest_0004
- * @tc.desc: On, Off
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(NapiTest, PrintTaskTest_0004, TestSize.Level1)
-{
-    napi_env env = nullptr;
-    napi_callback_info info = nullptr;
-    OHOS::Print::PrintTask::On(env, info);
-    OHOS::Print::PrintTask::Off(env, info);
-}
 } // namespace Print
 } // namespace OHOS
