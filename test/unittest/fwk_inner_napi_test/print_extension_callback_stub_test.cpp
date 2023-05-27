@@ -50,7 +50,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0001, Te
 {
     OHOS::Print::PrintExtensionCallbackStub printExtensionCallbackStub;
     uint32_t code = 0;
-    MessageParcel data, reply; 
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
@@ -155,6 +155,5 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0006, Te
     OHOS::Print::PrintJob job;
     printExtensionCallbackStub.dataReadJob(data, job);
 }
-
 } // namespace Print
 } // namespace OHOS

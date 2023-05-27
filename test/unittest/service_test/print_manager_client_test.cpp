@@ -1585,7 +1585,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0053, TestSize.Level1)
     std::vector<PrintExtensionInfo> extensionInfos;
     Testclient.QueryAllExtension(extensionInfos);
     Testclient.UnregisterAllExtCallback(extensionId);
-
 }
 
 /**
