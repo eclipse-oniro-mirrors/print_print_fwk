@@ -16,9 +16,9 @@
 #ifndef PRINT_CALLBACK_STUB_H
 #define PRINT_CALLBACK_STUB_H
 
+#include <map>
 #include "iprint_callback.h"
 #include "iremote_stub.h"
-#include <map>
 
 namespace OHOS::Print {
 class PrintCallbackStub : public IRemoteStub<IPrintCallback> {

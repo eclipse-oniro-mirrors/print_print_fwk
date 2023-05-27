@@ -114,5 +114,4 @@ bool PrintCallbackProxy::OnCallback(const std::string &extensionId, const std::s
     PRINT_HILOGD("PrintCallbackProxy::OnCallback End");
     return true;
 }
-
 } // namespace OHOS::Print

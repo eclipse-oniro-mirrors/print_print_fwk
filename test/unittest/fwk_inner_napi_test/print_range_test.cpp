@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
+#include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_range.h"
-#include <gtest/gtest.h>
 
 using namespace testing::ext;
 

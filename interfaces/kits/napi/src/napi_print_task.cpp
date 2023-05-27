@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#include "napi_print_task.h"
+#include <mutex>
 
+#include "napi_print_task.h"
 #include "napi_print_utils.h"
 #include "print_async_call.h"
 #include "print_log.h"
 #include "print_manager_client.h"
 #include "print_task.h"
-#include <mutex>
 
 static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";

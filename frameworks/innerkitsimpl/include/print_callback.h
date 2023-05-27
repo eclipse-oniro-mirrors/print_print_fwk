@@ -16,9 +16,9 @@
 #ifndef PRINT_CALLBACK_H
 #define PRINT_CALLBACK_H
 
+#include <mutex>
 #include "napi/native_api.h"
 #include "print_callback_stub.h"
-#include <mutex>
 
 namespace OHOS::Print {
 class PrintCallback : public PrintCallbackStub {
