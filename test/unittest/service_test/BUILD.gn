@@ -59,7 +59,17 @@ ohos_unittest("print_service_test") {
     "//third_party/zlib:libz",
   ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+  ]
 }
 
 group("unittest") {

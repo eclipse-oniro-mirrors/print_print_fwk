@@ -81,6 +81,8 @@ config("ability_public_config") {
     "${ability_runtime_kits_path}/fmskit/native/include",
     "//third_party/json/include",
   ]
+
+  cflags_cc = [ "-fno-exceptions" ]
 }
 
 ohos_shared_library("print_extension_framework") {
