@@ -18,7 +18,6 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-
 static constexpr const char *PARAM_CAPABILITY_COLORMODE = "colorMode";
 static constexpr const char *PARAM_CAPABILITY_DUPLEXMODE = "duplexMode";
 static constexpr const char *PARAM_CAPABILITY_PAGESIZE = "pageSize";

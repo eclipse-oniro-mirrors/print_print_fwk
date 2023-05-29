@@ -22,7 +22,6 @@
 #include "print_task.h"
 
 namespace OHOS::Print {
-
 const std::string PRINTER_EVENT_TYPE = "printerStateChange";
 const std::string PRINTJOB_EVENT_TYPE = "jobStateChange";
 const std::string EXTINFO_EVENT_TYPE = "extInfoChange";

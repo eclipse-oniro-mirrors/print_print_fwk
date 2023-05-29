@@ -28,7 +28,6 @@
 #include "printer_info.h"
 
 namespace OHOS::Print {
-
 class NapiInnerPrint {
 public:
     static napi_value QueryExtensionInfo(napi_env env, napi_callback_info info);

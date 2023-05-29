@@ -19,7 +19,6 @@
 #include <string>
 
 namespace OHOS::Print {
-
 #define PRINT_RET_NONE
 
 #define PRINT_ASSERT_BASE(env, assertion, message, retVal)  \

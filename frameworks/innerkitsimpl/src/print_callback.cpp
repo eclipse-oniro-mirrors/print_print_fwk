@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "print_callback.h"
+#include <uv.h>
 #include "napi_print_utils.h"
 #include "print_log.h"
-#include <uv.h>
+#include "print_callback.h"
 
 namespace OHOS::Print {
 struct CallbackParam {

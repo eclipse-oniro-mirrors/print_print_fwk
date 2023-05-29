@@ -16,9 +16,9 @@
 #ifndef NAPI_PRINT_TASK_H
 #define NAPI_PRINT_TASK_H
 
+#include <string>
 #include "napi/native_api.h"
 #include "napi/native_common.h"
-#include <string>
 
 namespace OHOS::Print {
 class NapiPrintTask {

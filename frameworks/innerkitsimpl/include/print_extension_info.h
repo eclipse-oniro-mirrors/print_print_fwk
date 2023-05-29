@@ -21,7 +21,6 @@
 #include "parcel.h"
 
 namespace OHOS::Print {
-
 class PrintExtensionInfo final : public Parcelable {
 public:
     explicit PrintExtensionInfo();

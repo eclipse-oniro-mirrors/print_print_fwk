@@ -24,7 +24,6 @@
 #include "print_constant.h"
 
 namespace OHOS::Print {
-
 class PrintAsyncCall final {
 public:
     class Context {
