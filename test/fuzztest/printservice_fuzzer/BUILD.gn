@@ -25,12 +25,6 @@ ohos_fuzztest("PrintServiceFuzzTest") {
   fuzz_config_file = "${print_path}/test/fuzztest/printservice_fuzzer"
 
   include_dirs = [
-    "//commonlibrary/c_utils/base/include",
-    "//utils/system/safwk/native/include",
-    "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient/include",
-    "//base/notification/distributed_notification_service/interfaces/inner_api",
-    "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
-    "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
     "${print_path}/frameworks/innerkitsimpl/include",
     "${print_path}/services/include",
     "${print_utils_path}/include",
@@ -45,11 +39,6 @@ ohos_fuzztest("PrintServiceFuzzTest") {
 
   deps = [
     "${print_path}/frameworks/innerkitsimpl:print_client",
-    "//base/notification/distributed_notification_service/frameworks/ans:ans_innerkits",
-    "//base/telephony/core_service/interfaces/innerkits:tel_core_service_api",
-    "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient:net_conn_manager_if",
-    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
-    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "${print_path}/services:print_service",
   ]
 
