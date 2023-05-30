@@ -1,0 +1,89 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#####################hydra-fuzz###################
+import("//build/config/features.gni")
+import("//build/test.gni")
+import("//base/print/print_fwk/print.gni")
+
+module_output_path = "print/print_fwk"
+
+##############################fuzztest##########################################
+ohos_fuzztest("PrintServiceFuzzTest") {
+  module_out_path = module_output_path
+
+  fuzz_config_file = "${print_path}/test/fuzztest/printservice_fuzzer"
+
+  include_dirs = [
+    "//commonlibrary/c_utils/base/include",
+    "//utils/system/safwk/native/include",
+    "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient/include",
+    "//base/notification/distributed_notification_service/interfaces/inner_api",
+    "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
+    "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
+    "${print_path}/frameworks/innerkitsimpl/include",
+    "${print_path}/services/include",
+    "${print_utils_path}/include",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+
+  deps = [
+    "${print_path}/frameworks/innerkitsimpl:print_client",
+    "//base/notification/distributed_notification_service/frameworks/ans:ans_innerkits",
+    "//base/telephony/core_service/interfaces/innerkits:tel_core_service_api",
+    "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient:net_conn_manager_if",
+    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "${print_path}/services:print_service",
+  ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "drivers_interface_ril:hril_innerkits",
+    "eventhandler:libeventhandler",
+    "hisysevent_native:libhisysevent",
+    "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "os_account:os_account_innerkits",
+    "relational_store:native_rdb",
+  ]
+  
+  sources = [ "formmanager_fuzzer.cpp" ]  
+}
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [
+    # deps file
+    ":PrintServiceFuzzTest",
+  ]
+}
+###############################################################################
