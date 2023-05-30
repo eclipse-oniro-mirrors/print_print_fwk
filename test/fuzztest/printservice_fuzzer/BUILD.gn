@@ -11,10 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#####################hydra-fuzz###################
+import("//base/print/print_fwk/print.gni")
 import("//build/config/features.gni")
 import("//build/test.gni")
-import("//base/print/print_fwk/print.gni")
 
 module_output_path = "print/print_fwk"
 
