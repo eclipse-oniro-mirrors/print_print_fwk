@@ -73,8 +73,8 @@ ohos_fuzztest("PrintServiceFuzzTest") {
     "os_account:os_account_innerkits",
     "relational_store:native_rdb",
   ]
-  
-  sources = [ "formmanager_fuzzer.cpp" ]  
+
+  sources = [ "printservice_fuzzer.cpp" ]
 }
 
 ###############################################################################
