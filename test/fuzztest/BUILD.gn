@@ -15,8 +15,5 @@ import("//base/print/print_fwk/print.gni")
 
 group("fuzztest") {
   testonly = true
-
-  deps = [
-    "printservice_fuzzer:fuzztest",
-  ]
+  deps = [ "printservice_fuzzer:fuzztest" ]
 }
