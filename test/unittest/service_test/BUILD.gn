@@ -64,14 +64,14 @@ ohos_unittest("print_service_test") {
     "ability_base:base",
     "ability_base:want",
     "ability_base:zuri",
-    "ipc:ipc_core",
-    "hiviewdfx_hilog_native:libhilog",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
   ]
 }
 
