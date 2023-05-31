@@ -16,6 +16,8 @@
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_preview_attribute.h"
+#include "printer_capability.h"
+#include "print_margin.h"
 #include "print_range.h"
 
 using namespace testing::ext;
@@ -59,6 +61,28 @@ HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0001, TestSize.Lev
     OHOS::Print::PrintPreviewAttribute::ValidateProperty(env, val);
     OHOS::Print::PrintPreviewAttribute::BuildFromJs(env, val);
     OHOS::Print::PrintPreviewAttribute attributeVal = attribute;
+}
+
+/**
+ * @tc.name: PrintPreviewAttributeTest_0002
+ * @tc.desc: Verify the StartPag function.
+ * @tc.type: FUNC
+ * @tc.require: AR00000000 SR00000000
+ */
+HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0002, TestSize.Level1)
+{
+    OHOS::Print::PrintPreviewAttribute attribute;
+    OHOS::Print::PrintRange range;
+    attribute.SetResult(0);
+    attribute.SetPreviewRange(range);
+
+    MessageParcel data;
+    std::string printerId = "1";
+    data.WriteString(printerId);
+    data.WriteBool(true);
+    attribute.Marshalling(data);
+    attribute.ReadFromParcel(data);
+    attribute.Unmarshalling(data);
 }
 } // namespace Print
 } // namespace OHOS

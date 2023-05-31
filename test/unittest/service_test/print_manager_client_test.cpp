@@ -59,6 +59,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0001, TestSize.Level1)
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     PrintExtensionInfo printExtensionInfo;
+    Testclient.ready_ = true;
     printExtensionInfo.SetExtensionId("1");
     printExtensionInfo.SetVendorIcon(1);
     printExtensionInfo.SetVersion("1");
@@ -85,8 +86,10 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0002, TestSize.Level1)
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<PrintExtensionInfo> extensionInfos;
-
+    
+    Testclient.ready_ = true;
     Testclient.StartPrint(fileList, fdList, taskId);
+    Testclient.StopPrint(taskId);
     Testclient.QueryAllExtension(extensionInfos);
 }
 
@@ -414,8 +417,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0015, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     printerInfos.emplace_back(printerInfo);
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
+    Testclient.ready_ = true;
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.DisconnectPrinter(printerId);
@@ -439,8 +441,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0016, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     std::string printerId;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.DisconnectPrinter(printerId);
@@ -464,8 +464,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0017, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     std::string printerId = "1";
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.DisconnectPrinter(printerId);
@@ -513,8 +511,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0018, TestSize.Level1)
     const PrintPreviewAttribute preview;
     jobinfo.SetPreview(preview);
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -539,8 +535,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0019, TestSize.Level1)
     std::string printerId = "1";
     PrintJob jobinfo;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -588,8 +582,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0020, TestSize.Level1)
     const PrintPreviewAttribute preview;
     jobinfo.SetPreview(preview);
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -616,8 +608,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0021, TestSize.Level1)
     PrintJob jobinfo;
     std::string jobId;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -644,8 +634,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0022, TestSize.Level1)
     PrintJob jobinfo;
     std::string jobId = "1";
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -695,8 +683,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0023, TestSize.Level1)
     jobinfo.SetPreview(preview);
     uint32_t state = 0;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -723,8 +709,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0024, TestSize.Level1)
     PrintJob jobinfo;
     uint32_t state = 0;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -751,8 +735,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0025, TestSize.Level1)
     PrintJob jobinfo;
     uint32_t state = 0;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -801,8 +783,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0026, TestSize.Level1)
     uint32_t state = 0;
     uint32_t subState = 0;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -831,8 +811,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0027, TestSize.Level1)
     uint32_t subState = 0;
     std::string jobId = "1";
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -861,8 +839,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0028, TestSize.Level1)
     uint32_t state = 0;
     uint32_t subState = 0;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -891,8 +867,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0029, TestSize.Level1)
     uint32_t state = 0;
     uint32_t subState = 0;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -919,8 +893,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0030, TestSize.Level1)
     PrintJob jobinfo;
     std::string extensionId = "1";
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -947,8 +919,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0031, TestSize.Level1)
     PrintJob jobinfo;
     std::string extensionId;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -998,8 +968,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0032, TestSize.Level1)
     jobinfo.SetPreview(preview);
     std::string previewResult = "1";
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1026,8 +994,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0033, TestSize.Level1)
     PrintJob jobinfo;
     std::string previewResult = "1";
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1054,8 +1020,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0034, TestSize.Level1)
     PrintJob jobinfo;
     std::string previewResult;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1105,8 +1069,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0035, TestSize.Level1)
     jobinfo.SetPreview(preview);
     std::vector<PrintJob> printJobs;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1132,8 +1094,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0036, TestSize.Level1)
     std::string printerId;
     PrintJob jobinfo;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1184,8 +1144,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0037, TestSize.Level1)
     std::vector<PrintJob> printJobs;
     printJobs.emplace_back(jobinfo);
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1212,8 +1170,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0038, TestSize.Level1)
     PrintJob jobinfo;
     std::vector<PrintJob> printJobs = {};
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1261,8 +1217,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0039, TestSize.Level1)
     const PrintPreviewAttribute preview;
     jobinfo.SetPreview(preview);
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1290,8 +1244,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0040, TestSize.Level1)
     PrintJob jobinfo;
     PrintJob printjob;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1319,8 +1271,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0041, TestSize.Level1)
     PrintJob jobinfo;
     PrintJob printjob;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1348,8 +1298,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0044, TestSize.Level1)
     std::string type;
     sptr<IPrintCallback> listener;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1377,8 +1325,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0045, TestSize.Level1)
     std::string type;
     sptr<IPrintCallback> listener;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1406,8 +1352,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0046, TestSize.Level1)
     std::string type = "1";
     sptr<IPrintCallback> listener;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1436,8 +1380,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0047, TestSize.Level1)
     std::string type = "1";
     sptr<IPrintCallback> listener;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1466,8 +1408,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0048, TestSize.Level1)
     std::string type;
     sptr<IPrintCallback> listener;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1497,8 +1437,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0049, TestSize.Level1)
     sptr<IPrintCallback> listener;
     std::string extensionId = "1";
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1529,8 +1467,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0050, TestSize.Level1)
     sptr<IPrintCallback> listener;
     std::string extensionId;
 
-    Testclient.StartPrint(fileList, fdList, taskId);
-    Testclient.StartDiscoverPrinter(extensionList);
     Testclient.AddPrinters(printerInfos);
     Testclient.ConnectPrinter(printerId);
     Testclient.StartPrintJob(jobinfo);
@@ -1672,5 +1608,5 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0056, TestSize.Level1)
     Testclient.QueryPrinterCapability(printerId);
     Testclient.UnregisterAllExtCallback(extensionId);
 }
-} // namespace Print
-} // namespace OHOS
+} //namespace Print
+} //namespace OHOS

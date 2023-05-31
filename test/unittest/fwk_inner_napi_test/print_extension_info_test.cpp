@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_extension_info.h"
+#include "printer_capability.h"
 #include "print_log.h"
 
 using namespace testing::ext;
@@ -63,6 +64,49 @@ HWTEST_F(PrintExtensionInfoTest, PrintExtInfoTest_0001, TestSize.Level1)
     OHOS::Print::PrintExtensionInfo::BuildFromJs(env, val);
     info.ToJsObject(env);
     info.Dump();
+}
+
+/**
+ * @tc.name: PrintExtInfoTest_0002
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintExtensionInfoTest, PrintExtInfoTest_0002, TestSize.Level1)
+{
+    OHOS::Print::PrintExtensionInfo info;
+    info.SetVendorName("vendorName");
+    info.SetExtensionId("extensionId:123");
+    info.SetVendorId("vendorId");
+    info.SetVendorIcon(123);
+    info.SetVersion("version");
+    OHOS::Print::PrintExtensionInfo info_ = info;
+    Parcel parcel;
+    info.ReadFromParcel(parcel);
+}
+
+/**
+ * @tc.name: PrintExtInfoTest_0003
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintExtensionInfoTest, PrintExtInfoTest_0003, TestSize.Level1)
+{
+    OHOS::Print::PrintExtensionInfo info;
+    info.SetVendorName("vendorName");
+    info.SetExtensionId("extensionId:123");
+    info.SetVendorId("vendorId");
+    info.SetVendorIcon(123);
+    info.SetVersion("version");
+
+    MessageParcel data;
+    std::string printerId = "1";
+    data.WriteString(printerId);
+    data.WriteBool(true);
+    info.Marshalling(data);
+    info.ReadFromParcel(data);
+    info.Unmarshalling(data);
 }
 } // namespace Print
 } // namespace OHOS

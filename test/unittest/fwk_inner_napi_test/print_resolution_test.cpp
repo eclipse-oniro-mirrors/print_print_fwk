@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
+#include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_resolution.h"
-#include <gtest/gtest.h>
+#include "printer_capability.h"
+#include "print_margin.h"
 
 using namespace testing::ext;
 
@@ -98,6 +100,26 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_004, TestSize.Level1)
     resolution.Marshalling(parcel);
     resolution.ReadFromParcel(parcel);
     resolution.Unmarshalling(parcel);
+}
+
+/**
+ * @tc.name: PrintResolutionTest_005
+ * @tc.desc: Verify the id function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_005, TestSize.Level1)
+{
+    OHOS::Print::PrintResolution resolution;
+    resolution.Reset();
+
+    MessageParcel data;
+    std::string printerId = "1";
+    data.WriteString(printerId);
+    data.WriteBool(true);
+    resolution.Marshalling(data);
+    resolution.ReadFromParcel(data);
+    resolution.Unmarshalling(data);
 }
 } // namespace Print
 } // namespace OHOS

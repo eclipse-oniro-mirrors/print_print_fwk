@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
+#include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_margin.h"
-#include <gtest/gtest.h>
+#include "printer_capability.h"
 
 using namespace testing::ext;
 
@@ -166,6 +167,30 @@ HWTEST_F(PrintMarginTest, PrintMarginTest_009, TestSize.Level1)
     margin.Marshalling(parcel);
     margin.ReadFromParcel(parcel);
     margin.Unmarshalling(parcel);
+}
+
+/**
+ * @tc.name: PrintMarginTest_010
+ * @tc.desc: Verify the Reset function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_010, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.Reset();
+    margin.SetTop(1);
+    margin.SetLeft(2);
+    margin.SetRight(3);
+    margin.SetBottom(4);
+
+    MessageParcel data;
+    std::string printerId = "1";
+    data.WriteString(printerId);
+    data.WriteBool(true);
+    margin.Marshalling(data);
+    margin.ReadFromParcel(data);
+    margin.Unmarshalling(data);
 }
 } // namespace Print
 } // namespace OHOS

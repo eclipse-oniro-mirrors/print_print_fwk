@@ -103,5 +103,25 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_003, TestSize.Level1)
     capability.ReadFromParcel(parcel);
     capability.Unmarshalling(parcel);
 }
+
+/**
+ * @tc.name: PrinterInfoTest_004
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_004, TestSize.Level1)
+{
+    OHOS::Print::PrinterCapability capability;
+    capability.SetColorMode(1);
+
+    MessageParcel data;
+    std::string printerId = "1";
+    data.WriteString(printerId);
+    data.WriteBool(true);
+    capability.Marshalling(data);
+    capability.ReadFromParcel(data);
+    capability.Unmarshalling(data);
+}
 } // namespace Print
 } // namespace OHOS
