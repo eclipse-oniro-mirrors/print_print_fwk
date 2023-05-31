@@ -52,7 +52,6 @@ void PrintCallbackProxyTest::TearDown(void) {}
  */
 HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0001, TestSize.Level1)
 {
-    
     const sptr<IRemoteObject> impl;
     OHOS::Print::PrintCallbackProxy callback(impl);
     uint32_t state = 1;

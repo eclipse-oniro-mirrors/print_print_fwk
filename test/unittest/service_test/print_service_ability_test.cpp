@@ -125,7 +125,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0005, TestSize.Level1)
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0006, TestSize.Level1)
 {
     OHOS::Print::PrintServiceAbility printSA(32, true);
-    std::vector<std::string> printerIds = {"1","2"};
+    std::vector<std::string> printerIds = {"1", "2"};
     PrinterInfo printerInfo;
     std::vector<PrinterInfo> printerInfos;
     printerInfos.emplace_back(printerInfo);

@@ -1608,5 +1608,5 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0056, TestSize.Level1)
     Testclient.QueryPrinterCapability(printerId);
     Testclient.UnregisterAllExtCallback(extensionId);
 }
-} //namespace Print
-} //namespace OHOS
+} // namespace Print
+} // namespace OHOS
