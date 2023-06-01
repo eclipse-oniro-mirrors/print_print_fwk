@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_page_size.h"
+#include "printer_capability.h"
 #include "print_log.h"
 
 using namespace testing::ext;
@@ -90,6 +91,33 @@ HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0002, TestSize.Level1)
     printpageSize.Marshalling(parcel);
     printpageSize.ReadFromParcel(parcel);
     printpageSize.Unmarshalling(parcel);
+}
+
+/**
+ * @tc.name: PrintPageSizeTest_0003
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0003, TestSize.Level1)
+{
+    OHOS::Print::PrintPageSize printpageSize;
+    DiscretePageName name = "name";
+    PAGE_SIZE_ID id = "id";
+    OHOS::Print::PrintPageSize(id, name, 1, 1);
+    printpageSize.Reset();
+    printpageSize.SetId("string");
+    printpageSize.SetHeight(1);
+    printpageSize.SetWidth(2);
+    printpageSize.SetName("name");
+
+    MessageParcel data;
+    std::string printerId = "1";
+    data.WriteString(printerId);
+    data.WriteBool(true);
+    printpageSize.Marshalling(data);
+    printpageSize.ReadFromParcel(data);
+    printpageSize.Unmarshalling(data);
 }
 } // namespace Print
 } // namespace OHOS

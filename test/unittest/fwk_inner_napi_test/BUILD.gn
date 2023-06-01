@@ -46,7 +46,6 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "print_preview_attribute_test.cpp",
     "print_range_test.cpp",
     "print_resolution_test.cpp",
-    "print_service_proxy_test.cpp",
     "print_sync_load_callback_test.cpp",
     "printer_capability_test.cpp",
     "printer_info_test.cpp",

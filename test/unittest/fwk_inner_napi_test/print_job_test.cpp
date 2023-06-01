@@ -744,5 +744,29 @@ HWTEST_F(PrintJobTest, PrintJobTest_0051, TestSize.Level1)
     OHOS::Print::PrintJob::BuildFromJs(env, val);
     OHOS::Print::PrintJob jobValue = job;
 }
+
+/**
+ * @tc.name: PrintJobTest_0052
+ * @tc.desc: Verify the UpdateParams function
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, PrintJobTest_0052, TestSize.Level1)
+{
+    OHOS::Print::PrintJob job;
+    PrintPageSize pagesize, getPagesize;
+    napi_env env = nullptr;
+    napi_value jsPrintJob = nullptr;
+    Parcel parcel;
+    job.SetIsSequential(true);
+    PRINT_HILOGD("%{public}d", job.GetIsSequential());
+    job.SetPageSize(pagesize);
+    OHOS::Print::PrintJob jobValue = job;
+    job.CreateFdList(env, jsPrintJob);
+    job.CreatePageRange(env, jsPrintJob);
+    job.CreatePageSize(env, jsPrintJob);
+    job.CreateMargin(env, jsPrintJob);
+    job.CreatePreview(env, jsPrintJob);
+}
 } // namespace Print
 } // namespace OHOS

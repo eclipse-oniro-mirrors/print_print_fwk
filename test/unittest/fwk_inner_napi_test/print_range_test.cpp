@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
+#include <gtest/gtest.h>
 #include "napi/native_api.h"
 #include "print_range.h"
-#include <gtest/gtest.h>
+#include "printer_capability.h"
+#include "print_margin.h"
 
 using namespace testing::ext;
 
@@ -94,6 +96,29 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_003, TestSize.Level1)
     range.Marshalling(parcel);
     range.ReadFromParcel(parcel);
     range.Unmarshalling(parcel);
+}
+
+/**
+ * @tc.name: PrintRangeTest_004
+ * @tc.desc: Verify the StartPag function.
+ * @tc.type: FUNC
+ * @tc.require: AR00000000 SR00000000
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_004, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    std::vector<uint32_t> pages = {0, 1};
+    range.SetStartPage(0);
+    range.SetEndPage(1);
+    range.SetPages(pages);
+
+    MessageParcel data;
+    std::string printerId = "1";
+    data.WriteString(printerId);
+    data.WriteBool(true);
+    range.Marshalling(data);
+    range.ReadFromParcel(data);
+    range.Unmarshalling(data);
 }
 } // namespace Print
 } // namespace OHOS
