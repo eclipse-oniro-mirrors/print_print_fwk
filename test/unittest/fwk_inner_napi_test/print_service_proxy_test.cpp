@@ -53,8 +53,8 @@ void PrintServiceProxyTest::TearDown(void) {}
  */
 HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0001, TestSize.Level1)
 {
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     OHOS::Print::PrintManagerClient client;

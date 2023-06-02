@@ -54,8 +54,8 @@ void PrintManagerClientTest::TearDown(void) {}
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     PrintExtensionInfo printExtensionInfo;
@@ -81,8 +81,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0002, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<PrintExtensionInfo> extensionInfos;
@@ -103,8 +103,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0003, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -123,8 +123,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0004, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList;
@@ -143,8 +143,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0005, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -164,8 +164,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0006, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -200,8 +200,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0007, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -222,8 +222,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0008, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -251,8 +251,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0009, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -275,8 +275,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0010, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -299,8 +299,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0011, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -328,8 +328,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0012, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -351,8 +351,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0013, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -380,8 +380,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0014, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -404,8 +404,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0015, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -433,8 +433,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0016, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -456,8 +456,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0017, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -479,8 +479,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0018, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -526,8 +526,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0019, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -550,8 +550,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0020, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -598,8 +598,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0021, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -624,8 +624,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0022, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -650,8 +650,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0023, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -699,8 +699,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0024, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -725,8 +725,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0025, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -751,8 +751,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0026, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -799,8 +799,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0027, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -827,8 +827,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0028, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -855,8 +855,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0029, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -883,8 +883,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0030, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -909,8 +909,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0031, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -935,8 +935,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0032, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -984,8 +984,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0033, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1010,8 +1010,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0034, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1036,8 +1036,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0035, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1085,8 +1085,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0036, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1110,8 +1110,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0037, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1160,8 +1160,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0038, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1186,8 +1186,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0039, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1233,8 +1233,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0040, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1260,8 +1260,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0041, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1287,8 +1287,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0044, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1314,8 +1314,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0045, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId;
     std::vector<std::string> extensionList = {"3"};
@@ -1341,8 +1341,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0046, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1369,8 +1369,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0047, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId;
     std::vector<std::string> extensionList = {"3"};
@@ -1397,8 +1397,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0048, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1425,8 +1425,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0049, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
@@ -1455,8 +1455,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0050, TestSize.Level1)
 {
     OHOS::Print::PrintManagerClient Testclient;
 
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> fdList = {1, 2};
     std::string taskId = "2";
     std::vector<std::string> extensionList = {"3"};
