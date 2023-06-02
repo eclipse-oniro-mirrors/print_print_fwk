@@ -41,7 +41,7 @@ PrintTask::PrintTask(const std::vector<std::string> &innerList) : taskId_("")
         fileList_.assign(innerList.begin(), innerList.end());
         pathType_ = FILE_PATH_ABSOLUTED;
         if (fileList_.size() > 0) {
-            if (fileList_.begin()->find("datashare://") == 0) {
+            if (fileList_.begin()->find("file://") == 0) {
                 pathType_ = FILE_PATH;
             }
         }

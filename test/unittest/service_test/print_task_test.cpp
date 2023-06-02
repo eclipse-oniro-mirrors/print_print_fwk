@@ -53,8 +53,8 @@ void PrintTaskTest::TearDown(void) {}
  */
 HWTEST_F(PrintTaskTest, PrintTaskTest_0001, TestSize.Level1)
 {
-    std::vector<std::string> fileList = {"datashare://data/print/a.png",
-        "datashare://data/print/b.png", "datashare://data/print/c.png"};
+    std::vector<std::string> fileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
     OHOS::Print::PrintTask task(fileList);
 }
 
