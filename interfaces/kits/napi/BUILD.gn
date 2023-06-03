@@ -21,20 +21,8 @@ config("print_interfaces_kits_napi_config") {
 }
 ohos_shared_library("print_napi") {
   include_dirs = [
-    "//foundation/arkui/ace_engine/frameworks/base/utils",
-    "//foundation/arkui/napi",
-    "//foundation/arkui/napi/interfaces/kits",
-    "//foundation/arkui/napi/interfaces/inner_api",
     "//third_party/node/src",
     "//third_party/curl/include",
-    "${ability_runtime_services_path}/common/include",
-    "//utils/system/safwk/native/include",
-    "${ability_runtime_path}/interfaces/kits/native/appkit/app/",
-    "${ability_runtime_path}/interfaces/kits/native/ability/native",
-    "${ability_runtime_services_path}/abilitymgr/include",
-    "${ability_runtime_inner_api_path}/ability_manager/include",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/Isamgr",
-    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy/include",
     "${print_utils_path}/include",
     "${print_path}/frameworks/innerkitsimpl/include",
   ]
@@ -48,11 +36,7 @@ ohos_shared_library("print_napi") {
     "src/print_module.cpp",
     "src/print_task.cpp",
   ]
-  deps = [
-    "${print_path}/frameworks/innerkitsimpl:print_client",
-    "//foundation/arkui/napi:ace_napi",
-    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-  ]
+  deps = [ "${print_path}/frameworks/innerkitsimpl:print_client" ]
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
@@ -64,10 +48,12 @@ ohos_shared_library("print_napi") {
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
+    "napi:ace_napi",
     "preferences:native_preferences",
     "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
+    "samgr:samgr_proxy",
   ]
   relative_install_dir = "module"
   subsystem_name = "print"
