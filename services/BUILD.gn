@@ -32,7 +32,7 @@ ohos_shared_library("print_service") {
   ]
 
   public_configs = [
-    "//commonlibrary/c_utils/base:utils_config",
+    "${c_utils_path}/base:utils_config",
     ":print_service_config",
   ]
   include_dirs = [

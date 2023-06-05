@@ -12,6 +12,7 @@
 # limitations under the License.
 
 ability_runtime_path = "//foundation/ability/ability_runtime"
+c_utils_path = "//commonlibrary/c_utils"
 
 print_path = "//base/print/print_fwk"
 print_utils_path = "${print_path}/utils"
