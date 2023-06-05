@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <map>
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -94,6 +95,7 @@ public:
     static int32_t OpenFile(const std::string &filePath);
     static bool IsPathValid(const std::string &filePath);
     static uint32_t GetIdFromFdPath(const std::string &fdPath);
+    static std::string GetJobStateChar(const uint32_t state);
 };
 } // namespace OHOS::Print
 #endif // NAPI_PRINT_UTILS_H

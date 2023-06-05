@@ -131,6 +131,8 @@ bool PrinterCapability::ReadFromParcel(Parcel &parcel)
     SetDuplexMode(parcel.ReadUint32());
 
     uint32_t vecSize = parcel.ReadUint32();
+
+    CHECK_IS_EXCEED_PRINT_RANGE_BOOL(vecSize);
     std::vector<PrintPageSize> pageSizeList;
     for (uint32_t index = 0; index < vecSize; index++) {
         auto pageSizePtr = PrintPageSize::Unmarshalling(parcel);

@@ -84,14 +84,17 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     if (data.ReadBool()) {
         data.ReadStringVector(&fileList);
         PRINT_HILOGD("Current file is %{public}zd", fileList.size());
+        CHECK_IS_EXCEED_PRINT_RANGE_BOOL(fileList.size());
         for (auto file : fileList) {
             PRINT_HILOGD("file is %{private}s", file.c_str());
         }
     }
 
     if (data.ReadBool()) {
-        for (int32_t index = 0; index < data.ReadInt32(); index++) {
-            uint32_t fd = data.ReadFileDescriptor();
+        int32_t len = data.ReadInt32();
+        CHECK_IS_EXCEED_PRINT_RANGE_BOOL(len);
+        for (int32_t index = 0; index < len; index++) {
+            uint32_t fd = static_cast<uint32_t>(data.ReadFileDescriptor());
             PRINT_HILOGD("fdList[%{public}d] = %{public}d", index, fd);
             fdList.emplace_back(fd);
         }
@@ -199,6 +202,7 @@ bool PrintServiceStub::OnAddPrinters(MessageParcel &data, MessageParcel &reply)
     uint32_t len = data.ReadUint32();
     PRINT_HILOGD("OnStartDiscoverPrinter len = %{public}d", len);
 
+    CHECK_IS_EXCEED_PRINT_RANGE_BOOL(len);
     for (uint32_t i = 0; i < len; i++) {
         auto infoPtr = PrinterInfo::Unmarshalling(data);
         if (infoPtr == nullptr) {
@@ -223,6 +227,8 @@ bool PrintServiceStub::OnRemovePrinters(MessageParcel &data, MessageParcel &repl
     std::vector<std::string> printerIds;
     data.ReadStringVector(&printerIds);
     PRINT_HILOGD("OnStartDiscoverPrinter len = %{public}zd", printerIds.size());
+
+    CHECK_IS_EXCEED_PRINT_RANGE_BOOL(printerIds.size());
     int32_t ret = RemovePrinters(printerIds);
     reply.WriteInt32(ret);
 
@@ -237,6 +243,7 @@ bool PrintServiceStub::OnUpdatePrinters(MessageParcel &data, MessageParcel &repl
     uint32_t len = data.ReadUint32();
     PRINT_HILOGD("OnStartDiscoverPrinter len = %{public}d", len);
 
+    CHECK_IS_EXCEED_PRINT_RANGE_BOOL(len);
     for (uint32_t i = 0; i < len; i++) {
         auto infoPtr = PrinterInfo::Unmarshalling(data);
         if (infoPtr == nullptr) {
