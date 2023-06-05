@@ -22,6 +22,8 @@ namespace OHOS::Print {
 
 #define PRINT_RET_NONE
 
+#define PRINT_MAX_PRINT_COUNT 1000
+
 #define PRINT_ASSERT_BASE(env, assertion, message, retVal)  \
     do {                                                    \
         if (!(assertion)) {                                 \
@@ -44,6 +46,20 @@ namespace OHOS::Print {
 #define PRINT_CALL(env, theCall) PRINT_CALL_BASE(env, theCall, nullptr)
 
 #define PRINT_CALL_RETURN_VOID(env, theCall) PRINT_CALL_BASE(env, theCall, PRINT_RET_NONE)
+
+#define CHECK_IS_EXCEED_PRINT_RANGE_BASE(count, retVal)                                             \
+    do {                                                                                            \
+        if ((count) > PRINT_MAX_PRINT_COUNT) {                                                      \
+            PRINT_HILOGW("input val is exceed print max range:%{public}d", PRINT_MAX_PRINT_COUNT);  \
+            return retVal;                                                                          \
+        }                                                                                           \
+    } while (0)
+
+#define CHECK_IS_EXCEED_PRINT_RANGE(count)          CHECK_IS_EXCEED_PRINT_RANGE_BASE(count, nullptr)
+#define CHECK_IS_EXCEED_PRINT_RANGE_BOOL(count)     CHECK_IS_EXCEED_PRINT_RANGE_BASE(count, false)
+#define CHECK_IS_EXCEED_PRINT_RANGE_VOID(count)     CHECK_IS_EXCEED_PRINT_RANGE_BASE(count, PRINT_RET_NONE)
+#define CHECK_IS_EXCEED_PRINT_RANGE_INT(count)      CHECK_IS_EXCEED_PRINT_RANGE_BASE(count, E_PRINT_INVALID_PARAMETER)
+
 
 enum PrintErrorCode {
     E_PRINT_NONE = 0,

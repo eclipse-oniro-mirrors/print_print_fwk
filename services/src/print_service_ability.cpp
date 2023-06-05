@@ -61,6 +61,7 @@ static const std::string EVENT_BLOCK = "blocked";
 static const std::string EVENT_SUCCESS = "success";
 static const std::string EVENT_FAIL = "failed";
 static const std::string EVENT_CANCEL = "cancelled";
+static const std::string CALLER_PKG_NAME = "caller.pkgName";
 
 static const std::string FD = "FD";
 static const std::string TYPE_PROPERTY = "type";
@@ -217,11 +218,13 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList);
     BuildFDParam(fdList, want);
     int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
+    std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     int32_t callerUid = IPCSkeleton::GetCallingUid();
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_TOKEN, callerTokenId);
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_UID, callerUid);
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_PID, callerPid);
+    want.SetParam(CALLER_PKG_NAME, callerPkg);
     if (!StartAbility(want)) {
         PRINT_HILOGE("Failed to start spooler ability");
         return E_PRINT_SERVER_FAILURE;
@@ -321,7 +324,6 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
     PRINT_HILOGD("StartDiscoverPrinter started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     printerInfoList_.clear();
-    printerJobMap_.clear();
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> abilityList;
     for (auto extensionId : extensionIds) {
         if (extensionList_.find(extensionId) != extensionList_.end()) {
@@ -456,7 +458,7 @@ int32_t PrintServiceAbility::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
     PRINT_HILOGD("QueryAllPrintJob started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     printJobs.clear();
-    for (auto printJob : printJobList_) {
+    for (auto printJob : queuedJobList_) {
         printJobs.emplace_back(*printJob.second);
     }
     PRINT_HILOGE("QueryAllPrintJob End.");
@@ -497,21 +499,16 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
         return E_PRINT_NO_PERMISSION;
     }
 
-    PRINT_HILOGD("StartPrintJob started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     auto jobId = jobInfo.GetJobId();
     auto printerId = jobInfo.GetPrinterId();
     auto extensionId = NapiPrintUtils::GetExtensionId(printerId);
+    PRINT_HILOGI("StartPrintJob started jobId:%{public}s printerId:%{public}s.", jobId.c_str(), printerId.c_str());
 
     auto jobIt = printJobList_.find(jobId);
     if (jobIt == printJobList_.end()) {
         PRINT_HILOGD("invalid job id");
-        return E_PRINT_INVALID_PRINTJOB;
-    }
-
-    if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
-        PRINT_HILOGD("invalid printer of the print job");
         return E_PRINT_INVALID_PRINTJOB;
     }
 
@@ -534,9 +531,10 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
     auto cbFunc = extCallbackMap_[cid];
     auto callback = [=]() {
         PRINT_HILOGD("Start PrintJob %{public}s", jobId.c_str());
-        if (cbFunc != nullptr && cbFunc->OnCallback(*printJob)) {
+        if (cbFunc != nullptr) {
             printJob->SetJobState(PRINT_JOB_QUEUED);
             UpdatePrintJobState(jobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
+            cbFunc->OnCallback(*printJob);
         }
     };
     serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
@@ -550,7 +548,7 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    PRINT_HILOGD("CancelPrintJob started.");
+    PRINT_HILOGI("CancelPrintJob started jobId:%{public}s.", jobId.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     auto jobIt = queuedJobList_.find(jobId);
@@ -565,6 +563,7 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
         std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CANCEL_PRINT);
         if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
             PRINT_HILOGW("CancelPrintJob Not Register Yet!!!");
+            UpdatePrintJobState(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
             return E_PRINT_SERVER_FAILURE;
         }
 
@@ -576,17 +575,19 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
             }
         };
         serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
-    }
-    auto printJob = std::make_shared<PrintJob>(*jobIt->second);
-    if (printJob == nullptr) {
-        PRINT_HILOGE("fail to move print job back to job list");
-        return E_PRINT_GENERIC_FAILURE;
-    }
-    printJob->SetJobState(PRINT_JOB_UNKNOWN);
-    printJobList_.insert(std::make_pair(jobId, printJob));
+    } else {
+        PRINT_HILOGI("job state is prepare");
+        auto printJob = std::make_shared<PrintJob>(*jobIt->second);
+        if (printJob == nullptr) {
+            PRINT_HILOGE("fail to move print job back to job list");
+            return E_PRINT_GENERIC_FAILURE;
+        }
+        printJob->SetJobState(PRINT_JOB_COMPLETED);
+        printJob->SetSubState(PRINT_JOB_COMPLETED_CANCELLED);
+        printJobList_.insert(std::make_pair(jobId, printJob));
 
-    printerJobMap_[jobIt->second->GetPrinterId()].erase(jobId);
-    queuedJobList_.erase(jobIt);
+        UpdatePrintJobState(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
+    }
     return ret;
 }
 
@@ -599,12 +600,12 @@ void PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
     auto jobId = printerJobMap_[printerId].begin()->first;
     auto jobIt = queuedJobList_.find(jobId);
     if (jobIt == queuedJobList_.end() || jobIt->second == nullptr) {
-        PRINT_HILOGE("invalid print job");
+        PRINT_HILOGE("invalid print job, jobId:%{public}s", jobId.c_str());
         return;
     }
 
     if (jobIt->second->GetJobState() != PRINT_JOB_PREPARED) {
-        PRINT_HILOGE("job state isn't prepared");
+        PRINT_HILOGE("job state isn't prepared, jobId:%{public}s", jobId.c_str());
         return;
     }
 
@@ -768,7 +769,8 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
         return E_PRINT_INVALID_PARAMETER;
     }
 
-    PRINT_HILOGD("UpdatePrintJobState started. %{public}s, state [%{public}d]", jobId.c_str(), state);
+    PRINT_HILOGI("UpdatePrintJobState started jobId:%{public}s, state:[%{public}d %{public}s], subState[%{public}d]",
+        jobId.c_str(), state, NapiPrintUtils::GetJobStateChar(state).c_str(), subState);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     auto jobIt = queuedJobList_.find(jobId);

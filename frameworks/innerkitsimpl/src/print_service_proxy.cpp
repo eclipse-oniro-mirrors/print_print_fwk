@@ -135,6 +135,7 @@ int32_t PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &ex
     }
 
     uint32_t len = reply.ReadUint32();
+    CHECK_IS_EXCEED_PRINT_RANGE_INT(len);
     for (uint32_t i = 0; i < len; i++) {
         auto infoPtr = PrintExtensionInfo::Unmarshalling(reply);
         if (infoPtr == nullptr) {
@@ -397,6 +398,7 @@ int32_t PrintServiceProxy::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
     }
 
     uint32_t len = reply.ReadUint32();
+    CHECK_IS_EXCEED_PRINT_RANGE_INT(len);
     for (uint32_t i = 0; i < len; i++) {
         auto jobPtr = PrintJob::Unmarshalling(reply);
         if (jobPtr == nullptr) {

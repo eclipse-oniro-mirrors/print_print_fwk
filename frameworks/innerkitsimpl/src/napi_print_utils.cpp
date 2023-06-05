@@ -23,6 +23,7 @@
 
 namespace OHOS::Print {
 static constexpr const int MAX_STRING_LENGTH = 65536;
+static std::map<uint32_t, std::string> jobStateMap_;
 const std::string GLOBAL_ID_DELIMITER = ":";
 const std::string EXTENSION_CID_DELIMITER = ":";
 const std::string TASK_EVENT_DELIMITER = "-";
@@ -403,4 +404,22 @@ uint32_t NapiPrintUtils::GetIdFromFdPath(const std::string &fdPath)
     }
     return fd;
 }
+
+std::string NapiPrintUtils::GetJobStateChar(const uint32_t state)
+{
+    if (jobStateMap_.size() == 0) {
+        jobStateMap_[PRINT_JOB_PREPARED] = "PRINT_JOB_PREPARED";
+        jobStateMap_[PRINT_JOB_QUEUED] = "PRINT_JOB_QUEUED";
+        jobStateMap_[PRINT_JOB_RUNNING] = "PRINT_JOB_RUNNING";
+        jobStateMap_[PRINT_JOB_BLOCKED] = "PRINT_JOB_BLOCKED";
+        jobStateMap_[PRINT_JOB_COMPLETED] = "PRINT_JOB_COMPLETED";
+        jobStateMap_[PRINT_JOB_UNKNOWN] = "PRINT_JOB_UNKNOWN";
+    }
+    auto it = jobStateMap_.find(state);
+    if (it != jobStateMap_.end()) {
+        return it -> second;
+    }
+    return "PRINT_JOB_UNKNOWN";
+}
+
 } // namespace OHOS::Print
