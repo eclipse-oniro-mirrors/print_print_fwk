@@ -19,20 +19,15 @@ module_output_path = "print/print_fwk"
 ohos_unittest("print_service_test") {
   module_out_path = module_output_path
   include_dirs = [
-    "mock",
     "${print_path}/frameworks/innerkitsimpl/include",
     "${print_path}/frameworks/innerkitsimpl/src",
     "${print_path}/interfaces/kits/napi/include",
     "${print_path}/interfaces/kits/napi/src",
     "${print_path}/services/include",
     "${print_path}/services/src",
-    "${arkui_path}/ace_engine/frameworks/base/utils",
-    "${arkui_path}/napi",
-    "${arkui_path}/napi/interfaces/kits",
-    "${arkui_path}/napi/interfaces/inner_api",
+    "${print_utils_path}/include",
     "//third_party/node/src",
     "//third_party/curl/include",
-    "${print_utils_path}/include",
   ]
 
   sources = [
@@ -43,7 +38,6 @@ ohos_unittest("print_service_test") {
   ]
 
   deps = [
-    "${arkui_path}/napi:ace_napi",
     "${print_path}/etc/init:printservice.rc",
     "${print_path}/frameworks/innerkitsimpl:print_client",
     "${print_path}/frameworks/kits/extension:print_extension_framework",
@@ -53,8 +47,6 @@ ohos_unittest("print_service_test") {
     "${print_path}/interfaces/kits/napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services:print_service",
-    "${system_ability_mgr_path}/safwk/interfaces/innerkits/safwk:system_ability_fwk",
-    "${system_ability_mgr_path}/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
     "//third_party/zlib:libz",
@@ -72,6 +64,9 @@ ohos_unittest("print_service_test") {
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
+    "napi:ace_napi",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 }
 

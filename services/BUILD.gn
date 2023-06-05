@@ -36,23 +36,10 @@ ohos_shared_library("print_service") {
     ":print_service_config",
   ]
   include_dirs = [
-    "//commonlibrary/c_utils/base/include",
-    "//utils/system/safwk/native/include",
-    "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient/include",
-    "//base/notification/distributed_notification_service/interfaces/inner_api",
-    "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
-    "//base/hiviewdfx/hitrace/interfaces/native/innerkits/include/hitrace_meter",
     "${print_path}/frameworks/innerkitsimpl/include",
     "${print_utils_path}/include",
   ]
-  deps = [
-    "${print_path}/frameworks/innerkitsimpl:print_client",
-    "//base/notification/distributed_notification_service/frameworks/ans:ans_innerkits",
-    "//base/telephony/core_service/interfaces/innerkits:tel_core_service_api",
-    "//foundation/communication/netmanager_base/interfaces/innerkits/netconnclient:net_conn_manager_if",
-    "//foundation/systemabilitymgr/safwk/interfaces/innerkits/safwk:system_ability_fwk",
-    "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
-  ]
+  deps = [ "${print_path}/frameworks/innerkitsimpl:print_client" ]
 
   external_deps = [
     "ability_base:base",
@@ -64,6 +51,8 @@ ohos_shared_library("print_service") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "core_service:tel_core_service_api",
+    "distributed_notification_service:ans_innerkits",
     "drivers_interface_ril:hril_innerkits",
     "eventhandler:libeventhandler",
     "hisysevent_native:libhisysevent",
@@ -71,8 +60,11 @@ ohos_shared_library("print_service") {
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
     "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
   subsystem_name = "print"
   part_name = "print_fwk"

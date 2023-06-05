@@ -14,39 +14,13 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
-ABILITY_RUNTIME_INNERKITS_PATH = "${ability_runtime_inner_api_path}"
-
 config("ability_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/include",
     "${print_path}/frameworks/kits/extension/include",
     "${print_utils_path}/include",
-    "//commonlibrary/c_utils/base/include",
-    "${ability_runtime_path}/interfaces/kits/native/ability/native",
-    "${ability_runtime_path}/interfaces/kits/native/appkit/app",
-    "${ABILITY_RUNTIME_INNERKITS_PATH}/app_manager/include/appmgr",
-    "${ABILITY_RUNTIME_INNERKITS_PATH}/ability_manager/include",
-    "${ability_runtime_services_path}/abilitymgr/include",
-    "${ability_runtime_path}/interfaces/kits/native/appkit/ability_runtime/app",
-    "${ability_runtime_path}/interfaces/kits/native/appkit/app",
-    "${ability_runtime_kits_path}/fmskit/native/include",
-    "${ability_runtime_path}/interfaces/kits/native/appkit/app",
-    "${ability_runtime_services_path}/common/include",
-
-    "${system_ability_mgr_path}/dmsfwk/services/dtbschedmgr/include",
-    "//base/global/resource_management/interfaces/inner_api/include",
-    "${ability_runtime_napi_path}/featureAbility",
-    "${arkui_path}/napi/interfaces/kits",
     "//third_party/node/src",
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
-    "${ability_runtime_path}/interfaces/kits/native/ability/native/continuation/remote_register_service",
-    "${ability_runtime_path}/interfaces/kits/native/ability/native/continuation/distributed",
-    "${ability_runtime_path}/interfaces/kits/native/ability/native/distributed_ability_runtime",
-    "${ABILITY_RUNTIME_INNERKITS_PATH}/ability_manager/include/continuation",
-    "${ability_runtime_path}/interfaces/kits/native/ability/native/continuation/kits",
-    "${ability_runtime_path}/interfaces/kits/native/appkit/app/task",
-    "${ability_runtime_napi_path}/inner/napi_common",
   ]
 
   cflags = []
@@ -64,21 +38,7 @@ config("ability_public_config") {
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/include",
     "${print_path}/frameworks/kits/extension/include",
-    "${ABILITY_RUNTIME_INNERKITS_PATH}/base/include",
-    "${ability_runtime_path}/interfaces/kits/native",
-    "${ability_runtime_path}/interfaces/kits/native/appkit/ability_runtime/app",
-    "${ability_runtime_path}/interfaces/kits/native/appkit/app",
-    "${ability_runtime_path}/interfaces/kits/native/ability_runtime",
-    "${ability_runtime_path}/interfaces/kits/native/ability/native",
     "//third_party/libuv/include",
-    "${ability_runtime_path}/interfaces/kits/native/ability_runtime/context",
-    "${ability_runtime_path}/interfaces/kits/native/ability/native/continuation/remote_register_service",
-    "${ability_runtime_path}/interfaces/kits/native/ability/native/continuation/distributed",
-    "${ability_runtime_path}/interfaces/kits/native/ability/native/distributed_ability_runtime",
-    "${ABILITY_RUNTIME_INNERKITS_PATH}/ability_manager/include/continuation",
-    "//base/global/resource_management/interfaces/inner_api/include",
-    "${ability_runtime_path}/interfaces/kits/native/ability/native/continuation/kits",
-    "${ability_runtime_kits_path}/fmskit/native/include",
     "//third_party/json/include",
   ]
 
@@ -89,7 +49,6 @@ ohos_shared_library("print_extension_framework") {
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/include",
     "${print_path}/frameworks/kits/extension/include",
-    "//base/global/i18n/frameworks/intl/include",
   ]
 
   sources = [
@@ -106,30 +65,24 @@ ohos_shared_library("print_extension_framework") {
     "${ability_runtime_path}/frameworks/native/ability:ability_context_public_config",
   ]
 
-  deps = [
-    "${ability_runtime_path}/frameworks/native/appkit:app_context",
-    "${print_path}/frameworks/innerkitsimpl:print_client",
-  ]
+  deps = [ "${print_path}/frameworks/innerkitsimpl:print_client" ]
 
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
     "ability_runtime:runtime",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
+    "i18n:intl_util",
     "ipc:ipc_napi_common",
     "ipc_js:rpc",
-  ]
-
-  public_deps = [
-    "${arkui_path}/napi:ace_napi",
-    "//base/global/i18n/frameworks/intl:intl_util",
-    "//base/global/resource_management/frameworks/resmgr:global_resmgr",
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "napi:ace_napi",
+    "resource_management:global_resmgr",
   ]
 
   subsystem_name = "print"
@@ -137,31 +90,26 @@ ohos_shared_library("print_extension_framework") {
 }
 
 ohos_shared_library("print_extension_module") {
-  include_dirs = [
-    "${ability_runtime_path}/interfaces/kits/native/ability/native",
-    "${ability_runtime_path}/interfaces/kits/native/ability/native/ability_runtime",
-  ]
-
   sources = [ "${print_path}/frameworks/kits/extension/src/print_extension_module_loader.cpp" ]
 
   configs = [ ":ability_config" ]
   public_configs = [ ":ability_public_config" ]
 
-  deps = [
-    ":print_extension_framework",
-    "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
-  ]
+  deps = [ ":print_extension_framework" ]
 
   external_deps = [
     "ability_base:base",
     "ability_base:want",
     "ability_base:zuri",
+    "ability_runtime:abilitykit_native",
     "ability_runtime:runtime",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
+    "i18n:intl_util",
+    "resource_management:global_resmgr",
   ]
   relative_install_dir = "extensionability"
   subsystem_name = "print"
