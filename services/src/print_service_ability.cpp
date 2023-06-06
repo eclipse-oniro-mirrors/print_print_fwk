@@ -36,6 +36,9 @@
 #include "system_ability.h"
 #include "system_ability_definition.h"
 #include "want_params_wrapper.h"
+#include "common_event_data.h"
+#include "common_event_manager.h"
+#include "common_event_support.h"
 
 namespace OHOS::Print {
 using namespace std;
@@ -66,6 +69,10 @@ static const std::string CALLER_PKG_NAME = "caller.pkgName";
 static const std::string FD = "FD";
 static const std::string TYPE_PROPERTY = "type";
 static const std::string VALUE_PROPERTY = "value";
+static const std::string QUEUE_JOB_LIST_CHANGED = "queuedJobListChanged";
+static const std::string ACTION_QUEUE_JOB_LIST_CHANGED = "action.printkit.queuedJobListChanged";
+static const std::string QUEUE_JOB_LIST_PRINTING = "printing";
+static const std::string QUEUE_JOB_LIST_COMPLETED = "completed";
 
 
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
@@ -530,8 +537,9 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
 
     auto cbFunc = extCallbackMap_[cid];
     auto callback = [=]() {
-        PRINT_HILOGD("Start PrintJob %{public}s", jobId.c_str());
         if (cbFunc != nullptr) {
+            PRINT_HILOGD("Start send task to Extension PrintJob %{public}s", jobId.c_str());
+            NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
             printJob->SetJobState(PRINT_JOB_QUEUED);
             UpdatePrintJobState(jobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
             cbFunc->OnCallback(*printJob);
@@ -618,6 +626,7 @@ void PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
         PRINT_HILOGD("Start Next Print Job %{public}s", jobId.c_str());
         if (cbFunc != nullptr && cbFunc->OnCallback(*printJob)) {
             printJob->SetJobState(PRINT_JOB_QUEUED);
+            NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
             UpdatePrintJobState(jobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
         }
     };
@@ -796,6 +805,7 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
             queuedJobList_.erase(jobIt);
         }
         if (printerJobMap_[printerId].empty()) {
+            NotifyAppJobQueueChanged(QUEUE_JOB_LIST_COMPLETED);
             PRINT_HILOGD("no print job exists, destroy extension");
             DestroyExtension(printerId);
         }
@@ -804,6 +814,17 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
 
     PRINT_HILOGD("UpdatePrintJobState end.");
     return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::NotifyAppJobQueueChanged(const std::string &applyResult)
+{
+    PRINT_HILOGD("NotifyAppJobQueueChanged started. %{public}s ", applyResult.c_str());
+    AAFwk::Want want;
+    want.SetAction(ACTION_QUEUE_JOB_LIST_CHANGED);
+    want.SetParam(QUEUE_JOB_LIST_CHANGED, applyResult);
+    EventFwk::CommonEventData commonData{ want };
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
+    PRINT_HILOGD("NotifyAppJobQueueChanged end.");
 }
 
 void PrintServiceAbility::DestroyExtension(const std::string &printerId)

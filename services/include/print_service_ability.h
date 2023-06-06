@@ -93,6 +93,7 @@ private:
     void SendQueuePrintJob(const std::string &printerId);
     void BuildFDParam(const std::vector<uint32_t> &fdList, AAFwk::Want &want);
     void DestroyExtension(const std::string &printerId);
+    void NotifyAppJobQueueChanged(const std::string &applyResult);
 
 #ifndef TDD_ENABLE
 private:
