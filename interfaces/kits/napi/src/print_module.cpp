@@ -72,6 +72,16 @@ static constexpr const char *PROPERTY_BLOCK_LOW_ON_INK = "PRINT_JOB_BLOCK_LOW_ON
 static constexpr const char *PROPERTY_BLOCK_LOW_ON_TONER = "PRINT_JOB_BLOCK_LOW_ON_TONER";
 static constexpr const char *PROPERTY_BLOCK_REALLY_LOW_ON_INK = "PRINT_JOB_BLOCK_REALLY_LOW_ON_INK";
 static constexpr const char *PROPERTY_BLOCK_BAD_CERTIFICATE = "PRINT_JOB_BLOCK_BAD_CERTIFICATE";
+static constexpr const char *PROPERTY_BLOCK_ACCOUNT_ERROR = "PRINT_BLOCK_ACCOUNT_ERROR";
+static constexpr const char *PROPERTY_BLOCK_PRINT_PERMISSION_ERROR = "PRINT_JOB_BLOCK_PRINT_PERMISSION_ERROR";
+static constexpr const char *PROPERTY_BLOCK_PRINT_COLOR_PERMISSION_ERROR = "PRINT_JOB_BLOCK_PRINT_COLOR_PERMISSION_ERROR";
+static constexpr const char *PROPERTY_BLOCK_NETWORK_ERROR = "PRINT_JOB_BLOCK_NETWORK_ERROR";
+static constexpr const char *PROPERTY_BLOCK_CONNECT_SERVER_ERROR = "PRINT_JOB_BLOCK_CONNECT_SERVER_ERROR";
+static constexpr const char *PROPERTY_BLOCK_LARGE_FILE_ERROR = "PRINT_JOB_BLOCK_LARGE_FILE_ERROR";
+static constexpr const char *PROPERTY_BLOCK_PARSE_FILE_ERROR = "PRINT_JOB_BLOCK_PARSE_FILE_ERROR";
+static constexpr const char *PROPERTY_BLOCK_FILE_CONVERT_SLOWLY = "PRINT_JOB_BLOCK_FILE_CONVERT_SLOWLY";
+static constexpr const char *PROPERTY_RUNNING_UPLOADING_FILES = "PRINT_JOB_RUNNING_UPLOADING_FILES";
+static constexpr const char *PROPERTY_RUNNING_CONVERTING_FILES = "PRINT_JOB_RUNNING_CONVERTING_FILES";
 static constexpr const char *PROPERTY_BLOCK_UNKNOWN = "PRINT_JOB_BLOCK_UNKNOWN";
 
 static constexpr const char *PROPERTY_ERR_NONE = "E_PRINT_NONE";
@@ -115,6 +125,16 @@ static napi_value block_low_on_ink = nullptr;
 static napi_value block_low_on_toner = nullptr;
 static napi_value block_really_low_on_ink = nullptr;
 static napi_value block_bad_certificate = nullptr;
+static napi_value block_account_error = nullptr;
+static napi_value block_print_permission_error = nullptr;
+static napi_value block_print_color_permission_error = nullptr;
+static napi_value block_network_error = nullptr;
+static napi_value block_connect_server_error = nullptr;
+static napi_value block_large_file_error = nullptr;
+static napi_value block_parse_file_error = nullptr;
+static napi_value block_file_convert_slowly = nullptr;
+static napi_value running_uploading_files = nullptr;
+static napi_value running_converting_files = nullptr;
 static napi_value block_unknown = nullptr;
 
 static napi_value err_none = nullptr;
@@ -173,6 +193,16 @@ static void NapiCreateEnum(napi_env env)
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_LOW_ON_TONER), &block_low_on_toner);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK), &block_really_low_on_ink);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE), &block_bad_certificate);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_ACCOUNT_ERROR), &block_account_error);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_PERMISSION_ERROR), &block_print_permission_error);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_COLOR_PERMISSION_ERROR), &block_print_color_permission_error);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_NETWORK_ERROR), &block_network_error);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_CONNECT_SERVER_ERROR), &block_connect_server_error);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_LARGE_FILE_ERROR), &block_large_file_error);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_PARSE_FILE_ERROR), &block_parse_file_error);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_FILE_CONVERT_SLOWLY), &block_file_convert_slowly);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES), &running_uploading_files);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_RUNNING_CONVERTING_FILES), &running_converting_files);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_UNKNOWN), &block_unknown);
 
     // create error code of js api
@@ -222,8 +252,17 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_LOW_ON_TONER, block_low_on_toner),
         PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_REALLY_LOW_ON_INK, block_really_low_on_ink),
         PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_BAD_CERTIFICATE, block_bad_certificate),
+        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_ACCOUNT_ERROR, block_account_error),
+        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_PRINT_PERMISSION_ERROR, block_print_permission_error),
+        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_PRINT_COLOR_PERMISSION_ERROR, block_print_color_permission_error),
+        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_NETWORK_ERROR, block_network_error),
+        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_CONNECT_SERVER_ERROR, block_connect_server_error),
+        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_LARGE_FILE_ERROR, block_large_file_error),
+        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_PARSE_FILE_ERROR, block_parse_file_error),
+        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_FILE_CONVERT_SLOWLY, block_file_convert_slowly),
+        PRINT_NAPI_PROPERTY(PROPERTY_RUNNING_UPLOADING_FILES, running_uploading_files),
+        PRINT_NAPI_PROPERTY(PROPERTY_RUNNING_CONVERTING_FILES, running_converting_files),
         PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_UNKNOWN, block_unknown),
-
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_NONE, err_none),
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_NO_PERMISSION, err_no_permission),
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PARAMETER, err_invalid_parameter),
@@ -234,7 +273,6 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTER, err_invalid_printer),
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTJOB, err_invalid_printjob),
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_FILE_IO, err_file_io),
-
         PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
         PRINT_NAPI_METHOD(FUNCTION_START_DISCOVERY, NapiInnerPrint::StartDiscovery),

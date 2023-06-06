@@ -34,7 +34,6 @@ static constexpr const char *PARAM_JOB_DUPLEXMODE = "duplexMode";
 static constexpr const char *PARAM_JOB_MARGIN = "margin";
 static constexpr const char *PARAM_JOB_PREVIEW = "preview";
 static constexpr const char *PARAM_JOB_OPTION = "option";
-static const int PRINT_FILE_MAX_COUNT = 1000;
 
 PrintJob::PrintJob()
     : jobId_(""), printerId_(""), jobState_(PRINT_JOB_PREPARED),
@@ -129,6 +128,10 @@ void PrintJob::SetSubState(uint32_t subState)
         subState_ = subState;
     }
     if (jobState_ == PRINT_JOB_BLOCKED &&
+    (subState < PRINT_JOB_BLOCKED_UNKNOWN && subState > PRINT_JOB_COMPLETED_FILE_CORRUPT)) {
+        subState_ = subState;
+    }
+    if (jobState_ == PRINT_JOB_RUNNING &&
     (subState < PRINT_JOB_BLOCKED_UNKNOWN && subState > PRINT_JOB_COMPLETED_FILE_CORRUPT)) {
         subState_ = subState;
     }
@@ -288,13 +291,8 @@ void PrintJob::ReadParcelFD(Parcel &parcel)
 {
     uint32_t fdSize = parcel.ReadUint32();
     fdList_.clear();
-    PRINT_HILOGD("fdSize: %{public}d", fdSize);
-    // frzzTest fdSize may be to large
-    if (fdSize > PRINT_FILE_MAX_COUNT) {
-        PRINT_HILOGW("fdSize is bigger than mast print files number, return");
-        return;
-    }
 
+    CHECK_IS_EXCEED_PRINT_RANGE_VOID(fdSize);
     auto msgParcel = static_cast<MessageParcel*>(&parcel);
     for (uint32_t index = 0; index < fdSize; index++) {
         auto fd = msgParcel->ReadFileDescriptor();

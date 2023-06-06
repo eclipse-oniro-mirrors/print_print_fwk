@@ -278,7 +278,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0018, TestSize.Level1)
     OHOS::Print::PrintJob job;
     job.SetJobState(4);
     job.SetSubState(5);
-    EXPECT_EQ(17, job.GetSubState());
+    EXPECT_EQ(99, job.GetSubState());
 }
 
 /**
@@ -306,7 +306,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0020, TestSize.Level1)
     OHOS::Print::PrintJob job;
     job.SetJobState(3);
     job.SetSubState(2);
-    EXPECT_EQ(17, job.GetSubState());
+    EXPECT_EQ(99, job.GetSubState());
 }
 
 /**
@@ -718,7 +718,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0050, TestSize.Level1)
     OHOS::Print::PrintJob job, jobInfo;
     OHOS::Print::PrintPreviewAttribute preview, getPreview;
     job.UpdateParams(jobInfo);
-    EXPECT_EQ(17, job.GetSubState());
+    EXPECT_EQ(99, job.GetSubState());
 }
 
 /**
