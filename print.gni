@@ -23,4 +23,3 @@ if (!defined(global_parts_info) ||
 } else {
   security_guard_enabled = false
 }
-
