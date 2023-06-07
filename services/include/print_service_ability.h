@@ -28,6 +28,7 @@
 #include "print_constant.h"
 #include "print_service_stub.h"
 #include "system_ability.h"
+#include "print_security_guard_manager.h"
 #define TDD_ENABLE 1
 
 namespace OHOS::Print {
@@ -94,10 +95,12 @@ private:
     void BuildFDParam(const std::vector<uint32_t> &fdList, AAFwk::Want &want);
     void DestroyExtension(const std::string &printerId);
     void NotifyAppJobQueueChanged(const std::string &applyResult);
+    std::shared_ptr<PrinterInfo> getPrinterInfo(const std::string printerId);
 
 #ifndef TDD_ENABLE
 private:
 #endif
+    PrintSecurityGuardManager securityGuardManager_;
     ServiceRunningState state_;
     static std::mutex instanceLock_;
     static sptr<PrintServiceAbility> instance_;
