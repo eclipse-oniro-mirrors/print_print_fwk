@@ -18,9 +18,9 @@ print_path = "//base/print/print_fwk"
 print_utils_path = "${print_path}/utils"
 
 if (!defined(global_parts_info) ||
-defined(global_parts_info.security_security_guard)) {
-    security_guard_enabled = true
+    defined(global_parts_info.security_security_guard)) {
+  security_guard_enabled = true
 } else {
-    security_guard_enabled = false
+  security_guard_enabled = false
 }
 
