@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
- #ifndef PRINT_UTIL_H
- #define PRINT_UTIL_H
+#ifndef PRINT_UTIL_H
+#define PRINT_UTIL_H
 
 #include <algorithm>
 #include <iostream>
@@ -87,7 +87,6 @@ inline bool PrintUtil::CheckContains(const std::string& str, const std::string& 
 
     return str.find(content) != std::string::npos;
 }
-
 } // namespace OHOS::Print
 
-#endif //PRINT_UTIL_H
+#endif // PRINT_UTIL_H

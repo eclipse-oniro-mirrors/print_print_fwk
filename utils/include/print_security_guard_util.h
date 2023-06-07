@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
- #ifndef PRINT_SECURITY_GUARD_UTIL_H
- #define PRINT_SECURITY_GUARD_UTIL_H
+#ifndef PRINT_SECURITY_GUARD_UTIL_H
+#define PRINT_SECURITY_GUARD_UTIL_H
 
 #include "print_util.h"
 
@@ -47,7 +47,6 @@ inline int32_t PrintSecurityGuardUtil::GetPrinterType(const std::string& des)
     }
     return FROM_LOCAL_NET;
 }
-
 } // namespace OHOS::Print
 
-#endif //PRINT_SECURITY_GUARD_UTIL_H
+#endif // PRINT_SECURITY_GUARD_UTIL_H
