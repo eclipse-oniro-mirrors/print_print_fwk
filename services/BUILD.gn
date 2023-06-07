@@ -29,10 +29,10 @@ ohos_shared_library("print_service") {
     "src/print_bms_helper.cpp",
     "src/print_callback_proxy.cpp",
     "src/print_extension_callback_proxy.cpp",
+    "src/print_security_guard_info.cpp",
+    "src/print_security_guard_manager.cpp",
     "src/print_service_ability.cpp",
     "src/print_service_stub.cpp",
-    "src/print_security_guard_manager.cpp",
-    "src/print_security_guard_info.cpp",
   ]
 
   public_configs = [
@@ -78,7 +78,7 @@ ohos_shared_library("print_service") {
       "time_service:time_client",
     ]
 
-    cflags_cc += ["-DSECURITY_GUARDE_ENABLE"]
+    cflags_cc += [ "-DSECURITY_GUARDE_ENABLE" ]
   }
 
   subsystem_name = "print"
