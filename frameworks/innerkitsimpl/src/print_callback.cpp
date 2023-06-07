@@ -28,7 +28,7 @@ PrintCallback::~PrintCallback()
     ref_ = nullptr;
 }
 
-bool InitUvWorkCallbackEnv(uv_work_t *work, napi_handle_scope &scope)
+static bool InitUvWorkCallbackEnv(uv_work_t *work, napi_handle_scope &scope)
 {
     if (work == nullptr) {
         PRINT_HILOGE("work is nullptr");
@@ -51,7 +51,7 @@ bool InitUvWorkCallbackEnv(uv_work_t *work, napi_handle_scope &scope)
 
 static void PrintTaskAfterCallFun(uv_work_t *work, int status)
 {
-    PRINT_HILOGD("OnCallback start run PrintTaskAfterCallFun");
+    PRINT_HILOGI("OnCallback start run PrintTaskAfterCallFun");
     napi_handle_scope scope = nullptr;
     if (!InitUvWorkCallbackEnv(work, scope)) {
         return;
@@ -66,7 +66,7 @@ static void PrintTaskAfterCallFun(uv_work_t *work, int status)
         napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_ZERO,
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGD("OnCallback end run PrintTaskAfterCallFun success");
+        PRINT_HILOGI("OnCallback end run PrintTaskAfterCallFun success");
         if (work != nullptr) {
             delete work;
             work = nullptr;
@@ -78,7 +78,7 @@ static void PrintTaskAfterCallFun(uv_work_t *work, int status)
 
 static void PrinterAfterCallFun(uv_work_t *work, int status)
 {
-    PRINT_HILOGD("OnCallback start run PrinterAfterCallFun");
+    PRINT_HILOGI("OnCallback start run PrinterAfterCallFun");
     napi_handle_scope scope = nullptr;
     if (!InitUvWorkCallbackEnv(work, scope)) {
         return;
@@ -94,7 +94,7 @@ static void PrinterAfterCallFun(uv_work_t *work, int status)
         napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGD("OnCallback end run PrinterAfterCallFun success");
+        PRINT_HILOGI("OnCallback end run PrinterAfterCallFun success");
         if (work != nullptr) {
             delete work;
             work = nullptr;
@@ -106,7 +106,7 @@ static void PrinterAfterCallFun(uv_work_t *work, int status)
 
 static void PrintJobAfterCallFun(uv_work_t *work, int status)
 {
-    PRINT_HILOGD("OnCallback start run PrintJobAfterCallFun");
+    PRINT_HILOGI("OnCallback start run PrintJobAfterCallFun");
     napi_handle_scope scope = nullptr;
     if (!InitUvWorkCallbackEnv(work, scope)) {
         return;
@@ -122,7 +122,7 @@ static void PrintJobAfterCallFun(uv_work_t *work, int status)
         napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGD("OnCallback end run PrintJobAfterCallFun success");
+        PRINT_HILOGI("OnCallback end run PrintJobAfterCallFun success");
         if (work != nullptr) {
             delete work;
             work = nullptr;
@@ -134,7 +134,7 @@ static void PrintJobAfterCallFun(uv_work_t *work, int status)
 
 static void ExtensionAfterCallFun(uv_work_t *work, int status)
 {
-    PRINT_HILOGD("OnCallback start run ExtensionAfterCallFun");
+    PRINT_HILOGI("OnCallback start run ExtensionAfterCallFun");
     napi_handle_scope scope = nullptr;
     if (!InitUvWorkCallbackEnv(work, scope)) {
         return;
@@ -152,7 +152,7 @@ static void ExtensionAfterCallFun(uv_work_t *work, int status)
         napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGD("OnCallback end run ExtensionAfterCallFun success");
+        PRINT_HILOGI("OnCallback end run ExtensionAfterCallFun success");
         if (work != nullptr) {
             delete work;
             work = nullptr;
@@ -204,8 +204,8 @@ bool PrintCallback::OnCallback(uint32_t state, const PrinterInfo &info)
     PRINT_HILOGI("Printer Notification in");
     return onBaseCallback(
         [state, info](CallbackParam* param) {
-             param->state = state;
-             param->printerInfo = info;
+            param->state = state;
+            param->printerInfo = info;
         }, PrinterAfterCallFun);
 }
 
@@ -214,8 +214,8 @@ bool PrintCallback::OnCallback(uint32_t state, const PrintJob &info)
     PRINT_HILOGI("PrintJob Notification in");
     return onBaseCallback(
         [state, info](CallbackParam* param) {
-             param->state = state;
-             param->jobInfo = info;
+            param->state = state;
+            param->jobInfo = info;
         }, PrintJobAfterCallFun);
 }
 
@@ -224,8 +224,8 @@ bool PrintCallback::OnCallback(const std::string &extensionId, const std::string
     PRINT_HILOGI("ExtensionInfo Notification in");
     return onBaseCallback(
         [extensionId, info](CallbackParam* param) {
-             param->extensionId = extensionId;
-             param->info = info;
+            param->extensionId = extensionId;
+            param->info = info;
         }, ExtensionAfterCallFun);
 }
 } // namespace OHOS::Print
