@@ -20,8 +20,24 @@
 #include "napi/native_api.h"
 #include "print_callback_stub.h"
 #include <mutex>
+#include "napi_print_utils.h"
+#include "print_log.h"
+#include <uv.h>
+#include <functional>
 
 namespace OHOS::Print {
+struct CallbackParam {
+    napi_env env;
+    napi_ref ref;
+    std::mutex* mutexPtr;
+    uint32_t state;
+    PrinterInfo printerInfo;
+    PrintJob jobInfo;
+
+    std::string extensionId;
+    std::string info;
+};
+
 class PrintCallback : public PrintCallbackStub {
 public:
     PrintCallback(napi_env env, napi_ref ref);
@@ -30,6 +46,9 @@ public:
     bool OnCallback(uint32_t state, const PrinterInfo &info) override;
     bool OnCallback(uint32_t state, const PrintJob &info) override;
     bool OnCallback(const std::string &extensionId, const std::string &info) override;
+
+private:
+    bool onBaseCallback(std::function<void(CallbackParam*)> paramFun, uv_after_work_cb after_work_cb);
 
 #ifndef TDD_ENABLE
 private:
