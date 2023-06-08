@@ -14,45 +14,45 @@
  */
 
 class PrintExtension {
-    onCreated(want) {
-        console.log('onCreated, want:' + want.abilityName);
-    }
+  onCreated(want) {
+    console.log('onCreated, want:' + want.abilityName);
+  }
 
-    onStartDiscoverPrinter() {
-        console.log('onStartDiscoverPrinter');
-    }
+  onStartDiscoverPrinter() {
+    console.log('onStartDiscoverPrinter');
+  }
 
-    onStopDiscoverPrinter() {
-        console.log('onStopDiscoverPrinter');
-    }
+  onStopDiscoverPrinter() {
+    console.log('onStopDiscoverPrinter');
+  }
 
-    onConnectPrinter(printerId) {
-        console.log('onConnectPrinter:' + printerId);
-    }
+  onConnectPrinter(printerId) {
+    console.log('onConnectPrinter:' + printerId);
+  }
 
-    onDisconnectPrinter(printerId) {
-        console.log('onDisconnectPrinter');
-    }
+  onDisconnectPrinter(printerId) {
+    console.log('onDisconnectPrinter');
+  }
 
-    onStartPrintJob(jobInfo) {
-        console.log('onStartPrintJob');
-    }
+  onStartPrintJob(jobInfo) {
+    console.log('onStartPrintJob');
+  }
 
-    onCancelPrintJob(jobInfo) {
-        console.log('onCancelPrintJob');
-    }
+  onCancelPrintJob(jobInfo) {
+    console.log('onCancelPrintJob');
+  }
 
-    onRequestPrinterCapability(printerId) {
-        console.log('onRequestPrinterCapability:' + printerId);
-    }
+  onRequestPrinterCapability(printerId) {
+    console.log('onRequestPrinterCapability:' + printerId);
+  }
 
-    onRequestPreview(jobInfo) {
-        console.log('onRequestPreview');
-    }
+  onRequestPreview(jobInfo) {
+    console.log('onRequestPreview');
+  }
 
-    onDestroy() {
-        console.log('onDestroy');
-    }
+  onDestroy() {
+    console.log('onDestroy');
+  }
 }
 
-export default PrintExtension
+export default PrintExtension;

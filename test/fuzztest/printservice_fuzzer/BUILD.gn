@@ -51,6 +51,9 @@ ohos_fuzztest("PrintServiceFuzzTest") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "core_service:tel_core_service_api",
+    "distributed_notification_service:ans_innerkits",
     "drivers_interface_ril:hril_innerkits",
     "eventhandler:libeventhandler",
     "hisysevent_native:libhisysevent",
@@ -58,9 +61,19 @@ ohos_fuzztest("PrintServiceFuzzTest") {
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
     "relational_store:native_rdb",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
+
+  if (security_guard_enabled) {
+    external_deps += [
+      "security_guard:libsg_collect_sdk",
+      "time_service:time_client",
+    ]
+  }
 
   sources = [ "printservice_fuzzer.cpp" ]
 }
