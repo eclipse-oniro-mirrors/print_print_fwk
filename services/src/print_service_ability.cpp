@@ -39,6 +39,7 @@
 #include "common_event_data.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "print_security_guard_manager.h"
 
 namespace OHOS::Print {
 using namespace std;
@@ -239,6 +240,9 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     printJobList_.insert(std::make_pair(jobId, printJob));
     taskId = jobId;
     SendPrintJobEvent(*printJob);
+
+    // save securityGuard base info
+    securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
     return E_PRINT_NONE;
 }
 
@@ -798,7 +802,6 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
     SendPrintJobEvent(*jobIt->second);
 
     auto printerId = jobIt->second->GetPrinterId();
-    PRINT_HILOGD("printerId = %{public}s", printerId.c_str());
     if (state == PRINT_JOB_COMPLETED) {
         if (jobInQueue) {
             printerJobMap_[printerId].erase(jobId);
@@ -1158,6 +1161,16 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
         eventIt->second->OnCallback(jobInfo.GetJobState(), jobInfo);
     }
 
+    // notify securityGuard
+    if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
+        std::shared_ptr<PrinterInfo> printerInfo = getPrinterInfo(jobInfo.GetPrinterId());
+        if (printerInfo != nullptr) {
+            securityGuardManager_.receiveJobStateUpdate(jobInfo.GetJobId(), *printerInfo, jobInfo);
+        } else {
+            PRINT_HILOGD("receiveJobStateUpdate printer is empty");
+        }
+    }
+
     std::string stateInfo = "";
     if (jobInfo.GetJobState() == PRINT_JOB_BLOCKED) {
         stateInfo = EVENT_BLOCK;
@@ -1194,5 +1207,14 @@ void PrintServiceAbility::SendExtensionEvent(const std::string &extensionId, con
     if (eventIt != registeredListeners_.end()) {
         eventIt->second->OnCallback(extensionId, extInfo);
     }
+}
+
+std::shared_ptr<PrinterInfo> PrintServiceAbility::getPrinterInfo(const std::string printerId)
+{
+    auto printerIt = printerInfoList_.find(printerId);
+    if (printerIt != printerInfoList_.end()) {
+        return printerIt ->second;
+    }
+    return nullptr;
 }
 } // namespace OHOS::Print
