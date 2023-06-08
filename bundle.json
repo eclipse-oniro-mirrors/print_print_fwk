@@ -37,6 +37,7 @@
           "hisysevent_native",
           "hitrace_native",
           "hiviewdfx_hilog_native",
+          "i18n",
           "init",
           "ipc",
           "ipc_js",
@@ -45,10 +46,15 @@
           "os_account",
           "preferences",
           "relational_store",
+          "resource_management",
           "safwk",
-          "samgr"
+          "samgr",
+          "security_guard",
+          "time_service"
         ],
         "third_party": [
+          "thirdparty_googletest",
+          "zlib"
         ]
       },
       "build": {
