@@ -148,6 +148,7 @@ bool PrinterCapability::ReadFromParcel(Parcel &parcel)
     if (hasResolution_) {
         std::vector<PrintResolution> resolutionList;
         vecSize = parcel.ReadUint32();
+        CHECK_IS_EXCEED_PRINT_RANGE_BOOL(vecSize);
         for (uint32_t index = 0; index < vecSize; index++) {
             auto resolutionPtr = PrintResolution::Unmarshalling(parcel);
             if (resolutionPtr == nullptr) {
