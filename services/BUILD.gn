@@ -25,6 +25,7 @@ config("print_service_config") {
 
 ohos_shared_library("print_service") {
   sources = [
+    "src/hisys_event_util.cpp",
     "src/print_bms_death_recipient.cpp",
     "src/print_bms_helper.cpp",
     "src/print_callback_proxy.cpp",
