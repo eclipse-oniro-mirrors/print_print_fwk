@@ -40,11 +40,14 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "print_security_guard_manager.h"
+#include "hisys_event_util.h"
+#include "nlohmann/json.hpp"
 
 namespace OHOS::Print {
 using namespace std;
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
+using json = nlohmann::json;
 
 const uint32_t MAX_RETRY_TIMES = 10;
 const uint32_t START_ABILITY_INTERVAL = 6;
@@ -81,6 +84,8 @@ REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
 std::mutex PrintServiceAbility::instanceLock_;
 sptr<PrintServiceAbility> PrintServiceAbility::instance_;
 std::shared_ptr<AppExecFwk::EventHandler> PrintServiceAbility::serviceHandler_;
+std::chrono::time_point<std::chrono::high_resolution_clock> PrintServiceAbility::startPrintTime_;
+std::string PrintServiceAbility::ingressPackage;
 
 PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START),
@@ -227,6 +232,7 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     BuildFDParam(fdList, want);
     int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    ingressPackage = callerPkg;
     int32_t callerUid = IPCSkeleton::GetCallingUid();
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_TOKEN, callerTokenId);
@@ -504,6 +510,7 @@ int32_t PrintServiceAbility::QueryPrintJobById(std::string &printJobId, PrintJob
 
 int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
 {
+    startPrintTime_ = std::chrono::high_resolution_clock::now();
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
@@ -802,21 +809,71 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
     SendPrintJobEvent(*jobIt->second);
 
     auto printerId = jobIt->second->GetPrinterId();
+    if (state == PRINT_JOB_BLOCKED) {
+        ReportHisysEvent(jobIt->second, printerId, subState);
+    }
     if (state == PRINT_JOB_COMPLETED) {
         if (jobInQueue) {
             printerJobMap_[printerId].erase(jobId);
             queuedJobList_.erase(jobIt);
         }
         if (printerJobMap_[printerId].empty()) {
-            NotifyAppJobQueueChanged(QUEUE_JOB_LIST_COMPLETED);
-            PRINT_HILOGD("no print job exists, destroy extension");
-            DestroyExtension(printerId);
+            ReportCompletedPrint(printerId);
         }
         SendQueuePrintJob(printerId);
     }
 
     PRINT_HILOGD("UpdatePrintJobState end.");
     return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::ReportCompletedPrint(const std::string &printerId)
+{
+    NotifyAppJobQueueChanged(QUEUE_JOB_LIST_COMPLETED);
+    PRINT_HILOGD("no print job exists, destroy extension");
+    DestroyExtension(printerId);
+    json msg;
+    auto endPrintTime = std::chrono::high_resolution_clock::now();
+    auto printTime = std::chrono::duration_cast<std::chrono::milliseconds>(endPrintTime - startPrintTime_);
+    msg["PRINT_TIME"] = printTime.count();
+    msg["INGRESS_PACKAGE"] = ingressPackage;
+    msg["STATUS"] = 0;
+    HisysEventUtil::reportPrintSuccess(msg.dump());
+}
+
+void PrintServiceAbility::ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo,
+                                           const std::string &printerId, uint32_t subState)
+{
+    json msg;
+    auto endPrintTime = std::chrono::high_resolution_clock::now();
+    auto printTime = std::chrono::duration_cast<std::chrono::milliseconds>(endPrintTime - startPrintTime_);
+    msg["PRINT_TIME"] = printTime.count();
+    msg["INGRESS_PACKAGE"] = ingressPackage;
+    if (isEprint(printerId)) {
+        msg["PRINT_TYPE"] = 1;
+    } else {
+        msg["PRINT_TYPE"] = 0;
+    }
+    auto printInfo = printerInfoList_.find(printerId);
+    std::vector<uint32_t> fdList;
+    jobInfo->GetFdList(fdList);
+    msg["FILE_NUM"] = fdList.size();
+    msg["PAGE_NUM"] = fdList.size();
+    if (printInfo == printerInfoList_.end()) {
+        msg["MODEL"] = "";
+    } else {
+        msg["MODEL"] = printInfo->second->GetPrinterName();
+    }
+    msg["COPIES_SETTING"] = jobInfo->GetCopyNumber();
+    std::string option = jobInfo->GetOption();
+    PRINT_HILOGI("test option:%{public}s", option.c_str());
+    json optionJson = json::parse(option);
+    PRINT_HILOGI("test optionJson: %{public}s", optionJson.dump().c_str());
+    PRINT_HILOGI("test jobDescription: %{public}s", optionJson["jobDescription"].get<std::string>().c_str());
+    msg["JOB_DESCRIPTION"] = optionJson["jobDescription"].get<std::string>();
+    msg["PRINT_STYLE_SETTING"] = jobInfo->GetDuplexMode();
+    msg["FAIL_REASON_CODE"] = subState;
+    HisysEventUtil::faultPrint("PRINT_JOB_BLOCKED", msg.dump());
 }
 
 void PrintServiceAbility::NotifyAppJobQueueChanged(const std::string &applyResult)
@@ -828,6 +885,18 @@ void PrintServiceAbility::NotifyAppJobQueueChanged(const std::string &applyResul
     EventFwk::CommonEventData commonData{ want };
     EventFwk::CommonEventManager::PublishCommonEvent(commonData);
     PRINT_HILOGD("NotifyAppJobQueueChanged end.");
+}
+
+bool PrintServiceAbility::isEprint(const std::string &printerId)
+{
+    if (printerId.length() <= 0) {
+        return false;
+    }
+    std::string ePrintID = "ePrintID";
+    if (printerId.length() < ePrintID.length()) {
+        return false;
+    }
+    return std::equal(ePrintID.rbegin(), ePrintID.rend(), printerId.rbegin());
 }
 
 void PrintServiceAbility::DestroyExtension(const std::string &printerId)

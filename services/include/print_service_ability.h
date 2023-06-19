@@ -96,6 +96,9 @@ private:
     void DestroyExtension(const std::string &printerId);
     void NotifyAppJobQueueChanged(const std::string &applyResult);
     std::shared_ptr<PrinterInfo> getPrinterInfo(const std::string printerId);
+    bool isEprint(const std::string &printerId);
+    void ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
+    void ReportCompletedPrint(const std::string & printerId);
 
 #ifndef TDD_ENABLE
 private:
@@ -105,6 +108,8 @@ private:
     static std::mutex instanceLock_;
     static sptr<PrintServiceAbility> instance_;
     static std::shared_ptr<AppExecFwk::EventHandler> serviceHandler_;
+    static std::chrono::time_point<std::chrono::high_resolution_clock> startPrintTime_;
+    static std::string ingressPackage;
 
     std::recursive_mutex apiMutex_;
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
