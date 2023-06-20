@@ -46,7 +46,7 @@ sptr<IPrintService> PrintManagerClient::GetPrintServiceProxy()
 {
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    sptr<IPrintService> serviceProxy = nullptr;        
+    sptr<IPrintService> serviceProxy = nullptr;
     if (systemAbilityManager != nullptr) {
         auto systemAbility = systemAbilityManager->GetSystemAbility(PRINT_SERVICE_ID, "");
         if (systemAbility != nullptr) {
@@ -65,7 +65,7 @@ void PrintManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
     printServiceProxy_ = GetPrintServiceProxy();
 }
 
-int32_t PrintManagerClient::StartPrintService() 
+int32_t PrintManagerClient::StartPrintService()
 {
     if (!LoadServer()) {
         PRINT_HILOGE("load print server fail");

@@ -25,7 +25,8 @@ using namespace OHOS::HiviewDFX;
 
 PrintServiceProxy::PrintServiceProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IPrintService>(object) {}
 
-int32_t PrintServiceProxy::GetResult(int retCode, MessageParcel &reply) {
+int32_t PrintServiceProxy::GetResult(int retCode, MessageParcel &reply)
+{
     if (retCode != ERR_NONE) {
         PRINT_HILOGE("rpc error code = %{public}d", retCode);
         return E_PRINT_RPC_FAILURE;
