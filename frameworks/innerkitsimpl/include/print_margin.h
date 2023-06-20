@@ -27,6 +27,8 @@ public:
 
     PrintMargin(const PrintMargin &right);
 
+    void Set(const PrintMargin &right);
+
     PrintMargin &operator=(const PrintMargin &right);
 
     virtual ~PrintMargin();

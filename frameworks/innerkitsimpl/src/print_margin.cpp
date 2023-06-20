@@ -29,6 +29,11 @@ PrintMargin::PrintMargin() : hasTop_(false), top_(0), hasBottom_(false), bottom_
 
 PrintMargin::PrintMargin(const PrintMargin &right)
 {
+    Set(right);
+}
+
+void PrintMargin::Set(const PrintMargin &right)
+{
     hasTop_ = right.hasTop_;
     top_ = right.top_;
     hasBottom_ = right.hasBottom_;
@@ -42,14 +47,7 @@ PrintMargin::PrintMargin(const PrintMargin &right)
 PrintMargin &PrintMargin::operator=(const PrintMargin &right)
 {
     if (this != &right) {
-        hasTop_ = right.hasTop_;
-        top_ = right.top_;
-        hasBottom_ = right.hasBottom_;
-        bottom_ = right.bottom_;
-        hasLeft_ = right.hasLeft_;
-        left_ = right.left_;
-        hasRight_ = right.hasRight_;
-        right_ = right.right_;
+        Set(right);
     }
     return *this;
 }
