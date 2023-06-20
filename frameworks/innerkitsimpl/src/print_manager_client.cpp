@@ -87,7 +87,7 @@ int32_t PrintManagerClient::StartPrint(const std::vector<std::string> &fileList,
 {
     PRINT_HILOGD("PrintManagerClient StartPrint start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->StartPrint(fileList, fdList, taskId);
         PRINT_HILOGD("PrintManagerClient StartPrint out ret = [%{public}d].", ret);
     }
@@ -98,7 +98,7 @@ int32_t PrintManagerClient::StopPrint(const std::string &taskId)
 {
     PRINT_HILOGD("PrintManagerClient StopPrint start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->StopPrint(taskId);
         PRINT_HILOGD("PrintManagerClient StopPrint out ret = [%{public}d].", ret);
     }
@@ -109,7 +109,7 @@ int32_t PrintManagerClient::ConnectPrinter(const std::string &printerId)
 {
     PRINT_HILOGD("PrintManagerClient ConnectPrinter start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->ConnectPrinter(printerId);
         PRINT_HILOGD("PrintManagerClient ConnectPrinter out ret = [%{public}d].", ret);
     }
@@ -120,7 +120,7 @@ int32_t PrintManagerClient::DisconnectPrinter(const std::string &printerId)
 {
     PRINT_HILOGD("PrintManagerClient DisconnectPrinter start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->DisconnectPrinter(printerId);
         PRINT_HILOGD("PrintManagerClient DisconnectPrinter out ret = [%{public}d].", ret);
     }
@@ -131,7 +131,7 @@ int32_t PrintManagerClient::QueryAllExtension(std::vector<PrintExtensionInfo> &e
 {
     PRINT_HILOGD("PrintManagerClient QueryAllExtension start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->QueryAllExtension(extensionInfos);
         PRINT_HILOGD("PrintManagerClient QueryAllExtension out ret = [%{public}d].", ret);
     }
@@ -142,7 +142,7 @@ int32_t PrintManagerClient::StartDiscoverPrinter(const std::vector<std::string> 
 {
     PRINT_HILOGD("PrintManagerClient StartDiscoverPrinter start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->StartDiscoverPrinter(extensionList);
         PRINT_HILOGD("PrintManagerClient StartDiscoverPrinter out ret = [%{public}d].", ret);
     }
@@ -153,7 +153,7 @@ int32_t PrintManagerClient::StopDiscoverPrinter()
 {
     PRINT_HILOGD("PrintManagerClient StopDiscoverPrinter start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->StopDiscoverPrinter();
         PRINT_HILOGD("PrintManagerClient StopDiscoverPrinter out ret = [%{public}d].", ret);
     }
@@ -164,7 +164,7 @@ int32_t PrintManagerClient::StartPrintJob(const PrintJob &jobinfo)
 {
     PRINT_HILOGD("PrintManagerClient StartPrintJob start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->StartPrintJob(jobinfo);
         PRINT_HILOGD("PrintManagerClient StartPrintJob out ret = [%{public}d].", ret);
     }
@@ -175,7 +175,7 @@ int32_t PrintManagerClient::CancelPrintJob(const std::string &jobId)
 {
     PRINT_HILOGD("PrintManagerClient CancelPrintJob start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->CancelPrintJob(jobId);
         PRINT_HILOGD("PrintManagerClient CancelPrintJob out ret = [%{public}d].", ret);
     }
@@ -186,7 +186,7 @@ int32_t PrintManagerClient::AddPrinters(const std::vector<PrinterInfo> &printerI
 {
     PRINT_HILOGD("PrintManagerClient AddPrinters start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->AddPrinters(printerInfos);
         PRINT_HILOGD("PrintManagerClient AddPrinters out ret = [%{public}d].", ret);
     }
@@ -197,7 +197,7 @@ int32_t PrintManagerClient::RemovePrinters(const std::vector<std::string> &print
 {
     PRINT_HILOGD("PrintManagerClient RemovePrinters start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->RemovePrinters(printerIds);
         PRINT_HILOGD("PrintManagerClient RemovePrinters out ret = [%{public}d].", ret);
     }
@@ -208,7 +208,7 @@ int32_t PrintManagerClient::UpdatePrinters(const std::vector<PrinterInfo> &print
 {
     PRINT_HILOGD("PrintManagerClient UpdatePrinters start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->UpdatePrinters(printerInfos);
         PRINT_HILOGD("PrintManagerClient UpdatePrinters out ret = [%{public}d].", ret);
     }
@@ -219,7 +219,7 @@ int32_t PrintManagerClient::UpdatePrinterState(const std::string &printerId, uin
 {
     PRINT_HILOGD("PrintManagerClient UpdatePrinterState start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->UpdatePrinterState(printerId, state);
         PRINT_HILOGD("PrintManagerClient UpdatePrinterState out ret = [%{public}d].", ret);
     }
@@ -230,7 +230,7 @@ int32_t PrintManagerClient::UpdatePrintJobState(const std::string &jobId, uint32
 {
     PRINT_HILOGD("PrintManagerClient UpdatePrintJobState start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->UpdatePrintJobState(jobId, state, subState);
         PRINT_HILOGD("PrintManagerClient UpdatePrintJobState out ret = [%{public}d].", ret);
     }
@@ -241,7 +241,7 @@ int32_t PrintManagerClient::UpdateExtensionInfo(const std::string &extInfo)
 {
     PRINT_HILOGD("PrintManagerClient UpdateExtensionInfo start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->UpdateExtensionInfo(extInfo);
         PRINT_HILOGD("PrintManagerClient UpdateExtensionInfo out ret = [%{public}d].", ret);
     }
@@ -252,7 +252,7 @@ int32_t PrintManagerClient::RequestPreview(const PrintJob &jobinfo, std::string 
 {
     PRINT_HILOGD("PrintManagerClient RequestPreview start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->RequestPreview(jobinfo, previewResult);
         PRINT_HILOGD("PrintManagerClient RequestPreview out ret = [%{public}d].", ret);
     }
@@ -263,7 +263,7 @@ int32_t PrintManagerClient::QueryPrinterCapability(const std::string &printerId)
 {
     PRINT_HILOGD("PrintManagerClient QueryPrinterCapability start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->QueryPrinterCapability(printerId);
         PRINT_HILOGD("PrintManagerClient QueryPrinterCapability out ret = [%{public}d].", ret);
     }
@@ -274,7 +274,7 @@ int32_t PrintManagerClient::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
 {
     PRINT_HILOGD("PrintManagerClient QueryAllPrintJob start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->QueryAllPrintJob(printJobs);
         PRINT_HILOGD("PrintManagerClient QueryAllPrintJob out ret = [%{public}d].", ret);
     }
@@ -285,7 +285,7 @@ int32_t PrintManagerClient::QueryPrintJobById(std::string &printJobId, PrintJob 
 {
     PRINT_HILOGD("PrintManagerClient QueryPrintJobById start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->QueryPrintJobById(printJobId, printjob);
         PRINT_HILOGD("PrintManagerClient QueryPrintJobById out ret = [%{public}d].", ret);
     }
@@ -296,7 +296,7 @@ int32_t PrintManagerClient::On(const std::string &taskId, const std::string &typ
 {
     PRINT_HILOGD("PrintManagerClient On start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->On(taskId, type, listener);
         PRINT_HILOGD("PrintManagerClient On out ret = [%{public}d].", ret);
     }
@@ -307,7 +307,7 @@ int32_t PrintManagerClient::Off(const std::string &taskId, const std::string &ty
 {
     PRINT_HILOGD("PrintManagerClient Off start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->Off(taskId, type);
         PRINT_HILOGD("PrintManagerClient Off out ret = [%{public}d].", ret);
     }
@@ -372,7 +372,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
         callbackStub->SetPrintJobCallback(cb);
     }
 
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->RegisterExtCallback(extensionCID, callbackStub);
         PRINT_HILOGD("PrintManagerClient RegisterExtCallback out ret = [%{public}d].", ret);
     }
@@ -406,7 +406,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
         callbackStub->SetCapabilityCallback(cb);
     }
 
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->RegisterExtCallback(extensionCID, callbackStub);
         PRINT_HILOGD("PrintManagerClient RegisterExtCallback out ret = [%{public}d].", ret);
     }
@@ -440,7 +440,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
         callbackStub->SetPrinterCallback(cb);
     }
 
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->RegisterExtCallback(extensionCID, callbackStub);
         PRINT_HILOGD("PrintManagerClient RegisterExtCallback out ret = [%{public}d].", ret);
     }
@@ -451,7 +451,7 @@ int32_t PrintManagerClient::UnregisterAllExtCallback(const std::string &extensio
 {
     PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->UnregisterAllExtCallback(extensionId);
         PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback out ret = [%{public}d].", ret);
     }
@@ -463,7 +463,7 @@ int32_t PrintManagerClient::LoadExtSuccess(const std::string &extensionId)
 {
     PRINT_HILOGD("PrintManagerClient LoadExtSuccess start.");
     int32_t ret = StartPrintService();
-    if(ret == E_PRINT_NONE){
+    if (ret == E_PRINT_NONE) {
         int32_t ret = printServiceProxy_->LoadExtSuccess(extensionId);
         PRINT_HILOGD("PrintManagerClient LoadExtSuccess out ret = [%{public}d].", ret);
     }
