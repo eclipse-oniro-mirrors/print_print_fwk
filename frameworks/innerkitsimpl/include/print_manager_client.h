@@ -78,7 +78,7 @@ public:
 private:
 #endif
     bool LoadServer();
-    sptr<IPrintService> GetPrintServiceProxy();
+    bool GetPrintServiceProxy();
 
 #ifndef TDD_ENABLE
 private:

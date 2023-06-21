@@ -109,6 +109,8 @@ public:
 
     napi_value ToJsObject(napi_env env) const;
 
+    static napi_value MakeJsPrintJob(const PrintJob &job,  napi_env env);
+
     static std::shared_ptr<PrintJob> BuildFromJs(napi_env env, napi_value jsValue);
 
     static std::shared_ptr<PrintJob> BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::string jobId,

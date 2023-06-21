@@ -56,6 +56,7 @@ public:
 #ifndef TDD_ENABLE
 private:
 #endif
+    int32_t GetResult(int retCode, MessageParcel &reply);
     static inline BrokerDelegator<PrintServiceProxy> delegator_;
 };
 } // namespace OHOS::Print
