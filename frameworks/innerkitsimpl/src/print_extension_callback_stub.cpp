@@ -107,9 +107,7 @@ void PrintExtensionCallbackStub::SetCapabilityCallback(PrinterCapabilityCallback
 bool PrintExtensionCallbackStub::HandleExtCallback(MessageParcel &data, MessageParcel &reply)
 {
     bool result = OnCallback();
-    if (!result) {
-        PRINT_HILOGE("Handle Print Extension Callback error");
-    }
+    PRINT_HILOGE("Handle Print Extension Callback ret[%{public}d]", result);
     reply.WriteBool(result);
     return result;
 }
@@ -118,9 +116,7 @@ bool PrintExtensionCallbackStub::HandlePrinterCallback(MessageParcel &data, Mess
 {
     std::string printerId = data.ReadString();
     bool result = OnCallback(printerId);
-    if (!result) {
-        PRINT_HILOGE("Handle Printer Extension Callback error");
-    }
+    PRINT_HILOGE("Handle Printer Extension Callback ret[%{public}d]", result);
     reply.WriteBool(result);
     return result;
 }
@@ -128,15 +124,12 @@ bool PrintExtensionCallbackStub::HandlePrinterCallback(MessageParcel &data, Mess
 bool PrintExtensionCallbackStub::HandlePrintJobCallback(MessageParcel &data, MessageParcel &reply)
 {
     auto printJobPtr = PrintJob::Unmarshalling(data);
-    if (printJobPtr == nullptr) {
-        PRINT_HILOGE("Restore print job object failed");
-        return false;
+    bool result = false;
+    if (printJobPtr != nullptr) {
+        result = OnCallback(*printJobPtr);
+        PRINT_HILOGE("Handle Print Job Extension Callback ret[%{public}d]", result);
+        reply.WriteBool(result);
     }
-    bool result = OnCallback(*printJobPtr);
-    if (!result) {
-        PRINT_HILOGE("Handle Print Job Extension Callback error");
-    }
-    reply.WriteBool(result);
     return result;
 }
 
@@ -145,9 +138,7 @@ bool PrintExtensionCallbackStub::HandleCapabilityCallback(MessageParcel &data, M
     std::string printerId = data.ReadString();
     PrinterCapability cap;
     bool result = OnCallback(printerId, cap);
-    if (!result) {
-        PRINT_HILOGE("Handle Printer Capability Extension Callback error");
-    }
+    PRINT_HILOGE("Handle Printer Capability Extension Callback ret[%{public}d]", result);
     reply.WriteBool(result);
     cap.Marshalling(reply);
     return result;

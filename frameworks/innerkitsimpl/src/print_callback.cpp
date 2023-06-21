@@ -30,167 +30,167 @@ PrintCallback::~PrintCallback()
 
 static bool InitUvWorkCallbackEnv(uv_work_t *work, napi_handle_scope &scope)
 {
-    if (work == nullptr) {
-        PRINT_HILOGE("work is nullptr");
-        return false;
+    bool result = false;
+    if (work != nullptr && work->data != nullptr) {
+        auto cbParam = static_cast<CallbackParam *>(work->data);
+        if (cbParam != nullptr) {
+            napi_open_handle_scope(cbParam->env, &scope);
+            if (scope != nullptr) {
+                result = true;
+            }
+        }
     }
-    if (work->data == nullptr) {
-        PRINT_HILOGE("data is nullptr");
-        return false;
-    }
-    CallbackParam *cbParam = reinterpret_cast<CallbackParam *>(work->data);
-    napi_open_handle_scope(cbParam->env, &scope);
-    if (scope == nullptr) {
-        PRINT_HILOGE("fail to open scope");
-        delete cbParam;
-        work->data = nullptr;
-        return false;
-    }
-    return true;
+    return result;
 }
 
 static void PrintTaskAfterCallFun(uv_work_t *work, int status)
 {
     PRINT_HILOGI("OnCallback start run PrintTaskAfterCallFun");
     napi_handle_scope scope = nullptr;
-    if (!InitUvWorkCallbackEnv(work, scope)) {
-        return;
-    }
-    CallbackParam *cbParam = static_cast<CallbackParam*>(work->data);
-    if (cbParam != nullptr) {
-        std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
-        napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
-        napi_value callbackResult = nullptr;
-        napi_value callbackValues[NapiPrintUtils::ARGC_ONE] = { 0 };
-        callbackValues[0] = NapiPrintUtils::GetUndefined(cbParam->env);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_ZERO,
-            callbackValues, &callbackResult);
-        napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGI("OnCallback end run PrintTaskAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
+    if (InitUvWorkCallbackEnv(work, scope)) {
+        auto cbParam = static_cast<CallbackParam*>(work->data);
+        if (cbParam != nullptr) {
+            std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
+            napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
+            napi_value callbackResult = nullptr;
+            napi_value callbackValues[NapiPrintUtils::ARGC_ONE] = { 0 };
+            callbackValues[0] = NapiPrintUtils::GetUndefined(cbParam->env);
+            napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_ZERO,
+                callbackValues, &callbackResult);
+            napi_close_handle_scope(cbParam->env, scope);
+            PRINT_HILOGI("OnCallback end run PrintTaskAfterCallFun success");
         }
-        delete cbParam;
-        cbParam = nullptr;
     }
+    if (work != nullptr) {
+        auto cbParam = static_cast<CallbackParam*>(work->data);
+        if (cbParam != nullptr) {
+            delete cbParam;
+            work->data = nullptr;
+        }
+        delete work;
+        work = nullptr;
+    }
+    PRINT_HILOGI("OnCallback run PrintTaskAfterCallFun end");
 }
 
 static void PrinterAfterCallFun(uv_work_t *work, int status)
 {
     PRINT_HILOGI("OnCallback start run PrinterAfterCallFun");
     napi_handle_scope scope = nullptr;
-    if (!InitUvWorkCallbackEnv(work, scope)) {
-        return;
-    }
-    CallbackParam *cbParam = static_cast<CallbackParam*>(work->data);
-    if (cbParam != nullptr) {
-        std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
-        napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
-        napi_value callbackResult = nullptr;
-        napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
-        callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
-        callbackValues[1] = cbParam->printerInfo.ToJsObject(cbParam->env);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
-            callbackValues, &callbackResult);
-        napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGI("OnCallback end run PrinterAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
+    if (InitUvWorkCallbackEnv(work, scope)) {
+        auto cbParam = static_cast<CallbackParam*>(work->data);
+        if (cbParam != nullptr) {
+            std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
+            napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
+            napi_value callbackResult = nullptr;
+            napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
+            callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
+            callbackValues[1] = cbParam->printerInfo.ToJsObject(cbParam->env);
+            napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
+                callbackValues, &callbackResult);
+            napi_close_handle_scope(cbParam->env, scope);
+            PRINT_HILOGI("OnCallback end run PrinterAfterCallFun success");
         }
-        delete cbParam;
-        cbParam = nullptr;
     }
+    if (work != nullptr) {
+        auto cbParam = static_cast<CallbackParam*>(work->data);
+        if (cbParam != nullptr) {
+            delete cbParam;
+            work->data = nullptr;
+        }
+        delete work;
+        work = nullptr;
+    }
+    PRINT_HILOGI("OnCallback run PrinterAfterCallFun end");
 }
 
 static void PrintJobAfterCallFun(uv_work_t *work, int status)
 {
     PRINT_HILOGI("OnCallback start run PrintJobAfterCallFun");
     napi_handle_scope scope = nullptr;
-    if (!InitUvWorkCallbackEnv(work, scope)) {
-        return;
-    }
-    CallbackParam *cbParam = static_cast<CallbackParam*>(work->data);
-    if (cbParam != nullptr) {
-        std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
-        napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
-        napi_value callbackResult = nullptr;
-        napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
-        callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
-        callbackValues[1] = cbParam->jobInfo.ToJsObject(cbParam->env);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
-            callbackValues, &callbackResult);
-        napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGI("OnCallback end run PrintJobAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
+    if (InitUvWorkCallbackEnv(work, scope)) {
+        auto cbParam = static_cast<CallbackParam*>(work->data);
+        if (cbParam != nullptr) {
+            std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
+            napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
+            napi_value callbackResult = nullptr;
+            napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
+            callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
+            callbackValues[1] = cbParam->jobInfo.ToJsObject(cbParam->env);
+            napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
+                callbackValues, &callbackResult);
+            napi_close_handle_scope(cbParam->env, scope);
+            PRINT_HILOGI("OnCallback end run PrintJobAfterCallFun success");
         }
-        delete cbParam;
-        cbParam = nullptr;
     }
+    if (work != nullptr) {
+        auto cbParam = static_cast<CallbackParam*>(work->data);
+        if (cbParam != nullptr) {
+            delete cbParam;
+            work->data = nullptr;
+        }
+        delete work;
+        work = nullptr;
+    }
+    PRINT_HILOGI("OnCallback run PrintJobAfterCallFun end");
 }
 
 static void ExtensionAfterCallFun(uv_work_t *work, int status)
 {
     PRINT_HILOGI("OnCallback start run ExtensionAfterCallFun");
     napi_handle_scope scope = nullptr;
-    if (!InitUvWorkCallbackEnv(work, scope)) {
-        return;
-    }
-    CallbackParam *cbParam = static_cast<CallbackParam*>(work->data);
-    if (cbParam != nullptr) {
-        std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
-        napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
-        napi_value callbackResult = nullptr;
-        napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
-        callbackValues[0] =
-            NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->extensionId);
-        callbackValues[1] =
-            NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->info);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
-            callbackValues, &callbackResult);
-        napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGI("OnCallback end run ExtensionAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
+    if (InitUvWorkCallbackEnv(work, scope)) {
+        auto cbParam = static_cast<CallbackParam*>(work->data);
+        if (cbParam != nullptr) {
+            std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
+            napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
+            napi_value callbackResult = nullptr;
+            napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
+            callbackValues[0] =
+                NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->extensionId);
+            callbackValues[1] =
+                NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->info);
+            napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
+                callbackValues, &callbackResult);
+            napi_close_handle_scope(cbParam->env, scope);
+            PRINT_HILOGI("OnCallback end run ExtensionAfterCallFun success");
         }
-        delete cbParam;
-        cbParam = nullptr;
     }
+    if (work != nullptr) {
+        auto cbParam = static_cast<CallbackParam*>(work->data);
+        if (cbParam != nullptr) {
+            delete cbParam;
+            work->data = nullptr;
+        }
+        delete work;
+        work = nullptr;
+    }
+    PRINT_HILOGI("OnCallback run ExtensionAfterCallFun end");
 }
 
 bool PrintCallback::onBaseCallback(std::function<void(CallbackParam*)> paramFun, uv_after_work_cb after_work_cb)
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        PRINT_HILOGE("Failed to get uv event loop");
-        return false;
-    }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        PRINT_HILOGE("Failed to create uv work");
-        return false;
-    }
-    CallbackParam *param = new (std::nothrow) CallbackParam;
-    if (param == nullptr) {
-        PRINT_HILOGE("Failed to create callback parameter");
-        return false;
-    }
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        param->env = env_;
-        param->ref = ref_;
-        param->mutexPtr = &mutex_;
+    bool result = false;
+    if (loop != nullptr) {
+        uv_work_t *work = new (std::nothrow) uv_work_t;
+        if (work != nullptr) {
+            CallbackParam *param = new (std::nothrow) CallbackParam;
+            if (param != nullptr) {
+                std::lock_guard<std::mutex> lock(mutex_);
+                param->env = env_;
+                param->ref = ref_;
+                param->mutexPtr = &mutex_;
 
-        paramFun(param);
+                paramFun(param);
+            }
+            work->data = param;
+            uv_queue_work(loop, work, [](uv_work_t *work) {}, after_work_cb);
+            result = true;
+        }
     }
-    work->data = param;
-    uv_queue_work(loop, work, [](uv_work_t *work) {}, after_work_cb);
-    return true;
+    return result;
 }
 
 bool PrintCallback::OnCallback()

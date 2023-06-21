@@ -40,7 +40,6 @@ public:
 
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
 
-    int32_t StartPrintService();
     int32_t StartPrint(const std::vector<std::string> &fileList,
         const std::vector<uint32_t> &fdList, std::string &taskId);
     int32_t StopPrint(const std::string &taskId);
@@ -79,7 +78,7 @@ public:
 private:
 #endif
     bool LoadServer();
-    sptr<IPrintService> GetPrintServiceProxy();
+    bool GetPrintServiceProxy();
 
 #ifndef TDD_ENABLE
 private:

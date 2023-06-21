@@ -59,26 +59,24 @@ bool PrintCallbackStub::HandlePrinterEvent(MessageParcel &data, MessageParcel &r
 {
     uint32_t state = data.ReadUint32();
     auto info = PrinterInfo::Unmarshalling(data);
-    if (info == nullptr) {
-        PRINT_HILOGE("invalid printer info object");
-        return false;
+    bool result = false;
+    if (info != nullptr) {
+        result = OnCallback(state, *info);
+        reply.WriteBool(result);
     }
-    bool result = OnCallback(state, *info);
-    reply.WriteBool(result);
-    return true;
+    return result;
 }
 
 bool PrintCallbackStub::HandlePrintJobEvent(MessageParcel &data, MessageParcel &reply)
 {
     uint32_t state = data.ReadUint32();
     auto info = PrintJob::Unmarshalling(data);
-    if (info == nullptr) {
-        PRINT_HILOGE("invalid print job object");
-        return false;
+    bool result = false;
+    if (info != nullptr) {
+        result = OnCallback(state, *info);
+        reply.WriteBool(result);
     }
-    bool result = OnCallback(state, *info);
-    reply.WriteBool(result);
-    return true;
+    return result;
 }
 
 bool PrintCallbackStub::HandleExtEvent(MessageParcel &data, MessageParcel &reply)
