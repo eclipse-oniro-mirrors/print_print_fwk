@@ -28,7 +28,6 @@
 #include "want.h"
 
 namespace OHOS::Print {
-
 class PrintBMSHelper : public DelayedSingleton<PrintBMSHelper> {
 public:
     using IBundleMgr = OHOS::AppExecFwk::IBundleMgr;

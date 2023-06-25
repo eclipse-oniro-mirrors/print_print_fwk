@@ -87,5 +87,4 @@ bool PrintCallbackStub::HandleExtEvent(MessageParcel &data, MessageParcel &reply
     reply.WriteBool(result);
     return true;
 }
-
 } // namespace OHOS::Print
