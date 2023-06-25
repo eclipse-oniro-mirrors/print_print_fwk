@@ -13,15 +13,14 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_PRINT_JOB_H
-#define PRINT_PRINT_JOB_H
-#define TDD_ENABLE 1
-
+#ifndef PRINT_JOB_H
+#define PRINT_JOB_H
 #include <map>
+#include <string>
+#include <vector>
 
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
-#include "napi/native_api.h"
 #include "parcel.h"
 #include "print_margin.h"
 #include "print_page_size.h"
@@ -95,9 +94,15 @@ public:
 
     [[nodiscard]] uint32_t GetDuplexMode() const;
 
+    [[nodiscard]] bool HasMargin() const;
+
     void GetMargin(PrintMargin &printMargin) const;
 
+    [[nodiscard]] bool HasPreview() const;
+
     void GetPreview(PrintPreviewAttribute &previewAttr) const;
+
+    [[nodiscard]] bool HasOption() const;
 
     [[nodiscard]] const std::string &GetOption() const;
 
@@ -107,33 +112,13 @@ public:
 
     static std::shared_ptr<PrintJob> Unmarshalling(Parcel &parcel);
 
-    napi_value ToJsObject(napi_env env) const;
-
-    static napi_value MakeJsPrintJob(const PrintJob &job,  napi_env env);
-
-    static std::shared_ptr<PrintJob> BuildFromJs(napi_env env, napi_value jsValue);
-
-    static std::shared_ptr<PrintJob> BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::string jobId,
-        uint32_t jobState, uint32_t subState, std::shared_ptr<PrintJob> &nativeObj);
-
     void Dump();
 
-#ifndef TDD_ENABLE
 private:
-#endif
-    bool ReadFromParcel(Parcel &parcel);
-    bool CreateFdList(napi_env env, napi_value &jsPrintJob) const;
-    bool CreatePageRange(napi_env env, napi_value &jsPrintJob) const;
-    bool CreatePageSize(napi_env env, napi_value &jsPrintJob) const;
-    bool CreateMargin(napi_env env, napi_value &jsPrintJob) const;
-    bool CreatePreview(napi_env env, napi_value &jsPrintJob) const;
-
-    static bool ValidateProperty(napi_env env, napi_value object);
+    void ReadFromParcel(Parcel &parcel);
     void ReadParcelFD(Parcel &parcel);
 
-#ifndef TDD_ENABLE
 private:
-#endif
     std::vector<uint32_t> fdList_;
     std::string jobId_;
     std::string printerId_;
@@ -153,5 +138,5 @@ private:
     bool hasOption_;
     std::string option_;
 };
-} // namespace OHOS::Print
-#endif /* PRINT_PRINT_JOB_H */
+}  // namespace OHOS::Print
+#endif  // PRINT_JOB_H

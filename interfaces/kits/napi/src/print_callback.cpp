@@ -14,6 +14,9 @@
  */
 
 #include "print_callback.h"
+#include "napi_print_utils.h"
+#include "print_job_helper.h"
+#include "printer_info_helper.h"
 
 namespace OHOS::Print {
 PrintCallback::PrintCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref)
@@ -85,7 +88,7 @@ static void PrinterAfterCallFun(uv_work_t *work, int status)
             napi_value callbackResult = nullptr;
             napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
             callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
-            callbackValues[1] = cbParam->printerInfo.ToJsObject(cbParam->env);
+            callbackValues[1] = PrinterInfoHelper::MakeJsObject(cbParam->env, cbParam->printerInfo);
             napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
                 callbackValues, &callbackResult);
             napi_close_handle_scope(cbParam->env, scope);
@@ -116,7 +119,7 @@ static void PrintJobAfterCallFun(uv_work_t *work, int status)
             napi_value callbackResult = nullptr;
             napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
             callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
-            callbackValues[1] = cbParam->jobInfo.ToJsObject(cbParam->env);
+            callbackValues[1] = PrintJobHelper::MakeJsObject(cbParam->env, cbParam->jobInfo);
             napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
                 callbackValues, &callbackResult);
             napi_close_handle_scope(cbParam->env, scope);
@@ -228,4 +231,4 @@ bool PrintCallback::OnCallback(const std::string &extensionId, const std::string
             param->info = info;
         }, ExtensionAfterCallFun);
 }
-} // namespace OHOS::Print
+}  // namespace OHOS::Print

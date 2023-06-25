@@ -14,15 +14,9 @@
  */
 
 #include "print_page_size.h"
-#include "napi_print_utils.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
-static constexpr const char *PARAM_PAGESIZE_ID = "id";
-static constexpr const char *PARAM_PAGESIZE_NAME = "name";
-static constexpr const char *PARAM_PAGESIZE_WIDTH = "width";
-static constexpr const char *PARAM_PAGESIZE_HEIGHT = "height";
-
 std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>> PrintPageSize::pageSize_;
 void PrintPageSize::BuildPageSizeMap()
 {
@@ -123,13 +117,12 @@ uint32_t PrintPageSize::GetHeight() const
     return height_;
 }
 
-bool PrintPageSize::ReadFromParcel(Parcel &parcel)
+void PrintPageSize::ReadFromParcel(Parcel &parcel)
 {
     SetId(parcel.ReadString());
     SetName(parcel.ReadString());
     SetWidth(parcel.ReadUint32());
     SetHeight(parcel.ReadUint32());
-    return true;
 }
 
 bool PrintPageSize::Marshalling(Parcel &parcel) const
@@ -144,86 +137,10 @@ bool PrintPageSize::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrintPageSize> PrintPageSize::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintPageSize>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print page size object");
-        return nullptr;
-    }
-    if (!nativeObj->ReadFromParcel(parcel)) {
-        PRINT_HILOGE("Failed to unmarshalling print page size");
-        return nullptr;
+    if (nativeObj != nullptr) {
+        nativeObj->ReadFromParcel(parcel);
     }
     return nativeObj;
-}
-
-napi_value PrintPageSize::ToJsObject(napi_env env) const
-{
-    napi_value jsObj = nullptr;
-    PRINT_CALL(env, napi_create_object(env, &jsObj));
-
-    NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_PAGESIZE_ID, GetId());
-    NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_PAGESIZE_NAME, GetName());
-    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_PAGESIZE_WIDTH, GetWidth());
-    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_PAGESIZE_HEIGHT, GetHeight());
-    return jsObj;
-}
-
-std::shared_ptr<PrintPageSize> PrintPageSize::BuildFromJs(napi_env env, napi_value jsValue)
-{
-    auto nativeObj = std::make_shared<PrintPageSize>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print range object");
-        return nullptr;
-    }
-
-    if (!ValidateProperty(env, jsValue)) {
-        PRINT_HILOGE("Invalid property of print page size");
-        return nullptr;
-    }
-
-    std::string id = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PAGESIZE_ID);
-    std::string name = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PAGESIZE_NAME);
-    uint32_t width = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PAGESIZE_WIDTH);
-    uint32_t height = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PAGESIZE_HEIGHT);
-
-    if (id == "") {
-        PRINT_HILOGE("Invalid resolution id");
-        return nullptr;
-    }
-
-    nativeObj->SetId(id);
-    nativeObj->SetName(name);
-    nativeObj->SetWidth(width);
-    nativeObj->SetHeight(height);
-    PRINT_HILOGE("Build Page Size succeed");
-    return nativeObj;
-}
-
-bool PrintPageSize::ValidateProperty(napi_env env, napi_value object)
-{
-    std::map<std::string, PrintParamStatus> propertyList = {
-        {PARAM_PAGESIZE_ID, PRINT_PARAM_NOT_SET},
-        {PARAM_PAGESIZE_NAME, PRINT_PARAM_NOT_SET},
-        {PARAM_PAGESIZE_WIDTH, PRINT_PARAM_NOT_SET},
-        {PARAM_PAGESIZE_HEIGHT, PRINT_PARAM_NOT_SET},
-    };
-
-    auto names = NapiPrintUtils::GetPropertyNames(env, object);
-    for (auto name : names) {
-        if (propertyList.find(name) == propertyList.end()) {
-            PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
-            return false;
-        }
-        propertyList[name] = PRINT_PARAM_SET;
-    }
-
-    for (auto propertypItem : propertyList) {
-        if (propertypItem.second == PRINT_PARAM_NOT_SET) {
-            PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
-            return false;
-        }
-    }
-
-    return true;
 }
 
 void PrintPageSize::Dump()

@@ -18,6 +18,7 @@
 #include "napi_print_utils.h"
 #include "print_log.h"
 #include "print_manager_client.h"
+#include "printer_info_helper.h"
 
 namespace OHOS::Print {
 napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
@@ -36,7 +37,7 @@ napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
         for (uint32_t index = 0; index < len; index++) {
             napi_value value;
             napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
-            auto printerInfoPtr = PrinterInfo::BuildFromJs(env, value);
+            auto printerInfoPtr = PrinterInfoHelper::BuildFromJs(env, value);
             if (printerInfoPtr == nullptr) {
                 context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
                 PRINT_HILOGE("PrinterInfo format error!");
@@ -134,7 +135,7 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info)
         for (uint32_t index = 0; index < len; index++) {
             napi_value value;
             napi_get_element(env, argv[NapiPrintUtils::INDEX_ZERO], index, &value);
-            auto printerInfoPtr = PrinterInfo::BuildFromJs(env, value);
+            auto printerInfoPtr = PrinterInfoHelper::BuildFromJs(env, value);
             if (printerInfoPtr == nullptr) {
                 context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
                 PRINT_HILOGE("PrinterInfo format error!");

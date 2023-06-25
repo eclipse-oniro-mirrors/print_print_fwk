@@ -15,7 +15,6 @@
 
 #ifndef NAPI_INNER_PRINT_H
 #define NAPI_INNER_PRINT_H
-#define TDD_ENABLE 1
 
 #include <string>
 #include <vector>
@@ -46,14 +45,10 @@ public:
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
 
-#ifndef TDD_ENABLE
 private:
-#endif
     static bool IsSupportType(const std::string& type);
 
-#ifndef TDD_ENABLE
 private:
-#endif
     struct InnerPrintContext : public PrintAsyncCall::Context {
         std::vector<PrintExtensionInfo> allExtensionInfos;
         std::vector<PrintJob> allPrintJobs;
@@ -77,5 +72,5 @@ private:
         virtual ~InnerPrintContext() {};
     };
 };
-} // namespace OHOS::Print
-#endif // NAPI_INNER_PRINT_H
+}  // namespace OHOS::Print
+#endif  // NAPI_INNER_PRINT_H

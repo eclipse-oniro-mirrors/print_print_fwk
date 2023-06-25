@@ -15,13 +15,10 @@
 
 #ifndef PRINT_EXTENSION_INFO_H
 #define PRINT_EXTENSION_INFO_H
-#define TDD_ENABLE 1
 
-#include "napi/native_api.h"
 #include "parcel.h"
 
 namespace OHOS::Print {
-
 class PrintExtensionInfo final : public Parcelable {
 public:
     explicit PrintExtensionInfo();
@@ -54,26 +51,17 @@ public:
 
     static std::shared_ptr<PrintExtensionInfo> Unmarshalling(Parcel &parcel);
 
-    napi_value ToJsObject(napi_env env) const;
-
-    static std::shared_ptr<PrintExtensionInfo> BuildFromJs(napi_env env, napi_value jsValue);
-
     void Dump();
 
-#ifndef TDD_ENABLE
 private:
-#endif
+    void ReadFromParcel(Parcel &parcel);
 
-    bool ReadFromParcel(Parcel &parcel);
-
-#ifndef TDD_ENABLE
 private:
-#endif
     std::string extensionId_;
     std::string vendorId_;
     std::string vendorName_;
     uint32_t vendorIcon_;
     std::string version_;
 };
-} // namespace OHOS::Print
-#endif // PRINT_EXTENSION_INFO_H
+}  // namespace OHOS::Print
+#endif  // PRINT_EXTENSION_INFO_H

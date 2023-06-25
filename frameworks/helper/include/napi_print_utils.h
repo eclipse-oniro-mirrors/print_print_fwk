@@ -17,17 +17,14 @@
 #define NAPI_PRINT_UTILS_H
 
 #include <string>
-#include <vector>
-#include <sstream>
-#include <map>
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
-#include "print_constant.h"
-#include "print_job.h"
-#include "print_resolution.h"
-#include "printer_capability.h"
-#include "printer_info.h"
+// #include "print_constant.h"
+// #include "print_job.h"
+// #include "print_resolution.h"
+// #include "printer_capability.h"
+// #include "printer_info.h"
 
 namespace OHOS::Print {
 class NapiPrintUtils {
@@ -47,10 +44,6 @@ public:
     static constexpr uint32_t INDEX_THREE = 3;
     static constexpr uint32_t INDEX_FOUR = 4;
     static constexpr uint32_t INDEX_FIVE = 5;
-
-    static constexpr int32_t MAX_NUMBER_BYTES = 8;
-    static constexpr int32_t MAX_LEN = 4096;
-    static constexpr int32_t MAX_JOBSTRING_LENGTH = 10;
 
     static napi_valuetype GetValueType(napi_env env, napi_value value);
     static bool HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
@@ -85,17 +78,6 @@ public:
     static void SetBooleanProperty(napi_env env, napi_value object, const std::string &name, bool value);
     static void DefineProperties(
         napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties);
-    static std::string ToLower(const std::string &s);
-    static std::string GetExtensionId(const std::string &globalId);
-    static std::string GetGlobalId(const std::string& extensionId, const std::string& localId);
-    static std::string GetLocalId(const std::string& globalId, const std::string& extensionId);
-    static std::string EncodeExtensionCid(const std::string &extensionId, uint32_t callbackId);
-    static bool DecodeExtensionCid(const std::string &cid, std::string &extensionId, uint32_t &callbackId);
-    static std::string GetTaskEventId(const std::string &taskId, const std::string &type);
-    static int32_t OpenFile(const std::string &filePath);
-    static bool IsPathValid(const std::string &filePath);
-    static uint32_t GetIdFromFdPath(const std::string &fdPath);
-    static std::string GetJobStateChar(const uint32_t state);
 };
 } // namespace OHOS::Print
 #endif // NAPI_PRINT_UTILS_H

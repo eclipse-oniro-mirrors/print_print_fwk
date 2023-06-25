@@ -29,7 +29,6 @@
 #include "print_service_stub.h"
 #include "system_ability.h"
 #include "print_security_guard_manager.h"
-#define TDD_ENABLE 1
 
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
@@ -71,15 +70,11 @@ public:
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override;
     int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) override;
 
-#ifndef TDD_ENABLE
 protected:
-#endif
     void OnStart() override;
     void OnStop() override;
 
-#ifndef TDD_ENABLE
 private:
-#endif
     int32_t Init();
     void InitServiceHandler();
     void ManualStart();
@@ -100,9 +95,7 @@ private:
     void ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
     void ReportCompletedPrint(const std::string & printerId);
 
-#ifndef TDD_ENABLE
 private:
-#endif
     PrintSecurityGuardManager securityGuardManager_;
     ServiceRunningState state_;
     static std::mutex instanceLock_;
@@ -129,5 +122,5 @@ private:
     std::mutex lock_;
     uint64_t currentJobId_;
 };
-} // namespace OHOS::Print
-#endif // PRINT_SYSTEM_ABILITY_H
+}  // namespace OHOS::Print
+#endif  // PRINT_SYSTEM_ABILITY_H

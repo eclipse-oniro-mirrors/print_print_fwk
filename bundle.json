@@ -66,7 +66,9 @@
            "//base/print/print_fwk/interfaces/kits/jsnapi/extensionctx:printextensioncontext_napi",
            "//base/print/print_fwk/frameworks/kits/extension:print_extension_framework",
            "//base/print/print_fwk/frameworks/kits/extension:print_extension_module",
-           "//base/print/print_fwk/frameworks/innerkitsimpl:print_client"
+           "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
+           "//base/print/print_fwk/frameworks/ipc:print_ipc",
+           "//base/print/print_fwk/utils:print_utils"
         ],
         "service_group":[
            "//base/print/print_fwk/services:print_service",

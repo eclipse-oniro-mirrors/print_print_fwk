@@ -15,9 +15,8 @@
 
 #ifndef PRINT_RESOLUTION_H
 #define PRINT_RESOLUTION_H
-#define TDD_ENABLE 1
 
-#include "napi/native_api.h"
+#include <string>
 #include "parcel.h"
 
 namespace OHOS::Print {
@@ -39,35 +38,25 @@ public:
 
     [[nodiscard]] uint32_t GetVerticalDpi() const;
 
+    void SetId(const std::string &id);
+
+    void SetHorizontalDpi(uint32_t hdpi);
+
+    void SetVerticalDpi(uint32_t vdpi);
+
     virtual bool Marshalling(Parcel &parcel) const override;
 
     static std::shared_ptr<PrintResolution> Unmarshalling(Parcel &parcel);
 
-    napi_value ToJsObject(napi_env env) const;
-
-    static std::shared_ptr<PrintResolution> BuildFromJs(napi_env env, napi_value jsValue);
-
     void Dump();
 
-#ifndef TDD_ENABLE
 private:
-#endif
-    void SetId(const std::string &id);
+    void ReadFromParcel(Parcel &parcel);
 
-    void SetHorizontalDpi(uint32_t horizontalDpi);
-
-    void SetVerticalDpi(uint32_t verticalDpi);
-
-    bool ReadFromParcel(Parcel &parcel);
-
-    static bool ValidateProperty(napi_env env, napi_value object);
-
-#ifndef TDD_ENABLE
 private:
-#endif
     std::string id_;
     uint32_t horizontalDpi_;
     uint32_t verticalDpi_;
 };
-} // namespace OHOS::Print
-#endif // PRINT_RESOLUTION_H
+}  // namespace OHOS::Print
+#endif  // PRINT_RESOLUTION_H

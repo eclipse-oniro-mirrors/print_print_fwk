@@ -42,11 +42,13 @@ config("ability_public_config") {
     "//third_party/json/include",
   ]
 
-  cflags_cc = [ "-fno-exceptions" ]
+  cflags_cc = [ "-fno-exceptions","--coverage" ]
+  ldflags = [ "--coverage" ]
 }
 
 ohos_shared_library("print_extension_framework") {
   include_dirs = [
+    "${print_path}/frameworks/helper/include",
     "${print_path}/frameworks/innerkitsimpl/include",
     "${print_path}/frameworks/kits/extension/include",
   ]
@@ -65,7 +67,10 @@ ohos_shared_library("print_extension_framework") {
     "${ability_runtime_path}/frameworks/native/ability:ability_context_public_config",
   ]
 
-  deps = [ "${print_path}/frameworks/innerkitsimpl:print_client" ]
+  deps = [
+    "${print_path}/frameworks/helper:print_helper",
+    "${print_path}/frameworks/innerkitsimpl:print_client",
+  ]
 
   external_deps = [
     "ability_base:want",

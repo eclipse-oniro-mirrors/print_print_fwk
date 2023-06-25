@@ -14,9 +14,7 @@
  */
 #ifndef PRINT_PREVIEW_ATTRIBUTE_H
 #define PRINT_PREVIEW_ATTRIBUTE_H
-#define TDD_ENABLE 1
 
-#include "napi/native_api.h"
 #include "parcel.h"
 #include "print_range.h"
 
@@ -33,37 +31,29 @@ public:
 
     void Reset();
 
+    [[nodiscard]] bool HasResult() const;
+
     [[nodiscard]] uint32_t GetResult() const;
 
     void GetPreviewRange(PrintRange &previewRange) const;
+
+    void SetResult(uint32_t result);
+
+    void SetPreviewRange(const PrintRange &previewRange);
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
     static std::shared_ptr<PrintPreviewAttribute> Unmarshalling(Parcel &parcel);
 
-    napi_value ToJsObject(napi_env env) const;
-
-    static std::shared_ptr<PrintPreviewAttribute> BuildFromJs(napi_env env, napi_value jsValue);
-
     void Dump();
 
-#ifndef TDD_ENABLE
 private:
-#endif
-    void SetResult(uint32_t result);
+    void ReadFromParcel(Parcel &parcel);
 
-    void SetPreviewRange(const PrintRange &previewRange);
-
-    bool ReadFromParcel(Parcel &parcel);
-
-    static bool ValidateProperty(napi_env env, napi_value object);
-
-#ifndef TDD_ENABLE
 private:
-#endif
     bool hasResult_;
     uint32_t result_;
     PrintRange previewRange_;
 };
-} // namespace OHOS::Print
-#endif // PRINT_PREVIEW_ATTRIBUTE_H
+}  // namespace OHOS::Print
+#endif  // PRINT_PREVIEW_ATTRIBUTE_H

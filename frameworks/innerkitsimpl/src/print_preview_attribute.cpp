@@ -14,12 +14,11 @@
  */
 
 #include "print_preview_attribute.h"
-#include "napi_print_utils.h"
+#include "message_parcel.h"
+#include "print_constant.h"
 #include "print_log.h"
-namespace OHOS::Print {
-static constexpr const char *PARAM_PREATTRIBUTE_RANGE = "previewRange";
-static constexpr const char *PARAM_PREATTRIBUTE_RESULT = "result";
 
+namespace OHOS::Print {
 PrintPreviewAttribute::PrintPreviewAttribute() : hasResult_(false), result_(PRINT_INVALID_ID) {
 }
 
@@ -62,6 +61,11 @@ void PrintPreviewAttribute::SetPreviewRange(const PrintRange &previewRange)
     previewRange_ = previewRange;
 }
 
+bool PrintPreviewAttribute::HasResult() const
+{
+    return hasResult_;
+}
+
 uint32_t  PrintPreviewAttribute::GetResult() const
 {
     return result_;
@@ -72,7 +76,7 @@ void PrintPreviewAttribute::GetPreviewRange(PrintRange &previewRange) const
     previewRange = previewRange_;
 }
 
-bool PrintPreviewAttribute::ReadFromParcel(Parcel &parcel)
+void PrintPreviewAttribute::ReadFromParcel(Parcel &parcel)
 {
     hasResult_ = parcel.ReadBool();
     auto msgParcel = static_cast<MessageParcel*>(&parcel);
@@ -80,109 +84,32 @@ bool PrintPreviewAttribute::ReadFromParcel(Parcel &parcel)
         SetResult(msgParcel->ReadFileDescriptor());
     }
     auto rangePtr = PrintRange::Unmarshalling(parcel);
-    if (rangePtr == nullptr) {
-        return false;
+    if (rangePtr != nullptr) {
+        SetPreviewRange(*rangePtr);
     }
-    SetPreviewRange(*rangePtr);
-    return true;
 }
 
 bool PrintPreviewAttribute::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteBool(hasResult_);
+    bool result = false;
     auto msgParcel = static_cast<MessageParcel*>(&parcel);
-    if (hasResult_ && msgParcel != nullptr) {
-        msgParcel->WriteFileDescriptor(GetResult());
+    if (msgParcel != nullptr) {
+        msgParcel->WriteBool(hasResult_);
+        if (hasResult_) {
+            msgParcel->WriteFileDescriptor(GetResult());
+        }
+        result = previewRange_.Marshalling(parcel);
     }
-    if (!previewRange_.Marshalling(parcel)) {
-        PRINT_HILOGE("Failed to marshalling preview attribute object");
-        return false;
-    }
-    return true;
+    return result;
 }
 
 std::shared_ptr<PrintPreviewAttribute> PrintPreviewAttribute::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintPreviewAttribute>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print preview attribute object");
-        return nullptr;
-    }
-    if (!nativeObj->ReadFromParcel(parcel)) {
-        PRINT_HILOGE("Failed to unmarshalling print preview attribute");
-        return nullptr;
+    if (nativeObj != nullptr) {
+        nativeObj->ReadFromParcel(parcel);
     }
     return nativeObj;
-}
-
-napi_value PrintPreviewAttribute::ToJsObject(napi_env env) const
-{
-    napi_value jsObj = nullptr;
-    PRINT_CALL(env, napi_create_object(env, &jsObj));
-
-    if (hasResult_) {
-        NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_PREATTRIBUTE_RESULT, GetResult());
-    }
-
-    napi_value jsPreviewRange = previewRange_.ToJsObject(env);
-    PRINT_CALL(env, napi_set_named_property(env, jsObj, PARAM_PREATTRIBUTE_RANGE, jsPreviewRange));
-    return jsObj;
-}
-
-std::shared_ptr<PrintPreviewAttribute> PrintPreviewAttribute::BuildFromJs(napi_env env, napi_value jsValue)
-{
-    auto nativeObj = std::make_shared<PrintPreviewAttribute>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print preview attribute object");
-        return nullptr;
-    }
-
-    if (!ValidateProperty(env, jsValue)) {
-        PRINT_HILOGE("Invalid property of print preview attribute");
-        return nullptr;
-    }
-
-    napi_value jsPreviewRange = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREATTRIBUTE_RANGE);
-    auto previewRangePtr = PrintRange::BuildFromJs(env, jsPreviewRange);
-    if (previewRangePtr == nullptr) {
-        PRINT_HILOGE("Failed to build print preview attribute object from js");
-        return nullptr;
-    }
-    nativeObj->SetPreviewRange(*previewRangePtr);
-
-    napi_value jsResult = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREATTRIBUTE_RESULT);
-    if (jsResult != nullptr) {
-        auto result = NapiPrintUtils::GetUint32FromValue(env, jsResult);
-        nativeObj->SetResult(result);
-    }
-    PRINT_HILOGE("Build Print Preview Attribute succeed");
-    return nativeObj;
-}
-
-bool PrintPreviewAttribute::ValidateProperty(napi_env env, napi_value object)
-{
-    std::map<std::string, PrintParamStatus> propertyList = {
-        {PARAM_PREATTRIBUTE_RANGE, PRINT_PARAM_NOT_SET},
-        {PARAM_PREATTRIBUTE_RESULT, PRINT_PARAM_OPT},
-    };
-
-    auto names = NapiPrintUtils::GetPropertyNames(env, object);
-    for (auto name : names) {
-        if (propertyList.find(name) == propertyList.end()) {
-            PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
-            return false;
-        }
-        propertyList[name] = PRINT_PARAM_SET;
-    }
-
-    for (auto propertypItem : propertyList) {
-        if (propertypItem.second == PRINT_PARAM_NOT_SET) {
-            PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
-            return false;
-        }
-    }
-
-    return true;
 }
 
 void PrintPreviewAttribute::Dump()
@@ -190,7 +117,6 @@ void PrintPreviewAttribute::Dump()
     if (hasResult_) {
         PRINT_HILOGD("result_: %{public}d", result_);
     }
-
     previewRange_.Dump();
 }
 } // namespace OHOS::Print

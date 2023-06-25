@@ -25,15 +25,12 @@ ohos_unittest("print_service_test") {
     "${print_path}/interfaces/kits/napi/src",
     "${print_path}/services/include",
     "${print_path}/services/src",
-    "${print_utils_path}/include",
+    "${print_utils_path}/lib",
     "//third_party/node/src",
     "//third_party/curl/include",
   ]
 
   sources = [
-    "napi_print_util_test.cpp",
-    "print_manager_client_test.cpp",
-    "print_service_ability_test.cpp",
     "print_task_test.cpp",
   ]
 

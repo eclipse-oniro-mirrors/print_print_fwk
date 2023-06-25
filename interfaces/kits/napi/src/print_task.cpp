@@ -19,6 +19,7 @@
 #include "print_callback.h"
 #include "print_log.h"
 #include "print_manager_client.h"
+#include "print_utils.h"
 
 namespace OHOS::Print {
 
@@ -33,7 +34,7 @@ PrintTask::PrintTask(const std::vector<std::string> &innerList) : taskId_("")
         PRINT_HILOGD("list type: fdlist");
         for (auto fdPath : innerList) {
             pathType_ = FD_PATH;
-            uint32_t fd = NapiPrintUtils::GetIdFromFdPath(fdPath);
+            uint32_t fd = PrintUtils::GetIdFromFdPath(fdPath);
             fdList_.emplace_back(fd);
         }
     } else {
@@ -67,7 +68,7 @@ uint32_t PrintTask::Start()
     }
     if (pathType_ == FILE_PATH_ABSOLUTED) {
         for (auto file : fileList_) {
-            int32_t fd = NapiPrintUtils::OpenFile(file);
+            int32_t fd = PrintUtils::OpenFile(file);
             if (fd < 0) {
                 PRINT_HILOGE("file[%{private}s] is invalid", file.c_str());
                 return E_PRINT_INVALID_PARAMETER;

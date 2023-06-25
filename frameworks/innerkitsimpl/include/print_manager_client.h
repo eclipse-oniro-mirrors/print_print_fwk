@@ -15,7 +15,6 @@
 
 #ifndef PRINT_MANAGER_CLIENT_H
 #define PRINT_MANAGER_CLIENT_H
-#define TDD_ENABLE 1
 
 #include <condition_variable>
 #include <map>
@@ -74,15 +73,11 @@ public:
     void LoadServerSuccess();
     void LoadServerFail();
 
-#ifndef TDD_ENABLE
 private:
-#endif
     bool LoadServer();
     bool GetPrintServiceProxy();
 
-#ifndef TDD_ENABLE
 private:
-#endif
     static std::mutex instanceLock_;
     static sptr<PrintManagerClient> instance_;
     sptr<IPrintService> printServiceProxy_;
@@ -96,5 +91,5 @@ private:
     bool ready_ = false;
     static constexpr int LOAD_SA_TIMEOUT_MS = 15000;
 };
-} // namespace OHOS::Print
-#endif // PRINT_MANAGER_CLIENT_H
+}  // namespace OHOS::Print
+#endif  // PRINT_MANAGER_CLIENT_H

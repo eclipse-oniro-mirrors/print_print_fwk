@@ -15,12 +15,10 @@
 
 #ifndef PRINT_CALLBACK_H
 #define PRINT_CALLBACK_H
-#define TDD_ENABLE 1
 
 #include "napi/native_api.h"
 #include "print_callback_stub.h"
 #include <mutex>
-#include "napi_print_utils.h"
 #include "print_log.h"
 #include <uv.h>
 #include <functional>
@@ -50,12 +48,10 @@ public:
 private:
     bool onBaseCallback(std::function<void(CallbackParam*)> paramFun, uv_after_work_cb after_work_cb);
 
-#ifndef TDD_ENABLE
 private:
-#endif
     napi_env env_;
     napi_ref ref_;
     std::mutex mutex_;
 };
-} // namespace OHOS::Print
-#endif // IPRINT_CALLBACK_H
+}  // namespace OHOS::Print
+#endif  // IPRINT_CALLBACK_H

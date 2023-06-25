@@ -15,7 +15,6 @@
 
 #ifndef NAPI_PRINT_EXT_H
 #define NAPI_PRINT_EXT_H
-#define TDD_ENABLE 1
 
 #include "napi/native_api.h"
 #include "noncopyable.h"
@@ -37,16 +36,12 @@ public:
     static napi_value UpdatePrintJobState(napi_env env, napi_callback_info info);
     static napi_value UpdateExtensionInfo(napi_env env, napi_callback_info info);
 
-#ifndef TDD_ENABLE
 private:
-#endif
     static bool IsValidPrinterState(uint32_t state);
     static bool IsValidPrintJobState(uint32_t state);
     static bool IsValidPrintJobSubState(uint32_t subState);
 
-#ifndef TDD_ENABLE
 private:
-#endif
     struct NapiPrintExtContext : public PrintAsyncCall::Context {
         bool result = true;
         std::vector<PrinterInfo> printerInfos;
@@ -67,5 +62,5 @@ private:
         virtual ~NapiPrintExtContext() {};
     };
 };
-} // namespace OHOS::Print
-#endif // NAPI_PRINT_EXT_H
+}  // namespace OHOS::Print
+#endif  // NAPI_PRINT_EXT_H

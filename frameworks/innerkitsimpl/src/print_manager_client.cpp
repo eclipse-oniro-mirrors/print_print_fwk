@@ -16,11 +16,11 @@
 #include "print_manager_client.h"
 
 #include "iservice_registry.h"
-#include "napi_print_utils.h"
 #include "print_constant.h"
 #include "print_extension_callback_stub.h"
 #include "print_log.h"
 #include "print_sync_load_callback.h"
+#include "print_utils.h"
 #include "system_ability_definition.h"
 
 namespace OHOS::Print {
@@ -311,16 +311,14 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
         return E_PRINT_INVALID_PARAMETER;
     }
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
-    std::string extensionCID = NapiPrintUtils::EncodeExtensionCid(extensionId, callbackId);
+    std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
     auto it = extCallbackMap_.find(extensionCID);
     if (it == extCallbackMap_.end()) {
         callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-        if (callbackStub == nullptr) {
-            PRINT_HILOGE("Invalid callback stub object.");
-            return E_PRINT_GENERIC_FAILURE;
+        if (callbackStub != nullptr) {
+            callbackStub->SetExtCallback(cb);
+            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         }
-        callbackStub->SetExtCallback(cb);
-        extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
     } else {
         callbackStub = it->second;
         callbackStub->SetExtCallback(cb);
@@ -343,16 +341,14 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     }
 
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
-    std::string extensionCID = NapiPrintUtils::EncodeExtensionCid(extensionId, callbackId);
+    std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
     auto it = extCallbackMap_.find(extensionCID);
     if (it == extCallbackMap_.end()) {
         callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-        if (callbackStub == nullptr) {
-            PRINT_HILOGE("Invalid callback stub object.");
-            return E_PRINT_GENERIC_FAILURE;
+        if (callbackStub != nullptr) {
+            callbackStub->SetPrintJobCallback(cb);
+            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         }
-        callbackStub->SetPrintJobCallback(cb);
-        extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
     } else {
         callbackStub = it->second;
         callbackStub->SetPrintJobCallback(cb);
@@ -376,16 +372,14 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     }
 
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
-    std::string extensionCID = NapiPrintUtils::EncodeExtensionCid(extensionId, callbackId);
+    std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
     auto it = extCallbackMap_.find(extensionCID);
     if (it == extCallbackMap_.end()) {
         callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-        if (callbackStub == nullptr) {
-            PRINT_HILOGE("Invalid callback stub object.");
-            return E_PRINT_GENERIC_FAILURE;
+        if (callbackStub != nullptr) {
+            callbackStub->SetCapabilityCallback(cb);
+            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         }
-        callbackStub->SetCapabilityCallback(cb);
-        extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
     } else {
         callbackStub = it->second;
         callbackStub->SetCapabilityCallback(cb);
@@ -409,16 +403,14 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     }
 
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
-    std::string extensionCID = NapiPrintUtils::EncodeExtensionCid(extensionId, callbackId);
+    std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
     auto it = extCallbackMap_.find(extensionCID);
     if (it == extCallbackMap_.end()) {
         callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-        if (callbackStub == nullptr) {
-            PRINT_HILOGE("Invalid callback stub object.");
-            return E_PRINT_GENERIC_FAILURE;
+        if (callbackStub != nullptr) {
+            callbackStub->SetPrinterCallback(cb);
+            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         }
-        callbackStub->SetPrinterCallback(cb);
-        extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
     } else {
         callbackStub = it->second;
         callbackStub->SetPrinterCallback(cb);

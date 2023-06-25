@@ -18,7 +18,6 @@
 
 #include "iprint_service.h"
 #include "iremote_proxy.h"
-#define TDD_ENABLE 1
 
 namespace OHOS::Print {
 class PrintServiceProxy : public IRemoteProxy<IPrintService> {
@@ -53,11 +52,9 @@ public:
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override;
     int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) override;
 
-#ifndef TDD_ENABLE
 private:
-#endif
     int32_t GetResult(int retCode, MessageParcel &reply);
     static inline BrokerDelegator<PrintServiceProxy> delegator_;
 };
-} // namespace OHOS::Print
-#endif // PRINT_SERVICE_PROXY_H
+}  // namespace OHOS::Print
+#endif  // PRINT_SERVICE_PROXY_H

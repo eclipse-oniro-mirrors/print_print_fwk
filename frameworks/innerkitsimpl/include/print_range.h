@@ -15,9 +15,8 @@
 
 #ifndef PRINT_RANGE_H
 #define PRINT_RANGE_H
-#define TDD_ENABLE 1
 
-#include "napi/native_api.h"
+#include <vector>
 #include "parcel.h"
 
 namespace OHOS::Print {
@@ -33,38 +32,34 @@ public:
 
     void Reset();
 
+    [[nodiscard]] bool HasStartPage() const;
+
     [[nodiscard]] uint32_t GetStartPage() const;
+
+    [[nodiscard]] bool HasEndPage() const;
 
     [[nodiscard]] uint32_t GetEndPage() const;
 
+    [[nodiscard]] bool HasPages() const;
+
     void GetPages(std::vector<uint32_t> &pages) const;
 
-    virtual bool Marshalling(Parcel &parcel) const override;
-
-    static std::shared_ptr<PrintRange> Unmarshalling(Parcel &parcel);
-
-    napi_value ToJsObject(napi_env env) const;
-
-    static std::shared_ptr<PrintRange> BuildFromJs(napi_env env, napi_value jsValue);
-
-    void Dump();
-
-#ifndef TDD_ENABLE
-private:
-#endif
     void SetStartPage(uint32_t startPage);
 
     void SetEndPage(uint32_t endPage);
 
     void SetPages(const std::vector<uint32_t> &pages);
 
-    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
 
-    static bool ValidateProperty(napi_env env, napi_value object);
+    static std::shared_ptr<PrintRange> Unmarshalling(Parcel &parcel);
 
-#ifndef TDD_ENABLE
+    void Dump();
+
 private:
-#endif
+    void ReadFromParcel(Parcel &parcel);
+
+private:
     bool hasStartPage_;
     uint32_t startPage_;
 
@@ -74,5 +69,5 @@ private:
     bool hasPages_;
     std::vector<uint32_t> pages_;
 };
-} // namespace OHOS::Print
-#endif // PRINT_RANGE_H
+}  // namespace OHOS::Print
+#endif  // PRINT_RANGE_H

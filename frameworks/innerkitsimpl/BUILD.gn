@@ -17,7 +17,8 @@ config("print_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc = [ "-fno-exceptions" ]
+  cflags_cc = [ "-fno-exceptions","--coverage" ]
+  ldflags = [ "--coverage" ]
 }
 ohos_shared_library("print_client") {
   include_dirs = [
@@ -28,8 +29,6 @@ ohos_shared_library("print_client") {
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
   sources = [
-    "src/napi_print_utils.cpp",
-    "src/print_callback.cpp",
     "src/print_callback_stub.cpp",
     "src/print_extension_callback_stub.cpp",
     "src/print_extension_info.cpp",
@@ -43,6 +42,7 @@ ohos_shared_library("print_client") {
     "src/print_sa_death_recipient.cpp",
     "src/print_service_proxy.cpp",
     "src/print_sync_load_callback.cpp",
+    "src/print_utils.cpp",
     "src/printer_capability.cpp",
     "src/printer_info.cpp",
   ]
