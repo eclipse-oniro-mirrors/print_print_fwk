@@ -14,7 +14,6 @@
  */
 
 #include <gtest/gtest.h>
-#include "napi/native_api.h"
 #include "print_margin.h"
 #include "printer_capability.h"
 
@@ -42,87 +41,92 @@ void PrintMarginTest::TearDown(void) {}
  * @tc.name: PrintMarginTest_001
  * @tc.desc: Verify the bottom function.
  * @tc.type: FUNC
- * @tc.require: AR00000000 SR00000000
+ * @tc.require:
  */
 HWTEST_F(PrintMarginTest, PrintMarginTest_001, TestSize.Level1)
 {
     OHOS::Print::PrintMargin margin;
-    EXPECT_EQ(0, margin.GetTop());
+    margin.Dump();
+    margin.~PrintMargin();
 }
 
 /**
  * @tc.name: PrintMarginTest_002
- * @tc.desc: Verify the bottom function.
+ * @tc.desc: Verify the getBottom function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintMarginTest, PrintMarginTest_002, TestSize.Level1)
 {
     OHOS::Print::PrintMargin margin;
-    EXPECT_EQ(0, margin.GetBottom());
+    OHOS::Print::PrintMargin right;
+    margin.Set(right);
+    EXPECT_EQ((uint32_t)0, margin.GetBottom());
 }
 
 /**
  * @tc.name: PrintMarginTest_003
- * @tc.desc: Verify the bottom function.
+ * @tc.desc: Verify the reset function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintMarginTest, PrintMarginTest_003, TestSize.Level1)
 {
     OHOS::Print::PrintMargin margin;
-    EXPECT_EQ(0, margin.GetLeft());
+    margin.Reset();
+    EXPECT_EQ((uint32_t)0, margin.GetBottom());
 }
 
 /**
  * @tc.name: PrintMarginTest_004
- * @tc.desc: Verify the bottom function.
+ * @tc.desc: Verify the hasTop function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintMarginTest, PrintMarginTest_004, TestSize.Level1)
 {
     OHOS::Print::PrintMargin margin;
-    EXPECT_EQ(0, margin.GetRight());
+    margin.SetTop(6);
+    EXPECT_TRUE(margin.HasTop());
 }
 
 /**
  * @tc.name: PrintMarginTest_005
- * @tc.desc: Verify the Reset function.
+ * @tc.desc: Verify the getTop function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintMarginTest, PrintMarginTest_005, TestSize.Level1)
 {
     OHOS::Print::PrintMargin margin;
-    margin.Reset();
-    EXPECT_EQ(0, margin.GetTop());
+    margin.SetTop(6);
+    EXPECT_EQ((uint32_t)6, margin.GetTop());
 }
 
 /**
  * @tc.name: PrintMarginTest_006
- * @tc.desc: Verify the Reset function.
+ * @tc.desc: Verify the hasBottom function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintMarginTest, PrintMarginTest_006, TestSize.Level1)
 {
     OHOS::Print::PrintMargin margin;
-    margin.Reset();
-    EXPECT_EQ(0, margin.GetBottom());
+    margin.SetBottom(6);
+    EXPECT_TRUE(margin.HasBottom());
 }
 
 /**
  * @tc.name: PrintMarginTest_007
- * @tc.desc: Verify the Reset function.
+ * @tc.desc: Verify the getBottom function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintMarginTest, PrintMarginTest_007, TestSize.Level1)
 {
     OHOS::Print::PrintMargin margin;
-    margin.Reset();
-    EXPECT_EQ(0, margin.GetLeft());
+    margin.SetBottom(6);
+    EXPECT_EQ((uint32_t)6, margin.GetBottom());
 }
 
 /**
@@ -134,19 +138,8 @@ HWTEST_F(PrintMarginTest, PrintMarginTest_007, TestSize.Level1)
 HWTEST_F(PrintMarginTest, PrintMarginTest_008, TestSize.Level1)
 {
     OHOS::Print::PrintMargin margin;
-    napi_env env = nullptr;
-    napi_value val = nullptr;
-    margin.Reset();
-    EXPECT_EQ(0, margin.GetRight());
-    OHOS::Print::PrintMargin(margin_);
-    margin.SetTop(1);
-    margin.SetLeft(2);
-    margin.SetRight(3);
-    margin.SetBottom(4);
-    margin.ToJsObject(env);
-    margin.Dump();
-    OHOS::Print::PrintMargin::BuildFromJs(env, val);
-    OHOS::Print::PrintMargin::ValidateProperty(env, val);
+    margin.SetLeft(6);
+    EXPECT_TRUE(margin.HasLeft());
 }
 
 /**
@@ -158,39 +151,234 @@ HWTEST_F(PrintMarginTest, PrintMarginTest_008, TestSize.Level1)
 HWTEST_F(PrintMarginTest, PrintMarginTest_009, TestSize.Level1)
 {
     OHOS::Print::PrintMargin margin;
-    margin.Reset();
-    margin.SetTop(1);
-    margin.SetLeft(2);
-    margin.SetRight(3);
-    margin.SetBottom(4);
-    Parcel parcel;
-    margin.Marshalling(parcel);
-    margin.ReadFromParcel(parcel);
-    margin.Unmarshalling(parcel);
+    margin.SetLeft(6);
+    EXPECT_EQ((uint32_t)6, margin.GetLeft());
 }
 
 /**
- * @tc.name: PrintMarginTest_010
- * @tc.desc: Verify the Reset function.
+ * @tc.name: PrintMarginTest_0010
+ * @tc.desc: Verify the hasRight function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintMarginTest, PrintMarginTest_010, TestSize.Level1)
+HWTEST_F(PrintMarginTest, PrintMarginTest_0010, TestSize.Level1)
 {
     OHOS::Print::PrintMargin margin;
-    margin.Reset();
-    margin.SetTop(1);
-    margin.SetLeft(2);
-    margin.SetRight(3);
-    margin.SetBottom(4);
+    margin.SetRight(6);
+    EXPECT_TRUE(margin.HasRight());
+}
 
-    MessageParcel data;
-    std::string printerId = "1";
-    data.WriteString(printerId);
-    data.WriteBool(true);
-    margin.Marshalling(data);
-    margin.ReadFromParcel(data);
-    margin.Unmarshalling(data);
+/**
+ * @tc.name: PrintMarginTest_0011
+ * @tc.desc: Verify the getRight function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0011, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetRight(6);
+    EXPECT_EQ((uint32_t)6, margin.GetRight());
+}
+
+/**
+ * @tc.name: PrintMarginTest_0012
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0012, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(6);
+    margin.SetBottom(6);
+    margin.SetLeft(6);
+    margin.SetRight(6);
+    Parcel parcel;
+    EXPECT_TRUE(margin.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintMarginTest_0013
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0013, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetBottom(6);
+    margin.SetLeft(6);
+    margin.SetRight(6);
+    Parcel parcel;
+    EXPECT_TRUE(margin.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintMarginTest_0014
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0014, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(6);
+    margin.SetLeft(6);
+    margin.SetRight(6);
+    Parcel parcel;
+    EXPECT_TRUE(margin.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintMarginTest_0015
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0015, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(6);
+    margin.SetBottom(6);
+    margin.SetRight(6);
+    Parcel parcel;
+    EXPECT_TRUE(margin.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintMarginTest_0016
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0016, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(6);
+    margin.SetBottom(6);
+    margin.SetLeft(6);
+    Parcel parcel;
+    EXPECT_TRUE(margin.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintMarginTest_0017
+ * @tc.desc: Verify the unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0017, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(6);
+    margin.SetBottom(6);
+    margin.SetLeft(6);
+    margin.SetRight(6);
+    Parcel parcel;
+    margin.Marshalling(parcel);
+    auto result = OHOS::Print::PrintMargin::Unmarshalling(parcel);
+    EXPECT_NE(nullptr, result);
+}
+
+/**
+ * @tc.name: PrintMarginTest_0018
+ * @tc.desc: Verify the unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0018, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetBottom(6);
+    margin.SetLeft(6);
+    margin.SetRight(6);
+    Parcel parcel;
+    margin.Marshalling(parcel);
+    auto result = OHOS::Print::PrintMargin::Unmarshalling(parcel);
+    EXPECT_NE(nullptr, result);
+}
+
+/**
+ * @tc.name: PrintMarginTest_0019
+ * @tc.desc: Verify the unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0019, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(6);
+    margin.SetLeft(6);
+    margin.SetRight(6);
+    Parcel parcel;
+    margin.Marshalling(parcel);
+    auto result = OHOS::Print::PrintMargin::Unmarshalling(parcel);
+    EXPECT_NE(nullptr, result);
+}
+
+/**
+ * @tc.name: PrintMarginTest_0020
+ * @tc.desc: Verify the unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0020, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(6);
+    margin.SetBottom(6);
+    margin.SetRight(6);
+    Parcel parcel;
+    margin.Marshalling(parcel);
+    auto result = OHOS::Print::PrintMargin::Unmarshalling(parcel);
+    EXPECT_NE(nullptr, result);
+}
+
+/**
+ * @tc.name: PrintMarginTest_0021
+ * @tc.desc: Verify the unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0021, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(6);
+    margin.SetBottom(6);
+    margin.SetLeft(6);
+    Parcel parcel;
+    margin.Marshalling(parcel);
+    auto result = OHOS::Print::PrintMargin::Unmarshalling(parcel);
+    EXPECT_NE(nullptr, result);
+}
+
+/**
+ * @tc.name: PrintMarginTest_0022
+ * @tc.desc: Verify the bottom function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0022, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(6);
+    OHOS::Print::PrintMargin copyMargin(margin);
+    EXPECT_EQ(copyMargin.GetTop(), margin.GetTop());
+}
+
+/**
+ * @tc.name: PrintMarginTest_0023
+ * @tc.desc: Verify the bottom function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintMarginTest, PrintMarginTest_0023, TestSize.Level1)
+{
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(6);
+    OHOS::Print::PrintMargin copyMargin = margin;
+    EXPECT_EQ(copyMargin.GetTop(), margin.GetTop());
 }
 } // namespace Print
 } // namespace OHOS

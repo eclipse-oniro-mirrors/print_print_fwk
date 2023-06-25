@@ -14,7 +14,6 @@
  */
 
 #include <gtest/gtest.h>
-#include "napi/native_api.h"
 #include "print_page_size.h"
 #include "printer_capability.h"
 #include "print_log.h"
@@ -41,7 +40,7 @@ void PrintPageSizeTest::TearDown(void) {}
 
 /**
  * @tc.name: PrintPageSizeTest_0001
- * @tc.desc: Verify the capability function.
+ * @tc.desc: Verify the constructor function.
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -49,75 +48,161 @@ HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintPageSize printpageSize;
     OHOS::Print::PrintPageSize::BuildPageSizeMap();
-    OHOS::Print::PrintPageSize(printpageSize_);
-    DiscretePageName name = "name";
-    PAGE_SIZE_ID id = "id";
-    OHOS::Print::PrintPageSize(id, name, 1, 1);
-    napi_env env = nullptr;
-    napi_value val = nullptr;
-    printpageSize.Reset();
-    printpageSize.SetId("string");
-    printpageSize.SetHeight(1);
-    printpageSize.SetWidth(2);
-    printpageSize.SetName("name");
-    PRINT_HILOGD("%{public}s", printpageSize.GetId().c_str());
-    PRINT_HILOGD("%{public}s", printpageSize.GetName().c_str());
-    PRINT_HILOGD("%{public}d", printpageSize.GetHeight());
-    printpageSize.ToJsObject(env);
     printpageSize.Dump();
-    OHOS::Print::PrintPageSize::ValidateProperty(env, val);
-    OHOS::Print::PrintPageSize::BuildFromJs(env, val);
-    OHOS::Print::PrintPageSize pageSizeValue = printpageSize;
+    printpageSize.~PrintPageSize();
 }
 
 /**
  * @tc.name: PrintPageSizeTest_0002
- * @tc.desc: Verify the capability function.
+ * @tc.desc: Verify the getPageSize function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0002, TestSize.Level1)
 {
-    OHOS::Print::PrintPageSize printpageSize;
-    DiscretePageName name = "name";
-    PAGE_SIZE_ID id = "id";
-    OHOS::Print::PrintPageSize(id, name, 1, 1);
-    printpageSize.Reset();
-    printpageSize.SetId("string");
-    printpageSize.SetHeight(1);
-    printpageSize.SetWidth(2);
-    printpageSize.SetName("name");
-    Parcel parcel;
-    printpageSize.Marshalling(parcel);
-    printpageSize.ReadFromParcel(parcel);
-    printpageSize.Unmarshalling(parcel);
+    auto pageSize = OHOS::Print::PrintPageSize::GetPageSize(ISO_A3);
+    EXPECT_EQ((uint32_t)0, pageSize.GetWidth());
 }
 
 /**
  * @tc.name: PrintPageSizeTest_0003
- * @tc.desc: Verify the capability function.
+ * @tc.desc: Verify the reset function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0003, TestSize.Level1)
 {
     OHOS::Print::PrintPageSize printpageSize;
-    DiscretePageName name = "name";
-    PAGE_SIZE_ID id = "id";
-    OHOS::Print::PrintPageSize(id, name, 1, 1);
     printpageSize.Reset();
-    printpageSize.SetId("string");
-    printpageSize.SetHeight(1);
-    printpageSize.SetWidth(2);
-    printpageSize.SetName("name");
+    EXPECT_EQ("", printpageSize.GetId());
+}
 
-    MessageParcel data;
-    std::string printerId = "1";
-    data.WriteString(printerId);
-    data.WriteBool(true);
-    printpageSize.Marshalling(data);
-    printpageSize.ReadFromParcel(data);
-    printpageSize.Unmarshalling(data);
+/**
+ * @tc.name: PrintPageSizeTest_0004
+ * @tc.desc: Verify the getId function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0004, TestSize.Level1)
+{
+    OHOS::Print::PrintPageSize printpageSize;
+    printpageSize.SetId("Test");
+    EXPECT_EQ("Test", printpageSize.GetId());
+}
+
+/**
+ * @tc.name: PrintPageSizeTest_0005
+ * @tc.desc: Verify the getName function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0005, TestSize.Level1)
+{
+    OHOS::Print::PrintPageSize printpageSize;
+    printpageSize.SetName("Test");
+    EXPECT_EQ("Test", printpageSize.GetName());
+}
+
+/**
+ * @tc.name: PrintPageSizeTest_0006
+ * @tc.desc: Verify the getWidth function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0006, TestSize.Level1)
+{
+    OHOS::Print::PrintPageSize printpageSize;
+    printpageSize.SetWidth(6);
+    EXPECT_EQ((uint32_t)6, printpageSize.GetWidth());
+}
+
+/**
+ * @tc.name: PrintPageSizeTest_0007
+ * @tc.desc: Verify the getHeight function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0007, TestSize.Level1)
+{
+    OHOS::Print::PrintPageSize printpageSize;
+    printpageSize.SetHeight(6);
+    EXPECT_EQ((uint32_t)6, printpageSize.GetHeight());
+}
+
+/**
+ * @tc.name: PrintPageSizeTest_0008
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0008, TestSize.Level1)
+{
+    OHOS::Print::PrintPageSize printpageSize;
+    printpageSize.SetId("Test");
+    printpageSize.SetName("Test");
+    printpageSize.SetWidth(6);
+    printpageSize.SetHeight(6);
+    Parcel parcel;
+    EXPECT_EQ(printpageSize.Marshalling(parcel), true);
+}
+
+/**
+ * @tc.name: PrintPageSizeTest_0009
+ * @tc.desc: Verify the unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0009, TestSize.Level1)
+{
+    OHOS::Print::PrintPageSize printpageSize;
+    printpageSize.SetId("Test");
+    printpageSize.SetName("Test");
+    printpageSize.SetWidth(6);
+    printpageSize.SetHeight(6);
+    Parcel parcel;
+    printpageSize.Marshalling(parcel);
+    auto result = OHOS::Print::PrintPageSize::Unmarshalling(parcel);
+    EXPECT_NE(nullptr, result);
+}
+
+/**
+ * @tc.name: PrintPageSizeTest_0010
+ * @tc.desc: Verify the constructor function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0010, TestSize.Level1)
+{
+    OHOS::Print::PrintPageSize printpageSize("Test", "Test", 6, 6);
+    EXPECT_EQ((uint32_t)6, printpageSize.GetWidth());
+}
+
+/**
+ * @tc.name: PrintPageSizeTest_0011
+ * @tc.desc: Verify the copy constructor function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0011, TestSize.Level1)
+{
+    OHOS::Print::PrintPageSize printpageSize;
+    printpageSize.SetWidth(6);
+    OHOS::Print::PrintPageSize copyPageSize(printpageSize);
+    EXPECT_EQ(copyPageSize.GetWidth(), printpageSize.GetWidth());
+}
+
+/**
+ * @tc.name: PrintPageSizeTest_0012
+ * @tc.desc: Verify the copy constructor function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0012, TestSize.Level1)
+{
+    OHOS::Print::PrintPageSize printpageSize;
+    printpageSize.SetWidth(6);
+    OHOS::Print::PrintPageSize copyPageSize = printpageSize;
+    EXPECT_EQ(copyPageSize.GetWidth(), printpageSize.GetWidth());
 }
 } // namespace Print
 } // namespace OHOS
