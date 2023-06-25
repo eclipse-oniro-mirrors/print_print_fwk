@@ -174,7 +174,7 @@ public:
 
     void SetWidth(uint32_t width);
 
-    void SetHeight(uint32_t height);    
+    void SetHeight(uint32_t height);
 
     virtual bool Marshalling(Parcel &parcel) const override;
 

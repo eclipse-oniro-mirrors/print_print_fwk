@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 #include "print_resolution_helper.h"
-#include <map>
 #include "print_constant.h"
 #include "napi_print_utils.h"
 #include "print_log.h"

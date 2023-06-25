@@ -24,7 +24,6 @@ class PrintExtensionInfoHelper {
 public:
     static napi_value MakeJsObject(napi_env env, const PrintExtensionInfo &info);
     static std::shared_ptr<PrintExtensionInfo> BuildFromJs(napi_env env, napi_value jsValue);
-
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_EXTENSION_INFO_HELPER_H

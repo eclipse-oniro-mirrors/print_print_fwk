@@ -14,7 +14,6 @@
  */
 
 #include "print_page_size_helper.h"
-#include <map>
 #include "napi_print_utils.h"
 #include "print_constant.h"
 #include "print_log.h"
@@ -94,5 +93,4 @@ bool PrintPageSizeHelper::ValidateProperty(napi_env env, napi_value object)
 
     return true;
 }
-
 } // namespace OHOS::Print

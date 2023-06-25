@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 #include "printer_capability_helper.h"
-#include <map>
 #include "napi_print_utils.h"
 #include "print_constant.h"
 #include "print_log.h"
@@ -22,7 +21,6 @@
 #include "print_resolution_helper.h"
 
 namespace OHOS::Print {
-
 static constexpr const char *PARAM_CAPABILITY_COLORMODE = "colorMode";
 static constexpr const char *PARAM_CAPABILITY_DUPLEXMODE = "duplexMode";
 static constexpr const char *PARAM_CAPABILITY_PAGESIZE = "pageSize";

@@ -20,11 +20,6 @@
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
-// #include "print_constant.h"
-// #include "print_job.h"
-// #include "print_resolution.h"
-// #include "printer_capability.h"
-// #include "printer_info.h"
 
 namespace OHOS::Print {
 class NapiPrintUtils {

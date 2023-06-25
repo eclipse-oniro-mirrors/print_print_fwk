@@ -17,7 +17,10 @@ config("print_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc = [ "-fno-exceptions","--coverage" ]
+  cflags_cc = [
+    "-fno-exceptions",
+    "--coverage",
+  ]
   ldflags = [ "--coverage" ]
 }
 ohos_shared_library("print_client") {

@@ -14,7 +14,6 @@
  */
 
 #include "printer_info_helper.h"
-#include <map>
 #include "napi_print_utils.h"
 #include "print_constant.h"
 #include "printer_capability_helper.h"

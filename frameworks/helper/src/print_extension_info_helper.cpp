@@ -18,7 +18,6 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-
 static constexpr const char *PARAM_EXTINFO_EXTENSION_ID = "extensionId";
 static constexpr const char *PARAM_EXTINFO_VENDOR_ID = "vendorId";
 static constexpr const char *PARAM_EXTINFO_VENDOR_NAME = "vendorName";

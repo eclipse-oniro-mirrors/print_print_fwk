@@ -15,7 +15,6 @@
 
 #include "napi_print_utils.h"
 
-#include <fcntl.h>
 #include "ability.h"
 #include "napi_base_context.h"
 #include "print_constant.h"

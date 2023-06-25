@@ -55,7 +55,7 @@ public:
 
     void SetLeft(uint32_t left);
 
-    void SetRight(uint32_t right);    
+    void SetRight(uint32_t right);
 
     virtual bool Marshalling(Parcel &parcel) const override;
 

@@ -14,7 +14,6 @@
  */
 
 #include "print_margin_helper.h"
-#include <map>
 #include "napi_print_utils.h"
 #include "print_constant.h"
 #include "print_log.h"

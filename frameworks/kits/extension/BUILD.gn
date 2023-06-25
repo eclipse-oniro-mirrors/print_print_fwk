@@ -42,7 +42,10 @@ config("ability_public_config") {
     "//third_party/json/include",
   ]
 
-  cflags_cc = [ "-fno-exceptions","--coverage" ]
+  cflags_cc = [
+    "-fno-exceptions",
+    "--coverage",
+  ]
   ldflags = [ "--coverage" ]
 }
 

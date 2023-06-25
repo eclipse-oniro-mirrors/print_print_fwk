@@ -16,12 +16,12 @@
 #ifndef PRINT_CALLBACK_H
 #define PRINT_CALLBACK_H
 
-#include "napi/native_api.h"
-#include "print_callback_stub.h"
 #include <mutex>
-#include "print_log.h"
 #include <uv.h>
 #include <functional>
+#include "napi/native_api.h"
+#include "print_callback_stub.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
 struct CallbackParam {

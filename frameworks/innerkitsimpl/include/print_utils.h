@@ -17,10 +17,6 @@
 #define PRINT_UTILS_H
 
 #include <string>
-// #include "print_job.h"
-// #include "print_resolution.h"
-// #include "printer_capability.h"
-// #include "printer_info.h"
 
 namespace OHOS::Print {
 class PrintUtils {

@@ -20,7 +20,10 @@ config("print_service_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc += [ "-fno-exceptions","--coverage" ]
+  cflags_cc += [
+    "-fno-exceptions",
+    "--coverage",
+  ]
   ldflags = [ "--coverage" ]
 }
 
