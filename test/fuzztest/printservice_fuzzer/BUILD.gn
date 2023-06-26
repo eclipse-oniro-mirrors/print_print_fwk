@@ -26,7 +26,7 @@ ohos_fuzztest("PrintServiceFuzzTest") {
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/include",
     "${print_path}/services/include",
-    "${print_utils_path}/lib",
+    "${print_utils_path}/include",
   ]
 
   cflags = [

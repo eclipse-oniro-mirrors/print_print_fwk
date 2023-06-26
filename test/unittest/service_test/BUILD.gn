@@ -31,7 +31,6 @@ ohos_unittest("print_service_test") {
   ]
 
   sources = [
-    "print_manager_client_test.cpp",
     "print_task_test.cpp",
   ]
 
