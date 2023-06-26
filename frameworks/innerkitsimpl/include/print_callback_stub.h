@@ -17,9 +17,9 @@
 #define PRINT_CALLBACK_STUB_H
 #define TDD_ENABLE 1
 
+#include <map>
 #include "iprint_callback.h"
 #include "iremote_stub.h"
-#include <map>
 
 namespace OHOS::Print {
 class PrintCallbackStub : public IRemoteStub<IPrintCallback> {

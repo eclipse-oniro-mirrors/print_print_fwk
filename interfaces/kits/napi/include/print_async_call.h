@@ -25,7 +25,6 @@
 #define TDD_ENABLE 1
 
 namespace OHOS::Print {
-
 class PrintAsyncCall final {
 public:
     class Context {

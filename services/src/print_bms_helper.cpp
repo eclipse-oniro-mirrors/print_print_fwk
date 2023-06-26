@@ -25,7 +25,6 @@
 #include "system_ability_definition.h"
 
 namespace OHOS::Print {
-
 using namespace OHOS::AppExecFwk::Constants;
 
 PrintBMSHelper::PrintBMSHelper() : sptrBundleMgr_(nullptr), printBMSDeath_(nullptr)

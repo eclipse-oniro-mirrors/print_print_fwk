@@ -17,9 +17,9 @@
 #define NAPI_PRINT_TASK_H
 #define TDD_ENABLE 1
 
+#include <string>
 #include "napi/native_api.h"
 #include "napi/native_common.h"
-#include <string>
 
 namespace OHOS::Print {
 class NapiPrintTask {

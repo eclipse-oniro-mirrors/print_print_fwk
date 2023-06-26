@@ -21,7 +21,6 @@
 #include "print_manager_client.h"
 
 namespace OHOS::Print {
-
 const std::string EVENT_BLOCK = "blocked";
 const std::string EVENT_SUCCESS = "success";
 const std::string EVENT_FAIL = "failed";
