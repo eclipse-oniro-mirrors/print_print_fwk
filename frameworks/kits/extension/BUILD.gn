@@ -42,11 +42,7 @@ config("ability_public_config") {
     "//third_party/json/include",
   ]
 
-  cflags_cc = [
-    "-fno-exceptions",
-    "--coverage",
-  ]
-  ldflags = [ "--coverage" ]
+  cflags_cc = [ "-fno-exceptions" ]
 }
 
 ohos_shared_library("print_extension_framework") {

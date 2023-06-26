@@ -15,6 +15,7 @@
 #ifndef PRINT_JOB_HELPER_H
 #define PRINT_JOB_HELPER_H
 
+#include <map>
 #include "napi/native_api.h"
 #include "print_job.h"
 

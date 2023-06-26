@@ -147,16 +147,80 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0008, TestSize.Level1)
     range.SetEndPage(6);
     range.SetStartPage(6);
     Parcel parcel;
-    EXPECT_EQ(range.Marshalling(parcel), true);
+    EXPECT_TRUE(range.Marshalling(parcel));
 }
 
 /**
  * @tc.name: PrintRangeTest_0009
- * @tc.desc: Verify the unmarshalling function.
+ * @tc.desc: Verify the marshalling function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintRangeTest, PrintRangeTest_0009, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    std::vector<uint32_t> pages = {1, 2, 3};
+    range.SetPages(pages);
+    range.SetEndPage(6);
+    range.SetStartPage(6);
+    Parcel parcel;
+    EXPECT_TRUE(range.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintRangeTest_0010
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0010, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    std::vector<uint32_t> pages = {1, 2, 3};
+    range.SetPages(pages);
+    range.SetEndPage(6);
+    Parcel parcel;
+    EXPECT_TRUE(range.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintRangeTest_0011
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0011, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    std::vector<uint32_t> pages = {1, 2, 3};
+    range.SetPages(pages);
+    range.SetStartPage(6);
+    Parcel parcel;
+    EXPECT_TRUE(range.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintRangeTest_0012
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0012, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    range.SetEndPage(6);
+    range.SetStartPage(6);
+    Parcel parcel;
+    EXPECT_FALSE(range.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintRangeTest_0013
+ * @tc.desc: Verify the unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0013, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     std::vector<uint32_t> pages = {1, 2, 3};
@@ -170,12 +234,12 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0009, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintRangeTest_0010
+ * @tc.name: PrintRangeTest_0014
  * @tc.desc: Verify the copy constructor function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0010, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0014, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     range.SetEndPage(6);
@@ -184,12 +248,12 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0010, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintRangeTest_0011
+ * @tc.name: PrintRangeTest_0015
  * @tc.desc: Verify the assignment construction function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0011, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0015, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     range.SetEndPage(6);

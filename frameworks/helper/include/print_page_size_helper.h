@@ -16,6 +16,7 @@
 #ifndef PRINT_PAGESIZE_HELPER_H
 #define PRINT_PAGESIZE_HELPER_H
 
+#include <map>
 #include "napi/native_api.h"
 #include "print_page_size.h"
 

@@ -138,7 +138,7 @@ HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0007, TestSize.Level1)
 HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0008, TestSize.Level1)
 {
     OHOS::Print::PrintPageSize printpageSize;
-    printpageSize.SetId("Test");
+    printpageSize.SetId("id-1234");
     printpageSize.SetName("Test");
     printpageSize.SetWidth(6);
     printpageSize.SetHeight(6);
@@ -155,10 +155,7 @@ HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0008, TestSize.Level1)
 HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0009, TestSize.Level1)
 {
     OHOS::Print::PrintPageSize printpageSize;
-    printpageSize.SetId("Test");
-    printpageSize.SetName("Test");
-    printpageSize.SetWidth(6);
-    printpageSize.SetHeight(6);
+    printpageSize.SetId("id-1234");
     Parcel parcel;
     printpageSize.Marshalling(parcel);
     auto result = OHOS::Print::PrintPageSize::Unmarshalling(parcel);

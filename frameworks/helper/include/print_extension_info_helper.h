@@ -16,6 +16,7 @@
 #ifndef PRINT_EXTENSION_INFO_HELPER_H
 #define PRINT_EXTENSION_INFO_HELPER_H
 
+#include <map>
 #include "napi/native_api.h"
 #include "print_extension_info.h"
 

@@ -107,16 +107,32 @@ HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0005, TestSize.Lev
     OHOS::Print::PrintRange printRange;
     attribute.SetPreviewRange(printRange);
     Parcel parcel;
-    EXPECT_EQ(attribute.Marshalling(parcel), true);
+    EXPECT_TRUE(attribute.Marshalling(parcel));
 }
 
 /**
  * @tc.name: PrintPreviewAttributeTest_0006
- * @tc.desc: Verify the unmarshalling function.
+ * @tc.desc: Verify the marshalling function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0006, TestSize.Level1)
+{
+    OHOS::Print::PrintPreviewAttribute attribute;
+    OHOS::Print::PrintRange printRange;
+    attribute.SetPreviewRange(printRange);
+    attribute.SetResult(6);
+    Parcel parcel;
+    EXPECT_TRUE(attribute.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintPreviewAttributeTest_0007
+ * @tc.desc: Verify the unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0007, TestSize.Level1)
 {
     OHOS::Print::PrintPreviewAttribute attribute;
     OHOS::Print::PrintRange printRange;

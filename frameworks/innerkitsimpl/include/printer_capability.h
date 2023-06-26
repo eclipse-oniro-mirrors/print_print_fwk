@@ -50,6 +50,8 @@ public:
 
     [[nodiscard]] uint32_t GetDuplexMode() const;
 
+	[[nodiscard]] bool GetIsEmpty() const;
+
     void SetMinMargin(const PrintMargin &minMargin);
 
     void SetPageSize(const std::vector<PrintPageSize> &pageSizeList);
@@ -59,6 +61,8 @@ public:
     void SetColorMode(uint32_t colorMode);
 
     void SetDuplexMode(uint32_t duplexMode);
+
+    void SetIsEmpty(bool isEmpty);
 
     virtual bool Marshalling(Parcel &parcel) const override;
 

@@ -16,6 +16,7 @@
 #ifndef PRINT_MARGIN_HELPER_H
 #define PRINT_MARGIN_HELPER_H
 
+#include <map>
 #include "napi/native_api.h"
 #include "print_margin.h"
 

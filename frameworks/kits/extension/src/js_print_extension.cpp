@@ -35,7 +35,6 @@
 
 namespace OHOS {
 namespace AbilityRuntime {
-
 JsPrintExtension *JsPrintExtension::jsExtension_ = nullptr;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Print;

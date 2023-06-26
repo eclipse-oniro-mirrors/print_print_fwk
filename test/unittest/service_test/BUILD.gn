@@ -25,7 +25,7 @@ ohos_unittest("print_service_test") {
     "${print_path}/interfaces/kits/napi/src",
     "${print_path}/services/include",
     "${print_path}/services/src",
-    "${print_utils_path}/lib",
+    "${print_utils_path}/include",
     "//third_party/node/src",
     "//third_party/curl/include",
   ]

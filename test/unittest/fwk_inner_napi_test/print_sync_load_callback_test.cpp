@@ -14,8 +14,6 @@
  */
 
 #include <gtest/gtest.h>
-#include "napi/native_api.h"
-
 #include "print_sync_load_callback.h"
 #include "iservice_registry.h"
 #include "isystem_ability_load_callback.h"

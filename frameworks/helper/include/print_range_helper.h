@@ -16,6 +16,7 @@
 #ifndef PRINT_RANGE_HELPER_H
 #define PRINT_RANGE_HELPER_H
 
+#include <map>
 #include "napi/native_api.h"
 #include "print_range.h"
 

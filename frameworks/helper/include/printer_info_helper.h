@@ -16,6 +16,7 @@
 #ifndef PRINTER_INFO_HELPER_H
 #define PRINTER_INFO_HELPER_H
 
+#include <map>
 #include "napi/native_api.h"
 #include "printer_info.h"
 
