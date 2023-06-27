@@ -116,6 +116,7 @@ private:
     void RegisterPreviewCb();
     void RegisterQueryCapCb();
     void RegisterExtensionCb();
+    void RegisterCb();
 
     void GetSrcPath(std::string &srcPath);
 

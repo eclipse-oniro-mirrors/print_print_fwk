@@ -94,6 +94,7 @@ private:
     bool isEprint(const std::string &printerId);
     void ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
     void ReportCompletedPrint(const std::string & printerId);
+    void CheckJobQueueBlocked(const PrintJob &jobInfo);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
@@ -121,6 +122,8 @@ private:
 
     std::mutex lock_;
     uint64_t currentJobId_;
+
+    bool isJobQueueBlocked_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_SYSTEM_ABILITY_H

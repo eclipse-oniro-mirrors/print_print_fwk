@@ -77,6 +77,8 @@ static const std::string QUEUE_JOB_LIST_CHANGED = "queuedJobListChanged";
 static const std::string ACTION_QUEUE_JOB_LIST_CHANGED = "action.printkit.queuedJobListChanged";
 static const std::string QUEUE_JOB_LIST_PRINTING = "printing";
 static const std::string QUEUE_JOB_LIST_COMPLETED = "completed";
+static const std::string QUEUE_JOB_LIST_BLOCKED = "blocked";
+static const std::string QUEUE_JOB_LIST_CLEAR_BLOCKED = "clear_blocked";
 
 
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
@@ -89,7 +91,8 @@ std::string PrintServiceAbility::ingressPackage;
 
 PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START),
-    spoolerBundleName_(SPOOLER_BUNDLE_NAME), spoolerAbilityName_(SPOOLER_ABILITY_NAME), currentJobId_(0)
+    spoolerBundleName_(SPOOLER_BUNDLE_NAME), spoolerAbilityName_(SPOOLER_ABILITY_NAME), currentJobId_(0),
+    isJobQueueBlocked_(false)
 {}
 
 PrintServiceAbility::~PrintServiceAbility()
@@ -807,6 +810,7 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
     jobIt->second->SetJobState(state);
     jobIt->second->SetSubState(subState);
     SendPrintJobEvent(*jobIt->second);
+    CheckJobQueueBlocked(*jobIt->second);
 
     auto printerId = jobIt->second->GetPrinterId();
     if (state == PRINT_JOB_BLOCKED) {
@@ -1285,5 +1289,32 @@ std::shared_ptr<PrinterInfo> PrintServiceAbility::getPrinterInfo(const std::stri
         return printerIt ->second;
     }
     return nullptr;
+}
+
+void PrintServiceAbility::CheckJobQueueBlocked(const PrintJob &jobInfo)
+{
+    PRINT_HILOGD("CheckJobQueueBlocked started,isJobQueueBlocked_=%{public}s", isJobQueueBlocked_ ? "true" : "false");
+    PRINT_HILOGD("CheckJobQueueBlocked %{public}s, %{public}d", jobInfo.GetJobId().c_str(), jobInfo.GetJobState());
+    if (!isJobQueueBlocked_ && jobInfo.GetJobState() == PRINT_JOB_BLOCKED) {
+        // going blocked
+        isJobQueueBlocked_ = true;
+        NotifyAppJobQueueChanged(QUEUE_JOB_LIST_BLOCKED);
+    }
+
+    if (isJobQueueBlocked_ && jobInfo.GetJobState() != PRINT_JOB_BLOCKED) {
+        bool hasJobBlocked = false;
+        for (auto printJob : queuedJobList_) {
+            if (printJob.second -> GetJobState() == PRINT_JOB_BLOCKED) {
+                hasJobBlocked = true;
+                break;
+            }
+        }
+        if (!hasJobBlocked) {
+            // clear blocked
+            isJobQueueBlocked_ = false;
+            NotifyAppJobQueueChanged(QUEUE_JOB_LIST_CLEAR_BLOCKED);
+        }
+    }
+    PRINT_HILOGD("CheckJobQueueBlocked end,isJobQueueBlocked_=%{public}s", isJobQueueBlocked_ ? "true" : "false");
 }
 } // namespace OHOS::Print
