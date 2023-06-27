@@ -57,10 +57,10 @@ void PrintManagerClientTest::CallRemoteObject(const std::shared_ptr<MockPrintSer
     EXPECT_CALL(*obj, IsProxyObject()).WillRepeatedly(Return(true));
     EXPECT_CALL(*obj, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*obj, AddDeathRecipient(_)).WillRepeatedly(
-            [&dr](const sptr<IRemoteObject::DeathRecipient> &recipient) {
-                dr = recipient;
-                return true;
-            });
+        [&dr](const sptr<IRemoteObject::DeathRecipient> &recipient) {
+            dr = recipient;
+            return true;
+        });
     PrintManagerClient::GetInstance()->SetProxy(obj);
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
@@ -198,7 +198,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0006, TestSize.Level1)
     int32_t ret = PrintManagerClient::GetInstance()->StopPrint(testTaskId);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
-    dr->OnRemoteDied(obj); 
+    dr->OnRemoteDied(obj);
 }
 
 /**
@@ -826,7 +826,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0036, TestSize.Level1)
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0037, TestSize.Level1)
 {
     std::string printerId = "printerId-1";
-	uint32_t state = 6;
+    uint32_t state = 6;
 
     PrintManagerClient::GetInstance()->LoadServerFail();
     int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterState(printerId, state);
@@ -842,7 +842,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0037, TestSize.Level1)
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0038, TestSize.Level1)
 {
     std::string printerId = "printerId-1";
-	uint32_t state = 6;
+    uint32_t state = 6;
 
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
@@ -859,15 +859,14 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0038, TestSize.Level1)
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0039, TestSize.Level1)
 {
     std::string testPrinterId = "printerId-1";
-	uint32_t testState = 6;
-
+    uint32_t testState = 6;
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UpdatePrinterState(_,_)).Times(1);
+    EXPECT_CALL(*service, UpdatePrinterState(_, _)).Times(1);
     ON_CALL(*service, UpdatePrinterState).WillByDefault(
             [&testPrinterId, &testState](const std::string &printerId, const uint32_t &state) {
                 EXPECT_EQ(testPrinterId, printerId);
-				EXPECT_EQ(testState, state);
+                EXPECT_EQ(testState, state);
                 return E_PRINT_NONE;
             });
     sptr<MockRemoteObject> obj = new MockRemoteObject();
@@ -889,9 +888,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0039, TestSize.Level1)
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0040, TestSize.Level1)
 {
     std::string printerId = "printerId-1";
-	uint32_t state = 6;
-	uint32_t subState = 6;
-
+    uint32_t state = 6;
+    uint32_t subState = 6;
     PrintManagerClient::GetInstance()->LoadServerFail();
     int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobState(printerId, state, subState);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
@@ -906,9 +904,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0040, TestSize.Level1)
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0041, TestSize.Level1)
 {
     std::string printerId = "printerId-1";
-	uint32_t state = 6;
-	uint32_t subState = 6;
-
+    uint32_t state = 6;
+    uint32_t subState = 6;
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
     int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobState(printerId, state, subState);
@@ -924,12 +921,11 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0041, TestSize.Level1)
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0042, TestSize.Level1)
 {
     std::string testPrinterId = "printerId-1";
-	uint32_t testState = 6;
-	uint32_t testSubState = 6;
-
+    uint32_t testState = 6;
+    uint32_t testSubState = 6;
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UpdatePrintJobState(_,_,_)).Times(1);
+    EXPECT_CALL(*service, UpdatePrintJobState(_, _, _)).Times(1);
     ON_CALL(*service, UpdatePrintJobState).WillByDefault(
             [&testPrinterId, &testState, &testSubState](const std::string &printerId, const uint32_t &state,
                 const uint32_t &subState) {
@@ -957,7 +953,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0042, TestSize.Level1)
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0043, TestSize.Level1)
 {
     std::string extensionId = "extensionId-1";
-
     PrintManagerClient::GetInstance()->LoadServerFail();
     int32_t ret = PrintManagerClient::GetInstance()->UpdateExtensionInfo(extensionId);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
@@ -972,8 +967,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0043, TestSize.Level1)
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0044, TestSize.Level1)
 {
     std::string extensionId = "extensionId-1";
-
-
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
     int32_t ret = PrintManagerClient::GetInstance()->UpdateExtensionInfo(extensionId);
@@ -1017,7 +1010,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0045, TestSize.Level1)
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0046, TestSize.Level1)
 {
     PrintJob jobinfo;
-	std::string previewFilePath = "/data/temp/preview.png";
+    std::string previewFilePath = "/data/temp/preview.png";
     PrintManagerClient::GetInstance()->LoadServerFail();
     int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(jobinfo, previewFilePath);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
@@ -1032,7 +1025,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0046, TestSize.Level1)
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0047, TestSize.Level1)
 {
     PrintJob jobinfo;
-	std::string previewFilePath = "/data/temp/preview.png";
+    std::string previewFilePath = "/data/temp/preview.png";
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
     int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(jobinfo, previewFilePath);
@@ -1049,10 +1042,10 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0048, TestSize.Level1)
 {
     PrintJob testJobinfo;
     testJobinfo.SetJobId("jobId-123");
-	std::string testPreviewFilePath = "/data/temp/preview.png";
+    std::string testPreviewFilePath = "/data/temp/preview.png";
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, RequestPreview(_,_)).Times(1);
+    EXPECT_CALL(*service, RequestPreview(_, _)).Times(1);
     ON_CALL(*service, RequestPreview).WillByDefault(
             [&testJobinfo, &testPreviewFilePath](const PrintJob &jobinfo, std::string &previewResult) {
                 EXPECT_EQ(testJobinfo.GetJobId(), jobinfo.GetJobId());
@@ -1189,7 +1182,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0054, TestSize.Level1)
     std::vector<PrintJob> result;
     int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(result);
     EXPECT_EQ(testPrintJobs.size(), result.size());
-    for(size_t index = 0; index < testPrintJobs.size(); index++) {
+    for(size_t index = 0; index < testPrintJobs.size(); index++)
+    {
         EXPECT_EQ(testPrintJobs[index].GetJobId(), result[index].GetJobId());
     }
     EXPECT_EQ(ret, E_PRINT_NONE);
@@ -1549,7 +1543,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0072, TestSize.Level1)
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, RegisterExtCallback(_, _)).Times(1);
     ON_CALL(*service, RegisterExtCallback).WillByDefault(
-        [&testExtCID, &testListener](const std::string &extensionId, 
+        [&testExtCID, &testListener](const std::string &extensionId,
             const sptr<IPrintExtensionCallback> listener) {
             EXPECT_EQ(testExtCID, extensionId);
             return E_PRINT_NONE;
@@ -1581,7 +1575,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0073, TestSize.Level1)
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, RegisterExtCallback(_, _)).Times(1);
     ON_CALL(*service, RegisterExtCallback).WillByDefault(
-        [&testExtCID, &testListener](const std::string &extensionId, 
+        [&testExtCID, &testListener](const std::string &extensionId,
             const sptr<IPrintExtensionCallback> listener) {
             EXPECT_EQ(testExtCID, extensionId);
             return E_PRINT_NONE;
@@ -1613,7 +1607,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0074, TestSize.Level1)
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, RegisterExtCallback(_, _)).Times(1);
     ON_CALL(*service, RegisterExtCallback).WillByDefault(
-        [&testExtCID, &testListener](const std::string &extensionId, 
+        [&testExtCID, &testListener](const std::string &extensionId,
             const sptr<IPrintExtensionCallback> listener) {
             EXPECT_EQ(testExtCID, extensionId);
             return E_PRINT_NONE;
@@ -1645,7 +1639,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0075, TestSize.Level1)
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, RegisterExtCallback(_, _)).Times(1);
     ON_CALL(*service, RegisterExtCallback).WillByDefault(
-        [&testExtCID, &testListener](const std::string &extensionId, 
+        [&testExtCID, &testListener](const std::string &extensionId,
             const sptr<IPrintExtensionCallback> listener) {
             EXPECT_EQ(testExtCID, extensionId);
             return E_PRINT_NONE;

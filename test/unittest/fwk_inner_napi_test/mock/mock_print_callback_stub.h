@@ -22,16 +22,20 @@ namespace OHOS {
 namespace Print {
 class DummyPrintCallbackStub : public PrintCallbackStub {
 public:
-    bool OnCallback() override {
+    bool OnCallback() override
+    {
         return true;
     }
-    bool OnCallback(uint32_t state, const PrinterInfo &info) override {
+    bool OnCallback(uint32_t state, const PrinterInfo &info) override
+    {
         return true;
     }
-    bool OnCallback(uint32_t state, const PrintJob &info) override {
+    bool OnCallback(uint32_t state, const PrintJob &info) override
+    {
         return true;
     }
-    bool OnCallback(const std::string &extensionId, const std::string &info) override {
+    bool OnCallback(const std::string &extensionId, const std::string &info) override
+    {
         return true;
     }
 };

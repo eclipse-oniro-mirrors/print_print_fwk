@@ -48,7 +48,6 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrinterCapability capability;
     capability.Dump();
-    // capability.~PrinterCapability();
 }
 
 /**
@@ -104,7 +103,9 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0005, TestSize.Level1)
 {
     OHOS::Print::PrinterCapability capability;
     std::vector<PrintPageSize> pagesize, getPagesize;
-    pagesize[0].SetWidth(1);
+    PrintPageSize testPagesize;
+    testPagesize.SetWidth(1);
+    pagesize.emplace_back(testPagesize);
     capability.SetPageSize(pagesize);
     capability.GetPageSize(getPagesize);
     EXPECT_EQ(pagesize.size(), getPagesize.size());

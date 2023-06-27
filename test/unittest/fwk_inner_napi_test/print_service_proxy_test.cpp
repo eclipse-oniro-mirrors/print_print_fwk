@@ -768,7 +768,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0023, TestSize.Level1)
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, UnregisterAllExtCallback(_)).Times(Exactly(1)).WillOnce(
         [&testExtId](const std::string &extensionId) {
-            // EXPECT_EQ(testExtId, extensionId);
+            EXPECT_EQ(testExtId, extensionId);
             return E_PRINT_NONE;
         });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);

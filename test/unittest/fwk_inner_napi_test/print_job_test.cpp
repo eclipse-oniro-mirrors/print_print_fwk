@@ -49,7 +49,7 @@ void PrintJobTest::TearDown(void) {}
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.Dump();
 }
 
@@ -61,7 +61,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     OHOS::Print::PrintPreviewAttribute attr;
     OHOS::Print::PrintMargin margin;
 
@@ -81,7 +81,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0003, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     std::vector<uint32_t> files = {1, 2, 3};
     std::vector<uint32_t> getFiles;
     job.SetFdList(files);
@@ -100,7 +100,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0003, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0004, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetJobId("jobid-1234");
     EXPECT_EQ(job.GetJobId(), "jobid-1234");
 }
@@ -113,7 +113,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0004, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0005, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetPrinterId("printid-1234");
     EXPECT_EQ(job.GetPrinterId(), "printid-1234");
 }
@@ -126,7 +126,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0005, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0006, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetJobState(PRINT_JOB_BLOCKED);
     EXPECT_EQ(job.GetJobState(), PRINT_JOB_BLOCKED);
 }
@@ -139,7 +139,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0006, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0007, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetJobState(PRINT_JOB_UNKNOWN + 1);
     EXPECT_EQ(job.GetJobState(), PRINT_JOB_PREPARED);
 }
@@ -152,7 +152,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0007, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0008, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetJobState(PRINT_JOB_COMPLETED);
     job.SetSubState(PRINT_JOB_COMPLETED_FILE_CORRUPT);
     EXPECT_EQ(job.GetSubState(), PRINT_JOB_COMPLETED_FILE_CORRUPT);
@@ -166,7 +166,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0008, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0009, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetJobState(PRINT_JOB_COMPLETED);
     job.SetSubState(PRINT_JOB_BLOCKED_OFFLINE);
     EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_UNKNOWN);
@@ -180,7 +180,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0009, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0010, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetJobState(PRINT_JOB_BLOCKED);
     job.SetSubState(PRINT_JOB_BLOCKED_OFFLINE);
     EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_OFFLINE);
@@ -194,7 +194,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0010, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0011, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetJobState(PRINT_JOB_BLOCKED);
     job.SetSubState(PRINT_JOB_COMPLETED_FILE_CORRUPT);
     EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_UNKNOWN);
@@ -208,7 +208,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0011, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0012, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetJobState(PRINT_JOB_RUNNING);
     job.SetSubState(PRINT_JOB_COMPLETED_FILE_CORRUPT);
     EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_UNKNOWN);
@@ -222,7 +222,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0012, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0013, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetJobState(PRINT_JOB_RUNNING);
     job.SetSubState(PRINT_JOB_BLOCKED_OFFLINE);
     EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_OFFLINE);
@@ -236,7 +236,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0013, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0014, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetCopyNumber(2);
     EXPECT_EQ(job.GetCopyNumber(), 2);
 }
@@ -249,7 +249,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0014, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0015, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     OHOS::Print::PrintRange range, getRange;
     range.SetStartPage(1);
     job.SetPageRange(range);
@@ -265,7 +265,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0015, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0016, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetIsSequential(true);
     EXPECT_EQ(job.GetIsSequential(), true);
 }
@@ -278,7 +278,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0016, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0017, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     OHOS::Print::PrintPageSize pageSize, getPageSize;
     pageSize.SetId("pgid-1234");
     job.SetPageSize(pageSize);
@@ -294,7 +294,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0017, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0018, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetIsLandscape(true);
     EXPECT_EQ(job.GetIsLandscape(), true);
 }
@@ -307,7 +307,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0018, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0019, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetColorMode(1);
     EXPECT_EQ(job.GetColorMode(), 1);
 }
@@ -320,7 +320,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0019, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0020, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetDuplexMode(1);
     EXPECT_EQ(job.GetDuplexMode(), 1);
 }
@@ -333,7 +333,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0020, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0021, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job, getJob;
+    PrintJob job, getJob;
     OHOS::Print::PrintMargin margin, getMargin;
     margin.SetBottom(1);
     job.SetMargin(margin);
@@ -350,7 +350,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0021, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0022, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     job.SetOption("option-123");
     EXPECT_EQ(job.HasOption(), true);
     EXPECT_EQ(job.GetOption(), "option-123");
@@ -364,7 +364,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0022, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0023, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job, getJob;
+    PrintJob job, getJob;
     OHOS::Print::PrintPreviewAttribute attr, getAttr;
     attr.SetResult(1);
     job.SetPreview(attr);
@@ -381,7 +381,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0023, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0024, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job, updateJob;
+    PrintJob job, updateJob;
     job.SetColorMode(1);
     job.SetCopyNumber(1);
     job.SetIsLandscape(true);
@@ -399,7 +399,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0024, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0025, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job, jobInfo;
+    PrintJob job, jobInfo;
     Parcel parcel;
 
     job.SetIsSequential(true);
@@ -414,7 +414,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0025, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0026, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job, jobInfo;
+    PrintJob job, jobInfo;
     Parcel parcel;
     OHOS::Print::PrintPreviewAttribute attr;
     OHOS::Print::PrintMargin margin;
@@ -437,13 +437,13 @@ HWTEST_F(PrintJobTest, PrintJobTest_0026, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0027, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     std::vector<uint32_t> files = {1, 2, 3};
     OHOS::Print::PrintRange range;
     OHOS::Print::PrintPageSize pageSize;
 
     job.SetIsSequential(true);
-    OHOS::Print::PrintJob getJob(job);
+    PrintJob getJob(job);
     EXPECT_EQ(getJob.GetIsSequential(), true);
 }
 
@@ -455,13 +455,13 @@ HWTEST_F(PrintJobTest, PrintJobTest_0027, TestSize.Level1)
  */
 HWTEST_F(PrintJobTest, PrintJobTest_0028, TestSize.Level1)
 {
-    OHOS::Print::PrintJob job;
+    PrintJob job;
     std::vector<uint32_t> files = {1, 2, 3};
     OHOS::Print::PrintRange range;
     OHOS::Print::PrintPageSize pageSize;
 
     job.SetIsSequential(true);
-    OHOS::Print::PrintJob getJob = job;
+    PrintJob getJob = job;
     EXPECT_EQ(getJob.GetIsSequential(), true);
 }
 } // namespace Print

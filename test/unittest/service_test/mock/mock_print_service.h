@@ -24,77 +24,101 @@ namespace Print {
 class DummyPrintServiceStub : public PrintServiceStub {
 public:
     int32_t StartPrint(const std::vector<std::string> &fileList,
-        const std::vector<uint32_t> &fdList, std::string &taskId) override {
+        const std::vector<uint32_t> &fdList, std::string &taskId) override
+    {
             return E_PRINT_NONE;
     }
-    int32_t StopPrint(const std::string &taskId) override {
+    int32_t StopPrint(const std::string &taskId) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t ConnectPrinter(const std::string &printerId) override {
+    int32_t ConnectPrinter(const std::string &printerId) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t DisconnectPrinter(const std::string &printerId) override {
+    int32_t DisconnectPrinter(const std::string &printerId) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t StartDiscoverPrinter(const std::vector<std::string> &extensionList) override {
+    int32_t StartDiscoverPrinter(const std::vector<std::string> &extensionList) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t StopDiscoverPrinter() override {
+    int32_t StopDiscoverPrinter() override
+    {
         return E_PRINT_NONE;
     }
-    int32_t QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos) override {
+    int32_t QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t StartPrintJob(const PrintJob &jobInfo) override {
+    int32_t StartPrintJob(const PrintJob &jobInfo) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t CancelPrintJob(const std::string &jobId) override {
+    int32_t CancelPrintJob(const std::string &jobId) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t AddPrinters(const std::vector<PrinterInfo> &printerInfos) override {
+    int32_t AddPrinters(const std::vector<PrinterInfo> &printerInfos) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t RemovePrinters(const std::vector<std::string> &printerIds) override {
+    int32_t RemovePrinters(const std::vector<std::string> &printerIds) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override {
+    int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) override {
+    int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState) override {
+    int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t UpdateExtensionInfo(const std::string &extensionId) override {
+    int32_t UpdateExtensionInfo(const std::string &extensionId) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override {
+    int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t QueryPrinterCapability(const std::string &printerId) override {
+    int32_t QueryPrinterCapability(const std::string &printerId) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener) override {
+    int32_t On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t Off(const std::string taskId, const std::string &type) override {
+    int32_t Off(const std::string taskId, const std::string &type) override
+    {
         return E_PRINT_NONE;
     }
     int32_t RegisterExtCallback(const std::string &extensionCID,
-        const sptr<IPrintExtensionCallback> &listener) override {
+        const sptr<IPrintExtensionCallback> &listener) override
+        {
             return E_PRINT_NONE;
         }
-    int32_t UnregisterAllExtCallback(const std::string &extensionId) override {
+    int32_t UnregisterAllExtCallback(const std::string &extensionId) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t LoadExtSuccess(const std::string &extensionId) override {
+    int32_t LoadExtSuccess(const std::string &extensionId) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override {
+    int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override
+    {
         return E_PRINT_NONE;
     }
-    int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) override {
+    int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) override
+    {
         return E_PRINT_NONE;
     }
 };
