@@ -41,9 +41,8 @@ void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, co
     printTypeInfo_.ip = PrintUtil::SplitStr(description, '&', SPLIT_INDEX);
     printTypeInfo_.mac = PrintUtil::SplitStr(printerId, '/', SPLIT_INDEX);
     subType_ = PrintSecurityGuardUtil::GetPrinterType(printerId);
-    printTypeInfo_.domain = (subType_ == FROM_EPRINT) ? EPRINT_DOMAIN : "";
 
-    if (subType == FROM_EPRINT) {
+    if (subType_ == FROM_EPRINT) {
         json optionJson = json::parse(printerInfo.GetOption());
         printTypeInfo_.domain = optionJson["ePrintUrl"].get<std::string>;
     } else {
