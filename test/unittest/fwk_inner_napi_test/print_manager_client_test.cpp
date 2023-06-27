@@ -745,7 +745,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0033, TestSize.Level1)
     EXPECT_CALL(*service, StartPrintJob(_)).Times(1);
     ON_CALL(*service, StartPrintJob).WillByDefault(
             [&testJob](const PrintJob &jobinfo) {
-               EXPECT_EQ(testJob.GetJobId(), jobinfo.GetJobId());
+                EXPECT_EQ(testJob.GetJobId(), jobinfo.GetJobId());
                 return E_PRINT_NONE;
             });
     sptr<MockRemoteObject> obj = new MockRemoteObject();
@@ -1182,7 +1182,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0054, TestSize.Level1)
     std::vector<PrintJob> result;
     int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(result);
     EXPECT_EQ(testPrintJobs.size(), result.size());
-    for(size_t index = 0; index < testPrintJobs.size(); index++)
+    for (size_t index = 0; index < testPrintJobs.size(); index++)
     {
         EXPECT_EQ(testPrintJobs[index].GetJobId(), result[index].GetJobId());
     }
