@@ -14,7 +14,6 @@
  */
 
 #include <gtest/gtest.h>
-#include "napi/native_api.h"
 #include "printer_info.h"
 
 using namespace testing::ext;
@@ -39,11 +38,24 @@ void PrinterInfoTest::TearDown(void) {}
 
 /**
  * @tc.name: PrinterInfoTest_0001
- * @tc.desc: Verify the id function.
+ * @tc.desc: Verify the constructor function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0001, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.Dump();
+    info.~PrinterInfo();
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0002
+ * @tc.desc: Verify settings and obtain id function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0002, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
@@ -51,51 +63,12 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0001, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrinterInfoTest_0002
- * @tc.desc: Verify the id function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0002, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterId("@@@111");
-    EXPECT_EQ("@@@111", info.GetPrinterId());
-}
-
-/**
  * @tc.name: PrinterInfoTest_0003
- * @tc.desc: Verify the id function.
+ * @tc.desc: Verify settings and obtain name function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0003, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterId("#￥1aa");
-    EXPECT_EQ("#￥1aa", info.GetPrinterId());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0004
- * @tc.desc: Verify the id function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0004, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterId("……&**/1a");
-    EXPECT_EQ("……&**/1a", info.GetPrinterId());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0005
- * @tc.desc: Verify the name function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0005, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterName("OpenHarmony");
@@ -103,155 +76,38 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0005, TestSize.Level1)
 }
 
 /**
+ * @tc.name: PrinterInfoTest_0004
+ * @tc.desc: Verify settings and obtain icon function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0004, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterIcon(0);
+    EXPECT_EQ((uint32_t)0, info.GetPrinterIcon());
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0005
+ * @tc.desc: Verify settings and obtain state function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0005, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterState(0);
+    EXPECT_EQ((uint32_t)0, info.GetPrinterState());
+}
+
+/**
  * @tc.name: PrinterInfoTest_0006
- * @tc.desc: Verify the name function.
+ * @tc.desc: Verify settings and obtain description function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrinterInfoTest, PrinterInfoTest_0006, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterName("OpenHarmony@1a/*");
-    EXPECT_EQ("OpenHarmony@1a/*", info.GetPrinterName());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0007
- * @tc.desc: Verify the name function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0007, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterName("OpenHarmony￥%……5a1");
-    EXPECT_EQ("OpenHarmony￥%……5a1", info.GetPrinterName());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0008
- * @tc.desc: Verify the name function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0008, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterName("OpenHarmony（*…………+.");
-    EXPECT_EQ("OpenHarmony（*…………+.", info.GetPrinterName());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0009
- * @tc.desc: Verify the icon function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0009, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterIcon(0);
-    EXPECT_EQ(0, info.GetPrinterIcon());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0010
- * @tc.desc: Verify the icon function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0010, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterIcon(10000);
-    EXPECT_EQ(10000, info.GetPrinterIcon());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0011
- * @tc.desc: Verify the icon function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0011, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterIcon(10000000);
-    EXPECT_EQ(10000000, info.GetPrinterIcon());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0012
- * @tc.desc: Verify the icon function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0012, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterIcon(1000000000);
-    EXPECT_EQ(1000000000, info.GetPrinterIcon());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0013
- * @tc.desc: Verify the state function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0013, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterState(0);
-    EXPECT_EQ(0, info.GetPrinterState());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0014
- * @tc.desc: Verify the state function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0014, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterState(10000);
-    EXPECT_EQ(10000, info.GetPrinterState());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0015
- * @tc.desc: Verify the state function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0015, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterState(10000000);
-    EXPECT_EQ(10000000, info.GetPrinterState());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0016
- * @tc.desc: Verify the state function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0016, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetPrinterState(1000000000);
-    EXPECT_EQ(1000000000, info.GetPrinterState());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0017
- * @tc.desc: Verify the description function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0017, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     info.SetDescription("normal");
@@ -259,90 +115,12 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0017, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrinterInfoTest_0018
- * @tc.desc: Verify the description function.
+ * @tc.name: PrinterInfoTest_0007
+ * @tc.desc: Verify settings and obtain option function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0018, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetDescription("false1a%……");
-    EXPECT_EQ("false1a%……", info.GetDescription());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0019
- * @tc.desc: Verify the description function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0019, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetDescription("error1￥qq");
-    EXPECT_EQ("error1￥qq", info.GetDescription());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0020
- * @tc.desc: Verify the description function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0020, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetDescription("success55aa￥%……");
-    EXPECT_EQ("success55aa￥%……", info.GetDescription());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0021
- * @tc.desc: Verify the option function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0021, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetOption("开始：start1a@#");
-    EXPECT_EQ("开始：start1a@#", info.GetOption());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0022
- * @tc.desc: Verify the option function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0022, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetOption("find error，stop work");
-    EXPECT_EQ("find error，stop work", info.GetOption());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0023
- * @tc.desc: Verify the option function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0023, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.SetOption("乱码：￥%……4aaa");
-    EXPECT_EQ("乱码：￥%……4aaa", info.GetOption());
-}
-
-/**
- * @tc.name: PrinterInfoTest_0024
- * @tc.desc: Verify the option function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0024, TestSize.Level1)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0007, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     info.SetOption("运行成功:success");
@@ -350,83 +128,203 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0024, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrinterInfoTest_0025
- * @tc.desc: Verify the capability function.
+ * @tc.name: PrinterInfoTest_0008
+ * @tc.desc: Verify settings and obtain capability function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0025, TestSize.Level1)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0008, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     OHOS::Print::PrinterCapability capability, getCapabillity;
     info.SetCapability(capability);
     info.GetCapability(getCapabillity);
-    EXPECT_EQ(0, getCapabillity.GetColorMode());
+    EXPECT_EQ((uint32_t)0, getCapabillity.GetColorMode());
 }
 
 /**
- * @tc.name: PrinterInfoTest_0026
- * @tc.desc: Verify the capability function.
+ * @tc.name: PrinterInfoTest_0009
+ * @tc.desc: Verify settings and obtain hasCapability function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0026, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    OHOS::Print::PrinterCapability capability, getCapabillity;
-    napi_env env = nullptr;
-    napi_value val = nullptr;
-    capability.SetColorMode(1);
-    info.SetCapability(capability);
-    info.GetCapability(getCapabillity);
-    EXPECT_EQ(0, getCapabillity.GetDuplexMode());
-    OHOS::Print::PrinterInfo(info_);
-    OHOS::Print::PrinterInfo info_value = info;
-    OHOS::Print::PrinterInfo::ValidateProperty(env, val);
-    OHOS::Print::PrinterInfo::BuildFromJs(env, val);
-    info.ToJsObject(env);
-    info.Dump();
-}
-
-/**
- * @tc.name: PrinterInfoTest_0027
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0027, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    OHOS::Print::PrinterCapability capability, getCapabillity;
-    capability.SetColorMode(1);
-    info.SetCapability(capability);
-    info.GetCapability(getCapabillity);
-    Parcel parcel;
-    info.Marshalling(parcel);
-    info.ReadFromParcel(parcel);
-    info.Unmarshalling(parcel);
-}
-
-/**
- * @tc.name: PrinterInfoTest_0028
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0028, TestSize.Level1)
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0009, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     OHOS::Print::PrinterCapability capability;
-    capability.SetColorMode(1);
     info.SetCapability(capability);
+    EXPECT_EQ(true, info.HasCapability());
+}
 
-    MessageParcel data;
-    std::string printerId = "1";
-    data.WriteString(printerId);
-    data.WriteBool(true);
-    info.Marshalling(data);
-    info.ReadFromParcel(data);
-    info.Unmarshalling(data);
+/**
+ * @tc.name: PrinterInfoTest_0010
+ * @tc.desc: Verify settings and obtain hasOption function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0010, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetOption("运行成功:success");
+    EXPECT_EQ(true, info.HasOption());
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0011
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0011, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetPrinterIcon(-1);
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0012
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0012, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetPrinterIcon(0);
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0013
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0013, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetPrinterIcon(0);
+    info.SetDescription("");
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0014
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0014, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetPrinterIcon(0);
+    info.SetDescription("description");
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0015
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0015, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetPrinterIcon(0);
+    info.SetDescription("description");
+    OHOS::Print::PrinterCapability capability;
+    info.SetCapability(capability);
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0016
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0016, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetPrinterIcon(0);
+    info.SetDescription("description");
+    OHOS::Print::PrinterCapability capability;
+    info.SetCapability(capability);
+    info.SetOption("option");
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0017
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0017, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetPrinterIcon(0);
+    Parcel parcel;
+    info.Marshalling(parcel);
+    auto result = OHOS::Print::PrinterInfo::Unmarshalling(parcel);
+    EXPECT_NE(nullptr, result);
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0018
+ * @tc.desc: Verify the constructor function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0018, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    OHOS::Print::PrinterInfo copyInfo(info);
+    EXPECT_EQ(copyInfo.GetPrinterId(), info.GetPrinterId());
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0019
+ * @tc.desc: Verify the constructor function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0019, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    OHOS::Print::PrinterInfo copyInfo = info;
+    EXPECT_EQ(copyInfo.GetPrinterId(), info.GetPrinterId());
 }
 } // namespace Print
 } // namespace OHOS

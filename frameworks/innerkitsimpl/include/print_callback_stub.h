@@ -15,7 +15,6 @@
 
 #ifndef PRINT_CALLBACK_STUB_H
 #define PRINT_CALLBACK_STUB_H
-#define TDD_ENABLE 1
 
 #include <map>
 #include "iprint_callback.h"
@@ -28,19 +27,15 @@ public:
     virtual ~PrintCallbackStub() = default;
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
-#ifndef TDD_ENABLE
 private:
-#endif
     bool HandlePrintTaskEvent(MessageParcel &data, MessageParcel &reply);
     bool HandlePrinterEvent(MessageParcel &data, MessageParcel &reply);
     bool HandlePrintJobEvent(MessageParcel &data, MessageParcel &reply);
     bool HandleExtEvent(MessageParcel &data, MessageParcel &reply);
 
-#ifndef TDD_ENABLE
 private:
-#endif
     using PRINT_EVENT_HANDLER = bool (PrintCallbackStub::*)(MessageParcel &, MessageParcel &);
     std::map<uint32_t, PRINT_EVENT_HANDLER> cmdMap_;
 };
-} // namespace OHOS::Print
-#endif // PRINT_CALLBACK_STUB_H
+}  // namespace OHOS::Print
+#endif  // PRINT_CALLBACK_STUB_H

@@ -14,7 +14,6 @@
  */
 #include "print_service_proxy.h"
 #include "iremote_broker.h"
-#include "napi_print_utils.h"
 #include "print_constant.h"
 #include "print_job.h"
 #include "print_log.h"

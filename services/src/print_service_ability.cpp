@@ -27,11 +27,11 @@
 #include "int_wrapper.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
-#include "napi_print_utils.h"
 #include "print_bms_helper.h"
 #include "print_constant.h"
 #include "print_log.h"
 #include "printer_info.h"
+#include "print_utils.h"
 #include "string_wrapper.h"
 #include "system_ability.h"
 #include "system_ability_definition.h"
@@ -280,8 +280,8 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
         return E_PRINT_INVALID_PRINTER;
     }
 
-    std::string extensionId = NapiPrintUtils::GetExtensionId(printerId);
-    std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CONNECT_PRINTER);
+    std::string extensionId = PrintUtils::GetExtensionId(printerId);
+    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CONNECT_PRINTER);
     if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
         PRINT_HILOGW("ConnectPrinter Not Register Yet!!!");
         return E_PRINT_SERVER_FAILURE;
@@ -313,8 +313,8 @@ int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId)
         return E_PRINT_INVALID_PRINTER;
     }
 
-    std::string extensionId = NapiPrintUtils::GetExtensionId(printerId);
-    std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_DISCONNECT_PRINTER);
+    std::string extensionId = PrintUtils::GetExtensionId(printerId);
+    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_DISCONNECT_PRINTER);
     if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
         PRINT_HILOGW("DisconnectPrinter Not Register Yet!!!");
         return E_PRINT_SERVER_FAILURE;
@@ -388,7 +388,7 @@ bool PrintServiceAbility::DelayStartDiscovery(const std::string &extensionId)
         return false;
     }
 
-    std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_DISCOVERY);
+    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_DISCOVERY);
     if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
         PRINT_HILOGE("StartDiscoverPrinter Not Register, BUT State is LOADED");
         return false;
@@ -416,7 +416,7 @@ int32_t PrintServiceAbility::StopDiscoverPrinter()
             return E_PRINT_NO_PERMISSION;
         }
         extension.second = PRINT_EXTENSION_UNLOAD;
-        std::string cid = NapiPrintUtils::EncodeExtensionCid(extension.first, PRINT_EXTCB_STOP_DISCOVERY);
+        std::string cid = PrintUtils::EncodeExtensionCid(extension.first, PRINT_EXTCB_STOP_DISCOVERY);
         if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
             PRINT_HILOGE("StopDiscoverPrinter Not Register, BUT State is LOADED");
             continue;
@@ -521,7 +521,7 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
 
     auto jobId = jobInfo.GetJobId();
     auto printerId = jobInfo.GetPrinterId();
-    auto extensionId = NapiPrintUtils::GetExtensionId(printerId);
+    auto extensionId = PrintUtils::GetExtensionId(printerId);
     PRINT_HILOGI("StartPrintJob started jobId:%{public}s printerId:%{public}s.", jobId.c_str(), printerId.c_str());
 
     auto jobIt = printJobList_.find(jobId);
@@ -530,7 +530,7 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
         return E_PRINT_INVALID_PRINTJOB;
     }
 
-    std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
+    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
     if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
         PRINT_HILOGW("StartPrintJob Not Register Yet!!!");
         return E_PRINT_SERVER_FAILURE;
@@ -578,8 +578,8 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
 
     int32_t ret = E_PRINT_NONE;
     if (jobIt->second->GetJobState() >= PRINT_JOB_QUEUED) {
-        std::string extensionId = NapiPrintUtils::GetExtensionId(jobIt->second->GetPrinterId());
-        std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CANCEL_PRINT);
+        std::string extensionId = PrintUtils::GetExtensionId(jobIt->second->GetPrinterId());
+        std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CANCEL_PRINT);
         if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
             PRINT_HILOGW("CancelPrintJob Not Register Yet!!!");
             UpdatePrintJobState(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
@@ -628,8 +628,8 @@ void PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
         return;
     }
 
-    auto extensionId = NapiPrintUtils::GetExtensionId(printerId);
-    std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
+    auto extensionId = PrintUtils::GetExtensionId(printerId);
+    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
 
     auto cbFunc = extCallbackMap_[cid];
     auto printJob = jobIt->second;
@@ -668,7 +668,7 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
             PRINT_HILOGE("fail to create printer info object");
             continue;
         }
-        printerInfo->SetPrinterId(NapiPrintUtils::GetGlobalId(extensionId, printerInfo->GetPrinterId()));
+        printerInfo->SetPrinterId(PrintUtils::GetGlobalId(extensionId, printerInfo->GetPrinterId()));
         printerInfo->SetPrinterState(PRINTER_ADDED);
         printerInfoList_.insert(std::make_pair(printerInfo->GetPrinterId(), printerInfo));
         SendPrinterEvent(*printerInfo);
@@ -694,7 +694,7 @@ int32_t PrintServiceAbility::RemovePrinters(const std::vector<std::string> &prin
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
 
     for (auto printerId : printerIds) {
-        printerId = NapiPrintUtils::GetGlobalId(extensionId, printerId);
+        printerId = PrintUtils::GetGlobalId(extensionId, printerId);
         auto printerIt = printerInfoList_.find(printerId);
         if (printerIt == printerInfoList_.end()) {
             PRINT_HILOGE("invalid printer id, ingore it");
@@ -727,7 +727,7 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
 
     for (auto info : printerInfos) {
-        std::string printExtId = NapiPrintUtils::GetGlobalId(extensionId, info.GetPrinterId());
+        std::string printExtId = PrintUtils::GetGlobalId(extensionId, info.GetPrinterId());
         auto printerIt = printerInfoList_.find(printExtId);
         if (printerIt == printerInfoList_.end()) {
             PRINT_HILOGE("invalid printer id, ingore it");
@@ -756,7 +756,7 @@ int32_t PrintServiceAbility::UpdatePrinterState(const std::string &printerId, ui
 
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
-    std::string printerExtId = NapiPrintUtils::GetGlobalId(extensionId, printerId);
+    std::string printerExtId = PrintUtils::GetGlobalId(extensionId, printerId);
     PRINT_HILOGD("UpdatePrinterState started. %{private}s, state [%{public}d]", printerExtId.c_str(), state);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
@@ -790,7 +790,7 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
     }
 
     PRINT_HILOGI("UpdatePrintJobState started jobId:%{public}s, state:[%{public}d %{public}s], subState[%{public}d]",
-        jobId.c_str(), state, NapiPrintUtils::GetJobStateChar(state).c_str(), subState);
+        jobId.c_str(), state, PrintUtils::GetJobStateChar(state).c_str(), subState);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     auto jobIt = queuedJobList_.find(jobId);
@@ -907,8 +907,8 @@ void PrintServiceAbility::DestroyExtension(const std::string &printerId)
         return;
     }
 
-    std::string extensionId = NapiPrintUtils::GetExtensionId(printerId);
-    std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_DESTROY_EXTENSION);
+    std::string extensionId = PrintUtils::GetExtensionId(printerId);
+    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_DESTROY_EXTENSION);
     if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
         PRINT_HILOGW("DestroyExtension Not Register Yet!!!");
         return;
@@ -958,7 +958,7 @@ int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo, std::string
 
     auto jobId = jobInfo.GetJobId();
     auto printerId = jobInfo.GetPrinterId();
-    auto extensionId = NapiPrintUtils::GetExtensionId(printerId);
+    auto extensionId = PrintUtils::GetExtensionId(printerId);
 
     auto jobIt = printJobList_.find(jobId);
     if (jobIt == printJobList_.end()) {
@@ -976,7 +976,7 @@ int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo, std::string
         return E_PRINT_INVALID_PRINTJOB;
     }
 
-    std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
+    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
     if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
         PRINT_HILOGW("StartPrintJob Not Register Yet!!!");
         return E_PRINT_SERVER_FAILURE;
@@ -1002,8 +1002,8 @@ int32_t PrintServiceAbility::QueryPrinterCapability(const std::string &printerId
         return E_PRINT_INVALID_PRINTER;
     }
 
-    std::string extensionId = NapiPrintUtils::GetExtensionId(printerId);
-    std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_REQUEST_CAP);
+    std::string extensionId = PrintUtils::GetExtensionId(printerId);
+    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_REQUEST_CAP);
     if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
         PRINT_HILOGW("QueryPrinterCapability Not Register Yet!!!");
         return E_PRINT_SERVER_FAILURE;
@@ -1043,7 +1043,7 @@ int32_t PrintServiceAbility::RegisterExtCallback(const std::string &extensionCID
     }
     std::string extensionId = "";
     uint32_t callbackId = 0;
-    if (!NapiPrintUtils::DecodeExtensionCid(extensionCID, extensionId, callbackId)) {
+    if (!PrintUtils::DecodeExtensionCid(extensionCID, extensionId, callbackId)) {
         PRINT_HILOGE("Failed to decode extension");
         return E_PRINT_INVALID_PARAMETER;
     }
@@ -1088,7 +1088,7 @@ int32_t PrintServiceAbility::UnregisterAllExtCallback(const std::string &extensi
     PRINT_HILOGD("PrintServiceAbility::UnregisterAllExtCallback started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     for (uint32_t callbackId = PRINT_EXTCB_START_DISCOVERY; callbackId < PRINT_EXTCB_MAX; callbackId++) {
-        std::string cid = NapiPrintUtils::EncodeExtensionCid(extensionId, callbackId);
+        std::string cid = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
         auto callbackIt = extCallbackMap_.find(cid);
         if (callbackIt != extCallbackMap_.end()) {
             extCallbackMap_.erase(callbackIt);
@@ -1131,7 +1131,7 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
     std::string eventType = type;
     if (taskId != "") {
         permission = PERMISSION_NAME_PRINT;
-        eventType = NapiPrintUtils::GetTaskEventId(taskId, type);
+        eventType = PrintUtils::GetTaskEventId(taskId, type);
     }
     if (!CheckPermission(permission)) {
         PRINT_HILOGE("no permission to access print service");
@@ -1160,7 +1160,7 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
     std::string eventType = type;
     if (taskId != "") {
         permission = PERMISSION_NAME_PRINT;
-        eventType = NapiPrintUtils::GetTaskEventId(taskId, type);
+        eventType = PrintUtils::GetTaskEventId(taskId, type);
     }
     if (!CheckPermission(permission)) {
         PRINT_HILOGE("no permission to access print service");
@@ -1261,7 +1261,7 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
         }
     }
     if (stateInfo != "") {
-        std::string taskEvent = NapiPrintUtils::GetTaskEventId(jobInfo.GetJobId(), stateInfo);
+        std::string taskEvent = PrintUtils::GetTaskEventId(jobInfo.GetJobId(), stateInfo);
         auto taskEventIt = registeredListeners_.find(taskEvent);
         if (taskEventIt != registeredListeners_.end()) {
             taskEventIt->second->OnCallback();

@@ -14,16 +14,9 @@
  */
 
 #include "print_extension_info.h"
-#include "napi_print_utils.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
-static constexpr const char *PARAM_EXTINFO_EXTENSION_ID = "extensionId";
-static constexpr const char *PARAM_EXTINFO_VENDOR_ID = "vendorId";
-static constexpr const char *PARAM_EXTINFO_VENDOR_NAME = "vendorName";
-static constexpr const char *PARAM_EXTINFO_ICON = "vendorIcon";
-static constexpr const char *PARAM_EXTINFO_VERSION = "version";
-
 PrintExtensionInfo::PrintExtensionInfo() : extensionId_(""), vendorId_(""), vendorName_(""),
     vendorIcon_(0), version_("") {
 }
@@ -99,14 +92,13 @@ const std::string &PrintExtensionInfo::GetVersion() const
     return version_;
 }
 
-bool PrintExtensionInfo::ReadFromParcel(Parcel &parcel)
+void PrintExtensionInfo::ReadFromParcel(Parcel &parcel)
 {
     SetExtensionId(parcel.ReadString());
     SetVendorId(parcel.ReadString());
     SetVendorName(parcel.ReadString());
     SetVendorIcon(parcel.ReadUint32());
     SetVersion(parcel.ReadString());
-    return true;
 }
 
 bool PrintExtensionInfo::Marshalling(Parcel &parcel) const
@@ -122,54 +114,9 @@ bool PrintExtensionInfo::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrintExtensionInfo> PrintExtensionInfo::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintExtensionInfo>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print extension info object");
-        return nullptr;
+    if (nativeObj != nullptr) {
+        nativeObj->ReadFromParcel(parcel);
     }
-    if (!nativeObj->ReadFromParcel(parcel)) {
-        PRINT_HILOGE("Failed to unmarshalling print extension info object");
-        return nullptr;
-    }
-    return nativeObj;
-}
-
-napi_value PrintExtensionInfo::ToJsObject(napi_env env) const
-{
-    napi_value jsObj = nullptr;
-
-    napi_create_object(env, &jsObj);
-    NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_EXTINFO_EXTENSION_ID, GetExtensionId());
-    NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_EXTINFO_VENDOR_ID, GetVendorId());
-    NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_EXTINFO_VENDOR_NAME, GetVendorName());
-    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_EXTINFO_ICON, GetVendorIcon());
-    NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_EXTINFO_VERSION, GetVersion());
-    return jsObj;
-}
-
-std::shared_ptr<PrintExtensionInfo> PrintExtensionInfo::BuildFromJs(napi_env env, napi_value jsValue)
-{
-    auto nativeObj = std::make_shared<PrintExtensionInfo>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print extension info object");
-        return nullptr;
-    }
-
-    auto names = NapiPrintUtils::GetPropertyNames(env, jsValue);
-    for (auto name : names) {
-        PRINT_HILOGD("Property: %{public}s", name.c_str());
-    }
-
-    std::string extensionId = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_EXTINFO_EXTENSION_ID);
-    std::string vendorId = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_EXTINFO_VENDOR_ID);
-    std::string vendorName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_EXTINFO_VENDOR_NAME);
-    uint32_t iconId = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_EXTINFO_ICON);
-    std::string version = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_EXTINFO_VERSION);
-    nativeObj->SetExtensionId(extensionId);
-    nativeObj->SetVendorId(vendorId);
-    nativeObj->SetVendorName(vendorName);
-    nativeObj->SetVendorIcon(iconId);
-    nativeObj->SetVersion(version);
-
     return nativeObj;
 }
 
@@ -181,4 +128,4 @@ void PrintExtensionInfo::Dump()
     PRINT_HILOGD("vendorIcon_ = %{public}d", vendorIcon_);
     PRINT_HILOGD("version_ = %{public}s", version_.c_str());
 }
-} // namespace OHOS::Print
+}  // namespace OHOS::Print

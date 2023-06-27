@@ -17,6 +17,8 @@
 
 #include "napi_print_utils.h"
 #include "print_callback.h"
+#include "print_extension_info_helper.h"
+#include "print_job_helper.h"
 #include "print_log.h"
 #include "print_manager_client.h"
 #include "print_task.h"
@@ -44,7 +46,7 @@ napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info i
             PRINT_HILOGD("VendorName = %{public}s", extInfo.GetVendorName().c_str());
             PRINT_HILOGD("VendorIcon = %{public}d", extInfo.GetVendorIcon());
             PRINT_HILOGD("Version = %{public}s", extInfo.GetVersion().c_str());
-            status = napi_set_element(env, *result, index++, extInfo.ToJsObject(env));
+            status = napi_set_element(env, *result, index++, PrintExtensionInfoHelper::MakeJsObject(env, extInfo));
         }
         return napi_ok;
     };
@@ -199,7 +201,7 @@ napi_value NapiInnerPrint::StartPrintJob(napi_env env, napi_callback_info info)
     auto context = std::make_shared<InnerPrintContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
-        auto printJobPtr = PrintJob::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        auto printJobPtr = PrintJobHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
         if (printJobPtr == nullptr) {
             PRINT_HILOGE("ParseJob type error!");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
@@ -270,7 +272,7 @@ napi_value NapiInnerPrint::RequestPreview(napi_env env, napi_callback_info info)
     auto context = std::make_shared<InnerPrintContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
-        auto printJobPtr = PrintJob::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        auto printJobPtr = PrintJobHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
         if (printJobPtr == nullptr) {
             PRINT_HILOGE("ParseJob type error!");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
@@ -346,7 +348,7 @@ napi_value NapiInnerPrint::QueryAllPrintJob(napi_env env, napi_callback_info inf
         for (auto printJob : context->allPrintJobs) {
             PRINT_HILOGD("PrinterId = %{public}s", printJob.GetPrinterId().c_str());
             PRINT_HILOGD("JobId = %{public}s", printJob.GetJobId().c_str());
-            status = napi_set_element(env, *result, index++, printJob.ToJsObject(env));
+            status = napi_set_element(env, *result, index++, PrintJobHelper::MakeJsObject(env, printJob));
         }
         return napi_ok;
     };
@@ -379,7 +381,7 @@ napi_value NapiInnerPrint::QueryPrintJobById(napi_env env, napi_callback_info in
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGD("ouput enter---->");
-        *result = context->printJob.ToJsObject(env);
+        *result = PrintJobHelper::MakeJsObject(env, context->printJob);
         return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {

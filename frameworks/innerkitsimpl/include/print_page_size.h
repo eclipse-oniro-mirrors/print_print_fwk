@@ -15,10 +15,8 @@
 
 #ifndef PRINT_PAGESIZE_H
 #define PRINT_PAGESIZE_H
-#define TDD_ENABLE 1
 
 #include <map>
-#include "napi/native_api.h"
 #include "parcel.h"
 
 namespace OHOS::Print {
@@ -170,19 +168,6 @@ public:
 
     [[nodiscard]] uint32_t GetHeight() const;
 
-    virtual bool Marshalling(Parcel &parcel) const override;
-
-    static std::shared_ptr<PrintPageSize> Unmarshalling(Parcel &parcel);
-
-    napi_value ToJsObject(napi_env env) const;
-
-    static std::shared_ptr<PrintPageSize> BuildFromJs(napi_env env, napi_value jsValue);
-
-    void Dump();
-
-#ifndef TDD_ENABLE
-private:
-#endif
     void SetId(const std::string &id);
 
     void SetName(const std::string &name);
@@ -191,13 +176,16 @@ private:
 
     void SetHeight(uint32_t height);
 
-    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
 
-    static bool ValidateProperty(napi_env env, napi_value object);
+    static std::shared_ptr<PrintPageSize> Unmarshalling(Parcel &parcel);
 
-#ifndef TDD_ENABLE
+    void Dump();
+
 private:
-#endif
+    void ReadFromParcel(Parcel &parcel);
+
+private:
     std::string id_;
     std::string name_;
     uint32_t width_;

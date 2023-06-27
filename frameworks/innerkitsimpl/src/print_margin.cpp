@@ -14,15 +14,9 @@
  */
 
 #include "print_margin.h"
-#include "napi_print_utils.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
-static constexpr const char *PARAM_MARGIN_TOP = "top";
-static constexpr const char *PARAM_MARGIN_BOTTOM = "bottom";
-static constexpr const char *PARAM_MARGIN_LEFT = "left";
-static constexpr const char *PARAM_MARGIN_RIGHT = "right";
-
 PrintMargin::PrintMargin() : hasTop_(false), top_(0), hasBottom_(false), bottom_(0), hasLeft_(false), left_(0),
     hasRight_(false), right_(0) {
 }
@@ -92,9 +86,19 @@ void PrintMargin::SetRight(uint32_t right)
     right_ = right;
 }
 
+bool PrintMargin::HasTop() const
+{
+    return hasTop_;
+}
+
 uint32_t PrintMargin::GetTop() const
 {
     return top_;
+}
+
+bool PrintMargin::HasBottom() const
+{
+    return hasBottom_;
 }
 
 uint32_t PrintMargin::GetBottom() const
@@ -102,9 +106,19 @@ uint32_t PrintMargin::GetBottom() const
     return bottom_;
 }
 
+bool PrintMargin::HasLeft() const
+{
+    return hasLeft_;
+}
+
 uint32_t PrintMargin::GetLeft() const
 {
     return left_;
+}
+
+bool PrintMargin::HasRight() const
+{
+    return hasRight_;
 }
 
 uint32_t PrintMargin::GetRight() const
@@ -112,7 +126,7 @@ uint32_t PrintMargin::GetRight() const
     return right_;
 }
 
-bool PrintMargin::ReadFromParcel(Parcel &parcel)
+void PrintMargin::ReadFromParcel(Parcel &parcel)
 {
     hasTop_ = parcel.ReadBool();
     if (hasTop_) {
@@ -133,7 +147,6 @@ bool PrintMargin::ReadFromParcel(Parcel &parcel)
     if (hasRight_) {
         SetRight(parcel.ReadUint32());
     }
-    return true;
 }
 
 bool PrintMargin::Marshalling(Parcel &parcel) const
@@ -163,95 +176,10 @@ bool PrintMargin::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrintMargin> PrintMargin::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintMargin>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print margin object");
-        return nullptr;
-    }
-    if (!nativeObj->ReadFromParcel(parcel)) {
-        PRINT_HILOGE("Failed to unmarshalling print margin");
-        return nullptr;
+    if (nativeObj != nullptr) {
+        nativeObj->ReadFromParcel(parcel);
     }
     return nativeObj;
-}
-
-napi_value PrintMargin::ToJsObject(napi_env env) const
-{
-    napi_value jsObj = nullptr;
-    PRINT_CALL(env, napi_create_object(env, &jsObj));
-    if (hasTop_) {
-        NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_MARGIN_TOP, GetTop());
-    }
-
-    if (hasBottom_) {
-        NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_MARGIN_BOTTOM, GetBottom());
-    }
-
-    if (hasLeft_) {
-        NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_MARGIN_LEFT, GetLeft());
-    }
-
-    if (hasRight_) {
-        NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_MARGIN_RIGHT, GetRight());
-    }
-    return jsObj;
-}
-
-std::shared_ptr<PrintMargin> PrintMargin::BuildFromJs(napi_env env, napi_value jsValue)
-{
-    auto nativeObj = std::make_shared<PrintMargin>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print margin object");
-        return nullptr;
-    }
-
-    if (!ValidateProperty(env, jsValue)) {
-        PRINT_HILOGE("Invalid property of print margin");
-        return nullptr;
-    }
-
-    auto jsTop = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_MARGIN_TOP);
-    if (jsTop != nullptr) {
-        nativeObj->SetTop(NapiPrintUtils::GetUint32FromValue(env, jsTop));
-    }
-
-    auto jsBottom = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_MARGIN_BOTTOM);
-    if (jsBottom != nullptr) {
-        nativeObj->SetBottom(NapiPrintUtils::GetUint32FromValue(env, jsBottom));
-    }
-
-    auto jsLeft = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_MARGIN_LEFT);
-    if (jsLeft != nullptr) {
-        nativeObj->SetLeft(NapiPrintUtils::GetUint32FromValue(env, jsLeft));
-    }
-
-    auto jsRight = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_MARGIN_RIGHT);
-    if (jsRight != nullptr) {
-        nativeObj->SetRight(NapiPrintUtils::GetUint32FromValue(env, jsRight));
-    }
-
-    PRINT_HILOGE("Build Print Margin succeed");
-    return nativeObj;
-}
-
-bool PrintMargin::ValidateProperty(napi_env env, napi_value object)
-{
-    std::map<std::string, PrintParamStatus> propertyList = {
-        {PARAM_MARGIN_TOP, PRINT_PARAM_OPT},
-        {PARAM_MARGIN_BOTTOM, PRINT_PARAM_OPT},
-        {PARAM_MARGIN_LEFT, PRINT_PARAM_OPT},
-        {PARAM_MARGIN_RIGHT, PRINT_PARAM_OPT},
-    };
-
-    auto names = NapiPrintUtils::GetPropertyNames(env, object);
-    for (auto name : names) {
-        if (propertyList.find(name) == propertyList.end()) {
-            PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
-            return false;
-        }
-        propertyList[name] = PRINT_PARAM_SET;
-    }
-
-    return true;
 }
 
 void PrintMargin::Dump()

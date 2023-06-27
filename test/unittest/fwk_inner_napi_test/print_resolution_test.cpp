@@ -14,7 +14,6 @@
  */
 
 #include <gtest/gtest.h>
-#include "napi/native_api.h"
 #include "print_resolution.h"
 #include "printer_capability.h"
 #include "print_margin.h"
@@ -41,28 +40,20 @@ void PrintResolutionTest::TearDown(void) {}
 
 /**
  * @tc.name: PrintResolutionTest_001
- * @tc.desc: Verify the id function.
+ * @tc.desc: Verify the constructor function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintResolutionTest, PrintResolutionTest_001, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
-    OHOS::Print::PrintResolution(resolution_);
-    napi_env env = nullptr;
-    napi_value val = nullptr;
-    resolution.ToJsObject(env);
-    OHOS::Print::PrintResolution::BuildFromJs(env, val);
-    OHOS::Print::PrintResolution::ValidateProperty(env, val);
-    OHOS::Print::PrintResolution resolution_value = resolution;
     resolution.Dump();
-    resolution.Reset();
-    EXPECT_EQ("", resolution.GetId());
+    resolution.~PrintResolution();
 }
 
 /**
  * @tc.name: PrintResolutionTest_002
- * @tc.desc: Verify the dpi function.
+ * @tc.desc: Verify the constructor function.
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -70,56 +61,108 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_002, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
     resolution.Reset();
-    EXPECT_EQ(0, resolution.GetHorizontalDpi());
+    EXPECT_EQ("", resolution.GetId());
 }
 
 /**
  * @tc.name: PrintResolutionTest_003
- * @tc.desc: Verify the dpi function.
+ * @tc.desc: Verify the getId function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintResolutionTest, PrintResolutionTest_003, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
-    resolution.Reset();
-    EXPECT_EQ(0, resolution.GetVerticalDpi());
+    resolution.SetId("test");
+    EXPECT_EQ("test", resolution.GetId());
 }
 
 /**
  * @tc.name: PrintResolutionTest_004
- * @tc.desc: Verify the id function.
+ * @tc.desc: Verify the getHorizontalDpi function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintResolutionTest, PrintResolutionTest_004, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
-    resolution.Reset();
-    Parcel parcel;
-    resolution.Marshalling(parcel);
-    resolution.ReadFromParcel(parcel);
-    resolution.Unmarshalling(parcel);
+    resolution.SetHorizontalDpi(32);
+    EXPECT_EQ((uint32_t)32, resolution.GetHorizontalDpi());
 }
 
 /**
  * @tc.name: PrintResolutionTest_005
- * @tc.desc: Verify the id function.
+ * @tc.desc: Verify the getVerticalDpi function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintResolutionTest, PrintResolutionTest_005, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
-    resolution.Reset();
-
-    MessageParcel data;
-    std::string printerId = "1";
-    data.WriteString(printerId);
-    data.WriteBool(true);
-    resolution.Marshalling(data);
-    resolution.ReadFromParcel(data);
-    resolution.Unmarshalling(data);
+    resolution.SetVerticalDpi(32);
+    EXPECT_EQ((uint32_t)32, resolution.GetVerticalDpi());
 }
-} // namespace Print
-} // namespace OHOS
+
+/**
+ * @tc.name: PrintResolutionTest_006
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_006, TestSize.Level1)
+{
+    OHOS::Print::PrintResolution resolution;
+    resolution.SetId("test");
+    resolution.SetHorizontalDpi(32);
+    resolution.SetVerticalDpi(32);
+    Parcel parcel;
+    EXPECT_EQ(resolution.Marshalling(parcel), true);
+}
+
+/**
+ * @tc.name: PrintResolutionTest_007
+ * @tc.desc: Verify the unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_007, TestSize.Level1)
+{
+    OHOS::Print::PrintResolution resolution;
+    resolution.SetId("test");
+    resolution.SetHorizontalDpi(32);
+    resolution.SetVerticalDpi(32);
+    Parcel parcel;
+    resolution.Marshalling(parcel);
+    auto result = OHOS::Print::PrintResolution::Unmarshalling(parcel);
+    EXPECT_NE(nullptr, result);
+}
+
+/**
+ * @tc.name: PrintResolutionTest_008
+ * @tc.desc: Verify the copy constructor function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_008, TestSize.Level1)
+{
+    OHOS::Print::PrintResolution resolution;
+    resolution.SetId("test");
+    OHOS::Print::PrintResolution copyResolution(resolution);
+    EXPECT_EQ(copyResolution.GetId(), resolution.GetId());
+}
+
+/**
+ * @tc.name: PrintResolutionTest_009
+ * @tc.desc: Verify the assignment construction function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_009, TestSize.Level1)
+{
+    OHOS::Print::PrintResolution resolution;
+    resolution.SetId("test");
+    OHOS::Print::PrintResolution copyResolution = resolution;
+    EXPECT_EQ(copyResolution.GetId(), resolution.GetId());
+}
+}  // namespace Print
+}  // namespace OHOS

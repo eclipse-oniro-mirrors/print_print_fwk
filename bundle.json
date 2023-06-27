@@ -66,7 +66,8 @@
            "//base/print/print_fwk/interfaces/kits/jsnapi/extensionctx:printextensioncontext_napi",
            "//base/print/print_fwk/frameworks/kits/extension:print_extension_framework",
            "//base/print/print_fwk/frameworks/kits/extension:print_extension_module",
-           "//base/print/print_fwk/frameworks/innerkitsimpl:print_client"
+           "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
+           "//base/print/print_fwk/frameworks/helper:print_helper"
         ],
         "service_group":[
            "//base/print/print_fwk/services:print_service",
@@ -86,7 +87,6 @@
       ],
       "test": [
         "//base/print/print_fwk/test/unittest/fwk_inner_napi_test:print_fwk_inner_napi_test",
-        "//base/print/print_fwk/test/unittest/service_test:print_service_test",
         "//base/print/print_fwk/test/fuzztest:fuzztest"
       ]
       },

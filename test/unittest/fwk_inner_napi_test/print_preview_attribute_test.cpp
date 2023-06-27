@@ -14,7 +14,6 @@
  */
 
 #include <gtest/gtest.h>
-#include "napi/native_api.h"
 #include "print_preview_attribute.h"
 #include "printer_capability.h"
 #include "print_margin.h"
@@ -42,47 +41,106 @@ void PrintPreviewAttributeTest::TearDown(void) {}
 
 /**
  * @tc.name: PrintPreviewAttributeTest_0001
- * @tc.desc: Verify the StartPag function.
+ * @tc.desc: Verify the constructor function.
  * @tc.type: FUNC
- * @tc.require: AR00000000 SR00000000
+ * @tc.require:
  */
 HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintPreviewAttribute attribute;
-    OHOS::Print::PrintPreviewAttribute(attribute_);
-    OHOS::Print::PrintRange range, getRange;
-    napi_env env = nullptr;
-    napi_value val = nullptr;
-    attribute.SetResult(0);
-    attribute.SetPreviewRange(range);
-    attribute.GetPreviewRange(getRange);
     attribute.Dump();
-    attribute.ToJsObject(env);
-    OHOS::Print::PrintPreviewAttribute::ValidateProperty(env, val);
-    OHOS::Print::PrintPreviewAttribute::BuildFromJs(env, val);
-    OHOS::Print::PrintPreviewAttribute attributeVal = attribute;
+    attribute.~PrintPreviewAttribute();
 }
 
 /**
  * @tc.name: PrintPreviewAttributeTest_0002
- * @tc.desc: Verify the StartPag function.
+ * @tc.desc: Verify the hasResult function.
  * @tc.type: FUNC
- * @tc.require: AR00000000 SR00000000
+ * @tc.require:
  */
 HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0002, TestSize.Level1)
 {
     OHOS::Print::PrintPreviewAttribute attribute;
-    OHOS::Print::PrintRange range;
-    attribute.SetResult(0);
-    attribute.SetPreviewRange(range);
+    attribute.Reset();
+    EXPECT_FALSE(attribute.HasResult());
+}
 
-    MessageParcel data;
-    std::string printerId = "1";
-    data.WriteString(printerId);
-    data.WriteBool(true);
-    attribute.Marshalling(data);
-    attribute.ReadFromParcel(data);
-    attribute.Unmarshalling(data);
+/**
+ * @tc.name: PrintPreviewAttributeTest_0003
+ * @tc.desc: Verify the getResult function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0003, TestSize.Level1)
+{
+    OHOS::Print::PrintPreviewAttribute attribute;
+    attribute.SetResult(6);
+    EXPECT_EQ((uint32_t)6, attribute.GetResult());
+}
+
+/**
+ * @tc.name: PrintPreviewAttributeTest_0004
+ * @tc.desc: Verify the hasStartPage function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0004, TestSize.Level1)
+{
+    OHOS::Print::PrintPreviewAttribute attribute;
+    OHOS::Print::PrintRange printRange;
+    attribute.SetResult(6);
+    attribute.SetPreviewRange(printRange);
+    PrintRange previewRange;
+    attribute.GetPreviewRange(previewRange);
+    EXPECT_FALSE(previewRange.HasStartPage());
+}
+
+/**
+ * @tc.name: PrintPreviewAttributeTest_0005
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0005, TestSize.Level1)
+{
+    OHOS::Print::PrintPreviewAttribute attribute;
+    OHOS::Print::PrintRange printRange;
+    attribute.SetPreviewRange(printRange);
+    Parcel parcel;
+    EXPECT_TRUE(attribute.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintPreviewAttributeTest_0006
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0006, TestSize.Level1)
+{
+    OHOS::Print::PrintPreviewAttribute attribute;
+    OHOS::Print::PrintRange printRange;
+    attribute.SetPreviewRange(printRange);
+    attribute.SetResult(6);
+    Parcel parcel;
+    EXPECT_TRUE(attribute.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintPreviewAttributeTest_0007
+ * @tc.desc: Verify the unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0007, TestSize.Level1)
+{
+    OHOS::Print::PrintPreviewAttribute attribute;
+    OHOS::Print::PrintRange printRange;
+    attribute.SetPreviewRange(printRange);
+    Parcel parcel;
+    attribute.Marshalling(parcel);
+    auto result = OHOS::Print::PrintPreviewAttribute::Unmarshalling(parcel);
+    EXPECT_NE(nullptr, result);
 }
 } // namespace Print
 } // namespace OHOS

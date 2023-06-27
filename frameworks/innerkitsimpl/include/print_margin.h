@@ -15,9 +15,7 @@
 
 #ifndef PRINT_MARGIN_H
 #define PRINT_MARGIN_H
-#define TDD_ENABLE 1
 
-#include "napi/native_api.h"
 #include "parcel.h"
 
 namespace OHOS::Print {
@@ -35,27 +33,22 @@ public:
 
     void Reset();
 
+    [[nodiscard]] bool HasTop() const;
+
     [[nodiscard]] uint32_t GetTop() const;
+
+    [[nodiscard]] bool HasBottom() const;
 
     [[nodiscard]] uint32_t GetBottom() const;
 
+    [[nodiscard]] bool HasLeft() const;
+
     [[nodiscard]] uint32_t GetLeft() const;
+
+    [[nodiscard]] bool HasRight() const;
 
     [[nodiscard]] uint32_t GetRight() const;
 
-    virtual bool Marshalling(Parcel &parcel) const override;
-
-    static std::shared_ptr<PrintMargin> Unmarshalling(Parcel &parcel);
-
-    napi_value ToJsObject(napi_env env) const;
-
-    static std::shared_ptr<PrintMargin> BuildFromJs(napi_env env, napi_value jsValue);
-
-    void Dump();
-
-#ifndef TDD_ENABLE
-private:
-#endif
     void SetTop(uint32_t top);
 
     void SetBottom(uint32_t bottom);
@@ -64,13 +57,16 @@ private:
 
     void SetRight(uint32_t right);
 
-    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
 
-    static bool ValidateProperty(napi_env env, napi_value object);
+    static std::shared_ptr<PrintMargin> Unmarshalling(Parcel &parcel);
 
-#ifndef TDD_ENABLE
+    void Dump();
+
 private:
-#endif
+    void ReadFromParcel(Parcel &parcel);
+
+private:
     bool hasTop_;
     uint32_t top_;
 
@@ -83,5 +79,5 @@ private:
     bool hasRight_;
     uint32_t right_;
 };
-} // namespace OHOS::Print
-#endif // PRINT_MARGIN_H
+}  // namespace OHOS::Print
+#endif  // PRINT_MARGIN_H

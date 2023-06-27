@@ -14,7 +14,6 @@
  */
 
 #include <gtest/gtest.h>
-#include "napi/native_api.h"
 #include "print_range.h"
 #include "printer_capability.h"
 #include "print_margin.h"
@@ -40,85 +39,226 @@ void PrintRangeTest::SetUp(void) {}
 void PrintRangeTest::TearDown(void) {}
 
 /**
- * @tc.name: PrintRangeTest_001
- * @tc.desc: Verify the StartPag function.
- * @tc.type: FUNC
- * @tc.require: AR00000000 SR00000000
- */
-HWTEST_F(PrintRangeTest, PrintRangeTest_001, TestSize.Level1)
-{
-    OHOS::Print::PrintRange range;
-    OHOS::Print::PrintRange(range_);
-    std::vector<uint32_t> pages = {0, 1};
-    std::vector<uint32_t> getPages;
-    napi_env env = nullptr;
-    napi_value val = nullptr;
-    range.SetStartPage(0);
-    range.SetEndPage(1);
-    range.SetPages(pages);
-    range.GetPages(getPages);
-    range.ToJsObject(env);
-    range.Dump();
-    OHOS::Print::PrintRange range_val = range;
-    OHOS::Print::PrintRange::ValidateProperty(env, val);
-    OHOS::Print::PrintRange::BuildFromJs(env, val);
-    EXPECT_EQ(0, range.GetStartPage());
-}
-
-/**
- * @tc.name: PrintRangeTest_002
- * @tc.desc: Verify the EndPage function.
+ * @tc.name: PrintRangeTest_0001
+ * @tc.desc: Verify the constructor function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_002, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
-    EXPECT_EQ(0, range.GetEndPage());
+    range.Dump();
+    range.~PrintRange();
 }
 
 /**
- * @tc.name: PrintRangeTest_003
- * @tc.desc: Verify the StartPag function.
+ * @tc.name: PrintRangeTest_0002
+ * @tc.desc: Verify the reset function.
  * @tc.type: FUNC
- * @tc.require: AR00000000 SR00000000
+ * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_003, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0002, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
-    std::vector<uint32_t> pages = {0, 1};
-    std::vector<uint32_t> getPages;
-    range.SetStartPage(0);
-    range.SetEndPage(1);
+    range.Reset();
+    EXPECT_FALSE(range.HasStartPage());
+}
+
+/**
+ * @tc.name: PrintRangeTest_0003
+ * @tc.desc: Verify the getStartPage function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0003, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    range.SetStartPage(6);
+    EXPECT_EQ((uint32_t)6, range.GetStartPage());
+}
+
+/**
+ * @tc.name: PrintRangeTest_0004
+ * @tc.desc: Verify the hasEndPage function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0004, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    range.SetEndPage(6);
+    EXPECT_TRUE(range.HasEndPage());
+}
+
+/**
+ * @tc.name: PrintRangeTest_0005
+ * @tc.desc: Verify the getEndPage function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0005, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    range.SetEndPage(6);
+    EXPECT_EQ((uint32_t)6, range.GetEndPage());
+}
+
+/**
+ * @tc.name: PrintRangeTest_0006
+ * @tc.desc: Verify the hasPages function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0006, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    std::vector<uint32_t> pages = {1, 2, 3};
     range.SetPages(pages);
+    EXPECT_TRUE(range.HasPages());
+}
+
+/**
+ * @tc.name: PrintRangeTest_0007
+ * @tc.desc: Verify the getPages function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0007, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    std::vector<uint32_t> pages = {1, 2, 3};
+    range.SetPages(pages);
+    std::vector<uint32_t> getPages;
     range.GetPages(getPages);
+    EXPECT_EQ((uint32_t)1, getPages[0]);
+}
+
+/**
+ * @tc.name: PrintRangeTest_0008
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0008, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    std::vector<uint32_t> pages = {1, 2, 3};
+    range.SetPages(pages);
+    range.SetEndPage(6);
+    range.SetStartPage(6);
+    Parcel parcel;
+    EXPECT_TRUE(range.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintRangeTest_0009
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0009, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    std::vector<uint32_t> pages = {1, 2, 3};
+    range.SetPages(pages);
+    range.SetEndPage(6);
+    range.SetStartPage(6);
+    Parcel parcel;
+    EXPECT_TRUE(range.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintRangeTest_0010
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0010, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    std::vector<uint32_t> pages = {1, 2, 3};
+    range.SetPages(pages);
+    range.SetEndPage(6);
+    Parcel parcel;
+    EXPECT_TRUE(range.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintRangeTest_0011
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0011, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    std::vector<uint32_t> pages = {1, 2, 3};
+    range.SetPages(pages);
+    range.SetStartPage(6);
+    Parcel parcel;
+    EXPECT_TRUE(range.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintRangeTest_0012
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0012, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    range.SetEndPage(6);
+    range.SetStartPage(6);
+    Parcel parcel;
+    EXPECT_FALSE(range.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrintRangeTest_0013
+ * @tc.desc: Verify the unmarshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0013, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    std::vector<uint32_t> pages = {1, 2, 3};
+    range.SetPages(pages);
+    range.SetEndPage(6);
+    range.SetStartPage(6);
     Parcel parcel;
     range.Marshalling(parcel);
-    range.ReadFromParcel(parcel);
-    range.Unmarshalling(parcel);
+    auto result = OHOS::Print::PrintRange::Unmarshalling(parcel);
+    EXPECT_NE(nullptr, result);
 }
 
 /**
- * @tc.name: PrintRangeTest_004
- * @tc.desc: Verify the StartPag function.
+ * @tc.name: PrintRangeTest_0014
+ * @tc.desc: Verify the copy constructor function.
  * @tc.type: FUNC
- * @tc.require: AR00000000 SR00000000
+ * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_004, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0014, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
-    std::vector<uint32_t> pages = {0, 1};
-    range.SetStartPage(0);
-    range.SetEndPage(1);
-    range.SetPages(pages);
+    range.SetEndPage(6);
+    OHOS::Print::PrintRange copyRange(range);
+    EXPECT_EQ(copyRange.GetEndPage(), range.GetEndPage());
+}
 
-    MessageParcel data;
-    std::string printerId = "1";
-    data.WriteString(printerId);
-    data.WriteBool(true);
-    range.Marshalling(data);
-    range.ReadFromParcel(data);
-    range.Unmarshalling(data);
+/**
+ * @tc.name: PrintRangeTest_0015
+ * @tc.desc: Verify the assignment construction function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0015, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    range.SetEndPage(6);
+    OHOS::Print::PrintRange copyRange = range;
+    EXPECT_EQ(copyRange.GetEndPage(), range.GetEndPage());
 }
 } // namespace Print
 } // namespace OHOS

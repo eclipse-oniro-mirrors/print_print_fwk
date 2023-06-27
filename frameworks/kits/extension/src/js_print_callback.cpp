@@ -24,7 +24,6 @@
 #include "napi/native_node_api.h"
 #include "napi_common_util.h"
 #include "napi_common_want.h"
-#include "napi_print_utils.h"
 #include "napi_remote_object.h"
 #include "print_log.h"
 #include "print_manager_client.h"

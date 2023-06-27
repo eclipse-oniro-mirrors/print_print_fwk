@@ -14,8 +14,6 @@
  */
 #ifndef PRINTER_CAPABILITY_H
 #define PRINTER_CAPABILITY_H
-#define TDD_ENABLE 1
-
 
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
@@ -38,9 +36,13 @@ public:
 
     void Reset();
 
+    [[nodiscard]] bool HasMargin() const;
+
     void GetMinMargin(PrintMargin &margin) const;
 
     void GetPageSize(std::vector<PrintPageSize> &pageSizeList) const;
+
+    [[nodiscard]] bool HasResolution() const;
 
     void GetResolution(std::vector<PrintResolution> &resolutionList) const;
 
@@ -50,22 +52,6 @@ public:
 
 	[[nodiscard]] bool GetIsEmpty() const;
 
-    virtual bool Marshalling(Parcel &parcel) const override;
-
-    static std::shared_ptr<PrinterCapability> Unmarshalling(Parcel &parcel);
-
-    napi_value ToJsObject(napi_env env) const;
-
-    static std::shared_ptr<PrinterCapability> BuildFromJs(napi_env env, napi_value jsValue);
-
-    static std::shared_ptr<PrinterCapability> BuildFromJsSecond(napi_env env, napi_value jsValue,
-        napi_value jsPageSizes, std::shared_ptr<PrinterCapability> nativeObj);
-
-    void Dump();
-
-#ifndef TDD_ENABLE
-private:
-#endif
     void SetMinMargin(const PrintMargin &minMargin);
 
     void SetPageSize(const std::vector<PrintPageSize> &pageSizeList);
@@ -78,17 +64,16 @@ private:
 
     void SetIsEmpty(bool isEmpty);
 
+    virtual bool Marshalling(Parcel &parcel) const override;
+
+    static std::shared_ptr<PrinterCapability> Unmarshalling(Parcel &parcel);
+
+    void Dump();
+
+private:
     bool ReadFromParcel(Parcel &parcel);
 
-    bool CreatePageSizeList(napi_env env, napi_value &jsPrinterCap) const;
-
-    bool CreateResolutionList(napi_env env, napi_value &jsPrinterCap) const;
-
-    static bool ValidateProperty(napi_env env, napi_value object);
-
-#ifndef TDD_ENABLE
 private:
-#endif
     uint32_t colorMode_;
     uint32_t duplexMode_;
     std::vector<PrintPageSize> pageSizeList_;
@@ -99,5 +84,5 @@ private:
     bool hasMargin_;
     PrintMargin minMargin_;
 };
-} // namespace OHOS::Print
-#endif // PRINTER_CAPABILITY_H
+}  // namespace OHOS::Print
+#endif  // PRINTER_CAPABILITY_H

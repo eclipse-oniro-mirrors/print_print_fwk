@@ -15,7 +15,6 @@
 
 #ifndef NAPI_PRINT_TASK_H
 #define NAPI_PRINT_TASK_H
-#define TDD_ENABLE 1
 
 #include <string>
 #include "napi/native_api.h"
@@ -26,17 +25,13 @@ class NapiPrintTask {
 public:
     static napi_value Print(napi_env env, napi_callback_info info);
 
-#ifndef TDD_ENABLE
 private:
-#endif
     static napi_value GetCtor(napi_env env);
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static bool IsValidFile(const std::string &fileName);
 
-#ifndef TDD_ENABLE
 private:
-#endif
     static __thread napi_ref globalCtor;
 };
-} // namespace OHOS::Print
-#endif // _NAPI_PRINT_TASK_H
+}  // namespace OHOS::Print
+#endif  // _NAPI_PRINT_TASK_H
