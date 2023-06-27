@@ -46,7 +46,7 @@ void PrinterCapabilityTest::TearDown(void) {}
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0001, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
+    PrinterCapability capability;
     capability.Dump();
 }
 
@@ -58,7 +58,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0001, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0002, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
+    PrinterCapability capability;
     capability.SetColorMode(6);
     capability.Reset();
     EXPECT_EQ((uint32_t)0, capability.GetColorMode());
@@ -72,8 +72,8 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0002, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0003, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
-    OHOS::Print::PrintMargin margin;
+    PrinterCapability capability;
+    PrintMargin margin;
     capability.SetMinMargin(margin);
     EXPECT_EQ(true, capability.HasMargin());
 }
@@ -86,8 +86,8 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0003, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0004, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
-    OHOS::Print::PrintMargin margin, copyMargin;
+    PrinterCapability capability;
+    PrintMargin margin, copyMargin;
     capability.SetMinMargin(margin);
     capability.GetMinMargin(copyMargin);
     EXPECT_EQ(true, copyMargin.HasRight());
@@ -101,7 +101,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0004, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0005, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
+    PrinterCapability capability;
     std::vector<PrintPageSize> pagesize, getPagesize;
     PrintPageSize testPagesize;
     testPagesize.SetWidth(1);
@@ -119,9 +119,11 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0005, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0006, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
+    PrinterCapability capability;
     std::vector<PrintResolution> resolution, getResolution;
-    resolution[0].SetHorizontalDpi(1);
+    PrintResolution testResolution;
+    testResolution.SetHorizontalDpi(1);
+    resolution.emplace_back(testResolution);
     capability.SetResolution(resolution);
     capability.GetResolution(getResolution);
     EXPECT_EQ(resolution.size(), getResolution.size());
@@ -135,7 +137,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0006, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0007, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
+    PrinterCapability capability;
     std::vector<PrintResolution> resolution;
     capability.SetResolution(resolution);
     EXPECT_EQ(true, capability.HasResolution());
@@ -149,7 +151,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0007, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0008, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
+    PrinterCapability capability;
     capability.SetColorMode(6);
     EXPECT_EQ((uint32_t)6, capability.GetColorMode());
 }
@@ -162,7 +164,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0008, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0009, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
+    PrinterCapability capability;
     capability.SetDuplexMode(6);
     EXPECT_EQ((uint32_t)6, capability.GetDuplexMode());
 }
@@ -175,13 +177,13 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0009, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0010, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
-    OHOS::Print::PrintMargin margin, getMargin;
-    std::vector<OHOS::Print::PrintResolution> resolutionList;
-    std::vector<PrintPageSize> pagesize, getPagesize;
+    PrinterCapability capability;
+    PrintMargin margin, getMargin;
+    std::vector<PrintResolution> resolutionList;
+    std::vector<PrintPageSize> pagesize;
     capability.SetColorMode(6);
     capability.SetDuplexMode(6);
-    pagesize[0].Reset();
+
     capability.SetMinMargin(margin);
     capability.SetPageSize(pagesize);
     capability.SetResolution(resolutionList);
@@ -197,13 +199,12 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0010, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0011, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
-    OHOS::Print::PrintMargin margin, getMargin;
-    std::vector<OHOS::Print::PrintResolution> resolutionList;
-    std::vector<PrintPageSize> pagesize, getPagesize;
+    PrinterCapability capability;
+    PrintMargin margin, getMargin;
+    std::vector<PrintResolution> resolutionList;
+    std::vector<PrintPageSize> pagesize;
     capability.SetColorMode(6);
     capability.SetDuplexMode(6);
-    pagesize[0].Reset();
     capability.SetPageSize(pagesize);
     Parcel parcel;
     EXPECT_EQ(capability.Marshalling(parcel), true);
@@ -217,13 +218,12 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0011, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0012, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
-    OHOS::Print::PrintMargin margin, getMargin;
-    std::vector<OHOS::Print::PrintResolution> resolutionList;
-    std::vector<PrintPageSize> pagesize, getPagesize;
+    PrinterCapability capability;
+    PrintMargin margin, getMargin;
+    std::vector<PrintResolution> resolutionList;
+    std::vector<PrintPageSize> pagesize;
     capability.SetColorMode(6);
     capability.SetDuplexMode(6);
-    pagesize[0].Reset();
     capability.SetMinMargin(margin);
     capability.SetPageSize(pagesize);
     capability.SetResolution(resolutionList);
@@ -241,9 +241,9 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0012, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0013, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
+    PrinterCapability capability;
     capability.SetColorMode(6);
-    OHOS::Print::PrinterCapability copyCapability(capability);
+    PrinterCapability copyCapability(capability);
     EXPECT_EQ((uint32_t)6, capability.GetColorMode());
 }
 
@@ -255,9 +255,9 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0013, TestSize.Level1)
  */
 HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0014, TestSize.Level1)
 {
-    OHOS::Print::PrinterCapability capability;
+    PrinterCapability capability;
     capability.SetColorMode(6);
-    OHOS::Print::PrinterCapability copyCapability = capability;
+    PrinterCapability copyCapability = capability;
     EXPECT_EQ((uint32_t)6, capability.GetColorMode());
 }
 } // namespace Print
