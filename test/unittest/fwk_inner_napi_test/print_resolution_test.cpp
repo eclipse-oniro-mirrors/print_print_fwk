@@ -48,7 +48,7 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_001, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
     resolution.Dump();
-    resolution.~PrintResolution();
+    // resolution.~PrintResolution();
 }
 
 /**

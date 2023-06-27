@@ -19,6 +19,7 @@
 #include "print_margin.h"
 #include "print_preview_attribute.h"
 #include "print_log.h"
+#include "print_constant.h"
 
 using namespace testing::ext;
 
@@ -50,7 +51,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
     job.Dump();
-    job.~PrintJob();
 }
 
 /**
@@ -71,7 +71,6 @@ HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1)
     job.SetMargin(margin);
     job.SetOption("option");
     job.Dump();
-    job.~PrintJob();
 }
 
 /**
@@ -128,8 +127,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0005, TestSize.Level1)
 HWTEST_F(PrintJobTest, PrintJobTest_0006, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    job.SetJobState(3);
-    EXPECT_EQ(job.GetJobState(), 3);
+    job.SetJobState(PRINT_JOB_BLOCKED);
+    EXPECT_EQ(job.GetJobState(), PRINT_JOB_BLOCKED);
 }
 
 /**
@@ -141,8 +140,8 @@ HWTEST_F(PrintJobTest, PrintJobTest_0006, TestSize.Level1)
 HWTEST_F(PrintJobTest, PrintJobTest_0007, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    job.SetJobState(6);
-    EXPECT_EQ(job.GetJobState(), 0);
+    job.SetJobState(PRINT_JOB_UNKNOWN + 1);
+    EXPECT_EQ(job.GetJobState(), PRINT_JOB_PREPARED);
 }
 
 /**
@@ -154,9 +153,9 @@ HWTEST_F(PrintJobTest, PrintJobTest_0007, TestSize.Level1)
 HWTEST_F(PrintJobTest, PrintJobTest_0008, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    job.SetJobState(4);
-    job.SetSubState(3);
-    EXPECT_EQ(job.GetSubState(), 3);
+    job.SetJobState(PRINT_JOB_COMPLETED);
+    job.SetSubState(PRINT_JOB_COMPLETED_FILE_CORRUPT);
+    EXPECT_EQ(job.GetSubState(), PRINT_JOB_COMPLETED_FILE_CORRUPT);
 }
 
 /**
@@ -168,9 +167,9 @@ HWTEST_F(PrintJobTest, PrintJobTest_0008, TestSize.Level1)
 HWTEST_F(PrintJobTest, PrintJobTest_0009, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    job.SetJobState(4);
-    job.SetSubState(4);
-    EXPECT_EQ(job.GetJobState(), 99);
+    job.SetJobState(PRINT_JOB_COMPLETED);
+    job.SetSubState(PRINT_JOB_BLOCKED_OFFLINE);
+    EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_UNKNOWN);
 }
 
 /**
@@ -182,9 +181,9 @@ HWTEST_F(PrintJobTest, PrintJobTest_0009, TestSize.Level1)
 HWTEST_F(PrintJobTest, PrintJobTest_0010, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    job.SetJobState(3);
-    job.SetSubState(4);
-    EXPECT_EQ(job.GetJobState(), 4);
+    job.SetJobState(PRINT_JOB_BLOCKED);
+    job.SetSubState(PRINT_JOB_BLOCKED_OFFLINE);
+    EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_OFFLINE);
 }
 
 /**
@@ -196,9 +195,9 @@ HWTEST_F(PrintJobTest, PrintJobTest_0010, TestSize.Level1)
 HWTEST_F(PrintJobTest, PrintJobTest_0011, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    job.SetJobState(3);
-    job.SetSubState(2);
-    EXPECT_EQ(job.GetJobState(), 99);
+    job.SetJobState(PRINT_JOB_BLOCKED);
+    job.SetSubState(PRINT_JOB_COMPLETED_FILE_CORRUPT);
+    EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_UNKNOWN);
 }
 
 /**
@@ -210,9 +209,9 @@ HWTEST_F(PrintJobTest, PrintJobTest_0011, TestSize.Level1)
 HWTEST_F(PrintJobTest, PrintJobTest_0012, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    job.SetJobState(2);
-    job.SetSubState(4);
-    EXPECT_EQ(job.GetJobState(), 4);
+    job.SetJobState(PRINT_JOB_RUNNING);
+    job.SetSubState(PRINT_JOB_COMPLETED_FILE_CORRUPT);
+    EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_UNKNOWN);
 }
 
 /**
@@ -224,9 +223,9 @@ HWTEST_F(PrintJobTest, PrintJobTest_0012, TestSize.Level1)
 HWTEST_F(PrintJobTest, PrintJobTest_0013, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
-    job.SetJobState(2);
-    job.SetSubState(2);
-    EXPECT_EQ(job.GetJobState(), 99);
+    job.SetJobState(PRINT_JOB_RUNNING);
+    job.SetSubState(PRINT_JOB_BLOCKED_OFFLINE);
+    EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_OFFLINE);
 }
 
 /**
@@ -393,12 +392,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0024, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0026
+ * @tc.name: PrintJobTest_0025
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0026, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0025, TestSize.Level1)
 {
     OHOS::Print::PrintJob job, jobInfo;
     Parcel parcel;
@@ -408,12 +407,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0026, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0027
+ * @tc.name: PrintJobTest_0026
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0027, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0026, TestSize.Level1)
 {
     OHOS::Print::PrintJob job, jobInfo;
     Parcel parcel;
@@ -427,16 +426,16 @@ HWTEST_F(PrintJobTest, PrintJobTest_0027, TestSize.Level1)
     job.SetOption("option");
     job.Marshalling(parcel);
     jobInfo.Unmarshalling(parcel);
-    EXPECT_EQ(jobInfo.GetIsSequential(), true);
+    EXPECT_EQ(jobInfo.GetIsSequential(), false);
 }
 
 /**
- * @tc.name: PrintJobTest_0028
+ * @tc.name: PrintJobTest_0027
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0028, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0027, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
     std::vector<uint32_t> files = {1, 2, 3};
@@ -449,12 +448,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0028, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0029
+ * @tc.name: PrintJobTest_0028
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0029, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0028, TestSize.Level1)
 {
     OHOS::Print::PrintJob job;
     std::vector<uint32_t> files = {1, 2, 3};

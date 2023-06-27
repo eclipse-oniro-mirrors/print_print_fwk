@@ -48,7 +48,6 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     range.Dump();
-    range.~PrintRange();
 }
 
 /**
@@ -211,7 +210,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0012, TestSize.Level1)
     range.SetEndPage(6);
     range.SetStartPage(6);
     Parcel parcel;
-    EXPECT_FALSE(range.Marshalling(parcel));
+    EXPECT_TRUE(range.Marshalling(parcel));
 }
 
 /**

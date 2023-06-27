@@ -47,7 +47,7 @@ HWTEST_F(PrintMarginTest, PrintMarginTest_001, TestSize.Level1)
 {
     OHOS::Print::PrintMargin margin;
     margin.Dump();
-    margin.~PrintMargin();
+    // margin.~PrintMargin();
 }
 
 /**

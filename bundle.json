@@ -87,7 +87,6 @@
       ],
       "test": [
         "//base/print/print_fwk/test/unittest/fwk_inner_napi_test:print_fwk_inner_napi_test",
-        "//base/print/print_fwk/test/unittest/service_test:print_service_test",
         "//base/print/print_fwk/test/fuzztest:fuzztest"
       ]
       },

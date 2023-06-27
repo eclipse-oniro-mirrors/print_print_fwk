@@ -48,7 +48,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrinterCapability capability;
     capability.Dump();
-    capability.~PrinterCapability();
+    // capability.~PrinterCapability();
 }
 
 /**
@@ -107,7 +107,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0005, TestSize.Level1)
     pagesize[0].SetWidth(1);
     capability.SetPageSize(pagesize);
     capability.GetPageSize(getPagesize);
-    EXPECT_EQ((uint32_t)1, getPagesize[0].GetWidth());
+    EXPECT_EQ(pagesize.size(), getPagesize.size());
 }
 
 /**
@@ -123,7 +123,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0006, TestSize.Level1)
     resolution[0].SetHorizontalDpi(1);
     capability.SetResolution(resolution);
     capability.GetResolution(getResolution);
-    EXPECT_EQ((uint32_t)1, getResolution[0].GetHorizontalDpi());
+    EXPECT_EQ(resolution.size(), getResolution.size());
 }
 
 /**

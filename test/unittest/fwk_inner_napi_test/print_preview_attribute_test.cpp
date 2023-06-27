@@ -49,7 +49,7 @@ HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0001, TestSize.Lev
 {
     OHOS::Print::PrintPreviewAttribute attribute;
     attribute.Dump();
-    attribute.~PrintPreviewAttribute();
+    // attribute.~PrintPreviewAttribute();
 }
 
 /**
