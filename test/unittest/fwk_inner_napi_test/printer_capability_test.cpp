@@ -104,10 +104,10 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0005, TestSize.Level1)
 {
     OHOS::Print::PrinterCapability capability;
     std::vector<PrintPageSize> pagesize, getPagesize;
-    pagesize[0].Reset();
+    pagesize[0].SetWidth(1);
     capability.SetPageSize(pagesize);
     capability.GetPageSize(getPagesize);
-    EXPECT_EQ((uint32_t)0, getPagesize[0].GetWidth());
+    EXPECT_EQ((uint32_t)1, getPagesize[0].GetWidth());
 }
 
 /**
@@ -120,10 +120,10 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0006, TestSize.Level1)
 {
     OHOS::Print::PrinterCapability capability;
     std::vector<PrintResolution> resolution, getResolution;
-    resolution[0].Reset();
+    pagesize[0].SetHorizontalDpi(1);
     capability.SetResolution(resolution);
     capability.GetResolution(getResolution);
-    EXPECT_EQ((uint32_t)0, getResolution[0].GetHorizontalDpi());
+    EXPECT_EQ((uint32_t)1, getResolution[0].GetHorizontalDpi());
 }
 
 /**

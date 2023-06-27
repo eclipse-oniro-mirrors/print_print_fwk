@@ -48,8 +48,8 @@ bool PrintManagerClient::GetPrintServiceProxy()
         return true;
     }
     bool result = false;
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    std::lock_guard<std::mutex> lock(proxyLock_);
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager != nullptr) {
         auto systemAbility = systemAbilityManager->GetSystemAbility(PRINT_SERVICE_ID, "");
         if (systemAbility != nullptr) {
@@ -67,7 +67,23 @@ bool PrintManagerClient::GetPrintServiceProxy()
 
 void PrintManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
 {
-    GetPrintServiceProxy();
+    PRINT_HILOGD("start");
+    if (remote == nullptr) {
+        PRINT_HILOGE("remote is nullptr");
+        return;
+    }
+    std::lock_guard<std::mutex> lock(proxyLock_);
+    if (printServiceProxy_ == nullptr) {
+        PRINT_HILOGE("printServiceProxy_ is null");
+        return;
+    }
+    auto serviceRemote = printServiceProxy_->AsObject();
+    if ((serviceRemote != nullptr) && (serviceRemote == remote.promote())) {
+        PRINT_HILOGD("need reset");
+        serviceRemote->RemoveDeathRecipient(deathRecipient_);
+        printServiceProxy_ = nullptr;
+        deathRecipient_ = nullptr;
+    }
 }
 
 int32_t PrintManagerClient::StartPrint(const std::vector<std::string> &fileList,
@@ -499,5 +515,26 @@ void PrintManagerClient::LoadServerFail()
 {
     ready_ = false;
     PRINT_HILOGE("load print server fail");
+}
+void PrintManagerClient::SetProxy(const sptr<IRemoteObject> &obj)
+{
+    if (printServiceProxy_ != nullptr) {
+        auto serviceRemote = printServiceProxy_->AsObject();
+        if (serviceRemote != nullptr) {
+            serviceRemote->RemoveDeathRecipient(deathRecipient_);
+            printServiceProxy_ = nullptr;
+            deathRecipient_ = nullptr;
+        }
+    }
+    deathRecipient_ = new (std::nothrow) PrintSaDeathRecipient();
+    if (deathRecipient_ != nullptr) {
+        obj->AddDeathRecipient(deathRecipient_);
+        PRINT_HILOGD("Getting PrintManagerClientProxy succeeded.");
+    }
+    printServiceProxy_ = iface_cast<IPrintService>(obj);
+}
+void PrintManagerClient::ResetProxy()
+{
+    printServiceProxy_ = nullptr;
 }
 } // namespace OHOS::Print
