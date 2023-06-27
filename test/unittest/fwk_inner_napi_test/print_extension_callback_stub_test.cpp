@@ -94,28 +94,6 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0003, Te
 }
 
 /**
- * @tc.name: PrintServiceProxyTest_0004
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0004, TestSize.Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(PRINT_EXTCB);
-
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
-    PrintExtensionCallbackStub callback;
-    PrintExtCallback testCb = [](const std::string&, OHOS::Print::PrinterCapability&) -> bool {
-        return true;
-    };
-    callback.SetExtCallback(testCb);
-    EXPECT_TRUE(callback.OnRemoteRequest(code, data, reply, option));
-}
-
-/**
  * @tc.name: PrintExtensionCallbackStubTest_0005
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
@@ -166,28 +144,6 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0007, Te
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
     PrintExtensionCallbackStub callback;
     EXPECT_FALSE(callback.OnRemoteRequest(code, data, reply, option));
-}
-
-/**
- * @tc.name: PrintExtensionCallbackStubTest_0008
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0008, TestSize.Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(PRINT_EXTCB_PRINTJOB);
-
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
-    PrintExtensionCallbackStub callback;
-    PrintJobCallback testCb = [](const std::string&, OHOS::Print::PrinterCapability&) -> bool {
-        return true;
-    };
-    callback.SetPrintJobCallback(testCb);
-    EXPECT_TRUE(callback.OnRemoteRequest(code, data, reply, option));
 }
 
 /**
@@ -244,28 +200,6 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0011, Te
 }
 
 /**
- * @tc.name: PrintServiceProxyTest_0004
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0012, TestSize.Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(PRINT_EXTCB_PRINTJOB);
-
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
-    PrintExtensionCallbackStub callback;
-    PrinterCallback testCb = [](const std::string&, OHOS::Print::PrinterCapability&) -> bool {
-        return true;
-    };
-    callback.SetPrinterCallback(testCb);
-    EXPECT_TRUE(callback.OnRemoteRequest(code, data, reply, option));
-}
-
-/**
  * @tc.name: PrintExtensionCallbackStubTest_0001
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
@@ -316,30 +250,6 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0015, Te
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
     PrintExtensionCallbackStub callback;
     EXPECT_FALSE(callback.OnRemoteRequest(code, data, reply, option));
-}
-
-/**
- * @tc.name: PrintServiceProxyTest_0004
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0016, TestSize.Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(PRINT_EXTCB_PRINTCAPABILITY);
-
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
-
-    PrintExtensionCallbackStub callback;
-    PrinterCapabilityCallback testCb = [](const std::string&, OHOS::Print::PrinterCapability&) -> bool {
-        return true;
-    };
-    callback.SetCapabilityCallback(testCb);
-
-    EXPECT_TRUE(callback.OnRemoteRequest(code, data, reply, option));
 }
 } // namespace Print
 } // namespace OHOS

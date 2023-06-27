@@ -120,7 +120,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0006, TestSize.Level1)
 {
     OHOS::Print::PrinterCapability capability;
     std::vector<PrintResolution> resolution, getResolution;
-    pagesize[0].SetHorizontalDpi(1);
+    resolution[0].SetHorizontalDpi(1);
     capability.SetResolution(resolution);
     capability.GetResolution(getResolution);
     EXPECT_EQ((uint32_t)1, getResolution[0].GetHorizontalDpi());
