@@ -46,7 +46,6 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     info.Dump();
-    info.~PrinterInfo();
 }
 
 /**

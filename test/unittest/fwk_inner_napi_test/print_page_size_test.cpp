@@ -49,7 +49,6 @@ HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0001, TestSize.Level1)
     OHOS::Print::PrintPageSize printpageSize;
     OHOS::Print::PrintPageSize::BuildPageSizeMap();
     printpageSize.Dump();
-    printpageSize.~PrintPageSize();
 }
 
 /**

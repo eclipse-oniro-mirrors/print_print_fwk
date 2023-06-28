@@ -72,6 +72,8 @@ public:
 
     void LoadServerSuccess();
     void LoadServerFail();
+    void SetProxy(const sptr<IRemoteObject> &obj);
+    void ResetProxy();
 
 private:
     bool LoadServer();
@@ -80,6 +82,7 @@ private:
 private:
     static std::mutex instanceLock_;
     static sptr<PrintManagerClient> instance_;
+    std::mutex proxyLock_;
     sptr<IPrintService> printServiceProxy_;
     sptr<PrintSaDeathRecipient> deathRecipient_;
 
