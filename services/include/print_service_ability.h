@@ -95,6 +95,7 @@ private:
     void ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
     void ReportCompletedPrint(const std::string & printerId);
     void CheckJobQueueBlocked(const PrintJob &jobInfo);
+    bool CheckIsPrinterDisabled();
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

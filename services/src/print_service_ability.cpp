@@ -42,6 +42,7 @@
 #include "print_security_guard_manager.h"
 #include "hisys_event_util.h"
 #include "nlohmann/json.hpp"
+#include "restrictions_proxy.h"
 
 namespace OHOS::Print {
 using namespace std;
@@ -526,7 +527,11 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
     auto printerId = jobInfo.GetPrinterId();
     auto extensionId = PrintUtils::GetExtensionId(printerId);
     PRINT_HILOGI("StartPrintJob started jobId:%{public}s printerId:%{public}s.", jobId.c_str(), printerId.c_str());
-
+    bool IsPrinterDisabled = CheckIsPrinterDisabled();
+    if (IsPrinterDisabled) {
+        PRINT_HILOGD("prohibit print");
+        return E_PRINT_NO_PERMISSION;
+    }
     auto jobIt = printJobList_.find(jobId);
     if (jobIt == printJobList_.end()) {
         PRINT_HILOGD("invalid job id");
@@ -1316,5 +1321,19 @@ void PrintServiceAbility::CheckJobQueueBlocked(const PrintJob &jobInfo)
         }
     }
     PRINT_HILOGD("CheckJobQueueBlocked end,isJobQueueBlocked_=%{public}s", isJobQueueBlocked_ ? "true" : "false");
+}
+
+bool PrintServiceAbility::CheckIsPrinterDisabled()
+{
+    auto proxy = OHOS::EDM::RestrictionsProxy::GetRestrictionsProxy();
+    if (proxy != nullptr) {
+        bool isDisabled = false;
+        proxy->IsPrinterDisabled(nullptr, isDisabled);
+        PRINT_HILOGD("PrintServiceAbility::CheckIsPrinterDisabled isDisabled %{public}d", isDisabled);
+        if (isDisabled) {
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace OHOS::Print
