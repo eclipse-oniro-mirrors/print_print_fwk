@@ -41,7 +41,6 @@
           "i18n",
           "init",
           "ipc",
-          "ipc_js",
           "napi",
           "netmanager_base",
           "os_account",
@@ -54,7 +53,6 @@
           "time_service"
         ],
         "third_party": [
-          "thirdparty_googletest",
           "zlib"
         ]
       },

@@ -84,7 +84,6 @@ ohos_shared_library("print_extension_framework") {
     "hitrace:hitrace_meter",
     "i18n:intl_util",
     "ipc:ipc_napi_common",
-    "ipc_js:rpc",
     "napi:ace_napi",
     "resource_management:global_resmgr",
   ]
