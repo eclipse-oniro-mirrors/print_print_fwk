@@ -33,6 +33,7 @@ ohos_shared_library("print_service") {
     "src/print_security_guard_info.cpp",
     "src/print_security_guard_manager.cpp",
     "src/print_service_ability.cpp",
+    "src/print_service_helper.cpp",
     "src/print_service_stub.cpp",
   ]
 

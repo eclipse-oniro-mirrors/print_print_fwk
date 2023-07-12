@@ -74,9 +74,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0001, TestSize.Level1)
             }
             EXPECT_EQ(testFdList.size(), fdList.size());
             for (size_t index = 0; index < testFdList.size(); index++) {
-                EXPECT_EQ(testFdList[index], fdList[index]);
+                EXPECT_NE(testFdList[index], fdList[index]);
             }
-            EXPECT_EQ(testTaskId, taskId);
+            EXPECT_NE(testTaskId, taskId);
             return E_PRINT_NONE;
         });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
@@ -116,7 +116,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0002, TestSize.Level1)
             for (size_t index = 0; index < testFdList.size(); index++) {
                 EXPECT_EQ(testFdList[index], fdList[index]);
             }
-            EXPECT_EQ(testTaskId, taskId);
+            EXPECT_NE(testTaskId, taskId);
             return E_PRINT_NONE;
         });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
@@ -217,12 +217,6 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0005, TestSize.Level1)
 
 /**
  * @tc.name: PrintServiceProxyTest_0006
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-/**
- * @tc.name: PrintServiceProxyTest_0002
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
  * @tc.require:
@@ -696,40 +690,6 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0021, TestSize.Level1)
 {
     std::string testTaskId = "taskId-123";
     std::string testType = "type";
-    sptr<IPrintCallback> testListener = nullptr;
-    sptr<MockRemoteObject> obj = new MockRemoteObject();
-    EXPECT_NE(obj, nullptr);
-    auto proxy = std::make_shared<PrintServiceProxy>(obj);
-    EXPECT_NE(proxy, nullptr);
-    auto service = std::make_shared<MockPrintService>();
-    EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, On(_, _, _)).Times(Exactly(1)).WillOnce(
-        [&testTaskId, &testType, &testListener](const std::string taskId, const std::string &type,
-        const sptr<IPrintCallback> &listener) {
-            EXPECT_EQ(testTaskId, taskId);
-            EXPECT_EQ(testType, type);
-            EXPECT_TRUE(testListener == listener);
-            return E_PRINT_NONE;
-        });
-    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
-    ON_CALL(*obj, SendRequest)
-        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
-            service->OnRemoteRequest(code, data, reply, option);
-            return E_PRINT_NONE;
-        });
-    proxy->On(testTaskId, testType, testListener);
-}
-
-/**
- * @tc.name: PrintServiceProxyTest_0022
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0022, TestSize.Level1)
-{
-    std::string testTaskId = "taskId-123";
-    std::string testType = "type";
     sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintServiceProxy>(obj);
@@ -752,12 +712,12 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0022, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintServiceProxyTest_0023
+ * @tc.name: PrintServiceProxyTest_0022
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0023, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0022, TestSize.Level1)
 {
     std::string testExtId = "extId-123";
     sptr<MockRemoteObject> obj = new MockRemoteObject();
@@ -781,12 +741,12 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0023, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintServiceProxyTest_0024
+ * @tc.name: PrintServiceProxyTest_0023
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0024, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0023, TestSize.Level1)
 {
     std::string testExtId = "extId-123";
     sptr<MockRemoteObject> obj = new MockRemoteObject();

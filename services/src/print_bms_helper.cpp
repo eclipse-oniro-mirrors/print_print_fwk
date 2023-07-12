@@ -14,24 +14,24 @@
  */
 
 #include "print_bms_helper.h"
-#include "bundle_mgr_proxy.h"
 #include "bundle_constants.h"
-#include "bundle_mgr_client.h"
 #include "ipc_skeleton.h"
-#include "iservice_registry.h"
-#include "nlohmann/json.hpp"
-#include "os_account_manager.h"
 #include "print_log.h"
-#include "system_ability_definition.h"
 
 namespace OHOS::Print {
 using namespace OHOS::AppExecFwk::Constants;
 
-PrintBMSHelper::PrintBMSHelper() : sptrBundleMgr_(nullptr), printBMSDeath_(nullptr)
+PrintBMSHelper::PrintBMSHelper() : sptrBundleMgr_(nullptr), printBMSDeath_(nullptr), helper_(nullptr)
 {}
 
 PrintBMSHelper::~PrintBMSHelper()
 {}
+
+void PrintBMSHelper::SetHelper(const std::shared_ptr<PrintServiceHelper> &helper)
+{
+    helper_ = helper;
+    sptrBundleMgr_ = nullptr;
+}
 
 bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
 {
@@ -40,18 +40,13 @@ bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilit
         return false;
     }
     std::vector<int> osAccountIds;
-    if (AccountSA::OsAccountManager::QueryActiveOsAccountIds(osAccountIds) != ERR_OK) {
-        PRINT_HILOGE("failed to QueryActiveOsAccountIds!");
+    if (!helper_->QueryAccounts(osAccountIds)) {
         return false;
     }
-    if (osAccountIds.size() == 0) {
-        PRINT_HILOGE("no os account acquired!");
-        return false;
-    }
+
     for (auto userId : osAccountIds) {
         PRINT_HILOGE("active userId = %{public}d", userId);
-        sptrBundleMgr_->QueryExtensionAbilityInfos(AppExecFwk::ExtensionAbilityType::PRINT,
-            userId, extensionInfos);
+        helper_->QueryExtension(sptrBundleMgr_, userId, extensionInfos);
     }
     return true;
 }
@@ -64,9 +59,7 @@ std::string PrintBMSHelper::QueryCallerBundleName()
     }
     int32_t callerUid = IPCSkeleton::GetCallingUid();
     std::string bundleName = "";
-    if (sptrBundleMgr_ != nullptr) {
-        sptrBundleMgr_->GetNameForUid(callerUid, bundleName);
-    }
+    helper_->QueryNameForUid(sptrBundleMgr_, callerUid, bundleName);
     PRINT_HILOGD("callerUid = %{public}d, bundleName = %{public}s", callerUid, bundleName.c_str());
     return bundleName;
 }
@@ -74,14 +67,11 @@ std::string PrintBMSHelper::QueryCallerBundleName()
 bool PrintBMSHelper::GetProxy()
 {
     if (sptrBundleMgr_ == nullptr) {
-        sptr<ISystemAbilityManager> systemAbilityManager =
-            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (systemAbilityManager == nullptr) {
-            PRINT_HILOGE("Failed to get system ability mgr.");
+        if (helper_ == nullptr) {
+            PRINT_HILOGE("Invalid printer helper.");
             return false;
         }
-
-        sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+        auto remoteObject = helper_->GetBundleMgr();
         if (remoteObject == nullptr) {
             PRINT_HILOGE("Failed to get bundle manager service.");
             return false;
@@ -93,26 +83,35 @@ bool PrintBMSHelper::GetProxy()
             return false;
         }
 
-        printBMSDeath_ = new PrintBMSDeathRecipient();
+        printBMSDeath_ = new (std::nothrow) PrintBMSDeathRecipient();
         if (printBMSDeath_ == nullptr) {
             PRINT_HILOGE("Failed to create death Recipient ptr BMSDeathRecipient");
             return false;
         }
-        if (!sptrBundleMgr_->AsObject()->AddDeathRecipient(printBMSDeath_)) {
-            PRINT_HILOGW("Failed to add death recipient");
-        }
+        remoteObject->AddDeathRecipient(printBMSDeath_);
     }
-
     return true;
 }
 
-void PrintBMSHelper::ResetProxy()
+void PrintBMSHelper::ResetProxy(const wptr<IRemoteObject> &remote)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    if ((sptrBundleMgr_ != nullptr) && (sptrBundleMgr_->AsObject() != nullptr)) {
-        sptrBundleMgr_->AsObject()->RemoveDeathRecipient(printBMSDeath_);
+    if (remote == nullptr) {
+        PRINT_HILOGE("remote is nullptr");
+        return;
     }
-    sptrBundleMgr_ = nullptr;
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (sptrBundleMgr_ == nullptr) {
+        PRINT_HILOGE("sptrBundleMgr_ is null");
+        return;
+    }
+
+    auto serviceRemote = sptrBundleMgr_->AsObject();
+    if ((serviceRemote != nullptr) && (serviceRemote == remote.promote())) {
+        PRINT_HILOGD("need reset");
+        serviceRemote->RemoveDeathRecipient(printBMSDeath_);
+        sptrBundleMgr_ = nullptr;
+        printBMSDeath_ = nullptr;
+    }
 }
 }  // namespace OHOS

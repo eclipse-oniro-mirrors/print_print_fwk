@@ -41,6 +41,7 @@
           "i18n",
           "init",
           "ipc",
+          "ipc_js",
           "napi",
           "netmanager_base",
           "os_account",
@@ -53,6 +54,7 @@
           "time_service"
         ],
         "third_party": [
+          "thirdparty_googletest",
           "zlib"
         ]
       },
@@ -86,6 +88,7 @@
       ],
       "test": [
         "//base/print/print_fwk/test/unittest/fwk_inner_napi_test:print_fwk_inner_napi_test",
+        "//base/print/print_fwk/test/unittest/service_test:print_service_test",
         "//base/print/print_fwk/test/fuzztest:fuzztest"
       ]
       },

@@ -26,7 +26,7 @@ public:
 
     PrinterInfo(const PrinterInfo &right);
 
-    PrinterInfo &operator=(const PrinterInfo &PrinterInfo);
+    PrinterInfo &operator=(const PrinterInfo &right);
 
     virtual ~PrinterInfo();
 

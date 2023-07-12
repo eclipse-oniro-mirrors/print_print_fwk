@@ -142,19 +142,14 @@ void JsPrintExtension::OnStart(const AAFwk::Want &want)
     NativeValue *nativeWant = reinterpret_cast<NativeValue *>(napiWant);
     NativeValue *argv[] = { nativeWant };
     CallObjectMethod("onCreate", argv, NapiPrintUtils::ARGC_ONE);
-    RegisterCb();
-    PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
-    PRINT_HILOGD("%{public}s end.", __func__);
-}
-
-void JsPrintExtension::RegisterCb()
-{
     RegisterDiscoveryCb();
     RegisterConnectionCb();
     RegisterPrintJobCb();
     RegisterPreviewCb();
     RegisterQueryCapCb();
     RegisterExtensionCb();
+    PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
+    PRINT_HILOGD("%{public}s end.", __func__);
 }
 
 void JsPrintExtension::OnStop()
@@ -252,7 +247,6 @@ void JsPrintExtension::OnCommand(const AAFwk::Want &want, bool restart, int star
         return;
     }
     PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
-    RegisterCb();
     PRINT_HILOGD("%{public}s end.", __func__);
 }
 

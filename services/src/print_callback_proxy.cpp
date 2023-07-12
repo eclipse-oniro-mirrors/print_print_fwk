@@ -27,11 +27,7 @@ bool PrintCallbackProxy::OnCallback()
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
-
+    data.WriteInterfaceToken(GetDescriptor());
     int error = Remote()->SendRequest(PRINT_CALLBACK_TASK, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
@@ -48,12 +44,8 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrinterInfo &info)
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
-
     PRINT_HILOGD("Printer Event argument:[%{public}d], printerId [%{private}s]", state, info.GetPrinterId().c_str());
+    data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(state);
     info.Marshalling(data);
 
@@ -73,12 +65,8 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrintJob &info)
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
-
     PRINT_HILOGD("PrintJob Event argument:[%{public}d], subState [%{public}d]", state, info.GetSubState());
+    data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(state);
     info.Marshalling(data);
 
@@ -98,11 +86,7 @@ bool PrintCallbackProxy::OnCallback(const std::string &extensionId, const std::s
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
-
+    data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(extensionId);
     data.WriteString(info);
 

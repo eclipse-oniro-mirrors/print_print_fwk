@@ -13,14 +13,21 @@
  * limitations under the License.
  */
 
-#include "print_bms_death_recipient.h"
-#include "print_bms_helper.h"
-#include "print_log.h"
+#ifndef PRINT_SERVICE_HELPER_H
+#define PRINT_SERVICE_HELPER_H
+
+#include <string>
+#include "ability_manager_client.h"
+#include "system_ability.h"
 
 namespace OHOS::Print {
-void PrintBMSDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &wptrDeath)
-{
-    PRINT_HILOGD("bundle manager service died, remove the proxy object");
-    DelayedSingleton<PrintBMSHelper>::GetInstance()->ResetProxy(wptrDeath);
-}
+class PrintServiceHelper {
+public:
+    virtual ~PrintServiceHelper();
+    virtual bool CheckPermission(const std::string &name);
+    virtual bool StartAbility(const AAFwk::Want &want);
+    virtual sptr<IRemoteObject> GetBundleMgr();
+    virtual bool QueryAccounts(std::vector<int> &accountList);
+};
 }  // namespace OHOS
+#endif  // PRINT_SERVICE_HELPER_H

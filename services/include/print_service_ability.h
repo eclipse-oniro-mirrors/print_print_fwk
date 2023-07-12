@@ -29,6 +29,7 @@
 #include "print_service_stub.h"
 #include "system_ability.h"
 #include "print_security_guard_manager.h"
+#include "print_service_helper.h"
 
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
@@ -69,6 +70,7 @@ public:
     int32_t LoadExtSuccess(const std::string &extensionId) override;
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override;
     int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) override;
+    void SetHelper(const std::shared_ptr<PrintServiceHelper> &helper);
 
 protected:
     void OnStart() override;
@@ -123,6 +125,7 @@ private:
 
     std::mutex lock_;
     uint64_t currentJobId_;
+    std::shared_ptr<PrintServiceHelper> helper_;
 
     bool isJobQueueBlocked_;
 };
