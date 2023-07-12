@@ -112,6 +112,7 @@ ohos_shared_library("print_extension_module") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "i18n:intl_util",
+    "napi:ace_napi",
     "resource_management:global_resmgr",
   ]
   relative_install_dir = "extensionability"
