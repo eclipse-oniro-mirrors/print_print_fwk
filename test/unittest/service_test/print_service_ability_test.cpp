@@ -225,7 +225,6 @@ std::shared_ptr<MockPrintServiceHelper> PrintServiceAbilityTest::CreatePrintServ
             [this](sptr<AppExecFwk::IBundleMgr>, int userId,
                 std::vector<AppExecFwk::ExtensionAbilityInfo>& extList) -> bool {
                 InitExtensionList(extList);
-                PRINT_HILOGE("QueryExtension extList size :%{public}d", extList.size());
                 if (extList.size() > 0) {
                     PRINT_HILOGE("extList[0]: %{public}s", extList[0].bundleName.c_str());
                 }
