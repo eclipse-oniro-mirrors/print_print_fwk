@@ -18,6 +18,8 @@
 
 #include <string>
 #include "ability_manager_client.h"
+#include "bundle_mgr_proxy.h"
+#include "bundle_mgr_client.h"
 #include "system_ability.h"
 
 namespace OHOS::Print {
@@ -28,6 +30,10 @@ public:
     virtual bool StartAbility(const AAFwk::Want &want);
     virtual sptr<IRemoteObject> GetBundleMgr();
     virtual bool QueryAccounts(std::vector<int> &accountList);
+    virtual bool QueryExtension(sptr<AppExecFwk::IBundleMgr> mgr, int userId,
+                                    std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos);
+    virtual bool QueryNameForUid(sptr<AppExecFwk::IBundleMgr> mgr, int32_t userId, std::string& name);
+    virtual bool IsSyncMode();
 };
 }  // namespace OHOS
 #endif  // PRINT_SERVICE_HELPER_H
