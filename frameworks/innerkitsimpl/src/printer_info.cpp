@@ -47,7 +47,7 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         hasCapability_ = right.hasCapability_;
         capability_ = right.capability_;
         hasOption_ = right.hasOption_;
-        option_= right.option_;
+        option_ = right.option_;
     }
     return *this;
 }

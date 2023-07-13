@@ -425,19 +425,6 @@ bool PrintServiceStub::OnUnregisterAllExtCallback(MessageParcel &data, MessagePa
 {
     PRINT_HILOGD("PrintServiceStub::OnUnregisterAllExtCallback in");
     std::string extensionId = data.ReadString();
-    sptr<IRemoteObject> remote = data.ReadRemoteObject();
-    if (remote == nullptr) {
-        PRINT_HILOGD("PrintServiceStub::OnUnregisterAllExtCallback remote is nullptr");
-        reply.WriteInt32(E_PRINT_RPC_FAILURE);
-        return true;
-    }
-    sptr<IPrintExtensionCallback> listener = iface_cast<IPrintExtensionCallback>(remote);
-    if (listener.GetRefPtr() == nullptr) {
-        PRINT_HILOGD("PrintServiceStub::OnUnregisterAllExtCallback listener is null");
-        reply.WriteInt32(E_PRINT_RPC_FAILURE);
-        return false;
-    }
-
     int32_t ret = UnregisterAllExtCallback(extensionId);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnUnregisterAllExtCallback out");

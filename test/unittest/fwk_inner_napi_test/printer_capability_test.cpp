@@ -90,7 +90,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0004, TestSize.Level1)
     PrintMargin margin, copyMargin;
     capability.SetMinMargin(margin);
     capability.GetMinMargin(copyMargin);
-    EXPECT_EQ(true, copyMargin.HasRight());
+    EXPECT_FALSE(copyMargin.HasRight());
 }
 
 /**

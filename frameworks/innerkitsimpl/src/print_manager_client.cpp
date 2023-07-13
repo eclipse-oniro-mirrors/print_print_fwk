@@ -58,6 +58,7 @@ bool PrintManagerClient::GetPrintServiceProxy()
                 systemAbility->AddDeathRecipient(deathRecipient_);
                 printServiceProxy_ = iface_cast<IPrintService>(systemAbility);
                 PRINT_HILOGD("Getting PrintManagerClientProxy succeeded.");
+                result = true;
             }
         }
     }

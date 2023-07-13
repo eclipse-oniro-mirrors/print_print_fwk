@@ -16,34 +16,28 @@ import("//build/test.gni")
 
 module_output_path = "print/print_fwk"
 
-ohos_unittest("print_fwk_inner_napi_test") {
+ohos_unittest("print_service_test") {
   module_out_path = module_output_path
   include_dirs = [
     "mock",
-    "../service_test/mock",
+    "../fwk_inner_napi_test/mock",
     "${print_path}/frameworks/innerkitsimpl/include",
+    "${print_path}/interfaces/kits/napi/include",
     "${print_path}/services/include",
     "${print_utils_path}/include",
     "//third_party/node/src",
   ]
 
   sources = [
-    "print_callback_stub_test.cpp",
-    "print_extension_callback_stub_test.cpp",
-    "print_extension_info_test.cpp",
-    "print_job_test.cpp",
-    "print_manager_client_test.cpp",
-    "print_margin_test.cpp",
-    "print_page_size_test.cpp",
-    "print_preview_attribute_test.cpp",
-    "print_range_test.cpp",
-    "print_resolution_test.cpp",
-    "print_sa_death_recipient_test.cpp",
-    "print_service_proxy_test.cpp",
-    "print_sync_load_callback_test.cpp",
-    "print_utils_test.cpp",
-    "printer_capability_test.cpp",
-    "printer_info_test.cpp",
+    "print_bms_death_recipient_test.cpp",
+    "print_bms_helper_test.cpp",
+    "print_callback_proxy_test.cpp",
+    "print_extension_callback_proxy_test.cpp",
+    "print_security_guard_info_test.cpp",
+    "print_security_guard_manager_test.cpp",
+    "print_service_ability_test.cpp",
+    "print_service_helper_test.cpp",
+    "print_service_stub_test.cpp",
   ]
 
   deps = [
@@ -62,24 +56,19 @@ ohos_unittest("print_fwk_inner_napi_test") {
   ]
 
   external_deps = [
+    "ability_base:base",
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
-    "ability_runtime:data_ability_helper",
-    "ability_runtime:napi_base_context",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
-    "common_event_service:cesfwk_innerkits",
-    "eventhandler:libeventhandler",
     "hilog:libhilog",
-    "i18n:intl_util",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "preferences:native_preferences",
-    "relational_store:native_appdatafwk",
-    "relational_store:native_dataability",
-    "relational_store:native_rdb",
-    "resource_management:global_resmgr",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
 }
@@ -89,5 +78,5 @@ group("unittest") {
 
   deps = []
 
-  deps += [ ":print_fwk_inner_napi_test" ]
+  deps += [ ":print_service_test" ]
 }

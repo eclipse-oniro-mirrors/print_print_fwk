@@ -21,35 +21,33 @@
 
 #include "bundle_mgr_interface.h"
 #include "extension_ability_info.h"
-#include "iremote_object.h"
 #include "print_bms_death_recipient.h"
-#include "refbase.h"
+#include "print_service_helper.h"
 #include "singleton.h"
-#include "want.h"
 
 namespace OHOS::Print {
 class PrintBMSHelper : public DelayedSingleton<PrintBMSHelper> {
 public:
-    using IBundleMgr = OHOS::AppExecFwk::IBundleMgr;
-
-    explicit PrintBMSHelper();
+    PrintBMSHelper();
 
     virtual ~PrintBMSHelper();
+
+    void SetHelper(const std::shared_ptr<PrintServiceHelper> &helper);
 
     bool QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfo);
 
     std::string QueryCallerBundleName();
 
-    void ResetProxy();
+    void ResetProxy(const wptr<IRemoteObject> &remote);
 
 private:
     bool GetProxy();
 
 private:
-    sptr<IBundleMgr> sptrBundleMgr_;
+    sptr<AppExecFwk::IBundleMgr> sptrBundleMgr_;
     std::mutex mutex_;
     sptr<PrintBMSDeathRecipient> printBMSDeath_;
+    std::shared_ptr<PrintServiceHelper> helper_;
 };
 }  // namespace OHOS
-
 #endif  // PRINT_BMS_HELPER_H

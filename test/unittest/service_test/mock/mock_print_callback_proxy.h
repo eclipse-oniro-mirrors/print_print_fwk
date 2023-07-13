@@ -12,36 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MOCK_PRINT_CALLBACK_STUB_H
-#define MOCK_PRINT_CALLBACK_STUB_H
+
+#ifndef MOCK_PRINT_CALLBACK_PROXY_H
+#define MOCK_PRINT_CALLBACK_PROXY_H
 
 #include <gmock/gmock.h>
-#include "print_callback_stub.h"
+#include "print_callback_proxy.h"
 
 namespace OHOS {
 namespace Print {
-class DummyPrintCallbackStub : public PrintCallbackStub {
+class MockPrintCallbackProxy final : public PrintCallbackProxy {
 public:
-    bool OnCallback() override
-    {
-        return true;
-    }
-    bool OnCallback(uint32_t state, const PrinterInfo &info) override
-    {
-        return true;
-    }
-    bool OnCallback(uint32_t state, const PrintJob &info) override
-    {
-        return true;
-    }
-    bool OnCallback(const std::string &extensionId, const std::string &info) override
-    {
-        return true;
-    }
-};
-
-class MockPrintCallbackStub final : public DummyPrintCallbackStub {
-public:
+    MockPrintCallbackProxy() : PrintCallbackProxy(nullptr) {}
     MOCK_METHOD0(OnCallback, bool());
     MOCK_METHOD2(OnCallback, bool(uint32_t, const PrinterInfo&));
     MOCK_METHOD2(OnCallback, bool(uint32_t, const PrintJob&));
@@ -49,4 +31,4 @@ public:
 };
 }  // namespace Print
 }  // namespace OHOS
-#endif  // MOCK_PRINT_CALLBACK_STUB_H
+#endif  // MOCK_PRINT_CALLBACK_PROXY_H
