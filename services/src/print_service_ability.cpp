@@ -33,6 +33,7 @@
 #include "printer_info.h"
 #include "print_utils.h"
 #include "string_wrapper.h"
+#include "system_ability.h"
 #include "system_ability_definition.h"
 #include "want_params_wrapper.h"
 #include "common_event_data.h"
@@ -49,6 +50,8 @@ using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
 using json = nlohmann::json;
 
+const uint32_t MAX_RETRY_TIMES = 10;
+const uint32_t START_ABILITY_INTERVAL = 6;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t INIT_INTERVAL = 5000L;
 
@@ -75,6 +78,8 @@ static const std::string QUEUE_JOB_LIST_CHANGED = "queuedJobListChanged";
 static const std::string ACTION_QUEUE_JOB_LIST_CHANGED = "action.printkit.queuedJobListChanged";
 static const std::string QUEUE_JOB_LIST_PRINTING = "printing";
 static const std::string QUEUE_JOB_LIST_COMPLETED = "completed";
+static const std::string QUEUE_JOB_LIST_BLOCKED = "blocked";
+static const std::string QUEUE_JOB_LIST_CLEAR_BLOCKED = "clear_blocked";
 
 static bool publishState = false;
 
