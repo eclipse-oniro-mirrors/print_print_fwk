@@ -33,7 +33,6 @@
 #include "printer_info.h"
 #include "print_utils.h"
 #include "string_wrapper.h"
-#include "system_ability.h"
 #include "system_ability_definition.h"
 #include "want_params_wrapper.h"
 #include "common_event_data.h"
@@ -50,8 +49,6 @@ using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
 using json = nlohmann::json;
 
-const uint32_t MAX_RETRY_TIMES = 10;
-const uint32_t START_ABILITY_INTERVAL = 6;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t INIT_INTERVAL = 5000L;
 
