@@ -95,7 +95,7 @@ private:
     std::shared_ptr<PrinterInfo> getPrinterInfo(const std::string printerId);
     bool isEprint(const std::string &printerId);
     void ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
-    void ReportCompletedPrint(const std::string & printerId);
+    void ReportCompletedPrint(const std::string &printerId);
     void CheckJobQueueBlocked(const PrintJob &jobInfo);
     bool CheckIsPrinterDisabled();
 

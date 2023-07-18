@@ -25,6 +25,7 @@
 #include "print_extension_info.h"
 #include "print_job.h"
 #include "printer_info.h"
+#include "iprint_ipc_interface_code.h"
 
 namespace OHOS::Print {
 class IPrintService : public IRemoteBroker {
@@ -56,33 +57,6 @@ public:
     virtual int32_t LoadExtSuccess(const std::string &extensionId) = 0;
     virtual int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) = 0;
     virtual int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) = 0;
-};
-
-enum {
-    CMD_START_PRINT,
-    CMD_STOP_PRINT,
-    CMD_CONNECTPRINTER,
-    CMD_DISCONNECTPRINTER,
-    CMD_STARTDISCOVERPRINTER,
-    CMD_STOPDISCOVERPRINTER,
-    CMD_QUERYALLEXTENSION,
-    CMD_STARTPRINTJOB,
-    CMD_CANCELPRINTJOB,
-    CMD_ADDPRINTERS,
-    CMD_REMOVEPRINTERS,
-    CMD_UPDATEPRINTERS,
-    CMD_UPDATEPRINTERSTATE,
-    CMD_UPDATEPRINTJOBSTATE,
-    CMD_UPDATEEXTENSIONINFO,
-    CMD_REQUESTPREVIEW,
-    CMD_QUERYPRINTERCAPABILITY,
-    CMD_ON,
-    CMD_OFF,
-    CMD_REG_EXT_CB,
-    CMD_UNREG_EXT_CB,
-    CMD_LOAD_EXT,
-    CMD_QUERYALLPRINTJOB,
-    CMD_QUERYPRINTJOBBYID,
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H
