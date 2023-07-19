@@ -103,15 +103,12 @@ std::string PrintServiceAbilityTest::GetExtensionId(EXTENSION_ID_TYPE type)
     switch (type) {
         case TYPE_DEFAULT:
             return DEFAULT_EXTENSION_ID;
-            break;
 
         case TYPE_UNLOAD:
             return UNLOAD_EXTENSION_ID;
-            break;
 
         case TYPE_NON_EXIST:
             return NONEXIST_EXTENSION_ID;
-            break;
 
         default:
             break;
