@@ -140,7 +140,8 @@ int32_t PrintServiceProxy::StartDiscoverPrinter(const std::vector<std::string> &
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteStringVector(extensionList);
     PRINT_HILOGD("PrintServiceProxy StartDiscoverPrinter started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STARTDISCOVERPRINTER, data, reply, option);
+    int32_t ret = Remote()->SendRequest(
+        OHOS::Print::IPrintInterfaceCode::CMD_STARTDISCOVERPRINTER, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy StartDiscoverPrinter out. ret = [%{public}d]", ret);
     return ret;
@@ -298,7 +299,8 @@ int32_t PrintServiceProxy::QueryPrinterCapability(const std::string &printerId)
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterCapability started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITY, data, reply, option);
+    int32_t ret = Remote()->SendRequest(
+        OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITY, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterCapability out. ret = [%{public}d]", ret);
     return ret;

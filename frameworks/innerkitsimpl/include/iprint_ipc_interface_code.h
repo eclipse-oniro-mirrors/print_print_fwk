@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
- #ifndef PRINT_IPC_INTERFACE_CODE_H
- #define PRINT_IPC_INTERFACE_CODE_H
+#ifndef PRINT_IPC_INTERFACE_CODE_H
+#define PRINT_IPC_INTERFACE_CODE_H
 
  /* SAID: 3707 */
 namespace OHOS::Print {
