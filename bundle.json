@@ -54,7 +54,7 @@
           "time_service"
         ],
         "third_party": [
-          "thirdparty_googletest",
+          "googletest",
           "zlib"
         ]
       },
