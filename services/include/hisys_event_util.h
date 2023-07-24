@@ -26,7 +26,7 @@ namespace OHOS::Print {
         static void faultPrint(std::string scene, std::string msg);
 
     private:
-        static constexpr char HW_PRINT_SPOOLER[] = "HW_PRINT_SPOOLER";
+        static constexpr char HW_PRINT_SPOOLER[] = "PRINT";
         static const int PRINT_SUCCESS = 1003;
         static const int FAULT_PRINT = 3002;
 
