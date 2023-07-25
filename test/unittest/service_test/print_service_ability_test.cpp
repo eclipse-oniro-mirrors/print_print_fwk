@@ -1840,7 +1840,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0081, TestSize.Level1)
     job.SetJobId(GetDefaultJobId());
     job.SetPrinterId(GetDefaultPrinterId());
     std::string result = "";
-    service->RequestPreview(job, result)
+    service->RequestPreview(job, result);
 }
 
 /**
@@ -1862,7 +1862,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082, TestSize.Level1)
     job.SetJobId(GetDefaultJobId());
     job.SetPrinterId(GetDefaultPrinterId());
     std::string result = "";
-    service->RequestPreview(job, result)
+    service->RequestPreview(job, result);
 }
 
 /**
