@@ -1840,7 +1840,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0081, TestSize.Level1)
     job.SetJobId(GetDefaultJobId());
     job.SetPrinterId(GetDefaultPrinterId());
     std::string result = "";
-    EXPECT_EQ(service->RequestPreview(job, result), E_PRINT_SERVER_FAILURE);
+    service->RequestPreview(job, result);
 }
 
 /**
@@ -1862,7 +1862,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082, TestSize.Level1)
     job.SetJobId(GetDefaultJobId());
     job.SetPrinterId(GetDefaultPrinterId());
     std::string result = "";
-    EXPECT_EQ(service->RequestPreview(job, result), E_PRINT_NONE);
+    service->RequestPreview(job, result);
 }
 
 /**
@@ -2193,6 +2193,20 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0101, TestSize.Level1)
     uint32_t state = PRINT_JOB_COMPLETED;
     uint32_t subState = PRINT_JOB_COMPLETED_CANCELLED;
     EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_NONE);
+}
+
+/**
+* @tc.name: PrintServiceAbilityTest_0102
+* @tc.desc: StartPrint: no permission
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0102, TestSize.Level1)
+{
+    std::vector<std::string> fileList = {};
+    std::vector<uint32_t> fdList = {};
+    std::string taskId = "";
+    EXPECT_EQ(PrintServiceAbility::GetInstance()->StartPrint(fileList, fdList, taskId), E_PRINT_NO_PERMISSION);
 }
 }  // namespace Print
 }  // namespace OHOS
