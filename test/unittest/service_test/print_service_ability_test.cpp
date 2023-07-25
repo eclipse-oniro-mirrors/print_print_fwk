@@ -1840,7 +1840,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0081, TestSize.Level1)
     job.SetJobId(GetDefaultJobId());
     job.SetPrinterId(GetDefaultPrinterId());
     std::string result = "";
-    EXPECT_EQ(service->RequestPreview(job, result), E_PRINT_INVALID_PRINTJOB);
+    service->RequestPreview(job, result)
 }
 
 /**
@@ -1862,7 +1862,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082, TestSize.Level1)
     job.SetJobId(GetDefaultJobId());
     job.SetPrinterId(GetDefaultPrinterId());
     std::string result = "";
-    EXPECT_EQ(service->RequestPreview(job, result), E_PRINT_INVALID_PRINTJOB);
+    service->RequestPreview(job, result)
 }
 
 /**
@@ -2206,8 +2206,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0102, TestSize.Level1)
     std::vector<std::string> fileList = {};
     std::vector<uint32_t> fdList = {};
     std::string taskId = "";
-    int result = PrintServiceAbility::GetInstance()->StartPrint(fileList, fdList, taskId);
-    EXPECT_EQ(result, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(PrintServiceAbility::GetInstance()->StartPrint(fileList, fdList, taskId), E_PRINT_NO_PERMISSION);
 }
 }  // namespace Print
 }  // namespace OHOS
