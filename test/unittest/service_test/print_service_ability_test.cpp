@@ -2201,7 +2201,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0101, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0102, TestSize.Level1)
 {
     std::vector<std::string> fileList = {};
     std::vector<uint32_t> fdList = {};
