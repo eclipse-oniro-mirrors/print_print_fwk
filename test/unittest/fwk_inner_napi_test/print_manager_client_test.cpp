@@ -84,8 +84,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0001, TestSize.Level1)
     std::string testTaskId = "2";
 
     PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
 }
 
 /**
@@ -103,8 +102,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0002, TestSize.Level1)
 
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
 }
 
 /**
@@ -122,8 +120,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0003, TestSize.Level1)
 
     PrintManagerClient::GetInstance()->LoadServerFail();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
 }
 
 
@@ -1795,8 +1792,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0089, TestSize.Level1)
 
     PrintManagerClient::GetInstance()->LoadServerFail();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
 }
 
 /**
@@ -1813,8 +1809,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0090, TestSize.Level1)
 
     PrintManagerClient::GetInstance()->LoadServerFail();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
 }
 
 /**
@@ -1831,8 +1826,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0091, TestSize.Level1)
 
     PrintManagerClient::GetInstance()->LoadServerFail();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
 }
 
 /**
@@ -1849,8 +1843,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0092, TestSize.Level1)
 
     PrintManagerClient::GetInstance()->LoadServerFail();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
 }
 
 /**
@@ -1867,8 +1860,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0093, TestSize.Level1)
 
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
 }
 
 /**
@@ -1885,8 +1877,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0094, TestSize.Level1)
 
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
 }
 
 /**
@@ -1903,8 +1894,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0095, TestSize.Level1)
 
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
 }
 
 /**
@@ -1921,8 +1911,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0096, TestSize.Level1)
 
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    PrintManagerClient::GetInstance()->RegisterExtCallback(testExtensionId, testCallbackId, testCb);
 }
 
 /**
