@@ -16,8 +16,8 @@
 #include "print_security_guard_manager.h"
 
 namespace OHOS::Print {
+using json = nlohmann::json;
 static const int32_t SPLIT_INDEX = 2;
-static const std::string EPRINT_DOMAIN = "https://apigw-01.huawei.com";
 
 PrintSecurityGuardInfo::PrintSecurityGuardInfo(const std::string callPkg, const std::vector<std::string> &fileList)
 {
@@ -41,7 +41,15 @@ void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, co
     printTypeInfo_.ip = PrintUtil::SplitStr(description, '&', SPLIT_INDEX);
     printTypeInfo_.mac = PrintUtil::SplitStr(printerId, '/', SPLIT_INDEX);
     subType_ = PrintSecurityGuardUtil::GetPrinterType(printerId);
-    printTypeInfo_.domain = (subType_ == FROM_EPRINT) ? EPRINT_DOMAIN : "";
+    printTypeInfo_.domain = "";
+    if (subType_ == FROM_EPRINT) {
+        if (json::accept(printerInfo.GetOption())) {
+            json optionJson = json::parse(printerInfo.GetOption());
+            if (optionJson.contains("ePrintUrl")) {
+                printTypeInfo_.domain = optionJson["ePrintUrl"].get<std::string>();
+            }
+        }
+    }
 
     uint32_t subState = printJob.GetSubState();
     switch (subState) {
