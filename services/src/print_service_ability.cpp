@@ -914,7 +914,7 @@ void PrintServiceAbility::ReportHisysEvent(const std::shared_ptr<PrintJob> &jobI
             PRINT_HILOGI("optionJson: %{public}s", optionJson.dump().c_str());
             if (optionJson.contains("jobDescription") && optionJson["jobDescription"].is_string()) {
                 jobDescription = optionJson["jobDescription"].get<std::string>();
-                PRINT_HILOGI("jobDescription: %{public}s", jobDescription);
+                PRINT_HILOGI("jobDescription: %{public}s", jobDescription.c_str());
             }
         }
     }
