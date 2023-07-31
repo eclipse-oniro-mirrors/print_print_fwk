@@ -45,7 +45,7 @@ void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, co
     if (subType_ == FROM_EPRINT) {
         if (json::accept(printerInfo.GetOption())) {
             json optionJson = json::parse(printerInfo.GetOption());
-            if (optionJson.contains("ePrintUrl")) {
+            if (optionJson.contains("ePrintUrl") && optionJson["ePrintUrl"].is_string()) {
                 printTypeInfo_.domain = optionJson["ePrintUrl"].get<std::string>();
             }
         }
