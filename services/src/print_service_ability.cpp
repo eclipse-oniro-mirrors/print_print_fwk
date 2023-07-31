@@ -906,14 +906,19 @@ void PrintServiceAbility::ReportHisysEvent(const std::shared_ptr<PrintJob> &jobI
     }
     msg["COPIES_SETTING"] = jobInfo->GetCopyNumber();
     std::string option = jobInfo->GetOption();
-    PRINT_HILOGI("test option:%{public}s", option.c_str());
+    PRINT_HILOGI("option:%{public}s", option.c_str());
+    std::string jobDescription = "";
     if (option != "") {
-        json optionJson = json::parse(option);
-        PRINT_HILOGI("test optionJson: %{public}s", optionJson.dump().c_str());
-        PRINT_HILOGI("test jobDescription: %{public}s", optionJson["jobDescription"].get<std::string>().c_str());
-        msg["JOB_DESCRIPTION"] = optionJson["jobDescription"].get<std::string>();
+        if (json::accept(option)) {
+            json optionJson = json::parse(option);
+            PRINT_HILOGI("optionJson: %{public}s", optionJson.dump().c_str());
+            if (optionJson.contains("jobDescription") && optionJson["jobDescription"].is_string()) {
+                jobDescription = optionJson["jobDescription"].get<std::string>();
+                PRINT_HILOGI("jobDescription: %{public}s", jobDescription.c_str());
+            }
+        }
     }
-
+    msg["JOB_DESCRIPTION"] = jobDescription;
     msg["PRINT_STYLE_SETTING"] = jobInfo->GetDuplexMode();
     msg["FAIL_REASON_CODE"] = subState;
     HisysEventUtil::faultPrint("PRINT_JOB_BLOCKED", msg.dump());
