@@ -35,6 +35,8 @@ public:
     static napi_value UpdatePrinterState(napi_env env, napi_callback_info info);
     static napi_value UpdatePrintJobState(napi_env env, napi_callback_info info);
     static napi_value UpdateExtensionInfo(napi_env env, napi_callback_info info);
+    static napi_value SetCupsPrinter(napi_env env, napi_callback_info info);
+    static napi_value GetPrinterCapabilities(napi_env env, napi_callback_info info);
 
 private:
     static bool IsValidPrinterState(uint32_t state);
@@ -56,6 +58,10 @@ private:
 
         std::string extensionId = "";
         std::string extInfo = "";
+
+        std::string printerUri = "";
+        std::string printerName = "";
+        PrinterCapability printerCaps;
 
         NapiPrintExtContext() : Context(nullptr, nullptr) {};
         NapiPrintExtContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};

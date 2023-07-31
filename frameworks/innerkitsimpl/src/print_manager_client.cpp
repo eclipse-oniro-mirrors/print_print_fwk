@@ -297,6 +297,28 @@ int32_t PrintManagerClient::QueryPrintJobById(std::string &printJobId, PrintJob 
     return ret;
 }
 
+int32_t PrintManagerClient::SetCupsPrinter(const std::string &printerUri, const std::string &printerName)
+{
+    PRINT_HILOGD("PrintManagerClient SetCupsPrinter start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->SetCupsPrinter(printerUri, printerName);
+        PRINT_HILOGD("PrintManagerClient SetCupsPrinter out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::GetPrinterCapabilities(const std::string &printerUri, PrinterCapability &printerCaps)
+{
+    PRINT_HILOGD("PrintManagerClient GetPrinterCapabilities start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->GetPrinterCapabilities(printerUri, printerCaps);
+        PRINT_HILOGD("PrintManagerClient GetPrinterCapabilities out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener)
 {
     PRINT_HILOGD("PrintManagerClient On start.");

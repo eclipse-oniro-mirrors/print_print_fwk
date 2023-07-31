@@ -54,6 +54,8 @@ private:
     bool OnLoadExtSuccess(MessageParcel &data, MessageParcel &reply);
     bool OnQueryAllPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnQueryPrintJobById(MessageParcel &data, MessageParcel &reply);
+    bool OnSetCupsPrinter(MessageParcel &data, MessageParcel &reply);
+    bool OnGetPrinterCapabilities(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

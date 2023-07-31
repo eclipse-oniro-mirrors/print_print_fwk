@@ -50,6 +50,12 @@ public:
 
     [[nodiscard]] uint32_t GetDuplexMode() const;
 
+    void SetOption(const std::string &option);
+
+    [[nodiscard]] bool HasOption() const;
+
+    [[nodiscard]] std::string GetOption() const;
+
     void SetMinMargin(const PrintMargin &minMargin);
 
     void SetPageSize(const std::vector<PrintPageSize> &pageSizeList);
@@ -79,6 +85,9 @@ private:
 
     bool hasMargin_;
     PrintMargin minMargin_;
+
+    bool hasOption_;
+    std::string option_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_CAPABILITY_H

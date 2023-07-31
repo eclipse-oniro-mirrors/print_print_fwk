@@ -57,6 +57,8 @@ public:
     virtual int32_t LoadExtSuccess(const std::string &extensionId) = 0;
     virtual int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) = 0;
     virtual int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) = 0;
+    virtual int32_t SetCupsPrinter(const std::string &printerUri, const std::string &printerName) = 0;
+    virtual int32_t GetPrinterCapabilities(const std::string &printerUri, PrinterCapability &printerCaps) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

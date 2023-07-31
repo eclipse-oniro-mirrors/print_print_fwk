@@ -45,6 +45,7 @@ ohos_shared_library("print_client") {
     "src/printer_capability.cpp",
     "src/printer_info.cpp",
   ]
+
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",

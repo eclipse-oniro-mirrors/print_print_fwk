@@ -19,6 +19,7 @@
 #include "print_log.h"
 #include "print_manager_client.h"
 #include "printer_info_helper.h"
+#include "printer_capability_helper.h"
 
 namespace OHOS::Print {
 napi_value NapiPrintExt::AddPrinters(napi_env env, napi_callback_info info)
@@ -302,6 +303,87 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info in
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to update extension information");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
+napi_value NapiPrintExt::SetCupsPrinter(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter SetCupsPrinter---->");
+    auto context = std::make_shared<NapiPrintExtContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
+
+        napi_valuetype valuetype;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerUri is not a string", napi_string_expected);
+
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerName is not a string", napi_string_expected);
+
+        std::string printerUri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        PRINT_HILOGD("printerUri : %{private}s", printerUri.c_str());
+        context->printerUri = printerUri;
+
+        std::string printerName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
+        PRINT_HILOGD("printerName : %{private}s", printerName.c_str());
+        context->printerName = printerName;
+
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        int32_t ret = PrintManagerClient::GetInstance()->SetCupsPrinter(context->printerUri, context->printerName);
+        PRINT_HILOGD("ret: %d", ret);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to set cups printer");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
+napi_value NapiPrintExt::GetPrinterCapabilities(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter GetPrinterCapabilities---->");
+    auto context = std::make_shared<NapiPrintExtContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+
+        napi_valuetype valuetype;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerUri is not a string", napi_string_expected);
+
+        std::string printerUri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        PRINT_HILOGD("printerUri : %{private}s", printerUri.c_str());
+        context->printerUri = printerUri;
+        return napi_ok;
+    };
+    // promise return
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        PRINT_HILOGD("output enter ---->");
+        *result = PrinterCapabilityHelper::MakeJsObject(env, context->printerCaps);
+        return napi_ok;
+    };
+
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        int32_t ret = PrintManagerClient::GetInstance()->GetPrinterCapabilities(context->printerUri,
+            context->printerCaps);
+        context->result = ret == E_PRINT_NONE;
+        PRINT_HILOGD("ret: %d", ret);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to get printers caps");
             context->SetErrorIndex(ret);
         }
     };

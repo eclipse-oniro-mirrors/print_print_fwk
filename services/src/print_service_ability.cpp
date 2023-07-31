@@ -42,6 +42,7 @@
 #include "hisys_event_util.h"
 #include "nlohmann/json.hpp"
 #include "restrictions_proxy.h"
+#include "print_cups_client.h"
 
 namespace OHOS::Print {
 using namespace std;
@@ -258,6 +259,9 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
 
     // save securityGuard base info
     securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
+    PRINT_HILOGD("PrintServiceAbility StartCupsdService started.");
+    PrintCupsClient::GetInstance()->StartCupsdService();
+    PRINT_HILOGD("PrintServiceAbility StartCupsdService end."); 
     return E_PRINT_NONE;
 }
 
@@ -532,6 +536,32 @@ int32_t PrintServiceAbility::QueryPrintJobById(std::string &printJobId, PrintJob
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceAbility::SetCupsPrinter(const std::string &printerUri, const std::string &printerName)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGD("SetCupsPrinter started.");
+    PrintCupsClient::GetInstance()->SetCupsPrinter(printerUri, printerName);
+    PRINT_HILOGD("SetCupsPrinter End.");
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::GetPrinterCapabilities(const std::string &printerUri, PrinterCapability &printerCaps)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGD("GetPrinterCapabilities started.");
+    PrintCupsClient::GetInstance()->GetPrinterCapabilities(printerUri, printerCaps);
+    PRINT_HILOGD("GetPrinterCapabilities End.");
+    return E_PRINT_NONE;
+}
+
 int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
 {
     startPrintTime_ = std::chrono::high_resolution_clock::now();
@@ -568,6 +598,12 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
     printJob->UpdateParams(jobInfo);
     queuedJobList_.insert(std::make_pair(jobId, printJob));
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
+    // send job to cups
+    if (cid.find(SPOOLER_BUNDLE_NAME) != string::npos) {
+        PRINT_HILOGD("default spooler extension print job");
+        PrintCupsClient::GetInstance()->AddCupsPrintJob(jobInfo);
+        return E_PRINT_NONE;
+    }
     auto cbFunc = extCallbackMap_[cid];
     auto callback = [=]() {
         if (cbFunc != nullptr) {
@@ -593,7 +629,6 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    PRINT_HILOGI("CancelPrintJob started jobId:%{public}s.", jobId.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     auto jobIt = queuedJobList_.find(jobId);
@@ -611,6 +646,11 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
             UpdatePrintJobState(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
             return E_PRINT_SERVER_FAILURE;
         }
+        // cancel job from cups
+        if (cid.find(SPOOLER_BUNDLE_NAME) != string::npos) {
+            PrintCupsClient::GetInstance()->CancelCupsJob(jobIt->second->GetJobId());
+            return E_PRINT_NONE;
+        }
 
         auto cbFunc = extCallbackMap_[cid];
         auto tmpPrintJob = queuedJobList_[jobId];
@@ -625,7 +665,6 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
             serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
         }
     } else {
-        PRINT_HILOGI("job state is prepare");
         auto printJob = std::make_shared<PrintJob>(*jobIt->second);
         if (printJob == nullptr) {
             PRINT_HILOGE("fail to move print job back to job list");
@@ -660,6 +699,11 @@ void PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
 
     auto extensionId = PrintUtils::GetExtensionId(printerId);
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
+    // no need send job to cups
+    if (cid.find(SPOOLER_BUNDLE_NAME) != string::npos) {
+        PRINT_HILOGD("default spooler extension, no need SendQueuePrintJob");
+        return;
+    }
 
     auto cbFunc = extCallbackMap_[cid];
     auto printJob = jobIt->second;
