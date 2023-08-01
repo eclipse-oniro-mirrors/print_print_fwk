@@ -99,6 +99,18 @@ int32_t PrintManagerClient::StartPrint(const std::vector<std::string> &fileList,
     return ret;
 }
 
+int32_t PrintManagerClient::StartPrint(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
+    std::string &taskId, const sptr<IRemoteObject> &token)
+{
+    PRINT_HILOGD("PrintManagerClient StartPrint start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->StartPrint(fileList, fdList, taskId, token);
+        PRINT_HILOGD("PrintManagerClient StartPrint out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::StopPrint(const std::string &taskId)
 {
     PRINT_HILOGD("PrintManagerClient StopPrint start.");

@@ -27,7 +27,8 @@ const std::string EVENT_SUCCESS = "success";
 const std::string EVENT_FAIL = "failed";
 const std::string EVENT_CANCEL = "cancelled";
 
-PrintTask::PrintTask(const std::vector<std::string> &innerList) : taskId_("")
+PrintTask::PrintTask(const std::vector<std::string> &innerList, const sptr<IRemoteObject> &innerCallerToken_)
+    : taskId_("")
 {
     if (innerList.begin()->find("fd://") == 0) {
         PRINT_HILOGD("list type: fdlist");
@@ -51,6 +52,7 @@ PrintTask::PrintTask(const std::vector<std::string> &innerList) : taskId_("")
     supportEvents_[EVENT_SUCCESS] = true;
     supportEvents_[EVENT_FAIL] = true;
     supportEvents_[EVENT_CANCEL] = true;
+    callerToken_ = innerCallerToken_;
 }
 
 PrintTask::~PrintTask()
@@ -75,7 +77,13 @@ uint32_t PrintTask::Start()
             fdList_.emplace_back(fd);
         }
     }
-    return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_);
+    if (callerToken_ == nullptr) {
+        PRINT_HILOGI("call client's old StartPrint interface.");
+        return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_);
+    } else {
+        PRINT_HILOGI("call client's new StartPrint interface.");
+        return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_, callerToken_);
+    }
 }
 
 void PrintTask::Stop()

@@ -76,6 +76,8 @@ static const std::string QUEUE_JOB_LIST_PRINTING = "printing";
 static const std::string QUEUE_JOB_LIST_COMPLETED = "completed";
 static const std::string QUEUE_JOB_LIST_BLOCKED = "blocked";
 static const std::string QUEUE_JOB_LIST_CLEAR_BLOCKED = "clear_blocked";
+static const std::string SPOOLER_PREVIEW_ABILITY_NAME = "PrintServiceExtAbility";
+static const std::string TOKEN_KEY = "ohos.ability.params.token";
 
 static bool publishState = false;
 
@@ -248,6 +250,57 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_PID, callerPid);
     want.SetParam(CALLER_PKG_NAME, callerPkg);
     if (!StartAbility(want)) {
+        PRINT_HILOGE("Failed to start spooler ability");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    printJobList_.insert(std::make_pair(jobId, printJob));
+    taskId = jobId;
+    SendPrintJobEvent(*printJob);
+
+    // save securityGuard base info
+    securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
+    std::string &taskId, const sptr<IRemoteObject> &token)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        PRINT_HILOGD("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGD("PrintServiceAbility StartPrint started.");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    if (fileList.empty() && fdList.empty() && token == nullptr) {
+        PRINT_HILOGE("to be printed filelist and fdlist are empty, or token is null.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    std::string jobId = GetPrintJobId();
+    auto printJob = std::make_shared<PrintJob>();
+    if (printJob == nullptr) {
+        return E_PRINT_GENERIC_FAILURE;
+    }
+    printJob->SetFdList(fdList);
+    printJob->SetJobId(jobId);
+    printJob->SetJobState(PRINT_JOB_PREPARED);
+    AAFwk::Want want;
+    want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_PREVIEW_ABILITY_NAME);
+    want.SetParam(LAUNCH_PARAMETER_JOB_ID, jobId);
+    want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList);
+    BuildFDParam(fdList, want);
+    int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
+    std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    ingressPackage = callerPkg;
+    int32_t callerUid = IPCSkeleton::GetCallingUid();
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_TOKEN, callerTokenId);
+    want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_UID, callerUid);
+    want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_PID, callerPid);
+    want.SetParam(CALLER_PKG_NAME, callerPkg);
+    want.SetParam(TOKEN_KEY, token);
+    curRequestCode_ = (curRequestCode_ == INT_MAX) ? 0 : (curRequestCode_ + 1);
+    if (!StartPrintServiceExtension(want, curRequestCode_)) {
         PRINT_HILOGE("Failed to start spooler ability");
         return E_PRINT_SERVER_FAILURE;
     }
@@ -1248,6 +1301,15 @@ bool PrintServiceAbility::StartAbility(const AAFwk::Want &want)
         return false;
     }
     return helper_->StartAbility(want);
+}
+
+bool PrintServiceAbility::StartPrintServiceExtension(const AAFwk::Want &want, int32_t curRequestCode_)
+{
+    if (helper_ == nullptr) {
+        return false;
+    }
+    PRINT_HILOGI("StartPrintServiceExtension curRequestCode_ [%{public}d]", curRequestCode_);
+    return helper_->StartPrintServiceExtension(want, curRequestCode_);
 }
 
 PrintExtensionInfo PrintServiceAbility::ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo)

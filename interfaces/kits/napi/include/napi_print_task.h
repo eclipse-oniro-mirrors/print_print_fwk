@@ -17,10 +17,18 @@
 #define NAPI_PRINT_TASK_H
 
 #include <string>
+#include "ability.h"
+#include "ability_context.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 
 namespace OHOS::Print {
+struct PrintTaskContext : public PrintAsyncCall::Context {
+    napi_ref ref = nullptr;
+    PrintTaskContext() : Context(nullptr, nullptr) {}
+    PrintTaskContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
+    virtual ~PrintTaskContext() {}
+};
 class NapiPrintTask {
 public:
     static napi_value Print(napi_env env, napi_callback_info info);
@@ -29,6 +37,11 @@ private:
     static napi_value GetCtor(napi_env env);
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static bool IsValidFile(const std::string &fileName);
+    static napi_value GetAbilityContext(
+        napi_env env, napi_value value, std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> &abilityContext);
+    static napi_value WrapVoidToJS(napi_env env);
+    static napi_status VerifyParameters(napi_env env, size_t argc, napi_value *argv,
+        const std::shared_ptr<PrintTaskContext> context, napi_value proxy);
 
 private:
     static __thread napi_ref globalCtor;

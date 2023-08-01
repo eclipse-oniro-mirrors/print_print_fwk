@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "iremote_object.h"
 #include "iprint_callback.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -29,7 +30,7 @@
 namespace OHOS::Print {
 class PrintTask {
 public:
-    explicit PrintTask(const std::vector<std::string> &fileList);
+    explicit PrintTask(const std::vector<std::string> &fileList, const sptr<IRemoteObject> &callerToken_);
     ~PrintTask();
 
     uint32_t Start();
@@ -57,6 +58,7 @@ private:
     std::vector<uint32_t> fdList_;
     std::map<std::string, bool> supportEvents_;
     uint32_t pathType_ = 0;
+    sptr<IRemoteObject> callerToken_;
     enum FilePathType {
         FD_UNDEFINED,
         FD_PATH,

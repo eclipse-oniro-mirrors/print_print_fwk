@@ -33,6 +33,7 @@
 
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
+static int32_t curRequestCode_ = 0;
 class IKeyguardStateCallback;
 
 class PrintServiceAbility : public SystemAbility, public PrintServiceStub {
@@ -46,6 +47,8 @@ public:
     static sptr<PrintServiceAbility> GetInstance();
     int32_t StartPrint(const std::vector<std::string> &fileList,
         const std::vector<uint32_t> &fdList, std::string &taskId) override;
+    int32_t StartPrint(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
+        std::string &taskId, const sptr<IRemoteObject> &token) override;
     int32_t StopPrint(const std::string &taskId) override;
     int32_t ConnectPrinter(const std::string &printerId) override;
     int32_t DisconnectPrinter(const std::string &printerId) override;
@@ -82,6 +85,7 @@ private:
     void ManualStart();
     std::string GetPrintJobId();
     bool StartAbility(const AAFwk::Want &want);
+    bool StartPrintServiceExtension(const AAFwk::Want &want, int32_t curRequestCode_);
     PrintExtensionInfo ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo);
     bool DelayStartDiscovery(const std::string &extensionId);
     void SendPrinterEvent(const PrinterInfo &info);
