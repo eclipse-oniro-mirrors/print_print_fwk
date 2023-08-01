@@ -61,7 +61,6 @@ ohos_shared_library("print_service") {
     "core_service:tel_core_service_api",
     "distributed_notification_service:ans_innerkits",
     "drivers_interface_ril:hril_innerkits",
-    "enterprise_device_management:edmservice_kits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
