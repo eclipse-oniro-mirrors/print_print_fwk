@@ -28,6 +28,11 @@ public:
     {
             return E_PRINT_NONE;
     }
+    int32_t StartPrint(const std::vector<std::string> &fileList,
+        const std::vector<uint32_t> &fdList, std::string &taskId, const sptr<IRemoteObject> &token) override
+    {
+            return E_PRINT_NONE;
+    }
     int32_t StopPrint(const std::string &taskId) override
     {
         return E_PRINT_NONE;

@@ -100,7 +100,14 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
         }
     }
 
-    int32_t ret = StartPrint(fileList, fdList, result);
+    sptr<IRemoteObject> token = data.ReadRemoteObject();
+    PRINT_HILOGI("OnStartPrint read token %{public}s", token != nullptr ? "success" : "failed");
+    int32_t ret = E_PRINT_NONE;
+    if (token == nullptr) {
+        ret = StartPrint(fileList, fdList, result);
+    } else {
+        ret = StartPrint(fileList, fdList, result, token);
+    }
     reply.WriteInt32(ret);
     reply.WriteString(result);
     PRINT_HILOGD("PrintServiceStub::OnStartPrint out");

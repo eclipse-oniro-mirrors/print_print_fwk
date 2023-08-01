@@ -28,6 +28,7 @@ public:
     virtual ~PrintServiceHelper();
     virtual bool CheckPermission(const std::string &name);
     virtual bool StartAbility(const AAFwk::Want &want);
+    virtual bool StartPrintServiceExtension(const AAFwk::Want &want, int32_t requestCode_);
     virtual sptr<IRemoteObject> GetBundleMgr();
     virtual bool QueryAccounts(std::vector<int> &accountList);
     virtual bool QueryExtension(sptr<AppExecFwk::IBundleMgr> mgr, int userId,

@@ -14,6 +14,7 @@
  */
 
 #include <mutex>
+#include "napi_base_context.h"
 #include "napi_print_utils.h"
 #include "print_async_call.h"
 #include "print_log.h"
@@ -28,39 +29,18 @@ namespace OHOS::Print {
 __thread napi_ref NapiPrintTask::globalCtor = nullptr;
 std::mutex g_printTaskMutex;
 
-struct PrintTaskContext : public PrintAsyncCall::Context {
-    napi_ref ref = nullptr;
-    PrintTaskContext() : Context(nullptr, nullptr) {}
-    PrintTaskContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
-    virtual ~PrintTaskContext() {}
-};
-
 napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter print JsMain.");
     auto context = std::make_shared<PrintTaskContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_HILOGD("print parser to native params %{public}d!", static_cast<int>(argc));
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, "need 1 parameter!", napi_invalid_arg);
-        bool isFileArray = false;
-
-        napi_is_array(env, argv[0], &isFileArray);
-        PRINT_ASSERT_BASE(env, isFileArray == true, "parameter type isn't list", napi_invalid_arg);
-
-        uint32_t len = 0;
-        PRINT_CALL_BASE(env, napi_get_array_length(env, argv[0], &len), napi_invalid_arg);
-
-        if (!isFileArray || len == 0) {
-            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-            return napi_invalid_arg;
-        }
-
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
+            "need 1 or 2 parameter!", napi_invalid_arg);
         napi_value proxy = nullptr;
-        napi_status status = napi_new_instance(env, GetCtor(env), argc, argv, &proxy);
-        if ((proxy == nullptr) || (status != napi_ok)) {
-            PRINT_HILOGE("Failed to create print task");
-            context->SetErrorIndex(E_PRINT_GENERIC_FAILURE);
-            return napi_generic_failure;
+        napi_status checkStatus = VerifyParameters(env, argc, argv, context, proxy);
+        if (checkStatus != napi_ok) {
+            return checkStatus;
         }
 
         PrintTask *task;
@@ -89,6 +69,36 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
     context->SetAction(std::move(input), std::move(output));
     PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
     return asyncCall.Call(env);
+}
+
+napi_value NapiPrintTask::GetAbilityContext(
+    napi_env env, napi_value value, std::shard_ptr<OHOS::AbilityRuntime::AbilityContext> &abilityContext)
+{
+    bool stageMode = false;
+    napi_status status = OHOS::AbilityRuntime::IsStageContext(env, value, stageMode);
+    if (status != napi_ok || !stageMode) {
+        PRINT_HILOGE("GetAbilityContext it is not a stage mode");
+        return nullptr;
+    } else {
+        auto context = OHOS::AbilityRuntime::GetStageModeContext(env, value);
+        if (context == nullptr) {
+            PRINT_HILOGE("GetAbilityContext get context failed");
+            return nullptr;
+        }
+        abilityContext = OHOS::AbilityRuntime::Context::ConvertTo<OHOS::AbilityRuntime::AbilityContext>(context);
+        if (abilityContext == nullptr) {
+            PRINT_HILOGE("GetAbilityContext get Stage model ability context failed.");
+            return nullptr; 
+        }
+        return WrapVoidToJS(env);
+    }
+}
+
+napi_value NapiPrintTask::WrapVoidToJS(napi_env env)
+{
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_get_null(env, &result));
+    return result;
 }
 
 napi_value NapiPrintTask::GetCtor(napi_env env)
@@ -131,7 +141,14 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
         }
     }
 
-    auto task = new (std::nothrow) PrintTask(printfiles);
+    std::shard_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
+    sptr<IRemoteObject> callerToken;
+    if (argc == NapiPrintUtils::ARGC_TWO && GetAbilityContext(env, argv[1], abilityContext) != nullptr) {
+        callerToken = abilityContext->GetToken();
+        PRINT_HILOGI("get callerToken:%{public}s", callerToken !=nullptr ? "success" : "failed");
+    }
+
+    auto task = new (std::nothrow) PrintTask(printfiles, callerToken);
     if (task == nullptr) {
         PRINT_HILOGE("print task fail");
         return nullptr;
@@ -166,5 +183,37 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
     }
     PRINT_HILOGE("invalid file name");
     return false;
+}
+
+napi_status NapiPrintTask::VerifyParameters(napi_env env, size_t argc, napi_value *argv,
+    const std::shared_ptr<PrintTaskContext> context, napi_value proxy)
+{
+    bool isFileArray = false;
+
+    napi_is_array(env, argv[0], &isFileArray);
+    PRINT_ASSERT_BASE(env, isFileArray == true, "parameter type isn't list", napi_invalid_arg);
+
+    uint32_t len = 0;
+    PRINT_CALL_BASE(env, napi_get_array_length(env, argv[0], &len), napi_invalid_arg);
+
+    if (!isFileArray || len == 0) {
+        context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+        return napi_invalid_arg;
+    }
+
+    std::shard_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
+    if (argc == NapiPrintUtils::ARGC_TWO) {
+        if (GetAbilityContext(env, argv[1], abilityContext) == nullptr) {
+            PRINT_HILOGE("Print, Ability Context is null.");
+        }
+    }
+    napi_status status = napi_new_instance(env, GetCtor(env), argc, argv, &proxy);
+    if ((proxy == nullptr) || (status != napi_ok))
+    {
+        PRINT_HILOGE("Failed to create print task");
+        context->SetErrorIndex(E_PRINT_GENERIC_FAILURE);
+        return napi_generic_failure;
+    }
+    return napi_ok;
 }
 } // namespace OHOS::Print

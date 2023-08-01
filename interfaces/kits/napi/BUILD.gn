@@ -45,6 +45,7 @@ ohos_shared_library("print_napi") {
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
+    "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "ability_runtime:data_ability_helper",

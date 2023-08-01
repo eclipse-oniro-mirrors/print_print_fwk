@@ -68,6 +68,42 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
     return ret;
 }
 
+int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
+    std::string &taskId, const sptr<IRemoteObject> &token)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    PRINT_HILOGD("Current file is %{public}zd", fileList.size());
+    for (auto file : fileList) {
+        PRINT_HILOGD("file is %{private}s", file.c_str());
+    }
+
+    data.WriteBool(fileList.size() > 0);
+    if (!fileList.empty()) {
+        data.WriteStringVector(fileList);
+    }
+
+    data.WriteBool(fdList.size() > 0);
+    if (!fdList.empty()) {
+        data.WriteInt32(fdList.size());
+        for (auto fd : fdList) {
+            data.WriteFileDescriptor(fd);
+        }
+    }
+
+    if (token == nullptr || !data.WriteRemoteObject(token)) {
+        PRINT_HILOGE("StartPrint, Failed to write remote object.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    PRINT_HILOGD("PrintServiceProxy StartPrint started.");
+    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_START_PRINT, data, reply, option);
+    ret = GetResult(ret, reply);
+    taskId = reply.ReadString();
+    PRINT_HILOGD("PrintServiceProxy StartPrint ret = [%{public}d] TaskId = %{public}s", ret, taskId.c_str());
+    return ret;
+}
+
 int32_t PrintServiceProxy::StopPrint(const std::string &taskId)
 {
     MessageParcel data, reply;
