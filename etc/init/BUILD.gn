@@ -35,3 +35,10 @@ ohos_prebuilt_etc("cupsd.conf") {
   part_name = "print_fwk"
   subsystem_name = "print"
 }
+
+ohos_prebuilt_etc("cups_service.cfg") {
+  source = "cups_service.cfg"
+  relative_install_dir = "init"
+  part_name = "print_fwk"
+  subsystem_name = "print"
+}
