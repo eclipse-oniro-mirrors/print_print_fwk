@@ -35,7 +35,6 @@ ohos_shared_library("print_service") {
     "src/print_service_ability.cpp",
     "src/print_service_helper.cpp",
     "src/print_service_stub.cpp",
-    "src/print_cups_client.cpp"
   ]
 
   public_configs = [
@@ -45,13 +44,18 @@ ohos_shared_library("print_service") {
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/include",
     "${print_utils_path}/include",
-    "//third_party/cups/cups-2.4.0"
   ]
-  deps = [
-    "${print_path}/frameworks/innerkitsimpl:print_client",
-    "//third_party/cups:third_party_cups",
-    "//third_party/cups-filters:third_party_cupsfilters"
-  ]
+  deps = [ "${print_path}/frameworks/innerkitsimpl:print_client" ]
+
+  if (cups_enable) {
+    include_dirs += [ "//third_party/cups/cups-2.4.0" ]
+    sources += [ "src/print_cups_client.cpp" ]
+    cflags_cc += [ "-DCUPS_ENABLE" ]
+    deps += [
+      "//third_party/cups:third_party_cups",
+      "//third_party/cups-filters:third_party_cupsfilters"
+    ]
+  }
 
   external_deps = [
     "ability_base:base",

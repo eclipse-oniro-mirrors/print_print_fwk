@@ -19,6 +19,8 @@
 #include <cups/cups-private.h>
 #include <thread>
 #include <semaphore.h>
+#include <signal.h>
+#include <stdlib.h>
 
 #include "nlohmann/json.hpp"
 #include "print_service_ability.h"
@@ -89,7 +91,7 @@ int32_t PrintCupsClient::StartCupsdService()
         ret = -1;
     } else {
         if (fgets(pid, sizeof(pid), pid_fp) != nullptr) {
-            PRINT_HILOGI("The Process of CUPSD has existed.");
+            PRINT_HILOGD("The Process of CUPSD has existed, pid: %{public}s.", pid);
             ret = 0;
         } else {
             FILE *start_fp = nullptr;
@@ -98,7 +100,7 @@ int32_t PrintCupsClient::StartCupsdService()
                 PRINT_HILOGE("Failed to call popen function");
                 ret = -1;
             } else {
-                PRINT_HILOGI("Start cupsd process.");
+                PRINT_HILOGI("Start cupsd process success.");
                 ret = 0;               
             }
             pclose(start_fp);
@@ -106,6 +108,30 @@ int32_t PrintCupsClient::StartCupsdService()
     }
     pclose(pid_fp);
     return ret;
+}
+
+void PrintCupsClient::StopCupsdService()
+{
+    PRINT_HILOGD("StopCupsdService enter");
+    char pid[256];
+    FILE *pid_fp = nullptr;
+    pid_fp = popen("pidof cupsd", "r");
+    if (pid_fp == nullptr) {
+        PRINT_HILOGE("Failed to call popen function");
+        return;
+    }
+    if (fgets(pid, sizeof(pid), pid_fp) != nullptr) {
+        PRINT_HILOGI("Stop CUPSD Process");
+        if (kill(atoi(pid), SIGTERM) == -1) {
+            PRINT_HILOGE("Failed to kill cupsd process");
+            return;
+        }
+        PRINT_HILOGE("kill cupsd process success");
+    } else {
+        PRINT_HILOGI("The Process of CUPSD is not existed.");
+    }
+    pclose(pid_fp);
+    return;   
 }
 
 int32_t PrintCupsClient::SetCupsPrinter(const std::string &printerUri, const std::string &printerName)
@@ -314,6 +340,11 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
     char buffer[8192];
     ssize_t bytes;
 
+    if (!IsCupsServerAlive()) {
+        PRINT_HILOGE("cups server is not alive");
+        StartCupsdService();
+        sleep(1);
+    }
     int num_files = jobParams->fdList.size();
     PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
     num_options = FillJobOptions(jobParams, num_options, &options);
@@ -375,7 +406,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
             fail_connect_times = 0;
             QueryJobState(http, param, jobStatus);
         } else if (fail_connect_times < OFFLINE_RETRY_TIMES) {
-            PRINT_HILOGE("unable connect to printer, retry: %d", fail_connect_times);
+            PRINT_HILOGE("unable connect to printer, retry: %{public}d", fail_connect_times);
             fail_connect_times++;
             sleep(INTERVAL_FOR_QUERY);
             continue;
@@ -404,7 +435,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
     delete param;
     delete jobStatus;
     delete prevousJobStatus;
-    PRINT_HILOGI("FINISHED MONITORING JOB %d\n", param->cupsJobId);
+    PRINT_HILOGI("FINISHED MONITORING JOB %{public}d\n", param->cupsJobId);
     callback();
     return;
 }
@@ -515,7 +546,7 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
         if ((attr = ippFindAttribute(response, "job-printer-state-reasons", IPP_TAG_KEYWORD)) != NULL) {
             ippAttributeString(attr, jobStatus->printer_state_reasons, sizeof(jobStatus->printer_state_reasons));
         }
-        PRINT_HILOGE("JOB %d: %s (%s), PRINTER: %s\n", param->cupsJobId, ippEnumString("job-state",
+        PRINT_HILOGE("JOB %{public}d: %{public}s (%{public}s), PRINTER: %s\n", param->cupsJobId, ippEnumString("job-state",
             (int)jobStatus->job_state), jobStatus->job_state_reasons, jobStatus->printer_state_reasons);
         ippDelete(response);
     }
@@ -582,6 +613,10 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
         return params;
     }
     std::string option = jobInfo.GetOption();
+    if (!json::accept(option)) {
+        PRINT_HILOGE("option can not parse to json object");
+        return params;
+    }   
     json optionJson = json::parse(option);
     PRINT_HILOGD("test optionJson: %{private}s", optionJson.dump().c_str());
     if (!optionJson.contains("printerUri") || !optionJson.contains("printerName")

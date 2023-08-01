@@ -118,6 +118,7 @@ class PrintCupsClient final {
     static PrintCupsClient *GetInstance();
 
     int32_t StartCupsdService();
+    void StopCupsdService();
     int32_t SetCupsPrinter(const std::string &printerUri, const std::string &printerName);
     int32_t GetPrinterCapabilities(const std::string &printerUri, PrinterCapability &printerCaps);
     void AddCupsPrintJob(const PrintJob &jobInf);
