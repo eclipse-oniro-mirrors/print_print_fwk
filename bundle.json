@@ -33,7 +33,6 @@
           "core_service",
           "distributed_notification_service",
           "drivers_interface_ril",
-          "enterprise_device_management",
           "eventhandler",
           "hisysevent",
           "hitrace",
