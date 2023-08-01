@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 import type { AsyncCallback } from './@ohos.base';
-import type Context from '/application/Context';
+import type Context from './application/Context';
 
 /**
  * System print
@@ -66,7 +66,7 @@ declare namespace print {
    * Start new print task for App.
    * @since 10
    * @param files Indicates the filepath list to be printed. Only pdf and picture filetype are supported.
-   * @paramv { Context } context - The ability context that initiates the call print request.
+   * @param { Context } context - The ability context that initiates the call print request.
    * @param callback The callback function for print task.
    * @permission {@code ohos.permission.PRINT}
    * @return -

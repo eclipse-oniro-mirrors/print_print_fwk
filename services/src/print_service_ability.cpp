@@ -285,7 +285,7 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     printJob->SetJobId(jobId);
     printJob->SetJobState(PRINT_JOB_PREPARED);
     AAFwk::Want want;
-    want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_ABILITY_NAME);
+    want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_PREVIEW_ABILITY_NAME);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, jobId);
     want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList);
     BuildFDParam(fdList, want);

@@ -29,7 +29,7 @@ public:
         const std::vector<uint32_t> &fdList, std::string &taskId) override;
     int32_t StopPrint(const std::string &taskId) override;
     int32_t StartPrint(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
-        std::string &taskId, const sptr<IRemoteObject> &token);
+        std::string &taskId, const sptr<IRemoteObject> &token) override;
     int32_t ConnectPrinter(const std::string &printerId) override;
     int32_t DisconnectPrinter(const std::string &printerId) override;
     int32_t StartDiscoverPrinter(const std::vector<std::string> &extensionList) override;

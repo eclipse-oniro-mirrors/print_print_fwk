@@ -38,7 +38,7 @@ private:
     static napi_value Initialize(napi_env env, napi_callback_info info);
     static bool IsValidFile(const std::string &fileName);
     static napi_value GetAbilityContext(
-        napi_env env, napi_value value, std::shard_ptr<OHOS::AbilityRuntime::AbilityContext> &abilityContext);
+        napi_env env, napi_value value, std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> &abilityContext);
     static napi_value WrapVoidToJS(napi_env env);
     static napi_status VerifyParameters(napi_env env, size_t argc, napi_value *argv,
         const std::shared_ptr<PrintTaskContext> context, napi_value proxy);

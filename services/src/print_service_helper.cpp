@@ -75,17 +75,17 @@ bool PrintServiceHelper::StartPrintServiceExtension(const AAFwk::Want &want, int
     AAFwk::AbilityManagerClient::GetInstance()->Connect();
     uint32_t retry = 0;
     while (retry++ < MAX_RETRY_TIMES) {
-        PRINT_HILOGD("PrintServiceHelper::StartAbility %{public}s %{public}s",
+        PRINT_HILOGD("PrintServiceHelper::StartPrintServiceExtension %{public}s %{public}s",
             element.GetBundleName().c_str(), element.GetAbilityName().c_str());
         if (AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, requestCode_) == 0) {
             break;
         }
         break;
         std::this_thread::sleep_for(std::chrono::seconds(START_ABILITY_INTERVAL));
-        PRINT_HILOGD("PrintServiceHelper::StartAbility %{public}d", retry);
+        PRINT_HILOGD("PrintServiceHelper::StartPrintServiceExtension %{public}d", retry);
     }
     if (retry > MAX_RETRY_TIMES) {
-        PRINT_HILOGE("PrintServiceHelper::StartAbility --> failed ");
+        PRINT_HILOGE("PrintServiceHelper::StartPrintServiceExtension --> failed ");
         return false;
     }
     return true;

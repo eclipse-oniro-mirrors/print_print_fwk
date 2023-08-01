@@ -72,7 +72,7 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
 }
 
 napi_value NapiPrintTask::GetAbilityContext(
-    napi_env env, napi_value value, std::shard_ptr<OHOS::AbilityRuntime::AbilityContext> &abilityContext)
+    napi_env env, napi_value value, std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> &abilityContext)
 {
     bool stageMode = false;
     napi_status status = OHOS::AbilityRuntime::IsStageContext(env, value, stageMode);
@@ -88,7 +88,7 @@ napi_value NapiPrintTask::GetAbilityContext(
         abilityContext = OHOS::AbilityRuntime::Context::ConvertTo<OHOS::AbilityRuntime::AbilityContext>(context);
         if (abilityContext == nullptr) {
             PRINT_HILOGE("GetAbilityContext get Stage model ability context failed.");
-            return nullptr; 
+            return nullptr;
         }
         return WrapVoidToJS(env);
     }
@@ -135,13 +135,13 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
         napi_value filesValue;
         napi_get_element(env, argv[0], index, &filesValue);
         std::string files = NapiPrintUtils::GetStringFromValueUtf8(env, filesValue);
-        PRINT_HILOGD("file[%{public}d] %{private}s", index, files.c_str());
+        PRINT_HILOGD("file[%{public}d] %{private}s.", index, files.c_str());
         if (IsValidFile(files)) {
             printfiles.emplace_back(files);
         }
     }
 
-    std::shard_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
+    std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
     sptr<IRemoteObject> callerToken;
     if (argc == NapiPrintUtils::ARGC_TWO && GetAbilityContext(env, argv[1], abilityContext) != nullptr) {
         callerToken = abilityContext->GetToken();
@@ -201,15 +201,15 @@ napi_status NapiPrintTask::VerifyParameters(napi_env env, size_t argc, napi_valu
         return napi_invalid_arg;
     }
 
-    std::shard_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
+    std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
     if (argc == NapiPrintUtils::ARGC_TWO) {
         if (GetAbilityContext(env, argv[1], abilityContext) == nullptr) {
             PRINT_HILOGE("Print, Ability Context is null.");
         }
     }
+
     napi_status status = napi_new_instance(env, GetCtor(env), argc, argv, &proxy);
-    if ((proxy == nullptr) || (status != napi_ok))
-    {
+    if ((proxy == nullptr) || (status != napi_ok)) {
         PRINT_HILOGE("Failed to create print task");
         context->SetErrorIndex(E_PRINT_GENERIC_FAILURE);
         return napi_generic_failure;
