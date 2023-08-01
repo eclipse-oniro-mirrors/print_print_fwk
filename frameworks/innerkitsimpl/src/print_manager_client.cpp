@@ -297,24 +297,24 @@ int32_t PrintManagerClient::QueryPrintJobById(std::string &printJobId, PrintJob 
     return ret;
 }
 
-int32_t PrintManagerClient::SetCupsPrinter(const std::string &printerUri, const std::string &printerName)
+int32_t PrintManagerClient::AddPrinterToCups(const std::string &printerUri, const std::string &printerName)
 {
-    PRINT_HILOGD("PrintManagerClient SetCupsPrinter start.");
+    PRINT_HILOGD("PrintManagerClient AddPrinterToCups start.");
     int32_t ret = E_PRINT_RPC_FAILURE;
     if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->SetCupsPrinter(printerUri, printerName);
-        PRINT_HILOGD("PrintManagerClient SetCupsPrinter out ret = [%{public}d].", ret);
+        ret = printServiceProxy_->AddPrinterToCups(printerUri, printerName);
+        PRINT_HILOGD("PrintManagerClient AddPrinterToCups out ret = [%{public}d].", ret);
     }
     return ret;
 }
 
-int32_t PrintManagerClient::GetPrinterCapabilities(const std::string &printerUri, PrinterCapability &printerCaps)
+int32_t PrintManagerClient::QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps)
 {
-    PRINT_HILOGD("PrintManagerClient GetPrinterCapabilities start.");
+    PRINT_HILOGD("PrintManagerClient QueryPrinterCapabilityByUri start.");
     int32_t ret = E_PRINT_RPC_FAILURE;
     if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->GetPrinterCapabilities(printerUri, printerCaps);
-        PRINT_HILOGD("PrintManagerClient GetPrinterCapabilities out ret = [%{public}d].", ret);
+        ret = printServiceProxy_->QueryPrinterCapabilityByUri(printerUri, printerCaps);
+        PRINT_HILOGD("PrintManagerClient QueryPrinterCapabilityByUri out ret = [%{public}d].", ret);
     }
     return ret;
 }

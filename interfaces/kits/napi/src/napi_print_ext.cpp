@@ -311,9 +311,9 @@ napi_value NapiPrintExt::UpdateExtensionInfo(napi_env env, napi_callback_info in
     return asyncCall.Call(env, exec);
 }
 
-napi_value NapiPrintExt::SetCupsPrinter(napi_env env, napi_callback_info info)
+napi_value NapiPrintExt::AddPrinterToCups(napi_env env, napi_callback_info info)
 {
-    PRINT_HILOGD("Enter SetCupsPrinter---->");
+    PRINT_HILOGD("Enter AddPrinterToCups---->");
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
@@ -341,7 +341,7 @@ napi_value NapiPrintExt::SetCupsPrinter(napi_env env, napi_callback_info info)
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->SetCupsPrinter(context->printerUri, context->printerName);
+        int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToCups(context->printerUri, context->printerName);
         PRINT_HILOGD("ret: %d", ret);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -354,9 +354,9 @@ napi_value NapiPrintExt::SetCupsPrinter(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
-napi_value NapiPrintExt::GetPrinterCapabilities(napi_env env, napi_callback_info info)
+napi_value NapiPrintExt::QueryPrinterCapabilityByUri(napi_env env, napi_callback_info info)
 {
-    PRINT_HILOGD("Enter GetPrinterCapabilities---->");
+    PRINT_HILOGD("Enter QueryPrinterCapabilityByUri---->");
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
@@ -378,7 +378,7 @@ napi_value NapiPrintExt::GetPrinterCapabilities(napi_env env, napi_callback_info
     };
 
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->GetPrinterCapabilities(context->printerUri,
+        int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(context->printerUri,
             context->printerCaps);
         context->result = ret == E_PRINT_NONE;
         PRINT_HILOGD("ret: %d", ret);

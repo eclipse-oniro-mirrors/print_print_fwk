@@ -99,6 +99,7 @@ declare namespace print {
     pageSize: Array<PrintPageSize>; // the page size list supported by the printer
     resolution?: Array<PrintResolution>; // the resolution list supported by the printer
     minMargin?: PrintMargin; // min margin of printer
+    option?: string; // json object string
   }
 
   interface PrinterInfo {
@@ -495,6 +496,32 @@ declare namespace print {
 
   function queryPrintJobById(jobId: string, callback: AsyncCallback<PrintJob>): void;
   function queryPrintJobById(jobId: string): Promise<PrintJob>;
+
+  /**
+   * query printerCapability by printerUri.
+   *
+   * @since 10
+   * @param callback The callback function for query printerCapability by printerUri..
+   * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
+   * @systemapi Hide this for inner system use.
+   * @return -
+   */
+
+  function queryPrinterCapabilityByUri(printerUri: string, callback: AsyncCallback<PrinterCapability>): void;
+  function queryPrinterCapabilityByUri(printerUri: string): Promise<PrinterCapability>;
+
+  /**
+   * add printer to cups.
+   *
+   * @since 10
+   * @param callback The callback function for add printer to cups.
+   * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
+   * @systemapi Hide this for inner system use.
+   * @return -
+   */
+
+  function addPrinterToCups(printerUri: string, printerName: string, callback: AsyncCallback<boolean>): void;
+  function addPrinterToCups(printerUri: string, printerName: string): Promise<boolean>;
 }
 
 export default print;

@@ -122,6 +122,7 @@ void PrintCupsClient::StopCupsdService()
     }
     if (fgets(pid, sizeof(pid), pid_fp) != nullptr) {
         PRINT_HILOGI("Stop CUPSD Process");
+        sleep(1);
         if (kill(atoi(pid), SIGTERM) == -1) {
             PRINT_HILOGE("Failed to kill cupsd process");
             return;
@@ -134,9 +135,9 @@ void PrintCupsClient::StopCupsdService()
     return;   
 }
 
-int32_t PrintCupsClient::SetCupsPrinter(const std::string &printerUri, const std::string &printerName)
+int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const std::string &printerName)
 {
-    PRINT_HILOGD("PrintCupsClient SetCupsPrinter start.");
+    PRINT_HILOGD("PrintCupsClient AddPrinterToCups start.");
     ipp_t *request;
     http_t *http = NULL;
     char uri[HTTP_MAX_URI];
@@ -168,9 +169,9 @@ int32_t PrintCupsClient::SetCupsPrinter(const std::string &printerUri, const std
     PRINT_HILOGI("add success");
     return E_PRINT_NONE;
 }
-int32_t PrintCupsClient::GetPrinterCapabilities(const std::string &printerUri, PrinterCapability &printerCaps)
+int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps)
 {
-    PRINT_HILOGD("PrintCupsClient GetPrinterCapabilities start.");
+    PRINT_HILOGD("PrintCupsClient QueryPrinterCapabilityByUri start.");
     ipp_t *request; /* IPP Request */
     ipp_t *response; /* IPP Request */
     http_t *http = NULL;
@@ -183,7 +184,7 @@ int32_t PrintCupsClient::GetPrinterCapabilities(const std::string &printerUri, P
     static const char * const pattrs[] = {
         "all"
     };
-    PRINT_HILOGD("getPrinterCapabilities enter");
+    PRINT_HILOGD("QueryPrinterCapabilityByUri enter");
     httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username), host,
                     sizeof(host), &port, resource, sizeof(resource));
 
@@ -749,7 +750,8 @@ bool PrintCupsClient::IsPrinterExist(const char* printerName)
 
 void PrintCupsClient::ParsePrinterAttributes(ipp_t *response, PrinterCapability &printerCaps)
 {
-    ipp_attribute_t *attrptr;
+	int i;
+	ipp_attribute_t *attrptr;
     SetOptionAttribute(response, printerCaps);
     GetSupportedDuplexType(response, printerCaps);
 
@@ -758,11 +760,22 @@ void PrintCupsClient::ParsePrinterAttributes(ipp_t *response, PrinterCapability 
             printerCaps.SetColorMode(1);
         }
     }
+    if ((attrptr = ippFindAttribute(response, "media-supported", IPP_TAG_KEYWORD)) != NULL) {
+        PRINT_HILOGD("media-supported found; number of values %{public}d", ippGetCount(attrptr));
+        std::vector<PrintPageSize> supportedMediaSizes;
+        for (i = 0; i < ippGetCount(attrptr); i++) {
+            const char* meidaSize = ippGetString(attrptr, i, NULL);
+            PRINT_HILOGD("media-supported found; mediaSizes: %s", meidaSize);
+            auto nativeObj = std::make_shared<PrintPageSize>();
+            nativeObj->SetName(meidaSize);
+            supportedMediaSizes.emplace_back(*nativeObj);
+        }
+        printerCaps.SetPageSize(supportedMediaSizes);
+    }
 }
 
 void PrintCupsClient::SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
 {
-    int i;
     ipp_attribute_t *attrptr;
     nlohmann::json options;
     if ((attrptr = ippFindAttribute(response, "printer-make-and-model", IPP_TAG_TEXT)) != NULL) {
@@ -773,16 +786,6 @@ void PrintCupsClient::SetOptionAttribute(ipp_t *response, PrinterCapability &pri
     }
     if ((attrptr = ippFindAttribute(response, "printer-name", IPP_TAG_TEXT)) != NULL) {
         options["printerName"] = ippGetString(attrptr, 0, NULL);
-    }
-    if ((attrptr = ippFindAttribute(response, "media-supported", IPP_TAG_KEYWORD)) != NULL) {
-        PRINT_HILOGD("media-supported found; number of values %d", ippGetCount(attrptr));
-        nlohmann::json supportedMediaSizes = nlohmann::json::array();
-        for (i = 0; i < ippGetCount(attrptr); i++) {
-            const char* meidaSize = ippGetString(attrptr, i, NULL);
-            PRINT_HILOGD("media-supported found; mediaSizes: %s", meidaSize);
-            supportedMediaSizes.push_back(meidaSize);
-        }
-        options["supportedMediaSizes"] = supportedMediaSizes;
     }
     nlohmann::json supportTypes = ParseSupportMediaTypes(response);
     options["supportedMediaTypes"] = supportTypes;

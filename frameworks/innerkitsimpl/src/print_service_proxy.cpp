@@ -348,32 +348,32 @@ int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &
     return ret;
 }
 
-int32_t PrintServiceProxy::SetCupsPrinter(const std::string &printerUri, const std::string &printerName)
+int32_t PrintServiceProxy::AddPrinterToCups(const std::string &printerUri, const std::string &printerName)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerUri);
     data.WriteString(printerName);
-    PRINT_HILOGD("PrintServiceProxy SetCupsPrinter started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_SETCUPSPRINTER, data, reply, option);
+    PRINT_HILOGD("PrintServiceProxy AddPrinterToCups started.");
+    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERTOCUPS, data, reply, option);
     ret = GetResult(ret, reply);
-    PRINT_HILOGD("PrintServiceProxy SetCupsPrinter succeeded.");
+    PRINT_HILOGD("PrintServiceProxy AddPrinterToCups succeeded.");
     return ret;
 }
 
-int32_t PrintServiceProxy::GetPrinterCapabilities(const std::string &printerUri, PrinterCapability &printerCaps)
+int32_t PrintServiceProxy::QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerUri);
-    PRINT_HILOGD("PrintServiceProxy GetPrinterCapabilities started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_GETPRINTERCAPABILITIES, data, reply, option);
+    PRINT_HILOGD("PrintServiceProxy QueryPrinterCapabilityByUri started.");
+    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITYBYURI, data, reply, option);
     ret = GetResult(ret, reply);
     auto printerCapsPtr = PrinterCapability::Unmarshalling(reply);
     printerCaps = *printerCapsPtr;
-    PRINT_HILOGD("PrintServiceProxy GetPrinterCapabilities succeeded.");
+    PRINT_HILOGD("PrintServiceProxy QueryPrinterCapabilityByUri succeeded.");
     return ret;
 }
 

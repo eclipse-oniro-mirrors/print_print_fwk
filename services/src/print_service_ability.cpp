@@ -537,33 +537,33 @@ int32_t PrintServiceAbility::QueryPrintJobById(std::string &printJobId, PrintJob
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceAbility::SetCupsPrinter(const std::string &printerUri, const std::string &printerName)
+int32_t PrintServiceAbility::AddPrinterToCups(const std::string &printerUri, const std::string &printerName)
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    PRINT_HILOGD("SetCupsPrinter started.");
+    PRINT_HILOGD("AddPrinterToCups started.");
 #ifdef CUPS_ENABLE
-    PrintCupsClient::GetInstance()->SetCupsPrinter(printerUri, printerName);
+    PrintCupsClient::GetInstance()->AddPrinterToCups(printerUri, printerName);
 #endif // CUPS_ENABLE
-    PRINT_HILOGD("SetCupsPrinter End.");
+    PRINT_HILOGD("AddPrinterToCups End.");
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceAbility::GetPrinterCapabilities(const std::string &printerUri, PrinterCapability &printerCaps)
+int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps)
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    PRINT_HILOGD("GetPrinterCapabilities started.");
+    PRINT_HILOGD("QueryPrinterCapabilityByUri started.");
 #ifdef CUPS_ENABLE
-    PrintCupsClient::GetInstance()->GetPrinterCapabilities(printerUri, printerCaps);
+    PrintCupsClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
 #endif // CUPS_ENABLE
-    PRINT_HILOGD("GetPrinterCapabilities End.");
+    PRINT_HILOGD("QueryPrinterCapabilityByUri End.");
     return E_PRINT_NONE;
 }
 
@@ -924,6 +924,9 @@ void PrintServiceAbility::ReportCompletedPrint(const std::string &printerId)
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_COMPLETED);
     PRINT_HILOGD("no print job exists, destroy extension");
     DestroyExtension(printerId);
+#ifdef CUPS_ENABLE
+    PrintCupsClient::GetInstance()->StopCupsdService();
+#endif // CUPS_ENABLE
     json msg;
     auto endPrintTime = std::chrono::high_resolution_clock::now();
     auto printTime = std::chrono::duration_cast<std::chrono::milliseconds>(endPrintTime - startPrintTime_);

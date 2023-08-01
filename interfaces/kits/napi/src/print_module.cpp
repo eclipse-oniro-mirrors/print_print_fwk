@@ -41,9 +41,8 @@ static constexpr const char *FUNCTION_UPDATE_PRINTER = "updatePrinters";
 static constexpr const char *FUNCTION_UPDATE_PRINTER_STATE = "updatePrinterState";
 static constexpr const char *FUNCTION_UPDATE_JOB_STATE = "updatePrintJobState";
 static constexpr const char *FUNCTION_UPDATE_EXTENSION_INFO = "updateExtensionInfo";
-
-static constexpr const char *FUNCTION_NATIVE_SET_CUPS_PRINTER = "nativeSetCupsPrinter";
-static constexpr const char *FUNCTION_NATIVE_GET_PRINTER_CAPABILITIES = "nativeGetPrinterCapabilities";
+static constexpr const char *FUNCTION_NATIVE_ADD_PRINTER_TO_CUPS = "addPrinterToCups";
+static constexpr const char *FUNCTION_QUERY_CAPABILITY_BY_URI = "queryPrinterCapabilityByUri";
 
 static constexpr const char *PROPERTY_PRINTER_ADD = "PRINTER_ADDED";
 static constexpr const char *PROPERTY_PRINTER_REMOVE = "PRINTER_REMOVED";
@@ -296,8 +295,8 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_STATE, NapiPrintExt::UpdatePrinterState),
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_JOB_STATE, NapiPrintExt::UpdatePrintJobState),
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_EXTENSION_INFO, NapiPrintExt::UpdateExtensionInfo),
-        PRINT_NAPI_METHOD(FUNCTION_NATIVE_SET_CUPS_PRINTER, NapiPrintExt::SetCupsPrinter),
-        PRINT_NAPI_METHOD(FUNCTION_NATIVE_GET_PRINTER_CAPABILITIES, NapiPrintExt::GetPrinterCapabilities),
+        PRINT_NAPI_METHOD(FUNCTION_NATIVE_ADD_PRINTER_TO_CUPS, NapiPrintExt::AddPrinterToCups),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_CAPABILITY_BY_URI, NapiPrintExt::QueryPrinterCapabilityByUri),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
