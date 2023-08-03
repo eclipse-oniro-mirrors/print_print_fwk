@@ -193,7 +193,7 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
 }
 
 napi_status NapiPrintTask::VerifyParameters(napi_env env, size_t argc, napi_value *argv,
-    const std::shared_ptr<PrintTaskContext> context, napi_value proxy)
+    const std::shared_ptr<PrintTaskContext> context)
 {
     bool isFileArray = false;
 
