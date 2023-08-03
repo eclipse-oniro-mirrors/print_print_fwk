@@ -41,7 +41,7 @@ private:
         napi_env env, napi_value value, std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> &abilityContext);
     static napi_value WrapVoidToJS(napi_env env);
     static napi_status VerifyParameters(napi_env env, size_t argc, napi_value *argv,
-        const std::shared_ptr<PrintTaskContext> context, napi_value proxy);
+        const std::shared_ptr<PrintTaskContext> context);
 
 private:
     static __thread napi_ref globalCtor;

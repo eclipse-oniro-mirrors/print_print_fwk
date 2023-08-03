@@ -272,7 +272,7 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     }
     PRINT_HILOGD("PrintServiceAbility StartPrint started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (fileList.empty() && fdList.empty() && token == nullptr) {
+    if ((fileList.empty() && fdList.empty()) || token == nullptr) {
         PRINT_HILOGE("to be printed filelist and fdlist are empty, or token is null.");
         return E_PRINT_INVALID_PARAMETER;
     }
