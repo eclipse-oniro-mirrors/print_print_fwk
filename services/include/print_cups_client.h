@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Huawei Technologies Co., Ltd. 2023. All rights reserved.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,15 +28,6 @@
 namespace OHOS::Print {
 using json = nlohmann::json;
 typedef std::function<void()> CallbackFunc;
-
-typedef struct {
-    const char *uri;
-    int valid;
-} parsed_uri;
-
-#ifndef MIN
-#define MIN(x, y) (((x) < (y)) ? (x) : (y))
-#endif
 
 enum MediaTypeCode {
     MEDIA_PLAIN,
@@ -112,7 +103,7 @@ struct MediaSize {
 };
 
 class PrintCupsClient final {
-  public:
+public:
     PrintCupsClient();
     ~PrintCupsClient();
     static PrintCupsClient *GetInstance();
@@ -124,7 +115,7 @@ class PrintCupsClient final {
     void AddCupsPrintJob(const PrintJob &jobInf);
     void CancelCupsJob(std::string serviceJobId);
 
-  private:
+private:
     static void MonitorJobState(JobMonitorParam *param, CallbackFunc callback);
     static void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
     static bool CheckPrinterOnline(const char* printerUri);
@@ -149,9 +140,9 @@ class PrintCupsClient final {
     void GetSupportedDuplexType(ipp_t *response, PrinterCapability &printerCaps);
     nlohmann::json ParseSupportQualities(ipp_t *response);
     nlohmann::json ParseSupportMediaTypes(ipp_t *response);
-    std::string ParsePrinterUris(ipp_t *response);
+    float ConvertInchTo100MM(float num);
 
-  private:
+private:
     static std::mutex instanceLock_;
     static PrintCupsClient* instance_;
     std::vector<JobParameters*> jobQueue;

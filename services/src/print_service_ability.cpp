@@ -652,12 +652,12 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
             UpdatePrintJobState(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
             return E_PRINT_SERVER_FAILURE;
         }
-    #ifdef CUPS_ENABLE
+#ifdef CUPS_ENABLE
         if (cid.find(SPOOLER_BUNDLE_NAME) != string::npos) {
             PrintCupsClient::GetInstance()->CancelCupsJob(jobIt->second->GetJobId());
             return E_PRINT_NONE;
         }
-    #endif // CUPS_ENABLE
+#endif // CUPS_ENABLE
 
         auto cbFunc = extCallbackMap_[cid];
         auto tmpPrintJob = queuedJobList_[jobId];

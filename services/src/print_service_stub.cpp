@@ -52,7 +52,8 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLPRINTJOB] = &PrintServiceStub::OnQueryAllPrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTJOBBYID] = &PrintServiceStub::OnQueryPrintJobById;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERTOCUPS] = &PrintServiceStub::OnAddPrinterToCups;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITYBYURI] = &PrintServiceStub::OnQueryPrinterCapabilityByUri;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITYBYURI] =
+        &PrintServiceStub::OnQueryPrinterCapabilityByUri;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(

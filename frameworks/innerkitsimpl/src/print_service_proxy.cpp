@@ -369,7 +369,8 @@ int32_t PrintServiceProxy::QueryPrinterCapabilityByUri(const std::string &printe
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerUri);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterCapabilityByUri started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITYBYURI, data, reply, option);
+    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITYBYURI,
+        data, reply, option);
     ret = GetResult(ret, reply);
     auto printerCapsPtr = PrinterCapability::Unmarshalling(reply);
     printerCaps = *printerCapsPtr;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Huawei Technologies Co., Ltd. 2023. All rights reserved.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,13 +33,14 @@ namespace OHOS::Print {
 using namespace std;
 using json = nlohmann::json;
 
+const uint32_t THOUSAND_INCH = 1000;
 const uint32_t CUPS_SEVER_PORT = 1631;
 const uint32_t TIME_OUT = 2000;
+const uint32_t CONVERSION_UNIT = 2540;
 const uint32_t LONG_TIME_OUT = 3000;
 const uint32_t LONG_LONG_TIME_OUT = 30000;
-const uint32_t INTERVAL_FOR_QUERY = 3;
+const uint32_t INTERVAL_FOR_QUERY = 2;
 const uint32_t OFFLINE_RETRY_TIMES = 5;
-const uint32_t MAX_URIS = 10;
 
 static const std::string DEFAULT_USER = "default";
 static const std::string PRINTER_STATE_WAITING_COMPLETE = "cups-waiting-for-job-completed";
@@ -95,13 +96,14 @@ int32_t PrintCupsClient::StartCupsdService()
             ret = 0;
         } else {
             FILE *start_fp = nullptr;
-            start_fp = popen("/system/bin/cupsd -f -c /etc/cups/cupsd.conf -s /etc/cups/cups-files.conf -l &", "r");
+            start_fp = popen("/system/bin/cupsd -f -c /etc/cups/cupsd.conf -s /etc/cups/cups-files.conf &", "r");
             if (start_fp == nullptr) {
                 PRINT_HILOGE("Failed to call popen function");
                 ret = -1;
             } else {
                 PRINT_HILOGI("Start cupsd process success.");
-                ret = 0;               
+                sleep(1);
+                ret = 0;
             }
             pclose(start_fp);
         }
@@ -132,7 +134,6 @@ void PrintCupsClient::StopCupsdService()
         PRINT_HILOGI("The Process of CUPSD is not existed.");
     }
     pclose(pid_fp);
-    return;   
 }
 
 int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const std::string &printerName)
@@ -142,11 +143,8 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     http_t *http = NULL;
     char uri[HTTP_MAX_URI];
 
-    if (!IsCupsServerAlive()) {
-        PRINT_HILOGE("cups server is not alive");
+    if (!IsCupsServerAlive())
         StartCupsdService();
-        sleep(1);
-    }
     ippSetPort(CUPS_SEVER_PORT);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s",
@@ -260,9 +258,9 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
     if (jobParams->borderless == 1 && jobParams->mediaType == CUPS_MEDIA_TYPE_PHOTO_GLOSSY) {
         PRINT_HILOGD("borderless job options");
         std::vector<MediaSize> mediaSizes;
-        mediaSizes.push_back({CUPS_MEDIA_4X6, 4000, 6000});
-        mediaSizes.push_back({CUPS_MEDIA_5X7, 5000, 7000});
-        mediaSizes.push_back({CUPS_MEDIA_A4, 8268, 11692});
+        mediaSizes.push_back({ CUPS_MEDIA_4X6, 4000, 6000 });
+        mediaSizes.push_back({ CUPS_MEDIA_5X7, 5000, 7000 });
+        mediaSizes.push_back({ CUPS_MEDIA_A4, 8268, 11692 });
         int sizeIndex = -1;
         float meidaWidth = 0;
         float mediaHeight = 0;
@@ -273,11 +271,11 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
             }
         }
         if (sizeIndex >= 0) {
-            meidaWidth = floorf(MI_TO_100_MM(mediaSizes[sizeIndex].WidthInInches));
-            mediaHeight = floorf(MI_TO_100_MM(mediaSizes[sizeIndex].HeightInInches));
+            meidaWidth = floorf(ConvertInchTo100MM(mediaSizes[sizeIndex].WidthInInches));
+            mediaHeight = floorf(ConvertInchTo100MM(mediaSizes[sizeIndex].HeightInInches));
         } else {
-            meidaWidth = floorf(MI_TO_100_MM(mediaSizes[0].WidthInInches));
-            mediaHeight = floorf(MI_TO_100_MM(mediaSizes[0].HeightInInches));
+            meidaWidth = floorf(ConvertInchTo100MM(mediaSizes[0].WidthInInches));
+            mediaHeight = floorf(ConvertInchTo100MM(mediaSizes[0].HeightInInches));
         }
         PRINT_HILOGD("meidaWidth: %f", meidaWidth);
         PRINT_HILOGD("mediaHeight: %f", mediaHeight);
@@ -341,11 +339,8 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
     char buffer[8192];
     ssize_t bytes;
 
-    if (!IsCupsServerAlive()) {
-        PRINT_HILOGE("cups server is not alive");
+    if (!IsCupsServerAlive())
         StartCupsdService();
-        sleep(1);
-    }
     int num_files = jobParams->fdList.size();
     PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
     num_options = FillJobOptions(jobParams, num_options, &options);
@@ -547,8 +542,9 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
         if ((attr = ippFindAttribute(response, "job-printer-state-reasons", IPP_TAG_KEYWORD)) != NULL) {
             ippAttributeString(attr, jobStatus->printer_state_reasons, sizeof(jobStatus->printer_state_reasons));
         }
-        PRINT_HILOGE("JOB %{public}d: %{public}s (%{public}s), PRINTER: %s\n", param->cupsJobId, ippEnumString("job-state",
-            (int)jobStatus->job_state), jobStatus->job_state_reasons, jobStatus->printer_state_reasons);
+        PRINT_HILOGE("JOB %{public}d: %{public}s (%{public}s), PRINTER: %s\n", param->cupsJobId,
+            ippEnumString("job-state", (int)jobStatus->job_state), jobStatus->job_state_reasons,
+            jobStatus->printer_state_reasons);
         ippDelete(response);
     }
 }
@@ -617,7 +613,7 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     if (!json::accept(option)) {
         PRINT_HILOGE("option can not parse to json object");
         return params;
-    }   
+    }
     json optionJson = json::parse(option);
     PRINT_HILOGD("test optionJson: %{private}s", optionJson.dump().c_str());
     if (!optionJson.contains("printerUri") || !optionJson.contains("printerName")
@@ -625,7 +621,7 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
         PRINT_HILOGE("The option does not have a necessary attribute.");
         return params;
     }
-    params = new (std::nothrow) JobParameters{};
+    params = new (std::nothrow) JobParameters {};
     jobInfo.GetFdList(params->fdList);
     params->serviceJobId = jobInfo.GetJobId();
     params->numCopies = jobInfo.GetCopyNumber();
@@ -718,6 +714,7 @@ bool PrintCupsClient::IsCupsServerAlive()
     ippSetPort(CUPS_SEVER_PORT);
     http = httpConnect2(cupsServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
     if (http == nullptr) {
+        PRINT_HILOGE("cups server is not alive");
         return false;
     }
     httpClose(http);
@@ -750,8 +747,8 @@ bool PrintCupsClient::IsPrinterExist(const char* printerName)
 
 void PrintCupsClient::ParsePrinterAttributes(ipp_t *response, PrinterCapability &printerCaps)
 {
-	int i;
-	ipp_attribute_t *attrptr;
+    int i;
+    ipp_attribute_t *attrptr;
     SetOptionAttribute(response, printerCaps);
     GetSupportedDuplexType(response, printerCaps);
 
@@ -789,8 +786,6 @@ void PrintCupsClient::SetOptionAttribute(ipp_t *response, PrinterCapability &pri
     }
     nlohmann::json supportTypes = ParseSupportMediaTypes(response);
     options["supportedMediaTypes"] = supportTypes;
-    std::string printerUri = ParsePrinterUris(response);
-    options["printerUri"] = printerUri;
     nlohmann::json supportQualities = ParseSupportQualities(response);
     options["supportQualities"] = supportQualities;
     std::string optionStr = options.dump();
@@ -856,47 +851,8 @@ nlohmann::json PrintCupsClient::ParseSupportMediaTypes(ipp_t *response)
     return _supportedMediaTypes;
 }
 
-/**
- * @brief set printer uris
- * @param response
- * @param printerCaps
- */
-std::string PrintCupsClient::ParsePrinterUris(ipp_t *response)
+float PrintCupsClient::ConvertInchTo100MM(float num)
 {
-    int i;
-    int index;
-    ipp_attribute_t *attrptr;
-    parsed_uri uris[MAX_URIS] = {};
-
-    if ((attrptr = ippFindAttribute(response, "printer-uri-supported", IPP_TAG_URI)) != NULL) {
-        for (i = 0; i < MIN(ippGetCount(attrptr), MAX_URIS); i++) {
-            uris[i].uri = ippGetString(attrptr, i, NULL);
-            uris[i].valid = true;
-        }
-    }
-
-    // If authentication is required by any URI, mark it invalid
-    if ((attrptr = ippFindAttribute(response, "uri-authentication-supported", IPP_TAG_KEYWORD))
-            != NULL) {
-        for (i = 0; i < MIN(ippGetCount(attrptr), MAX_URIS); i++) {
-            // Allow "none" and "requesting-user-name" only
-            if (strcmp("none", ippGetString(attrptr, i, NULL)) != 0 &&
-                strcmp("requesting-user-name", ippGetString(attrptr, i, NULL)) != 0) {
-                PRINT_HILOGD("parse_printerUris %s invalid because auth=%s", uris[i].uri,
-                             ippGetString(attrptr, i, NULL));
-                uris[i].valid = false;
-            }
-        }
-    }
-
-    // Find a valid URI and copy it into place.
-    for (i = 0; i < MAX_URIS; i++) {
-        // Copy if the URI is valid and we haven't yet discovered ipps
-        if (uris[i].valid) {
-            PRINT_HILOGD("parse_printerUris found %{private}s", uris[i].uri);
-            index = i;
-        }
-    }
-    return uris[index].uri;
+    return ((num / THOUSAND_INCH) * CONVERSION_UNIT);
 }
 }
