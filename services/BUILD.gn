@@ -53,7 +53,7 @@ ohos_shared_library("print_service") {
     cflags_cc += [ "-DCUPS_ENABLE" ]
     deps += [
       "//third_party/cups:third_party_cups",
-      "//third_party/cups-filters:third_party_cupsfilters"
+      "//third_party/cups-filters:third_party_cupsfilters",
     ]
   }
 

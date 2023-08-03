@@ -19,15 +19,13 @@
 #include <cups/cups-private.h>
 #include <thread>
 #include <semaphore.h>
-#include <signal.h>
-#include <stdlib.h>
+#include <csignal>
+#include <cstdlib>
 
 #include "nlohmann/json.hpp"
 #include "print_service_ability.h"
 #include "print_log.h"
 #include "print_constant.h"
-
-#define MI_TO_100_MM(n) (((n) / 1000) * 2540) // Convert 1k inch to 100 mm
 
 namespace OHOS::Print {
 using namespace std;
@@ -194,8 +192,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerU
     request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printerUri.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
-    ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes",
-    (int)(sizeof(pattrs) / sizeof(pattrs[0])), NULL, pattrs);
+    ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", 1, NULL, pattrs);
     response = cupsDoRequest(http, request, "/");
 
     if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
@@ -258,9 +255,9 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
     if (jobParams->borderless == 1 && jobParams->mediaType == CUPS_MEDIA_TYPE_PHOTO_GLOSSY) {
         PRINT_HILOGD("borderless job options");
         std::vector<MediaSize> mediaSizes;
-        mediaSizes.push_back({ CUPS_MEDIA_4X6, 4000, 6000 });
-        mediaSizes.push_back({ CUPS_MEDIA_5X7, 5000, 7000 });
-        mediaSizes.push_back({ CUPS_MEDIA_A4, 8268, 11692 });
+        mediaSizes.push_back( { CUPS_MEDIA_4X6, 4000, 6000 } );
+        mediaSizes.push_back( { CUPS_MEDIA_5X7, 5000, 7000 } );
+        mediaSizes.push_back( { CUPS_MEDIA_A4, 8268, 11692 } );
         int sizeIndex = -1;
         float meidaWidth = 0;
         float mediaHeight = 0;
@@ -519,6 +516,7 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
     ipp_t *request; /* IPP request */
     ipp_t *response; /* IPP response */
     ipp_attribute_t *attr; /* Attribute in response */
+    int jattrsLen = 3;
     static const char * const jattrs[] = {
         "job-state",
         "job-state-reasons",
@@ -529,8 +527,7 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, param->printerUri.c_str());
         ippAddInteger(request, IPP_TAG_OPERATION, IPP_TAG_INTEGER, "job-id", param->cupsJobId);
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, DEFAULT_USER.c_str());
-        ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes",
-        (int)(sizeof(jattrs) / sizeof(jattrs[0])), NULL, jattrs);
+        ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", jattrsLen, NULL, jattrs);
         PRINT_HILOGD("get job state from cups service: start");
         response = cupsDoRequest(http, request, "/");
         if ((attr = ippFindAttribute(response, "job-state", IPP_TAG_ENUM)) != NULL) {

@@ -591,7 +591,6 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
     }
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
     if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
-        PRINT_HILOGW("StartPrintJob Not Register Yet!!!");
         return E_PRINT_SERVER_FAILURE;
     }
     printJobList_.erase(jobIt);
@@ -605,7 +604,6 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
 #ifdef CUPS_ENABLE
     if (cid.find(SPOOLER_BUNDLE_NAME) != string::npos) {
-        PRINT_HILOGD("default spooler extension print job");
         PrintCupsClient::GetInstance()->AddCupsPrintJob(jobInfo);
         return E_PRINT_NONE;
     }
