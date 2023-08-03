@@ -21,6 +21,9 @@
 #include <thread>
 #include <unistd.h>
 
+#ifdef CUPS_ENABLE
+#include "print_cups_client.h"
+#endif // CUPS_ENABLE
 #include "accesstoken_kit.h"
 #include "array_wrapper.h"
 #include "core_service_client.h"
@@ -41,9 +44,6 @@
 #include "print_security_guard_manager.h"
 #include "hisys_event_util.h"
 #include "nlohmann/json.hpp"
-#ifdef CUPS_ENABLE
-#include "print_cups_client.h"
-#endif // CUPS_ENABLE
 
 namespace OHOS::Print {
 using namespace std;
