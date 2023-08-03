@@ -37,10 +37,17 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
         PRINT_HILOGD("print parser to native params %{public}d!", static_cast<int>(argc));
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
             "need 1 or 2 parameter!", napi_invalid_arg);
-        napi_value proxy = nullptr;
-        napi_status checkStatus = VerifyParameters(env, argc, argv, context, proxy);
+        napi_status checkStatus = VerifyParameters(env, argc, argv, context);
         if (checkStatus != napi_ok) {
             return checkStatus;
+        }
+
+        napi_value proxy = nullptr;
+        napi_status status = napi_new_instance(env, GetCtor(env), argc, argv, &proxy);
+        if ((proxy == nullptr) || (status != napi_ok)) {
+            PRINT_HILOGE("Failed to create print task");
+            context->SetErrorIndex(E_PRINT_GENERIC_FAILURE);
+            return napi_generic_failure;
         }
 
         PrintTask *task;
@@ -186,7 +193,7 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
 }
 
 napi_status NapiPrintTask::VerifyParameters(napi_env env, size_t argc, napi_value *argv,
-    const std::shared_ptr<PrintTaskContext> context, napi_value proxy)
+    const std::shared_ptr<PrintTaskContext> context)
 {
     bool isFileArray = false;
 
@@ -206,13 +213,6 @@ napi_status NapiPrintTask::VerifyParameters(napi_env env, size_t argc, napi_valu
         if (GetAbilityContext(env, argv[1], abilityContext) == nullptr) {
             PRINT_HILOGE("Print, Ability Context is null.");
         }
-    }
-
-    napi_status status = napi_new_instance(env, GetCtor(env), argc, argv, &proxy);
-    if ((proxy == nullptr) || (status != napi_ok)) {
-        PRINT_HILOGE("Failed to create print task");
-        context->SetErrorIndex(E_PRINT_GENERIC_FAILURE);
-        return napi_generic_failure;
     }
     return napi_ok;
 }
