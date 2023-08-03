@@ -255,9 +255,9 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
     if (jobParams->borderless == 1 && jobParams->mediaType == CUPS_MEDIA_TYPE_PHOTO_GLOSSY) {
         PRINT_HILOGD("borderless job options");
         std::vector<MediaSize> mediaSizes;
-        mediaSizes.push_back( { CUPS_MEDIA_4X6, 4000, 6000 } );
-        mediaSizes.push_back( { CUPS_MEDIA_5X7, 5000, 7000 } );
-        mediaSizes.push_back( { CUPS_MEDIA_A4, 8268, 11692 } );
+        mediaSizes.push_back({CUPS_MEDIA_4X6, 4000, 6000});
+        mediaSizes.push_back({CUPS_MEDIA_5X7, 5000, 7000});
+        mediaSizes.push_back({CUPS_MEDIA_A4, 8268, 11692});
         int sizeIndex = -1;
         float meidaWidth = 0;
         float mediaHeight = 0;
