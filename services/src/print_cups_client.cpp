@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -255,9 +255,9 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
     if (jobParams->borderless == 1 && jobParams->mediaType == CUPS_MEDIA_TYPE_PHOTO_GLOSSY) {
         PRINT_HILOGD("borderless job options");
         std::vector<MediaSize> mediaSizes;
-        mediaSizes.push_back({CUPS_MEDIA_4X6, 4000, 6000});
-        mediaSizes.push_back({CUPS_MEDIA_5X7, 5000, 7000});
-        mediaSizes.push_back({CUPS_MEDIA_A4, 8268, 11692});
+        mediaSizes.push_back({ CUPS_MEDIA_4X6, 4000, 6000 });
+        mediaSizes.push_back({ CUPS_MEDIA_5X7, 5000, 7000 });
+        mediaSizes.push_back({ CUPS_MEDIA_A4, 8268, 11692 });
         int sizeIndex = -1;
         float meidaWidth = 0;
         float mediaHeight = 0;
@@ -539,7 +539,7 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
         if ((attr = ippFindAttribute(response, "job-printer-state-reasons", IPP_TAG_KEYWORD)) != NULL) {
             ippAttributeString(attr, jobStatus->printer_state_reasons, sizeof(jobStatus->printer_state_reasons));
         }
-        PRINT_HILOGE("JOB %{public}d: %{public}s (%{public}s), PRINTER: %s\n", param->cupsJobId,
+        PRINT_HILOGE("JOB %{public}d: %{public}s (%{public}s), PRINTER: %{public}s\n", param->cupsJobId,
             ippEnumString("job-state", (int)jobStatus->job_state), jobStatus->job_state_reasons,
             jobStatus->printer_state_reasons);
         ippDelete(response);

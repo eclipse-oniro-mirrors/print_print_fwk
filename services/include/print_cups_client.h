@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,24 +30,24 @@ using json = nlohmann::json;
 typedef std::function<void()> CallbackFunc;
 
 enum MediaTypeCode {
-    MEDIA_PLAIN,
-    MEDIA_SPECIAL,
-    MEDIA_PHOTO,
-    MEDIA_TRANSPARENCY,
-    MEDIA_IRON_ON,
-    MEDIA_IRON_ON_MIRROR,
-    MEDIA_ADVANCED_PHOTO,
-    MEDIA_FAST_TRANSPARENCY,
-    MEDIA_BROCHURE_GLOSSY,
-    MEDIA_BROCHURE_MATTE,
-    MEDIA_PHOTO_GLOSSY,
-    MEDIA_PHOTO_MATTE,
-    MEDIA_PREMIUM_PHOTO,
-    MEDIA_OTHER_PHOTO,
-    MEDIA_PRINTABLE_CD,
-    MEDIA_PREMIUM_PRESENTATION,
+    MEDIA_PLAIN = 0,
+    MEDIA_SPECIAL = 1,
+    MEDIA_PHOTO = 2,
+    MEDIA_TRANSPARENCY = 3,
+    MEDIA_IRON_ON = 4,
+    MEDIA_IRON_ON_MIRROR = 5,
+    MEDIA_ADVANCED_PHOTO = 6,
+    MEDIA_FAST_TRANSPARENCY = 7,
+    MEDIA_BROCHURE_GLOSSY = 8,
+    MEDIA_BROCHURE_MATTE = 9,
+    MEDIA_PHOTO_GLOSSY = 10,
+    MEDIA_PHOTO_MATTE = 11,
+    MEDIA_PREMIUM_PHOTO = 12,
+    MEDIA_OTHER_PHOTO = 13,
+    MEDIA_PRINTABLE_CD = 14,
+    MEDIA_PREMIUM_PRESENTATION = 15,
     MEDIA_AUTO = 98,
-    MEDIA_UNKNOWN = 99 // New types above this line
+    MEDIA_UNKNOWN = 99
 };
 
 enum DuplexModeCode {
