@@ -26,6 +26,7 @@ static constexpr const char *PARAM_CAPABILITY_DUPLEXMODE = "duplexMode";
 static constexpr const char *PARAM_CAPABILITY_PAGESIZE = "pageSize";
 static constexpr const char *PARAM_CAPABILITY_RESOLUTION = "resolution";
 static constexpr const char *PARAM_CAPABILITY_MINMARGIN = "minMargin";
+static constexpr const char *PARAM_CAPABILITY_OPTION = "option";
 
 napi_value PrinterCapabilityHelper::MakeJsObject(napi_env env, const PrinterCapability &cap)
 {
@@ -45,6 +46,9 @@ napi_value PrinterCapabilityHelper::MakeJsObject(napi_env env, const PrinterCapa
         cap.GetMinMargin(margin);
         napi_value jsMargin = PrintMarginHelper::MakeJsObject(env, margin);
         PRINT_CALL(env, napi_set_named_property(env, jsObj, PARAM_CAPABILITY_MINMARGIN, jsMargin));
+    }
+    if (cap.HasOption()) {
+        NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_CAPABILITY_OPTION, cap.GetOption());
     }
     return jsObj;
 }
@@ -89,7 +93,10 @@ std::shared_ptr<PrinterCapability> PrinterCapabilityHelper::BuildFromJs(napi_env
         pageSizes.emplace_back(*pageSizePtr);
     }
     nativeObj->SetPageSize(pageSizes);
-
+    auto jsOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_CAPABILITY_OPTION);
+    if (jsOption != nullptr) {
+        nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_CAPABILITY_OPTION));
+    }
     PRINT_HILOGE("Build Print Capability succeed");
     return BuildFromJsSecond(env, jsValue, jsPageSizes, nativeObj);
 }
@@ -173,6 +180,7 @@ bool PrinterCapabilityHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_CAPABILITY_PAGESIZE, PRINT_PARAM_NOT_SET},
         {PARAM_CAPABILITY_RESOLUTION, PRINT_PARAM_OPT},
         {PARAM_CAPABILITY_MINMARGIN, PRINT_PARAM_OPT},
+        {PARAM_CAPABILITY_OPTION, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);

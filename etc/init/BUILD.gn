@@ -21,3 +21,24 @@ ohos_prebuilt_etc("printservice.rc") {
   part_name = "print_fwk"
   subsystem_name = "print"
 }
+
+ohos_prebuilt_etc("cups-files.conf") {
+  source = "cups-files.conf"
+  relative_install_dir = "cups"
+  part_name = "print_fwk"
+  subsystem_name = "print"
+}
+
+ohos_prebuilt_etc("cupsd.conf") {
+  source = "cupsd.conf"
+  relative_install_dir = "cups"
+  part_name = "print_fwk"
+  subsystem_name = "print"
+}
+
+ohos_prebuilt_etc("cups_service.cfg") {
+  source = "cups_service.cfg"
+  relative_install_dir = "init"
+  part_name = "print_fwk"
+  subsystem_name = "print"
+}

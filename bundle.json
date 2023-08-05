@@ -54,7 +54,9 @@
         ],
         "third_party": [
           "googletest",
-          "zlib"
+          "zlib",
+          "cups",
+          "cups-filters"
         ]
       },
       "build": {
@@ -72,7 +74,11 @@
         "service_group":[
            "//base/print/print_fwk/services:print_service",
            "//base/print/print_fwk/etc/init:printservice.rc",
-           "//base/print/print_fwk/profile:print_sa_profiles"
+           "//base/print/print_fwk/profile:print_sa_profiles",
+           "//base/print/print_fwk/profile:print_sa_profiles",
+           "//base/print/print_fwk/etc/init:cups-files.conf",
+           "//base/print/print_fwk/etc/init:cupsd.conf",
+           "//base/print/print_fwk/etc/init:cups_service.cfg"
         ]
       },
       "inner_kits": [

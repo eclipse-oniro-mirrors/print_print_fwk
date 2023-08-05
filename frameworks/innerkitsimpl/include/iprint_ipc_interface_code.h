@@ -43,6 +43,8 @@ namespace OHOS::Print {
         CMD_LOAD_EXT,
         CMD_QUERYALLPRINTJOB,
         CMD_QUERYPRINTJOBBYID,
+        CMD_ADDPRINTERTOCUPS,
+        CMD_QUERYPRINTERCAPABILITYBYURI,
     };
 } // namespace OHOS:Print
 #endif // PRINT_SERVICE_INTERFACE_H

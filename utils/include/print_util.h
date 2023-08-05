@@ -41,7 +41,7 @@ inline std::string PrintUtil::ParseListToString(const std::vector<std::string> &
 {
     std::string str;
     if (!list.empty()) {
-        int count = 1;
+        uint32_t count = 1;
         uint32_t size = list.size();
         for (auto val: list) {
             str += val;

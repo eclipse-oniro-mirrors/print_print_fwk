@@ -51,6 +51,9 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_LOAD_EXT] = &PrintServiceStub::OnLoadExtSuccess;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLPRINTJOB] = &PrintServiceStub::OnQueryAllPrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTJOBBYID] = &PrintServiceStub::OnQueryPrintJobById;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERTOCUPS] = &PrintServiceStub::OnAddPrinterToCups;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITYBYURI] =
+        &PrintServiceStub::OnQueryPrinterCapabilityByUri;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -362,6 +365,29 @@ bool PrintServiceStub::OnQueryPrintJobById(MessageParcel &data, MessageParcel &r
     reply.WriteInt32(ret);
     printJob.Marshalling(reply);
     PRINT_HILOGD("PrintServiceStub::OnQueryPrintJobById out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnAddPrinterToCups(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnAddPrinterToCups in");
+    std::string printerUri = data.ReadString();
+    std::string printerName = data.ReadString();
+    int32_t ret = AddPrinterToCups(printerUri, printerName);
+    reply.WriteInt32(ret);
+    PRINT_HILOGD("PrintServiceStub::OnAddPrinterToCups out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnQueryPrinterCapabilityByUri(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapabilityByUri in");
+    PrinterCapability printerCaps;
+    std::string printerUri = data.ReadString();
+    int32_t ret = QueryPrinterCapabilityByUri(printerUri, printerCaps);
+    reply.WriteInt32(ret);
+    printerCaps.Marshalling(reply);
+    PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapabilityByUri out");
     return ret == E_PRINT_NONE;
 }
 

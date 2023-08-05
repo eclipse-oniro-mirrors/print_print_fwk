@@ -19,7 +19,7 @@
 
 namespace OHOS::Print {
 PrinterCapability::PrinterCapability() : colorMode_(0), duplexMode_(0),
-    hasResolution_(false), hasMargin_(false)
+    hasResolution_(false), hasMargin_(false), hasOption_(false), option_("")
 {
     pageSizeList_.clear();
     resolutionList_.clear();
@@ -35,6 +35,8 @@ PrinterCapability::PrinterCapability(const PrinterCapability &right)
     resolutionList_.assign(right.resolutionList_.begin(), right.resolutionList_.end());
     hasMargin_ = right.hasMargin_;
     minMargin_ = right.minMargin_;
+    hasOption_ = right.hasOption_;
+    option_= right.option_;
 }
 
 PrinterCapability &PrinterCapability::operator=(const PrinterCapability &right)
@@ -47,6 +49,8 @@ PrinterCapability &PrinterCapability::operator=(const PrinterCapability &right)
         resolutionList_.assign(right.resolutionList_.begin(), right.resolutionList_.end());
         hasMargin_ = right.hasMargin_;
         minMargin_ = right.minMargin_;
+        hasOption_ = right.hasOption_;
+        option_ = right.option_;
     }
     return *this;
 }
@@ -93,6 +97,12 @@ void PrinterCapability::SetDuplexMode(uint32_t duplexMode)
     duplexMode_ = duplexMode;
 }
 
+void PrinterCapability::SetOption(const std::string &option)
+{
+    hasOption_ = true;
+    option_ = option;
+}
+
 bool PrinterCapability::HasMargin() const
 {
     return hasMargin_;
@@ -126,6 +136,16 @@ uint32_t PrinterCapability::GetColorMode() const
 uint32_t PrinterCapability::GetDuplexMode() const
 {
     return duplexMode_;
+}
+
+bool PrinterCapability::HasOption() const
+{
+    return hasOption_;
+}
+
+std::string PrinterCapability::GetOption() const
+{
+    return option_;
 }
 
 bool PrinterCapability::ReadFromParcel(Parcel &parcel)
@@ -166,6 +186,10 @@ bool PrinterCapability::ReadFromParcel(Parcel &parcel)
             minMargin_ = *marginPtr;
         }
     }
+    hasOption_ = parcel.ReadBool();
+    if (hasOption_) {
+        SetOption(parcel.ReadString());
+    }
     return true;
 }
 
@@ -192,6 +216,10 @@ bool PrinterCapability::Marshalling(Parcel &parcel) const
     parcel.WriteBool(hasMargin_);
     if (hasMargin_) {
         minMargin_.Marshalling(parcel);
+    }
+    parcel.WriteBool(hasOption_);
+    if (hasOption_) {
+        parcel.WriteString(GetOption());
     }
     return true;
 }
@@ -222,6 +250,9 @@ void PrinterCapability::Dump()
 
     if (hasMargin_) {
         minMargin_.Dump();
+    }
+    if (hasOption_) {
+        PRINT_HILOGD("option: %{private}s", option_.c_str());
     }
 }
 } // namespace OHOS::Print

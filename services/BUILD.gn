@@ -47,6 +47,16 @@ ohos_shared_library("print_service") {
   ]
   deps = [ "${print_path}/frameworks/innerkitsimpl:print_client" ]
 
+  if (cups_enable) {
+    include_dirs += [ "//third_party/cups/cups-2.4.0" ]
+    sources += [ "src/print_cups_client.cpp" ]
+    cflags_cc += [ "-DCUPS_ENABLE" ]
+    deps += [
+      "//third_party/cups:third_party_cups",
+      "//third_party/cups-filters:third_party_cupsfilters",
+    ]
+  }
+
   external_deps = [
     "ability_base:base",
     "ability_base:want",
