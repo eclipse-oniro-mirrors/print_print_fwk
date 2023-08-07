@@ -23,6 +23,8 @@ namespace OHOS::Print {
 
 #define PRINT_MAX_PRINT_COUNT 1000
 
+#define NEW_PRINT_INTERFACE_SWITCH false
+
 #define PRINT_ASSERT_BASE(env, assertion, message, retVal)  \
     do {                                                    \
         if (!(assertion)) {                                 \

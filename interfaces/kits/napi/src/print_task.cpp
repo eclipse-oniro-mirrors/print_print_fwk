@@ -77,12 +77,12 @@ uint32_t PrintTask::Start()
             fdList_.emplace_back(fd);
         }
     }
-    if (callerToken_ == nullptr) {
-        PRINT_HILOGI("call client's old StartPrint interface.");
-        return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_);
-    } else {
+    if (callerToken_ != nullptr && NEW_PRINT_INTERFACE_SWITCH) {
         PRINT_HILOGI("call client's new StartPrint interface.");
         return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_, callerToken_);
+    } else {
+        PRINT_HILOGI("call client's old StartPrint interface.");
+        return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_);
     }
 }
 
