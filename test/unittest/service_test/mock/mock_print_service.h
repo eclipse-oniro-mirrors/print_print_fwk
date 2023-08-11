@@ -139,7 +139,7 @@ public:
 class MockPrintService final : public DummyPrintServiceStub {
 public:
     MOCK_METHOD3(StartPrint, int32_t(const std::vector<std::string>&, const std::vector<uint32_t>&, std::string &));
-    MOCK_METHOD4(StartPrint, int32_t(const std::vector<std::string>&, const std::vector<uint32_t>&, 
+    MOCK_METHOD4(StartPrint, int32_t(const std::vector<std::string>&, const std::vector<uint32_t>&,
         std::string &, const sptr<IRemoteObject> &));
     MOCK_METHOD1(StopPrint, int32_t(const std::string&));
     MOCK_METHOD1(ConnectPrinter, int32_t(const std::string&));
