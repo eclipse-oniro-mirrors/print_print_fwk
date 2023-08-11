@@ -2229,7 +2229,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0104, TestSize.Level1)
     service->SetHelper(CreatePrintServiceHelper(true, false, false, false));
 
     std::vector<std::string> fileList = {};
-    InitFileList(filelist);
+    InitFileList(fileList);
     std::vector<uint32_t> fdList = {};
     std::string taskId = "";
     sptr<IRemoteObject> token;
@@ -2258,11 +2258,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0106, TestSize.Level1)
     service->SetHelper(helper);
 
     std::vector<std::string> fileList = {};
-    InitFileList(filelist);
+    InitFileList(fileList);
     std::vector<uint32_t> fdList = {};
     InitFdList(fdList);
     std::string taskId = "";
-    sptr<IRemoteObject> token = help -> GetBundleMgr();
+    sptr<IRemoteObject> token = helper -> GetBundleMgr();
     service->StartPrint(fileList, fdList, taskId, token);
     helper = nullptr;
 }
@@ -2283,7 +2283,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0108, TestSize.Level1)
 
     std::vector<PrinterInfo> printerInfos;
     InitExtPrinterList(printerInfos, 1);
-    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
     EXPECT_CALL(*helper, IsSyncMode()).WillRepeatedly(Return(false));
 
     service -> ConnectPrinter(GetDefaultPrinterId());
@@ -2311,7 +2311,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0111, TestSize.Level1)
 
     std::vector<PrinterInfo> printerInfos;
     InitExtPrinterList(printerInfos, 1);
-    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
 
     service -> ConnectPrinter(GetDefaultPrinterId());
 }
@@ -2323,7 +2323,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112, TestSize.Level1)
 
     std::vector<PrinterInfo> printerInfos;
     InitExtPrinterList(printerInfos, 1);
-    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
 
     service -> ConnectPrinter(GetDefaultPrinterId());
 }
@@ -2335,7 +2335,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0113, TestSize.Level1)
 
     std::vector<PrinterInfo> printerInfos;
     InitExtPrinterList(printerInfos, 1);
-    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
 
     service -> ConnectPrinter(GetInvalidPrinterId());
 }
@@ -2356,7 +2356,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0115, TestSize.Level1)
 
     std::vector<PrinterInfo> printerInfos;
     InitExtPrinterList(printerInfos, 1);
-    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
     EXPECT_CALL(*helper, IsSyncMode()).WillRepeatedly(Return(false));
 
     service -> DisconnectPrinter(GetDefaultPrinterId());
@@ -2384,7 +2384,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0118, TestSize.Level1)
 
     std::vector<PrinterInfo> printerInfos;
     InitExtPrinterList(printerInfos, 1);
-    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
 
     service -> DisconnectPrinter(GetDefaultPrinterId());
 }
@@ -2396,7 +2396,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0119, TestSize.Level1)
 
     std::vector<PrinterInfo> printerInfos;
     InitExtPrinterList(printerInfos, 1);
-    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
 
     service -> DisconnectPrinter(GetDefaultPrinterId());
 }
@@ -2408,7 +2408,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0120, TestSize.Level1)
 
     std::vector<PrinterInfo> printerInfos;
     InitExtPrinterList(printerInfos, 1);
-    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
 
     service -> DisconnectPrinter(GetInvalidPrinterId());
 }
@@ -2497,7 +2497,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0127, TestSize.Level1)
 
     std::vector<PrinterInfo> printerInfos;
     InitExtPrinterList(printerInfos, 1);
-    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
 
     PrintJob testJob;
     testJob.SetJobId(GetDefaultJobId());

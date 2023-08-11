@@ -2239,7 +2239,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0116, TestSize.Level1)
     std::string printerUri;
     PrinterCapability printerCaps;
     PrintManagerClient::GetInstance()->LoadServerFail();
-    PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerName);
+    PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0117, TestSize.Level1)
@@ -2248,7 +2248,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0117, TestSize.Level1)
     PrinterCapability printerCaps;
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
-    PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerName);
+    PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0118, TestSize.Level1)
@@ -2257,7 +2257,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0118, TestSize.Level1)
     PrinterCapability printerCaps;
     PrintManagerClient::GetInstance()->LoadServerFail();
     PrintManagerClient::GetInstance()->ResetProxy();
-    PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerName);
+    PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0119, TestSize.Level1)
@@ -2265,7 +2265,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0119, TestSize.Level1)
     std::string printerUri;
     PrinterCapability printerCaps;
     PrintManagerClient::GetInstance()->LoadServerSuccess();
-    PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerName);
+    PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
 }
 } // namespace Print
 } // namespace OHOS

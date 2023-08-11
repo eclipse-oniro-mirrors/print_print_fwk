@@ -85,7 +85,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0004, TestSize.Level1)
     PrintServiceHelper helper;
     AAFwk::Want want;
     int32_t requestCode = 0;
-    helper.StartPrintServiceExtension(want, requestCode)
+    helper.StartPrintServiceExtension(want, requestCode);
 }
 
 /**
