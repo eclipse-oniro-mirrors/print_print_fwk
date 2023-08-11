@@ -47,6 +47,8 @@ void PrintResolutionTest::TearDown(void) {}
 HWTEST_F(PrintResolutionTest, PrintResolutionTest_001, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
+    OHOS::Print::PrintResolution res;
+    res = resolution;
     resolution.Dump();
 }
 

@@ -82,7 +82,7 @@ static const std::string QUEUE_JOB_LIST_CLEAR_BLOCKED = "clear_blocked";
 static const std::string SPOOLER_PREVIEW_ABILITY_NAME = "PrintServiceExtAbility";
 static const std::string TOKEN_KEY = "ohos.ability.params.token";
 
-static bool publishState = false;
+static bool g_publishState = false;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
 
@@ -120,13 +120,13 @@ int32_t PrintServiceAbility::Init()
         helper_ = std::make_shared<PrintServiceHelper>();
     }
     DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(helper_);
-    if (!publishState) {
+    if (!g_publishState) {
         bool ret = Publish(PrintServiceAbility::GetInstance());
         if (!ret) {
             PRINT_HILOGE("PrintServiceAbility Publish failed.");
             return E_PRINT_SERVER_FAILURE;
         }
-        publishState = true;
+        g_publishState = true;
     }
     state_ = ServiceRunningState::STATE_RUNNING;
     PRINT_HILOGE("state_ is %{public}d.", static_cast<int>(state_));

@@ -2195,18 +2195,363 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0101, TestSize.Level1)
     EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_NONE);
 }
 
-/**
-* @tc.name: PrintServiceAbilityTest_0102
-* @tc.desc: StartPrint: no permission
-* @tc.type: FUNC
-* @tc.require:
-*/
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0102, TestSize.Level1)
 {
     std::vector<std::string> fileList = {};
     std::vector<uint32_t> fdList = {};
     std::string taskId = "";
-    EXPECT_EQ(PrintServiceAbility::GetInstance()->StartPrint(fileList, fdList, taskId), E_PRINT_NO_PERMISSION);
+    sptr<IRemoteObject> token;
+    int result = PrintServiceAbility::GetInstance()->StartPrint(fileList, fdList, taskId, token);
+    EXPECT_EQ(result, E_PRINT_NO_PERMISSION);
+    std::shared_ptr<PrintServiceHelper> helper = nullptr;
+    PrintServiceAbility::GetInstance()->SetHelper(helper);
+    result = PrintServiceAbility::GetInstance()->StartPrint(fileList, fdList, taskId, token);
+    EXPECT_EQ(result, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0103, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    service->SetHelper(CreatePrintServiceHelper(true, false, false, false));
+
+    std::vector<std::string> fileList = {};
+    std::vector<uint32_t> fdList = {};
+    std::string taskId = "";
+    sptr<IRemoteObject> token;
+    EXPECT_EQ(service->StartPrint(fileList, fdList, taskId, token), E_PRINT_INVALID_PARAMETER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0104, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    service->SetHelper(CreatePrintServiceHelper(true, false, false, false));
+
+    std::vector<std::string> fileList = {};
+    InitFileList(filelist);
+    std::vector<uint32_t> fdList = {};
+    std::string taskId = "";
+    sptr<IRemoteObject> token;
+    EXPECT_EQ(service->StartPrint(fileList, fdList, taskId, token), E_PRINT_INVALID_PARAMETER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0105, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    service->SetHelper(CreatePrintServiceHelper(true, false, false, false));
+
+    std::vector<std::string> fileList = {};
+    std::vector<uint32_t> fdList = {};
+    InitFdList(fdList);
+    std::string taskId = "";
+    sptr<IRemoteObject> token;
+    EXPECT_EQ(service->StartPrint(fileList, fdList, taskId, token), E_PRINT_INVALID_PARAMETER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0106, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    auto helper = CreatePrintServiceHelper(true, true, false, true);
+    service->SetHelper(helper);
+
+    std::vector<std::string> fileList = {};
+    InitFileList(filelist);
+    std::vector<uint32_t> fdList = {};
+    InitFdList(fdList);
+    std::string taskId = "";
+    sptr<IRemoteObject> token = help -> GetBundleMgr();
+    service->StartPrint(fileList, fdList, taskId, token);
+    helper = nullptr;
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0107, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    service -> ConnectPrinter(GetDefaultPrinterId());
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0108, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+    auto helper = CreatePrintServiceHelper(true, true, true, true);
+    service->SetHelper(helper);
+
+    std::vector<PrinterInfo> printerInfos;
+    InitExtPrinterList(printerInfos, 1);
+    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+    EXPECT_CALL(*helper, IsSyncMode()).WillRepeatedly(Return(false));
+
+    service -> ConnectPrinter(GetDefaultPrinterId());
+    helper = nullptr;
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0109, TestSize.Level1)
+{
+    auto service = CreateServiceWithoutEvent(PRINT_EXTCB_CONNECT_PRINTER);
+    EXPECT_NE(service, nullptr);
+    service -> ConnectPrinter(GetDefaultPrinterId());
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0110, TestSize.Level1)
+{
+    auto service = CreateServiceWithoutEvent(PRINT_EXTCB_CONNECT_PRINTER);
+    EXPECT_NE(service, nullptr);
+    service -> ConnectPrinter(GetInvalidPrinterId());
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0111, TestSize.Level1)
+{
+    auto service = CreateServiceWithoutEvent(PRINT_EXTCB_CONNECT_PRINTER);
+    EXPECT_NE(service, nullptr);
+
+    std::vector<PrinterInfo> printerInfos;
+    InitExtPrinterList(printerInfos, 1);
+    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+
+    service -> ConnectPrinter(GetDefaultPrinterId());
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+
+    std::vector<PrinterInfo> printerInfos;
+    InitExtPrinterList(printerInfos, 1);
+    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+
+    service -> ConnectPrinter(GetDefaultPrinterId());
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0113, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+
+    std::vector<PrinterInfo> printerInfos;
+    InitExtPrinterList(printerInfos, 1);
+    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+
+    service -> ConnectPrinter(GetInvalidPrinterId());
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0114, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    service -> DisconnectPrinter(GetDefaultPrinterId());
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0115, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+    auto helper = CreatePrintServiceHelper(true, true, true, true);
+    service->SetHelper(helper);
+
+    std::vector<PrinterInfo> printerInfos;
+    InitExtPrinterList(printerInfos, 1);
+    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+    EXPECT_CALL(*helper, IsSyncMode()).WillRepeatedly(Return(false));
+
+    service -> DisconnectPrinter(GetDefaultPrinterId());
+    helper = nullptr;
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0116, TestSize.Level1)
+{
+    auto service = CreateServiceWithoutEvent(PRINT_EXTCB_DISCONNECT_PRINTER);
+    EXPECT_NE(service, nullptr);
+    service -> DisconnectPrinter(GetDefaultPrinterId());
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0117, TestSize.Level1)
+{
+    auto service = CreateServiceWithoutEvent(PRINT_EXTCB_DISCONNECT_PRINTER);
+    EXPECT_NE(service, nullptr);
+    service -> DisconnectPrinter(GetInvalidPrinterId());
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0118, TestSize.Level1)
+{
+    auto service = CreateServiceWithoutEvent(PRINT_EXTCB_DISCONNECT_PRINTER);
+    EXPECT_NE(service, nullptr);
+
+    std::vector<PrinterInfo> printerInfos;
+    InitExtPrinterList(printerInfos, 1);
+    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+
+    service -> DisconnectPrinter(GetDefaultPrinterId());
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0119, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+
+    std::vector<PrinterInfo> printerInfos;
+    InitExtPrinterList(printerInfos, 1);
+    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+
+    service -> DisconnectPrinter(GetDefaultPrinterId());
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0120, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+
+    std::vector<PrinterInfo> printerInfos;
+    InitExtPrinterList(printerInfos, 1);
+    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+
+    service -> DisconnectPrinter(GetInvalidPrinterId());
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0121, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+
+    std::string printerUrl;
+    set::string printerName;
+
+    service -> AddPrinterToCups(printerUrl, printerName);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0122, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+
+    std::string printerUrl;
+    set::string printerName;
+
+    service -> AddPrinterToCups(printerUrl, printerName);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0123, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+
+    std::string printerUri;
+    PrinterCapability printerCaps;
+
+    service -> QueryPrinterCapabilityByUri(printerUri, printerCaps);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0124, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+
+    std::string printerUri;
+    PrinterCapability printerCaps;
+
+    service -> QueryPrinterCapabilityByUri(printerUri, printerCaps);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0125, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    auto helper = CreatePrintServiceHelper(true, true, true, true);
+    service->SetHelper(helper);
+
+    std::vector<PrintExtensionInfo> infoList;
+    EXPECT_EQ(service->QueryAllExtension(infoList), E_PRINT_NONE);
+
+    std::vector<std::string> extensionIds;
+    extensionIds.emplace_back(GetExtensionId(TYPE_DEFAULT));
+    EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_NONE);
+    EXPECT_CALL(*helper, IsSyncMode()).WillRepeatedly(Return(false));
+
+    service->LoadExtSuccess(GetExtensionId(TYPE_DEFAULT));
+    helper = nullptr;
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0126, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+    auto helper = CreatePrintServiceHelper(true, true, true, true);
+    service->SetHelper(helper);
+
+    EXPECT_CALL(*helper, IsSyncMode()).WillRepeatedly(Return(false));
+    service->StopDiscoverPrinter();
+    helper = nullptr;
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0127, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+    auto helper = CreatePrintServiceHelper(true, true, true, true);
+    service->SetHelper(helper);
+
+    std::vector<PrinterInfo> printerInfos;
+    InitExtPrinterList(printerInfos, 1);
+    EXPECT_EQ(service->AddPrinter(printerInfos), E_PRINT_NONE);
+
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    testJob.SetPrinterId(GetDefaultPrinterId());
+
+    EXPECT_CALL(*helper, IsSyncMode()).WillRepeatedly(Return(false));
+    service->StartPrintJob(testJob);
+    helper = nullptr;
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+    auto helper = CreatePrintServiceHelper(true, true, true, true);
+    service->SetHelper(helper);
+
+    std::vector<PrinterInfo> printerInfos;
+    InitExtPrinterList(printerInfos, 1);
+    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
+
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    testJob.SetPrinterId(GetDefaultPrinterId());
+    EXPECT_EQ(service->StartPrintJob(testJob), E_PRINT_NONE);
+
+    EXPECT_CALL(*helper, IsSyncMode()).WillRepeatedly(Return(false));
+    service->CancelPrintJob(GetDefaultJobId());
+    helper = nullptr;
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0129, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+    auto helper = CreatePrintServiceHelper(true, true, true, true);
+    service->SetHelper(helper);
+
+    std::vector<PrinterInfo> printerInfos;
+    InitExtPrinterList(printerInfos, 1);
+    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
+
+    std::string printerId = GetDefaultPrinterId();
+    EXPECT_CALL(*helper, IsSyncMode()).WillRepeatedly(Return(false));
+    service->QueryPrinterCapability(printerId);
+    helper = nullptr;
+}
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130, TestSize.Level1)
+{
+    std::vector<std::string> fileList = {};
+    std::vector<uint32_t> fdList = {};
+    std::string taskId = "";
+    int result = PrintServiceAbility::GetInstance()->StartPrint(fileList, fdList, taskId);
+    EXPECT_EQ(result, E_PRINT_NO_PERMISSION);
 }
 }  // namespace Print
 }  // namespace OHOS

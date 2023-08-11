@@ -19,6 +19,7 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "print_resolution.h"
+#include "print_sa_death_recipient.h"
 
 using namespace testing::ext;
 
@@ -39,5 +40,12 @@ void PrintSaDeathRecipientTest::TearDownTestCase(void) {}
 void PrintSaDeathRecipientTest::SetUp(void) {}
 
 void PrintSaDeathRecipientTest::TearDown(void) {}
+
+HWTEST_F(PrintSaDeathRecipientTest, PrintSaDeathRecipientTest_0001, TestSize.Level1)
+{
+    wptr<IRemoteObject> remote;
+    PrintSaDeathRecipient rec;
+    rec.OnRemoteDied(remote);
+}
 }  // namespace Print
 }  // namespace OHOS

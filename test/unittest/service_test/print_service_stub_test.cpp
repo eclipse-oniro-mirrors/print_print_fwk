@@ -97,7 +97,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0003, TestSize.Level1)
 
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, StartPrint).WillByDefault(Return(E_PRINT_NONE));
+    ON_CALL(*stub, StartPrint(_, _, _)).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
@@ -123,7 +123,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0004, TestSize.Level1)
 
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, StartPrint).WillByDefault(Return(E_PRINT_NONE));
+    ON_CALL(*stub, StartPrint(_, _, _)).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
@@ -153,7 +153,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0005, TestSize.Level1)
 
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, StartPrint).WillByDefault(Return(E_PRINT_NONE));
+    ON_CALL(*stub, StartPrint(_, _, _)).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
@@ -186,7 +186,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0006, TestSize.Level1)
 
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, StartPrint).WillByDefault(Return(E_PRINT_NONE));
+    ON_CALL(*stub, StartPrint(_, _, _)).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
