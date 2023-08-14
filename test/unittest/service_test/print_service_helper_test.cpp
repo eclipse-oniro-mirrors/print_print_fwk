@@ -83,7 +83,9 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0003, TestSize.Level1)
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0004, TestSize.Level1)
 {
     PrintServiceHelper helper;
-    helper.GetBundleMgr();
+    AAFwk::Want want;
+    int32_t requestCode = 0;
+    helper.StartPrintServiceExtension(want, requestCode);
 }
 
 /**
@@ -95,8 +97,75 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0004, TestSize.Level1)
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0005, TestSize.Level1)
 {
     PrintServiceHelper helper;
+    helper.GetBundleMgr();
+}
+
+/**
+* @tc.name: PrintServiceHelperTest_0006
+* @tc.desc: faultPrint
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0006, TestSize.Level1)
+{
+    PrintServiceHelper helper;
     std::vector<int> accountList;
     helper.QueryAccounts(accountList);
+}
+
+/**
+* @tc.name: PrintServiceHelperTest_0007
+* @tc.desc: faultPrint
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0007, TestSize.Level1)
+{
+    PrintServiceHelper helper;
+    std::vector<int> accountList = {};
+    helper.QueryAccounts(accountList);
+}
+
+/**
+* @tc.name: PrintServiceHelperTest_0008
+* @tc.desc: faultPrint
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0008, TestSize.Level1)
+{
+    PrintServiceHelper helper;
+    sptr<AppExecFwk::IBundleMgr> mgr;
+    int userId = 0;
+    std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos;
+    helper.QueryExtension(mgr, userId, extensionInfos);
+}
+
+/**
+* @tc.name: PrintServiceHelperTest_0009
+* @tc.desc: faultPrint
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0009, TestSize.Level1)
+{
+    PrintServiceHelper helper;
+    sptr<AppExecFwk::IBundleMgr> mgr;
+    int userId = 0;
+    std::string userName;
+    helper.QueryNameForUid(mgr, userId, userName);
+}
+
+/**
+* @tc.name: PrintServiceHelperTest_0010
+* @tc.desc: faultPrint
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0010, TestSize.Level1)
+{
+    PrintServiceHelper helper;
+    helper.IsSyncMode();
 }
 } // namespace Print
 } // namespace OHOS

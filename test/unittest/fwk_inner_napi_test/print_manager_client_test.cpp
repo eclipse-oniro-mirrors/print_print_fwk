@@ -140,7 +140,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0004, TestSize.Level1)
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
     EXPECT_CALL(*service, StartPrint(_, _, _)).Times(1);
-    ON_CALL(*service, StartPrint).WillByDefault(
+    ON_CALL(*service, StartPrint(_, _, _)).WillByDefault(
             [&testFileList, &testFdList, &testTaskId](const std::vector<std::string> &fileList,
                 const std::vector<uint32_t> &fdList, std::string &taskId) {
                 EXPECT_EQ(testFileList.size(), fileList.size());
@@ -2160,6 +2160,112 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0108, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0109, TestSize.Level1)
+{
+    std::vector<std::string> testFileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
+    std::vector<uint32_t> testFdList = {1, 2};
+    std::string testTaskId = "2";
+    sptr<IRemoteObject> testToken;
+
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId, testToken);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0110, TestSize.Level1)
+{
+    std::vector<std::string> testFileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
+    std::vector<uint32_t> testFdList = {1, 2};
+    std::string testTaskId = "2";
+    sptr<IRemoteObject> testToken;
+
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId, testToken);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0111, TestSize.Level1)
+{
+    std::vector<std::string> testFileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
+    std::vector<uint32_t> testFdList = {1, 2};
+    std::string testTaskId = "2";
+    sptr<IRemoteObject> testToken;
+
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId, testToken);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0112, TestSize.Level1)
+{
+    std::string printerUri;
+    std::string printerName;
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0113, TestSize.Level1)
+{
+    std::string printerUri;
+    std::string printerName;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0114, TestSize.Level1)
+{
+    std::string printerUri;
+    std::string printerName;
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0115, TestSize.Level1)
+{
+    std::string printerUri;
+    std::string printerName;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0116, TestSize.Level1)
+{
+    std::string printerUri;
+    PrinterCapability printerCaps;
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0117, TestSize.Level1)
+{
+    std::string printerUri;
+    PrinterCapability printerCaps;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0118, TestSize.Level1)
+{
+    std::string printerUri;
+    PrinterCapability printerCaps;
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0119, TestSize.Level1)
+{
+    std::string printerUri;
+    PrinterCapability printerCaps;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
 }
 } // namespace Print
 } // namespace OHOS

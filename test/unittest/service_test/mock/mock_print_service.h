@@ -107,9 +107,9 @@ public:
     }
     int32_t RegisterExtCallback(const std::string &extensionCID,
         const sptr<IPrintExtensionCallback> &listener) override
-        {
-            return E_PRINT_NONE;
-        }
+    {
+        return E_PRINT_NONE;
+    }
     int32_t UnregisterAllExtCallback(const std::string &extensionId) override
     {
         return E_PRINT_NONE;
@@ -130,7 +130,6 @@ public:
     {
         return E_PRINT_NONE;
     }
-
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps) override
     {
         return E_PRINT_NONE;
@@ -140,6 +139,8 @@ public:
 class MockPrintService final : public DummyPrintServiceStub {
 public:
     MOCK_METHOD3(StartPrint, int32_t(const std::vector<std::string>&, const std::vector<uint32_t>&, std::string &));
+    MOCK_METHOD4(StartPrint, int32_t(const std::vector<std::string>&, const std::vector<uint32_t>&,
+        std::string &, const sptr<IRemoteObject> &));
     MOCK_METHOD1(StopPrint, int32_t(const std::string&));
     MOCK_METHOD1(ConnectPrinter, int32_t(const std::string&));
     MOCK_METHOD1(DisconnectPrinter, int32_t(const std::string&));

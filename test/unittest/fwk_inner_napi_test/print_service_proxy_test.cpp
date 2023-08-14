@@ -768,5 +768,32 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0023, TestSize.Level1)
         });
     proxy->LoadExtSuccess(testExtId);
 }
+
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0024, TestSize.Level1)
+{
+    std::vector<std::string> testFileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
+    std::vector<uint32_t> testFdList = {1, 2};
+    std::string testTaskId = "2";
+    sptr<IRemoteObject> testToken;
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    proxy->StartPrint(testFileList, testFdList, testTaskId, testToken);
+}
+
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0025, TestSize.Level1)
+{
+    std::vector<std::string> testFileList = {};
+    std::vector<uint32_t> testFdList = {};
+    std::string testTaskId = "2";
+    sptr<IRemoteObject> testToken;
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    proxy->StartPrint(testFileList, testFdList, testTaskId, testToken);
+}
 } // namespace Print
 } // namespace OHOS

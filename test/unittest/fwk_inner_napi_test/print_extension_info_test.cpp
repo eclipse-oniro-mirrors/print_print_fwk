@@ -47,6 +47,8 @@ void PrintExtensionInfoTest::TearDown(void) {}
 HWTEST_F(PrintExtensionInfoTest, PrintExtInfoTest_0001, TestSize.Level1)
 {
     OHOS::Print::PrintExtensionInfo info;
+    OHOS::Print::PrintExtensionInfo inf;
+    inf = info;
     info.Dump();
 }
 

@@ -38,17 +38,74 @@ void PrintSecurityGuardInfoTest::SetUp(void) {}
 
 void PrintSecurityGuardInfoTest::TearDown(void) {}
 
-/**
-* @tc.name: PrintSecurityGuardInfoTest_0001
-* @tc.desc: OnRemoteRequest
-* @tc.type: FUNC
-* @tc.require:
-*/
 HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0001, TestSize.Level1)
 {
     std::vector<std::string> fileList;
     PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
     PrinterInfo printerInfo;
+    PrintJob printJob;
+    printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
+    EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
+}
+
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0002, TestSize.Level1)
+{
+    std::vector<std::string> fileList;
+    PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("EPRINT_printer");
+    PrintJob printJob;
+    printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
+    EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
+}
+
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0003, TestSize.Level1)
+{
+    std::vector<std::string> fileList;
+    PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("EPRINT_printer");
+    std::string option = R"({"ePrintUrl":"testUrl"})";
+    printerInfo.SetOption(option);
+    PrintJob printJob;
+    printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
+    EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
+}
+
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0004, TestSize.Level1)
+{
+    std::vector<std::string> fileList;
+    PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("EPRINT_printer");
+    std::string option = R"({"ePrintUrl":0})";
+    printerInfo.SetOption(option);
+    PrintJob printJob;
+    printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
+    EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
+}
+
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0005, TestSize.Level1)
+{
+    std::vector<std::string> fileList;
+    PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("EPRINT_printer");
+    std::string option = R"({"":"testUrl"})";
+    printerInfo.SetOption(option);
+    PrintJob printJob;
+    printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
+    EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
+}
+
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0006, TestSize.Level1)
+{
+    std::vector<std::string> fileList;
+    PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId("EPRINT_printer");
+    std::string option = R"({"":""})";
+    printerInfo.SetOption(option);
     PrintJob printJob;
     printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
