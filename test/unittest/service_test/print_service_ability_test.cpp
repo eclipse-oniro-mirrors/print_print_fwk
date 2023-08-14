@@ -2419,7 +2419,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0121, TestSize.Level1)
     EXPECT_NE(service, nullptr);
 
     std::string printerUrl;
-    set::string printerName;
+    std::string printerName;
 
     service -> AddPrinterToCups(printerUrl, printerName);
 }
@@ -2430,7 +2430,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0122, TestSize.Level1)
     EXPECT_NE(service, nullptr);
 
     std::string printerUrl;
-    set::string printerName;
+    std::string printerName;
 
     service -> AddPrinterToCups(printerUrl, printerName);
 }
