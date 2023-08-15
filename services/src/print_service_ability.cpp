@@ -970,9 +970,6 @@ void PrintServiceAbility::ReportCompletedPrint(const std::string &printerId)
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_COMPLETED);
     PRINT_HILOGD("no print job exists, destroy extension");
     DestroyExtension(printerId);
-#ifdef CUPS_ENABLE
-    PrintCupsClient::GetInstance()->StopCupsdService();
-#endif // CUPS_ENABLE
     json msg;
     auto endPrintTime = std::chrono::high_resolution_clock::now();
     auto printTime = std::chrono::duration_cast<std::chrono::milliseconds>(endPrintTime - startPrintTime_);
