@@ -262,9 +262,6 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
 
     // save securityGuard base info
     securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
-#ifdef CUPS_ENABLE
-    PrintCupsClient::GetInstance()->StartCupsdService();
-#endif // CUPS_ENABLE
     return E_PRINT_NONE;
 }
 
