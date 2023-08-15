@@ -141,8 +141,6 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     http_t *http = NULL;
     char uri[HTTP_MAX_URI];
 
-    if (!IsCupsServerAlive())
-        StartCupsdService();
     ippSetPort(CUPS_SEVER_PORT);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s",
@@ -336,8 +334,6 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
     char buffer[8192];
     ssize_t bytes;
 
-    if (!IsCupsServerAlive())
-        StartCupsdService();
     int num_files = jobParams->fdList.size();
     PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
     num_options = FillJobOptions(jobParams, num_options, &options);
