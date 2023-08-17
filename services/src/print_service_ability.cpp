@@ -262,9 +262,6 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
 
     // save securityGuard base info
     securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
-#ifdef CUPS_ENABLE
-    PrintCupsClient::GetInstance()->StartCupsdService();
-#endif // CUPS_ENABLE
     return E_PRINT_NONE;
 }
 
@@ -970,9 +967,6 @@ void PrintServiceAbility::ReportCompletedPrint(const std::string &printerId)
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_COMPLETED);
     PRINT_HILOGD("no print job exists, destroy extension");
     DestroyExtension(printerId);
-#ifdef CUPS_ENABLE
-    PrintCupsClient::GetInstance()->StopCupsdService();
-#endif // CUPS_ENABLE
     json msg;
     auto endPrintTime = std::chrono::high_resolution_clock::now();
     auto printTime = std::chrono::duration_cast<std::chrono::milliseconds>(endPrintTime - startPrintTime_);
