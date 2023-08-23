@@ -64,10 +64,10 @@ static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRI
 static const std::string PRINTER_EVENT_TYPE = "printerStateChange";
 static const std::string PRINTJOB_EVENT_TYPE = "jobStateChange";
 static const std::string EXTINFO_EVENT_TYPE = "extInfoChange";
-static const std::string EVENT_BLOCK = "blocked";
-static const std::string EVENT_SUCCESS = "success";
-static const std::string EVENT_FAIL = "failed";
-static const std::string EVENT_CANCEL = "cancelled";
+static const std::string EVENT_BLOCK = "block";
+static const std::string EVENT_SUCCESS = "succeed";
+static const std::string EVENT_FAIL = "fail";
+static const std::string EVENT_CANCEL = "cancel";
 static const std::string CALLER_PKG_NAME = "caller.pkgName";
 
 static const std::string FD = "FD";

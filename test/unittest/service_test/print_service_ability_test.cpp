@@ -46,10 +46,10 @@ static constexpr const char *DEFAULT_PRINT_FILE_C = "file://data/print/c.png";
 static constexpr const char *PRINTER_EVENT_TYPE = "printerStateChange";
 static constexpr const char *PRINTJOB_EVENT_TYPE = "jobStateChange";
 static constexpr const char *EXTINFO_EVENT_TYPE = "extInfoChange";
-static constexpr const char *EVENT_BLOCK = "blocked";
-static constexpr const char *EVENT_SUCCESS = "success";
-static constexpr const char *EVENT_FAIL = "failed";
-static constexpr const char *EVENT_CANCEL = "cancelled";
+static constexpr const char *EVENT_BLOCK = "block";
+static constexpr const char *EVENT_SUCCESS = "succeed";
+static constexpr const char *EVENT_FAIL = "fail";
+static constexpr const char *EVENT_CANCEL = "cancel";
 static constexpr const char *DEFAULT_EXT_INFO = "custom extension info";
 enum EXTENSION_ID_TYPE {
     TYPE_DEFAULT,

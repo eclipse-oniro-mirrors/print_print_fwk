@@ -130,6 +130,7 @@ bool PrintServiceHelper::QueryNameForUid(sptr<AppExecFwk::IBundleMgr> mgr, int32
 {
     if (mgr != nullptr) {
         mgr->GetNameForUid(userId, name);
+        return true;
     }
     PRINT_HILOGE("Invalid bundle manager");
     return false;
