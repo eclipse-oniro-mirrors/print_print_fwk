@@ -726,7 +726,6 @@ bool PrintCupsClient::IsCupsServerAlive()
  */
 bool PrintCupsClient::IsPrinterExist(const char* printerUri, const char* printerName)
 {
-    int i;
     bool printerExist = false;
     cups_dest_t *dest;
     PRINT_HILOGD("IsPrinterExist enter");
