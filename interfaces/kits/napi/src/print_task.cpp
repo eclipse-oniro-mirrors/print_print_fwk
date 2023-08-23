@@ -22,10 +22,10 @@
 #include "print_utils.h"
 
 namespace OHOS::Print {
-const std::string EVENT_BLOCK = "blocked";
-const std::string EVENT_SUCCESS = "success";
-const std::string EVENT_FAIL = "failed";
-const std::string EVENT_CANCEL = "cancelled";
+const std::string EVENT_BLOCK = "block";
+const std::string EVENT_SUCCESS = "succeed";
+const std::string EVENT_FAIL = "fail";
+const std::string EVENT_CANCEL = "cancel";
 
 PrintTask::PrintTask(const std::vector<std::string> &innerList, const sptr<IRemoteObject> &innerCallerToken_)
     : taskId_("")
