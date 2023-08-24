@@ -141,6 +141,10 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     http_t *http = NULL;
     char uri[HTTP_MAX_URI];
 
+    if (IsPrinterExist(printerUri.c_str(), printerName.c_str())) {
+        PRINT_HILOGI("add success, printer has added");
+        return E_PRINT_NONE;
+    }
     ippSetPort(CUPS_SEVER_PORT);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s",
@@ -722,19 +726,20 @@ bool PrintCupsClient::IsCupsServerAlive()
  */
 bool PrintCupsClient::IsPrinterExist(const char* printerName)
 {
-    int i; /* Looping var */
     bool printerExist = false;
-    cups_dest_t *dests;
-    PRINT_HILOGD("QueryPrinterExist enter");
-    int num_dests = cupsGetDests2(CUPS_HTTP_DEFAULT, &dests);
-    for (i = 0; i < num_dests; i++) {
-        cups_dest_t *dest = dests + i;
-        if (strcmp(dest->name, printerName) == 0) {
+    cups_dest_t *dest;
+    PRINT_HILOGD("IsPrinterExist enter");
+    dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printerName, NULL);
+    if (dest != NULL) {
+        const char *deviceUri = cupsGetOption("device-uri", dest->num_options, dest->options);
+        PRINT_HILOGD("deviceUri=%s", deviceUri);
+        const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
+        PRINT_HILOGD("makeModel=%s", makeModel);
+        if (strcmp(deviceUri, printerUri) == 0 && makeModel != nullptr) {
             printerExist = true;
-            break;
         }
+        cupsFreeDests(1, dest);
     }
-    cupsFreeDests(num_dests, dests);
     return printerExist;
 }
 

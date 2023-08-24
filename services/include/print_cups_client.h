@@ -133,7 +133,7 @@ private:
     std::string GetDulpexString(uint32_t duplexCode);
     void DumpJobParameters(JobParameters* jobParams);
     bool IsCupsServerAlive();
-    bool IsPrinterExist(const char* printerName);
+    bool IsPrinterExist(const char* printerUri, const char* printerName);
 
     void ParsePrinterAttributes(ipp_t *response, PrinterCapability &printerCaps);
     void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps);
