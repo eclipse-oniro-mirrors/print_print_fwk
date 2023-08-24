@@ -79,7 +79,7 @@ nlohmann::json PrintSecurityGuardInfo::ToJson()
 
     nlohmann::json securityGuardInfoJson;
     securityGuardInfoJson["type"] = 0;
-    securityGuardInfoJson["subType_"] = subType_;
+    securityGuardInfoJson["subType"] = subType_;
     securityGuardInfoJson["caller"] = caller_;
     securityGuardInfoJson["objectInfo"] = objectInfo_;
     securityGuardInfoJson["bootTime"] = bootTime_;
