@@ -724,7 +724,7 @@ bool PrintCupsClient::IsCupsServerAlive()
  * @return true printer exist
  * @return false printer is not exist
  */
-bool PrintCupsClient::IsPrinterExist(const char* printerName)
+bool PrintCupsClient::IsPrinterExist(const char* printerUri, const char* printerName)
 {
     bool printerExist = false;
     cups_dest_t *dest;
