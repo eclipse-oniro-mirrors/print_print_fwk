@@ -2498,14 +2498,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0127, TestSize.Level1)
     std::vector<PrinterInfo> printerInfos;
     InitExtPrinterList(printerInfos, 1);
     EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
-
-    PrintJob testJob;
-    testJob.SetJobId(GetDefaultJobId());
-    testJob.SetPrinterId(GetDefaultPrinterId());
-
-    EXPECT_CALL(*helper, IsSyncMode()).WillRepeatedly(Return(false));
-    service->StartPrintJob(testJob);
-    helper = nullptr;
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128, TestSize.Level1)

@@ -57,7 +57,6 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services:print_service",
     "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
     "//third_party/zlib:libz",
   ]
 
