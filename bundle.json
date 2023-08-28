@@ -53,7 +53,6 @@
           "time_service"
         ],
         "third_party": [
-          "googletest",
           "zlib",
           "cups",
           "cups-filters"
