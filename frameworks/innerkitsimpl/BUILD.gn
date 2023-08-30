@@ -29,18 +29,18 @@ ohos_shared_library("print_client") {
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
   sources = [
+    "src/iprint_adapter.cpp",
+    "src/iprint_adapter_inner.cpp",
+    "src/print_callback.cpp",
     "src/print_callback_stub.cpp",
     "src/print_extension_callback_stub.cpp",
     "src/print_manager_client.cpp",
     "src/print_sa_death_recipient.cpp",
     "src/print_service_proxy.cpp",
     "src/print_sync_load_callback.cpp",
-    "src/print_callback.cpp",
-    "src/iprint_adapter.cpp",
-    "src/iprint_adapter_inner.cpp",
   ]
 
-  deps = [ "${print_path}/frameworks/helper:print_helper" ] 
+  deps = [ "${print_path}/frameworks/helper:print_helper" ]
 
   external_deps = [
     "ability_base:want",
