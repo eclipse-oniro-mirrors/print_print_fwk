@@ -14,6 +14,7 @@
  */
 
 #include "iprint_adapter.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
 void PrintDocumentAdapter::onStartLayoutWrite(const std::string &jobId, const PrintAttributes &oldAttrs,

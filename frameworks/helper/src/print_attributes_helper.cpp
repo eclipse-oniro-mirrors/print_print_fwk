@@ -15,6 +15,7 @@
 
 #include "napi/native_api.h"
 #include "print_attributes_helper.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
 static constexpr const char *PARAM_JOB_COPYNUMBER = "copyNumber";

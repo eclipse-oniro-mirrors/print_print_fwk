@@ -21,7 +21,6 @@
 #include <functional>
 #include "napi/native_api.h"
 #include "print_callback_stub.h"
-#include "print_log.h"
 #include "iprint_adapter.h"
 #include "print_manager_client.h"
 

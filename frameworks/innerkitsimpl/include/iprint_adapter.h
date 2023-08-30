@@ -18,7 +18,6 @@
 
 #include <functional>
 #include "print_job.h"
-#include "print_log.h"
 
 namespace OHOS::Print {
 class PrintDocumentAdapter {

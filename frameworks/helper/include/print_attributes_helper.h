@@ -21,7 +21,6 @@
 #include "print_job.h"
 #include "napi_print_utils.h"
 #include "print_constant.h"
-#include "print_log.h"
 #include "print_margin_helper.h"
 #include "print_preview_attribute_helper.h"
 #include "print_page_size_helper.h"

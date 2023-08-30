@@ -18,6 +18,7 @@
 #include "print_job_helper.h"
 #include "printer_info_helper.h"
 #include "print_attributes_helper.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
 PrintCallback::PrintCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref)
