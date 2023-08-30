@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include <map>
 #include "napi/native_api.h"
 #include "print_attributes_helper.h"
 
@@ -35,7 +34,7 @@ napi_value PrintAttributesHelper::MakeJsObject(napi_env env, const PrintAttribut
     NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_COPYNUMBER, attributes.GetCopyNumber());
 
     if (!CreatePageRange(env, jsObj, attributes)) {
-        PRINT_HILOGE("Failed to create page range of print job");
+        PRINT_HILOGE("Failed to create page range property of print job");
         return nullptr;
     }
 
@@ -51,7 +50,7 @@ napi_value PrintAttributesHelper::MakeJsObject(napi_env env, const PrintAttribut
     NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_DUPLEXMODE, attributes.GetDuplexMode());
 
     if (!CreateMargin(env, jsObj, attributes)) {
-        PRINT_HILOGE("Failed to create page margin property of print job");
+        PRINT_HILOGE("Failed to create margin property of print job");
         return nullptr;
     }
 

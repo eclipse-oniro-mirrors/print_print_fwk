@@ -22,7 +22,6 @@
 
 namespace OHOS::Print {
 class PrintDocumentAdapter {
-
 public:
     virtual void onStartLayoutWrite(const std::string &jobId, const PrintAttributes &oldAttrs,
         const PrintAttributes &newAttrs,
@@ -32,5 +31,4 @@ public:
     virtual void onJobStateChanged(const std::string &jobId, uint32_t state);
 };
 }
-
-#endif //PRINT_FWK_IPRINT_ADAPTER_H
+#endif // PRINT_FWK_IPRINT_ADAPTER_H

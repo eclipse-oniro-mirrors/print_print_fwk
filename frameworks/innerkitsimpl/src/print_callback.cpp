@@ -373,5 +373,4 @@ bool PrintCallback::onCallbackAdapterJobStateChanged(const std::string jobId, co
             }, PrintAdapterJobStateChangedAfterCallFun);
     }
 }
-
 }  // namespace OHOS::Print

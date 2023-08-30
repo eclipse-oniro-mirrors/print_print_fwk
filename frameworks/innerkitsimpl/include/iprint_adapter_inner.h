@@ -30,4 +30,4 @@ public:
 };
 }
 
-#endif //PRINT_FWK_IPRINT_INNER_ADAPTER_H
+#endif // PRINT_FWK_IPRINT_INNER_ADAPTER_H

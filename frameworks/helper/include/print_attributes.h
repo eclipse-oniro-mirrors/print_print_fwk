@@ -112,4 +112,4 @@ private:
     std::string option_;
 };
 } // namespace OHOS::Print
-#endif //PRINT_FWK_PRINT_ATTRIBUTES_H
+#endif // PRINT_FWK_PRINT_ATTRIBUTES_H

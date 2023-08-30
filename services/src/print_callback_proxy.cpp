@@ -151,5 +151,4 @@ bool PrintCallbackProxy::onCallbackAdapterJobStateChanged(const std::string jobI
     PRINT_HILOGI("PrintCallbackProxy::onCallbackAdapterJobStateChanged End");
     return true;
 }
-
 } // namespace OHOS::Print
