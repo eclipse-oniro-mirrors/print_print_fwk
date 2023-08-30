@@ -14,6 +14,7 @@
  */
 
 #include "print_security_guard_manager.h"
+#include "print_log.h"
 
 namespace OHOS::Print {
 using json = nlohmann::json;

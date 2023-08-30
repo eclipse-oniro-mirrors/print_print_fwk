@@ -118,6 +118,11 @@ void PrintJob::SetSubState(uint32_t subState)
     (subState < PRINT_JOB_BLOCKED_UNKNOWN && subState > PRINT_JOB_COMPLETED_FILE_CORRUPT)) {
         subState_ = subState;
     }
+
+    if (jobState_ == PRINT_JOB_CREATE_FILE_COMPLETED &&
+    (subState == PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS || subState == PRINT_JOB_CREATE_FILE_COMPLETED_FAILED)) {
+        subState_ = subState;
+    }
 }
 
 void PrintJob::SetCopyNumber(uint32_t copyNumber)

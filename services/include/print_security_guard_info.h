@@ -31,7 +31,6 @@
 #include "printer_info.h"
 #include "print_job.h"
 #include "print_constant.h"
-#include "print_log.h"
 
 namespace OHOS::Print {
 class PrintSecurityGuardInfo {

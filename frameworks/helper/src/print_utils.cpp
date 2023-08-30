@@ -127,6 +127,7 @@ std::string PrintUtils::GetJobStateChar(const uint32_t state)
         jobStateMap_[PRINT_JOB_RUNNING] = "PRINT_JOB_RUNNING";
         jobStateMap_[PRINT_JOB_BLOCKED] = "PRINT_JOB_BLOCKED";
         jobStateMap_[PRINT_JOB_COMPLETED] = "PRINT_JOB_COMPLETED";
+        jobStateMap_[PRINT_JOB_CREATE_FILE_COMPLETED] = "PRINT_JOB_CREATE_FILE_COMPLETED";
         jobStateMap_[PRINT_JOB_UNKNOWN] = "PRINT_JOB_UNKNOWN";
     }
     auto it = jobStateMap_.find(state);

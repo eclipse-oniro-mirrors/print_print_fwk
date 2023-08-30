@@ -32,6 +32,13 @@ std::mutex g_printTaskMutex;
 napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter print JsMain.");
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+    size_t paramCount = NapiPrintUtils::GetJsVal(env, info, argv);
+    // 通过DocumentAdapter打印
+    if (paramCount == NapiPrintUtils::ARGC_FOUR || paramCount == NapiPrintUtils::ARGC_THREE) {
+        return NapiInnerPrint::PrintByAdapter(env, info);
+    }
+
     auto context = std::make_shared<PrintTaskContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_HILOGD("print parser to native params %{public}d!", static_cast<int>(argc));

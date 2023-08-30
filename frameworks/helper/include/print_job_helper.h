@@ -23,6 +23,7 @@ namespace OHOS::Print {
 class PrintJobHelper {
 public:
     static napi_value MakeJsObject(napi_env env, const PrintJob &job);
+    static napi_value MakeJsSimpleObject(napi_env env, const PrintJob &job);
     static std::shared_ptr<PrintJob> BuildFromJs(napi_env env, napi_value jsValue);
     static std::shared_ptr<PrintJob> BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::string jobId,
         uint32_t jobState, uint32_t subState, std::shared_ptr<PrintJob> &nativeObj);

@@ -38,6 +38,16 @@ static constexpr const char *PARAM_JOB_MARGIN = "margin";
 static constexpr const char *PARAM_JOB_PREVIEW = "preview";
 static constexpr const char *PARAM_JOB_OPTION = "option";
 
+napi_value PrintJobHelper::MakeJsSimpleObject(napi_env env, const PrintJob &job)
+{
+    napi_value jsObj = nullptr;
+    PRINT_CALL(env, napi_create_object(env, &jsObj));
+    NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_JOB_JOBID, job.GetJobId());
+    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_JOBSTATE, job.GetJobState());
+    NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_JOB_SUBSTATE, job.GetSubState());
+    return jsObj;
+}
+
 napi_value PrintJobHelper::MakeJsObject(napi_env env, const PrintJob &job)
 {
     napi_value jsObj = nullptr;

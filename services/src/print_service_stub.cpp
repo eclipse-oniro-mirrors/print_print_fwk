@@ -54,6 +54,8 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERTOCUPS] = &PrintServiceStub::OnAddPrinterToCups;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITYBYURI] =
         &PrintServiceStub::OnQueryPrinterCapabilityByUri;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_STARTPRINTJOB_BY_ADAPTER] = &PrintServiceStub::OnPrintByAdapter;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_START_GET_FILE] = &PrintServiceStub::OnStartGetPrintFile;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -471,6 +473,34 @@ bool PrintServiceStub::OnLoadExtSuccess(MessageParcel &data, MessageParcel &repl
     int32_t ret = LoadExtSuccess(extensionId);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnLoadExtSuccess out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnPrintByAdapter(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnPrintByAdapter in");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    std::string jobName = data.ReadString();
+    auto attrs = PrintAttributes::Unmarshalling(data);
+    if (attrs != nullptr) {
+        attrs->Dump();
+        ret = PrintByAdapter(jobName, *attrs);
+    }
+    reply.WriteInt32(ret);
+    PRINT_HILOGI("PrintServiceStub::OnPrintByAdapter out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnStartGetPrintFile(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnStartGetPrintFile in");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    std::string jobId = data.ReadString();
+    auto attrs = PrintAttributes::Unmarshalling(data);
+    uint32_t fd = static_cast<uint32_t>(data.ReadFileDescriptor());
+    ret = StartGetPrintFile(jobId, *attrs, fd);
+    reply.WriteInt32(ret);
+    PRINT_HILOGI("PrintServiceStub::OnStartGetPrintFile out");
     return ret == E_PRINT_NONE;
 }
 } // namespace OHOS::Print

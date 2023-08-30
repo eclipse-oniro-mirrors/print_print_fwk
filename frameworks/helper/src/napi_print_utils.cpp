@@ -244,6 +244,14 @@ napi_value NapiPrintUtils::CallFunction(
     return res;
 }
 
+napi_value NapiPrintUtils::CreateFunction
+    (napi_env env, const std::string &name, napi_callback func, void *arg)
+{
+    napi_value res = nullptr;
+    PRINT_CALL(env, napi_create_function(env, name.c_str(), NAPI_AUTO_LENGTH, func, arg, &res));
+    return res;
+}
+
 /* reference */
 napi_ref NapiPrintUtils::CreateReference(napi_env env, napi_value callback)
 {
@@ -306,5 +314,14 @@ std::string NapiPrintUtils::GetValueString(napi_env env, napi_value value)
     napi_get_value_string_utf8(env, value, value_string, value_size, &result);
     resultValue = value_string;
     return resultValue;
+}
+
+size_t NapiPrintUtils::GetJsVal(napi_env env, napi_callback_info info, napi_value argv[])
+{
+    size_t argc = NapiPrintUtils::MAX_ARGC;
+    napi_value thisVal = nullptr;
+    void *data = nullptr;
+    napi_get_cb_info(env, info, &argc, argv, &thisVal, &data);
+    return argc;
 }
 }  // namespace OHOS::Print
