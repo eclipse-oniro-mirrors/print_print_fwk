@@ -353,6 +353,44 @@ int32_t PrintManagerClient::Off(const std::string &taskId, const std::string &ty
     return ret;
 }
 
+int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
+    const PrintAttributes &printAttributes)
+{
+    auto func = [printJobName, listener, printAttributes](sptr<IPrintService> serviceProxy) {
+        serviceProxy->On("", PRINT_CALLBACK_ADAPTER, listener);
+        return serviceProxy->PrintByAdapter(printJobName, printAttributes);
+    };
+    return CALL_COMMON_CLIENT(func);
+}
+
+int32_t PrintManagerClient::StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
+    const uint32_t fd)
+{
+    auto func = [jobId, printAttributes, fd](sptr<IPrintService> serviceProxy) {
+        return serviceProxy->StartGetPrintFile(jobId, printAttributes, fd);
+    };
+    return CALL_COMMON_CLIENT(func);
+}
+
+int32_t PrintManagerClient::runBase(const char* callerFunName, std::function<int32_t(sptr<IPrintService>)> func)
+{
+    PRINT_HILOGI("PrintManagerClient %{public}s start.", callerFunName);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (!LoadServer()) {
+        PRINT_HILOGE("LoadServer error");
+        return ret;
+    }
+
+    if (!GetPrintServiceProxy()) {
+        PRINT_HILOGE("GetPrintServiceProxy error");
+        return ret;
+    }
+
+    ret = func(printServiceProxy_);
+    PRINT_HILOGI("PrintManagerClient %{public}s end ret = [%{public}d].", callerFunName, ret);
+    return ret;
+}
+
 int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     uint32_t callbackId, PrintExtCallback cb)
 {

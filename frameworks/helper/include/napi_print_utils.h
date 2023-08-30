@@ -73,6 +73,8 @@ public:
     static void SetBooleanProperty(napi_env env, napi_value object, const std::string &name, bool value);
     static void DefineProperties(
         napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties);
+
+    static size_t GetJsVal(napi_env env, napi_callback_info info, napi_value argv[]);
 };
 } // namespace OHOS::Print
 #endif // NAPI_PRINT_UTILS_H

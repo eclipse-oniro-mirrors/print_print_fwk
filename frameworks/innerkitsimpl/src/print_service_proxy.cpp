@@ -476,6 +476,50 @@ int32_t PrintServiceProxy::RegisterExtCallback(const std::string &extensionCID,
     return ret;
 }
 
+int32_t PrintServiceProxy::PrintByAdapter(const std::string printJobName, const PrintAttributes &printAttributes)
+{
+    PRINT_HILOGI("PrintServiceProxy PrintByAdapter start jobName = [%{public}s]", printJobName.c_str());
+    MessageParcel data, reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(printJobName);
+    printAttributes.Marshalling(data);
+    PRINT_HILOGD("PrintServiceProxy PrintByAdapter started.");
+    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STARTPRINTJOB_BY_ADAPTER,
+        data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("PrintByAdapter, rpc error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    ret = reply.ReadInt32();
+    PRINT_HILOGD("PrintServiceProxy PrintByAdapter out. ret = [%{public}d]", ret);
+    return ret;
+}
+
+int32_t PrintServiceProxy::StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
+    const uint32_t fd)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(jobId);
+    printAttributes.Marshalling(data);
+    data.WriteFileDescriptor(fd);
+    PRINT_HILOGD("PrintServiceProxy StartGetPrintFile started.");
+    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_START_GET_FILE, data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("StartGetPrintFile, rpc error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    ret = reply.ReadInt32();
+    PRINT_HILOGD("PrintServiceProxy StartGetPrintFile out. ret = [%{public}d]", ret);
+    return ret;
+}
+
 int32_t PrintServiceProxy::UnregisterAllExtCallback(const std::string &extensionId)
 {
     PRINT_HILOGD("PrintServiceProxy::UnregisterAllExtCallback in");

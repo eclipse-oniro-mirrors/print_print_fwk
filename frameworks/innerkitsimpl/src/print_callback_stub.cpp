@@ -25,6 +25,8 @@ PrintCallbackStub::PrintCallbackStub()
     cmdMap_[PRINT_CALLBACK_PRINTER] = &PrintCallbackStub::HandlePrinterEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_JOB] = &PrintCallbackStub::HandlePrintJobEvent;
     cmdMap_[PRINT_CALLBACK_EXTINFO] = &PrintCallbackStub::HandleExtEvent;
+    cmdMap_[PRINT_CALLBACK_PRINT_JOB_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterJobEvent;
+    cmdMap_[PRINT_CALLBACK_PRINT_JOB_CHANGED_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterJobChangedEvent;
 }
 
 int32_t PrintCallbackStub::OnRemoteRequest(
@@ -85,6 +87,40 @@ bool PrintCallbackStub::HandleExtEvent(MessageParcel &data, MessageParcel &reply
     std::string info = data.ReadString();
     bool result = OnCallback(extensionId, info);
     reply.WriteBool(result);
+    return true;
+}
+
+bool PrintCallbackStub::HandlePrintAdapterJobEvent(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobEvent start");
+    std::string jobId = data.ReadString();
+    auto oldAttrs = PrintAttributes::Unmarshalling(data);
+    auto newAttrs = PrintAttributes::Unmarshalling(data);
+    if (newAttrs == nullptr) {
+        PRINT_HILOGE("invalid print attributes object");
+        return false;
+    }
+    uint32_t fd = static_cast<uint32_t>(data.ReadFileDescriptor());
+
+    PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobEvent jobId:%{public}s, fd:%{public}d", jobId.c_str(), fd);
+    bool result = OnCallbackAdapterLayout(jobId, *oldAttrs, *newAttrs, fd);
+    reply.WriteBool(result);
+    PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobEvent end");
+    return true;
+}
+
+bool PrintCallbackStub::HandlePrintAdapterJobChangedEvent(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobChangedEvent start");
+    std::string jobId = data.ReadString();
+    uint32_t state = data.ReadUint32();
+    uint32_t subState = data.ReadUint32();
+
+    PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobChangedEvent jobId:%{public}s, subState:%{public}d",
+        jobId.c_str(), subState);
+    bool result = onCallbackAdapterJobStateChanged(jobId, state, subState);
+    reply.WriteBool(result);
+    PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobChangedEvent end");
     return true;
 }
 } // namespace OHOS::Print

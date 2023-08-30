@@ -22,6 +22,8 @@
 #include "napi/native_api.h"
 #include "print_callback_stub.h"
 #include "print_log.h"
+#include "iprint_adapter.h"
+#include "print_manager_client.h"
 
 namespace OHOS::Print {
 struct CallbackParam {
@@ -34,16 +36,26 @@ struct CallbackParam {
 
     std::string extensionId;
     std::string info;
+
+    std::string jobId;
+    PrintAttributes oldAttrs;
+    PrintAttributes newAttrs;
+    uint32_t fd;
 };
 
 class PrintCallback : public PrintCallbackStub {
 public:
     PrintCallback(napi_env env, napi_ref ref);
+    PrintCallback(PrintDocumentAdapter *adapter);
     virtual ~PrintCallback();
     bool OnCallback() override;
     bool OnCallback(uint32_t state, const PrinterInfo &info) override;
     bool OnCallback(uint32_t state, const PrintJob &info) override;
     bool OnCallback(const std::string &extensionId, const std::string &info) override;
+    bool OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
+        const PrintAttributes &newAttrs, uint32_t fd) override;
+    bool onCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
+        const uint32_t subState) override;
 
 private:
     bool onBaseCallback(std::function<void(CallbackParam*)> paramFun, uv_after_work_cb after_work_cb);
@@ -52,6 +64,7 @@ private:
     napi_env env_;
     napi_ref ref_;
     std::mutex mutex_;
+    PrintDocumentAdapter *adapter_ = nullptr;
 };
 }  // namespace OHOS::Print
 #endif  // IPRINT_CALLBACK_H

@@ -65,7 +65,7 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrintJob &info)
     MessageParcel reply;
     MessageOption option;
 
-    PRINT_HILOGD("PrintJob Event argument:[%{public}d], subState [%{public}d]", state, info.GetSubState());
+    PRINT_HILOGD("PrintJob Event state:[%{public}d], subState [%{public}d]", state, info.GetSubState());
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(state);
     info.Marshalling(data);
@@ -98,4 +98,58 @@ bool PrintCallbackProxy::OnCallback(const std::string &extensionId, const std::s
     PRINT_HILOGD("PrintCallbackProxy::OnCallback End");
     return true;
 }
+
+bool PrintCallbackProxy::OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
+    const PrintAttributes &newAttrs, uint32_t fd)
+{
+    PRINT_HILOGI("PrintCallbackProxy::OnCallbackAdapterLayout Start");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        PRINT_HILOGE("write descriptor failed");
+        return false;
+    }
+
+    data.WriteString(jobId);
+    oldAttrs.Marshalling(data);
+    newAttrs.Marshalling(data);
+    data.WriteFileDescriptor(fd);
+
+    int error = Remote()->SendRequest(PRINT_CALLBACK_PRINT_JOB_ADAPTER, data, reply, option);
+    if (error != 0) {
+        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+        return false;
+    }
+    PRINT_HILOGI("PrintCallbackProxy::OnCallbackAdapterLayout End");
+    return true;
+}
+
+bool PrintCallbackProxy::onCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
+    const uint32_t subState)
+{
+    PRINT_HILOGI("PrintCallbackProxy::onCallbackAdapterJobStateChanged Start");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        PRINT_HILOGE("write descriptor failed");
+        return false;
+    }
+
+    data.WriteString(jobId);
+    data.WriteUint32(state);
+    data.WriteUint32(subState);
+
+    int error = Remote()->SendRequest(PRINT_CALLBACK_PRINT_JOB_CHANGED_ADAPTER, data, reply, option);
+    if (error != 0) {
+        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+        return false;
+    }
+    PRINT_HILOGI("PrintCallbackProxy::onCallbackAdapterJobStateChanged End");
+    return true;
+}
+
 } // namespace OHOS::Print

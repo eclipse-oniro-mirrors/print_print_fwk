@@ -42,6 +42,7 @@ ohos_unittest("print_service_test") {
 
   deps = [
     "${print_path}/etc/init:printservice.rc",
+    "${print_path}/frameworks/helper:print_helper",
     "${print_path}/frameworks/innerkitsimpl:print_client",
     "${print_path}/frameworks/kits/extension:print_extension_framework",
     "${print_path}/frameworks/kits/extension:print_extension_module",

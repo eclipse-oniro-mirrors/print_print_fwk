@@ -76,6 +76,9 @@ public:
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName) override;
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps) override;
     void SetHelper(const std::shared_ptr<PrintServiceHelper> &helper);
+    int32_t PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes) override;
+    int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
+        const uint32_t fd) override;
 
 protected:
     void OnStart() override;
@@ -103,6 +106,11 @@ private:
     void ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
     void ReportCompletedPrint(const std::string &printerId);
     void CheckJobQueueBlocked(const PrintJob &jobInfo);
+    int32_t CallSpooler(const std::vector<std::string> &fileList,
+        const std::vector<uint32_t> &fdList, std::string &taskId, bool isCheckFdList);
+    void notifyAdapterJobChanged(const std::string jobId, const uint32_t state, const uint32_t subState);
+    bool checkJobState(uint32_t state, uint32_t subState);
+    int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
@@ -121,6 +129,7 @@ private:
     std::map<std::string, PrintExtensionState> extensionStateList_;
     std::map<std::string, std::shared_ptr<PrintJob>> printJobList_;
     std::map<std::string, std::shared_ptr<PrintJob>> queuedJobList_;
+    std::map<std::string, PrintAttributes> printAttributesList_;
 
     std::map<std::string, std::shared_ptr<PrinterInfo>> printerInfoList_;
     std::map<std::string, std::unordered_map<std::string, bool>> printerJobMap_;

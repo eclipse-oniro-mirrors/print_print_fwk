@@ -88,6 +88,14 @@
             ],
             "header_base":"//base/print/print_fwk/frameworks/innerkitsimpl/include"
           }
+        },
+        {
+          "name": "//base/print/print_fwk/frameworks/helper:print_helper",
+          "header": {
+            "header_files": [
+            ],
+            "header_base":"//base/print/print_fwk/frameworks/helper/include"
+          }
         }
       ],
       "test": [

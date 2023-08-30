@@ -29,6 +29,10 @@ public:
     virtual bool OnCallback(uint32_t state, const PrinterInfo &info) = 0;
     virtual bool OnCallback(uint32_t state, const PrintJob &info) = 0;
     virtual bool OnCallback(const std::string &extensionId, const std::string &info) = 0;
+    virtual bool OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
+        const PrintAttributes &newAttrs, uint32_t fd) = 0;
+    virtual bool onCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
+        const uint32_t subState) = 0;
 };
 
 enum {
@@ -36,6 +40,9 @@ enum {
     PRINT_CALLBACK_PRINTER,
     PRINT_CALLBACK_PRINT_JOB,
     PRINT_CALLBACK_EXTINFO,
+    PRINT_CALLBACK_PRINT_JOB_ADAPTER,
+    PRINT_CALLBACK_PRINT_JOB_ADAPTER_TEST,
+    PRINT_CALLBACK_PRINT_JOB_CHANGED_ADAPTER,
 };
 } // namespace OHOS::Print
 #endif // IPRINT_CALLBACK_H

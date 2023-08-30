@@ -21,6 +21,7 @@
 #include "ability_context.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
+#include "napi_inner_print.h"
 
 namespace OHOS::Print {
 struct PrintTaskContext : public PrintAsyncCall::Context {

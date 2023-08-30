@@ -64,6 +64,7 @@ static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRI
 static const std::string PRINTER_EVENT_TYPE = "printerStateChange";
 static const std::string PRINTJOB_EVENT_TYPE = "jobStateChange";
 static const std::string EXTINFO_EVENT_TYPE = "extInfoChange";
+static const std::string PRINT_ADAPTER_EVENT_TYPE = "printCallback_adapter";
 static const std::string EVENT_BLOCK = "block";
 static const std::string EVENT_SUCCESS = "succeed";
 static const std::string EVENT_FAIL = "fail";
@@ -219,6 +220,12 @@ void PrintServiceAbility::BuildFDParam(const std::vector<uint32_t> &fdList, AAFw
 int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList,
     const std::vector<uint32_t> &fdList, std::string &taskId)
 {
+    return CallSpooler(fileList, fdList, taskId, true);
+}
+
+int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileList,
+    const std::vector<uint32_t> &fdList, std::string &taskId, bool isCheckFdList)
+{
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGD("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
@@ -226,7 +233,7 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     }
     PRINT_HILOGD("PrintServiceAbility StartPrint started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (fileList.empty() && fdList.empty()) {
+    if (isCheckFdList && fileList.empty() && fdList.empty()) {
         PRINT_HILOGE("to be printed filelist and fdlist are empty");
         return E_PRINT_INVALID_PARAMETER;
     }
@@ -242,6 +249,7 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_ABILITY_NAME);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, jobId);
     want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList);
+
     BuildFDParam(fdList, want);
     int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
@@ -905,21 +913,31 @@ int32_t PrintServiceAbility::UpdatePrinterState(const std::string &printerId, ui
     return E_PRINT_NONE;
 }
 
+bool PrintServiceAbility::checkJobState(uint32_t state, uint32_t subState)
+{
+    if (state > PRINT_JOB_UNKNOWN) {
+        return false;
+    }
+    if (state == PRINT_JOB_BLOCKED && (subState < PRINT_JOB_BLOCKED_OFFLINE || subState > PRINT_JOB_BLOCKED_UNKNOWN)) {
+        return false;
+    }
+    if (state == PRINT_JOB_COMPLETED && subState > PRINT_JOB_COMPLETED_FILE_CORRUPT) {
+        return false;
+    }
+
+    return true;
+}
+
 int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(state == PRINT_JOB_CREATE_FILE_COMPLETED ? PERMISSION_NAME_PRINT:
+            PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
 
-    if (state > PRINT_JOB_UNKNOWN) {
-        return E_PRINT_INVALID_PARAMETER;
-    }
-    if (state == PRINT_JOB_BLOCKED && (subState < PRINT_JOB_BLOCKED_OFFLINE || subState > PRINT_JOB_BLOCKED_UNKNOWN)) {
-        return E_PRINT_INVALID_PARAMETER;
-    }
-    if (state == PRINT_JOB_COMPLETED && subState > PRINT_JOB_COMPLETED_FILE_CORRUPT) {
+    if (!checkJobState(state, subState)) {
         return E_PRINT_INVALID_PARAMETER;
     }
 
@@ -927,6 +945,18 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
         jobId.c_str(), state, PrintUtils::GetJobStateChar(state).c_str(), subState);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
+    if (state == PRINT_JOB_CREATE_FILE_COMPLETED) {
+        auto printJob = std::make_shared<PrintJob>();
+        printJob->SetJobId(jobId);
+        printJob->SetSubState(subState);
+        queuedJobList_.insert(std::make_pair(jobId, printJob));
+    }
+
+    return CheckAndSendQueuePrintJob(jobId, state, subState);
+}
+
+int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState)
+{
     auto jobIt = queuedJobList_.find(jobId);
     bool jobInQueue = true;
     if (jobIt == queuedJobList_.end()) {
@@ -941,6 +971,7 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
     jobIt->second->SetJobState(state);
     jobIt->second->SetSubState(subState);
     SendPrintJobEvent(*jobIt->second);
+    notifyAdapterJobChanged(jobId, state, subState);
     CheckJobQueueBlocked(*jobIt->second);
 
     auto printerId = jobIt->second->GetPrinterId();
@@ -958,7 +989,7 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
         SendQueuePrintJob(printerId);
     }
 
-    PRINT_HILOGD("UpdatePrintJobState end.");
+    PRINT_HILOGD("CheckAndSendQueuePrintJob end.");
     return E_PRINT_NONE;
 }
 
@@ -1287,6 +1318,12 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
         permission = PERMISSION_NAME_PRINT;
         eventType = PrintUtils::GetTaskEventId(taskId, type);
     }
+
+    if (type == PRINT_CALLBACK_ADAPTER) {
+        permission = PERMISSION_NAME_PRINT;
+        eventType = type;
+    }
+
     if (!CheckPermission(permission)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1383,8 +1420,8 @@ void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info)
 
 void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
 {
-    PRINT_HILOGD("PrintServiceAbility::SendPrintJobEvent type %{public}s, %{public}d",
-        jobInfo.GetJobId().c_str(), jobInfo.GetJobState());
+    PRINT_HILOGD("PrintServiceAbility::SendPrintJobEvent jobId: %{public}s, state: %{public}d, subState: %{public}d",
+        jobInfo.GetJobId().c_str(), jobInfo.GetJobState(), jobInfo.GetSubState());
     auto eventIt = registeredListeners_.find(PRINTJOB_EVENT_TYPE);
     if (eventIt != registeredListeners_.end()) {
         eventIt->second->OnCallback(jobInfo.GetJobState(), jobInfo);
@@ -1478,5 +1515,60 @@ void PrintServiceAbility::CheckJobQueueBlocked(const PrintJob &jobInfo)
         }
     }
     PRINT_HILOGD("CheckJobQueueBlocked end,isJobQueueBlocked_=%{public}s", isJobQueueBlocked_ ? "true" : "false");
+}
+
+int32_t PrintServiceAbility::PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes)
+{
+    PRINT_HILOGI("PrintServiceAbility::PrintByAdapter start");
+    // 拉起打印预览页面
+    std::vector<std::string> fileList;
+    std::vector<uint32_t> fdList;
+    std::string taskId;
+    int32_t ret = CallSpooler(fileList, fdList, taskId, false);
+    PRINT_HILOGI("PrintServiceAbility::PrintByAdapter end");
+    return ret;
+}
+
+int32_t PrintServiceAbility::StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
+    const uint32_t fd)
+{
+    PRINT_HILOGI("PrintServiceAbility::StartGetPrintFile start");
+    auto eventIt = registeredListeners_.find(PRINT_ADAPTER_EVENT_TYPE);
+    if (eventIt != registeredListeners_.end()) {
+        PrintAttributes oldAttrs;
+        auto attrIt = printAttributesList_.find(jobId);
+        if (attrIt == printAttributesList_.end()) {
+            printAttributesList_.insert(std::make_pair(jobId, printAttributes));
+        } else {
+            oldAttrs = attrIt->second;
+            PRINT_HILOGD("PrintServiceAbility::StartGetPrintFile Replace printAttributes.");
+            printAttributesList_[jobId] = printAttributes;
+        }
+
+        eventIt->second->OnCallbackAdapterLayout(jobId, oldAttrs, printAttributes, fd);
+    } else {
+        PRINT_HILOGW("PrintServiceAbility find event:%{public}s not found", PRINT_ADAPTER_EVENT_TYPE.c_str());
+    }
+    PRINT_HILOGI("PrintServiceAbility::StartGetPrintFile end");
+    return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::notifyAdapterJobChanged(const std::string jobId, const uint32_t state,
+    const uint32_t subState)
+{
+    // 任务完成通知Adapter
+    if (subState == PRINT_JOB_COMPLETED_SUCCESS
+        || subState == PRINT_JOB_COMPLETED_FAILED
+        || subState == PRINT_JOB_COMPLETED_CANCELLED) {
+        auto attrIt = printAttributesList_.find(jobId);
+        if (attrIt != printAttributesList_.end()) {
+            printAttributesList_.erase(attrIt);
+        }
+
+        auto eventIt = registeredListeners_.find(PRINT_ADAPTER_EVENT_TYPE);
+        if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {
+            eventIt->second->onCallbackAdapterJobStateChanged(jobId, state, subState);
+        }
+    }
 }
 } // namespace OHOS::Print

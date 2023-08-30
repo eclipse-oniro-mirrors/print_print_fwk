@@ -66,6 +66,10 @@ public:
 
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);
+    int32_t Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
+        const PrintAttributes &printAttributes);
+    int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
+        const uint32_t fd);
 
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrintExtCallback cb);
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrintJobCallback cb);
@@ -82,6 +86,8 @@ public:
 private:
     bool LoadServer();
     bool GetPrintServiceProxy();
+    int32_t runBase(const char* callerFunName, std::function<int32_t(sptr<IPrintService>)> func);
+    #define CALL_COMMON_CLIENT(func) runBase(__func__, func)
 
 private:
     static std::mutex instanceLock_;

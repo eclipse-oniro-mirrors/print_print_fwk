@@ -28,6 +28,10 @@ public:
     bool OnCallback(uint32_t state, const PrinterInfo &info) override;
     bool OnCallback(uint32_t state, const PrintJob &info) override;
     bool OnCallback(const std::string &extensionId, const std::string &info) override;
+    bool OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
+        const PrintAttributes &newAttrs, uint32_t fd) override;
+    bool onCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
+        const uint32_t subState) override;
 
 private:
     static inline BrokerDelegator<PrintCallbackProxy> delegator_;

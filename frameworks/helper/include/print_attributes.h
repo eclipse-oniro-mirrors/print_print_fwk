@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_JOB_H
-#define PRINT_JOB_H
+
+#ifndef PRINT_FWK_PRINT_ATTRIBUTES_H
+#define PRINT_FWK_PRINT_ATTRIBUTES_H
+#define TDD_ENABLE 1
+
 #include <map>
-#include <string>
-#include <vector>
 
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
@@ -28,25 +29,15 @@
 #include "print_range.h"
 
 namespace OHOS::Print {
-class PrintJob final : public Parcelable {
+class PrintAttributes final : public Parcelable {
 public:
-    explicit PrintJob();
+    explicit PrintAttributes();
 
-    PrintJob(const PrintJob &right);
+    PrintAttributes(const PrintAttributes &right);
 
-    PrintJob &operator=(const PrintJob &right);
+    PrintAttributes &operator=(const PrintAttributes &right);
 
-    virtual ~PrintJob();
-
-    void SetFdList(const std::vector<uint32_t> &files);
-
-    void SetJobId(const std::string &jobId);
-
-    void SetPrinterId(const std::string &printerid);
-
-    void SetJobState(uint32_t jobState);
-
-    void SetSubState(uint32_t jobSubState);
+    virtual ~PrintAttributes();
 
     void SetCopyNumber(uint32_t copyNumber);
 
@@ -66,19 +57,7 @@ public:
 
     void SetOption(const std::string &option);
 
-    void SetPreview(const PrintPreviewAttribute &preview);
-
-    void UpdateParams(const PrintJob& jobInfo);
-
-    void GetFdList(std::vector<uint32_t> &fdList) const;
-
-    [[nodiscard]] const std::string &GetJobId() const;
-
-    [[nodiscard]] const std::string &GetPrinterId() const;
-
-    [[nodiscard]] uint32_t GetJobState() const;
-
-    [[nodiscard]] uint32_t GetSubState() const;
+    void UpdateParams(const PrintAttributes& jobInfo);
 
     [[nodiscard]] uint32_t GetCopyNumber() const;
 
@@ -94,8 +73,6 @@ public:
 
     [[nodiscard]] uint32_t GetDuplexMode() const;
 
-    [[nodiscard]] bool HasMargin() const;
-
     void GetMargin(PrintMargin &printMargin) const;
 
     [[nodiscard]] bool HasPreview() const;
@@ -110,20 +87,18 @@ public:
 
     virtual bool MarshallingParam(Parcel &parcel) const;
 
-    static std::shared_ptr<PrintJob> Unmarshalling(Parcel &parcel);
+    static std::shared_ptr<PrintAttributes> Unmarshalling(Parcel &parcel);
 
     void Dump();
 
+#ifndef TDD_ENABLE
 private:
-    void ReadFromParcel(Parcel &parcel);
-    void ReadParcelFD(Parcel &parcel);
+#endif
+    bool ReadFromParcel(Parcel &parcel);
 
+#ifndef TDD_ENABLE
 private:
-    std::vector<uint32_t> fdList_;
-    std::string jobId_;
-    std::string printerId_;
-    uint32_t jobState_;
-    uint32_t subState_;
+#endif
     uint32_t copyNumber_;
     PrintRange pageRange_;
     bool isSequential_;
@@ -133,10 +108,8 @@ private:
     uint32_t duplexMode_;
     bool hasMargin_;
     PrintMargin margin_;
-    bool hasPreview_;
-    PrintPreviewAttribute preview_;
     bool hasOption_;
     std::string option_;
 };
-}  // namespace OHOS::Print
-#endif  // PRINT_JOB_H
+} // namespace OHOS::Print
+#endif //PRINT_FWK_PRINT_ATTRIBUTES_H
