@@ -134,6 +134,15 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
+        const uint32_t fd) override
+    {
+        return E_PRINT_NONE;
+    }
 };
 
 class MockPrintService final : public DummyPrintServiceStub {

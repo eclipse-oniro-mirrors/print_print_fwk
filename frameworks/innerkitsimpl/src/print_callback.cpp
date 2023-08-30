@@ -50,7 +50,7 @@ static bool InitUvWorkCallbackEnv(uv_work_t *work, napi_handle_scope &scope)
         PRINT_HILOGE("data is nullptr");
         return false;
     }
-    CallbackParam *cbParam = reinterpret_cast<CallbackParam*>(work->data);
+    CallbackParam *cbParam = reinterpret_cast<CallbackParam *>(work->data);
     napi_open_handle_scope(cbParam->env, &scope);
     if (scope == nullptr) {
         PRINT_HILOGE("fail to open scope");
@@ -183,7 +183,7 @@ static void PrintAdapterAfterCallFun(uv_work_t *work, int status)
     if (!InitUvWorkCallbackEnv(work, scope)) {
         return;
     }
-    CallbackParam *cbParam = static_cast<CallbackParam *>(work->data);
+    CallbackParam *cbParam = static_cast<CallbackParam*>(work->data);
     if (cbParam != nullptr) {
         std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
         napi_value adapterObj = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
