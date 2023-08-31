@@ -1519,6 +1519,11 @@ void PrintServiceAbility::CheckJobQueueBlocked(const PrintJob &jobInfo)
 
 int32_t PrintServiceAbility::PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes)
 {
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
     PRINT_HILOGI("PrintServiceAbility::PrintByAdapter start");
     // 拉起打印预览页面
     std::vector<std::string> fileList;
@@ -1532,6 +1537,11 @@ int32_t PrintServiceAbility::PrintByAdapter(const std::string jobName, const Pri
 int32_t PrintServiceAbility::StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
     const uint32_t fd)
 {
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
     PRINT_HILOGI("PrintServiceAbility::StartGetPrintFile start");
     auto eventIt = registeredListeners_.find(PRINT_ADAPTER_EVENT_TYPE);
     if (eventIt != registeredListeners_.end()) {
