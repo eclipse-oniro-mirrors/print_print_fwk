@@ -1520,7 +1520,7 @@ void PrintServiceAbility::CheckJobQueueBlocked(const PrintJob &jobInfo)
 int32_t PrintServiceAbility::PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
