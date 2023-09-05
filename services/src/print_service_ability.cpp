@@ -653,7 +653,11 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
         return E_PRINT_GENERIC_FAILURE;
     }
     printJob->UpdateParams(jobInfo);
-    queuedJobList_.insert(std::make_pair(jobId, printJob));
+    if (queuedJobList_.find(jobId) != queuedJobList_.end()) {
+        queuedJobList_[jobId] = printJob;
+    } else {
+        queuedJobList_.insert(std::make_pair(jobId, printJob));
+    }
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
 #ifdef CUPS_ENABLE
     if (cid.find(SPOOLER_BUNDLE_NAME) != string::npos) {
