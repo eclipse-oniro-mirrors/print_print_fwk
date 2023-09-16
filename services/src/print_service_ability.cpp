@@ -708,7 +708,7 @@ void PrintServiceAbility::StartPrintJobCB(const std::string &jobId, const std::s
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
     printJob->SetJobState(PRINT_JOB_QUEUED);
     UpdatePrintJobState(jobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
-}    
+}
 
 int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
 {
