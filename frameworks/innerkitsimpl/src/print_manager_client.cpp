@@ -356,9 +356,16 @@ int32_t PrintManagerClient::Off(const std::string &taskId, const std::string &ty
 int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
     const PrintAttributes &printAttributes)
 {
-    auto func = [printJobName, listener, printAttributes](sptr<IPrintService> serviceProxy) {
+    retrun Prinit(printJobName, listener, printAttributes, nullptr);
+}
+
+int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
+    const PrintAttributes &printAttributes, void* contextToken)
+{
+    auto func = [printJobName, listener, printAttributes, contextToken](sptr<IPrintService> serviceProxy) {
         serviceProxy->On("", PRINT_CALLBACK_ADAPTER, listener);
-        return serviceProxy->PrintByAdapter(printJobName, printAttributes);
+        sptr<IRemoteObject> token = static_cast<IRemoteObject*>(contextToken);
+        return serviceProxy->PrintByAdapter(printJobName, printAttributes, token);
     };
     return CALL_COMMON_CLIENT(func);
 }

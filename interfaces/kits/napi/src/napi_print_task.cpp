@@ -33,15 +33,15 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter print JsMain.");
     napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
-    size_t paramCount = NapiPrintUtils::GetJsVal(env, info, argv);
-    // 通过DocumentAdapter打印
-    if (paramCount == NapiPrintUtils::ARGC_FOUR || paramCount == NapiPrintUtils::ARGC_THREE) {
+    size_t paramCount = NapiPrintUtils::GetJsVal(env, info, argv, NapiPrintUtils::MAX_ARGC);
+    napi_valuetype type;
+    PRINT_CALL(env, napi_typeof(env, argv[0], &type));
+    if ((paramCount == NapiPrintUtils::ARGC_FOUR || paramCount == NapiPrintUtils::ARGC_THREE) && type == napi_string) {
         return NapiInnerPrint::PrintByAdapter(env, info);
     }
 
     auto context = std::make_shared<PrintTaskContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        PRINT_HILOGD("print parser to native params %{public}d!", static_cast<int>(argc));
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
             "need 1 or 2 parameter!", napi_invalid_arg);
         napi_status checkStatus = VerifyParameters(env, argc, argv, context);

@@ -45,7 +45,7 @@ struct CallbackParam {
 class PrintCallback : public PrintCallbackStub {
 public:
     PrintCallback(napi_env env, napi_ref ref);
-    PrintCallback(PrintDocumentAdapter *adapter);
+    explicit PrintCallback(PrintDocumentAdapter *adapter);
     virtual ~PrintCallback();
     bool OnCallback() override;
     bool OnCallback(uint32_t state, const PrinterInfo &info) override;
@@ -55,13 +55,14 @@ public:
         const PrintAttributes &newAttrs, uint32_t fd) override;
     bool onCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
         const uint32_t subState) override;
+    bool OnCallbackAdapterGetFile(uint32_t state) override;
 
 private:
     bool onBaseCallback(std::function<void(CallbackParam*)> paramFun, uv_after_work_cb after_work_cb);
 
 private:
-    napi_env env_;
-    napi_ref ref_;
+    napi_env env_ = nullptr;
+    napi_ref ref_ = nullptr;
     std::mutex mutex_;
     PrintDocumentAdapter *adapter_ = nullptr;
 };

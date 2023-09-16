@@ -479,20 +479,36 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
 {
     PRINT_HILOGI("StartGetPrintFile start ---->");
     napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
-    size_t argc = NapiPrintUtils::GetJsVal(env, info, argv);
-    PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_THREE, "StartGetPrintFile need 3 parameter!");
+    size_t argc = NapiPrintUtils::GetJsVal(env, info, argv, NapiPrintUtils::MAX_ARGC);
+    PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_FOUR, "StartGetPrintFile need 4 parameter!");
 
     napi_valuetype valuetype;
     PRINT_CALL(env, napi_typeof(env, argv[0], &valuetype));
     PRINT_ASSERT(env, valuetype == napi_string, "type is not a string");
     std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
 
+    if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_THREE) {
+        napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_THREE]);
+        sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
+        if (callback == nullptr) {
+            PRINT_HILOGE("create startGetPrintFile callback object fail");
+            return nullptr;
+        }
+        int32_t retCallback = PrintManagerClient::GetInstance()->On("", PRINT_GET_FILE_CALLBACK_ADAPTER, callback);
+        if (retCallback != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to register startGetPrintFile callback");
+            return nullptr;
+        }
+    }
+
     auto printAttributes = PrintAttributesHelper::BuildFromJs(env, argv[1]);
-    uint32_t fd = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_TWO]);
-    int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, *printAttributes, fd);
-    if (ret != E_PRINT_NONE) {
-        PRINT_HILOGE("Failed to StartGetPrintFile");
-        return nullptr;
+    if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_TWO) {
+        uint32_t fd = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_TWO]);
+        int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, *printAttributes, fd);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to StartGetPrintFile");
+            return nullptr;
+        }
     }
     return nullptr;
 }
@@ -501,7 +517,7 @@ napi_value NapiInnerPrint::PrintByAdapter(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGI("PrintByAdapter start ---->");
     napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
-    size_t argc = NapiPrintUtils::GetJsVal(env, info, argv);
+    size_t argc = NapiPrintUtils::GetJsVal(env, info, argv, NapiPrintUtils::MAX_ARGC);
     PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_FOUR || argc == NapiPrintUtils::ARGC_THREE,
         "PrintByAdapter need 3 or 4 parameter!");
 
@@ -527,11 +543,13 @@ napi_value NapiInnerPrint::PrintByAdapter(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    auto printAttributes = PrintAttributesHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_TWO]);
-    int32_t ret = PrintManagerClient::GetInstance()->Print(printJobName, callback, *printAttributes);
-    if (ret != E_PRINT_NONE) {
-        PRINT_HILOGE("Failed to register event");
-        return nullptr;
+    if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_TWO) {
+        auto printAttributes = PrintAttributesHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_TWO]);
+        int32_t ret = PrintManagerClient::GetInstance()->Print(printJobName, callback, *printAttributes);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to register event");
+            return nullptr;
+        }
     }
     return nullptr;
 }

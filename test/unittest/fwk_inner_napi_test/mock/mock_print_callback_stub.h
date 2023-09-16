@@ -48,6 +48,10 @@ public:
     {
         return true;
     }
+    bool OnCallbackAdapterGetFile(uint32_t state) override
+    {
+        return true;
+    }
 };
 
 class MockPrintCallbackStub final : public DummyPrintCallbackStub {

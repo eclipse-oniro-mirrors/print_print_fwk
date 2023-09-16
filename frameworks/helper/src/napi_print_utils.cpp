@@ -316,9 +316,9 @@ std::string NapiPrintUtils::GetValueString(napi_env env, napi_value value)
     return resultValue;
 }
 
-size_t NapiPrintUtils::GetJsVal(napi_env env, napi_callback_info info, napi_value argv[])
+size_t NapiPrintUtils::GetJsVal(napi_env env, napi_callback_info info, napi_value argv[], size_t length)
 {
-    size_t argc = NapiPrintUtils::MAX_ARGC;
+    size_t argc = length;
     napi_value thisVal = nullptr;
     void *data = nullptr;
     napi_get_cb_info(env, info, &argc, argv, &thisVal, &data);

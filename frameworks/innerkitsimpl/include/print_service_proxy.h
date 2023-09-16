@@ -55,7 +55,8 @@ public:
     int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) override;
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName) override;
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps) override;
-    int32_t PrintByAdapter(const std::string printJobName, const PrintAttributes &printAttributes) override;
+    int32_t PrintByAdapter(const std::string printJobName, const PrintAttributes &printAttributes,
+        const sptr<IRemoteObject> &token) override;
     int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
         const uint32_t fd) override;
 

@@ -482,9 +482,10 @@ bool PrintServiceStub::OnPrintByAdapter(MessageParcel &data, MessageParcel &repl
     int32_t ret = E_PRINT_RPC_FAILURE;
     std::string jobName = data.ReadString();
     auto attrs = PrintAttributes::Unmarshalling(data);
+    sptr<IRemoteObject> token = data.ReadRemoteObject();
     if (attrs != nullptr) {
         attrs->Dump();
-        ret = PrintByAdapter(jobName, *attrs);
+        ret = PrintByAdapter(jobName, *attrs, token);
     }
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnPrintByAdapter out");

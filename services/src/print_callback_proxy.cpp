@@ -151,4 +151,27 @@ bool PrintCallbackProxy::onCallbackAdapterJobStateChanged(const std::string jobI
     PRINT_HILOGI("PrintCallbackProxy::onCallbackAdapterJobStateChanged End");
     return true;
 }
+
+bool PrintCallbackProxy::OnCallbackAdapterGetFile(uint32_t state)
+{
+    PRINT_HILOGI("PrintCallbackProxy::OnCallbackAdapterGetFile Start");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        PRINT_HILOGE("write descriptor failed");
+        return false;
+    }
+
+    data.WriteUint32(state);
+
+    int error = Remote()->SendRequest(PRINT_CALLBACK_PRINT_GET_FILE_ADAPTER, data, reply, option);
+    if (error != 0) {
+        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+        return false;
+    }
+    PRINT_HILOGI("PrintCallbackProxy::OnCallbackAdapterGetFile End");
+    return true;
+}
 } // namespace OHOS::Print

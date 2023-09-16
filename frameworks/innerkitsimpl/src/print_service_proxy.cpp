@@ -476,15 +476,17 @@ int32_t PrintServiceProxy::RegisterExtCallback(const std::string &extensionCID,
     return ret;
 }
 
-int32_t PrintServiceProxy::PrintByAdapter(const std::string printJobName, const PrintAttributes &printAttributes)
+int32_t PrintServiceProxy::PrintByAdapter(const std::string printJobName, const PrintAttributes &printAttributes,
+    const sptr<IRemoteObject> &token)
 {
-    PRINT_HILOGI("PrintServiceProxy PrintByAdapter start jobName = [%{public}s]", printJobName.c_str());
+    PRINT_HILOGI("PrintServiceProxy PrintByAdapter start.");
     MessageParcel data, reply;
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printJobName);
     printAttributes.Marshalling(data);
+    data.WriteRemoteObject(token);
     PRINT_HILOGD("PrintServiceProxy PrintByAdapter started.");
     int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STARTPRINTJOB_BY_ADAPTER,
         data, reply, option);

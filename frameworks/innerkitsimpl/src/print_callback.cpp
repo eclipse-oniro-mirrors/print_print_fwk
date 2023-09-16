@@ -263,6 +263,33 @@ static void PrintAdapterJobStateChangedAfterCallFun(uv_work_t *work, int status)
     }
 }
 
+static void PrintAdapterGetFileAfterCallFun(uv_work_t *work, int status)
+{
+    PRINT_HILOGI("OnCallback start run PrintAdapterGetFileAfterCallFun");
+    napi_handle_scope scope = nullptr;
+    if (!InitUvWorkCallbackEnv(work, scope)) {
+        return;
+    }
+    CallbackParam *cbParam = static_cast<CallbackParam*>(work->data);
+    if (cbParam != nullptr) {
+        std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
+        napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
+        napi_value callbackResult = nullptr;
+        napi_value callbackValues[1] = { 0 };
+        callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
+        napi_call_function(cbParam->env, nullptr, callbackFunc, 1,
+            callbackValues, &callbackResult);
+        napi_close_handle_scope(cbParam->env, scope);
+        PRINT_HILOGI("OnCallback end run PrintAdapterGetFileAfterCallFun success");
+        if (work != nullptr) {
+            delete work;
+            work = nullptr;
+        }
+        delete cbParam;
+        cbParam = nullptr;
+    }
+}
+
 bool PrintCallback::onBaseCallback(std::function<void(CallbackParam*)> paramFun, uv_after_work_cb after_work_cb)
 {
     uv_loop_s *loop = nullptr;
@@ -373,5 +400,14 @@ bool PrintCallback::onCallbackAdapterJobStateChanged(const std::string jobId, co
                 param->state = subState;
             }, PrintAdapterJobStateChangedAfterCallFun);
     }
+}
+
+bool PrintCallback::OnCallbackAdapterGetFile(uint32_t state)
+{
+    PRINT_HILOGI("OnCallbackAdapterGetFile in");
+    return onBaseCallback(
+        [state](CallbackParam* param) {
+            param->state = state;
+        }, PrintAdapterGetFileAfterCallFun);
 }
 }  // namespace OHOS::Print
