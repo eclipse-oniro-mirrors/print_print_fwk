@@ -356,7 +356,7 @@ int32_t PrintManagerClient::Off(const std::string &taskId, const std::string &ty
 int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
     const PrintAttributes &printAttributes)
 {
-    retrun Prinit(printJobName, listener, printAttributes, nullptr);
+    return Print(printJobName, listener, printAttributes, nullptr);
 }
 
 int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,

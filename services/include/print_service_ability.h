@@ -39,7 +39,7 @@ class IKeyguardStateCallback;
 struct AdapterParam {
     std::string documentName;
     bool isCheckFdList;
-}
+};
 
 class PrintServiceAbility : public SystemAbility, public PrintServiceStub {
     DECLARE_SYSTEM_ABILITY(PrintServiceAbility);
@@ -120,7 +120,7 @@ private:
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
     void UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
-    void StartPrintJobCB(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
+    void StartPrintJobCB(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
