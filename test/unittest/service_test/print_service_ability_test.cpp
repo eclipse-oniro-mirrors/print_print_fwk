@@ -2492,8 +2492,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0127, TestSize.Level1)
 {
     auto service = CreateService();
     EXPECT_NE(service, nullptr);
-    auto helper = CreatePrintServiceHelper(true, true, true, true);
-    service->SetHelper(helper);
+    service->SetHelper(CreatePrintServiceHelper(true, true, true, true));
 
     std::vector<PrinterInfo> printerInfos;
     InitExtPrinterList(printerInfos, 1);
