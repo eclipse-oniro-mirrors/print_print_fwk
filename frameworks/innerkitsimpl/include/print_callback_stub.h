@@ -34,6 +34,7 @@ private:
     bool HandleExtEvent(MessageParcel &data, MessageParcel &reply);
     bool HandlePrintAdapterJobEvent(MessageParcel &data, MessageParcel &reply);
     bool HandlePrintAdapterJobChangedEvent(MessageParcel &data, MessageParcel &reply);
+    bool HandlePrintAdapterGetFileEvent(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PRINT_EVENT_HANDLER = bool (PrintCallbackStub::*)(MessageParcel &, MessageParcel &);

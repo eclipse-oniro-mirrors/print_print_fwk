@@ -56,6 +56,7 @@ const int64_t INIT_INTERVAL = 5000L;
 
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_ABILITY_NAME = "MainAbility";
+static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
 static const std::string LAUNCH_PARAMETER_FILE_LIST = "fileList";
 static const std::string LAUNCH_PARAMETER_FD_LIST = "fdList";
@@ -65,6 +66,7 @@ static const std::string PRINTER_EVENT_TYPE = "printerStateChange";
 static const std::string PRINTJOB_EVENT_TYPE = "jobStateChange";
 static const std::string EXTINFO_EVENT_TYPE = "extInfoChange";
 static const std::string PRINT_ADAPTER_EVENT_TYPE = "printCallback_adapter";
+static const std::string PRINT_GET_FILE_EVENT_TYPE = "getPrintFileCallback_adapter";
 static const std::string EVENT_BLOCK = "block";
 static const std::string EVENT_SUCCESS = "succeed";
 static const std::string EVENT_FAIL = "fail";
@@ -220,11 +222,14 @@ void PrintServiceAbility::BuildFDParam(const std::vector<uint32_t> &fdList, AAFw
 int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList,
     const std::vector<uint32_t> &fdList, std::string &taskId)
 {
-    return CallSpooler(fileList, fdList, taskId, true);
+    std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
+    adapterParam->documentName = "";
+    adapterParam->isCheckFdList = true;
+    return CallSpooler(fileList, fdList, taskId, adapterParam);
 }
 
 int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileList,
-    const std::vector<uint32_t> &fdList, std::string &taskId, bool isCheckFdList)
+    const std::vector<uint32_t> &fdList, std::string &taskId, const std::shared_ptr<AdapterParam> &adapterParam)
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
@@ -233,7 +238,7 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
     }
     PRINT_HILOGD("PrintServiceAbility StartPrint started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (isCheckFdList && fileList.empty() && fdList.empty()) {
+    if (adapterParam->isCheckFdList && fileList.empty() && fdList.empty()) {
         PRINT_HILOGE("to be printed filelist and fdlist are empty");
         return E_PRINT_INVALID_PARAMETER;
     }
@@ -249,6 +254,7 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_ABILITY_NAME);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, jobId);
     want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList);
+    want.SetParam(LAUNCH_PARAMETER_DOCUMENT_NAME, adapterParam->documentName);
 
     BuildFDParam(fdList, want);
     int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
@@ -276,6 +282,15 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
 int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
     std::string &taskId, const sptr<IRemoteObject> &token)
 {
+    std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
+    adapterParam->documentName = "";
+    adapterParam->isCheckFdList = true;
+    return CallSpooler(fileList, fdList, taskId, token, adapterParam);
+}
+
+int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
+    std::string &taskId, const sptr<IRemoteObject> &token, const std::shared_ptr<AdapterParam> &adapterParam)
+{
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGD("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
@@ -283,7 +298,7 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     }
     PRINT_HILOGD("PrintServiceAbility StartPrint started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if ((fileList.empty() && fdList.empty()) || token == nullptr) {
+    if ((adapterParam->isCheckFdList && fileList.empty() && fdList.empty()) || token == nullptr) {
         PRINT_HILOGE("to be printed filelist and fdlist are empty, or token is null.");
         return E_PRINT_INVALID_PARAMETER;
     }
@@ -299,6 +314,7 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_PREVIEW_ABILITY_NAME);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, jobId);
     want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList);
+    want.SetParam(LAUNCH_PARAMETER_DOCUMENT_NAME, adapterParam->documentName);
     BuildFDParam(fdList, want);
     int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
@@ -653,11 +669,7 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
         return E_PRINT_GENERIC_FAILURE;
     }
     printJob->UpdateParams(jobInfo);
-    if (queuedJobList_.find(jobId) != queuedJobList_.end()) {
-        queuedJobList_[jobId] = printJob;
-    } else {
-        queuedJobList_.insert(std::make_pair(jobId, printJob));
-    }
+    UpdateQueuedJobList(jobId, printJob);
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
 #ifdef CUPS_ENABLE
     if (cid.find(SPOOLER_BUNDLE_NAME) != string::npos) {
@@ -668,10 +680,7 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
     auto cbFunc = extCallbackMap_[cid];
     auto callback = [=]() {
         if (cbFunc != nullptr) {
-            PRINT_HILOGD("Start send task to Extension PrintJob %{public}s", jobId.c_str());
-            NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
-            printJob->SetJobState(PRINT_JOB_QUEUED);
-            UpdatePrintJobState(jobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
+            StartPrintJobCB(jobId, printJob);
             cbFunc->OnCallback(*printJob);
         }
     };
@@ -683,6 +692,24 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
     return E_PRINT_NONE;
 }
 
+void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
+{
+    if (queuedJobList_.find(jobId) != queuedJobList_.end()) {
+        queuedJobList_[jobId] = printJob;
+    } else {
+        queuedJobList_.insert(std::make_pair(jobId, printJob));
+    }
+}
+
+void PrintServiceAbility::StartPrintJobCB(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
+{
+    PRINT_HILOGD("Start send task to Extension PrintJob %{public}s", jobId.c_str());
+    notifyAdapterJobChanged(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
+    NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
+    printJob->SetJobState(PRINT_JOB_QUEUED);
+    UpdatePrintJobState(jobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
+}
+
 int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
 {
     ManualStart();
@@ -690,6 +717,7 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    notifyAdapterJobChanged(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     auto jobIt = queuedJobList_.find(jobId);
@@ -698,7 +726,6 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
         return E_PRINT_INVALID_PRINTJOB;
     }
 
-    int32_t ret = E_PRINT_NONE;
     if (jobIt->second->GetJobState() >= PRINT_JOB_QUEUED) {
         std::string extensionId = PrintUtils::GetExtensionId(jobIt->second->GetPrinterId());
         std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CANCEL_PRINT);
@@ -738,7 +765,7 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
 
         UpdatePrintJobState(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
     }
-    return ret;
+    return E_PRINT_NONE;
 }
 
 void PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
@@ -954,6 +981,11 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
         printJob->SetJobId(jobId);
         printJob->SetSubState(subState);
         queuedJobList_.insert(std::make_pair(jobId, printJob));
+        auto eventIt = registeredListeners_.find(PRINT_GET_FILE_EVENT_TYPE);
+        if (eventIt != registeredListeners_.end()) {
+            PRINT_HILOGI("PRINT_JOB_CREATE_FILE_COMPLETED subState[%{public}d]", subState);
+            eventIt->second->OnCallbackAdapterGetFile(subState == PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS ? 0 : 1);
+        }
     }
 
     return CheckAndSendQueuePrintJob(jobId, state, subState);
@@ -975,7 +1007,6 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     jobIt->second->SetJobState(state);
     jobIt->second->SetSubState(subState);
     SendPrintJobEvent(*jobIt->second);
-    notifyAdapterJobChanged(jobId, state, subState);
     CheckJobQueueBlocked(*jobIt->second);
 
     auto printerId = jobIt->second->GetPrinterId();
@@ -1521,7 +1552,8 @@ void PrintServiceAbility::CheckJobQueueBlocked(const PrintJob &jobInfo)
     PRINT_HILOGD("CheckJobQueueBlocked end,isJobQueueBlocked_=%{public}s", isJobQueueBlocked_ ? "true" : "false");
 }
 
-int32_t PrintServiceAbility::PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes)
+int32_t PrintServiceAbility::PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes,
+    const sptr<IRemoteObject> &token)
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
@@ -1533,7 +1565,15 @@ int32_t PrintServiceAbility::PrintByAdapter(const std::string jobName, const Pri
     std::vector<std::string> fileList;
     std::vector<uint32_t> fdList;
     std::string taskId;
-    int32_t ret = CallSpooler(fileList, fdList, taskId, false);
+    std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
+    adapterParam->documentName = jobName;
+    adapterParam->isCheckFdList = false;
+    int32_t ret = E_PRINT_NONE;
+    if (token == nullptr) {
+        ret = CallSpooler(fileList, fdList, taskId, adapterParam);
+    } else {
+        ret = CallSpooler(fileList, fdList, taskId, token, adapterParam);
+    }
     PRINT_HILOGI("PrintServiceAbility::PrintByAdapter end");
     return ret;
 }
@@ -1549,6 +1589,7 @@ int32_t PrintServiceAbility::StartGetPrintFile(const std::string &jobId, const P
     PRINT_HILOGI("PrintServiceAbility::StartGetPrintFile start");
     auto eventIt = registeredListeners_.find(PRINT_ADAPTER_EVENT_TYPE);
     if (eventIt != registeredListeners_.end()) {
+        adapterListeners_.insert(std::make_pair(jobId, eventIt->second));
         PrintAttributes oldAttrs;
         auto attrIt = printAttributesList_.find(jobId);
         if (attrIt == printAttributesList_.end()) {
@@ -1570,7 +1611,7 @@ int32_t PrintServiceAbility::StartGetPrintFile(const std::string &jobId, const P
 void PrintServiceAbility::notifyAdapterJobChanged(const std::string jobId, const uint32_t state,
     const uint32_t subState)
 {
-    // 任务完成通知Adapter
+    // UI界面关闭时，通知Adapter
     if (subState == PRINT_JOB_COMPLETED_SUCCESS
         || subState == PRINT_JOB_COMPLETED_FAILED
         || subState == PRINT_JOB_COMPLETED_CANCELLED) {
@@ -1579,9 +1620,12 @@ void PrintServiceAbility::notifyAdapterJobChanged(const std::string jobId, const
             printAttributesList_.erase(attrIt);
         }
 
-        auto eventIt = registeredListeners_.find(PRINT_ADAPTER_EVENT_TYPE);
-        if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {
+        // Callback Name: PRINT_ADAPTER_EVENT_TYPE
+        auto eventIt = adapterListeners_.find(jobId);
+        if (eventIt != adapterListeners_.end() && eventIt->second != nullptr) {
+            PRINT_HILOGI("notifyAdapterJobChanged for UI exit.");
             eventIt->second->onCallbackAdapterJobStateChanged(jobId, state, subState);
+            adapterListeners_.erase(jobId);
         }
     }
 }

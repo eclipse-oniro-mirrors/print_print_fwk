@@ -36,6 +36,11 @@ enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 static int32_t curRequestCode_ = 0;
 class IKeyguardStateCallback;
 
+struct AdapterParam {
+    std::string documentName;
+    bool isCheckFdList;
+};
+
 class PrintServiceAbility : public SystemAbility, public PrintServiceStub {
     DECLARE_SYSTEM_ABILITY(PrintServiceAbility);
 
@@ -76,7 +81,8 @@ public:
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName) override;
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps) override;
     void SetHelper(const std::shared_ptr<PrintServiceHelper> &helper);
-    int32_t PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes) override;
+    int32_t PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes,
+        const sptr<IRemoteObject> &token) override;
     int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
         const uint32_t fd) override;
 
@@ -107,10 +113,14 @@ private:
     void ReportCompletedPrint(const std::string &printerId);
     void CheckJobQueueBlocked(const PrintJob &jobInfo);
     int32_t CallSpooler(const std::vector<std::string> &fileList,
-        const std::vector<uint32_t> &fdList, std::string &taskId, bool isCheckFdList);
+        const std::vector<uint32_t> &fdList, std::string &taskId, const std::shared_ptr<AdapterParam> &adapterParam);
+    int32_t CallSpooler(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
+        std::string &taskId, const sptr<IRemoteObject> &token, const std::shared_ptr<AdapterParam> &adapterParam);
     void notifyAdapterJobChanged(const std::string jobId, const uint32_t state, const uint32_t subState);
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
+    void UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
+    void StartPrintJobCB(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
@@ -123,6 +133,7 @@ private:
 
     std::recursive_mutex apiMutex_;
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
+    std::map<std::string, sptr<IPrintCallback>> adapterListeners_;
     std::map<std::string, sptr<IPrintExtensionCallback>> extCallbackMap_;
 
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> extensionList_;

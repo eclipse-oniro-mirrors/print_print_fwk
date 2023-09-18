@@ -32,6 +32,7 @@ public:
         const PrintAttributes &newAttrs, uint32_t fd) override;
     bool onCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
         const uint32_t subState) override;
+    bool OnCallbackAdapterGetFile(uint32_t state) override;
 
 private:
     static inline BrokerDelegator<PrintCallbackProxy> delegator_;

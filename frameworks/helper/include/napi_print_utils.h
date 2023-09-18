@@ -74,7 +74,7 @@ public:
     static void DefineProperties(
         napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties);
 
-    static size_t GetJsVal(napi_env env, napi_callback_info info, napi_value argv[]);
+    static size_t GetJsVal(napi_env env, napi_callback_info info, napi_value argv[], size_t length);
 };
 } // namespace OHOS::Print
 #endif // NAPI_PRINT_UTILS_H

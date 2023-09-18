@@ -23,6 +23,7 @@ namespace OHOS::Print {
 
 #define PRINT_MAX_PRINT_COUNT 1000
 #define PRINT_CALLBACK_ADAPTER "printCallback_adapter"
+#define PRINT_GET_FILE_CALLBACK_ADAPTER "getPrintFileCallback_adapter"
 
 #define NEW_PRINT_INTERFACE_SWITCH false
 

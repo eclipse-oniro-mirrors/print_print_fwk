@@ -27,6 +27,7 @@ PrintCallbackStub::PrintCallbackStub()
     cmdMap_[PRINT_CALLBACK_EXTINFO] = &PrintCallbackStub::HandleExtEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_JOB_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterJobEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_JOB_CHANGED_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterJobChangedEvent;
+    cmdMap_[PRINT_CALLBACK_PRINT_GET_FILE_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterGetFileEvent;
 }
 
 int32_t PrintCallbackStub::OnRemoteRequest(
@@ -121,6 +122,19 @@ bool PrintCallbackStub::HandlePrintAdapterJobChangedEvent(MessageParcel &data, M
     bool result = onCallbackAdapterJobStateChanged(jobId, state, subState);
     reply.WriteBool(result);
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobChangedEvent end");
+    return true;
+}
+
+bool PrintCallbackStub::HandlePrintAdapterGetFileEvent(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterGetFileEvent start");
+    uint32_t state = data.ReadUint32();
+
+    PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterGetFileEvent state:%{public}d",
+        state);
+    bool result = OnCallbackAdapterGetFile(state);
+    reply.WriteBool(result);
+    PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterGetFileEvent end");
     return true;
 }
 } // namespace OHOS::Print
