@@ -24,8 +24,8 @@
 #include "system_ability_definition.h"
 
 namespace OHOS::Print {
-const uint32_t MAX_RETRY_TIMES = 10;
-const uint32_t START_ABILITY_INTERVAL = 6;
+const uint32_t MAX_RETRY_TIMES = 3;
+const uint32_t START_ABILITY_INTERVAL = 2;
 using namespace Security::AccessToken;
 
 PrintServiceHelper::~PrintServiceHelper()
@@ -58,7 +58,6 @@ bool PrintServiceHelper::StartAbility(const AAFwk::Want &want)
         if (AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want) == 0) {
             break;
         }
-        break;
         std::this_thread::sleep_for(std::chrono::seconds(START_ABILITY_INTERVAL));
         PRINT_HILOGD("PrintServiceHelper::StartAbility %{public}d", retry);
     }
@@ -80,7 +79,6 @@ bool PrintServiceHelper::StartPrintServiceExtension(const AAFwk::Want &want, int
         if (AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, requestCode_) == 0) {
             break;
         }
-        break;
         std::this_thread::sleep_for(std::chrono::seconds(START_ABILITY_INTERVAL));
         PRINT_HILOGD("PrintServiceHelper::StartPrintServiceExtension %{public}d", retry);
     }
