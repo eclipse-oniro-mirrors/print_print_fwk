@@ -15,11 +15,9 @@ import("//base/print/print_fwk/print.gni")
 import("//build/config/features.gni")
 import("//build/test.gni")
 
-module_output_path = "print/print_fwk"
-
 ##############################fuzztest##########################################
 ohos_fuzztest("PrintServiceFuzzTest") {
-  module_out_path = module_output_path
+  module_out_path = fuzz_test_output_path
 
   fuzz_config_file = "${print_path}/test/fuzztest/printservice_fuzzer"
 
