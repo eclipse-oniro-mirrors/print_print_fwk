@@ -12,6 +12,7 @@
 # limitations under the License.
 
 ability_runtime_path = "//foundation/ability/ability_runtime"
+fuzz_test_output_path = "print_fwk/print_fwk"
 c_utils_path = "//commonlibrary/c_utils"
 
 print_path = "//base/print/print_fwk"
