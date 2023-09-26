@@ -620,7 +620,7 @@ int32_t PrintServiceAbility::AddPrinterToCups(const std::string &printerUri, con
     }
     PRINT_HILOGD("AddPrinterToCups started.");
 #ifdef CUPS_ENABLE
-    PrintCupsClient::GetInstance()->AddPrinterToCups(printerUri, printerName);
+    DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerUri, printerName);
 #endif // CUPS_ENABLE
     PRINT_HILOGD("AddPrinterToCups End.");
     return E_PRINT_NONE;
@@ -635,7 +635,7 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
     }
     PRINT_HILOGD("QueryPrinterCapabilityByUri started.");
 #ifdef CUPS_ENABLE
-    PrintCupsClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
+    DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
 #endif // CUPS_ENABLE
     PRINT_HILOGD("QueryPrinterCapabilityByUri End.");
     return E_PRINT_NONE;
@@ -673,7 +673,7 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
 #ifdef CUPS_ENABLE
     if (cid.find(SPOOLER_BUNDLE_NAME) != string::npos) {
-        PrintCupsClient::GetInstance()->AddCupsPrintJob(jobInfo);
+        DelayedSingleton<PrintCupsClient>::GetInstance()->AddCupsPrintJob(jobInfo);
         return E_PRINT_NONE;
     }
 #endif // CUPS_ENABLE
@@ -736,7 +736,7 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
         }
 #ifdef CUPS_ENABLE
         if (cid.find(SPOOLER_BUNDLE_NAME) != string::npos) {
-            PrintCupsClient::GetInstance()->CancelCupsJob(jobIt->second->GetJobId());
+            DelayedSingleton<PrintCupsClient>::GetInstance()->CancelCupsJob(jobIt->second->GetJobId());
             return E_PRINT_NONE;
         }
 #endif // CUPS_ENABLE

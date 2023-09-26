@@ -58,25 +58,11 @@ static const std::string PRINTER_STATE_COVER_OPEN = "cover-open";
 static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string DEFAULT_JOB_NAME = "test";
 
-std::mutex PrintCupsClient::instanceLock_;
-PrintCupsClient *PrintCupsClient::instance_ = nullptr;
-
 PrintCupsClient::PrintCupsClient()
 {}
 
 PrintCupsClient::~PrintCupsClient()
 {}
-
-PrintCupsClient *PrintCupsClient::GetInstance()
-{
-    if (instance_ == nullptr) {
-        std::lock_guard<std::mutex> lock(instanceLock_);
-        if (instance_ == nullptr) {
-            instance_ = new (std::nothrow) PrintCupsClient;
-        }
-    }
-    return instance_;
-}
 
 int32_t PrintCupsClient::StartCupsdService()
 {
@@ -125,6 +111,7 @@ void PrintCupsClient::StopCupsdService()
         sleep(1);
         if (kill(atoi(pid), SIGTERM) == -1) {
             PRINT_HILOGE("Failed to kill cupsd process");
+            pclose(pid_fp);
             return;
         }
         PRINT_HILOGE("kill cupsd process success");
@@ -223,7 +210,7 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo)
 
 void PrintCupsClient::StartNextJob()
 {
-    if (jobQueue.size() == 0) {
+    if (jobQueue.empty()) {
         PRINT_HILOGE("no active job in jobQueue");
         return;
     }
@@ -375,7 +362,8 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
     PRINT_HILOGD("start job success, job_id: %d", job_id);
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam { PrintServiceAbility::GetInstance(),
         jobParams->serviceJobId, job_id, jobParams->printerUri.c_str() };
-
+    if (param == nullptr)
+        return;
     CallbackFunc callback = [this]() { JobCompleteCallback(); };
     std::thread jobMonitorThread(PrintCupsClient::MonitorJobState, param, callback);
     jobMonitorThread.detach();
@@ -430,7 +418,6 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
     delete prevousJobStatus;
     PRINT_HILOGI("FINISHED MONITORING JOB %{public}d\n", param->cupsJobId);
     callback();
-    return;
 }
 
 void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline)
@@ -469,6 +456,10 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
 
 void PrintCupsClient::ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus)
 {
+    if (param == nullptr || param->serviceAbility == nullptr || jobStatus == nullptr) {
+        PRINT_HILOGE("ReportBlockedReason parameter is nullptr");
+        return;
+    }
     if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_EMPTY.c_str()) != NULL) {
         param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_OUT_OF_PAPER);
@@ -806,11 +797,10 @@ void PrintCupsClient::GetSupportedDuplexType(ipp_t *response, PrinterCapability 
 
 nlohmann::json PrintCupsClient::ParseSupportQualities(ipp_t *response)
 {
-    int i;
     ipp_attribute_t *attrptr;
     nlohmann::json supportedQualities = nlohmann::json::array();
     if ((attrptr = ippFindAttribute(response, "print-quality-supported", IPP_TAG_ENUM)) != NULL) {
-        for (i = 0; i < ippGetCount(attrptr); i++) {
+        for (int i = 0; i < ippGetCount(attrptr); i++) {
             uint32_t mediaQuality = ippGetInteger(attrptr, i);
             PRINT_HILOGD("print-quality-supported: %{public}d", mediaQuality);
             supportedQualities.push_back(mediaQuality);
@@ -821,13 +811,12 @@ nlohmann::json PrintCupsClient::ParseSupportQualities(ipp_t *response)
 
 nlohmann::json PrintCupsClient::ParseSupportMediaTypes(ipp_t *response)
 {
-    int i;
     ipp_attribute_t *attrptr;
     nlohmann::json _supportedMediaTypes = nlohmann::json::array();
     if (((attrptr = ippFindAttribute(response, "media-type-supported", IPP_TAG_KEYWORD)) != NULL)
           || ((attrptr = ippFindAttribute(response, "media-type-supported", IPP_TAG_NAME)) != NULL)) {
         PRINT_HILOGD("media-type-supported found; number of values %d", ippGetCount(attrptr));
-        for (i = 0; i < ippGetCount(attrptr); i++) {
+        for (int i = 0; i < ippGetCount(attrptr); i++) {
             const char* mediaType = ippGetString(attrptr, i, NULL);
             PRINT_HILOGD("media-type-supported found; mediaType: %s", mediaType);
             if (strcasestr(mediaType, "photographic-glossy")) {
@@ -840,7 +829,7 @@ nlohmann::json PrintCupsClient::ParseSupportMediaTypes(ipp_t *response)
                 _supportedMediaTypes.push_back((uint32_t)MEDIA_AUTO);
             }
         }
-        if (_supportedMediaTypes.size() == 0) {
+        if (_supportedMediaTypes.empty()) {
             _supportedMediaTypes.push_back((uint32_t)MEDIA_PLAIN);
             _supportedMediaTypes.push_back((uint32_t)MEDIA_PHOTO);
             _supportedMediaTypes.push_back((uint32_t)MEDIA_PHOTO_GLOSSY);

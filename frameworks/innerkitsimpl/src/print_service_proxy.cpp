@@ -392,7 +392,12 @@ int32_t PrintServiceProxy::AddPrinterToCups(const std::string &printerUri, const
     data.WriteString(printerUri);
     data.WriteString(printerName);
     PRINT_HILOGD("PrintServiceProxy AddPrinterToCups started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERTOCUPS, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy AddPrinterToCups remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERTOCUPS, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy AddPrinterToCups succeeded.");
     return ret;
@@ -405,7 +410,12 @@ int32_t PrintServiceProxy::QueryPrinterCapabilityByUri(const std::string &printe
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerUri);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterCapabilityByUri started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITYBYURI,
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy AddPrinterToCups remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITYBYURI,
         data, reply, option);
     ret = GetResult(ret, reply);
     auto printerCapsPtr = PrinterCapability::Unmarshalling(reply);

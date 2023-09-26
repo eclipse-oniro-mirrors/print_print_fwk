@@ -343,7 +343,7 @@ napi_value NapiPrintExt::AddPrinterToCups(napi_env env, napi_callback_info info)
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToCups(context->printerUri, context->printerName);
         PRINT_HILOGD("ret: %d", ret);
-        context->result = ret == E_PRINT_NONE;
+        context->result = (ret == E_PRINT_NONE);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to set cups printer");
             context->SetErrorIndex(ret);
@@ -380,7 +380,7 @@ napi_value NapiPrintExt::QueryPrinterCapabilityByUri(napi_env env, napi_callback
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(context->printerUri,
             context->printerCaps);
-        context->result = ret == E_PRINT_NONE;
+        context->result = (ret == E_PRINT_NONE);
         PRINT_HILOGD("ret: %d", ret);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to get printers caps");
