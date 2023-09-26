@@ -37,25 +37,27 @@ JsPrintCallback::JsPrintCallback(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime), 
 
 uv_loop_s* JsPrintCallback::GetJsLoop(JsRuntime &jsRuntime)
 {
-    NativeEngine *nativeEngine = &jsRuntime_.GetNativeEngine();
+    napi_env env = jsRuntime_.GetNapiEnv();
     uv_loop_s* loop = nullptr;
-    napi_get_uv_event_loop(reinterpret_cast<napi_env>(nativeEngine), &loop);
+    napi_get_uv_event_loop(env, &loop);
     if (loop == nullptr) {
         return nullptr;
     }
     return loop;
 }
 
-bool JsPrintCallback::BuildJsWorker(NativeValue *jsObj, const std::string &name,
-    NativeValue *const *argv, size_t argc, bool isSync)
+bool JsPrintCallback::BuildJsWorker(napi_value jsObj, const std::string &name,
+    napi_value const *argv, size_t argc, bool isSync)
 {
-    NativeObject *obj = ConvertNativeValueTo<NativeObject>(jsObj);
+    napi_value obj = jsObj;
     if (obj == nullptr) {
         PRINT_HILOGE("Failed to get PrintExtension object");
         return false;
     }
 
-    NativeValue *method = obj->GetProperty(name.c_str());
+    napi_env env = jsRuntime_.GetNapiEnv();
+    napi_value method = nullptr;
+    napi_get_named_property(env, obj, name.c_str(), &method);
     if (method == nullptr) {
         PRINT_HILOGE("Failed to get '%{public}s' from PrintExtension object", name.c_str());
         return false;
@@ -68,7 +70,7 @@ bool JsPrintCallback::BuildJsWorker(NativeValue *jsObj, const std::string &name,
     }
 
     jsParam_.self = shared_from_this();
-    jsParam_.nativeEngine = &jsRuntime_.GetNativeEngine();
+    jsParam_.nativeEngine = jsRuntime_.GetNapiEnv();
     jsParam_.jsObj = jsObj;
     jsParam_.jsMethod = method;
     jsParam_.argv = argv;
@@ -80,8 +82,8 @@ bool JsPrintCallback::BuildJsWorker(NativeValue *jsObj, const std::string &name,
     return true;
 }
 
-NativeValue *JsPrintCallback::Exec(
-    NativeValue *jsObj, const std::string &name, NativeValue *const *argv, size_t argc, bool isSync)
+napi_value JsPrintCallback::Exec(
+    napi_value jsObj, const std::string &name, napi_value const *argv, size_t argc, bool isSync)
 {
     PRINT_HILOGD("%{public}s callback in", name.c_str());
     HandleScope handleScope(jsRuntime_);
@@ -99,8 +101,8 @@ NativeValue *JsPrintCallback::Exec(
         [](uv_work_t *work, int statusInt) {
             auto jsWorkParam = reinterpret_cast<JsPrintCallback::JsWorkParam*>(work->data);
             if (jsWorkParam != nullptr) {
-                jsWorkParam->jsResult = jsWorkParam->nativeEngine->CallFunction(
-                    jsWorkParam->jsObj, jsWorkParam->jsMethod, jsWorkParam->argv, jsWorkParam->argc);
+                napi_call_function(jsWorkParam->nativeEngine, jsWorkParam->jsObj,
+                    jsWorkParam->jsMethod, jsWorkParam->argc, jsWorkParam->argv, &(jsWorkParam->jsResult));
                 jsWorkParam->isCompleted = true;
                 if (jsWorkParam->isSync) {
                     jsWorkParam->self = nullptr;

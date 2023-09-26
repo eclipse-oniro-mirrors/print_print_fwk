@@ -21,8 +21,6 @@
 #include "print_job.h"
 
 class NativeReference;
-class NativeValue;
-class NativeObject;
 
 namespace OHOS {
 namespace AbilityRuntime {
@@ -107,9 +105,9 @@ public:
     virtual void OnStop() override;
 
 private:
-    NativeValue *CallObjectMethod(const char *name, NativeValue *const *argv = nullptr, size_t argc = 0);
+    napi_value CallObjectMethod(const char *name, napi_value const *argv = nullptr, size_t argc = 0);
     bool InitExtensionObj(JsRuntime &jsRuntime);
-    bool InitContextObj(JsRuntime &jsRuntime, NativeObject *&extObj, std::string &extensionId);
+    bool InitContextObj(JsRuntime &jsRuntime, napi_value &extObj, std::string &extensionId);
     void RegisterDiscoveryCb();
     void RegisterConnectionCb();
     void RegisterPrintJobCb();

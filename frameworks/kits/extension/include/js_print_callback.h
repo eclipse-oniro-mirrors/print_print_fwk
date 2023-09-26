@@ -23,9 +23,6 @@
 
 #include "napi/native_api.h"
 
-class NativeValue;
-class NativeEngine;
-
 namespace OHOS {
 namespace AbilityRuntime {
 class JsRuntime;
@@ -33,23 +30,23 @@ class JsPrintCallback : public std::enable_shared_from_this<JsPrintCallback> {
 public:
     explicit JsPrintCallback(JsRuntime &jsRutime);
     ~JsPrintCallback() = default;
-    NativeValue *Exec(NativeValue *jsObj, const std::string &name, NativeValue *const *argv = nullptr, size_t argc = 0,
+    napi_value Exec(napi_value jsObj, const std::string &name, napi_value const *argv = nullptr, size_t argc = 0,
         bool isSync = true);
 
 private:
     uv_loop_s *GetJsLoop(JsRuntime &jsRuntime);
-    bool BuildJsWorker(NativeValue *jsObj, const std::string &name,
-        NativeValue *const *argv, size_t argc, bool isSync);
+    bool BuildJsWorker(napi_value jsObj, const std::string &name,
+        napi_value const *argv, size_t argc, bool isSync);
 
 private:
     struct JsWorkParam {
         std::shared_ptr<JsPrintCallback> self;
-        NativeEngine *nativeEngine;
-        NativeValue *jsObj;
-        NativeValue *jsMethod;
-        NativeValue *const *argv;
+        napi_env nativeEngine;
+        napi_value jsObj;
+        napi_value jsMethod;
+        napi_value const *argv;
         size_t argc;
-        NativeValue *jsResult;
+        napi_value jsResult;
         bool isSync;
         bool isCompleted;
         JsWorkParam()
