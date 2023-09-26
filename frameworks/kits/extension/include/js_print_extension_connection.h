@@ -21,16 +21,15 @@
 #include "ability_connect_callback.h"
 #include "event_handler.h"
 #include "print_extension_context.h"
+#include "napi/native_api.h"
 
-class NativeEngine;
-class NativeValue;
 class NativeReference;
 
 namespace OHOS {
 namespace AbilityRuntime {
 class JSPrintExtensionConnection : public AbilityConnectCallback {
 public:
-    explicit JSPrintExtensionConnection(NativeEngine& engine);
+    explicit JSPrintExtensionConnection(napi_env engine);
     ~JSPrintExtensionConnection();
     void OnAbilityConnectDone(
         const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode) override;
@@ -38,10 +37,10 @@ public:
     void HandleOnAbilityConnectDone(
         const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode);
     void HandleOnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int resultCode);
-    void SetJsConnectionObject(NativeValue* jsConnectionObject);
+    void SetJsConnectionObject(napi_value jsConnectionObject);
     void CallJsFailed(int32_t errorCode);
 private:
-    NativeEngine& engine_;
+    napi_env engine_;
     std::unique_ptr<NativeReference> jsConnectionObject_ = nullptr;
 };
 

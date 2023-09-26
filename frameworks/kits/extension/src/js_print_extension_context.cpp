@@ -42,79 +42,93 @@ public:
     explicit JsPrintExtensionContext(const std::shared_ptr<PrintExtensionContext>& context) : context_(context) {}
     ~JsPrintExtensionContext() = default;
 
-    static void Finalizer(NativeEngine *engine, noneType data, noneType hint)
+    static void Finalizer(napi_env engine, noneType data, noneType hint)
     {
         PRINT_HILOGD("JsAbilityContext::Finalizer is called");
         std::unique_ptr<JsPrintExtensionContext>(static_cast<JsPrintExtensionContext*>(data));
     }
 
-    static NativeValue *StartAbility(NativeEngine *engine, NativeCallbackInfo *info)
+    static napi_value StartAbility(napi_env engine, napi_callback_info info)
     {
         JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
-        return (me != nullptr) ? me->OnStartAbility(*engine, *info) : nullptr;
+        return (me != nullptr) ? me->OnStartAbility(engine, info) : nullptr;
     }
 
-    static NativeValue *StartAbilityWithAccount(NativeEngine *engine, NativeCallbackInfo *info)
+    static napi_value StartAbilityWithAccount(napi_env engine, napi_callback_info info)
     {
         JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
-        return (me != nullptr) ? me->OnStartAbilityWithAccount(*engine, *info) : nullptr;
+        return (me != nullptr) ? me->OnStartAbilityWithAccount(engine, info) : nullptr;
     }
 
-    static NativeValue *ConnectAbilityWithAccount(NativeEngine *engine, NativeCallbackInfo *info)
+    static napi_value ConnectAbilityWithAccount(napi_env engine, napi_callback_info info)
     {
         JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
-        return (me != nullptr) ? me->OnConnectAbilityWithAccount(*engine, *info) : nullptr;
+        return (me != nullptr) ? me->OnConnectAbilityWithAccount(engine, info) : nullptr;
     }
 
-    static NativeValue *TerminateAbility(NativeEngine *engine, NativeCallbackInfo *info)
+    static napi_value TerminateAbility(napi_env engine, napi_callback_info info)
     {
         JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
-        return (me != nullptr) ? me->OnTerminateAbility(*engine, *info) : nullptr;
+        return (me != nullptr) ? me->OnTerminateAbility(engine, info) : nullptr;
     }
 
-    static NativeValue *ConnectAbility(NativeEngine *engine, NativeCallbackInfo *info)
+    static napi_value ConnectAbility(napi_env engine, napi_callback_info info)
     {
         JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
-        return (me != nullptr) ? me->OnConnectAbility(*engine, *info) : nullptr;
+        return (me != nullptr) ? me->OnConnectAbility(engine, info) : nullptr;
     }
 
-    static NativeValue *DisconnectAbility(NativeEngine *engine, NativeCallbackInfo *info)
+    static napi_value DisconnectAbility(napi_env engine, napi_callback_info info)
     {
         JsPrintExtensionContext* me = CheckParamsAndGetThis<JsPrintExtensionContext>(engine, info);
-        return (me != nullptr) ? me->OnDisconnectAbility(*engine, *info) : nullptr;
+        return (me != nullptr) ? me->OnDisconnectAbility(engine, info) : nullptr;
     }
 
 private:
     std::weak_ptr<PrintExtensionContext> context_;
 
-    NativeValue *OnStartAbility(NativeEngine &engine, NativeCallbackInfo &info)
+    napi_value GetUndefinedValue(napi_env &engine)
+    {
+        PRINT_HILOGE("params count or value is error");
+        napi_value undefineResult = nullptr;
+        napi_get_undefined(engine, &undefineResult);
+        return undefineResult;
+    }
+
+    napi_valuetype GetNapiValueType(napi_env &engine, napi_value &argv)
+    {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(engine, argv, &valueType);
+        return valueType;
+    }
+
+    napi_value OnStartAbility(napi_env &engine, napi_callback_info &info)
     {
         PRINT_HILOGD("OnStartAbility is called");
-        // only support one or two or three params
-        if (info.argc != NapiPrintUtils::ARGC_ONE && info.argc != NapiPrintUtils::ARGC_TWO &&
-            info.argc != NapiPrintUtils::ARGC_THREE) {
-            PRINT_HILOGE("Not enough params");
-            return engine.CreateUndefined();
+        size_t argc = NapiPrintUtils::MAX_ARGC;
+        napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+        napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr);
+        if (argc != NapiPrintUtils::ARGC_ONE && argc != NapiPrintUtils::ARGC_TWO &&
+            argc != NapiPrintUtils::ARGC_THREE) {
+            return GetUndefinedValue(engine);
         }
 
-        decltype(info.argc) unwrapArgc = 0;
+        decltype(argc) unwrapArgc = 0;
         AAFwk::Want want;
-        OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), want);
+        OHOS::AppExecFwk::UnwrapWant(engine, argv[NapiPrintUtils::INDEX_ZERO], want);
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
 
         AAFwk::StartOptions startOptions;
-        if (info.argc > NapiPrintUtils::ARGC_ONE && info.argv[1]->TypeOf() == NATIVE_OBJECT) {
+        if (argc > NapiPrintUtils::ARGC_ONE && GetNapiValueType(engine, argv[1]) == napi_object) {
             PRINT_HILOGD("OnStartAbility start options is used.");
-            AppExecFwk::UnwrapStartOptions(reinterpret_cast<napi_env>(&engine),
-                reinterpret_cast<napi_value>(info.argv[1]), startOptions);
+            AppExecFwk::UnwrapStartOptions(engine, argv[1], startOptions);
             unwrapArgc++;
         }
 
-        AsyncTask::CompleteCallback complete = [weak = context_, want, startOptions, unwrapArgc](
-                                                   NativeEngine &engine, AsyncTask &task, int32_t status) {
+        NapiAsyncTask::CompleteCallback complete = [weak = context_, want, startOptions, unwrapArgc](
+                                                   napi_env engine, NapiAsyncTask &task, int32_t status) {
             PRINT_HILOGD("startAbility begin");
             auto context = weak.lock();
             if (!context) {
@@ -127,98 +141,91 @@ private:
             (unwrapArgc == 1) ? errcode = context->StartAbility(want)
                               : errcode = context->StartAbility(want, startOptions);
             if (errcode == 0) {
-                task.Resolve(engine, engine.CreateUndefined());
+                napi_value undefineResult = nullptr;
+                napi_get_undefined(engine, &undefineResult);
+                task.Resolve(engine, undefineResult);
             } else {
                 task.Reject(engine, CreateJsError(engine, errcode, "Start Ability failed."));
             }
         };
 
-        NativeValue *lastParam = (info.argc == unwrapArgc) ? nullptr : info.argv[unwrapArgc];
-        NativeValue *result = nullptr;
-        AsyncTask::Schedule("PrintExtensionContext::OnStartAbility", engine,
+        napi_value lastParam = (argc == unwrapArgc) ? nullptr : argv[unwrapArgc];
+        napi_value result = nullptr;
+        NapiAsyncTask::Schedule("PrintExtensionContext::OnStartAbility", engine,
             CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
         return result;
     }
 
-    NativeValue *CheckInfo(NativeEngine &engine, NativeCallbackInfo &info)
+    napi_value OnStartAbilityWithAccount(napi_env &engine, napi_callback_info &info)
     {
-        PRINT_HILOGD("OnStartAbilityWithAccount is called");
-        // only support two or three or four params
-        if (info.argc != NapiPrintUtils::ARGC_TWO && info.argc != NapiPrintUtils::ARGC_THREE &&
-            info.argc != NapiPrintUtils::ARGC_FOUR) {
-            PRINT_HILOGE("Not enough params");
-            return engine.CreateUndefined();
+        size_t argc = NapiPrintUtils::MAX_ARGC;
+        napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+        napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr);
+        if (argc != NapiPrintUtils::ARGC_TWO && argc != NapiPrintUtils::ARGC_THREE &&
+            argc != NapiPrintUtils::ARGC_FOUR) {
+            return GetUndefinedValue(engine);
         }
-        return nullptr;
-    }
 
-    NativeValue *OnStartAbilityWithAccount(NativeEngine &engine, NativeCallbackInfo &info)
-    {
-        CheckInfo(engine, info);
-        decltype(info.argc) unwrapArgc = 0;
+        decltype(argc) unwrapArgc = 0;
         AAFwk::Want want;
-        OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[0]), want);
+        OHOS::AppExecFwk::UnwrapWant(engine, argv[0], want);
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
         unwrapArgc++;
 
         int32_t accountId = 0;
-        if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[1]), accountId)) {
-            PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
-            return engine.CreateUndefined();
+        if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(engine, argv[1], accountId)) {
+            return GetUndefinedValue(engine);
         }
         PRINT_HILOGD("%{public}d accountId:", accountId);
         unwrapArgc++;
 
         AAFwk::StartOptions startOptions;
-        if (info.argc > NapiPrintUtils::ARGC_TWO && info.argv[NapiPrintUtils::INDEX_TWO]->TypeOf() == NATIVE_OBJECT) {
-            PRINT_HILOGD("OnStartAbilityWithAccount start options is used.");
-            AppExecFwk::UnwrapStartOptions(reinterpret_cast<napi_env>(&engine),
-                reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_TWO]), startOptions);
+        if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_TWO &&
+            GetNapiValueType(engine, argv[NapiPrintUtils::INDEX_TWO]) == napi_object) {
+            AppExecFwk::UnwrapStartOptions(engine, argv[NapiPrintUtils::INDEX_TWO], startOptions);
             unwrapArgc++;
         }
 
-        AsyncTask::CompleteCallback complete = [weak = context_, want, accountId, startOptions, unwrapArgc](
-                                                   NativeEngine &engine, AsyncTask &task, int32_t status) {
-            PRINT_HILOGD("startAbility begin");
+        NapiAsyncTask::CompleteCallback complete = [weak = context_, want, accountId, startOptions, unwrapArgc](
+                                                   napi_env engine, NapiAsyncTask &task, int32_t status) {
             auto context = weak.lock();
             if (!context) {
-                PRINT_HILOGW("context is released");
                 task.Reject(engine, CreateJsError(engine, E_PRINT_INVALID_CONTEXT, "Context is released"));
                 return;
             }
 
             ErrCode errcode = ERR_OK;
-            (unwrapArgc == NapiPrintUtils::ARGC_TWO)
-                ? errcode = context->StartAbilityWithAccount(want, accountId)
+            (unwrapArgc == NapiPrintUtils::ARGC_TWO) ? errcode = context->StartAbilityWithAccount(want, accountId)
                 : errcode = context->StartAbilityWithAccount(want, accountId, startOptions);
             if (errcode == 0) {
-                task.Resolve(engine, engine.CreateUndefined());
+                napi_value undefineResult = nullptr;
+                napi_get_undefined(engine, &undefineResult);
+                task.Resolve(engine, undefineResult);
             } else {
                 task.Reject(engine, CreateJsError(engine, errcode, "Start Ability failed."));
             }
         };
 
-        NativeValue *lastParam = (info.argc == unwrapArgc) ? nullptr : info.argv[unwrapArgc];
-        NativeValue *result = nullptr;
-        AsyncTask::Schedule("PrintExtensionContext::OnStartAbilityWithAccount", engine,
+        napi_value lastParam = (argc == unwrapArgc) ? nullptr : argv[unwrapArgc];
+        napi_value result = nullptr;
+        NapiAsyncTask::Schedule("PrintExtensionContext::OnStartAbilityWithAccount", engine,
             CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
         return result;
     }
 
-    NativeValue *OnTerminateAbility(NativeEngine &engine, NativeCallbackInfo &info)
+    napi_value OnTerminateAbility(napi_env &engine, napi_callback_info &info)
     {
         PRINT_HILOGD("OnTerminateAbility is called");
-        // only support one or zero params
-        if (info.argc != NapiPrintUtils::ARGC_ZERO && info.argc != NapiPrintUtils::ARGC_ONE) {
-            PRINT_HILOGE("Not enough params");
-            return engine.CreateUndefined();
+        size_t argc = NapiPrintUtils::MAX_ARGC;
+        napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+        napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr);
+        if (argc != NapiPrintUtils::ARGC_ZERO && argc != NapiPrintUtils::ARGC_ONE) {
+            return GetUndefinedValue(engine);
         }
 
-        AsyncTask::CompleteCallback complete = [weak = context_](
-                                                   NativeEngine &engine, AsyncTask &task, int32_t status) {
+        NapiAsyncTask::CompleteCallback complete = [weak = context_](
+                                                   napi_env engine, NapiAsyncTask &task, int32_t status) {
             PRINT_HILOGD("TerminateAbility begin");
             auto context = weak.lock();
             if (!context) {
@@ -229,51 +236,46 @@ private:
 
             auto errcode = context->TerminateAbility();
             if (errcode == 0) {
-                task.Resolve(engine, engine.CreateUndefined());
+                napi_value undefineResult = nullptr;
+                napi_get_undefined(engine, &undefineResult);
+                task.Resolve(engine, undefineResult);
             } else {
                 task.Reject(engine, CreateJsError(engine, errcode, "Terminate Ability failed."));
             }
         };
 
-        NativeValue *lastParam =
-            (info.argc == NapiPrintUtils::ARGC_ZERO) ? nullptr : info.argv[0];
-        NativeValue *result = nullptr;
-        AsyncTask::Schedule("PrintExtensionContext::OnTerminateAbility", engine,
+        napi_value lastParam = (argc == NapiPrintUtils::ARGC_ZERO) ? nullptr : argv[0];
+        napi_value result = nullptr;
+        NapiAsyncTask::Schedule("PrintExtensionContext::OnTerminateAbility", engine,
             CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
         return result;
     }
 
-    NativeValue *OnConnectAbility(NativeEngine &engine, NativeCallbackInfo &info)
+    napi_value OnConnectAbility(napi_env &engine, napi_callback_info &info)
     {
         PRINT_HILOGD("OnConnectAbility is called");
-        // only support two params
-        if (info.argc != NapiPrintUtils::ARGC_TWO) {
-            PRINT_HILOGE("Not enough params");
-            return engine.CreateUndefined();
+        size_t argc = NapiPrintUtils::MAX_ARGC;
+        napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+        napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr);
+        if (argc != NapiPrintUtils::ARGC_TWO) {
+            return GetUndefinedValue(engine);
         }
 
-        // unwrap want
         AAFwk::Want want;
-        OHOS::AppExecFwk::UnwrapWant(
-            reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(
-                info.argv[0]), want);
+        OHOS::AppExecFwk::UnwrapWant(engine, argv[0], want);
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
-        // unwarp connection
+
         sptr<JSPrintExtensionConnection> connection = new JSPrintExtensionConnection(engine);
-        connection->SetJsConnectionObject(info.argv[1]);
+        connection->SetJsConnectionObject(argv[1]);
         int64_t connectId = serialNumber_;
         ConnecttionKey key;
         key.id = serialNumber_;
         key.want = want;
         connects_.emplace(key, connection);
-        if (serialNumber_ < INT64_MAX) {
-            serialNumber_++;
-        } else {
-            serialNumber_ = 0;
-        }
-        AsyncTask::CompleteCallback complete = [weak = context_, want, connection, connectId](
-                                                   NativeEngine &engine, AsyncTask &task, int32_t status) {
+        (serialNumber_ < INT64_MAX) ? serialNumber_++ : serialNumber_ = 0;
+        NapiAsyncTask::CompleteCallback complete = [weak = context_, want, connection, connectId](
+                                                   napi_env engine, NapiAsyncTask &task, int32_t status) {
             PRINT_HILOGD("OnConnectAbility begin");
             auto context = weak.lock();
             if (!context) {
@@ -285,52 +287,49 @@ private:
             if (!context->ConnectAbility(want, connection)) {
                     connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
             }
-            task.Resolve(engine, engine.CreateUndefined());
+            napi_value undefineResult = nullptr;
+            napi_get_undefined(engine, &undefineResult);
+            task.Resolve(engine, undefineResult);
         };
-        NativeValue *result = nullptr;
-        AsyncTask::Schedule("PrintExtensionContext::OnConnectAbility", engine,
+        napi_value result = nullptr;
+        NapiAsyncTask::Schedule("PrintExtensionContext::OnConnectAbility", engine,
             CreateAsyncTaskWithLastParam(engine, nullptr, nullptr, std::move(complete), &result));
-        return engine.CreateNumber(connectId);
+        napi_value numberResult = nullptr;
+        napi_create_double(engine, connectId, &numberResult);
+        return numberResult;
     }
 
-    NativeValue *OnConnectAbilityWithAccount(NativeEngine &engine, NativeCallbackInfo &info)
+    napi_value OnConnectAbilityWithAccount(napi_env &engine, napi_callback_info &info)
     {
         PRINT_HILOGD("OnConnectAbilityWithAccount is called");
-        // only support three params
-        if (info.argc != NapiPrintUtils::ARGC_THREE) {
-            PRINT_HILOGE("Not enough params");
-            return engine.CreateUndefined();
+        size_t argc = NapiPrintUtils::MAX_ARGC;
+        napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+        napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr);
+        if (argc != NapiPrintUtils::ARGC_THREE) {
+            return GetUndefinedValue(engine);
         }
 
-        // unwrap want
         AAFwk::Want want;
-        OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[0]), want);
+        OHOS::AppExecFwk::UnwrapWant(engine, argv[0], want);
         PRINT_HILOGD("%{public}s bundlename:%{public}s abilityname:%{public}s", __func__, want.GetBundle().c_str(),
             want.GetElement().GetAbilityName().c_str());
 
         int32_t accountId = 0;
-        if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[1]), accountId)) {
+        if (!OHOS::AppExecFwk::UnwrapInt32FromJS2(engine, argv[1], accountId)) {
             PRINT_HILOGD("%{public}s called, the second parameter is invalid.", __func__);
-            return engine.CreateUndefined();
+            return GetUndefinedValue(engine);
         }
 
-        // unwarp connection
         sptr<JSPrintExtensionConnection> connection = new JSPrintExtensionConnection(engine);
-        connection->SetJsConnectionObject(info.argv[1]);
+        connection->SetJsConnectionObject(argv[1]);
         int64_t connectId = serialNumber_;
         ConnecttionKey key;
         key.id = serialNumber_;
         key.want = want;
         connects_.emplace(key, connection);
-        if (serialNumber_ < INT64_MAX) {
-            serialNumber_++;
-        } else {
-            serialNumber_ = 0;
-        }
-        AsyncTask::CompleteCallback complete = [weak = context_, want, accountId, connection, connectId](
-                                                   NativeEngine &engine, AsyncTask &task, int32_t status) {
+        (serialNumber_ < INT64_MAX) ? serialNumber_++ : serialNumber_ = 0;
+        NapiAsyncTask::CompleteCallback complete = [weak = context_, want, accountId, connection, connectId](
+                                                   napi_env engine, NapiAsyncTask &task, int32_t status) {
             PRINT_HILOGD("OnConnectAbilityWithAccount begin");
             auto context = weak.lock();
             if (!context) {
@@ -342,30 +341,32 @@ private:
             if (!context->ConnectAbilityWithAccount(want, accountId, connection)) {
                 connection->CallJsFailed(E_PRINT_INVALID_CONTEXT);
             }
-            task.Resolve(engine, engine.CreateUndefined());
+            napi_value undefineResult = nullptr;
+            napi_get_undefined(engine, &undefineResult);
+            task.Resolve(engine, undefineResult);
         };
-        NativeValue *result = nullptr;
-        AsyncTask::Schedule("PrintExtensionContext::OnConnectAbilityWithAccount", engine,
+        napi_value result = nullptr;
+        NapiAsyncTask::Schedule("PrintExtensionContext::OnConnectAbilityWithAccount", engine,
             CreateAsyncTaskWithLastParam(engine, nullptr, nullptr, std::move(complete), &result));
-        return engine.CreateNumber(connectId);
+        napi_value numberResult = nullptr;
+        napi_create_double(engine, connectId, &numberResult);
+        return numberResult;
     }
 
-    NativeValue *OnDisconnectAbility(NativeEngine &engine, NativeCallbackInfo &info)
+    napi_value OnDisconnectAbility(napi_env &engine, napi_callback_info &info)
     {
         PRINT_HILOGD("OnDisconnectAbility is called");
-        // only support one or two params
-        if (info.argc != NapiPrintUtils::ARGC_ONE && info.argc != NapiPrintUtils::ARGC_TWO) {
-            PRINT_HILOGE("Not enough params");
-            return engine.CreateUndefined();
+        size_t argc = NapiPrintUtils::MAX_ARGC;
+        napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+        napi_get_cb_info(engine, info, &argc, argv, nullptr, nullptr);
+        if (argc != NapiPrintUtils::ARGC_ONE && argc != NapiPrintUtils::ARGC_TWO) {
+            return GetUndefinedValue(engine);
         }
 
-        // unwrap want
         AAFwk::Want want;
-        // unwrap connectId
         int64_t connectId = -1;
         sptr<JSPrintExtensionConnection> connection = nullptr;
-        napi_get_value_int64(reinterpret_cast<napi_env>(&engine),
-            reinterpret_cast<napi_value>(info.argv[NapiPrintUtils::INDEX_ZERO]), &connectId);
+        napi_get_value_int64(engine, argv[NapiPrintUtils::INDEX_ZERO], &connectId);
         PRINT_HILOGD("OnDisconnectAbility connection:%{public}d", (int32_t)connectId);
         auto item = std::find_if(connects_.begin(), connects_.end(),
             [&connectId](const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
@@ -378,9 +379,8 @@ private:
         } else {
             PRINT_HILOGD("%{public}s not find conn exist.", __func__);
         }
-        // begin disconnect
-        AsyncTask::CompleteCallback complete = [weak = context_, want, connection](
-                                                   NativeEngine &engine, AsyncTask &task, int32_t status) {
+        NapiAsyncTask::CompleteCallback complete = [weak = context_, want, connection](
+                                                   napi_env engine, NapiAsyncTask &task, int32_t status) {
             PRINT_HILOGD("OnDisconnectAbility begin");
             auto context = weak.lock();
             if (!context) {
@@ -395,94 +395,96 @@ private:
             }
             PRINT_HILOGD("context->DisconnectAbility");
             auto errcode = context->DisconnectAbility(want, connection);
-            errcode == 0 ? task.Resolve(engine, engine.CreateUndefined())
+            napi_value undefineResult = nullptr;
+            napi_get_undefined(engine, &undefineResult);
+            errcode == 0 ? task.Resolve(engine, undefineResult)
                          : task.Reject(engine, CreateJsError(engine, errcode, "Disconnect Ability failed."));
         };
 
-        NativeValue *lastParam =
-            (info.argc == NapiPrintUtils::ARGC_ONE) ? nullptr : info.argv[1];
-        NativeValue *result = nullptr;
-        AsyncTask::Schedule("PrintExtensionContext::OnDisconnectAbility", engine,
+        napi_value lastParam = (argc == NapiPrintUtils::ARGC_ONE) ? nullptr : argv[1];
+        napi_value result = nullptr;
+        NapiAsyncTask::Schedule("PrintExtensionContext::OnDisconnectAbility", engine,
             CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
         return result;
     }
 };
 
-NativeValue *CreateJsMetadata(NativeEngine &engine, const AppExecFwk::Metadata &Info)
+napi_value CreateJsMetadata(napi_env &engine, const AppExecFwk::Metadata &Info)
 {
     PRINT_HILOGD("CreateJsMetadata");
-    NativeValue *objValue = engine.CreateObject();
-    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+    napi_value object = nullptr;
+    napi_create_object(engine, &object);
 
-    object->SetProperty("name", CreateJsValue(engine, Info.name));
-    object->SetProperty("value", CreateJsValue(engine, Info.value));
-    object->SetProperty("resource", CreateJsValue(engine, Info.resource));
-    return objValue;
+    napi_set_named_property(engine, object, "name", CreateJsValue(engine, Info.name));
+    napi_set_named_property(engine, object, "value", CreateJsValue(engine, Info.value));
+    napi_set_named_property(engine, object, "resource", CreateJsValue(engine, Info.resource));
+    return object;
 }
 
-NativeValue *CreateJsMetadataArray(NativeEngine &engine, const std::vector<AppExecFwk::Metadata> &info)
+napi_value CreateJsMetadataArray(napi_env &engine, const std::vector<AppExecFwk::Metadata> &info)
 {
     PRINT_HILOGD("CreateJsMetadataArray");
-    NativeValue *arrayValue = engine.CreateArray(info.size());
-    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    napi_value arrayValue = nullptr;
+    napi_create_array_with_length(engine, info.size(), &arrayValue);
     uint32_t index = 0;
     for (const auto &item : info) {
-        array->SetElement(index++, CreateJsMetadata(engine, item));
+        napi_set_element(engine, arrayValue, index++, CreateJsMetadata(engine, item));
     }
     return arrayValue;
 }
 
-NativeValue *CreateJsExtensionAbilityInfo(NativeEngine &engine, const AppExecFwk::ExtensionAbilityInfo &info)
+napi_value CreateJsExtensionAbilityInfoMessage(napi_env &engine, const AppExecFwk::ExtensionAbilityInfo &info)
 {
-    PRINT_HILOGD("CreateJsExtensionAbilityInfo");
-    NativeValue *objValue = engine.CreateObject();
-    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
-    object->SetProperty("bundleName", CreateJsValue(engine, info.bundleName));
-    object->SetProperty("moduleName", CreateJsValue(engine, info.moduleName));
-    object->SetProperty("name", CreateJsValue(engine, info.name));
-    object->SetProperty("labelId", CreateJsValue(engine, info.labelId));
-    object->SetProperty("descriptionId", CreateJsValue(engine, info.descriptionId));
-    object->SetProperty("iconId", CreateJsValue(engine, info.iconId));
-    object->SetProperty("isVisible", CreateJsValue(engine, info.visible));
-    object->SetProperty("extensionAbilityType", CreateJsValue(engine, info.type));
-    NativeValue *permissionArrayValue = engine.CreateArray(info.permissions.size());
-    NativeArray *permissionArray = ConvertNativeValueTo<NativeArray>(permissionArrayValue);
-    if (permissionArray != nullptr) {
-        int index = 0;
+    PRINT_HILOGD("CreateJsExtensionAbilityInfoMessage");
+    napi_value object = nullptr;
+    napi_create_object(engine, &object);
+    napi_set_named_property(engine, object, "bundleName", CreateJsValue(engine, info.bundleName));
+    napi_set_named_property(engine, object, "moduleName", CreateJsValue(engine, info.moduleName));
+    napi_set_named_property(engine, object, "name", CreateJsValue(engine, info.name));
+    napi_set_named_property(engine, object, "labelId", CreateJsValue(engine, info.labelId));
+    napi_set_named_property(engine, object, "descriptionId", CreateJsValue(engine, info.descriptionId));
+    napi_set_named_property(engine, object, "iconId", CreateJsValue(engine, info.iconId));
+    napi_set_named_property(engine, object, "isVisible", CreateJsValue(engine, info.visible));
+    napi_set_named_property(engine, object, "extensionAbilityType", CreateJsValue(engine, info.type));
+
+    napi_value permissionArrayValue = nullptr;
+    napi_create_array_with_length(engine, info.permissions.size(), &permissionArrayValue);
+    if (permissionArrayValue != nullptr) {
+        uint32_t index = 0;
         for (auto permission : info.permissions) {
-            permissionArray->SetElement(index++, CreateJsValue(engine, permission));
+            napi_set_element(engine, permissionArrayValue, index++, CreateJsValue(engine, permission));
         }
     }
-    object->SetProperty("permissions", permissionArrayValue);
-    object->SetProperty("applicationInfo", CreateJsApplicationInfo(engine, info.applicationInfo));
-    object->SetProperty("metadata", CreateJsMetadataArray(engine, info.metadata));
-    object->SetProperty("enabled", CreateJsValue(engine, info.enabled));
-    object->SetProperty("readPermission", CreateJsValue(engine, info.readPermission));
-    object->SetProperty("writePermission", CreateJsValue(engine, info.writePermission));
-    return objValue;
+    napi_set_named_property(engine, object, "permissions", permissionArrayValue);
+    napi_set_named_property(engine, object, "applicationInfo", CreateJsApplicationInfo(engine, info.applicationInfo));
+    napi_set_named_property(engine, object, "metadata", CreateJsMetadataArray(engine, info.metadata));
+    napi_set_named_property(engine, object, "enabled", CreateJsValue(engine, info.enabled));
+    napi_set_named_property(engine, object, "readPermission", CreateJsValue(engine, info.readPermission));
+    napi_set_named_property(engine, object, "writePermission", CreateJsValue(engine, info.writePermission));
+    return object;
 }
 
-NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine,
+napi_value CreateJsPrintExtensionContext(napi_env engine,
     std::shared_ptr<PrintExtensionContext> context, std::string &extensionId)
 {
     PRINT_HILOGD("CreateJsPrintExtensionContext begin");
-    NativeValue *objValue = CreateJsExtensionContext(engine, context);
-    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+    napi_value objValue = CreateJsExtensionContext(engine, context);
+    napi_value object = objValue;
 
     std::unique_ptr<JsPrintExtensionContext> jsContext = std::make_unique<JsPrintExtensionContext>(context);
-    object->SetNativePointer(jsContext.release(), JsPrintExtensionContext::Finalizer, nullptr);
+    napi_wrap(engine, object, jsContext.release(), JsPrintExtensionContext::Finalizer, nullptr, nullptr);
 
     // make handler
     handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
     const char *moduleName = "JsPrintExtensionContext";
-    BindNativeFunction(engine, *object, "startAbility", moduleName, JsPrintExtensionContext::StartAbility);
-    BindNativeFunction(engine, *object, "terminateSelf", moduleName, JsPrintExtensionContext::TerminateAbility);
-    BindNativeFunction(engine, *object, "connectAbility", moduleName, JsPrintExtensionContext::ConnectAbility);
-    BindNativeFunction(engine, *object, "disconnectAbility", moduleName, JsPrintExtensionContext::DisconnectAbility);
+    BindNativeFunction(engine, object, "startAbility", moduleName, JsPrintExtensionContext::StartAbility);
+    BindNativeFunction(engine, object, "terminateSelf", moduleName, JsPrintExtensionContext::TerminateAbility);
+    BindNativeFunction(engine, object, "connectAbility", moduleName, JsPrintExtensionContext::ConnectAbility);
+    BindNativeFunction(engine, object, "disconnectAbility", moduleName, JsPrintExtensionContext::DisconnectAbility);
     BindNativeFunction(
-        engine, *object, "startAbilityWithAccount", moduleName, JsPrintExtensionContext::StartAbilityWithAccount);
+        engine, object, "startAbilityWithAccount", moduleName, JsPrintExtensionContext::StartAbilityWithAccount);
     BindNativeFunction(
-        engine, *object, "connectAbilityWithAccount", moduleName, JsPrintExtensionContext::ConnectAbilityWithAccount);
+        engine, object, "connectAbilityWithAccount", moduleName, JsPrintExtensionContext::ConnectAbilityWithAccount);
     if (context) {
         PRINT_HILOGD("Set ExtensionAbilityInfo Property");
         auto abilityInfo = context->GetAbilityInfo();
@@ -500,7 +502,8 @@ NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine,
                 PRINT_HILOGD("Get target fail.");
                 return objValue;
             }
-            object->SetProperty("extensionAbilityInfo", CreateJsExtensionAbilityInfo(engine, *infoIter));
+            napi_set_named_property(engine, object,
+                "extensionAbilityInfo", CreateJsExtensionAbilityInfoMessage(engine, *infoIter));
         }
     }
 

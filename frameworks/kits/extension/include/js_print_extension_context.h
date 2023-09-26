@@ -21,14 +21,11 @@
 #include "ability_connect_callback.h"
 #include "event_handler.h"
 #include "print_extension_context.h"
-
-class NativeEngine;
-class NativeValue;
-class NativeReference;
+#include "napi/native_api.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
-NativeValue *CreateJsPrintExtensionContext(NativeEngine &engine,
+napi_value CreateJsPrintExtensionContext(napi_env engine,
     std::shared_ptr<PrintExtensionContext> context, std::string &extensionId);
 } // namespace AbilityRuntime
 } // namespace OHOS

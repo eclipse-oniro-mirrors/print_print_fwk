@@ -31,7 +31,7 @@ using namespace OHOS::Print;
 
 namespace OHOS {
 namespace AbilityRuntime {
-JSPrintExtensionConnection::JSPrintExtensionConnection(NativeEngine& engine) : engine_(engine) {}
+JSPrintExtensionConnection::JSPrintExtensionConnection(napi_env engine) : engine_(engine) {}
 
 JSPrintExtensionConnection::~JSPrintExtensionConnection() = default;
 
@@ -60,32 +60,30 @@ void JSPrintExtensionConnection::HandleOnAbilityConnectDone(const AppExecFwk::El
 {
     PRINT_HILOGD("HandleOnAbilityConnectDone begin, resultCode:%{public}d", resultCode);
     // wrap ElementName
-    napi_value napiElementName = OHOS::AppExecFwk::WrapElementName(reinterpret_cast<napi_env>(&engine_), element);
-    NativeValue* nativeElementName = reinterpret_cast<NativeValue*>(napiElementName);
+    napi_value nativeElementName = OHOS::AppExecFwk::WrapElementName(engine_, element);
 
     // wrap RemoteObject
     PRINT_HILOGD("OnAbilityConnectDone begin NAPI_ohos_rpc_CreateJsRemoteObject");
-    napi_value napiRemoteObject = NAPI_ohos_rpc_CreateJsRemoteObject(
-        reinterpret_cast<napi_env>(&engine_), remoteObject);
-    NativeValue* nativeRemoteObject = reinterpret_cast<NativeValue*>(napiRemoteObject);
-    NativeValue* argv[] = {nativeElementName, nativeRemoteObject};
+    napi_value nativeRemoteObject = NAPI_ohos_rpc_CreateJsRemoteObject(engine_, remoteObject);
+    napi_value argv[] = {nativeElementName, nativeRemoteObject};
     if (jsConnectionObject_ == nullptr) {
         PRINT_HILOGE("jsConnectionObject_ nullptr");
         return;
     }
-    NativeValue* value = jsConnectionObject_->Get();
-    NativeObject* obj = ConvertNativeValueTo<NativeObject>(value);
+    napi_value obj = jsConnectionObject_->GetNapiValue();
     if (obj == nullptr) {
         PRINT_HILOGE("Failed to get object");
         return;
     }
-    NativeValue* methodOnConnect = obj->GetProperty("onConnect");
+    napi_value methodOnConnect = nullptr;
+    napi_get_named_property(engine_, obj, "onConnect", &methodOnConnect);
     if (methodOnConnect == nullptr) {
         PRINT_HILOGE("Failed to get onConnect from object");
         return;
     }
-    PRINT_HILOGD("JSPrintExtensionConnection::CallFunction onConnect, success");
-    engine_.CallFunction(value, methodOnConnect, argv, NapiPrintUtils::ARGC_TWO);
+    PRINT_HILOGD("JSPrintExtensionConnection::napi_call_function onConnect, success");
+    napi_value callResult = nullptr;
+    napi_call_function(engine_, obj, methodOnConnect, NapiPrintUtils::ARGC_TWO, argv, &callResult);
     PRINT_HILOGD("OnAbilityConnectDone end");
 }
 
@@ -112,21 +110,20 @@ void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk:
     int resultCode)
 {
     PRINT_HILOGD("HandleOnAbilityDisconnectDone begin, resultCode:%{public}d", resultCode);
-    napi_value napiElementName = OHOS::AppExecFwk::WrapElementName(reinterpret_cast<napi_env>(&engine_), element);
-    NativeValue* nativeElementName = reinterpret_cast<NativeValue*>(napiElementName);
-    NativeValue* argv[] = {nativeElementName};
+    napi_value nativeElementName = OHOS::AppExecFwk::WrapElementName(engine_, element);
+    napi_value argv[] = {nativeElementName};
     if (jsConnectionObject_ == nullptr) {
         PRINT_HILOGE("jsConnectionObject_ nullptr");
         return;
     }
-    NativeValue* value = jsConnectionObject_->Get();
-    NativeObject* obj = ConvertNativeValueTo<NativeObject>(value);
+    napi_value obj = jsConnectionObject_->GetNapiValue();
     if (obj == nullptr) {
         PRINT_HILOGE("Failed to get object");
         return;
     }
 
-    NativeValue* method = obj->GetProperty("onDisconnect");
+    napi_value method = nullptr;
+    napi_get_named_property(engine_, obj, "onDisconnect", &method);
     if (method == nullptr) {
         PRINT_HILOGE("Failed to get onDisconnect from object");
         return;
@@ -148,13 +145,16 @@ void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk:
         connects_.erase(item);
         PRINT_HILOGD("OnAbilityDisconnectDone erase connects_.size:%{public}zu", connects_.size());
     }
-    PRINT_HILOGD("OnAbilityDisconnectDone CallFunction success");
-    engine_.CallFunction(value, method, argv, NapiPrintUtils::ARGC_ONE);
+    PRINT_HILOGD("OnAbilityDisconnectDone napi_call_function success");
+    napi_value callResult = nullptr;
+    napi_call_function(engine_, obj, method, NapiPrintUtils::ARGC_ONE, argv, &callResult);
 }
 
-void JSPrintExtensionConnection::SetJsConnectionObject(NativeValue* jsConnectionObject)
+void JSPrintExtensionConnection::SetJsConnectionObject(napi_value jsConnectionObject)
 {
-    jsConnectionObject_ = std::unique_ptr<NativeReference>(engine_.CreateReference(jsConnectionObject, 1));
+    napi_ref jsRef = nullptr;
+    napi_create_reference(engine_, jsConnectionObject, 1, &jsRef);
+    jsConnectionObject_.reset(reinterpret_cast<NativeReference*>(jsRef));
 }
 
 void JSPrintExtensionConnection::CallJsFailed(int32_t errorCode)
@@ -164,21 +164,25 @@ void JSPrintExtensionConnection::CallJsFailed(int32_t errorCode)
         PRINT_HILOGE("jsConnectionObject_ nullptr");
         return;
     }
-    NativeValue* value = jsConnectionObject_->Get();
-    NativeObject* obj = ConvertNativeValueTo<NativeObject>(value);
+    napi_value obj = jsConnectionObject_->GetNapiValue();
     if (obj == nullptr) {
         PRINT_HILOGE("Failed to get object");
         return;
     }
 
-    NativeValue* method = obj->GetProperty("onFailed");
+    napi_value method = nullptr;
+    napi_get_named_property(engine_, obj, "onFailed", &method);
     if (method == nullptr) {
         PRINT_HILOGE("Failed to get onFailed from object");
         return;
     }
-    NativeValue* argv[] = {engine_.CreateNumber(errorCode)};
-    PRINT_HILOGD("CallJsFailed CallFunction success");
-    engine_.CallFunction(value, method, argv, NapiPrintUtils::ARGC_ONE);
+
+    napi_value result = nullptr;
+    napi_create_int32(engine_, errorCode, &result);
+    napi_value argv[] = { result };
+    PRINT_HILOGD("CallJsFailed napi_call_function success");
+    napi_value callResult = nullptr;
+    napi_call_function(engine_, obj, method, NapiPrintUtils::ARGC_ONE, argv, &callResult);
     PRINT_HILOGD("CallJsFailed end");
 }
 }  // namespace AbilityRuntime
