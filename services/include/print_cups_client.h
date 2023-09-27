@@ -16,12 +16,13 @@
 #ifndef PRINT_CUPS_CLIENT_H
 #define PRINT_CUPS_CLIENT_H
 
-#include <string>
 #include <vector>
+#include <string>
 #include <functional>
 #include <cups/cups-private.h>
 #include <nlohmann/json.hpp>
 
+#include "singleton.h"
 #include "print_service_ability.h"
 #include "print_job.h"
 
@@ -69,7 +70,7 @@ enum PrintQualityCode {
 };
 
 struct JobParameters {
-    int cupsJobId;
+    uint32_t cupsJobId;
     uint32_t borderless;
     uint32_t numCopies;
     std::string duplex;
@@ -102,11 +103,10 @@ struct MediaSize {
     const float HeightInInches;
 };
 
-class PrintCupsClient final {
+class PrintCupsClient final : public DelayedSingleton<PrintCupsClient> {
 public:
     PrintCupsClient();
     ~PrintCupsClient();
-    static PrintCupsClient *GetInstance();
 
     int32_t StartCupsdService();
     void StopCupsdService();
@@ -143,8 +143,6 @@ private:
     float ConvertInchTo100MM(float num);
 
 private:
-    static std::mutex instanceLock_;
-    static PrintCupsClient* instance_;
     std::vector<JobParameters*> jobQueue;
     JobParameters *currentJob = nullptr;
 };
