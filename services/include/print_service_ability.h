@@ -78,7 +78,8 @@ public:
     int32_t LoadExtSuccess(const std::string &extensionId) override;
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override;
     int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) override;
-    int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName) override;
+    int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
+        const std::string &printerMake) override;
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps) override;
     void SetHelper(const std::shared_ptr<PrintServiceHelper> &helper);
     int32_t PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes,

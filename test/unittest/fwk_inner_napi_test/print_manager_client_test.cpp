@@ -2204,34 +2204,38 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0112, TestSize.Level1)
 {
     std::string printerUri;
     std::string printerName;
+    std::string printerMake;
     PrintManagerClient::GetInstance()->LoadServerFail();
-    PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName);
+    PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0113, TestSize.Level1)
 {
     std::string printerUri;
     std::string printerName;
+    std::string printerMake;
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
-    PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName);
+    PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0114, TestSize.Level1)
 {
     std::string printerUri;
     std::string printerName;
+    std::string printerMake;
     PrintManagerClient::GetInstance()->LoadServerFail();
     PrintManagerClient::GetInstance()->ResetProxy();
-    PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName);
+    PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0115, TestSize.Level1)
 {
     std::string printerUri;
     std::string printerName;
+    std::string printerMake;
     PrintManagerClient::GetInstance()->LoadServerSuccess();
-    PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName);
+    PrintManagerClient::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0116, TestSize.Level1)

@@ -375,7 +375,8 @@ bool PrintServiceStub::OnAddPrinterToCups(MessageParcel &data, MessageParcel &re
     PRINT_HILOGD("PrintServiceStub::OnAddPrinterToCups in");
     std::string printerUri = data.ReadString();
     std::string printerName = data.ReadString();
-    int32_t ret = AddPrinterToCups(printerUri, printerName);
+    std::string printerMake = data.ReadString();
+    int32_t ret = AddPrinterToCups(printerUri, printerName, printerMake);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnAddPrinterToCups out");
     return ret == E_PRINT_NONE;

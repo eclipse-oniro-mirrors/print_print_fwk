@@ -61,6 +61,7 @@ private:
 
         std::string printerUri = "";
         std::string printerName = "";
+        std::string printerMake = "";
         PrinterCapability printerCaps;
 
         NapiPrintExtContext() : Context(nullptr, nullptr) {};
