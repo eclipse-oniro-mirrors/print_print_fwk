@@ -45,7 +45,7 @@ struct CallbackParam {
 struct Param {
     napi_env env;
     napi_ref callbackRef;
-}
+};
 
 class PrintCallback : public PrintCallbackStub {
 public:

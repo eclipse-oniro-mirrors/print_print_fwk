@@ -48,7 +48,7 @@ PrintCallback::~PrintCallback()
         work->data = reinterpret_cast<void*>(param);
         uv_queue_work(loop, work, [](uv_work_t *work) {}, [](uv_work_t *work, int _status) {
             PRINT_HILOGD("uv_queue_work PrintCallback DeleteReference");
-            Prarm *param_ = reinterpret_cast<Param*>(work->data);
+            Param *param_ = reinterpret_cast<Param*>(work->data);
             if (param_ == nullptr) {
                 delete work;
                 return;
@@ -61,11 +61,11 @@ PrintCallback::~PrintCallback()
                 return;
             }
             napi_ref callbackRef_ = param_->callbackRef;
-            NapiPrintUtils::DeleteReferene(param_->env, callbackRef_);
+            NapiPrintUtils::DeleteReference(param_->env, callbackRef_);
             napi_close_handle_scope(param_->env, scope);
             delete param_;
             delete work;
-        })
+        });
     }
 }
 
