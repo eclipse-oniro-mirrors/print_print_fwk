@@ -623,7 +623,7 @@ int32_t PrintServiceAbility::AddPrinterToCups(const std::string &printerUri, con
     }
     PRINT_HILOGD("AddPrinterToCups started.");
 #ifdef CUPS_ENABLE
-    DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerUri, printerName);
+    DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
 #endif // CUPS_ENABLE
     PRINT_HILOGD("AddPrinterToCups End.");
     return E_PRINT_NONE;
