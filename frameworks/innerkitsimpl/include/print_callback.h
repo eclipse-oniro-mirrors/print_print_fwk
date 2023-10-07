@@ -42,6 +42,11 @@ struct CallbackParam {
     uint32_t fd;
 };
 
+struct Param {
+    napi_env env;
+    napi_ref callbackRef;
+};
+
 class PrintCallback : public PrintCallbackStub {
 public:
     PrintCallback(napi_env env, napi_ref ref);

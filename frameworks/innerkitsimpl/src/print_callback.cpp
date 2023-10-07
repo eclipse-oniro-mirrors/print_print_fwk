@@ -36,8 +36,38 @@ PrintCallback::~PrintCallback()
     } else {
         std::lock_guard<std::mutex> autoLock(mutex_);
         PRINT_HILOGD("callback has been destroyed");
-        NapiPrintUtils::DeleteReference(env_, ref_);
-        ref_ = nullptr;
+
+        uv_loop_s *loop = nullptr;
+        napi_get_uv_event_loop(env_, &loop);
+        Param *param = new (std::nothrow) Param;
+        param->env = env_;
+        param->callbackRef = ref_;
+        uv_work_t *work = new (std::nothrow) uv_work_t;
+        if (work == nullptr) {
+            delete param;
+            return;
+        }
+        work->data = reinterpret_cast<void*>(param);
+        uv_queue_work(loop, work, [](uv_work_t *work) {}, [](uv_work_t *work, int _status) {
+            PRINT_HILOGD("uv_queue_work PrintCallback DeleteReference");
+            Param *param_ = reinterpret_cast<Param*>(work->data);
+            if (param_ == nullptr) {
+                delete work;
+                return;
+            }
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(param_->env, &scope);
+            if (scope == nullptr) {
+                delete param_;
+                delete work;
+                return;
+            }
+            napi_ref callbackRef_ = param_->callbackRef;
+            NapiPrintUtils::DeleteReference(param_->env, callbackRef_);
+            napi_close_handle_scope(param_->env, scope);
+            delete param_;
+            delete work;
+        });
     }
 }
 
