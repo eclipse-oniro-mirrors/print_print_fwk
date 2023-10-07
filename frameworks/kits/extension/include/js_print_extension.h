@@ -16,6 +16,8 @@
 #ifndef JS_PRINT_EXTENSION_H
 #define JS_PRINT_EXTENSION_H
 
+#include <mutex>
+
 #include "napi/native_api.h"
 #include "print_extension.h"
 #include "print_job.h"
@@ -26,6 +28,16 @@ namespace OHOS {
 namespace AbilityRuntime {
 class PrintExtension;
 class JsRuntime;
+
+struct WorkParam {
+    napi_env env;
+    std::string funcName;
+    std::string printerId;
+    Print::PrintJob job;
+    WorkParam(napi_env env, std::string funcName) : env(env), funcName(funcName)
+    {}
+};
+
 /**
  * @brief Basic Print components.
  */
@@ -108,6 +120,9 @@ private:
     napi_value CallObjectMethod(const char *name, napi_value const *argv = nullptr, size_t argc = 0);
     bool InitExtensionObj(JsRuntime &jsRuntime);
     bool InitContextObj(JsRuntime &jsRuntime, napi_value &extObj, std::string &extensionId);
+    bool Callback(const std::string funcName);
+    bool Callback(const std::string funcName, const std::string &printerId);
+    bool Callback(const std::string funcName, const Print::PrintJob &job);
     void RegisterDiscoveryCb();
     void RegisterConnectionCb();
     void RegisterPrintJobCb();
@@ -121,6 +136,7 @@ private:
     JsRuntime &jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;
     static JsPrintExtension *jsExtension_;
+    static std::mutex mtx;
     std::string extensionId_;
     bool hasDestroyed_;
 };

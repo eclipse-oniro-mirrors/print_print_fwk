@@ -36,6 +36,7 @@
 namespace OHOS {
 namespace AbilityRuntime {
 JsPrintExtension *JsPrintExtension::jsExtension_ = nullptr;
+std::mutex JsPrintExtension::mtx;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Print;
 
@@ -302,26 +303,140 @@ void JsPrintExtension::GetSrcPath(std::string &srcPath)
     }
 }
 
+bool JsPrintExtension::Callback(std::string funcName)
+{
+    PRINT_HILOGD("call %{public}s", funcName.c_str());
+    std::lock_guard<std::mutex> lock(mtx);
+    if (JsPrintExtension::jsExtension_ == nullptr) {
+        return false;
+    }
+    napi_env env = (JsPrintExtension::jsExtension_->jsRuntime_).GetNapiEnv();
+    WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
+    if (workParam == nullptr) {
+        return false;
+    }
+    uv_after_work_cb afterCallback = [](uv_work_t *work, int32_t status) {
+        WorkParam *param = reinterpret_cast<WorkParam *>(work->data);
+        if (param == nullptr) {
+            delete work;
+            return;
+        }
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(param->env, &scope);
+        if (scope == nullptr) {
+            delete param;
+            delete work;
+            return;
+        }
+        napi_value arg[] = { 0 };
+        std::lock_guard<std::mutex> lock(mtx);
+        if (JsPrintExtension::jsExtension_ != nullptr) {
+            JsPrintExtension::jsExtension_->CallObjectMethod(param->funcName.c_str(), arg, NapiPrintUtils::ARGC_ZERO);
+        }
+        napi_close_handle_scope(param->env, scope);
+        delete param;
+        delete work;
+    };
+    JsPrintCallback::Call(env, workParam, afterCallback);
+    return true;
+}
+
+bool JsPrintExtension::Callback(const std::string funcName, const std::string &printerId)
+{
+    PRINT_HILOGD("call %{public}s", funcName.c_str());
+    std::lock_guard<std::mutex> lock(mtx);
+    if (JsPrintExtension::jsExtension_ == nullptr) {
+        return false;
+    }
+    napi_env env = (JsPrintExtension::jsExtension_->jsRuntime_).GetNapiEnv();
+    WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
+    if (workParam == nullptr) {
+        return false;
+    }
+    workParam->printerId = printerId;
+    uv_after_work_cb afterCallback = [](uv_work_t *work, int32_t status) {
+        WorkParam *param = reinterpret_cast<WorkParam *>(work->data);
+        if (param == nullptr) {
+            delete work;
+            return;
+        }
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(param->env, &scope);
+        if (scope == nullptr) {
+            delete param;
+            delete work;
+            return;
+        }
+        napi_value id = OHOS::AppExecFwk::WrapStringToJS(param->env, param->printerId);
+        napi_value arg[] = { id };
+        std::lock_guard<std::mutex> lock(mtx);
+        if (JsPrintExtension::jsExtension_ != nullptr) {
+            JsPrintExtension::jsExtension_->CallObjectMethod(param->funcName.c_str(), arg, NapiPrintUtils::ARGC_ONE);
+        }
+        napi_close_handle_scope(param->env, scope);
+        delete param;
+        delete work;
+    };
+    JsPrintCallback::Call(env, workParam, afterCallback);
+    return true;
+}
+
+bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJob &job)
+{
+    PRINT_HILOGD("call %{public}s", funcName.c_str());
+    std::lock_guard<std::mutex> lock(mtx);
+    if (JsPrintExtension::jsExtension_ == nullptr) {
+        return false;
+    }
+    napi_env env = (JsPrintExtension::jsExtension_->jsRuntime_).GetNapiEnv();
+    WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
+    if (workParam == nullptr) {
+        return false;
+    }
+    workParam->job = job;
+    uv_after_work_cb afterCallback = [](uv_work_t *work, int32_t status) {
+        WorkParam *param = reinterpret_cast<WorkParam *>(work->data);
+        if (param == nullptr) {
+            delete work;
+            return;
+        }
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(param->env, &scope);
+        if (scope == nullptr) {
+            delete param;
+            delete work;
+            return;
+        }
+        napi_value jobObject = PrintJobHelper::MakeJsObject(param->env, param->job);
+        napi_value arg[] = { jobObject };
+        std::lock_guard<std::mutex> lock(mtx);
+        if (JsPrintExtension::jsExtension_ != nullptr) {
+            JsPrintExtension::jsExtension_->CallObjectMethod(param->funcName.c_str(), arg, NapiPrintUtils::ARGC_ONE);
+        }
+        napi_close_handle_scope(param->env, scope);
+        delete param;
+        delete work;
+    };
+    JsPrintCallback::Call(env, workParam, afterCallback);
+    return true;
+}
+
 void JsPrintExtension::RegisterDiscoveryCb()
 {
     PRINT_HILOGD("Register Print Extension Callback");
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_DISCOVERY,
         []() -> bool {
-            PRINT_HILOGD("Start Print Discovery");
-            HandleScope handleScope(jsExtension_->jsRuntime_);
-            auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
-            napi_value value = jsExtension_->jsObj_->GetNapiValue();
-            callback->Exec(value, "onStartDiscoverPrinter");
-            return true;
+            if (JsPrintExtension::jsExtension_ == nullptr) {
+                return false;
+            }
+            return JsPrintExtension::jsExtension_->Callback("onStartDiscoverPrinter");
     });
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_STOP_DISCOVERY,
         []() -> bool {
-            PRINT_HILOGD("Stop Print Discovery");
-            HandleScope handleScope(jsExtension_->jsRuntime_);
-            auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
-            napi_value value = jsExtension_->jsObj_->GetNapiValue();
-            callback->Exec(value, "onStopDiscoverPrinter");
-        return true;
+            if (JsPrintExtension::jsExtension_ == nullptr) {
+                return false;
+            }
+            return JsPrintExtension::jsExtension_->Callback("onStopDiscoverPrinter");
     });
 }
 
@@ -329,31 +444,19 @@ void JsPrintExtension::RegisterConnectionCb()
 {
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CONNECT_PRINTER,
         [](const std::string &printId) -> bool {
-            PRINT_HILOGD("Connect Printer");
+            if (JsPrintExtension::jsExtension_ == nullptr) {
+                return false;
+            }
             std::string realPrinterId = PrintUtils::GetLocalId(printId, jsExtension_->extensionId_);
-            HandleScope handleScope(jsExtension_->jsRuntime_);
-            napi_env nativeEng = (jsExtension_->jsRuntime_).GetNapiEnv();
-            napi_value nativePrintId =
-                OHOS::AppExecFwk::WrapStringToJS(nativeEng, realPrinterId);
-            napi_value arg[] = { nativePrintId };
-            auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
-            napi_value value = jsExtension_->jsObj_->GetNapiValue();
-            callback->Exec(value, "onConnectPrinter", arg, NapiPrintUtils::ARGC_ONE);
-            return true;
+            return JsPrintExtension::jsExtension_->Callback("onConnectPrinter", realPrinterId);
     });
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER,
         [](const std::string &printId) -> bool {
-            PRINT_HILOGD("Disconnect Printer");
+            if (JsPrintExtension::jsExtension_ == nullptr) {
+                return false;
+            }
             std::string realPrinterId = PrintUtils::GetLocalId(printId, jsExtension_->extensionId_);
-            HandleScope handleScope(jsExtension_->jsRuntime_);
-            napi_env nativeEng = (jsExtension_->jsRuntime_).GetNapiEnv();
-            napi_value nativePrintId =
-                OHOS::AppExecFwk::WrapStringToJS(nativeEng, realPrinterId);
-            napi_value arg[] = { nativePrintId };
-            auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
-            napi_value value = jsExtension_->jsObj_->GetNapiValue();
-            callback->Exec(value, "onDisconnectPrinter", arg, NapiPrintUtils::ARGC_ONE);
-            return true;
+            return JsPrintExtension::jsExtension_->Callback("onDisconnectPrinter", realPrinterId);
     });
 }
 
@@ -361,29 +464,17 @@ void JsPrintExtension::RegisterPrintJobCb()
 {
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_PRINT,
         [](const PrintJob &job) -> bool {
-            PRINT_HILOGD("Start Print Job");
-            HandleScope handleScope(jsExtension_->jsRuntime_);
-            napi_env nativeEng = (jsExtension_->jsRuntime_).GetNapiEnv();
-            napi_value nativeJob = PrintJobHelper::MakeJsObject(nativeEng, job);
-            napi_value arg[] = { nativeJob };
-
-            auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
-            napi_value value = jsExtension_->jsObj_->GetNapiValue();
-            callback->Exec(value, "onStartPrintJob", arg, NapiPrintUtils::ARGC_ONE);
-            return true;
+            if (JsPrintExtension::jsExtension_ == nullptr) {
+                return false;
+            }
+            return JsPrintExtension::jsExtension_->Callback("onStartPrintJob", job);
     });
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CANCEL_PRINT,
         [](const PrintJob &job) -> bool {
-            PRINT_HILOGD("Cancel Print Job");
-            HandleScope handleScope(jsExtension_->jsRuntime_);
-            napi_env nativeEng = (jsExtension_->jsRuntime_).GetNapiEnv();
-            napi_value nativeJob = PrintJobHelper::MakeJsObject(nativeEng, job);
-            napi_value arg[] = { nativeJob };
-
-            auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
-            napi_value value = jsExtension_->jsObj_->GetNapiValue();
-            callback->Exec(value, "onCancelPrintJob", arg, NapiPrintUtils::ARGC_ONE);
-            return true;
+            if (JsPrintExtension::jsExtension_ == nullptr) {
+                return false;
+            }
+            return JsPrintExtension::jsExtension_->Callback("onCancelPrintJob", job);
     });
 }
 
@@ -391,16 +482,10 @@ void JsPrintExtension::RegisterPreviewCb()
 {
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_PREVIEW,
         [](const PrintJob &job) -> bool {
-            PRINT_HILOGD("Requet preview");
-            HandleScope handleScope(jsExtension_->jsRuntime_);
-            napi_env nativeEng = (jsExtension_->jsRuntime_).GetNapiEnv();
-            napi_value nativeJob = PrintJobHelper::MakeJsObject(nativeEng, job);
-            napi_value arg[] = { nativeJob };
-
-            auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
-            napi_value value = jsExtension_->jsObj_->GetNapiValue();
-            callback->Exec(value, "onRequestPreview", arg, NapiPrintUtils::ARGC_ONE);
-            return true;
+            if (JsPrintExtension::jsExtension_ == nullptr) {
+                return false;
+            }
+            return JsPrintExtension::jsExtension_->Callback("onRequestPreview", job);
     });
 }
 
@@ -408,18 +493,11 @@ void JsPrintExtension::RegisterQueryCapCb()
 {
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_CAP,
         [](const std::string &printId) -> bool {
-            PRINT_HILOGD("Request Capability");
+            if (JsPrintExtension::jsExtension_ == nullptr) {
+                return false;
+            }
             std::string realPrinterId = PrintUtils::GetLocalId(printId, jsExtension_->extensionId_);
-            HandleScope handleScope(jsExtension_->jsRuntime_);
-            napi_env nativeEng = (jsExtension_->jsRuntime_).GetNapiEnv();
-            napi_value nativePrintId =
-                OHOS::AppExecFwk::WrapStringToJS(nativeEng, realPrinterId);
-            napi_value arg[] = { nativePrintId };
-            auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
-            napi_value value = jsExtension_->jsObj_->GetNapiValue();
-            callback->Exec(value, "onRequestPrinterCapability", arg, NapiPrintUtils::ARGC_ONE);
-            PRINT_HILOGD("Request Capability Success");
-            return true;
+            return JsPrintExtension::jsExtension_->Callback("onRequestPrinterCapability", realPrinterId);
     });
 }
 
@@ -427,15 +505,10 @@ void JsPrintExtension::RegisterExtensionCb()
 {
     PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DESTROY_EXTENSION,
         []() -> bool {
-            PRINT_HILOGD("Stop Extension");
-            HandleScope handleScope(jsExtension_->jsRuntime_);
-            napi_value arg[] = { };
-            auto callback = std::make_shared<JsPrintCallback>(jsExtension_->jsRuntime_);
-            napi_value value = jsExtension_->jsObj_->GetNapiValue();
-            callback->Exec(value, "onDestroy", arg, NapiPrintUtils::ARGC_ZERO);
-            jsExtension_->hasDestroyed_ = true;
-            PRINT_HILOGD("Destroy Extension Success");
-            return true;
+            if (JsPrintExtension::jsExtension_ == nullptr) {
+                return false;
+            }
+            return JsPrintExtension::jsExtension_->Callback("onDestroy");
     });
 }
 } // namespace AbilityRuntime

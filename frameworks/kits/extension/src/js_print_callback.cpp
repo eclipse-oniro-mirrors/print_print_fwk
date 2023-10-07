@@ -46,6 +46,23 @@ uv_loop_s* JsPrintCallback::GetJsLoop(JsRuntime &jsRuntime)
     return loop;
 }
 
+bool JsPrintCallback::Call(napi_env env, void *data, uv_after_work_cb afterCallback)
+{
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env, &loop);
+    if (loop == nullptr) {
+        return false;
+    }
+    uv_work_t *work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        return false;
+    }
+    work->data = data;
+    uv_queue_work_with_qos(
+        loop, work, [](uv_work_t *work) {}, afterCallback, uv_qos_user_initiated);
+    return true;
+}
+
 bool JsPrintCallback::BuildJsWorker(napi_value jsObj, const std::string &name,
     napi_value const *argv, size_t argc, bool isSync)
 {
