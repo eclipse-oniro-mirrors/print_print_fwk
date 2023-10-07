@@ -30,6 +30,7 @@ class JsPrintCallback : public std::enable_shared_from_this<JsPrintCallback> {
 public:
     explicit JsPrintCallback(JsRuntime &jsRutime);
     ~JsPrintCallback() = default;
+    static bool Call(napi_env env, void *data, uv_after_work_cb afterCallback);
     napi_value Exec(napi_value jsObj, const std::string &name, napi_value const *argv = nullptr, size_t argc = 0,
         bool isSync = true);
 
