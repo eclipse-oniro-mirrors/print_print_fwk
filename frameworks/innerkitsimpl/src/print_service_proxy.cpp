@@ -384,13 +384,15 @@ int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &
     return ret;
 }
 
-int32_t PrintServiceProxy::AddPrinterToCups(const std::string &printerUri, const std::string &printerName)
+int32_t PrintServiceProxy::AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
+    const std::string &printerMake)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerUri);
     data.WriteString(printerName);
+    data.WriteString(printerMake);
     PRINT_HILOGD("PrintServiceProxy AddPrinterToCups started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {

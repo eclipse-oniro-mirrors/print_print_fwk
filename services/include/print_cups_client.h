@@ -108,9 +108,11 @@ public:
     PrintCupsClient();
     ~PrintCupsClient();
 
-    int32_t StartCupsdService();
+    int32_t InitCupsResources();
     void StopCupsdService();
-    int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName);
+    void QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds);
+    int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
+        const std::string &printerMake);
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps);
     void AddCupsPrintJob(const PrintJob &jobInf);
     void CancelCupsJob(std::string serviceJobId);
@@ -121,7 +123,10 @@ private:
     static bool CheckPrinterOnline(const char* printerUri);
     static void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
     static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
+    static void CopyDirectory(const char *srcDir, const char *destDir);
+    static void ChangeFilterPermission(const std::string &path, mode_t mode);
 
+    int32_t StartCupsdService();
     void StartNextJob();
     void JobCompleteCallback();
     void StartCupsJob(JobParameters *jobParams);
@@ -133,7 +138,7 @@ private:
     std::string GetDulpexString(uint32_t duplexCode);
     void DumpJobParameters(JobParameters* jobParams);
     bool IsCupsServerAlive();
-    bool IsPrinterExist(const char* printerUri, const char* printerName);
+    bool IsPrinterExist(const char *printerUri, const char *printerName, const char *ppdName);
 
     void ParsePrinterAttributes(ipp_t *response, PrinterCapability &printerCaps);
     void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps);
@@ -141,6 +146,8 @@ private:
     nlohmann::json ParseSupportQualities(ipp_t *response);
     nlohmann::json ParseSupportMediaTypes(ipp_t *response);
     float ConvertInchTo100MM(float num);
+    void ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
+        std::vector<std::string> &ppds);
 
 private:
     std::vector<JobParameters*> jobQueue;

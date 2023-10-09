@@ -533,8 +533,8 @@ declare namespace print {
    * @return -
    */
 
-  function addPrinterToCups(printerUri: string, printerName: string, callback: AsyncCallback<boolean>): void;
-  function addPrinterToCups(printerUri: string, printerName: string): Promise<boolean>;
+  function addPrinterToCups(printerUri: string, printerName: string, printerMake? :string, callback: AsyncCallback<boolean>): void;
+  function addPrinterToCups(printerUri: string, printerName: string, printerMake? :string): Promise<boolean>;
 }
 
 export default print;

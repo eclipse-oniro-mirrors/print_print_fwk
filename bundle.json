@@ -75,7 +75,9 @@
            "//base/print/print_fwk/profile:print_sa_profiles",
            "//base/print/print_fwk/etc/init:cups-files.conf",
            "//base/print/print_fwk/etc/init:cupsd.conf",
-           "//base/print/print_fwk/etc/init:cups_service.cfg"
+           "//base/print/print_fwk/etc/init:cups_service.cfg",
+           "//base/print/print_fwk/etc/param:print.para",
+           "//base/print/print_fwk/etc/param:print.para.dac"
         ]
       },
       "inner_kits": [

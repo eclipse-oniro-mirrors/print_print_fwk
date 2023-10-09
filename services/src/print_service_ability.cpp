@@ -273,9 +273,11 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
     printJobList_.insert(std::make_pair(jobId, printJob));
     taskId = jobId;
     SendPrintJobEvent(*printJob);
-
     // save securityGuard base info
     securityGuardManager_.receiveBaseInfo(jobId, callerPkg, fileList);
+#ifdef CUPS_ENABLE
+    return DelayedSingleton<PrintCupsClient>::GetInstance()->InitCupsResources();
+#endif // CUPS_ENABLE
     return E_PRINT_NONE;
 }
 
@@ -611,7 +613,8 @@ int32_t PrintServiceAbility::QueryPrintJobById(std::string &printJobId, PrintJob
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceAbility::AddPrinterToCups(const std::string &printerUri, const std::string &printerName)
+int32_t PrintServiceAbility::AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
+    const std::string &printerMake)
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
@@ -620,7 +623,7 @@ int32_t PrintServiceAbility::AddPrinterToCups(const std::string &printerUri, con
     }
     PRINT_HILOGD("AddPrinterToCups started.");
 #ifdef CUPS_ENABLE
-    DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerUri, printerName);
+    DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
 #endif // CUPS_ENABLE
     PRINT_HILOGD("AddPrinterToCups End.");
     return E_PRINT_NONE;

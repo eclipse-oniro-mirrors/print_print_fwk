@@ -2420,8 +2420,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0121, TestSize.Level1)
 
     std::string printerUrl;
     std::string printerName;
+    std::string printerMake;
 
-    service -> AddPrinterToCups(printerUrl, printerName);
+    service -> AddPrinterToCups(printerUrl, printerName, printerMake);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0122, TestSize.Level1)
@@ -2431,8 +2432,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0122, TestSize.Level1)
 
     std::string printerUrl;
     std::string printerName;
+    std::string printerMake;
 
-    service -> AddPrinterToCups(printerUrl, printerName);
+    service -> AddPrinterToCups(printerUrl, printerName, printerMake);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0123, TestSize.Level1)

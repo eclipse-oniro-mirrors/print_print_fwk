@@ -21,7 +21,11 @@
 #include <semaphore.h>
 #include <csignal>
 #include <cstdlib>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
+#include "parameter.h"
 #include "nlohmann/json.hpp"
 #include "print_service_ability.h"
 #include "print_log.h"
@@ -39,7 +43,18 @@ const uint32_t LONG_TIME_OUT = 3000;
 const uint32_t LONG_LONG_TIME_OUT = 30000;
 const uint32_t INTERVAL_FOR_QUERY = 2;
 const uint32_t OFFLINE_RETRY_TIMES = 5;
+const uint32_t RESOURCE_COUNT = 2;
+const uint32_t DIR_COUNT = 3;
+const uint32_t INDEX_ZERO = 0;
+const uint32_t INDEX_ONE = 1;
+const uint32_t INDEX_TWO = 2;
+const uint32_t BUFFER_LEN = 256;
+const uint32_t DIR_MODE = 0771;
 
+static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
+static const std::string CUPS_RUN_DIR = "/data/service/el1/public/print_service/cups/run";
+static const std::string DEFAULT_PPD_NAME = "everywhere";
+static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
 static const std::string DEFAULT_USER = "default";
 static const std::string PRINTER_STATE_WAITING_COMPLETE = "cups-waiting-for-job-completed";
 static const std::string PRINTER_STATE_NONE = "none";
@@ -67,39 +82,133 @@ PrintCupsClient::~PrintCupsClient()
 int32_t PrintCupsClient::StartCupsdService()
 {
     PRINT_HILOGD("StartCupsdService enter");
-    int ret = 0;
-    char pid[256];
-    FILE *pid_fp = nullptr;
-    pid_fp = popen("pidof cupsd", "r");
-    if (pid_fp == nullptr) {
-        PRINT_HILOGE("Failed to call popen function");
-        ret = -1;
-    } else {
-        if (fgets(pid, sizeof(pid), pid_fp) != nullptr) {
-            PRINT_HILOGD("The Process of CUPSD has existed, pid: %{public}s.", pid);
-            ret = 0;
-        } else {
-            FILE *start_fp = nullptr;
-            start_fp = popen("/system/bin/cupsd -f -c /etc/cups/cupsd.conf -s /etc/cups/cups-files.conf &", "r");
-            if (start_fp == nullptr) {
-                PRINT_HILOGE("Failed to call popen function");
-                ret = -1;
-            } else {
-                PRINT_HILOGI("Start cupsd process success.");
-                sleep(1);
-                ret = 0;
+    if (!IsCupsServerAlive()) {
+        PRINT_HILOGI("The cupsd process is not started, start it now.");
+        int result = SetParameter("print.cupsd.ready", "true");
+        if (result) {
+            PRINT_HILOGD("SetParameter failed: %{public}d.", result);
+            return E_PRINT_SERVER_FAILURE;
+        }
+        const int bufferSize = 96;
+        char value[bufferSize] = {0};
+        GetParameter("print.cupsd.ready", "", value, bufferSize-1);
+        PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
+        return E_PRINT_NONE;
+    }
+    std::string pidFile = CUPS_RUN_DIR + "/cupsd.pid";
+    struct stat sb;
+    if (stat(pidFile.c_str(), &sb) != 0) {
+        PRINT_HILOGI("stat pidFile failed.");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    int fd;
+    if ((fd = open(pidFile.c_str(), O_RDONLY)) < 0) {
+        PRINT_HILOGE("Open pidFile error!");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    lseek(fd, 0, SEEK_SET);
+    char buf[BUFFER_LEN] = {0};
+    ssize_t bytes;
+    if ((bytes = read(fd, buf, sb.st_size)) < 0) {
+        PRINT_HILOGE("Read pidFile error!");
+        close(fd);
+        return E_PRINT_SERVER_FAILURE;
+    }
+    close(fd);
+    PRINT_HILOGD("The Process of CUPSD has existed, pid: %{public}s.", buf);
+    return E_PRINT_NONE;
+}
+
+void PrintCupsClient::ChangeFilterPermission(const std::string &path, mode_t mode)
+{
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        return;
+    }
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != nullptr) {
+        std::string fileName = entry->d_name;
+        if (fileName == "." || fileName == "..") {
+            continue;
+        }
+        std::string filePath = path + "/" + fileName;
+        struct stat fileStat;
+        if (stat(filePath.c_str(), &fileStat) == -1) {
+            continue;
+        }
+        if (S_ISDIR(fileStat.st_mode)) {
+            ChangeFilterPermission(filePath.c_str(), mode);
+        } else if (S_ISREG(fileStat.st_mode)) {
+            if (chmod(filePath.c_str(), mode) == -1) {
+                PRINT_HILOGE("Failed to change mode: %{private}s", filePath.c_str());
             }
-            pclose(start_fp);
         }
     }
-    pclose(pid_fp);
-    return ret;
+    closedir(dir);
+}
+
+void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
+{
+    DIR *dir = opendir(srcDir);
+    if (dir == nullptr) {
+        PRINT_HILOGE("Failed to open Dir: %{private}s", srcDir);
+        return;
+    }
+    if (access(destDir, F_OK) != 0) {
+        mkdir(destDir, DIR_MODE);
+    }
+    struct dirent *file;
+    struct stat filestat;
+    while ((file = readdir(dir)) != nullptr) {
+        if (strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0) {
+            continue;
+        }
+        std::string srcFilePath = std::string(srcDir) + "/" + std::string(file->d_name);
+        std::string destFilePath = std::string(destDir) + "/" + std::string(file->d_name);
+
+        stat(srcFilePath.c_str(), &filestat);
+        if (S_ISDIR(filestat.st_mode)) {
+            CopyDirectory(srcFilePath.c_str(), destFilePath.c_str());
+            chmod(destFilePath.c_str(), filestat.st_mode);
+        } else {
+            FILE *srcFile = fopen(srcFilePath.c_str(), "rb");
+            FILE *destFile = fopen(destFilePath.c_str(), "wb");
+            if (srcFile == nullptr || destFile == nullptr) {
+                continue;
+            }
+            char buffer[4096];
+            size_t bytesRead;
+            while ((bytesRead = fread(buffer, 1, sizeof(buffer), srcFile)) > 0) {
+                fwrite(buffer, 1, bytesRead, destFile);
+            }
+            fclose(srcFile);
+            fclose(destFile);
+            chmod(destFilePath.c_str(), filestat.st_mode);
+        }
+    }
+    closedir(dir);
+}
+
+int32_t PrintCupsClient::InitCupsResources()
+{
+    string array[RESOURCE_COUNT][DIR_COUNT] = {
+        {"/system/bin/cups/", CUPS_ROOT_DIR + "/serverbin", CUPS_ROOT_DIR + "/serverbin/daemon"},
+        {"/system/etc/cups/share/", CUPS_ROOT_DIR + "/datadir", CUPS_ROOT_DIR + "/datadir/mime"}
+    };
+    for (uint32_t i = 0; i < RESOURCE_COUNT; i++) {
+        if (access(array[i][INDEX_TWO].c_str(), F_OK) != -1) {
+            PRINT_HILOGD("The resource has been copied.");
+            continue;
+        }
+        CopyDirectory(array[i][INDEX_ZERO].c_str(), array[i][INDEX_ONE].c_str());
+    }
+    return StartCupsdService();
 }
 
 void PrintCupsClient::StopCupsdService()
 {
     PRINT_HILOGD("StopCupsdService enter");
-    char pid[256];
+    char pid[BUFFER_LEN];
     FILE *pid_fp = nullptr;
     pid_fp = popen("pidof cupsd", "r");
     if (pid_fp == nullptr) {
@@ -121,18 +230,86 @@ void PrintCupsClient::StopCupsdService()
     pclose(pid_fp);
 }
 
-int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const std::string &printerName)
+void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds)
 {
-    PRINT_HILOGD("PrintCupsClient AddPrinterToCups start.");
+    ipp_t *request;
+    ipp_t *response;
+    const char *ppd_make_model;
+    const char *ppd_name;
+
+    request = ippNewRequest(CUPS_GET_PPDS);
+    if (makeModel)
+        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", NULL, makeModel);
+ 
+    PRINT_HILOGD("CUPS_GET_PPDS start.");
+    if ((response = cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/")) != NULL) {
+        if (response->request.status.status_code > IPP_OK_CONFLICT) {
+            PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
+            ippDelete(response);
+            return;
+        }
+        ParsePPDInfo(response, ppd_make_model, ppd_name, ppds);
+        ippDelete(response);
+    } else {
+        PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
+    }
+}
+
+void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
+    std::vector<std::string> &ppds)
+{
+    for (ipp_attribute_t *attr = response->attrs; attr != NULL; attr = attr->next) {
+        while (attr != NULL && attr->group_tag != IPP_TAG_PRINTER)
+            attr = attr->next;
+        if (attr == NULL) {
+            break;
+        }
+        ppd_make_model = NULL;
+        ppd_name = NULL;
+
+        while (attr != NULL && attr->group_tag == IPP_TAG_PRINTER) {
+            if (!strcmp(attr->name, "ppd-make-and-model") && attr->value_tag == IPP_TAG_TEXT)
+                ppd_make_model = attr->values[0].string.text;
+            else if (!strcmp(attr->name, "ppd-name") && attr->value_tag == IPP_TAG_NAME)
+                ppd_name = attr->values[0].string.text;
+            attr = attr->next;
+        }
+        if (ppd_make_model == NULL || ppd_name == NULL) {
+            if (attr == NULL)
+                break;
+            else
+                continue;
+        }
+        ppds.push_back(ppd_name);
+        PRINT_HILOGI("ppd: name = %{private}s, make-and-model = %{private}s", ppd_name, ppd_make_model);
+        if (attr == NULL)
+            break;
+    }
+}
+
+int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
+    const std::string &printerMake)
+{
+    PRINT_HILOGD("PrintCupsClient AddPrinterToCups start, printerMake: %{public}s", printerMake.c_str());
     ipp_t *request;
     http_t *http = NULL;
     char uri[HTTP_MAX_URI];
+    std::vector<string> ppds;
+    std::string ppd = DEFAULT_PPD_NAME;
 
-    if (IsPrinterExist(printerUri.c_str(), printerName.c_str())) {
+    ippSetPort(CUPS_SEVER_PORT);
+    QueryPPDInformation(printerMake.c_str(), ppds);
+    if (!ppds.empty()) {
+        ppd = ppds[0];
+        std::string serverBin = CUPS_ROOT_DIR + "/serverbin";
+        mode_t permissions = S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH;
+        ChangeFilterPermission(serverBin, permissions);
+    }
+    PRINT_HILOGI("ppd driver: %{public}s", ppd.c_str());
+    if (IsPrinterExist(printerUri.c_str(), printerName.c_str(), ppd.c_str())) {
         PRINT_HILOGI("add success, printer has added");
         return E_PRINT_NONE;
     }
-    ippSetPort(CUPS_SEVER_PORT);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s",
                      printerName.c_str());
@@ -141,19 +318,20 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-info", NULL, printerName.c_str());
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "device-uri", NULL, printerUri.c_str());
     ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_IDLE);
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", NULL, "everywhere");
+    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", NULL, ppd.c_str());
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-accepting-jobs", 1);
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-shared", 1);
     PRINT_HILOGD("IPP_OP_CUPS_ADD_MODIFY_PRINTER cupsDoRequest");
     ippDelete(cupsDoRequest(http, request, "/admin/"));
     if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
         PRINT_HILOGE("add error: %s", cupsLastErrorString());
-        return -1;
+        return E_PRINT_SERVER_FAILURE;
     }
     httpClose(http);
     PRINT_HILOGI("add success");
     return E_PRINT_NONE;
 }
+
 int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps)
 {
     PRINT_HILOGD("PrintCupsClient QueryPrinterCapabilityByUri start.");
@@ -176,7 +354,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerU
     http = httpConnect2(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, TIME_OUT, NULL);
     if (http == nullptr) {
         PRINT_HILOGD("connect printer failed");
-        return -1;
+        return E_PRINT_SERVER_FAILURE;
     }
     request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printerUri.c_str());
@@ -185,11 +363,11 @@ int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerU
     response = cupsDoRequest(http, request, "/");
 
     if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
-        PRINT_HILOGE("set default printers error: %s", cupsLastErrorString());
+        PRINT_HILOGE("set default printers error: %{public}s", cupsLastErrorString());
         ippDelete(response);
-        return -1;
+        return E_PRINT_SERVER_FAILURE;
     }
-    PRINT_HILOGD("get caps success: %s", cupsLastErrorString());
+    PRINT_HILOGD("get caps success: %{public}s", cupsLastErrorString());
     ParsePrinterAttributes(response, printerCaps);
     httpClose(http);
     return E_PRINT_NONE;
@@ -541,9 +719,9 @@ bool PrintCupsClient::CheckPrinterOnline(const char* printerUri)
 {
     http_t *http;
     char scheme[32];
-    char userpass[256];
-    char host[256];
-    char resource[256];
+    char userpass[BUFFER_LEN];
+    char host[BUFFER_LEN];
+    char resource[BUFFER_LEN];
     int port;
     httpSeparateURI(HTTP_URI_CODING_ALL, printerUri, scheme, sizeof(scheme), userpass, sizeof(userpass), host,
                     sizeof(host), &port, resource, sizeof(resource));
@@ -563,8 +741,8 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
     for (size_t index = 0; index < jobQueue.size(); index++) {
         PRINT_HILOGD("jobQueue[index]->serviceJobId: %{public}s", jobQueue[index]->serviceJobId.c_str());
         if (jobQueue[index]->serviceJobId == serviceJobId) {
-        jobIndex = index;
-        break;
+            jobIndex = index;
+            break;
         }
     }
     PRINT_HILOGI("jobIndex: %{public}d", jobIndex);
@@ -715,7 +893,7 @@ bool PrintCupsClient::IsCupsServerAlive()
  * @return true printer exist
  * @return false printer is not exist
  */
-bool PrintCupsClient::IsPrinterExist(const char* printerUri, const char* printerName)
+bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printerName, const char *ppdName)
 {
     bool printerExist = false;
     cups_dest_t *dest;
@@ -723,11 +901,18 @@ bool PrintCupsClient::IsPrinterExist(const char* printerUri, const char* printer
     dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printerName, NULL);
     if (dest != NULL) {
         const char *deviceUri = cupsGetOption("device-uri", dest->num_options, dest->options);
-        PRINT_HILOGD("deviceUri=%s", deviceUri);
+        PRINT_HILOGD("deviceUri=%{private}s", deviceUri);
         const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
-        PRINT_HILOGD("makeModel=%s", makeModel);
-        if (strcmp(deviceUri, printerUri) == 0 && makeModel != nullptr) {
-            printerExist = true;
+        PRINT_HILOGD("makeModel=%{private}s", makeModel);
+        if (strcmp(deviceUri, printerUri) == 0) {
+            if (makeModel != nullptr && strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) == NULL) {
+                // 当前打印机驱动不是默认的ipp-everywhere驱动，则返回true
+                printerExist = true;
+            } else {
+                // 当前打印机配置的是默认的ipp-everywhere驱动，如果打印机存在私有驱动就返回false，否则返回true
+                printerExist = (makeModel != nullptr) && (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL) &&
+                    (strcmp(ppdName, DEFAULT_PPD_NAME.c_str()) == 0);
+            }
         }
         cupsFreeDests(1, dest);
     }
