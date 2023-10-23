@@ -747,7 +747,7 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
         auto cbFunc = extCallbackMap_[cid];
         auto tmpPrintJob = queuedJobList_[jobId];
         auto callback = [=]() {
-            if (cbFunc != nullptr && cbFunc->OnCallback(*tmpPrintJob) == false {
+            if (cbFunc != nullptr && cbFunc->OnCallback(*tmpPrintJob) == false) {
                 UpdatePrintJobState(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
             }
         };
