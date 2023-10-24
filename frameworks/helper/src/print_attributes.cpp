@@ -266,10 +266,6 @@ bool PrintAttributes::MarshallingParam(Parcel &parcel) const
 std::shared_ptr<PrintAttributes> PrintAttributes::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintAttributes>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print job object");
-        return nullptr;
-    }
     if (!nativeObj->ReadFromParcel(parcel)) {
         PRINT_HILOGE("Failed to unmarshalling PrintAttributes");
         return nullptr;

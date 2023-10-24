@@ -38,10 +38,6 @@ napi_value PrintPageSizeHelper::MakeJsObject(napi_env env, const PrintPageSize &
 std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJs(napi_env env, napi_value jsValue)
 {
     auto nativeObj = std::make_shared<PrintPageSize>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print range object");
-        return nullptr;
-    }
 
     if (!ValidateProperty(env, jsValue)) {
         PRINT_HILOGE("Invalid property of print page size");

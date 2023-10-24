@@ -28,6 +28,7 @@
 #include "napi_remote_object.h"
 #include "print_log.h"
 #include "start_options.h"
+#include <shared_mutex>
 
 using namespace OHOS::Print;
 using noneType = void*;
@@ -86,6 +87,7 @@ public:
 
 private:
     std::weak_ptr<PrintExtensionContext> context_;
+    std::shared_timed_mutex managersMutex_;
 
     napi_value GetUndefinedValue(napi_env &engine)
     {
@@ -272,6 +274,7 @@ private:
         ConnecttionKey key;
         key.id = serialNumber_;
         key.want = want;
+        std::unique_lock<std::shared_timed_mutex> lock(managersMutex_);
         connects_.emplace(key, connection);
         (serialNumber_ < INT64_MAX) ? serialNumber_++ : serialNumber_ = 0;
         NapiAsyncTask::CompleteCallback complete = [weak = context_, want, connection, connectId](
@@ -326,6 +329,7 @@ private:
         ConnecttionKey key;
         key.id = serialNumber_;
         key.want = want;
+        std::unique_lock<std::shared_timed_mutex> lock(managersMutex_);
         connects_.emplace(key, connection);
         (serialNumber_ < INT64_MAX) ? serialNumber_++ : serialNumber_ = 0;
         NapiAsyncTask::CompleteCallback complete = [weak = context_, want, accountId, connection, connectId](
@@ -367,7 +371,7 @@ private:
         int64_t connectId = -1;
         sptr<JSPrintExtensionConnection> connection = nullptr;
         napi_get_value_int64(engine, argv[NapiPrintUtils::INDEX_ZERO], &connectId);
-        PRINT_HILOGD("OnDisconnectAbility connection:%{public}d", (int32_t)connectId);
+        PRINT_HILOGD("OnDisconnectAbility connection:%{public}d", static_cast<int32_t>(connectId));
         auto item = std::find_if(connects_.begin(), connects_.end(),
             [&connectId](const std::map<ConnecttionKey, sptr<JSPrintExtensionConnection>>::value_type &obj) {
                 return connectId == obj.first.id;

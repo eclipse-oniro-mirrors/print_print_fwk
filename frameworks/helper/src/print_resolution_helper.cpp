@@ -36,18 +36,16 @@ std::shared_ptr<PrintResolution> PrintResolutionHelper::BuildFromJs(napi_env env
     std::shared_ptr<PrintResolution> nativeObj = nullptr;
     if (ValidateProperty(env, jsValue)) {
         nativeObj = std::make_shared<PrintResolution>();
-        if (nativeObj != nullptr) {
-            std::string id = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_RESOLUTION_ID);
-            uint32_t horizontalDpi = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_RESOLUTION_HORIZONTALDPI);
-            uint32_t verticalDpi = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_RESOLUTION_VERTICALDPI);
-            if (id == "") {
-                PRINT_HILOGE("Invalid resolution id");
-                return nullptr;
-            }
-            nativeObj->SetId(id);
-            nativeObj->SetHorizontalDpi(horizontalDpi);
-            nativeObj->SetVerticalDpi(verticalDpi);
+        std::string id = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_RESOLUTION_ID);
+        uint32_t horizontalDpi = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_RESOLUTION_HORIZONTALDPI);
+        uint32_t verticalDpi = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_RESOLUTION_VERTICALDPI);
+        if (id == "") {
+            PRINT_HILOGE("Invalid resolution id");
+            return nullptr;
         }
+        nativeObj->SetId(id);
+        nativeObj->SetHorizontalDpi(horizontalDpi);
+        nativeObj->SetVerticalDpi(verticalDpi);
     }
     return nativeObj;
 }

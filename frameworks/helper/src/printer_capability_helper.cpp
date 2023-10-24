@@ -56,10 +56,6 @@ napi_value PrinterCapabilityHelper::MakeJsObject(napi_env env, const PrinterCapa
 std::shared_ptr<PrinterCapability> PrinterCapabilityHelper::BuildFromJs(napi_env env, napi_value jsValue)
 {
     auto nativeObj = std::make_shared<PrinterCapability>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create printer capability object");
-        return nullptr;
-    }
 
     if (!ValidateProperty(env, jsValue)) {
         PRINT_HILOGE("Invalid property of printer capability");

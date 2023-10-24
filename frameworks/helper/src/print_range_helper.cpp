@@ -55,10 +55,6 @@ napi_value PrintRangeHelper::MakeJsObject(napi_env env, const PrintRange &range)
 std::shared_ptr<PrintRange> PrintRangeHelper::BuildFromJs(napi_env env, napi_value jsValue)
 {
     auto nativeObj = std::make_shared<PrintRange>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print range object");
-        return nullptr;
-    }
 
     if (!ValidateProperty(env, jsValue)) {
         PRINT_HILOGE("Invalid property of print range");

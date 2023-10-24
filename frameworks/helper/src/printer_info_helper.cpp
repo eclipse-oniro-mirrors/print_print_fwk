@@ -60,10 +60,6 @@ napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info
 std::shared_ptr<PrinterInfo> PrinterInfoHelper::BuildFromJs(napi_env env, napi_value jsValue)
 {
     auto nativeObj = std::make_shared<PrinterInfo>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create printer info object");
-        return nullptr;
-    }
 
     if (!ValidateProperty(env, jsValue)) {
         PRINT_HILOGE("Invalid property of printer info");

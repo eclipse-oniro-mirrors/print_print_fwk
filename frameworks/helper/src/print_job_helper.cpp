@@ -97,10 +97,6 @@ napi_value PrintJobHelper::MakeJsObject(napi_env env, const PrintJob &job)
 std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value jsValue)
 {
     auto nativeObj = std::make_shared<PrintJob>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print job object");
-        return nullptr;
-    }
 
     if (!ValidateProperty(env, jsValue)) {
         PRINT_HILOGE("Invalid property of print job");

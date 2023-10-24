@@ -154,9 +154,7 @@ bool PrintRange::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrintRange> PrintRange::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintRange>();
-    if (nativeObj != nullptr) {
-        nativeObj->ReadFromParcel(parcel);
-    }
+    nativeObj->ReadFromParcel(parcel);
     return nativeObj;
 }
 

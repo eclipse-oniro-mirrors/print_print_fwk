@@ -17,6 +17,7 @@
 #define JS_PRINT_EXTENSION_CONNECTION_H
 
 #include <memory>
+#include <shared_mutex>
 
 #include "ability_connect_callback.h"
 #include "event_handler.h"
@@ -42,6 +43,7 @@ public:
 private:
     napi_env engine_;
     std::unique_ptr<NativeReference> jsConnectionObject_ = nullptr;
+    std::shared_timed_mutex managersMutex_;
 };
 
 struct ConnecttionKey {
