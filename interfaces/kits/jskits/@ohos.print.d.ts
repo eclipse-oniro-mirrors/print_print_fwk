@@ -60,7 +60,7 @@ declare namespace print {
      * @param oldAttrs Indicates old print attributes.
      * @param newAttrs Indicates new print attributes.
      * @param fd Indicates print file fd.
-     * @param writeResultCallback indicates this function should execute after the file is updated.
+     * @param writeResultCallback Indicates this function should execute after the file is updated.
      * @permission {@code ohos.permission.PRINT}
      * @return -
      */
@@ -72,7 +72,7 @@ declare namespace print {
      * 
      * @since 11
      * @param jobId Indicates print job id.
-     * @param state Indicates job changes to this state.
+     * @param state Indicates job changes to this state..
      * @permission {@code ohos.permission.PRINT}
      * @return -
      */
@@ -113,15 +113,15 @@ declare namespace print {
    * @permission {@code ohos.permission.PRINT}
    * @return -
    */
-  function print(jobName: string, printAdapter: PrintDocumentAdapter, printAttributes: PrintAttrubutes,
+  function print(jobName: string, printAdapter: PrintDocumentAdapter, printAttributes: PrintAttributes,
     context: Context, callback: AsyncCallback<PrintTask>): void;
-  function print(obName: string, printAdapter: PrintDocumentAdapter, printAttributes: PrintAttrubutes,
+  function print(jobName: string, printAdapter: PrintDocumentAdapter, printAttributes: PrintAttributes,
     context: Context): Promise<PrintTask>;
 
-  interface PrintAttributes{
+  interface PrintAttributes {
     copyNumber?: number; // copies of document list
     pageRange?: PrinterRange; // range size to be printed
-    isSequential?: boolean; // sequential print
+    isSequential? : boolean; // sequential print
     pageSize? : PrintPageSize; // page size
     isLandscape? : boolean; // vertical printing
     colorMode? : number; // color mode
@@ -597,7 +597,7 @@ declare namespace print {
    *
    * @since 11
    * @param jobId Indicates print job id.
-   * @param printAttributes Indicates print attributes..
+   * @param printAttributes Indicates print attributes.
    * @param fd Indicates print file fd.
    * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
    * @systemapi Hide this for inner system use.
@@ -606,7 +606,7 @@ declare namespace print {
   function startGetPrintFile(jobId: string, printAttributes: PrintAttributes, fd: number): void;
 
   /**
-   * Notify print service the information
+   * Notify print service the information.
    *
    * @since 11
    * @param jobId Indicates print job id.
@@ -617,7 +617,7 @@ declare namespace print {
    * @return -
    */
   function notifyPrintService(jobId: string, type: string, callback: AsyncCallback<void>);
-  function notifyPrintService(jobId: string, type: string): Promise<void>;
+  function notifyPrintService(jobId: string, type: string, ): Promise<void>;
 }
 
 export default print;
