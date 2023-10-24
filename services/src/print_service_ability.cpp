@@ -1593,6 +1593,21 @@ int32_t PrintServiceAbility::StartGetPrintFile(const std::string &jobId, const P
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const std::string &type)
+{
+    std::string permission = PERMISSION_NAME_PRINT_JOB;
+    if (!CheckPermission(permission)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+
+    if (type == "0") {
+        PRINT_HILOGI("Notify Spooler Closed jobId : %{public}s", jobId.c_str());
+        return E_PRINT_NONE;
+    }
+    return E_PRINT_INVALID_PARAMETER;
+}
+
 void PrintServiceAbility::notifyAdapterJobChanged(const std::string jobId, const uint32_t state,
     const uint32_t subState)
 {

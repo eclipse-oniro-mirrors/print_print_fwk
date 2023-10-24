@@ -31,9 +31,12 @@ namespace OHOS::Print {
 class PrintTask {
 public:
     explicit PrintTask(const std::vector<std::string> &fileList, const sptr<IRemoteObject> &callerToken_);
+    PrintTask(const std::string &printJobName_, const sptr<IPrintCallback> &printAdapterCallback_,
+        const std::shared_ptr<PrintAttributes> &printAttributes_, const sptr<IRemoteObject> &callerToken_);
     ~PrintTask();
 
     uint32_t Start();
+    uint32_t StartPrintAdapter();
     void Stop();
     const std::string &GetId() const;
     static napi_value On(napi_env env, napi_callback_info info);
@@ -58,7 +61,10 @@ private:
     std::vector<uint32_t> fdList_;
     std::map<std::string, bool> supportEvents_;
     uint32_t pathType_ = 0;
-    sptr<IRemoteObject> callerToken_;
+    sptr<IRemoteObject> callerToken_ = nullptr;
+    std::string printJobName_;
+    sptr<IPrintCallback> printAdapterCallback_ = nullptr;
+    std::shared_ptr<PrintAttributes> printAttributes_ = nullptr;
     enum FilePathType {
         FD_UNDEFINED,
         FD_PATH,

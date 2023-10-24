@@ -56,6 +56,7 @@ PrintServiceStub::PrintServiceStub()
         &PrintServiceStub::OnQueryPrinterCapabilityByUri;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_STARTPRINTJOB_BY_ADAPTER] = &PrintServiceStub::OnPrintByAdapter;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_START_GET_FILE] = &PrintServiceStub::OnStartGetPrintFile;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_NOTIFY_PRINT_SERVICE] = &PrintServiceStub::OnNotifyPrintService;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -503,6 +504,19 @@ bool PrintServiceStub::OnStartGetPrintFile(MessageParcel &data, MessageParcel &r
     ret = StartGetPrintFile(jobId, *attrs, fd);
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnStartGetPrintFile out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnNotifyPrintService(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnNotifyPrintService in");
+    std::string jobId = data.ReadString();
+    std::string type = data.ReadString();
+    PRINT_HILOGD(
+        "PrintServiceStub::OnNotifyPrintService jobId=%{public}s type=%{public}s ", jobId.c_str(), type.c_str());
+    int32_t ret = NotifyPrintService(jobId, type);
+    reply.WriteInt32(ret);
+    PRINT_HILOGD("PrintServiceStub::OnNotifyPrintService out");
     return ret == E_PRINT_NONE;
 }
 } // namespace OHOS::Print

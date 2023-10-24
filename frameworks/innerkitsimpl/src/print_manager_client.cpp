@@ -380,6 +380,17 @@ int32_t PrintManagerClient::StartGetPrintFile(const std::string &jobId, const Pr
     return CALL_COMMON_CLIENT(func);
 }
 
+int32_t PrintManagerClient::NotifyPrintService(const std::string &jobId, const std::string &type)
+{
+    PRINT_HILOGD("PrintManagerClient NotifyPrintService start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->NotifyPrintService(jobId, type);
+        PRINT_HILOGD("PrintManagerClient NotifyPrintService out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::runBase(const char* callerFunName, std::function<int32_t(sptr<IPrintService>)> func)
 {
     PRINT_HILOGI("PrintManagerClient %{public}s start.", callerFunName);
