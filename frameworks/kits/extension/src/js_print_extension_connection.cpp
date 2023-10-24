@@ -26,6 +26,7 @@
 #include "napi_remote_object.h"
 #include "print_log.h"
 #include "start_options.h"
+#include <shared_mutex>
 
 using namespace OHOS::Print;
 
@@ -141,6 +142,7 @@ void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk:
                    (abilityName == obj.first.want.GetElement().GetAbilityName());
         });
     if (item != connects_.end()) {
+        std::unique_lock<std::shared_timed_mutex> lock(managersMutex_);
         // match bundlename && abilityname
         connects_.erase(item);
         PRINT_HILOGD("OnAbilityDisconnectDone erase connects_.size:%{public}zu", connects_.size());

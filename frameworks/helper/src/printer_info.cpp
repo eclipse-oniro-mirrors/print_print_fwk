@@ -209,9 +209,7 @@ bool PrinterInfo::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrinterInfo> PrinterInfo::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrinterInfo>();
-    if (nativeObj != nullptr) {
-        nativeObj->ReadFromParcel(parcel);
-    }
+    nativeObj->ReadFromParcel(parcel);
     return nativeObj;
 }
 

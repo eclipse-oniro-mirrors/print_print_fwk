@@ -244,9 +244,6 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
     }
     std::string jobId = GetPrintJobId();
     auto printJob = std::make_shared<PrintJob>();
-    if (printJob == nullptr) {
-        return E_PRINT_GENERIC_FAILURE;
-    }
     printJob->SetFdList(fdList);
     printJob->SetJobId(jobId);
     printJob->SetJobState(PRINT_JOB_PREPARED);
@@ -306,9 +303,6 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
     }
     std::string jobId = GetPrintJobId();
     auto printJob = std::make_shared<PrintJob>();
-    if (printJob == nullptr) {
-        return E_PRINT_GENERIC_FAILURE;
-    }
     printJob->SetFdList(fdList);
     printJob->SetJobId(jobId);
     printJob->SetJobState(PRINT_JOB_PREPARED);
@@ -667,10 +661,6 @@ int32_t PrintServiceAbility::StartPrintJob(const PrintJob &jobInfo)
     }
     printJobList_.erase(jobIt);
     auto printJob = std::make_shared<PrintJob>();
-    if (printJob == nullptr) {
-        PRINT_HILOGE("fail to move print job to queue");
-        return E_PRINT_GENERIC_FAILURE;
-    }
     printJob->UpdateParams(jobInfo);
     UpdateQueuedJobList(jobId, printJob);
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
@@ -758,10 +748,6 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
         }
     } else {
         auto printJob = std::make_shared<PrintJob>(*jobIt->second);
-        if (printJob == nullptr) {
-            PRINT_HILOGE("fail to move print job back to job list");
-            return E_PRINT_GENERIC_FAILURE;
-        }
         printJob->SetJobState(PRINT_JOB_COMPLETED);
         printJob->SetSubState(PRINT_JOB_COMPLETED_CANCELLED);
         printJobList_.insert(std::make_pair(jobId, printJob));
@@ -835,10 +821,6 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
             continue;
         }
         auto printerInfo = std::make_shared<PrinterInfo>(info);
-        if (printerInfo == nullptr) {
-            PRINT_HILOGE("fail to create printer info object");
-            continue;
-        }
         printerInfo->SetPrinterId(PrintUtils::GetGlobalId(extensionId, printerInfo->GetPrinterId()));
         printerInfo->SetPrinterState(PRINTER_ADDED);
         printerInfoList_.insert(std::make_pair(printerInfo->GetPrinterId(), printerInfo));

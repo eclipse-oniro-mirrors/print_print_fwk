@@ -42,10 +42,6 @@ napi_value PrintPreviewAttributeHelper::MakeJsObject(napi_env env, const PrintPr
 std::shared_ptr<PrintPreviewAttribute> PrintPreviewAttributeHelper::BuildFromJs(napi_env env, napi_value jsValue)
 {
     auto nativeObj = std::make_shared<PrintPreviewAttribute>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print preview attribute object");
-        return nullptr;
-    }
 
     if (!ValidateProperty(env, jsValue)) {
         PRINT_HILOGE("Invalid property of print preview attribute");

@@ -48,10 +48,6 @@ napi_value PrintMarginHelper::MakeJsObject(napi_env env,  const PrintMargin &mar
 std::shared_ptr<PrintMargin> PrintMarginHelper::BuildFromJs(napi_env env, napi_value jsValue)
 {
     auto nativeObj = std::make_shared<PrintMargin>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print margin object");
-        return nullptr;
-    }
 
     if (!ValidateProperty(env, jsValue)) {
         PRINT_HILOGE("Invalid property of print margin");

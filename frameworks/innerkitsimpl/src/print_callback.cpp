@@ -40,6 +40,9 @@ PrintCallback::~PrintCallback()
         uv_loop_s *loop = nullptr;
         napi_get_uv_event_loop(env_, &loop);
         Param *param = new (std::nothrow) Param;
+        if (param == nullptr) {
+            return;
+        }
         param->env = env_;
         param->callbackRef = ref_;
         uv_work_t *work = new (std::nothrow) uv_work_t;

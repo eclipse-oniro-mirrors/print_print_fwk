@@ -176,9 +176,7 @@ bool PrintMargin::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrintMargin> PrintMargin::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintMargin>();
-    if (nativeObj != nullptr) {
-        nativeObj->ReadFromParcel(parcel);
-    }
+    nativeObj->ReadFromParcel(parcel);
     return nativeObj;
 }
 

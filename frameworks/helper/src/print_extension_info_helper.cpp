@@ -39,10 +39,6 @@ napi_value PrintExtensionInfoHelper::MakeJsObject(napi_env env, const PrintExten
 std::shared_ptr<PrintExtensionInfo> PrintExtensionInfoHelper::BuildFromJs(napi_env env, napi_value jsValue)
 {
     auto nativeObj = std::make_shared<PrintExtensionInfo>();
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("Failed to create print extension info object");
-        return nullptr;
-    }
 
     auto names = NapiPrintUtils::GetPropertyNames(env, jsValue);
     for (auto name : names) {

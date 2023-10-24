@@ -137,9 +137,7 @@ bool PrintPageSize::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrintPageSize> PrintPageSize::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintPageSize>();
-    if (nativeObj != nullptr) {
-        nativeObj->ReadFromParcel(parcel);
-    }
+    nativeObj->ReadFromParcel(parcel);
     return nativeObj;
 }
 

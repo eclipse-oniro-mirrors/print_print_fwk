@@ -96,9 +96,7 @@ bool PrintResolution::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrintResolution> PrintResolution::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintResolution>();
-    if (nativeObj != nullptr) {
-        nativeObj->ReadFromParcel(parcel);
-    }
+    nativeObj->ReadFromParcel(parcel);
     return nativeObj;
 }
 

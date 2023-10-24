@@ -106,9 +106,7 @@ bool PrintPreviewAttribute::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrintPreviewAttribute> PrintPreviewAttribute::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintPreviewAttribute>();
-    if (nativeObj != nullptr) {
-        nativeObj->ReadFromParcel(parcel);
-    }
+    nativeObj->ReadFromParcel(parcel);
     return nativeObj;
 }
 

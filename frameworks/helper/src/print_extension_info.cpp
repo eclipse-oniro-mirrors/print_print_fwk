@@ -114,9 +114,7 @@ bool PrintExtensionInfo::Marshalling(Parcel &parcel) const
 std::shared_ptr<PrintExtensionInfo> PrintExtensionInfo::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintExtensionInfo>();
-    if (nativeObj != nullptr) {
-        nativeObj->ReadFromParcel(parcel);
-    }
+    nativeObj->ReadFromParcel(parcel);
     return nativeObj;
 }
 
