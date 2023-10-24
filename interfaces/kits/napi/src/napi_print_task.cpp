@@ -305,6 +305,7 @@ napi_status NapiPrintTask::VerifyParameters(napi_env env, size_t argc, napi_valu
         }
         return napi_ok;
     }
+
     bool isFileArray = false;
 
     napi_is_array(env, argv[0], &isFileArray);
