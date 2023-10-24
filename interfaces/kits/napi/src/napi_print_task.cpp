@@ -139,7 +139,7 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
 {
     if (argc > NapiPrintUtils::ARGC_THREE && argc > NapiPrintUtils::ARGC_TWO) {
         std::string printJobName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
-        
+
         napi_ref adapterRef = NapiPrintUtils::CreateReference(env, argv[1]);
         sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, adapterRef);
 
@@ -232,7 +232,7 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
     size_t argc = NapiPrintUtils::MAX_ARGC;
     napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
     PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-
+    
     if (argc > NapiPrintUtils::ARGC_THREE) {
         return ParsePrintAdapterParameter(env, argc, argv, self);
     } else {
