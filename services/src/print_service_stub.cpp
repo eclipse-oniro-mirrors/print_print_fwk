@@ -512,7 +512,8 @@ bool PrintServiceStub::OnNotifyPrintService(MessageParcel &data, MessageParcel &
     PRINT_HILOGD("PrintServiceStub::OnNotifyPrintService in");
     std::string jobId = data.ReadString();
     std::string type = data.ReadString();
-    PRINT_HILOGD("PrintServiceStub::OnNotifyPrintService type=%{public}s ", type.c_str());
+    PRINT_HILOGD(
+        "PrintServiceStub::OnNotifyPrintService jobId=%{public}s type=%{public}s ", jobId.c_str(), type.c_str());
     int32_t ret = NotifyPrintService(jobId, type);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnNotifyPrintService out");

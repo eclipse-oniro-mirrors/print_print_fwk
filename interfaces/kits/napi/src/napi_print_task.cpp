@@ -90,7 +90,7 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
 
 napi_value NapiPrintTask::PrintByAdapter(napi_env env, napi_callback_info info)
 {
-    PRINT_HILOGD("PrintByAdapter start ---->");
+    PRINT_HILOGI("PrintByAdapter start ---->");
     auto context = std::make_shared<PrintTaskContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_FOUR, "need 4 parameter!", napi_invalid_arg);
@@ -135,10 +135,10 @@ napi_value NapiPrintTask::PrintByAdapter(napi_env env, napi_callback_info info)
     return asyncCall.Call(env);
 }
 
-napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, napi_value *argv, napi_value self);
+napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, napi_value *argv, napi_value self)
 {
     if (argc > NapiPrintUtils::ARGC_THREE && argc > NapiPrintUtils::ARGC_TWO) {
-        std::string printJobName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0])
+        std::string printJobName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
 
         napi_ref adapterRef = NapiPrintUtils::CreateReference(env, argv[1]);
         sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, adapterRef);
@@ -147,14 +147,15 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
         printAttributes = PrintAttributesHelper::BuildFromJs(env, argv[NapiPrintUtils::ARGC_TWO]);
         if (callback == nullptr || printAttributes == nullptr) {
             PRINT_HILOGE("printAdapter paramter error");
+            return nullptr;
         }
 
         std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
-        sptr<IRemoteObject> callerToken;
+        sptr<IRemoteObject> callerToken = nullptr;
         if (GetAbilityContext(env, argv[NapiPrintUtils::ARGC_THREE], abilityContext) != nullptr) {
             callerToken = abilityContext->GetToken();
         }
-        auto task = new (std::nothrow) PrintTask(printJobName, callback, PrintAttributes, callerToken);
+        auto task = new (std::nothrow) PrintTask(printJobName, callback, printAttributes, callerToken);
 
         if (task == nullptr) {
             PRINT_HILOGE("print task fail");
@@ -252,9 +253,8 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
         sptr<IRemoteObject> callerToken;
         if (argc == NapiPrintUtils::ARGC_TWO && GetAbilityContext(env, argv[1], abilityContext) != nullptr) {
             callerToken = abilityContext->GetToken();
-            PRINT_HILOGI("get callerToken:%{public}s", callerToken !=nullptr ? "success" : "failed");
+            PRINT_HILOGI("get callerToken:%{public}s", callerToken != nullptr ? "success" : "failed");
         }
-
         auto task = new (std::nothrow) PrintTask(printfiles, callerToken);
         if (task == nullptr) {
             PRINT_HILOGE("print task fail");
@@ -298,8 +298,8 @@ napi_status NapiPrintTask::VerifyParameters(napi_env env, size_t argc, napi_valu
 {
     if (argc > NapiPrintUtils::ARGC_THREE) {
         std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
-        if (GetAbilityContext(env, argv[NapiPrintUtils::ARGC_THREE], abilityContext) == nulptr) {
-            PRINT_HILOGE("Print adapter Ability Context is null");
+        if (GetAbilityContext(env, argv[NapiPrintUtils::ARGC_THREE], abilityContext) == nullptr) {
+            PRINT_HILOGE("Print adapter Ability Context is null.");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
         }

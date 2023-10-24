@@ -515,7 +515,7 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
 
 napi_value NapiInnerPrint::NotifyPrintService(napi_env env, napi_callback_info info)
 {
-    PRINT_HILOGD("Enter NotifyPrintService---->");
+    PRINT_HILOGI("Enter NotifyPrintService---->");
     auto context = std::make_shared<InnerPrintContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
@@ -527,7 +527,7 @@ napi_value NapiInnerPrint::NotifyPrintService(napi_env env, napi_callback_info i
         std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[1]);
         if (jobId == "" || type == "") {
-            PRINT_HILOGE("Parse jobId error");
+            PRINT_HILOGE("Parse JobId error!");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
         }
@@ -537,14 +537,14 @@ napi_value NapiInnerPrint::NotifyPrintService(napi_env env, napi_callback_info i
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("context->result = %{public}d", context->result);
+        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret = PrintManagerClient::GetInstance()->NotifyPrintService(context->jobId, context->type);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("Failed to unregister event");
+            PRINT_HILOGE("Failed to NotifyPrintService");
             context->SetErrorIndex(ret);
         }
     };

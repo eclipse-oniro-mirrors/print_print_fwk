@@ -1595,7 +1595,7 @@ int32_t PrintServiceAbility::StartGetPrintFile(const std::string &jobId, const P
 
 int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const std::string &type)
 {
-    std::string permission = PERMISSION_NAME_PRINT_JOB
+    std::string permission = PERMISSION_NAME_PRINT_JOB;
     if (!CheckPermission(permission)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1606,7 +1606,7 @@ int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const 
         return E_PRINT_NONE;
     }
     return E_PRINT_INVALID_PARAMETER;
- }
+}
 
 void PrintServiceAbility::notifyAdapterJobChanged(const std::string jobId, const uint32_t state,
     const uint32_t subState)

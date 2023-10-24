@@ -56,7 +56,7 @@ PrintTask::PrintTask(const std::vector<std::string> &innerList, const sptr<IRemo
 }
 
 PrintTask::PrintTask(const std::string &innerPrintJobName_, const sptr<IPrintCallback> &innerPrintAdapterCallback_,
-    const std::shared_ptr<PrintAttributes> &innerPrintAttributes_, const sptr<IRemoteObject> &innerCalllerToken_)
+    const std::shared_ptr<PrintAttributes> &innerPrintAttributes_, const sptr<IRemoteObject> &innerCallerToken_)
     : taskId_("")
 {
     supportEvents_[EVENT_BLOCK] = true;
@@ -65,7 +65,7 @@ PrintTask::PrintTask(const std::string &innerPrintJobName_, const sptr<IPrintCal
     supportEvents_[EVENT_CANCEL] = true;
     printJobName_ = innerPrintJobName_;
     printAdapterCallback_ = innerPrintAdapterCallback_;
-    printAttributes = innerPrintAttributes_;
+    printAttributes_ = innerPrintAttributes_;
     callerToken_ = innerCallerToken_;
 }
 
@@ -104,7 +104,7 @@ uint32_t PrintTask::StartPrintAdapter()
 {
     if (printAdapterCallback_ != nullptr && printAttributes_ != nullptr && callerToken_ != nullptr) {
         PRINT_HILOGI("call client's StartPrintAdapter interface.");
-        return PrintManagerClient::GetINstance()->Print(
+        return PrintManagerClient::GetInstance()->Print(
             printJobName_, printAdapterCallback_, *printAttributes_, static_cast<void*>(callerToken_));
     }
     return E_PRINT_INVALID_PARAMETER;

@@ -32,7 +32,7 @@ class PrintTask {
 public:
     explicit PrintTask(const std::vector<std::string> &fileList, const sptr<IRemoteObject> &callerToken_);
     PrintTask(const std::string &printJobName_, const sptr<IPrintCallback> &printAdapterCallback_,
-        const std::shared_ptr<PrintAttributes> &printAttributes_, const sptr<IRemoteObject> &calllerToken_);
+        const std::shared_ptr<PrintAttributes> &printAttributes_, const sptr<IRemoteObject> &callerToken_);
     ~PrintTask();
 
     uint32_t Start();
@@ -62,7 +62,7 @@ private:
     std::map<std::string, bool> supportEvents_;
     uint32_t pathType_ = 0;
     sptr<IRemoteObject> callerToken_ = nullptr;
-    std::string printJobName_;;
+    std::string printJobName_;
     sptr<IPrintCallback> printAdapterCallback_ = nullptr;
     std::shared_ptr<PrintAttributes> printAttributes_ = nullptr;
     enum FilePathType {
