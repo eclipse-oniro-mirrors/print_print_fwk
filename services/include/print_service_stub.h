@@ -58,6 +58,7 @@ private:
     bool OnQueryPrinterCapabilityByUri(MessageParcel &data, MessageParcel &reply);
     bool OnPrintByAdapter(MessageParcel &data, MessageParcel &reply);
     bool OnStartGetPrintFile(MessageParcel &data, MessageParcel &reply);
+    bool OnNotifyPrintService(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

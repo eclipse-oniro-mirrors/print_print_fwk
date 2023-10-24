@@ -44,8 +44,8 @@ public:
     static napi_value QueryPrintJobById(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
-    static napi_value PrintByAdapter(napi_env env, napi_callback_info info);
     static napi_value StartGetPrintFile(napi_env env, napi_callback_info info);
+    static napi_value NotifyPrintService(napi_env env, napi_callback_info info);
 
 private:
     static bool IsSupportType(const std::string& type);

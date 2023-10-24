@@ -73,6 +73,7 @@ public:
         const PrintAttributes &printAttributes, void* contextToken);
     int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
         const uint32_t fd);
+    int32_t NotifyPrintService(const std::string &jobId, const std::string &type);
 
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrintExtCallback cb);
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrintJobCallback cb);

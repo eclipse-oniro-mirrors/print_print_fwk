@@ -513,45 +513,44 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
     return nullptr;
 }
 
-napi_value NapiInnerPrint::PrintByAdapter(napi_env env, napi_callback_info info)
+napi_value NapiInnerPrint::NotifyPrintService(napi_env env, napi_callback_info info)
 {
-    PRINT_HILOGI("PrintByAdapter start ---->");
-    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
-    size_t argc = NapiPrintUtils::GetJsVal(env, info, argv, NapiPrintUtils::MAX_ARGC);
-    PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_FOUR || argc == NapiPrintUtils::ARGC_THREE,
-        "PrintByAdapter need 3 or 4 parameter!");
-
-    napi_valuetype valuetype;
-    PRINT_CALL(env, napi_typeof(env, argv[0], &valuetype));
-    PRINT_ASSERT(env, valuetype == napi_string, "type is not a string");
-    std::string printJobName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
-    PRINT_HILOGD("printJobName : %{public}s", printJobName.c_str());
-
-    uint32_t type = argc == NapiPrintUtils::ARGC_FOUR ?
-        NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::ARGC_THREE]) : 0;
-    sptr<IPrintCallback> callback = nullptr;
-    if (type == 0) {
-        napi_ref adapterRef = NapiPrintUtils::CreateReference(env, argv[1]);
-        callback = new (std::nothrow) PrintCallback(env, adapterRef);
-    } else {
-        PrintDocumentAdapter *adapter = new PrintDocumentInnerAdapter();
-        callback = new (std::nothrow) PrintCallback(adapter);
-    }
-
-    if (callback == nullptr) {
-        PRINT_HILOGE("create print callback object fail");
-        return nullptr;
-    }
-
-    if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_TWO) {
-        auto printAttributes = PrintAttributesHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_TWO]);
-        int32_t ret = PrintManagerClient::GetInstance()->Print(printJobName, callback, *printAttributes);
-        if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("Failed to register event");
-            return nullptr;
+    PRINT_HILOGD("Enter NotifyPrintService---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
+        napi_valuetype valuetype;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "jobId is not a string", napi_string_expected);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[1], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "info type is not a string", napi_string_expected);
+        std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
+        std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[1]);
+        if (jobId == "" || type == "") {
+            PRINT_HILOGE("Parse jobId error");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
         }
-    }
-    return nullptr;
+        context->jobId = jobId;
+        context->type = type;
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        PRINT_HILOGD("context->result = %{public}d", context->result);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        int32_t ret = PrintManagerClient::GetInstance()->NotifyPrintService(context->jobId, context->type);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to unregister event");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
 }
 
 bool NapiInnerPrint::IsSupportType(const std::string& type)

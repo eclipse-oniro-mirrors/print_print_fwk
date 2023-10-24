@@ -534,6 +534,22 @@ int32_t PrintServiceProxy::StartGetPrintFile(const std::string &jobId, const Pri
     return ret;
 }
 
+int32_t PrintServiceProxy::NotifyPrintService(const std::string &jobId, const std::string &type)
+{
+    PRINT_HILOGD("PrintServiceProxy::NotifyPrintService in");
+    MessageParcel data, reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(jobId);
+    data.WriteString(type);
+    int32_t ret = Remote()->SendRequest(
+        OHOS::Print::IPrintInterfaceCode::CMD_NOTIFY_PRINT_SERVICE, data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy NotifyPrintService out. ret = [%{public}d]", ret);
+    return ret;
+}
+
 int32_t PrintServiceProxy::UnregisterAllExtCallback(const std::string &extensionId)
 {
     PRINT_HILOGD("PrintServiceProxy::UnregisterAllExtCallback in");

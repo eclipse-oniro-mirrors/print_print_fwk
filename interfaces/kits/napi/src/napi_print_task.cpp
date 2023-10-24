@@ -21,6 +21,9 @@
 #include "print_manager_client.h"
 #include "print_task.h"
 #include "napi_print_task.h"
+#include "print_attributes_helper.h"
+#include "print_callback.h"
+#include "iprint_callback.h"
 
 static constexpr const char *FUNCTION_ON = "on";
 static constexpr const char *FUNCTION_OFF = "off";
@@ -36,8 +39,8 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
     size_t paramCount = NapiPrintUtils::GetJsVal(env, info, argv, NapiPrintUtils::MAX_ARGC);
     napi_valuetype type;
     PRINT_CALL(env, napi_typeof(env, argv[0], &type));
-    if ((paramCount == NapiPrintUtils::ARGC_FOUR || paramCount == NapiPrintUtils::ARGC_THREE) && type == napi_string) {
-        return NapiInnerPrint::PrintByAdapter(env, info);
+    if ((paramCount > NapiPrintUtils::ARGC_THREE) && type == napi_string) {
+        return PrintByAdapter(env, info);
     }
 
     auto context = std::make_shared<PrintTaskContext>();
@@ -83,6 +86,93 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
     context->SetAction(std::move(input), std::move(output));
     PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
     return asyncCall.Call(env);
+}
+
+napi_value NapiPrintTask::PrintByAdapter(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("PrintByAdapter start ---->");
+    auto context = std::make_shared<PrintTaskContext>();
+    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_FOUR, "need 4 parameter!", napi_invalid_arg);
+        napi_status checkStatus = VerifyParameters(env, argc, argv, context);
+        if (checkStatus != napi_ok) {
+            return checkStatus;
+        }
+
+        napi_value proxy = nullptr;
+        napi_status status = napi_new_instance(env, GetCtor(env), argc, argv, &proxy);
+        if ((proxy == nullptr) || (status != napi_ok)) {
+            PRINT_HILOGE("Failed to create print task");
+            context->SetErrorIndex(E_PRINT_GENERIC_FAILURE);
+            return napi_generic_failure;
+        }
+
+        PrintTask *task;
+        PRINT_CALL_BASE(env, napi_unwrap(env, proxy, reinterpret_cast<void **>(&task)), napi_invalid_arg);
+        uint32_t ret = E_PRINT_GENERIC_FAILURE;
+        if (task != nullptr) {
+            ret = task->StartPrintAdapter();
+        }
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to start print task");
+            context->SetErrorIndex(ret);
+            return napi_generic_failure;
+        }
+        napi_create_reference(env, proxy, 1, &(context->ref));
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        if (context->ref == nullptr) {
+            *result = NapiPrintUtils::GetUndefined(env);
+            return napi_generic_failure;
+        }
+        napi_status status = napi_get_reference_value(env, context->ref, result);
+        napi_delete_reference(env, context->ref);
+        return status;
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env);
+}
+
+napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, napi_value *argv, napi_value self);
+{
+    if (argc > NapiPrintUtils::ARGC_THREE && argc > NapiPrintUtils::ARGC_TWO) {
+        std::string printJobName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0])
+
+        napi_ref adapterRef = NapiPrintUtils::CreateReference(env, argv[1]);
+        sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, adapterRef);
+
+        std::shared_ptr<PrintAttributes> printAttributes;
+        printAttributes = PrintAttributesHelper::BuildFromJs(env, argv[NapiPrintUtils::ARGC_TWO]);
+        if (callback == nullptr || printAttributes == nullptr) {
+            PRINT_HILOGE("printAdapter paramter error");
+        }
+
+        std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
+        sptr<IRemoteObject> callerToken;
+        if (GetAbilityContext(env, argv[NapiPrintUtils::ARGC_THREE], abilityContext) != nullptr) {
+            callerToken = abilityContext->GetToken();
+        }
+        auto task = new (std::nothrow) PrintTask(printJobName, callback, PrintAttributes, callerToken);
+
+        if (task == nullptr) {
+            PRINT_HILOGE("print task fail");
+            return nullptr;
+        }
+        auto finalize = [](napi_env env, void *data, void *hint) {
+            PRINT_HILOGD("destructed print task");
+            PrintTask *task = reinterpret_cast<PrintTask *>(data);
+            delete task;
+        };
+        if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
+            finalize(env, task, nullptr);
+            return nullptr;
+        }
+        PRINT_HILOGD("Succeed to allocate print task");
+        return self;
+    }
+    return nullptr;
 }
 
 napi_value NapiPrintTask::GetAbilityContext(
@@ -142,42 +232,46 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
     napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
     PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
 
-    std::vector<std::string> printfiles;
-    uint32_t arrayReLength = 0;
-    PRINT_CALL(env, napi_get_array_length(env, argv[0], &arrayReLength));
-    for (uint32_t index = 0; index < arrayReLength; index++) {
-        napi_value filesValue;
-        napi_get_element(env, argv[0], index, &filesValue);
-        std::string files = NapiPrintUtils::GetStringFromValueUtf8(env, filesValue);
-        PRINT_HILOGD("file[%{public}d] %{private}s.", index, files.c_str());
-        if (IsValidFile(files)) {
-            printfiles.emplace_back(files);
+    if (argc > NapiPrintUtils::ARGC_THREE) {
+        return ParsePrintAdapterParameter(env, argc, argv, self);
+    } else {
+        std::vector<std::string> printfiles;
+        uint32_t arrayReLength = 0;
+        PRINT_CALL(env, napi_get_array_length(env, argv[0], &arrayReLength));
+        for (uint32_t index = 0; index < arrayReLength; index++) {
+            napi_value filesValue;
+            napi_get_element(env, argv[0], index, &filesValue);
+            std::string files = NapiPrintUtils::GetStringFromValueUtf8(env, filesValue);
+            PRINT_HILOGD("file[%{public}d] %{private}s.", index, files.c_str());
+            if (IsValidFile(files)) {
+                printfiles.emplace_back(files);
+            }
         }
-    }
 
-    std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
-    sptr<IRemoteObject> callerToken;
-    if (argc == NapiPrintUtils::ARGC_TWO && GetAbilityContext(env, argv[1], abilityContext) != nullptr) {
-        callerToken = abilityContext->GetToken();
-        PRINT_HILOGI("get callerToken:%{public}s", callerToken !=nullptr ? "success" : "failed");
-    }
+        std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
+        sptr<IRemoteObject> callerToken;
+        if (argc == NapiPrintUtils::ARGC_TWO && GetAbilityContext(env, argv[1], abilityContext) != nullptr) {
+            callerToken = abilityContext->GetToken();
+            PRINT_HILOGI("get callerToken:%{public}s", callerToken !=nullptr ? "success" : "failed");
+        }
 
-    auto task = new (std::nothrow) PrintTask(printfiles, callerToken);
-    if (task == nullptr) {
-        PRINT_HILOGE("print task fail");
-        return nullptr;
+        auto task = new (std::nothrow) PrintTask(printfiles, callerToken);
+        if (task == nullptr) {
+            PRINT_HILOGE("print task fail");
+            return nullptr;
+        }
+        auto finalize = [](napi_env env, void *data, void *hint) {
+            PRINT_HILOGD("destructed print task");
+            PrintTask *task = reinterpret_cast<PrintTask *>(data);
+            delete task;
+        };
+        if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
+            finalize(env, task, nullptr);
+            return nullptr;
+        }
+        PRINT_HILOGD("Succeed to allocate print task");
+        return self;
     }
-    auto finalize = [](napi_env env, void *data, void *hint) {
-        PRINT_HILOGD("destructed print task");
-        PrintTask *task = reinterpret_cast<PrintTask *>(data);
-        delete task;
-    };
-    if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
-        finalize(env, task, nullptr);
-        return nullptr;
-    }
-    PRINT_HILOGD("Succeed to allocate print task");
-    return self;
 }
 
 bool NapiPrintTask::IsValidFile(const std::string &fileName)
@@ -202,6 +296,15 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
 napi_status NapiPrintTask::VerifyParameters(napi_env env, size_t argc, napi_value *argv,
     const std::shared_ptr<PrintTaskContext> context)
 {
+    if (argc > NapiPrintUtils::ARGC_THREE) {
+        std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
+        if (GetAbilityContext(env, argv[NapiPrintUtils::ARGC_THREE], abilityContext) == nulptr) {
+            PRINT_HILOGE("Print adapter Ability Context is null");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        return napi_ok;
+    }
     bool isFileArray = false;
 
     napi_is_array(env, argv[0], &isFileArray);

@@ -145,6 +145,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t NotifyPrintService(const std::string &taskId, const std::string &type) override
+    {
+        return E_PRINT_NONE;
+    }
 };
 
 class MockPrintService final : public DummyPrintServiceStub {

@@ -43,6 +43,8 @@ private:
     static napi_value WrapVoidToJS(napi_env env);
     static napi_status VerifyParameters(napi_env env, size_t argc, napi_value *argv,
         const std::shared_ptr<PrintTaskContext> context);
+    static napi_value PrintByAdapter(napi_env env, napi_callback_info info);
+    static napi_value ParsePrintAdapterParameter(napi_env env, size_t argc, napi_value *argv, napi_value self);
 
 private:
     static __thread napi_ref globalCtor;
