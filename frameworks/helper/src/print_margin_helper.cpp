@@ -74,7 +74,7 @@ std::shared_ptr<PrintMargin> PrintMarginHelper::BuildFromJs(napi_env env, napi_v
         nativeObj->SetRight(NapiPrintUtils::GetUint32FromValue(env, jsRight));
     }
 
-    PRINT_HILOGE("Build Print Margin succeed");
+    PRINT_HILOGI("Build Print Margin succeed");
     return nativeObj;
 }
 

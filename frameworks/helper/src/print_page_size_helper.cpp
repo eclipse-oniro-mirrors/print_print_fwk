@@ -58,7 +58,7 @@ std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJs(napi_env env, na
     nativeObj->SetName(name);
     nativeObj->SetWidth(width);
     nativeObj->SetHeight(height);
-    PRINT_HILOGE("Build Page Size succeed");
+    PRINT_HILOGI("Build Page Size succeed");
     return nativeObj;
 }
 

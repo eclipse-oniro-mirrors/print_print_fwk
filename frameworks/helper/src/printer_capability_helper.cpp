@@ -93,7 +93,7 @@ std::shared_ptr<PrinterCapability> PrinterCapabilityHelper::BuildFromJs(napi_env
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_CAPABILITY_OPTION));
     }
-    PRINT_HILOGE("Build Print Capability succeed");
+    PRINT_HILOGI("Build Print Capability succeed");
     return BuildFromJsSecond(env, jsValue, jsPageSizes, nativeObj);
 }
 

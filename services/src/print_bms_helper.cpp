@@ -45,7 +45,7 @@ bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilit
     }
 
     for (auto userId : osAccountIds) {
-        PRINT_HILOGE("active userId = %{public}d", userId);
+        PRINT_HILOGI("active userId = %{public}d", userId);
         helper_->QueryExtension(sptrBundleMgr_, userId, extensionInfos);
     }
     return true;

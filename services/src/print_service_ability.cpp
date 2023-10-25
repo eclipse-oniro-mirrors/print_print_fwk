@@ -132,7 +132,7 @@ int32_t PrintServiceAbility::Init()
         g_publishState = true;
     }
     state_ = ServiceRunningState::STATE_RUNNING;
-    PRINT_HILOGE("state_ is %{public}d.", static_cast<int>(state_));
+    PRINT_HILOGI("state_ is %{public}d.", static_cast<int>(state_));
     PRINT_HILOGI("Init PrintServiceAbility success.");
     return ERR_OK;
 }
@@ -233,7 +233,7 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
-        PRINT_HILOGD("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
+        PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGD("PrintServiceAbility StartPrint started.");
@@ -292,7 +292,7 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
-        PRINT_HILOGD("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
+        PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGD("PrintServiceAbility StartPrint started.");
@@ -560,7 +560,7 @@ int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &
         extensionList_.insert(std::make_pair(printExtInfo.GetExtensionId(), extInfo));
         extensionStateList_.insert(std::make_pair(printExtInfo.GetExtensionId(), PRINT_EXTENSION_UNLOAD));
     }
-    PRINT_HILOGE("QueryAllExtension End.");
+    PRINT_HILOGI("QueryAllExtension End.");
     return E_PRINT_NONE;
 }
 
@@ -603,7 +603,7 @@ int32_t PrintServiceAbility::QueryPrintJobById(std::string &printJobId, PrintJob
     } else {
         printJob = *jobIt->second;
     }
-    PRINT_HILOGE("QueryPrintJobById End.");
+    PRINT_HILOGI("QueryPrintJobById End.");
     return E_PRINT_NONE;
 }
 
