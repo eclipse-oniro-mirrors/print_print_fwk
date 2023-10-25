@@ -107,7 +107,7 @@ void PrintExtensionCallbackStub::SetCapabilityCallback(PrinterCapabilityCallback
 bool PrintExtensionCallbackStub::HandleExtCallback(MessageParcel &data, MessageParcel &reply)
 {
     bool result = OnCallback();
-    PRINT_HILOGE("Handle Print Extension Callback ret[%{public}d]", result);
+    PRINT_HILOGI("Handle Print Extension Callback ret[%{public}d]", result);
     reply.WriteBool(result);
     return result;
 }
@@ -116,7 +116,7 @@ bool PrintExtensionCallbackStub::HandlePrinterCallback(MessageParcel &data, Mess
 {
     std::string printerId = data.ReadString();
     bool result = OnCallback(printerId);
-    PRINT_HILOGE("Handle Printer Extension Callback ret[%{public}d]", result);
+    PRINT_HILOGI("Handle Printer Extension Callback ret[%{public}d]", result);
     reply.WriteBool(result);
     return result;
 }
@@ -127,7 +127,7 @@ bool PrintExtensionCallbackStub::HandlePrintJobCallback(MessageParcel &data, Mes
     bool result = false;
     if (printJobPtr != nullptr) {
         result = OnCallback(*printJobPtr);
-        PRINT_HILOGE("Handle Print Job Extension Callback ret[%{public}d]", result);
+        PRINT_HILOGI("Handle Print Job Extension Callback ret[%{public}d]", result);
         reply.WriteBool(result);
     }
     return result;
@@ -138,7 +138,7 @@ bool PrintExtensionCallbackStub::HandleCapabilityCallback(MessageParcel &data, M
     std::string printerId = data.ReadString();
     PrinterCapability cap;
     bool result = OnCallback(printerId, cap);
-    PRINT_HILOGE("Handle Printer Capability Extension Callback ret[%{public}d]", result);
+    PRINT_HILOGI("Handle Printer Capability Extension Callback ret[%{public}d]", result);
     reply.WriteBool(result);
     cap.Marshalling(reply);
     return result;
