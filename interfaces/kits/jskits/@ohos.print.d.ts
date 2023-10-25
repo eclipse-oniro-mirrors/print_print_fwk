@@ -51,6 +51,34 @@ declare namespace print {
     off(type: 'block' | 'succeed' | 'fail' | 'cancel', callback?: (boolean) => void): void;
   }
 
+  interface PrintDocumentAdapter {
+    /**
+     * Implement this function to update the print file.
+     * 
+     * @since 11
+     * @param jobId Indicates print job id.
+     * @param oldAttrs Indicates old print attributes.
+     * @param newAttrs Indicates new print attributes.
+     * @param fd Indicates print file fd.
+     * @param writeResultCallback Indicates this function should execute after the file is updated.
+     * @permission {@code ohos.permission.PRINT}
+     * @return -
+     */
+    onStartLayoutWrite(jobId: string, oldAttrs: PrintAttributes, newAttrs: PrintAttributes, fd: number,
+        writeResultCallback: Function): void;
+
+    /**
+     * Implement this function to Listen job status change.
+     * 
+     * @since 11
+     * @param jobId Indicates print job id.
+     * @param state Indicates job changes to this state..
+     * @permission {@code ohos.permission.PRINT}
+     * @return -
+     */
+    onJobStateChanged(jobId: string, state: number): void;
+  }
+
   /**
    * Start new print task for App.
    * @since 10
@@ -73,6 +101,34 @@ declare namespace print {
    */
   function print(files: Array<string>, context: Context, callback: AsyncCallback<PrintTask>): void;
   function print(files: Array<string>, context: Context): Promise<PrintTask>;
+
+  /**
+   * Start new print task for App And the App need update print file.
+   * @since 11
+   * @param jobName Indicates print file name.
+   * @param printAdapter Indicates functions implemented by the app.
+   * @param printAttributes Indicates print attributes.
+   * @param { Context } context - The ability context that initiates the call print request.
+   * @param callback The callback function for print task.
+   * @permission {@code ohos.permission.PRINT}
+   * @return -
+   */
+  function print(jobName: string, printAdapter: PrintDocumentAdapter, printAttributes: PrintAttributes,
+    context: Context, callback: AsyncCallback<PrintTask>): void;
+  function print(jobName: string, printAdapter: PrintDocumentAdapter, printAttributes: PrintAttributes,
+    context: Context): Promise<PrintTask>;
+
+  interface PrintAttributes {
+    copyNumber?: number; // copies of document list
+    pageRange?: PrinterRange; // range size to be printed
+    isSequential? : boolean; // sequential print
+    pageSize? : PrintPageSize; // page size
+    isLandscape? : boolean; // vertical printing
+    colorMode? : number; // color mode
+    duplexMode? : number; // duplex mode
+    margin? : PrintMargin; // print margin
+    option? : string; // json object string
+  }
 
   interface PrintMargin {
     top?: number; // top margin
@@ -535,6 +591,33 @@ declare namespace print {
 
   function addPrinterToCups(printerUri: string, printerName: string, printerMake? :string, callback: AsyncCallback<boolean>): void;
   function addPrinterToCups(printerUri: string, printerName: string, printerMake? :string): Promise<boolean>;
+
+  /**
+   * Start get print file.
+   *
+   * @since 11
+   * @param jobId Indicates print job id.
+   * @param printAttributes Indicates print attributes.
+   * @param fd Indicates print file fd.
+   * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
+   * @systemapi Hide this for inner system use.
+   * @return -
+   */
+  function startGetPrintFile(jobId: string, printAttributes: PrintAttributes, fd: number): void;
+
+  /**
+   * Notify print service the information.
+   *
+   * @since 11
+   * @param jobId Indicates print job id.
+   * @param type Indicates notify information.
+   * @param callback The callback function for indcating the result of API execution.
+   * @permission {@code ohos.permission.MANAGE_PRINT_JOB}
+   * @systemapi Hide this for inner system use.
+   * @return -
+   */
+  function notifyPrintService(jobId: string, type: string, callback: AsyncCallback<void>);
+  function notifyPrintService(jobId: string, type: string, ): Promise<void>;
 }
 
 export default print;
