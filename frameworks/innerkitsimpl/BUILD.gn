@@ -13,6 +13,8 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
+cflags_cc = []
+
 config("print_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
@@ -41,7 +43,15 @@ ohos_shared_library("print_client") {
   ]
 
   deps = [ "${print_path}/frameworks/helper:print_helper" ]
-
+  if (pdfium_enable) {
+    include_dirs += [
+      "//third_party/pdfium",
+      "//third_party/pdfium/public",
+      "//third_party/pdfium/testing/image_diff",
+    ]
+    cflags_cc += [ "-DPDFIUM_ENABLE" ]
+    deps += [ "//third_party/pdfium:pdfium_shared" ]
+  }
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
