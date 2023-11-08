@@ -25,3 +25,4 @@ if (!defined(global_parts_info) ||
   security_guard_enabled = false
 }
 cups_enable = true
+pdfium_enable = false

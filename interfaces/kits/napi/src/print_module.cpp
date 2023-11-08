@@ -16,12 +16,18 @@
 #include "napi_inner_print.h"
 #include "napi_print_ext.h"
 #include "napi_print_task.h"
+#ifdef PDFIUM_ENABLE
+#include "napi_print_pdf_render.h"
+#endif // PDFIUM_ENABLE
 #include "print_constant.h"
 #include "print_log.h"
 
 using namespace OHOS::Print;
 
 static constexpr const char *FUNCTION_PRINT = "print";
+#ifdef PDFIUM_ENABLE
+static constexpr const char *FUNCTION_CREATE_PDF_RENDER = "createPdfRender";
+#endif // PDFIUM_ENABLE
 static constexpr const char *FUNCTION_QUERY_EXT = "queryAllPrinterExtensionInfos";
 static constexpr const char *FUNCTION_START_DISCOVERY = "startDiscoverPrinter";
 static constexpr const char *FUNCTION_STOP_DISCOVERY = "stopDiscoverPrinter";
@@ -278,6 +284,9 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTJOB, err_invalid_printjob),
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_FILE_IO, err_file_io),
         PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
+#ifdef PDFIUM_ENABLE
+        PRINT_NAPI_METHOD(FUNCTION_CREATE_PDF_RENDER, NapiPrintPdfRender::CreatePdfRender),
+#endif // PDFIUM_ENABLE
         PRINT_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
         PRINT_NAPI_METHOD(FUNCTION_START_DISCOVERY, NapiInnerPrint::StartDiscovery),
         PRINT_NAPI_METHOD(FUNCTION_STOP_DISCOVERY, NapiInnerPrint::StopDiscovery),
