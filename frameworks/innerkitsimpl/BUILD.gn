@@ -25,6 +25,7 @@ ohos_shared_library("print_client") {
     "//third_party/curl/include",
     "${print_utils_path}/include",
     "${print_path}/frameworks/helper/include",
+    "${print_path}/frameworks/models/include",
   ]
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
@@ -40,7 +41,10 @@ ohos_shared_library("print_client") {
     "src/print_sync_load_callback.cpp",
   ]
 
-  deps = [ "${print_path}/frameworks/helper:print_helper" ]
+  deps = [
+    "${print_path}/frameworks/helper:print_helper",
+    "${print_path}/frameworks/models:print_models",
+  ]
 
   external_deps = [
     "ability_base:want",

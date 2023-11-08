@@ -67,7 +67,8 @@
            "//base/print/print_fwk/frameworks/kits/extension:print_extension_framework",
            "//base/print/print_fwk/frameworks/kits/extension:print_extension_module",
            "//base/print/print_fwk/frameworks/innerkitsimpl:print_client",
-           "//base/print/print_fwk/frameworks/helper:print_helper"
+           "//base/print/print_fwk/frameworks/helper:print_helper",
+           "//base/print/print_fwk/frameworks/models:print_models"
         ],
         "service_group":[
            "//base/print/print_fwk/services:print_service",
@@ -95,6 +96,14 @@
             "header_files": [
             ],
             "header_base":"//base/print/print_fwk/frameworks/helper/include"
+          }
+        },
+        {
+          "name": "//base/print/print_fwk/frameworks/models:print_models",
+          "header": {
+            "header_files": [
+            ],
+            "header_base":"//base/print/print_fwk/frameworks/models/include"
           }
         }
       ],
