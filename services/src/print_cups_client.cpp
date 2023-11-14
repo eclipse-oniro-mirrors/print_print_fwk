@@ -504,6 +504,7 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     if (!CheckPrinterOnline(jobParams->printerUri.c_str())) {
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_NETWORK_ERROR);
+        JobCompleteCallback();
         return false;
     }
     num_options = FillJobOptions(jobParams, num_options, &options);
@@ -776,7 +777,9 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
             PRINT_HILOGI("cancel current job");
             if (cupsCancelJob2(CUPS_HTTP_DEFAULT, currentJob->printerName.c_str(),
                 currentJob->cupsJobId, 0) != IPP_OK) {
-                PRINT_HILOGE("cancel Joob Error %s", cupsLastErrorString());
+                PRINT_HILOGE("cancel Joob Error %{public}s", cupsLastErrorString());
+                PrintServiceAbility::GetInstance()->UpdatePrintJobState(serviceJobId, PRINT_JOB_COMPLETED,
+                    PRINT_JOB_COMPLETED_CANCELLED);
                 return;
             }
         } else {
