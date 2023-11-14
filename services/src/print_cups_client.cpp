@@ -492,28 +492,47 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     return num_options;
 }
 
-void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
+bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options, int &job_id,
+    cups_option_t *options, http_t *http)
 {
-    http_t *http = nullptr;
-    int num_options = 0;
-    cups_option_t *options;
-    cups_file_t *fp;
-    int job_id;
-    http_status_t status;
-    char buffer[8192];
-    ssize_t bytes;
-
-    int num_files = jobParams->fdList.size();
-    PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
+    if (jobParams == nullptr) {
+        PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
+            PRINT_JOB_BLOCKED_UNKNOWN);
+        JobCompleteCallback();
+        return false;
+    }
+    if (!CheckPrinterOnline(jobParams->printerUri.c_str())) {
+        PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
+            PRINT_JOB_BLOCKED_NETWORK_ERROR);
+        return false;
+    }
     num_options = FillJobOptions(jobParams, num_options, &options);
     if ((job_id = cupsCreateJob(http, jobParams->printerName.c_str(), jobParams->jobName.c_str(),
         num_options, options)) == 0) {
         PRINT_HILOGE("Unable to cupsCreateJob: %s", cupsLastErrorString());
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
-            PRINT_JOB_BLOCKED_UNKNOWN);
+            PRINT_JOB_BLOCKED_CONNECT_SERVER_ERROR);
         JobCompleteCallback();
+        return false;
+    }
+    return true;
+}
+void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
+{
+    http_t *http = nullptr;
+    int num_options = 0;
+    cups_option_t *options = nullptr;
+    cups_file_t *fp = nullptr;
+    int job_id;
+    http_status_t status;
+    char buffer[8192];
+    ssize_t bytes;
+
+    if (!VerifyPrintJob(jobParams, num_options, job_id, options, http)) {
         return;
     }
+    int num_files = jobParams->fdList.size();
+    PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
     for (int i = 0; i < num_files; i++) {
         if ((fp = cupsFileOpenFd(jobParams->fdList[i], "rb")) == NULL) {
             PRINT_HILOGE("Unable to open print file, cancel the job");
