@@ -382,38 +382,38 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo)
         return;
     }
     DumpJobParameters(jobParams);
-    jobQueue.push_back(jobParams);
+    _jobQueue.push_back(jobParams);
     StartNextJob();
 }
 
 void PrintCupsClient::StartNextJob()
 {
-    if (jobQueue.empty()) {
-        PRINT_HILOGE("no active job in jobQueue");
+    if (_jobQueue.empty()) {
+        PRINT_HILOGE("no active job in _jobQueue");
         return;
     }
-    if (currentJob != nullptr) {
-        PRINT_HILOGE("a active job is running, job len: %{public}zd", jobQueue.size());
+    if (_currentJob != nullptr) {
+        PRINT_HILOGE("a active job is running, job len: %{public}zd", _jobQueue.size());
         return;
     }
     PRINT_HILOGI("start next job from queue");
 
-    currentJob = jobQueue.at(0);
-    jobQueue.erase(jobQueue.begin());
-    if (!currentJob) {
-        PRINT_HILOGE("currentJob is nullptr");
+    _currentJob = _jobQueue.at(0);
+    _jobQueue.erase(_jobQueue.begin());
+    if (!_currentJob) {
+        PRINT_HILOGE("_currentJob is nullptr");
         return;
     }
-    StartCupsJob(currentJob);
+    StartCupsJob(_currentJob);
 }
 
 void PrintCupsClient::JobCompleteCallback()
 {
     PRINT_HILOGI("Previous job complete, start next job");
-    if (!currentJob) {
-        free(currentJob);
+    if (!_currentJob) {
+        free(_currentJob);
     }
-    currentJob = nullptr;
+    _currentJob = nullptr;
     StartNextJob();
 }
 
@@ -498,13 +498,11 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     if (jobParams == nullptr) {
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_UNKNOWN);
-        JobCompleteCallback();
         return false;
     }
     if (!CheckPrinterOnline(jobParams->printerUri.c_str())) {
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_NETWORK_ERROR);
-        JobCompleteCallback();
         return false;
     }
     num_options = FillJobOptions(jobParams, num_options, &options);
@@ -513,7 +511,6 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
         PRINT_HILOGE("Unable to cupsCreateJob: %s", cupsLastErrorString());
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_CONNECT_SERVER_ERROR);
-        JobCompleteCallback();
         return false;
     }
     return true;
@@ -530,6 +527,8 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
     ssize_t bytes;
 
     if (!VerifyPrintJob(jobParams, num_options, job_id, options, http)) {
+        PRINT_HILOGE("StartCupsJob VerifyPrintJob failed");
+        JobCompleteCallback();
         return;
     }
     int num_files = jobParams->fdList.size();
@@ -571,6 +570,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
 {
     http_t *http = NULL;
     uint32_t fail_connect_times = 0;
+    bool isPrinterOffline = false;
     PRINT_HILOGD("MonitorJobState enter, cupsJobId: %{public}d", param->cupsJobId);
     ippSetPort(CUPS_SEVER_PORT);
     http = httpConnect2(cupsServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
@@ -591,8 +591,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
             continue;
         } else {
             PRINT_HILOGE("_start(): The maximum number of connection failures has been exceeded");
-            JobStatusCallback(param, jobStatus, true);
-            break;
+            isPrinterOffline = true;
         }
         if (jobStatus->job_state < IPP_JSTATE_CANCELED)
             sleep(INTERVAL_FOR_QUERY);
@@ -608,7 +607,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
         prevousJobStatus->job_state = jobStatus->job_state;
         strlcpy(prevousJobStatus->printer_state_reasons, jobStatus->printer_state_reasons,
                 sizeof(jobStatus->printer_state_reasons));
-        JobStatusCallback(param, jobStatus, false);
+        JobStatusCallback(param, jobStatus, isPrinterOffline);
     }
     httpClose(http);
     delete param;
@@ -758,9 +757,9 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
 {
     PRINT_HILOGD("CancelCupsJob(): Enter, serviceJobId: %{public}s", serviceJobId.c_str());
     int jobIndex = -1;
-    for (size_t index = 0; index < jobQueue.size(); index++) {
-        PRINT_HILOGD("jobQueue[index]->serviceJobId: %{public}s", jobQueue[index]->serviceJobId.c_str());
-        if (jobQueue[index]->serviceJobId == serviceJobId) {
+    for (size_t index = 0; index < _jobQueue.size(); index++) {
+        PRINT_HILOGD("_jobQueue[index]->serviceJobId: %{public}s", _jobQueue[index]->serviceJobId.c_str());
+        if (_jobQueue[index]->serviceJobId == serviceJobId) {
             jobIndex = index;
             break;
         }
@@ -768,15 +767,15 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
     PRINT_HILOGI("jobIndex: %{public}d", jobIndex);
     if (jobIndex >= 0) {
         PRINT_HILOGI("job in queue, delete");
-        jobQueue.erase(jobQueue.begin() + jobIndex);
+        _jobQueue.erase(_jobQueue.begin() + jobIndex);
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(serviceJobId, PRINT_JOB_COMPLETED,
             PRINT_JOB_COMPLETED_CANCELLED);
     } else {
         // 任务正在运行中
-        if (currentJob && currentJob->serviceJobId == serviceJobId) {
+        if (_currentJob && _currentJob->serviceJobId == serviceJobId) {
             PRINT_HILOGI("cancel current job");
-            if (cupsCancelJob2(CUPS_HTTP_DEFAULT, currentJob->printerName.c_str(),
-                currentJob->cupsJobId, 0) != IPP_OK) {
+            if (cupsCancelJob2(CUPS_HTTP_DEFAULT, _currentJob->printerName.c_str(),
+                _currentJob->cupsJobId, 0) != IPP_OK) {
                 PRINT_HILOGE("cancel Joob Error %{public}s", cupsLastErrorString());
                 PrintServiceAbility::GetInstance()->UpdatePrintJobState(serviceJobId, PRINT_JOB_COMPLETED,
                     PRINT_JOB_COMPLETED_CANCELLED);
@@ -926,7 +925,8 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         PRINT_HILOGD("deviceUri=%{private}s", deviceUri);
         const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
         PRINT_HILOGD("makeModel=%{private}s", makeModel);
-        if (strcmp(deviceUri, printerUri) == 0) {
+        const char *printerState = cupsGetOption("printer-state", dest->num_options, dest->options);
+        if (strcmp(deviceUri, printerUri) == 0 || strcmp(printerState, "Stopped") != 0) {
             if (makeModel != nullptr && strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) == NULL) {
                 // 当前打印机驱动不是默认的ipp-everywhere驱动，则返回true
                 printerExist = true;

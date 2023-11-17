@@ -316,10 +316,7 @@ napi_value NapiPrintExt::AddPrinterToCups(napi_env env, napi_callback_info info)
     PRINT_HILOGD("Enter AddPrinterToCups---->");
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        if (argc < NapiPrintUtils::ARGC_TWO || argc > NapiPrintUtils::ARGC_THREE) {
-            PRINT_HILOGE("Num of args is wrong");
-        }
-
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerUri is not a string", napi_string_expected);
@@ -335,13 +332,11 @@ napi_value NapiPrintExt::AddPrinterToCups(napi_env env, napi_callback_info info)
         PRINT_HILOGD("printerName : %{private}s", printerName.c_str());
         context->printerName = printerName;
 
-        if (argc >= NapiPrintUtils::ARGC_THREE) {
-            PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valuetype), napi_invalid_arg);
-            PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerMake is not a string", napi_string_expected);
-            std::string printerMake = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
-            PRINT_HILOGD("printerMake : %{private}s", printerMake.c_str());
-            context->printerMake = printerMake;
-        }
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerMake is not a string", napi_string_expected);
+        std::string printerMake = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
+        PRINT_HILOGD("printerMake : %{private}s", printerMake.c_str());
+        context->printerMake = printerMake;
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
