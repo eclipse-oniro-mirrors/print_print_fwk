@@ -925,11 +925,17 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
     PRINT_HILOGD("IsPrinterExist enter");
     dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printerName, NULL);
     if (dest != NULL) {
+		for (int j = 0; j < dest->num_options; j ++) {
+            const char *value = cupsGetOption(dest->options[j].name, dest->num_options, dest->options);
+            PRINT_HILOGD("key=%{public}s", dest->options[j].name);
+            PRINT_HILOGD("value=%{public}s", value);
+        }
         const char *deviceUri = cupsGetOption("device-uri", dest->num_options, dest->options);
         PRINT_HILOGD("deviceUri=%{private}s", deviceUri);
         const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
         PRINT_HILOGD("makeModel=%{private}s", makeModel);
         const char *printerState = cupsGetOption("printer-state", dest->num_options, dest->options);
+        PRINT_HILOGD("printerState=%{private}s", printerState);
         if (strcmp(deviceUri, printerUri) == 0 || strcmp(printerState, "Stopped") != 0) {
             if (makeModel != nullptr && strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) == NULL) {
                 // 当前打印机驱动不是默认的ipp-everywhere驱动，则返回true
