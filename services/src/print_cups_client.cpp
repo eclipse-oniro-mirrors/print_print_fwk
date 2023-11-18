@@ -393,6 +393,9 @@ void PrintCupsClient::StartNextJob()
         return;
     }
     if (_currentJob != nullptr) {
+        JobParameters *lastJob = _jobQueue.back();
+        PrintServiceAbility::GetInstance()->UpdatePrintJobState(lastJob->serviceJobId, PRINT_JOB_QUEUED,
+            PRINT_JOB_BLOCKED_UNKNOWN);
         PRINT_HILOGE("a active job is running, job len: %{public}zd", _jobQueue.size());
         return;
     }
@@ -558,7 +561,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
     jobParams->cupsJobId = job_id;
     PRINT_HILOGD("start job success, job_id: %d", job_id);
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam { PrintServiceAbility::GetInstance(),
-        jobParams->serviceJobId, job_id, jobParams->printerUri.c_str() };
+        jobParams->serviceJobId, job_id, jobParams->printerUri, jobParams->printerName };
     if (param == nullptr)
         return;
     CallbackFunc callback = [this]() { JobCompleteCallback(); };
@@ -570,7 +573,6 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
 {
     http_t *http = NULL;
     uint32_t fail_connect_times = 0;
-    bool isPrinterOffline = false;
     PRINT_HILOGD("MonitorJobState enter, cupsJobId: %{public}d", param->cupsJobId);
     ippSetPort(CUPS_SEVER_PORT);
     http = httpConnect2(cupsServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
@@ -591,7 +593,8 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
             continue;
         } else {
             PRINT_HILOGE("_start(): The maximum number of connection failures has been exceeded");
-            isPrinterOffline = true;
+            JobStatusCallback(param, jobStatus, true);
+            break;
         }
         if (jobStatus->job_state < IPP_JSTATE_CANCELED)
             sleep(INTERVAL_FOR_QUERY);
@@ -607,7 +610,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
         prevousJobStatus->job_state = jobStatus->job_state;
         strlcpy(prevousJobStatus->printer_state_reasons, jobStatus->printer_state_reasons,
                 sizeof(jobStatus->printer_state_reasons));
-        JobStatusCallback(param, jobStatus, isPrinterOffline);
+        JobStatusCallback(param, jobStatus, false);
     }
     httpClose(http);
     delete param;
@@ -622,6 +625,7 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
     PRINT_HILOGD("JobStatusCallback enter, job_state: %{public}d", jobStatus->job_state);
     PRINT_HILOGD("JobStatusCallback enter, printer_state_reasons: %{public}s", jobStatus->printer_state_reasons);
     if (isOffline) {
+        cupsCancelJob2(CUPS_HTTP_DEFAULT, param->printerName.c_str(), param->cupsJobId, 0);
         param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_OFFLINE);
         return;

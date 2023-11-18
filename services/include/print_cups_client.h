@@ -96,6 +96,7 @@ struct JobMonitorParam {
     std::string serviceJobId;
     int cupsJobId;
     std::string printerUri;
+    std::string printerName;
 };
 struct MediaSize {
     std::string name;
