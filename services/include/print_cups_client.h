@@ -131,7 +131,8 @@ private:
     void StartNextJob();
     void JobCompleteCallback();
     void StartCupsJob(JobParameters *jobParams);
-    bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId, cups_option_t *options, http_t *http);
+    bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId, cups_option_t *options,
+        http_t *http);
     int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     JobParameters* BuildJobParameters(const PrintJob &jobInfo);

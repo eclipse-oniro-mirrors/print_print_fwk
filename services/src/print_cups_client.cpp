@@ -101,18 +101,16 @@ int32_t PrintCupsClient::StartCupsdService()
         PRINT_HILOGI("stat pidFile failed.");
         return E_PRINT_SERVER_FAILURE;
     }
-    char *realPidFile = realpath(pidFile.c_str(), NULL);
-    if (realPidFile == nullptr) {
-        PRINT_HILOGE("realPidFile is null");
+    char realPidFile[PATH_MAX] = {};
+    if (realpath(pidFile.c_str(), realPidFile) == nullptr) {
+        PRINT_HILOGE("The realPidFile is null.");
         return E_PRINT_SERVER_FAILURE;
     }
     int fd;
     if ((fd = open(realPidFile, O_RDONLY)) < 0) {
         PRINT_HILOGE("Open pidFile error!");
-        free(realPidFile);
         return E_PRINT_SERVER_FAILURE;
     }
-    free(realPidFile);
     lseek(fd, 0, SEEK_SET);
     char buf[BUFFER_LEN] = {0};
     ssize_t bytes;
@@ -178,22 +176,18 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
             CopyDirectory(srcFilePath.c_str(), destFilePath.c_str());
             chmod(destFilePath.c_str(), filestat.st_mode);
         } else {
-            char *realSrc = realpath(srcFilePath.c_str(), NULL);
-            if (realSrc == nullptr) {
-                PRINT_HILOGE("realSrc is null.");
+            char realSrc[PATH_MAX] = {};
+            if (realpath(srcFilePath.c_str(), realSrc) == nullptr) {
+                PRINT_HILOGE("The realSrc is null.");
                 continue;
             }
             FILE *srcFile = fopen(realSrc, "rb");
-            free(realSrc);
-
-            char *realDest = realpath(destFilePath.c_str(), NULL);
-            if (realDest == nullptr) {
-                PRINT_HILOGE("realDest is null.");
+            if (srcFile == nullptr) {
                 continue;
             }
-            FILE *destFile = fopen(realDest, "wb");
-            free(realDest);
-            if (srcFile == nullptr || destFile == nullptr) {
+            FILE *destFile = fopen(destFilePath.c_str(), "wb");
+            if (destFile == nullptr) {
+                fclose(srcFile);
                 continue;
             }
             char buffer[4096];
