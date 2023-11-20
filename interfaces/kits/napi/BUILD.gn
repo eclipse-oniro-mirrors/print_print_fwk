@@ -13,6 +13,8 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
+cflags_cc = []
+
 config("print_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
@@ -43,6 +45,13 @@ ohos_shared_library("print_napi") {
     "${print_path}/frameworks/innerkitsimpl:print_client",
     "${print_path}/frameworks/models:print_models",
   ]
+  if (pdfium_enable) {
+    sources += [
+      "src/napi_print_pdf_render.cpp",
+      "src/print_pdf_render.cpp",
+    ]
+    cflags_cc += [ "-DPDFIUM_ENABLE" ]
+  }
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",

@@ -74,6 +74,14 @@ public:
     int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
         const uint32_t fd);
     int32_t NotifyPrintService(const std::string &jobId, const std::string &type);
+#ifdef PDFIUM_ENABLE
+    int32_t PdfRenderInit(const std::string filePath, const std::string sandBoxPath,
+                          std::string &basePngName, uint32_t &pageCount);
+    int32_t PdfRenderDestroy(const std::string basePngName, const uint32_t pageCount);
+    int32_t GetPdfPageSize(const std::string filePath, const uint32_t pageIndex, uint32_t &width, uint32_t &height);
+    int32_t RenderPdfToPng(const std::string filePath, const std::string basePngName,
+                           const uint32_t pageIndex, std::string &imagePath);
+#endif // PDFIUM_ENABLE
 
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrintExtCallback cb);
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrintJobCallback cb);
