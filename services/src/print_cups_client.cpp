@@ -396,41 +396,41 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo)
         return;
     }
     DumpJobParameters(jobParams);
-    _jobQueue.push_back(jobParams);
+    jobQueue_.push_back(jobParams);
     StartNextJob();
 }
 
 void PrintCupsClient::StartNextJob()
 {
-    if (_jobQueue.empty()) {
-        PRINT_HILOGE("no active job in _jobQueue");
+    if (jobQueue_.empty()) {
+        PRINT_HILOGE("no active job in jobQueue_");
         return;
     }
-    if (_currentJob != nullptr) {
-        JobParameters *lastJob = _jobQueue.back();
+    if (currentJob_ != nullptr) {
+        JobParameters *lastJob = jobQueue_.back();
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(lastJob->serviceJobId, PRINT_JOB_QUEUED,
             PRINT_JOB_BLOCKED_UNKNOWN);
-        PRINT_HILOGE("a active job is running, job len: %{public}zd", _jobQueue.size());
+        PRINT_HILOGE("a active job is running, job len: %{public}zd", jobQueue_.size());
         return;
     }
     PRINT_HILOGI("start next job from queue");
 
-    _currentJob = _jobQueue.at(0);
-    _jobQueue.erase(_jobQueue.begin());
-    if (!_currentJob) {
-        PRINT_HILOGE("_currentJob is nullptr");
+    currentJob_ = jobQueue_.at(0);
+    jobQueue_.erase(jobQueue_.begin());
+    if (!currentJob_) {
+        PRINT_HILOGE("currentJob_ is nullptr");
         return;
     }
-    StartCupsJob(_currentJob);
+    StartCupsJob(currentJob_);
 }
 
 void PrintCupsClient::JobCompleteCallback()
 {
     PRINT_HILOGI("Previous job complete, start next job");
-    if (!_currentJob) {
-        free(_currentJob);
+    if (!currentJob_) {
+        free(currentJob_);
     }
-    _currentJob = nullptr;
+    currentJob_ = nullptr;
     StartNextJob();
 }
 
@@ -774,9 +774,9 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
 {
     PRINT_HILOGD("CancelCupsJob(): Enter, serviceJobId: %{public}s", serviceJobId.c_str());
     int jobIndex = -1;
-    for (int index = 0; index < _jobQueue.size(); index++) {
-        PRINT_HILOGD("_jobQueue[index]->serviceJobId: %{public}s", _jobQueue[index]->serviceJobId.c_str());
-        if (_jobQueue[index]->serviceJobId == serviceJobId) {
+    for (int index = 0; index < jobQueue_.size(); index++) {
+        PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
+        if (jobQueue_[index]->serviceJobId == serviceJobId) {
             jobIndex = index;
             break;
         }
@@ -784,15 +784,15 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
     PRINT_HILOGI("jobIndex: %{public}d", jobIndex);
     if (jobIndex >= 0) {
         PRINT_HILOGI("job in queue, delete");
-        _jobQueue.erase(_jobQueue.begin() + jobIndex);
+        jobQueue_.erase(jobQueue_.begin() + jobIndex);
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(serviceJobId, PRINT_JOB_COMPLETED,
             PRINT_JOB_COMPLETED_CANCELLED);
     } else {
         // 任务正在运行中
-        if (_currentJob && _currentJob->serviceJobId == serviceJobId) {
+        if (currentJob_ && currentJob_->serviceJobId == serviceJobId) {
             PRINT_HILOGI("cancel current job");
-            if (cupsCancelJob2(CUPS_HTTP_DEFAULT, _currentJob->printerName.c_str(),
-                _currentJob->cupsJobId, 0) != IPP_OK) {
+            if (cupsCancelJob2(CUPS_HTTP_DEFAULT, currentJob_->printerName.c_str(),
+                currentJob_->cupsJobId, 0) != IPP_OK) {
                 PRINT_HILOGE("cancel Joob Error %{public}s", cupsLastErrorString());
                 PrintServiceAbility::GetInstance()->UpdatePrintJobState(serviceJobId, PRINT_JOB_COMPLETED,
                     PRINT_JOB_COMPLETED_CANCELLED);

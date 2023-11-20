@@ -153,8 +153,8 @@ private:
         std::vector<std::string> &ppds);
 
 private:
-    std::vector<JobParameters*> _jobQueue;
-    JobParameters *_currentJob = nullptr;
+    std::vector<JobParameters*> jobQueue_;
+    JobParameters *currentJob_ = nullptr;
 };
 } // namespace OHOS::Print
 #endif // PRINT_CUPS_CLIENT_H
