@@ -513,8 +513,7 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     cups_option_t *options, http_t *http)
 {
     if (jobParams == nullptr) {
-        PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
-            PRINT_JOB_BLOCKED_UNKNOWN);
+        PRINT_HILOGE("The jobParams is null");
         return false;
     }
     if (!CheckPrinterOnline(jobParams->printerUri.c_str())) {
