@@ -101,11 +101,18 @@ int32_t PrintCupsClient::StartCupsdService()
         PRINT_HILOGI("stat pidFile failed.");
         return E_PRINT_SERVER_FAILURE;
     }
-    int fd;
-    if ((fd = open(pidFile.c_str(), O_RDONLY)) < 0) {
-        PRINT_HILOGE("Open pidFile error!");
+    char *realPidFile = realpath(pidFile.c_str(), NULL);
+    if (realPidFile == nullptr) {
+        PRINT_HILOGE("realPidFile is null");
         return E_PRINT_SERVER_FAILURE;
     }
+    int fd;
+    if ((fd = open(realPidFile, O_RDONLY)) < 0) {
+        PRINT_HILOGE("Open pidFile error!");
+        free(realPidFile);
+        return E_PRINT_SERVER_FAILURE;
+    }
+    free(realPidFile);
     lseek(fd, 0, SEEK_SET);
     char buf[BUFFER_LEN] = {0};
     ssize_t bytes;
@@ -171,8 +178,21 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
             CopyDirectory(srcFilePath.c_str(), destFilePath.c_str());
             chmod(destFilePath.c_str(), filestat.st_mode);
         } else {
-            FILE *srcFile = fopen(srcFilePath.c_str(), "rb");
-            FILE *destFile = fopen(destFilePath.c_str(), "wb");
+            char *realSrc = realpath(srcFilePath.c_str(), NULL);
+            if (realSrc == nullptr) {
+                PRINT_HILOGE("realSrc is null.");
+                continue;
+            }
+            FILE *srcFile = fopen(realSrc, "rb");
+            free(realSrc);
+
+            char *realDest = realpath(destFilePath.c_str(), NULL);
+            if (realDest == nullptr) {
+                PRINT_HILOGE("realDest is null.");
+                continue;
+            }
+            FILE *destFile = fopen(realDest, "wb");
+            free(realDest);
             if (srcFile == nullptr || destFile == nullptr) {
                 continue;
             }
@@ -431,7 +451,7 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         int sizeIndex = -1;
         float meidaWidth = 0;
         float mediaHeight = 0;
-        for (size_t i = 0; i < mediaSizes.size(); i++) {
+        for (int i = 0; i < mediaSizes.size(); i++) {
             if (mediaSizes[i].name == jobParams->mediaSize) {
                 sizeIndex = i;
                 break;
@@ -495,7 +515,7 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     return num_options;
 }
 
-bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options, int &job_id,
+bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
     cups_option_t *options, http_t *http)
 {
     if (jobParams == nullptr) {
@@ -509,7 +529,7 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
         return false;
     }
     num_options = FillJobOptions(jobParams, num_options, &options);
-    if ((job_id = cupsCreateJob(http, jobParams->printerName.c_str(), jobParams->jobName.c_str(),
+    if ((jobId = cupsCreateJob(http, jobParams->printerName.c_str(), jobParams->jobName.c_str(),
         num_options, options)) == 0) {
         PRINT_HILOGE("Unable to cupsCreateJob: %s", cupsLastErrorString());
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
@@ -524,26 +544,26 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
     int num_options = 0;
     cups_option_t *options = nullptr;
     cups_file_t *fp = nullptr;
-    int job_id;
+    uint32_t jobId;
     http_status_t status;
     char buffer[8192];
     ssize_t bytes;
 
-    if (!VerifyPrintJob(jobParams, num_options, job_id, options, http)) {
+    if (!VerifyPrintJob(jobParams, num_options, jobId, options, http)) {
         PRINT_HILOGE("StartCupsJob VerifyPrintJob failed");
         JobCompleteCallback();
         return;
     }
-    int num_files = jobParams->fdList.size();
+    uint32_t num_files = jobParams->fdList.size();
     PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
-    for (int i = 0; i < num_files; i++) {
+    for (uint32_t i = 0; i < num_files; i++) {
         if ((fp = cupsFileOpenFd(jobParams->fdList[i], "rb")) == NULL) {
             PRINT_HILOGE("Unable to open print file, cancel the job");
-            cupsCancelJob2(http, jobParams->printerName.c_str(), job_id, 0);
+            cupsCancelJob2(http, jobParams->printerName.c_str(), jobId, 0);
             JobCompleteCallback();
             return;
         }
-        status = cupsStartDocument(http, jobParams->printerName.c_str(), job_id, jobParams->jobName.c_str(),
+        status = cupsStartDocument(http, jobParams->printerName.c_str(), jobId, jobParams->jobName.c_str(),
             jobParams->documentFormat.c_str(), i == (num_files - 1));
         while (status == HTTP_STATUS_CONTINUE && (bytes = cupsFileRead(fp, buffer, sizeof(buffer))) > 0)
             status = cupsWriteRequestData(http, buffer, (size_t)bytes);
@@ -551,17 +571,17 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
         if (status != HTTP_STATUS_CONTINUE || cupsFinishDocument(http, jobParams->printerName.c_str())
             != IPP_STATUS_OK) {
             PRINT_HILOGE("Unable to queue, error is %s, cancel the job and return...", cupsLastErrorString());
-            cupsCancelJob2(http, jobParams->printerUri.c_str(), job_id, 0);
+            cupsCancelJob2(http, jobParams->printerUri.c_str(), jobId, 0);
             PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
                 PRINT_JOB_BLOCKED_UNKNOWN);
             JobCompleteCallback();
             return;
         }
     }
-    jobParams->cupsJobId = job_id;
-    PRINT_HILOGD("start job success, job_id: %d", job_id);
+    jobParams->cupsJobId = jobId;
+    PRINT_HILOGD("start job success, jobId: %d", jobId);
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam { PrintServiceAbility::GetInstance(),
-        jobParams->serviceJobId, job_id, jobParams->printerUri, jobParams->printerName };
+        jobParams->serviceJobId, jobId, jobParams->printerUri, jobParams->printerName };
     if (param == nullptr)
         return;
     CallbackFunc callback = [this]() { JobCompleteCallback(); };
@@ -761,7 +781,7 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
 {
     PRINT_HILOGD("CancelCupsJob(): Enter, serviceJobId: %{public}s", serviceJobId.c_str());
     int jobIndex = -1;
-    for (size_t index = 0; index < _jobQueue.size(); index++) {
+    for (int index = 0; index < _jobQueue.size(); index++) {
         PRINT_HILOGD("_jobQueue[index]->serviceJobId: %{public}s", _jobQueue[index]->serviceJobId.c_str());
         if (_jobQueue[index]->serviceJobId == serviceJobId) {
             jobIndex = index;
@@ -1017,7 +1037,7 @@ nlohmann::json PrintCupsClient::ParseSupportQualities(ipp_t *response)
     nlohmann::json supportedQualities = nlohmann::json::array();
     if ((attrptr = ippFindAttribute(response, "print-quality-supported", IPP_TAG_ENUM)) != NULL) {
         for (int i = 0; i < ippGetCount(attrptr); i++) {
-            uint32_t mediaQuality = ippGetInteger(attrptr, i);
+            int mediaQuality = ippGetInteger(attrptr, i);
             PRINT_HILOGD("print-quality-supported: %{public}d", mediaQuality);
             supportedQualities.push_back(mediaQuality);
         }
@@ -1029,8 +1049,11 @@ nlohmann::json PrintCupsClient::ParseSupportMediaTypes(ipp_t *response)
 {
     ipp_attribute_t *attrptr;
     nlohmann::json _supportedMediaTypes = nlohmann::json::array();
-    if (((attrptr = ippFindAttribute(response, "media-type-supported", IPP_TAG_KEYWORD)) != NULL)
-          || ((attrptr = ippFindAttribute(response, "media-type-supported", IPP_TAG_NAME)) != NULL)) {
+    attrptr = ippFindAttribute(response, "media-type-supported", IPP_TAG_KEYWORD);
+    if (attrptr == NULL) {
+        attrptr = ippFindAttribute(response, "media-type-supported", IPP_TAG_NAME);
+    }
+    if (attrptr != NULL) {
         PRINT_HILOGD("media-type-supported found; number of values %d", ippGetCount(attrptr));
         for (int i = 0; i < ippGetCount(attrptr); i++) {
             const char* mediaType = ippGetString(attrptr, i, NULL);
