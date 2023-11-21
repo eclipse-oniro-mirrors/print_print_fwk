@@ -38,6 +38,7 @@ static constexpr const char *FUNCTION_CANCEL_PRINT = "cancelPrintJob";
 static constexpr const char *FUNCTION_REQUEST_PREVIEW = "requestPrintPreview";
 static constexpr const char *FUNCTION_QUERY_CAPABILITY = "queryPrinterCapability";
 static constexpr const char *FUNCTION_QUERY_ALL_PRINTJOB = "queryAllPrintJobs";
+static constexpr const char *FUNCTION_QUERY_PRINTJOB_LIST = "queryPrintJobList";
 static constexpr const char *FUNCTION_QUERY_PRINTJOB_BYID = "queryPrintJobById";
 static constexpr const char *FUNCTION_REGISTER_EVENT = "on";
 static constexpr const char *FUNCTION_UNREGISTER_EVENT = "off";
@@ -86,10 +87,10 @@ static constexpr const char *PROPERTY_BLOCK_ACCOUNT_ERROR = "PRINT_BLOCK_ACCOUNT
 static constexpr const char *PROPERTY_BLOCK_PRINT_PERMISSION_ERROR = "PRINT_JOB_BLOCK_PRINT_PERMISSION_ERROR";
 static constexpr const char *PROPERTY_BLOCK_PRINT_COLOR_PERMISSION_ERROR = "PRINT_JOB_BLOCK_PRINT_COLOR_PERMISSION_ERROR";
 static constexpr const char *PROPERTY_BLOCK_NETWORK_ERROR = "PRINT_JOB_BLOCK_NETWORK_ERROR";
-static constexpr const char *PROPERTY_BLOCK_CONNECT_SERVER_ERROR = "PRINT_JOB_BLOCK_CONNECT_SERVER_ERROR";
+static constexpr const char *PROPERTY_BLOCK_SERVER_CONNECTION_ERROR = "PRINT_JOB_BLOCK_CONNECT_SERVER_ERROR";
 static constexpr const char *PROPERTY_BLOCK_LARGE_FILE_ERROR = "PRINT_JOB_BLOCK_LARGE_FILE_ERROR";
-static constexpr const char *PROPERTY_BLOCK_PARSE_FILE_ERROR = "PRINT_JOB_BLOCK_PARSE_FILE_ERROR";
-static constexpr const char *PROPERTY_BLOCK_FILE_CONVERT_SLOWLY = "PRINT_JOB_BLOCK_FILE_CONVERT_SLOWLY";
+static constexpr const char *PROPERTY_BLOCK_FILE_PARSING_ERROR = "PRINT_JOB_BLOCK_PARSE_FILE_ERROR";
+static constexpr const char *PROPERTY_BLOCK_SLOW_FILE_CONVERSION = "PRINT_JOB_BLOCK_FILE_CONVERT_SLOWLY";
 static constexpr const char *PROPERTY_RUNNING_UPLOADING_FILES = "PRINT_JOB_RUNNING_UPLOADING_FILES";
 static constexpr const char *PROPERTY_RUNNING_CONVERTING_FILES = "PRINT_JOB_RUNNING_CONVERTING_FILES";
 static constexpr const char *PROPERTY_BLOCK_UNKNOWN = "PRINT_JOB_BLOCK_UNKNOWN";
@@ -139,10 +140,10 @@ static napi_value block_account_error = nullptr;
 static napi_value block_print_permission_error = nullptr;
 static napi_value block_print_color_permission_error = nullptr;
 static napi_value block_network_error = nullptr;
-static napi_value block_connect_server_error = nullptr;
+static napi_value block_server_connection_error = nullptr;
 static napi_value block_large_file_error = nullptr;
-static napi_value block_parse_file_error = nullptr;
-static napi_value block_file_convert_slowly = nullptr;
+static napi_value block_file_parsing_error = nullptr;
+static napi_value block_slow_file_conversion = nullptr;
 static napi_value running_uploading_files = nullptr;
 static napi_value running_converting_files = nullptr;
 static napi_value block_unknown = nullptr;
@@ -207,10 +208,11 @@ static void NapiCreateEnum(napi_env env)
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_PERMISSION_ERROR), &block_print_permission_error);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_COLOR_PERMISSION_ERROR), &block_print_color_permission_error);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_NETWORK_ERROR), &block_network_error);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_CONNECT_SERVER_ERROR), &block_connect_server_error);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR),
+        &block_server_connection_error);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_LARGE_FILE_ERROR), &block_large_file_error);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_PARSE_FILE_ERROR), &block_parse_file_error);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_FILE_CONVERT_SLOWLY), &block_file_convert_slowly);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_FILE_PARSING_ERROR), &block_file_parsing_error);
+    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_SLOW_FILE_CONVERSION), &block_slow_file_conversion);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES), &running_uploading_files);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_RUNNING_CONVERTING_FILES), &running_converting_files);
     napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_UNKNOWN), &block_unknown);
@@ -266,10 +268,10 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_PRINT_PERMISSION_ERROR, block_print_permission_error),
         PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_PRINT_COLOR_PERMISSION_ERROR, block_print_color_permission_error),
         PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_NETWORK_ERROR, block_network_error),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_CONNECT_SERVER_ERROR, block_connect_server_error),
+        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_SERVER_CONNECTION_ERROR, block_server_connection_error),
         PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_LARGE_FILE_ERROR, block_large_file_error),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_PARSE_FILE_ERROR, block_parse_file_error),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_FILE_CONVERT_SLOWLY, block_file_convert_slowly),
+        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_FILE_PARSING_ERROR, block_file_parsing_error),
+        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_SLOW_FILE_CONVERSION, block_slow_file_conversion),
         PRINT_NAPI_PROPERTY(PROPERTY_RUNNING_UPLOADING_FILES, running_uploading_files),
         PRINT_NAPI_PROPERTY(PROPERTY_RUNNING_CONVERTING_FILES, running_converting_files),
         PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_UNKNOWN, block_unknown),
@@ -297,6 +299,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_REQUEST_PREVIEW, NapiInnerPrint::RequestPreview),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_CAPABILITY, NapiInnerPrint::QueryCapability),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_ALL_PRINTJOB, NapiInnerPrint::QueryAllPrintJob),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_PRINTJOB_LIST, NapiInnerPrint::QueryAllPrintJob),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_PRINTJOB_BYID, NapiInnerPrint::QueryPrintJobById),
         PRINT_NAPI_METHOD(FUNCTION_REGISTER_EVENT, NapiInnerPrint::On),
         PRINT_NAPI_METHOD(FUNCTION_UNREGISTER_EVENT, NapiInnerPrint::Off),

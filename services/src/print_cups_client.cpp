@@ -391,8 +391,6 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo)
 {
     JobParameters *jobParams =  BuildJobParameters(jobInfo);
     if (jobParams == nullptr) {
-        PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
-            PRINT_JOB_BLOCKED_UNKNOWN);
         return;
     }
     DumpJobParameters(jobParams);
@@ -526,7 +524,7 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
         num_options, options)) == 0) {
         PRINT_HILOGE("Unable to cupsCreateJob: %s", cupsLastErrorString());
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
-            PRINT_JOB_BLOCKED_CONNECT_SERVER_ERROR);
+            PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR);
         return false;
     }
     return true;
@@ -620,9 +618,11 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
             PRINT_HILOGD("the prevous jobState is the same as current, ignore");
             continue;
         }
-        prevousJobStatus->job_state = jobStatus->job_state;
-        strlcpy(prevousJobStatus->printer_state_reasons, jobStatus->printer_state_reasons,
+        if (prevousJobStatus != nullptr) {
+            prevousJobStatus->job_state = jobStatus->job_state;
+            strlcpy(prevousJobStatus->printer_state_reasons, jobStatus->printer_state_reasons,
                 sizeof(jobStatus->printer_state_reasons));
+        }
         JobStatusCallback(param, jobStatus, false);
     }
     httpClose(http);

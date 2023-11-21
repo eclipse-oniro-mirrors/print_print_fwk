@@ -80,7 +80,7 @@ napi_value PrintAsyncCall::SyncCall(napi_env env, PrintAsyncCall::Context::ExecA
         context_->ctx->exec_ = std::move(exec);
     }
     napi_value promise = nullptr;
-    if (context_->callback == nullptr) {
+    if (context_ != nullptr && context_->callback == nullptr) {
         napi_create_promise(env, &context_->defer, &promise);
     } else {
         napi_get_undefined(env, &promise);
@@ -131,7 +131,11 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         if (context->paramStatus != napi_ok) {
             errorIndex = E_PRINT_INVALID_PARAMETER;
         } else {
-            errorIndex = context->ctx->GetErrorIndex();
+            if (context->ctx == nullptr) {
+                errorIndex = E_PRINT_GENERIC_FAILURE;
+            } else {
+                errorIndex = context->ctx->GetErrorIndex();
+            }
         }
         PRINT_HILOGE("ErrorMessage: [%{public}s], ErrorIndex:[%{public}d]",
             GetErrorText(errorIndex).c_str(), errorIndex);
