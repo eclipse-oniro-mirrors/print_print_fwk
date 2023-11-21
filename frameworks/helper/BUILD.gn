@@ -24,34 +24,25 @@ ohos_shared_library("print_helper") {
     "//third_party/node/src",
     "//third_party/curl/include",
     "${print_path}/frameworks/innerkitsimpl/include",
+    "${print_path}/frameworks/models/include",
     "${print_utils_path}/include",
   ]
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
   sources = [
     "src/napi_print_utils.cpp",
-    "src/print_attributes.cpp",
     "src/print_attributes_helper.cpp",
-    "src/print_extension_info.cpp",
     "src/print_extension_info_helper.cpp",
-    "src/print_job.cpp",
     "src/print_job_helper.cpp",
-    "src/print_margin.cpp",
     "src/print_margin_helper.cpp",
-    "src/print_page_size.cpp",
     "src/print_page_size_helper.cpp",
-    "src/print_preview_attribute.cpp",
     "src/print_preview_attribute_helper.cpp",
-    "src/print_range.cpp",
     "src/print_range_helper.cpp",
-    "src/print_resolution.cpp",
     "src/print_resolution_helper.cpp",
-    "src/print_utils.cpp",
-    "src/printer_capability.cpp",
     "src/printer_capability_helper.cpp",
-    "src/printer_info.cpp",
     "src/printer_info_helper.cpp",
   ]
+  deps = [ "${print_path}/frameworks/models:print_models" ]
 
   external_deps = [
     "ability_base:want",
