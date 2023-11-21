@@ -101,8 +101,13 @@ int32_t PrintCupsClient::StartCupsdService()
         PRINT_HILOGI("stat pidFile failed.");
         return E_PRINT_SERVER_FAILURE;
     }
+    char realPidFile[PATH_MAX] = {};
+    if (realpath(pidFile.c_str(), realPidFile) == nullptr) {
+        PRINT_HILOGE("The realPidFile is null.");
+        return E_PRINT_SERVER_FAILURE;
+    }
     int fd;
-    if ((fd = open(pidFile.c_str(), O_RDONLY)) < 0) {
+    if ((fd = open(realPidFile, O_RDONLY)) < 0) {
         PRINT_HILOGE("Open pidFile error!");
         return E_PRINT_SERVER_FAILURE;
     }
@@ -171,9 +176,18 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
             CopyDirectory(srcFilePath.c_str(), destFilePath.c_str());
             chmod(destFilePath.c_str(), filestat.st_mode);
         } else {
-            FILE *srcFile = fopen(srcFilePath.c_str(), "rb");
+            char realSrc[PATH_MAX] = {};
+            if (realpath(srcFilePath.c_str(), realSrc) == nullptr) {
+                PRINT_HILOGE("The realSrc is null.");
+                continue;
+            }
+            FILE *srcFile = fopen(realSrc, "rb");
+            if (srcFile == nullptr) {
+                continue;
+            }
             FILE *destFile = fopen(destFilePath.c_str(), "wb");
-            if (srcFile == nullptr || destFile == nullptr) {
+            if (destFile == nullptr) {
+                fclose(srcFile);
                 continue;
             }
             char buffer[4096];
@@ -382,38 +396,41 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo)
         return;
     }
     DumpJobParameters(jobParams);
-    jobQueue.push_back(jobParams);
+    jobQueue_.push_back(jobParams);
     StartNextJob();
 }
 
 void PrintCupsClient::StartNextJob()
 {
-    if (jobQueue.empty()) {
-        PRINT_HILOGE("no active job in jobQueue");
+    if (jobQueue_.empty()) {
+        PRINT_HILOGE("no active job in jobQueue_");
         return;
     }
-    if (currentJob != nullptr) {
-        PRINT_HILOGE("a active job is running, job len: %{public}zd", jobQueue.size());
+    if (currentJob_ != nullptr) {
+        JobParameters *lastJob = jobQueue_.back();
+        PrintServiceAbility::GetInstance()->UpdatePrintJobState(lastJob->serviceJobId, PRINT_JOB_QUEUED,
+            PRINT_JOB_BLOCKED_UNKNOWN);
+        PRINT_HILOGE("a active job is running, job len: %{public}zd", jobQueue_.size());
         return;
     }
     PRINT_HILOGI("start next job from queue");
 
-    currentJob = jobQueue.at(0);
-    jobQueue.erase(jobQueue.begin());
-    if (!currentJob) {
-        PRINT_HILOGE("currentJob is nullptr");
+    currentJob_ = jobQueue_.at(0);
+    jobQueue_.erase(jobQueue_.begin());
+    if (!currentJob_) {
+        PRINT_HILOGE("currentJob_ is nullptr");
         return;
     }
-    StartCupsJob(currentJob);
+    StartCupsJob(currentJob_);
 }
 
 void PrintCupsClient::JobCompleteCallback()
 {
     PRINT_HILOGI("Previous job complete, start next job");
-    if (!currentJob) {
-        free(currentJob);
+    if (!currentJob_) {
+        free(currentJob_);
     }
-    currentJob = nullptr;
+    currentJob_ = nullptr;
     StartNextJob();
 }
 
@@ -428,7 +445,7 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         int sizeIndex = -1;
         float meidaWidth = 0;
         float mediaHeight = 0;
-        for (size_t i = 0; i < mediaSizes.size(); i++) {
+        for (int i = 0; i < mediaSizes.size(); i++) {
             if (mediaSizes[i].name == jobParams->mediaSize) {
                 sizeIndex = i;
                 break;
@@ -492,36 +509,54 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     return num_options;
 }
 
+bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
+    cups_option_t *options, http_t *http)
+{
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("The jobParams is null");
+        return false;
+    }
+    if (!CheckPrinterOnline(jobParams->printerUri.c_str())) {
+        PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
+            PRINT_JOB_BLOCKED_NETWORK_ERROR);
+        return false;
+    }
+    num_options = FillJobOptions(jobParams, num_options, &options);
+    if ((jobId = cupsCreateJob(http, jobParams->printerName.c_str(), jobParams->jobName.c_str(),
+        num_options, options)) == 0) {
+        PRINT_HILOGE("Unable to cupsCreateJob: %s", cupsLastErrorString());
+        PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
+            PRINT_JOB_BLOCKED_CONNECT_SERVER_ERROR);
+        return false;
+    }
+    return true;
+}
 void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
 {
     http_t *http = nullptr;
     int num_options = 0;
-    cups_option_t *options;
-    cups_file_t *fp;
-    int job_id;
+    cups_option_t *options = nullptr;
+    cups_file_t *fp = nullptr;
+    uint32_t jobId;
     http_status_t status;
     char buffer[8192];
     ssize_t bytes;
 
-    int num_files = jobParams->fdList.size();
-    PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
-    num_options = FillJobOptions(jobParams, num_options, &options);
-    if ((job_id = cupsCreateJob(http, jobParams->printerName.c_str(), jobParams->jobName.c_str(),
-        num_options, options)) == 0) {
-        PRINT_HILOGE("Unable to cupsCreateJob: %s", cupsLastErrorString());
-        PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
-            PRINT_JOB_BLOCKED_UNKNOWN);
+    if (!VerifyPrintJob(jobParams, num_options, jobId, options, http)) {
+        PRINT_HILOGE("StartCupsJob VerifyPrintJob failed");
         JobCompleteCallback();
         return;
     }
-    for (int i = 0; i < num_files; i++) {
+    uint32_t num_files = jobParams->fdList.size();
+    PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
+    for (uint32_t i = 0; i < num_files; i++) {
         if ((fp = cupsFileOpenFd(jobParams->fdList[i], "rb")) == NULL) {
             PRINT_HILOGE("Unable to open print file, cancel the job");
-            cupsCancelJob2(http, jobParams->printerName.c_str(), job_id, 0);
+            cupsCancelJob2(http, jobParams->printerName.c_str(), jobId, 0);
             JobCompleteCallback();
             return;
         }
-        status = cupsStartDocument(http, jobParams->printerName.c_str(), job_id, jobParams->jobName.c_str(),
+        status = cupsStartDocument(http, jobParams->printerName.c_str(), jobId, jobParams->jobName.c_str(),
             jobParams->documentFormat.c_str(), i == (num_files - 1));
         while (status == HTTP_STATUS_CONTINUE && (bytes = cupsFileRead(fp, buffer, sizeof(buffer))) > 0)
             status = cupsWriteRequestData(http, buffer, (size_t)bytes);
@@ -529,17 +564,17 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
         if (status != HTTP_STATUS_CONTINUE || cupsFinishDocument(http, jobParams->printerName.c_str())
             != IPP_STATUS_OK) {
             PRINT_HILOGE("Unable to queue, error is %s, cancel the job and return...", cupsLastErrorString());
-            cupsCancelJob2(http, jobParams->printerUri.c_str(), job_id, 0);
+            cupsCancelJob2(http, jobParams->printerUri.c_str(), jobId, 0);
             PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
                 PRINT_JOB_BLOCKED_UNKNOWN);
             JobCompleteCallback();
             return;
         }
     }
-    jobParams->cupsJobId = job_id;
-    PRINT_HILOGD("start job success, job_id: %d", job_id);
+    jobParams->cupsJobId = jobId;
+    PRINT_HILOGD("start job success, jobId: %d", jobId);
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam { PrintServiceAbility::GetInstance(),
-        jobParams->serviceJobId, job_id, jobParams->printerUri.c_str() };
+        jobParams->serviceJobId, jobId, jobParams->printerUri, jobParams->printerName };
     if (param == nullptr)
         return;
     CallbackFunc callback = [this]() { JobCompleteCallback(); };
@@ -603,6 +638,7 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
     PRINT_HILOGD("JobStatusCallback enter, job_state: %{public}d", jobStatus->job_state);
     PRINT_HILOGD("JobStatusCallback enter, printer_state_reasons: %{public}s", jobStatus->printer_state_reasons);
     if (isOffline) {
+        cupsCancelJob2(CUPS_HTTP_DEFAULT, param->printerName.c_str(), param->cupsJobId, 0);
         param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_OFFLINE);
         return;
@@ -738,9 +774,9 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
 {
     PRINT_HILOGD("CancelCupsJob(): Enter, serviceJobId: %{public}s", serviceJobId.c_str());
     int jobIndex = -1;
-    for (size_t index = 0; index < jobQueue.size(); index++) {
-        PRINT_HILOGD("jobQueue[index]->serviceJobId: %{public}s", jobQueue[index]->serviceJobId.c_str());
-        if (jobQueue[index]->serviceJobId == serviceJobId) {
+    for (int index = 0; index < jobQueue_.size(); index++) {
+        PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
+        if (jobQueue_[index]->serviceJobId == serviceJobId) {
             jobIndex = index;
             break;
         }
@@ -748,16 +784,18 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
     PRINT_HILOGI("jobIndex: %{public}d", jobIndex);
     if (jobIndex >= 0) {
         PRINT_HILOGI("job in queue, delete");
-        jobQueue.erase(jobQueue.begin() + jobIndex);
+        jobQueue_.erase(jobQueue_.begin() + jobIndex);
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(serviceJobId, PRINT_JOB_COMPLETED,
             PRINT_JOB_COMPLETED_CANCELLED);
     } else {
         // 任务正在运行中
-        if (currentJob && currentJob->serviceJobId == serviceJobId) {
+        if (currentJob_ && currentJob_->serviceJobId == serviceJobId) {
             PRINT_HILOGI("cancel current job");
-            if (cupsCancelJob2(CUPS_HTTP_DEFAULT, currentJob->printerName.c_str(),
-                currentJob->cupsJobId, 0) != IPP_OK) {
-                PRINT_HILOGE("cancel Joob Error %s", cupsLastErrorString());
+            if (cupsCancelJob2(CUPS_HTTP_DEFAULT, currentJob_->printerName.c_str(),
+                currentJob_->cupsJobId, 0) != IPP_OK) {
+                PRINT_HILOGE("cancel Joob Error %{public}s", cupsLastErrorString());
+                PrintServiceAbility::GetInstance()->UpdatePrintJobState(serviceJobId, PRINT_JOB_COMPLETED,
+                    PRINT_JOB_COMPLETED_CANCELLED);
                 return;
             }
         } else {
@@ -904,6 +942,12 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         PRINT_HILOGD("deviceUri=%{private}s", deviceUri);
         const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
         PRINT_HILOGD("makeModel=%{private}s", makeModel);
+        int printerState = cupsGetIntegerOption("printer-state", dest->num_options, dest->options);
+        PRINT_HILOGD("printerState=%{private}d", printerState);
+        if (printerState == IPP_PRINTER_STOPPED) {
+            PRINT_HILOGI("printer is stopped, update state");
+            return printerExist;
+        }
         if (strcmp(deviceUri, printerUri) == 0) {
             if (makeModel != nullptr && strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) == NULL) {
                 // 当前打印机驱动不是默认的ipp-everywhere驱动，则返回true
@@ -986,7 +1030,7 @@ nlohmann::json PrintCupsClient::ParseSupportQualities(ipp_t *response)
     nlohmann::json supportedQualities = nlohmann::json::array();
     if ((attrptr = ippFindAttribute(response, "print-quality-supported", IPP_TAG_ENUM)) != NULL) {
         for (int i = 0; i < ippGetCount(attrptr); i++) {
-            uint32_t mediaQuality = ippGetInteger(attrptr, i);
+            int mediaQuality = ippGetInteger(attrptr, i);
             PRINT_HILOGD("print-quality-supported: %{public}d", mediaQuality);
             supportedQualities.push_back(mediaQuality);
         }
@@ -998,8 +1042,11 @@ nlohmann::json PrintCupsClient::ParseSupportMediaTypes(ipp_t *response)
 {
     ipp_attribute_t *attrptr;
     nlohmann::json _supportedMediaTypes = nlohmann::json::array();
-    if (((attrptr = ippFindAttribute(response, "media-type-supported", IPP_TAG_KEYWORD)) != NULL)
-          || ((attrptr = ippFindAttribute(response, "media-type-supported", IPP_TAG_NAME)) != NULL)) {
+    attrptr = ippFindAttribute(response, "media-type-supported", IPP_TAG_KEYWORD);
+    if (attrptr == NULL) {
+        attrptr = ippFindAttribute(response, "media-type-supported", IPP_TAG_NAME);
+    }
+    if (attrptr != NULL) {
         PRINT_HILOGD("media-type-supported found; number of values %d", ippGetCount(attrptr));
         for (int i = 0; i < ippGetCount(attrptr); i++) {
             const char* mediaType = ippGetString(attrptr, i, NULL);
