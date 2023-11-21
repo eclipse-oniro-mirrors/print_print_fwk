@@ -186,6 +186,7 @@ declare namespace print {
     jobId: string; // job id
     printerId: string; // printer id to take charge of printing
     jobState: PrintJobState; // current print job state
+    jobSubstate: PrintJobSubState; // current print job sub state.
     copyNumber: number; // copies of document list
     pageRange: PrinterRange; // range size to be printed
     isSequential: boolean; // sequential print
@@ -237,10 +238,10 @@ declare namespace print {
     PRINT_JOB_BLOCK_PRINT_PERMISSION_ERROR = 19, // The printing permission is abnormal.
     PRINT_JOB_BLOCK_PRINT_COLOR_PERMISSION_ERROR = 20, // Color printing permission exception
     PRINT_JOB_BLOCK_NETWORK_ERROR = 21, // The device is not connected to the network.
-    PRINT_JOB_BLOCK_CONNECT_SERVER_ERROR = 22, // Unable to connect to the server
+    PRINT_JOB_BLOCK_SERVER_CONNECTION_ERROR = 22, // Unable to connect to the server
     PRINT_JOB_BLOCK_LARGE_FILE_ERROR = 23, // Large file exception
-    PRINT_JOB_BLOCK_PARSE_FILE_ERROR = 24, // File parsing exception.
-    PRINT_JOB_BLOCK_FILE_CONVERT_SLOWLY = 25, // The file conversion is too slow.
+    PRINT_JOB_BLOCK_FILE_PARSING_ERROR = 24, // File parsing exception.
+    PRINT_JOB_BLOCK_SLOW_FILE_CONVERSION = 25, // The file conversion is too slow.
 
     PRINT_JOB_RUNNING_UPLOADING_FILES = 26, // Uploading file...
     PRINT_JOB_RUNNING_CONVERTING_FILES = 27, // Converting files...
