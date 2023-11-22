@@ -71,6 +71,10 @@ public:
         const PrintAttributes &printAttributes);
     int32_t Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
         const PrintAttributes &printAttributes, void* contextToken);
+    int32_t Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
+        const PrintAttributes &printAttributes, std::string &taskId);
+    int32_t Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
+        const PrintAttributes &printAttributes, std::string &taskId, void* contextToken);
     int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
         const uint32_t fd);
     int32_t NotifyPrintService(const std::string &jobId, const std::string &type);

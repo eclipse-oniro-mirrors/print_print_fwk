@@ -19,20 +19,32 @@
 
 namespace OHOS::Print {
 PrintAttributes::PrintAttributes()
-    : copyNumber_(0),
-      isSequential_(false), isLandscape_(false), colorMode_(0), duplexMode_(0),
-      hasMargin_(false), hasOption_(false), option_("") {
+    : hasCopyNumber_(false), copyNumber_(0), hasPageRange_(false), hasSequential_(false), isSequential_(false),
+    hasPageSize_(false), hasLandscape_(false), isLandscape_(false), hasDirectionMode_(false), directionMode_(0),
+    hasColorMode_(false), colorMode_(0), hasDuplexMode_(false), duplexMode_(0),
+    hasMargin_(false), hasOption_(false), option_("") {
+    pageRange_.Reset();
+    pageSize_.Reset();
     margin_.Reset();
 }
 
 PrintAttributes::PrintAttributes(const PrintAttributes &right)
 {
+    hasCopyNumber_ = right.hasCopyNumber_;
     copyNumber_ = right.copyNumber_;
+    hasPageRange_ = right.hasPageRange_;
     pageRange_ = right.pageRange_;
+    hasSequential_ = right.hasSequential_;
     isSequential_ = right.isSequential_;
+    hasPageSize_ = right.hasPageSize_;
     pageSize_ = right.pageSize_;
+    hasLandscape_ = right.hasLandscape_;
     isLandscape_ = right.isLandscape_;
+    hasDirectionMode_ = right.hasDirectionMode_;
+    directionMode_ = right.directionMode_;
+    hasColorMode_ = right.hasColorMode_;
     colorMode_ = right.colorMode_;
+    hasDuplexMode_ = right.hasDuplexMode_;
     duplexMode_ = right.duplexMode_;
     hasMargin_ = right.hasMargin_;
     margin_ = right.margin_;
@@ -43,12 +55,21 @@ PrintAttributes::PrintAttributes(const PrintAttributes &right)
 PrintAttributes &PrintAttributes::operator=(const PrintAttributes &right)
 {
     if (this != &right) {
+        hasCopyNumber_ = right.hasCopyNumber_;
         copyNumber_ = right.copyNumber_;
+        hasPageRange_ = right.hasPageRange_;
         pageRange_ = right.pageRange_;
+        hasSequential_ = right.hasSequential_;
         isSequential_ = right.isSequential_;
+        hasPageSize_ = right.hasPageSize_;
         pageSize_ = right.pageSize_;
+        hasLandscape_ = right.hasLandscape_;
         isLandscape_ = right.isLandscape_;
+        hasDirectionMode_ = right.hasDirectionMode_;
+        directionMode_ = right.directionMode_;
+        hasColorMode_ = right.hasColorMode_;
         colorMode_ = right.colorMode_;
+        hasDuplexMode_ = right.hasDuplexMode_;
         duplexMode_ = right.duplexMode_;
         hasMargin_ = right.hasMargin_;
         margin_ = right.margin_;
@@ -64,36 +85,49 @@ PrintAttributes::~PrintAttributes()
 
 void PrintAttributes::SetCopyNumber(uint32_t copyNumber)
 {
+    hasCopyNumber_ = true;
     copyNumber_ = copyNumber;
 }
 
 void PrintAttributes::SetPageRange(const PrintRange &pageRange)
 {
+    hasPageRange_ = true;
     pageRange_ = pageRange;
 }
 
 void PrintAttributes::SetIsSequential(bool isSequential)
 {
+    hasSequential_ = true;
     isSequential_ = isSequential;
 }
 
 void PrintAttributes::SetPageSize(const PrintPageSize &pageSize)
 {
+    hasPageSize_ = true;
     pageSize_ = pageSize;
 }
 
 void PrintAttributes::SetIsLandscape(bool isLandscape)
 {
+    hasLandscape_ = true;
     isLandscape_ = isLandscape;
+}
+
+void PrintAttributes::SetDirectionMode(uint32_t directionMode)
+{
+    hasDirectionMode_ = true;
+    directionMode_ = directionMode;
 }
 
 void PrintAttributes::SetColorMode(uint32_t colorMode)
 {
+    hasColorMode_ = true;
     colorMode_ = colorMode;
 }
 
 void PrintAttributes::SetDuplexMode(uint32_t duplexmode)
 {
+    hasDuplexMode_ = true;
     duplexMode_ = duplexmode;
 }
 
@@ -111,12 +145,21 @@ void PrintAttributes::SetOption(const std::string &option)
 
 void PrintAttributes::UpdateParams(const PrintAttributes &jobInfo)
 {
+    hasCopyNumber_ = jobInfo.hasCopyNumber_;
     copyNumber_ = jobInfo.copyNumber_;
+    hasPageRange_ = jobInfo.hasPageRange_;
     pageRange_ = jobInfo.pageRange_;
+    hasSequential_ = jobInfo.hasSequential_;
     isSequential_ = jobInfo.isSequential_;
+    hasPageSize_ = jobInfo.hasPageSize_;
     pageSize_ = jobInfo.pageSize_;
+    hasLandscape_ = jobInfo.hasLandscape_;
     isLandscape_ = jobInfo.isLandscape_;
+    hasDirectionMode_ = jobInfo.hasDirectionMode_;
+    directionMode_ = jobInfo.directionMode_;
+    hasColorMode_ = jobInfo.hasColorMode_;
     colorMode_ = jobInfo.colorMode_;
+    hasDuplexMode_ = jobInfo.hasDuplexMode_;
     duplexMode_ = jobInfo.duplexMode_;
     hasMargin_ = jobInfo.hasMargin_;
     margin_ = jobInfo.margin_;
@@ -148,6 +191,11 @@ bool PrintAttributes::GetIsLandscape() const
     return isLandscape_;
 }
 
+uint32_t PrintAttributes::GetDirectionMode() const
+{
+    return directionMode_;
+}
+
 uint32_t PrintAttributes::GetColorMode() const
 {
     return colorMode_;
@@ -168,6 +216,51 @@ const std::string &PrintAttributes::GetOption() const
     return option_;
 }
 
+bool PrintAttributes::HasCopyNumber() const
+{
+    return hasCopyNumber_;
+}
+
+bool PrintAttributes::HasPageRange() const
+{
+    return hasPageRange_;
+}
+
+bool PrintAttributes::HasSequential() const
+{
+    return hasSequential_;
+}
+
+bool PrintAttributes::HasPageSize() const
+{
+    return hasPageSize_;
+}
+
+bool PrintAttributes::HasLandscape() const
+{
+    return hasLandscape_;
+}
+
+bool PrintAttributes::HasDirectionMode() const
+{
+    return hasDirectionMode_;
+}
+
+bool PrintAttributes::HasColorMode() const
+{
+    return hasColorMode_;
+}
+
+bool PrintAttributes::HasDuplexMode() const
+{
+    return hasDuplexMode_;
+}
+
+bool PrintAttributes::HasMargin() const
+{
+    return hasMargin_;
+}
+
 bool PrintAttributes::HasOption() const
 {
     return hasOption_;
@@ -175,23 +268,53 @@ bool PrintAttributes::HasOption() const
 
 bool PrintAttributes::ReadFromParcel(Parcel &parcel)
 {
-    SetCopyNumber(parcel.ReadUint32());
-    auto rangePtr = PrintRange::Unmarshalling(parcel);
-    if (rangePtr == nullptr) {
-        PRINT_HILOGE("Failed to restore page range");
-        return false;
+    hasCopyNumber_ = parcel.ReadBool();
+    if (hasCopyNumber_) {
+        SetCopyNumber(parcel.ReadUint32());
     }
-    SetPageRange(*rangePtr);
-    SetIsSequential(parcel.ReadBool());
-    auto pageSizePtr = PrintPageSize::Unmarshalling(parcel);
-    if (pageSizePtr == nullptr) {
-        PRINT_HILOGE("Failed to restore page size");
-        return false;
+    hasPageRange_ = parcel.ReadBool();
+    if (hasPageRange_) {
+        auto rangePtr = PrintRange::Unmarshalling(parcel);
+        if (rangePtr == nullptr) {
+            PRINT_HILOGE("Failed to restore page range");
+            return false;
+        }
+        SetPageRange(*rangePtr);
     }
-    SetPageSize(*pageSizePtr);
-    SetIsLandscape(parcel.ReadBool());
-    SetColorMode(parcel.ReadUint32());
-    SetDuplexMode(parcel.ReadUint32());
+    hasSequential_ = parcel.ReadBool();
+    if (hasSequential_) {
+        SetIsSequential(parcel.ReadBool());
+    }
+    hasPageSize_ = parcel.ReadBool();
+    if (hasPageSize_) {
+        auto pageSizePtr = PrintPageSize::Unmarshalling(parcel);
+        if (pageSizePtr == nullptr) {
+            PRINT_HILOGE("Failed to restore page size");
+            return false;
+        }
+        SetPageSize(*pageSizePtr);
+    }
+    hasLandscape_ = parcel.ReadBool();
+    if (hasLandscape_) {
+        SetIsLandscape(parcel.ReadBool());
+    }
+    hasDirectionMode_ = parcel.ReadBool();
+    if (hasDirectionMode_) {
+        SetDirectionMode(parcel.ReadUint32());
+    }
+    hasColorMode_ = parcel.ReadBool();
+    if (hasColorMode_) {
+        SetColorMode(parcel.ReadUint32());
+    }
+    hasDuplexMode_ = parcel.ReadBool();
+    if (hasDuplexMode_) {
+        SetDuplexMode(parcel.ReadUint32());
+    }
+    return ReadNextDataFromParcel(parcel);
+}
+
+bool PrintAttributes::ReadNextDataFromParcel(Parcel &parcel)
+{
     hasMargin_ = parcel.ReadBool();
     if (hasMargin_) {
         auto marginPtr = PrintMargin::Unmarshalling(parcel);
@@ -210,19 +333,19 @@ bool PrintAttributes::ReadFromParcel(Parcel &parcel)
 
 bool PrintAttributes::Marshalling(Parcel &parcel) const
 {
-    if (!parcel.WriteUint32(GetCopyNumber())) {
-        PRINT_HILOGE("Failed to save copy number");
-        return false;
+    parcel.WriteBool(hasCopyNumber_);
+    if (hasCopyNumber_) {
+        parcel.WriteUint32(GetCopyNumber());
     }
 
-    if (!pageRange_.Marshalling(parcel)) {
-        PRINT_HILOGE("Failed to save page range");
-        return false;
+    parcel.WriteBool(hasPageRange_);
+    if (hasPageRange_) {
+        pageRange_.Marshalling(parcel);
     }
 
-    if (!parcel.WriteBool(GetIsSequential())) {
-        PRINT_HILOGE("Failed to save sequential mode");
-        return false;
+    parcel.WriteBool(hasSequential_);
+    if (hasSequential_) {
+        parcel.WriteBool(GetIsSequential());
     }
 
     return MarshallingParam(parcel);
@@ -230,24 +353,29 @@ bool PrintAttributes::Marshalling(Parcel &parcel) const
 
 bool PrintAttributes::MarshallingParam(Parcel &parcel) const
 {
-    if (!pageSize_.Marshalling(parcel)) {
-        PRINT_HILOGE("Failed to save page size");
-        return false;
+    parcel.WriteBool(hasPageSize_);
+    if (hasPageSize_) {
+        pageSize_.Marshalling(parcel);
     }
 
-    if (!parcel.WriteBool(GetIsLandscape())) {
-        PRINT_HILOGE("Failed to save printer id");
-        return false;
+    parcel.WriteBool(hasLandscape_);
+    if (hasLandscape_) {
+        parcel.WriteBool(GetIsLandscape());
     }
 
-    if (!parcel.WriteUint32(GetColorMode())) {
-        PRINT_HILOGE("Failed to save color mode");
-        return false;
+    parcel.WriteBool(hasDirectionMode_);
+    if (hasDirectionMode_) {
+        parcel.WriteUint32(GetDirectionMode());
     }
 
-    if (!parcel.WriteUint32(GetDuplexMode())) {
-        PRINT_HILOGE("Failed to save duplex mode");
-        return false;
+    parcel.WriteBool(hasColorMode_);
+    if (hasColorMode_) {
+        parcel.WriteUint32(GetColorMode());
+    }
+
+    parcel.WriteBool(hasDuplexMode_);
+    if (hasDuplexMode_) {
+        parcel.WriteUint32(GetDuplexMode());
     }
 
     parcel.WriteBool(hasMargin_);
@@ -275,14 +403,30 @@ std::shared_ptr<PrintAttributes> PrintAttributes::Unmarshalling(Parcel &parcel)
 
 void PrintAttributes::Dump()
 {
-    PRINT_HILOGD("copyNumber_ = %{public}d", copyNumber_);
-    PRINT_HILOGD("isSequential_ = %{public}d", isSequential_);
-    PRINT_HILOGD("isLandscape_ = %{public}d", isLandscape_);
-    PRINT_HILOGD("colorMode_ = %{public}d", colorMode_);
-    PRINT_HILOGD("duplexMode_ = %{public}d", duplexMode_);
-
-    pageRange_.Dump();
-    pageSize_.Dump();
+    if (hasCopyNumber_) {
+        PRINT_HILOGD("copyNumber_ = %{public}d", copyNumber_);
+    }
+    if (hasSequential_) {
+        PRINT_HILOGD("isSequential_ = %{public}d", isSequential_);
+    }
+    if (hasLandscape_) {
+        PRINT_HILOGD("isLandscape_ = %{public}d", isLandscape_);
+    }
+    if (hasDirectionMode_) {
+        PRINT_HILOGD("directionMode_ = %{public}d", directionMode_);
+    }
+    if (hasColorMode_) {
+        PRINT_HILOGD("colorMode_ = %{public}d", colorMode_);
+    }
+    if (hasDuplexMode_) {
+        PRINT_HILOGD("duplexMode_ = %{public}d", duplexMode_);
+    }
+    if (hasPageRange_) {
+        pageRange_.Dump();
+    }
+    if (hasPageSize_) {
+        pageSize_.Dump();
+    }
     if (hasMargin_) {
         margin_.Dump();
     }

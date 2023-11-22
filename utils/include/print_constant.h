@@ -96,8 +96,9 @@ enum PrintJobState {
     PRINT_JOB_RUNNING = 2,      // executing print job
     PRINT_JOB_BLOCKED = 3,      // print job has been blocked
     PRINT_JOB_COMPLETED = 4,    // print job ocmpleted
-    PRINT_JOB_CREATE_FILE_COMPLETED = 5,    // create print file completed
     PRINT_JOB_UNKNOWN = 100,      // unknown state of print job
+    PRINT_JOB_CREATE_FILE_COMPLETED = 101,    // For internal use only: create print file completed
+    PRINT_JOB_SPOOLER_CLOSED = 102,    // For internal use only: spooler closed
 };
 
 enum PrintJobSubState {
@@ -132,6 +133,22 @@ enum PrintJobSubState {
     PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS = 28, // print job create file succeed
     PRINT_JOB_CREATE_FILE_COMPLETED_FAILED = 29, // print job create file fail
     PRINT_JOB_BLOCKED_UNKNOWN = 99,             // unknown issue
+    PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 101, // For internal use only: Click Cancel
+    PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED = 102, // For internal use only: Click Start
+};
+
+enum PrintFileCreatedInfoCode {
+    PRINT_FILE_CREATED_SUCCESS = 0,
+    PRINT_FILE_CREATED_FAIL = 1,
+    PRINT_FILE_CREATED_SUCCESS_UNRENDERED = 2,
+};
+
+enum PrintAdapterListeningState {
+    PREVIEW_ABILITY_DESTROY = 0,
+    PRINT_TASK_SUCCEED = 1,
+    PRINT_TASK_FAIL = 2,
+    PRINT_TASK_CANCEL = 3,
+    PRINT_TASK_BLOCK = 4,
 };
 
 enum PrintExtensionState {

@@ -276,7 +276,6 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
 
 bool NapiPrintTask::IsValidFile(const std::string &fileName)
 {
-    PRINT_HILOGE("fileName: %{private}s", fileName.c_str());
     if (fileName == "") {
         PRINT_HILOGE("invalid file name");
         return false;

@@ -481,15 +481,17 @@ bool PrintServiceStub::OnLoadExtSuccess(MessageParcel &data, MessageParcel &repl
 bool PrintServiceStub::OnPrintByAdapter(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnPrintByAdapter in");
+    std::string resultTaskId = "";
     int32_t ret = E_PRINT_RPC_FAILURE;
     std::string jobName = data.ReadString();
     auto attrs = PrintAttributes::Unmarshalling(data);
     sptr<IRemoteObject> token = data.ReadRemoteObject();
     if (attrs != nullptr) {
         attrs->Dump();
-        ret = PrintByAdapter(jobName, *attrs, token);
+        ret = PrintByAdapter(jobName, *attrs, resultTaskId, token);
     }
     reply.WriteInt32(ret);
+    reply.WriteString(resultTaskId);
     PRINT_HILOGI("PrintServiceStub::OnPrintByAdapter out");
     return ret == E_PRINT_NONE;
 }

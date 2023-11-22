@@ -248,7 +248,7 @@ static void PrintAdapterAfterCallFun(uv_work_t *work, int status)
         callbackValues[NapiPrintUtils::ARGC_FOUR] =
             NapiPrintUtils::CreateFunction(cbParam->env, "writeResultCallback", successCallback, nullptr);
 
-        napi_call_function(cbParam->env, nullptr, layoutWriteFunc, NapiPrintUtils::ARGC_FIVE,
+        napi_call_function(cbParam->env, adapterObj, layoutWriteFunc, NapiPrintUtils::ARGC_FIVE,
             callbackValues, &callbackResult);
 
         napi_close_handle_scope(cbParam->env, scope);
@@ -282,7 +282,7 @@ static void PrintAdapterJobStateChangedAfterCallFun(uv_work_t *work, int status)
         callbackValues[0] = NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->jobId);
         callbackValues[1] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
 
-        napi_call_function(cbParam->env, nullptr, jobStateChangedFunc, NapiPrintUtils::ARGC_TWO,
+        napi_call_function(cbParam->env, adapterObj, jobStateChangedFunc, NapiPrintUtils::ARGC_TWO,
             callbackValues, &callbackResult);
 
         napi_close_handle_scope(cbParam->env, scope);

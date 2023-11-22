@@ -65,18 +65,18 @@ declare namespace print {
      * @return -
      */
     onStartLayoutWrite(jobId: string, oldAttrs: PrintAttributes, newAttrs: PrintAttributes, fd: number,
-        writeResultCallback: Function): void;
+      writeResultCallback: (jobId: string, writeResult: PrintFileCreatedInfoCode) => void): void;
 
     /**
      * Implement this function to Listen job status change.
      * 
      * @since 11
      * @param jobId Indicates print job id.
-     * @param state Indicates job changes to this state..
+     * @param state Indicates job changes to this state.
      * @permission {@code ohos.permission.PRINT}
      * @return -
      */
-    onJobStateChanged(jobId: string, state: number): void;
+    onJobStateChanged(jobId: string, state: PrintAdapterListeningState): void;
   }
 
   /**
@@ -118,16 +118,99 @@ declare namespace print {
   function print(jobName: string, printAdapter: PrintDocumentAdapter, printAttributes: PrintAttributes,
     context: Context): Promise<PrintTask>;
 
+  /**
+   * public interface
+   */
   interface PrintAttributes {
     copyNumber?: number; // copies of document list
     pageRange?: PrinterRange; // range size to be printed
-    isSequential? : boolean; // sequential print
-    pageSize? : PrintPageSize; // page size
-    isLandscape? : boolean; // vertical printing
-    colorMode? : number; // color mode
-    duplexMode? : number; // duplex mode
-    margin? : PrintMargin; // print margin
-    option? : string; // json object string
+    pageSize? : PrintPageSize | PrintPageTypeCode; // page size
+    directionMode? : PrintDirectionModeCode; // print direction
+    colorMode? : PrintColorModeCode; // color mode
+    duplexMode? : PrintDuplexModeCode; // duplex mode
+  }
+
+  /**
+   * public interface
+   */
+  interface PrinterRange {
+    startPage?: number; // start page of sequence
+    endPage?: number; // end page of sequence
+    pages?: Array<number>; // discrete page of sequence
+  }
+
+  /**
+   * public interface
+   */
+  interface PrintPageSize {
+    id: string; // page size id
+    name: string; // page size name
+    width: number; // unit: millimeter
+    height: number; // unit: millimeter
+  }
+
+  /**
+   * public enum
+   */
+  enum PrintDirectionModeCode {
+    DIRECTION_MODE_AUTO = 0,
+    DIRECTION_MODE_PORTRAIT = 1,
+    DIRECTION_MODE_LANDSCAPE = 2,
+  }
+
+  /**
+   * public enum
+   */
+  enum PrintColorModeCode {
+    COLOR_MODE_MONOCHROME = 0,
+    COLOR_MODE_COLOR = 1,
+  }
+
+  /**
+   * public enum
+   */
+  enum PrintDuplexModeCode {
+    DUPLEX_MODE_NONE = 0,
+    DUPLEX_MODE_LONG_EDGE = 1,
+    DUPLEX_MODE_SHORT_EDGE = 2,
+  }
+
+  /**
+   * public enum
+   */
+  enum PrintPageTypeCode {
+    PAGE_ISO_A3 = 0,
+    PAGE_ISO_A4 = 1,
+    PAGE_ISO_A5 = 2,
+    PAGE_JIS_B5 = 3,
+    PAGE_ISO_C5 = 4,
+    PAGE_ISO_DL = 5,
+    PAGE_LETTER = 6,
+    PAGE_LEGAL = 7,
+    PAGE_PHOTO_4x6 = 8,
+    PAGE_PHOTO_5x7 = 9,
+    PAGE_INT_DL_ENVELOPE = 10,
+    PAGE_B_TABLOID = 11,
+  }
+
+  /**
+   * public enum
+   */
+  enum PrintAdapterListeningState {
+    PREVIEW_ABILITY_DESTROY = 0,
+    PRINT_TASK_SUCCEED = 1,
+    PRINT_TASK_FAIL = 2,
+    PRINT_TASK_CANCEL = 3,
+    PRINT_TASK_BLOCK = 4,
+  }
+
+  /**
+   * public enum
+   */
+  enum PrintFileCreatedInfoCode {
+    PRINT_FILE_CREATED_SUCCESS = 0,
+    PRINT_FILE_CREATED_FAIL = 1,
+    PRINT_FILE_CREATED_SUCCESS_UNRENDERED = 2,
   }
 
   interface PrintMargin {
@@ -135,12 +218,6 @@ declare namespace print {
     bottom?: number; // bottom margin
     left?: number; // left side margin
     right?: number; // right side margin
-  }
-
-  interface PrinterRange {
-    startPage?: number; // start page of sequence
-    endPage?: number; // end page of sequence
-    pages?: Array<number>; // discrete page of sequence
   }
 
   interface PreviewAttribute {
@@ -604,7 +681,8 @@ declare namespace print {
    * @systemapi Hide this for inner system use.
    * @return -
    */
-  function startGetPrintFile(jobId: string, printAttributes: PrintAttributes, fd: number): void;
+  function startGetPrintFile(jobId: string, printAttributes: PrintAttributes, fd: number,
+    onFileStateChanged: (state: PrintFileCreatedInfoCode) => void): void;
 
   /**
    * Notify print service the information.
@@ -618,7 +696,7 @@ declare namespace print {
    * @return -
    */
   function notifyPrintService(jobId: string, type: string, callback: AsyncCallback<void>);
-  function notifyPrintService(jobId: string, type: string, ): Promise<void>;
+  function notifyPrintService(jobId: string, type: string): Promise<void>;
 }
 
 export default print;

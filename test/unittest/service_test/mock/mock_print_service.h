@@ -136,7 +136,7 @@ public:
         return E_PRINT_NONE;
     }
     int32_t PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes,
-        const sptr<IRemoteObject> &token) override
+        std::string &taskId, const sptr<IRemoteObject> &token) override
     {
         return E_PRINT_NONE;
     }
