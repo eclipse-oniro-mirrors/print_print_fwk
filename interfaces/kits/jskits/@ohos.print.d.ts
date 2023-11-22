@@ -187,8 +187,8 @@ declare namespace print {
     PAGE_ISO_DL = 5,
     PAGE_LETTER = 6,
     PAGE_LEGAL = 7,
-    PAGE_PHOTO_4x6 = 8,
-    PAGE_PHOTO_5x7 = 9,
+    PAGE_PHOTO_4X6 = 8,
+    PAGE_PHOTO_5X7 = 9,
     PAGE_INT_DL_ENVELOPE = 10,
     PAGE_B_TABLOID = 11,
   }
@@ -229,13 +229,6 @@ declare namespace print {
     id: string; // resolution id
     horizontalDpi: number; // horizontal DPI
     verticalDpi: number; // vertical DPI
-  }
-
-  interface PrintPageSize {
-    id: string; // page size id
-    name: string; // page size name
-    width: number; // unit: millimeter
-    height: number; // unit: millimeter
   }
 
   interface PrinterCapability {
