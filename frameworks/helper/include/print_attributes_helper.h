@@ -31,8 +31,7 @@ class PrintAttributesHelper {
 public:
     static napi_value MakeJsObject(napi_env env, const PrintAttributes &attributes);
     static std::shared_ptr<PrintAttributes> BuildFromJs(napi_env env, napi_value jsValue);
-    static std::shared_ptr<PrintAttributes> BuildJsWorkerIsLegal(napi_env env, napi_value jsValue,
-        std::shared_ptr<PrintAttributes> &nativeObj);
+    static void BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::shared_ptr<PrintAttributes> &nativeObj);
 
 private:
     static bool CreatePageRange(napi_env env, napi_value &jsPrintAttributes, const PrintAttributes &attributes);
@@ -40,6 +39,7 @@ private:
     static bool CreateMargin(napi_env env, napi_value &jsPrintAttributes, const PrintAttributes &attributes);
 
     static bool ValidateProperty(napi_env env, napi_value object);
+    static void BuildFromJsPageSize(napi_env env, napi_value jsValue, std::shared_ptr<PrintAttributes> &nativeObj);
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_ATTRIBUTE_HELPER_H

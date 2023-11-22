@@ -49,6 +49,8 @@ public:
 
     void SetIsLandscape(bool isLandscape);
 
+    void SetDirectionMode(uint32_t directionMode);
+
     void SetColorMode(uint32_t colorMode);
 
     void SetDuplexMode(uint32_t duplexmode);
@@ -69,6 +71,8 @@ public:
 
     [[nodiscard]] bool GetIsLandscape() const;
 
+    [[nodiscard]] uint32_t GetDirectionMode() const;
+
     [[nodiscard]] uint32_t GetColorMode() const;
 
     [[nodiscard]] uint32_t GetDuplexMode() const;
@@ -78,6 +82,24 @@ public:
     [[nodiscard]] bool HasPreview() const;
 
     void GetPreview(PrintPreviewAttribute &previewAttr) const;
+
+    [[nodiscard]] bool HasCopyNumber() const;
+
+    [[nodiscard]] bool HasPageRange() const;
+
+    [[nodiscard]] bool HasSequential() const;
+
+    [[nodiscard]] bool HasPageSize() const;
+
+    [[nodiscard]] bool HasLandscape() const;
+
+    [[nodiscard]] bool HasDirectionMode() const;
+
+    [[nodiscard]] bool HasColorMode() const;
+
+    [[nodiscard]] bool HasDuplexMode() const;
+
+    [[nodiscard]] bool HasMargin() const;
 
     [[nodiscard]] bool HasOption() const;
 
@@ -95,16 +117,26 @@ public:
 private:
 #endif
     bool ReadFromParcel(Parcel &parcel);
+    bool ReadNextDataFromParcel(Parcel &parcel);
 
 #ifndef TDD_ENABLE
 private:
 #endif
+    bool hasCopyNumber_;
     uint32_t copyNumber_;
+    bool hasPageRange_;
     PrintRange pageRange_;
+    bool hasSequential_;
     bool isSequential_;
+    bool hasPageSize_;
     PrintPageSize pageSize_;
+    bool hasLandscape_;
     bool isLandscape_;
+    bool hasDirectionMode_;
+    uint32_t directionMode_;
+    bool hasColorMode_;
     uint32_t colorMode_;
+    bool hasDuplexMode_;
     uint32_t duplexMode_;
     bool hasMargin_;
     PrintMargin margin_;

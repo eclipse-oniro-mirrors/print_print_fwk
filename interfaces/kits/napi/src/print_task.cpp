@@ -105,7 +105,7 @@ uint32_t PrintTask::StartPrintAdapter()
     if (printAdapterCallback_ != nullptr && printAttributes_ != nullptr && callerToken_ != nullptr) {
         PRINT_HILOGI("call client's StartPrintAdapter interface.");
         return PrintManagerClient::GetInstance()->Print(
-            printJobName_, printAdapterCallback_, *printAttributes_, static_cast<void*>(callerToken_));
+            printJobName_, printAdapterCallback_, *printAttributes_, taskId_, static_cast<void*>(callerToken_));
     }
     return E_PRINT_INVALID_PARAMETER;
 }

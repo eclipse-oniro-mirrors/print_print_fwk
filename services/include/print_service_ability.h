@@ -19,6 +19,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <nlohmann/json.hpp>
 
 #include "ability_manager_client.h"
 #include "event_handler.h"
@@ -39,6 +40,7 @@ class IKeyguardStateCallback;
 struct AdapterParam {
     std::string documentName;
     bool isCheckFdList;
+    PrintAttributes printAttributes;
 };
 
 class PrintServiceAbility : public SystemAbility, public PrintServiceStub {
@@ -83,7 +85,7 @@ public:
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps) override;
     void SetHelper(const std::shared_ptr<PrintServiceHelper> &helper);
     int32_t PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes,
-        const sptr<IRemoteObject> &token) override;
+        std::string &taskId, const sptr<IRemoteObject> &token) override;
     int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
         const uint32_t fd) override;
     int32_t NotifyPrintService(const std::string &jobId, const std::string &type) override;
@@ -123,6 +125,12 @@ private:
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
     void UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
     void StartPrintJobCB(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob);
+    void CreateDefaultAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam);
+    void BuildAdapterParam(
+        const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want, const std::string &jobId);
+    void BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);
+    void ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, nlohmann::json &attrJson);
+    int32_t AdapterGetFileCallBack(const std::string &jobId, uint32_t state, uint32_t subState);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
@@ -135,7 +143,7 @@ private:
 
     std::recursive_mutex apiMutex_;
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
-    std::map<std::string, sptr<IPrintCallback>> adapterListeners_;
+    std::map<std::string, sptr<IPrintCallback>> adapterListenersByJobId_;
     std::map<std::string, sptr<IPrintExtensionCallback>> extCallbackMap_;
 
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> extensionList_;

@@ -493,7 +493,7 @@ int32_t PrintServiceProxy::RegisterExtCallback(const std::string &extensionCID,
 }
 
 int32_t PrintServiceProxy::PrintByAdapter(const std::string printJobName, const PrintAttributes &printAttributes,
-    const sptr<IRemoteObject> &token)
+    std::string &taskId, const sptr<IRemoteObject> &token)
 {
     PRINT_HILOGI("PrintServiceProxy PrintByAdapter start.");
     MessageParcel data, reply;
@@ -510,8 +510,8 @@ int32_t PrintServiceProxy::PrintByAdapter(const std::string printJobName, const 
         PRINT_HILOGE("PrintByAdapter, rpc error code = %{public}d", ret);
         return E_PRINT_RPC_FAILURE;
     }
-
-    ret = reply.ReadInt32();
+    ret = GetResult(ret, reply);
+    taskId = reply.ReadString();
     PRINT_HILOGD("PrintServiceProxy PrintByAdapter out. ret = [%{public}d]", ret);
     return ret;
 }
@@ -526,14 +526,14 @@ int32_t PrintServiceProxy::StartGetPrintFile(const std::string &jobId, const Pri
     data.WriteString(jobId);
     printAttributes.Marshalling(data);
     data.WriteFileDescriptor(fd);
-    PRINT_HILOGD("PrintServiceProxy StartGetPrintFile started.");
+    PRINT_HILOGI("PrintServiceProxy StartGetPrintFile started.");
     int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_START_GET_FILE, data, reply, option);
     if (ret != ERR_NONE) {
         PRINT_HILOGE("StartGetPrintFile, rpc error code = %{public}d", ret);
         return E_PRINT_RPC_FAILURE;
     }
 
-    ret = reply.ReadInt32();
+    ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy StartGetPrintFile out. ret = [%{public}d]", ret);
     return ret;
 }

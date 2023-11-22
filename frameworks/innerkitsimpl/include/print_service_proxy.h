@@ -57,7 +57,7 @@ public:
         const std::string &printerMake) override;
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps) override;
     int32_t PrintByAdapter(const std::string printJobName, const PrintAttributes &printAttributes,
-        const sptr<IRemoteObject> &token) override;
+        std::string &taskId, const sptr<IRemoteObject> &token) override;
     int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
         const uint32_t fd) override;
     int32_t NotifyPrintService(const std::string &jobId, const std::string &type) override;

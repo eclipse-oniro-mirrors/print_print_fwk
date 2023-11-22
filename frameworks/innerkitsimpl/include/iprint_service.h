@@ -63,7 +63,7 @@ public:
         const std::string &printerMake) = 0;
     virtual int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps) = 0;
     virtual int32_t PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes,
-        const sptr<IRemoteObject> &token) = 0;
+        std::string &taskId, const sptr<IRemoteObject> &token) = 0;
     virtual int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
         const uint32_t fd) = 0;
     virtual int32_t NotifyPrintService(const std::string &jobId, const std::string &type) = 0;

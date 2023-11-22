@@ -60,6 +60,7 @@ static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
 static const std::string LAUNCH_PARAMETER_FILE_LIST = "fileList";
 static const std::string LAUNCH_PARAMETER_FD_LIST = "fdList";
+static const std::string LAUNCH_PARAMETER_PRINT_ATTRIBUTE = "printAttributes";
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
 static const std::string PRINTER_EVENT_TYPE = "printerStateChange";
@@ -84,6 +85,9 @@ static const std::string QUEUE_JOB_LIST_BLOCKED = "blocked";
 static const std::string QUEUE_JOB_LIST_CLEAR_BLOCKED = "clear_blocked";
 static const std::string SPOOLER_PREVIEW_ABILITY_NAME = "PrintServiceExtAbility";
 static const std::string TOKEN_KEY = "ohos.ability.params.token";
+
+static const std::string NOTIFY_INFO_SPOOLER_CLOSED_FOR_CANCELLED = "spooler_closed_for_cancelled";
+static const std::string NOTIFY_INFO_SPOOLER_CLOSED_FOR_STARTED = "spooler_closed_for_started";
 
 static bool g_publishState = false;
 
@@ -223,8 +227,7 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     const std::vector<uint32_t> &fdList, std::string &taskId)
 {
     std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
-    adapterParam->documentName = "";
-    adapterParam->isCheckFdList = true;
+    CreateDefaultAdapterParam(adapterParam);
     return CallSpooler(fileList, fdList, taskId, adapterParam);
 }
 
@@ -251,8 +254,7 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_ABILITY_NAME);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, jobId);
     want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList);
-    want.SetParam(LAUNCH_PARAMETER_DOCUMENT_NAME, adapterParam->documentName);
-
+    BuildAdapterParam(adapterParam, want, jobId);
     BuildFDParam(fdList, want);
     int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
@@ -282,8 +284,7 @@ int32_t PrintServiceAbility::StartPrint(const std::vector<std::string> &fileList
     std::string &taskId, const sptr<IRemoteObject> &token)
 {
     std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
-    adapterParam->documentName = "";
-    adapterParam->isCheckFdList = true;
+    CreateDefaultAdapterParam(adapterParam);
     return CallSpooler(fileList, fdList, taskId, token, adapterParam);
 }
 
@@ -310,7 +311,7 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_PREVIEW_ABILITY_NAME);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, jobId);
     want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList);
-    want.SetParam(LAUNCH_PARAMETER_DOCUMENT_NAME, adapterParam->documentName);
+    BuildAdapterParam(adapterParam, want, jobId);
     BuildFDParam(fdList, want);
     int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
     std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
@@ -697,7 +698,6 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
 void PrintServiceAbility::StartPrintJobCB(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
 {
     PRINT_HILOGD("Start send task to Extension PrintJob %{public}s", jobId.c_str());
-    notifyAdapterJobChanged(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
     printJob->SetJobState(PRINT_JOB_QUEUED);
     UpdatePrintJobState(jobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
@@ -710,7 +710,6 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    notifyAdapterJobChanged(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     auto jobIt = queuedJobList_.find(jobId);
@@ -947,8 +946,10 @@ bool PrintServiceAbility::checkJobState(uint32_t state, uint32_t subState)
 int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState)
 {
     ManualStart();
-    if (!CheckPermission(state == PRINT_JOB_CREATE_FILE_COMPLETED ? PERMISSION_NAME_PRINT:
-            PERMISSION_NAME_PRINT_JOB)) {
+    if (state == PRINT_JOB_CREATE_FILE_COMPLETED) {
+        return AdapterGetFileCallBack(jobId, state, subState);
+    }
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -961,19 +962,31 @@ int32_t PrintServiceAbility::UpdatePrintJobState(const std::string &jobId, uint3
         jobId.c_str(), state, PrintUtils::GetJobStateChar(state).c_str(), subState);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
-    if (state == PRINT_JOB_CREATE_FILE_COMPLETED) {
-        auto printJob = std::make_shared<PrintJob>();
-        printJob->SetJobId(jobId);
-        printJob->SetSubState(subState);
-        queuedJobList_.insert(std::make_pair(jobId, printJob));
-        auto eventIt = registeredListeners_.find(PRINT_GET_FILE_EVENT_TYPE);
-        if (eventIt != registeredListeners_.end()) {
-            PRINT_HILOGI("PRINT_JOB_CREATE_FILE_COMPLETED subState[%{public}d]", subState);
-            eventIt->second->OnCallbackAdapterGetFile(subState == PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS ? 0 : 1);
-        }
+    return CheckAndSendQueuePrintJob(jobId, state, subState);
+}
+
+int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, uint32_t state, uint32_t subState)
+{
+    if (state != PRINT_JOB_CREATE_FILE_COMPLETED) {
+        return E_PRINT_NONE;
+    }
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
     }
 
-    return CheckAndSendQueuePrintJob(jobId, state, subState);
+    auto eventIt = registeredListeners_.find(PRINT_GET_FILE_EVENT_TYPE);
+    if (eventIt != registeredListeners_.end()) {
+        PRINT_HILOGI("print job adapter file created subState[%{public}d]", subState);
+        uint32_t fileCompletedState = subState;
+        if (subState == PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS) {
+            fileCompletedState = PRINT_FILE_CREATED_SUCCESS;
+        } else if (subState == PRINT_JOB_CREATE_FILE_COMPLETED_FAILED) {
+            fileCompletedState = PRINT_FILE_CREATED_FAIL;
+        }
+        eventIt->second->OnCallbackAdapterGetFile(fileCompletedState);
+    }
+    return E_PRINT_NONE;
 }
 
 int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState)
@@ -992,6 +1005,7 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     jobIt->second->SetJobState(state);
     jobIt->second->SetSubState(subState);
     SendPrintJobEvent(*jobIt->second);
+    notifyAdapterJobChanged(jobId, state, subState);
     CheckJobQueueBlocked(*jobIt->second);
 
     auto printerId = jobIt->second->GetPrinterId();
@@ -1538,7 +1552,7 @@ void PrintServiceAbility::CheckJobQueueBlocked(const PrintJob &jobInfo)
 }
 
 int32_t PrintServiceAbility::PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes,
-    const sptr<IRemoteObject> &token)
+    std::string &taskId, const sptr<IRemoteObject> &token)
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
@@ -1549,10 +1563,10 @@ int32_t PrintServiceAbility::PrintByAdapter(const std::string jobName, const Pri
     // 拉起打印预览页面
     std::vector<std::string> fileList;
     std::vector<uint32_t> fdList;
-    std::string taskId;
     std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
     adapterParam->documentName = jobName;
     adapterParam->isCheckFdList = false;
+    adapterParam->printAttributes = printAttributes;
     int32_t ret = E_PRINT_NONE;
     if (token == nullptr) {
         ret = CallSpooler(fileList, fdList, taskId, adapterParam);
@@ -1572,9 +1586,8 @@ int32_t PrintServiceAbility::StartGetPrintFile(const std::string &jobId, const P
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("PrintServiceAbility::StartGetPrintFile start");
-    auto eventIt = registeredListeners_.find(PRINT_ADAPTER_EVENT_TYPE);
-    if (eventIt != registeredListeners_.end()) {
-        adapterListeners_.insert(std::make_pair(jobId, eventIt->second));
+    auto eventIt = adapterListenersByJobId_.find(jobId);
+    if (eventIt != adapterListenersByJobId_.end() && eventIt->second != nullptr) {
         PrintAttributes oldAttrs;
         auto attrIt = printAttributesList_.find(jobId);
         if (attrIt == printAttributesList_.end()) {
@@ -1601,8 +1614,15 @@ int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const 
         return E_PRINT_NO_PERMISSION;
     }
 
-    if (type == "0") {
-        PRINT_HILOGI("Notify Spooler Closed jobId : %{public}s", jobId.c_str());
+    if (type == "0" || type == NOTIFY_INFO_SPOOLER_CLOSED_FOR_STARTED) {
+        PRINT_HILOGI("Notify Spooler Closed for started jobId : %{public}s", jobId.c_str());
+        notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED);
+        return E_PRINT_NONE;
+    }
+
+    if (type == NOTIFY_INFO_SPOOLER_CLOSED_FOR_CANCELLED) {
+        PRINT_HILOGI("Notify Spooler Closed for canceled jobId : %{public}s", jobId.c_str());
+        notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED);
         return E_PRINT_NONE;
     }
     return E_PRINT_INVALID_PARAMETER;
@@ -1611,22 +1631,156 @@ int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const 
 void PrintServiceAbility::notifyAdapterJobChanged(const std::string jobId, const uint32_t state,
     const uint32_t subState)
 {
-    // UI界面关闭时，通知Adapter
-    if (subState == PRINT_JOB_COMPLETED_SUCCESS
-        || subState == PRINT_JOB_COMPLETED_FAILED
-        || subState == PRINT_JOB_COMPLETED_CANCELLED) {
-        auto attrIt = printAttributesList_.find(jobId);
-        if (attrIt != printAttributesList_.end()) {
-            printAttributesList_.erase(attrIt);
-        }
+    if (state != PRINT_JOB_BLOCKED && state != PRINT_JOB_COMPLETED && state != PRINT_JOB_SPOOLER_CLOSED) {
+        return;
+    }
 
-        // Callback Name: PRINT_ADAPTER_EVENT_TYPE
-        auto eventIt = adapterListeners_.find(jobId);
-        if (eventIt != adapterListeners_.end() && eventIt->second != nullptr) {
-            PRINT_HILOGI("notifyAdapterJobChanged for UI exit.");
-            eventIt->second->onCallbackAdapterJobStateChanged(jobId, state, subState);
-            adapterListeners_.erase(jobId);
+    auto attrIt = printAttributesList_.find(jobId);
+    if (attrIt != printAttributesList_.end()) {
+        printAttributesList_.erase(attrIt);
+    }
+
+    PRINT_HILOGI("get adapterListenersByJobId_ %{public}s", jobId.c_str());
+    auto eventIt = adapterListenersByJobId_.find(jobId);
+    if (eventIt == adapterListenersByJobId_.end() || eventIt->second == nullptr) {
+        return;
+    }
+
+    uint32_t printAdapterListeningState = PRINT_TASK_FAIL;
+    if (state == PRINT_JOB_SPOOLER_CLOSED) {
+        printAdapterListeningState = PREVIEW_ABILITY_DESTROY;
+    } else if (state == PRINT_JOB_BLOCKED) {
+        printAdapterListeningState = PRINT_TASK_BLOCK;
+    } else {
+        switch (subState) {
+            case PRINT_JOB_COMPLETED_SUCCESS:
+                printAdapterListeningState = PRINT_TASK_SUCCEED;
+                break;
+            case PRINT_JOB_COMPLETED_FAILED:
+                printAdapterListeningState = PRINT_TASK_FAIL;
+                break;
+            case PRINT_JOB_COMPLETED_CANCELLED:
+                printAdapterListeningState = PRINT_TASK_CANCEL;
+                break;
+            default:
+                printAdapterListeningState = PRINT_TASK_FAIL;
+                break;
         }
+    }
+    PRINT_HILOGI("notifyAdapterJobChanged for subState: %{public}d, listeningState: %{public}d",
+        subState, printAdapterListeningState);
+    eventIt->second->onCallbackAdapterJobStateChanged(jobId, state, printAdapterListeningState);
+
+    if (subState == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED || state == PRINT_JOB_COMPLETED) {
+        PRINT_HILOGI("erase adapterListenersByJobId_ %{public}s", jobId.c_str());
+        adapterListenersByJobId_.erase(jobId);
+    }
+}
+
+void PrintServiceAbility::CreateDefaultAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam)
+{
+    adapterParam->documentName = "";
+    adapterParam->isCheckFdList = true;
+}
+
+void PrintServiceAbility::BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam,
+    AAFwk::Want &want, const std::string &jobId)
+{
+    want.SetParam(LAUNCH_PARAMETER_DOCUMENT_NAME, adapterParam->documentName);
+    if (adapterParam->isCheckFdList) {
+        std::string defaultAttribute = "";
+        want.SetParam(LAUNCH_PARAMETER_PRINT_ATTRIBUTE, defaultAttribute);
+        return;
+    }
+
+    PRINT_HILOGI("BuildAdapterParam for jobId %{public}s", jobId.c_str());
+    auto eventIt = registeredListeners_.find(PRINT_ADAPTER_EVENT_TYPE);
+    if (eventIt != registeredListeners_.end()) {
+        PRINT_HILOGI("adapterListenersByJobId_ set adapterListenersByJobId_ %{public}s", jobId.c_str());
+        adapterListenersByJobId_.insert(std::make_pair(jobId, eventIt->second));
+    }
+    want.SetParam(LAUNCH_PARAMETER_DOCUMENT_NAME, adapterParam->documentName);
+    BuildPrintAttributesParam(adapterParam, want);
+}
+
+void PrintServiceAbility::BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &adapterParam,
+    AAFwk::Want &want)
+{
+    json attrJson;
+    PrintAttributes attrParam = adapterParam->printAttributes;
+    if (attrParam.HasCopyNumber()) {
+        attrJson["copyNumber"] = attrParam.GetCopyNumber();
+    }
+    if (attrParam.HasSequential()) {
+        attrJson["isSequential"] = attrParam.GetIsSequential();
+    }
+    if (attrParam.HasLandscape()) {
+        attrJson["isLandscape"] = attrParam.GetIsLandscape();
+    }
+    if (attrParam.HasDirectionMode()) {
+        attrJson["directionMode"] = attrParam.GetDirectionMode();
+    }
+    if (attrParam.HasColorMode()) {
+        attrJson["colorMode"] = attrParam.GetColorMode();
+    }
+    if (attrParam.HasDuplexMode()) {
+        attrJson["duplexMode"] = attrParam.GetDuplexMode();
+    }
+    ParseAttributesObjectParamForJson(attrParam, attrJson);
+    if (attrParam.HasOption()) {
+        attrJson["options"] = attrParam.GetOption();
+    }
+    want.SetParam(LAUNCH_PARAMETER_PRINT_ATTRIBUTE, attrJson.dump());
+    PRINT_HILOGD("CallSpooler set printAttributes: %{public}s", attrJson.dump().c_str());
+}
+
+void PrintServiceAbility::ParseAttributesObjectParamForJson(
+    const PrintAttributes &attrParam, nlohmann::json &attrJson)
+{
+    if (attrParam.HasPageRange()) {
+        json pageRangeJson;
+        PrintRange printRangeAttr;
+        attrParam.GetPageRange(printRangeAttr);
+        if (printRangeAttr.HasStartPage()) {
+            pageRangeJson["startPage"] = printRangeAttr.GetStartPage();
+        }
+        if (printRangeAttr.HasEndPage()) {
+            pageRangeJson["endPage"] = printRangeAttr.GetEndPage();
+        }
+        if (printRangeAttr.HasPages()) {
+            std::vector<uint32_t> pages;
+            printRangeAttr.GetPages(pages);
+            pageRangeJson["pages"] = pages;
+        }
+        attrJson["pageRange"] = pageRangeJson;
+    }
+    if (attrParam.HasPageSize()) {
+        json pageSizeJson;
+        PrintPageSize pageSizeAttr;
+        attrParam.GetPageSize(pageSizeAttr);
+        pageSizeJson["id"] = pageSizeAttr.GetId();
+        pageSizeJson["name"] = pageSizeAttr.GetName();
+        pageSizeJson["width"] = pageSizeAttr.GetWidth();
+        pageSizeJson["height"] = pageSizeAttr.GetHeight();
+        attrJson["pageSize"] = pageSizeJson;
+    }
+    if (attrParam.HasMargin()) {
+        json marginJson;
+        PrintMargin marginAttr;
+        attrParam.GetMargin(marginAttr);
+        if (marginAttr.HasTop()) {
+            marginJson["top"] = marginAttr.GetTop();
+        }
+        if (marginAttr.HasBottom()) {
+            marginJson["bottom"] = marginAttr.GetBottom();
+        }
+        if (marginAttr.HasLeft()) {
+            marginJson["left"] = marginAttr.GetLeft();
+        }
+        if (marginAttr.HasRight()) {
+            marginJson["right"] = marginAttr.GetRight();
+        }
+        attrJson["margin"] = marginJson;
     }
 }
 } // namespace OHOS::Print

@@ -50,7 +50,7 @@ struct Param {
 class PrintCallback : public PrintCallbackStub {
 public:
     PrintCallback(napi_env env, napi_ref ref);
-    explicit PrintCallback(PrintDocumentAdapter *adapter);
+    explicit PrintCallback(PrintDocumentAdapter *adapter); // This interface is invoked by other domains.
     virtual ~PrintCallback();
     bool OnCallback() override;
     bool OnCallback(uint32_t state, const PrinterInfo &info) override;

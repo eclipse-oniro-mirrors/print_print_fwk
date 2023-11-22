@@ -367,16 +367,30 @@ int32_t PrintManagerClient::Off(const std::string &taskId, const std::string &ty
 int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
     const PrintAttributes &printAttributes)
 {
-    return Print(printJobName, listener, printAttributes, nullptr);
+    std::string taskId = "";
+    return Print(printJobName, listener, printAttributes, taskId, nullptr);
 }
 
 int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
     const PrintAttributes &printAttributes, void* contextToken)
 {
-    auto func = [printJobName, listener, printAttributes, contextToken](sptr<IPrintService> serviceProxy) {
+    std::string taskId = "";
+    return Print(printJobName, listener, printAttributes, taskId, contextToken);
+}
+
+int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
+    const PrintAttributes &printAttributes, std::string &taskId)
+{
+    return Print(printJobName, listener, printAttributes, taskId, nullptr);
+}
+
+int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
+    const PrintAttributes &printAttributes, std::string &taskId, void* contextToken)
+{
+    auto func = [printJobName, listener, printAttributes, &taskId, contextToken](sptr<IPrintService> serviceProxy) {
         serviceProxy->On("", PRINT_CALLBACK_ADAPTER, listener);
         sptr<IRemoteObject> token = static_cast<IRemoteObject*>(contextToken);
-        return serviceProxy->PrintByAdapter(printJobName, printAttributes, token);
+        return serviceProxy->PrintByAdapter(printJobName, printAttributes, taskId, token);
     };
     return CALL_COMMON_CLIENT(func);
 }
