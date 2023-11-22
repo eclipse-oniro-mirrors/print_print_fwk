@@ -49,7 +49,7 @@ public:
 
     void SetIsLandscape(bool isLandscape);
 
-    void SetDirectionMode(uint32_5 directionMode);
+    void SetDirectionMode(uint32_t directionMode);
 
     void SetColorMode(uint32_t colorMode);
 

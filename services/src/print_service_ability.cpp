@@ -1693,7 +1693,7 @@ void PrintServiceAbility::BuildAdapterParam(const std::shared_ptr<AdapterParam> 
         return;
     }
 
-    PRINT_HILOGI("BuildAdapterParam for jobId %{public}s", jobId,c_str());
+    PRINT_HILOGI("BuildAdapterParam for jobId %{public}s", jobId.c_str());
     auto eventIt = registeredListeners_.find(PRINT_ADAPTER_EVENT_TYPE);
     if (eventIt != registeredListeners_.end()) {
         PRINT_HILOGI("adapterListenersByJobId_ set adapterListenersByJobId_ %{public}s", jobId.c_str());
