@@ -185,7 +185,12 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
             if (srcFile == nullptr) {
                 continue;
             }
-            FILE *destFile = fopen(destFilePath.c_str(), "wb");
+            char realDest[PATH_MAX] = {};
+            if (realpath(destFilePath.c_str(), realDest) == nullptr) {
+                PRINT_HILOGE("The realDest is null.");
+                continue;
+            }
+            FILE *destFile = fopen(realDest, "wb");
             if (destFile == nullptr) {
                 fclose(srcFile);
                 continue;
@@ -443,7 +448,7 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         int sizeIndex = -1;
         float meidaWidth = 0;
         float mediaHeight = 0;
-        for (int i = 0; i < mediaSizes.size(); i++) {
+        for (int i = 0; i < static_cast<int>(mediaSizes.size()); i++) {
             if (mediaSizes[i].name == jobParams->mediaSize) {
                 sizeIndex = i;
                 break;
@@ -520,8 +525,8 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
         return false;
     }
     num_options = FillJobOptions(jobParams, num_options, &options);
-    if ((jobId = cupsCreateJob(http, jobParams->printerName.c_str(), jobParams->jobName.c_str(),
-        num_options, options)) == 0) {
+    if ((jobId = static_cast<uint32_t>(cupsCreateJob(http, jobParams->printerName.c_str(), jobParams->jobName.c_str(),
+        num_options, options))) == 0) {
         PRINT_HILOGE("Unable to cupsCreateJob: %s", cupsLastErrorString());
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR);
@@ -556,8 +561,15 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
         }
         status = cupsStartDocument(http, jobParams->printerName.c_str(), jobId, jobParams->jobName.c_str(),
             jobParams->documentFormat.c_str(), i == (num_files - 1));
-        while (status == HTTP_STATUS_CONTINUE && (bytes = cupsFileRead(fp, buffer, sizeof(buffer))) > 0)
+        if (status == HTTP_STATUS_CONTINUE) {
+            bytes = cupsFileRead(fp, buffer, sizeof(buffer));
+        } else {
+            bytes = 0;
+        }
+        while (status == HTTP_STATUS_CONTINUE && bytes > 0) {
             status = cupsWriteRequestData(http, buffer, (size_t)bytes);
+            bytes = cupsFileRead(fp, buffer, sizeof(buffer));
+        }
         cupsFileClose(fp);
         if (status != HTTP_STATUS_CONTINUE || cupsFinishDocument(http, jobParams->printerName.c_str())
             != IPP_STATUS_OK) {
@@ -774,7 +786,7 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
 {
     PRINT_HILOGD("CancelCupsJob(): Enter, serviceJobId: %{public}s", serviceJobId.c_str());
     int jobIndex = -1;
-    for (int index = 0; index < jobQueue_.size(); index++) {
+    for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
         PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
         if (jobQueue_[index]->serviceJobId == serviceJobId) {
             jobIndex = index;
