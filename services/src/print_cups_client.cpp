@@ -165,9 +165,8 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
     struct dirent *file;
     struct stat filestat;
     while ((file = readdir(dir)) != nullptr) {
-        if (strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0) {
+        if (strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0)
             continue;
-        }
         std::string srcFilePath = std::string(srcDir) + "/" + std::string(file->d_name);
         std::string destFilePath = std::string(destDir) + "/" + std::string(file->d_name);
 
@@ -182,9 +181,8 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
                 continue;
             }
             FILE *srcFile = fopen(realSrc, "rb");
-            if (srcFile == nullptr) {
+            if (srcFile == nullptr)
                 continue;
-            }
             char realDest[PATH_MAX] = {};
             if (realpath(destFilePath.c_str(), realDest) == nullptr) {
                 PRINT_HILOGE("The realDest is null.");
@@ -520,6 +518,7 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
         return false;
     }
     if (!CheckPrinterOnline(jobParams->printerUri.c_str())) {
+        PRINT_HILOGE("VerifyPrintJob printer offline");
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_NETWORK_ERROR);
         return false;
@@ -543,10 +542,9 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
     uint32_t jobId;
     http_status_t status;
     char buffer[8192];
-    ssize_t bytes;
+    ssize_t bytes = -1;
 
     if (!VerifyPrintJob(jobParams, num_options, jobId, options, http)) {
-        PRINT_HILOGE("StartCupsJob VerifyPrintJob failed");
         JobCompleteCallback();
         return;
     }
@@ -561,11 +559,8 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
         }
         status = cupsStartDocument(http, jobParams->printerName.c_str(), jobId, jobParams->jobName.c_str(),
             jobParams->documentFormat.c_str(), i == (num_files - 1));
-        if (status == HTTP_STATUS_CONTINUE) {
+        if (status == HTTP_STATUS_CONTINUE)
             bytes = cupsFileRead(fp, buffer, sizeof(buffer));
-        } else {
-            bytes = 0;
-        }
         while (status == HTTP_STATUS_CONTINUE && bytes > 0) {
             status = cupsWriteRequestData(http, buffer, (size_t)bytes);
             bytes = cupsFileRead(fp, buffer, sizeof(buffer));
