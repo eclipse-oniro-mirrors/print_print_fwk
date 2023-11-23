@@ -951,19 +951,17 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         PRINT_HILOGD("makeModel=%{private}s", makeModel);
         int printerState = cupsGetIntegerOption("printer-state", dest->num_options, dest->options);
         PRINT_HILOGD("printerState=%{private}d", printerState);
-        if (printerState == IPP_PRINTER_STOPPED) {
-            PRINT_HILOGI("printer is stopped, update state");
+        if (printerState == IPP_PRINTER_STOPPED || makeModel == nullptr || strcmp(deviceUri, printerUri) != 0) {
+            cupsFreeDests(1, dest);
+            PRINT_HILOGI("Printer information needs to be modified");
             return printerExist;
         }
-        if (strcmp(deviceUri, printerUri) == 0) {
-            if (makeModel != nullptr && strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) == NULL) {
-                // 当前打印机驱动不是默认的ipp-everywhere驱动，则返回true
-                printerExist = true;
-            } else {
-                // 当前打印机配置的是默认的ipp-everywhere驱动，如果打印机存在私有驱动就返回false，否则返回true
-                printerExist = (makeModel != nullptr) && (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL) &&
-                    (strcmp(ppdName, DEFAULT_PPD_NAME.c_str()) == 0);
-            }
+        if (strcmp(ppdName, DEFAULT_PPD_NAME.c_str()) == 0) {
+            // 没查到驱动
+            printerExist = (strcmp(makeModel, DEFAULT_MAKE_MODEL.c_str()) == 0);
+        } else {
+            // 查到驱动
+            printerExist = (strcmp(makeModel, DEFAULT_MAKE_MODEL.c_str()) != 0);
         }
         cupsFreeDests(1, dest);
     }
