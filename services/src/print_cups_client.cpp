@@ -165,8 +165,9 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
     struct dirent *file;
     struct stat filestat;
     while ((file = readdir(dir)) != nullptr) {
-        if (strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0)
+        if (strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0) {
             continue;
+        }
         std::string srcFilePath = std::string(srcDir) + "/" + std::string(file->d_name);
         std::string destFilePath = std::string(destDir) + "/" + std::string(file->d_name);
 
@@ -181,14 +182,10 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
                 continue;
             }
             FILE *srcFile = fopen(realSrc, "rb");
-            if (srcFile == nullptr)
-                continue;
-            char realDest[PATH_MAX] = {};
-            if (realpath(destFilePath.c_str(), realDest) == nullptr) {
-                PRINT_HILOGE("The realDest is null.");
+            if (srcFile == nullptr) {
                 continue;
             }
-            FILE *destFile = fopen(realDest, "wb");
+            FILE *destFile = fopen(destFilePath.c_str(), "wb");
             if (destFile == nullptr) {
                 fclose(srcFile);
                 continue;
