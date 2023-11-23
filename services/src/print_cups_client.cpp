@@ -955,10 +955,10 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         }
         if (strcmp(ppdName, DEFAULT_PPD_NAME.c_str()) == 0) {
             // 没查到驱动
-            printerExist = (strcmp(makeModel, DEFAULT_MAKE_MODEL.c_str()) == 0);
+            printerExist = (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL);
         } else {
             // 查到驱动
-            printerExist = (strcmp(makeModel, DEFAULT_MAKE_MODEL.c_str()) != 0);
+            printerExist = !(strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL);
         }
         cupsFreeDests(1, dest);
     }
