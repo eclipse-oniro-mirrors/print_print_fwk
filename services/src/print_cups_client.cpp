@@ -507,6 +507,13 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     return num_options;
 }
 
+void PrintCupsClient::ReportAbnormalState(PrintServiceAbility *printServiceAbility, std::string serviceJobId)
+{
+    sleep(INDEX_ONE);
+    printServiceAbility->UpdatePrintJobState(serviceJobId, PRINT_JOB_BLOCKED,
+        PRINT_JOB_BLOCKED_NETWORK_ERROR);
+}
+
 bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
     cups_option_t *options, http_t *http)
 {
@@ -516,8 +523,10 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     }
     if (!CheckPrinterOnline(jobParams->printerUri.c_str())) {
         PRINT_HILOGE("VerifyPrintJob printer offline");
-        PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
-            PRINT_JOB_BLOCKED_NETWORK_ERROR);
+        // Abnormal status reported too quickly, icon does not display abnormalities
+        std::thread reportAbnormalThread(ReportAbnormalState, PrintServiceAbility::GetInstance(),
+            jobParams->serviceJobId);
+        reportAbnormalThread.detach();
         return false;
     }
     num_options = FillJobOptions(jobParams, num_options, &options);
