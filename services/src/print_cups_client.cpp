@@ -443,7 +443,7 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         int sizeIndex = -1;
         float meidaWidth = 0;
         float mediaHeight = 0;
-        for (int i = 0; i < mediaSizes.size(); i++) {
+        for (int i = 0; i < static_cast<int>(mediaSizes.size()); i++) {
             if (mediaSizes[i].name == jobParams->mediaSize) {
                 sizeIndex = i;
                 break;
@@ -507,6 +507,13 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     return num_options;
 }
 
+void PrintCupsClient::ReportAbnormalState(PrintServiceAbility *printServiceAbility, std::string serviceJobId)
+{
+    sleep(INDEX_ONE);
+    printServiceAbility->UpdatePrintJobState(serviceJobId, PRINT_JOB_BLOCKED,
+        PRINT_JOB_BLOCKED_NETWORK_ERROR);
+}
+
 bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
     cups_option_t *options, http_t *http)
 {
@@ -515,13 +522,16 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
         return false;
     }
     if (!CheckPrinterOnline(jobParams->printerUri.c_str())) {
-        PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
-            PRINT_JOB_BLOCKED_NETWORK_ERROR);
+        PRINT_HILOGE("VerifyPrintJob printer offline");
+        // Abnormal status reported too quickly, icon does not display abnormalities
+        std::thread reportAbnormalThread(ReportAbnormalState, PrintServiceAbility::GetInstance(),
+            jobParams->serviceJobId);
+        reportAbnormalThread.detach();
         return false;
     }
     num_options = FillJobOptions(jobParams, num_options, &options);
-    if ((jobId = cupsCreateJob(http, jobParams->printerName.c_str(), jobParams->jobName.c_str(),
-        num_options, options)) == 0) {
+    if ((jobId = static_cast<uint32_t>(cupsCreateJob(http, jobParams->printerName.c_str(), jobParams->jobName.c_str(),
+        num_options, options))) == 0) {
         PRINT_HILOGE("Unable to cupsCreateJob: %s", cupsLastErrorString());
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR);
@@ -538,10 +548,9 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
     uint32_t jobId;
     http_status_t status;
     char buffer[8192];
-    ssize_t bytes;
+    ssize_t bytes = -1;
 
     if (!VerifyPrintJob(jobParams, num_options, jobId, options, http)) {
-        PRINT_HILOGE("StartCupsJob VerifyPrintJob failed");
         JobCompleteCallback();
         return;
     }
@@ -556,8 +565,12 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
         }
         status = cupsStartDocument(http, jobParams->printerName.c_str(), jobId, jobParams->jobName.c_str(),
             jobParams->documentFormat.c_str(), i == (num_files - 1));
-        while (status == HTTP_STATUS_CONTINUE && (bytes = cupsFileRead(fp, buffer, sizeof(buffer))) > 0)
+        if (status == HTTP_STATUS_CONTINUE)
+            bytes = cupsFileRead(fp, buffer, sizeof(buffer));
+        while (status == HTTP_STATUS_CONTINUE && bytes > 0) {
             status = cupsWriteRequestData(http, buffer, (size_t)bytes);
+            bytes = cupsFileRead(fp, buffer, sizeof(buffer));
+        }
         cupsFileClose(fp);
         if (status != HTTP_STATUS_CONTINUE || cupsFinishDocument(http, jobParams->printerName.c_str())
             != IPP_STATUS_OK) {
@@ -774,7 +787,7 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
 {
     PRINT_HILOGD("CancelCupsJob(): Enter, serviceJobId: %{public}s", serviceJobId.c_str());
     int jobIndex = -1;
-    for (int index = 0; index < jobQueue_.size(); index++) {
+    for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
         PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
         if (jobQueue_[index]->serviceJobId == serviceJobId) {
             jobIndex = index;
@@ -944,19 +957,17 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         PRINT_HILOGD("makeModel=%{private}s", makeModel);
         int printerState = cupsGetIntegerOption("printer-state", dest->num_options, dest->options);
         PRINT_HILOGD("printerState=%{private}d", printerState);
-        if (printerState == IPP_PRINTER_STOPPED) {
-            PRINT_HILOGI("printer is stopped, update state");
+        if (printerState == IPP_PRINTER_STOPPED || makeModel == nullptr || strcmp(deviceUri, printerUri) != 0) {
+            cupsFreeDests(1, dest);
+            PRINT_HILOGI("Printer information needs to be modified");
             return printerExist;
         }
-        if (strcmp(deviceUri, printerUri) == 0) {
-            if (makeModel != nullptr && strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) == NULL) {
-                // 当前打印机驱动不是默认的ipp-everywhere驱动，则返回true
-                printerExist = true;
-            } else {
-                // 当前打印机配置的是默认的ipp-everywhere驱动，如果打印机存在私有驱动就返回false，否则返回true
-                printerExist = (makeModel != nullptr) && (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL) &&
-                    (strcmp(ppdName, DEFAULT_PPD_NAME.c_str()) == 0);
-            }
+        if (strcmp(ppdName, DEFAULT_PPD_NAME.c_str()) == 0) {
+            // 没查到驱动
+            printerExist = (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL);
+        } else {
+            // 查到驱动
+            printerExist = !(strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL);
         }
         cupsFreeDests(1, dest);
     }

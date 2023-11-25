@@ -126,6 +126,7 @@ private:
     static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
     static void CopyDirectory(const char *srcDir, const char *destDir);
     static void ChangeFilterPermission(const std::string &path, mode_t mode);
+    static void ReportAbnormalState(PrintServiceAbility *printServiceAbility, std::string serviceJobId);
 
     int32_t StartCupsdService();
     void StartNextJob();
