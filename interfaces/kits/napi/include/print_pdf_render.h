@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,6 +24,9 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "print_async_call.h"
+#ifdef PDFIUM_ENABLE
+#include "fpdfview.h"
+#endif // PDFIUM_ENABLE
 
 namespace OHOS::Print {
 class PrintPdfRender {
@@ -40,19 +43,23 @@ public:
 private:
     struct PrintPdfRenderEventContext : public PrintAsyncCall::Context {
         std::string imagePath = "";
-        std::string file_ = "";
         std::string basePngName = "";
         uint32_t pageIndex = 0;
+#ifdef PDFIUM_ENABLE
+        FPDF_DOCUMENT doc_;
+#endif // PDFIUM_ENABLE
         PrintPdfRenderEventContext() : Context(nullptr, nullptr) {};
-        PrintPdfRenderEventContext(InputAction input,
-                                   OutputAction output) : Context(std::move(input),
-                                                                  std::move(output)) {};
+        PrintPdfRenderEventContext(InputAction input, OutputAction output)
+            : Context(std::move(input), std::move(output)) {};
         virtual ~PrintPdfRenderEventContext() {};
     };
 
     std::string file_;
     uint32_t pageCount = 0;
     std::string basePngName = "";
+#ifdef PDFIUM_ENABLE
+    FPDF_DOCUMENT doc_;
+#endif // PDFIUM_ENABLE
 };
-}  // namespace OHOS::Print
-#endif  // _PRINT_PDF_RENDER_H
+} // namespace OHOS::Print
+#endif // _PRINT_PDF_RENDER_H

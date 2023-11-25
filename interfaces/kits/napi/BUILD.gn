@@ -46,6 +46,7 @@ ohos_shared_library("print_napi") {
     "${print_path}/frameworks/models:print_models",
   ]
   if (pdfium_enable) {
+    include_dirs += [ "//third_party/pdfium/public" ]
     sources += [
       "src/napi_print_pdf_render.cpp",
       "src/print_pdf_render.cpp",

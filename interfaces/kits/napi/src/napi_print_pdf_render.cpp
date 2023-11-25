@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,10 +24,10 @@
 #include "napi_print_pdf_render.h"
 
 // Set the application layer interface function name
-static constexpr const char *FUNCTION_GetPageCount = "getPageCount";
-static constexpr const char *FUNCTION_GetPageSize = "getPageSize";
-static constexpr const char *FUNCTION_RenderPageToPng = "renderPageToPng";
-static constexpr const char *FUNCTION_Destroy = "destroy";
+static constexpr const char *FUNCTION_GET_PAGE_COUNT = "getPageCount";
+static constexpr const char *FUNCTION_GET_PAGE_SIZE = "getPageSize";
+static constexpr const char *FUNCTION_RENDER_PAGE_TO_PNG = "renderPageToPng";
+static constexpr const char *FUNCTION_DESTROY = "destroy";
 
 namespace OHOS::Print {
 __thread napi_ref NapiPrintPdfRender::globalCtor = nullptr;
@@ -47,7 +47,6 @@ napi_value NapiPrintPdfRender::CreatePdfRender(napi_env env, napi_callback_info 
         std::string file = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         std::string sandBoxPath = NapiPrintUtils::GetStringFromValueUtf8(env, argv[1]);
         if (!IsPdfFile(file)) {
-            PRINT_HILOGE("invalid file");
             context->SetErrorIndex(E_PRINT_GENERIC_FAILURE);
             return napi_generic_failure;
         }
@@ -60,7 +59,7 @@ napi_value NapiPrintPdfRender::CreatePdfRender(napi_env env, napi_callback_info 
         }
         PrintPdfRender *render = nullptr;
         PRINT_CALL_BASE(env, napi_unwrap(env, proxy, reinterpret_cast<void **>(&render)), napi_invalid_arg);
-        uint32_t ret = E_PRINT_GENERIC_FAILURE;
+        int32_t ret = E_PRINT_GENERIC_FAILURE;
         if (render != nullptr) {
             ret = render->Init(sandBoxPath);
         }
@@ -91,8 +90,8 @@ napi_status NapiPrintPdfRender::VerifyParameters(napi_env env, napi_callback_inf
     PRINT_HILOGD("VerifyParameters start!");
     napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
     size_t paramCount = NapiPrintUtils::GetJsVal(env, info, argv, NapiPrintUtils::MAX_ARGC);
-    PRINT_ASSERT_BASE(env, paramCount == NapiPrintUtils::ARGC_TWO,
-                      "CreatePdfRender need 2 parameter!", napi_invalid_arg);
+    PRINT_ASSERT_BASE(env, paramCount == NapiPrintUtils::ARGC_TWO, "CreatePdfRender need 2 parameter!",
+        napi_invalid_arg);
     napi_valuetype type;
     PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &type), napi_invalid_arg);
     PRINT_ASSERT_BASE(env, type == napi_string, "index not a string", napi_invalid_arg);
@@ -112,13 +111,13 @@ napi_value NapiPrintPdfRender::GetCtor(napi_env env)
     }
 
     napi_property_descriptor clzDes[] = {
-        { FUNCTION_GetPageCount, 0, PrintPdfRender::GetPageCount, 0, 0, 0, napi_default, 0 },
-        { FUNCTION_GetPageSize, 0, PrintPdfRender::GetPageSize, 0, 0, 0, napi_default, 0 },
-        { FUNCTION_RenderPageToPng, 0, PrintPdfRender::RenderPageToPng, 0, 0, 0, napi_default, 0 },
-        { FUNCTION_Destroy, 0, PrintPdfRender::Destroy, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_GET_PAGE_COUNT, 0, PrintPdfRender::GetPageCount, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_GET_PAGE_SIZE, 0, PrintPdfRender::GetPageSize, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_RENDER_PAGE_TO_PNG, 0, PrintPdfRender::RenderPageToPng, 0, 0, 0, napi_default, 0 },
+        { FUNCTION_DESTROY, 0, PrintPdfRender::Destroy, 0, 0, 0, napi_default, 0 },
     };
     PRINT_CALL(env, napi_define_class(env, "NapiPrintPdfRender", NAPI_AUTO_LENGTH, Initialize, nullptr,
-                       sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
+        sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
     PRINT_CALL(env, napi_create_reference(env, cons, 1, &globalCtor));
     return cons;
 }
