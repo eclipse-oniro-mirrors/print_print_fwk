@@ -2546,5 +2546,60 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130, TestSize.Level1)
     int result = PrintServiceAbility::GetInstance()->StartPrint(fileList, fdList, taskId);
     EXPECT_EQ(result, E_PRINT_NO_PERMISSION);
 }
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+
+    std::string jobId = GetDefaultJobId();
+    PrintAttributes printAttributes;
+    EXPECT_EQ(service->StartGetPrintFile(jobId, printAttributes), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0132, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+
+    std::string jobId = GetDefaultJobId();
+    std::string type = "-1";
+    EXPECT_EQ(service->NotifyPrintService(jobId, type), E_PRINT_INVALID_PARAMETER);
+    std::string type = "spooler_closed_for_cancelled";
+    service->NotifyPrintService(jobId, type);
+    std::string type = "spooler_closed_for_started";
+    service->NotifyPrintService(jobId, type);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+
+    PrintAttributes printAttributes;
+    printAttributes.SetCopyNumber(1);
+    OHOS::Print::PrintRange range;
+    range.SetStartPage(1);
+    printAttributes.SetPageRange(range);
+    printAttributes.SetIsSequential(true);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("1");
+    printAttributes.SetPageSize(pageSize);
+    printAttributes.SetIsLandscape(true);
+    printAttributes.SetDirectionMode(1);
+    printAttributes.SetColorMode(1);
+    printAttributes.SetDuplexMode(1);
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(1);
+    printAttributes.SetMargin(margin);
+    printAttributes.SetOption("1");
+
+    std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
+    AAFwk::Want want;
+    adapterParam->documentName = "";
+    adapterParam->isCheckFdList = true;
+    adapterParam->printAttributes = printAttributes;
+    service->BuildAdapterParam(adapterParam, want);
+}
 }  // namespace Print
 }  // namespace OHOS
