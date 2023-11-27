@@ -29,6 +29,9 @@
 #include "print_sa_death_recipient.h"
 #include "printer_info.h"
 #include "refbase.h"
+#ifdef PDFIUM_ENABLE
+#include "fpdfview.h"
+#endif // PDFIUM_ENABLE
 
 namespace OHOS::Print {
 class PrintManagerClient : public RefBase {
@@ -79,12 +82,12 @@ public:
         const uint32_t fd);
     int32_t NotifyPrintService(const std::string &jobId, const std::string &type);
 #ifdef PDFIUM_ENABLE
-    int32_t PdfRenderInit(const std::string filePath, const std::string sandBoxPath,
-                          std::string &basePngName, uint32_t &pageCount);
-    int32_t PdfRenderDestroy(const std::string basePngName, const uint32_t pageCount);
-    int32_t GetPdfPageSize(const std::string filePath, const uint32_t pageIndex, uint32_t &width, uint32_t &height);
-    int32_t RenderPdfToPng(const std::string filePath, const std::string basePngName,
-                           const uint32_t pageIndex, std::string &imagePath);
+    int32_t PdfRenderInit(const std::string filePath, const std::string sandBoxPath, std::string &basePngName,
+        uint32_t &pageCount, FPDF_DOCUMENT &doc);
+    int32_t PdfRenderDestroy(const std::string basePngName, const uint32_t pageCount, FPDF_DOCUMENT &doc);
+    int32_t GetPdfPageSize(const uint32_t pageIndex, uint32_t &width, uint32_t &height, FPDF_DOCUMENT &doc);
+    int32_t RenderPdfToPng(const std::string basePngName, const uint32_t pageIndex, std::string &imagePath,
+        FPDF_DOCUMENT &doc);
 #endif // PDFIUM_ENABLE
 
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrintExtCallback cb);
@@ -103,7 +106,7 @@ private:
     bool LoadServer();
     bool GetPrintServiceProxy();
     int32_t runBase(const char* callerFunName, std::function<int32_t(sptr<IPrintService>)> func);
-    #define CALL_COMMON_CLIENT(func) runBase(__func__, func)
+#define CALL_COMMON_CLIENT(func) runBase(__func__, func)
 
 private:
     static std::mutex instanceLock_;

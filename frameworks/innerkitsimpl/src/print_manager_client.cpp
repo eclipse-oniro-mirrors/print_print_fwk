@@ -16,7 +16,6 @@
 #include "print_manager_client.h"
 
 #ifdef PDFIUM_ENABLE
-#include "fpdfview.h"
 #include "fpdf_edit.h"
 #include "cpp/fpdf_scopers.h"
 #include "image_diff_png.h"
@@ -419,20 +418,35 @@ int32_t PrintManagerClient::NotifyPrintService(const std::string &jobId, const s
 #ifndef INT_MAX
 #define INT_MAX 2147483647
 #endif
-static constexpr const int FPDF_CONFIG_VERSION = 3;
-static constexpr const double SCALING_RATE = 300.0/72.0;
+static constexpr const int FPDF_CONFIG_VERSION = 2;
+static constexpr const double SCALING_RATE = 300.0 / 72.0;
+static int pdfiumInitRequestCount = 0;
+
+static void initializeLibraryIfNeeded()
+{
+    if (pdfiumInitRequestCount == 0) {
+        // Init
+        FPDF_LIBRARY_CONFIG config;
+        config.version = FPDF_CONFIG_VERSION;
+        config.m_pUserFontPaths = NULL;
+        config.m_pIsolate = NULL;
+        config.m_v8EmbedderSlot = 0;
+        FPDF_InitLibraryWithConfig(&config);
+    }
+    pdfiumInitRequestCount++;
+}
+
+static void destroyLibraryIfNeeded()
+{
+    if (pdfiumInitRequestCount == 1) {
+        FPDF_DestroyLibrary();
+    }
+    pdfiumInitRequestCount--;
+}
 
 static FPDF_DOCUMENT LoadPdfFile(const std::string filePath)
 {
-    // Init
-    FPDF_LIBRARY_CONFIG config;
-    config.version = FPDF_CONFIG_VERSION;
-    config.m_pUserFontPaths = NULL;
-    config.m_pIsolate = NULL;
-    config.m_v8EmbedderSlot = 0;
-    config.m_pPlatform = NULL;
-    config.m_pUserFontPaths = NULL;
-    FPDF_InitLibraryWithConfig(&config);
+    initializeLibraryIfNeeded();
     // Load pdf file
     FPDF_DOCUMENT doc = FPDF_LoadDocument(filePath.c_str(), nullptr);
     return doc;
@@ -449,11 +463,7 @@ static bool CheckDimensions(int stride, int width, int height)
     return true;
 }
 
-static std::vector<uint8_t> EncodePng(pdfium::span<const uint8_t> input,
-                                      int height,
-                                      int width,
-                                      int format,
-                                      int stride)
+static std::vector<uint8_t> EncodePng(pdfium::span<const uint8_t> input, int height, int width, int format, int stride)
 {
     std::vector<uint8_t> png;
     switch (format) {
@@ -484,13 +494,18 @@ static bool WritePng(std::string imagePath, void *buffer, int width, int height,
     if (!CheckDimensions(stride, width, height)) {
         return false;
     }
-    auto input = pdfium::make_span(static_cast<uint8_t*>(buffer), stride * height);
+    auto input = pdfium::make_span(static_cast<uint8_t *>(buffer), stride * height);
     std::vector<uint8_t> png_encoding = EncodePng(input, height, width, FPDFBitmap_BGRA, stride);
     if (png_encoding.empty()) {
         PRINT_HILOGE("Failed to convert bitmap to PNG\n");
         return false;
     }
-    FILE* fp = fopen(imagePath.c_str(), "wb");
+    char realImagePath[PATH_MAX] = {};
+    if (realpath(imagePath.c_str(), realImagePath) == nullptr) {
+        PRINT_HILOGE("The realImagePath is null.");
+        return false;
+    }
+    FILE *fp = fopen(realImagePath, "wb");
     if (!fp) {
         PRINT_HILOGE("Failed to open %s for output\n", imagePath.c_str());
         return false;
@@ -522,7 +537,7 @@ static ScopedFPDFBitmap BitmapInit(FPDF_PAGE page, uint32_t width, uint32_t heig
 }
 
 int32_t PrintManagerClient::PdfRenderInit(const std::string filePath, const std::string sandBoxPath,
-                                          std::string &basePngName, uint32_t &pageCount)
+    std::string &basePngName, uint32_t &pageCount, FPDF_DOCUMENT &doc)
 {
     if (access(sandBoxPath.c_str(), F_OK) != 0) {
         PRINT_HILOGE("PdfRenderInit SandBoxPath can't be opened.");
@@ -537,7 +552,7 @@ int32_t PrintManagerClient::PdfRenderInit(const std::string filePath, const std:
         }
     }
     PRINT_HILOGD("PdfRenderInit SandBoxPath:%{public}s.", sandBoxPath.c_str());
-    FPDF_DOCUMENT doc = LoadPdfFile(filePath);
+    doc = LoadPdfFile(filePath);
     if (doc == NULL) {
         PRINT_HILOGE("PdfRenderInit Pdfium LoadPdfFile failed.");
         return E_PRINT_FILE_IO;
@@ -558,12 +573,11 @@ int32_t PrintManagerClient::PdfRenderInit(const std::string filePath, const std:
         return E_PRINT_INVALID_PARAMETER;
     }
     PRINT_HILOGD("PdfRenderInit filePath:%{public}s count %{public}d.", filePath.c_str(), pageCount);
-    FPDF_CloseDocument(doc);
-    FPDF_DestroyLibrary();
     return E_PRINT_NONE;
 }
 
-int32_t PrintManagerClient::PdfRenderDestroy(const std::string basePngName, const uint32_t pageCount)
+int32_t PrintManagerClient::PdfRenderDestroy(const std::string basePngName, const uint32_t pageCount,
+    FPDF_DOCUMENT &doc)
 {
     for (uint32_t pageIndex = 0; pageIndex < pageCount; pageIndex++) {
         std::string imagePath = GetImagePathByIndex(basePngName, pageIndex);
@@ -576,17 +590,16 @@ int32_t PrintManagerClient::PdfRenderDestroy(const std::string basePngName, cons
             unlink(imagePath.c_str());
         }
     }
+    FPDF_CloseDocument(doc);
+    destroyLibraryIfNeeded();
     return E_PRINT_NONE;
 }
 
-int32_t PrintManagerClient::GetPdfPageSize(const std::string filePath,
-                                           const uint32_t pageIndex,
-                                           uint32_t &width,
-                                           uint32_t &height)
+int32_t PrintManagerClient::GetPdfPageSize(const uint32_t pageIndex, uint32_t &width, uint32_t &height,
+    FPDF_DOCUMENT &doc)
 {
-    FPDF_DOCUMENT doc = LoadPdfFile(filePath);
     if (doc == NULL) {
-        PRINT_HILOGE("GetPdfPageSize Pdfium LoadPdfFile failed.");
+        PRINT_HILOGE("GetPdfPageSize loaded doc is null.");
         return E_PRINT_FILE_IO;
     }
     // Get page of pageIndex from pdf
@@ -598,30 +611,26 @@ int32_t PrintManagerClient::GetPdfPageSize(const std::string filePath,
     // Get pdf's width and length
     width = static_cast<uint32_t>(FPDF_GetPageWidth(page) * SCALING_RATE);
     height = static_cast<uint32_t>(FPDF_GetPageHeight(page) * SCALING_RATE);
-    PRINT_HILOGD("GetPdfPageSize page width: %{public}d, height: %{public}d.",
-                 width, height);
-    FPDF_CloseDocument(doc);
-    FPDF_DestroyLibrary();
+    PRINT_HILOGD("GetPdfPageSize page width: %{public}d, height: %{public}d.", width, height);
+    FPDF_ClosePage(page);
     return E_PRINT_NONE;
 }
 
-int32_t PrintManagerClient::RenderPdfToPng(const std::string filePath, const std::string basePngName,
-                                           const uint32_t pageIndex, std::string &imagePath)
+int32_t PrintManagerClient::RenderPdfToPng(const std::string basePngName, const uint32_t pageIndex,
+    std::string &imagePath, FPDF_DOCUMENT &doc)
 {
+    if (doc == NULL) {
+        PRINT_HILOGE("RenderPdfToPng  loaded doc is null..");
+        return E_PRINT_FILE_IO;
+    }
     imagePath = GetImagePathByIndex(basePngName, pageIndex);
     if (imagePath.empty()) {
         PRINT_HILOGE("RenderPdfToPng This imagePath is empty.");
         return E_PRINT_INVALID_PARAMETER;
     }
-    PRINT_HILOGD("RenderPdfToPng This filePath is %{public}s", filePath.c_str());
     if (access(imagePath.c_str(), F_OK) != -1) {
         PRINT_HILOGD("RenderPdfToPng This page image is exist %{public}s.", imagePath.c_str());
         return E_PRINT_NONE;
-    }
-    FPDF_DOCUMENT doc = LoadPdfFile(filePath);
-    if (doc == NULL) {
-        PRINT_HILOGE("RenderPdfToPng Pdfium LoadPdfFile failed.");
-        return E_PRINT_FILE_IO;
     }
     // Get pdf file pageCount.
     int pageCount = FPDF_GetPageCount(doc);
@@ -629,7 +638,7 @@ int32_t PrintManagerClient::RenderPdfToPng(const std::string filePath, const std
         PRINT_HILOGE("RenderPdfToPng Pdfium GetPageCount failed.");
         return E_PRINT_INVALID_PARAMETER;
     }
-    PRINT_HILOGD("RenderPdfToPng %{public}s count %{public}d.", filePath.c_str(), pageCount);
+    PRINT_HILOGD("RenderPdfToPng %{public}s count %{public}d.", basePngName.c_str(), pageCount);
     // Get page of pageIndex from pdf.
     FPDF_PAGE page = FPDF_LoadPage(doc, pageIndex);
     if (page == NULL) {
@@ -645,6 +654,7 @@ int32_t PrintManagerClient::RenderPdfToPng(const std::string filePath, const std
     }
     PRINT_HILOGD("RenderPdfToPng  page width: %{public}d height: %{public}d.", width, height);
     ScopedFPDFBitmap bitmap = BitmapInit(page, width, height);
+    FPDF_ClosePage(page);
     if (bitmap) {
         void *buffer = FPDFBitmap_GetBuffer(bitmap.get());
         int stride = FPDFBitmap_GetStride(bitmap.get());
@@ -656,8 +666,6 @@ int32_t PrintManagerClient::RenderPdfToPng(const std::string filePath, const std
         PRINT_HILOGE("RenderPdfToPng FPDF_RenderPageBitmap error.");
         return E_PRINT_GENERIC_FAILURE;
     }
-    FPDF_CloseDocument(doc);
-    FPDF_DestroyLibrary();
     return E_PRINT_NONE;
 }
 #endif // PDFIUM_ENABLE
