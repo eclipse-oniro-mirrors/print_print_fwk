@@ -987,6 +987,10 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         } else {
             // 查到驱动
             printerExist = !(strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL);
+            if (!printerExist) {
+                // 私有驱动已卸载，需要先删除打印机再添加，不然下发任务找不到驱动
+                DeleteCupsPrinter(printerName);
+            }
         }
         cupsFreeDests(1, dest);
     }
