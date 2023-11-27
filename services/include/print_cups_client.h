@@ -116,7 +116,7 @@ public:
         const std::string &printerMake);
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps);
     int32_t DeleteCupsPrinter(const char *printerName);
-    void AddCupsPrintJob(const PrintJob &jobInf);
+    void AddCupsPrintJob(const PrintJob &jobInfo);
     void CancelCupsJob(std::string serviceJobId);
 
 private:
