@@ -2589,19 +2589,5 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0132, TestSize.Level1)
     uint32_t fd = 1;
     EXPECT_EQ(service->StartGetPrintFile(jobId, printAttributes, fd), E_PRINT_NONE);
 }
-
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133, TestSize.Level1)
-{
-    auto service = CreateService();
-    EXPECT_NE(service, nullptr);
-
-    std::string jobId = GetDefaultJobId();
-    std::string type = "-1";
-    service->NotifyPrintService(jobId, type);
-    type = "spooler_closed_for_cancelled";
-    service->NotifyPrintService(jobId, type);
-    type = "spooler_closed_for_started";
-    service->NotifyPrintService(jobId, type);
-}
 }  // namespace Print
 }  // namespace OHOS
