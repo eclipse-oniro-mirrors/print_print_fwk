@@ -29,6 +29,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
   ]
 
   sources = [
+    "print_attributes_test.cpp",
     "print_callback_stub_test.cpp",
     "print_extension_callback_stub_test.cpp",
     "print_extension_info_test.cpp",
