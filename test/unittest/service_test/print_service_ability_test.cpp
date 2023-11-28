@@ -2549,33 +2549,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130, TestSize.Level1)
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131, TestSize.Level1)
 {
-    auto service = CreateService();
-    EXPECT_NE(service, nullptr);
-
-    std::string jobId = GetDefaultJobId();
-    PrintAttributes printAttributes;
-    EXPECT_EQ(service->StartGetPrintFile(jobId, printAttributes), E_PRINT_NONE);
-}
-
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0132, TestSize.Level1)
-{
-    auto service = CreateService();
-    EXPECT_NE(service, nullptr);
-
-    std::string jobId = GetDefaultJobId();
-    std::string type = "-1";
-    EXPECT_EQ(service->NotifyPrintService(jobId, type), E_PRINT_INVALID_PARAMETER);
-    std::string type = "spooler_closed_for_cancelled";
-    service->NotifyPrintService(jobId, type);
-    std::string type = "spooler_closed_for_started";
-    service->NotifyPrintService(jobId, type);
-}
-
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133, TestSize.Level1)
-{
-    auto service = CreateService();
-    EXPECT_NE(service, nullptr);
-
     PrintAttributes printAttributes;
     printAttributes.SetCopyNumber(1);
     OHOS::Print::PrintRange range;
@@ -2594,12 +2567,41 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133, TestSize.Level1)
     printAttributes.SetMargin(margin);
     printAttributes.SetOption("1");
 
-    std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
-    AAFwk::Want want;
-    adapterParam->documentName = "";
-    adapterParam->isCheckFdList = true;
-    adapterParam->printAttributes = printAttributes;
-    service->BuildAdapterParam(adapterParam, want);
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    auto helper = CreatePrintServiceHelper(true, true, false, true);
+    service->SetHelper(helper);
+
+    std::string jobName = "123.pdf";
+    std::string taskId = "";
+    sptr<IRemoteObject> token = helper -> GetBundleMgr();
+    service->PrintByAdapter(jobName, printAttributes, taskId, token);
+    helper = nullptr;
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0132, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+
+    std::string jobId = GetDefaultJobId();
+    PrintAttributes printAttributes;
+    uint32_t fd = 1;
+    EXPECT_EQ(service->StartGetPrintFile(jobId, printAttributes, fd), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133, TestSize.Level1)
+{
+    auto service = CreateService();
+    EXPECT_NE(service, nullptr);
+
+    std::string jobId = GetDefaultJobId();
+    std::string type = "-1";
+    EXPECT_EQ(service->NotifyPrintService(jobId, type), E_PRINT_INVALID_PARAMETER);
+    type = "spooler_closed_for_cancelled";
+    service->NotifyPrintService(jobId, type);
+    type = "spooler_closed_for_started";
+    service->NotifyPrintService(jobId, type);
 }
 }  // namespace Print
 }  // namespace OHOS
