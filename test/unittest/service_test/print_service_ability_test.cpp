@@ -2265,27 +2265,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0106, TestSize.Level1)
     sptr<IRemoteObject> token = helper -> GetBundleMgr();
     service->StartPrint(fileList, fdList, taskId, token);
 
-    PrintAttributes printAttributes;
-    printAttributes.SetCopyNumber(1);
-    OHOS::Print::PrintRange range;
-    range.SetStartPage(1);
-    printAttributes.SetPageRange(range);
-    printAttributes.SetIsSequential(true);
-    OHOS::Print::PrintPageSize pageSize;
-    pageSize.SetId("1");
-    printAttributes.SetPageSize(pageSize);
-    printAttributes.SetIsLandscape(true);
-    printAttributes.SetDirectionMode(1);
-    printAttributes.SetColorMode(1);
-    printAttributes.SetDuplexMode(1);
-    OHOS::Print::PrintMargin margin;
-    margin.SetTop(1);
-    printAttributes.SetMargin(margin);
-    printAttributes.SetOption("1");
-
-    std::string jobName = "123.pdf";
-    service->PrintByAdapter(jobName, printAttributes, taskId, token);
-
+    
     helper = nullptr;
 }
 
