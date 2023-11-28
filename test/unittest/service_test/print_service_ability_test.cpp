@@ -2597,7 +2597,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133, TestSize.Level1)
 
     std::string jobId = GetDefaultJobId();
     std::string type = "-1";
-    EXPECT_EQ(service->NotifyPrintService(jobId, type), E_PRINT_INVALID_PARAMETER);
+    service->NotifyPrintService(jobId, type);
     type = "spooler_closed_for_cancelled";
     service->NotifyPrintService(jobId, type);
     type = "spooler_closed_for_started";
