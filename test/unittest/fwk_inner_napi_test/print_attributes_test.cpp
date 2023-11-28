@@ -262,6 +262,7 @@ HWTEST_F(PrintAttributesTest, PrintAttributesTest_0014, TestSize.Level1)
 {
     OHOS::Print::PrintAttributes printAttributes;
     printAttributes.Dump();
+    Parcel parcel;
     EXPECT_TRUE(printAttributes.Marshalling(parcel));
     auto result = OHOS::Print::PrintAttributes::Unmarshalling(parcel);
     EXPECT_NE(nullptr, result);
