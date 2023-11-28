@@ -40,7 +40,8 @@ void PrintAttributesTest::SetUp(void) {}
 
 void PrintAttributesTest::TearDown(void) {}
 
-OHOS::Print::PrintAttributes PrintAttributesTest::GetDefaultPrintAttributes() {
+OHOS::Print::PrintAttributes PrintAttributesTest::GetDefaultPrintAttributes()
+{
     OHOS::Print::PrintAttributes printAttributes;
     printAttributes.SetCopyNumber(1);
     OHOS::Print::PrintRange range;
