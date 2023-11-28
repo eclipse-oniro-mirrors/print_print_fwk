@@ -181,8 +181,6 @@ public:
     MOCK_METHOD2(QueryPrintJobById, int32_t(std::string&, PrintJob&));
     MOCK_METHOD3(AddPrinterToCups, int32_t(const std::string&, const std::string&, const std::string&));
     MOCK_METHOD2(QueryPrinterCapabilityByUri, int32_t(const std::string&, PrinterCapability&));
-    MOCK_METHOD4(PrintByAdapter, int32_t(const std::string, const PrintAttributes&,
-        std::string&, const sptr<IRemoteObject>&));
 };
 } // namespace Print
 } // namespace OHOS

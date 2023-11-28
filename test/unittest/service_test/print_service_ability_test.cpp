@@ -2546,5 +2546,35 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130, TestSize.Level1)
     int result = PrintServiceAbility::GetInstance()->StartPrint(fileList, fdList, taskId);
     EXPECT_EQ(result, E_PRINT_NO_PERMISSION);
 }
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131, TestSize.Level1)
+{
+    PrintAttributes printAttributes;
+    printAttributes.SetCopyNumber(1);
+    OHOS::Print::PrintRange range;
+    range.SetStartPage(1);
+    printAttributes.SetPageRange(range);
+    printAttributes.SetIsSequential(true);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("1");
+    printAttributes.SetPageSize(pageSize);
+    printAttributes.SetIsLandscape(true);
+    printAttributes.SetDirectionMode(1);
+    printAttributes.SetColorMode(1);
+    printAttributes.SetDuplexMode(1);
+    OHOS::Print::PrintMargin margin;
+    margin.SetTop(1);
+    printAttributes.SetMargin(margin);
+    printAttributes.SetOption("1");
+
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_NE(service, nullptr);
+    service->SetHelper(CreatePrintServiceHelper(true, true, false, true));
+
+    std::string jobName = "123.pdf";
+    std::string taskId = "";
+    sptr<IRemoteObject> token = nullptr;
+    service->PrintByAdapter(jobName, printAttributes, taskId, token);
+}
 }  // namespace Print
 }  // namespace OHOS
