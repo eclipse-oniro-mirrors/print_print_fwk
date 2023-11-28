@@ -2264,8 +2264,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0106, TestSize.Level1)
     std::string taskId = "";
     sptr<IRemoteObject> token = helper -> GetBundleMgr();
     service->StartPrint(fileList, fdList, taskId, token);
-
-    
     helper = nullptr;
 }
 
