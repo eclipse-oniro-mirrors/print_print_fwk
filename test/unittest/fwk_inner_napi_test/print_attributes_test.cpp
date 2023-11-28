@@ -251,5 +251,20 @@ HWTEST_F(PrintAttributesTest, PrintAttributesTest_0013, TestSize.Level1)
     auto result = OHOS::Print::PrintAttributes::Unmarshalling(parcel);
     EXPECT_NE(nullptr, result);
 }
+
+/**
+ * @tc.name: PrintAttributesTest_0014
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintAttributesTest, PrintAttributesTest_0014, TestSize.Level1)
+{
+    OHOS::Print::PrintAttributes printAttributes;
+    printAttributes.Dump();
+    EXPECT_TRUE(printAttributes.Marshalling(parcel));
+    auto result = OHOS::Print::PrintAttributes::Unmarshalling(parcel);
+    EXPECT_NE(nullptr, result);
+}
 } // namespace Print
 } // namespace OHOS
