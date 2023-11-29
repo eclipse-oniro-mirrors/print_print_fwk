@@ -346,6 +346,25 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     return E_PRINT_NONE;
 }
 
+int32_t PrintCupsClient::DeleteCupsPrinter(const char *printerName)
+{
+    ipp_t *request;
+    char uri[HTTP_MAX_URI];
+    http_t *http = NULL;
+
+    PRINT_HILOGD("PrintCupsClient DeleteCupsPrinter start: %{private}s", printerName);
+    request = ippNewRequest(IPP_OP_CUPS_DELETE_PRINTER);
+    httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s", printerName);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+    ippDelete(cupsDoRequest(http, request, "/admin/"));
+    if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
+        PRINT_HILOGE("DeleteCupsPrinter error: %{public}s", cupsLastErrorString());
+        return E_PRINT_SERVER_FAILURE;
+    }
+    return E_PRINT_NONE;
+}
+
 int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps)
 {
     PRINT_HILOGD("PrintCupsClient QueryPrinterCapabilityByUri start.");
@@ -968,6 +987,10 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         } else {
             // 查到驱动
             printerExist = !(strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL);
+            if (!printerExist) {
+                // 私有驱动已卸载，需要先删除打印机再添加，不然下发任务找不到驱动
+                DeleteCupsPrinter(printerName);
+            }
         }
         cupsFreeDests(1, dest);
     }
