@@ -2620,7 +2620,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133, TestSize.Level1)
     EXPECT_EQ(service->NotifyPrintService(jobID, type), E_PRINT_NONE);
 
     type = "spooler_closed_for_started";
-    EXPECT_EQ(service->NotifyPrintService(jobID, type), E_PRINT_NONE);    
+    EXPECT_EQ(service->NotifyPrintService(jobID, type), E_PRINT_NONE);
     helper = nullptr;
 }
 
