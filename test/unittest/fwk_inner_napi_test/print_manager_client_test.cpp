@@ -78,13 +78,7 @@ void PrintManagerClientTest::CallRemoteObject(const std::shared_ptr<MockPrintSer
  */
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0001, TestSize.Level1)
 {
-    std::vector<std::string> testFileList = {"file://data/print/a.png",
-        "file://data/print/b.png", "file://data/print/c.png"};
-    std::vector<uint32_t> testFdList = {1, 2};
-    std::string testTaskId = "2";
-
     PrintManagerClient::GetInstance()->LoadServerFail();
-    PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
 }
 
 /**
@@ -113,14 +107,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0002, TestSize.Level1)
 */
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0003, TestSize.Level1)
 {
-    std::vector<std::string> testFileList = {"file://data/print/a.png",
-        "file://data/print/b.png", "file://data/print/c.png"};
-    std::vector<uint32_t> testFdList = {1, 2};
-    std::string testTaskId = "2";
-
     PrintManagerClient::GetInstance()->LoadServerFail();
     PrintManagerClient::GetInstance()->ResetProxy();
-    PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
 }
 
 

@@ -300,7 +300,6 @@ napi_status NapiPrintTask::VerifyParameters(napi_env env, size_t argc, napi_valu
         if (GetAbilityContext(env, argv[NapiPrintUtils::ARGC_THREE], abilityContext) == nullptr) {
             PRINT_HILOGE("Print adapter Ability Context is null.");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-            return napi_invalid_arg;
         }
         return napi_ok;
     }
