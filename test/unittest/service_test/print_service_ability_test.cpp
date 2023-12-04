@@ -2556,17 +2556,17 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131, TestSize.Level1)
     OHOS::Print::PrintAttributes printAttributes;
     std::string jobName = "123.jpg";
     std::string taskId = "";
-    EXPECT_EQ(service->PrintByAdapter(jobName, printAttributes, taskId. nullptr), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->PrintByAdapter(jobName, printAttributes, taskId, nullptr), E_PRINT_NO_PERMISSION);
 
     EXPECT_CALL(*helper, CheckPermission(_)).WillRepeatedly(Return(true));
-    EXPECT_EQ(service->PrintByAdapter(jobName, printAttributes, taskId. nullptr), E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(service->PrintByAdapter(jobName, printAttributes, taskId, nullptr), E_PRINT_SERVER_FAILURE);
 
     printAttributes.SetCopyNumber(1);
     OHOS::Print::PrintRange range;
     range.SetStartPage(1);
-    range.SetEndPage(1);;
+    range.SetEndPage(3);
     std::vector<uint32_t> pages = {1, 2, 3};
-    range.SetPages(pages)
+    range.SetPages(pages);
     printAttributes.SetPageRange(range);
     printAttributes.SetIsSequential(true);
     OHOS::Print::PrintPageSize pageSize;
@@ -2583,7 +2583,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131, TestSize.Level1)
     margin.SetRight(1);
     printAttributes.SetMargin(margin);
     printAttributes.SetOption("1");
-    EXPECT_EQ(service->PrintByAdapter(jobName, printAttributes, taskId. nullptr), E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(service->PrintByAdapter(jobName, printAttributes, taskId, nullptr), E_PRINT_SERVER_FAILURE);
     helper = nullptr;
 }
 
@@ -2593,13 +2593,13 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0132, TestSize.Level1)
     EXPECT_NE(service, nullptr);
     auto helper = CreatePrintServiceHelper(false, false, false, false);
     service->SetHelper(helper);
-    std::string jobId = "1";
+    std::string jobID = "1";
     OHOS::Print::PrintAttributes printAttributes;
     uint32_t fd = 2;
-    EXPECT_EQ(service->StartGetPrintFile(jobId, printAttributes, fd), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->StartGetPrintFile(jobID, printAttributes, fd), E_PRINT_NO_PERMISSION);
 
     EXPECT_CALL(*helper, CheckPermission(_)).WillRepeatedly(Return(true));
-    EXPECT_EQ(service->StartGetPrintFile(jobId, printAttributes, fd), E_PRINT_NONE);
+    EXPECT_EQ(service->StartGetPrintFile(jobID, printAttributes, fd), E_PRINT_NONE);
     helper = nullptr;
 }
 
@@ -2609,34 +2609,34 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133, TestSize.Level1)
     EXPECT_NE(service, nullptr);
     auto helper = CreatePrintServiceHelper(false, false, false, false);
     service->SetHelper(helper);
-    std::string jobId = "1";
+    std::string jobID = "1";
     std::string type = "-1";
-    EXPECT_EQ(service->NnotifyPrintService(jobId, type), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->NotifyPrintService(jobID, type), E_PRINT_NO_PERMISSION);
 
     EXPECT_CALL(*helper, CheckPermission(_)).WillRepeatedly(Return(true));
-    EXPECT_EQ(service->NnotifyPrintService(jobId, type), E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(service->NotifyPrintService(jobID, type), E_PRINT_INVALID_PARAMETER);
 
     type = "spooler_closed_for_cancelled";
-    EXPECT_EQ(service->NnotifyPrintService(jobId, type), E_PRINT_NONE);
+    EXPECT_EQ(service->NotifyPrintService(jobID, type), E_PRINT_NONE);
 
     type = "spooler_closed_for_started";
-    EXPECT_EQ(service->NnotifyPrintService(jobId, type), E_PRINT_NONE);    
+    EXPECT_EQ(service->NotifyPrintService(jobID, type), E_PRINT_NONE);    
     helper = nullptr;
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0134, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
     auto helper = CreatePrintServiceHelper(false, false, false, false);
     service->SetHelper(helper);
-    std::string jobId = "1";
+    std::string jobID = "1";
     uint32_t state = PRINT_JOB_CREATE_FILE_COMPLETED;
     uint32_t subState = PRINT_FILE_CREATED_SUCCESS;
-    EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->UpdatePrintJobState(jobID, state, subState), E_PRINT_NO_PERMISSION);
 
     EXPECT_CALL(*helper, CheckPermission(_)).WillRepeatedly(Return(true));
-    EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_NONE);
+    EXPECT_EQ(service->UpdatePrintJobState(jobID, state, subState), E_PRINT_NONE);
     helper = nullptr;
 }
 }  // namespace Print
