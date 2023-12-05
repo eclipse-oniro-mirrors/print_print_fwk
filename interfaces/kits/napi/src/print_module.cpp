@@ -303,7 +303,8 @@ static napi_value NapiCreateFileCreationStateEnum(napi_env env)
     napi_create_object(env, &object);
     CreateUint32Property(env, object, "PRINT_FILE_CREATED", static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS));
     CreateUint32Property(env, object, "PRINT_FILE_CREATION_FAILED", static_cast<int32_t>(PRINT_FILE_CREATED_FAIL));
-    CreateUint32Property(env, object, "PRINT_FILE_CREATED_UNRENDERED", static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS_UNRENDERED));
+    CreateUint32Property(env, object, "PRINT_FILE_CREATED_UNRENDERED",
+        static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS_UNRENDERED));
     return object;
 }
 
