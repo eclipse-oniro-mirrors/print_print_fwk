@@ -106,40 +106,6 @@ static constexpr const char *PROPERTY_ERR_INVALID_PRINTER = "E_PRINT_INVALID_PRI
 static constexpr const char *PROPERTY_ERR_INVALID_PRINTJOB = "E_PRINT_INVALID_PRINTJOB";
 static constexpr const char *PROPERTY_ERR_FILE_IO = "E_PRINT_FILE_IO";
 
-static constexpr const char *PROPERTY_DIRECTION_MODE_AUTO = "DIRECTION_MODE_AUTO";
-static constexpr const char *PROPERTY_DIRECTION_MODE_PORTRAIT = "DIRECTION_MODE_PORTRAIT";
-static constexpr const char *PROPERTY_DIRECTION_MODE_LANDSCAPE = "DIRECTION_MODE_LANDSCAPE";
-
-static constexpr const char *PROPERTY_PRINT_COLOR_MODE_MONOCHROME = "COLOR_MODE_MONOCHROME";
-static constexpr const char *PROPERTY_PRINT_COLOR_MODE_COLOR = "COLOR_MODE_COLOR";
-
-static constexpr const char *PROPERTY_DUPLEX_MODE_NONE = "DUPLEX_MODE_NONE";
-static constexpr const char *PROPERTY_DUPLEX_MODE_LONG_EDGE = "DUPLEX_MODE_LONG_EDGE";
-static constexpr const char *PROPERTY_DUPLEX_MODE_SHORT_EDGE = "DUPLEX_MODE_SHORT_EDGE";
-
-static constexpr const char *PROPERTY_PAGE_ISO_A3 = "PAGE_ISO_A3";
-static constexpr const char *PROPERTY_PAGE_ISO_A4 = "PAGE_ISO_A4";
-static constexpr const char *PROPERTY_PAGE_ISO_A5 = "PAGE_ISO_A5";
-static constexpr const char *PROPERTY_PAGE_ISO_B5 = "PAGE_ISO_B5";
-static constexpr const char *PROPERTY_PAGE_ISO_C5 = "PAGE_ISO_C5";
-static constexpr const char *PROPERTY_PAGE_ISO_DL = "PAGE_ISO_DL";
-static constexpr const char *PROPERTY_PAGE_LETTER = "PAGE_LETTER";
-static constexpr const char *PROPERTY_PAGE_LEGAL = "PAGE_LEGAL";
-static constexpr const char *PROPERTY_PAGE_PHOTO_4X6 = "PAGE_PHOTO_4X6";
-static constexpr const char *PROPERTY_PAGE_PHOTO_5X7 = "PAGE_PHOTO_5X7";
-static constexpr const char *PROPERTY_PAGE_INT_DL_ENVELOPE = "PAGE_INT_DL_ENVELOPE";
-static constexpr const char *PROPERTY_PAGE_B_TABLOID = "PAGE_B_TABLOID";
-
-static constexpr const char *PROPERTY_PREVIEW_ABILITY_DESTROY = "PREVIEW_DESTROY";
-static constexpr const char *PROPERTY_PRINT_TASK_SUCCEED = "PRINT_TASK_SUCCEED";
-static constexpr const char *PROPERTY_PRINT_TASK_FAIL = "PRINT_TASK_FAIL";
-static constexpr const char *PROPERTY_PRINT_TASK_CANCEL = "PRINT_TASK_CANCEL";
-static constexpr const char *PROPERTY_PRINT_TASK_BLOCK = "PRINT_TASK_BLOCK";
-
-static constexpr const char *PROPERTY_PRINT_FILE_CREATED_SUCCESS = "PRINT_FILE_CREATED";
-static constexpr const char *PROPERTY_PRINT_FILE_CREATED_FAIL = "PRINT_FILE_CREATION_FAILED";
-static constexpr const char *PROPERTY_PRINT_FILE_CREATED_SUCCESS_UNRENDERED = "PRINT_FILE_CREATED_UNRENDERED";
-
 static napi_value printer_add = nullptr;
 static napi_value printer_removed = nullptr;
 static napi_value printer_updatecap = nullptr;
@@ -192,40 +158,6 @@ static napi_value err_invalid_extension = nullptr;
 static napi_value err_invalid_printer = nullptr;
 static napi_value err_invalid_printjob = nullptr;
 static napi_value err_file_io = nullptr;
-
-static napi_value direction_mode_auto = nullptr;
-static napi_value direction_mode_portrait = nullptr;
-static napi_value direction_mode_landscape = nullptr;
-
-static napi_value print_color_mode_monochrome = nullptr;
-static napi_value print_color_mode_color = nullptr;
-
-static napi_value duplex_mode_none = nullptr;
-static napi_value duplex_mode_long_edge = nullptr;
-static napi_value duplex_mode_short_edge = nullptr;
-
-static napi_value page_iso_a3 = nullptr;
-static napi_value page_iso_a4 = nullptr;
-static napi_value page_iso_a5 = nullptr;
-static napi_value page_iso_b5 = nullptr;
-static napi_value page_iso_c5 = nullptr;
-static napi_value page_iso_dl = nullptr;
-static napi_value page_letter = nullptr;
-static napi_value page_legal = nullptr;
-static napi_value page_photo_4x6 = nullptr;
-static napi_value page_photo_5x7 = nullptr;
-static napi_value page_int_dl_envelope = nullptr;
-static napi_value page_b_tabloid = nullptr;
-
-static napi_value preview_ability_destroy = nullptr;
-static napi_value print_task_succeed = nullptr;
-static napi_value print_task_fail = nullptr;
-static napi_value print_task_cancel = nullptr;
-static napi_value print_task_block = nullptr;
-
-static napi_value print_file_created_success = nullptr;
-static napi_value print_file_created_fail = nullptr;
-static napi_value print_file_created_success_unrendered = nullptr;
 
 #define PRINT_NAPI_METHOD(name, func)           \
     {                                           \
@@ -296,52 +228,95 @@ static void NapiCreateEnum(napi_env env)
     napi_create_int32(env, static_cast<int32_t>(E_PRINT_INVALID_PRINTER), &err_invalid_printer);
     napi_create_int32(env, static_cast<int32_t>(E_PRINT_INVALID_PRINTJOB), &err_invalid_printjob);
     napi_create_int32(env, static_cast<int32_t>(E_PRINT_FILE_IO), &err_file_io);
+}
 
-    // create print direction mode enum
-    napi_create_int32(env, static_cast<int32_t>(DIRECTION_MODE_AUTO), &direction_mode_auto);
-    napi_create_int32(env, static_cast<int32_t>(DIRECTION_MODE_PORTRAIT), &direction_mode_portrait);
-    napi_create_int32(env, static_cast<int32_t>(DIRECTION_MODE_LANDSCAPE), &direction_mode_landscape);
+static void CreateUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value)
+{
+    napi_value tempValue = nullptr;
+    napi_create_object(env, value, &tempValue);
+    napi_set_named_property(env, object, name.c_str(), tempValue);
+}
 
-    // create print color mode enum
-    napi_create_int32(env, static_cast<int32_t>(PRINT_COLOR_MODE_MONOCHROME), &print_color_mode_monochrome);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_COLOR_MODE_COLOR), &print_color_mode_color);
+static napi_value NapiCreateDirectionModeEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    CreateUint32Property(env, object, "DIRECTION_MODE_AUTO", static_cast<int32_t>(DIRECTION_MODE_AUTO));
+    CreateUint32Property(env, object, "DIRECTION_MODE_PORTRAIT", static_cast<int32_t>(DIRECTION_MODE_PORTRAIT));
+    CreateUint32Property(env, object, "DIRECTION_MODE_LANDSCAPE", static_cast<int32_t>(DIRECTION_MODE_LANDSCAPE));
+    return object;
+}
 
-    // create print duplex mode enum
-    napi_create_int32(env, static_cast<int32_t>(DUPLEX_MODE_NONE), &duplex_mode_none);
-    napi_create_int32(env, static_cast<int32_t>(DUPLEX_MODE_LONG_EDGE), &duplex_mode_long_edge);
-    napi_create_int32(env, static_cast<int32_t>(DUPLEX_MODE_SHORT_EDGE), &duplex_mode_short_edge);
+static napi_value NapiCreateColorModeEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    CreateUint32Property(env, object, "COLOR_MODE_MONOCHROME", static_cast<int32_t>(PRINT_COLOR_MODE_MONOCHROME));
+    CreateUint32Property(env, object, "COLOR_MODE_COLOR", static_cast<int32_t>(PRINT_COLOR_MODE_COLOR));
+    return object;
+}
 
-    // create print duplex mode enum
-    napi_create_int32(env, static_cast<int32_t>(PAGE_ISO_A3), &page_iso_a3);
-    napi_create_int32(env, static_cast<int32_t>(PAGE_ISO_A4), &page_iso_a4);
-    napi_create_int32(env, static_cast<int32_t>(PAGE_ISO_A5), &page_iso_a5);
-    napi_create_int32(env, static_cast<int32_t>(PAGE_ISO_B5), &page_iso_b5);
-    napi_create_int32(env, static_cast<int32_t>(PAGE_ISO_C5), &page_iso_c5);
-    napi_create_int32(env, static_cast<int32_t>(PAGE_ISO_DL), &page_iso_dl);
-    napi_create_int32(env, static_cast<int32_t>(PAGE_LETTER), &page_letter);
-    napi_create_int32(env, static_cast<int32_t>(PAGE_LEGAL), &page_legal);
-    napi_create_int32(env, static_cast<int32_t>(PAGE_PHOTO_4X6), &page_photo_4x6);
-    napi_create_int32(env, static_cast<int32_t>(PAGE_PHOTO_5X7), &page_photo_5x7);
-    napi_create_int32(env, static_cast<int32_t>(PAGE_INT_DL_ENVELOPE), &page_int_dl_envelope);
-    napi_create_int32(env, static_cast<int32_t>(PAGE_B_TABLOID), &page_b_tabloid);
+static napi_value NapiCreateDuplexModeEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    CreateUint32Property(env, object, "DUPLEX_MODE_NONE", static_cast<int32_t>(DUPLEX_MODE_NONE));
+    CreateUint32Property(env, object, "DUPLEX_MODE_LONG_EDGE", static_cast<int32_t>(DUPLEX_MODE_LONG_EDGE));
+    CreateUint32Property(env, object, "DUPLEX_MODE_SHORT_EDGE", static_cast<int32_t>(DUPLEX_MODE_SHORT_EDGE));
+    return object;
+}
 
-    // create print document adapter state enum
-    napi_create_int32(env, static_cast<int32_t>(PREVIEW_ABILITY_DESTROY), &preview_ability_destroy);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_TASK_SUCCEED), &print_task_succeed);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_TASK_FAIL), &print_task_fail);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_TASK_CANCEL), &print_task_cancel);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_TASK_BLOCK), &print_task_block);
+static napi_value NapiCreatePageTypeEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    CreateUint32Property(env, object, "PAGE_ISO_A3", static_cast<int32_t>(PAGE_ISO_A3));
+    CreateUint32Property(env, object, "PAGE_ISO_A4", static_cast<int32_t>(PAGE_ISO_A4));
+    CreateUint32Property(env, object, "PAGE_ISO_A5", static_cast<int32_t>(PAGE_ISO_A5));
+    CreateUint32Property(env, object, "PAGE_ISO_B5", static_cast<int32_t>(PAGE_ISO_B5));
+    CreateUint32Property(env, object, "PAGE_ISO_C5", static_cast<int32_t>(PAGE_ISO_C5));
+    CreateUint32Property(env, object, "PAGE_ISO_DL", static_cast<int32_t>(PAGE_ISO_DL));
+    CreateUint32Property(env, object, "PAGE_LETTER", static_cast<int32_t>(PAGE_LETTER));
+    CreateUint32Property(env, object, "PAGE_LEGAL", static_cast<int32_t>(PAGE_LEGAL));
+    CreateUint32Property(env, object, "PAGE_PHOTO_4X6", static_cast<int32_t>(PAGE_PHOTO_4X6));
+    CreateUint32Property(env, object, "PAGE_PHOTO_5X7", static_cast<int32_t>(PAGE_PHOTO_5X7));
+    CreateUint32Property(env, object, "PAGE_INT_DL_ENVELOPE", static_cast<int32_t>(PAGE_INT_DL_ENVELOPE));
+    CreateUint32Property(env, object, "PAGE_B_TABLOID", static_cast<int32_t>(PAGE_B_TABLOID));
+    return object;
+}
 
-    // create print file creation state enum
-    napi_create_int32(env, static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS), &print_file_created_success);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_FILE_CREATED_FAIL), &print_file_created_fail);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS_UNRENDERED), &print_file_created_success_unrendered);
+static napi_value NapiCreateDocumentAdapterStateEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    CreateUint32Property(env, object, "PREVIEW_DESTROY", static_cast<int32_t>(PREVIEW_ABILITY_DESTROY));
+    CreateUint32Property(env, object, "PRINT_TASK_SUCCEED", static_cast<int32_t>(PRINT_TASK_SUCCEED));
+    CreateUint32Property(env, object, "PRINT_TASK_FAIL", static_cast<int32_t>(PRINT_TASK_FAIL));
+    CreateUint32Property(env, object, "PRINT_TASK_CANCEL", static_cast<int32_t>(PRINT_TASK_CANCEL));
+    CreateUint32Property(env, object, "PRINT_TASK_BLOCK", static_cast<int32_t>(PRINT_TASK_BLOCK));
+    return object;
+}
+
+static napi_value NapiCreateFileCreationStateEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    CreateUint32Property(env, object, "PRINT_FILE_CREATED", static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS));
+    CreateUint32Property(env, object, "PRINT_FILE_CREATION_FAILED", static_cast<int32_t>(PRINT_FILE_CREATED_FAIL));
+    CreateUint32Property(env, object, "PRINT_FILE_CREATED_UNRENDERED", static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS_UNRENDERED));
+    return object;
 }
 
 static napi_value Init(napi_env env, napi_value exports)
 {
     NapiCreateEnum(env);
     napi_property_descriptor desc[] = {
+        PRINT_NAPI_PROPERTY("PrintDirectionMode", NapiCreateDirectionModeEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintColorMode", NapiCreateColorModeEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintDuplexMode", NapiCreateDuplexModeEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintPageType", NapiCreatePageTypeEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintDocumentAdapterState", NapiCreateDocumentAdapterStateEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintFileCreationState", NapiCreateFileCreationStateEnum(env)),
         PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_ADD, printer_add),
         PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_REMOVE, printer_removed),
         PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_UPDATE_CAP, printer_updatecap),
@@ -393,34 +368,6 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTER, err_invalid_printer),
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTJOB, err_invalid_printjob),
         PRINT_NAPI_PROPERTY(PROPERTY_ERR_FILE_IO, err_file_io),
-        PRINT_NAPI_PROPERTY(PROPERTY_DIRECTION_MODE_AUTO, direction_mode_auto),
-        PRINT_NAPI_PROPERTY(PROPERTY_DIRECTION_MODE_PORTRAIT, direction_mode_portrait),
-        PRINT_NAPI_PROPERTY(PROPERTY_DIRECTION_MODE_LANDSCAPE, direction_mode_landscape),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_COLOR_MODE_MONOCHROME, print_color_mode_monochrome),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_COLOR_MODE_COLOR, print_color_mode_color),
-        PRINT_NAPI_PROPERTY(PROPERTY_DUPLEX_MODE_NONE, duplex_mode_none),
-        PRINT_NAPI_PROPERTY(PROPERTY_DUPLEX_MODE_LONG_EDGE, duplex_mode_long_edge),
-        PRINT_NAPI_PROPERTY(PROPERTY_DUPLEX_MODE_SHORT_EDGE, duplex_mode_short_edge),
-        PRINT_NAPI_PROPERTY(PROPERTY_PAGE_ISO_A3, page_iso_a3),
-        PRINT_NAPI_PROPERTY(PROPERTY_PAGE_ISO_A4, page_iso_a4),
-        PRINT_NAPI_PROPERTY(PROPERTY_PAGE_ISO_A5, page_iso_a5),
-        PRINT_NAPI_PROPERTY(PROPERTY_PAGE_ISO_B5, page_iso_b5),
-        PRINT_NAPI_PROPERTY(PROPERTY_PAGE_ISO_C5, page_iso_c5),
-        PRINT_NAPI_PROPERTY(PROPERTY_PAGE_ISO_DL, page_iso_dl),
-        PRINT_NAPI_PROPERTY(PROPERTY_PAGE_LETTER, page_letter),
-        PRINT_NAPI_PROPERTY(PROPERTY_PAGE_LEGAL, page_legal),
-        PRINT_NAPI_PROPERTY(PROPERTY_PAGE_PHOTO_4X6, page_photo_4x6),
-        PRINT_NAPI_PROPERTY(PROPERTY_PAGE_PHOTO_5X7, page_photo_5x7),
-        PRINT_NAPI_PROPERTY(PROPERTY_PAGE_INT_DL_ENVELOPE, page_int_dl_envelope),
-        PRINT_NAPI_PROPERTY(PROPERTY_PAGE_B_TABLOID, page_b_tabloid),
-        PRINT_NAPI_PROPERTY(PROPERTY_PREVIEW_ABILITY_DESTROY, preview_ability_destroy),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_TASK_SUCCEED, print_task_succeed),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_TASK_FAIL, print_task_fail),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_TASK_CANCEL, print_task_cancel),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_TASK_BLOCK, print_task_block),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_FILE_CREATED_SUCCESS, print_file_created_success),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_FILE_CREATED_FAIL, print_file_created_fail),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_FILE_CREATED_SUCCESS_UNRENDERED, print_file_created_success_unrendered),
         PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
 #ifdef PDFIUM_ENABLE
         PRINT_NAPI_METHOD(FUNCTION_CREATE_PDF_RENDER, NapiPrintPdfRender::CreatePdfRender),
