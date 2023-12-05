@@ -230,10 +230,94 @@ static void NapiCreateEnum(napi_env env)
     napi_create_int32(env, static_cast<int32_t>(E_PRINT_FILE_IO), &err_file_io);
 }
 
+static void CreateUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value)
+{
+    napi_value tempValue = nullptr;
+    napi_create_int32(env, value, &tempValue);
+    napi_set_named_property(env, object, name.c_str(), tempValue);
+}
+
+static napi_value NapiCreateDirectionModeEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    CreateUint32Property(env, object, "DIRECTION_MODE_AUTO", static_cast<int32_t>(DIRECTION_MODE_AUTO));
+    CreateUint32Property(env, object, "DIRECTION_MODE_PORTRAIT", static_cast<int32_t>(DIRECTION_MODE_PORTRAIT));
+    CreateUint32Property(env, object, "DIRECTION_MODE_LANDSCAPE", static_cast<int32_t>(DIRECTION_MODE_LANDSCAPE));
+    return object;
+}
+
+static napi_value NapiCreateColorModeEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    CreateUint32Property(env, object, "COLOR_MODE_MONOCHROME", static_cast<int32_t>(PRINT_COLOR_MODE_MONOCHROME));
+    CreateUint32Property(env, object, "COLOR_MODE_COLOR", static_cast<int32_t>(PRINT_COLOR_MODE_COLOR));
+    return object;
+}
+
+static napi_value NapiCreateDuplexModeEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    CreateUint32Property(env, object, "DUPLEX_MODE_NONE", static_cast<int32_t>(DUPLEX_MODE_NONE));
+    CreateUint32Property(env, object, "DUPLEX_MODE_LONG_EDGE", static_cast<int32_t>(DUPLEX_MODE_LONG_EDGE));
+    CreateUint32Property(env, object, "DUPLEX_MODE_SHORT_EDGE", static_cast<int32_t>(DUPLEX_MODE_SHORT_EDGE));
+    return object;
+}
+
+static napi_value NapiCreatePageTypeEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    CreateUint32Property(env, object, "PAGE_ISO_A3", static_cast<int32_t>(PAGE_ISO_A3));
+    CreateUint32Property(env, object, "PAGE_ISO_A4", static_cast<int32_t>(PAGE_ISO_A4));
+    CreateUint32Property(env, object, "PAGE_ISO_A5", static_cast<int32_t>(PAGE_ISO_A5));
+    CreateUint32Property(env, object, "PAGE_ISO_B5", static_cast<int32_t>(PAGE_ISO_B5));
+    CreateUint32Property(env, object, "PAGE_ISO_C5", static_cast<int32_t>(PAGE_ISO_C5));
+    CreateUint32Property(env, object, "PAGE_ISO_DL", static_cast<int32_t>(PAGE_ISO_DL));
+    CreateUint32Property(env, object, "PAGE_LETTER", static_cast<int32_t>(PAGE_LETTER));
+    CreateUint32Property(env, object, "PAGE_LEGAL", static_cast<int32_t>(PAGE_LEGAL));
+    CreateUint32Property(env, object, "PAGE_PHOTO_4X6", static_cast<int32_t>(PAGE_PHOTO_4X6));
+    CreateUint32Property(env, object, "PAGE_PHOTO_5X7", static_cast<int32_t>(PAGE_PHOTO_5X7));
+    CreateUint32Property(env, object, "PAGE_INT_DL_ENVELOPE", static_cast<int32_t>(PAGE_INT_DL_ENVELOPE));
+    CreateUint32Property(env, object, "PAGE_B_TABLOID", static_cast<int32_t>(PAGE_B_TABLOID));
+    return object;
+}
+
+static napi_value NapiCreateDocumentAdapterStateEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    CreateUint32Property(env, object, "PREVIEW_DESTROY", static_cast<int32_t>(PREVIEW_ABILITY_DESTROY));
+    CreateUint32Property(env, object, "PRINT_TASK_SUCCEED", static_cast<int32_t>(PRINT_TASK_SUCCEED));
+    CreateUint32Property(env, object, "PRINT_TASK_FAIL", static_cast<int32_t>(PRINT_TASK_FAIL));
+    CreateUint32Property(env, object, "PRINT_TASK_CANCEL", static_cast<int32_t>(PRINT_TASK_CANCEL));
+    CreateUint32Property(env, object, "PRINT_TASK_BLOCK", static_cast<int32_t>(PRINT_TASK_BLOCK));
+    return object;
+}
+
+static napi_value NapiCreateFileCreationStateEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    CreateUint32Property(env, object, "PRINT_FILE_CREATED", static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS));
+    CreateUint32Property(env, object, "PRINT_FILE_CREATION_FAILED", static_cast<int32_t>(PRINT_FILE_CREATED_FAIL));
+    CreateUint32Property(env, object, "PRINT_FILE_CREATED_UNRENDERED",
+        static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS_UNRENDERED));
+    return object;
+}
+
 static napi_value Init(napi_env env, napi_value exports)
 {
     NapiCreateEnum(env);
     napi_property_descriptor desc[] = {
+        PRINT_NAPI_PROPERTY("PrintDirectionMode", NapiCreateDirectionModeEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintColorMode", NapiCreateColorModeEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintDuplexMode", NapiCreateDuplexModeEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintPageType", NapiCreatePageTypeEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintDocumentAdapterState", NapiCreateDocumentAdapterStateEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintFileCreationState", NapiCreateFileCreationStateEnum(env)),
         PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_ADD, printer_add),
         PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_REMOVE, printer_removed),
         PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_UPDATE_CAP, printer_updatecap),
