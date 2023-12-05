@@ -233,7 +233,7 @@ static void NapiCreateEnum(napi_env env)
 static void CreateUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value)
 {
     napi_value tempValue = nullptr;
-    napi_create_object(env, value, &tempValue);
+    napi_create_int32(env, value, &tempValue);
     napi_set_named_property(env, object, name.c_str(), tempValue);
 }
 
