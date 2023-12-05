@@ -137,13 +137,13 @@ enum PrintJobSubState {
     PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED = 102, // For internal use only: Click Start
 };
 
-enum PrintFileCreatedInfoCode {
+enum PrintFileCreationState {
     PRINT_FILE_CREATED_SUCCESS = 0,
     PRINT_FILE_CREATED_FAIL = 1,
     PRINT_FILE_CREATED_SUCCESS_UNRENDERED = 2,
 };
 
-enum PrintAdapterListeningState {
+enum PrintDocumentAdapterState {
     PREVIEW_ABILITY_DESTROY = 0,
     PRINT_TASK_SUCCEED = 1,
     PRINT_TASK_FAIL = 2,
@@ -161,6 +161,38 @@ enum PrintParamStatus {
     PRINT_PARAM_NOT_SET,
     PRINT_PARAM_OPT,
     PRINT_PARAM_SET,
+};
+
+enum PrintDirectionMode {
+    DIRECTION_MODE_AUTO = 0,
+    DIRECTION_MODE_PORTRAIT = 1,
+    DIRECTION_MODE_LANDSCAPE = 2,
+};
+
+enum PrintColorMode {
+    PRINT_COLOR_MODE_MONOCHROME = 0,
+    PRINT_COLOR_MODE_COLOR = 1,
+};
+
+enum PrintDuplexMode {
+    DUPLEX_MODE_NONE = 0,
+    DUPLEX_MODE_LONG_EDGE = 1,
+    DUPLEX_MODE_SHORT_EDGE = 2,
+};
+
+enum PrintPageType {
+    PAGE_ISO_A3 = 0,
+    PAGE_ISO_A4 = 1,
+    PAGE_ISO_A5 = 2,
+    PAGE_ISO_B5 = 3,
+    PAGE_ISO_C5 = 4,
+    PAGE_ISO_DL = 5,
+    PAGE_LETTER = 6,
+    PAGE_LEGAL = 7,
+    PAGE_PHOTO_4X6 = 8,
+    PAGE_PHOTO_5X7 = 9,
+    PAGE_INT_DL_ENVELOPE = 10,
+    PAGE_B_TABLOID = 11,
 };
 } // namespace OHOS::Print
 #endif // PRINT_CONSTANT_H
