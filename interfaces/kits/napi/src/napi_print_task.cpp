@@ -139,14 +139,18 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
 {
     if (argc > NapiPrintUtils::ARGC_THREE && argc > NapiPrintUtils::ARGC_TWO) {
         std::string printJobName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
-        
+
+        std::shared_ptr<PrintAttributes> printAttributes =
+            PrintAttributesHelper::BuildFromJs(env, argv[NapiPrintUtils::ARGC_TWO]);
+        if (printAttributes == nullptr) {
+            PRINT_HILOGE("printAdapter parameter error");
+            return nullptr;
+        }
+
         napi_ref adapterRef = NapiPrintUtils::CreateReference(env, argv[1]);
         sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, adapterRef);
-
-        std::shared_ptr<PrintAttributes> printAttributes;
-        printAttributes = PrintAttributesHelper::BuildFromJs(env, argv[NapiPrintUtils::ARGC_TWO]);
-        if (callback == nullptr || printAttributes == nullptr) {
-            PRINT_HILOGE("printAdapter paramter error");
+        if (callback == nullptr) {
+            PRINT_HILOGE("callback parameter error");
             return nullptr;
         }
 
@@ -159,6 +163,7 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
 
         if (task == nullptr) {
             PRINT_HILOGE("print task fail");
+            delete callback;
             return nullptr;
         }
         auto finalize = [](napi_env env, void *data, void *hint) {

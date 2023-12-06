@@ -137,7 +137,7 @@ enum PrintJobSubState {
     PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED = 102, // For internal use only: Click Start
 };
 
-enum PrintFileCreationState {
+enum PrintFileCreatedInfoCode {
     PRINT_FILE_CREATED_SUCCESS = 0,
     PRINT_FILE_CREATED_FAIL = 1,
     PRINT_FILE_CREATED_SUCCESS_UNRENDERED = 2,

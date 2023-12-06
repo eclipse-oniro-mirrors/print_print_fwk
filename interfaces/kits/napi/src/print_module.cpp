@@ -53,112 +53,6 @@ static constexpr const char *FUNCTION_QUERY_CAPABILITY_BY_URI = "queryPrinterCap
 static constexpr const char *FUNCTION_START_GET_PRINT_FILE = "startGetPrintFile";
 static constexpr const char *FUNCTION_NOTIFY_PRINT_SERVICE = "notifyPrintService";
 
-static constexpr const char *PROPERTY_PRINTER_ADD = "PRINTER_ADDED";
-static constexpr const char *PROPERTY_PRINTER_REMOVE = "PRINTER_REMOVED";
-static constexpr const char *PROPERTY_PRINTER_UPDATE_CAP = "PRINTER_UPDATE_CAP";
-static constexpr const char *PROPERTY_PRINTER_CONNECTED = "PRINTER_CONNECTED";
-static constexpr const char *PROPERTY_PRINTER_DISCONNECTED = "PRINTER_DISCONNECTED";
-static constexpr const char *PROPERTY_PRINTER_RUNNING = "PRINTER_RUNNING";
-
-static constexpr const char *PROPERTY_PRINT_JOB_PREPARE = "PRINT_JOB_PREPARE";
-static constexpr const char *PROPERTY_PRINT_JOB_QUEUED = "PRINT_JOB_QUEUED";
-static constexpr const char *PROPERTY_PRINT_JOB_RUNNING = "PRINT_JOB_RUNNING";
-static constexpr const char *PROPERTY_PRINT_JOB_BLOCKED = "PRINT_JOB_BLOCKED";
-static constexpr const char *PROPERTY_PRINT_JOB_COMPLETED = "PRINT_JOB_COMPLETED";
-
-static constexpr const char *PROPERTY_COMPLETED_SUCCESS = "PRINT_JOB_COMPLETED_SUCCESS";
-static constexpr const char *PROPERTY_COMPLETED_FAILED = "PRINT_JOB_COMPLETED_FAILED";
-static constexpr const char *PROPERTY_COMPLETED_CANCELLED = "PRINT_JOB_COMPLETED_CANCELLED";
-static constexpr const char *PROPERTY_COMPLETED_FILE_CORRUPT = "PRINT_JOB_COMPLETED_FILE_CORRUPT";
-static constexpr const char *PROPERTY_BLOCK_OFFLINE = "PRINT_JOB_BLOCK_OFFLINE";
-static constexpr const char *PROPERTY_BLOCK_BUSY = "PRINT_JOB_BLOCK_BUSY";
-static constexpr const char *PROPERTY_BLOCK_CANCELLED = "PRINT_JOB_BLOCK_CANCELLED";
-static constexpr const char *PROPERTY_BLOCK_OUT_OF_PAPER = "PRINT_JOB_BLOCK_OUT_OF_PAPER";
-static constexpr const char *PROPERTY_BLOCK_OUT_OF_INK = "PRINT_JOB_BLOCK_OUT_OF_INK";
-static constexpr const char *PROPERTY_BLOCK_OUT_OF_TONER = "PRINT_JOB_BLOCK_OUT_OF_TONER";
-static constexpr const char *PROPERTY_BLOCK_JAMMED = "PRINT_JOB_BLOCK_JAMMED";
-static constexpr const char *PROPERTY_BLOCK_DOOR_OPEN = "PRINT_JOB_BLOCK_DOOR_OPEN";
-static constexpr const char *PROPERTY_BLOCK_SERVICE_REQUEST = "PRINT_JOB_BLOCK_SERVICE_REQUEST";
-static constexpr const char *PROPERTY_BLOCK_LOW_ON_INK = "PRINT_JOB_BLOCK_LOW_ON_INK";
-static constexpr const char *PROPERTY_BLOCK_LOW_ON_TONER = "PRINT_JOB_BLOCK_LOW_ON_TONER";
-static constexpr const char *PROPERTY_BLOCK_REALLY_LOW_ON_INK = "PRINT_JOB_BLOCK_REALLY_LOW_ON_INK";
-static constexpr const char *PROPERTY_BLOCK_BAD_CERTIFICATE = "PRINT_JOB_BLOCK_BAD_CERTIFICATE";
-static constexpr const char *PROPERTY_BLOCK_ACCOUNT_ERROR = "PRINT_BLOCK_ACCOUNT_ERROR";
-static constexpr const char *PROPERTY_BLOCK_PRINT_PERMISSION_ERROR = "PRINT_JOB_BLOCK_PRINT_PERMISSION_ERROR";
-static constexpr const char *PROPERTY_BLOCK_PRINT_COLOR_PERMISSION_ERROR = "PRINT_JOB_BLOCK_PRINT_COLOR_PERMISSION_ERROR";
-static constexpr const char *PROPERTY_BLOCK_NETWORK_ERROR = "PRINT_JOB_BLOCK_NETWORK_ERROR";
-static constexpr const char *PROPERTY_BLOCK_SERVER_CONNECTION_ERROR = "PRINT_JOB_BLOCK_CONNECT_SERVER_ERROR";
-static constexpr const char *PROPERTY_BLOCK_LARGE_FILE_ERROR = "PRINT_JOB_BLOCK_LARGE_FILE_ERROR";
-static constexpr const char *PROPERTY_BLOCK_FILE_PARSING_ERROR = "PRINT_JOB_BLOCK_PARSE_FILE_ERROR";
-static constexpr const char *PROPERTY_BLOCK_SLOW_FILE_CONVERSION = "PRINT_JOB_BLOCK_FILE_CONVERT_SLOWLY";
-static constexpr const char *PROPERTY_RUNNING_UPLOADING_FILES = "PRINT_JOB_RUNNING_UPLOADING_FILES";
-static constexpr const char *PROPERTY_RUNNING_CONVERTING_FILES = "PRINT_JOB_RUNNING_CONVERTING_FILES";
-static constexpr const char *PROPERTY_BLOCK_UNKNOWN = "PRINT_JOB_BLOCK_UNKNOWN";
-
-static constexpr const char *PROPERTY_ERR_NONE = "E_PRINT_NONE";
-static constexpr const char *PROPERTY_ERR_NO_PERMISSION = "E_PRINT_NO_PERMISSION";
-static constexpr const char *PROPERTY_ERR_INVALID_PARAMETER = "E_PRINT_INVALID_PARAMETER";
-static constexpr const char *PROPERTY_ERR_GENERIC_FAILURE = "E_PRINT_GENERIC_FAILURE";
-static constexpr const char *PROPERTY_ERR_RPC_FAILURE = "E_PRINT_RPC_FAILURE";
-static constexpr const char *PROPERTY_ERR_SERVER_FAILURE = "E_PRINT_SERVER_FAILURE";
-static constexpr const char *PROPERTY_ERR_INVALID_EXTENSION = "E_PRINT_INVALID_EXTENSION";
-static constexpr const char *PROPERTY_ERR_INVALID_PRINTER = "E_PRINT_INVALID_PRINTER";
-static constexpr const char *PROPERTY_ERR_INVALID_PRINTJOB = "E_PRINT_INVALID_PRINTJOB";
-static constexpr const char *PROPERTY_ERR_FILE_IO = "E_PRINT_FILE_IO";
-
-static napi_value printer_add = nullptr;
-static napi_value printer_removed = nullptr;
-static napi_value printer_updatecap = nullptr;
-static napi_value printer_connected = nullptr;
-static napi_value printer_disconnected = nullptr;
-static napi_value printer_running = nullptr;
-
-static napi_value print_job_prepare = nullptr;
-static napi_value print_job_queued = nullptr;
-static napi_value print_job_running = nullptr;
-static napi_value print_job_blocked = nullptr;
-static napi_value print_job_completed = nullptr;
-
-static napi_value completed_success = nullptr;
-static napi_value completed_failed = nullptr;
-static napi_value completed_cancelled = nullptr;
-static napi_value completed_file_corrupt = nullptr;
-static napi_value block_offline = nullptr;
-static napi_value block_busy = nullptr;
-static napi_value block_cancelled = nullptr;
-static napi_value block_out_of_paper = nullptr;
-static napi_value block_out_of_ink = nullptr;
-static napi_value block_out_of_toner = nullptr;
-static napi_value block_jammed = nullptr;
-static napi_value block_door_open = nullptr;
-static napi_value block_service_request = nullptr;
-static napi_value block_low_on_ink = nullptr;
-static napi_value block_low_on_toner = nullptr;
-static napi_value block_really_low_on_ink = nullptr;
-static napi_value block_bad_certificate = nullptr;
-static napi_value block_account_error = nullptr;
-static napi_value block_print_permission_error = nullptr;
-static napi_value block_print_color_permission_error = nullptr;
-static napi_value block_network_error = nullptr;
-static napi_value block_server_connection_error = nullptr;
-static napi_value block_large_file_error = nullptr;
-static napi_value block_file_parsing_error = nullptr;
-static napi_value block_slow_file_conversion = nullptr;
-static napi_value running_uploading_files = nullptr;
-static napi_value running_converting_files = nullptr;
-static napi_value block_unknown = nullptr;
-
-static napi_value err_none = nullptr;
-static napi_value err_no_permission = nullptr;
-static napi_value err_invalid_parameter = nullptr;
-static napi_value err_generic_failure = nullptr;
-static napi_value err_rpc_failure = nullptr;
-static napi_value err_server_failure = nullptr;
-static napi_value err_invalid_extension = nullptr;
-static napi_value err_invalid_printer = nullptr;
-static napi_value err_invalid_printjob = nullptr;
-static napi_value err_file_io = nullptr;
-
 #define PRINT_NAPI_METHOD(name, func)           \
     {                                           \
         name, 0, func, 0, 0, 0, napi_default, 0 \
@@ -169,68 +63,7 @@ static napi_value err_file_io = nullptr;
         (name), nullptr, nullptr, nullptr, nullptr, val, napi_static, nullptr   \
     }
 
-static void NapiCreateEnum(napi_env env)
-{
-    // create printer state enum
-    napi_create_int32(env, static_cast<int32_t>(PRINTER_ADDED), &printer_add);
-    napi_create_int32(env, static_cast<int32_t>(PRINTER_REMOVED), &printer_removed);
-    napi_create_int32(env, static_cast<int32_t>(PRINTER_UPDATE_CAP), &printer_updatecap);
-    napi_create_int32(env, static_cast<int32_t>(PRINTER_CONNECTED), &printer_connected);
-    napi_create_int32(env, static_cast<int32_t>(PRINTER_DISCONNECTED), &printer_disconnected);
-    napi_create_int32(env, static_cast<int32_t>(PRINTER_RUNNING), &printer_running);
-
-    // create print job state enum
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_PREPARED), &print_job_prepare);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_QUEUED), &print_job_queued);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_RUNNING), &print_job_running);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED), &print_job_blocked);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_COMPLETED), &print_job_completed);
-
-    // create print job sub-state enum
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_COMPLETED_SUCCESS), &completed_success);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_COMPLETED_FAILED), &completed_failed);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_COMPLETED_CANCELLED), &completed_cancelled);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_COMPLETED_FILE_CORRUPT), &completed_file_corrupt);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_OFFLINE), &block_offline);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_BUSY), &block_busy);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_CANCELLED), &block_cancelled);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_PAPER), &block_out_of_paper);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_INK), &block_out_of_ink);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_TONER), &block_out_of_toner);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_JAMMED), &block_jammed);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_DOOR_OPEN), &block_door_open);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_SERVICE_REQUEST), &block_service_request);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_LOW_ON_INK), &block_low_on_ink);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_LOW_ON_TONER), &block_low_on_toner);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK), &block_really_low_on_ink);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE), &block_bad_certificate);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_ACCOUNT_ERROR), &block_account_error);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_PERMISSION_ERROR), &block_print_permission_error);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_COLOR_PERMISSION_ERROR), &block_print_color_permission_error);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_NETWORK_ERROR), &block_network_error);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR),
-        &block_server_connection_error);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_LARGE_FILE_ERROR), &block_large_file_error);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_FILE_PARSING_ERROR), &block_file_parsing_error);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_SLOW_FILE_CONVERSION), &block_slow_file_conversion);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES), &running_uploading_files);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_RUNNING_CONVERTING_FILES), &running_converting_files);
-    napi_create_int32(env, static_cast<int32_t>(PRINT_JOB_BLOCKED_UNKNOWN), &block_unknown);
-
-    // create error code of js api
-    napi_create_int32(env, static_cast<int32_t>(E_PRINT_NONE), &err_none);
-    napi_create_int32(env, static_cast<int32_t>(E_PRINT_NO_PERMISSION), &err_no_permission);
-    napi_create_int32(env, static_cast<int32_t>(E_PRINT_INVALID_PARAMETER), &err_invalid_parameter);
-    napi_create_int32(env, static_cast<int32_t>(E_PRINT_GENERIC_FAILURE), &err_generic_failure);
-    napi_create_int32(env, static_cast<int32_t>(E_PRINT_RPC_FAILURE), &err_rpc_failure);
-    napi_create_int32(env, static_cast<int32_t>(E_PRINT_SERVER_FAILURE), &err_server_failure);
-    napi_create_int32(env, static_cast<int32_t>(E_PRINT_INVALID_EXTENSION), &err_invalid_extension);
-    napi_create_int32(env, static_cast<int32_t>(E_PRINT_INVALID_PRINTER), &err_invalid_printer);
-    napi_create_int32(env, static_cast<int32_t>(E_PRINT_INVALID_PRINTJOB), &err_invalid_printjob);
-    napi_create_int32(env, static_cast<int32_t>(E_PRINT_FILE_IO), &err_file_io);
-}
-
-static void CreateUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value)
+static void SetEnumProperty(napi_env env, napi_value object, const std::string &name, uint32_t value)
 {
     napi_value tempValue = nullptr;
     napi_create_int32(env, value, &tempValue);
@@ -241,9 +74,9 @@ static napi_value NapiCreateDirectionModeEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "DIRECTION_MODE_AUTO", static_cast<int32_t>(DIRECTION_MODE_AUTO));
-    CreateUint32Property(env, object, "DIRECTION_MODE_PORTRAIT", static_cast<int32_t>(DIRECTION_MODE_PORTRAIT));
-    CreateUint32Property(env, object, "DIRECTION_MODE_LANDSCAPE", static_cast<int32_t>(DIRECTION_MODE_LANDSCAPE));
+    SetEnumProperty(env, object, "DIRECTION_MODE_AUTO", static_cast<int32_t>(DIRECTION_MODE_AUTO));
+    SetEnumProperty(env, object, "DIRECTION_MODE_PORTRAIT", static_cast<int32_t>(DIRECTION_MODE_PORTRAIT));
+    SetEnumProperty(env, object, "DIRECTION_MODE_LANDSCAPE", static_cast<int32_t>(DIRECTION_MODE_LANDSCAPE));
     return object;
 }
 
@@ -251,8 +84,8 @@ static napi_value NapiCreateColorModeEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "COLOR_MODE_MONOCHROME", static_cast<int32_t>(PRINT_COLOR_MODE_MONOCHROME));
-    CreateUint32Property(env, object, "COLOR_MODE_COLOR", static_cast<int32_t>(PRINT_COLOR_MODE_COLOR));
+    SetEnumProperty(env, object, "COLOR_MODE_MONOCHROME", static_cast<int32_t>(PRINT_COLOR_MODE_MONOCHROME));
+    SetEnumProperty(env, object, "COLOR_MODE_COLOR", static_cast<int32_t>(PRINT_COLOR_MODE_COLOR));
     return object;
 }
 
@@ -260,9 +93,9 @@ static napi_value NapiCreateDuplexModeEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "DUPLEX_MODE_NONE", static_cast<int32_t>(DUPLEX_MODE_NONE));
-    CreateUint32Property(env, object, "DUPLEX_MODE_LONG_EDGE", static_cast<int32_t>(DUPLEX_MODE_LONG_EDGE));
-    CreateUint32Property(env, object, "DUPLEX_MODE_SHORT_EDGE", static_cast<int32_t>(DUPLEX_MODE_SHORT_EDGE));
+    SetEnumProperty(env, object, "DUPLEX_MODE_NONE", static_cast<int32_t>(DUPLEX_MODE_NONE));
+    SetEnumProperty(env, object, "DUPLEX_MODE_LONG_EDGE", static_cast<int32_t>(DUPLEX_MODE_LONG_EDGE));
+    SetEnumProperty(env, object, "DUPLEX_MODE_SHORT_EDGE", static_cast<int32_t>(DUPLEX_MODE_SHORT_EDGE));
     return object;
 }
 
@@ -270,18 +103,18 @@ static napi_value NapiCreatePageTypeEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "PAGE_ISO_A3", static_cast<int32_t>(PAGE_ISO_A3));
-    CreateUint32Property(env, object, "PAGE_ISO_A4", static_cast<int32_t>(PAGE_ISO_A4));
-    CreateUint32Property(env, object, "PAGE_ISO_A5", static_cast<int32_t>(PAGE_ISO_A5));
-    CreateUint32Property(env, object, "PAGE_ISO_B5", static_cast<int32_t>(PAGE_ISO_B5));
-    CreateUint32Property(env, object, "PAGE_ISO_C5", static_cast<int32_t>(PAGE_ISO_C5));
-    CreateUint32Property(env, object, "PAGE_ISO_DL", static_cast<int32_t>(PAGE_ISO_DL));
-    CreateUint32Property(env, object, "PAGE_LETTER", static_cast<int32_t>(PAGE_LETTER));
-    CreateUint32Property(env, object, "PAGE_LEGAL", static_cast<int32_t>(PAGE_LEGAL));
-    CreateUint32Property(env, object, "PAGE_PHOTO_4X6", static_cast<int32_t>(PAGE_PHOTO_4X6));
-    CreateUint32Property(env, object, "PAGE_PHOTO_5X7", static_cast<int32_t>(PAGE_PHOTO_5X7));
-    CreateUint32Property(env, object, "PAGE_INT_DL_ENVELOPE", static_cast<int32_t>(PAGE_INT_DL_ENVELOPE));
-    CreateUint32Property(env, object, "PAGE_B_TABLOID", static_cast<int32_t>(PAGE_B_TABLOID));
+    SetEnumProperty(env, object, "PAGE_ISO_A3", static_cast<int32_t>(PAGE_ISO_A3));
+    SetEnumProperty(env, object, "PAGE_ISO_A4", static_cast<int32_t>(PAGE_ISO_A4));
+    SetEnumProperty(env, object, "PAGE_ISO_A5", static_cast<int32_t>(PAGE_ISO_A5));
+    SetEnumProperty(env, object, "PAGE_ISO_B5", static_cast<int32_t>(PAGE_ISO_B5));
+    SetEnumProperty(env, object, "PAGE_ISO_C5", static_cast<int32_t>(PAGE_ISO_C5));
+    SetEnumProperty(env, object, "PAGE_ISO_DL", static_cast<int32_t>(PAGE_ISO_DL));
+    SetEnumProperty(env, object, "PAGE_LETTER", static_cast<int32_t>(PAGE_LETTER));
+    SetEnumProperty(env, object, "PAGE_LEGAL", static_cast<int32_t>(PAGE_LEGAL));
+    SetEnumProperty(env, object, "PAGE_PHOTO_4X6", static_cast<int32_t>(PAGE_PHOTO_4X6));
+    SetEnumProperty(env, object, "PAGE_PHOTO_5X7", static_cast<int32_t>(PAGE_PHOTO_5X7));
+    SetEnumProperty(env, object, "PAGE_INT_DL_ENVELOPE", static_cast<int32_t>(PAGE_INT_DL_ENVELOPE));
+    SetEnumProperty(env, object, "PAGE_B_TABLOID", static_cast<int32_t>(PAGE_B_TABLOID));
     return object;
 }
 
@@ -289,11 +122,11 @@ static napi_value NapiCreateDocumentAdapterStateEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "PREVIEW_DESTROY", static_cast<int32_t>(PREVIEW_ABILITY_DESTROY));
-    CreateUint32Property(env, object, "PRINT_TASK_SUCCEED", static_cast<int32_t>(PRINT_TASK_SUCCEED));
-    CreateUint32Property(env, object, "PRINT_TASK_FAIL", static_cast<int32_t>(PRINT_TASK_FAIL));
-    CreateUint32Property(env, object, "PRINT_TASK_CANCEL", static_cast<int32_t>(PRINT_TASK_CANCEL));
-    CreateUint32Property(env, object, "PRINT_TASK_BLOCK", static_cast<int32_t>(PRINT_TASK_BLOCK));
+    SetEnumProperty(env, object, "PREVIEW_DESTROY", static_cast<int32_t>(PREVIEW_ABILITY_DESTROY));
+    SetEnumProperty(env, object, "PRINT_TASK_SUCCEED", static_cast<int32_t>(PRINT_TASK_SUCCEED));
+    SetEnumProperty(env, object, "PRINT_TASK_FAIL", static_cast<int32_t>(PRINT_TASK_FAIL));
+    SetEnumProperty(env, object, "PRINT_TASK_CANCEL", static_cast<int32_t>(PRINT_TASK_CANCEL));
+    SetEnumProperty(env, object, "PRINT_TASK_BLOCK", static_cast<int32_t>(PRINT_TASK_BLOCK));
     return object;
 }
 
@@ -301,16 +134,106 @@ static napi_value NapiCreateFileCreationStateEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "PRINT_FILE_CREATED", static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS));
-    CreateUint32Property(env, object, "PRINT_FILE_CREATION_FAILED", static_cast<int32_t>(PRINT_FILE_CREATED_FAIL));
-    CreateUint32Property(env, object, "PRINT_FILE_CREATED_UNRENDERED",
+    SetEnumProperty(env, object, "PRINT_FILE_CREATED", static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS));
+    SetEnumProperty(env, object, "PRINT_FILE_CREATION_FAILED", static_cast<int32_t>(PRINT_FILE_CREATED_FAIL));
+    SetEnumProperty(env, object, "PRINT_FILE_CREATED_UNRENDERED",
         static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS_UNRENDERED));
+    return object;
+}
+
+static napi_value NapiCreatePrinterStateEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    SetEnumProperty(env, object, "PRINTER_ADDED", static_cast<int32_t>(PRINTER_ADDED));
+    SetEnumProperty(env, object, "PRINTER_REMOVED", static_cast<int32_t>(PRINTER_REMOVED));
+    SetEnumProperty(env, object, "PRINTER_CAPABILITY_UPDATED", static_cast<int32_t>(PRINTER_UPDATE_CAP));
+    SetEnumProperty(env, object, "PRINTER_CONNECTED", static_cast<int32_t>(PRINTER_CONNECTED));
+    SetEnumProperty(env, object, "PRINTER_DISCONNECTED", static_cast<int32_t>(PRINTER_DISCONNECTED));
+    SetEnumProperty(env, object, "PRINTER_RUNNING", static_cast<int32_t>(PRINTER_RUNNING));
+    return object;
+}
+
+static napi_value NapiCreatePrintJobStateEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    SetEnumProperty(env, object, "PRINT_JOB_PREPARE", static_cast<int32_t>(PRINT_JOB_PREPARED));
+    SetEnumProperty(env, object, "PRINT_JOB_QUEUED", static_cast<int32_t>(PRINT_JOB_QUEUED));
+    SetEnumProperty(env, object, "PRINT_JOB_RUNNING", static_cast<int32_t>(PRINT_JOB_RUNNING));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCKED", static_cast<int32_t>(PRINT_JOB_BLOCKED));
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED", static_cast<int32_t>(PRINT_JOB_COMPLETED));
+    return object;
+}
+
+static napi_value NapiCreatePrintJobSubStateEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_SUCCESS", static_cast<int32_t>(PRINT_JOB_COMPLETED_SUCCESS));
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_FAILED", static_cast<int32_t>(PRINT_JOB_COMPLETED_FAILED));
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_CANCELLED", static_cast<int32_t>(PRINT_JOB_COMPLETED_CANCELLED));
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_FILE_CORRUPTED",
+        static_cast<int32_t>(PRINT_JOB_COMPLETED_FILE_CORRUPT));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OFFLINE", static_cast<int32_t>(PRINT_JOB_BLOCKED_OFFLINE));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_BUSY", static_cast<int32_t>(PRINT_JOB_BLOCKED_BUSY));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_CANCELLED", static_cast<int32_t>(PRINT_JOB_BLOCKED_CANCELLED));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OUT_OF_PAPER", static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_PAPER));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OUT_OF_INK", static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_INK));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OUT_OF_TONER", static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_TONER));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_JAMMED", static_cast<int32_t>(PRINT_JOB_BLOCKED_JAMMED));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_DOOR_OPEN", static_cast<int32_t>(PRINT_JOB_BLOCKED_DOOR_OPEN));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_SERVICE_REQUEST",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_SERVICE_REQUEST));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_LOW_ON_INK", static_cast<int32_t>(PRINT_JOB_BLOCKED_LOW_ON_INK));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_LOW_ON_TONER", static_cast<int32_t>(PRINT_JOB_BLOCKED_LOW_ON_TONER));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_REALLY_LOW_ON_INK",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_BAD_CERTIFICATE",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_ACCOUNT_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_ACCOUNT_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_PRINT_PERMISSION_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_PERMISSION_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_PRINT_COLOR_PERMISSION_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_COLOR_PERMISSION_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_NETWORK_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_NETWORK_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_SERVER_CONNECTION_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_LARGE_FILE_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_LARGE_FILE_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_FILE_PARSING_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_FILE_PARSING_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_SLOW_FILE_CONVERSION",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_SLOW_FILE_CONVERSION));
+    SetEnumProperty(env, object, "PRINT_JOB_RUNNING_UPLOADING_FILES",
+        static_cast<int32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES));
+    SetEnumProperty(env, object, "PRINT_JOB_RUNNING_CONVERTING_FILES",
+        static_cast<int32_t>(PRINT_JOB_RUNNING_CONVERTING_FILES));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_UNKNOWN", static_cast<int32_t>(PRINT_JOB_BLOCKED_UNKNOWN));
+    return object;
+}
+
+static napi_value NapiCreatePrintErrorCodeEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    SetEnumProperty(env, object, "E_PRINT_NONE", static_cast<int32_t>(E_PRINT_NONE));
+    SetEnumProperty(env, object, "E_PRINT_NO_PERMISSION", static_cast<int32_t>(E_PRINT_NO_PERMISSION));
+    SetEnumProperty(env, object, "E_PRINT_INVALID_PARAMETER", static_cast<int32_t>(E_PRINT_INVALID_PARAMETER));
+    SetEnumProperty(env, object, "E_PRINT_GENERIC_FAILURE", static_cast<int32_t>(E_PRINT_GENERIC_FAILURE));
+    SetEnumProperty(env, object, "E_PRINT_RPC_FAILURE", static_cast<int32_t>(E_PRINT_RPC_FAILURE));
+    SetEnumProperty(env, object, "E_PRINT_SERVER_FAILURE", static_cast<int32_t>(E_PRINT_SERVER_FAILURE));
+    SetEnumProperty(env, object, "E_PRINT_INVALID_EXTENSION", static_cast<int32_t>(E_PRINT_INVALID_EXTENSION));
+    SetEnumProperty(env, object, "E_PRINT_INVALID_PRINTER", static_cast<int32_t>(E_PRINT_INVALID_PRINTER));
+    SetEnumProperty(env, object, "E_PRINT_INVALID_PRINT_JOB", static_cast<int32_t>(E_PRINT_INVALID_PRINTJOB));
+    SetEnumProperty(env, object, "E_PRINT_FILE_IO", static_cast<int32_t>(E_PRINT_FILE_IO));
     return object;
 }
 
 static napi_value Init(napi_env env, napi_value exports)
 {
-    NapiCreateEnum(env);
     napi_property_descriptor desc[] = {
         PRINT_NAPI_PROPERTY("PrintDirectionMode", NapiCreateDirectionModeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintColorMode", NapiCreateColorModeEnum(env)),
@@ -318,57 +241,11 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY("PrintPageType", NapiCreatePageTypeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintDocumentAdapterState", NapiCreateDocumentAdapterStateEnum(env)),
         PRINT_NAPI_PROPERTY("PrintFileCreationState", NapiCreateFileCreationStateEnum(env)),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_ADD, printer_add),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_REMOVE, printer_removed),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_UPDATE_CAP, printer_updatecap),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_CONNECTED, printer_connected),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_DISCONNECTED, printer_disconnected),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINTER_RUNNING, printer_running),
+        PRINT_NAPI_PROPERTY("PrinterState", NapiCreatePrinterStateEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintJobState", NapiCreatePrintJobStateEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintJobSubState", NapiCreatePrintJobSubStateEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintErrorCode", NapiCreatePrintErrorCodeEnum(env)),
 
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_PREPARE, print_job_prepare),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_QUEUED, print_job_queued),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_RUNNING, print_job_running),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_BLOCKED, print_job_blocked),
-        PRINT_NAPI_PROPERTY(PROPERTY_PRINT_JOB_COMPLETED, print_job_completed),
-
-        PRINT_NAPI_PROPERTY(PROPERTY_COMPLETED_SUCCESS, completed_success),
-        PRINT_NAPI_PROPERTY(PROPERTY_COMPLETED_FAILED, completed_failed),
-        PRINT_NAPI_PROPERTY(PROPERTY_COMPLETED_CANCELLED, completed_cancelled),
-        PRINT_NAPI_PROPERTY(PROPERTY_COMPLETED_FILE_CORRUPT, completed_file_corrupt),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_OFFLINE, block_offline),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_BUSY, block_busy),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_CANCELLED, block_cancelled),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_OUT_OF_PAPER, block_out_of_paper),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_OUT_OF_INK, block_out_of_ink),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_OUT_OF_TONER, block_out_of_toner),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_JAMMED, block_jammed),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_DOOR_OPEN, block_door_open),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_SERVICE_REQUEST, block_service_request),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_LOW_ON_INK, block_low_on_ink),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_LOW_ON_TONER, block_low_on_toner),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_REALLY_LOW_ON_INK, block_really_low_on_ink),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_BAD_CERTIFICATE, block_bad_certificate),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_ACCOUNT_ERROR, block_account_error),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_PRINT_PERMISSION_ERROR, block_print_permission_error),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_PRINT_COLOR_PERMISSION_ERROR, block_print_color_permission_error),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_NETWORK_ERROR, block_network_error),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_SERVER_CONNECTION_ERROR, block_server_connection_error),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_LARGE_FILE_ERROR, block_large_file_error),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_FILE_PARSING_ERROR, block_file_parsing_error),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_SLOW_FILE_CONVERSION, block_slow_file_conversion),
-        PRINT_NAPI_PROPERTY(PROPERTY_RUNNING_UPLOADING_FILES, running_uploading_files),
-        PRINT_NAPI_PROPERTY(PROPERTY_RUNNING_CONVERTING_FILES, running_converting_files),
-        PRINT_NAPI_PROPERTY(PROPERTY_BLOCK_UNKNOWN, block_unknown),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_NONE, err_none),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_NO_PERMISSION, err_no_permission),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PARAMETER, err_invalid_parameter),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_GENERIC_FAILURE, err_generic_failure),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_RPC_FAILURE, err_rpc_failure),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_SERVER_FAILURE, err_server_failure),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_EXTENSION, err_invalid_extension),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTER, err_invalid_printer),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_INVALID_PRINTJOB, err_invalid_printjob),
-        PRINT_NAPI_PROPERTY(PROPERTY_ERR_FILE_IO, err_file_io),
         PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
 #ifdef PDFIUM_ENABLE
         PRINT_NAPI_METHOD(FUNCTION_CREATE_PDF_RENDER, NapiPrintPdfRender::CreatePdfRender),
