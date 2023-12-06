@@ -86,7 +86,7 @@ napi_value PrintPdfRender::GetPageCount(napi_env env, napi_callback_info info)
         PRINT_HILOGE("This render is null");
         return result;
     }
-    result = NapiPrintUtils::CreateUint32(env, render->pageCount);
+    result = NapiPrintUtils::CreateInt32(env, render->pageCount);
     return result;
 }
 
@@ -102,7 +102,7 @@ napi_value PrintPdfRender::GetPageSize(napi_env env, napi_callback_info info)
     napi_valuetype valuetype;
     PRINT_CALL(env, napi_typeof(env, argv[0], &valuetype));
     PRINT_ASSERT(env, valuetype == napi_number, "index not a number");
-    uint32_t pageIndex = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_ZERO]);
+    int32_t pageIndex = NapiPrintUtils::GetInt32FromValue(env, argv[0]);
     PrintPdfRender *render = nullptr;
     napi_value napi_pageSize = nullptr;
     PRINT_CALL(env, napi_unwrap(env, thisVal, reinterpret_cast<void **>(&render)));
@@ -137,7 +137,7 @@ napi_value PrintPdfRender::RenderPageToPng(napi_env env, napi_callback_info info
         PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_number, "type is not a number", napi_number_expected);
         // Get pageIndex and PdfRender
-        context->pageIndex = NapiPrintUtils::GetUint32FromValue(env, argv[0]);
+        context->pageIndex = NapiPrintUtils::GetInt32FromValue(env, argv[0]);
         PrintPdfRender *render = nullptr;
         PRINT_CALL_BASE(env, napi_unwrap(env, self, reinterpret_cast<void **>(&render)), napi_invalid_arg);
         if (render == nullptr) {

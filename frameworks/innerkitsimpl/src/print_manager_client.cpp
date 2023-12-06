@@ -500,12 +500,7 @@ static bool WritePng(std::string imagePath, void *buffer, int width, int height,
         PRINT_HILOGE("Failed to convert bitmap to PNG\n");
         return false;
     }
-    char realImagePath[PATH_MAX] = {};
-    if (realpath(imagePath.c_str(), realImagePath) == nullptr) {
-        PRINT_HILOGE("The realImagePath is null.");
-        return false;
-    }
-    FILE *fp = fopen(realImagePath, "wb");
+    FILE *fp = fopen(imagePath.c_str(), "wb");
     if (!fp) {
         PRINT_HILOGE("Failed to open %s for output\n", imagePath.c_str());
         return false;
@@ -518,7 +513,7 @@ static bool WritePng(std::string imagePath, void *buffer, int width, int height,
     return true;
 }
 
-static std::string GetImagePathByIndex(std::string basePngName, uint32_t pageIndex)
+static std::string GetImagePathByIndex(std::string basePngName, int32_t pageIndex)
 {
     std::string imagePath = basePngName + "-" + std::to_string(pageIndex) + ".png";
     return imagePath;
@@ -537,7 +532,7 @@ static ScopedFPDFBitmap BitmapInit(FPDF_PAGE page, uint32_t width, uint32_t heig
 }
 
 int32_t PrintManagerClient::PdfRenderInit(const std::string filePath, const std::string sandBoxPath,
-    std::string &basePngName, uint32_t &pageCount, FPDF_DOCUMENT &doc)
+    std::string &basePngName, int32_t &pageCount, FPDF_DOCUMENT &doc)
 {
     if (access(sandBoxPath.c_str(), F_OK) != 0) {
         PRINT_HILOGE("PdfRenderInit SandBoxPath can't be opened.");
@@ -576,10 +571,10 @@ int32_t PrintManagerClient::PdfRenderInit(const std::string filePath, const std:
     return E_PRINT_NONE;
 }
 
-int32_t PrintManagerClient::PdfRenderDestroy(const std::string basePngName, const uint32_t pageCount,
+int32_t PrintManagerClient::PdfRenderDestroy(const std::string basePngName, const int32_t pageCount,
     FPDF_DOCUMENT &doc)
 {
-    for (uint32_t pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+    for (int32_t pageIndex = 0; pageIndex < pageCount; pageIndex++) {
         std::string imagePath = GetImagePathByIndex(basePngName, pageIndex);
         if (imagePath.empty()) {
             PRINT_HILOGE("PdfRenderDestroy This imagePath is empty.");
@@ -595,7 +590,7 @@ int32_t PrintManagerClient::PdfRenderDestroy(const std::string basePngName, cons
     return E_PRINT_NONE;
 }
 
-int32_t PrintManagerClient::GetPdfPageSize(const uint32_t pageIndex, uint32_t &width, uint32_t &height,
+int32_t PrintManagerClient::GetPdfPageSize(const int32_t pageIndex, uint32_t &width, uint32_t &height,
     FPDF_DOCUMENT &doc)
 {
     if (doc == NULL) {
@@ -616,7 +611,7 @@ int32_t PrintManagerClient::GetPdfPageSize(const uint32_t pageIndex, uint32_t &w
     return E_PRINT_NONE;
 }
 
-int32_t PrintManagerClient::RenderPdfToPng(const std::string basePngName, const uint32_t pageIndex,
+int32_t PrintManagerClient::RenderPdfToPng(const std::string basePngName, const int32_t pageIndex,
     std::string &imagePath, FPDF_DOCUMENT &doc)
 {
     if (doc == NULL) {
