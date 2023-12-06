@@ -63,7 +63,7 @@ static constexpr const char *FUNCTION_NOTIFY_PRINT_SERVICE = "notifyPrintService
         (name), nullptr, nullptr, nullptr, nullptr, val, napi_static, nullptr   \
     }
 
-static void CreateUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value)
+static void SetEnumProperty(napi_env env, napi_value object, const std::string &name, uint32_t value)
 {
     napi_value tempValue = nullptr;
     napi_create_int32(env, value, &tempValue);
@@ -74,9 +74,9 @@ static napi_value NapiCreateDirectionModeEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "DIRECTION_MODE_AUTO", static_cast<int32_t>(DIRECTION_MODE_AUTO));
-    CreateUint32Property(env, object, "DIRECTION_MODE_PORTRAIT", static_cast<int32_t>(DIRECTION_MODE_PORTRAIT));
-    CreateUint32Property(env, object, "DIRECTION_MODE_LANDSCAPE", static_cast<int32_t>(DIRECTION_MODE_LANDSCAPE));
+    SetEnumProperty(env, object, "DIRECTION_MODE_AUTO", static_cast<int32_t>(DIRECTION_MODE_AUTO));
+    SetEnumProperty(env, object, "DIRECTION_MODE_PORTRAIT", static_cast<int32_t>(DIRECTION_MODE_PORTRAIT));
+    SetEnumProperty(env, object, "DIRECTION_MODE_LANDSCAPE", static_cast<int32_t>(DIRECTION_MODE_LANDSCAPE));
     return object;
 }
 
@@ -84,8 +84,8 @@ static napi_value NapiCreateColorModeEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "COLOR_MODE_MONOCHROME", static_cast<int32_t>(PRINT_COLOR_MODE_MONOCHROME));
-    CreateUint32Property(env, object, "COLOR_MODE_COLOR", static_cast<int32_t>(PRINT_COLOR_MODE_COLOR));
+    SetEnumProperty(env, object, "COLOR_MODE_MONOCHROME", static_cast<int32_t>(PRINT_COLOR_MODE_MONOCHROME));
+    SetEnumProperty(env, object, "COLOR_MODE_COLOR", static_cast<int32_t>(PRINT_COLOR_MODE_COLOR));
     return object;
 }
 
@@ -93,9 +93,9 @@ static napi_value NapiCreateDuplexModeEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "DUPLEX_MODE_NONE", static_cast<int32_t>(DUPLEX_MODE_NONE));
-    CreateUint32Property(env, object, "DUPLEX_MODE_LONG_EDGE", static_cast<int32_t>(DUPLEX_MODE_LONG_EDGE));
-    CreateUint32Property(env, object, "DUPLEX_MODE_SHORT_EDGE", static_cast<int32_t>(DUPLEX_MODE_SHORT_EDGE));
+    SetEnumProperty(env, object, "DUPLEX_MODE_NONE", static_cast<int32_t>(DUPLEX_MODE_NONE));
+    SetEnumProperty(env, object, "DUPLEX_MODE_LONG_EDGE", static_cast<int32_t>(DUPLEX_MODE_LONG_EDGE));
+    SetEnumProperty(env, object, "DUPLEX_MODE_SHORT_EDGE", static_cast<int32_t>(DUPLEX_MODE_SHORT_EDGE));
     return object;
 }
 
@@ -103,18 +103,18 @@ static napi_value NapiCreatePageTypeEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "PAGE_ISO_A3", static_cast<int32_t>(PAGE_ISO_A3));
-    CreateUint32Property(env, object, "PAGE_ISO_A4", static_cast<int32_t>(PAGE_ISO_A4));
-    CreateUint32Property(env, object, "PAGE_ISO_A5", static_cast<int32_t>(PAGE_ISO_A5));
-    CreateUint32Property(env, object, "PAGE_ISO_B5", static_cast<int32_t>(PAGE_ISO_B5));
-    CreateUint32Property(env, object, "PAGE_ISO_C5", static_cast<int32_t>(PAGE_ISO_C5));
-    CreateUint32Property(env, object, "PAGE_ISO_DL", static_cast<int32_t>(PAGE_ISO_DL));
-    CreateUint32Property(env, object, "PAGE_LETTER", static_cast<int32_t>(PAGE_LETTER));
-    CreateUint32Property(env, object, "PAGE_LEGAL", static_cast<int32_t>(PAGE_LEGAL));
-    CreateUint32Property(env, object, "PAGE_PHOTO_4X6", static_cast<int32_t>(PAGE_PHOTO_4X6));
-    CreateUint32Property(env, object, "PAGE_PHOTO_5X7", static_cast<int32_t>(PAGE_PHOTO_5X7));
-    CreateUint32Property(env, object, "PAGE_INT_DL_ENVELOPE", static_cast<int32_t>(PAGE_INT_DL_ENVELOPE));
-    CreateUint32Property(env, object, "PAGE_B_TABLOID", static_cast<int32_t>(PAGE_B_TABLOID));
+    SetEnumProperty(env, object, "PAGE_ISO_A3", static_cast<int32_t>(PAGE_ISO_A3));
+    SetEnumProperty(env, object, "PAGE_ISO_A4", static_cast<int32_t>(PAGE_ISO_A4));
+    SetEnumProperty(env, object, "PAGE_ISO_A5", static_cast<int32_t>(PAGE_ISO_A5));
+    SetEnumProperty(env, object, "PAGE_ISO_B5", static_cast<int32_t>(PAGE_ISO_B5));
+    SetEnumProperty(env, object, "PAGE_ISO_C5", static_cast<int32_t>(PAGE_ISO_C5));
+    SetEnumProperty(env, object, "PAGE_ISO_DL", static_cast<int32_t>(PAGE_ISO_DL));
+    SetEnumProperty(env, object, "PAGE_LETTER", static_cast<int32_t>(PAGE_LETTER));
+    SetEnumProperty(env, object, "PAGE_LEGAL", static_cast<int32_t>(PAGE_LEGAL));
+    SetEnumProperty(env, object, "PAGE_PHOTO_4X6", static_cast<int32_t>(PAGE_PHOTO_4X6));
+    SetEnumProperty(env, object, "PAGE_PHOTO_5X7", static_cast<int32_t>(PAGE_PHOTO_5X7));
+    SetEnumProperty(env, object, "PAGE_INT_DL_ENVELOPE", static_cast<int32_t>(PAGE_INT_DL_ENVELOPE));
+    SetEnumProperty(env, object, "PAGE_B_TABLOID", static_cast<int32_t>(PAGE_B_TABLOID));
     return object;
 }
 
@@ -122,11 +122,11 @@ static napi_value NapiCreateDocumentAdapterStateEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "PREVIEW_DESTROY", static_cast<int32_t>(PREVIEW_ABILITY_DESTROY));
-    CreateUint32Property(env, object, "PRINT_TASK_SUCCEED", static_cast<int32_t>(PRINT_TASK_SUCCEED));
-    CreateUint32Property(env, object, "PRINT_TASK_FAIL", static_cast<int32_t>(PRINT_TASK_FAIL));
-    CreateUint32Property(env, object, "PRINT_TASK_CANCEL", static_cast<int32_t>(PRINT_TASK_CANCEL));
-    CreateUint32Property(env, object, "PRINT_TASK_BLOCK", static_cast<int32_t>(PRINT_TASK_BLOCK));
+    SetEnumProperty(env, object, "PREVIEW_DESTROY", static_cast<int32_t>(PREVIEW_ABILITY_DESTROY));
+    SetEnumProperty(env, object, "PRINT_TASK_SUCCEED", static_cast<int32_t>(PRINT_TASK_SUCCEED));
+    SetEnumProperty(env, object, "PRINT_TASK_FAIL", static_cast<int32_t>(PRINT_TASK_FAIL));
+    SetEnumProperty(env, object, "PRINT_TASK_CANCEL", static_cast<int32_t>(PRINT_TASK_CANCEL));
+    SetEnumProperty(env, object, "PRINT_TASK_BLOCK", static_cast<int32_t>(PRINT_TASK_BLOCK));
     return object;
 }
 
@@ -134,9 +134,9 @@ static napi_value NapiCreateFileCreationStateEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "PRINT_FILE_CREATED", static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS));
-    CreateUint32Property(env, object, "PRINT_FILE_CREATION_FAILED", static_cast<int32_t>(PRINT_FILE_CREATED_FAIL));
-    CreateUint32Property(env, object, "PRINT_FILE_CREATED_UNRENDERED",
+    SetEnumProperty(env, object, "PRINT_FILE_CREATED", static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS));
+    SetEnumProperty(env, object, "PRINT_FILE_CREATION_FAILED", static_cast<int32_t>(PRINT_FILE_CREATED_FAIL));
+    SetEnumProperty(env, object, "PRINT_FILE_CREATED_UNRENDERED",
         static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS_UNRENDERED));
     return object;
 }
@@ -145,12 +145,12 @@ static napi_value NapiCreatePrinterStateEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "PRINTER_ADDED", static_cast<int32_t>(PRINTER_ADDED));
-    CreateUint32Property(env, object, "PRINTER_REMOVED", static_cast<int32_t>(PRINTER_REMOVED));
-    CreateUint32Property(env, object, "PRINTER_CAPABILITY_UPDATED", static_cast<int32_t>(PRINTER_UPDATE_CAP));
-    CreateUint32Property(env, object, "PRINTER_CONNECTED", static_cast<int32_t>(PRINTER_CONNECTED));
-    CreateUint32Property(env, object, "PRINTER_DISCONNECTED", static_cast<int32_t>(PRINTER_DISCONNECTED));
-    CreateUint32Property(env, object, "PRINTER_RUNNING", static_cast<int32_t>(PRINTER_RUNNING));
+    SetEnumProperty(env, object, "PRINTER_ADDED", static_cast<int32_t>(PRINTER_ADDED));
+    SetEnumProperty(env, object, "PRINTER_REMOVED", static_cast<int32_t>(PRINTER_REMOVED));
+    SetEnumProperty(env, object, "PRINTER_CAPABILITY_UPDATED", static_cast<int32_t>(PRINTER_UPDATE_CAP));
+    SetEnumProperty(env, object, "PRINTER_CONNECTED", static_cast<int32_t>(PRINTER_CONNECTED));
+    SetEnumProperty(env, object, "PRINTER_DISCONNECTED", static_cast<int32_t>(PRINTER_DISCONNECTED));
+    SetEnumProperty(env, object, "PRINTER_RUNNING", static_cast<int32_t>(PRINTER_RUNNING));
     return object;
 }
 
@@ -158,11 +158,11 @@ static napi_value NapiCreatePrintJobStateEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "PRINT_JOB_PREPARE", static_cast<int32_t>(PRINT_JOB_PREPARED));
-    CreateUint32Property(env, object, "PRINT_JOB_QUEUED", static_cast<int32_t>(PRINT_JOB_QUEUED));
-    CreateUint32Property(env, object, "PRINT_JOB_RUNNING", static_cast<int32_t>(PRINT_JOB_RUNNING));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCKED", static_cast<int32_t>(PRINT_JOB_BLOCKED));
-    CreateUint32Property(env, object, "PRINT_JOB_COMPLETED", static_cast<int32_t>(PRINT_JOB_COMPLETED));
+    SetEnumProperty(env, object, "PRINT_JOB_PREPARE", static_cast<int32_t>(PRINT_JOB_PREPARED));
+    SetEnumProperty(env, object, "PRINT_JOB_QUEUED", static_cast<int32_t>(PRINT_JOB_QUEUED));
+    SetEnumProperty(env, object, "PRINT_JOB_RUNNING", static_cast<int32_t>(PRINT_JOB_RUNNING));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCKED", static_cast<int32_t>(PRINT_JOB_BLOCKED));
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED", static_cast<int32_t>(PRINT_JOB_COMPLETED));
     return object;
 }
 
@@ -170,34 +170,48 @@ static napi_value NapiCreatePrintJobSubStateEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "PRINT_JOB_COMPLETED_SUCCESS", static_cast<int32_t>(PRINT_JOB_COMPLETED_SUCCESS));
-    CreateUint32Property(env, object, "PRINT_JOB_COMPLETED_FAILED", static_cast<int32_t>(PRINT_JOB_COMPLETED_FAILED));
-    CreateUint32Property(env, object, "PRINT_JOB_COMPLETED_CANCELLED", static_cast<int32_t>(PRINT_JOB_COMPLETED_CANCELLED));
-    CreateUint32Property(env, object, "PRINT_JOB_COMPLETED_FILE_CORRUPTED", static_cast<int32_t>(PRINT_JOB_COMPLETED_FILE_CORRUPT));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_OFFLINE", static_cast<int32_t>(PRINT_JOB_BLOCKED_OFFLINE));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_BUSY", static_cast<int32_t>(PRINT_JOB_BLOCKED_BUSY));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_CANCELLED", static_cast<int32_t>(PRINT_JOB_BLOCKED_CANCELLED));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_OUT_OF_PAPER", static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_PAPER));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_OUT_OF_INK", static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_INK));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_OUT_OF_TONER", static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_TONER));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_JAMMED", static_cast<int32_t>(PRINT_JOB_BLOCKED_JAMMED));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_DOOR_OPEN", static_cast<int32_t>(PRINT_JOB_BLOCKED_DOOR_OPEN));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_SERVICE_REQUEST", static_cast<int32_t>(PRINT_JOB_BLOCKED_SERVICE_REQUEST));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_LOW_ON_INK", static_cast<int32_t>(PRINT_JOB_BLOCKED_LOW_ON_INK));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_LOW_ON_TONER", static_cast<int32_t>(PRINT_JOB_BLOCKED_LOW_ON_TONER));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_REALLY_LOW_ON_INK", static_cast<int32_t>(PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_BAD_CERTIFICATE", static_cast<int32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_ACCOUNT_ERROR", static_cast<int32_t>(PRINT_JOB_BLOCKED_ACCOUNT_ERROR));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_PRINT_PERMISSION_ERROR", static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_PERMISSION_ERROR));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_PRINT_COLOR_PERMISSION_ERROR", static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_COLOR_PERMISSION_ERROR));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_NETWORK_ERROR", static_cast<int32_t>(PRINT_JOB_BLOCKED_NETWORK_ERROR));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_SERVER_CONNECTION_ERROR", static_cast<int32_t>(PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_LARGE_FILE_ERROR", static_cast<int32_t>(PRINT_JOB_BLOCKED_LARGE_FILE_ERROR));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_FILE_PARSING_ERROR", static_cast<int32_t>(PRINT_JOB_BLOCKED_FILE_PARSING_ERROR));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_SLOW_FILE_CONVERSION", static_cast<int32_t>(PRINT_JOB_BLOCKED_SLOW_FILE_CONVERSION));
-    CreateUint32Property(env, object, "PRINT_JOB_RUNNING_UPLOADING_FILES", static_cast<int32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES));
-    CreateUint32Property(env, object, "PRINT_JOB_RUNNING_CONVERTING_FILES", static_cast<int32_t>(PRINT_JOB_RUNNING_CONVERTING_FILES));
-    CreateUint32Property(env, object, "PRINT_JOB_BLOCK_UNKNOWN", static_cast<int32_t>(PRINT_JOB_BLOCKED_UNKNOWN));
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_SUCCESS", static_cast<int32_t>(PRINT_JOB_COMPLETED_SUCCESS));
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_FAILED", static_cast<int32_t>(PRINT_JOB_COMPLETED_FAILED));
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_CANCELLED", static_cast<int32_t>(PRINT_JOB_COMPLETED_CANCELLED));
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_FILE_CORRUPTED",
+        static_cast<int32_t>(PRINT_JOB_COMPLETED_FILE_CORRUPT));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OFFLINE", static_cast<int32_t>(PRINT_JOB_BLOCKED_OFFLINE));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_BUSY", static_cast<int32_t>(PRINT_JOB_BLOCKED_BUSY));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_CANCELLED", static_cast<int32_t>(PRINT_JOB_BLOCKED_CANCELLED));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OUT_OF_PAPER", static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_PAPER));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OUT_OF_INK", static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_INK));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OUT_OF_TONER", static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_TONER));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_JAMMED", static_cast<int32_t>(PRINT_JOB_BLOCKED_JAMMED));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_DOOR_OPEN", static_cast<int32_t>(PRINT_JOB_BLOCKED_DOOR_OPEN));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_SERVICE_REQUEST",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_SERVICE_REQUEST));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_LOW_ON_INK", static_cast<int32_t>(PRINT_JOB_BLOCKED_LOW_ON_INK));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_LOW_ON_TONER", static_cast<int32_t>(PRINT_JOB_BLOCKED_LOW_ON_TONER));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_REALLY_LOW_ON_INK",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_BAD_CERTIFICATE",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_ACCOUNT_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_ACCOUNT_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_PRINT_PERMISSION_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_PERMISSION_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_PRINT_COLOR_PERMISSION_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_COLOR_PERMISSION_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_NETWORK_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_NETWORK_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_SERVER_CONNECTION_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_LARGE_FILE_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_LARGE_FILE_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_FILE_PARSING_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_FILE_PARSING_ERROR));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_SLOW_FILE_CONVERSION",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_SLOW_FILE_CONVERSION));
+    SetEnumProperty(env, object, "PRINT_JOB_RUNNING_UPLOADING_FILES",
+        static_cast<int32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES));
+    SetEnumProperty(env, object, "PRINT_JOB_RUNNING_CONVERTING_FILES",
+        static_cast<int32_t>(PRINT_JOB_RUNNING_CONVERTING_FILES));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_UNKNOWN", static_cast<int32_t>(PRINT_JOB_BLOCKED_UNKNOWN));
     return object;
 }
 
@@ -205,16 +219,16 @@ static napi_value NapiCreatePrintErrorCodeEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    CreateUint32Property(env, object, "E_PRINT_NONE", static_cast<int32_t>(E_PRINT_NONE));
-    CreateUint32Property(env, object, "E_PRINT_NO_PERMISSION", static_cast<int32_t>(E_PRINT_NO_PERMISSION));
-    CreateUint32Property(env, object, "E_PRINT_INVALID_PARAMETER", static_cast<int32_t>(E_PRINT_INVALID_PARAMETER));
-    CreateUint32Property(env, object, "E_PRINT_GENERIC_FAILURE", static_cast<int32_t>(E_PRINT_GENERIC_FAILURE));
-    CreateUint32Property(env, object, "E_PRINT_RPC_FAILURE", static_cast<int32_t>(E_PRINT_RPC_FAILURE));
-    CreateUint32Property(env, object, "E_PRINT_SERVER_FAILURE", static_cast<int32_t>(E_PRINT_SERVER_FAILURE));
-    CreateUint32Property(env, object, "E_PRINT_INVALID_EXTENSION", static_cast<int32_t>(E_PRINT_INVALID_EXTENSION));
-    CreateUint32Property(env, object, "E_PRINT_INVALID_PRINTER", static_cast<int32_t>(E_PRINT_INVALID_PRINTER));
-    CreateUint32Property(env, object, "E_PRINT_INVALID_PRINT_JOB", static_cast<int32_t>(E_PRINT_INVALID_PRINTJOB));
-    CreateUint32Property(env, object, "E_PRINT_FILE_IO", static_cast<int32_t>(E_PRINT_FILE_IO));
+    SetEnumProperty(env, object, "E_PRINT_NONE", static_cast<int32_t>(E_PRINT_NONE));
+    SetEnumProperty(env, object, "E_PRINT_NO_PERMISSION", static_cast<int32_t>(E_PRINT_NO_PERMISSION));
+    SetEnumProperty(env, object, "E_PRINT_INVALID_PARAMETER", static_cast<int32_t>(E_PRINT_INVALID_PARAMETER));
+    SetEnumProperty(env, object, "E_PRINT_GENERIC_FAILURE", static_cast<int32_t>(E_PRINT_GENERIC_FAILURE));
+    SetEnumProperty(env, object, "E_PRINT_RPC_FAILURE", static_cast<int32_t>(E_PRINT_RPC_FAILURE));
+    SetEnumProperty(env, object, "E_PRINT_SERVER_FAILURE", static_cast<int32_t>(E_PRINT_SERVER_FAILURE));
+    SetEnumProperty(env, object, "E_PRINT_INVALID_EXTENSION", static_cast<int32_t>(E_PRINT_INVALID_EXTENSION));
+    SetEnumProperty(env, object, "E_PRINT_INVALID_PRINTER", static_cast<int32_t>(E_PRINT_INVALID_PRINTER));
+    SetEnumProperty(env, object, "E_PRINT_INVALID_PRINT_JOB", static_cast<int32_t>(E_PRINT_INVALID_PRINTJOB));
+    SetEnumProperty(env, object, "E_PRINT_FILE_IO", static_cast<int32_t>(E_PRINT_FILE_IO));
     return object;
 }
 
