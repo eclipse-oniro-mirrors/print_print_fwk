@@ -143,14 +143,14 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
         std::shared_ptr<PrintAttributes> printAttributes =
             PrintAttributesHelper::BuildFromJs(env, argv[NapiPrintUtils::ARGC_TWO]);
         if (printAttributes == nullptr) {
-            PRINT_HILOGE("printAdapter paramter error");
+            PRINT_HILOGE("printAdapter parameter error");
             return nullptr;
         }
 
         napi_ref adapterRef = NapiPrintUtils::CreateReference(env, argv[1]);
         sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, adapterRef);
         if (callback == nullptr) {
-            PRINT_HILOGE("callback paramter error");
+            PRINT_HILOGE("callback parameter error");
             return nullptr;
         }
 
