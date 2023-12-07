@@ -85,6 +85,7 @@ struct JobParameters {
     std::string color;
     std::string serviceJobId;
     std::vector<uint32_t> fdList;
+    PrintServiceAbility *serviceAbility;
 };
 struct JobStatus {
     char printer_state_reasons[1024];
@@ -120,6 +121,7 @@ public:
     void CancelCupsJob(std::string serviceJobId);
 
 private:
+    static void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
     static void MonitorJobState(JobMonitorParam *param, CallbackFunc callback);
     static void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
     static bool CheckPrinterOnline(const char* printerUri);
@@ -127,16 +129,16 @@ private:
     static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
     static void CopyDirectory(const char *srcDir, const char *destDir);
     static void ChangeFilterPermission(const std::string &path, mode_t mode);
-    static void ReportAbnormalState(PrintServiceAbility *printServiceAbility, std::string serviceJobId);
+    static bool CheckPrinterMakeModel(JobParameters *jobParams);
+    static bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
+        cups_option_t *options, http_t *http);
+    static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static float ConvertInchTo100MM(float num);
 
     int32_t StartCupsdService();
     void StartNextJob();
     void JobCompleteCallback();
-    void StartCupsJob(JobParameters *jobParams);
-    bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId, cups_option_t *options,
-        http_t *http);
-    int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
-    int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     JobParameters* BuildJobParameters(const PrintJob &jobInfo);
     std::string GetColorString(uint32_t colorCode);
     std::string GetMedieSize(const PrintJob &jobInfo);
@@ -150,7 +152,6 @@ private:
     void GetSupportedDuplexType(ipp_t *response, PrinterCapability &printerCaps);
     nlohmann::json ParseSupportQualities(ipp_t *response);
     nlohmann::json ParseSupportMediaTypes(ipp_t *response);
-    float ConvertInchTo100MM(float num);
     void ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
         std::vector<std::string> &ppds);
 
