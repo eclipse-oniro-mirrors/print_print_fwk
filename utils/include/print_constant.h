@@ -119,6 +119,7 @@ enum PrintJobSubState {
     PRINT_JOB_BLOCKED_LOW_ON_TONER = 14,        // low on toner
     PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK = 15,   // really low on ink
     PRINT_JOB_BLOCKED_BAD_CERTIFICATE = 16,     // bad certification
+    PRINT_JOB_BLOCKED_DRIVER_EXCEPTION = 17,    // printer driver exception
 
     PRINT_JOB_BLOCKED_ACCOUNT_ERROR = 18, // An error occurred when printing the account.
     PRINT_JOB_BLOCKED_PRINT_PERMISSION_ERROR = 19, // The printing permission is abnormal.

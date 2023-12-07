@@ -48,6 +48,7 @@ const uint32_t DIR_COUNT = 3;
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_ONE = 1;
 const uint32_t INDEX_TWO = 2;
+const uint32_t MAX_RETRY_TIMES = 5;
 const uint32_t BUFFER_LEN = 256;
 const uint32_t DIR_MODE = 0771;
 
@@ -438,7 +439,9 @@ void PrintCupsClient::StartNextJob()
         PRINT_HILOGE("currentJob_ is nullptr");
         return;
     }
-    StartCupsJob(currentJob_);
+    CallbackFunc callback = [this]() { JobCompleteCallback(); };
+    std::thread StartPrintThread(StartCupsJob, currentJob_, callback);
+    StartPrintThread.detach();
 }
 
 void PrintCupsClient::JobCompleteCallback()
@@ -526,11 +529,34 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     return num_options;
 }
 
-void PrintCupsClient::ReportAbnormalState(PrintServiceAbility *printServiceAbility, std::string serviceJobId)
+bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams)
 {
-    sleep(INDEX_ONE);
-    printServiceAbility->UpdatePrintJobState(serviceJobId, PRINT_JOB_BLOCKED,
-        PRINT_JOB_BLOCKED_NETWORK_ERROR);
+    cups_dest_t *dest = nullptr;
+    bool isMakeModelRight = false;
+    uint32_t retryCount = 0;
+    PRINT_HILOGD("CheckPrinterMakeModel start.");
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("The jobParams is null");
+        return isMakeModelRight;
+    }
+    while (retryCount < MAX_RETRY_TIMES) {
+        dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, jobParams->printerName.c_str(), NULL);
+        if (dest != NULL) {
+            const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
+            PRINT_HILOGD("makeModel=%{private}s", makeModel);
+            if (strcmp(makeModel, "Local Raw Printer") != 0) {
+                isMakeModelRight = true;
+                cupsFreeDests(1, dest);
+                break;
+            }
+            cupsFreeDests(1, dest);
+        } else {
+            PRINT_HILOGE("The dest is null");
+        }
+        retryCount++;
+        sleep(INDEX_TWO);
+    }
+    return isMakeModelRight;
 }
 
 bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
@@ -540,25 +566,39 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
         PRINT_HILOGE("The jobParams is null");
         return false;
     }
-    if (!CheckPrinterOnline(jobParams->printerUri.c_str())) {
-        PRINT_HILOGE("VerifyPrintJob printer offline");
-        // Abnormal status reported too quickly, icon does not display abnormalities
-        std::thread reportAbnormalThread(ReportAbnormalState, PrintServiceAbility::GetInstance(),
-            jobParams->serviceJobId);
-        reportAbnormalThread.detach();
+    uint32_t retryCount = 0;
+    bool isPrinterOnline = false;
+    while (retryCount < MAX_RETRY_TIMES) {
+        if (CheckPrinterOnline(jobParams->printerUri.c_str())) {
+            isPrinterOnline = true;
+            break;
+        }
+        retryCount++;
+        sleep(INDEX_ONE);
+    }
+    if (!isPrinterOnline) {
+        jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
+            PRINT_JOB_BLOCKED_NETWORK_ERROR);
+        return false;
+    }
+    if (!CheckPrinterMakeModel(jobParams)) {
+        PRINT_HILOGE("VerifyPrintJob printer make model is error");
+        sleep(INDEX_ONE);
+        jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
+            PRINT_JOB_BLOCKED_DRIVER_EXCEPTION);
         return false;
     }
     num_options = FillJobOptions(jobParams, num_options, &options);
     if ((jobId = static_cast<uint32_t>(cupsCreateJob(http, jobParams->printerName.c_str(), jobParams->jobName.c_str(),
         num_options, options))) == 0) {
         PRINT_HILOGE("Unable to cupsCreateJob: %s", cupsLastErrorString());
-        PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
+        jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR);
         return false;
     }
     return true;
 }
-void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
+void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callback)
 {
     http_t *http = nullptr;
     int num_options = 0;
@@ -570,7 +610,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
     ssize_t bytes = -1;
 
     if (!VerifyPrintJob(jobParams, num_options, jobId, options, http)) {
-        JobCompleteCallback();
+        callback();
         return;
     }
     uint32_t num_files = jobParams->fdList.size();
@@ -579,7 +619,9 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
         if ((fp = cupsFileOpenFd(jobParams->fdList[i], "rb")) == NULL) {
             PRINT_HILOGE("Unable to open print file, cancel the job");
             cupsCancelJob2(http, jobParams->printerName.c_str(), jobId, 0);
-            JobCompleteCallback();
+            jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
+                PRINT_JOB_COMPLETED_FILE_CORRUPT);
+            callback();
             return;
         }
         status = cupsStartDocument(http, jobParams->printerName.c_str(), jobId, jobParams->jobName.c_str(),
@@ -595,21 +637,19 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams)
             != IPP_STATUS_OK) {
             PRINT_HILOGE("Unable to queue, error is %s, cancel the job and return...", cupsLastErrorString());
             cupsCancelJob2(http, jobParams->printerUri.c_str(), jobId, 0);
-            PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
+            jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
                 PRINT_JOB_BLOCKED_UNKNOWN);
-            JobCompleteCallback();
+            callback();
             return;
         }
     }
     jobParams->cupsJobId = jobId;
     PRINT_HILOGD("start job success, jobId: %d", jobId);
-    JobMonitorParam *param = new (std::nothrow) JobMonitorParam { PrintServiceAbility::GetInstance(),
+    JobMonitorParam *param = new (std::nothrow) JobMonitorParam { jobParams->serviceAbility,
         jobParams->serviceJobId, jobId, jobParams->printerUri, jobParams->printerName };
     if (param == nullptr)
         return;
-    CallbackFunc callback = [this]() { JobCompleteCallback(); };
-    std::thread jobMonitorThread(PrintCupsClient::MonitorJobState, param, callback);
-    jobMonitorThread.detach();
+    MonitorJobState(param, callback);
 }
 
 void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callback)
@@ -878,16 +918,15 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     } else {
         params->printQuality = CUPS_PRINT_QUALITY_NORMAL;
     }
-    if (optionJson.contains("jobName")) {
+    if (optionJson.contains("jobName"))
         params->jobName = optionJson["jobName"];
-    } else {
+    else
         params->jobName = DEFAULT_JOB_NAME;
-    }
-    if (optionJson.contains("mediaType")) {
+    if (optionJson.contains("mediaType"))
         params->mediaType = optionJson["mediaType"];
-    } else {
+    else
         params->mediaType = CUPS_MEDIA_TYPE_PLAIN;
-    }
+    params->serviceAbility = PrintServiceAbility::GetInstance();
     return params;
 }
 
