@@ -2150,6 +2150,12 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0108, TestSize.Level1)
     dr->OnRemoteDied(obj);
 }
 
+/**
+* @tc.name: PrintManagerClientTest_0109
+* @tc.desc: LoadServerFail
+* @tc.type: FUNC
+* @tc.require:
+*/
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0109, TestSize.Level1)
 {
     std::vector<std::string> testFileList = {"file://data/print/a.png",

@@ -83,10 +83,10 @@ public:
     int32_t NotifyPrintService(const std::string &jobId, const std::string &type);
 #ifdef PDFIUM_ENABLE
     int32_t PdfRenderInit(const std::string filePath, const std::string sandBoxPath, std::string &basePngName,
-        uint32_t &pageCount, FPDF_DOCUMENT &doc);
-    int32_t PdfRenderDestroy(const std::string basePngName, const uint32_t pageCount, FPDF_DOCUMENT &doc);
-    int32_t GetPdfPageSize(const uint32_t pageIndex, uint32_t &width, uint32_t &height, FPDF_DOCUMENT &doc);
-    int32_t RenderPdfToPng(const std::string basePngName, const uint32_t pageIndex, std::string &imagePath,
+        int32_t &pageCount, FPDF_DOCUMENT &doc);
+    int32_t PdfRenderDestroy(const std::string basePngName, const int32_t pageCount, FPDF_DOCUMENT &doc);
+    int32_t GetPdfPageSize(const int32_t pageIndex, uint32_t &width, uint32_t &height, FPDF_DOCUMENT &doc);
+    int32_t RenderPdfToPng(const std::string basePngName, const int32_t pageIndex, std::string &imagePath,
         FPDF_DOCUMENT &doc);
 #endif // PDFIUM_ENABLE
 

@@ -44,9 +44,9 @@ private:
     struct PrintPdfRenderEventContext : public PrintAsyncCall::Context {
         std::string imagePath = "";
         std::string basePngName = "";
-        uint32_t pageIndex = 0;
+        int32_t pageIndex = 0;
 #ifdef PDFIUM_ENABLE
-        FPDF_DOCUMENT doc_;
+        FPDF_DOCUMENT doc_ = nullptr;
 #endif // PDFIUM_ENABLE
         PrintPdfRenderEventContext() : Context(nullptr, nullptr) {};
         PrintPdfRenderEventContext(InputAction input, OutputAction output)
@@ -55,10 +55,10 @@ private:
     };
 
     std::string file_;
-    uint32_t pageCount = 0;
+    int32_t pageCount = 0;
     std::string basePngName = "";
 #ifdef PDFIUM_ENABLE
-    FPDF_DOCUMENT doc_;
+    FPDF_DOCUMENT doc_ = nullptr;
 #endif // PDFIUM_ENABLE
 };
 } // namespace OHOS::Print

@@ -155,7 +155,12 @@ bool NapiPrintPdfRender::IsPdfFile(const std::string fileName)
         PRINT_HILOGE("This file is null");
         return false;
     }
-    auto file = fopen(fileName.c_str(), "rb");
+    char realPdfPath[PATH_MAX] = {};
+    if (realpath(fileName.c_str(), realPdfPath) == nullptr) {
+        PRINT_HILOGE("The realPdfPath is null.");
+        return false;
+    }
+    auto file = fopen(realPdfPath, "rb");
     if (file != nullptr) {
         fclose(file);
         if (fileName.find(".pdf") == fileName.npos) {
