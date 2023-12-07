@@ -583,7 +583,6 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     }
     if (!CheckPrinterMakeModel(jobParams)) {
         PRINT_HILOGE("VerifyPrintJob printer make model is error");
-        sleep(INDEX_ONE);
         jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_DRIVER_EXCEPTION);
         return false;
@@ -1087,10 +1086,10 @@ void PrintCupsClient::GetSupportedDuplexType(ipp_t *response, PrinterCapability 
 {
     ipp_attribute_t *attrptr;
     if ((attrptr = ippFindAttribute(response, "sides-supported", IPP_TAG_KEYWORD)) != NULL) {
-        if (ippContainsString(attrptr, CUPS_SIDES_TWO_SIDED_PORTRAIT)) {
-            printerCaps.SetDuplexMode((uint32_t)DUPLEX_MODE_TWO_SIDED_LONG_EDGE);
-        } else if (ippContainsString(attrptr, CUPS_SIDES_TWO_SIDED_LANDSCAPE)) {
+        if (ippContainsString(attrptr, CUPS_SIDES_TWO_SIDED_LANDSCAPE)) {
             printerCaps.SetDuplexMode((uint32_t)DUPLEX_MODE_TWO_SIDED_SHORT_EDGE);
+        } else if (ippContainsString(attrptr, CUPS_SIDES_TWO_SIDED_PORTRAIT)) {
+            printerCaps.SetDuplexMode((uint32_t)DUPLEX_MODE_TWO_SIDED_LONG_EDGE);
         } else {
             printerCaps.SetDuplexMode((uint32_t)DUPLEX_MODE_ONE_SIDED);
         }
