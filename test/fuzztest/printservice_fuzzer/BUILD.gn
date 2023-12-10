@@ -22,8 +22,8 @@ ohos_fuzztest("PrintServiceFuzzTest") {
   fuzz_config_file = "${print_path}/test/fuzztest/printservice_fuzzer"
 
   include_dirs = [
-    "${print_path}/frameworks/innerkitsimpl/include",
-    "${print_path}/services/include",
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/services/print_service/include",
     "${print_utils_path}/include",
   ]
 
@@ -35,8 +35,8 @@ ohos_fuzztest("PrintServiceFuzzTest") {
   ]
 
   deps = [
-    "${print_path}/frameworks/innerkitsimpl:print_client",
-    "${print_path}/services:print_service",
+    "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
+    "${print_path}/services/print_service:print_service",
   ]
 
   external_deps = [

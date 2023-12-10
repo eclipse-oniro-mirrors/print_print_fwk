@@ -17,7 +17,7 @@ import("//build/ohos.gni")
 config("ability_config") {
   visibility = [ ":*" ]
   include_dirs = [
-    "${print_path}/frameworks/innerkitsimpl/include",
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/kits/extension/include",
     "${print_utils_path}/include",
     "//third_party/node/src",
@@ -36,7 +36,7 @@ config("ability_config") {
 config("ability_public_config") {
   visibility = [ ":*" ]
   include_dirs = [
-    "${print_path}/frameworks/innerkitsimpl/include",
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/kits/extension/include",
     "//third_party/libuv/include",
     "//third_party/json/include",
@@ -47,9 +47,9 @@ config("ability_public_config") {
 
 ohos_shared_library("print_extension_framework") {
   include_dirs = [
-    "${print_path}/frameworks/helper/include",
-    "${print_path}/frameworks/models/include",
-    "${print_path}/frameworks/innerkitsimpl/include",
+    "${print_path}/frameworks/helper/print_helper/include",
+    "${print_path}/frameworks/models/print_models/include",
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/kits/extension/include",
   ]
 
@@ -68,9 +68,9 @@ ohos_shared_library("print_extension_framework") {
   ]
 
   deps = [
-    "${print_path}/frameworks/helper:print_helper",
-    "${print_path}/frameworks/innerkitsimpl:print_client",
-    "${print_path}/frameworks/models:print_models",
+    "${print_path}/frameworks/helper/print_helper:print_helper",
+    "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
+    "${print_path}/frameworks/models/print_models:print_models",
   ]
 
   external_deps = [

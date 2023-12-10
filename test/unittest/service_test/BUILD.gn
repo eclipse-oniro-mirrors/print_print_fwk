@@ -21,10 +21,10 @@ ohos_unittest("print_service_test") {
   include_dirs = [
     "mock",
     "../fwk_inner_napi_test/mock",
-    "${print_path}/frameworks/innerkitsimpl/include",
-    "${print_path}/frameworks/models/include",
-    "${print_path}/interfaces/kits/napi/include",
-    "${print_path}/services/include",
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/models/print_models/include",
+    "${print_path}/interfaces/kits/napi/print_napi/include",
+    "${print_path}/services/print_service/include",
     "${print_utils_path}/include",
     "//third_party/node/src",
   ]
@@ -43,15 +43,15 @@ ohos_unittest("print_service_test") {
 
   deps = [
     "${print_path}/etc/init:printservice.rc",
-    "${print_path}/frameworks/innerkitsimpl:print_client",
+    "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
     "${print_path}/frameworks/kits/extension:print_extension_framework",
     "${print_path}/frameworks/kits/extension:print_extension_module",
-    "${print_path}/frameworks/models:print_models",
-    "${print_path}/interfaces/kits/jsnapi/extension:printextension_napi",
-    "${print_path}/interfaces/kits/jsnapi/extensionctx:printextensioncontext_napi",
-    "${print_path}/interfaces/kits/napi:print_napi",
+    "${print_path}/frameworks/models/print_models:print_models",
+    "${print_path}/interfaces/kits/jsnapi/print_extension:printextension_napi",
+    "${print_path}/interfaces/kits/jsnapi/print_extensionctx:printextensioncontext_napi",
+    "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
-    "${print_path}/services:print_service",
+    "${print_path}/services/print_service:print_service",
     "//third_party/googletest:gmock_main",
     "//third_party/zlib:libz",
   ]
