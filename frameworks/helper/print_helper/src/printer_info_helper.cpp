@@ -26,7 +26,7 @@ static constexpr const char *PARAM_INFO_PRINTERSTATE = "printerState";
 static constexpr const char *PARAM_INFO_PRINTERICON = "printerIcon";
 static constexpr const char *PARAM_INFO_DESCRIPTION = "description";
 static constexpr const char *PARAM_INFO_CAPABILITY = "capability";
-static constexpr const char *PARAM_JOB_OPTION = "option";
+static constexpr const char *PARAM_JOB_OPTION = "options";
 
 napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info)
 {

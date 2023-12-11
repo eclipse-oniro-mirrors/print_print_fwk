@@ -20,18 +20,19 @@ extern const char _binary_print_extension_js_end[];
 extern const char _binary_print_extension_abc_start[];
 extern const char _binary_print_extension_abc_end[];
 
-extern "C" __attribute__((constructor)) void NAPI_PrintExtension_AutoRegister()
+extern "C" __attribute__((constructor)) void NAPI_app_ability_PrintExtensionAbility_AutoRegister()
 {
     auto moduleManager = NativeModuleManager::GetInstance();
     NativeModule newModuleInfo = {
-        .name = "PrintExtension",
-        .fileName = "libprintextension_napi.so/PrintExtension.js",
+        .name = "app.ability.PrintExtensionAbility",
+        .fileName = "app/ability/libprintextensionability_napi.so/PrintExtension.js",
     };
 
     moduleManager->Register(&newModuleInfo);
 }
 
-extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtension_GetJSCode(const char **buf, int *bufLen)
+extern "C" __attribute__((visibility("default"))) void NAPI_app_ability_PrintExtensionAbility_GetJSCode(
+    const char **buf, int *bufLen)
 {
     if (buf != nullptr) {
         *buf = _binary_print_extension_js_start;
@@ -43,7 +44,8 @@ extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtension_GetJS
 }
 
 // print_extension JS register
-extern "C" __attribute__((visibility("default"))) void NAPI_PrintExtension_GetABCCode(const char **buf, int *buflen)
+extern "C" __attribute__((visibility("default"))) void NAPI_app_ability_PrintExtensionAbility_GetABCCode(
+    const char **buf, int *buflen)
 {
     if (buf != nullptr) {
         *buf = _binary_print_extension_abc_start;

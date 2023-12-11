@@ -36,7 +36,7 @@ static constexpr const char *PARAM_JOB_COLORMODE = "colorMode";
 static constexpr const char *PARAM_JOB_DUPLEXMODE = "duplexMode";
 static constexpr const char *PARAM_JOB_MARGIN = "margin";
 static constexpr const char *PARAM_JOB_PREVIEW = "preview";
-static constexpr const char *PARAM_JOB_OPTION = "option";
+static constexpr const char *PARAM_JOB_OPTION = "options";
 
 napi_value PrintJobHelper::MakeJsSimpleObject(napi_env env, const PrintJob &job)
 {
