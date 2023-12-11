@@ -163,7 +163,6 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
 
         if (task == nullptr) {
             PRINT_HILOGE("print task fail");
-            delete callback;
             return nullptr;
         }
         auto finalize = [](napi_env env, void *data, void *hint) {
