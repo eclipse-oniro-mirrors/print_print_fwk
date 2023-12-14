@@ -722,7 +722,7 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
         std::string printerState(jobStatus->printer_state_reasons);
         if (find(IGNORE_STATE_LIST.begin(), IGNORE_STATE_LIST.end(), printerState) != IGNORE_STATE_LIST.end()) {
             param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
-                PRINT_JOB_BLOCKED_BUSY);           
+                PRINT_JOB_BLOCKED_BUSY);
         } else {
             ReportBlockedReason(param, jobStatus);
         }
