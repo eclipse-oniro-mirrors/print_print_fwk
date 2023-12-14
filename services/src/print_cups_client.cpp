@@ -76,7 +76,7 @@ static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::vector<std::string> IGNORE_STATE_LIST = {
-    PRINTER_STATE_WAITING_COMPLETE, PRINTER_STATE_NONE, PRINTER_STATE_WIFI_NOT_CONFIGURED
+    PRINTER_STATE_WAITING_COMPLETE, PRINTER_STATE_NONE, PRINTER_STATE_EMPTY, PRINTER_STATE_WIFI_NOT_CONFIGURED
 };
 
 PrintCupsClient::PrintCupsClient()
@@ -232,7 +232,7 @@ void PrintCupsClient::StopCupsdService()
         PRINT_HILOGI("The cupsd process is not started, no need stop.");
         return;
     }
-    PRINT_HILOGI("The cupsd process is not started, stop it now.");
+    PRINT_HILOGI("The cupsd process is started, stop it now.");
     int result = SetParameter(CUPSD_CONTROL_PARAM.c_str(), "false");
     if (result) {
         PRINT_HILOGD("SetParameter failed: %{public}d.", result);
