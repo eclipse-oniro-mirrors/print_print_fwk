@@ -58,6 +58,7 @@ static const std::string DEFAULT_PPD_NAME = "everywhere";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
 static const std::string DEFAULT_USER = "default";
 static const std::string PRINTER_STATE_WAITING_COMPLETE = "cups-waiting-for-job-completed";
+static const std::string PRINTER_STATE_WIFI_NOT_CONFIGURED = "wifi-not-configured-report";
 static const std::string PRINTER_STATE_NONE = "none";
 static const std::string PRINTER_STATE_EMPTY = "";
 static const std::string PRINTER_STATE_MEDIA_EMPTY = "media-empty";
@@ -73,6 +74,10 @@ static const std::string PRINTER_STATE_INK_EMPTY = "marker-ink-almost-empty";
 static const std::string PRINTER_STATE_COVER_OPEN = "cover-open";
 static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string DEFAULT_JOB_NAME = "test";
+static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
+static const std::vector<std::string> IGNORE_STATE_LIST = {
+    PRINTER_STATE_WAITING_COMPLETE, PRINTER_STATE_NONE, PRINTER_STATE_WIFI_NOT_CONFIGURED
+}
 
 PrintCupsClient::PrintCupsClient()
 {}
@@ -85,14 +90,14 @@ int32_t PrintCupsClient::StartCupsdService()
     PRINT_HILOGD("StartCupsdService enter");
     if (!IsCupsServerAlive()) {
         PRINT_HILOGI("The cupsd process is not started, start it now.");
-        int result = SetParameter("print.cupsd.ready", "true");
+        int result = SetParameter(CUPSD_CONTROL_PARAM.c_str(), "true");
         if (result) {
             PRINT_HILOGD("SetParameter failed: %{public}d.", result);
             return E_PRINT_SERVER_FAILURE;
         }
         const int bufferSize = 96;
         char value[bufferSize] = {0};
-        GetParameter("print.cupsd.ready", "", value, bufferSize-1);
+        GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, bufferSize-1);
         PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
         return E_PRINT_NONE;
     }
@@ -223,26 +228,20 @@ int32_t PrintCupsClient::InitCupsResources()
 void PrintCupsClient::StopCupsdService()
 {
     PRINT_HILOGD("StopCupsdService enter");
-    char pid[BUFFER_LEN];
-    FILE *pid_fp = nullptr;
-    pid_fp = popen("pidof cupsd", "r");
-    if (pid_fp == nullptr) {
-        PRINT_HILOGE("Failed to call popen function");
+    if (!IsCupsServerAlive()) {
+        PRINT_HILOGI("The cupsd process is not started, no need stop.");
         return;
     }
-    if (fgets(pid, sizeof(pid), pid_fp) != nullptr) {
-        PRINT_HILOGI("Stop CUPSD Process");
-        sleep(1);
-        if (kill(atoi(pid), SIGTERM) == -1) {
-            PRINT_HILOGE("Failed to kill cupsd process");
-            pclose(pid_fp);
-            return;
-        }
-        PRINT_HILOGE("kill cupsd process success");
-    } else {
-        PRINT_HILOGI("The Process of CUPSD is not existed.");
+    PRINT_HILOGI("The cupsd process is not started, stop it now.");
+    int result = SetParameter(CUPSD_CONTROL_PARAM.c_str(), "false");
+    if (result) {
+        PRINT_HILOGD("SetParameter failed: %{public}d.", result);
+        return;
     }
-    pclose(pid_fp);
+    const int bufferSize = 96;
+    char value[bufferSize] = {0};
+    GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, bufferSize-1);
+    PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
 }
 
 void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds)
@@ -720,11 +719,10 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
             PRINT_JOB_COMPLETED_SUCCESS);
     } else if (jobStatus->job_state == IPP_JOB_PROCESSING) {
         PRINT_HILOGD("IPP_JOB_PROCESSING");
-        if (strcmp(jobStatus->printer_state_reasons, PRINTER_STATE_WAITING_COMPLETE.c_str()) == 0 ||
-            strcmp(jobStatus->printer_state_reasons, PRINTER_STATE_NONE.c_str()) == 0 ||
-            strcmp(jobStatus->printer_state_reasons, PRINTER_STATE_EMPTY.c_str()) == 0) {
+        std::string printerState(jobStatus->printer_state_reasons);
+        if (find(IGNORE_STATE_LIST.begin(), IGNORE_STATE_LIST.end(), printerState) != IGNORE_STATE_LIST.end()) {
             param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
-                PRINT_JOB_BLOCKED_BUSY);
+                PRINT_JOB_BLOCKED_BUSY);           
         } else {
             ReportBlockedReason(param, jobStatus);
         }
@@ -867,6 +865,7 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
                 PRINT_HILOGE("cancel Joob Error %{public}s", cupsLastErrorString());
                 PrintServiceAbility::GetInstance()->UpdatePrintJobState(serviceJobId, PRINT_JOB_COMPLETED,
                     PRINT_JOB_COMPLETED_CANCELLED);
+                JobCompleteCallback();
                 return;
             }
         } else {
