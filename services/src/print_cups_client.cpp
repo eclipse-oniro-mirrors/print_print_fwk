@@ -77,7 +77,7 @@ static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::vector<std::string> IGNORE_STATE_LIST = {
     PRINTER_STATE_WAITING_COMPLETE, PRINTER_STATE_NONE, PRINTER_STATE_WIFI_NOT_CONFIGURED
-}
+};
 
 PrintCupsClient::PrintCupsClient()
 {}
