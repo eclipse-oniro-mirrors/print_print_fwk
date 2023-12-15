@@ -22,10 +22,12 @@
 #include <list>
 #include <vector>
 #include <string>
+#include <regex>
 
 #include "print_log.h"
 
 namespace OHOS::Print {
+const uint32_t MAX_PRINTER_NAME_LENGTH = 127;
 class PrintUtil {
 public:
     static std::string ParseListToString(const std::vector<std::string> &list);
@@ -35,6 +37,8 @@ public:
     static std::string ToUpper(const std::string& str);
 
     static bool CheckContains(const std::string& str, const std::string& content);
+
+    static std::string StandardizePrinterName(sdt::string printerName);
 };
 
 inline std::string PrintUtil::ParseListToString(const std::vector<std::string> &list)
@@ -86,6 +90,16 @@ inline bool PrintUtil::CheckContains(const std::string& str, const std::string& 
     }
 
     return str.find(content) != std::string::npos;
+}
+
+inline std::string PrintUtil::StandardizePrinterName(sdt::string printerName)
+{
+    std::regex pattern("[ /#]");
+    std::string name = std::regex_replace(printerName, pattern, "_");
+    if (name.length() < MAX_PRINTER_NAME_LENGTH) {
+        return name;
+    }
+    return name.substr(0, MAX_PRINTER_NAME_LENGTH - 1);
 }
 } // namespace OHOS::Print
 

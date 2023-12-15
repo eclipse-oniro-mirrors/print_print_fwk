@@ -310,6 +310,7 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     char uri[HTTP_MAX_URI];
     std::vector<string> ppds;
     std::string ppd = DEFAULT_PPD_NAME;
+    std::string standardName = StandardizePrinterName(printerName);
 
     ippSetPort(CUPS_SEVER_PORT);
     QueryPPDInformation(printerMake.c_str(), ppds);
@@ -320,16 +321,16 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
         ChangeFilterPermission(serverBin, permissions);
     }
     PRINT_HILOGI("ppd driver: %{public}s", ppd.c_str());
-    if (IsPrinterExist(printerUri.c_str(), printerName.c_str(), ppd.c_str())) {
+    if (IsPrinterExist(printerUri.c_str(), standardName.c_str(), ppd.c_str())) {
         PRINT_HILOGI("add success, printer has added");
         return E_PRINT_NONE;
     }
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s",
-                     printerName.c_str());
+                     standardName.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-info", NULL, printerName.c_str());
+    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-info", NULL, standardName.c_str());
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "device-uri", NULL, printerUri.c_str());
     ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_IDLE);
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", NULL, ppd.c_str());
@@ -903,7 +904,7 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     params->jobOriginatingUserName = DEFAULT_USER;
     params->mediaSize = GetMedieSize(jobInfo);
     params->color = GetColorString(jobInfo.GetColorMode());
-    params->printerName = optionJson["printerName"];
+    params->printerName = StandardizePrinterName(optionJson["printerName"]);
     params->printerUri = optionJson["printerUri"];
     params->documentFormat = optionJson["documentFormat"];
     if (optionJson.contains("documentCategory")) {
