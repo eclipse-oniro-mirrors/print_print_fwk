@@ -100,6 +100,8 @@ private:
     void ManualStart();
     std::string GetPrintJobId();
     bool StartAbility(const AAFwk::Want &want);
+    bool KillAbility(const std::string bundleName);
+    void KillAllAbility();
     bool StartPrintServiceExtension(const AAFwk::Want &want, int32_t curRequestCode_);
     PrintExtensionInfo ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo);
     bool DelayStartDiscovery(const std::string &extensionId);
