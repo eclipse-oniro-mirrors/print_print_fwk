@@ -30,6 +30,7 @@
 #include "print_service_ability.h"
 #include "print_log.h"
 #include "print_constant.h"
+#include "print_utils.h"
 
 namespace OHOS::Print {
 using namespace std;
@@ -310,7 +311,7 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     char uri[HTTP_MAX_URI];
     std::vector<string> ppds;
     std::string ppd = DEFAULT_PPD_NAME;
-    std::string standardName = StandardizePrinterName(printerName);
+    std::string standardName = PrintUtil::StandardizePrinterName(printerName);
 
     ippSetPort(CUPS_SEVER_PORT);
     QueryPPDInformation(printerMake.c_str(), ppds);
@@ -904,7 +905,7 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     params->jobOriginatingUserName = DEFAULT_USER;
     params->mediaSize = GetMedieSize(jobInfo);
     params->color = GetColorString(jobInfo.GetColorMode());
-    params->printerName = StandardizePrinterName(optionJson["printerName"]);
+    params->printerName = PrintUtil::StandardizePrinterName(optionJson["printerName"]);
     params->printerUri = optionJson["printerUri"];
     params->documentFormat = optionJson["documentFormat"];
     if (optionJson.contains("documentCategory")) {
