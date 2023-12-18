@@ -38,7 +38,7 @@ public:
 
     static bool CheckContains(const std::string& str, const std::string& content);
 
-    static std::string StandardizePrinterName(sdt::string printerName);
+    static std::string StandardizePrinterName(std::string printerName);
 };
 
 inline std::string PrintUtil::ParseListToString(const std::vector<std::string> &list)
@@ -92,7 +92,7 @@ inline bool PrintUtil::CheckContains(const std::string& str, const std::string& 
     return str.find(content) != std::string::npos;
 }
 
-inline std::string PrintUtil::StandardizePrinterName(sdt::string printerName)
+inline std::string PrintUtil::StandardizePrinterName(std::string printerName)
 {
     std::regex pattern("[ /#]");
     std::string name = std::regex_replace(printerName, pattern, "_");
