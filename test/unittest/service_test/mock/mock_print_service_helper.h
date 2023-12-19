@@ -25,6 +25,7 @@ class MockPrintServiceHelper final : public PrintServiceHelper {
 public:
     MOCK_METHOD1(CheckPermission, bool(const std::string&));
     MOCK_METHOD1(StartAbility, bool(const AAFwk::Want&));
+    MOCK_METHOD1(KillAbility, bool(const std::string&));
     MOCK_METHOD2(StartPrintServiceExtension, bool(const AAFwk::Want&, int32_t));
     MOCK_METHOD0(GetBundleMgr, sptr<IRemoteObject>());
     MOCK_METHOD1(QueryAccounts, bool(std::vector<int>&));

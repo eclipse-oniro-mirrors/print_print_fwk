@@ -135,6 +135,7 @@ int32_t PrintServiceAbility::Init()
         }
         g_publishState = true;
     }
+    KillAllAbility();
     state_ = ServiceRunningState::STATE_RUNNING;
     PRINT_HILOGI("state_ is %{public}d.", static_cast<int>(state_));
     PRINT_HILOGI("Init PrintServiceAbility success.");
@@ -1420,6 +1421,26 @@ bool PrintServiceAbility::StartAbility(const AAFwk::Want &want)
         return false;
     }
     return helper_->StartAbility(want);
+}
+
+bool PrintServiceAbility::KillAbility(const std::string bundleName)
+{
+    if (helper_ == nullptr) {
+        return false;
+    }
+    return helper_->KillAbility(bundleName);
+}
+
+void PrintServiceAbility::KillAllAbility()
+{
+    std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfo;
+    if (!DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryExtensionInfos(extensionInfo)) {
+        PRINT_HILOGE("Failed to query extension");
+    }
+
+    for (auto extInfo : extensionInfo) {
+        KillAbility(extInfo.bundleName.c_str());
+    }
 }
 
 bool PrintServiceAbility::StartPrintServiceExtension(const AAFwk::Want &want, int32_t curRequestCode_)

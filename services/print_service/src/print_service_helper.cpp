@@ -68,6 +68,19 @@ bool PrintServiceHelper::StartAbility(const AAFwk::Want &want)
     return true;
 }
 
+bool PrintServiceHelper::KillAbility(const std::string &bundleName)
+{
+    for (uint32_t retry = 0; retry < MAX_RETRY_TIMES; ++retry) {
+        if (AAFwk::AbilityManagerClient::GetInstance()->KillProcess(bundleName) == ERR_OK) {
+            return true;
+        }
+        PRINT_HILOGD("PrintServiceHelper::KillAbility %{public}d %{public}s",
+            retry, bundleName.c_str());
+    }
+    PRINT_HILOGE("PrintServiceHelper::KillAbility %{public}s failed", bundleName.c_str());
+    return false;
+}
+
 bool PrintServiceHelper::StartPrintServiceExtension(const AAFwk::Want &want, int32_t requestCode_)
 {
     AppExecFwk::ElementName element = want.GetElement();
