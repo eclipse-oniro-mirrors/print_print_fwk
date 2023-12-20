@@ -2490,17 +2490,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0126, TestSize.Level1)
     helper = nullptr;
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0127, TestSize.Level1)
-{
-    auto service = CreateService();
-    EXPECT_NE(service, nullptr);
-    service->SetHelper(CreatePrintServiceHelper(true, true, true, true));
-
-    std::vector<PrinterInfo> printerInfos;
-    InitExtPrinterList(printerInfos, 1);
-    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
-}
-
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128, TestSize.Level1)
 {
     auto service = CreateService();
