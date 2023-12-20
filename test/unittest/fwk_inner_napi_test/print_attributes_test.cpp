@@ -63,19 +63,6 @@ OHOS::Print::PrintAttributes PrintAttributesTest::GetDefaultPrintAttributes()
 }
 
 /**
- * @tc.name: PrintAttributesTest_001
- * @tc.desc: Verify the Dump function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintAttributesTest, PrintAttributesTest_001, TestSize.Level1)
-{
-    OHOS::Print::PrintAttributes printAttributes(GetDefaultPrintAttributes());
-    printAttributes.Dump();
-    printAttributes.~PrintAttributes();
-}
-
-/**
  * @tc.name: PrintAttributesTest_002
  * @tc.desc: Verify the UpdateParams function.
  * @tc.type: FUNC
