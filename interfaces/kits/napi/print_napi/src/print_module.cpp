@@ -50,7 +50,7 @@ static constexpr const char *FUNCTION_UPDATE_JOB_STATE = "updatePrintJobState";
 static constexpr const char *FUNCTION_UPDATE_EXTENSION_INFO = "updateExtensionInfo";
 static constexpr const char *FUNCTION_NATIVE_ADD_PRINTER_TO_CUPS = "addPrinterToCups";
 static constexpr const char *FUNCTION_QUERY_CAPABILITY_BY_URI = "queryPrinterCapabilityByUri";
-static constexpr const char *FUNCTION_START_GET_PRINT_FILE = "startGetPrintFile";
+static constexpr const char *FUNCTION_START_GET_PRINT_FILE = "startGettingPrintFile";
 static constexpr const char *FUNCTION_NOTIFY_PRINT_SERVICE = "notifyPrintService";
 
 #define PRINT_NAPI_METHOD(name, func)           \
@@ -106,7 +106,7 @@ static napi_value NapiCreatePageTypeEnum(napi_env env)
     SetEnumProperty(env, object, "PAGE_ISO_A3", static_cast<int32_t>(PAGE_ISO_A3));
     SetEnumProperty(env, object, "PAGE_ISO_A4", static_cast<int32_t>(PAGE_ISO_A4));
     SetEnumProperty(env, object, "PAGE_ISO_A5", static_cast<int32_t>(PAGE_ISO_A5));
-    SetEnumProperty(env, object, "PAGE_ISO_B5", static_cast<int32_t>(PAGE_ISO_B5));
+    SetEnumProperty(env, object, "PAGE_JIS_B5", static_cast<int32_t>(PAGE_JIS_B5));
     SetEnumProperty(env, object, "PAGE_ISO_C5", static_cast<int32_t>(PAGE_ISO_C5));
     SetEnumProperty(env, object, "PAGE_ISO_DL", static_cast<int32_t>(PAGE_ISO_DL));
     SetEnumProperty(env, object, "PAGE_LETTER", static_cast<int32_t>(PAGE_LETTER));

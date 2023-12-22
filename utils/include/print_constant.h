@@ -185,7 +185,7 @@ enum PrintPageType {
     PAGE_ISO_A3 = 0,
     PAGE_ISO_A4 = 1,
     PAGE_ISO_A5 = 2,
-    PAGE_ISO_B5 = 3,
+    PAGE_JIS_B5 = 3,
     PAGE_ISO_C5 = 4,
     PAGE_ISO_DL = 5,
     PAGE_LETTER = 6,
