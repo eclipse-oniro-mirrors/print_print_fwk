@@ -26,7 +26,7 @@ static constexpr const char *PARAM_CAPABILITY_DUPLEXMODE = "duplexMode";
 static constexpr const char *PARAM_CAPABILITY_PAGESIZE = "pageSize";
 static constexpr const char *PARAM_CAPABILITY_RESOLUTION = "resolution";
 static constexpr const char *PARAM_CAPABILITY_MINMARGIN = "minMargin";
-static constexpr const char *PARAM_CAPABILITY_OPTION = "option";
+static constexpr const char *PARAM_CAPABILITY_OPTION = "options";
 
 napi_value PrinterCapabilityHelper::MakeJsObject(napi_env env, const PrinterCapability &cap)
 {

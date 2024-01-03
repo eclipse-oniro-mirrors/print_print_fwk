@@ -26,7 +26,7 @@ static constexpr const char *PARAM_JOB_FDLIST = "fdList";
 static constexpr const char *PARAM_JOB_JOBID = "jobId";
 static constexpr const char *PARAM_JOB_PRINTERID = "printerId";
 static constexpr const char *PARAM_JOB_JOBSTATE = "jobState";
-static constexpr const char *PARAM_JOB_SUBSTATE = "jobSubState";
+static constexpr const char *PARAM_JOB_SUBSTATE = "jobSubstate";
 static constexpr const char *PARAM_JOB_COPYNUMBER = "copyNumber";
 static constexpr const char *PARAM_JOB_PAGERANGE = "pageRange";
 static constexpr const char *PARAM_JOB_ISSEQUENTIAL = "isSequential";
@@ -36,7 +36,7 @@ static constexpr const char *PARAM_JOB_COLORMODE = "colorMode";
 static constexpr const char *PARAM_JOB_DUPLEXMODE = "duplexMode";
 static constexpr const char *PARAM_JOB_MARGIN = "margin";
 static constexpr const char *PARAM_JOB_PREVIEW = "preview";
-static constexpr const char *PARAM_JOB_OPTION = "option";
+static constexpr const char *PARAM_JOB_OPTION = "options";
 
 napi_value PrintJobHelper::MakeJsSimpleObject(napi_env env, const PrintJob &job)
 {
