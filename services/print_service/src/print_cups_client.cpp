@@ -939,11 +939,10 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     } else {
         params->borderless = 0;
     }
-    if (optionJson.contains("printQuality")) {
+    if (optionJson.contains("printQuality"))
         params->printQuality = optionJson["printQuality"];
-    } else {
+    else
         params->printQuality = CUPS_PRINT_QUALITY_NORMAL;
-    }
     if (optionJson.contains("jobName"))
         params->jobName = optionJson["jobName"];
     else
@@ -1175,7 +1174,7 @@ float PrintCupsClient::ConvertInchTo100MM(float num)
     return ((num / THOUSAND_INCH) * CONVERSION_UNIT);
 }
 
-bool PrintCupsClient::IsIpConflict(const sdt::string &printerId, std::string &nic)
+bool PrintCupsClient::IsIpConflict(const std::string &printerId, std::string &nic)
 {
     if (printerId.find(P2P_PRINTER) == std::string.npos) {
         PRINT_HILOGD("The printer is not p2p: %{private}s", printerId.c_str());
