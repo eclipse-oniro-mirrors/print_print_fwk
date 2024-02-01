@@ -24,7 +24,11 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <wifi_device.h>
+#include <wifi_p2p.h>
+#include <wifi_p2p_msg.h>
 
+#include "system_ability_definition.h"
 #include "parameter.h"
 #include "nlohmann/json.hpp"
 #include "print_service_ability.h"
@@ -52,6 +56,10 @@ const uint32_t INDEX_TWO = 2;
 const uint32_t MAX_RETRY_TIMES = 5;
 const uint32_t BUFFER_LEN = 256;
 const uint32_t DIR_MODE = 0771;
+const uint32_t IP_RIGHT_SHIFT_0 = 0;
+const uint32_t IP_RIGHT_SHIFT_8 = 8;
+const uint32_t IP_RIGHT_SHIFT_16 = 16;
+const uint32_t IP_RIGHT_SHIFT_24 = 24;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 static const std::string CUPS_RUN_DIR = "/data/service/el1/public/print_service/cups/run";
@@ -76,6 +84,7 @@ static const std::string PRINTER_STATE_COVER_OPEN = "cover-open";
 static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
+static const std::string P2P_PRINTER = "p2p";
 static const std::vector<std::string> IGNORE_STATE_LIST = {
     PRINTER_STATE_WAITING_COMPLETE, PRINTER_STATE_NONE, PRINTER_STATE_EMPTY, PRINTER_STATE_WIFI_NOT_CONFIGURED
 };
@@ -367,7 +376,8 @@ int32_t PrintCupsClient::DeleteCupsPrinter(const char *printerName)
     return E_PRINT_NONE;
 }
 
-int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps)
+int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
+    PrinterCapability &printerCaps)
 {
     PRINT_HILOGD("PrintCupsClient QueryPrinterCapabilityByUri start.");
     ipp_t *request; /* IPP Request */
@@ -386,7 +396,12 @@ int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerU
     httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username), host,
                     sizeof(host), &port, resource, sizeof(resource));
 
-    http = httpConnect2(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, TIME_OUT, NULL);
+    std::string nic;
+    if (IsIpConflict(printerId, nic)) {
+        http = httpConnect3(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, TIME_OUT, NULL, nic.c_str());
+    } else {
+        http = httpConnect2(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, TIME_OUT, NULL);
+    }
     if (http == nullptr) {
         PRINT_HILOGD("connect printer failed");
         return E_PRINT_SERVER_FAILURE;
@@ -526,6 +541,10 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     } else {
         num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
     }
+    std::string nic;
+    if (IsIpConflict(jobParams->printerId, nic)) {
+        num_options = cupsAddOption("nic", nic.c_str(), num_options, options);
+    }
     num_options = FillBorderlessOptions(jobParams, num_options, options);
     return num_options;
 }
@@ -570,7 +589,7 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     uint32_t retryCount = 0;
     bool isPrinterOnline = false;
     while (retryCount < MAX_RETRY_TIMES) {
-        if (CheckPrinterOnline(jobParams->printerUri.c_str())) {
+        if (CheckPrinterOnline(jobParams->printerUri.c_str(), jobParams->printerId)) {
             isPrinterOnline = true;
             break;
         }
@@ -646,7 +665,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     jobParams->cupsJobId = jobId;
     PRINT_HILOGD("start job success, jobId: %d", jobId);
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam { jobParams->serviceAbility,
-        jobParams->serviceJobId, jobId, jobParams->printerUri, jobParams->printerName };
+        jobParams->serviceJobId, jobId, jobParams->printerUri, jobParams->printerName, jobParams->printerId };
     if (param == nullptr)
         return;
     MonitorJobState(param, callback);
@@ -666,7 +685,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
             PRINT_HILOGE("http is NULL");
             httpReconnect2(http, LONG_LONG_TIME_OUT, NULL);
         }
-        if (httpGetFd(http) > 0 && CheckPrinterOnline(param->printerUri.c_str())) {
+        if (httpGetFd(http) > 0 && CheckPrinterOnline(param->printerUri.c_str(), param->printerId)) {
             fail_connect_times = 0;
             QueryJobState(http, param, jobStatus);
         } else if (fail_connect_times < OFFLINE_RETRY_TIMES) {
@@ -822,7 +841,7 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
     }
 }
 
-bool PrintCupsClient::CheckPrinterOnline(const char* printerUri)
+bool PrintCupsClient::CheckPrinterOnline(const char* printerUri, std::string printerId)
 {
     http_t *http;
     char scheme[32];
@@ -832,7 +851,13 @@ bool PrintCupsClient::CheckPrinterOnline(const char* printerUri)
     int port;
     httpSeparateURI(HTTP_URI_CODING_ALL, printerUri, scheme, sizeof(scheme), userpass, sizeof(userpass), host,
                     sizeof(host), &port, resource, sizeof(resource));
-    http = httpConnect2(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
+    std::string nic;
+    if (IsIpConflict(printerId, nic)) {
+        http = httpConnect3(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL,
+            nic.c_str());
+    } else {
+        http = httpConnect2(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
+    }
     if (http == nullptr) {
         PRINT_HILOGE("httpConnect2 printer failed");
         return false;
@@ -905,6 +930,7 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     params->jobOriginatingUserName = DEFAULT_USER;
     params->mediaSize = GetMedieSize(jobInfo);
     params->color = GetColorString(jobInfo.GetColorMode());
+    jobParams->printerId = jobInfo.GetPrinterId();
     params->printerName = PrintUtil::StandardizePrinterName(optionJson["printerName"]);
     params->printerUri = optionJson["printerUri"];
     params->documentFormat = optionJson["documentFormat"];
@@ -939,6 +965,7 @@ void PrintCupsClient::DumpJobParameters(JobParameters* jobParams)
     PRINT_HILOGD("jobParams->printQuality: %{public}s", jobParams->printQuality.c_str());
     PRINT_HILOGD("jobParams->jobName: %{public}s", jobParams->jobName.c_str());
     PRINT_HILOGD("jobParams->jobOriginatingUserName: %{public}s", jobParams->jobOriginatingUserName.c_str());
+    PRINT_HILOGD("jobParams->printerId: %{private}s", jobParams->printerId.c_str());
     PRINT_HILOGD("jobParams->printerName: %{private}s", jobParams->printerName.c_str());
     PRINT_HILOGD("jobParams->printerUri: %{private}s", jobParams->printerUri.c_str());
     PRINT_HILOGD("jobParams->documentFormat: %{public}s", jobParams->documentFormat.c_str());
@@ -1146,5 +1173,42 @@ nlohmann::json PrintCupsClient::ParseSupportMediaTypes(ipp_t *response)
 float PrintCupsClient::ConvertInchTo100MM(float num)
 {
     return ((num / THOUSAND_INCH) * CONVERSION_UNIT);
+}
+
+bool PrintCupsClient::IsIpConflict(const sdt::string &printerId, std::string &nic)
+{
+    if (printerId.find(P2P_PRINTER) == std::string.npos) {
+        PRINT_HILOGD("The printer is not p2p: %{private}s", printerId.c_str());
+        return false;
+    }
+    bool isWifiConnected = false;
+    Wifi::WifiDevice::GetInstance(OHOS::WIFI_DEVICE_SYS_ABILITY_ID)->IsConnected(isWifiConnected);
+    PRINT_HILOGD("isWifiConnected: %{public}d", isWifiConnected);
+    Wifi::WifiP2pLinkedInfo p2pLinkedInfo;
+    Wifi::WifiP2p::GetInstance(OHOS::WIFI_P2P_SYS_ABILITY_ID)->QueryP2pLinkedInfo(p2pLinkedInfo);
+    PRINT_HILOGD("P2pConnectedState: %{public}d", p2pLinkedInfo.GetConnectState());
+    if (isWifiConnected && p2pLinkedInfo.GetConnectState() == Wifi::P2pConnectedState::P2P_CONNECTED) {
+        Wifi::IpInfo info;
+        Wifi::WifiDevice::GetInstance(OHOS::WIFI_DEVICE_SYS_ABILITY_ID)->GetIpInfo(info);
+        PRINT_HILOGD("wifi server ip: %{private}s", GetIpAddress(info.serverIp).c_str());
+        PRINT_HILOGD("p2p go ip: %{private}s", p2pLinkedInfo.GetGroupOwnerAddress().c_str());
+        if (GetIpAddress(info.serverIp) == p2pLinkedInfo.GetGroupOwnerAddress()) {
+            Wifi::WifiP2pGroupInfo group;
+            Wifi::WifiP2p::GetInstance(OHOS::WIFI_P2P_SYS_ABILITY_ID)->GetCurrentGroup(group);
+            nic = group.GetInterface();
+            PRINT_HILOGI("The P2P ip conflicts with the wlan ip, p2p nic: %{public}s", nic.c_str());
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string PrintCupsClient::GetIpAddress(unsigned int number)
+{
+    unsigned int ip3 = (number << IP_RIGHT_SHIFT_0) >> IP_RIGHT_SHIFT_24;
+    unsigned int ip2 = (number << IP_RIGHT_SHIFT_8) >> IP_RIGHT_SHIFT_24;
+    unsigned int ip1 = (number << IP_RIGHT_SHIFT_16) >> IP_RIGHT_SHIFT_24;
+    unsigned int ip0 = (number << IP_RIGHT_SHIFT_24) >> IP_RIGHT_SHIFT_24;
+    return sdt::to_string(ip3) + "." + sdt::to_string(ip2) + "." + sdt::to_string(ip1) + "." + sdt::to_string(ip0);
 }
 }

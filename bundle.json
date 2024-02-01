@@ -49,7 +49,8 @@
           "safwk",
           "samgr",
           "security_guard",
-          "time_service"
+          "time_service",
+          "wifi"
         ],
         "third_party": [
           "zlib",

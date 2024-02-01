@@ -364,7 +364,8 @@ napi_value NapiPrintExt::QueryPrinterCapabilityByUri(napi_env env, napi_callback
     PRINT_HILOGD("Enter QueryPrinterCapabilityByUri---->");
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
+            " should 1 or 2 parameter!", napi_invalid_arg);
 
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
@@ -373,6 +374,15 @@ napi_value NapiPrintExt::QueryPrinterCapabilityByUri(napi_env env, napi_callback
         std::string printerUri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         PRINT_HILOGD("printerUri : %{private}s", printerUri.c_str());
         context->printerUri = printerUri;
+
+        if (argc == NapiPrintUtils::ARGC_TWO) {
+            PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
+            PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
+
+            std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
+            PRINT_HILOGD("printerId : %{private}s", printerUri.c_str());
+            context->printerId = printerId;
+        }
         return napi_ok;
     };
     // promise return
@@ -384,7 +394,7 @@ napi_value NapiPrintExt::QueryPrinterCapabilityByUri(napi_env env, napi_callback
 
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(context->printerUri,
-            context->printerCaps);
+            context->printerId, context->printerCaps);
         context->result = (ret == E_PRINT_NONE);
         PRINT_HILOGD("ret: %d", ret);
         if (ret != E_PRINT_NONE) {

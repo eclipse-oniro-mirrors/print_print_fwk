@@ -66,7 +66,8 @@ public:
     int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob);
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);
-    int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps);
+    int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
+        PrinterCapability &printerCaps);
 
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);

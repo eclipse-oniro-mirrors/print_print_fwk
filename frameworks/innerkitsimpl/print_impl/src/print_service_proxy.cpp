@@ -409,12 +409,14 @@ int32_t PrintServiceProxy::AddPrinterToCups(const std::string &printerUri, const
     return ret;
 }
 
-int32_t PrintServiceProxy::QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps)
+int32_t PrintServiceProxy::QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
+    PrinterCapability &printerCaps)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerUri);
+    data.WriteString(printerId);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterCapabilityByUri started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {

@@ -131,7 +131,8 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps) override
+    int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
+        PrinterCapability &printerCaps) override
     {
         return E_PRINT_NONE;
     }
@@ -180,7 +181,7 @@ public:
     MOCK_METHOD1(QueryAllPrintJob, int32_t(std::vector<PrintJob>&));
     MOCK_METHOD2(QueryPrintJobById, int32_t(std::string&, PrintJob&));
     MOCK_METHOD3(AddPrinterToCups, int32_t(const std::string&, const std::string&, const std::string&));
-    MOCK_METHOD2(QueryPrinterCapabilityByUri, int32_t(const std::string&, PrinterCapability&));
+    MOCK_METHOD3(QueryPrinterCapabilityByUri, int32_t(const std::string&, const std::string&, PrinterCapability&));
 };
 } // namespace Print
 } // namespace OHOS
