@@ -930,7 +930,7 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     params->jobOriginatingUserName = DEFAULT_USER;
     params->mediaSize = GetMedieSize(jobInfo);
     params->color = GetColorString(jobInfo.GetColorMode());
-    jobParams->printerId = jobInfo.GetPrinterId();
+    params->printerId = jobInfo.GetPrinterId();
     params->printerName = PrintUtil::StandardizePrinterName(optionJson["printerName"]);
     params->printerUri = optionJson["printerUri"];
     params->documentFormat = optionJson["documentFormat"];
@@ -1176,7 +1176,7 @@ float PrintCupsClient::ConvertInchTo100MM(float num)
 
 bool PrintCupsClient::IsIpConflict(const std::string &printerId, std::string &nic)
 {
-    if (printerId.find(P2P_PRINTER) == std::string.npos) {
+    if (printerId.find(P2P_PRINTER) == std::string::npos) {
         PRINT_HILOGD("The printer is not p2p: %{private}s", printerId.c_str());
         return false;
     }
@@ -1208,6 +1208,6 @@ std::string PrintCupsClient::GetIpAddress(unsigned int number)
     unsigned int ip2 = (number << IP_RIGHT_SHIFT_8) >> IP_RIGHT_SHIFT_24;
     unsigned int ip1 = (number << IP_RIGHT_SHIFT_16) >> IP_RIGHT_SHIFT_24;
     unsigned int ip0 = (number << IP_RIGHT_SHIFT_24) >> IP_RIGHT_SHIFT_24;
-    return sdt::to_string(ip3) + "." + sdt::to_string(ip2) + "." + sdt::to_string(ip1) + "." + sdt::to_string(ip0);
+    return std::to_string(ip3) + "." + std::to_string(ip2) + "." + std::to_string(ip1) + "." + std::to_string(ip0);
 }
 }
