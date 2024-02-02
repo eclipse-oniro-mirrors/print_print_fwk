@@ -139,7 +139,7 @@ private:
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
     static std::string GetIpAddress(unsigned int number);
-    static bool IsIpConflict(const sdt::string &printerId, std::string &nic);
+    static bool IsIpConflict(const std::string &printerId, std::string &nic);
 
     int32_t StartCupsdService();
     void StartNextJob();
