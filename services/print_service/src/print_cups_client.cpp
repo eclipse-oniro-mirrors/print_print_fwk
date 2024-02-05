@@ -159,6 +159,41 @@ void PrintCupsClient::ChangeFilterPermission(const std::string &path, mode_t mod
     closedir(dir);
 }
 
+void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
+{
+    DIR *dir = opendir(srcDir);
+    if (dir == nullptr) {
+        PRINT_HILOGE("Failed to open Dir: %{private}s", srcDir);
+        return;
+    }
+    if (access(destDir, F_OK) != 0) {
+        mkdir(destDir, DIR_MODE);
+    }
+    struct dirent *file;
+    struct stat filestat;
+    while ((file = readdir(dir)) != nullptr) {
+        if (strcmp(file->d_name, ".") == 0 || strcmp(file->d_name, "..") == 0) {
+            continue;
+        }
+        std::string srcFilePath = std::string(srcDir) + "/" + std::string(file->d_name);
+        std::string destFilePath = std::string(destDir) + "/" + std::string(file->d_name);
+
+        stat(srcFilePath.c_str(), &filestat);
+        if (S_ISDIR(filestat.st_mode)) {
+            SymlinkDirectory(srcFilePath.c_str(), destFilePath.c_str());
+            // chmod(destFilePath.c_str(), filestat.st_mode);
+        } else {
+            if (symlink(srcFilePath.c_str(), destFilePath.c_str()) == 0) {
+                // chmod(destFilePath.c_str(), filestat.st_mode);
+                PRINT_HILOGE("symlink success");
+            } else {
+                PRINT_HILOGE("symlink failed");
+            }
+        }
+    }
+    closedir(dir);
+}
+
 void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
 {
     DIR *dir = opendir(srcDir);
@@ -221,7 +256,11 @@ int32_t PrintCupsClient::InitCupsResources()
             PRINT_HILOGD("The resource has been copied.");
             continue;
         }
-        CopyDirectory(array[i][INDEX_ZERO].c_str(), array[i][INDEX_ONE].c_str());
+        if (i == 0) {
+            SymlinkDirectory(array[i][INDEX_ZERO].c_str(), array[i][INDEX_ONE].c_str());
+        } else {
+            CopyDirectory(array[i][INDEX_ZERO].c_str(), array[i][INDEX_ONE].c_str());
+        }
     }
     return StartCupsdService();
 }
