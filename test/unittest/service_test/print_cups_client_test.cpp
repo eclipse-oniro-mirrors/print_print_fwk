@@ -230,11 +230,11 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0018, TestSize.Level1)
 
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019, TestSize.Level1)
 {
-    JobParameters *jobParams = nullptr;
+    JobParameters *jobParams1 = nullptr;
     int num_options = 0;
     cups_option_t *options = nullptr;
     int ret =
-        DelayedSingleton<PrintCupsClient>::GetInstance()->FillBorderlessOptions(jobParams, num_options, &options);
+        DelayedSingleton<PrintCupsClient>::GetInstance()->FillBorderlessOptions(jobParams1, num_options, &options);
     EXPECT_EQ(ret, 0);
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -246,50 +246,57 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    *jobParams = printCupsClient.BuildJobParameters(testJob);
-    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->FillBorderlessOptions(jobParams, num_options, &options);
+    JobParameters *jobParams2 = printCupsClient.BuildJobParameters(testJob);
+    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->FillBorderlessOptions(jobParams2, num_options, &options);
     EXPECT_EQ(ret, 1);
 }
 
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0020, TestSize.Level1)
 {
-    JobParameters *jobParams = nullptr;
+    JobParameters *jobParams1 = nullptr;
     int num_options = 0;
     cups_option_t *options = nullptr;
-    int ret = DelayedSingleton<PrintCupsClient>::GetInstance()->FillJobOptions(jobParams, num_options, &options);
+    int ret = DelayedSingleton<PrintCupsClient>::GetInstance()->FillJobOptions(jobParams1, num_options, &options);
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob jobInfo;
     jobInfo.SetCopyNumber(2);
     jobInfo.SetDuplexMode(1);
     jobInfo.SetColorMode(0);
-    *jobParams = printCupsClient.BuildJobParameters(jobInfo);
-    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->FillJobOptions(jobParams, num_options, &options);
+    JobParameters *jobParams2 = printCupsClient.BuildJobParameters(jobInfo);
+    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->FillJobOptions(jobParams2, num_options, &options);
     EXPECT_EQ(ret, 3);
 }
 
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0021, TestSize.Level1)
 {
-    JobParameters *jobParams = nullptr;
-    bool ret = DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterMakeModel(jobParams);
+    JobParameters *jobParams1 = nullptr;
+    bool ret = DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterMakeModel(jobParams1);
     EXPECT_EQ(ret, false);
     OHOS::Print::PrintCupsClient printCupsClient;
-    PrintJob jobInfo;
-    jobInfo.SetJobId(1);
-    *jobParams = printCupsClient.BuildJobParameters(jobInfo);
-    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterMakeModel(jobParams);
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize, getPageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams2 = printCupsClient.BuildJobParameters(testJob);
+    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterMakeModel(jobParams2);
     EXPECT_EQ(ret, false);
 }
 
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0022, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    JobParameters *jobParams = nullptr;
+    JobParameters *jobParams1 = nullptr;
     int num_options = 0;
     uint32_t jobId = 1;
     cups_option_t *options = nullptr;
     http_t *http = nullptr;
     bool ret =
-        DelayedSingleton<PrintCupsClient>::GetInstance()->VerifyPrintJob(jobParams, num_options, jobId, options, http);
+        DelayedSingleton<PrintCupsClient>::GetInstance()->VerifyPrintJob(jobParams1, num_options, jobId, options, http);
     EXPECT_EQ(ret, false);
     PrintJob testJob;
     testJob.SetJobId(GetDefaultJobId());
@@ -300,9 +307,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0022, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams2 = printCupsClient.BuildJobParameters(testJob);
     ret =
-        DelayedSingleton<PrintCupsClient>::GetInstance()->VerifyPrintJob(jobParams, num_options, jobId, options, http);
+        DelayedSingleton<PrintCupsClient>::GetInstance()->VerifyPrintJob(jobParams2, num_options, jobId, options, http);
     EXPECT_EQ(ret, false);
 }
 
@@ -319,7 +326,10 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0023, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    CallbackFunc callback = [this]() { JobCompleteCallback(); };
+    CallbackFunc callback = [this]() {
+        OHOS::Print::PrintCupsClient printCupsClient;
+        printCupsClient.JobCompleteCallback();
+    };
     DelayedSingleton<PrintCupsClient>::GetInstance()->StartCupsJob(jobParams, callback);
 }
 
@@ -336,8 +346,18 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0024, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    CallbackFunc callback = [this]() { JobCompleteCallback(); };
-    DelayedSingleton<PrintCupsClient>::GetInstance()->MonitorJobState(jobParams, callback);
+    CallbackFunc callback = [this]() {
+        OHOS::Print::PrintCupsClient printCupsClient;
+        printCupsClient.JobCompleteCallback();
+    };
+    JobMonitorParam *param = new (std::nothrow) JobMonitorParam {
+        jobParams->serviceAbility,
+        jobParams->serviceJobId,
+        1,
+        "ipp://192.168.186.1:631/ipp/print",
+        "DIRECT-HUAWEI_PixLab_V1-0105"
+    };
+    DelayedSingleton<PrintCupsClient>::GetInstance()->MonitorJobState(param, callback);
 }
 
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025, TestSize.Level1)
@@ -355,17 +375,24 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025, TestSize.Level1)
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
     JobStatus *jobStatus = new (std::nothrow) JobStatus { {'\0'}, (ipp_jstate_t)0, {'\0'}};
     bool isOffline = true;
-    DelayedSingleton<PrintCupsClient>::GetInstance()->JobStatusCallback(jobParams, jobStatus, isOffline);
+    JobMonitorParam *param = new (std::nothrow) JobMonitorParam {
+        jobParams->serviceAbility,
+        jobParams->serviceJobId,
+        1,
+        "ipp://192.168.186.1:631/ipp/print",
+        "DIRECT-HUAWEI_PixLab_V1-0105"
+    };
+    DelayedSingleton<PrintCupsClient>::GetInstance()->JobStatusCallback(param, jobStatus, isOffline);
     isOffline = false;
-    DelayedSingleton<PrintCupsClient>::GetInstance()->JobStatusCallback(jobParams, jobStatus, isOffline);
+    DelayedSingleton<PrintCupsClient>::GetInstance()->JobStatusCallback(param, jobStatus, isOffline);
 }
 
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0026, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    JobParameters *jobParams1 = nullptr;
-    JobStatus *jobStatus = nullptr;
-    DelayedSingleton<PrintCupsClient>::GetInstance()->ReportBlockedReason(jobParams1, jobStatus);
+    JobStatus *jobStatus1 = nullptr;
+    JobMonitorParam *param1 = nullptr;
+    DelayedSingleton<PrintCupsClient>::GetInstance()->ReportBlockedReason(param1, jobStatus1);
     PrintJob testJob;
     testJob.SetJobId(GetDefaultJobId());
     std::vector<uint32_t> files = {1};
@@ -375,9 +402,16 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0026, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams2 = printCupsClient.BuildJobParameters(jobInfo);
-    *jobStatus = new (std::nothrow) JobStatus { {'\0'}, (ipp_jstate_t)0, {'\0'}};
-    DelayedSingleton<PrintCupsClient>::GetInstance()->ReportBlockedReason(jobParams2, jobStatus);
+    JobParameters *jobParams2 = printCupsClient.BuildJobParameters(testJob);
+    JobStatus *jobStatus = new (std::nothrow) JobStatus { {'\0'}, (ipp_jstate_t)0, {'\0'}};
+    JobMonitorParam *param2 = new (std::nothrow) JobMonitorParam {
+        jobParams2->serviceAbility,
+        jobParams2->serviceJobId,
+        1,
+        "ipp://192.168.186.1:631/ipp/print",
+        "DIRECT-HUAWEI_PixLab_V1-0105"
+    };
+    DelayedSingleton<PrintCupsClient>::GetInstance()->ReportBlockedReason(param2, jobStatus2);
 }
 
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0027, TestSize.Level1)
@@ -391,10 +425,17 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0027, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0028, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    std::string serviceJobId = 1;
-    PrintJob jobInfo;
-    jobInfo.SetJobId(1);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(jobInfo);
+    std::string serviceJobId = "1";
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize, getPageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
     printCupsClient.jobQueue_.push_back(jobParams);
     DelayedSingleton<PrintCupsClient>::GetInstance()->CancelCupsJob(serviceJobId);
 }
@@ -402,18 +443,32 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0028, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0029, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    PrintJob jobInfo;
-    jobInfo.SetJobId(1);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(jobInfo);
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize, getPageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
     DelayedSingleton<PrintCupsClient>::GetInstance()->DumpJobParameters(jobParams);
 }
 
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0030, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    PrintJob jobInfo;
-    jobInfo.SetJobId(1);
-    DelayedSingleton<PrintCupsClient>::GetInstance()->BuildJobParameters(jobInfo);
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize, getPageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    DelayedSingleton<PrintCupsClient>::GetInstance()->BuildJobParameters(testJob);
 }
 
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0031, TestSize.Level1)
