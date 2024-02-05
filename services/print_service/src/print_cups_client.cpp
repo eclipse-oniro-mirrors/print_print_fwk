@@ -181,10 +181,10 @@ void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
         stat(srcFilePath.c_str(), &filestat);
         if (S_ISDIR(filestat.st_mode)) {
             SymlinkDirectory(srcFilePath.c_str(), destFilePath.c_str());
-            // chmod(destFilePath.c_str(), filestat.st_mode);
         } else {
-            if (symlink(srcFilePath.c_str(), destFilePath.c_str()) == 0) {
-                // chmod(destFilePath.c_str(), filestat.st_mode);
+            int ret = symlink(srcFilePath.c_str(), destFilePath.c_str());
+            PRINT_HILOGI("symlink ret = %{public}d, errno = %{public}d", ret, errno);
+            if (ret == 0) {
                 PRINT_HILOGE("symlink success");
             } else {
                 PRINT_HILOGE("symlink failed");
