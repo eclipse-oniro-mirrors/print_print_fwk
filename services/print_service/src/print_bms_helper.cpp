@@ -36,7 +36,7 @@ void PrintBMSHelper::SetHelper(const std::shared_ptr<PrintServiceHelper> &helper
 bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!GetProxy()) {
+    if (helper_ == nullptr || !GetProxy()) {
         return false;
     }
     std::vector<int> osAccountIds;

@@ -53,11 +53,12 @@ sptr<PrintManagerClient> PrintManagerClient::GetInstance()
 
 bool PrintManagerClient::GetPrintServiceProxy()
 {
+    std::lock_guard<std::mutex> lock(proxyLock_);
     if (printServiceProxy_ != nullptr) {
+        PRINT_HILOGD("printServiceProxy_ is not null");
         return true;
     }
     bool result = false;
-    std::lock_guard<std::mutex> lock(proxyLock_);
     auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager != nullptr) {
         auto systemAbility = systemAbilityManager->GetSystemAbility(PRINT_SERVICE_ID, "");
@@ -77,12 +78,12 @@ bool PrintManagerClient::GetPrintServiceProxy()
 
 void PrintManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
 {
+    std::lock_guard<std::mutex> lock(proxyLock_);
     PRINT_HILOGD("start");
     if (remote == nullptr) {
         PRINT_HILOGE("remote is nullptr");
         return;
     }
-    std::lock_guard<std::mutex> lock(proxyLock_);
     if (printServiceProxy_ == nullptr) {
         PRINT_HILOGE("printServiceProxy_ is null");
         return;
