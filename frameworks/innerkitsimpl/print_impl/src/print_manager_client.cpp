@@ -330,12 +330,13 @@ int32_t PrintManagerClient::AddPrinterToCups(const std::string &printerUri, cons
     return ret;
 }
 
-int32_t PrintManagerClient::QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps)
+int32_t PrintManagerClient::QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
+    PrinterCapability &printerCaps)
 {
     PRINT_HILOGD("PrintManagerClient QueryPrinterCapabilityByUri start.");
     int32_t ret = E_PRINT_RPC_FAILURE;
     if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->QueryPrinterCapabilityByUri(printerUri, printerCaps);
+        ret = printServiceProxy_->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
         PRINT_HILOGD("PrintManagerClient QueryPrinterCapabilityByUri out ret = [%{public}d].", ret);
     }
     return ret;

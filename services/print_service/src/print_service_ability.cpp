@@ -625,7 +625,8 @@ int32_t PrintServiceAbility::AddPrinterToCups(const std::string &printerUri, con
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps)
+int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
+    PrinterCapability &printerCaps)
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
@@ -634,7 +635,7 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
     }
     PRINT_HILOGD("QueryPrinterCapabilityByUri started.");
 #ifdef CUPS_ENABLE
-    DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
+    DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
 #endif // CUPS_ENABLE
     PRINT_HILOGD("QueryPrinterCapabilityByUri End.");
     return E_PRINT_NONE;

@@ -388,7 +388,8 @@ bool PrintServiceStub::OnQueryPrinterCapabilityByUri(MessageParcel &data, Messag
     PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapabilityByUri in");
     PrinterCapability printerCaps;
     std::string printerUri = data.ReadString();
-    int32_t ret = QueryPrinterCapabilityByUri(printerUri, printerCaps);
+    std::string printerId = data.ReadString();
+    int32_t ret = QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
     reply.WriteInt32(ret);
     printerCaps.Marshalling(reply);
     PRINT_HILOGD("PrintServiceStub::OnQueryPrinterCapabilityByUri out");

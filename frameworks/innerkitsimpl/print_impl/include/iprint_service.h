@@ -61,7 +61,8 @@ public:
     virtual int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) = 0;
     virtual int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake) = 0;
-    virtual int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps) = 0;
+    virtual int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
+        PrinterCapability &printerCaps) = 0;
     virtual int32_t PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes,
         std::string &taskId, const sptr<IRemoteObject> &token) = 0;
     virtual int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,

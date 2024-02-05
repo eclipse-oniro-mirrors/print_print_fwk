@@ -77,6 +77,7 @@ struct JobParameters {
     std::string printQuality;
     std::string jobName;
     std::string jobOriginatingUserName;
+    std::string printerId;
     std::string printerName;
     std::string printerUri;
     std::string documentFormat;
@@ -98,6 +99,7 @@ struct JobMonitorParam {
     int cupsJobId;
     std::string printerUri;
     std::string printerName;
+    std::string printerId;
 };
 struct MediaSize {
     std::string name;
@@ -115,7 +117,8 @@ public:
     void QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds);
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);
-    int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, PrinterCapability &printerCaps);
+    int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
+        PrinterCapability &printerCaps);
     int32_t DeleteCupsPrinter(const char *printerName);
     void AddCupsPrintJob(const PrintJob &jobInfo);
     void CancelCupsJob(std::string serviceJobId);
@@ -124,7 +127,7 @@ private:
     static void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
     static void MonitorJobState(JobMonitorParam *param, CallbackFunc callback);
     static void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
-    static bool CheckPrinterOnline(const char* printerUri);
+    static bool CheckPrinterOnline(const char* printerUri, std::string printerId);
     static void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
     static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
     static void CopyDirectory(const char *srcDir, const char *destDir);
@@ -135,6 +138,8 @@ private:
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
+    static std::string GetIpAddress(unsigned int number);
+    static bool IsIpConflict(const std::string &printerId, std::string &nic);
 
     int32_t StartCupsdService();
     void StartNextJob();

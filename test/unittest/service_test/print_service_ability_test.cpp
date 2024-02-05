@@ -2443,9 +2443,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0123, TestSize.Level1)
     EXPECT_NE(service, nullptr);
 
     std::string printerUri;
+    std::string printerId;
     PrinterCapability printerCaps;
 
-    service -> QueryPrinterCapabilityByUri(printerUri, printerCaps);
+    service -> QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0124, TestSize.Level1)
@@ -2454,9 +2455,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0124, TestSize.Level1)
     EXPECT_NE(service, nullptr);
 
     std::string printerUri;
+    std::string printerId;
     PrinterCapability printerCaps;
 
-    service -> QueryPrinterCapabilityByUri(printerUri, printerCaps);
+    service -> QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0125, TestSize.Level1)
