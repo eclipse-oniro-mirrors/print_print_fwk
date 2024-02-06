@@ -130,6 +130,7 @@ private:
     static bool CheckPrinterOnline(const char* printerUri, std::string printerId);
     static void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
     static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
+    static void SymlinkDirectory(const char *srcDir, const char *destDir);
     static void CopyDirectory(const char *srcDir, const char *destDir);
     static void ChangeFilterPermission(const std::string &path, mode_t mode);
     static bool CheckPrinterMakeModel(JobParameters *jobParams);
