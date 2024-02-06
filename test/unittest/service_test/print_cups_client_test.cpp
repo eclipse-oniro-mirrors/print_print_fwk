@@ -167,8 +167,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0015, TestSize.Level1)
 {
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
     PrinterCapability printerCaps;
-    int32_t ret =
-        DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
+    std::string printerId = "1";
+    int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(
+        printerUri, printerId, printerCaps);
     EXPECT_EQ(ret, E_PRINT_SERVER_FAILURE);
 }
 
@@ -403,7 +404,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0026, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams2 = printCupsClient.BuildJobParameters(testJob);
-    JobStatus *jobStatus = new (std::nothrow) JobStatus { {'\0'}, (ipp_jstate_t)0, {'\0'}};
+    JobStatus *jobStatus2 = new (std::nothrow) JobStatus { {'\0'}, (ipp_jstate_t)0, {'\0'}};
     JobMonitorParam *param2 = new (std::nothrow) JobMonitorParam {
         jobParams2->serviceAbility,
         jobParams2->serviceJobId,
@@ -418,7 +419,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0027, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     const char* printerUri = "ipp://192.168.186.1:631/ipp/print";
-    bool ret = DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterOnline(printerUri);
+    std::string printerId = "1";
+    bool ret = DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterOnline(printerUri, printerId);
     EXPECT_EQ(ret, false);
 }
 
