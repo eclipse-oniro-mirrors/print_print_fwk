@@ -167,9 +167,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0015, TestSize.Level1)
 {
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
     PrinterCapability printerCaps;
-    std::string printerId = "1";
-    int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(
-        printerUri, printerId, printerCaps);
+    int32_t ret =
+        DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerCaps);
     EXPECT_EQ(ret, E_PRINT_SERVER_FAILURE);
 }
 
@@ -419,8 +418,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0027, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     const char* printerUri = "ipp://192.168.186.1:631/ipp/print";
-    std::string printerId = "1";
-    bool ret = DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterOnline(printerUri, printerId);
+    bool ret = DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterOnline(printerUri);
     EXPECT_EQ(ret, false);
 }
 

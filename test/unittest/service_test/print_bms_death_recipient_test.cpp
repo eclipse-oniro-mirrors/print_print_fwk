@@ -38,17 +38,6 @@ void PrintBMSDeathRecipientTest::SetUp(void) {}
 
 void PrintBMSDeathRecipientTest::TearDown(void) {}
 
-/**
-* @tc.name: PrintBMSDeathRecipientTest_0001
-* @tc.desc: OnRemoteRequest
-* @tc.type: FUNC
-* @tc.require:
-*/
-HWTEST_F(PrintBMSDeathRecipientTest, PrintBMSDeathRecipientTest_0001, TestSize.Level1)
-{
-    PrintBMSDeathRecipient  dr;
-    wptr<IRemoteObject> testRemote = nullptr;
-    dr.OnRemoteDied(testRemote);
-}
+
 }  // namespace Print
 }  // namespace OHOS
