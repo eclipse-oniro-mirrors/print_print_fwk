@@ -68,7 +68,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0003, TestSize.L
     std::string option = R"({"ePrintUrl":"testUrl"})";
     printerInfo.SetOption(option);
     PrintJob printJob;
-    printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS;)
+    printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
     printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
@@ -82,7 +82,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0004, TestSize.L
     std::string option = R"({"ePrintUrl":0})";
     printerInfo.SetOption(option);
     PrintJob printJob;
-    printJob.SetSubState(PRINT_JOB_COMPLETED_CANCELLED;)
+    printJob.SetSubState(PRINT_JOB_COMPLETED_CANCELLED);
     printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
@@ -96,7 +96,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0005, TestSize.L
     std::string option = R"({"":"testUrl"})";
     printerInfo.SetOption(option);
     PrintJob printJob;
-    printJob.SetSubState(PRINT_JOB_COMPLETED_FAILED;)
+    printJob.SetSubState(PRINT_JOB_COMPLETED_FAILED);
     printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
@@ -110,7 +110,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0006, TestSize.L
     std::string option = R"({"":""})";
     printerInfo.SetOption(option);
     PrintJob printJob;
-    printJob.SetSubState(PRINT_JOB_COMPLETED_FILE_CORRUPT;)
+    printJob.SetSubState(PRINT_JOB_COMPLETED_FILE_CORRUPT);
     printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
