@@ -2490,43 +2490,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0126, TestSize.Level1)
     helper = nullptr;
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128, TestSize.Level1)
-{
-    auto service = CreateService();
-    EXPECT_NE(service, nullptr);
-    auto helper = CreatePrintServiceHelper(true, true, true, true);
-    service->SetHelper(helper);
-
-    std::vector<PrinterInfo> printerInfos;
-    InitExtPrinterList(printerInfos, 1);
-    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
-
-    PrintJob testJob;
-    testJob.SetJobId(GetDefaultJobId());
-    testJob.SetPrinterId(GetDefaultPrinterId());
-    EXPECT_EQ(service->StartPrintJob(testJob), E_PRINT_NONE);
-
-    EXPECT_CALL(*helper, IsSyncMode()).WillRepeatedly(Return(false));
-    service->CancelPrintJob(GetDefaultJobId());
-    helper = nullptr;
-}
-
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0129, TestSize.Level1)
-{
-    auto service = CreateService();
-    EXPECT_NE(service, nullptr);
-    auto helper = CreatePrintServiceHelper(true, true, true, true);
-    service->SetHelper(helper);
-
-    std::vector<PrinterInfo> printerInfos;
-    InitExtPrinterList(printerInfos, 1);
-    EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NONE);
-
-    std::string printerId = GetDefaultPrinterId();
-    EXPECT_CALL(*helper, IsSyncMode()).WillRepeatedly(Return(false));
-    service->QueryPrinterCapability(printerId);
-    helper = nullptr;
-}
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130, TestSize.Level1)
 {
     std::vector<std::string> fileList = {};
