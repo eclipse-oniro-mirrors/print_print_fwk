@@ -22,6 +22,7 @@
 #include "print_utils.h"
 #include "mock_print_extension_callback_proxy.h"
 #include "mock_print_callback_proxy.h"
+#include "print_service_mock_permission.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -372,6 +373,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001, TestSize.Level1)
 */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002, TestSize.Level1)
 {
+    PrintServiceMockPermission::MockPermission();
     std::vector<std::string> fileList = {};
     std::vector<uint32_t> fdList = {};
     std::string taskId = "";
@@ -391,6 +393,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002, TestSize.Level1)
 */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0003, TestSize.Level1)
 {
+    PrintServiceMockPermission::MockPermission();
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
     service->SetHelper(CreatePrintServiceHelper(true, false, false, false));
@@ -409,6 +412,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0003, TestSize.Level1)
 */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004, TestSize.Level1)
 {
+    PrintServiceMockPermission::MockPermission();
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
     service->SetHelper(CreatePrintServiceHelper(true, false, false, false));
@@ -428,6 +432,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004, TestSize.Level1)
 */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0005, TestSize.Level1)
 {
+    PrintServiceMockPermission::MockPermission();
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
     service->SetHelper(CreatePrintServiceHelper(true, false, false, false));
@@ -447,6 +452,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0005, TestSize.Level1)
 */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0006, TestSize.Level1)
 {
+    PrintServiceMockPermission::MockPermission();
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
     service->SetHelper(CreatePrintServiceHelper(true, false, false, true));
@@ -467,6 +473,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0006, TestSize.Level1)
 */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0007, TestSize.Level1)
 {
+    PrintServiceMockPermission::MockPermission();
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
     service->SetHelper(CreatePrintServiceHelper(false, false, false, false));
@@ -483,6 +490,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0007, TestSize.Level1)
 */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0008, TestSize.Level1)
 {
+    PrintServiceMockPermission::MockPermission();
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
     service->SetHelper(CreatePrintServiceHelper(true, false, false, false));
@@ -499,6 +507,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0008, TestSize.Level1)
 */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0009, TestSize.Level1)
 {
+    PrintServiceMockPermission::MockPermission();
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
     service->SetHelper(CreatePrintServiceHelper(false, false, false, false));
@@ -515,6 +524,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0009, TestSize.Level1)
 */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0010, TestSize.Level1)
 {
+    PrintServiceMockPermission::MockPermission();
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
     service->SetHelper(CreatePrintServiceHelper(true, false, false, false));
