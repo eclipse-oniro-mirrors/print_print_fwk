@@ -40,26 +40,5 @@ void PrintServiceMockPermission::MockPermission()
     tokenId = GetAccessTokenId(&infoInstance);
     SetSelfTokenID(tokenId);
 }
-
-void PrintServiceMockPermission::MockProcess(const char* processName)
-{
-    static const char *PERMS[] = {
-        "ohos.permission.PRINT",
-        "ohos.permission.MANAGE_PRINT_JOB"
-    };
-    uint64_t tokenId;
-    NativeTokenInfoParams infoInstance = {
-        .dcapsNum = 0,
-        .permsNum = 2,
-        .aclsNum = 0,
-        .dcaps = nullptr,
-        .perms = PERMS,
-        .acls = nullptr,
-        .processName = processName,
-        .aplStr = "",
-    };
-    tokenId = GetAccessTokenId(&infoInstance);
-    SetSelfTokenID(tokenId);
-}
 }
 }

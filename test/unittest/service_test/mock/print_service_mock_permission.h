@@ -21,7 +21,6 @@ namespace Print {
 class PrintServiceMockPermission {
 public:
     static void MockPermission();
-    static void MockProcess(const char* processName);
 };
 } // namespace Print
 } // namespace OHOS
