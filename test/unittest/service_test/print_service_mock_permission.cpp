@@ -35,7 +35,7 @@ void PrintServiceMockPermission::MockPermission()
         .perms = PERMS,
         .acls = nullptr,
         .processName = "print_service",
-        .aplStr = "",
+        .aplStr = "system_core",
     };
     tokenId = GetAccessTokenId(&infoInstance);
     SetSelfTokenID(tokenId);
