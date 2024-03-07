@@ -104,6 +104,21 @@ void PrintAsyncCall::OnExecute(napi_env env, void *data)
     }
 }
 
+uint32_t PrintAsyncCall::GetErrorIndex(AsyncContext *context)
+{
+    uint32_t errorIndex = E_PRINT_NONE;
+    if (context->paramStatus != napi_ok) {
+        errorIndex = E_PRINT_INVALID_PARAMETER;
+    } else {
+        if (context->ctx == nullptr) {
+            errorIndex = E_PRINT_GENERIC_FAILURE;
+        } else {
+            errorIndex = context->ctx->GetErrorIndex();
+        }
+    }
+    return errorIndex;
+}
+
 void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
 {
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
@@ -127,16 +142,7 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         }
     } else {
         napi_value message = nullptr;
-        uint32_t errorIndex = E_PRINT_NONE;
-        if (context->paramStatus != napi_ok) {
-            errorIndex = E_PRINT_INVALID_PARAMETER;
-        } else {
-            if (context->ctx == nullptr) {
-                errorIndex = E_PRINT_GENERIC_FAILURE;
-            } else {
-                errorIndex = context->ctx->GetErrorIndex();
-            }
-        }
+        uint32_t errorIndex = GetErrorIndex(context);
         PRINT_HILOGE("ErrorMessage: [%{public}s], ErrorIndex:[%{public}d]",
             GetErrorText(errorIndex).c_str(), errorIndex);
         napi_create_uint32(env, errorIndex, &message);

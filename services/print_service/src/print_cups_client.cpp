@@ -619,8 +619,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
         if ((fp = cupsFileOpenFd(jobParams->fdList[i], "rb")) == NULL) {
             PRINT_HILOGE("Unable to open print file, cancel the job");
             cupsCancelJob2(http, jobParams->printerName.c_str(), jobId, 0);
-            jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
-                PRINT_JOB_COMPLETED_FILE_CORRUPT);
+            UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_COMPLETED_FILE_CORRUPT);
             callback();
             return;
         }
@@ -637,8 +636,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
             != IPP_STATUS_OK) {
             PRINT_HILOGE("Unable to queue, error is %s, cancel the job and return...", cupsLastErrorString());
             cupsCancelJob2(http, jobParams->printerUri.c_str(), jobId, 0);
-            jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
-                PRINT_JOB_BLOCKED_UNKNOWN);
+            UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN);
             callback();
             return;
         }
@@ -650,6 +648,11 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     if (param == nullptr)
         return;
     MonitorJobState(param, callback);
+}
+
+void PrintCupsClient::UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t substate)
+{
+    jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, state, substate);
 }
 
 void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callback)
@@ -691,9 +694,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
             continue;
         }
         if (prevousJobStatus != nullptr) {
-            prevousJobStatus->job_state = jobStatus->job_state;
-            strlcpy(prevousJobStatus->printer_state_reasons, jobStatus->printer_state_reasons,
-                sizeof(jobStatus->printer_state_reasons));
+            UpdateJobStatus(prevousJobStatus, jobStatus);
         }
         JobStatusCallback(param, jobStatus, false);
     }
@@ -703,6 +704,13 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
     delete prevousJobStatus;
     PRINT_HILOGI("FINISHED MONITORING JOB %{public}d\n", param->cupsJobId);
     callback();
+}
+
+void PrintCupsClient::UpdateJobStatus(JobStatus *prevousJobStatus, JobStatus *jobStatus)
+{
+    prevousJobStatus->job_state = jobStatus->job_state;
+    strlcpy(prevousJobStatus->printer_state_reasons, jobStatus->printer_state_reasons,
+        sizeof(jobStatus->printer_state_reasons));
 }
 
 void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline)
