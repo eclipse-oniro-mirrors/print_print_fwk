@@ -637,7 +637,7 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     }
     if (!isPrinterOnline) {
         jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
-            PRINT_JOB_BLOCKED_NETWORK_ERROR);
+            PRINT_JOB_BLOCKED_OFFLINE);
         return false;
     }
     if (!CheckPrinterMakeModel(jobParams)) {
