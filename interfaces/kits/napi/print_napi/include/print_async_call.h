@@ -110,6 +110,7 @@ private:
         napi_status paramStatus = napi_ok;
     };
     static void DeleteContext(napi_env env, AsyncContext *context);
+    static uint32_t GetErrorIndex(AsyncContext *context);
 
     AsyncContext *context_ = nullptr;
     napi_env env_ = nullptr;

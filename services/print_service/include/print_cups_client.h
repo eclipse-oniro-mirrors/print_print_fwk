@@ -135,6 +135,8 @@ private:
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
+    static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t substate);
+    static void UpdateJobStatus(JobStatus *prevousJobStatus, JobStatus *jobStatus);
 
     int32_t StartCupsdService();
     void StartNextJob();

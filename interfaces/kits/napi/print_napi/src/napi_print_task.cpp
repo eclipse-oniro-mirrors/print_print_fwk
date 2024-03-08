@@ -34,7 +34,6 @@ std::mutex g_printTaskMutex;
 
 napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
 {
-    PRINT_HILOGD("Enter print JsMain.");
     napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
     size_t paramCount = NapiPrintUtils::GetJsVal(env, info, argv, NapiPrintUtils::MAX_ARGC);
     napi_valuetype type;
