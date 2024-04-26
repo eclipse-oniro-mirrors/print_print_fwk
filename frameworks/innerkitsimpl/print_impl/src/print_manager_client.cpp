@@ -366,6 +366,20 @@ int32_t PrintManagerClient::Off(const std::string &taskId, const std::string &ty
 }
 
 int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
+    const std::shared_ptr<PrintAttributes> &printAttributes)
+{
+    std::string taskId = "";
+    return Print(printJobName, listener, printAttributes, taskId, nullptr);
+}
+
+int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
+    const std::shared_ptr<PrintAttributes> &printAttributes, void* contextToken)
+{
+    std::string taskId = "";
+    return Print(printJobName, listener, *printAttributes, taskId, contextToken);
+}
+
+int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
     const PrintAttributes &printAttributes)
 {
     std::string taskId = "";

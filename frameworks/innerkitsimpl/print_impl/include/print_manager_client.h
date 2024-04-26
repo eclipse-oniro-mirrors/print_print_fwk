@@ -72,6 +72,10 @@ public:
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);
     int32_t Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
+        const std::shared_ptr<PrintAttributes> &printAttributes);
+    int32_t Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
+        const std::shared_ptr<PrintAttributes> &printAttributes, void* contextToken);
+    int32_t Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
         const PrintAttributes &printAttributes);
     int32_t Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
         const PrintAttributes &printAttributes, void* contextToken);
