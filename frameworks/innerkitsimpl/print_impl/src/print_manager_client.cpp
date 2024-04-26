@@ -369,7 +369,7 @@ int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IP
     const std::shared_ptr<PrintAttributes> &printAttributes)
 {
     std::string taskId = "";
-    return Print(printJobName, listener, printAttributes, taskId, nullptr);
+    return Print(printJobName, listener, *printAttributes, taskId, nullptr);
 }
 
 int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
