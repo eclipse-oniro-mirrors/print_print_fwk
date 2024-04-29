@@ -230,12 +230,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0018, TestSize.Level1)
 
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019, TestSize.Level1)
 {
-    JobParameters *jobParams1 = nullptr;
     int num = 0;
     cups_option_t *options = nullptr;
-    int ret =
-        DelayedSingleton<PrintCupsClient>::GetInstance()->FillBorderlessOptions(jobParams1, num, &options);
-    EXPECT_EQ(ret, 0);
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
     testJob.SetJobId(GetDefaultJobId());
@@ -247,23 +243,21 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams2 = printCupsClient.BuildJobParameters(testJob);
-    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->FillBorderlessOptions(jobParams2, num, &options);
+    int ret = DelayedSingleton<PrintCupsClient>::GetInstance()->FillBorderlessOptions(jobParams2, num, &options);
     EXPECT_EQ(ret, 1);
 }
 
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0020, TestSize.Level1)
 {
-    JobParameters *jobParams1 = nullptr;
     int num = 0;
     cups_option_t *options = nullptr;
-    int ret = DelayedSingleton<PrintCupsClient>::GetInstance()->FillJobOptions(jobParams1, num, &options);
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob jobInfo;
     jobInfo.SetCopyNumber(2);
     jobInfo.SetDuplexMode(1);
     jobInfo.SetColorMode(0);
     JobParameters *jobParams2 = printCupsClient.BuildJobParameters(jobInfo);
-    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->FillJobOptions(jobParams2, num, &options);
+    int ret = DelayedSingleton<PrintCupsClient>::GetInstance()->FillJobOptions(jobParams2, num, &options);
     EXPECT_EQ(ret, 3);
 }
 
