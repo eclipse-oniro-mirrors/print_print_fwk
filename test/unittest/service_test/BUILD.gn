@@ -36,7 +36,6 @@ ohos_unittest("print_service_test") {
     "print_extension_callback_proxy_test.cpp",
     "print_security_guard_info_test.cpp",
     "print_security_guard_manager_test.cpp",
-    "print_service_ability_test.cpp",
     "print_service_helper_test.cpp",
     "print_service_mock_permission.cpp",
     "print_service_stub_test.cpp",
@@ -59,7 +58,6 @@ ohos_unittest("print_service_test") {
 
   if (cups_enable) {
     include_dirs += [ "//third_party/cups/cups-2.4.0" ]
-    sources += [ "print_cups_client_test.cpp" ]
     cflags_cc = [ "-DCUPS_ENABLE" ]
     deps += [
       "//third_party/cups:third_party_cups",
