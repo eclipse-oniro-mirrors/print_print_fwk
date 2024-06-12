@@ -26,22 +26,6 @@
 using json = nlohmann::json;
 
 namespace OHOS::Print {
-static std::vector<uint32_t> Str2Vec(std::string str)
-{
-    if (str.size() <= 1) {
-        return {};
-    }
-    str.pop_back();
-    str.erase(str.begin());
-    std::vector<uint32_t> vec;
-    std::istringstream is(str);
-    std::string temp;
-    while (getline(is, temp, ',')) {
-        vec.push_back(stoi(temp));
-    }
-    return vec;
-}
-
 char *CopyString(const std::string &source)
 {
     auto len = source.length();
@@ -349,7 +333,7 @@ void ParsePrinterOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePri
     if (cupsOpt.contains(keyword)) {
         std::string orientationArray = cupsOpt[keyword].get<std::string>();
         PRINT_HILOGD("supported orientations: %{public}s", orientationArray.c_str());
-        std::vector<uint32_t> orientationVector = Str2Vec(orientationArray);
+        std::vector<uint32_t> orientationVector = PrintUtil::Str2Vec(orientationArray);
         nativePrinterInfo.capability.supportedOrientations = CopyArray<uint32_t, Print_OrientationMode>(
             orientationVector, nativePrinterInfo.capability.supportedOrientationsCount, ConvertOrientationMode);
     }

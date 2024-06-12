@@ -26,6 +26,7 @@ public:
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
+    bool OnStartService(MessageParcel &data, MessageParcel &reply);
     bool OnStartPrint(MessageParcel &data, MessageParcel &reply);
     bool OnStopPrint(MessageParcel &data, MessageParcel &reply);
     bool OnEventOn(MessageParcel &data, MessageParcel &reply);
@@ -45,10 +46,12 @@ private:
     bool OnStartPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnCancelPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnUpdatePrinterState(MessageParcel &data, MessageParcel &reply);
-    bool OnUpdatePrintJobState(MessageParcel &data, MessageParcel &reply);
+    bool OnUpdatePrintJobStateOnlyForSystemApp(MessageParcel &data, MessageParcel &reply);
     bool OnUpdateExtensionInfo(MessageParcel &data, MessageParcel &reply);
     bool OnRequestPreview(MessageParcel &data, MessageParcel &reply);
     bool OnQueryPrinterCapability(MessageParcel &data, MessageParcel &reply);
+    bool OnRegisterPrinterCallback(MessageParcel &data, MessageParcel &reply);
+    bool OnUnregisterPrinterCallback(MessageParcel &data, MessageParcel &reply);
     bool OnRegisterExtCallback(MessageParcel &data, MessageParcel &reply);
     bool OnUnregisterAllExtCallback(MessageParcel &data, MessageParcel &reply);
     bool OnLoadExtSuccess(MessageParcel &data, MessageParcel &reply);
@@ -59,6 +62,16 @@ private:
     bool OnPrintByAdapter(MessageParcel &data, MessageParcel &reply);
     bool OnStartGetPrintFile(MessageParcel &data, MessageParcel &reply);
     bool OnNotifyPrintService(MessageParcel &data, MessageParcel &reply);
+
+    bool OnQueryPrinterInfoByPrinterId(MessageParcel &data, MessageParcel &reply);
+    bool OnQueryAddedPrinter(MessageParcel &data, MessageParcel &reply);
+    bool OnQueryPrinterProperties(MessageParcel &data, MessageParcel &reply);
+    bool OnStartNativePrintJob(MessageParcel &data, MessageParcel &reply);
+    bool OnNotifyPrintServiceEvent(MessageParcel &data, MessageParcel &reply);
+    bool OnGetPrinterPreference(MessageParcel &data, MessageParcel &reply);
+    bool OnSetPrinterPreference(MessageParcel &data, MessageParcel &reply);
+    bool OnSetDefaultPrinter(MessageParcel &data, MessageParcel &reply);
+    bool OnDeletePrinterFromCups(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

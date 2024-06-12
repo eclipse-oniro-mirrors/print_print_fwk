@@ -27,6 +27,9 @@ static constexpr const char *PARAM_INFO_PRINTERICON = "printerIcon";
 static constexpr const char *PARAM_INFO_DESCRIPTION = "description";
 static constexpr const char *PARAM_INFO_CAPABILITY = "capability";
 static constexpr const char *PARAM_JOB_OPTION = "options";
+static constexpr const char *PARAM_INFO_IS_DAFAULT_PRINTER = "isDefaultPrinter";
+static constexpr const char *PARAM_INFO_IS_LAST_USED_PRINTER = "isLastUsedPrinter";
+static constexpr const char *PARAM_INFO_PRINTER_STATUS = "printerStatus";
 
 napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info)
 {
@@ -53,6 +56,18 @@ napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info
 
     if (info.HasOption()) {
         NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_JOB_OPTION, info.GetOption());
+    }
+
+    if (info.HasIsDefaultPrinter()) {
+        NapiPrintUtils::SetBooleanProperty(env, jsObj, PARAM_INFO_IS_DAFAULT_PRINTER, info.GetIsDefaultPrinter());
+    }
+
+    if (info.HasIsLastUsedPrinter()) {
+        NapiPrintUtils::SetBooleanProperty(env, jsObj, PARAM_INFO_IS_LAST_USED_PRINTER, info.GetIsLastUsedPrinter());
+    }
+
+    if (info.HasPrinterStatus()) {
+        NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_INFO_PRINTER_STATUS, info.GetPrinterStatus());
     }
     return jsObj;
 }
@@ -123,20 +138,6 @@ bool PrinterInfoHelper::ValidateProperty(napi_env env, napi_value object)
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
-    for (auto name : names) {
-        if (propertyList.find(name) == propertyList.end()) {
-            PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
-            return false;
-        }
-        propertyList[name] = PRINT_PARAM_SET;
-    }
-
-    for (auto propertypItem : propertyList) {
-        if (propertypItem.second == PRINT_PARAM_NOT_SET) {
-            PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
-            return false;
-        }
-    }
-    return true;
+    return NapiPrintUtils::VerifyProperty(names, propertyList);
 }
 }  // namespace OHOS::Print

@@ -16,11 +16,18 @@
 #include <gtest/gtest.h>
 #include "print_service_helper.h"
 #include "print_constant.h"
+#include "ipc_skeleton.h"
 
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Print {
+
+static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
+static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
+static const std::string SPOOLER_STATUS_BAR_ABILITY_NAME = "PluginPrintIconExtAbility";
+static const std::string CALLER_PKG_NAME = "caller.pkgName";
+
 class PrintServiceHelperTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
@@ -33,7 +40,11 @@ void PrintServiceHelperTest::SetUpTestCase(void) {}
 
 void PrintServiceHelperTest::TearDownTestCase(void) {}
 
-void PrintServiceHelperTest::SetUp(void) {}
+void PrintServiceHelperTest::SetUp(void)
+{
+    static int32_t testNo = 0;
+    PRINT_HILOGI("PrintServiceHelperTest_%{public}d", ++testNo);
+}
 
 void PrintServiceHelperTest::TearDown(void) {}
 
@@ -140,5 +151,30 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0008, TestSize.Level1)
     PrintServiceHelper helper;
     helper.IsSyncMode();
 }
+
+/**
+* @tc.name: PrintServiceHelperTest_0013
+* @tc.desc: faultPrint
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_009, TestSize.Level1) {
+    PrintServiceHelper helper;
+    AAFwk::Want want;
+    EXPECT_FALSE(helper.StartAbility(want));
+}
+ 
+/**
+* @tc.name: PrintServiceHelperTest_0014
+* @tc.desc: faultPrint
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0010, TestSize.Level1)
+{
+    PrintServiceHelper helper;
+    helper.PrintSubscribeCommonEvent();
+}
+
 } // namespace Print
 } // namespace OHOS

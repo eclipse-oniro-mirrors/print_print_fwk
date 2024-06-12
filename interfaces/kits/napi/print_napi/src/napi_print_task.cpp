@@ -44,7 +44,8 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
     }
 
     auto context = std::make_shared<PrintTaskContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input = [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
             "need 1 or 2 parameter!", napi_invalid_arg);
         napi_status checkStatus = VerifyParameters(env, argc, argv, context);
@@ -57,19 +58,17 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
         if ((proxy == nullptr) || (status != napi_ok)) {
             PRINT_HILOGE("Failed to create print task");
             context->SetErrorIndex(E_PRINT_GENERIC_FAILURE);
-            return napi_generic_failure;
         }
 
         PrintTask *task;
         PRINT_CALL_BASE(env, napi_unwrap(env, proxy, reinterpret_cast<void **>(&task)), napi_invalid_arg);
         uint32_t ret = E_PRINT_GENERIC_FAILURE;
         if (task != nullptr) {
-            ret = task->Start();
+            ret = task->Start(env, info);
         }
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to start print task");
             context->SetErrorIndex(ret);
-            return napi_generic_failure;
         }
         napi_create_reference(env, proxy, 1, &(context->ref));
         return napi_ok;
@@ -92,7 +91,9 @@ napi_value NapiPrintTask::PrintByAdapter(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGI("PrintByAdapter start ---->");
     auto context = std::make_shared<PrintTaskContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_FOUR, "need 4 parameter!", napi_invalid_arg);
         napi_status checkStatus = VerifyParameters(env, argc, argv, context);
         if (checkStatus != napi_ok) {
@@ -111,7 +112,7 @@ napi_value NapiPrintTask::PrintByAdapter(napi_env env, napi_callback_info info)
         PRINT_CALL_BASE(env, napi_unwrap(env, proxy, reinterpret_cast<void **>(&task)), napi_invalid_arg);
         uint32_t ret = E_PRINT_GENERIC_FAILURE;
         if (task != nullptr) {
-            ret = task->StartPrintAdapter();
+            ret = task->StartPrintAdapter(env, info);
         }
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to start print task");
@@ -289,7 +290,8 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
         fclose(file);
         return true;
     }
-    if (fileName.find("file://") == 0 || fileName.find("fd://") == 0) {
+    PRINT_HILOGD("fileName: %{public}s", fileName.c_str());
+    if (fileName.find("file://") == 0 || fileName.find("fd://") == 0 || fileName.find("content://") == 0) {
         return true;
     }
     PRINT_HILOGE("invalid file name");

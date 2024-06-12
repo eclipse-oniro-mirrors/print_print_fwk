@@ -27,7 +27,7 @@ PrintBMSHelper::PrintBMSHelper() : sptrBundleMgr_(nullptr), printBMSDeath_(nullp
 PrintBMSHelper::~PrintBMSHelper()
 {}
 
-void PrintBMSHelper::SetHelper(const std::shared_ptr<PrintServiceHelper> &helper)
+void PrintBMSHelper::SetHelper(std::shared_ptr<PrintServiceHelper> &helper)
 {
     helper_ = helper;
     sptrBundleMgr_ = nullptr;

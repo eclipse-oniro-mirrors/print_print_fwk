@@ -18,8 +18,12 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrinterInfo::PrinterInfo() : printerId_(""), printerName_(""), printerState_(PRINTER_UNKNOWN),
-    printerIcon_(PRINT_INVALID_ID), description_(""), hasCapability_(false), hasOption_(false), option_("") {
+PrinterInfo::PrinterInfo()
+    : printerId_(""), printerName_(""), printerState_(PRINTER_UNKNOWN), printerIcon_(PRINT_INVALID_ID),
+      description_(""), hasCapability_(false), hasOption_(false), option_(""), hasIsDefaultPrinter_(false),
+      isDefaultPrinter_(false), hasIsLastUsedPrinter_(false), isLastUsedPrinter_(false), hasPrinterStatus_(false),
+      printerStatus_(PRINTER_STATUS_UNAVAILABLE)
+{
     capability_.Reset();
 }
 
@@ -34,6 +38,12 @@ PrinterInfo::PrinterInfo(const PrinterInfo &right)
     capability_ = right.capability_;
     hasOption_ = right.hasOption_;
     option_= right.option_;
+    hasIsDefaultPrinter_ = right.hasIsDefaultPrinter_;
+    isDefaultPrinter_ = right.isDefaultPrinter_;
+    hasIsLastUsedPrinter_ = right.hasIsLastUsedPrinter_;
+    isLastUsedPrinter_ = right.isLastUsedPrinter_;
+    hasPrinterStatus_ = right.hasPrinterStatus_;
+    printerStatus_ = right.printerStatus_;
 }
 
 PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
@@ -48,6 +58,12 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         capability_ = right.capability_;
         hasOption_ = right.hasOption_;
         option_ = right.option_;
+        hasIsDefaultPrinter_ = right.hasIsDefaultPrinter_;
+        isDefaultPrinter_ = right.isDefaultPrinter_;
+        hasIsLastUsedPrinter_ = right.hasIsLastUsedPrinter_;
+        isLastUsedPrinter_ = right.isLastUsedPrinter_;
+        hasPrinterStatus_ = right.hasPrinterStatus_;
+        printerStatus_ = right.printerStatus_;
     }
     return *this;
 }
@@ -91,6 +107,24 @@ void PrinterInfo::SetOption(const std::string &option)
 {
     hasOption_ = true;
     option_ = option;
+}
+
+void PrinterInfo::SetIsDefaultPrinter(bool isDefaultPrinter)
+{
+    hasIsDefaultPrinter_ = true;
+    isDefaultPrinter_ = true;
+}
+
+void PrinterInfo::SetIsLastUsedPrinter(bool isLastUsedPrinter)
+{
+    hasIsLastUsedPrinter_ = true;
+    isLastUsedPrinter_ = true;
+}
+
+void PrinterInfo::SetPrinterStatus(uint32_t printerStatus)
+{
+    hasPrinterStatus_ = true;
+    printerStatus_ = printerStatus;
 }
 
 const std::string &PrinterInfo::GetPrinterId() const
@@ -138,8 +172,42 @@ std::string PrinterInfo::GetOption() const
     return option_;
 }
 
+bool PrinterInfo::HasIsDefaultPrinter() const
+{
+    return hasIsDefaultPrinter_;
+}
+
+bool PrinterInfo::GetIsDefaultPrinter() const
+{
+    return isDefaultPrinter_;
+}
+
+bool PrinterInfo::HasIsLastUsedPrinter() const
+{
+    return hasIsLastUsedPrinter_;
+}
+
+bool PrinterInfo::GetIsLastUsedPrinter() const
+{
+    return isLastUsedPrinter_;
+}
+
+bool PrinterInfo::HasPrinterStatus() const
+{
+    return hasPrinterStatus_;
+}
+
+uint32_t PrinterInfo::GetPrinterStatus() const
+{
+    return printerStatus_;
+}
+
 bool PrinterInfo::ReadFromParcel(Parcel &parcel)
 {
+    if (parcel.GetReadableBytes() == 0) {
+        PRINT_HILOGE("no data in parcel");
+        return false;
+    }
     SetPrinterId(parcel.ReadString());
     SetPrinterName(parcel.ReadString());
     SetPrinterState(parcel.ReadUint32());
@@ -169,6 +237,23 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
     hasOption_ = parcel.ReadBool();
     if (hasOption_) {
         SetOption(parcel.ReadString());
+    }
+
+    hasIsDefaultPrinter_ = parcel.ReadBool();
+    if (hasIsDefaultPrinter_) {
+        isDefaultPrinter_ = parcel.ReadBool();
+    }
+
+    hasIsLastUsedPrinter_ = parcel.ReadBool();
+    if (hasIsLastUsedPrinter_) {
+        isLastUsedPrinter_ = parcel.ReadBool();
+    }
+
+    hasPrinterStatus_ = parcel.ReadBool();
+    PRINT_HILOGD("hasPrinterStatus_: %{public}d", hasPrinterStatus_);
+    if (hasPrinterStatus_) {
+        SetPrinterStatus(parcel.ReadUint32());
+        PRINT_HILOGD("GetPrinterStatus(): %{public}d", GetPrinterStatus());
     }
 
     return true;
@@ -203,6 +288,23 @@ bool PrinterInfo::Marshalling(Parcel &parcel) const
     if (hasOption_) {
         parcel.WriteString(GetOption());
     }
+
+    parcel.WriteBool(hasIsDefaultPrinter_);
+    if (hasIsDefaultPrinter_) {
+        parcel.WriteBool(isDefaultPrinter_);
+    }
+
+    parcel.WriteBool(hasIsLastUsedPrinter_);
+    if (hasIsLastUsedPrinter_) {
+        parcel.WriteBool(isLastUsedPrinter_);
+    }
+
+    parcel.WriteBool(hasPrinterStatus_);
+    PRINT_HILOGD("hasPrinterStatus_: %{public}d", hasPrinterStatus_);
+    if (hasPrinterStatus_) {
+        PRINT_HILOGD("GetPrinterStatus(): %{public}d", GetPrinterStatus());
+        parcel.WriteUint32(GetPrinterStatus());
+    }
     return true;
 }
 
@@ -229,5 +331,14 @@ void PrinterInfo::Dump()
     if (hasOption_) {
         PRINT_HILOGD("option: %{private}s", option_.c_str());
     }
+    if (hasIsDefaultPrinter_) {
+        PRINT_HILOGD("isDefaultPrinter: %{public}d", isDefaultPrinter_);
+    }
+    if (hasIsLastUsedPrinter_) {
+        PRINT_HILOGD("isLastUsedPrinter: %{public}d", isLastUsedPrinter_);
+    }
+    if (hasPrinterStatus_) {
+        PRINT_HILOGD("printerStatus: %{public}d", printerStatus_);
+    }
 }
-} // namespace OHOS::Print
+}  // namespace OHOS::Print

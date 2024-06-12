@@ -43,6 +43,10 @@ std::shared_ptr<PrintResolution> PrintResolutionHelper::BuildFromJs(napi_env env
             PRINT_HILOGE("Invalid resolution id");
             return nullptr;
         }
+        if (nativeObj == nullptr) {
+            PRINT_HILOGE("nativeObj is nullptr");
+            return nullptr;
+        }
         nativeObj->SetId(id);
         nativeObj->SetHorizontalDpi(horizontalDpi);
         nativeObj->SetVerticalDpi(verticalDpi);
@@ -59,21 +63,6 @@ bool PrintResolutionHelper::ValidateProperty(napi_env env, napi_value object)
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
-    for (auto name : names) {
-        if (propertyList.find(name) == propertyList.end()) {
-            PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
-            return false;
-        }
-        propertyList[name] = PRINT_PARAM_SET;
-    }
-
-    for (auto propertypItem : propertyList) {
-        if (propertypItem.second == PRINT_PARAM_NOT_SET) {
-            PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
-            return false;
-        }
-    }
-
-    return true;
+    return NapiPrintUtils::VerifyProperty(names, propertyList);
 }
 }  // namespace OHOS::Print

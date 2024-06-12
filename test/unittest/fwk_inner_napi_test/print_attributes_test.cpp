@@ -63,6 +63,19 @@ OHOS::Print::PrintAttributes PrintAttributesTest::GetDefaultPrintAttributes()
 }
 
 /**
+ * @tc.name: PrintAttributesTest_001
+ * @tc.desc: Verify the Dump function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintAttributesTest, PrintAttributesTest_001, TestSize.Level1)
+{
+    OHOS::Print::PrintAttributes printAttributes(GetDefaultPrintAttributes());
+    printAttributes.Dump();
+    printAttributes.~PrintAttributes();
+}
+
+/**
  * @tc.name: PrintAttributesTest_002
  * @tc.desc: Verify the UpdateParams function.
  * @tc.type: FUNC
@@ -255,5 +268,20 @@ HWTEST_F(PrintAttributesTest, PrintAttributesTest_0014, TestSize.Level1)
     auto result = OHOS::Print::PrintAttributes::Unmarshalling(parcel);
     EXPECT_NE(nullptr, result);
 }
+
+/**
+ * @tc.name: PrintAttributesTest_0015
+ * @tc.desc: Verify the marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintAttributesTest, PrintAttributesTest_0015, TestSize.Level1)
+{
+    OHOS::Print::PrintAttributes printAttributes;
+    printAttributes.Dump();
+    Parcel parcel;
+    EXPECT_FALSE(printAttributes.ReadFromParcel(parcel));
+}
+
 } // namespace Print
 } // namespace OHOS

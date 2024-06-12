@@ -149,11 +149,6 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value j
 std::shared_ptr<PrintJob> PrintJobHelper::BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::string jobId,
     uint32_t jobState, uint32_t subState, std::shared_ptr<PrintJob> &nativeObj)
 {
-    if (jobId == "") {
-        PRINT_HILOGE("Invalid job id");
-        return nullptr;
-    }
-
     if (jobState >= PRINT_JOB_UNKNOWN || subState > PRINT_JOB_BLOCKED_UNKNOWN) {
         PRINT_HILOGE("Invalid job state[%{public}d] or sub state [%{public}d]", jobState, subState);
         return nullptr;
@@ -276,20 +271,6 @@ bool PrintJobHelper::ValidateProperty(napi_env env, napi_value object)
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
-    for (auto name : names) {
-        if (propertyList.find(name) == propertyList.end()) {
-            PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
-            return false;
-        }
-        propertyList[name] = PRINT_PARAM_SET;
-    }
-
-    for (auto propertypItem : propertyList) {
-        if (propertypItem.second == PRINT_PARAM_NOT_SET) {
-            PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
-            return false;
-        }
-    }
-    return true;
+    return NapiPrintUtils::VerifyProperty(names, propertyList);
 }
 }

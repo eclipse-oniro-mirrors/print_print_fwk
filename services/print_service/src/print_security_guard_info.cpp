@@ -51,7 +51,17 @@ void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, co
             }
         }
     }
-
+    printTypeInfo_.copyNumber = (int32_t)printJob.GetCopyNumber();
+    if (json::accept(printJob.GetOption())) {
+        json jobOptionJson = json::parse(printJob.GetOption());
+        if (jobOptionJson.contains("printPages") && jobOptionJson["printPages"].is_number()) {
+            printTypeInfo_.printPages = jobOptionJson["printPages"];
+        } else {
+            std::vector<uint32_t> fdList;
+            printJob.GetFdList(fdList);
+            printTypeInfo_.printPages = (int32_t)fdList.size();
+        }
+    }
     uint32_t subState = printJob.GetSubState();
     switch (subState) {
         case PRINT_JOB_COMPLETED_SUCCESS:
@@ -76,6 +86,8 @@ nlohmann::json PrintSecurityGuardInfo::ToJson()
     printTypeInfoJson["mac"] = printTypeInfo_.mac;
     printTypeInfoJson["domain"] = printTypeInfo_.domain;
     printTypeInfoJson["name"] = printTypeInfo_.name;
+    printTypeInfoJson["copyNumber"] = printTypeInfo_.copyNumber;
+    printTypeInfoJson["printPages"] = printTypeInfo_.printPages;
     targetInfo_ = printTypeInfoJson.dump();
 
     nlohmann::json securityGuardInfoJson;

@@ -31,12 +31,23 @@ ohos_shared_library("print_client") {
   ]
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    boundary_sanitize = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
   sources = [
     "src/iprint_adapter.cpp",
     "src/iprint_adapter_inner.cpp",
     "src/print_callback.cpp",
     "src/print_callback_stub.cpp",
     "src/print_extension_callback_stub.cpp",
+    "src/print_innerkit_modal_ui_callback.cpp",
     "src/print_manager_client.cpp",
     "src/print_sa_death_recipient.cpp",
     "src/print_service_proxy.cpp",
@@ -47,15 +58,6 @@ ohos_shared_library("print_client") {
     "${print_path}/frameworks/helper/print_helper:print_helper",
     "${print_path}/frameworks/models/print_models:print_models",
   ]
-  if (pdfium_enable) {
-    include_dirs += [
-      "//third_party/pdfium",
-      "//third_party/pdfium/public",
-      "//third_party/pdfium/testing/image_diff",
-    ]
-    cflags_cc += [ "-DPDFIUM_ENABLE" ]
-    deps += [ "//third_party/pdfium:pdfium_shared" ]
-  }
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
@@ -63,16 +65,14 @@ ohos_shared_library("print_client") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
+    "ability_runtime:ui_extension",
+    "ace_engine:ace_uicontent",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "preferences:native_preferences",
-    "relational_store:native_appdatafwk",
-    "relational_store:native_dataability",
-    "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
 

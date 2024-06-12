@@ -21,11 +21,21 @@
 #include <string>
 #include <vector>
 
+#include "ui_content.h"
+#include "modal_ui_extension_config.h"
+#include "want.h"
+#include "napi_base_context.h"
+#include "ipc_skeleton.h"
+#include "bundle_mgr_client.h"
 #include "iremote_object.h"
-#include "iprint_callback.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
+
+#include "iprint_callback.h"
 #include "print_async_call.h"
+#include "print_modal_ui_callback.h"
+#include "print_context.h"
+#include "print_utils.h"
 
 namespace OHOS::Print {
 class PrintTask {
@@ -35,14 +45,27 @@ public:
         const std::shared_ptr<PrintAttributes> &printAttributes_, const sptr<IRemoteObject> &callerToken_);
     ~PrintTask();
 
-    uint32_t Start();
-    uint32_t StartPrintAdapter();
+    uint32_t Start(napi_env env, napi_callback_info info);
+    uint32_t StartPrintAdapter(napi_env env, napi_callback_info info);
     void Stop();
     const std::string &GetId() const;
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);
 
     bool IsSupportType(const std::string &type) const;
+
+private:
+    uint32_t CallSpooler(napi_env env, napi_callback_info info, const std::shared_ptr<AdapterParam> &adapterParam,
+        bool isPrintByAdapter);
+    bool ParseAbilityContextReq(napi_env env, const napi_value &obj,
+        std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> &abilityContext,
+        std::shared_ptr<OHOS::AbilityRuntime::UIExtensionContext> &uiExtensionContext);
+    void StartUIExtensionAbility(
+        std::shared_ptr<BaseContext> asyncContext, const std::shared_ptr<AdapterParam> &adapterParam);
+    uint32_t StartUIExtensionAbility(OHOS::AAFwk::Want &want, std::shared_ptr<BaseContext> asyncContext);
+    OHOS::Ace::UIContent* GetUIContent(const BaseContext *asyncContext);
+    void CreateDefaultAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam);
+    bool CheckPermission(const std::string &name);
 
 private:
     struct TaskEventContext : public PrintAsyncCall::Context {

@@ -32,7 +32,10 @@ PrintCallback::PrintCallback(PrintDocumentAdapter* adapter) :adapter_(adapter)
 PrintCallback::~PrintCallback()
 {
     if (adapter_ != nullptr) {
+        delete adapter_;
         adapter_ = nullptr;
+    } else if (nativePrinterChange_cb != nullptr) {
+        nativePrinterChange_cb = nullptr;
     } else {
         std::lock_guard<std::mutex> autoLock(mutex_);
         PRINT_HILOGD("callback has been destroyed");
@@ -51,7 +54,7 @@ PrintCallback::~PrintCallback()
             return;
         }
         work->data = reinterpret_cast<void*>(param);
-        uv_queue_work(loop, work, [](uv_work_t *work) {}, [](uv_work_t *work, int _status) {
+        int retVal = uv_queue_work(loop, work, [](uv_work_t *work) {}, [](uv_work_t *work, int _status) {
             PRINT_HILOGD("uv_queue_work PrintCallback DeleteReference");
             Param *param_ = reinterpret_cast<Param*>(work->data);
             if (param_ == nullptr) {
@@ -71,6 +74,12 @@ PrintCallback::~PrintCallback()
             delete param_;
             delete work;
         });
+        if (retVal != 0) {
+            PRINT_HILOGE("Failed to get uv_queue_work.");
+            delete param;
+            delete work;
+            return;
+        }
     }
 }
 
@@ -232,7 +241,8 @@ static void PrintAdapterAfterCallFun(uv_work_t *work, int status)
             std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, args[0]);
             uint32_t replyState = NapiPrintUtils::GetUint32FromValue(env, args[1]);
 
-            PrintManagerClient::GetInstance()->UpdatePrintJobState(jobId, PRINT_JOB_CREATE_FILE_COMPLETED, replyState);
+            PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(
+                jobId, PRINT_JOB_CREATE_FILE_COMPLETED, replyState);
             PRINT_HILOGI("from js return jobId:%{public}s, replyState:%{public}d", jobId.c_str(), replyState);
             return nullptr;
         };
@@ -340,6 +350,7 @@ bool PrintCallback::onBaseCallback(std::function<void(CallbackParam*)> paramFun,
     CallbackParam *param = new (std::nothrow) CallbackParam;
     if (param == nullptr) {
         PRINT_HILOGE("Failed to create callback parameter");
+        delete work;
         return false;
     } else {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -352,7 +363,13 @@ bool PrintCallback::onBaseCallback(std::function<void(CallbackParam*)> paramFun,
     }
 
     work->data = param;
-    uv_queue_work(loop, work, [](uv_work_t *work) {}, after_work_cb);
+    int retVal = uv_queue_work(loop, work, [](uv_work_t *work) {}, after_work_cb);
+    if (retVal != 0) {
+        PRINT_HILOGE("Failed to get uv_queue_work.");
+        delete param;
+        delete work;
+        return false;
+    }
     return true;
 }
 
@@ -365,6 +382,9 @@ bool PrintCallback::OnCallback()
 bool PrintCallback::OnCallback(uint32_t state, const PrinterInfo &info)
 {
     PRINT_HILOGI("Printer Notification in");
+    if (nativePrinterChange_cb != nullptr) {
+        return nativePrinterChange_cb(state, info);
+    }
     return onBaseCallback(
         [state, info](CallbackParam* param) {
             param->state = state;
@@ -392,27 +412,30 @@ bool PrintCallback::OnCallback(const std::string &extensionId, const std::string
         }, ExtensionAfterCallFun);
 }
 
-bool PrintCallback::OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
-    const PrintAttributes &newAttrs, uint32_t fd)
+bool PrintCallback::OnCallbackAdapterLayout(
+    const std::string &jobId, const PrintAttributes &oldAttrs, const PrintAttributes &newAttrs, uint32_t fd)
 {
     PRINT_HILOGI("PrintCallback OnCallbackAdapterLayout Notification in, jobId:%{public}s newAttrs copyNum:%{public}d",
-        jobId.c_str(), newAttrs.GetCopyNumber());
+        jobId.c_str(),
+        newAttrs.GetCopyNumber());
     if (adapter_ != nullptr) {
         PRINT_HILOGI("OnCallbackAdapterLayout run c++");
         adapter_->onStartLayoutWrite(jobId, oldAttrs, newAttrs, fd, [](std::string jobId, uint32_t state) {
             PRINT_HILOGI("onStartLayoutWrite write over, jobId:%{public}s state: %{public}d", jobId.c_str(), state);
-            PrintManagerClient::GetInstance()->UpdatePrintJobState(jobId, PRINT_JOB_CREATE_FILE_COMPLETED, state);
+            PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(
+                jobId, PRINT_JOB_CREATE_FILE_COMPLETED, state);
         });
         return true;
     } else {
         PRINT_HILOGI("OnCallbackAdapterLayout run ets");
         return onBaseCallback(
-            [jobId, oldAttrs, newAttrs, fd](CallbackParam* param) {
+            [jobId, oldAttrs, newAttrs, fd](CallbackParam *param) {
                 param->jobId = jobId;
                 param->oldAttrs = oldAttrs;
                 param->newAttrs = newAttrs;
                 param->fd = fd;
-            }, PrintAdapterAfterCallFun);
+            },
+            PrintAdapterAfterCallFun);
     }
 }
 

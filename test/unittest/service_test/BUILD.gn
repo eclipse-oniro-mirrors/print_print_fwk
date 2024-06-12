@@ -1,4 +1,4 @@
-# Copyright (C) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,7 +14,7 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
-module_output_path = "print/print_fwk"
+module_output_path = "print_fwk/service_test"
 
 ohos_unittest("print_service_test") {
   module_out_path = module_output_path
@@ -29,17 +29,22 @@ ohos_unittest("print_service_test") {
     "//third_party/node/src",
   ]
 
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${print_path}/cfi_blocklist.txt"
+  }
+
   sources = [
     "print_bms_death_recipient_test.cpp",
-    "print_bms_helper_test.cpp",
-    "print_callback_proxy_test.cpp",
-    "print_extension_callback_proxy_test.cpp",
+    "print_cups_attribute_test.cpp",
     "print_security_guard_info_test.cpp",
     "print_security_guard_manager_test.cpp",
-    "print_service_ability_test.cpp",
+    "print_service_converter_test.cpp",
     "print_service_helper_test.cpp",
-    "print_service_mock_permission.cpp",
-    "print_service_stub_test.cpp",
+    "print_system_data_test.cpp",
+    "print_user_data_test.cpp",
   ]
 
   deps = [
@@ -54,17 +59,29 @@ ohos_unittest("print_service_test") {
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service:print_service",
     "//third_party/googletest:gmock_main",
+    "//third_party/jsoncpp:jsoncpp",
     "//third_party/zlib:libz",
   ]
 
   if (cups_enable) {
     include_dirs += [ "//third_party/cups/cups-2.4.0" ]
-    sources += [ "print_cups_client_test.cpp" ]
     cflags_cc = [ "-DCUPS_ENABLE" ]
     deps += [
       "//third_party/cups:third_party_cups",
       "//third_party/cups-filters:third_party_cupsfilters",
     ]
+  }
+
+  if (ipp_over_usb_enable) {
+    include_dirs += [ "//third_party/cpp-httplib" ]
+    sources += [
+      "print_http_request_process_test.cpp",
+      "print_http_server_manager_test.cpp",
+      "print_ipp_over_usb_manager_test.cpp",
+      "print_usb_manager_test.cpp",
+    ]
+    cflags_cc += [ "-DCPPHTTPLIB_NO_EXCEPTIONS" ]
+    cflags_cc += [ "-DIPPOVERUSB_ENABLE" ]
   }
 
   external_deps = [
@@ -79,11 +96,13 @@ ohos_unittest("print_service_test") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "usb_manager:usbsrv_client",
   ]
 }
 

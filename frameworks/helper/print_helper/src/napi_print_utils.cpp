@@ -324,4 +324,24 @@ size_t NapiPrintUtils::GetJsVal(napi_env env, napi_callback_info info, napi_valu
     napi_get_cb_info(env, info, &argc, argv, &thisVal, &data);
     return argc;
 }
+
+bool NapiPrintUtils::VerifyProperty(
+    std::vector<std::string> &names, std::map<std::string, PrintParamStatus> &propertyList)
+{
+    for (auto name : names) {
+        if (propertyList.find(name) == propertyList.end()) {
+            PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
+            return false;
+        }
+        propertyList[name] = PRINT_PARAM_SET;
+    }
+
+    for (auto propertypItem : propertyList) {
+        if (propertypItem.second == PRINT_PARAM_NOT_SET) {
+            PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
+            return false;
+        }
+    }
+    return true;
+}
 }  // namespace OHOS::Print

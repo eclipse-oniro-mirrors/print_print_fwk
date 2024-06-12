@@ -31,28 +31,30 @@ namespace OHOS::Print {
 class IPrintService : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.IPrintService");
+    virtual int32_t StartService() = 0;
     virtual int32_t StartPrint(const std::vector<std::string> &fileList,
         const std::vector<uint32_t> &fdList, std::string &taskId) = 0;
-    virtual int32_t StartPrint(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
-        std::string &taskId, const sptr<IRemoteObject> &token) = 0;
     virtual int32_t StopPrint(const std::string &taskId) = 0;
     virtual int32_t ConnectPrinter(const std::string &printerId) = 0;
     virtual int32_t DisconnectPrinter(const std::string &printerId) = 0;
     virtual int32_t StartDiscoverPrinter(const std::vector<std::string> &extensionList) = 0;
     virtual int32_t StopDiscoverPrinter() = 0;
     virtual int32_t QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos) = 0;
-    virtual int32_t StartPrintJob(const PrintJob &jobInfo) = 0;
+    virtual int32_t StartPrintJob(PrintJob &jobInfo) = 0;
     virtual int32_t CancelPrintJob(const std::string &jobId) = 0;
     virtual int32_t AddPrinters(const std::vector<PrinterInfo> &printerInfos) = 0;
     virtual int32_t RemovePrinters(const std::vector<std::string> &printerIds) = 0;
     virtual int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) = 0;
     virtual int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) = 0;
-    virtual int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState) = 0;
+    virtual int32_t UpdatePrintJobStateOnlyForSystemApp(
+        const std::string &jobId, uint32_t state, uint32_t subState) = 0;
     virtual int32_t UpdateExtensionInfo(const std::string &extensionId) = 0;
     virtual int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult) = 0;
     virtual int32_t QueryPrinterCapability(const std::string &printerId) = 0;
     virtual int32_t On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener) = 0;
     virtual int32_t Off(const std::string taskId, const std::string &type) = 0;
+    virtual int32_t RegisterPrinterCallback(const std::string &type, const sptr<IPrintCallback> &listener) = 0;
+    virtual int32_t UnregisterPrinterCallback(const std::string &type) = 0;
     virtual int32_t RegisterExtCallback(const std::string &extensionCID,
         const sptr<IPrintExtensionCallback> &listener) = 0;
     virtual int32_t UnregisterAllExtCallback(const std::string &extensionId) = 0;
@@ -64,10 +66,21 @@ public:
     virtual int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
         PrinterCapability &printerCaps) = 0;
     virtual int32_t PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes,
-        std::string &taskId, const sptr<IRemoteObject> &token) = 0;
+        std::string &taskId) = 0;
     virtual int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
         const uint32_t fd) = 0;
     virtual int32_t NotifyPrintService(const std::string &jobId, const std::string &type) = 0;
+    virtual int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) = 0;
+    virtual int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) = 0;
+    virtual int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
+        std::vector<std::string> &valueList) = 0;
+    virtual int32_t StartNativePrintJob(PrintJob &printJob) = 0;
+    virtual int32_t NotifyPrintServiceEvent(std::string &jobId, uint32_t event) = 0;
+    virtual int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference) = 0;
+    virtual int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference) = 0;
+    virtual int32_t SetDefaultPrinter(const std::string &printerId) = 0;
+    virtual int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
+        const std::string &printerMake) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

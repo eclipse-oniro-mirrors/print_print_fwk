@@ -44,6 +44,12 @@ public:
 
     void SetOption(const std::string &option);
 
+    void SetIsDefaultPrinter(bool isDefaultPrinter);
+
+    void SetIsLastUsedPrinter(bool isLastUsedPrinter);
+
+    void SetPrinterStatus(uint32_t printerStatus);
+
     [[nodiscard]] const std::string &GetPrinterId() const;
 
     [[nodiscard]] const std::string &GetPrinterName() const;
@@ -61,6 +67,18 @@ public:
     [[nodiscard]] bool HasOption() const;
 
     [[nodiscard]] std::string GetOption() const;
+
+    [[nodiscard]] bool HasIsDefaultPrinter() const;
+
+    [[nodiscard]] bool GetIsDefaultPrinter() const;
+
+    [[nodiscard]] bool HasIsLastUsedPrinter() const;
+
+    [[nodiscard]] bool GetIsLastUsedPrinter() const;
+
+    [[nodiscard]] bool HasPrinterStatus() const;
+
+    [[nodiscard]] uint32_t GetPrinterStatus() const;
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
@@ -89,6 +107,18 @@ private:
     bool hasOption_;
 
     std::string option_;
+
+    bool hasIsDefaultPrinter_;
+
+    bool isDefaultPrinter_;
+
+    bool hasIsLastUsedPrinter_;
+
+    bool isLastUsedPrinter_;
+
+    bool hasPrinterStatus_;
+
+    uint32_t printerStatus_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_INFO_H

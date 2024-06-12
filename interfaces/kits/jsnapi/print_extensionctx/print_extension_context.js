@@ -21,19 +21,14 @@ class PrintExtensionContext extends ExtensionContext {
     this.extensionAbilityInfo = obj.extensionAbilityInfo;
   }
 
-  startAbility(want, options, callback) {
-    console.log('startAbility');
-    return this.__context_impl__.startAbility(want, options, callback);
-  }
-
   connectAbility(want, options) {
     console.log('connectAbility');
     return this.__context_impl__.connectAbility(want, options);
   }
 
-  startAbilityWithAccount(want, accountId, options, callback) {
-    console.log('startAbilityWithAccount');
-    return this.__context_impl__.startAbilityWithAccount(want, accountId, options, callback);
+  startAbility(want, options, callback) {
+    console.log('startAbility');
+    return this.__context_impl__.startAbility(want, options, callback);
   }
 
   connectAbilityWithAccount(want, accountId, options) {
@@ -41,14 +36,19 @@ class PrintExtensionContext extends ExtensionContext {
     return this.__context_impl__.connectAbilityWithAccount(want, accountId, options);
   }
 
-  disconnectAbility(connection, callback) {
-    console.log('disconnectAbility');
-    return this.__context_impl__.disconnectAbility(connection, callback);
+  startAbilityWithAccount(want, accountId, options, callback) {
+    console.log('startAbilityWithAccount');
+    return this.__context_impl__.startAbilityWithAccount(want, accountId, options, callback);
   }
 
   terminateSelf(callback) {
     console.log('terminateSelf');
     return this.__context_impl__.terminateSelf(callback);
+  }
+
+  disconnectAbility(connection, callback) {
+    console.log('disconnectAbility');
+    return this.__context_impl__.disconnectAbility(connection, callback);
   }
 }
 

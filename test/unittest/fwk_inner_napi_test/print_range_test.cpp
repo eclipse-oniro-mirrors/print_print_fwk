@@ -259,5 +259,21 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0015, TestSize.Level1)
     OHOS::Print::PrintRange copyRange = range;
     EXPECT_EQ(copyRange.GetEndPage(), range.GetEndPage());
 }
+
+/**
+ * @tc.name: PrintRangeTest_0016
+ * @tc.desc: Verify the constructor function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintRangeTest, PrintRangeTest_0016, TestSize.Level1)
+{
+    OHOS::Print::PrintRange range;
+    range.SetStartPage(0);
+    range.SetEndPage(5);
+    range.SetPages({0, 1, 2, 3, 4, 5});
+    range.Dump();
+}
+
 } // namespace Print
 } // namespace OHOS

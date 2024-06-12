@@ -76,7 +76,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0001, TestSize.Level1)
             for (size_t index = 0; index < testFdList.size(); index++) {
                 EXPECT_NE(testFdList[index], fdList[index]);
             }
-            EXPECT_NE(testTaskId, taskId);
+            EXPECT_EQ(testTaskId, taskId);
             return E_PRINT_NONE;
         });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
@@ -116,7 +116,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0002, TestSize.Level1)
             for (size_t index = 0; index < testFdList.size(); index++) {
                 EXPECT_EQ(testFdList[index], fdList[index]);
             }
-            EXPECT_NE(testTaskId, taskId);
+            EXPECT_EQ(testTaskId, taskId);
             return E_PRINT_NONE;
         });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
@@ -514,7 +514,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0015, TestSize.Level1)
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UpdatePrintJobState(_, _, _)).Times(Exactly(1)).WillOnce(
+    EXPECT_CALL(*service, UpdatePrintJobStateOnlyForSystemApp(_, _, _)).Times(Exactly(1)).WillOnce(
         [&testJobId, &testState, &testSubState](const std::string &jobId,
             uint32_t state, uint32_t subState) {
             EXPECT_EQ(testJobId, jobId);
@@ -528,7 +528,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0015, TestSize.Level1)
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
         });
-    proxy->UpdatePrintJobState(testJobId, testState, testSubState);
+    proxy->UpdatePrintJobStateOnlyForSystemApp(testJobId, testState, testSubState);
 }
 
 /**
@@ -769,31 +769,91 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0023, TestSize.Level1)
     proxy->LoadExtSuccess(testExtId);
 }
 
+ 
+/**
+ * @tc.name: PrintServiceProxyTest_0024
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0024, TestSize.Level1)
 {
-    std::vector<std::string> testFileList = {"file://data/print/a.png",
-        "file://data/print/b.png", "file://data/print/c.png"};
-    std::vector<uint32_t> testFdList = {1, 2};
-    std::string testTaskId = "2";
-    sptr<IRemoteObject> testToken;
+    std::string testExtId = "extId-123";
     sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintServiceProxy>(obj);
-    EXPECT_NE(proxy, nullptr);
-    proxy->StartPrint(testFileList, testFdList, testTaskId, testToken);
+    EXPECT_EQ(E_PRINT_INVALID_PARAMETER, proxy->RegisterExtCallback(testExtId, nullptr));
 }
-
+ 
+/**
+ * @tc.name: PrintServiceProxyTest_0025
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0025, TestSize.Level1)
 {
-    std::vector<std::string> testFileList = {};
-    std::vector<uint32_t> testFdList = {};
-    std::string testTaskId = "2";
-    sptr<IRemoteObject> testToken;
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_EQ(E_PRINT_INVALID_PARAMETER, proxy->UnregisterPrinterCallback(""));
+}
+ 
+/**
+ * @tc.name: PrintServiceProxyTest_0026
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0026, TestSize.Level1)
+{
     sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
     auto proxy = std::make_shared<PrintServiceProxy>(obj);
     EXPECT_NE(proxy, nullptr);
-    proxy->StartPrint(testFileList, testFdList, testTaskId, testToken);
+    auto service = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(service, nullptr);
+    const int testRetCode = -259;
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return testRetCode;
+        });
+    std::string testJobId = "jobId-123";
+    EXPECT_EQ(E_PRINT_RPC_FAILURE, proxy->NotifyPrintServiceEvent(testJobId, 0));
 }
+
+/**
+ * @tc.name: PrintServiceProxyTest_0027
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0027, TestSize.Level1)
+{
+    std::string testTaskId = "taskId-123";
+    std::string testType = "";
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, Off(_, _)).Times(Exactly(1)).WillOnce(
+        [&testTaskId, &testType](const std::string taskId, const std::string &type) {
+            EXPECT_EQ(testTaskId, taskId);
+            EXPECT_EQ(testType, type);
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    proxy->Off(testTaskId, testType);
+}
+
 } // namespace Print
 } // namespace OHOS

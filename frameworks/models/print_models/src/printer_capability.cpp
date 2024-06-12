@@ -17,6 +17,7 @@
 #include "print_constant.h"
 #include "print_log.h"
 
+using json = nlohmann::json;
 namespace OHOS::Print {
 PrinterCapability::PrinterCapability() : colorMode_(0), duplexMode_(0),
     hasResolution_(false), hasMargin_(false), hasOption_(false), option_("")
@@ -252,5 +253,39 @@ void PrinterCapability::Dump()
     if (hasOption_) {
         PRINT_HILOGD("option: %{private}s", option_.c_str());
     }
+}
+
+const char* PrinterCapability::GetPrinterAttrValue(const char* name)
+{
+    auto iter = printerAttr_group.find(name);
+    if (iter != printerAttr_group.end()) {
+        return iter->second.c_str();
+    } else {
+        return "";
+    }
+}
+    
+void PrinterCapability::SetPrinterAttrNameAndValue(const char* name, const char* value)
+{
+    printerAttr_group[name] = value;
+}
+
+nlohmann::json PrinterCapability::GetPrinterAttrGroupJson()
+{
+    if (printerAttr_group.size() < 1) {
+        PRINT_HILOGI("no printerAttr_group");
+        return "";
+    }
+    nlohmann::json printerAttrGroupJson;
+    for (auto iter = printerAttr_group.begin(); iter != printerAttr_group.end(); iter++) {
+        printerAttrGroupJson[iter->first] = iter->second;
+    }
+    return printerAttrGroupJson;
+}
+
+void PrinterCapability::ClearCurPrinterAttrGroup()
+{
+    PRINT_HILOGI("printerAttr_group reset");
+    printerAttr_group.clear();
 }
 } // namespace OHOS::Print
