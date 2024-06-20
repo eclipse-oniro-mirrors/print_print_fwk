@@ -1,0 +1,73 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//base/print/print_fwk/print.gni")
+import("//build/ohos.gni")
+
+config("print_ndk_config") {
+  visibility = [ ":*" ]
+  include_dirs = []
+
+  cflags_cc = [ "-fno-exceptions" ]
+}
+ohos_shared_library("ohprint") {
+  include_dirs = [
+    "${print_path}/frameworks/ohprint/include",
+    "${print_utils_path}/include",
+    "${print_path}/frameworks/helper/print_helper/include",
+    "${print_path}/frameworks/models/print_models/include",
+    "${print_path}/services/print_service/include",
+  ]
+  public_configs = [ ":print_ndk_config" ]
+
+  sources = [
+    "src/print_capi.cpp",
+    "src/print_converter.cpp",
+    "src/print_helper.cpp",
+  ]
+
+  deps = [
+    "${print_path}/frameworks/helper/print_helper:print_helper",
+    "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
+    "${print_path}/frameworks/models/print_models:print_models",
+    "${print_path}/services/print_service:print_service",
+  ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:data_ability_helper",
+    "ability_runtime:napi_base_context",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "napi:ace_napi",
+    "preferences:native_preferences",
+    "relational_store:native_appdatafwk",
+    "relational_store:native_dataability",
+    "relational_store:native_rdb",
+    "samgr:samgr_proxy",
+  ]
+
+  relative_install_dir = "ndk"
+  output_name = "ohprint"
+  output_extension = "so"
+
+  install_enable = true
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
