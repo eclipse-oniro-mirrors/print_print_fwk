@@ -195,5 +195,7 @@ enum PrintPageType {
     PAGE_INT_DL_ENVELOPE = 10,
     PAGE_B_TABLOID = 11,
 };
+const std::string PRINTER_DISCOVER_EVENT_TYPE = "printerDiscover";
+const std::string PRINTER_CHANGE_EVENT_TYPE = "printerChange";
 } // namespace OHOS::Print
 #endif // PRINT_CONSTANT_H

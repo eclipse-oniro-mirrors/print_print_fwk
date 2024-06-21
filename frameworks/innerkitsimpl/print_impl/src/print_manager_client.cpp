@@ -297,6 +297,67 @@ int32_t PrintManagerClient::QueryPrinterCapability(const std::string &printerId)
     return ret;
 }
 
+int32_t PrintManagerClient::QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info)
+{
+    PRINT_HILOGD("PrintManagerClient QueryPrinterInfoByPrinterId start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        PRINT_HILOGD("PrintManagerClient QueryPrinterInfoByPrinterId out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::QueryAddedPrinter(std::vector<std::string> &printerNameList)
+{
+    PRINT_HILOGD("PrintManagerClient QueryAddedPrinter start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        PRINT_HILOGD("PrintManagerClient QueryAddedPrinter out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::QueryPrinterProperties(const std::string &printerId,
+    const std::vector<std::string> &keyList, std::vector<std::string> &valueList)
+{
+    PRINT_HILOGD("PrintManagerClient QueryPrinterProperties start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        PRINT_HILOGD("PrintManagerClient QueryPrinterProperties out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::StartNativePrintJob(PrintJob &printJob)
+{
+    PRINT_HILOGD("PrintManagerClient StartNativePrintJob start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        PRINT_HILOGD("PrintManagerClient QueryPrinterProperties out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::GetPrinterPreference(const std::string &printerId, std::string &printerPreference)
+{
+    PRINT_HILOGI("PrintManagerClient GetPrinterPreference start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        PRINT_HILOGI("PrintManagerClient GetPrinterPreference out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::SetPrinterPreference(const std::string &printerId, const std::string &printerPreference)
+{
+    PRINT_HILOGI("PrintManagerClient SetPrinterPreference start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        PRINT_HILOGI("PrintManagerClient SetPrinterPreference out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
 {
     PRINT_HILOGD("PrintManagerClient QueryAllPrintJob start.");
@@ -834,6 +895,16 @@ int32_t PrintManagerClient::UnregisterAllExtCallback(const std::string &extensio
     return ret;
 }
 
+int32_t PrintManagerClient::SetNativePrinterChangeCallback(const std::string &type, NativePrinterChangeCallback cb)
+{
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    PRINT_HILOGI("PrintManagerClient SetNativePrinterChangeCallback start");
+    if (LoadServer() && GetPrintServiceProxy()) {
+    }
+    PRINT_HILOGD("PrintManagerClient SetNativePrinterChangeCallback out ret = [%{public}d].", ret);
+    return ret;
+}
+
 int32_t PrintManagerClient::LoadExtSuccess(const std::string &extensionId)
 {
     PRINT_HILOGD("PrintManagerClient LoadExtSuccess start.");
@@ -918,5 +989,22 @@ void PrintManagerClient::SetProxy(const sptr<IRemoteObject> &obj)
 void PrintManagerClient::ResetProxy()
 {
     printServiceProxy_ = nullptr;
+}
+
+int32_t PrintManagerClient::Init()
+{
+    PRINT_HILOGI("nativePrint Init start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+    }
+    PRINT_HILOGD("PrintManagerClient Init out ret = [%{public}d].", ret);
+    return ret;
+}
+
+int32_t PrintManagerClient::Release()
+{
+    SetNativePrinterChangeCallback(PRINTER_DISCOVER_EVENT_TYPE, nullptr);
+    SetNativePrinterChangeCallback(PRINTER_CHANGE_EVENT_TYPE, nullptr);
+    return E_PRINT_NONE;
 }
 } // namespace OHOS::Print

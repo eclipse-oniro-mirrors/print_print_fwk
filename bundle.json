@@ -70,7 +70,8 @@
           "//base/print/print_fwk/frameworks/kits/extension:print_extension_module",
           "//base/print/print_fwk/frameworks/innerkitsimpl/print_impl:print_client",
           "//base/print/print_fwk/frameworks/helper/print_helper:print_helper",
-          "//base/print/print_fwk/frameworks/models/print_models:print_models"
+          "//base/print/print_fwk/frameworks/models/print_models:print_models",
+          "//base/print/print_fwk/frameworks/ohprint:ohprint"
         ],
         "service_group":[
            "//base/print/print_fwk/services/print_service:print_service",

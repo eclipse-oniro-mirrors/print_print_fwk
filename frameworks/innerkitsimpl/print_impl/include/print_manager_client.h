@@ -42,6 +42,8 @@ public:
 
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
 
+    int32_t Init();
+    int32_t Release();
     int32_t StartPrint(const std::vector<std::string> &fileList,
         const std::vector<uint32_t> &fdList, std::string &taskId);
     int32_t StopPrint(const std::string &taskId);
@@ -68,6 +70,13 @@ public:
         const std::string &printerMake);
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
         PrinterCapability &printerCaps);
+    int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info);
+    int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList);
+    int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
+        std::vector<std::string> &valueList);
+    int32_t StartNativePrintJob(PrintJob &printJob);
+    int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference);
+    int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference);
 
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);
@@ -101,6 +110,8 @@ public:
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrinterCapabilityCallback cb);
     int32_t UnregisterAllExtCallback(const std::string &extensionId);
     int32_t LoadExtSuccess(const std::string &extensionId);
+
+    int32_t SetNativePrinterChangeCallback(const std::string &type, NativePrinterChangeCallback cb);
 
     void LoadServerSuccess();
     void LoadServerFail();
