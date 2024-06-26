@@ -27,6 +27,7 @@
 #include "print_task.h"
 #include "printer_info.h"
 #include "print_utils.h"
+#include "print_constant.h"
 
 namespace OHOS::Print {
 class NapiInnerPrint {
@@ -49,11 +50,13 @@ public:
 
 private:
     static bool IsSupportType(const std::string& type);
+    static bool IsValidApplicationEvent(uint32_t event);
 
 private:
     struct InnerPrintContext : public PrintAsyncCall::Context {
         std::vector<PrintExtensionInfo> allExtensionInfos;
         std::vector<PrintJob> allPrintJobs;
+        std::vector<std::string> allPrinters;
         std::string previewResult = "";
         std::string type = "";
         sptr<IPrintCallback> callback = nullptr;
@@ -65,9 +68,12 @@ private:
         bool result = false;
         std::string stateType_ = "";
         PrintJob printJob;
+        PrinterInfo printerInfo;
         std::string jobId = "";
         std::string printerId = "";
         std::vector<std::string> extensionList;
+        uint32_t applicationEvent = -1;
+        std::string printerPreference;
 
         InnerPrintContext() : Context(nullptr, nullptr) {};
         InnerPrintContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};

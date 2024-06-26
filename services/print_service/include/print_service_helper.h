@@ -20,7 +20,10 @@
 #include "ability_manager_client.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_client.h"
+#include "ability_connect_callback_stub.h"
 #include "system_ability.h"
+#include "print_log.h"
+#include "print_event_subscriber.h"
 
 namespace OHOS::Print {
 class PrintServiceHelper {
@@ -28,14 +31,31 @@ public:
     virtual ~PrintServiceHelper();
     virtual bool CheckPermission(const std::string &name);
     virtual bool StartAbility(const AAFwk::Want &want);
-    virtual bool KillAbility(const std::string &bundleName);
-    virtual bool StartPrintServiceExtension(const AAFwk::Want &want, int32_t requestCode_);
     virtual sptr<IRemoteObject> GetBundleMgr();
     virtual bool QueryAccounts(std::vector<int> &accountList);
     virtual bool QueryExtension(sptr<AppExecFwk::IBundleMgr> mgr, int userId,
                                     std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos);
     virtual bool QueryNameForUid(sptr<AppExecFwk::IBundleMgr> mgr, int32_t userId, std::string& name);
     virtual bool IsSyncMode();
+    virtual bool StartPluginPrintIconExtAbility(const AAFwk::Want &want);
+    virtual void PrintSubscribeCommonEvent();
+
+private:
+    class PrintAbilityConnection : public AAFwk::AbilityConnectionStub {
+        void OnAbilityConnectDone(const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject,
+            int32_t resultCode) override
+        {
+            PRINT_HILOGI("connect done");
+        }
+        void OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int32_t resultCode) override
+        {
+            PRINT_HILOGI("disconnect done");
+        }
+    };
+
+private:
+    std::shared_ptr<PrintEventSubscriber> userStatusListener;
+    bool isSubscribeCommonEvent = false;
 };
 }  // namespace OHOS
 #endif  // PRINT_SERVICE_HELPER_H

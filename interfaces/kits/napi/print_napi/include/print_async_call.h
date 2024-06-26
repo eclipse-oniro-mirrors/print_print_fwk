@@ -28,7 +28,7 @@ class PrintAsyncCall final {
 public:
     class Context {
     public:
-        using InputAction = std::function<napi_status(napi_env, size_t, napi_value *, napi_value)>;
+        using InputAction = std::function<napi_status(napi_env, size_t, napi_value *, napi_value, napi_callback_info)>;
         using OutputAction = std::function<napi_status(napi_env, napi_value *)>;
         using ExecAction = std::function<void(Context *)>;
         Context(InputAction input, OutputAction output) : input_(std::move(input)), output_(std::move(output)) {};
@@ -45,12 +45,13 @@ public:
             SetAction(nullptr, std::move(output));
         }
 
-        virtual napi_status operator()(napi_env env, size_t argc, napi_value *argv, napi_value self)
+        virtual napi_status operator()(
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info)
         {
             if (input_ == nullptr) {
                 return napi_ok;
             }
-            return input_(env, argc, argv, self);
+            return input_(env, argc, argv, self, info);
         }
 
         virtual napi_status operator()(napi_env env, napi_value *result)
@@ -110,6 +111,7 @@ private:
         napi_status paramStatus = napi_ok;
     };
     static void DeleteContext(napi_env env, AsyncContext *context);
+    static uint32_t GetErrorIndex(AsyncContext *context);
 
     AsyncContext *context_ = nullptr;
     napi_env env_ = nullptr;

@@ -28,6 +28,7 @@
 
 namespace OHOS::Print {
 const uint32_t MAX_PRINTER_NAME_LENGTH = 127;
+const uint32_t MIN_INT_LIST_STRLENGTH = 2;
 class PrintUtil {
 public:
     static std::string ParseListToString(const std::vector<std::string> &list);
@@ -39,7 +40,40 @@ public:
     static bool CheckContains(const std::string& str, const std::string& content);
 
     static std::string StandardizePrinterName(std::string printerName);
+
+    static std::vector<uint32_t> Str2Vec(std::string str);
+
+    static void Str2VecStr(std::string& str, std::vector<std::string>& vec);
 };
+
+inline std::vector<uint32_t> PrintUtil::Str2Vec(std::string str)
+{
+    if (str.size() < MIN_INT_LIST_STRLENGTH) {
+        return {};
+    }
+    str.pop_back();
+    str.erase(str.begin());
+    std::vector<uint32_t> vec;
+    std::istringstream is(str);
+    std::string temp;
+    while (getline(is, temp, ',')) {
+        vec.push_back(stoi(temp));
+    }
+    return vec;
+}
+
+inline void PrintUtil::Str2VecStr(std::string& str, std::vector<std::string>& vec)
+{
+    if (!str.empty()) {
+        str.pop_back();
+        str.erase(str.begin());
+        std::istringstream is(str);
+        std::string temp;
+        while (getline(is, temp, ',')) {
+            vec.push_back(temp);
+        }
+    }
+}
 
 inline std::string PrintUtil::ParseListToString(const std::vector<std::string> &list)
 {

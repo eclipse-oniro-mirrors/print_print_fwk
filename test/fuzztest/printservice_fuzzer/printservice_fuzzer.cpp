@@ -25,22 +25,17 @@ namespace Print {
     constexpr size_t U32_AT_SIZE = 4;
     const std::u16string PRINT_SERVICE_INTERFACE_TOKEN = u"OHOS.Print.IPrintService";
 
-    uint32_t GetU32Data(const char* ptr)
-    {
-        // 将第0个数字左移24位，将第1个数字左移16位，将第2个数字左移8位，第3个数字不左移
-        return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | (ptr[3]);
-    }
-
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
-        uint32_t code = GetU32Data(data);
-        MessageParcel datas;
-        datas.WriteInterfaceToken(PRINT_SERVICE_INTERFACE_TOKEN);
-        datas.WriteBuffer(data, size);
-        datas.RewindRead(0);
-        MessageParcel reply;
-        MessageOption option;
-        PrintServiceAbility::GetInstance()->OnRemoteRequest(code, datas, reply, option);
+        for (uint32_t code = CMD_START_PRINT; code <= CMD_NOTIFY_PRINT_SERVICE; ++code) {
+            MessageParcel datas;
+            datas.WriteInterfaceToken(PRINT_SERVICE_INTERFACE_TOKEN);
+            datas.WriteBuffer(data, size);
+            datas.RewindRead(0);
+            MessageParcel reply;
+            MessageOption option;
+            PrintServiceAbility::GetInstance()->OnRemoteRequest(code, datas, reply, option);
+        }
         return true;
     }
 }

@@ -25,9 +25,6 @@
 using namespace OHOS::Print;
 
 static constexpr const char *FUNCTION_PRINT = "print";
-#ifdef PDFIUM_ENABLE
-static constexpr const char *FUNCTION_CREATE_PDF_RENDER = "createPdfRender";
-#endif // PDFIUM_ENABLE
 static constexpr const char *FUNCTION_QUERY_EXT = "queryAllPrinterExtensionInfos";
 static constexpr const char *FUNCTION_START_DISCOVERY = "startDiscoverPrinter";
 static constexpr const char *FUNCTION_STOP_DISCOVERY = "stopDiscoverPrinter";
@@ -52,6 +49,7 @@ static constexpr const char *FUNCTION_NATIVE_ADD_PRINTER_TO_CUPS = "addPrinterTo
 static constexpr const char *FUNCTION_QUERY_CAPABILITY_BY_URI = "queryPrinterCapabilityByUri";
 static constexpr const char *FUNCTION_START_GET_PRINT_FILE = "startGettingPrintFile";
 static constexpr const char *FUNCTION_NOTIFY_PRINT_SERVICE = "notifyPrintService";
+static constexpr const char *FUNCTION_DELETE_PRINTER_FROM_CUPS = "deletePrinterFromCups";
 
 #define PRINT_NAPI_METHOD(name, func)           \
     {                                           \
@@ -232,6 +230,27 @@ static napi_value NapiCreatePrintErrorCodeEnum(napi_env env)
     return object;
 }
 
+static napi_value NapiCreatePrintStatusEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    SetEnumProperty(env, object, "PRINTER_STATUS_IDLE", static_cast<int32_t>(PRINTER_STATUS_IDLE));
+    SetEnumProperty(env, object, "PRINTER_STATUS_BUSY", static_cast<int32_t>(PRINTER_STATUS_BUSY));
+    SetEnumProperty(env, object, "PRINTER_STATUS_UNAVAILABLE", static_cast<int32_t>(PRINTER_STATUS_UNAVAILABLE));
+    return object;
+}
+
+static napi_value NapiCreatePrintEventEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    SetEnumProperty(env, object, "PRINTER_EVENT_ADDED", static_cast<int32_t>(PRINTER_STATUS_IDLE));
+    SetEnumProperty(env, object, "PRINTER_EVENT_DELETED", static_cast<int32_t>(PRINTER_STATUS_BUSY));
+    SetEnumProperty(env, object, "PRINTER_EVENT_STATE_CHANGED", static_cast<int32_t>(PRINTER_STATUS_UNAVAILABLE));
+    SetEnumProperty(env, object, "PRINTER_EVENT_INFO_CHANGED", static_cast<int32_t>(PRINTER_STATUS_UNAVAILABLE));
+    return object;
+}
+
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
@@ -245,11 +264,10 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY("PrintJobState", NapiCreatePrintJobStateEnum(env)),
         PRINT_NAPI_PROPERTY("PrintJobSubState", NapiCreatePrintJobSubStateEnum(env)),
         PRINT_NAPI_PROPERTY("PrintErrorCode", NapiCreatePrintErrorCodeEnum(env)),
+        PRINT_NAPI_PROPERTY("PrinterStatus", NapiCreatePrintStatusEnum(env)),
+        PRINT_NAPI_PROPERTY("PrinterEvent", NapiCreatePrintEventEnum(env)),
 
         PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
-#ifdef PDFIUM_ENABLE
-        PRINT_NAPI_METHOD(FUNCTION_CREATE_PDF_RENDER, NapiPrintPdfRender::CreatePdfRender),
-#endif // PDFIUM_ENABLE
         PRINT_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
         PRINT_NAPI_METHOD(FUNCTION_START_DISCOVERY, NapiInnerPrint::StartDiscovery),
         PRINT_NAPI_METHOD(FUNCTION_STOP_DISCOVERY, NapiInnerPrint::StopDiscovery),
@@ -268,12 +286,13 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_REMOVE_PRINTER, NapiPrintExt::RemovePrinters),
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER, NapiPrintExt::UpdatePrinters),
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_STATE, NapiPrintExt::UpdatePrinterState),
-        PRINT_NAPI_METHOD(FUNCTION_UPDATE_JOB_STATE, NapiPrintExt::UpdatePrintJobState),
+        PRINT_NAPI_METHOD(FUNCTION_UPDATE_JOB_STATE, NapiPrintExt::UpdatePrintJobStateOnlyForSystemApp),
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_EXTENSION_INFO, NapiPrintExt::UpdateExtensionInfo),
         PRINT_NAPI_METHOD(FUNCTION_NATIVE_ADD_PRINTER_TO_CUPS, NapiPrintExt::AddPrinterToCups),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_CAPABILITY_BY_URI, NapiPrintExt::QueryPrinterCapabilityByUri),
         PRINT_NAPI_METHOD(FUNCTION_START_GET_PRINT_FILE, NapiInnerPrint::StartGetPrintFile),
         PRINT_NAPI_METHOD(FUNCTION_NOTIFY_PRINT_SERVICE, NapiInnerPrint::NotifyPrintService),
+        PRINT_NAPI_METHOD(FUNCTION_DELETE_PRINTER_FROM_CUPS, NapiPrintExt::DeletePrinterFromCups),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);

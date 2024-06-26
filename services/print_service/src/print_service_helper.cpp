@@ -22,6 +22,9 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "system_ability_definition.h"
+#include "common_event_data.h"
+#include "common_event_manager.h"
+#include "common_event_support.h"
 
 namespace OHOS::Print {
 const uint32_t MAX_RETRY_TIMES = 3;
@@ -42,6 +45,9 @@ bool PrintServiceHelper::CheckPermission(const std::string &name)
     }
     int result = AccessTokenKit::VerifyAccessToken(tokenId, name);
     if (result != PERMISSION_GRANTED) {
+        if (name == PERMISSION_NAME_PRINT) {
+            result = AccessTokenKit::VerifyAccessToken(tokenId, PERMISSION_NAME_PRINT_JOB);
+        }
         PRINT_HILOGE("Current tokenId permission is %{public}d", result);
     }
     return result == PERMISSION_GRANTED;
@@ -68,35 +74,31 @@ bool PrintServiceHelper::StartAbility(const AAFwk::Want &want)
     return true;
 }
 
-bool PrintServiceHelper::KillAbility(const std::string &bundleName)
+bool PrintServiceHelper::StartPluginPrintIconExtAbility(const AAFwk::Want &want)
 {
-    for (uint32_t retry = 0; retry < MAX_RETRY_TIMES; ++retry) {
-        if (AAFwk::AbilityManagerClient::GetInstance()->KillProcess(bundleName) == ERR_OK) {
-            return true;
-        }
-        PRINT_HILOGD("PrintServiceHelper::KillAbility %{public}d %{public}s",
-            retry, bundleName.c_str());
-    }
-    PRINT_HILOGE("PrintServiceHelper::KillAbility %{public}s failed", bundleName.c_str());
-    return false;
-}
-
-bool PrintServiceHelper::StartPrintServiceExtension(const AAFwk::Want &want, int32_t requestCode_)
-{
+    PRINT_HILOGD("enter PrintServiceHelper::StartPluginPrintIconExtAbility");
+    PRINT_HILOGD("want: %{public}s", want.ToUri().c_str());
     AppExecFwk::ElementName element = want.GetElement();
     AAFwk::AbilityManagerClient::GetInstance()->Connect();
     uint32_t retry = 0;
+    sptr<PrintAbilityConnection> printAbilityConnection = new (std::nothrow) PrintAbilityConnection();
+    if (printAbilityConnection == nullptr) {
+        PRINT_HILOGE("fail to create printAbilityConnection");
+        return false;
+    }
+    PRINT_HILOGD("PrintServiceHelper::StartPluginPrintIconExtAbility %{public}s %{public}s",
+        element.GetBundleName().c_str(),
+        element.GetAbilityName().c_str());
     while (retry++ < MAX_RETRY_TIMES) {
-        PRINT_HILOGD("PrintServiceHelper::StartPrintServiceExtension %{public}s %{public}s",
-            element.GetBundleName().c_str(), element.GetAbilityName().c_str());
-        if (AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, requestCode_) == 0) {
+        if (AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, printAbilityConnection, -1) == 0) {
+            PRINT_HILOGI("PrintServiceHelper::StartPluginPrintIconExtAbility ConnectAbility success");
             break;
         }
         std::this_thread::sleep_for(std::chrono::seconds(START_ABILITY_INTERVAL));
-        PRINT_HILOGD("PrintServiceHelper::StartPrintServiceExtension %{public}d", retry);
+        PRINT_HILOGE("PrintServiceHelper::StartPluginPrintIconExtAbility %{public}d", retry);
     }
     if (retry > MAX_RETRY_TIMES) {
-        PRINT_HILOGE("PrintServiceHelper::StartPrintServiceExtension --> failed ");
+        PRINT_HILOGE("PrintServiceHelper::StartPluginPrintIconExtAbility --> failed ");
         return false;
     }
     return true;
@@ -150,5 +152,28 @@ bool PrintServiceHelper::QueryNameForUid(sptr<AppExecFwk::IBundleMgr> mgr, int32
 bool PrintServiceHelper::IsSyncMode()
 {
     return false;
+}
+
+void PrintServiceHelper::PrintSubscribeCommonEvent()
+{
+    if (isSubscribeCommonEvent) {
+        return;
+    }
+    isSubscribeCommonEvent = true;
+    PRINT_HILOGI("listen user status.");
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
+
+    userStatusListener = std::make_shared<PrintEventSubscriber>(subscribeInfo);
+    if (userStatusListener == nullptr) {
+        PRINT_HILOGE("create userStatusListener failed.");
+        return;
+    }
+    if (!EventFwk::CommonEventManager::SubscribeCommonEvent(userStatusListener)) {
+        PRINT_HILOGE("subscribe common event failed");
+    }
 }
 }  // namespace OHOS

@@ -18,6 +18,7 @@
 
 #include <gmock/gmock.h>
 #include "iremote_object.h"
+#include "iremote_broker.h"
 #include "bundle_mgr_proxy.h"
 
 namespace OHOS {

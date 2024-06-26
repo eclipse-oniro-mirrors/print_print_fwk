@@ -268,6 +268,10 @@ bool PrintAttributes::HasOption() const
 
 bool PrintAttributes::ReadFromParcel(Parcel &parcel)
 {
+    if (parcel.GetReadableBytes() == 0) {
+        PRINT_HILOGE("no data in parcel");
+        return false;
+    }
     hasCopyNumber_ = parcel.ReadBool();
     if (hasCopyNumber_) {
         SetCopyNumber(parcel.ReadUint32());

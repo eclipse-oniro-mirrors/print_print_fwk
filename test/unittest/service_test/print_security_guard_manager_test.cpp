@@ -53,5 +53,21 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0001, Test
     printSerPrintSecurityGuardManager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
     printSerPrintSecurityGuardManager.receiveJobStateUpdate("jobId-2", printerInfo, printJob);
 }
+
+/**
+* @tc.name: PrintSecurityGuardManagerTest_0002
+* @tc.desc: receiveBaseInfo
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0002, TestSize.Level1)
+{
+    PrintSecurityGuardManager printSerPrintSecurityGuardManager;
+    std::vector<std::string> fileList;
+    PrinterInfo printerInfo;
+    PrintJob printJob;
+    printSerPrintSecurityGuardManager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
+    printSerPrintSecurityGuardManager.receiveJobStateUpdate("jobId-1", printerInfo, printJob);
+}
 } // namespace Print
 } // namespace OHOS

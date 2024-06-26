@@ -17,8 +17,21 @@
 #define PRINT_UTILS_H
 
 #include <string>
+#include "want.h"
+#include "bundle_mgr_client.h"
+#include <nlohmann/json.hpp>
+#include <mutex>
+
+#include <print_attributes.h>
 
 namespace OHOS::Print {
+struct AdapterParam {
+    std::string documentName;
+    bool isCheckFdList;
+    PrintAttributes printAttributes;
+    std::string jobId;
+};
+
 class PrintUtils {
 public:
     static std::string ToLower(const std::string &s);
@@ -32,6 +45,17 @@ public:
     static bool IsPathValid(const std::string &filePath);
     static uint32_t GetIdFromFdPath(const std::string &fdPath);
     static std::string GetJobStateChar(const uint32_t state);
+
+    static void BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);
+    static void BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);
+    static void ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, nlohmann::json &attrJson);
+    static std::string GetBundleNameForUid(const int uid);
+    static std::string GetPrintJobId();
+    static std::string GetEventTypeWithToken(int64_t callerTokenId, const std::string &type);
+    static std::string GetEventType(const std::string &type);
+
+private:
+    static std::mutex instanceLock_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_UTILS_H

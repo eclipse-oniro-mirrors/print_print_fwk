@@ -32,11 +32,22 @@ ohos_shared_library("print_napi") {
   ]
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    boundary_sanitize = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
   sources = [
     "src/napi_inner_print.cpp",
     "src/napi_print_ext.cpp",
     "src/napi_print_task.cpp",
     "src/print_async_call.cpp",
+    "src/print_modal_ui_callback.cpp",
     "src/print_module.cpp",
     "src/print_task.cpp",
   ]
@@ -45,15 +56,8 @@ ohos_shared_library("print_napi") {
     "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
     "${print_path}/frameworks/models/print_models:print_models",
   ]
-  if (pdfium_enable) {
-    include_dirs += [ "//third_party/pdfium/public" ]
-    sources += [
-      "src/napi_print_pdf_render.cpp",
-      "src/print_pdf_render.cpp",
-    ]
-    cflags_cc += [ "-DPDFIUM_ENABLE" ]
-  }
   external_deps = [
+    "ability_base:base",
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:ability_context_native",
@@ -61,15 +65,15 @@ ohos_shared_library("print_napi") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
+    "ability_runtime:ui_extension",
+    "access_token:libaccesstoken_sdk",
+    "ace_engine:ace_uicontent",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "preferences:native_preferences",
-    "relational_store:native_appdatafwk",
-    "relational_store:native_dataability",
-    "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
   relative_install_dir = "module"

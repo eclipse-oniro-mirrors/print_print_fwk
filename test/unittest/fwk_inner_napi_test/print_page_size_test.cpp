@@ -53,14 +53,16 @@ HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0001, TestSize.Level1)
 
 /**
  * @tc.name: PrintPageSizeTest_0002
- * @tc.desc: Verify the getPageSize function.
+ * @tc.desc: Verify the FindPageSizeById function.
  * @tc.type: FUNC
  * @tc.require:
  */
 HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0002, TestSize.Level1)
 {
-    auto pageSize = OHOS::Print::PrintPageSize::GetPageSize(ISO_A3);
-    EXPECT_EQ((uint32_t)0, pageSize.GetWidth());
+    constexpr uint32_t expectWidth = 11690;
+    OHOS::Print::PrintPageSize printpageSize;
+    OHOS::Print::PrintPageSize::FindPageSizeById("ISO_A3", printpageSize);
+    EXPECT_EQ(expectWidth, printpageSize.GetWidth());
 }
 
 /**

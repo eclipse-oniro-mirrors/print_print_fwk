@@ -28,6 +28,7 @@ public:
         std::function<void(std::string, uint32_t)> writeResultCallback);
 
     virtual void onJobStateChanged(const std::string &jobId, uint32_t state);
+    virtual ~PrintDocumentAdapter() {};
 };
 }
 #endif // PRINT_FWK_IPRINT_ADAPTER_H
