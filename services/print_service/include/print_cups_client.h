@@ -20,6 +20,7 @@
 #include <string>
 #include <functional>
 #include <cups/cups-private.h>
+#include <cups/ppd.h>
 #include <nlohmann/json.hpp>
 
 #include "singleton.h"
@@ -29,45 +30,6 @@
 namespace OHOS::Print {
 using json = nlohmann::json;
 typedef std::function<void()> CallbackFunc;
-
-enum MediaTypeCode {
-    MEDIA_PLAIN = 0,
-    MEDIA_SPECIAL = 1,
-    MEDIA_PHOTO = 2,
-    MEDIA_TRANSPARENCY = 3,
-    MEDIA_IRON_ON = 4,
-    MEDIA_IRON_ON_MIRROR = 5,
-    MEDIA_ADVANCED_PHOTO = 6,
-    MEDIA_FAST_TRANSPARENCY = 7,
-    MEDIA_BROCHURE_GLOSSY = 8,
-    MEDIA_BROCHURE_MATTE = 9,
-    MEDIA_PHOTO_GLOSSY = 10,
-    MEDIA_PHOTO_MATTE = 11,
-    MEDIA_PREMIUM_PHOTO = 12,
-    MEDIA_OTHER_PHOTO = 13,
-    MEDIA_PRINTABLE_CD = 14,
-    MEDIA_PREMIUM_PRESENTATION = 15,
-    MEDIA_AUTO = 98,
-    MEDIA_UNKNOWN = 99
-};
-
-enum DuplexModeCode {
-    DUPLEX_MODE_ONE_SIDED = 0,
-    DUPLEX_MODE_TWO_SIDED_LONG_EDGE = 1,
-    DUPLEX_MODE_TWO_SIDED_SHORT_EDGE = 2,
-};
-
-enum ColorModeCode {
-    COLOR_MODE_MONOCHROME = 0,
-    COLOR_MODE_COLOR = 1,
-    COLOR_MODE_AUTO = 2
-};
-
-enum PrintQualityCode {
-    PRINT_QUALITY_DRAFT = 3,
-    PRINT_QUALITY_NORMAL = 4,
-    PRINT_QUALITY_HIGH = 5
-};
 
 struct JobParameters {
     uint32_t cupsJobId;
@@ -87,7 +49,9 @@ struct JobParameters {
     std::string serviceJobId;
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
+    std::string printerAttrsOption_cupsOption;
 };
+
 struct JobStatus {
     char printer_state_reasons[1024];
     ipp_jstate_t job_state;
@@ -123,6 +87,16 @@ public:
     void AddCupsPrintJob(const PrintJob &jobInfo);
     void CancelCupsJob(std::string serviceJobId);
 
+    int32_t QueryAddedPrinterList(std::vector<std::string> &printerName);
+    ppd_file_t* GetPPDFile(const std::string &printerName);
+    int32_t SetDefaultPrinter(const std::string &printerName);
+
+    int32_t QueryPrinterAttrList(const std::string &printerName, const std::vector<std::string> &keyList,
+        std::vector<std::string> &valueList);
+    int32_t QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info);
+    int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
+        const std::string &printerMake);
+
 private:
     static void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
     static void MonitorJobState(JobMonitorParam *param, CallbackFunc callback);
@@ -139,8 +113,12 @@ private:
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
+    static void UpdateJobStatus(JobStatus *prevousJobStatus, JobStatus *jobStatus);
+    static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState);
     static std::string GetIpAddress(unsigned int number);
     static bool IsIpConflict(const std::string &printerId, std::string &nic);
+    static void QueryJobStateAgain(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
+    static uint32_t GetBlockedSubstate(JobStatus *jobStatus);
 
     int32_t StartCupsdService();
     void StartNextJob();
@@ -153,11 +131,6 @@ private:
     bool IsCupsServerAlive();
     bool IsPrinterExist(const char *printerUri, const char *printerName, const char *ppdName);
 
-    void ParsePrinterAttributes(ipp_t *response, PrinterCapability &printerCaps);
-    void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps);
-    void GetSupportedDuplexType(ipp_t *response, PrinterCapability &printerCaps);
-    nlohmann::json ParseSupportQualities(ipp_t *response);
-    nlohmann::json ParseSupportMediaTypes(ipp_t *response);
     void ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
         std::vector<std::string> &ppds);
 

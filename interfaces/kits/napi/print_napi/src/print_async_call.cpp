@@ -27,7 +27,9 @@ PrintAsyncCall::PrintAsyncCall(napi_env env, napi_callback_info info,
     napi_value self = nullptr;
     napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
     PRINT_CALL_RETURN_VOID(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-    pos = ((pos == ASYNC_DEFAULT_POS) ? (argc - 1) : pos);
+    if (argc > 0) {
+        pos = ((pos == ASYNC_DEFAULT_POS) ? (argc - 1) : pos);
+    }
     if (pos >= 0 && pos < argc) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, argv[pos], &valueType);
@@ -36,7 +38,7 @@ PrintAsyncCall::PrintAsyncCall(napi_env env, napi_callback_info info,
             argc = pos;
         }
     }
-    context_->paramStatus = (*context)(env, argc, argv, self);
+    context_->paramStatus = (*context)(env, argc, argv, self, info);
     context_->ctx = std::move(context);
     napi_create_reference(env, self, 1, &context_->self);
 }
@@ -104,6 +106,21 @@ void PrintAsyncCall::OnExecute(napi_env env, void *data)
     }
 }
 
+uint32_t PrintAsyncCall::GetErrorIndex(AsyncContext *context)
+{
+    uint32_t errorIndex = E_PRINT_NONE;
+    if (context->paramStatus != napi_ok) {
+        errorIndex = E_PRINT_INVALID_PARAMETER;
+    } else {
+        if (context->ctx == nullptr) {
+            errorIndex = E_PRINT_GENERIC_FAILURE;
+        } else {
+            errorIndex = context->ctx->GetErrorIndex();
+        }
+    }
+    return errorIndex;
+}
+
 void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
 {
     AsyncContext *context = reinterpret_cast<AsyncContext *>(data);
@@ -127,16 +144,7 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         }
     } else {
         napi_value message = nullptr;
-        uint32_t errorIndex = E_PRINT_NONE;
-        if (context->paramStatus != napi_ok) {
-            errorIndex = E_PRINT_INVALID_PARAMETER;
-        } else {
-            if (context->ctx == nullptr) {
-                errorIndex = E_PRINT_GENERIC_FAILURE;
-            } else {
-                errorIndex = context->ctx->GetErrorIndex();
-            }
-        }
+        uint32_t errorIndex = GetErrorIndex(context);
         PRINT_HILOGE("ErrorMessage: [%{public}s], ErrorIndex:[%{public}d]",
             GetErrorText(errorIndex).c_str(), errorIndex);
         napi_create_uint32(env, errorIndex, &message);

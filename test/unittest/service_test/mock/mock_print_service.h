@@ -28,11 +28,6 @@ public:
     {
             return E_PRINT_NONE;
     }
-    int32_t StartPrint(const std::vector<std::string> &fileList,
-        const std::vector<uint32_t> &fdList, std::string &taskId, const sptr<IRemoteObject> &token) override
-    {
-            return E_PRINT_NONE;
-    }
     int32_t StopPrint(const std::string &taskId) override
     {
         return E_PRINT_NONE;
@@ -57,7 +52,7 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t StartPrintJob(const PrintJob &jobInfo) override
+    int32_t StartPrintJob(PrintJob &jobInfo) override
     {
         return E_PRINT_NONE;
     }
@@ -81,7 +76,7 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState) override
+    int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState) override
     {
         return E_PRINT_NONE;
     }
@@ -137,7 +132,7 @@ public:
         return E_PRINT_NONE;
     }
     int32_t PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes,
-        std::string &taskId, const sptr<IRemoteObject> &token) override
+        std::string &taskId) override
     {
         return E_PRINT_NONE;
     }
@@ -150,26 +145,74 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t StartService() override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
+        std::vector<std::string> &valueList) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t RegisterPrinterCallback(const std::string &type, const sptr<IPrintCallback> &listener) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t UnregisterPrinterCallback(const std::string &type) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t StartNativePrintJob(PrintJob &printJob) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t NotifyPrintServiceEvent(std::string &jobId, uint32_t event) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t SetDefaultPrinter(const std::string &printerId) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
+        const std::string &printerMake) override
+    {
+        return E_PRINT_NONE;
+    }
 };
 
 class MockPrintService final : public DummyPrintServiceStub {
 public:
     MOCK_METHOD3(StartPrint, int32_t(const std::vector<std::string>&, const std::vector<uint32_t>&, std::string &));
-    MOCK_METHOD4(StartPrint, int32_t(const std::vector<std::string>&, const std::vector<uint32_t>&,
-        std::string &, const sptr<IRemoteObject> &));
     MOCK_METHOD1(StopPrint, int32_t(const std::string&));
     MOCK_METHOD1(ConnectPrinter, int32_t(const std::string&));
     MOCK_METHOD1(DisconnectPrinter, int32_t(const std::string&));
     MOCK_METHOD1(StartDiscoverPrinter, int32_t(const std::vector<std::string>&));
     MOCK_METHOD0(StopDiscoverPrinter, int32_t());
     MOCK_METHOD1(QueryAllExtension, int32_t(std::vector<PrintExtensionInfo>&));
-    MOCK_METHOD1(StartPrintJob, int32_t(const PrintJob &));
+    MOCK_METHOD1(StartPrintJob, int32_t(PrintJob &));
     MOCK_METHOD1(CancelPrintJob, int32_t(const std::string&));
     MOCK_METHOD1(AddPrinters, int32_t(const std::vector<PrinterInfo>&));
     MOCK_METHOD1(RemovePrinters, int32_t(const std::vector<std::string>&));
     MOCK_METHOD1(UpdatePrinters, int32_t(const std::vector<PrinterInfo>&));
     MOCK_METHOD2(UpdatePrinterState, int32_t(const std::string&, uint32_t));
-    MOCK_METHOD3(UpdatePrintJobState, int32_t(const std::string&, uint32_t, uint32_t));
+    MOCK_METHOD3(UpdatePrintJobStateOnlyForSystemApp, int32_t(const std::string&, uint32_t, uint32_t));
     MOCK_METHOD1(UpdateExtensionInfo, int32_t(const std::string&));
     MOCK_METHOD2(RequestPreview, int32_t(const PrintJob&, std::string&));
     MOCK_METHOD1(QueryPrinterCapability, int32_t(const std::string&));
@@ -182,6 +225,9 @@ public:
     MOCK_METHOD2(QueryPrintJobById, int32_t(std::string&, PrintJob&));
     MOCK_METHOD3(AddPrinterToCups, int32_t(const std::string&, const std::string&, const std::string&));
     MOCK_METHOD3(QueryPrinterCapabilityByUri, int32_t(const std::string&, const std::string&, PrinterCapability&));
+    MOCK_METHOD2(NotifyPrintServiceEvent, int32_t(std::string&, uint32_t));
+    MOCK_METHOD1(SetDefaultPrinter, int32_t(const std::string&));
+    MOCK_METHOD3(DeletePrinterFromCups, int32_t(const std::string&, const std::string&, const std::string&));
 };
 } // namespace Print
 } // namespace OHOS

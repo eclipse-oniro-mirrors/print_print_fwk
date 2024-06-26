@@ -20,6 +20,7 @@
 #include <map>
 #include <mutex>
 
+#include "want.h"
 #include "iprint_callback.h"
 #include "iprint_service.h"
 #include "iremote_object.h"
@@ -42,11 +43,11 @@ public:
 
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
 
+    int32_t Init();
+    int32_t Release();
     int32_t StartPrint(const std::vector<std::string> &fileList,
         const std::vector<uint32_t> &fdList, std::string &taskId);
     int32_t StopPrint(const std::string &taskId);
-    int32_t StartPrint(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
-        std::string &taskId, const sptr<IRemoteObject> &token);
     int32_t QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos);
     int32_t StartDiscoverPrinter(const std::vector<std::string> &extensionList);
     int32_t StopDiscoverPrinter();
@@ -55,10 +56,10 @@ public:
     int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos);
     int32_t ConnectPrinter(const std::string &printerId);
     int32_t DisconnectPrinter(const std::string &printerId);
-    int32_t StartPrintJob(const PrintJob &jobinfo);
+    int32_t StartPrintJob(PrintJob &jobinfo);
     int32_t CancelPrintJob(const std::string &jobId);
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state);
-    int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState);
+    int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState);
     int32_t UpdateExtensionInfo(const std::string &extensionId);
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult);
     int32_t QueryPrinterCapability(const std::string &printerId);
@@ -68,6 +69,17 @@ public:
         const std::string &printerMake);
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
         PrinterCapability &printerCaps);
+    int32_t NotifyPrintServiceEvent(std::string &jobId, uint32_t event);
+    int32_t SetDefaultPrinter(const std::string &printerId);
+    int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
+        const std::string &printerMake);
+    int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info);
+    int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList);
+    int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
+        std::vector<std::string> &valueList);
+    int32_t StartNativePrintJob(PrintJob &printJob);
+    int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference);
+    int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference);
 
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);
@@ -86,14 +98,6 @@ public:
     int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
         const uint32_t fd);
     int32_t NotifyPrintService(const std::string &jobId, const std::string &type);
-#ifdef PDFIUM_ENABLE
-    int32_t PdfRenderInit(const std::string filePath, const std::string sandBoxPath, std::string &basePngName,
-        int32_t &pageCount, FPDF_DOCUMENT &doc);
-    int32_t PdfRenderDestroy(const std::string basePngName, const int32_t pageCount, FPDF_DOCUMENT &doc);
-    int32_t GetPdfPageSize(const int32_t pageIndex, uint32_t &width, uint32_t &height, FPDF_DOCUMENT &doc);
-    int32_t RenderPdfToPng(const std::string basePngName, const int32_t pageIndex, std::string &imagePath,
-        FPDF_DOCUMENT &doc);
-#endif // PDFIUM_ENABLE
 
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrintExtCallback cb);
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrintJobCallback cb);
@@ -102,12 +106,15 @@ public:
     int32_t UnregisterAllExtCallback(const std::string &extensionId);
     int32_t LoadExtSuccess(const std::string &extensionId);
 
+    int32_t SetNativePrinterChangeCallback(const std::string &type, NativePrinterChangeCallback cb);
+
     void LoadServerSuccess();
     void LoadServerFail();
     void SetProxy(const sptr<IRemoteObject> &obj);
     void ResetProxy();
 
 private:
+    void SetWantParam(AAFwk::Want &want, std::string &taskId);
     bool LoadServer();
     bool GetPrintServiceProxy();
     int32_t runBase(const char* callerFunName, std::function<int32_t(sptr<IPrintService>)> func);

@@ -17,9 +17,11 @@
 #define NAPI_PRINT_UTILS_H
 
 #include <string>
+#include <map>
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
+#include "print_constant.h"
 
 namespace OHOS::Print {
 class NapiPrintUtils {
@@ -75,6 +77,7 @@ public:
         napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties);
 
     static size_t GetJsVal(napi_env env, napi_callback_info info, napi_value argv[], size_t length);
+    static bool VerifyProperty(std::vector<std::string> &names, std::map<std::string, PrintParamStatus> &propertyList);
 };
 } // namespace OHOS::Print
 #endif // NAPI_PRINT_UTILS_H

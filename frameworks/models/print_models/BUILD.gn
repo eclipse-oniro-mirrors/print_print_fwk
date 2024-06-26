@@ -17,11 +17,21 @@ config("print_models_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc = [ "-fno-exceptions" ]
+  cflags_cc = [ "-fexceptions" ]
 }
 ohos_shared_library("print_models") {
   include_dirs = [ "${print_utils_path}/include" ]
   public_configs = [ ":print_models_config" ]
+
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    boundary_sanitize = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
 
   sources = [
     "src/print_attributes.cpp",
@@ -44,16 +54,13 @@ ohos_shared_library("print_models") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "preferences:native_preferences",
-    "relational_store:native_appdatafwk",
-    "relational_store:native_dataability",
-    "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
 

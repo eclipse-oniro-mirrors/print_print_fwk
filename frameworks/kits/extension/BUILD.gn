@@ -53,6 +53,16 @@ ohos_shared_library("print_extension_framework") {
     "${print_path}/frameworks/kits/extension/include",
   ]
 
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    boundary_sanitize = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
   sources = [
     "src/js_print_callback.cpp",
     "src/js_print_extension.cpp",
@@ -87,12 +97,9 @@ ohos_shared_library("print_extension_framework") {
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
-    "hitrace:hitrace_meter",
-    "i18n:intl_util",
     "ipc:ipc_napi",
     "ipc:rpc",
     "napi:ace_napi",
-    "resource_management:global_resmgr",
   ]
 
   subsystem_name = "print"
@@ -104,6 +111,16 @@ ohos_shared_library("print_extension_module") {
 
   configs = [ ":ability_config" ]
   public_configs = [ ":ability_public_config" ]
+
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    boundary_sanitize = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
 
   deps = [ ":print_extension_framework" ]
 
@@ -117,10 +134,7 @@ ohos_shared_library("print_extension_module") {
     "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
-    "hitrace:hitrace_meter",
-    "i18n:intl_util",
     "napi:ace_napi",
-    "resource_management:global_resmgr",
   ]
   relative_install_dir = "extensionability"
   subsystem_name = "print"

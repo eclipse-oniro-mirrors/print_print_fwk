@@ -23,7 +23,7 @@ config("print_service_config") {
     "${print_path}/frameworks/models/print_models/include",
   ]
 
-  cflags_cc += [ "-fno-exceptions" ]
+  cflags_cc += [ "-fexceptions" ]
 }
 
 ohos_shared_library("print_service") {
@@ -32,13 +32,27 @@ ohos_shared_library("print_service") {
     "src/print_bms_death_recipient.cpp",
     "src/print_bms_helper.cpp",
     "src/print_callback_proxy.cpp",
+    "src/print_event_subscriber.cpp",
     "src/print_extension_callback_proxy.cpp",
     "src/print_security_guard_info.cpp",
     "src/print_security_guard_manager.cpp",
     "src/print_service_ability.cpp",
+    "src/print_service_converter.cpp",
     "src/print_service_helper.cpp",
     "src/print_service_stub.cpp",
+    "src/print_system_data.cpp",
+    "src/print_user_data.cpp",
   ]
+
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    boundary_sanitize = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
 
   public_configs = [
     "${c_utils_path}/base:utils_config",
@@ -48,17 +62,8 @@ ohos_shared_library("print_service") {
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_utils_path}/include",
   ]
-  deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
 
-  if (cups_enable) {
-    include_dirs += [ "//third_party/cups/cups-2.4.0" ]
-    sources += [ "src/print_cups_client.cpp" ]
-    cflags_cc += [ "-DCUPS_ENABLE" ]
-    deps += [
-      "//third_party/cups:third_party_cups",
-      "//third_party/cups-filters:third_party_cupsfilters",
-    ]
-  }
+  deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
 
   external_deps = [
     "ability_base:base",
@@ -71,22 +76,44 @@ ohos_shared_library("print_service") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "core_service:tel_core_service_api",
-    "distributed_notification_service:ans_innerkits",
+    "drivers_interface_usb:libusb_proxy_1.0",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
-    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "netmanager_base:net_conn_manager_if",
     "os_account:os_account_innerkits",
-    "relational_store:native_rdb",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "usb_manager:usbsrv_client",
     "wifi:wifi_sdk",
   ]
+
+  if (cups_enable) {
+    include_dirs += [ "//third_party/cups/cups-2.4.0" ]
+    sources += [ "src/print_cups_attribute.cpp" ]
+    sources += [ "src/print_cups_client.cpp" ]
+    cflags_cc += [ "-DCUPS_ENABLE" ]
+    deps += [
+      "//third_party/cups:third_party_cups",
+      "//third_party/cups-filters:third_party_cupsfilters",
+    ]
+    external_deps += [ "cJSON:cjson" ]
+  }
+
+  if (ipp_over_usb_enable) {
+    include_dirs += [ "//third_party/cpp-httplib" ]
+    sources += [
+      "src/print_http_request_process.cpp",
+      "src/print_http_server_manager.cpp",
+      "src/print_ipp_over_usb_manager.cpp",
+      "src/print_usb_manager.cpp",
+    ]
+    cflags_cc += [ "-DCPPHTTPLIB_NO_EXCEPTIONS" ]
+    cflags_cc += [ "-DCPPHTTPLIB_RECV_BUFSIZ=4096ul" ]
+    cflags_cc += [ "-DIPPOVERUSB_ENABLE" ]
+  }
 
   if (security_guard_enabled) {
     external_deps += [

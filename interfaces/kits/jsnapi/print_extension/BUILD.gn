@@ -37,6 +37,16 @@ gen_js_obj("print_extension_abc") {
 ohos_shared_library("printextensionability_napi") {
   sources = [ "print_extension_module.cpp" ]
 
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    boundary_sanitize = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
   deps = [
     ":print_extension_abc",
     ":print_extension_js",

@@ -22,6 +22,7 @@
 #include "system_ability_definition.h"
 #include "mock_remote_object.h"
 #include "mock_print_callback_stub.h"
+#include "print_log.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -40,7 +41,11 @@ void PrintCallbackProxyTest::SetUpTestCase(void) {}
 
 void PrintCallbackProxyTest::TearDownTestCase(void) {}
 
-void PrintCallbackProxyTest::SetUp(void) {}
+void PrintCallbackProxyTest::SetUp(void)
+{
+    static int32_t testNo = 0;
+    PRINT_HILOGI("PrintCallbackProxyTest_%{public}d", ++testNo);
+}
 
 void PrintCallbackProxyTest::TearDown(void) {}
 
@@ -228,6 +233,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0006, TestSize.Level1)
     EXPECT_FALSE(proxy->OnCallback(testState, testJob));
 }
 
+ 
 /**
  * @tc.name: PrintCallbackProxyTest_0007
  * @tc.desc: printCallbackProxy
@@ -242,22 +248,18 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0007, TestSize.Level1)
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintCallbackStub>();
     EXPECT_NE(service, nullptr);
-
-    std::string extensionId = "com.sample.ext";
-    std::string extInfo = "custom extension info";
-
-    EXPECT_CALL(*service, OnCallback(extensionId, extInfo)).Times(1).WillOnce(Return(true));
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
             service->OnRemoteRequest(code, data, reply, option);
-            return E_PRINT_NONE;
+            return E_PRINT_RPC_FAILURE;
         });
-    EXPECT_TRUE(proxy->OnCallback(extensionId, extInfo));
+    uint32_t testState = 0;
+    EXPECT_FALSE(proxy->OnCallbackAdapterGetFile(testState));
 }
-
+ 
 /**
- * @tc.name: PrintCallbackProxyTest_0007
+ * @tc.name: PrintCallbackProxyTest_0008
  * @tc.desc: printCallbackProxy
  * @tc.type: FUNC
  * @tc.require:
@@ -270,18 +272,44 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0008, TestSize.Level1)
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintCallbackStub>();
     EXPECT_NE(service, nullptr);
-
-    std::string extensionId = "com.sample.ext";
-    std::string extInfo = "custom extension info";
-
-    EXPECT_CALL(*service, OnCallback(extensionId, extInfo)).Times(1).WillOnce(Return(true));
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_RPC_FAILURE;
         });
-    EXPECT_FALSE(proxy->OnCallback(extensionId, extInfo));
+    uint32_t testState = 0;
+    uint32_t testSubState = 0;
+    std::string jobId = "job:1234";
+    EXPECT_FALSE(proxy->onCallbackAdapterJobStateChanged(jobId, testState, testSubState));
 }
+ 
+/**
+ * @tc.name: PrintCallbackProxyTest_0009
+ * @tc.desc: printCallbackProxy
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0009, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintCallbackProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_RPC_FAILURE;
+        });
+    uint32_t testState = 0;
+    uint32_t testSubState = 0;
+    std::string jobId = "job:1234";
+    EXPECT_FALSE(proxy->onCallbackAdapterJobStateChanged(jobId, testState, testSubState));
+}
+ 
+
 } // namespace Print
 } // namespace OHOS

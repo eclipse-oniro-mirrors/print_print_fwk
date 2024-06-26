@@ -110,8 +110,7 @@ void PrintJob::SetSubState(uint32_t subState)
     if (jobState_ == PRINT_JOB_COMPLETED && subState <= PRINT_JOB_COMPLETED_FILE_CORRUPT) {
         subState_ = subState;
     }
-    if (jobState_ == PRINT_JOB_BLOCKED &&
-    (subState < PRINT_JOB_BLOCKED_UNKNOWN && subState > PRINT_JOB_COMPLETED_FILE_CORRUPT)) {
+    if (jobState_ == PRINT_JOB_BLOCKED && subState > PRINT_JOB_COMPLETED_FILE_CORRUPT) {
         subState_ = subState;
     }
     if (jobState_ == PRINT_JOB_RUNNING &&
@@ -306,6 +305,10 @@ void PrintJob::ReadParcelFD(Parcel &parcel)
 
 void PrintJob::ReadFromParcel(Parcel &parcel)
 {
+    if (parcel.GetReadableBytes() == 0) {
+        PRINT_HILOGE("no data in parcel");
+        return;
+    }
     ReadParcelFD(parcel);
     SetJobId(parcel.ReadString());
     SetPrinterId(parcel.ReadString());

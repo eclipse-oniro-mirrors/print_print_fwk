@@ -15,7 +15,9 @@
 
 #include <gtest/gtest.h>
 #include <memory>
+#define private public
 #include "print_manager_client.h"
+#undef private
 
 #include "iservice_registry.h"
 #include "print_constant.h"
@@ -26,6 +28,7 @@
 #include "mock_print_service.h"
 #include "mock_remote_object.h"
 #include "mock_print_callback_stub.h"
+#include "mock_print_manager_client.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -1069,7 +1072,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0052, TestSize.Level1)
 
 /**
  * @tc.name: PrintManagerClientTest_0053
- * @tc.desc: UpdatePrintJobState
+ * @tc.desc: UpdatePrintJobStateOnlyForSystemApp
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1079,13 +1082,13 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0053, TestSize.Level1)
     uint32_t state = 6;
     uint32_t subState = 6;
     PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobState(printerId, state, subState);
+    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(printerId, state, subState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 /**
 * @tc.name: PrintManagerClientTest_0054
-* @tc.desc: UpdatePrintJobState
+* @tc.desc: UpdatePrintJobStateOnlyForSystemApp
 * @tc.type: FUNC
 * @tc.require:
 */
@@ -1096,7 +1099,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0054, TestSize.Level1)
     uint32_t subState = 6;
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobState(printerId, state, subState);
+    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(printerId, state, subState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1113,13 +1116,13 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0055, TestSize.Level1)
     uint32_t subState = 6;
     PrintManagerClient::GetInstance()->LoadServerFail();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobState(printerId, state, subState);
+    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(printerId, state, subState);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 /**
 * @tc.name: PrintManagerClientTest_0056
-* @tc.desc: UpdatePrintJobState
+* @tc.desc: UpdatePrintJobStateOnlyForSystemApp
 * @tc.type: FUNC
 * @tc.require:
 */
@@ -1130,8 +1133,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0056, TestSize.Level1)
     uint32_t testSubState = 6;
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UpdatePrintJobState(_, _, _)).Times(1);
-    ON_CALL(*service, UpdatePrintJobState).WillByDefault(
+    EXPECT_CALL(*service, UpdatePrintJobStateOnlyForSystemApp(_, _, _)).Times(1);
+    ON_CALL(*service, UpdatePrintJobStateOnlyForSystemApp).WillByDefault(
             [&testPrinterId, &testState, &testSubState](const std::string &printerId, const uint32_t &state,
                 const uint32_t &subState) {
                 EXPECT_EQ(testPrinterId, printerId);
@@ -1143,7 +1146,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0056, TestSize.Level1)
     sptr<IRemoteObject::DeathRecipient> dr = nullptr;
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobState(testPrinterId, testState, testSubState);
+    int32_t ret =
+        PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(testPrinterId, testState, testSubState);
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
@@ -2150,50 +2154,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0108, TestSize.Level1)
     dr->OnRemoteDied(obj);
 }
 
-/**
-* @tc.name: PrintManagerClientTest_0109
-* @tc.desc: LoadServerFail
-* @tc.type: FUNC
-* @tc.require:
-*/
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0109, TestSize.Level1)
-{
-    std::vector<std::string> testFileList = {"file://data/print/a.png",
-        "file://data/print/b.png", "file://data/print/c.png"};
-    std::vector<uint32_t> testFdList = {1, 2};
-    std::string testTaskId = "2";
-    sptr<IRemoteObject> testToken;
-
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId, testToken);
-}
-
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0110, TestSize.Level1)
-{
-    std::vector<std::string> testFileList = {"file://data/print/a.png",
-        "file://data/print/b.png", "file://data/print/c.png"};
-    std::vector<uint32_t> testFdList = {1, 2};
-    std::string testTaskId = "2";
-    sptr<IRemoteObject> testToken;
-
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    PrintManagerClient::GetInstance()->ResetProxy();
-    PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId, testToken);
-}
-
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0111, TestSize.Level1)
-{
-    std::vector<std::string> testFileList = {"file://data/print/a.png",
-        "file://data/print/b.png", "file://data/print/c.png"};
-    std::vector<uint32_t> testFdList = {1, 2};
-    std::string testTaskId = "2";
-    sptr<IRemoteObject> testToken;
-
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    PrintManagerClient::GetInstance()->ResetProxy();
-    PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId, testToken);
-}
-
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0112, TestSize.Level1)
 {
     std::string printerUri;
@@ -2268,6 +2228,292 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0119, TestSize.Level1)
     PrinterCapability printerCaps;
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0121, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo printerInfo;
+    std::string printerId = "printId-123";
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterName("1");
+    printerInfo.SetPrinterIcon(1);
+    printerInfo.SetPrinterState(1);
+    printerInfo.SetDescription("111");
+    const PrinterCapability capability;
+    printerInfo.SetCapability(capability);
+    const std::string option = "1";
+    printerInfo.SetOption(option);
+	
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->QueryPrinterInfoByPrinterId(printerId, printerInfo);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0122, TestSize.Level1)
+{
+    std::vector<std::string> printerNameList;
+    printerNameList.push_back("1");
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->QueryAddedPrinter(printerNameList);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0123, TestSize.Level1)
+{
+    std::string printerId = "printId-123";
+    std::vector<std::string> keyList;
+    std::vector<std::string> valueList;
+    keyList.push_back("1");
+    valueList.push_back("1");
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->QueryPrinterProperties(printerId, keyList, valueList);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0124, TestSize.Level1)
+{
+    std::string testPrintJobId = "jobId-123";
+    PrintJob testPrintJob;
+    testPrintJob.SetJobId("jobId-123");
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0125, TestSize.Level1)
+{
+    std::string printJobName = "jobName-123";
+    sptr<IPrintCallback> testListener;
+    PrintAttributes testPrintAttributes;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->Print(printJobName, testListener, testPrintAttributes);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0126, TestSize.Level1)
+{
+    std::string printJobName = "jobName-123";
+    sptr<IPrintCallback> testListener;
+    PrintAttributes testPrintAttributes;
+    void* contextToken = nullptr;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->Print(printJobName, testListener, testPrintAttributes, contextToken);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0127, TestSize.Level1)
+{
+    std::string printJobName = "jobName-123";
+    sptr<IPrintCallback> testListener;
+    PrintAttributes testPrintAttributes;
+    std::string taskId = "1";
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->Print(printJobName, testListener, testPrintAttributes, taskId);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0128, TestSize.Level1)
+{
+    std::string printJobName = "jobName-123";
+    sptr<IPrintCallback> testListener;
+    PrintAttributes testPrintAttributes;
+    std::string taskId = "1";
+    void* contextToken = nullptr;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->Print(printJobName, testListener, testPrintAttributes, taskId, contextToken);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0129, TestSize.Level1)
+{
+    std::string jobId = "1";
+    PrintAttributes testPrintAttributes;
+    uint32_t fd = 0;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, testPrintAttributes, fd);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0130, TestSize.Level1)
+{
+    std::string jobId = "1";
+    std::string type = "";
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->NotifyPrintService(jobId, type);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0131, TestSize.Level1)
+{
+    char callerFunN[] = "testName";
+    char* callerFunName = callerFunN;
+    std::function<int32_t(sptr<IPrintService>)> func = [](sptr<IPrintService>) -> int32_t {
+        return 0;
+    };
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->runBase(callerFunName, func);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0132, TestSize.Level1)
+{
+    std::string type = "test";
+    NativePrinterChangeCallback cb = nullptr;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(type, cb);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0133, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->Init();
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0134, TestSize.Level1)
+{
+    MockPrintManagerClient mockPrintManagerClient;
+    mockPrintManagerClient.Init();
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0135, TestSize.Level1)
+{
+    MockPrintManagerClient mockPrintManagerClient;
+    std::vector<std::string> testFileList = {"file://data/print/a.png",
+        "file://data/print/b.png", "file://data/print/c.png"};
+    std::vector<uint32_t> testFdList = {1, 2};
+    std::string testTaskId = "2";
+    mockPrintManagerClient.StartPrint(testFileList, testFdList, testTaskId);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0137, TestSize.Level1)
+{
+    MockPrintManagerClient mockPrintManagerClient;
+    std::string testTaskId = "2";
+    mockPrintManagerClient.StopPrint(testTaskId);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0138, TestSize.Level1)
+{
+    MockPrintManagerClient mockPrintManagerClient;
+    std::string printerId = "2";
+    mockPrintManagerClient.ConnectPrinter(printerId);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0139, TestSize.Level1)
+{
+    MockPrintManagerClient mockPrintManagerClient;
+    std::string printerId = "2";
+    mockPrintManagerClient.DisconnectPrinter(printerId);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0140, TestSize.Level1)
+{
+    MockPrintManagerClient mockPrintManagerClient;
+    std::vector<PrintExtensionInfo> extensionInfos;
+    mockPrintManagerClient.QueryAllExtension(extensionInfos);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0141, TestSize.Level1)
+{
+    MockPrintManagerClient mockPrintManagerClient;
+    std::vector<std::string> testExtensionList = {"extensionId-1", "extensionId-2"};
+    mockPrintManagerClient.StartDiscoverPrinter(testExtensionList);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0142, TestSize.Level1)
+{
+    MockPrintManagerClient mockPrintManagerClient;
+    mockPrintManagerClient.StopDiscoverPrinter();
+    PrintJob jobinfo;
+    mockPrintManagerClient.StartPrintJob(jobinfo);
+    std::string testJobId = "jobId-1";
+    mockPrintManagerClient.CancelPrintJob(testJobId);
+    std::vector<PrinterInfo> printerInfos;
+    mockPrintManagerClient.AddPrinters(printerInfos);
+    std::vector<std::string> testPrinterIds = {"printerId-1", "printerId-2"};
+    mockPrintManagerClient.RemovePrinters(testPrinterIds);
+    mockPrintManagerClient.UpdatePrinters(printerInfos);
+    std::string printerId = "2";
+    uint32_t testState = 6;
+    mockPrintManagerClient.UpdatePrinterState(printerId, testState);
+    std::string jobId = "jobId-1";
+    uint32_t testSubState = 6;
+    mockPrintManagerClient.UpdatePrintJobStateOnlyForSystemApp(jobId, testState, testSubState);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0143, TestSize.Level1)
+{
+    MockPrintManagerClient mockPrintManagerClient;
+    std::string extensionId = "extensionId-1";
+    mockPrintManagerClient.UpdateExtensionInfo(extensionId);
+    PrintJob jobinfo;
+    std::string previewFilePath = "/data/temp/preview.png";
+    mockPrintManagerClient.RequestPreview(jobinfo, previewFilePath);
+    std::string printerId = "2";
+    mockPrintManagerClient.QueryPrinterCapability(printerId);
+    PrinterInfo printerInfo;
+    mockPrintManagerClient.QueryPrinterInfoByPrinterId(printerId, printerInfo);
+    std::vector<std::string> printerNameList;
+    printerNameList.push_back("1");
+    mockPrintManagerClient.QueryAddedPrinter(printerNameList);
+    std::vector<std::string> keyList;
+    std::vector<std::string> valueList;
+    keyList.push_back("1");
+    valueList.push_back("1");
+    mockPrintManagerClient.QueryPrinterProperties(printerId, keyList, valueList);
+    mockPrintManagerClient.StartNativePrintJob(jobinfo);
+    std::vector<PrintJob> printJobs;
+    mockPrintManagerClient.QueryAllPrintJob(printJobs);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0144, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    uint32_t event = 0;
+    std::string jobId = "jobId";
+    PrintManagerClient::GetInstance()->NotifyPrintServiceEvent(jobId, event);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0145, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    uint32_t event = 0;
+    std::string jobId = "jobId";
+    PrintManagerClient::GetInstance()->NotifyPrintServiceEvent(jobId, event);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0146, TestSize.Level1)
+{
+    MockPrintManagerClient mockPrintManagerClient;
+    uint32_t event = 0;
+    std::string jobId = "jobId";
+    mockPrintManagerClient.NotifyPrintServiceEvent(jobId, event);
+    std::string testPrintJobId = "jobId-123";
+    PrintJob testPrintJob;
+    mockPrintManagerClient.QueryPrintJobById(testPrintJobId, testPrintJob);
+    std::string printerUri;
+    std::string printerName;
+    std::string printerMake;
+    mockPrintManagerClient.AddPrinterToCups(printerUri, printerName, printerMake);
+    std::string printerId;
+    PrinterCapability printerCaps;
+    mockPrintManagerClient.QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
+    std::string testTaskId = "taskId-123";
+    std::string testType = "type";
+    sptr<IPrintCallback> testListener;
+    mockPrintManagerClient.On(testTaskId, testType, testListener);
+    mockPrintManagerClient.Off(testTaskId, testType);
+    std::string type = "";
+    mockPrintManagerClient.NotifyPrintService(jobId, type);
+    char callerFunN[] = "testName";
+    char* callerFunName = callerFunN;
+    std::function<int32_t(sptr<IPrintService>)> func = [](sptr<IPrintService>) -> int32_t {
+        return 0;
+    };
+    mockPrintManagerClient.runBase(callerFunName, func);
+    std::string testExtensionId = "com.example.ext";
+    uint32_t testCallbackId = PRINT_EXTCB_START_DISCOVERY;
+    PrinterCapabilityCallback testCb = nullptr;
+    mockPrintManagerClient.RegisterExtCallback(testExtensionId, testCallbackId, testCb);
+    PrintJobCallback jobCb = nullptr;
+    mockPrintManagerClient.RegisterExtCallback(testExtensionId, testCallbackId, jobCb);
+    PrinterCapabilityCallback capCb = nullptr;
+    mockPrintManagerClient.RegisterExtCallback(testExtensionId, testCallbackId, capCb);
+    PrinterCallback printerCb = nullptr;
+    mockPrintManagerClient.RegisterExtCallback(testExtensionId, testCallbackId, printerCb);
+    mockPrintManagerClient.UnregisterAllExtCallback(testExtensionId);
+    NativePrinterChangeCallback cb = nullptr;
+    mockPrintManagerClient.SetNativePrinterChangeCallback(type, cb);
+    mockPrintManagerClient.LoadExtSuccess(testExtensionId);
 }
 } // namespace Print
 } // namespace OHOS

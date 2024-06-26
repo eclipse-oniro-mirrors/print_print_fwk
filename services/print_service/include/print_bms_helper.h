@@ -32,7 +32,7 @@ public:
 
     virtual ~PrintBMSHelper();
 
-    void SetHelper(const std::shared_ptr<PrintServiceHelper> &helper);
+    void SetHelper(std::shared_ptr<PrintServiceHelper> &helper);
 
     bool QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfo);
 

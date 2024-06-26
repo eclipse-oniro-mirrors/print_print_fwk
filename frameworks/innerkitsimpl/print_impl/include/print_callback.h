@@ -51,7 +51,8 @@ class PrintCallback : public PrintCallbackStub {
 public:
     PrintCallback(napi_env env, napi_ref ref);
     explicit PrintCallback(PrintDocumentAdapter *adapter); // This interface is invoked by other domains.
-    virtual ~PrintCallback();
+    PrintCallback(){};
+    ~PrintCallback();
     bool OnCallback() override;
     bool OnCallback(uint32_t state, const PrinterInfo &info) override;
     bool OnCallback(uint32_t state, const PrintJob &info) override;
@@ -62,6 +63,11 @@ public:
         const uint32_t subState) override;
     bool OnCallbackAdapterGetFile(uint32_t state) override;
 
+    void SetNativePrinterChangeCallback(NativePrinterChangeCallback cb)
+    {
+        nativePrinterChange_cb = cb;
+    }
+
 private:
     bool onBaseCallback(std::function<void(CallbackParam*)> paramFun, uv_after_work_cb after_work_cb);
 
@@ -70,6 +76,7 @@ private:
     napi_ref ref_ = nullptr;
     std::mutex mutex_;
     PrintDocumentAdapter *adapter_ = nullptr;
+    NativePrinterChangeCallback nativePrinterChange_cb = nullptr;
 };
 }  // namespace OHOS::Print
 #endif  // IPRINT_CALLBACK_H

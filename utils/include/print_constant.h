@@ -25,7 +25,7 @@ namespace OHOS::Print {
 #define PRINT_CALLBACK_ADAPTER "printCallback_adapter"
 #define PRINT_GET_FILE_CALLBACK_ADAPTER "getPrintFileCallback_adapter"
 
-#define NEW_PRINT_INTERFACE_SWITCH false
+#define NEW_PRINT_INTERFACE_SWITCH true
 
 #define PRINT_ASSERT_BASE(env, assertion, message, retVal)  \
     do {                                                    \
@@ -75,6 +75,8 @@ enum PrintErrorCode {
     E_PRINT_INVALID_PRINTER = 13100005,
     E_PRINT_INVALID_PRINTJOB = 13100006,
     E_PRINT_FILE_IO = 13100007,
+    E_PRINT_INVALID_TOKEN = 13100008,
+    E_PRINT_INVALID_USERID = 13100009,
     E_PRINT_UNKNOWN = 13100255,
 };
 
@@ -195,5 +197,29 @@ enum PrintPageType {
     PAGE_INT_DL_ENVELOPE = 10,
     PAGE_B_TABLOID = 11,
 };
+
+enum ApplicationEvent {
+    APPLICATION_CREATED = 0,
+    APPLICATION_CLOSED_FOR_STARTED = 1,
+    APPLICATION_CLOSED_FOR_CANCELED = 2,
+};
+
+enum PrinterStatus {
+    PRINTER_STATUS_IDLE = 0,
+    PRINTER_STATUS_BUSY = 1,
+    PRINTER_STATUS_UNAVAILABLE = 2,
+};
+
+enum PrinterEvent {
+    PRINTER_EVENT_ADDED = 0,
+    PRINTER_EVENT_DELETED = 1,
+    PRINTER_EVENT_STATE_CHANGED = 2,
+    PRINTER_EVENT_INFO_CHANGED = 3,
+};
+
+const std::string PRINTER_DISCOVER_EVENT_TYPE = "printerDiscover";
+const std::string PRINTER_CHANGE_EVENT_TYPE = "printerChange";
+static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
+static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
 } // namespace OHOS::Print
 #endif // PRINT_CONSTANT_H

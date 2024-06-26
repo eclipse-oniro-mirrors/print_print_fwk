@@ -20,12 +20,29 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "securec.h"
+#include <chrono>
+#include <sstream>
+#include <cstdlib>
+#include <ctime>
+#include <random>
+#include <ctime>
 
 namespace OHOS::Print {
+
+using json = nlohmann::json;
+
+std::mutex PrintUtils::instanceLock_;
+
+static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
+static const std::string LAUNCH_PARAMETER_PRINT_ATTRIBUTE = "printAttributes";
+
 static std::map<uint32_t, std::string> jobStateMap_;
 const std::string GLOBAL_ID_DELIMITER = ":";
 const std::string EXTENSION_CID_DELIMITER = ":";
 const std::string TASK_EVENT_DELIMITER = "-";
+const int32_t DEFAULT_FD = 99;
+const int32_t MINIMUN_RANDOM_NUMBER_100 = 100;
+const int32_t MAXIMUN_RANDOM_NUMBER_999 = 999;
 
 std::string PrintUtils::ToLower(const std::string &s)
 {
@@ -82,8 +99,29 @@ std::string PrintUtils::GetTaskEventId(const std::string &taskId, const std::str
     return type + TASK_EVENT_DELIMITER + taskId;
 }
 
+std::string PrintUtils::GetEventTypeWithToken(int64_t callerTokenId, const std::string &type)
+{
+    std::string eventType = std::to_string(callerTokenId) + TASK_EVENT_DELIMITER + type;
+    PRINT_HILOGD("eventType: %{public}s", eventType.c_str());
+    return eventType;
+}
+
+std::string PrintUtils::GetEventType(const std::string &type)
+{
+    auto pos = type.find(TASK_EVENT_DELIMITER);
+    if (pos == std::string::npos || pos + 1 >= type.length()) {
+        return "";
+    }
+    std::string eventType = type.substr(pos + 1);
+    PRINT_HILOGD("eventType: %{public}s", eventType.c_str());
+    return eventType;
+}
+
 int32_t PrintUtils::OpenFile(const std::string &filePath)
 {
+    if (filePath.find("content://") == 0) {
+        return DEFAULT_FD;
+    }
     if (!IsPathValid(filePath)) {
         return PRINT_INVALID_ID;
     }
@@ -136,5 +174,128 @@ std::string PrintUtils::GetJobStateChar(const uint32_t state)
         return it -> second;
     }
     return "PRINT_JOB_UNKNOWN";
+}
+
+void PrintUtils::BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want)
+{
+    want.SetParam(LAUNCH_PARAMETER_DOCUMENT_NAME, adapterParam->documentName);
+    if (adapterParam->isCheckFdList) {
+        std::string defaultAttribute = "";
+        want.SetParam(LAUNCH_PARAMETER_PRINT_ATTRIBUTE, defaultAttribute);
+        return;
+    }
+    BuildPrintAttributesParam(adapterParam, want);
+}
+
+void PrintUtils::BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want)
+{
+    json attrJson;
+    PrintAttributes attrParam = adapterParam->printAttributes;
+    if (attrParam.HasCopyNumber()) {
+        attrJson["copyNumber"] = attrParam.GetCopyNumber();
+    }
+    if (attrParam.HasSequential()) {
+        attrJson["isSequential"] = attrParam.GetIsSequential();
+    }
+    if (attrParam.HasLandscape()) {
+        attrJson["isLandscape"] = attrParam.GetIsLandscape();
+    }
+    if (attrParam.HasDirectionMode()) {
+        attrJson["directionMode"] = attrParam.GetDirectionMode();
+    }
+    if (attrParam.HasColorMode()) {
+        attrJson["colorMode"] = attrParam.GetColorMode();
+    }
+    if (attrParam.HasDuplexMode()) {
+        attrJson["duplexMode"] = attrParam.GetDuplexMode();
+    }
+    ParseAttributesObjectParamForJson(attrParam, attrJson);
+    if (attrParam.HasOption()) {
+        attrJson["options"] = attrParam.GetOption();
+    }
+    want.SetParam(LAUNCH_PARAMETER_PRINT_ATTRIBUTE, attrJson.dump());
+    PRINT_HILOGD("CallSpooler set printAttributes: %{public}s", attrJson.dump().c_str());
+}
+
+void PrintUtils::ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, nlohmann::json &attrJson)
+{
+    if (attrParam.HasPageRange()) {
+        json pageRangeJson;
+        PrintRange printRangeAttr;
+        attrParam.GetPageRange(printRangeAttr);
+        if (printRangeAttr.HasStartPage()) {
+            pageRangeJson["startPage"] = printRangeAttr.GetStartPage();
+        }
+        if (printRangeAttr.HasEndPage()) {
+            pageRangeJson["endPage"] = printRangeAttr.GetEndPage();
+        }
+        if (printRangeAttr.HasPages()) {
+            std::vector<uint32_t> pages;
+            printRangeAttr.GetPages(pages);
+            pageRangeJson["pages"] = pages;
+        }
+        attrJson["pageRange"] = pageRangeJson;
+    }
+    if (attrParam.HasPageSize()) {
+        json pageSizeJson;
+        PrintPageSize pageSizeAttr;
+        attrParam.GetPageSize(pageSizeAttr);
+        pageSizeJson["id"] = pageSizeAttr.GetId();
+        pageSizeJson["name"] = pageSizeAttr.GetName();
+        pageSizeJson["width"] = pageSizeAttr.GetWidth();
+        pageSizeJson["height"] = pageSizeAttr.GetHeight();
+        attrJson["pageSize"] = pageSizeJson;
+    }
+    if (attrParam.HasMargin()) {
+        json marginJson;
+        PrintMargin marginAttr;
+        attrParam.GetMargin(marginAttr);
+        if (marginAttr.HasTop()) {
+            marginJson["top"] = marginAttr.GetTop();
+        }
+        if (marginAttr.HasBottom()) {
+            marginJson["bottom"] = marginAttr.GetBottom();
+        }
+        if (marginAttr.HasLeft()) {
+            marginJson["left"] = marginAttr.GetLeft();
+        }
+        if (marginAttr.HasRight()) {
+            marginJson["right"] = marginAttr.GetRight();
+        }
+        attrJson["margin"] = marginJson;
+    }
+}
+
+std::string PrintUtils::GetBundleNameForUid(const int uid)
+{
+    OHOS::AppExecFwk::BundleMgrClient bmsClient;
+    std::string bundleName = "";
+    auto ret = bmsClient.GetNameForUid(uid, bundleName);
+    if (ret != OHOS::ERR_OK || bundleName.empty()) {
+        PRINT_HILOGE("get bundleName failed.");
+    }
+    PRINT_HILOGI("bundleName: %{public}s", bundleName.c_str());
+    return bundleName;
+}
+
+std::string PrintUtils::GetPrintJobId()
+{
+    std::lock_guard<std::mutex> autoLock(instanceLock_);
+    auto nowTime = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime.time_since_epoch()).count();
+    std::stringstream ss;
+    ss << timestamp;
+
+    std::random_device rd;
+    std::time_t current_time = time(NULL);
+    if (current_time == -1) {
+        return "";
+    }
+    std::mt19937 gen((unsigned int)current_time);
+    std::uniform_int_distribution<> dis(MINIMUN_RANDOM_NUMBER_100, MAXIMUN_RANDOM_NUMBER_999);
+    int32_t randomNumber = dis(gen);
+    std::string jobId = ss.str() + "_" + std::to_string(randomNumber);
+    PRINT_HILOGI("jobId: %{public}s", jobId.c_str());
+    return jobId;
 }
 }  // namespace OHOS::Print

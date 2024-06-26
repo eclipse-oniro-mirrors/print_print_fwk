@@ -25,4 +25,6 @@ if (!defined(global_parts_info) ||
   security_guard_enabled = false
 }
 cups_enable = true
-pdfium_enable = false
+jpeg_enable = true
+debug_enable = false
+ipp_over_usb_enable = false

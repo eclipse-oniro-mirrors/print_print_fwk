@@ -72,21 +72,6 @@ bool PrintPageSizeHelper::ValidateProperty(napi_env env, napi_value object)
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
-    for (auto name : names) {
-        if (propertyList.find(name) == propertyList.end()) {
-            PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
-            return false;
-        }
-        propertyList[name] = PRINT_PARAM_SET;
-    }
-
-    for (auto propertypItem : propertyList) {
-        if (propertypItem.second == PRINT_PARAM_NOT_SET) {
-            PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
-            return false;
-        }
-    }
-
-    return true;
+    return NapiPrintUtils::VerifyProperty(names, propertyList);
 }
 } // namespace OHOS::Print

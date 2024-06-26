@@ -35,8 +35,10 @@
 namespace OHOS::Print {
 class PrintSecurityGuardInfo {
 struct PrintTypeInfo {
-    std::string ip;
     int32_t port = 631;
+    int32_t copyNumber = 1;
+    int32_t printPages = 1;
+    std::string ip;
     std::string mac;
     std::string domain;
     std::string name;

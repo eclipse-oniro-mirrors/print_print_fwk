@@ -24,6 +24,7 @@
 #include "print_manager_client.h"
 #include "print_task.h"
 #include "iprint_adapter_inner.h"
+#include "printer_info_helper.h"
 
 namespace OHOS::Print {
 const std::string PRINTER_EVENT_TYPE = "printerStateChange";
@@ -34,7 +35,9 @@ napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info i
 {
     PRINT_HILOGD("Enter ---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
         return napi_ok;
     };
@@ -69,7 +72,9 @@ napi_value NapiInnerPrint::StartDiscovery(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter StartDiscovery---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         bool isArray = false;
         napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
@@ -111,7 +116,9 @@ napi_value NapiInnerPrint::StopDiscovery(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter StopDiscovery---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
         return napi_ok;
     };
@@ -137,7 +144,9 @@ napi_value NapiInnerPrint::ConnectPrinter(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ConnectPrinter---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
@@ -169,7 +178,9 @@ napi_value NapiInnerPrint::DisconnectPrinter(napi_env env, napi_callback_info in
 {
     PRINT_HILOGD("Enter DisconnectPrinter---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
@@ -201,7 +212,9 @@ napi_value NapiInnerPrint::StartPrintJob(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter StartPrintJob---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         auto printJobPtr = PrintJobHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
         if (printJobPtr == nullptr) {
@@ -235,7 +248,9 @@ napi_value NapiInnerPrint::CancelPrintJob(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter CancelPrintJob---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
@@ -272,7 +287,9 @@ napi_value NapiInnerPrint::RequestPreview(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         auto printJobPtr = PrintJobHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
         if (printJobPtr == nullptr) {
@@ -307,7 +324,9 @@ napi_value NapiInnerPrint::QueryCapability(napi_env env, napi_callback_info info
 {
     PRINT_HILOGD("Enter QueryCapability---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
@@ -339,7 +358,9 @@ napi_value NapiInnerPrint::QueryAllPrintJob(napi_env env, napi_callback_info inf
 {
     PRINT_HILOGD("Enter QueryAllPrintJob---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
         return napi_ok;
     };
@@ -371,7 +392,9 @@ napi_value NapiInnerPrint::QueryPrintJobById(napi_env env, napi_callback_info in
 {
     PRINT_HILOGD("Enter QueryPrintJobById---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
@@ -442,7 +465,9 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
@@ -517,7 +542,9 @@ napi_value NapiInnerPrint::NotifyPrintService(napi_env env, napi_callback_info i
 {
     PRINT_HILOGI("Enter NotifyPrintService---->");
     auto context = std::make_shared<InnerPrintContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
@@ -526,8 +553,8 @@ napi_value NapiInnerPrint::NotifyPrintService(napi_env env, napi_callback_info i
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "info type is not a string", napi_string_expected);
         std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
         std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[1]);
-        if (jobId == "" || type == "") {
-            PRINT_HILOGE("Parse JobId error!");
+        if (type == "") {
+            PRINT_HILOGE("Parse type error!");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
         }
@@ -553,9 +580,18 @@ napi_value NapiInnerPrint::NotifyPrintService(napi_env env, napi_callback_info i
     return asyncCall.Call(env, exec);
 }
 
-bool NapiInnerPrint::IsSupportType(const std::string& type)
+bool NapiInnerPrint::IsSupportType(const std::string &type)
 {
-    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE) {
+    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
+        type == PRINTER_CHANGE_EVENT_TYPE) {
+        return true;
+    }
+    return false;
+}
+
+bool NapiInnerPrint::IsValidApplicationEvent(uint32_t event)
+{
+    if (event >= APPLICATION_CREATED && event <= APPLICATION_CLOSED_FOR_CANCELED) {
         return true;
     }
     return false;

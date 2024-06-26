@@ -22,12 +22,14 @@
 #include "iremote_stub.h"
 #include "print_job.h"
 #include "printer_capability.h"
+#include "printer_info.h"
 
 namespace OHOS::Print {
 using PrintExtCallback = bool (*)();
 using PrintJobCallback = bool (*)(const PrintJob&);
 using PrinterCallback = bool (*)(const std::string&);
 using PrinterCapabilityCallback = bool (*)(const std::string&, PrinterCapability&);
+using NativePrinterChangeCallback = bool (*)(uint32_t event, const OHOS::Print::PrinterInfo &info);
 
 class PrintExtensionCallbackStub : public IRemoteStub<IPrintExtensionCallback> {
 public:

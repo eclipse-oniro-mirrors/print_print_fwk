@@ -246,8 +246,13 @@ void JsPrintExtension::OnCommand(const AAFwk::Want &want, bool restart, int star
         PRINT_HILOGD("%{public}s ignore.", __func__);
         return;
     }
-    PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
+    HandleScope handleScope(jsRuntime_);
+    napi_env nativeEngine = jsRuntime_.GetNapiEnv();
+    napi_value nativeWant = OHOS::AppExecFwk::WrapWant(nativeEngine, want);
+    napi_value argv[] = { nativeWant };
+    CallObjectMethod("onCreate", argv, NapiPrintUtils::ARGC_ONE);
     RegisterCb();
+    PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
     PRINT_HILOGD("%{public}s end.", __func__);
 }
 
@@ -508,6 +513,7 @@ void JsPrintExtension::RegisterExtensionCb()
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
+            JsPrintExtension::jsExtension_->OnStop();
             return JsPrintExtension::jsExtension_->Callback("onDestroy");
     });
 }

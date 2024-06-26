@@ -13,26 +13,34 @@
  * limitations under the License.
  */
 
-#include "print_manager_client.h"
-
-#ifdef PDFIUM_ENABLE
-#include "fpdf_edit.h"
-#include "cpp/fpdf_scopers.h"
-#include "image_diff_png.h"
-#include "iostream"
-#include "sys/stat.h"
-#include "unistd.h"
-#endif // PDFIUM_ENABLE
-
 #include "iservice_registry.h"
+#include "system_ability_definition.h"
+#include "napi/native_common.h"
+#include "ui_content.h"
+#include "ipc_skeleton.h"
+#include "want.h"
+#include "bundle_mgr_client.h"
+
+#include "print_manager_client.h"
 #include "print_constant.h"
 #include "print_extension_callback_stub.h"
 #include "print_log.h"
 #include "print_sync_load_callback.h"
 #include "print_utils.h"
-#include "system_ability_definition.h"
+#include "print_callback.h"
+#include "print_innerkit_modal_ui_callback.h"
 
 namespace OHOS::Print {
+
+static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
+static const std::string SPOOLER_PREVIEW_ABILITY_NAME = "PrintServiceExtAbility";
+static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
+static const std::string LAUNCH_PARAMETER_FILE_LIST = "fileList";
+static const std::string TOKEN_KEY = "ohos.ability.params.token";
+static const std::string UI_EXTENSION_TYPE_NAME = "ability.want.params.uiExtensionType";
+static const std::string PRINT_UI_EXTENSION_TYPE = "sysDialog/common";
+static const std::string CALLER_PKG_NAME = "caller.pkgName";
+
 std::mutex PrintManagerClient::instanceLock_;
 sptr<PrintManagerClient> PrintManagerClient::instance_ = nullptr;
 
@@ -109,18 +117,6 @@ int32_t PrintManagerClient::StartPrint(const std::vector<std::string> &fileList,
     return ret;
 }
 
-int32_t PrintManagerClient::StartPrint(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
-    std::string &taskId, const sptr<IRemoteObject> &token)
-{
-    PRINT_HILOGD("PrintManagerClient StartPrint start.");
-    int32_t ret = E_PRINT_RPC_FAILURE;
-    if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->StartPrint(fileList, fdList, taskId, token);
-        PRINT_HILOGD("PrintManagerClient StartPrint out ret = [%{public}d].", ret);
-    }
-    return ret;
-}
-
 int32_t PrintManagerClient::StopPrint(const std::string &taskId)
 {
     PRINT_HILOGD("PrintManagerClient StopPrint start.");
@@ -187,7 +183,7 @@ int32_t PrintManagerClient::StopDiscoverPrinter()
     return ret;
 }
 
-int32_t PrintManagerClient::StartPrintJob(const PrintJob &jobinfo)
+int32_t PrintManagerClient::StartPrintJob(PrintJob &jobinfo)
 {
     PRINT_HILOGD("PrintManagerClient StartPrintJob start.");
     int32_t ret = E_PRINT_RPC_FAILURE;
@@ -253,13 +249,14 @@ int32_t PrintManagerClient::UpdatePrinterState(const std::string &printerId, uin
     return ret;
 }
 
-int32_t PrintManagerClient::UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState)
+int32_t PrintManagerClient::UpdatePrintJobStateOnlyForSystemApp(
+    const std::string &jobId, uint32_t state, uint32_t subState)
 {
-    PRINT_HILOGD("PrintManagerClient UpdatePrintJobState start.");
+    PRINT_HILOGD("PrintManagerClient UpdatePrintJobStateOnlyForSystemApp start.");
     int32_t ret = E_PRINT_RPC_FAILURE;
     if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->UpdatePrintJobState(jobId, state, subState);
-        PRINT_HILOGD("PrintManagerClient UpdatePrintJobState out ret = [%{public}d].", ret);
+        ret = printServiceProxy_->UpdatePrintJobStateOnlyForSystemApp(jobId, state, subState);
+        PRINT_HILOGD("PrintManagerClient UpdatePrintJobStateOnlyForSystemApp out ret = [%{public}d].", ret);
     }
     return ret;
 }
@@ -293,6 +290,73 @@ int32_t PrintManagerClient::QueryPrinterCapability(const std::string &printerId)
     if (LoadServer() && GetPrintServiceProxy()) {
         ret = printServiceProxy_->QueryPrinterCapability(printerId);
         PRINT_HILOGD("PrintManagerClient QueryPrinterCapability out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info)
+{
+    PRINT_HILOGD("PrintManagerClient QueryPrinterInfoByPrinterId start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->QueryPrinterInfoByPrinterId(printerId, info);
+        PRINT_HILOGD("PrintManagerClient QueryPrinterInfoByPrinterId out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::QueryAddedPrinter(std::vector<std::string> &printerNameList)
+{
+    PRINT_HILOGD("PrintManagerClient QueryAddedPrinter start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->QueryAddedPrinter(printerNameList);
+        PRINT_HILOGD("PrintManagerClient QueryAddedPrinter out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::QueryPrinterProperties(const std::string &printerId,
+    const std::vector<std::string> &keyList, std::vector<std::string> &valueList)
+{
+    PRINT_HILOGD("PrintManagerClient QueryPrinterProperties start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->QueryPrinterProperties(printerId, keyList, valueList);
+        PRINT_HILOGD("PrintManagerClient QueryPrinterProperties out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::StartNativePrintJob(PrintJob &printJob)
+{
+    PRINT_HILOGD("PrintManagerClient StartNativePrintJob start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->StartNativePrintJob(printJob);
+        PRINT_HILOGD("PrintManagerClient QueryPrinterProperties out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::GetPrinterPreference(const std::string &printerId, std::string &printerPreference)
+{
+    PRINT_HILOGI("PrintManagerClient GetPrinterPreference start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->GetPrinterPreference(printerId, printerPreference);
+        PRINT_HILOGI("PrintManagerClient GetPrinterPreference out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::SetPrinterPreference(const std::string &printerId, const std::string &printerPreference)
+{
+    PRINT_HILOGI("PrintManagerClient SetPrinterPreference start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->SetPrinterPreference(printerId, printerPreference);
+        PRINT_HILOGI("PrintManagerClient SetPrinterPreference out ret = [%{public}d].", ret);
     }
     return ret;
 }
@@ -339,6 +403,40 @@ int32_t PrintManagerClient::QueryPrinterCapabilityByUri(const std::string &print
     if (LoadServer() && GetPrintServiceProxy()) {
         ret = printServiceProxy_->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
         PRINT_HILOGD("PrintManagerClient QueryPrinterCapabilityByUri out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::NotifyPrintServiceEvent(std::string &jobId, uint32_t event)
+{
+    PRINT_HILOGD("PrintManagerClient NotifyPrintServiceEvent start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->NotifyPrintServiceEvent(jobId, event);
+        PRINT_HILOGD("PrintManagerClient NotifyPrintServiceEvent out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::SetDefaultPrinter(const std::string &printerId)
+{
+    PRINT_HILOGD("PrintManagerClient SetDefaultPrinter start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->SetDefaultPrinter(printerId);
+        PRINT_HILOGD("PrintManagerClient SetDefaultPrinter out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
+    const std::string &printerMake)
+{
+    PRINT_HILOGD("PrintManagerClient DeletePrinterFromCups start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->DeletePrinterFromCups(printerUri, printerName, printerMake);
+        PRINT_HILOGD("PrintManagerClient DeletePrinterFromCups out ret = [%{public}d].", ret);
     }
     return ret;
 }
@@ -400,14 +498,69 @@ int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IP
 }
 
 int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IPrintCallback> &listener,
-    const PrintAttributes &printAttributes, std::string &taskId, void* contextToken)
+    const PrintAttributes &printAttributes, std::string &taskId, void* uiContent)
 {
-    auto func = [printJobName, listener, printAttributes, &taskId, contextToken](sptr<IPrintService> serviceProxy) {
+    if (uiContent == nullptr) {
+        PRINT_HILOGE("uiContent is nullptr.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    PRINT_HILOGI("PrintManagerClient Print start.");
+    if (taskId.empty()) {
+        taskId = PrintUtils::GetPrintJobId();
+        std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
+        if (adapterParam == nullptr) {
+            PRINT_HILOGE("create adapterParam failed.");
+            return E_PRINT_SERVER_FAILURE;
+        }
+        adapterParam->documentName = printJobName;
+        adapterParam->isCheckFdList = false;
+        adapterParam->printAttributes = printAttributes;
+        AAFwk::Want want;
+        SetWantParam(want, taskId);
+        PrintUtils::BuildAdapterParam(adapterParam, want);
+
+        OHOS::Ace::ModalUIExtensionConfig config;
+        config.isProhibitBack = true;
+        auto printUiContent = static_cast<OHOS::Ace::UIContent *>(uiContent);
+        auto callback = std::make_shared<PrintInnerkitModalUICallback>(printUiContent);
+        OHOS::Ace::ModalUIExtensionCallbacks extensionCallbacks = {
+            std::bind(&PrintInnerkitModalUICallback::OnRelease, callback, std::placeholders::_1),
+            std::bind(&PrintInnerkitModalUICallback::OnResultForModal,
+                callback, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&PrintInnerkitModalUICallback::OnReceive, callback, std::placeholders::_1),
+            std::bind(&PrintInnerkitModalUICallback::OnError,
+                callback, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+        };
+        int32_t sessionId = printUiContent->CreateModalUIExtension(want, extensionCallbacks, config);
+        PRINT_HILOGI("StartUIExtensionAbility sessionId %{public}d", sessionId);
+        if (callback != nullptr) {
+            callback->SetSessionId(sessionId);
+        }
+    }
+
+    auto func = [printJobName, listener, printAttributes, &taskId](sptr<IPrintService> serviceProxy) {
         serviceProxy->On("", PRINT_CALLBACK_ADAPTER, listener);
-        sptr<IRemoteObject> token = static_cast<IRemoteObject*>(contextToken);
-        return serviceProxy->PrintByAdapter(printJobName, printAttributes, taskId, token);
+        return serviceProxy->PrintByAdapter(printJobName, printAttributes, taskId);
     };
     return CALL_COMMON_CLIENT(func);
+}
+
+void PrintManagerClient::SetWantParam(AAFwk::Want &want, std::string &taskId)
+{
+    std::vector<std::string> fileList;
+    want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_PREVIEW_ABILITY_NAME);
+    want.SetParam(LAUNCH_PARAMETER_JOB_ID, taskId);
+    want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList);
+    int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
+    int32_t callerUid = IPCSkeleton::GetCallingUid();
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    std::string callerPkg = PrintUtils::GetBundleNameForUid(callerUid);
+    want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_TOKEN, callerTokenId);
+    want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_UID, callerUid);
+    want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_PID, callerPid);
+    want.SetParam(CALLER_PKG_NAME, callerPkg);
+    want.SetParam(UI_EXTENSION_TYPE_NAME, PRINT_UI_EXTENSION_TYPE);
+    want.SetParam(TOKEN_KEY, true);
 }
 
 int32_t PrintManagerClient::StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
@@ -429,257 +582,6 @@ int32_t PrintManagerClient::NotifyPrintService(const std::string &jobId, const s
     }
     return ret;
 }
-
-#ifdef PDFIUM_ENABLE
-#ifndef INT_MAX
-#define INT_MAX 2147483647
-#endif
-static constexpr const int FPDF_CONFIG_VERSION = 2;
-static constexpr const double SCALING_RATE = 300.0 / 72.0;
-static int pdfiumInitRequestCount = 0;
-
-static void initializeLibraryIfNeeded()
-{
-    if (pdfiumInitRequestCount == 0) {
-        // Init
-        FPDF_LIBRARY_CONFIG config;
-        config.version = FPDF_CONFIG_VERSION;
-        config.m_pUserFontPaths = NULL;
-        config.m_pIsolate = NULL;
-        config.m_v8EmbedderSlot = 0;
-        FPDF_InitLibraryWithConfig(&config);
-    }
-    pdfiumInitRequestCount++;
-}
-
-static void destroyLibraryIfNeeded()
-{
-    if (pdfiumInitRequestCount == 1) {
-        FPDF_DestroyLibrary();
-    }
-    pdfiumInitRequestCount--;
-}
-
-static FPDF_DOCUMENT LoadPdfFile(const std::string filePath)
-{
-    initializeLibraryIfNeeded();
-    // Load pdf file
-    FPDF_DOCUMENT doc = FPDF_LoadDocument(filePath.c_str(), nullptr);
-    return doc;
-}
-
-static bool CheckDimensions(int stride, int width, int height)
-{
-    if (stride <= 0 || width <= 0 || height <= 0) {
-        return false;
-    }
-    if (height > 0 && stride > INT_MAX / height) {
-        return false;
-    }
-    return true;
-}
-
-static std::vector<uint8_t> EncodePng(pdfium::span<const uint8_t> input, int height, int width, int format, int stride)
-{
-    std::vector<uint8_t> png;
-    switch (format) {
-        case FPDFBitmap_Unknown:
-            break;
-        case FPDFBitmap_Gray:
-            PRINT_HILOGD("EncodePng FPDFBitmap_Gray\n");
-            png = image_diff_png::EncodeGrayPNG(input, width, height, stride);
-            break;
-        case FPDFBitmap_BGR:
-            PRINT_HILOGD("EncodePng FPDFBitmap_BGR\n");
-            png = image_diff_png::EncodeBGRPNG(input, width, height, stride);
-            break;
-        case FPDFBitmap_BGRx:
-            PRINT_HILOGD("EncodePng FPDFBitmap_BGRx\n");
-            png = image_diff_png::EncodeBGRAPNG(input, width, height, stride, true);
-            break;
-        case FPDFBitmap_BGRA:
-            PRINT_HILOGD("EncodePng FPDFBitmap_BGRA\n");
-            png = image_diff_png::EncodeBGRAPNG(input, width, height, stride, false);
-            break;
-    }
-    return png;
-}
-
-static bool WritePng(std::string imagePath, void *buffer, int width, int height, int stride)
-{
-    if (!CheckDimensions(stride, width, height)) {
-        return false;
-    }
-    auto input = pdfium::make_span(static_cast<uint8_t *>(buffer), stride * height);
-    std::vector<uint8_t> png_encoding = EncodePng(input, height, width, FPDFBitmap_BGRA, stride);
-    if (png_encoding.empty()) {
-        PRINT_HILOGE("Failed to convert bitmap to PNG\n");
-        return false;
-    }
-    FILE *fp = fopen(imagePath.c_str(), "wb");
-    if (!fp) {
-        PRINT_HILOGE("Failed to open %s for output\n", imagePath.c_str());
-        return false;
-    }
-    size_t bytes_written = fwrite(&png_encoding.front(), 1, png_encoding.size(), fp);
-    if (bytes_written != png_encoding.size()) {
-        PRINT_HILOGE("Failed to write to %s\n", imagePath.c_str());
-    }
-    (void)fclose(fp);
-    return true;
-}
-
-static std::string GetImagePathByIndex(std::string basePngName, int32_t pageIndex)
-{
-    std::string imagePath = basePngName + "-" + std::to_string(pageIndex) + ".png";
-    return imagePath;
-}
-
-static ScopedFPDFBitmap BitmapInit(FPDF_PAGE page, uint32_t width, uint32_t height)
-{
-    int alpha = FPDFPage_HasTransparency(page) ? 1 : 0;
-    ScopedFPDFBitmap bitmap(FPDFBitmap_Create(width, height, alpha));
-    FPDF_DWORD fill_color = alpha ? 0x00000000 : 0xFFFFFFFF;
-    FPDFBitmap_FillRect(bitmap.get(), 0, 0, width, height, fill_color);
-    int rotation = 0;
-    int flags = FPDF_ANNOT;
-    FPDF_RenderPageBitmap(bitmap.get(), page, 0, 0, width, height, rotation, flags);
-    return bitmap;
-}
-
-int32_t PrintManagerClient::PdfRenderInit(const std::string filePath, const std::string sandBoxPath,
-    std::string &basePngName, int32_t &pageCount, FPDF_DOCUMENT &doc)
-{
-    if (access(sandBoxPath.c_str(), F_OK) != 0) {
-        PRINT_HILOGE("PdfRenderInit SandBoxPath can't be opened.");
-        return E_PRINT_INVALID_PARAMETER;
-    }
-    // Create floder when the floder isn't exist;
-    std::string floderPath = sandBoxPath + "/preview/";
-    if (access(floderPath.c_str(), F_OK) != 0) {
-        mkdir(floderPath.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
-        if (access(floderPath.c_str(), F_OK) == 0) {
-            PRINT_HILOGD("PdfRenderInit Create floder %{public}s success.", floderPath.c_str());
-        }
-    }
-    PRINT_HILOGD("PdfRenderInit SandBoxPath:%{public}s.", sandBoxPath.c_str());
-    doc = LoadPdfFile(filePath);
-    if (doc == NULL) {
-        PRINT_HILOGE("PdfRenderInit Pdfium LoadPdfFile failed.");
-        return E_PRINT_FILE_IO;
-    }
-    size_t filename_start = filePath.find_last_of("/");
-    size_t filename_end = filePath.find_last_of(".");
-    if (filename_start == filePath.npos || filename_end == filePath.npos) {
-        PRINT_HILOGE("PdfRenderInit Find filename failed.");
-        return E_PRINT_INVALID_PARAMETER;
-    }
-    std::string filename = filePath.substr(filename_start + 1, filename_end - filename_start - 1);
-    basePngName = floderPath + filename;
-    PRINT_HILOGD("PdfRenderInit basePngName:%{public}s.", basePngName.c_str());
-    // Get pdf file pageCount
-    pageCount = FPDF_GetPageCount(doc);
-    if (pageCount == 0) {
-        PRINT_HILOGE("PdfRenderInit Pdfium GetPageCount failed.");
-        return E_PRINT_INVALID_PARAMETER;
-    }
-    PRINT_HILOGD("PdfRenderInit filePath:%{public}s count %{public}d.", filePath.c_str(), pageCount);
-    return E_PRINT_NONE;
-}
-
-int32_t PrintManagerClient::PdfRenderDestroy(const std::string basePngName, const int32_t pageCount,
-    FPDF_DOCUMENT &doc)
-{
-    for (int32_t pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-        std::string imagePath = GetImagePathByIndex(basePngName, pageIndex);
-        if (imagePath.empty()) {
-            PRINT_HILOGE("PdfRenderDestroy This imagePath is empty.");
-            return E_PRINT_INVALID_PARAMETER;
-        }
-        if (access(imagePath.c_str(), F_OK) == 0) {
-            PRINT_HILOGD("PdfRenderDestroy Start delete floder %{public}s.", imagePath.c_str());
-            unlink(imagePath.c_str());
-        }
-    }
-    FPDF_CloseDocument(doc);
-    destroyLibraryIfNeeded();
-    return E_PRINT_NONE;
-}
-
-int32_t PrintManagerClient::GetPdfPageSize(const int32_t pageIndex, uint32_t &width, uint32_t &height,
-    FPDF_DOCUMENT &doc)
-{
-    if (doc == NULL) {
-        PRINT_HILOGE("GetPdfPageSize loaded doc is null.");
-        return E_PRINT_FILE_IO;
-    }
-    // Get page of pageIndex from pdf
-    FPDF_PAGE page = FPDF_LoadPage(doc, pageIndex);
-    if (page == NULL) {
-        PRINT_HILOGE("GetPdfPageSize Pdfium FPDF_LoadPage failed.");
-        return E_PRINT_FILE_IO;
-    }
-    // Get pdf's width and length
-    width = static_cast<uint32_t>(FPDF_GetPageWidth(page) * SCALING_RATE);
-    height = static_cast<uint32_t>(FPDF_GetPageHeight(page) * SCALING_RATE);
-    PRINT_HILOGD("GetPdfPageSize page width: %{public}d, height: %{public}d.", width, height);
-    FPDF_ClosePage(page);
-    return E_PRINT_NONE;
-}
-
-int32_t PrintManagerClient::RenderPdfToPng(const std::string basePngName, const int32_t pageIndex,
-    std::string &imagePath, FPDF_DOCUMENT &doc)
-{
-    if (doc == NULL) {
-        PRINT_HILOGE("RenderPdfToPng  loaded doc is null..");
-        return E_PRINT_FILE_IO;
-    }
-    imagePath = GetImagePathByIndex(basePngName, pageIndex);
-    if (imagePath.empty()) {
-        PRINT_HILOGE("RenderPdfToPng This imagePath is empty.");
-        return E_PRINT_INVALID_PARAMETER;
-    }
-    if (access(imagePath.c_str(), F_OK) != -1) {
-        PRINT_HILOGD("RenderPdfToPng This page image is exist %{public}s.", imagePath.c_str());
-        return E_PRINT_NONE;
-    }
-    // Get pdf file pageCount.
-    int pageCount = FPDF_GetPageCount(doc);
-    if (pageCount == 0) {
-        PRINT_HILOGE("RenderPdfToPng Pdfium GetPageCount failed.");
-        return E_PRINT_INVALID_PARAMETER;
-    }
-    PRINT_HILOGD("RenderPdfToPng %{public}s count %{public}d.", basePngName.c_str(), pageCount);
-    // Get page of pageIndex from pdf.
-    FPDF_PAGE page = FPDF_LoadPage(doc, pageIndex);
-    if (page == NULL) {
-        PRINT_HILOGE("RenderPdfToPng Pdfium FPDF_LoadPage failed.");
-        return E_PRINT_FILE_IO;
-    }
-    // Get pdf's width and length.
-    uint32_t width = static_cast<uint32_t>(FPDF_GetPageWidth(page) * SCALING_RATE);
-    uint32_t height = static_cast<uint32_t>(FPDF_GetPageHeight(page) * SCALING_RATE);
-    if (width <= 0 || height <= 0) {
-        PRINT_HILOGE("RenderPdfToPng pdfium get page's width or height error.");
-        return E_PRINT_GENERIC_FAILURE;
-    }
-    PRINT_HILOGD("RenderPdfToPng  page width: %{public}d height: %{public}d.", width, height);
-    ScopedFPDFBitmap bitmap = BitmapInit(page, width, height);
-    FPDF_ClosePage(page);
-    if (bitmap) {
-        void *buffer = FPDFBitmap_GetBuffer(bitmap.get());
-        int stride = FPDFBitmap_GetStride(bitmap.get());
-        PRINT_HILOGD("RenderPdfToPng bitmap stride %{public}d.", stride);
-        if (!WritePng(imagePath, buffer, width, height, stride)) {
-            unlink(imagePath.c_str());
-        }
-    } else {
-        PRINT_HILOGE("RenderPdfToPng FPDF_RenderPageBitmap error.");
-        return E_PRINT_GENERIC_FAILURE;
-    }
-    return E_PRINT_NONE;
-}
-#endif // PDFIUM_ENABLE
 
 int32_t PrintManagerClient::runBase(const char* callerFunName, std::function<int32_t(sptr<IPrintService>)> func)
 {
@@ -834,6 +736,27 @@ int32_t PrintManagerClient::UnregisterAllExtCallback(const std::string &extensio
     return ret;
 }
 
+int32_t PrintManagerClient::SetNativePrinterChangeCallback(const std::string &type, NativePrinterChangeCallback cb)
+{
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    PRINT_HILOGI("PrintManagerClient SetNativePrinterChangeCallback start");
+    if (LoadServer() && GetPrintServiceProxy()) {
+        if (cb != nullptr) {
+            sptr<PrintCallback> callback = new (std::nothrow) PrintCallback;
+            if (callback != nullptr) {
+                callback->SetNativePrinterChangeCallback(cb);
+                ret = printServiceProxy_->RegisterPrinterCallback(type, callback);
+            } else {
+                ret = E_PRINT_GENERIC_FAILURE;
+            }
+        } else {
+            ret = printServiceProxy_->UnregisterPrinterCallback(type);
+        }
+    }
+    PRINT_HILOGD("PrintManagerClient SetNativePrinterChangeCallback out ret = [%{public}d].", ret);
+    return ret;
+}
+
 int32_t PrintManagerClient::LoadExtSuccess(const std::string &extensionId)
 {
     PRINT_HILOGD("PrintManagerClient LoadExtSuccess start.");
@@ -918,5 +841,23 @@ void PrintManagerClient::SetProxy(const sptr<IRemoteObject> &obj)
 void PrintManagerClient::ResetProxy()
 {
     printServiceProxy_ = nullptr;
+}
+
+int32_t PrintManagerClient::Init()
+{
+    PRINT_HILOGI("nativePrint Init start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->StartService();
+    }
+    PRINT_HILOGD("PrintManagerClient Init out ret = [%{public}d].", ret);
+    return ret;
+}
+
+int32_t PrintManagerClient::Release()
+{
+    SetNativePrinterChangeCallback(PRINTER_DISCOVER_EVENT_TYPE, nullptr);
+    SetNativePrinterChangeCallback(PRINTER_CHANGE_EVENT_TYPE, nullptr);
+    return E_PRINT_NONE;
 }
 } // namespace OHOS::Print
