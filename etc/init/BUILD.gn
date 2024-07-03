@@ -42,3 +42,17 @@ ohos_prebuilt_etc("cups_service.cfg") {
   part_name = "print_fwk"
   subsystem_name = "print"
 }
+
+ohos_prebuilt_etc("scanservice.rc") {
+  source = "scanservice.rc"
+  relative_install_dir = "init"
+  part_name = "print_fwk"
+  subsystem_name = "print"
+}
+
+ohos_prebuilt_etc("scanservice.cfg") {
+  source = "scanservice.cfg"
+  relative_install_dir = "init"
+  part_name = "print_fwk"
+  subsystem_name = "print"
+}

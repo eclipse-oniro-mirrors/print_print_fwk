@@ -1,4 +1,4 @@
-# Copyright (C) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,20 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ability_runtime_path = "//foundation/ability/ability_runtime"
-fuzz_test_output_path = "print_fwk/print_fwk"
-c_utils_path = "//commonlibrary/c_utils"
+import("//build/ohos.gni")
+import("//build/ohos/ndk/ndk.gni")
 
-print_path = "//base/print/print_fwk"
-print_utils_path = "${print_path}/utils"
-
-if (!defined(global_parts_info) ||
-    defined(global_parts_info.security_security_guard)) {
-  security_guard_enabled = true
-} else {
-  security_guard_enabled = false
+ohos_ndk_headers("ohscan_header") {
+  dest_dir = "$ndk_headers_out_dir/ohscan"
+  sources = [ "${print_path}/frameworks/ohscan/include/ohscan.h" ]
 }
-cups_enable = true
-debug_enable = false
-ipp_over_usb_enable = false
-sane_enable = false
+
+ohos_ndk_library("libohscan_ndk") {
+  output_name = "ohscan"
+  output_extension = "so"
+  ndk_description_file = "./libohscan.ndk.json"
+  system_capability = "SystemCapability.Print.PrintFramework"
+  system_capability_headers = [ "ohscan/ohscan.h" ]
+}

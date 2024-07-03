@@ -1,0 +1,42 @@
+[
+    {
+        "first_introduced": "12",
+        "name": "OH_Scan_Init"
+    },
+    {
+        "first_introduced": "12",
+        "name": "OH_Scan_StartScannerDiscovery"
+    },
+    {
+        "first_introduced": "12",
+        "name": "OH_Scan_OpenScanner"
+    },
+    {
+        "first_introduced": "12",
+        "name": "OH_Scan_CloseScanner"
+    },
+    {
+        "first_introduced": "12",
+        "name": "OH_Scan_GetScannerParameter"
+    },
+    {
+        "first_introduced": "12",
+        "name": "OH_Scan_SetScannerParameter"
+    },
+    {
+        "first_introduced": "12",
+        "name": "OH_Scan_StartScan"
+    },
+    {
+        "first_introduced": "12",
+        "name": "OH_Scan_CancelScan"
+    },
+    {
+        "first_introduced": "12",
+        "name": "OH_Scan_GetScanPictureProgress"
+    },
+    {
+        "first_introduced": "12",
+        "name": "OH_Scan_Exit"
+    }
+]

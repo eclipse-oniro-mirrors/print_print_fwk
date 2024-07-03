@@ -1,0 +1,80 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//base/print/print_fwk/print.gni")
+import("//build/ohos.gni")
+
+config("scan_interfaces_kits_napi_config") {
+  visibility = [ ":*" ]
+  include_dirs = [ "include" ]
+
+  cflags_cc = [ "-fno-exceptions" ]
+}
+ohos_shared_library("scan_helper") {
+  include_dirs = [
+    "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
+    "${print_utils_path}/include",
+  ]
+  public_configs = [ ":scan_interfaces_kits_napi_config" ]
+
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    boundary_sanitize = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
+  if (debug_enable) {
+    cflags_cc += [ "-DDEBUG_ENABLE" ]
+  }
+
+  sources = [
+    "src/napi_scan_utils.cpp",
+    "src/scan_option_descriptor.cpp",
+    "src/scan_option_descriptor_helper.cpp",
+    "src/scan_option_value.cpp",
+    "src/scan_option_value_helper.cpp",
+    "src/scan_parameters.cpp",
+    "src/scan_parameters_helper.cpp",
+    "src/scan_progress.cpp",
+    "src/scan_progress_helper.cpp",
+    "src/scan_range.cpp",
+    "src/scan_range_helper.cpp",
+    "src/scanner_info.cpp",
+    "src/scanner_info_helper.cpp",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:data_ability_helper",
+    "ability_runtime:napi_base_context",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "napi:ace_napi",
+    "samgr:samgr_proxy",
+  ]
+
+  #relative_install_dir = "module"
+  install_enable = true
+  subsystem_name = "print"
+  innerapi_tags = [ "platformsdk" ]
+  part_name = "print_fwk"
+}
