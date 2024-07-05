@@ -26,7 +26,6 @@
 #endif // CUPS_ENABLE
 #include "accesstoken_kit.h"
 #include "array_wrapper.h"
-#include "core_service_client.h"
 #include "int_wrapper.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
