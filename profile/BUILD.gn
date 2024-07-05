@@ -17,3 +17,8 @@ ohos_sa_profile("print_sa_profiles") {
   sources = [ "3707.json" ]
   part_name = "print_fwk"
 }
+
+ohos_sa_profile("scan_sa_profiles") {
+  sources = [ "3708.json" ]
+  part_name = "print_fwk"
+}
