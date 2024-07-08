@@ -434,9 +434,16 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     nativePrinterInfo->printerName = CopyString(info.GetPrinterName());
     nativePrinterInfo->description = CopyString(info.GetDescription());
     nativePrinterInfo->detailInfo = nullptr;
-    nativePrinterInfo->printerState = ConvertPrinterState(info.GetPrinterState());
+    nativePrinterInfo->printerState = static_cast<Print_PrinterState>(info.GetPrinterStatus());
     OHOS::Print::PrinterCapability cap;
     info.GetCapability(cap);
+    if (cap.HasOption() && json::accept(cap.GetOption())) {
+        nlohmann::json capJson = json::parse(cap.GetOption());
+        if (capJson.contains("cupsOptions") && capJson["cupsOptions"].is_object()) {
+            nlohmann::json cupsJson = capJson["cupsOptions"];
+            ParseCupsOptions(cupsJson, *nativePrinterInfo);
+        }
+    }
     ConvertColorMode(cap.GetColorMode(), nativePrinterInfo->defaultValue.defaultColorMode);
     ConvertDuplexMode(cap.GetDuplexMode(), nativePrinterInfo->defaultValue.defaultDuplexMode);
     if (info.HasOption()) {
@@ -494,6 +501,10 @@ bool SetPrintPageSizeInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &
     }
     std::string pageSizeId(nativePrintJob.pageSizeId);
     PrintPageSize pageSize;
+    if (!PrintPageSize::FindPageSizeById(pageSizeId, pageSize)) {
+        PRINT_HILOGW("cannot find page size: %{public}s.", pageSizeId.c_str());
+        return false;
+    }
     printJob.SetPageSize(pageSize);
     PRINT_HILOGI("SetPrintPageSizeInPrintJob out.");
     return true;

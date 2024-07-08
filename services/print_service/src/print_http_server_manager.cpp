@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#ifdef IPPOVERUSB_ENABLE
 #include "print_http_server_manager.h"
 #include "print_http_request_process.h"
 #include "print_usb_manager.h"
@@ -48,7 +49,7 @@ bool PrintHttpServerManager::AllocatePort(std::shared_ptr<httplib::Server> svr, 
             PRINT_HILOGD("port : %{public}d is using", allocPort);
             continue;
         }
-        if (svr->bind_to_port(LOCAL_HOST, allocPort)) {
+        if (svr != nullptr && svr->bind_to_port(LOCAL_HOST, allocPort)) {
             PRINT_HILOGD("bind to port : %{public}d success", allocPort);
             port = allocPort;
             return true;
@@ -102,8 +103,9 @@ bool PrintHttpServerManager::CreateServer(std::string printerName, int32_t &port
     printHttpProcessMap[printerName] = newProcess;
     newProcess->SetDeviceName(printerName);
 
-    std::thread tServer = std::thread(StartServer, printHttpServerMap[printerName],
-        printHttpProcessMap[printerName]);
+    std::thread tServer = std::thread([this, &printerName] {
+        this->StartServer(this->printHttpServerMap[printerName], this->printHttpProcessMap[printerName]);
+    });
     tServer.detach();
     return true;
 }
@@ -150,3 +152,4 @@ void PrintHttpServerManager::DealUsbDevDetach(const std::string &devStr)
     cJSON_Delete(devJson);
 }
 }
+#endif // IPPOVERUSB_ENABLE

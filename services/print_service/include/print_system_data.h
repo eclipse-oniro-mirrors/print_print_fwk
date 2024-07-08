@@ -18,6 +18,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 #include <nlohmann/json.hpp>
 #include "printer_info.h"
 #include "printer_capability.h"
@@ -32,6 +33,7 @@ struct CupsPrinterInfo {
     std::string maker;
     PrinterCapability printerCapability;
     PrinterStatus printerStatus = PRINTER_STATUS_UNAVAILABLE;
+    std::string alias;
 };
 
 class PrintSystemData {
@@ -49,11 +51,14 @@ public:
     void DeleteCupsPrinter(const std::string &printerId);
     void GetAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList);
     void UpdatePrinterStatus(const std::string &printerId, PrinterStatus printerStatus);
+    bool UpdatePrinterAlias(const std::string& printerId, const std::string& printerAlias);
     void QueryPrinterInfoById(const std::string &printerId, PrinterInfo &printerInfo);
+    bool CheckPrinterBusy(const std::string &printerId);
+    bool GetAllPrintUser(std::vector<int32_t> &allPrintUserList);
 
 private:
     bool ParsePrinterListJsonV1(nlohmann::json& jsonObject);
-    bool GetJsonObjectFromFile(nlohmann::json &jsonObject);
+    bool GetJsonObjectFromFile(nlohmann::json &jsonObject, const std::string &fileName);
     void ConvertPrinterCapabilityToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
     void ConvertPrintMarginToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
     void ConvertPageSizeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
@@ -64,9 +69,14 @@ private:
     bool ConvertJsonToPrintResolution(nlohmann::json &capsJson, PrinterCapability &printerCapability);
     bool GetPrinterCapabilityFromFile(std::string printerId, PrinterCapability &printerCapability);
     bool CheckPrinterInfoJson(nlohmann::json &object, std::string &printerId);
+    bool GetPrinterCapabilityFromJson(
+        std::string printerId, nlohmann::json &jsonObject, PrinterCapability &printerCapability);
+    bool ParseUserListJsonV1(
+        nlohmann::json &jsonObject, std::vector<int32_t> &allPrintUserList);
 
 private:
     std::map<std::string, std::shared_ptr<CupsPrinterInfo>> addedPrinterMap_;
+    std::map<uint32_t, std::string> addedPrinterOrderList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> addedPrinterInfoList_;
 };
 

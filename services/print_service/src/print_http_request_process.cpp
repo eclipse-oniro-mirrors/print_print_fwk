@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#ifdef IPPOVERUSB_ENABLE
 #include "print_http_request_process.h"
 #include <cmath>
 #include "print_log.h"
@@ -385,7 +386,7 @@ void PrintHttpRequestProcess::CreatWriteDataTask()
     PRINT_HILOGD("CreatWriteDataTask needWriteData: %{public}d", needWriteData);
     if (!needWriteData) {
         needWriteData = true;
-        std::thread writeDataTask(&PrintHttpRequestProcess::StartWriteDataToPrinterLooper, this);
+        std::thread writeDataTask([this] {this->StartWriteDataToPrinterLooper();});
         writeDataTask.detach();
     }
 }
@@ -414,7 +415,7 @@ void PrintHttpRequestProcess::CreatReadSendDocTask()
     PRINT_HILOGD("CreatReadSendDocTask needReadSendDoc: %{public}d", needReadSendDoc);
     if (!needReadSendDoc) {
         needReadSendDoc = true;
-        std::thread readSendDocTask(&PrintHttpRequestProcess::StartReadSendDocDataFromPrinterLooper, this);
+        std::thread readSendDocTask([this] {this->StartReadSendDocDataFromPrinterLooper();});
         readSendDocTask.detach();
     }
 }
@@ -566,3 +567,4 @@ void PrintHttpRequestProcess::Stop()
 
 }
 
+#endif // IPPOVERUSB_ENABLE

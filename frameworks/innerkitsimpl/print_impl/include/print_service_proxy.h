@@ -72,7 +72,7 @@ public:
     int32_t NotifyPrintServiceEvent(std::string &jobId, uint32_t event) override;
     int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference) override;
     int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference) override;
-    int32_t SetDefaultPrinter(const std::string &printerId) override;
+    int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) override;
     int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake) override;
 

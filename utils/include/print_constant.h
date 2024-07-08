@@ -152,6 +152,8 @@ enum PrintDocumentAdapterState {
     PRINT_TASK_FAIL = 2,
     PRINT_TASK_CANCEL = 3,
     PRINT_TASK_BLOCK = 4,
+    PREVIEW_ABILITY_DESTROY_FOR_CANCELED = 5,
+    PREVIEW_ABILITY_DESTROY_FOR_STARTED = 6,
 };
 
 enum PrintExtensionState {
@@ -215,6 +217,11 @@ enum PrinterEvent {
     PRINTER_EVENT_DELETED = 1,
     PRINTER_EVENT_STATE_CHANGED = 2,
     PRINTER_EVENT_INFO_CHANGED = 3,
+};
+
+enum DefaultPrinterType {
+    DEFAULT_PRINTER_TYPE_SETTED_BY_USER = 0,
+    DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER = 1,
 };
 
 const std::string PRINTER_DISCOVER_EVENT_TYPE = "printerDiscover";

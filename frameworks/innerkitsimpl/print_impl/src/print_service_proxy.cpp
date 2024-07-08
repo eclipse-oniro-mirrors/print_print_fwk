@@ -38,8 +38,7 @@ int32_t PrintServiceProxy::GetResult(int retCode, MessageParcel &reply)
 
 int32_t PrintServiceProxy::StartService()
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     const std::string ndkInfo = "nativePrint";
@@ -54,8 +53,7 @@ int32_t PrintServiceProxy::StartService()
 int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
     const std::vector<uint32_t> &fdList, std::string &taskId)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     PRINT_HILOGD("Current file is %{public}zd", fileList.size());
@@ -88,8 +86,7 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
 
 int32_t PrintServiceProxy::StopPrint(const std::string &taskId)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(taskId);
@@ -102,8 +99,7 @@ int32_t PrintServiceProxy::StopPrint(const std::string &taskId)
 
 int32_t PrintServiceProxy::ConnectPrinter(const std::string &printerId)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
@@ -116,8 +112,7 @@ int32_t PrintServiceProxy::ConnectPrinter(const std::string &printerId)
 
 int32_t PrintServiceProxy::DisconnectPrinter(const std::string &printerId)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
@@ -130,8 +125,7 @@ int32_t PrintServiceProxy::DisconnectPrinter(const std::string &printerId)
 
 int32_t PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     PRINT_HILOGD("PrintServiceProxy QueryAllExtension started.");
@@ -157,8 +151,7 @@ int32_t PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &ex
 
 int32_t PrintServiceProxy::StartDiscoverPrinter(const std::vector<std::string> &extensionList)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteStringVector(extensionList);
@@ -172,8 +165,7 @@ int32_t PrintServiceProxy::StartDiscoverPrinter(const std::vector<std::string> &
 
 int32_t PrintServiceProxy::StopDiscoverPrinter()
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     PRINT_HILOGD("PrintServiceProxy StopDiscoverPrinter started.");
@@ -185,8 +177,7 @@ int32_t PrintServiceProxy::StopDiscoverPrinter()
 
 int32_t PrintServiceProxy::StartPrintJob(PrintJob &jobinfo)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
@@ -200,8 +191,7 @@ int32_t PrintServiceProxy::StartPrintJob(PrintJob &jobinfo)
 
 int32_t PrintServiceProxy::CancelPrintJob(const std::string &jobId)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
@@ -215,8 +205,7 @@ int32_t PrintServiceProxy::CancelPrintJob(const std::string &jobId)
 
 int32_t PrintServiceProxy::AddPrinters(const std::vector<PrinterInfo> &printerInfos)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(printerInfos.size());
@@ -233,8 +222,7 @@ int32_t PrintServiceProxy::AddPrinters(const std::vector<PrinterInfo> &printerIn
 
 int32_t PrintServiceProxy::RemovePrinters(const std::vector<std::string> &printerIds)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteStringVector(printerIds);
@@ -248,8 +236,7 @@ int32_t PrintServiceProxy::RemovePrinters(const std::vector<std::string> &printe
 
 int32_t PrintServiceProxy::UpdatePrinters(const std::vector<PrinterInfo> &printerInfos)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteUint32(printerInfos.size());
@@ -266,8 +253,7 @@ int32_t PrintServiceProxy::UpdatePrinters(const std::vector<PrinterInfo> &printe
 
 int32_t PrintServiceProxy::UpdatePrinterState(const std::string &printerId, uint32_t state)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
@@ -282,8 +268,7 @@ int32_t PrintServiceProxy::UpdatePrinterState(const std::string &printerId, uint
 int32_t PrintServiceProxy::UpdatePrintJobStateOnlyForSystemApp(
     const std::string &jobId, uint32_t state, uint32_t subState)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(jobId);
@@ -299,8 +284,7 @@ int32_t PrintServiceProxy::UpdatePrintJobStateOnlyForSystemApp(
 
 int32_t PrintServiceProxy::UpdateExtensionInfo(const std::string &extInfo)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(extInfo);
@@ -313,8 +297,7 @@ int32_t PrintServiceProxy::UpdateExtensionInfo(const std::string &extInfo)
 
 int32_t PrintServiceProxy::RequestPreview(const PrintJob &jobinfo, std::string &previewResult)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     jobinfo.Marshalling(data);
@@ -329,8 +312,7 @@ int32_t PrintServiceProxy::RequestPreview(const PrintJob &jobinfo, std::string &
 
 int32_t PrintServiceProxy::QueryPrinterCapability(const std::string &printerId)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
@@ -344,8 +326,7 @@ int32_t PrintServiceProxy::QueryPrinterCapability(const std::string &printerId)
 
 int32_t PrintServiceProxy::QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
@@ -366,8 +347,7 @@ int32_t PrintServiceProxy::QueryPrinterInfoByPrinterId(const std::string &printe
 
 int32_t PrintServiceProxy::QueryAddedPrinter(std::vector<std::string> &printerNameList)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     PRINT_HILOGD("PrintServiceProxy QueryAddedPrinter started.");
@@ -382,8 +362,7 @@ int32_t PrintServiceProxy::QueryAddedPrinter(std::vector<std::string> &printerNa
 int32_t PrintServiceProxy::QueryPrinterProperties(const std::string &printerId,
     const std::vector<std::string> &keyList, std::vector<std::string> &valueList)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
@@ -399,8 +378,7 @@ int32_t PrintServiceProxy::QueryPrinterProperties(const std::string &printerId,
 
 int32_t PrintServiceProxy::StartNativePrintJob(PrintJob &printJob)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     printJob.Marshalling(data);
@@ -414,8 +392,7 @@ int32_t PrintServiceProxy::StartNativePrintJob(PrintJob &printJob)
 
 int32_t PrintServiceProxy::GetPrinterPreference(const std::string &printerId, std::string &printerPreference)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
@@ -431,8 +408,7 @@ int32_t PrintServiceProxy::GetPrinterPreference(const std::string &printerId, st
 
 int32_t PrintServiceProxy::SetPrinterPreference(const std::string &printerId, const std::string &printerPreference)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
@@ -447,8 +423,7 @@ int32_t PrintServiceProxy::SetPrinterPreference(const std::string &printerId, co
 
 int32_t PrintServiceProxy::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     PRINT_HILOGD("PrintServiceProxy QueryAllPrintJob started.");
@@ -474,8 +449,7 @@ int32_t PrintServiceProxy::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
 
 int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &printJob)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printJobId);
@@ -496,8 +470,7 @@ int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &
 int32_t PrintServiceProxy::AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
     const std::string &printerMake)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerUri);
@@ -518,8 +491,7 @@ int32_t PrintServiceProxy::AddPrinterToCups(const std::string &printerUri, const
 int32_t PrintServiceProxy::QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
     PrinterCapability &printerCaps)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerUri);
@@ -541,8 +513,7 @@ int32_t PrintServiceProxy::QueryPrinterCapabilityByUri(const std::string &printe
 
 int32_t PrintServiceProxy::NotifyPrintServiceEvent(std::string &jobId, uint32_t event)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(jobId);
@@ -555,13 +526,13 @@ int32_t PrintServiceProxy::NotifyPrintServiceEvent(std::string &jobId, uint32_t 
     return ret;
 }
 
-int32_t PrintServiceProxy::SetDefaultPrinter(const std::string &printerId)
+int32_t PrintServiceProxy::SetDefaultPrinter(const std::string &printerId, uint32_t type)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
+    data.WriteUint32(type);
     PRINT_HILOGD("PrintServiceProxy SetDefaultPrinter started.");
     int32_t ret =
         Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_SET_DEFAULT_PRINTERID, data, reply, option);
@@ -573,8 +544,7 @@ int32_t PrintServiceProxy::SetDefaultPrinter(const std::string &printerId)
 int32_t PrintServiceProxy::DeletePrinterFromCups(
     const std::string &printerUri, const std::string &printerName, const std::string &printerMake)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerUri);
@@ -600,8 +570,7 @@ int32_t PrintServiceProxy::On(const std::string taskId, const std::string &type,
         return E_PRINT_INVALID_PARAMETER;
     }
 
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
@@ -622,8 +591,7 @@ int32_t PrintServiceProxy::Off(const std::string taskId, const std::string &type
         return E_PRINT_INVALID_PARAMETER;
     }
 
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
@@ -647,8 +615,7 @@ int32_t PrintServiceProxy::RegisterPrinterCallback(const std::string &type, cons
         return E_PRINT_INVALID_PARAMETER;
     }
 
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
@@ -668,8 +635,7 @@ int32_t PrintServiceProxy::UnregisterPrinterCallback(const std::string &type)
         return E_PRINT_INVALID_PARAMETER;
     }
 
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
@@ -689,8 +655,7 @@ int32_t PrintServiceProxy::RegisterExtCallback(const std::string &extensionCID,
     }
 
     PRINT_HILOGD("PrintServiceProxy::RegisterExtCallback in: %{public}s", extensionCID.c_str());
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
@@ -707,8 +672,7 @@ int32_t PrintServiceProxy::PrintByAdapter(const std::string printJobName, const 
     std::string &taskId)
 {
     PRINT_HILOGI("PrintServiceProxy PrintByAdapter start.");
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
@@ -730,8 +694,7 @@ int32_t PrintServiceProxy::PrintByAdapter(const std::string printJobName, const 
 int32_t PrintServiceProxy::StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
     const uint32_t fd)
 {
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
@@ -753,8 +716,7 @@ int32_t PrintServiceProxy::StartGetPrintFile(const std::string &jobId, const Pri
 int32_t PrintServiceProxy::NotifyPrintService(const std::string &jobId, const std::string &type)
 {
     PRINT_HILOGD("PrintServiceProxy::NotifyPrintService in");
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
@@ -770,8 +732,7 @@ int32_t PrintServiceProxy::NotifyPrintService(const std::string &jobId, const st
 int32_t PrintServiceProxy::UnregisterAllExtCallback(const std::string &extensionId)
 {
     PRINT_HILOGD("PrintServiceProxy::UnregisterAllExtCallback in");
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(extensionId);
@@ -784,8 +745,7 @@ int32_t PrintServiceProxy::UnregisterAllExtCallback(const std::string &extension
 int32_t PrintServiceProxy::LoadExtSuccess(const std::string &extensionId)
 {
     PRINT_HILOGD("PrintServiceProxy::LoadExtSuccess in");
-    MessageParcel data;
-    MessageParcel reply;
+    MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(extensionId);

@@ -50,7 +50,7 @@ T *CopyArray(const std::vector<T> &list, uint32_t &count)
 {
     count = 0;
     size_t len = list.size();
-    if (len <= 0) {
+    if (len == 0) {
         return nullptr;
     }
     T *dest = new (std::nothrow) T[len];
@@ -74,7 +74,7 @@ T2 *CopyArray(const std::vector<T1> &list, uint32_t &count, bool (*ConvertFuncti
 {
     count = 0;
     size_t len = list.size();
-    if (len <= 0) {
+    if (len == 0) {
         return nullptr;
     }
     T2 *dest = new (std::nothrow) T2[len];

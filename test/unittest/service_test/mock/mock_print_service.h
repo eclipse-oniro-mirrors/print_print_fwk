@@ -186,7 +186,7 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t SetDefaultPrinter(const std::string &printerId) override
+    int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) override
     {
         return E_PRINT_NONE;
     }
@@ -226,7 +226,7 @@ public:
     MOCK_METHOD3(AddPrinterToCups, int32_t(const std::string&, const std::string&, const std::string&));
     MOCK_METHOD3(QueryPrinterCapabilityByUri, int32_t(const std::string&, const std::string&, PrinterCapability&));
     MOCK_METHOD2(NotifyPrintServiceEvent, int32_t(std::string&, uint32_t));
-    MOCK_METHOD1(SetDefaultPrinter, int32_t(const std::string&));
+    MOCK_METHOD2(SetDefaultPrinter, int32_t(const std::string&, uint32_t));
     MOCK_METHOD3(DeletePrinterFromCups, int32_t(const std::string&, const std::string&, const std::string&));
 };
 } // namespace Print

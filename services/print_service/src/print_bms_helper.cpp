@@ -54,7 +54,7 @@ bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilit
 std::string PrintBMSHelper::QueryCallerBundleName()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!GetProxy()) {
+    if (helper_ == nullptr || !GetProxy()) {
         return "";
     }
     int32_t callerUid = IPCSkeleton::GetCallingUid();

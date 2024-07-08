@@ -70,7 +70,7 @@ public:
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
         PrinterCapability &printerCaps);
     int32_t NotifyPrintServiceEvent(std::string &jobId, uint32_t event);
-    int32_t SetDefaultPrinter(const std::string &printerId);
+    int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type);
     int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info);
@@ -123,7 +123,7 @@ private:
 private:
     static std::mutex instanceLock_;
     static sptr<PrintManagerClient> instance_;
-    std::mutex proxyLock_;
+    std::recursive_mutex proxyLock_;
     sptr<IPrintService> printServiceProxy_;
     sptr<PrintSaDeathRecipient> deathRecipient_;
 

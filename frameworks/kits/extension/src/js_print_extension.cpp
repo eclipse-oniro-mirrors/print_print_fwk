@@ -158,7 +158,7 @@ void JsPrintExtension::OnStop()
     PrintExtension::OnStop();
     PRINT_HILOGD("jws JsPrintExtension OnStop begin.");
     if (!hasDestroyed_) {
-        CallObjectMethod("onDestroy");
+        Callback("onDestroy");
     }
     bool ret = ConnectionManager::GetInstance().DisconnectCaller(GetContext()->GetToken());
     if (ret) {

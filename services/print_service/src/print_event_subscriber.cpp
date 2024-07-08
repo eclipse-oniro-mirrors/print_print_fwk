@@ -47,7 +47,7 @@ void PrintEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
         int32_t userId = data.GetCode();
         PRINT_HILOGI("user switched, current userId: %{public}d", userId);
-        PrintServiceAbility::GetInstance()->SwitchUser(userId);
+        PrintServiceAbility::GetInstance()->NotifyCurrentUserChanged(userId);
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED) {
         int32_t userId = data.GetCode();
         PRINT_HILOGI("user removed, removed userId: %{public}d", userId);

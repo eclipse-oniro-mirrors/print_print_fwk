@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#ifdef IPPOVERUSB_ENABLE
 #include "print_ipp_over_usb_manager.h"
 #include "print_log.h"
 #include "print_usb_manager.h"
@@ -27,7 +28,7 @@ using namespace OHOS;
 using namespace OHOS::USB;
 using namespace httplib;
 
-static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
+static const std::string SPOOLER_BUNDLE_NAME = "com.huawei.hmos.spooler";
 
 PrintIppOverUsbManager::PrintIppOverUsbManager()
 {}
@@ -58,7 +59,7 @@ void PrintIppOverUsbManager::Init()
 bool PrintIppOverUsbManager::ConnectPrinter(const std::string printerId, int32_t &port)
 {
     PRINT_HILOGD("ConnectPrinter printerId = %{public}s", printerId.c_str());
-    // printerId: com.ohos.spooler:USB-XXXXX
+    // printerId: com.huawei.hmos.spooler:USB-XXXXX
     auto posColon = printerId.find_first_of(SPLIT_VALUE_COLON);
     if (posColon == std::string::npos) {
         PRINT_HILOGE("can not find : , return!");
@@ -114,3 +115,4 @@ void PrintIppOverUsbManager::DisConnectPrinter(const std::string printerId)
     }
 }
 }
+#endif // IPPOVERUSB_ENABLE

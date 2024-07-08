@@ -33,13 +33,13 @@ const std::string EVENT_SUCCESS = "succeed";
 const std::string EVENT_FAIL = "fail";
 const std::string EVENT_CANCEL = "cancel";
 
-static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
+static const std::string SPOOLER_BUNDLE_NAME = "com.huawei.hmos.spooler";
 static const std::string SPOOLER_PREVIEW_ABILITY_NAME = "PrintServiceExtAbility";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
 static const std::string LAUNCH_PARAMETER_FILE_LIST = "fileList";
 static const std::string TOKEN_KEY = "ohos.ability.params.token";
 static const std::string UI_EXTENSION_TYPE_NAME = "ability.want.params.uiExtensionType";
-static const std::string PRINT_UI_EXTENSION_TYPE = "sysDialog/common";
+static const std::string PRINT_UI_EXTENSION_TYPE = "sysDialog/print";
 static const std::string CALLER_PKG_NAME = "caller.pkgName";
 
 PrintTask::PrintTask(const std::vector<std::string> &innerList, const sptr<IRemoteObject> &innerCallerToken_)

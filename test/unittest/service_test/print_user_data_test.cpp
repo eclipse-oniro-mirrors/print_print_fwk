@@ -208,7 +208,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0013, TestSize.Level1)
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0014, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    std::string printerId = "com.ohos.spooler:p2p://DIRECT-HW_PixLab_V1-0105";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-0105";
     userData->SetLastUsedPrinter(printerId);
     std::string printerId2 = "";
     userData->SetLastUsedPrinter(printerId2);
@@ -248,10 +248,108 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0019, TestSize.Level1)
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0020, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    std::string printerId = "com.ohos.spooler:p2p://DIRECT-H_PixLab_V1-0105";
-    userData->SetDefaultPrinter(printerId);
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-0105";
+    userData->SetDefaultPrinter(printerId, 0);
     std::string printerId2 = "";
-    userData->SetDefaultPrinter(printerId2);
+    userData->SetDefaultPrinter(printerId2, 0);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0021, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    nlohmann::json jsonObject;
+    userData->ParseUserDataFromJson(jsonObject);
+    nlohmann::json userDataList;
+    jsonObject["print_user_data"] = userDataList;
+    userData->ParseUserDataFromJson(jsonObject);
+
+    nlohmann::json jsonObject2;
+    nlohmann::json userDataList2;
+    userData->userId_ = 100;
+    nlohmann::json userData2 = nlohmann::json::array();
+    userDataList2["100"] = userData2;
+    jsonObject2["print_user_data"] = userDataList2;
+    userData->ParseUserDataFromJson(jsonObject2);
+
+    nlohmann::json jsonObject3;
+    nlohmann::json userDataList3;
+    nlohmann::json userData3 = nlohmann::json::object();
+    userDataList3["100"] = userData3;
+    jsonObject3["print_user_data"] = userDataList3;
+    userData->ParseUserDataFromJson(jsonObject3);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0022, TestSize.Level1)
+{
+    auto printUserData = std::make_shared<OHOS::Print::PrintUserData>();
+    nlohmann::json jsonObject;
+    nlohmann::json userDataList;
+    printUserData->userId_ = 100;
+    nlohmann::json userData = nlohmann::json::object();
+    userData["defaultPrinter"] = 123;
+    userDataList["100"] = userData;
+    jsonObject["print_user_data"] = userDataList;
+    printUserData->ParseUserDataFromJson(jsonObject);
+
+    nlohmann::json jsonObject2;
+    nlohmann::json userDataList2;
+    nlohmann::json userData2 = nlohmann::json::object();
+    userData2["defaultPrinter"] = "123";
+    userDataList2["100"] = userData2;
+    jsonObject2["print_user_data"] = userDataList2;
+    printUserData->ParseUserDataFromJson(jsonObject2);
+
+    nlohmann::json jsonObject3;
+    nlohmann::json userDataList3;
+    nlohmann::json userData3 = nlohmann::json::object();
+    userData3["defaultPrinter"] = "123";
+    userData3["lastUsedPrinter"] = 123;
+    userDataList3["100"] = userData3;
+    jsonObject3["print_user_data"] = userDataList3;
+    printUserData->ParseUserDataFromJson(jsonObject3);
+
+    nlohmann::json jsonObject4;
+    nlohmann::json userDataList4;
+    nlohmann::json userData4 = nlohmann::json::object();
+    userData4["defaultPrinter"] = "123";
+    userData4["lastUsedPrinter"] = "123";
+    userDataList4["100"] = userData4;
+    jsonObject4["print_user_data"] = userDataList4;
+    printUserData->ParseUserDataFromJson(jsonObject4);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0023, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    nlohmann::json jsonObject;
+    std::string fileData0 = "test";
+    userData->CheckFileData(fileData0, jsonObject);
+
+    nlohmann::json fileJson;
+    fileJson["key"] = "value";
+    std::string fileData = fileJson.dump();
+    userData->CheckFileData(fileData, jsonObject);
+
+    nlohmann::json fileJson2;
+    fileJson2["version"] = 123;
+    std::string fileData2 = fileJson2.dump();
+    userData->CheckFileData(fileData2, jsonObject);
+
+    nlohmann::json fileJson3;
+    fileJson3["version"] = "123";
+    std::string fileData3 = fileJson3.dump();
+    userData->CheckFileData(fileData3, jsonObject);
+
+    nlohmann::json fileJson4;
+    fileJson4["version"] = "v1";
+    std::string fileData4 = fileJson4.dump();
+    userData->CheckFileData(fileData4, jsonObject);
+
+    nlohmann::json fileJson5;
+    fileJson5["version"] = "v1";
+    fileJson5["print_user_data"] = "100";
+    std::string fileData5 = fileJson5.dump();
+    userData->CheckFileData(fileData5, jsonObject);
 }
 
 }

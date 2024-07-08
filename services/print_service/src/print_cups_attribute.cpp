@@ -162,8 +162,13 @@ void ParseColorModeAttributes(ipp_t *response, PrinterCapability &printerCaps)
     ColorModeCode code;
     if (ParseAttributeToValue<ColorModeCode>(response, keyword, code, ConvertColorModeCode)) {
         uint32_t mode = static_cast<uint32_t>(code);
-        printerCaps.SetColorMode(mode);
         printerCaps.SetPrinterAttrNameAndValue("defaultColorMode", std::to_string(mode).c_str());
+    }
+    for (auto& color : supportedColorModes) {
+        if (color == ColorModeCode::COLOR_MODE_COLOR) {
+            printerCaps.SetColorMode(ColorModeCode::COLOR_MODE_COLOR);
+            break;
+        }
     }
 }
 

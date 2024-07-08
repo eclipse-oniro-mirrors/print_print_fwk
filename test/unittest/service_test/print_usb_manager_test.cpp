@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#ifdef IPPOVERUSB_ENABLE
 #include <gtest/gtest.h>
 #define private public
 #include "print_usb_manager.h"
@@ -113,7 +114,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_001, TestSize.Level1)
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_002, TestSize.Level1)
 {
     OHOS::Print::PrintUsbManager printUsbManager;
-    std::string printerName = "HW PixLab V1-0105";
+    std::string printerName = "HUAWEI PixLab V1-0105";
     OHOS::USB::UsbDevice usbDevice;
     printUsbManager.printDeviceMap[printerName] = usbDevice;
     bool ret = printUsbManager.isExistIppOverUsbPrinter(printerName);
@@ -186,7 +187,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_006, TestSize.Level1)
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_007, TestSize.Level1)
 {
     OHOS::Print::PrintUsbManager printUsbManager;
-    std::string printerName = "HW PixLab V1-0105";
+    std::string printerName = "HUAWEI PixLab V1-0105";
     OHOS::USB::USBDevicePipe usbDevicePipe;
     printUsbManager.printPipeMap[printerName] = usbDevicePipe;
     OHOS::USB::UsbDevice usbDevice;
@@ -204,7 +205,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_007, TestSize.Level1)
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_09, TestSize.Level1)
 {
     OHOS::Print::PrintUsbManager printUsbManager;
-    std::string printerName = "HW PixLab V1-0105";
+    std::string printerName = "HUAWEI PixLab V1-0105";
     std::vector<uint8_t> vectorRequestBuffer;
     int32_t ret =
         printUsbManager.BulkTransferWrite(printerName, Operation::Get_Printer_Attributes, vectorRequestBuffer);
@@ -224,7 +225,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_09, TestSize.Level1)
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_010, TestSize.Level1)
 {
     OHOS::Print::PrintUsbManager printUsbManager;
-    std::string printerName = "HW PixLab V1-0105";
+    std::string printerName = "HUAWEI PixLab V1-0105";
     std::vector<uint8_t> vectorRequestBuffer;
     int32_t ret = printUsbManager.BulkTransferRead(printerName, Operation::Get_Printer_Attributes, vectorRequestBuffer);
     EXPECT_GT(0, ret);
@@ -264,7 +265,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_011, TestSize.Level1)
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_012, TestSize.Level1)
 {
     OHOS::Print::PrintUsbManager printUsbManager;
-    std::string name = "HW PixLab V1-0105";
+    std::string name = "HUAWEI PixLab V1-0105";
     std::string printerName = printUsbManager.GetPrinterName(name);
     EXPECT_EQ("", printerName);
     OHOS::USB::UsbDevice usbDevice;
@@ -275,7 +276,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_012, TestSize.Level1)
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_013, TestSize.Level1)
 {
     OHOS::Print::PrintUsbManager printUsbManager;
-    std::string name = "HW PixLab V1-0105";
+    std::string name = "HUAWEI PixLab V1-0105";
     OHOS::USB::USBDevicePipe usbDevicePipe;
     OHOS::USB::UsbDevice usbDevice;
     bool ret = printUsbManager.AllocateInterface(name, usbDevice, usbDevicePipe);
@@ -285,7 +286,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_013, TestSize.Level1)
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_014, TestSize.Level1)
 {
     OHOS::Print::PrintUsbManager printUsbManager;
-    std::string name = "HW PixLab V1-0105";
+    std::string name = "HUAWEI PixLab V1-0105";
     OHOS::USB::UsbDevice usbDevice;
     printUsbManager.printDeviceMap[name] = usbDevice;
     printUsbManager.DisConnectUsbPinter(name);
@@ -294,7 +295,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_014, TestSize.Level1)
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_015, TestSize.Level1)
 {
     OHOS::Print::PrintUsbManager printUsbManager;
-    std::string name = "HW PixLab V1-0105";
+    std::string name = "HUAWEI PixLab V1-0105";
     OHOS::USB::USBDevicePipe usbDevicePipe;
     printUsbManager.printPipeMap[name] = usbDevicePipe;
     printUsbManager.DisConnectUsbPinter(name);
@@ -328,7 +329,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_018, TestSize.Level1)
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_019, TestSize.Level1)
 {
     OHOS::Print::PrintUsbManager printUsbManager;
-    std::string printerName = "HW PixLab V1-0105";
+    std::string printerName = "HUAWEI PixLab V1-0105";
     bool ret = printUsbManager.ConnectUsbPinter(printerName);
     EXPECT_EQ(ret, false);
 }
@@ -337,7 +338,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_020, TestSize.Level1)
 {
     OHOS::Print::PrintUsbManager printUsbManager;
     OHOS::USB::UsbDevice usbDevice;
-    std::string printerName = "HW PixLab V1-0105";
+    std::string printerName = "HUAWEI PixLab V1-0105";
     printUsbManager.isPrintDevice(usbDevice, printerName);
 }
 
@@ -352,3 +353,4 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_021, TestSize.Level1)
 }
 }  // namespace Print
 }  // namespace OHOS
+#endif // IPPOVERUSB_ENABLE
