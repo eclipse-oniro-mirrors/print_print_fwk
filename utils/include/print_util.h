@@ -41,6 +41,8 @@ public:
 
     static std::string StandardizePrinterName(std::string printerName);
 
+    static std::string RemoveUnderlineFromPrinterName(std::string printerName);
+
     static std::vector<uint32_t> Str2Vec(std::string str);
 
     static void Str2VecStr(std::string& str, std::vector<std::string>& vec);
@@ -130,6 +132,16 @@ inline std::string PrintUtil::StandardizePrinterName(std::string printerName)
 {
     std::regex pattern("[ /#]");
     std::string name = std::regex_replace(printerName, pattern, "_");
+    if (name.length() < MAX_PRINTER_NAME_LENGTH) {
+        return name;
+    }
+    return name.substr(0, MAX_PRINTER_NAME_LENGTH - 1);
+}
+
+inline std::string PrintUtil::RemoveUnderlineFromPrinterName(std::string printerName)
+{
+    std::regex pattern("[_]");
+    std::string name = std::regex_replace(printerName, pattern, " ");
     if (name.length() < MAX_PRINTER_NAME_LENGTH) {
         return name;
     }

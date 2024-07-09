@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#ifdef IPPOVERUSB_ENABLE
 #include <gtest/gtest.h>
 #define private public
 #include "print_http_server_manager.h"
@@ -81,7 +82,7 @@ void PrintHttpServerManagerTest::TearDown(void)
 HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_001, TestSize.Level1)
 {
     auto service = std::make_shared<PrintHttpServerManager>();
-    std::string printerName = "HW PixLab V1-0105";
+    std::string printerName = "HUAWEI PixLab V1-0105";
     int32_t port;
     EXPECT_TRUE(service->CreateServer(printerName, port));
 }
@@ -95,7 +96,7 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_001, TestSize.Le
 HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_002, TestSize.Level1)
 {
     auto service = std::make_shared<PrintHttpServerManager>();
-    std::string printerName = "HW PixLab V1-0105";
+    std::string printerName = "HUAWEI PixLab V1-0105";
     int32_t port;
     std::shared_ptr<httplib::Server> newServer = std::make_shared<httplib::Server>();
     EXPECT_NE(newServer, nullptr);
@@ -112,7 +113,7 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_002, TestSize.Le
 HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_003, TestSize.Level1)
 {
     auto service = std::make_shared<PrintHttpServerManager>();
-    std::string printerName = "HW PixLab V1-0105";
+    std::string printerName = "HUAWEI PixLab V1-0105";
     int32_t port;
     std::shared_ptr<httplib::Server> newServer = std::make_shared<httplib::Server>();
     EXPECT_NE(newServer, nullptr);
@@ -131,7 +132,7 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_003, TestSize.Le
 HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_004, TestSize.Level1)
 {
     OHOS::Print::PrintHttpServerManager printHttpServerManager;
-    std::string printerName = "HW PixLab V1-0105";
+    std::string printerName = "HUAWEI PixLab V1-0105";
     std::shared_ptr<httplib::Server> newServer = std::make_shared<httplib::Server>();
     EXPECT_NE(newServer, nullptr);
     std::shared_ptr<PrintHttpRequestProcess> newProcess = std::make_shared<PrintHttpRequestProcess>();
@@ -156,3 +157,4 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_005, TestSize.Le
 
 }  // namespace Print
 }  // namespace OHOS
+#endif // IPPOVERUSB_ENABLE

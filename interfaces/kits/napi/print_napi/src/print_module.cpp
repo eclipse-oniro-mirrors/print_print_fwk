@@ -49,6 +49,12 @@ static constexpr const char *FUNCTION_NATIVE_ADD_PRINTER_TO_CUPS = "addPrinterTo
 static constexpr const char *FUNCTION_QUERY_CAPABILITY_BY_URI = "queryPrinterCapabilityByUri";
 static constexpr const char *FUNCTION_START_GET_PRINT_FILE = "startGettingPrintFile";
 static constexpr const char *FUNCTION_NOTIFY_PRINT_SERVICE = "notifyPrintService";
+static constexpr const char *FUNCTION_QUERY_ADDED_PRINTER = "getAddedPrinters";
+static constexpr const char *FUNCTION_QUERY_PRINTER_INFO_BY_PRINTER_ID = "getPrinterInfoById";
+static constexpr const char *FUNCTION_NOTIFY_PRINT_SERVICE_EVENT = "notifyPrintServiceEvent";
+static constexpr const char *FUNCTION_GET_PRINTER_PREFERENCE = "getPrinterPreference";
+static constexpr const char *FUNCTION_SET_PRINTER_PREFERENCE = "setPrinterPreference";
+static constexpr const char *FUNCTION_SET_DEFAULT_PRINTER = "setDefaultPrinter";
 static constexpr const char *FUNCTION_DELETE_PRINTER_FROM_CUPS = "deletePrinterFromCups";
 
 #define PRINT_NAPI_METHOD(name, func)           \
@@ -244,10 +250,35 @@ static napi_value NapiCreatePrintEventEnum(napi_env env)
 {
     napi_value object = nullptr;
     napi_create_object(env, &object);
-    SetEnumProperty(env, object, "PRINTER_EVENT_ADDED", static_cast<int32_t>(PRINTER_STATUS_IDLE));
-    SetEnumProperty(env, object, "PRINTER_EVENT_DELETED", static_cast<int32_t>(PRINTER_STATUS_BUSY));
-    SetEnumProperty(env, object, "PRINTER_EVENT_STATE_CHANGED", static_cast<int32_t>(PRINTER_STATUS_UNAVAILABLE));
-    SetEnumProperty(env, object, "PRINTER_EVENT_INFO_CHANGED", static_cast<int32_t>(PRINTER_STATUS_UNAVAILABLE));
+    SetEnumProperty(env, object, "PRINTER_EVENT_ADDED", static_cast<int32_t>(PRINTER_EVENT_ADDED));
+    SetEnumProperty(env, object, "PRINTER_EVENT_DELETED", static_cast<int32_t>(PRINTER_EVENT_DELETED));
+    SetEnumProperty(env, object, "PRINTER_EVENT_STATE_CHANGED", static_cast<int32_t>(PRINTER_EVENT_STATE_CHANGED));
+    SetEnumProperty(env, object, "PRINTER_EVENT_INFO_CHANGED", static_cast<int32_t>(PRINTER_EVENT_INFO_CHANGED));
+    return object;
+}
+
+static napi_value NapiCreateApplicationEventEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    SetEnumProperty(env, object, "APPLICATION_CREATED", static_cast<int32_t>(APPLICATION_CREATED));
+    SetEnumProperty(
+        env, object, "APPLICATION_CLOSED_FOR_STARTED", static_cast<int32_t>(APPLICATION_CLOSED_FOR_STARTED));
+    SetEnumProperty(
+        env, object, "APPLICATION_CLOSED_FOR_CANCELED", static_cast<int32_t>(APPLICATION_CLOSED_FOR_CANCELED));
+    return object;
+}
+
+static napi_value NapiCreateDefaultPrinterTypeEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    SetEnumProperty(
+        env, object, "DEFAULT_PRINTER_TYPE_SETTED_BY_USER", static_cast<int32_t>(DEFAULT_PRINTER_TYPE_SETTED_BY_USER));
+    SetEnumProperty(env,
+        object,
+        "DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER",
+        static_cast<int32_t>(DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER));
     return object;
 }
 
@@ -266,6 +297,8 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY("PrintErrorCode", NapiCreatePrintErrorCodeEnum(env)),
         PRINT_NAPI_PROPERTY("PrinterStatus", NapiCreatePrintStatusEnum(env)),
         PRINT_NAPI_PROPERTY("PrinterEvent", NapiCreatePrintEventEnum(env)),
+        PRINT_NAPI_PROPERTY("ApplicationEvent", NapiCreateApplicationEventEnum(env)),
+        PRINT_NAPI_PROPERTY("DefaultPrinterType", NapiCreateDefaultPrinterTypeEnum(env)),
 
         PRINT_NAPI_METHOD(FUNCTION_PRINT, NapiPrintTask::Print),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_EXT, NapiInnerPrint::QueryExtensionInfo),
@@ -292,6 +325,12 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_QUERY_CAPABILITY_BY_URI, NapiPrintExt::QueryPrinterCapabilityByUri),
         PRINT_NAPI_METHOD(FUNCTION_START_GET_PRINT_FILE, NapiInnerPrint::StartGetPrintFile),
         PRINT_NAPI_METHOD(FUNCTION_NOTIFY_PRINT_SERVICE, NapiInnerPrint::NotifyPrintService),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_ADDED_PRINTER, NapiInnerPrint::QueryAddedPrinter),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_PRINTER_INFO_BY_PRINTER_ID, NapiInnerPrint::QueryPrinterInfoByPrinterId),
+        PRINT_NAPI_METHOD(FUNCTION_NOTIFY_PRINT_SERVICE_EVENT, NapiInnerPrint::NotifyPrintServiceEvent),
+        PRINT_NAPI_METHOD(FUNCTION_GET_PRINTER_PREFERENCE, NapiInnerPrint::GetPrinterPreference),
+        PRINT_NAPI_METHOD(FUNCTION_SET_PRINTER_PREFERENCE, NapiInnerPrint::SetPrinterPreference),
+        PRINT_NAPI_METHOD(FUNCTION_SET_DEFAULT_PRINTER, NapiInnerPrint::SetDefaultPrinter),
         PRINT_NAPI_METHOD(FUNCTION_DELETE_PRINTER_FROM_CUPS, NapiPrintExt::DeletePrinterFromCups),
     };
 

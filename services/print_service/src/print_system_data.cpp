@@ -26,10 +26,14 @@
 namespace {
 const std::string PRINTER_LIST_FILE = "/data/service/el1/public/print_service/printer_list.json";
 const std::string PRINTER_LIST_VERSION = "v1";
+const std::string PRINT_USER_DATA_FILE = "/data/service/el1/public/print_service/print_user_data.json";
+const std::string PRINT_USER_DATA_VERSION = "v1";
 }  // namespace
 
 namespace OHOS {
 namespace Print {
+
+using namespace std;
 
 bool PrintSystemData::ParsePrinterListJsonV1(nlohmann::json &jsonObject)
 {
@@ -75,6 +79,9 @@ bool PrintSystemData::ParsePrinterListJsonV1(nlohmann::json &jsonObject)
         info.uri = uri;
         info.maker = maker;
         info.printerCapability = printerCapability;
+        if (object.contains("alias") && object["alias"].is_string()) {
+            info.alias = object["alias"];
+        }
         InsertCupsPrinter(id, info, true);
     }
     return true;
@@ -84,25 +91,16 @@ bool PrintSystemData::Init()
 {
     addedPrinterMap_.clear();
     nlohmann::json jsonObject;
-    if (!GetJsonObjectFromFile(jsonObject)) {
+    if (!GetJsonObjectFromFile(jsonObject, PRINTER_LIST_FILE)) {
         PRINT_HILOGW("get json from file fail");
         return false;
     }
-    if (!jsonObject.contains("version") || !jsonObject["version"].is_string()) {
-        PRINT_HILOGW("can not find version");
-        return false;
-    }
-    std::string version = jsonObject["version"].get<std::string>();
-    PRINT_HILOGI("json version: %{public}s", version.c_str());
-    if (version == PRINTER_LIST_VERSION) {
-        return ParsePrinterListJsonV1(jsonObject);
-    }
-    return false;
+    return ParsePrinterListJsonV1(jsonObject);
 }
 
-bool PrintSystemData::GetJsonObjectFromFile(nlohmann::json &jsonObject)
+bool PrintSystemData::GetJsonObjectFromFile(nlohmann::json &jsonObject, const std::string &fileName)
 {
-    std::ifstream ifs(PRINTER_LIST_FILE.c_str(), std::ios::in | std::ios::binary);
+    std::ifstream ifs(fileName.c_str(), std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
         PRINT_HILOGW("open printer list file fail");
         return false;
@@ -118,13 +116,28 @@ bool PrintSystemData::GetJsonObjectFromFile(nlohmann::json &jsonObject)
         PRINT_HILOGW("can not find version");
         return false;
     }
+    std::string version = jsonObject["version"].get<std::string>();
+    PRINT_HILOGI("json version: %{public}s", version.c_str());
+    std::string fileVersion = "";
+    if (strcmp(fileName.c_str(), PRINTER_LIST_FILE.c_str())) {
+        fileVersion = PRINTER_LIST_VERSION;
+    } else {
+        fileVersion = PRINT_USER_DATA_VERSION;
+    }
+    if (strcmp(version.c_str(), PRINTER_LIST_VERSION.c_str())) {
+        PRINT_HILOGW("printer list version is error.");
+        return false;
+    }
     return true;
 }
 
 void PrintSystemData::InsertCupsPrinter(
     const std::string &printerId, const CupsPrinterInfo &printerInfo, bool needUpdateCaps)
 {
-    PRINT_HILOGI("InsertCupsPrinter printerId: %{public}s", printerId.c_str());
+    auto orderId = 0;
+    if (addedPrinterOrderList_.size()) {
+        orderId = addedPrinterOrderList_.rbegin()->first;
+    }
     auto iter = addedPrinterMap_.find(printerId);
     if (iter == addedPrinterMap_.end() || iter->second == nullptr) {
         PRINT_HILOGI("insert new printer");
@@ -134,17 +147,40 @@ void PrintSystemData::InsertCupsPrinter(
         iter->second->name = printerInfo.name;
         iter->second->uri = printerInfo.uri;
         iter->second->maker = printerInfo.maker;
+        iter->second->printerStatus = printerInfo.printerStatus;
+        iter->second->alias = printerInfo.alias;
         if (needUpdateCaps) {
             iter->second->printerCapability = printerInfo.printerCapability;
+        }
+    }
+    if (needUpdateCaps) {
+        auto addedPrinterOrderListIter = std::find_if(addedPrinterOrderList_.begin(),
+            addedPrinterOrderList_.end(),
+            [&printerId](
+                const std::pair<uint32_t, std::string> &addedPrinter) { return addedPrinter.second == printerId; });
+        if (addedPrinterOrderListIter != addedPrinterOrderList_.end()) {
+            PRINT_HILOGW("value found");
+        } else {
+            addedPrinterOrderList_.insert(std::make_pair(orderId + 1, printerId));
+            PRINT_HILOGI("printerId: %{public}s, orderId: %{public}d", printerId.c_str(), orderId + 1);
         }
     }
 }
 
 void PrintSystemData::DeleteCupsPrinter(const std::string &printerId)
 {
-    PRINT_HILOGI("DeleteCupsPrinter printerId: %{public}s", printerId.c_str());
-    addedPrinterMap_.erase(printerId);
-    SaveCupsPrinterMap();
+    if (!printerId.empty()) {
+        PRINT_HILOGI("DeleteCupsPrinter printerId: %{public}s", printerId.c_str());
+        addedPrinterMap_.erase(printerId);
+        for (auto printer: addedPrinterOrderList_) {
+            if (!strcmp(printerId.c_str(), printer.second.c_str())) {
+                addedPrinterOrderList_.erase(printer.first);
+                PRINT_HILOGI("erase printer order success");
+                break;
+            }
+        }
+        SaveCupsPrinterMap();
+    }
 }
 
 bool PrintSystemData::SaveCupsPrinterMap()
@@ -157,7 +193,11 @@ bool PrintSystemData::SaveCupsPrinterMap()
         return false;
     }
     nlohmann::json printerMapJson = nlohmann::json::array();
-    for (auto iter = addedPrinterMap_.begin(); iter != addedPrinterMap_.end(); ++iter) {
+    for (auto printer : addedPrinterOrderList_) {
+        auto iter = addedPrinterMap_.find(printer.second);
+        if (iter == addedPrinterMap_.end()) {
+            continue;
+        }
         auto info = iter->second;
         if (info == nullptr) {
             continue;
@@ -167,6 +207,7 @@ bool PrintSystemData::SaveCupsPrinterMap()
         printerJson["name"] = info->name;
         printerJson["uri"] = info->uri;
         printerJson["maker"] = info->maker;
+        printerJson["alias"] = info->alias;
         nlohmann::json capsJson;
         ConvertPrinterCapabilityToJson(info->printerCapability, capsJson);
         printerJson["capability"] = capsJson;
@@ -194,7 +235,8 @@ std::string PrintSystemData::QueryPrinterIdByStandardizeName(const std::string &
             continue;
         }
         std::string name = PrintUtil::StandardizePrinterName(info->name);
-        if (name == printerName) {
+        if (name == PrintUtil::StandardizePrinterName(printerName)) {
+            PRINT_HILOGD("printerId: %{public}s", iter->first.c_str());
             return iter->first;
         }
     }
@@ -214,6 +256,7 @@ bool PrintSystemData::QueryCupsPrinterInfoByPrinterId(const std::string &printer
             cupsPrinter.maker = info->maker;
             cupsPrinter.printerCapability = info->printerCapability;
             cupsPrinter.printerStatus = info->printerStatus;
+            cupsPrinter.alias = info->alias;
             return true;
         }
     }
@@ -225,12 +268,14 @@ void PrintSystemData::QueryPrinterInfoById(const std::string &printerId, Printer
     CupsPrinterInfo cupsPrinter;
     if (QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter)) {
         printerInfo.SetPrinterId(printerId);
-        printerInfo.SetPrinterName(cupsPrinter.name);
+        printerInfo.SetPrinterName(PrintUtil::RemoveUnderlineFromPrinterName(cupsPrinter.name));
         printerInfo.SetCapability(cupsPrinter.printerCapability);
+        printerInfo.SetPrinterStatus(cupsPrinter.printerStatus);
         nlohmann::json option;
         option["printerName"] = cupsPrinter.name;
         option["printerUri"] = cupsPrinter.uri;
         option["make"] = cupsPrinter.maker;
+        option["alias"] = cupsPrinter.alias;
         printerInfo.SetOption(option.dump());
         printerInfo.Dump();
     } else {
@@ -238,19 +283,29 @@ void PrintSystemData::QueryPrinterInfoById(const std::string &printerId, Printer
     }
 }
 
-void PrintSystemData::UpdatePrinterStatus(const std::string &printerId, PrinterStatus printerStatus)
+void PrintSystemData::UpdatePrinterStatus(const std::string& printerId, PrinterStatus printerStatus)
 {
-    for (auto iter = addedPrinterMap_.begin(); iter != addedPrinterMap_.end(); ++iter) {
-        auto info = iter->second;
-        if (info == nullptr) {
-            continue;
-        }
-        if (printerId == iter->first) {
-            info->printerStatus = printerStatus;
-            PRINT_HILOGI("UpdatePrinterStatus success, status: %{public}d", info->printerStatus);
-            return;
-        }
+    auto iter = addedPrinterMap_.find(printerId);
+    if (iter != addedPrinterMap_.end() && iter->second != nullptr) {
+        iter->second->printerStatus = printerStatus;
+        PRINT_HILOGI("UpdatePrinterStatus success, status: %{public}d", iter->second->printerStatus);
     }
+}
+
+bool PrintSystemData::UpdatePrinterAlias(const std::string& printerId, const std::string& printerAlias)
+{
+    auto iter = addedPrinterMap_.find(printerId);
+    if (iter != addedPrinterMap_.end() && iter->second != nullptr) {
+        if (iter->second->alias != printerAlias) {
+            iter->second->alias = printerAlias;
+            PRINT_HILOGI("UpdatePrinterAlias success, alias: %{public}s", iter->second->alias.c_str());
+            return true;
+        }
+        PRINT_HILOGW("Alias is the same, no update needed.");
+        return false;
+    }
+    PRINT_HILOGE("Unable to find the corresponding printId.");
+    return false;
 }
 
 void PrintSystemData::InsertPrinterInfo(const std::string &printerId, const PrinterInfo &printerInfo)
@@ -264,23 +319,26 @@ void PrintSystemData::InsertPrinterInfo(const std::string &printerId, const Prin
 
 std::shared_ptr<PrinterInfo> PrintSystemData::QueryPrinterInfoByPrinterId(const std::string &printerId)
 {
-    for (auto iter = addedPrinterInfoList_.begin(); iter != addedPrinterInfoList_.end(); ++iter) {
-        if (printerId == iter->first) {
-            return iter->second;
-        }
+    auto iter = addedPrinterInfoList_.find(printerId);
+    if (iter != addedPrinterInfoList_.end()) {
+        return iter->second;
     }
     return nullptr;
 }
 
 void PrintSystemData::GetAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList)
 {
-    for (auto iter = addedPrinterMap_.begin(); iter != addedPrinterMap_.end(); ++iter) {
-        auto info = iter->second;
+    for (auto it = addedPrinterOrderList_.rbegin(); it != addedPrinterOrderList_.rend(); ++it) {
+        auto addedPrinterIter = addedPrinterMap_.find(it->second);
+        if (addedPrinterIter == addedPrinterMap_.end()) {
+            continue;
+        }
+        auto info = addedPrinterIter->second;
         if (info == nullptr) {
             continue;
         }
-        PRINT_HILOGI("GetAddedPrinterListFromSystemData info->name: %{public}s", info->name.c_str());
-        printerNameList.emplace_back(info->name);
+        PRINT_HILOGD("GetAddedPrinterListFromSystemData info->name: %{public}s", info->name.c_str());
+        printerNameList.push_back(info->name);
     }
 }
 
@@ -517,8 +575,8 @@ bool PrintSystemData::GetPrinterCapabilityFromSystemData(
     PrinterCapability cupsPrinterCaps = cupsPrinter.printerCapability;
     std::vector<PrintPageSize> pageSizeList;
     cupsPrinterCaps.GetPageSize(pageSizeList);
-    if (pageSizeList.size() != 0 && cupsPrinterCaps.HasOption()) {
-        PRINT_HILOGI("find printer capability in ststem data");
+    if (pageSizeList.size() != 0) {
+        PRINT_HILOGI("find printer capability in system data");
         printerCapability = cupsPrinterCaps;
         return true;
     } else if (GetPrinterCapabilityFromFile(printerId, printerCapability)) {
@@ -531,10 +589,21 @@ bool PrintSystemData::GetPrinterCapabilityFromFile(std::string printerId, Printe
 {
     PRINT_HILOGI("GetPrinterCapabilityFromFile printerId: %{public}s", printerId.c_str());
     nlohmann::json jsonObject;
-    if (!GetJsonObjectFromFile(jsonObject)) {
+    if (!GetJsonObjectFromFile(jsonObject, PRINTER_LIST_FILE)) {
         PRINT_HILOGW("get json from file fail");
         return false;
     }
+
+    if (!GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability)) {
+        PRINT_HILOGW("get caps from file json fail");
+        return false;
+    }
+    return true;
+}
+
+bool PrintSystemData::GetPrinterCapabilityFromJson(
+    std::string printerId, nlohmann::json &jsonObject, PrinterCapability &printerCapability)
+{
     if (!jsonObject.contains("printer_list") || !jsonObject["printer_list"].is_array()) {
         PRINT_HILOGW("can not find printer_list");
         return false;
@@ -562,7 +631,7 @@ bool PrintSystemData::GetPrinterCapabilityFromFile(std::string printerId, Printe
         }
         std::vector<PrintPageSize> pageSizeList;
         caps.GetPageSize(pageSizeList);
-        if (pageSizeList.size() != 0 && caps.HasOption()) {
+        if (pageSizeList.size() != 0) {
             PRINT_HILOGI("find printer capability in file");
             caps.Dump();
             printerCapability = caps;
@@ -596,6 +665,49 @@ bool PrintSystemData::CheckPrinterInfoJson(nlohmann::json &object, std::string &
     }
     if (!object.contains("capability") || !object["capability"].is_object()) {
         PRINT_HILOGW("can not find capability");
+        return false;
+    }
+    return true;
+}
+
+bool PrintSystemData::CheckPrinterBusy(const std::string &printerId)
+{
+    CupsPrinterInfo cupsPrinter;
+    QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter);
+    if (cupsPrinter.printerStatus == PRINTER_STATUS_BUSY) {
+        PRINT_HILOGI("printer is busy");
+        return true;
+    }
+    return false;
+}
+
+bool PrintSystemData::GetAllPrintUser(std::vector<int32_t> &allPrintUserList)
+{
+    nlohmann::json jsonObject;
+    if (!GetJsonObjectFromFile(jsonObject, PRINT_USER_DATA_FILE)) {
+        PRINT_HILOGW("get json from file fail");
+        return false;
+    }
+    return ParseUserListJsonV1(jsonObject, allPrintUserList);
+}
+
+bool PrintSystemData::ParseUserListJsonV1(nlohmann::json &jsonObject, std::vector<int32_t> &allPrintUserList)
+{
+    if (!jsonObject.contains("print_user_data") || !jsonObject["print_user_data"].is_object()) {
+        PRINT_HILOGE("can not find print_user_data");
+        return false;
+    }
+    for (auto &element : jsonObject["print_user_data"].items()) {
+        std::string userIdStr = element.key();
+        if (userIdStr.empty()) {
+            continue;
+        }
+        int32_t userId = std::atoi(userIdStr.c_str());
+        PRINT_HILOGI("ParseUserListJsonV1 userId: %{public}d", userId);
+        allPrintUserList.push_back(userId);
+    }
+    if (!allPrintUserList.size()) {
+        PRINT_HILOGE("allPrintUserList is empty.");
         return false;
     }
     return true;

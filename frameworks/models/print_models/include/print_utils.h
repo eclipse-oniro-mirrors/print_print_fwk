@@ -51,7 +51,7 @@ public:
     static void ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, nlohmann::json &attrJson);
     static std::string GetBundleNameForUid(const int uid);
     static std::string GetPrintJobId();
-    static std::string GetEventTypeWithToken(int64_t callerTokenId, const std::string &type);
+    static std::string GetEventTypeWithToken(int64_t id, const std::string &type);
     static std::string GetEventType(const std::string &type);
 
 private:

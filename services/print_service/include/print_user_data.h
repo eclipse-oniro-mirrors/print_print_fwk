@@ -18,18 +18,26 @@
 
 #include <string>
 #include <map>
+#include <deque>
+#include <mutex>
 
 #include "printer_info.h"
 #include "iprint_callback.h"
 
 namespace OHOS {
 namespace Print {
+
+using namespace std;
+
 struct JobIdCmp {
     bool operator()(const std::string a, const std::string b) const
     {
         return atoi(a.c_str()) > atoi(b.c_str());
     }
 };
+
+const uint32_t DELETE_DEFAULT_PRINTER = 101;
+const uint32_t DELETE_LAST_USED_PRINTER = 102;
 
 class PrintUserData {
 public:
@@ -41,16 +49,23 @@ public:
         const std::string &jobId, const std::shared_ptr<PrintJob> &printJob, std::string jobOrderId);
     int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printJob);
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs);
-    int32_t SetDefaultPrinter(const std::string &printerId);
+    int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type);
     int32_t SetLastUsedPrinter(const std::string &printerId);
     void ParseUserData();
     void SetUserId(int32_t userId);
     std::string GetLastUsedPrinter();
     std::string GetDefaultPrinter();
+    bool CheckIfUseLastUsedPrinterForDefault();
+    void DeletePrinter(const std::string &printerId);
 
 private:
     bool SetUserDataToFile();
     bool GetFileData(std::string &fileData);
+    void ParseUserDataFromJson(nlohmann::json &jsonObject);
+    bool CheckFileData(std::string &fileData, nlohmann::json &jsonObject);
+    bool ConvertJsonToUsedPrinterList(nlohmann::json &userData);
+    void ConvertUsedPrinterListToJson(nlohmann::json &usedPrinterListJson);
+    void DeletePrinterFromUsedPrinterList(const std::string &printerId);
 
 public:
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
@@ -62,6 +77,9 @@ private:
     std::string defaultPrinterId_ = "";
     std::string lastUsedPrinterId_ = "";
     int32_t userId_ = 0;
+    bool useLastUsedPrinterForDefault_ = true;
+    deque<std::string> usedPrinterList_;
+    std::recursive_mutex userDataMutex_;
 };
 
 }  // namespace Print

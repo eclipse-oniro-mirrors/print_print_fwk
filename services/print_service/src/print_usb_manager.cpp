@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#ifdef IPPOVERUSB_ENABLE
 #include "print_usb_manager.h"
 #include "print_log.h"
 #include "usb_errors.h"
@@ -353,3 +354,4 @@ std::string PrintUsbManager::GetPrinterName(const std::string &name)
 }
 }
 
+#endif // IPPOVERUSB_ENABLE

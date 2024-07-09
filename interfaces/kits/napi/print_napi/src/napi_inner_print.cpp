@@ -422,6 +422,94 @@ napi_value NapiInnerPrint::QueryPrintJobById(napi_env env, napi_callback_info in
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiInnerPrint::GetPrinterPreference(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGI("Enter GetPrinterPreference---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    if (context == nullptr) {
+        PRINT_HILOGE("InnerPrintContext context nullptr");
+        return nullptr;
+    }
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+        napi_valuetype valuetype;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId number is not a string", napi_string_expected);
+        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        PRINT_HILOGD("printerId : %{private}s", printerId.c_str());
+        context->printerId = printerId;
+        return napi_ok;
+    };
+
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_create_string_utf8(env, context->printerPreference.c_str(), NAPI_AUTO_LENGTH, result);
+        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        PRINT_HILOGD("exec----");
+        int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(context->printerId,
+            context->printerPreference);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to Get PrinterPreference");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
+napi_value NapiInnerPrint::SetPrinterPreference(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGI("Enter SetPrinterPreference---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    if (context == nullptr) {
+        PRINT_HILOGE("InnerPrintContext context nullptr");
+        return nullptr;
+    }
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
+        napi_valuetype valuetype;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[1], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerPreference is not a string", napi_string_expected);
+        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
+        std::string printerPreference = NapiPrintUtils::GetStringFromValueUtf8(env, argv[1]);
+        if (printerPreference == "") {
+            PRINT_HILOGE("Parse error!");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        context->printerId = printerId;
+        context->printerPreference = printerPreference;
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(context->printerId,
+            context->printerPreference);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to SetPrinterPreference");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
@@ -580,6 +668,163 @@ napi_value NapiInnerPrint::NotifyPrintService(napi_env env, napi_callback_info i
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiInnerPrint::QueryAddedPrinter(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter QueryAddedPrinter---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        PRINT_HILOGD("ouput enter---->");
+        napi_status status = napi_create_array(env, result);
+        uint32_t index = 0;
+        for (auto printerId : context->allPrinters) {
+            PRINT_HILOGD("PrinterId = %{public}s", printerId.c_str());
+            status = napi_set_element(env, *result, index++, NapiPrintUtils::CreateStringUtf8(env, printerId));
+        }
+        return napi_ok;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        int32_t ret = PrintManagerClient::GetInstance()->QueryAddedPrinter(context->allPrinters);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to query printerList");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
+napi_value NapiInnerPrint::QueryPrinterInfoByPrinterId(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter QueryPrinterInfoByPrinterId---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+        napi_valuetype valuetype;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId number is not a string", napi_string_expected);
+        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
+        context->printerId = printerId;
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        PRINT_HILOGD("ouput enter---->");
+        *result = PrinterInfoHelper::MakeJsObject(env, context->printerInfo);
+        return napi_ok;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        int32_t ret =
+            PrintManagerClient::GetInstance()->QueryPrinterInfoByPrinterId(context->printerId, context->printerInfo);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to query printerInfo from printerList");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
+napi_value NapiInnerPrint::NotifyPrintServiceEvent(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGI("Enter NotifyPrintServiceEvent---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
+        napi_valuetype valuetype;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "jobId is not a string", napi_string_expected);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_number, "event is not a number", napi_number_expected);
+        std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        uint32_t event = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_ONE]);
+        PRINT_HILOGI("jobId: %{public}s, event : %{public}d", jobId.c_str(), event);
+        if (!IsValidApplicationEvent(event)) {
+            PRINT_HILOGE("invalid event");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        context->jobId = jobId;
+        context->applicationEvent = event;
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        int32_t ret =
+            PrintManagerClient::GetInstance()->NotifyPrintServiceEvent(context->jobId, context->applicationEvent);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to NotifyPrintServiceEvent");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
+napi_value NapiInnerPrint::SetDefaultPrinter(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter SetDefaultPrinter---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
+        napi_valuetype valuetype;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
+        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_number, "defaultPrinterType is not a number", napi_number_expected);
+        uint32_t type = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_ONE]);
+        if (!IsValidDefaultPrinterType(type)) {
+            PRINT_HILOGE("invalid defaultPrinterType");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
+        context->printerId = printerId;
+        context->defaultPrinterType = type;
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        int32_t ret =
+            PrintManagerClient::GetInstance()->SetDefaultPrinter(context->printerId, context->defaultPrinterType);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to set default printer");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 bool NapiInnerPrint::IsSupportType(const std::string &type)
 {
     if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
@@ -592,6 +837,15 @@ bool NapiInnerPrint::IsSupportType(const std::string &type)
 bool NapiInnerPrint::IsValidApplicationEvent(uint32_t event)
 {
     if (event >= APPLICATION_CREATED && event <= APPLICATION_CLOSED_FOR_CANCELED) {
+        return true;
+    }
+    return false;
+}
+
+bool NapiInnerPrint::IsValidDefaultPrinterType(uint32_t type)
+{
+    if (type >= DEFAULT_PRINTER_TYPE_SETTED_BY_USER &&
+        type <= DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER) {
         return true;
     }
     return false;

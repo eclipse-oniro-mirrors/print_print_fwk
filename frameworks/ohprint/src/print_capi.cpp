@@ -164,7 +164,7 @@ Print_ErrorCode OH_Print_QueryPrinterList(Print_StringList *printerIdList)
     int32_t ret = PrintManagerClient::GetInstance()->QueryAddedPrinter(printerNameList);
     size_t count = printerNameList.size();
     PRINT_HILOGI("OH_Print_QueryPrinterList ret = %{public}d, count = %{public}zu.", ret, count);
-    if (ret != 0 || count <= 0) {
+    if (ret != 0 || count == 0) {
         return PRINT_ERROR_INVALID_PRINTER;
     }
     printerIdList->list = new (std::nothrow) char *[count];
@@ -237,7 +237,7 @@ Print_ErrorCode OH_Print_LaunchPrinterManager()
 {
     OHOS::AAFwk::AbilityManagerClient::GetInstance()->Connect();
     OHOS::AAFwk::Want want;
-    want.SetElementName("com.ohos.spooler", "PrinterManagerAbility");
+    want.SetElementName("com.huawei.hmos.spooler", "PrinterManagerAbility");
     auto ret = OHOS::AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
     PRINT_HILOGI("StartAbility ret = %{public}d", ret);
     if (ret != 0) {
@@ -250,11 +250,12 @@ Print_ErrorCode OH_Print_LaunchPrinterManager()
 
 int32_t OH_Print_LaunchPrinterPreference(const char* printerName, const char* printerId)
 {
+    std::string id = printerId;
+    std::string name = printerName;
+    std::string preferencesParam = id + "id&name" + name;  // 传参和应用层对齐
     OHOS::AAFwk::AbilityManagerClient::GetInstance()->Connect();
     OHOS::AAFwk::Want want;
-    want.SetElementName(printerId, "com.ohos.spooler", "PreferencesAbility", "");
-    want.SetParam("printerName", printerName);
-    want.SetParam("printerId", printerId);
+    want.SetElementName(preferencesParam, "com.huawei.hmos.spooler", "PreferencesAbility", "");
     std::string thirdAppFlag = "window";
     want.SetParam("thirdApp", thirdAppFlag.c_str());
     auto ret = OHOS::AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
@@ -318,6 +319,20 @@ void OH_Print_ReleasePrinterProperties(Print_PropertyList *propertyList)
 
 Print_ErrorCode OH_Print_UpdatePrinterProperties(const char *printerId, const Print_PropertyList *propertyList)
 {
+    if (printerId == nullptr || propertyList->list == nullptr || propertyList->count <= 0) {
+        PRINT_HILOGW("OH_Print_UpdatePrinterProperties invalid parameter.");
+        return PRINT_ERROR_INVALID_PRINTER;
+    }
+    nlohmann::json settingJson;
+    for (uint32_t i = 0; i < propertyList->count; i++) {
+        settingJson[propertyList->list[i].key] = propertyList->list[i].value;
+    }
+    PRINT_HILOGW("OH_Print_UpdatePrinterProperties setting : %{public}s.", settingJson.dump().c_str());
+    int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(printerId, settingJson.dump());
+    if (ret != 0) {
+        PRINT_HILOGW("SetPrinterPreference fail");
+        return PRINT_ERROR_INVALID_PRINTER;
+    }
     return PRINT_ERROR_NONE;
 }
 

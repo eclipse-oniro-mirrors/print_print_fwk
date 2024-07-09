@@ -25,7 +25,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <random>
-#include <ctime>
 
 namespace OHOS::Print {
 
@@ -99,9 +98,9 @@ std::string PrintUtils::GetTaskEventId(const std::string &taskId, const std::str
     return type + TASK_EVENT_DELIMITER + taskId;
 }
 
-std::string PrintUtils::GetEventTypeWithToken(int64_t callerTokenId, const std::string &type)
+std::string PrintUtils::GetEventTypeWithToken(int64_t id, const std::string &type)
 {
-    std::string eventType = std::to_string(callerTokenId) + TASK_EVENT_DELIMITER + type;
+    std::string eventType = std::to_string(id) + TASK_EVENT_DELIMITER + type;
     PRINT_HILOGD("eventType: %{public}s", eventType.c_str());
     return eventType;
 }
@@ -287,11 +286,7 @@ std::string PrintUtils::GetPrintJobId()
     ss << timestamp;
 
     std::random_device rd;
-    std::time_t current_time = time(NULL);
-    if (current_time == -1) {
-        return "";
-    }
-    std::mt19937 gen((unsigned int)current_time);
+    std::mt19937 gen((unsigned int)time(NULL));
     std::uniform_int_distribution<> dis(MINIMUN_RANDOM_NUMBER_100, MAXIMUN_RANDOM_NUMBER_999);
     int32_t randomNumber = dis(gen);
     std::string jobId = ss.str() + "_" + std::to_string(randomNumber);

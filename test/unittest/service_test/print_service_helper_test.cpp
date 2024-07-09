@@ -23,8 +23,8 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Print {
 
-static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
-static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
+static const std::string SPOOLER_BUNDLE_NAME = "com.huawei.hmos.spooler";
+static const std::string SPOOLER_PACKAGE_NAME = "com.huawei.hmos.spooler";
 static const std::string SPOOLER_STATUS_BAR_ABILITY_NAME = "PluginPrintIconExtAbility";
 static const std::string CALLER_PKG_NAME = "caller.pkgName";
 

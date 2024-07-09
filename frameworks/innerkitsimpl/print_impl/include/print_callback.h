@@ -51,7 +51,7 @@ class PrintCallback : public PrintCallbackStub {
 public:
     PrintCallback(napi_env env, napi_ref ref);
     explicit PrintCallback(PrintDocumentAdapter *adapter); // This interface is invoked by other domains.
-    PrintCallback(){};
+    PrintCallback(){}; // This interface is invoked by ndk C++ Object
     ~PrintCallback();
     bool OnCallback() override;
     bool OnCallback(uint32_t state, const PrinterInfo &info) override;

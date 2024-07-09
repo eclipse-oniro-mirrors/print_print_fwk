@@ -520,7 +520,8 @@ bool PrintServiceStub::OnSetDefaultPrinter(MessageParcel &data, MessageParcel &r
 {
     PRINT_HILOGD("PrintServiceStub::OnSetDefaultPrinter in");
     std::string printerId = data.ReadString();
-    int32_t ret = SetDefaultPrinter(printerId);
+    uint32_t type = data.ReadUint32();
+    int32_t ret = SetDefaultPrinter(printerId, type);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnSetDefaultPrinter out");
     return ret == E_PRINT_NONE;
@@ -685,7 +686,9 @@ bool PrintServiceStub::OnStartGetPrintFile(MessageParcel &data, MessageParcel &r
     std::string jobId = data.ReadString();
     auto attrs = PrintAttributes::Unmarshalling(data);
     uint32_t fd = static_cast<uint32_t>(data.ReadFileDescriptor());
-    ret = StartGetPrintFile(jobId, *attrs, fd);
+    if (attrs != nullptr) {
+        ret = StartGetPrintFile(jobId, *attrs, fd);
+    }
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnStartGetPrintFile out");
     return ret == E_PRINT_NONE;

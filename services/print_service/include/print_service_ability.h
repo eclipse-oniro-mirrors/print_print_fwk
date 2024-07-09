@@ -98,11 +98,11 @@ public:
     int32_t StartNativePrintJob(PrintJob &printJob) override;
     int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState);
     void CancelUserPrintJobs(const int32_t userId);
-    void SwitchUser(const int32_t userId);
+    void NotifyCurrentUserChanged(const int32_t userId);
     int32_t NotifyPrintServiceEvent(std::string &jobId, uint32_t event) override;
     int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference) override;
     int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference) override;
-    int32_t SetDefaultPrinter(const std::string &printerId) override;
+    int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) override;
     int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake) override;
 
@@ -126,7 +126,6 @@ private:
     void SendExtensionEvent(const std::string &extensionId, const std::string &extInfo);
     bool CheckPermission(const std::string &permissionName);
     void SendQueuePrintJob(const std::string &printerId);
-    void BuildFDParam(const std::vector<uint32_t> &fdList, AAFwk::Want &want);
     void NotifyAppJobQueueChanged(const std::string &applyResult);
     std::shared_ptr<PrinterInfo> getPrinterInfo(const std::string printerId);
     bool isEprint(const std::string &printerId);
@@ -169,10 +168,16 @@ private:
     std::string StandardizePrinterId(const std::string &printerId);
     bool CheckIsDefaultPrinter(const std::string &printerId);
     bool CheckIsLastUsedPrinter(const std::string &printerId);
-    void DeletePrinterFromSystemData(const std::string &printerName);
     void SetLastUsedPrinter(const std::string &printerId);
     int32_t DestroyExtension();
     void DeletePrinterFromUserData(const std::string &printerId);
+    std::shared_ptr<PrintUserData> GetUserDataByUserId(int32_t userId);
+    PrintJobState DetermineUserJobStatus(const std::map<std::string, std::shared_ptr<PrintJob>> &jobList);
+    void NotifyAppDeletePrinterWithDefaultPrinter(const std::string &printerId);
+    void ChangeDefaultPrinterForDelete(std::shared_ptr<PrintUserData> &userData, const std::string &printerId);
+    bool UpdatePrinterCapability(const std::string &printerId, PrinterInfo &info);
+    bool UpdatePrinterSystemData(const std::string &printerId, PrinterInfo &info);
+    uint32_t GetListeningState(const uint32_t subState);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

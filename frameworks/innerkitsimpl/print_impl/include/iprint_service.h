@@ -78,7 +78,7 @@ public:
     virtual int32_t NotifyPrintServiceEvent(std::string &jobId, uint32_t event) = 0;
     virtual int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference) = 0;
     virtual int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference) = 0;
-    virtual int32_t SetDefaultPrinter(const std::string &printerId) = 0;
+    virtual int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) = 0;
     virtual int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake) = 0;
 };

@@ -26,7 +26,7 @@ namespace OHOS::Print {
             HW_PRINT_SPOOLER,
             name,
             HiSysEvent::EventType::BEHAVIOR,
-            "PACKAGE_NAME", "com.ohos.spooler",
+            "PACKAGE_NAME", "com.huawei.hmos.spooler",
             "PROCESS_NAME", "hwPrintSpooler",
             "BEHAVIOR_CODE", behaviorCode,
             "MSG", msg);
@@ -38,7 +38,7 @@ namespace OHOS::Print {
             HW_PRINT_SPOOLER,
             name,
             HiSysEvent::EventType::FAULT,
-            "PACKAGE_NAME", "com.ohos.spooler",
+            "PACKAGE_NAME", "com.huawei.hmos.spooler",
             "PROCESS_NAME", "hwPrintSpooler",
             "FAULT_CODE", faultCode,
             "SCENE", scene,

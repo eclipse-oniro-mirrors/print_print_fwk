@@ -47,10 +47,17 @@ public:
     static napi_value Off(napi_env env, napi_callback_info info);
     static napi_value StartGetPrintFile(napi_env env, napi_callback_info info);
     static napi_value NotifyPrintService(napi_env env, napi_callback_info info);
+    static napi_value QueryAddedPrinter(napi_env env, napi_callback_info info);
+    static napi_value QueryPrinterInfoByPrinterId(napi_env env, napi_callback_info info);
+    static napi_value NotifyPrintServiceEvent(napi_env env, napi_callback_info info);
+    static napi_value GetPrinterPreference(napi_env env, napi_callback_info info);
+    static napi_value SetPrinterPreference(napi_env env, napi_callback_info info);
+    static napi_value SetDefaultPrinter(napi_env env, napi_callback_info info);
 
 private:
     static bool IsSupportType(const std::string& type);
     static bool IsValidApplicationEvent(uint32_t event);
+    static bool IsValidDefaultPrinterType(uint32_t type);
 
 private:
     struct InnerPrintContext : public PrintAsyncCall::Context {
@@ -74,6 +81,7 @@ private:
         std::vector<std::string> extensionList;
         uint32_t applicationEvent = -1;
         std::string printerPreference;
+        uint32_t defaultPrinterType = -1;
 
         InnerPrintContext() : Context(nullptr, nullptr) {};
         InnerPrintContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};

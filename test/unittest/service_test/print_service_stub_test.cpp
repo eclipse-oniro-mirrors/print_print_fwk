@@ -1035,7 +1035,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0042, TestSize.Level1)
     uint32_t code = static_cast<uint32_t>(CMD_ADDPRINTERTOCUPS);
 
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
-    std::string printerName = "DIRECT-HW_PixLab_V1-1620";
+    std::string printerName = "DIRECT-HUAWEI_PixLab_V1-1620";
     std::string printerMake = "PixLab V1 - IPP Everywhere";
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
     EXPECT_TRUE(data.WriteString(printerUri));
@@ -1056,7 +1056,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0043, TestSize.Level1)
     uint32_t code = static_cast<uint32_t>(CMD_QUERYPRINTERCAPABILITYBYURI);
 
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
-    std::string printerId = "com.ohos.spooler:p2p://DIRECT-HW_PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
     EXPECT_TRUE(data.WriteString(printerUri));
@@ -1197,7 +1197,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0051, TestSize.Level1)
     MessageOption option(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(CMD_QUERYPRINTERINFOBYPRINTERID);
 
-    std::string printerId = "com.ohos.spooler:p2p://DIRECT-HW_PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
     EXPECT_TRUE(data.WriteString(printerId));
 
@@ -1229,7 +1229,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0053, TestSize.Level1)
     MessageOption option(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(CMD_QUERYPRINTERPROPERTIES);
 
-    std::string printerId = "com.ohos.spooler:p2p://DIRECT-HW_PixLab_V1-1620";
+    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
     std::vector<std::string> keyList;
     keyList.resize(1001);
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));

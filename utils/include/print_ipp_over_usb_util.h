@@ -15,6 +15,7 @@
  
 #ifndef PRINT_IPP_OVER_USB__UTIL_H
 #define PRINT_IPP_OVER_USB__UTIL_H
+#ifdef IPPOVERUSB_ENABLE
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -98,8 +99,7 @@ inline bool PrintIppOverUsbUtil::IsEndWithHttpResponse(uint8_t *data, size_t len
     }
 }
 
-void PrintIppOverUsbUtil::MakeHeader(size_t startLine, size_t endline, const uint8_t *data,
-    httplib::Response &httpResponse)
+inline void PrintIppOverUsbUtil::MakeHeader(size_t startLine, size_t endline, const uint8_t *data, httplib::Response &httpResponse)
 {
     // 提取key和value
     size_t theSplitIndex = startLine; // ":" 所在的位置
@@ -129,8 +129,7 @@ inline void PrintIppOverUsbUtil::DumpRespCode(const uint8_t *data, size_t dataLe
     }
 }
 
-int PrintIppOverUsbUtil::ConstructHttpResponse(const uint8_t *readBuf, const size_t length,
-    httplib::Response &httpResponse)
+inline int PrintIppOverUsbUtil::ConstructHttpResponse(const uint8_t *readBuf, const size_t length, httplib::Response &httpResponse)
 {
     PRINT_HILOGD("start construct_http_response length :%{public}lu", length);
     if (length <= HTTP_COMMON_CONST_VALUE_6) {
@@ -181,4 +180,5 @@ int PrintIppOverUsbUtil::ConstructHttpResponse(const uint8_t *readBuf, const siz
     }
 }
 }
+#endif // IPPOVERUSB_ENABLE
 #endif // PRINT_IPP_OVER_USB__UTIL_H

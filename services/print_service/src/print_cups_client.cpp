@@ -346,6 +346,9 @@ void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std
 void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
     std::vector<std::string> &ppds)
 {
+    if (response == nullptr) {
+        return;
+    }
     for (ipp_attribute_t *attr = response->attrs; attr != NULL; attr = attr->next) {
         while (attr != NULL && attr->group_tag != IPP_TAG_PRINTER)
             attr = attr->next;
@@ -549,8 +552,10 @@ void PrintCupsClient::StartNextJob()
     }
     if (currentJob_ != nullptr) {
         JobParameters *lastJob = jobQueue_.back();
-        PrintServiceAbility::GetInstance()->UpdatePrintJobState(lastJob->serviceJobId, PRINT_JOB_QUEUED,
-            PRINT_JOB_BLOCKED_UNKNOWN);
+        if (lastJob != nullptr) {
+            PrintServiceAbility::GetInstance()->UpdatePrintJobState(lastJob->serviceJobId, PRINT_JOB_QUEUED,
+                PRINT_JOB_BLOCKED_UNKNOWN);
+        }
         PRINT_HILOGE("a active job is running, job len: %{public}zd", jobQueue_.size());
         return;
     }
@@ -563,7 +568,7 @@ void PrintCupsClient::StartNextJob()
         return;
     }
     CallbackFunc callback = [this]() { JobCompleteCallback(); };
-    std::thread StartPrintThread(StartCupsJob, currentJob_, callback);
+    std::thread StartPrintThread([this, &callback] {this->StartCupsJob(this->currentJob_, callback);});
     StartPrintThread.detach();
 }
 
@@ -923,7 +928,9 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
 
 void PrintCupsClient::UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState)
 {
-    jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, state, subState);
+    if (jobParams != nullptr && jobParams->serviceAbility != nullptr) {
+        jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, state, subState);
+    }
 }
 
 void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callback)
@@ -1256,6 +1263,9 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
 
 void PrintCupsClient::DumpJobParameters(JobParameters* jobParams)
 {
+    if (jobParams == nullptr) {
+        return;
+    }
     PRINT_HILOGD("jobParams->serviceJobId: %{public}s", jobParams->serviceJobId.c_str());
     PRINT_HILOGD("jobParams->borderless: %{public}d", jobParams->borderless);
     PRINT_HILOGD("jobParams->numCopies: %{public}d", jobParams->numCopies);

@@ -64,7 +64,7 @@ void ScanUsbManager::RefreshUsbDevice()
         SCAN_HILOGE("RefreshDeviceList GetDevices failed with ret = %{public}d.", ret);
         return;
     }
-    SCAN_HILOGI("RefreshDeviceList DeviceList size = %{public}u.", devlist.size());
+    SCAN_HILOGI("RefreshDeviceList DeviceList size = %{public}zu.", devlist.size());
     for (auto dev : devlist) {
         SCAN_HILOGI("RefreshDeviceList dev.GetName() %{public}s ", dev.GetName().c_str());
         std::string serialNumber = GetSerialNumber(dev);
