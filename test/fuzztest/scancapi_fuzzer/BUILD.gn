@@ -16,17 +16,16 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
-##############################fuzztest##########################################
-ohos_fuzztest("PrintServiceAbilityFuzzTest") {
+ohos_fuzztest("ScanCapiFuzzTest") {
   module_out_path = fuzz_test_output_path
 
-  fuzz_config_file = "${print_path}/test/fuzztest/printserviceability_fuzzer"
+  fuzz_config_file = "${print_path}/test/fuzztest/scanhelper_fuzzer"
 
   include_dirs = [
-    "mock",
-    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/ohscan/include",
+    "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
+    "${print_path}/frameworks/helper/scan_helper/include",
     "${print_utils_path}/include",
-    "//vendor/open_source/cpp-httplib",
   ]
 
   cflags = [
@@ -36,24 +35,9 @@ ohos_fuzztest("PrintServiceAbilityFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
-  cflags_cc = []
-
   deps = [
-    "${print_path}/etc/init:printservice.rc",
-    "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
-    "${print_path}/frameworks/kits/extension:print_extension_framework",
-    "${print_path}/frameworks/kits/extension:print_extension_module",
-    "${print_path}/frameworks/models/print_models:print_models",
-    "${print_path}/interfaces/kits/jsnapi/print_extension:printextensionability_napi",
-    "${print_path}/interfaces/kits/jsnapi/print_extensionctx:printextensioncontext_napi",
-    "${print_path}/interfaces/kits/napi/print_napi:print_napi",
-    "${print_path}/profile:print_sa_profiles",
-    "${print_path}/services/print_service:print_service",
-  ]
-
-  sources = [
-    "printserviceability_fuzzer.cpp",
-    "printserviceability_mock_permission.cpp",
+    "${print_path}/frameworks/helper/scan_helper:scan_helper",
+    "${print_path}/frameworks/ohscan/:ohscan",
   ]
 
   external_deps = [
@@ -63,14 +47,10 @@ ohos_fuzztest("PrintServiceAbilityFuzzTest") {
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "access_token:libaccesstoken_sdk",
-    "access_token:libaccesstoken_sdk",
-    "access_token:libnativetoken",
-    "access_token:libtoken_setproc",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "drivers_interface_usb:libusb_proxy_1.0",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
@@ -80,18 +60,7 @@ ohos_fuzztest("PrintServiceAbilityFuzzTest") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "usb_manager:usbsrv_client",
-    "wifi:wifi_sdk",
   ]
-
-  if (cups_enable) {
-    cflags_cc += [ "-DCUPS_ENABLE" ]
-    external_deps += [
-      "cJSON:cjson",
-      "cups:cups",
-      "cups-filters:cupsfilters",
-    ]
-  }
 
   if (security_guard_enabled) {
     external_deps += [
@@ -99,15 +68,15 @@ ohos_fuzztest("PrintServiceAbilityFuzzTest") {
       "time_service:time_client",
     ]
   }
+
+  sources = [ "scancapi_fuzzer.cpp" ]
 }
 
-###############################################################################
 group("fuzztest") {
   testonly = true
   deps = []
   deps += [
     # deps file
-    ":PrintServiceAbilityFuzzTest",
+    ":ScanCapiFuzzTest",
   ]
 }
-###############################################################################

@@ -106,10 +106,67 @@ ohos_unittest("print_service_test") {
   ]
 }
 
+ohos_unittest("scan_service_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "mock",
+    "../fwk_inner_napi_test/mock",
+    "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
+    "${print_path}/interfaces/kits/napi/scan_napi/include",
+    "${print_path}/services/scan_service/include",
+    "${print_utils_path}/include",
+    "//third_party/node/src",
+  ]
+
+  sources = [
+    "scan_callback_proxy_test.cpp",
+    "scan_mdns_service_test.cpp",
+    "scan_service_ability_test.cpp",
+    "scan_service_stub_test.cpp",
+  ]
+
+  deps = [
+    "${print_path}/etc/init:scanservice.rc",
+    "${print_path}/frameworks/innerkitsimpl/scan_impl:scan_client",
+    "${print_path}/interfaces/kits/napi/scan_napi:scan_napi",
+    "${print_path}/profile:scan_sa_profiles",
+    "${print_path}/services/scan_service:scan_service",
+    "//third_party/googletest:gmock_main",
+    "//third_party/jsoncpp:jsoncpp",
+    "//third_party/zlib:libz",
+  ]
+
+  if (sane_enable) {
+    include_dirs += [ "//vendor/open_source/backends/include" ]
+    deps += [ "//vendor/open_source/backends:third_sane" ]
+    cflags_cc = [ "-DSANE_ENABLE" ]
+  }
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "napi:ace_napi",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "usb_manager:usbsrv_client",
+  ]
+}
+
 group("unittest") {
   testonly = true
 
   deps = []
 
   deps += [ ":print_service_test" ]
+  deps += [ ":scan_service_test" ]
 }
