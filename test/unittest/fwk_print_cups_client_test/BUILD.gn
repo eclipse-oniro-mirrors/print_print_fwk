@@ -23,7 +23,7 @@ ohos_unittest("fwk_print_cups_client_test") {
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/interfaces/kits/napi/print_napi/include",
     "${print_path}/services/print_service/include",
-    "//third_party/cpp-httplib",
+    "//vendor/open_source/cpp-httplib",
     "${print_utils_path}/include",
     "//third_party/node/src",
   ]

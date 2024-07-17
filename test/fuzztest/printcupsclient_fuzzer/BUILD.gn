@@ -25,7 +25,7 @@ ohos_fuzztest("PrintCupsClientFuzzTest") {
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_utils_path}/include",
-    "//third_party/cpp-httplib",
+    "//vendor/open_source/cpp-httplib",
   ]
 
   cflags = [
