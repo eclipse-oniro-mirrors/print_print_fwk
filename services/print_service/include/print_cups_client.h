@@ -71,7 +71,8 @@ struct MediaSize {
     const float HeightInInches;
 };
 
-class PrintCupsClient final : public DelayedSingleton<PrintCupsClient> {
+class PrintCupsClient final : public DelayedSingleton<PrintCupsClient>,
+    public std::enable_shared_from_this<PrintCupsClient> {
 public:
     PrintCupsClient();
     ~PrintCupsClient();

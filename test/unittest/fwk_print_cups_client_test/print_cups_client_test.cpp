@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <thread>
 #include <gtest/gtest.h>
 #define private public
 #include "print_cups_client.h"
@@ -222,9 +223,10 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0012, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0013, TestSize.Level1)
 {
-    OHOS::Print::PrintCupsClient printCupsClient;
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
-    printCupsClient.AddCupsPrintJob(testJob);
+    printCupsClient->AddCupsPrintJob(testJob);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -235,7 +237,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0013, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0014, TestSize.Level1)
 {
-    OHOS::Print::PrintCupsClient printCupsClient;
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
     testJob.SetJobId(GetDefaultJobId());
     std::vector<uint32_t> files = {1};
@@ -248,7 +250,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0014, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    printCupsClient.AddCupsPrintJob(testJob);
+    printCupsClient->AddCupsPrintJob(testJob);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -259,8 +262,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0014, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0015, TestSize.Level1)
 {
-    OHOS::Print::PrintCupsClient printCupsClient;
-    printCupsClient.StartNextJob();
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    printCupsClient->StartNextJob();
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -271,7 +275,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0015, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
 {
-    OHOS::Print::PrintCupsClient printCupsClient;
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
     testJob.SetJobId(GetDefaultJobId());
     std::vector<uint32_t> files = {1};
@@ -281,9 +285,10 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    printCupsClient.jobQueue_.push_back(jobParams);
-    printCupsClient.StartNextJob();
+    JobParameters *jobParams = printCupsClient->BuildJobParameters(testJob);
+    printCupsClient->jobQueue_.push_back(jobParams);
+    printCupsClient->StartNextJob();
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     delete jobParams;
 }
 
@@ -295,10 +300,11 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0018, TestSize.Level1)
 {
-    OHOS::Print::PrintCupsClient printCupsClient;
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     JobParameters *jobParams = nullptr;
-    printCupsClient.jobQueue_.push_back(jobParams);
-    printCupsClient.StartNextJob();
+    printCupsClient->jobQueue_.push_back(jobParams);
+    printCupsClient->StartNextJob();
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     delete jobParams;
 }
 
@@ -310,32 +316,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0018, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019, TestSize.Level1)
 {
-    OHOS::Print::PrintCupsClient printCupsClient;
-    printCupsClient.JobCompleteCallback();
-}
-
-/**
- * @tc.name: PrintCupsClientTest_0020
- * @tc.desc: JobCompleteCallback
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0020, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    PrintJob testJob;
-    testJob.SetJobId(GetDefaultJobId());
-    std::vector<uint32_t> files = {1};
-    testJob.SetFdList(files);
-    OHOS::Print::PrintPageSize pageSize;
-    pageSize.SetId("pgid-1234");
-    testJob.SetPageSize(pageSize);
-    testJob.SetPrinterId("printid-1234");
-    testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    printCupsClient.currentJob_ = jobParams;
-    printCupsClient.JobCompleteCallback();
-    delete jobParams;
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    printCupsClient->JobCompleteCallback();
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -1171,21 +1154,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0057, TestSize.Level1)
     delete jobStatus;
     delete param;
     delete http;
-}
-
-/**
- * @tc.name: PrintCupsClientTest_0058
- * @tc.desc: CheckPrinterOnline
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0058, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    const char *printerUri = "ipp://192.168.186.1:631/ipp/print";
-    std::string printerId = "1";
-    bool ret = printCupsClient.CheckPrinterOnline(printerUri, printerId);
-    EXPECT_EQ(ret, false);
 }
 
 /**

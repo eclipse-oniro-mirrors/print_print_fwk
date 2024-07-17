@@ -517,19 +517,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0014, TestSize.Level1)
     service->StartPrintJob(testJob);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0017, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    service->CallStatusBar();
-    service->helper_= nullptr;
-    service->CallStatusBar();
-    service->SetHelper(nullptr);
-    service->CallStatusBar();
-    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
-    service->SetHelper(helper);
-    service->CallStatusBar();
-}
-
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0018, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);

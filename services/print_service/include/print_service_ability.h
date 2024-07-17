@@ -178,6 +178,7 @@ private:
     bool UpdatePrinterCapability(const std::string &printerId, PrinterInfo &info);
     bool UpdatePrinterSystemData(const std::string &printerId, PrinterInfo &info);
     uint32_t GetListeningState(const uint32_t subState);
+    std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

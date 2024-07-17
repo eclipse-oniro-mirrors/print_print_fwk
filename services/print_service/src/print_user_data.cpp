@@ -193,7 +193,7 @@ void PrintUserData::DeletePrinter(const std::string &printerId)
 {
     DeletePrinterFromUsedPrinterList(printerId);
     if (!strcmp(lastUsedPrinterId_.c_str(), printerId.c_str())) {
-        if (lastUsedPrinterId_.size()) {
+        if (usedPrinterList_.size()) {
             auto it = usedPrinterList_.begin();
             lastUsedPrinterId_ = *it;
             PRINT_HILOGI(

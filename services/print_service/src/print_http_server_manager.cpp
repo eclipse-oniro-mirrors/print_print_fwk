@@ -62,6 +62,10 @@ void PrintHttpServerManager::StartServer(std::shared_ptr<httplib::Server> svr,
     std::shared_ptr<PrintHttpRequestProcess> process)
 {
     PRINT_HILOGD("startServer");
+    if (svr == nullptr) {
+        PRINT_HILOGE("svr is null");
+        return;
+    }
     svr->set_payload_max_length(HTTP_SERVER_MAX_LENGTH);
     PRINT_HILOGD("post /");
     svr->Post("^/.*", [process](const httplib::Request &req, httplib::Response &res,
@@ -103,7 +107,7 @@ bool PrintHttpServerManager::CreateServer(std::string printerName, int32_t &port
     printHttpProcessMap[printerName] = newProcess;
     newProcess->SetDeviceName(printerName);
 
-    std::thread tServer = std::thread([this, &printerName] {
+    std::thread tServer = std::thread([this, printerName] {
         this->StartServer(this->printHttpServerMap[printerName], this->printHttpProcessMap[printerName]);
     });
     tServer.detach();

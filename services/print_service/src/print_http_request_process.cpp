@@ -124,7 +124,7 @@ void PrintHttpRequestProcess::DumpRespIdCode(const std::vector<uint8_t> &readTem
 bool PrintHttpRequestProcess::CheckLineEnd(std::vector<uint8_t> &readTempBuffer, size_t index)
 {
     size_t readSize = readTempBuffer.size();
-    if ((index + HTTP_COMMON_CONST_VALUE_15) < readSize && readTempBuffer[index] == HTTP_SPLIT_R_CODE &&
+    if ((index + HTTP_COMMON_CONST_VALUE_3) < readSize && readTempBuffer[index] == HTTP_SPLIT_R_CODE &&
         readTempBuffer[index + INDEX_1] == HTTP_SPLIT_N_CODE && readTempBuffer[index + INDEX_2] == HTTP_SPLIT_R_CODE &&
         readTempBuffer[index + INDEX_3] == HTTP_SPLIT_N_CODE) {
         return true;
@@ -177,7 +177,6 @@ bool PrintHttpRequestProcess::ProcessDataFromDevice(Operation operation)
         for (size_t index = reqindex; index < readSize; index++) {
             bool findLineEnd = (!findRequestId && CheckLineEnd(readTempBuffer, index));
             if (findLineEnd) {
-                requestId = CalculateRequestId(readTempBuffer, index, operation);
                 fileDataBeginIndex = CalculateFileDataBeginIndex(index, operation);
                 findRequestId = true;
             }
@@ -187,8 +186,11 @@ bool PrintHttpRequestProcess::ProcessDataFromDevice(Operation operation)
             tmVector.push_back(readTempBuffer[index]);
         }
         // 一次读取的报文长度小于 Content-Length字段的值则需再读取一次
-        if ((readSize - fileDataBeginIndex) < contentLength) {
+        while (tmVector.size() < readSize + contentLength) {
             GetAttrAgain(operation, tmVector);
+        }
+        if (fileDataBeginIndex > HTTP_COMMON_CONST_VALUE_4) {
+            requestId = CalculateRequestId(tmVector, fileDataBeginIndex - HTTP_COMMON_CONST_VALUE_4, operation);
         }
         PRINT_HILOGD("operation:%{public}s requestId: %{public}lu ", PrintOperation(operation).c_str(), requestId);
         RecordBufByOperation(operation, requestId, tmVector);
