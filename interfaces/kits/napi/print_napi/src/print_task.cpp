@@ -297,14 +297,14 @@ uint32_t PrintTask::StartUIExtensionAbility(OHOS::AAFwk::Want &want, std::shared
         return E_PRINT_SERVER_FAILURE;
     }
     OHOS::Ace::ModalUIExtensionCallbacks extensionCallbacks = {
-        std::bind(&PrintModalUICallback::OnRelease, callback, std::placeholders::_1),
-        std::bind(&PrintModalUICallback::OnResultForModal, callback, std::placeholders::_1, std::placeholders::_2),
-        std::bind(&PrintModalUICallback::OnReceive, callback, std::placeholders::_1),
-        std::bind(&PrintModalUICallback::OnError,
-            callback,
-            std::placeholders::_1,
-            std::placeholders::_2,
-            std::placeholders::_3),
+        [&callback](int32_t releaseCode) { callback->OnRelease(releaseCode); },
+        [&callback](int32_t resultCode, const OHOS::AAFwk::Want& result) {
+            callback->OnResultForModal(resultCode, result);
+        },
+        [&callback](const OHOS::AAFwk::WantParams& request) { callback->OnReceive(request); },
+        [&callback](int32_t code, const std::string& name, const std::string& message) {
+            callback->OnError(code, name, message);
+        }
     };
 
     OHOS::Ace::ModalUIExtensionConfig config;

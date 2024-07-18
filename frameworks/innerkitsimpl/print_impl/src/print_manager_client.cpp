@@ -556,12 +556,14 @@ int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IP
         auto printUiContent = static_cast<OHOS::Ace::UIContent *>(uiContent);
         auto callback = std::make_shared<PrintInnerkitModalUICallback>(printUiContent);
         OHOS::Ace::ModalUIExtensionCallbacks extensionCallbacks = {
-            std::bind(&PrintInnerkitModalUICallback::OnRelease, callback, std::placeholders::_1),
-            std::bind(&PrintInnerkitModalUICallback::OnResultForModal,
-                callback, std::placeholders::_1, std::placeholders::_2),
-            std::bind(&PrintInnerkitModalUICallback::OnReceive, callback, std::placeholders::_1),
-            std::bind(&PrintInnerkitModalUICallback::OnError,
-                callback, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
+            [&callback](int32_t releaseCode) { callback->OnRelease(releaseCode); },
+            [&callback](int32_t resultCode, const OHOS::AAFwk::Want& result) {
+                callback->OnResultForModal(resultCode, result);
+            },
+            [&callback](const OHOS::AAFwk::WantParams& request) { callback->OnReceive(request); },
+            [&callback](int32_t code, const std::string& name, const std::string& message) {
+                callback->OnError(code, name, message);
+            }
         };
         int32_t sessionId = printUiContent->CreateModalUIExtension(want, extensionCallbacks, config);
         PRINT_HILOGI("StartUIExtensionAbility sessionId %{public}d", sessionId);
