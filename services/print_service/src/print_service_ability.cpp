@@ -676,29 +676,23 @@ int32_t PrintServiceAbility::QueryPrinterProperties(const std::string &printerId
         return E_PRINT_NO_PERMISSION;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-
-    PrinterPreference printerPreference;
-    auto iter = printerIdAndPreferenceMap_.find(printerId);
-    if (iter != printerIdAndPreferenceMap_.end()) {
-        std::string savePrinterPreference = printerIdAndPreferenceMap_[printerId];
-        if (!json::accept(savePrinterPreference)) {
-            PRINT_HILOGW("no printerPreference");
-            return E_PRINT_INVALID_PRINTER;
-        }
-        nlohmann::json AttrsJson = json::parse(savePrinterPreference);
-        printerPreference = PrinterPreference::BuildPrinterPreferenceFromJson(AttrsJson);
+    PRINT_HILOGI("printerId %{public}s", printerId.c_str());
+    PrinterInfo printerInfo;
+    uint32_t ret = QueryPrinterInfoByPrinterId(printerId, printerInfo);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGW("no printerInfo");
+        return E_PRINT_INVALID_PRINTER;
     }
-    
-    PRINT_HILOGI("printerPreference pagesizeId:%{public}s", printerPreference.setting.pagesizeId.c_str());
+    PRINT_HILOGD("printerInfo %{public}s", printerInfo.GetPrinterName.c_str());
     for (auto &key : keyList) {
-        if (key == "pagesizeId") {
-            valueList.emplace_back(key + "&" + printerPreference.setting.pagesizeId);
-        } else if (key == "orientation") {
-            valueList.emplace_back(key + "&" + printerPreference.setting.orientation);
-        } else if (key == "duplex") {
-            valueList.emplace_back(key + "&" + printerPreference.setting.duplex);
-        } else if (key == "quality") {
-            valueList.emplace_back(key + "&" + printerPreference.setting.quality);
+        PRINT_HILOGD("QueryPrinterProperties key %{public}s", key.c_str());
+        if (key == "printerPreference") {
+            std::string printerPreference;
+            if (GetPrinterPreference(printerId, printerPreference) == E_PRINT_NONE) {
+                nlohmann::json preferenceJson = json::parse(printerPreference);
+                valueList.emplace_back(preferenceJson.at("setting").dump());
+                PRINT_HILOGD("getPrinterPreference success");
+            }
         }
     }
     return E_PRINT_NONE;
