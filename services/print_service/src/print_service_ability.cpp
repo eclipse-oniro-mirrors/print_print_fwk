@@ -683,7 +683,7 @@ int32_t PrintServiceAbility::QueryPrinterProperties(const std::string &printerId
         PRINT_HILOGW("no printerInfo");
         return E_PRINT_INVALID_PRINTER;
     }
-    PRINT_HILOGD("printerInfo %{public}s", printerInfo.GetPrinterName.c_str());
+    PRINT_HILOGD("printerInfo %{public}s", printerInfo.GetPrinterName().c_str());
     for (auto &key : keyList) {
         PRINT_HILOGD("QueryPrinterProperties key %{public}s", key.c_str());
         if (key == "printerPreference") {
