@@ -138,7 +138,6 @@ private:
     static JsPrintExtension *jsExtension_;
     static std::mutex mtx;
     std::string extensionId_;
-    bool hasDestroyed_;
 };
 } // namespace AbilityRuntime
 } // namespace OHOS

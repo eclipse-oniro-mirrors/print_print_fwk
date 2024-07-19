@@ -63,6 +63,12 @@ public:
      * @return The PrintExtension instance.
      */
     static PrintExtension *Create(const std::unique_ptr<Runtime> &runtime);
+
+    /**
+     * @brief Stop Extension.
+     * 
+     */
+    virtual void OnStop() override;
 };
 } // namespace AbilityRuntime
 } // namespace OHOS

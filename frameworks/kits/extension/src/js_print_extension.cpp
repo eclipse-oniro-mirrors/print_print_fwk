@@ -48,7 +48,7 @@ JsPrintExtension *JsPrintExtension::Create(const std::unique_ptr<Runtime> &runti
 }
 
 JsPrintExtension::JsPrintExtension(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime),
-    extensionId_(""), hasDestroyed_(false) {}
+    extensionId_("") {}
 JsPrintExtension::~JsPrintExtension() = default;
 
 void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
@@ -157,9 +157,6 @@ void JsPrintExtension::OnStop()
 {
     PrintExtension::OnStop();
     PRINT_HILOGD("jws JsPrintExtension OnStop begin.");
-    if (!hasDestroyed_) {
-        Callback("onDestroy");
-    }
     bool ret = ConnectionManager::GetInstance().DisconnectCaller(GetContext()->GetToken());
     if (ret) {
         PRINT_HILOGD("The Print extension connection is not disconnected.");
