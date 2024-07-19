@@ -65,8 +65,7 @@ public:
     static PrintExtension *Create(const std::unique_ptr<Runtime> &runtime);
 
     /**
-     * @brief Stop Extension.
-     * 
+     * @brief Stop Extension. 
      */
     virtual void OnStop() override;
 };
