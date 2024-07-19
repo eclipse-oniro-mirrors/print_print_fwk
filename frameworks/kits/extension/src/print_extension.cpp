@@ -66,7 +66,7 @@ std::shared_ptr<PrintExtensionContext> PrintExtension::CreateAndInitContext(
 
 void PrintExtension::OnStop()
 {
-    Extension::Onstop();
+    Extension::OnStop();
     GetContext()->TerminateAbility();
 }
 } // namespace AbilityRuntime
