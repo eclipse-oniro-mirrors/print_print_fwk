@@ -1880,7 +1880,7 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
         left -= parm.GetBytesPerLine() - jpegrow;
         jpegrow = 0;
     }
-    if(memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(), saneReadBuf + i, left) != ERR_OK) {
+    if (memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(), saneReadBuf + i, left) != ERR_OK) {
         SCAN_HILOGE("memcpy_s failed");
         return false;
     }
