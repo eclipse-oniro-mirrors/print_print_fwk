@@ -567,8 +567,9 @@ void PrintCupsClient::StartNextJob()
         PRINT_HILOGE("currentJob_ is nullptr");
         return;
     }
-    CallbackFunc callback = [this]() { JobCompleteCallback(); };
-    std::thread StartPrintThread([this, &callback] {this->StartCupsJob(this->currentJob_, callback);});
+    auto self = shared_from_this();
+    CallbackFunc callback = [self]() { self->JobCompleteCallback(); };
+    std::thread StartPrintThread([self, callback] {self->StartCupsJob(self->currentJob_, callback);});
     StartPrintThread.detach();
 }
 

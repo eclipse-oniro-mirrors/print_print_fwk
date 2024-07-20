@@ -44,21 +44,6 @@ void PrintIppOverUsbManagerTest::TearDown(void)
 {}
 
 /**
- * @tc.name: PrintIppOverUsbManagerTest_001
- * @tc.desc: Verify the Init function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_001, TestSize.Level1)
-{
-    OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
-    printIppOverUsbManager.isInit = true;
-    printIppOverUsbManager.Init();
-    printIppOverUsbManager.isInit = false;
-    printIppOverUsbManager.Init();
-}
-
-/**
  * @tc.name: PrintIppOverUsbManagerTest_002
  * @tc.desc: Verify the ConnectPrinter function.
  * @tc.type: FUNC

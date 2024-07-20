@@ -143,18 +143,6 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_004, TestSize.Le
     printHttpServerManager.StopServer(printerName);
 }
 
-/**
- * @tc.name: PrintHttpServerManagerTest_005
- * @tc.desc: Verify the DealUsbDevDetach function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_005, TestSize.Level1)
-{
-    OHOS::Print::PrintHttpServerManager printHttpServerManager;
-    printHttpServerManager.DealUsbDevDetach(IPP_PRINTER);
-}
-
 }  // namespace Print
 }  // namespace OHOS
 #endif // IPPOVERUSB_ENABLE

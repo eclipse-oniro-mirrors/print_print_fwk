@@ -62,7 +62,7 @@ const int64_t INIT_INTERVAL = 5000L;
 const int32_t UID_TRANSFORM_DIVISOR = 200000;
 const std::int32_t START_USER_ID = 100;
 const std::int32_t MAX_USER_ID = 1099;
-const uint32_t UNLOAD_SA_INTERVAL_10000 = 10000;
+const uint32_t UNLOAD_SA_INTERVAL = 90000;
 
 static const std::string SPOOLER_BUNDLE_NAME = "com.huawei.hmos.spooler";
 static const std::string SPOOLER_PACKAGE_NAME = "com.huawei.hmos.spooler";
@@ -743,28 +743,22 @@ int32_t PrintServiceAbility::AddPrinterToCups(const std::string &printerUri, con
         return ret;
     }
 #endif // CUPS_ENABLE
-    PRINT_HILOGD("AddPrinterToCups printerName %{public}s.", printerName.c_str());
-    for (auto iter = printerInfoList_.begin(); iter != printerInfoList_.end(); ++iter) {
-        auto printerInfoPtr = iter->second;
-        if (printerInfoPtr == nullptr) {
-            continue;
-        }
-        std::string stdName = PrintUtil::StandardizePrinterName(printerInfoPtr->GetPrinterName());
-        PRINT_HILOGD("AddPrinterToCups stdName %{public}s.", stdName.c_str());
-        if (stdName != PrintUtil::StandardizePrinterName(printerName)) {
-            continue;
-        }
-        std::string id = iter->first;
-        CupsPrinterInfo info;
-        info.name = printerName;
-        info.uri = printerUri;
-        info.maker = printerMake;
-        info.printerStatus = PRINTER_STATUS_IDLE;
-        int ret = QueryPrinterCapabilityByUri(printerUri, id, info.printerCapability);
-        if (ret != 0) {
-            PRINT_HILOGE("AddPrinterToCups QueryPrinterCapabilityByUri fail");
-            return ret;
-        }
+    std::string id = QueryPrinterIdByStandardizeName(printerName);
+    if (id.empty()) {
+        PRINT_HILOGE("can not find the printer");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    CupsPrinterInfo info;
+    info.name = printerName;
+    info.uri = printerUri;
+    info.maker = printerMake;
+    info.printerStatus = PRINTER_STATUS_IDLE;
+    ret = QueryPrinterCapabilityByUri(printerUri, id, info.printerCapability);
+    if (ret != 0) {
+        PRINT_HILOGE("AddPrinterToCups QueryPrinterCapabilityByUri fail");
+        return ret;
+    }
+    if (!printSystemData_.IsPrinterAdded(id)) {
         printSystemData_.InsertCupsPrinter(id, info, true);
         printSystemData_.SaveCupsPrinterMap();
         PrinterInfo printerInfo;
@@ -773,10 +767,29 @@ int32_t PrintServiceAbility::AddPrinterToCups(const std::string &printerUri, con
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, printerInfo);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, printerInfo);
         SetLastUsedPrinter(id);
-        break;
     }
     PRINT_HILOGD("AddPrinterToCups End.");
     return E_PRINT_NONE;
+}
+
+std::string PrintServiceAbility::QueryPrinterIdByStandardizeName(const std::string &printerName)
+{
+    PRINT_HILOGD("QueryPrinterIdByStandardizeName printerName : %{public}s.", printerName.c_str());
+    for (auto iter = printerInfoList_.begin(); iter != printerInfoList_.end(); ++iter) {
+        auto printerInfoPtr = iter->second;
+        if (printerInfoPtr == nullptr) {
+            continue;
+        }
+        std::string stdName = PrintUtil::StandardizePrinterName(printerInfoPtr->GetPrinterName());
+        PRINT_HILOGD("QueryPrinterIdByStandardizeName stdName : %{public}s.", stdName.c_str());
+        if (stdName != PrintUtil::StandardizePrinterName(printerName)) {
+            continue;
+        }
+        std::string id = iter->first;
+        PRINT_HILOGD("QueryPrinterIdByStandardizeName printerId : %{public}s.", id.c_str());
+        return id;
+    }
+    return "";
 }
 
 int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
@@ -2007,14 +2020,14 @@ void PrintServiceAbility::UnloadSystemAbility()
             return;
         }
         NotifyAppJobQueueChanged(QUEUE_JOB_LIST_UNSUBSCRIBE);
-#ifdef CUPS_ENABLE
-        DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdService();
-#endif // CUPS_ENABLE
         int32_t ret = DestroyExtension();
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("DestroyExtension failed.");
             return;
         }
+#ifdef CUPS_ENABLE
+        DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdService();
+#endif // CUPS_ENABLE
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {
             PRINT_HILOGE("get samgr failed");
@@ -2027,7 +2040,7 @@ void PrintServiceAbility::UnloadSystemAbility()
         }
         PRINT_HILOGI("unload print system ability successfully");
     };
-    serviceHandler_->PostTask(unloadTask, UNLOAD_SA_INTERVAL_10000);
+    serviceHandler_->PostTask(unloadTask, UNLOAD_SA_INTERVAL);
 }
 
 bool PrintServiceAbility::CheckPermission(const std::string &permissionName)

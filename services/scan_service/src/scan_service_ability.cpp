@@ -1291,7 +1291,7 @@ bool ScanServiceAbility::CheckPermission(const std::string &permissionName)
     AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
     TypeATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
     if (tokenType == TOKEN_INVALID) {
-        SCAN_HILOGE("invalid token id %{public}d", tokenId);
+        SCAN_HILOGE("invalid token id");
         return false;
     }
     int result = AccessTokenKit::VerifyAccessToken(tokenId, permissionName);
@@ -1798,7 +1798,7 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
     while (true) {
         SANE_Status saneStatus = sane_read(scannerHandle, saneReadBuf, buffer_size, &curReadSize);
         scanStatus = ScanUtil::ConvertErro(saneStatus);
-        totalBytes += (uint64_t)curReadSize;
+        totalBytes += (int64_t)curReadSize;
         int64_t progr = ((totalBytes * SCAN_PROGRESS_100) / hundred_percent);
         if (progr >= SCAN_PROGRESS_100)
             progr = SCAN_PROGRESS_100 - 1;
@@ -1880,7 +1880,10 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
         left -= parm.GetBytesPerLine() - jpegrow;
         jpegrow = 0;
     }
-    memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(), saneReadBuf + i, left);
+    if (memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(), saneReadBuf + i, left) != ERR_OK) {
+        SCAN_HILOGE("memcpy_s failed");
+        return false;
+    }
     jpegrow += left;
     SCAN_HILOGI("finish write jpeg picture data");
     return true;

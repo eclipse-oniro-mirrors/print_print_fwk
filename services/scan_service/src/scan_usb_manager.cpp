@@ -119,7 +119,7 @@ std::string ScanUsbManager::GetDeviceSerialNumber(USBDevicePipe &usbDevicePipe)
 
 void ScanUsbManager::formatUsbPort(std::string &port)
 {
-    for (int size = port.size(); size < USB_DEVICEID_FIRSTID_LEN_3; size++) {
+    for (auto size = port.size(); size < USB_DEVICEID_FIRSTID_LEN_3; size++) {
         std::string newString = "0";
         newString.append(port);
         port = newString;
