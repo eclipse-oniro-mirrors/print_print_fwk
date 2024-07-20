@@ -222,7 +222,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0012, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0013, TestSize.Level1)
 {
-    auto printCupsClient = std::make_share<OHOS::Print::PrintCupsClient>();
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
     printCupsClient->AddCupsPrintJob(testJob);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
@@ -236,7 +236,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0013, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0014, TestSize.Level1)
 {
-    auto printCupsClient = std::make_share<OHOS::Print::PrintCupsClient>();
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
     testJob.SetJobId(GetDefaultJobId());
     std::vector<uint32_t> files = {1};
@@ -261,7 +261,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0014, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0015, TestSize.Level1)
 {
-    auto printCupsClient = std::make_share<OHOS::Print::PrintCupsClient>();
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
@@ -274,7 +274,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0015, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
 {
-    auto printCupsClient = std::make_share<OHOS::Print::PrintCupsClient>();
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
     testJob.SetJobId(GetDefaultJobId());
     std::vector<uint32_t> files = {1};
@@ -299,7 +299,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0018, TestSize.Level1)
 {
-    auto printCupsClient = std::make_share<OHOS::Print::PrintCupsClient>();
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     JobParameters *jobParams = nullptr;
     printCupsClient->jobQueue_.push_back(jobParams);
     printCupsClient->StartNextJob();
@@ -315,7 +315,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0018, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019, TestSize.Level1)
 {
-    auto printCupsClient = std::make_share<OHOS::Print::PrintCupsClient>();
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     printCupsClient->JobCompleteCallback();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
