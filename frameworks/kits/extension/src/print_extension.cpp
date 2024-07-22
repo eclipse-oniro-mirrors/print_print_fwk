@@ -63,5 +63,11 @@ std::shared_ptr<PrintExtensionContext> PrintExtension::CreateAndInitContext(
     }
     return context;
 }
+
+void PrintExtension::OnStop()
+{
+    Extension::OnStop();
+    GetContext()->TerminateAbility();
+}
 } // namespace AbilityRuntime
 } // namespace OHOS
