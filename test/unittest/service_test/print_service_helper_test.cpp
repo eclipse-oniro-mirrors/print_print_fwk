@@ -153,19 +153,19 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0008, TestSize.Level1)
 }
 
 /**
-* @tc.name: PrintServiceHelperTest_0013
+* @tc.name: PrintServiceHelperTest_009
 * @tc.desc: faultPrint
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_009, TestSize.Level1) {
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0009, TestSize.Level1) {
     PrintServiceHelper helper;
     AAFwk::Want want;
     EXPECT_FALSE(helper.StartAbility(want));
 }
  
 /**
-* @tc.name: PrintServiceHelperTest_0014
+* @tc.name: PrintServiceHelperTest_0010
 * @tc.desc: faultPrint
 * @tc.type: FUNC
 * @tc.require:
@@ -174,7 +174,19 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0010, TestSize.Level1)
 {
     PrintServiceHelper helper;
     helper.PrintSubscribeCommonEvent();
+    helper.PrintSubscribeCommonEvent();
 }
 
+/**
+* @tc.name: PrintServiceHelperTest_0011
+* @tc.desc: StartPluginPrintIconExtAbility
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0011, TestSize.Level1) {
+    PrintServiceHelper helper;
+    AAFwk::Want want;
+    EXPECT_FALSE(helper.StartPluginPrintIconExtAbility(want));
+}
 } // namespace Print
 } // namespace OHOS

@@ -116,10 +116,17 @@ static const std::vector<std::string> IGNORE_STATE_LIST = {PRINTER_STATE_WAITING
     PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT};
 
 PrintCupsClient::PrintCupsClient()
-{}
+{
+    printAbility = new (std::nothrow) PrintCupsWrapper();
+}
 
 PrintCupsClient::~PrintCupsClient()
-{}
+{
+    if (printAbility != nullptr) {
+        delete printAbility;
+        printAbility = nullptr;
+    }
+}
 
 int32_t PrintCupsClient::StartCupsdService()
 {
@@ -325,12 +332,16 @@ void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std
     const char *ppd_make_model;
     const char *ppd_name;
 
+    if (printAbility == nullptr) {
+        PRINT_HILOGW("printAbility is null");
+        return;
+    }
     request = ippNewRequest(CUPS_GET_PPDS);
     if (makeModel)
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", NULL, makeModel);
  
     PRINT_HILOGD("CUPS_GET_PPDS start.");
-    if ((response = cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/")) != NULL) {
+    if ((response = printAbility->DoRequest(CUPS_HTTP_DEFAULT, request, "/")) != NULL) {
         if (response->request.status.status_code > IPP_OK_CONFLICT) {
             PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
             ippDelete(response);
@@ -402,6 +413,10 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
         PRINT_HILOGI("add success, printer has added");
         return E_PRINT_NONE;
     }
+    if (printAbility == nullptr) {
+        PRINT_HILOGW("printAbility is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s",
                      standardName.c_str());
@@ -414,7 +429,7 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-accepting-jobs", 1);
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-shared", 1);
     PRINT_HILOGD("IPP_OP_CUPS_ADD_MODIFY_PRINTER cupsDoRequest");
-    ippDelete(cupsDoRequest(http, request, "/admin/"));
+    ippDelete(printAbility->DoRequest(http, request, "/admin/"));
     if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
         PRINT_HILOGE("add error: %s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
@@ -448,6 +463,10 @@ int32_t PrintCupsClient::DeletePrinterFromCups(const std::string &printerUri, co
         PRINT_HILOGI("printer has not added");
         return E_PRINT_NONE;
     }
+    if (printAbility == nullptr) {
+        PRINT_HILOGW("printAbility is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
     request = ippNewRequest(IPP_OP_CUPS_DELETE_PRINTER);
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s",
                      standardName.c_str());
@@ -457,7 +476,7 @@ int32_t PrintCupsClient::DeletePrinterFromCups(const std::string &printerUri, co
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "device-uri", NULL, printerUri.c_str());
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", NULL, ppd.c_str());
     PRINT_HILOGD("IPP_OP_CUPS_DELETE_PRINTER cupsDoRequest");
-    ippDelete(cupsDoRequest(http, request, "/admin/"));
+    ippDelete(printAbility->DoRequest(http, request, "/admin/"));
     if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
         PRINT_HILOGE("delete error: %s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
@@ -474,11 +493,15 @@ int32_t PrintCupsClient::DeleteCupsPrinter(const char *printerName)
     http_t *http = NULL;
 
     PRINT_HILOGD("PrintCupsClient DeleteCupsPrinter start: %{private}s", printerName);
+    if (printAbility == nullptr) {
+        PRINT_HILOGW("printAbility is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
     request = ippNewRequest(IPP_OP_CUPS_DELETE_PRINTER);
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s", printerName);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
-    ippDelete(cupsDoRequest(http, request, "/admin/"));
+    ippDelete(printAbility->DoRequest(http, request, "/admin/"));
     if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
         PRINT_HILOGE("DeleteCupsPrinter error: %{public}s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
@@ -503,6 +526,10 @@ int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerU
         "all"
     };
     PRINT_HILOGD("QueryPrinterCapabilityByUri enter");
+    if (printAbility == nullptr) {
+        PRINT_HILOGW("printAbility is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
     httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username), host,
                     sizeof(host), &port, resource, sizeof(resource));
 
@@ -520,7 +547,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerU
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printerUri.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
     ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", 1, NULL, pattrs);
-    response = cupsDoRequest(http, request, "/");
+    response = printAbility->DoRequest(http, request, "/");
 
     if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
         PRINT_HILOGE("set default printers error: %{public}s", cupsLastErrorString());
@@ -544,11 +571,11 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo)
     StartNextJob();
 }
 
-void PrintCupsClient::StartNextJob()
+JobParameters *PrintCupsClient::GetNextJob()
 {
     if (jobQueue_.empty()) {
         PRINT_HILOGE("no active job in jobQueue_");
-        return;
+        return nullptr;
     }
     if (currentJob_ != nullptr) {
         JobParameters *lastJob = jobQueue_.back();
@@ -557,20 +584,28 @@ void PrintCupsClient::StartNextJob()
                 PRINT_JOB_BLOCKED_UNKNOWN);
         }
         PRINT_HILOGE("a active job is running, job len: %{public}zd", jobQueue_.size());
-        return;
+        return nullptr;
     }
     PRINT_HILOGI("start next job from queue");
 
     currentJob_ = jobQueue_.at(0);
     jobQueue_.erase(jobQueue_.begin());
-    if (!currentJob_) {
-        PRINT_HILOGE("currentJob_ is nullptr");
+    return currentJob_;
+}
+
+void PrintCupsClient::StartNextJob()
+{
+    auto nextJob = GetNextJob();
+    if (nextJob == nullptr) {
+        PRINT_HILOGW("nextJob is nullptr");
         return;
     }
-    auto self = shared_from_this();
-    CallbackFunc callback = [self]() { self->JobCompleteCallback(); };
-    std::thread StartPrintThread([self, callback] {self->StartCupsJob(self->currentJob_, callback);});
-    StartPrintThread.detach();
+    if (toCups) {
+        auto self = shared_from_this();
+        CallbackFunc callback = [self]() { self->JobCompleteCallback(); };
+        std::thread StartPrintThread([self, callback] {self->StartCupsJob(self->currentJob_, callback);});
+        StartPrintThread.detach();
+    }
 }
 
 void PrintCupsClient::JobCompleteCallback()
@@ -686,6 +721,10 @@ int32_t PrintCupsClient::QueryAddedPrinterList(std::vector<std::string> &printer
 int32_t PrintCupsClient::SetDefaultPrinter(const std::string &printerName)
 {
     http_t *http;
+    if (printAbility == nullptr) {
+        PRINT_HILOGW("printAbility is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
     ippSetPort(CUPS_SEVER_PORT);
     http = httpConnect2(cupsServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
     if (http == nullptr) {
@@ -701,7 +740,7 @@ int32_t PrintCupsClient::SetDefaultPrinter(const std::string &printerName)
         "printer-uri", NULL, uri);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name",
         NULL, cupsUser());
-    ippDelete(cupsDoRequest(http, request, "/admin/"));
+    ippDelete(printAbility->DoRequest(http, request, "/admin/"));
 
     const char* default_printer = cupsGetDefault();
     PRINT_HILOGI("default_printer=%{public}s", default_printer);
@@ -746,8 +785,12 @@ ppd_file_t* PrintCupsClient::GetPPDFile(const std::string &printerName)
 int32_t PrintCupsClient::QueryPrinterAttrList(const std::string &printerName, const std::vector<std::string> &keyList,
     std::vector<std::string> &valueList)
 {
+    if (printAbility == nullptr) {
+        PRINT_HILOGW("printAbility is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
     cups_dest_t *dest = nullptr;
-    dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printerName.c_str(), NULL);
+    dest = printAbility->GetNamedDest(CUPS_HTTP_DEFAULT, printerName.c_str(), NULL);
     if (dest == nullptr) {
         PRINT_HILOGW("the printer is not found");
         return E_PRINT_SERVER_FAILURE;
@@ -760,6 +803,7 @@ int32_t PrintCupsClient::QueryPrinterAttrList(const std::string &printerName, co
             valueList.emplace_back(value);
         }
     }
+    printAbility->FreeDests(1, dest);
     PRINT_HILOGI("QueryPrinterAttr end");
     return E_PRINT_NONE;
 }
@@ -767,12 +811,17 @@ int32_t PrintCupsClient::QueryPrinterAttrList(const std::string &printerName, co
 int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info)
 {
     PRINT_HILOGD("the printerInfo printerName %{public}s", info.GetPrinterName().c_str());
+    if (printAbility == nullptr) {
+        PRINT_HILOGW("printAbility is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
     cups_dest_t *dest = nullptr;
-    dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, info.GetPrinterName().c_str(), NULL);
+    dest = printAbility->GetNamedDest(CUPS_HTTP_DEFAULT, info.GetPrinterName().c_str(), NULL);
     if (dest == nullptr) {
         PRINT_HILOGW("the printer is not found");
         return E_PRINT_SERVER_FAILURE;
     }
+    printAbility->FreeDests(1, dest);
     if (info.HasOption()) {
         PRINT_HILOGI("the printerInfo option");
         PrinterCapability printerCaps;
@@ -816,17 +865,21 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams)
         PRINT_HILOGE("The jobParams is null");
         return isMakeModelRight;
     }
+    if (printAbility == nullptr) {
+        PRINT_HILOGW("printAbility is null");
+        return isMakeModelRight;
+    }
     while (retryCount < MAX_RETRY_TIMES) {
-        dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, jobParams->printerName.c_str(), NULL);
+        dest = printAbility->GetNamedDest(CUPS_HTTP_DEFAULT, jobParams->printerName.c_str(), NULL);
         if (dest != NULL) {
             const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
             PRINT_HILOGD("makeModel=%{private}s", makeModel);
-            if (strcmp(makeModel, "Local Raw Printer") != 0) {
+            if (makeModel != nullptr && strcmp(makeModel, "Local Raw Printer") != 0) {
                 isMakeModelRight = true;
-                cupsFreeDests(1, dest);
+                printAbility->FreeDests(1, dest);
                 break;
             }
-            cupsFreeDests(1, dest);
+            printAbility->FreeDests(1, dest);
         } else {
             PRINT_HILOGE("The dest is null");
         }
@@ -1104,6 +1157,10 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
         "job-state-reasons",
         "job-printer-state-reasons"
     };
+    if (printAbility == nullptr) {
+        PRINT_HILOGW("printAbility is null");
+        return;
+    }
     if (param->cupsJobId > 0) {
         request = ippNewRequest(IPP_OP_GET_JOB_ATTRIBUTES);
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, param->printerUri.c_str());
@@ -1111,7 +1168,7 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, DEFAULT_USER.c_str());
         ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", jattrsLen, NULL, jattrs);
         PRINT_HILOGD("get job state from cups service: start");
-        response = cupsDoRequest(http, request, "/");
+        response = printAbility->DoRequest(http, request, "/");
         if ((attr = ippFindAttribute(response, "job-state", IPP_TAG_ENUM)) != NULL) {
             jobStatus->job_state = (ipp_jstate_t)ippGetInteger(attr, 0);
         }
@@ -1190,7 +1247,7 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
     }
 }
 
-static void UpdateBorderlessJobParameter(json& optionJson, JobParameters *params)
+void PrintCupsClient::UpdateBorderlessJobParameter(json& optionJson, JobParameters *params)
 {
     if (params == nullptr) {
         return;
@@ -1345,7 +1402,11 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
     bool printerExist = false;
     cups_dest_t *dest;
     PRINT_HILOGD("IsPrinterExist enter");
-    dest = cupsGetNamedDest(CUPS_HTTP_DEFAULT, printerName, NULL);
+    if (printAbility == nullptr) {
+        PRINT_HILOGW("printAbility is null");
+        return printerExist;
+    }
+    dest = printAbility->GetNamedDest(CUPS_HTTP_DEFAULT, printerName, NULL);
     if (dest != NULL) {
         const char *deviceUri = cupsGetOption("device-uri", dest->num_options, dest->options);
         PRINT_HILOGD("deviceUri=%{private}s", deviceUri);
@@ -1354,7 +1415,7 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         int printerState = cupsGetIntegerOption("printer-state", dest->num_options, dest->options);
         PRINT_HILOGD("printerState=%{private}d", printerState);
         if (printerState == IPP_PRINTER_STOPPED || makeModel == nullptr || strcmp(deviceUri, printerUri) != 0) {
-            cupsFreeDests(1, dest);
+            printAbility->FreeDests(1, dest);
             PRINT_HILOGI("Printer information needs to be modified");
             return printerExist;
         }
@@ -1369,7 +1430,7 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
                 DeleteCupsPrinter(printerName);
             }
         }
-        cupsFreeDests(1, dest);
+        printAbility->FreeDests(1, dest);
     }
     return printerExist;
 }

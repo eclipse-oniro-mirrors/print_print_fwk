@@ -48,6 +48,7 @@ private:
     std::mutex mutex_;
     sptr<PrintBMSDeathRecipient> printBMSDeath_;
     std::shared_ptr<PrintServiceHelper> helper_;
+    bool hasBms = true;
 };
 }  // namespace OHOS
 #endif  // PRINT_BMS_HELPER_H

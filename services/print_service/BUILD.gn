@@ -96,8 +96,11 @@ ohos_shared_library("print_service") {
 
   if (cups_enable) {
     include_dirs += [ "//third_party/cups/cups-2.4.0" ]
-    sources += [ "src/print_cups_attribute.cpp" ]
-    sources += [ "src/print_cups_client.cpp" ]
+    sources += [
+      "src/print_cups_attribute.cpp",
+      "src/print_cups_client.cpp",
+      "src/print_cups_wrapper.cpp",
+    ]
     cflags_cc += [ "-DCUPS_ENABLE" ]
     deps += [
       "//third_party/cups:third_party_cups",

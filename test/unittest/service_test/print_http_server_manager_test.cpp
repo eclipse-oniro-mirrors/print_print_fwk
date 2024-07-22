@@ -25,7 +25,7 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Print {
 using namespace httplib;
-
+static const int64_t WAIT_TIME_IN_MS = 2000;
 static const std::string IPP_PRINTER =
     R"({"busNum":2,"clazz":0,"configs":[{"attributes":192,"id":1,"interfaces":[{"alternateSetting":0,"clazz":7,)"\
     R"("endpoints":[{"address":1,"attributes":2,"direction":0,"interfaceId":0,"interval":0,"maxPacketSize":512,)"\
@@ -85,6 +85,9 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_001, TestSize.Le
     std::string printerName = "HUAWEI PixLab V1-0105";
     int32_t port;
     EXPECT_TRUE(service->CreateServer(printerName, port));
+    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
+    service->StopServer(printerName);
+    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
 }
 
 /**
@@ -102,6 +105,9 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_002, TestSize.Le
     EXPECT_NE(newServer, nullptr);
     service->printHttpServerMap[printerName] = newServer;
     service->CreateServer(printerName, port);
+    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
+    service->StopServer(printerName);
+    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
 }
 
 /**
@@ -120,6 +126,9 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_003, TestSize.Le
     service->printHttpServerMap[printerName] = newServer;
     service->printHttpPortMap[printerName] = 60000;
     service->CreateServer(printerName, port);
+    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
+    service->StopServer(printerName);
+    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
 }
 
 

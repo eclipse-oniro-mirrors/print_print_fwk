@@ -231,6 +231,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0012, TestSize.Level1)
     capability.Marshalling(parcel);
     auto result = OHOS::Print::PrinterCapability::Unmarshalling(parcel);
     EXPECT_NE(nullptr, result);
+    capability.Dump();
 }
 
 /**
@@ -259,6 +260,23 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0014, TestSize.Level1)
     capability.SetColorMode(6);
     PrinterCapability copyCapability = capability;
     EXPECT_EQ((uint32_t)6, capability.GetColorMode());
+}
+
+/**
+ * @tc.name: PrinterCapabilityTest_0015
+ * @tc.desc: GetPrinterAttrValue.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0015, TestSize.Level1)
+{
+    PrinterCapability capability;
+    capability.GetPrinterAttrGroupJson();
+    capability.SetPrinterAttrNameAndValue("key1", "value1");
+    capability.SetPrinterAttrNameAndValue("key2", "value2");
+    EXPECT_STREQ(capability.GetPrinterAttrValue("key1"), "value1");
+    EXPECT_STREQ(capability.GetPrinterAttrValue("key"), "");
+    capability.ClearCurPrinterAttrGroup();
 }
 } // namespace Print
 } // namespace OHOS

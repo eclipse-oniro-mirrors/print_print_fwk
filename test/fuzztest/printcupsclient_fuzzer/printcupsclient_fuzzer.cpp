@@ -141,7 +141,7 @@ void TestCheckPrinterMakeModel(const uint8_t *data, size_t size, FuzzedDataProvi
 {
     PrintCupsClient::GetInstance()->InitCupsResources();
     JobParameters jobParams;
-    PrintCupsClient::CheckPrinterMakeModel(&jobParams);
+    PrintCupsClient::GetInstance()->CheckPrinterMakeModel(&jobParams);
 }
 
 void TestDeletePrinterFromCups(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
