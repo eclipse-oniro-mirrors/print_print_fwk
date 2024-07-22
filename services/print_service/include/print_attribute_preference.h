@@ -34,12 +34,20 @@ public:
 
     static PreferenceSetting BuildPreferenceSettingFromJson(const json& printerAttr)
     {
-        return {
-            printerAttr.at("pagesizeId").get<std::string>(),
-            printerAttr.at("orientation").get<std::string>(),
-            printerAttr.at("duplex").get<std::string>(),
-            printerAttr.at("quality").get<std::string>()
-        };
+        PreferenceSetting preferenceSetting;
+        if (printerAttr.contains("pagesizeId")) {
+            preferenceSetting.pagesizeId = printerAttr.at("pagesizeId").get<std::string>();
+        }
+        if (printerAttr.contains("orientation")) {
+            preferenceSetting.orientation = printerAttr.at("orientation").get<std::string>();
+        }
+        if (printerAttr.contains("duplex")) {
+            preferenceSetting.duplex = printerAttr.at("duplex").get<std::string>();
+        }
+        if (printerAttr.contains("quality")) {
+            preferenceSetting.quality = printerAttr.at("quality").get<std::string>();
+        }
+        return preferenceSetting;
     }
 
     json BuildPreferenceSettingJson() const
@@ -67,14 +75,27 @@ public:
 
     static PrinterPreference BuildPrinterPreferenceFromJson(const json& printerAttrs)
     {
-        return {
-            printerAttrs.at("pagesizeId").get<std::vector<std::string>>(),
-            printerAttrs.at("orientation").get<std::vector<std::string>>(),
-            printerAttrs.at("duplex").get<std::vector<std::string>>(),
-            printerAttrs.at("quality").get<std::vector<std::string>>(),
-            PreferenceSetting::BuildPreferenceSettingFromJson(printerAttrs.at("defaultSetting")),
-            PreferenceSetting::BuildPreferenceSettingFromJson(printerAttrs.at("setting"))
-        };
+        PrinterPreference printerPreference;
+        if (printerAttrs.contains("pagesizeId")) {
+            printerPreference.pagesizeId = printerAttrs.at("pagesizeId").get<std::vector<std::string>>();
+        }
+        if (printerAttrs.contains("orientation")) {
+            printerPreference.orientation = printerAttrs.at("orientation").get<std::vector<std::string>>();
+        }
+        if (printerAttrs.contains("duplex")) {
+            printerPreference.duplex = printerAttrs.at("duplex").get<std::vector<std::string>>();
+        }
+        if (printerAttrs.contains("quality")) {
+            printerPreference.quality = printerAttrs.at("quality").get<std::vector<std::string>>();
+        }
+        if (printerAttrs.contains("defaultSetting")) {
+            printerPreference.defaultSetting =
+                PreferenceSetting::BuildPreferenceSettingFromJson(printerAttrs.at("defaultSetting"));
+        }
+        if (printerAttrs.contains("setting")) {
+            printerPreference.setting = PreferenceSetting::BuildPreferenceSettingFromJson(printerAttrs.at("setting"));
+        }
+        return printerPreference;
     }
 
     json BuildPrinterPreferenceJson() const
