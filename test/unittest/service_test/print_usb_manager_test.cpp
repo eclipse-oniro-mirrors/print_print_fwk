@@ -194,6 +194,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_007, TestSize.Level1)
     printUsbManager.printDeviceMap[printerName] = usbDevice;
     bool ret = printUsbManager.ConnectUsbPinter(printerName);
     EXPECT_EQ(ret, true);
+    printUsbManager.DisConnectUsbPinter(printerName);
 }
 
 /**
