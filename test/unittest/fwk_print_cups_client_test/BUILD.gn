@@ -76,7 +76,10 @@ ohos_unittest("fwk_print_cups_client_test") {
 
   if (cups_enable) {
     include_dirs += [ "//third_party/cups/cups-2.4.0" ]
-    sources += [ "print_cups_client_test.cpp" ]
+    sources += [
+      "print_cups_client_test.cpp",
+      "print_cups_wrapper_test.cpp",
+    ]
     cflags_cc += [ "-DCUPS_ENABLE" ]
     external_deps += [
       "cJSON:cjson",

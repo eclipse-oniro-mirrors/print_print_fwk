@@ -82,6 +82,10 @@ ohos_unittest("fwk_print_http_request_process_test") {
     ]
   }
 
+  if (ipp_over_usb_enable) {
+    cflags_cc += [ "-DIPPOVERUSB_ENABLE" ]
+  }
+
   cflags_cc += [ "-DCPPHTTPLIB_NO_EXCEPTIONS" ]
 }
 

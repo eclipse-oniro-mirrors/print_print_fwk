@@ -90,8 +90,10 @@ bool PrintUsbManager::isPrintDevice(USB::UsbDevice &usbdevice, std::string &prin
 void PrintUsbManager::RefreshUsbPrinterDevice()
 {
     vector<UsbDevice> devlist;
-    auto &UsbSrvClient = UsbSrvClient::GetInstance();
-    auto ret = UsbSrvClient.GetDevices(devlist);
+    int32_t ret = ERR_OK;
+    if (isUsbEnable) {
+        ret = UsbSrvClient::GetInstance().GetDevices(devlist);
+    }
     if (ERR_OK != ret) {
         PRINT_HILOGE("RefreshDeviceList GetDevices failed with ret = %{public}d.", ret);
         return;
@@ -109,10 +111,12 @@ void PrintUsbManager::RefreshUsbPrinterDevice()
 
 std::string PrintUsbManager::GetProductName(UsbDevice &usbDevice)
 {
-    auto &UsbSrvClient = UsbSrvClient::GetInstance();
     PRINT_HILOGI("getProductName dev.GetName() = %{public}s.", usbDevice.GetName().c_str());
     USBDevicePipe usbDevicePipe;
-    int32_t openDeviceRet = UsbSrvClient.OpenDevice(usbDevice, usbDevicePipe);
+    int32_t openDeviceRet = UEC_OK;
+    if (isUsbEnable) {
+        openDeviceRet = UsbSrvClient::GetInstance().OpenDevice(usbDevice, usbDevicePipe);
+    }
     PRINT_HILOGI("openDevice ret = %{public}d", openDeviceRet);
     if (openDeviceRet != UEC_OK) {
         PRINT_HILOGE("openDevice fail with ret = %{public}d", openDeviceRet);
@@ -122,8 +126,11 @@ std::string PrintUsbManager::GetProductName(UsbDevice &usbDevice)
         QueryPrinterInfoFromStringDescriptor(usbDevicePipe, USB_VALUE_DESCRIPTOR_INDEX_PRODUCT_NAME);
     std::string serialNumber =
         QueryPrinterInfoFromStringDescriptor(usbDevicePipe, USB_VALUE_DESCRIPTOR_INDEX_SERIAL_NUMBER);
-    std::string printerName =
-        productName + "-" + serialNumber.substr(serialNumber.length() - HTTP_COMMON_CONST_VALUE_4);
+    size_t len = serialNumber.length();
+    if (len > HTTP_COMMON_CONST_VALUE_4) {
+        serialNumber = serialNumber.substr(len - HTTP_COMMON_CONST_VALUE_4);
+    }
+    std::string printerName = productName + "-" + serialNumber;
     PRINT_HILOGI("getProductName printerName = %{public}s.", printerName.c_str());
     return printerName;
 }
@@ -131,7 +138,6 @@ std::string PrintUsbManager::GetProductName(UsbDevice &usbDevice)
 std::string PrintUsbManager::QueryPrinterInfoFromStringDescriptor(
     USBDevicePipe &usbDevicePipe, uint16_t indexInStringDescriptor)
 {
-    auto &UsbSrvClient = UsbSrvClient::GetInstance();
     PRINT_HILOGI("enter QueryPrinterInfoFromStringDescriptor");
     uint8_t requestType = USB_REQUESTTYPE_DEVICE_TO_HOST;
     uint8_t request = USB_REQUEST_GET_DESCRIPTOR;
@@ -140,7 +146,10 @@ std::string PrintUsbManager::QueryPrinterInfoFromStringDescriptor(
     int32_t timeOut = HTTP_COMMON_CONST_VALUE_500;
     const HDI::Usb::V1_0::UsbCtrlTransfer tctrl = {requestType, request, value, index, timeOut};
     std::vector<uint8_t> bufferData(HTTP_COMMON_CONST_VALUE_100, 0);
-    int32_t ret = UsbSrvClient.ControlTransfer(usbDevicePipe, tctrl, bufferData);
+    int32_t ret = 0;
+    if (isUsbEnable) {
+        ret = UsbSrvClient::GetInstance().ControlTransfer(usbDevicePipe, tctrl, bufferData);
+    }
     if (ret != 0 || bufferData[INDEX_0] == 0) {
         PRINT_HILOGE("ControlTransfer failed ret = %{public}d, buffer length = %{public}d", ret, bufferData[0]);
         return "";
@@ -160,14 +169,16 @@ std::string PrintUsbManager::QueryPrinterInfoFromStringDescriptor(
 bool PrintUsbManager::AllocateInterface(const std::string &printerName, UsbDevice &usbdevice,
     USBDevicePipe &usbDevicePipe)
 {
-    auto &UsbSrvClient = UsbSrvClient::GetInstance();
     PrinterTranIndex tranIndex;
     for (auto index : printerIndexMap[printerName]) {
         int32_t configIndex = index.first;
         int32_t interfaceIndex = index.second;
         UsbInterface ippInterface =
             usbdevice.GetConfigs()[configIndex].GetInterfaces()[interfaceIndex];
-        int32_t ret = UsbSrvClient.ClaimInterface(usbDevicePipe, ippInterface, true);
+        int32_t ret = UEC_OK;
+        if (isUsbEnable) {
+            ret = UsbSrvClient::GetInstance().ClaimInterface(usbDevicePipe, ippInterface, true);
+        }
         if (ret != UEC_OK) {
             PRINT_HILOGE("ClaimInterface fail, ret = %{public}d", ret);
             continue;
@@ -187,9 +198,13 @@ bool PrintUsbManager::AllocateInterface(const std::string &printerName, UsbDevic
             int32_t configIndex = tranIndex.commonConfigIndex;
             UsbInterface commonInterface =
                 usbdevice.GetConfigs()[configIndex].GetInterfaces()[tranIndex.commonInterfaceIndex];
-            UsbSrvClient.ReleaseInterface(usbDevicePipe, commonInterface);
+            if (isUsbEnable) {
+                UsbSrvClient::GetInstance().ReleaseInterface(usbDevicePipe, commonInterface);
+            }
         }
-        UsbSrvClient.Close(usbDevicePipe);
+        if (isUsbEnable) {
+            UsbSrvClient::GetInstance().Close(usbDevicePipe);
+        }
         return false;
     }
 
@@ -200,7 +215,6 @@ bool PrintUsbManager::AllocateInterface(const std::string &printerName, UsbDevic
 
 bool PrintUsbManager::ConnectUsbPinter(const std::string &printerName)
 {
-    auto &UsbSrvClient = UsbSrvClient::GetInstance();
     PRINT_HILOGD("connect usb printerName = %{public}s", printerName.c_str());
     if (!printerName.empty() && printPipeMap.find(printerName) != printPipeMap.end()) {
         PRINT_HILOGD("printerName = %{public}s is opened", printerName.c_str());
@@ -209,7 +223,10 @@ bool PrintUsbManager::ConnectUsbPinter(const std::string &printerName)
     if (!printerName.empty() && printDeviceMap.find(printerName) != printDeviceMap.end()) {
         UsbDevice usbdevice = printDeviceMap[printerName];
         USBDevicePipe usbDevicePipe;
-        int32_t openDeviceRet = UsbSrvClient.OpenDevice(usbdevice, usbDevicePipe);
+        int32_t openDeviceRet = UEC_OK;
+        if (isUsbEnable) {
+            openDeviceRet = UsbSrvClient::GetInstance().OpenDevice(usbdevice, usbDevicePipe);
+        }
         PRINT_HILOGD("openDevice ret = %{public}d", openDeviceRet);
         if (openDeviceRet == UEC_OK) {
             return AllocateInterface(printerName, usbdevice, usbDevicePipe);
@@ -224,23 +241,20 @@ bool PrintUsbManager::ConnectUsbPinter(const std::string &printerName)
 void PrintUsbManager::DisConnectUsbPinter(const std::string &printerName)
 {
     if (!printerName.empty() && printDeviceMap.find(printerName) != printDeviceMap.end() &&
-        printPipeMap.find(printerName) != printPipeMap.end()) {
-        auto &UsbSrvClient = UsbSrvClient::GetInstance();
-
+        printPipeMap.find(printerName) != printPipeMap.end() &&
+        printTranIndexMap.find(printerName) != printTranIndexMap.end()) {
         UsbDevice usbdevice = printDeviceMap[printerName];
         USBDevicePipe usbDevicePipe = printPipeMap[printerName];
-
         PrinterTranIndex tranIndex = printTranIndexMap[printerName];
         UsbInterface commonInterface =
             usbdevice.GetConfigs()[tranIndex.commonConfigIndex].GetInterfaces()[tranIndex.commonInterfaceIndex];
-        UsbSrvClient.ReleaseInterface(usbDevicePipe, commonInterface);
-
         UsbInterface sendDocIterface =
             usbdevice.GetConfigs()[tranIndex.sendDocConfigIndex].GetInterfaces()[tranIndex.sendDocInterfaceIndex];
-        UsbSrvClient.ReleaseInterface(usbDevicePipe, sendDocIterface);
-
-        UsbSrvClient.Close(usbDevicePipe);
-
+        if (isUsbEnable) {
+            UsbSrvClient::GetInstance().ReleaseInterface(usbDevicePipe, commonInterface);
+            UsbSrvClient::GetInstance().ReleaseInterface(usbDevicePipe, sendDocIterface);
+            UsbSrvClient::GetInstance().Close(usbDevicePipe);
+        }
         printPipeMap.erase(printerName);
         printTranIndexMap.erase(printerName);
     }
@@ -252,7 +266,6 @@ int32_t PrintUsbManager::BulkTransferWrite(std::string printerName, const Operat
     if (printDeviceMap.find(printerName) == printDeviceMap.end()) {
         return INVAILD_VALUE;
     }
-    auto &UsbSrvClient = UsbSrvClient::GetInstance();
     UsbDevice usbdevice = printDeviceMap[printerName];
     int32_t currentConfigIndex = INVAILD_VALUE;
     int32_t currentInterfaceIndex = INVAILD_VALUE;
@@ -274,8 +287,11 @@ int32_t PrintUsbManager::BulkTransferWrite(std::string printerName, const Operat
         pointWrite = point2;
     }
     USBDevicePipe usbDevicePipe = printPipeMap[printerName];
-    int32_t writeRet = UsbSrvClient.BulkTransfer(usbDevicePipe, pointWrite, vectorRequestBuffer,
-        USB_BULKTRANSFER_WRITE_TIMEOUT);
+    int32_t writeRet = 0;
+    if (isUsbEnable) {
+        writeRet = UsbSrvClient::GetInstance().BulkTransfer(usbDevicePipe, pointWrite, vectorRequestBuffer,
+            USB_BULKTRANSFER_WRITE_TIMEOUT);
+    }
     return writeRet;
 }
 
@@ -285,7 +301,6 @@ int32_t PrintUsbManager::BulkTransferRead(std::string printerName, const Operati
     if (printDeviceMap.find(printerName) == printDeviceMap.end()) {
         return INVAILD_VALUE;
     }
-    auto &UsbSrvClient = UsbSrvClient::GetInstance();
     UsbDevice usbdevice = printDeviceMap[printerName];
     int32_t currentConfigIndex = INVAILD_VALUE;
     int32_t currentInterfaceIndex = INVAILD_VALUE;
@@ -307,8 +322,11 @@ int32_t PrintUsbManager::BulkTransferRead(std::string printerName, const Operati
         pointRead = point1;
     }
     USBDevicePipe usbDevicePipe = printPipeMap[printerName];
-    int32_t readFromUsbRes = UsbSrvClient.BulkTransfer(usbDevicePipe, pointRead, readTempBUffer,
-        USB_BULKTRANSFER_READ_TIMEOUT);
+    int32_t readFromUsbRes = 0;
+    if (isUsbEnable) {
+        readFromUsbRes = UsbSrvClient::GetInstance().BulkTransfer(usbDevicePipe, pointRead, readTempBUffer,
+            USB_BULKTRANSFER_READ_TIMEOUT);
+    }
     return readFromUsbRes;
 }
 
@@ -317,8 +335,9 @@ void PrintUsbManager::DealUsbDevStatusChange(const std::string &devStr, bool isA
     PRINT_HILOGD("DealUsbDevStatusChange isAttach = %{public}d, devStr = %{public}s.",
         isAttach, devStr.c_str());
     cJSON *devJson = cJSON_Parse(devStr.c_str());
-    if (!devJson) {
+    if (devJson == nullptr) {
         PRINT_HILOGE("Create devJson error");
+        return;
     }
     UsbDevice *dev = new UsbDevice(devJson);
     if (!isAttach) {

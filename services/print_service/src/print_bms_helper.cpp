@@ -35,6 +35,10 @@ void PrintBMSHelper::SetHelper(std::shared_ptr<PrintServiceHelper> &helper)
 
 bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
 {
+    if (!hasBms) {
+        PRINT_HILOGE("Don't have BMS.");
+        return false;
+    }
     std::lock_guard<std::mutex> lock(mutex_);
     if (helper_ == nullptr || !GetProxy()) {
         return false;

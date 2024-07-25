@@ -2594,27 +2594,7 @@ void PrintServiceAbility::notifyAdapterJobChanged(const std::string jobId, const
         return;
     }
 
-    uint32_t printAdapterListeningState = PRINT_TASK_FAIL;
-    if (state == PRINT_JOB_SPOOLER_CLOSED) {
-        printAdapterListeningState = GetListeningState(subState);
-    } else if (state == PRINT_JOB_BLOCKED) {
-        printAdapterListeningState = PRINT_TASK_BLOCK;
-    } else {
-        switch (subState) {
-            case PRINT_JOB_COMPLETED_SUCCESS:
-                printAdapterListeningState = PRINT_TASK_SUCCEED;
-                break;
-            case PRINT_JOB_COMPLETED_FAILED:
-                printAdapterListeningState = PRINT_TASK_FAIL;
-                break;
-            case PRINT_JOB_COMPLETED_CANCELLED:
-                printAdapterListeningState = PRINT_TASK_CANCEL;
-                break;
-            default:
-                printAdapterListeningState = PRINT_TASK_FAIL;
-                break;
-        }
-    }
+    uint32_t printAdapterListeningState = GetListeningState(state, subState);
     PRINT_HILOGI("notifyAdapterJobChanged for subState: %{public}d, listeningState: %{public}d",
         subState, printAdapterListeningState);
     eventIt->second->onCallbackAdapterJobStateChanged(jobId, state, printAdapterListeningState);
@@ -2638,6 +2618,32 @@ uint32_t PrintServiceAbility::GetListeningState(const uint32_t subState)
             return PREVIEW_ABILITY_DESTROY;
             break;
     }
+}
+
+uint32_t PrintServiceAbility::GetListeningState(uint32_t state, uint32_t subState)
+{
+    uint32_t printAdapterListeningState = PRINT_TASK_FAIL;
+    if (state == PRINT_JOB_SPOOLER_CLOSED) {
+        printAdapterListeningState = GetListeningState(subState);
+    } else if (state == PRINT_JOB_BLOCKED) {
+        printAdapterListeningState = PRINT_TASK_BLOCK;
+    } else {
+        switch (subState) {
+            case PRINT_JOB_COMPLETED_SUCCESS:
+                printAdapterListeningState = PRINT_TASK_SUCCEED;
+                break;
+            case PRINT_JOB_COMPLETED_FAILED:
+                printAdapterListeningState = PRINT_TASK_FAIL;
+                break;
+            case PRINT_JOB_COMPLETED_CANCELLED:
+                printAdapterListeningState = PRINT_TASK_CANCEL;
+                break;
+            default:
+                printAdapterListeningState = PRINT_TASK_FAIL;
+                break;
+        }
+    }
+    return printAdapterListeningState;
 }
 
 int32_t PrintServiceAbility::CallStatusBar()
