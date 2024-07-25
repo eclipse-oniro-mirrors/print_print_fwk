@@ -66,6 +66,7 @@ const uint32_t UNLOAD_SA_INTERVAL = 90000;
 
 static const std::string SPOOLER_BUNDLE_NAME = "com.huawei.hmos.spooler";
 static const std::string SPOOLER_PACKAGE_NAME = "com.huawei.hmos.spooler";
+static const std::string EPRINTER_ID = "com.huawei.hmos.hwprintext:ePrintID";
 static const std::string SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
@@ -800,23 +801,7 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
     DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
 #endif // CUPS_ENABLE
     PRINT_HILOGD("QueryPrinterCapabilityByUri End.");
-    std::string standardPrinterId = StandardizePrinterId(printerId);
-    if (printerCaps.HasOption()) {
-        if (printerIdAndPreferenceMap_.count(standardPrinterId)) {
-            return E_PRINT_NONE;
-        }
-        PrinterPreference printPreference;
-        int32_t ret = BuildPrinterPreference(printerCaps, printPreference);
-        if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("printerCaps can not success to printPreference");
-            return E_PRINT_NONE;
-        }
-        nlohmann::json jsonObject = nlohmann::json::object();
-        jsonObject = printPreference.BuildPrinterPreferenceJson();
-        std::string savePrinterPreference = jsonObject.dump();
-        printerIdAndPreferenceMap_.insert(std::make_pair(standardPrinterId, savePrinterPreference));
-        WritePreferenceToFile();
-    }
+    WritePrinterPreference(printerId, printerCaps);
     return E_PRINT_NONE;
 }
 
@@ -1049,6 +1034,54 @@ bool PrintServiceAbility::WritePreferenceToFile()
     auto writeLength = write(fd, jsonString.c_str(), jsonLength);
     close(fd);
     return (size_t)writeLength == jsonLength;
+}
+
+bool PrintServiceAbility::WritePrinterPreference(const std::string &printerId, PrinterCapability &printerCaps)
+{
+    std::string standardPrinterId = StandardizePrinterId(printerId);
+    if (printerCaps.HasOption()) {
+        if (printerIdAndPreferenceMap_.count(standardPrinterId)) {
+            return false;
+        }
+        PrinterPreference printPreference;
+        int32_t ret = BuildPrinterPreference(printerCaps, printPreference);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("printerCaps can not success to printPreference");
+            return false;
+        }
+        nlohmann::json jsonObject = nlohmann::json::object();
+        jsonObject = printPreference.BuildPrinterPreferenceJson();
+        std::string savePrinterPreference = jsonObject.dump();
+        printerIdAndPreferenceMap_.insert(std::make_pair(standardPrinterId, savePrinterPreference));
+        return WritePreferenceToFile();
+    }
+    return false;
+}
+
+bool PrintServiceAbility::WriteEprinterPreference(const std::string &printerId, PrinterCapability &printerCaps)
+{
+    if (printerIdAndPreferenceMap_.count(printerId)) {
+        return false;
+    }
+    json printerPreference;
+    std::vector<PrintPageSize> pageSize;
+    printerCaps.GetPageSize(pageSize);
+    json pageSizeList = json::array();
+    for (auto& item : pageSize) {
+        pageSizeList.push_back(item.GetId());
+    }
+    std::vector<std::string> emptyStrArr;
+    printerPreference["pagesizeId"] = pageSizeList;
+    printerPreference["orientation"] = emptyStrArr;
+    printerPreference["duplex"] = {to_string(printerCaps.GetDuplexMode())};
+    printerPreference["quality"] = emptyStrArr;
+    PreferenceSetting preferenceSetting;
+    printerPreference["defaultSetting"] = preferenceSetting.BuildPreferenceSettingJson();
+    printerPreference["setting"] = preferenceSetting.BuildPreferenceSettingJson();
+    std::string savePrinterPreference = printerPreference.dump();
+    PRINT_HILOGD("savePrinterPreference = %{public}s", savePrinterPreference.c_str());
+    printerIdAndPreferenceMap_.insert(std::make_pair(printerId, savePrinterPreference));
+    return WritePreferenceToFile();
 }
 
 bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
@@ -1583,6 +1616,15 @@ bool PrintServiceAbility::UpdatePrinterSystemData(const std::string &printerId, 
 
 bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, PrinterInfo &info)
 {
+    PRINT_HILOGI("UpdatePrinterCapability Enter");
+    if (printerId.compare(0, EPRINTER_ID.size(), EPRINTER_ID) == 0) {
+        PRINT_HILOGI("ePrinter Enter");
+        info.Dump();
+        PrinterCapability printerCaps;
+        info.GetCapability(printerCaps);
+        WriteEprinterPreference(printerId, printerCaps);
+    }
+
     if (printerId.compare(0, SPOOLER_PACKAGE_NAME.size(), SPOOLER_PACKAGE_NAME) != 0) {
         CupsPrinterInfo cupsPrinterInfo;
         cupsPrinterInfo.name = info.GetPrinterName();

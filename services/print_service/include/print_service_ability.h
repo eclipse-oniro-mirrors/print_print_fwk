@@ -158,6 +158,8 @@ private:
     void ReduceAppCount();
     void InitPreferenceMap();
     bool WritePreferenceToFile();
+    bool WritePrinterPreference(const std::string &printerId, PrinterCapability &printerCaps);
+    bool WriteEprinterPreference(const std::string &printerId, PrinterCapability &printerCaps);
     bool ReadPreferenceFromFile(const std::string &printerId, std::string& printPreference);
     int32_t BuildPrinterPreference(PrinterCapability &cap, PrinterPreference &printPreference);
     void BuildPrinterPreferenceByDefault(nlohmann::json& capOpt, PreferenceSetting &printerDefaultAttr);
