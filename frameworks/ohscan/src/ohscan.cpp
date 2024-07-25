@@ -48,7 +48,7 @@ static constexpr int32_t SCAN_STRING_TYPE = 3;
 static constexpr int32_t SCAN_NUM_LIST = 2;
 static constexpr int32_t SCAN_STRING_LIST = 3;
 static std::map<std::string, std::map<int, ValueMap>> g_valueMap;
-static std::map<std::string, Scan_ScannerParameterOptions* > g_scanParaTables;
+static std::map<std::string, Scan_ScannerOptions* > g_scanParaTables;
 static bool g_isListening = false;
 static const char* GET_SCANNER_DEVICE_LIST = "GET_SCANNER_DEVICE_LIST";
 static Scan_DiscoverScannerCallback g_discoverCallback = nullptr;
@@ -169,13 +169,12 @@ int32_t GetScanParaValues(const std::string &deviceId, ScanOptionValue &value, S
     return SCAN_ERROR_NONE;
 }
 
-void FreeScannerOptionsMemory(Scan_ScannerParameterOptions* scannerOptions)
+void FreeScannerOptionsMemory(Scan_ScannerOptions* scannerOptions)
 {
     if (scannerOptions == nullptr) {
         SCAN_HILOGW("scannerOptions is a nullptr.");
         return;
     }
-    DELETE_ARRAY_AND_NULLIFY(scannerOptions->options)
 
     for (int i = 0; i < scannerOptions->optionCount; i++) {
         DELETE_AND_NULLIFY(scannerOptions->titles[i])
@@ -194,33 +193,30 @@ void FreeScannerOptionsMemory(Scan_ScannerParameterOptions* scannerOptions)
     DELETE_AND_NULLIFY(scannerOptions)
 }
 
-Scan_ScannerParameterOptions* CreateScannerOptions(int32_t &optionCount)
+Scan_ScannerOptions* CreateScannerOptions(int32_t &optionCount)
 {
-    Scan_ScannerParameterOptions* scannerOptions = new (std::nothrow) Scan_ScannerParameterOptions();
+    Scan_ScannerOptions* scannerOptions = new (std::nothrow) Scan_ScannerOptions();
     if (scannerOptions == nullptr) {
         SCAN_HILOGE("scannerOptions is a nullptr");
         return nullptr;
     }
-    int32_t scannerOptionsMemSize = sizeof(Scan_ScannerParameterOptions);
+    int32_t scannerOptionsMemSize = sizeof(Scan_ScannerOptions);
     if (memset_s(scannerOptions, scannerOptionsMemSize, 0, scannerOptionsMemSize) != 0) {
         SCAN_HILOGW("memset_s fail");
         FreeScannerOptionsMemory(scannerOptions);
         return nullptr;
     }
-    scannerOptions->options = new (std::nothrow) int[optionCount];
     scannerOptions->titles = new (std::nothrow) char* [optionCount];
     scannerOptions->descriptions = new (std::nothrow) char* [optionCount];
     scannerOptions->ranges = new (std::nothrow) char* [optionCount];
     scannerOptions->optionCount = optionCount;
-    if (scannerOptions->options == nullptr || scannerOptions->titles == nullptr ||
-    scannerOptions->descriptions == nullptr || scannerOptions->ranges == nullptr) {
+    if (scannerOptions->titles == nullptr || scannerOptions->descriptions == nullptr ||
+        scannerOptions->ranges == nullptr) {
         FreeScannerOptionsMemory(scannerOptions);
         return nullptr;
     }
-    int32_t integerMemSize = optionCount * sizeof(int32_t);
     int32_t stringMemSize = optionCount * sizeof(char**);
-    if (memset_s(scannerOptions->options, integerMemSize, 0, integerMemSize) != 0 ||
-        memset_s(scannerOptions->titles, stringMemSize, 0, stringMemSize) != 0 ||
+    if (memset_s(scannerOptions->titles, stringMemSize, 0, stringMemSize) != 0 ||
         memset_s(scannerOptions->descriptions, stringMemSize, 0, stringMemSize) != 0 ||
         memset_s(scannerOptions->ranges, stringMemSize, 0, stringMemSize) != 0) {
             SCAN_HILOGW("memset_s fail");
@@ -230,10 +226,9 @@ Scan_ScannerParameterOptions* CreateScannerOptions(int32_t &optionCount)
     return scannerOptions;
 }
 
-bool MemSetScannerOptions(Scan_ScannerParameterOptions* scannerOptions, int32_t &optionCount, ScanParaTable &paraTable)
+bool MemSetScannerOptions(Scan_ScannerOptions* scannerOptions, int32_t &optionCount, ScanParaTable &paraTable)
 {
     for (int i = 0; i < optionCount; i++) {
-        scannerOptions->options[i] = i;
         auto bufferSize = paraTable.titBuff[i].length() + 1;
         char* titleBuf = new (std::nothrow) char[bufferSize];
         if (titleBuf == nullptr) {
@@ -277,14 +272,14 @@ bool MemSetScannerOptions(Scan_ScannerParameterOptions* scannerOptions, int32_t 
     return true;
 }
 
-Scan_ScannerParameterOptions* GetScanParaValue(ScanParaTable &paraTable)
+Scan_ScannerOptions* GetScanParaValue(ScanParaTable &paraTable)
 {
     int32_t optionCount = paraTable.lengthBuff;
     if (optionCount <= 0) {
         SCAN_HILOGE("optionCount <= 0");
         return nullptr;
     }
-    Scan_ScannerParameterOptions* scannerOptions = CreateScannerOptions(optionCount);
+    Scan_ScannerOptions* scannerOptions = CreateScannerOptions(optionCount);
     if (scannerOptions == nullptr) {
         SCAN_HILOGE("scannerOptions is a nullptr");
         return nullptr;
@@ -372,7 +367,7 @@ int32_t OH_Scan_CloseScanner(const char* scannerId)
     }
 }
 
-Scan_ScannerParameterOptions* OH_Scan_GetScannerParameter(const char* scannerId, int32_t* errorCode)
+Scan_ScannerOptions* OH_Scan_GetScannerParameter(const char* scannerId, int32_t* errorCode)
 {
     if (scannerId == nullptr || errorCode == nullptr) {
         SCAN_HILOGE("Invalid parameter.");
@@ -400,7 +395,7 @@ Scan_ScannerParameterOptions* OH_Scan_GetScannerParameter(const char* scannerId,
         return nullptr;
     }
 
-    Scan_ScannerParameterOptions* scaParaOptions = GetScanParaValue(paraTable);
+    Scan_ScannerOptions* scaParaOptions = GetScanParaValue(paraTable);
     if (scaParaOptions == nullptr) {
         *errorCode = SCAN_ERROR_GENERIC_FAILURE;
         return nullptr;
