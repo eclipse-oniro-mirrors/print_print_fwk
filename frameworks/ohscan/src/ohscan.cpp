@@ -51,7 +51,7 @@ static std::map<std::string, std::map<int, ValueMap>> g_valueMap;
 static std::map<std::string, Scan_ScannerOptions* > g_scanParaTables;
 static bool g_isListening = false;
 static const char* GET_SCANNER_DEVICE_LIST = "GET_SCANNER_DEVICE_LIST";
-static Scan_DiscoverScannerCallback g_discoverCallback = nullptr;
+static Scan_ScannerDiscoveryCallback g_discoverCallback = nullptr;
 
 
 static inline void FreeDeviceListMemory(Scan_ScannerDevice** devices, int32_t deviceCount)
@@ -307,7 +307,7 @@ int32_t OH_Scan_Init()
     }
 }
 
-int32_t OH_Scan_StartScannerDiscovery(Scan_DiscoverScannerCallback callback)
+int32_t OH_Scan_StartScannerDiscovery(Scan_ScannerDiscoveryCallback callback)
 {
     g_discoverCallback = callback;
     auto client = ScanManagerClient::GetInstance();
@@ -489,7 +489,7 @@ int32_t OH_Scan_CancelScan(const char* scannerId)
     }
 }
 
-int32_t OH_Scan_GetScanPictureProgress(const char* scannerId, Scan_ScanPictureProgress* prog)
+int32_t OH_Scan_GetPictureScanProgress(const char* scannerId, Scan_PictureScanProgress* prog)
 {
     if (prog == nullptr) {
         SCAN_HILOGE("Invalid parameter.");

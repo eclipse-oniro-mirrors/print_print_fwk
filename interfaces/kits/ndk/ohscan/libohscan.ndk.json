@@ -33,7 +33,7 @@
     },
     {
         "first_introduced": "12",
-        "name": "OH_Scan_GetScanPictureProgress"
+        "name": "OH_Scan_GetPictureScanProgress"
     },
     {
         "first_introduced": "12",
