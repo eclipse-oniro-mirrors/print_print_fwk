@@ -112,6 +112,45 @@ HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_006, TestSize.Le
     printIppOverUsbManager.DisConnectPrinter(printerId);
 }
 
+/**
+ * @tc.name: PrintIppOverUsbManagerTest_007
+ * @tc.desc: Verify the DisConnectPrinter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_007, TestSize.Level1)
+{
+    OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
+    std::string printerId = "com.huawei.hmos.spoolerUSB-HUAWEI PixLab V1-0159";
+    printIppOverUsbManager.DisConnectPrinter(printerId);
+}
+
+/**
+ * @tc.name: PrintIppOverUsbManagerTest_008
+ * @tc.desc: Verify the DisConnectPrinter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_008, TestSize.Level1)
+{
+    OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
+    std::string printerId = "com.ohos.test:USB-HUAWEI PixLab V1-0159";
+    printIppOverUsbManager.DisConnectPrinter(printerId);
+}
+
+/**
+ * @tc.name: PrintIppOverUsbManagerTest_009
+ * @tc.desc: Verify the DisConnectPrinter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_009, TestSize.Level1)
+{
+    OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
+    std::string printerId = "com.huawei.hmos.spooler:HUAWEI PixLab V1-0159";
+    printIppOverUsbManager.DisConnectPrinter(printerId);
+}
+
 }  // namespace Print
 }  // namespace OHOS
 
