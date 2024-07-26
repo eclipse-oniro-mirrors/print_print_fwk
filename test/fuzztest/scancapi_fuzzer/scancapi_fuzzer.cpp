@@ -81,11 +81,11 @@ void OHScanCancelScanFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvid
 void OHScanGetScanPictureProgressFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    Scan_ScanPictureProgress progress;
+    Scan_PictureScanProgress progress;
     progress.progress = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
     progress.fd = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
     progress.isFinal = dataProvider->ConsumeBool();
-    OH_Scan_GetScanPictureProgress(scannerId.c_str(), &progress);
+    OH_Scan_GetPictureScanProgress(scannerId.c_str(), &progress);
 }
 
 }

@@ -69,11 +69,11 @@ typedef enum {
     /** @error Operation is not supported. **/
     SCAN_ERROR_UNSUPPORTED = 24300104,
     /** @error Operation was cancelled. **/
-    SCAN_ERROR_CANCELLED = 24300105,
+    SCAN_ERROR_CANCELED = 24300105,
     /** @error Device is busy, try again later. **/
     SCAN_ERROR_DEVICE_BUSY = 24300106,
     /** @error Data is invalid (includes no dev at open). **/
-    SCAN_ERROR_INVAL = 24300107,
+    SCAN_ERROR_INVALID = 24300107,
     /** @error Document feeder jammed. **/
     SCAN_ERROR_JAMMED = 24300108,
     /** @error Document feeder out of documents. **/
@@ -83,7 +83,7 @@ typedef enum {
     /** @error Error during device I/O. **/
     SCAN_ERROR_IO_ERROR = 24300111,
     /** @error Out of memory. **/
-    SCAN_ERROR_NO_MEM = 24300112,
+    SCAN_ERROR_NO_MEMORY = 24300112,
 } Scan_ErrorCode;
 
 /**
@@ -116,7 +116,7 @@ typedef struct {
     int32_t fd;
     /** Indicates whether the image is the last scanned image. */
     bool isFinal;
-} Scan_ScanPictureProgress;
+} Scan_PictureScanProgress;
 
 /**
  * @brief Indicates all parameter options for one scanner.
@@ -142,7 +142,7 @@ typedef struct {
  * @param deviceCount Number of Scanners Found.
  * @since 12
  */
-typedef void (*Scan_DiscoverScannerCallback)(Scan_ScannerDevice** devices, int32_t deviceCount);
+typedef void (*Scan_ScannerDiscoveryCallback)(Scan_ScannerDevice** devices, int32_t deviceCount);
 
 /**
  * @brief This API checks and pulls up the scan service, initializes the scan client,
@@ -162,7 +162,7 @@ int32_t OH_Scan_Init();
  * @brief This API starts discovering scanners, Register a callback to handle discovered scanner devices.
  *
  * @permission {@code ohos.permission.PRINT}
- * @param callback The {@link Scan_DiscoverScannerCallback} of scanner discovery event.
+ * @param callback The {@link Scan_ScannerDiscoveryCallback} of scanner discovery event.
  * @return {@link Scan_ERROR_NONE} Indicates successful start of scanner search.
  *         {@link SCAN_ERROR_NO_PERMISSION} Indicates have no permission to use this interface.
  *         {@link SCAN_ERROR_RPC_FAILURE} Indicates an RPC communication error.
@@ -170,7 +170,7 @@ int32_t OH_Scan_Init();
  * @syscap SystemCapability.Print.PrintFramework
  * @since 12
  */
-int32_t OH_Scan_StartScannerDiscovery(Scan_DiscoverScannerCallback callback);
+int32_t OH_Scan_StartScannerDiscovery(Scan_ScannerDiscoveryCallback callback);
 
 /**
  * @brief This API connects to scanner devices.
@@ -184,7 +184,7 @@ int32_t OH_Scan_StartScannerDiscovery(Scan_DiscoverScannerCallback callback);
  *         {@link SCAN_ERROR_DEVICE_BUSY} Indicates that the scanner is busy.
  *         {@link SCAN_ERROR_INVALID_PARAMETER} Indicates that the input parameter is invalid.
  *         {@link SCAN_ERROR_IO_ERROR} Indicates an error occured while communicating with the device.
- *         {@link SCAN_ERROR_NO_MEM} Indicates an insufficent amount of memory is available.
+ *         {@link SCAN_ERROR_NO_MEMORY} Indicates an insufficent amount of memory is available.
  * @syscap SystemCapability.Print.PrintFramework
  * @since 12
  */
@@ -258,7 +258,7 @@ int32_t OH_Scan_SetScannerParameter(const char* scannerId, const int32_t option,
  *         {@link SCAN_ERROR_NO_DOCS} Indicates the document feeder is out of documents.
  *         {@link SCAN_ERROR_COVER_OPEN} Indicates the scanner cover is open.
  *         {@link SCAN_ERROR_IO_ERROR} Indicates an error occurred while communicating with the device.
- *         {@link SCAN_ERROR_NO_MEM} Indicates an insufficent amount of memory is available.
+ *         {@link SCAN_ERROR_NO_MEMORY} Indicates an insufficent amount of memory is available.
  *         {@link SCAN_ERROR_INVALID_PARAMETER} Indicates that the input parameter is invalid.
  *         {@link SCAN_ERROR_DEVICE_BUSY} Indicates the device is busy, the operation should be retried later.
  * @syscap SystemCapability.Print.PrintFramework
@@ -287,7 +287,7 @@ int32_t OH_Scan_CancelScan(const char* scannerId);
  *
  * @permission {@code ohos.permission.PRINT}
  * @param scannerId The id for querying the image scanning progress of the scanner.
- * @param prog The {@link Scan_ScanPictureProgress} of scanning pictures, must be a non-null value.
+ * @param prog The {@link Scan_PictureScanProgress} of scanning pictures, must be a non-null value.
  * @return {@link Scan_ERROR_NONE} Indicates the scanner has successfully queried the progress of the scanned image.
  *         {@link SCAN_ERROR_NO_PERMISSION} Indicates have no permission to use this interface.
  *         {@link SCAN_ERROR_INVALID_PARAMETER} Indicates if the pointer is null or the character string is null.
@@ -297,12 +297,12 @@ int32_t OH_Scan_CancelScan(const char* scannerId);
  *         {@link SCAN_ERROR_NO_DOCS} Indicates the document feeder is out of documents.
  *         {@link SCAN_ERROR_COVER_OPEN} Indicates the scanner cover is open.
  *         {@link SCAN_ERROR_IO_ERROR} Indicates an error occurred while communicating with the scanner.
- *         {@link SCAN_ERROR_NO_MEM} Indicates an insufficent amount of memory is available.
+ *         {@link SCAN_ERROR_NO_MEMORY} Indicates an insufficent amount of memory is available.
  *         {@link SCAN_ERROR_DEVICE_BUSY} Indicates the device is busy, the operation should be retried later.
  * @syscap SystemCapability.Print.PrintFramework
  * @since 12
  */
-int32_t OH_Scan_GetScanPictureProgress(const char* scannerId, Scan_ScanPictureProgress* prog);
+int32_t OH_Scan_GetPictureScanProgress(const char* scannerId, Scan_PictureScanProgress* prog);
 
 /**
  * @brief This API can be used to exit the scanning service, free the Scan Framework Memory,
