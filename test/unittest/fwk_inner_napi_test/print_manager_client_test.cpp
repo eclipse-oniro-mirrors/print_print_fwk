@@ -2539,7 +2539,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0149, TestSize.Level1)
     std::string printerName;
     std::string printerMake;
     PrintManagerClient::GetInstance()->DeletePrinterFromCups(printerUri, printerName, printerMake);
-    
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0150, TestSize.Level1)
