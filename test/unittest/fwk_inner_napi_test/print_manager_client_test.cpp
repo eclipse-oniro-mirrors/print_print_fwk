@@ -2515,5 +2515,73 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0146, TestSize.Level1)
     mockPrintManagerClient.SetNativePrinterChangeCallback(type, cb);
     mockPrintManagerClient.LoadExtSuccess(testExtensionId);
 }
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0147, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::string printerId = "printId-123";
+    uint32_t type = 1;
+    PrintManagerClient::GetInstance()->SetDefaultPrinter(printerId, type);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0148, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    std::string printerId = "printId-123";
+    uint32_t type = 1;
+    PrintManagerClient::GetInstance()->SetDefaultPrinter(printerId, type);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0149, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::string printerUri;
+    std::string printerName;
+    std::string printerMake;
+    PrintManagerClient::GetInstance()->DeletePrinterFromCups(printerUri, printerName, printerMake);
+    
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0150, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    std::string printerUri;
+    std::string printerName;
+    std::string printerMake;
+    PrintManagerClient::GetInstance()->DeletePrinterFromCups(printerUri, printerName, printerMake);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0151, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::string printerId = "printId-123";
+    std::string printPreference = "";
+    PrintManagerClient::GetInstance()->GetPrinterPreference(printerId, printPreference);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0152, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    std::string printerId = "printId-123";
+    std::string printPreference = "";
+    PrintManagerClient::GetInstance()->GetPrinterPreference(printerId, printPreference);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0153, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::string printerId = "printId-123";
+    std::string printPreference = "";
+    PrintManagerClient::GetInstance()->SetPrinterPreference(printerId, printPreference);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0154, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    std::string printerId = "printId-123";
+    std::string printPreference = "";
+    PrintManagerClient::GetInstance()->SetPrinterPreference(printerId, printPreference);
+}
+
 } // namespace Print
 } // namespace OHOS
