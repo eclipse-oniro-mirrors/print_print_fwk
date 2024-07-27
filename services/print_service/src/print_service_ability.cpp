@@ -1227,7 +1227,7 @@ bool PrintServiceAbility::CheckPrintJob(PrintJob &jobInfo)
         PRINT_HILOGW("cannot update printer name/uri");
         return false;
     }
-    auto jobIt = printJobList_.find(jobId);
+    auto jobIt = printJobList_.find(jobInfo.GetJobId());
     if (jobIt == printJobList_.end()) {
         PRINT_HILOGE("invalid job id");
         return false;
