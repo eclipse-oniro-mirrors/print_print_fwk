@@ -1182,23 +1182,17 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
         return E_PRINT_NO_PERMISSION;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (!UpdatePrintJobOptionByPrinterId(jobInfo)) {
-        PRINT_HILOGW("cannot update printer name/uri");
-        return E_PRINT_INVALID_PRINTER;
+    if (!CheckPrintJob(jobInfo)) {
+        PRINT_HILOGW("check printJob unavailable");
+        return E_PRINT_INVALID_PRINTJOB;
     }
     auto jobId = jobInfo.GetJobId();
     auto printerId = jobInfo.GetPrinterId();
     auto extensionId = PrintUtils::GetExtensionId(printerId);
-    auto jobIt = printJobList_.find(jobId);
-    if (jobIt == printJobList_.end()) {
-        PRINT_HILOGE("invalid job id");
-        return E_PRINT_INVALID_PRINTJOB;
-    }
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
     if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
         return E_PRINT_SERVER_FAILURE;
     }
-    printJobList_.erase(jobIt);
     auto printJob = std::make_shared<PrintJob>();
     printJob->UpdateParams(jobInfo);
     UpdateQueuedJobList(jobId, printJob);
@@ -1225,6 +1219,21 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
         serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
     }
     return E_PRINT_NONE;
+}
+
+bool PrintServiceAbility::CheckPrintJob(PrintJob &jobInfo)
+{
+    if (!UpdatePrintJobOptionByPrinterId(jobInfo)) {
+        PRINT_HILOGW("cannot update printer name/uri");
+        return false;
+    }
+    auto jobIt = printJobList_.find(jobId);
+    if (jobIt == printJobList_.end()) {
+        PRINT_HILOGE("invalid job id");
+        return false;
+    }
+    printJobList_.erase(jobIt);
+    return true;
 }
 
 void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
