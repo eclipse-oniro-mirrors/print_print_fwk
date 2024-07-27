@@ -1927,4 +1927,28 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0125, TestSize.Level1)
     state1 = service->GetListeningState(PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_OUT_OF_INK);
     EXPECT_EQ(state1, PRINT_TASK_FAIL);
 }
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0126, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerName = "testPrinterName";
+    service->QueryPrinterIdByStandardizeName(printerName);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0127, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "Pixlab_0759"; 
+    PrinterCapability printerCaps;
+    EXPECT_EQ(service->WriteEprinterPreference(printerId, printerCaps), true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "Pixlab_0759"; 
+    PrinterInfo info;
+    EXPECT_EQ(service->UpdatePrinterCapability(printerId, info), true);
+}
+
 } // namespace OHOS::Print
