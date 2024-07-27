@@ -162,7 +162,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_005, TestSize.Level1)
     printUsbManager.isUsbEnable = false;
     OHOS::USB::UsbDevice usbDevice;
     std::string printerName = printUsbManager.GetProductName(usbDevice);
-    EXPECT_EQ("", printerName);
+    EXPECT_EQ("-", printerName);
 }
 
 /**

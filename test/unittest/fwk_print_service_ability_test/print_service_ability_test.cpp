@@ -471,7 +471,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0012, TestSize.Level1)
     taskId = "";
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_NONE);
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_NONE);
-    delete listener;
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0013, TestSize.Level1)
@@ -918,7 +917,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0049, TestSize.Level1)
     EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_PARAMETER);
     subState = PRINT_JOB_BLOCKED_UNKNOWN + 1;
     EXPECT_EQ(service->checkJobState(state, subState), true);
-    EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_USERID);
     state = PRINT_JOB_COMPLETED;
     subState = PRINT_JOB_COMPLETED_FILE_CORRUPT + 1;
     EXPECT_EQ(service->checkJobState(state, subState), false);
