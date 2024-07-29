@@ -223,6 +223,7 @@ private:
     int32_t currentUserId_;
 
     uint32_t printAppCount_;
+    uint32_t unloadCount_;
     std::map<std::string, std::string> printerIdAndPreferenceMap_;
 };
 }  // namespace OHOS::Print

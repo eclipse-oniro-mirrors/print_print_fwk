@@ -117,7 +117,7 @@ std::string PrintServiceAbility::ingressPackage;
 PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START),
     spoolerBundleName_(SPOOLER_BUNDLE_NAME), spoolerAbilityName_(SPOOLER_ABILITY_NAME), currentJobOrderId_(0),
-    helper_(nullptr), isJobQueueBlocked_(false), currentUserId_(-1), printAppCount_(0)
+    helper_(nullptr), isJobQueueBlocked_(false), currentUserId_(-1), printAppCount_(0), unloadCount_(0)
 {}
 
 PrintServiceAbility::~PrintServiceAbility()
@@ -2064,7 +2064,8 @@ void PrintServiceAbility::UnloadSystemAbility()
 {
     PRINT_HILOGI("delay unload task begin");
     auto unloadTask = [this]() {
-        PRINT_HILOGI("do unload tsak");
+        unloadCount_--;
+        PRINT_HILOGI("do unload tsak, unloadCount_: %{public}u", unloadCount_);
         if (printAppCount_ != 0 || queuedJobList_.size() > 0) {
             PRINT_HILOGE("There are still print jobs being executed.");
             return;
@@ -2091,6 +2092,8 @@ void PrintServiceAbility::UnloadSystemAbility()
         PRINT_HILOGI("unload print system ability successfully");
     };
     serviceHandler_->PostTask(unloadTask, UNLOAD_SA_INTERVAL);
+    unloadCount_++;
+    PRINT_HILOGI("unloadCount_: %{public}u", unloadCount_);
 }
 
 bool PrintServiceAbility::CheckPermission(const std::string &permissionName)
