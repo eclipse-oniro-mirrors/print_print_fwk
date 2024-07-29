@@ -1937,7 +1937,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0126, TestSize.Level1)
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0127, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "Pixlab_0759"; 
+    std::string printerId = "Pixlab_0759";
     PrinterCapability printerCaps;
     EXPECT_EQ(service->WriteEprinterPreference(printerId, printerCaps), true);
 }
@@ -1945,7 +1945,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0127, TestSize.Level1)
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "Pixlab_0759"; 
+    std::string printerId = "Pixlab_0759";
     PrinterInfo info;
     EXPECT_EQ(service->UpdatePrinterCapability(printerId, info), true);
 }
