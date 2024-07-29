@@ -1,1 +1,2 @@
 src:*/base/print/print_fwk/test/unittest/*
+src:*/third_party/googletest/*
