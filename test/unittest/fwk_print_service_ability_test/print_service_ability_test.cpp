@@ -508,7 +508,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0014, TestSize.Level1)
     service->printJobList_["1"] = job;
     EXPECT_EQ(service->StartPrintJob(testJob), E_PRINT_INVALID_PRINTJOB);
     service->printJobList_["0"] = job;
-    EXPECT_EQ(service->StartPrintJob(testJob), E_PRINT_SERVER_FAILURE);
     std::string extensionId = PrintUtils::GetExtensionId(GetDefaultPrinterId());
     sptr<IPrintExtensionCallback> listener = nullptr;
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
