@@ -2064,8 +2064,9 @@ void PrintServiceAbility::UnloadSystemAbility()
 {
     PRINT_HILOGI("delay unload task begin");
     auto unloadTask = [this]() {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
         unloadCount_--;
-        PRINT_HILOGI("do unload tsak, unloadCount_: %{public}u", unloadCount_);
+        PRINT_HILOGI("do unload task, unloadCount_: %{public}u", unloadCount_);
         if (printAppCount_ != 0 || queuedJobList_.size() > 0 || unloadCount_ != 0) {
             PRINT_HILOGE("There are still print jobs being executed.");
             return;
