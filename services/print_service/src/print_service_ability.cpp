@@ -2066,7 +2066,7 @@ void PrintServiceAbility::UnloadSystemAbility()
     auto unloadTask = [this]() {
         unloadCount_--;
         PRINT_HILOGI("do unload tsak, unloadCount_: %{public}u", unloadCount_);
-        if (printAppCount_ != 0 || queuedJobList_.size() > 0) {
+        if (printAppCount_ != 0 || queuedJobList_.size() > 0 || unloadCount_ != 0) {
             PRINT_HILOGE("There are still print jobs being executed.");
             return;
         }
