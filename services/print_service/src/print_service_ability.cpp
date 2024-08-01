@@ -1483,6 +1483,21 @@ void PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
     }
 }
 
+bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info)
+{
+    CupsPrinterInfo cupsPrinter;
+    std::string option = info->GetOption();
+    if (printSystemData_.QueryCupsPrinterInfoByPrinterId(info->GetPrinterId(), cupsPrinter) && json::accept(option)) {
+        json optionJson = json::parse(option);
+        if (optionJson.contains("printerUri") && optionJson["printerUri"].is_string()) {
+            if (optionJson["printerUri"].get<std::string>() != cupsPrinter.uri) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printerInfos)
 {
     ManualStart();
@@ -1499,12 +1514,16 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
 
     for (auto info : printerInfos) {
         if (printerInfoList_.find(info.GetPrinterId()) != printerInfoList_.end()) {
-            PRINT_HILOGE("duplicate printer id, ingore it");
+            PRINT_HILOGW("duplicate printer id, ignore it");
             continue;
         }
         auto printerInfo = std::make_shared<PrinterInfo>(info);
         printerInfo->SetPrinterId(PrintUtils::GetGlobalId(extensionId, printerInfo->GetPrinterId()));
         PRINT_HILOGD("AddPrinters printerId = %{public}s", printerInfo->GetPrinterId().c_str());
+        if (CheckPrinterUriDifferent(printerInfo)) {
+            PRINT_HILOGW("different printer uri, ignore it");
+            continue;
+        }
         printerInfo->SetPrinterState(PRINTER_ADDED);
         printerInfoList_[printerInfo->GetPrinterId()] = printerInfo;
         SendPrinterDiscoverEvent(PRINTER_ADDED, *printerInfo);
