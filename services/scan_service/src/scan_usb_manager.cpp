@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-#include "scan_usb_manager.h"
 #include "scan_log.h"
 #include "usb_errors.h"
 #include "scan_constant.h"
@@ -22,6 +21,8 @@
 #include "common_event_data.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "scan_system_data.h"
+#include "scan_usb_manager.h"
 
 namespace OHOS::Scan {
 using namespace std;
@@ -70,6 +71,25 @@ void ScanUsbManager::RefreshUsbDevice()
         std::string serialNumber = GetSerialNumber(dev);
         SCAN_HILOGI("RefreshDeviceList serialNumber = %{public}s.", serialNumber.c_str());
         ScanServiceAbility::usbSnMap[dev.GetName()] = serialNumber;
+    }
+}
+
+void ScanUsbManager::RefreshUsbDevicePort()
+{
+    SCAN_HILOGI("RefreshUsbDevicePort start");
+    vector<UsbDevice> devlist;
+    auto &UsbSrvClient = UsbSrvClient::GetInstance();
+    auto ret = UsbSrvClient.GetDevices(devlist);
+    if (ret != ERR_OK) {
+        SCAN_HILOGE("RefreshUsbDevicePort GetDevices failed with ret = %{public}d.", ret);
+        return;
+    }
+    SCAN_HILOGI("RefreshUsbDevicePort DeviceList size = %{public}zu.", devlist.size());
+    for (auto dev : devlist) {
+        SCAN_HILOGI("RefreshUsbDevicePort dev.GetName() %{public}s ", dev.GetName().c_str());
+        std::string serialNumber = GetSerialNumber(dev);
+        SCAN_HILOGI("RefreshUsbDevicePort serialNumber = %{public}s.", serialNumber.c_str());
+        ScanSystemData::usbSnToPortMap_[serialNumber] = dev.GetName();
     }
 }
 
@@ -144,6 +164,12 @@ void ScanUsbManager::UpdateUsbScannerId(std::string serialNumber, std::string us
     if (serialNumber.empty() || usbDeviceName.empty()) {
         SCAN_HILOGE("UpdateUsbScannerId serialNumber or usbDeviceName is null.");
         return;
+    }
+    std::string uniqueId = "USB" + serialNumber;
+    if (ScanSystemData::GetInstance().UpdateScannerIdByUsbDeviceName(uniqueId, usbDeviceName)) {
+        if (!ScanSystemData::GetInstance().SaveScannerMap()) {
+            SCAN_HILOGW("Failed to update the Json file.");
+        }
     }
     auto it = ScanServiceAbility::saneGetUsbDeviceInfoMap.find(serialNumber);
     if (it != ScanServiceAbility::saneGetUsbDeviceInfoMap.end()) {

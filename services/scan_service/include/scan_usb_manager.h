@@ -32,6 +32,7 @@ public:
     void RefreshUsbDevice();
     std::string GetSerialNumber(USB::UsbDevice &usbDevice);
     void DealUsbDevStatusChange(const std::string &devStr, bool isAttach);
+    void RefreshUsbDevicePort();
     void Init();
 private:
     std::string GetDeviceSerialNumber(USB::USBDevicePipe &usbDevicePipe);
