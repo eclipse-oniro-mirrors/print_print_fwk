@@ -1520,10 +1520,6 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
         auto printerInfo = std::make_shared<PrinterInfo>(info);
         printerInfo->SetPrinterId(PrintUtils::GetGlobalId(extensionId, printerInfo->GetPrinterId()));
         PRINT_HILOGD("AddPrinters printerId = %{public}s", printerInfo->GetPrinterId().c_str());
-        if (CheckPrinterUriDifferent(printerInfo)) {
-            PRINT_HILOGW("different printer uri, ignore it");
-            continue;
-        }
         printerInfo->SetPrinterState(PRINTER_ADDED);
         printerInfoList_[printerInfo->GetPrinterId()] = printerInfo;
         SendPrinterDiscoverEvent(PRINTER_ADDED, *printerInfo);
@@ -1531,10 +1527,14 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
         SendQueuePrintJob(printerInfo->GetPrinterId());
         if (printSystemData_.IsPrinterAdded(printerInfo->GetPrinterId()) &&
             !printSystemData_.CheckPrinterBusy(printerInfo->GetPrinterId())) {
-            printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-            printSystemData_.UpdatePrinterStatus(printerInfo->GetPrinterId(), PRINTER_STATUS_IDLE);
-            SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-            SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+            if (CheckPrinterUriDifferent(printerInfo)) {
+                PRINT_HILOGW("different printer uri, ignore it");
+            } else {
+                printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
+                printSystemData_.UpdatePrinterStatus(printerInfo->GetPrinterId(), PRINTER_STATUS_IDLE);
+                SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+                SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+            }
         }
     }
     PRINT_HILOGD("AddPrinters end. Total size is %{public}zd", printerInfoList_.size());
