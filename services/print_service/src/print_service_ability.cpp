@@ -1490,7 +1490,8 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
     if (printSystemData_.QueryCupsPrinterInfoByPrinterId(info->GetPrinterId(), cupsPrinter) && json::accept(option)) {
         json optionJson = json::parse(option);
         if (optionJson.contains("printerUri") && optionJson["printerUri"].is_string()) {
-            if (optionJson["printerUri"].get<std::string>() != cupsPrinter.uri) {
+            std::string printerUri = optionJson["printerUri"].get<std::string>();
+            if (!printerUri.empty() && printerUri != cupsPrinter.uri) {
                 return true;
             }
         }
