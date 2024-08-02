@@ -94,7 +94,7 @@ HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_004, TestSize.Le
 HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_005, TestSize.Level1)
 {
     OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
-    std::string printerId = "com.ohos.spooler:HUAWEI PixLab V1-0159";
+    std::string printerId = "com.ohos.spooler:USB-PixLab V1-0159";
     int32_t port = 60000;
     printIppOverUsbManager.ConnectPrinter(printerId, port);
 }
@@ -147,7 +147,7 @@ HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_008, TestSize.Le
 HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_009, TestSize.Level1)
 {
     OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
-    std::string printerId = "com.ohos.spooler:HUAWEI PixLab V1-0159";
+    std::string printerId = "com.ohos.spooler:USB-PixLab V1-0159";
     printIppOverUsbManager.DisConnectPrinter(printerId);
 }
 
