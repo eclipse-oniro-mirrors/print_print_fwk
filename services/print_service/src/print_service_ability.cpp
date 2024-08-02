@@ -66,6 +66,7 @@ const uint32_t UNLOAD_SA_INTERVAL = 90000;
 
 static const std::string SPOOLER_BUNDLE_NAME = "com.huawei.hmos.spooler";
 static const std::string SPOOLER_PACKAGE_NAME = "com.huawei.hmos.spooler";
+static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.huawei.hmos.hwprintext";
 static const std::string EPRINTER_ID = "com.huawei.hmos.hwprintext:ePrintID";
 static const std::string SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
@@ -1581,7 +1582,8 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
     bool isChanged = false;
     for (auto info: printerInfos) {
         std::string printExtId = info.GetPrinterId();
-        if (printExtId.find(SPOOLER_PACKAGE_NAME) == std::string::npos) {
+        if (printExtId.find(SPOOLER_PACKAGE_NAME) == std::string::npos &&
+            printExtId.find(PRINT_EXTENSION_BUNDLE_NAME) == std::string::npos) {
             printExtId = PrintUtils::GetGlobalId(extensionId, printExtId);
         }
         if (UpdatePrinterSystemData(printExtId, info)) {
