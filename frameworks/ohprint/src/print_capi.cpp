@@ -237,7 +237,7 @@ Print_ErrorCode OH_Print_LaunchPrinterManager()
 {
     OHOS::AAFwk::AbilityManagerClient::GetInstance()->Connect();
     OHOS::AAFwk::Want want;
-    want.SetElementName("com.huawei.hmos.spooler", "PrinterManagerAbility");
+    want.SetElementName("com.ohos.spooler", "PrinterManagerAbility");
     auto ret = OHOS::AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
     PRINT_HILOGI("StartAbility ret = %{public}d", ret);
     if (ret != 0) {
@@ -255,7 +255,7 @@ int32_t OH_Print_LaunchPrinterPreference(const char* printerName, const char* pr
     std::string preferencesParam = id + "id&name" + name;  // 传参和应用层对齐
     OHOS::AAFwk::AbilityManagerClient::GetInstance()->Connect();
     OHOS::AAFwk::Want want;
-    want.SetElementName(preferencesParam, "com.huawei.hmos.spooler", "PreferencesAbility", "");
+    want.SetElementName(preferencesParam, "com.ohos.spooler", "PreferencesAbility", "");
     std::string thirdAppFlag = "window";
     want.SetParam("thirdApp", thirdAppFlag.c_str());
     auto ret = OHOS::AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);

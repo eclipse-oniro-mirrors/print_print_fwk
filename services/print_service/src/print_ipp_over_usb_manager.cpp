@@ -28,7 +28,7 @@ using namespace OHOS;
 using namespace OHOS::USB;
 using namespace httplib;
 
-static const std::string SPOOLER_BUNDLE_NAME = "com.huawei.hmos.spooler";
+static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 
 PrintIppOverUsbManager::PrintIppOverUsbManager()
 {}
@@ -59,7 +59,7 @@ void PrintIppOverUsbManager::Init()
 bool PrintIppOverUsbManager::ConnectPrinter(const std::string printerId, int32_t &port)
 {
     PRINT_HILOGD("ConnectPrinter printerId = %{public}s", printerId.c_str());
-    // printerId: com.huawei.hmos.spooler:USB-XXXXX
+    // printerId: com.ohos.spooler:USB-XXXXX
     auto posColon = printerId.find_first_of(SPLIT_VALUE_COLON);
     if (posColon == std::string::npos) {
         PRINT_HILOGE("can not find : , return!");
