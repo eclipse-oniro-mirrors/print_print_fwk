@@ -1483,6 +1483,22 @@ void PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
     }
 }
 
+bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info)
+{
+    CupsPrinterInfo cupsPrinter;
+    std::string option = info->GetOption();
+    if (printSystemData_.QueryCupsPrinterInfoByPrinterId(info->GetPrinterId(), cupsPrinter) && json::accept(option)) {
+        json optionJson = json::parse(option);
+        if (optionJson.contains("printerUri") && optionJson["printerUri"].is_string()) {
+            std::string printerUri = optionJson["printerUri"].get<std::string>();
+            if (!printerUri.empty() && printerUri != cupsPrinter.uri) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printerInfos)
 {
     ManualStart();
@@ -1499,7 +1515,7 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
 
     for (auto info : printerInfos) {
         if (printerInfoList_.find(info.GetPrinterId()) != printerInfoList_.end()) {
-            PRINT_HILOGE("duplicate printer id, ingore it");
+            PRINT_HILOGW("duplicate printer id, ignore it");
             continue;
         }
         auto printerInfo = std::make_shared<PrinterInfo>(info);
@@ -1512,10 +1528,14 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
         SendQueuePrintJob(printerInfo->GetPrinterId());
         if (printSystemData_.IsPrinterAdded(printerInfo->GetPrinterId()) &&
             !printSystemData_.CheckPrinterBusy(printerInfo->GetPrinterId())) {
-            printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-            printSystemData_.UpdatePrinterStatus(printerInfo->GetPrinterId(), PRINTER_STATUS_IDLE);
-            SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-            SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+            if (CheckPrinterUriDifferent(printerInfo)) {
+                PRINT_HILOGW("different printer uri, ignore it");
+            } else {
+                printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
+                printSystemData_.UpdatePrinterStatus(printerInfo->GetPrinterId(), PRINTER_STATUS_IDLE);
+                SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+                SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+            }
         }
     }
     PRINT_HILOGD("AddPrinters end. Total size is %{public}zd", printerInfoList_.size());
