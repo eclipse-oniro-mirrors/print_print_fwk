@@ -679,7 +679,7 @@ int32_t PrintServiceAbility::QueryPrinterProperties(const std::string &printerId
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGI("printerId %{public}s", printerId.c_str());
     PrinterInfo printerInfo;
-    uint32_t ret = QueryPrinterInfoByPrinterId(printerId, printerInfo);
+    int32_t ret = QueryPrinterInfoByPrinterId(printerId, printerInfo);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("no printerInfo");
         return E_PRINT_INVALID_PRINTER;
@@ -689,7 +689,8 @@ int32_t PrintServiceAbility::QueryPrinterProperties(const std::string &printerId
         PRINT_HILOGD("QueryPrinterProperties key %{public}s", key.c_str());
         if (key == "printerPreference") {
             std::string printerPreference;
-            if (GetPrinterPreference(printerId, printerPreference) == E_PRINT_NONE) {
+            if (GetPrinterPreference(printerId, printerPreference) == E_PRINT_NONE &&
+                json::accept(printerPreference)) {
                 nlohmann::json preferenceJson = json::parse(printerPreference);
                 valueList.emplace_back(preferenceJson.at("setting").dump());
                 PRINT_HILOGD("getPrinterPreference success");
