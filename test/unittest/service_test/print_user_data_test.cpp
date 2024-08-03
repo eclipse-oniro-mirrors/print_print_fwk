@@ -208,7 +208,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0013, TestSize.Level1)
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0014, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-0105";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-0105";
     userData->SetLastUsedPrinter(printerId);
     std::string printerId2 = "";
     userData->SetLastUsedPrinter(printerId2);
@@ -248,7 +248,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0019, TestSize.Level1)
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0020, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-0105";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-0105";
     userData->SetDefaultPrinter(printerId, 0);
     std::string printerId2 = "";
     userData->SetDefaultPrinter(printerId2, 0);

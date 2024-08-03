@@ -170,7 +170,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0009, TestSize.Level1)
     EXPECT_NE(systemData, nullptr);
     nlohmann::json printerMapJson = nlohmann::json::array();
     nlohmann::json printerJson;
-    printerJson["id"] = "com.huawei.hmos.spooler:mdns://9e9561ad-0e30-1000-8000-9c9561ad0e30";
+    printerJson["id"] = "com.ohos.spooler:mdns://9e9561ad-0e30-1000-8000-9c9561ad0e30";
     printerJson["maker"] = "HUAWEI PixLab V1";
     printerJson["name"] = "HUAWEI_PixLab_V1-0105";
     printerJson["uri"] = "ipp://192.168.186.1:631/ipp/print";

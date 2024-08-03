@@ -193,7 +193,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0009, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "DIRECT-PixLab_V1-0105";
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-0105";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-0105";
     PrinterInfo info;
     info.SetPrinterName(printerName);
     printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
@@ -1450,10 +1450,10 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0074, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0075, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    std::string printerId = "com.huawei.hmos.spooler:usb://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:usb://DIRECT-PixLab_V1-1620";
     std::string nic = "";
     printCupsClient.IsIpConflict(printerId, nic);
-    printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
     printCupsClient.IsIpConflict(printerId, nic);
 }
 
