@@ -70,6 +70,7 @@ sptr<IScanService> ScanManagerClient::GetScanServiceProxy()
 
 void ScanManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
 {
+    std::lock_guard<std::mutex> lock(proxyLock_);
     scanServiceProxy_ = nullptr;
     ready_ = false;
 }
