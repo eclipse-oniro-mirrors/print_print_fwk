@@ -556,12 +556,12 @@ int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IP
         auto printUiContent = static_cast<OHOS::Ace::UIContent *>(uiContent);
         auto callback = std::make_shared<PrintInnerkitModalUICallback>(printUiContent);
         OHOS::Ace::ModalUIExtensionCallbacks extensionCallbacks = {
-            [&callback](int32_t releaseCode) { callback->OnRelease(releaseCode); },
-            [&callback](int32_t resultCode, const OHOS::AAFwk::Want& result) {
+            [callback](int32_t releaseCode) { callback->OnRelease(releaseCode); },
+            [callback](int32_t resultCode, const OHOS::AAFwk::Want& result) {
                 callback->OnResultForModal(resultCode, result);
             },
-            [&callback](const OHOS::AAFwk::WantParams& request) { callback->OnReceive(request); },
-            [&callback](int32_t code, const std::string& name, const std::string& message) {
+            [callback](const OHOS::AAFwk::WantParams& request) { callback->OnReceive(request); },
+            [callback](int32_t code, const std::string& name, const std::string& message) {
                 callback->OnError(code, name, message);
             }
         };
