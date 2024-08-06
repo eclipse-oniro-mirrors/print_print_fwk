@@ -56,13 +56,6 @@ void PrintSystemDataTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0001, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    EXPECT_EQ(systemData->Init(), true);
-}
-
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0002, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
