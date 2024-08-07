@@ -40,7 +40,6 @@ bool ScanSystemData::CheckJsonObjectValue(const nlohmann::json& object)
             return false;
         }
     }
-    RefreshUsbDeviceId();
     return true;
 }
 
@@ -66,6 +65,7 @@ bool ScanSystemData::ParseScannerListJsonV1(nlohmann::json& jsonObject)
         std::string uniqueId = scanDeviceInfo.discoverMode + scanDeviceInfo.serialNumber;
         InsertScannerInfo(uniqueId, scanDeviceInfo);
     }
+    RefreshUsbDeviceId();
     return true;
 }
 
@@ -98,18 +98,17 @@ bool ScanSystemData::Init()
 
 void ScanSystemData::RefreshUsbDeviceId()
 {
-    usbSnToPortMap_.clear();
     ScanUsbManager::GetInstance()->RefreshUsbDevicePort();
     if (usbSnToPortMap_.empty()) {
         SCAN_HILOGW("Failed to refresh the USB device.");
         return;
     }
     for (auto &scanDevIt : addedScannerMap_) {
-        std::string serialNumber = scanDevIt.second->serialNumber;
         std::string discoverMode = scanDevIt.second->discoverMode;
         if (discoverMode == "TCP") {
             continue;
         }
+        std::string serialNumber = scanDevIt.second->serialNumber;
         auto it = usbSnToPortMap_.find(serialNumber);
         if (it == usbSnToPortMap_.end()) {
             continue;
@@ -124,12 +123,12 @@ void ScanSystemData::RefreshUsbDeviceId()
     }
 }
 
-std::string ScanSystemData::GetNewDeviceId(std::string oldDeviceId, std::string usbDeviceName)
+std::string ScanSystemData::GetNewDeviceId(std::string oldDeviceId, std::string usbDevicePort)
 {
     std::string deviceIdHead = oldDeviceId.substr(0, oldDeviceId.find_last_of(":")
                                                     - USB_DEVICEID_FIRSTID_LEN_3);
-    std::string firstPort = usbDeviceName.substr(0, usbDeviceName.find("-"));
-    std::string secondPort = usbDeviceName.substr(usbDeviceName.find("-") + 1, usbDeviceName.size() - 1);
+    std::string firstPort = usbDevicePort.substr(0, usbDevicePort.find("-"));
+    std::string secondPort = usbDevicePort.substr(usbDevicePort.find("-") + 1, usbDevicePort.size() - 1);
     SCAN_HILOGI("firstPort = %{public}s, secondPort = %{public}s.",
                 firstPort.c_str(), secondPort.c_str());
     FormatUsbPort(firstPort);
@@ -146,16 +145,16 @@ void ScanSystemData::FormatUsbPort(std::string &port)
     }
 }
 
-bool ScanSystemData::UpdateScannerIdByUsbDeviceName(const std::string &uniqueId, const std::string &usbDeviceName)
+bool ScanSystemData::UpdateScannerIdByUsbDevicePort(const std::string &uniqueId, const std::string &usbDevicePort)
 {
     std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
     auto iter = addedScannerMap_.find(uniqueId);
     if (iter != addedScannerMap_.end()) {
         std::string oldDeviceId = iter->second->deviceId;
-        std::string newDeviceId = GetNewDeviceId(oldDeviceId, usbDeviceName);
+        std::string newDeviceId = GetNewDeviceId(oldDeviceId, usbDevicePort);
         iter->second->deviceId = newDeviceId;
     } else {
-        SCAN_HILOGE("ScanSystemData UpdateScannerIdByUsbDeviceName fail");
+        SCAN_HILOGE("ScanSystemData UpdateScannerIdByUsbDevicePort fail");
         return false;
     }
     return true;
