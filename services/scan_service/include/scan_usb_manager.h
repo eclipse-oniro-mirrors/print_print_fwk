@@ -36,9 +36,9 @@ public:
     void Init();
 private:
     std::string GetDeviceSerialNumber(USB::USBDevicePipe &usbDevicePipe);
-    void formatUsbPort(std::string &port);
-    std::string getNewDeviceId(std::string oldDeviceId, std::string usbDeviceName);
-    void UpdateUsbScannerId(std::string serialNumber, std::string usbDeviceName);
+    void FormatUsbPort(std::string &port);
+    std::string getNewDeviceId(std::string oldDeviceId, std::string usbDevicePort);
+    void UpdateUsbScannerId(std::string serialNumber, std::string usbDevicePort);
     void DisConnectUsbScanner(std::string usbDeviceName);
     std::shared_ptr<ScanEventSubscriber> usbDevStatusListener;
     bool isInit = false;
