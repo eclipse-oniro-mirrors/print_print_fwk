@@ -158,7 +158,7 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
         std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
         sptr<IRemoteObject> callerToken = nullptr;
         if (GetAbilityContext(env, argv[NapiPrintUtils::ARGC_THREE], abilityContext) != nullptr) {
-            if(abilityContext != nullptr) {
+            if (abilityContext != nullptr) {
                 callerToken = abilityContext->GetToken();
             }
         }
