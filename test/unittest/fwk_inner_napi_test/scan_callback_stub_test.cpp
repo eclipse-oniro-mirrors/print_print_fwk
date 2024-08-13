@@ -32,13 +32,3 @@ void ScanCallbackStubTest::TearDownTestCase(void) {}
 void ScanCallbackStubTest::SetUp(void) {}
 
 void ScanCallbackStubTest::TearDown(void) {}
-
-/**
- * @tc.name: ScanCallbackStubTest_0001
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScanCallbackStubTest, ScanCallbackStubTest_0001, TestSize.Level1) { }
-} // namespace Scan
-} // namespace OHOS
