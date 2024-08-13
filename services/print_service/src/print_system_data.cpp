@@ -103,7 +103,7 @@ bool PrintSystemData::GetJsonObjectFromFile(nlohmann::json &jsonObject, const st
     std::ifstream ifs(fileName.c_str(), std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
         PRINT_HILOGW("open printer list file fail");
-        return false;
+        return true;
     }
     std::string fileData((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
     ifs.close();
