@@ -158,7 +158,9 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
         std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
         sptr<IRemoteObject> callerToken = nullptr;
         if (GetAbilityContext(env, argv[NapiPrintUtils::ARGC_THREE], abilityContext) != nullptr) {
-            callerToken = abilityContext->GetToken();
+            if (abilityContext != nullptr) {
+                callerToken = abilityContext->GetToken();
+            }
         }
         auto task = new (std::nothrow) PrintTask(printJobName, callback, printAttributes, callerToken);
 
@@ -198,7 +200,6 @@ napi_value NapiPrintTask::GetAbilityContext(
         abilityContext = OHOS::AbilityRuntime::Context::ConvertTo<OHOS::AbilityRuntime::AbilityContext>(context);
         if (abilityContext == nullptr) {
             PRINT_HILOGE("GetAbilityContext get Stage model ability context failed.");
-            return nullptr;
         }
         return WrapVoidToJS(env);
     }
@@ -257,7 +258,9 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
         std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
         sptr<IRemoteObject> callerToken;
         if (argc == NapiPrintUtils::ARGC_TWO && GetAbilityContext(env, argv[1], abilityContext) != nullptr) {
-            callerToken = abilityContext->GetToken();
+            if (abilityContext != nullptr) {
+                callerToken = abilityContext->GetToken();
+            }
             PRINT_HILOGI("get callerToken:%{public}s", callerToken != nullptr ? "success" : "failed");
         }
         auto task = new (std::nothrow) PrintTask(printfiles, callerToken);
