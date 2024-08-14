@@ -842,45 +842,6 @@ napi_value NapiInnerScan::UpdateScannerName(napi_env env, napi_callback_info inf
     return asyncCall.Call(env, exec);
 }
 
-napi_value NapiInnerScan::AddPrinter(napi_env env, napi_callback_info info)
-{
-    auto context = std::make_shared<NapiScanContext>();
-    auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
-        SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
-        napi_valuetype valuetype = napi_undefined;
-
-        SCAN_CALL_BASE(env, napi_typeof(env, argv[NapiScanUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
-        SCAN_ASSERT_BASE(env, valuetype == napi_string, "scanner serialNumber is not a string", napi_string_expected);
-        std::string serialNumber = NapiScanUtils::GetStringFromValueUtf8(env, argv[NapiScanUtils::INDEX_ZERO]);
-        SCAN_HILOGD("serialNumber : %{public}s", serialNumber.c_str());
-        context->serialNumber = serialNumber;
-
-        SCAN_CALL_BASE(env, napi_typeof(env, argv[NapiScanUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
-        SCAN_ASSERT_BASE(env, valuetype == napi_string, "discoverMode is not a string", napi_string_expected);
-        std::string discoverMode = NapiScanUtils::GetStringFromValueUtf8(env, argv[NapiScanUtils::INDEX_ONE]);
-        SCAN_HILOGD("discoverMode : %{public}s", discoverMode.c_str());
-        context->discoverMode = discoverMode;
-
-        return napi_ok;
-    };
-    auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        SCAN_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
-        return status;
-    };
-    auto exec = [context](ScanAsyncCall::Context *ctx) {
-        int32_t ret = ScanManagerClient::GetInstance()->AddPrinter(context->serialNumber, context->discoverMode);
-        context->result = ret == E_SCAN_NONE;
-        if (ret != E_SCAN_NONE) {
-            SCAN_HILOGE("Failed to add Printer");
-            context->SetErrorIndex(ret);
-        }
-    };
-    context->SetAction(std::move(input), std::move(output));
-    ScanAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<ScanAsyncCall::Context>(context));
-    return asyncCall.Call(env, exec);
-}
-
 bool NapiInnerScan::IsSupportType(const std::string& type)
 {
     if (type == GET_FRAME_RES_EVENT_TYPE || type == SCAN_DEVICE_FOUND_TCP|| type == SCAN_DEVICE_FOUND

@@ -23,7 +23,6 @@ ScanCallbackStub::ScanCallbackStub()
 {
     cmdMap_[SCAN_CALLBACK_DEVICE_TCP] = &ScanCallbackStub::HandleDeviceInfoTcpEvent;
     cmdMap_[SCAN_CALLBACK_DEVICE] = &ScanCallbackStub::HandleDeviceInfoEvent;
-    cmdMap_[SCAN_CALLBACK_DEVICE] = &ScanCallbackStub::HandleDeviceInfoEvent;
     cmdMap_[SCAN_CALLBACK_DEVICE_SYNC] = &ScanCallbackStub::HandleDeviceInfoSyncEvent;
     cmdMap_[SCAN_CALLBACK_GET_FRAME_RES] = &ScanCallbackStub::HandleGetFrameResEvent;
     cmdMap_[SCAN_CALLBACK_SCAN_INIT] = &ScanCallbackStub::HandleGetFrameResEvent;

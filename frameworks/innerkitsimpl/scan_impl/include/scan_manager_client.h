@@ -61,7 +61,6 @@ public:
     int32_t GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner);
     int32_t UpdateScannerName(const std::string& serialNumber,
         const std::string& discoverMode, const std::string& deviceName);
-    int32_t AddPrinter(const std::string& serialNumber, const std::string& discoverMode);
 
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IScanCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);

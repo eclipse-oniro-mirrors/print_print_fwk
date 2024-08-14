@@ -306,5 +306,16 @@ bool ScanSystemData::SaveScannerMap()
     }
     return (size_t)writeLength == jsonLength;
 }
+
+bool ScanSystemData::IsContainScanner(const std::string &uniqueId)
+{
+    if (addedScannerMap_.find(uniqueId) != addedScannerMap_.end()) {
+        SCAN_HILOGI("The map contains the scanner.");
+        return true;
+    } else {
+        SCAN_HILOGW("The scanner is not included in the map.");
+        return false;
+    }
+}
 }  // namespace Scan
 }  // namespace OHOS
