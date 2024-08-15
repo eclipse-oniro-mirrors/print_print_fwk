@@ -105,7 +105,6 @@ bool PrintServiceStub::OnStartService(MessageParcel &data, MessageParcel &reply)
     PRINT_HILOGD("nativePrint PrintServiceStub::OnStartService in");
     int32_t ret = E_PRINT_NONE;
     if (data.ReadString() == "nativePrint") {
-        std::string result = "";
         ret = StartService();
         reply.WriteInt32(ret);
         PRINT_HILOGI("nativePrint PrintServiceStub::OnStartService out:%{public}d", ret);
@@ -118,15 +117,11 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     PRINT_HILOGD("PrintServiceStub::OnStartPrint in");
     std::vector<std::string> fileList;
     std::vector<uint32_t> fdList;
-    std::string result = "";
 
     if (data.ReadBool()) {
         data.ReadStringVector(&fileList);
         PRINT_HILOGD("Current file is %{public}zd", fileList.size());
         CHECK_IS_EXCEED_PRINT_RANGE_BOOL(fileList.size());
-        for (auto file : fileList) {
-            PRINT_HILOGD("file is %{private}s", file.c_str());
-        }
     }
 
     if (data.ReadBool()) {

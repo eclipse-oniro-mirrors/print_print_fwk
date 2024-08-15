@@ -97,7 +97,7 @@ bool PrintCallbackStub::HandlePrintAdapterJobEvent(MessageParcel &data, MessageP
     std::string jobId = data.ReadString();
     auto oldAttrs = PrintAttributes::Unmarshalling(data);
     auto newAttrs = PrintAttributes::Unmarshalling(data);
-    if (newAttrs == nullptr) {
+    if (newAttrs == nullptr || oldAttrs == nullptr) {
         PRINT_HILOGE("invalid print attributes object");
         return false;
     }

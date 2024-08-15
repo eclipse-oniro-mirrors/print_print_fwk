@@ -615,6 +615,10 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
     }
 
     auto printAttributes = PrintAttributesHelper::BuildFromJs(env, argv[1]);
+    if (printAttributes == nullptr) {
+        PRINT_HILOGE("printAttributes is nullptr");
+        return nullptr;
+    }
     if (static_cast<uint32_t>(argc) > NapiPrintUtils::INDEX_TWO) {
         uint32_t fd = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_TWO]);
         int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, *printAttributes, fd);
