@@ -1008,10 +1008,6 @@ void PrintCupsClient::UpdatePrintJobStateInJobParams(JobParameters *jobParams, u
 
 void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callback)
 {
-    if (param == nullptr) {
-        PRINT_HILOGE("MonitorJobState Param is nullptr");
-        return;
-    }
     http_t *http = NULL;
     uint32_t fail_connect_times = 0;
     PRINT_HILOGD("MonitorJobState enter, cupsJobId: %{public}d", param->cupsJobId);
