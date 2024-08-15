@@ -1377,40 +1377,44 @@ int32_t ScanServiceAbility::AddScanner(const std::string& serialNumber, const st
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-    SCAN_HILOGI("ScanServiceAbility AddScanner start");
-
-#ifdef SANE_ENABLE
-    std::string uniqueId = discoverMode + serialNumber;
-    if (discoverMode == "USB") {
-        auto usbIt = saneGetUsbDeviceInfoMap.find(serialNumber);
-        if (usbIt != saneGetUsbDeviceInfoMap.end()) {
-            ScanSystemData::GetInstance().InsertScannerInfo(uniqueId, usbIt->second);
-            if (!ScanSystemData::GetInstance().SaveScannerMap()) {
-                SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
-                return E_SCAN_GENERIC_FAILURE;
-            }
-            SendDeviceInfo(usbIt->second, SCAN_DEVICE_ADD);
-        } else {
-            SCAN_HILOGE("ScanServiceAbility AddScanner not found the USB scanner");
-        }
-    } else if (discoverMode == "TCP") {
-        auto tcpIt = saneGetTcpDeviceInfoMap.find(serialNumber);
-        if (tcpIt != saneGetTcpDeviceInfoMap.end()) {
-            ScanSystemData::GetInstance().InsertScannerInfo(uniqueId, tcpIt->second);
-            if (!ScanSystemData::GetInstance().SaveScannerMap()) {
-                SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
-                return E_SCAN_GENERIC_FAILURE;
-            }
-            SendDeviceInfo(tcpIt->second, SCAN_DEVICE_ADD);
-        } else {
-            SCAN_HILOGE("ScanServiceAbility AddScanner not found the TCP scanner");
-        }
-    } else {
-        SCAN_HILOGE("ScanServiceAbility AddScanner invalid parameter");
+    if (discoverMode != "USB" && discoverMode != "TCP") {
+        SCAN_HILOGE("discoverMode is a invalid parameter.");
         return E_SCAN_INVALID_PARAMETER;
     }
+    auto addScannerExe = [=]() {
+#ifdef SANE_ENABLE
+    std::string uniqueId = discoverMode + serialNumber;
+    ScanSystemData &scanData = ScanSystemData::GetInstance();
+    if (discoverMode == "USB") {
+        auto usbIt = saneGetUsbDeviceInfoMap.find(serialNumber);
+        if (usbIt == saneGetUsbDeviceInfoMap.end() || scanData.IsContainScanner(uniqueId)) {
+            SCAN_HILOGE("Failed to add usb scanner.");
+            return;
+        }
+        scanData.InsertScannerInfo(uniqueId, usbIt->second);
+        if (!scanData.SaveScannerMap()) {
+            SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
+            return;
+        }
+        SendDeviceInfo(usbIt->second, SCAN_DEVICE_ADD);
+    } else if (discoverMode == "TCP") {
+        auto tcpIt = saneGetTcpDeviceInfoMap.find(serialNumber);
+        if (tcpIt == saneGetTcpDeviceInfoMap.end() || scanData.IsContainScanner(uniqueId)) {
+            SCAN_HILOGE("Failed to add tcp scanner.");
+            return;
+        }
+        scanData.InsertScannerInfo(uniqueId, tcpIt->second);
+        if (!scanData.SaveScannerMap()) {
+            SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
+            return;
+        }
+        SendDeviceInfo(tcpIt->second, SCAN_DEVICE_ADD);
+    } else {
+        SCAN_HILOGE("discoverMode is invalid.");
+    }
 #endif
-    SCAN_HILOGI("ScanServiceAbility AddScanner end");
+    };
+    serviceHandler_->PostTask(addScannerExe, ASYNC_CMD_DELAY);
     return E_SCAN_NONE;
 }
 
@@ -1481,20 +1485,6 @@ int32_t ScanServiceAbility::UpdateScannerName(const std::string& serialNumber,
     }
 #endif
     SCAN_HILOGI("ScanServiceAbility UpdateScannerName end");
-    return E_SCAN_NONE;
-}
-
-int32_t ScanServiceAbility::AddPrinter(const std::string& serialNumber, const std::string& discoverMode)
-{
-    ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
-        SCAN_HILOGE("no permission to access scan service");
-        return E_SCAN_NO_PERMISSION;
-    }
-    auto exe = [=]() {
-        AddScanner(serialNumber, discoverMode);
-    };
-    serviceHandler_->PostTask(exe, ASYNC_CMD_DELAY);
     return E_SCAN_NONE;
 }
 
@@ -1805,7 +1795,7 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
         if (progr > (scanProPtr->GetScanProgress())) {
             scanProPtr->SetScanProgress((int32_t)progr);
         }
-        SCAN_HILOGI(" %{public}ld bytes ; scan progr:%{public}lu", totalBytes, progr);
+        SCAN_HILOGI(" %{public}lld bytes ; scan progr:%{public}lld", totalBytes, progr);
         if (g_scannerState == SCANNER_CANCELING) {
             std::queue<int32_t> emptyQueue;
             scanQueue.swap(emptyQueue);
@@ -1816,7 +1806,7 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
             return;
         }
         if (saneStatus == SANE_STATUS_EOF) {
-            SCAN_HILOGI("Totally read %{public}ld bytes of frame data", totalBytes);
+            SCAN_HILOGI("Totally read %{public}lld bytes of frame data", totalBytes);
             break;
         }
         if (saneStatus != SANE_STATUS_GOOD) {

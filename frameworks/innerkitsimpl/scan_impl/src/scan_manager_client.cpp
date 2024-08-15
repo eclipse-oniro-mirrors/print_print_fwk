@@ -615,25 +615,4 @@ int32_t ScanManagerClient::UpdateScannerName(const std::string& serialNumber,
     return ret;
 }
 
-int32_t ScanManagerClient::AddPrinter(const std::string& serialNumber, const std::string& discoverMode)
-{
-    std::lock_guard<std::mutex> lock(proxyLock_);
-    SCAN_HILOGD("ScanManagerClient AddPrinter start.");
-    if (!LoadServer()) {
-        SCAN_HILOGE("load scan server fail");
-        return E_SCAN_RPC_FAILURE;
-    }
-
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGW("Redo GetScanServiceProxy");
-        scanServiceProxy_ = GetScanServiceProxy();
-    }
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetScanServiceProxy failed.");
-        return E_SCAN_RPC_FAILURE;
-    }
-    int32_t ret = scanServiceProxy_->AddPrinter(serialNumber, discoverMode);
-    SCAN_HILOGD("ScanManagerClient AddPrinter end ret = [%{public}d].", ret);
-    return ret;
-}
 }  // namespace OHOS::Scan

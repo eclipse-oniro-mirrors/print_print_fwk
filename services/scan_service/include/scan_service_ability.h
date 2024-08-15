@@ -74,7 +74,6 @@ public:
     int32_t GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner) override;
     int32_t UpdateScannerName(const std::string& serialNumber,
         const std::string& discoverMode, const std::string& deviceName) override;
-    int32_t AddPrinter(const std::string& serialNumber, const std::string& discoverMode) override;
     int32_t OnStartScan(const std::string scannerId, const bool &batchMode);
     void DisConnectUsbScanner(std::string serialNumber, std::string newDeviceId); // public
     void UpdateUsbScannerId(std::string serialNumber, std::string newDeviceId); // public

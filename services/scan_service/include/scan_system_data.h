@@ -42,6 +42,7 @@ public:
     void RefreshUsbDeviceId();
     void GetAddedScannerInfoList(std::vector<ScanDeviceInfo> &infoList);
     bool SaveScannerMap();
+    bool IsContainScanner(const std::string &uniqueId);
     static std::map<std::string, std::string> usbSnToPortMap_;
 
 private:

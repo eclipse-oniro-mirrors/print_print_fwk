@@ -47,7 +47,6 @@ ScanServiceStub::ScanServiceStub()
     cmdMap_[CMD_DISCONNECT_SCANNER] = &ScanServiceStub::OnDisConnectScanner;
     cmdMap_[CMD_GET_CONNECTED_SCANNER] = &ScanServiceStub::OnGetConnectedScanner;
     cmdMap_[CMD_UPDATE_SCANNER_NAME] = &ScanServiceStub::OnUpdateScannerName;
-    cmdMap_[CMD_ADD_PRINTER] = &ScanServiceStub::OnAddPrinter;
     cmdMap_[CMD_ON] = &ScanServiceStub::OnEventOn;
     cmdMap_[CMD_OFF] = &ScanServiceStub::OnEventOff;
 }
@@ -381,17 +380,6 @@ bool ScanServiceStub::OnUpdateScannerName(MessageParcel &data, MessageParcel &re
     int32_t ret = UpdateScannerName(serialNumber, discoverMode, deviceName);
     reply.WriteInt32(ret);
     SCAN_HILOGD("ScanServiceStub::OnUpdateScannerName end");
-    return ret == E_SCAN_NONE;
-}
-
-bool ScanServiceStub::OnAddPrinter(MessageParcel &data, MessageParcel &reply)
-{
-    SCAN_HILOGD("ScanServiceStub::OnAddPrinter start");
-    std::string serialNumber = data.ReadString();
-    std::string discoverMode = data.ReadString();
-    int32_t ret = AddPrinter(serialNumber, discoverMode);
-    reply.WriteInt32(ret);
-    SCAN_HILOGD("ScanServiceStub::OnAddPrinter end");
     return ret == E_SCAN_NONE;
 }
 

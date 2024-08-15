@@ -541,24 +541,4 @@ int32_t ScanServiceProxy::UpdateScannerName(const std::string& serialNumber,
     return ret;
 }
 
-int32_t ScanServiceProxy::AddPrinter(const std::string& serialNumber, const std::string& discoverMode)
-{
-    SCAN_HILOGD("ScanServiceProxy AddPrinter start");
-    CREATE_PRC_MESSAGE;
-    auto remote = Remote();
-    if (remote == nullptr) {
-        SCAN_HILOGE("ScanServiceProxy::AddPrinter remote is null");
-        return E_SCAN_RPC_FAILURE;
-    }
-    data.WriteString(serialNumber);
-    data.WriteString(discoverMode);
-    int32_t ret = remote->SendRequest(CMD_ADD_PRINTER, data, reply, option);
-    ret = GetResult(ret, reply);
-    if (ret != E_SCAN_NONE) {
-        SCAN_HILOGE("ScanServiceProxy AddPrinter failed");
-        return ret;
-    }
-    SCAN_HILOGD("ScanServiceProxy AddPrinter end");
-    return ret;
-}
 } // namespace OHOS::Scan

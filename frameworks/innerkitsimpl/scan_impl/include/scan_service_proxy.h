@@ -51,7 +51,6 @@ public:
     int32_t GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner) override;
     int32_t UpdateScannerName(const std::string& serialNumber,
         const std::string& discoverMode, const std::string& deviceName) override;
-    int32_t AddPrinter(const std::string& serialNumber, const std::string& discoverMode) override;
 
     int32_t On(const std::string taskId, const std::string &type, const sptr<IScanCallback> &listener) override;
     int32_t Off(const std::string taskId, const std::string &type) override;

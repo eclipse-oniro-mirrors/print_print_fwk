@@ -63,7 +63,6 @@ public:
     static napi_value DeleteScanner(napi_env env, napi_callback_info info);
     static napi_value GetAddedScanner(napi_env env, napi_callback_info info);
     static napi_value UpdateScannerName(napi_env env, napi_callback_info info);
-    static napi_value AddPrinter(napi_env env, napi_callback_info info);
 
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);

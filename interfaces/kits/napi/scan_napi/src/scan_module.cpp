@@ -40,7 +40,6 @@ static constexpr const char *FUNCTION_ADD_SCANNER = "addScanner";
 static constexpr const char *FUNCTION_DELETE_SCANNER = "deleteScanner";
 static constexpr const char *FUNCTION_GET_ADDED_SCANNER = "getAddedScanner";
 static constexpr const char *FUNCTION_UPDATE_SCANNER_NAME = "updateScannerName";
-static constexpr const char *FUNCTION_ADD_PRINTER = "addPrinter";
 
 static constexpr const char *FUNCTION_REGISTER_EVENT = "on";
 static constexpr const char *FUNCTION_UNREGISTER_EVENT = "off";
@@ -82,7 +81,6 @@ static napi_value Init(napi_env env, napi_value exports)
         SCAN_NAPI_METHOD(FUNCTION_DELETE_SCANNER, NapiInnerScan::DeleteScanner),
         SCAN_NAPI_METHOD(FUNCTION_GET_ADDED_SCANNER, NapiInnerScan::GetAddedScanner),
         SCAN_NAPI_METHOD(FUNCTION_UPDATE_SCANNER_NAME, NapiInnerScan::UpdateScannerName),
-        SCAN_NAPI_METHOD(FUNCTION_ADD_PRINTER, NapiInnerScan::AddPrinter),
 
         SCAN_NAPI_METHOD(FUNCTION_REGISTER_EVENT, NapiInnerScan::On),
         SCAN_NAPI_METHOD(FUNCTION_UNREGISTER_EVENT, NapiInnerScan::Off),
