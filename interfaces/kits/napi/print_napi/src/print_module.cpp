@@ -56,6 +56,7 @@ static constexpr const char *FUNCTION_GET_PRINTER_PREFERENCE = "getPrinterPrefer
 static constexpr const char *FUNCTION_SET_PRINTER_PREFERENCE = "setPrinterPreference";
 static constexpr const char *FUNCTION_SET_DEFAULT_PRINTER = "setDefaultPrinter";
 static constexpr const char *FUNCTION_DELETE_PRINTER_FROM_CUPS = "deletePrinterFromCups";
+static constexpr const char *FUNCTION_DISCOVER_USB_PRINTERS = "discoverUsbPrinters";
 
 #define PRINT_NAPI_METHOD(name, func)           \
     {                                           \
@@ -332,6 +333,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_SET_PRINTER_PREFERENCE, NapiInnerPrint::SetPrinterPreference),
         PRINT_NAPI_METHOD(FUNCTION_SET_DEFAULT_PRINTER, NapiInnerPrint::SetDefaultPrinter),
         PRINT_NAPI_METHOD(FUNCTION_DELETE_PRINTER_FROM_CUPS, NapiPrintExt::DeletePrinterFromCups),
+        PRINT_NAPI_METHOD(FUNCTION_DISCOVER_USB_PRINTERS, NapiPrintExt::DiscoverUsbPrinters),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);

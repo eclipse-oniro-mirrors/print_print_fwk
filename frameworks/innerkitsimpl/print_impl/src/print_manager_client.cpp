@@ -471,6 +471,18 @@ int32_t PrintManagerClient::DeletePrinterFromCups(const std::string &printerUri,
     return ret;
 }
 
+int32_t PrintManagerClient::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGD("PrintManagerClient DiscoverUsbPrinters start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->DiscoverUsbPrinters(printers);
+        PRINT_HILOGD("PrintManagerClient DiscoverUsbPrinters out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);

@@ -477,6 +477,40 @@ napi_value NapiPrintExt::DeletePrinterFromCups(napi_env env, napi_callback_info 
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiPrintExt::DiscoverUsbPrinters(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter DiscoverUsbPrinters---->");
+    auto context = std::make_shared<NapiPrintExtContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        PRINT_HILOGD("ouput enter---->");
+        napi_status status = napi_create_array(env, result);
+        uint32_t index = 0;
+        for (auto info : context->printerInfos) {
+            PRINT_HILOGD("PrinterId = %{public}s", info.GetPrinterId().c_str());
+            PRINT_HILOGD("PrinterName = %{public}s", info.GetPrinterName().c_str());
+            status = napi_set_element(env, *result, index++, PrinterInfoHelper::MakeJsObject(env, info));
+        }
+        return napi_ok;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        int32_t ret = PrintManagerClient::GetInstance()->DiscoverUsbPrinters(context->printerInfos);
+        context->result = (ret == E_PRINT_NONE);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to discover usb printers");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 bool NapiPrintExt::IsValidPrinterState(uint32_t state)
 {
     if (state >= PRINTER_ADDED && state < PRINTER_UNKNOWN) {

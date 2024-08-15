@@ -26,6 +26,7 @@ public:
     MOCK_METHOD3(GetNamedDest, cups_dest_t*(http_t *, const char *, const char *));
     MOCK_METHOD2(FreeDests, void(int, cups_dest_t *));
     MOCK_METHOD3(DoRequest, ipp_t *(http_t *, ipp_t *, const char *));
+    MOCK_METHOD2(CopyDestInfo, cups_dinfo_t*(http_t *, cups_dest_t *));
 };
 }  // namespace Print
 }  // namespace OHOS

@@ -81,6 +81,7 @@ public:
     virtual int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) = 0;
     virtual int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake) = 0;
+    virtual int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

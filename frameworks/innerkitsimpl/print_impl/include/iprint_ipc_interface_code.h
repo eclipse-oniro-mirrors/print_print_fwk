@@ -60,6 +60,7 @@ namespace OHOS::Print {
         CMD_SET_PRINTER_PREFERENCE,
         CMD_SET_DEFAULT_PRINTERID,
         CMD_DELETE_PRINTER_FROM_CUPS,
+        CMD_DISCOVER_USB_PRINTERS,
     };
 } // namespace OHOS:Print
 #endif // PRINT_SERVICE_INTERFACE_H

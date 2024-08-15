@@ -2453,6 +2453,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0143, TestSize.Level1)
     mockPrintManagerClient.StartNativePrintJob(jobinfo);
     std::vector<PrintJob> printJobs;
     mockPrintManagerClient.QueryAllPrintJob(printJobs);
+    std::vector<PrinterInfo> printers;
+    mockPrintManagerClient.DiscoverUsbPrinters(printers);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0144, TestSize.Level1)
@@ -2580,6 +2582,35 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0154, TestSize.Level1)
     std::string printerId = "printId-123";
     std::string printPreference = "";
     PrintManagerClient::GetInstance()->SetPrinterPreference(printerId, printPreference);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0155, TestSize.Level1)
+{
+    std::vector<PrinterInfo> testPrinters;
+
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance()->DiscoverUsbPrinters(testPrinters);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0156, TestSize.Level1)
+{
+    std::vector<PrinterInfo> testPrinters;
+
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    int32_t ret = PrintManagerClient::GetInstance()->DiscoverUsbPrinters(testPrinters);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0157, TestSize.Level1)
+{
+    std::vector<PrinterInfo> testPrinters;
+
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    int32_t ret = PrintManagerClient::GetInstance()->DiscoverUsbPrinters(testPrinters);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 } // namespace Print

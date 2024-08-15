@@ -558,6 +558,32 @@ int32_t PrintServiceProxy::DeletePrinterFromCups(
     return ret;
 }
 
+int32_t PrintServiceProxy::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    PRINT_HILOGD("PrintServiceProxy DiscoverUsbPrinters started.");
+    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_DISCOVER_USB_PRINTERS, data, reply, option);
+    ret = GetResult(ret, reply);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGD("PrintServiceProxy DiscoverUsbPrinters Failed.");
+        return ret;
+    }
+
+    uint32_t len = reply.ReadUint32();
+    for (uint32_t i = 0; i < len; i++) {
+        auto infoPtr = PrinterInfo::Unmarshalling(reply);
+        if (infoPtr == nullptr) {
+            PRINT_HILOGE("wrong printerInfo from data");
+            return E_PRINT_GENERIC_FAILURE;
+        }
+        printers.emplace_back(*infoPtr);
+    }
+    PRINT_HILOGD("PrintServiceProxy DiscoverUsbPrinters succeeded.");
+    return E_PRINT_NONE;
+}
+
 int32_t PrintServiceProxy::On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener)
 {
     if (listener == nullptr) {

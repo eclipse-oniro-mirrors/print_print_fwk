@@ -840,5 +840,34 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0028, TestSize.Level1)
     EXPECT_EQ(E_PRINT_NONE, proxy->RegisterPrinterCallback(testType, testListener));
 }
 
+/**
+ * @tc.name: PrintServiceProxyTest_0029
+ * @tc.desc: Verify the DiscoverUsbPrinters function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0029, TestSize.Level1)
+{
+    std::vector<PrinterInfo> testPrinters = {};
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, DiscoverUsbPrinters(_)).Times(Exactly(1)).WillOnce(
+        [&testPrinters](std::vector<PrinterInfo> &printers) {
+            EXPECT_EQ(testPrinters.size(), printers.size());
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    proxy->DiscoverUsbPrinters(testPrinters);
+}
+
 } // namespace Print
 } // namespace OHOS

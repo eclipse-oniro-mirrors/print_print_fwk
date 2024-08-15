@@ -195,6 +195,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers) override
+    {
+        return E_PRINT_NONE;
+    }
 };
 
 class MockPrintService final : public DummyPrintServiceStub {
@@ -228,6 +232,7 @@ public:
     MOCK_METHOD2(NotifyPrintServiceEvent, int32_t(std::string&, uint32_t));
     MOCK_METHOD2(SetDefaultPrinter, int32_t(const std::string&, uint32_t));
     MOCK_METHOD3(DeletePrinterFromCups, int32_t(const std::string&, const std::string&, const std::string&));
+    MOCK_METHOD1(DiscoverUsbPrinters, int32_t(std::vector<PrinterInfo>&));
 };
 } // namespace Print
 } // namespace OHOS

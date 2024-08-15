@@ -31,4 +31,9 @@ ipp_t *PrintCupsWrapper::DoRequest(http_t *http, ipp_t *request, const char *res
 {
     return cupsDoRequest(http, request, resource);
 }
+
+cups_dinfo_t *PrintCupsWrapper::CopyDestInfo(http_t *http, cups_dest_t *dest)
+{
+    return cupsCopyDestInfo(http, dest);
+}
 }

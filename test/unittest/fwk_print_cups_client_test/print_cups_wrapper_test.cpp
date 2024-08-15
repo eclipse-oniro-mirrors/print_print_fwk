@@ -563,5 +563,26 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0088, TestSize.Level1)
     mode_t permissions = S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH;
     printCupsClient.ChangeFilterPermission(dstDir1, permissions);
 }
+
+/**
+ * @tc.name: PrintCupsWrapperTest_0089
+ * @tc.desc: QueryPrinterCapabilityFromPpd
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0089, TestSize.Level1)
+{
+    cups_dest_t cupsDests = {0};
+    cups_dinfo_t cupsDinfo = {0};
+    MockTestFunc testFunc =
+        [this, &cupsDests, &cupsDinfo](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
+        EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillRepeatedly(Return(&cupsDests));
+        EXPECT_CALL(mock, CopyDestInfo(_, _)).WillRepeatedly(Return(&cupsDinfo));
+        std::string printerName = "testName";
+        PrinterCapability printerCaps;
+        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_SERVER_FAILURE);
+    };
+    DoMockTest(testFunc);
+}
 }  // namespace Print
 }  // namespace OHOS

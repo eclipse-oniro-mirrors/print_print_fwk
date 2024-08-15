@@ -96,6 +96,8 @@ public:
     int32_t QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info);
     int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);
+    int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
+    int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps);
 
 private:
     void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
