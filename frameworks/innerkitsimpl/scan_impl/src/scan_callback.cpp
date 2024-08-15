@@ -50,6 +50,9 @@ ScanCallback::~ScanCallback()
     work->data = reinterpret_cast<void*>(param);
     int retVal = uv_queue_work(loop, work, [](uv_work_t *work) {}, [](uv_work_t *work, int _status) {
         SCAN_HILOGI("uv_queue_work ScanCallback DeleteReference");
+        if (work == nullptr) {
+            return;
+        }
         Param *param_ = reinterpret_cast<Param*>(work->data);
         if (param_ == nullptr) {
             delete work;
