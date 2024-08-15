@@ -101,7 +101,7 @@ private:
     void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
     void MonitorJobState(JobMonitorParam *param, CallbackFunc callback);
     void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
-    bool CheckPrinterOnline(const char* printerUri, std::string printerId);
+    bool CheckPrinterOnline(const char* printerUri, const std::string& printerId);
     static void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
     static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
     static void SymlinkDirectory(const char *srcDir, const char *destDir);

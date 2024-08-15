@@ -193,7 +193,7 @@ void PrintCupsClient::ChangeFilterPermission(const std::string &path, mode_t mod
             ChangeFilterPermission(filePath.c_str(), mode);
         } else if (S_ISREG(fileStat.st_mode)) {
             if (chmod(filePath.c_str(), mode) == -1) {
-                PRINT_HILOGE("Failed to change mode: %{private}s", filePath.c_str());
+                PRINT_HILOGE("Failed to change mode");
             }
         }
     }
@@ -337,21 +337,22 @@ void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std
         return;
     }
     request = ippNewRequest(CUPS_GET_PPDS);
-    if (makeModel)
+    if (makeModel) {
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", NULL, makeModel);
+    }
  
     PRINT_HILOGD("CUPS_GET_PPDS start.");
-    if ((response = printAbility->DoRequest(CUPS_HTTP_DEFAULT, request, "/")) != NULL) {
-        if (response->request.status.status_code > IPP_OK_CONFLICT) {
-            PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
-            ippDelete(response);
-            return;
-        }
-        ParsePPDInfo(response, ppd_make_model, ppd_name, ppds);
-        ippDelete(response);
-    } else {
+    if ((response = printAbility->DoRequest(CUPS_HTTP_DEFAULT, request, "/")) == NULL) {
         PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
+        return;
     }
+    if (response->request.status.status_code > IPP_OK_CONFLICT) {
+        PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
+        ippDelete(response);
+        return;
+    }
+    ParsePPDInfo(response, ppd_make_model, ppd_name, ppds);
+    ippDelete(response);
 }
 
 void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
@@ -370,10 +371,11 @@ void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, 
         ppd_name = NULL;
 
         while (attr != NULL && attr->group_tag == IPP_TAG_PRINTER) {
-            if (!strcmp(attr->name, "ppd-make-and-model") && attr->value_tag == IPP_TAG_TEXT)
+            if (!strcmp(attr->name, "ppd-make-and-model") && attr->value_tag == IPP_TAG_TEXT) {
                 ppd_make_model = attr->values[0].string.text;
-            else if (!strcmp(attr->name, "ppd-name") && attr->value_tag == IPP_TAG_NAME)
+            } else if (!strcmp(attr->name, "ppd-name") && attr->value_tag == IPP_TAG_NAME) {
                 ppd_name = attr->values[0].string.text;
+            }
             attr = attr->next;
         }
         if (ppd_make_model == NULL || ppd_name == NULL) {
@@ -620,6 +622,10 @@ void PrintCupsClient::JobCompleteCallback()
 
 int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("FillBorderlessOptions Params is nullptr");
+        return num_options;
+    }
     if (jobParams->borderless == 1 && jobParams->mediaType == CUPS_MEDIA_TYPE_PHOTO_GLOSSY) {
         PRINT_HILOGD("borderless job options");
         std::vector<MediaSize> mediaSizes;
@@ -668,6 +674,10 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
 
 int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("FillJobOptions Params is nullptr");
+        return num_options;
+    }
     if (jobParams->numCopies >= 1) {
         num_options = cupsAddIntegerOption(CUPS_COPIES, jobParams->numCopies, num_options, options);
     } else {
@@ -760,6 +770,11 @@ ppd_file_t* PrintCupsClient::GetPPDFile(const std::string &printerName)
             return nullptr;
         }
     }
+    std::string backStr = "../";
+    if (printerName.size() >= backStr.size() && printerName.substr(0, backStr.size()) == backStr) {
+        PRINT_HILOGE("GetPPDFile printerName is out of fileDir");
+        return nullptr;
+    }
     ppd_file_t *ppd = 0;
     std::string fileDir = "/data/service/el1/public/print_service/cups/ppd/";
     std::string pName = printerName;
@@ -778,7 +793,11 @@ ppd_file_t* PrintCupsClient::GetPPDFile(const std::string &printerName)
     PRINT_HILOGI("GetPPDFile %{public}d", fd);
     ppd = ppdOpenFd(fd);
     close(fd);
-    PRINT_HILOGI("GetPPDFile groups:%{public}d,pagesize_num:%{public}d", ppd->num_groups, ppd->num_sizes);
+    if (ppd == nullptr) {
+        PRINT_HILOGE("ppdfile open is nullptr");
+    } else {
+        PRINT_HILOGI("GetPPDFile groups:%{public}d,pagesize_num:%{public}d", ppd->num_groups, ppd->num_sizes);
+    }
     return ppd;
 }
 
@@ -1058,6 +1077,10 @@ void PrintCupsClient::UpdateJobStatus(JobStatus *prevousJobStatus, JobStatus *jo
 
 void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline)
 {
+    if (param == nullptr || jobStatus == nullptr) {
+        PRINT_HILOGE("JobStatusCallback param is nullptr");
+        return;
+    }
     PRINT_HILOGD("JobStatusCallback enter, job_state: %{public}d", jobStatus->job_state);
     PRINT_HILOGD("JobStatusCallback enter, printer_state_reasons: %{public}s", jobStatus->printer_state_reasons);
     if (isOffline) {
@@ -1121,6 +1144,10 @@ void PrintCupsClient::ReportBlockedReason(JobMonitorParam *param, JobStatus *job
 
 uint32_t PrintCupsClient::GetBlockedSubstate(JobStatus *jobStatus)
 {
+    if (jobStatus == nullptr) {
+        PRINT_HILOGE("GetBlockedSubstate param is nullptr");
+        return PRINT_JOB_COMPLETED_FAILED;
+    }
     uint32_t substate = PRINT_JOB_COMPLETED_SUCCESS;
     if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_EMPTY.c_str()) != NULL) {
         substate = substate * NUMBER_FOR_SPLICING_SUBSTATE + PRINT_JOB_BLOCKED_OUT_OF_PAPER;
@@ -1161,6 +1188,10 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
         PRINT_HILOGW("printAbility is null");
         return;
     }
+    if (param == nullptr || jobStatus == nullptr) {
+        PRINT_HILOGE("QueryJobState param is null");
+        return;
+    }
     if (param->cupsJobId > 0) {
         request = ippNewRequest(IPP_OP_GET_JOB_ATTRIBUTES);
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, param->printerUri.c_str());
@@ -1185,7 +1216,7 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
     }
 }
 
-bool PrintCupsClient::CheckPrinterOnline(const char* printerUri, std::string printerId)
+bool PrintCupsClient::CheckPrinterOnline(const char* printerUri, const std::string& printerId)
 {
     http_t *http;
     char scheme[32];

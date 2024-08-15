@@ -53,7 +53,7 @@ sptr<PrintManagerClient> PrintManagerClient::GetInstance()
     if (instance_ == nullptr) {
         std::lock_guard<std::mutex> autoLock(instanceLock_);
         if (instance_ == nullptr) {
-            instance_ = new PrintManagerClient;
+            instance_ = new (std::nothrow) PrintManagerClient();
         }
     }
     return instance_;
