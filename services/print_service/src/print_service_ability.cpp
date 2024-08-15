@@ -826,12 +826,14 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
                 return E_PRINT_INVALID_PRINTER;
             }
             std::string make = opsJson["printerMake"];
-            auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerUri, printerInfo->GetPrinterName(), make);
+            auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
+                AddPrinterToCups(printerUri, printerInfo->GetPrinterName(), make);
             if (ret != E_PRINT_NONE) {
                 PRINT_HILOGE("AddPrinterToCups error = %{public}d.", ret);
                 return ret;
             }
-            DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityFromPPD(printerInfo->GetPrinterName(), printerCaps);
+            DelayedSingleton<PrintCupsClient>::GetInstance()->
+                QueryPrinterCapabilityFromPPD(printerInfo->GetPrinterName(), printerCaps);
         }
     } else {
         DelayedSingleton<PrintCupsClient>::GetInstance()->
@@ -3067,7 +3069,7 @@ int32_t PrintServiceAbility::DiscoverUsbPrinters(std::vector<PrinterInfo> &print
         return ret;
     }
 #endif  // CUPS_ENABLE
-    PRINT_HILOGD("DiscoverUsbDevices printers size: %{public}lu", printers.size());
+    PRINT_HILOGD("DiscoverUsbDevices printers size: %{public}u", printers.size());
     return E_PRINT_NONE;
 }
 } // namespace OHOS::Print

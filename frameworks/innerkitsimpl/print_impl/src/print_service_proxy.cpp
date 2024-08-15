@@ -564,7 +564,8 @@ int32_t PrintServiceProxy::DiscoverUsbPrinters(std::vector<PrinterInfo> &printer
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     PRINT_HILOGD("PrintServiceProxy DiscoverUsbPrinters started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_DISCOVER_USB_PRINTERS, data, reply, option);
+    int32_t ret = Remote()->
+        SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_DISCOVER_USB_PRINTERS, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGD("PrintServiceProxy DiscoverUsbPrinters Failed.");
