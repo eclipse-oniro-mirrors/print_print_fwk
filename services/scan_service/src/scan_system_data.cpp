@@ -23,7 +23,7 @@
 #include "scan_system_data.h"
 
 namespace {
-const std::string SCANNER_LIST_FILE = "/data/service/el1/public/print_service/sane/tmp/scanner_list.json";
+const std::string SCANNER_LIST_FILE = "/data/service/el2/public/print_service/sane/tmp/scanner_list.json";
 const std::string SCANNER_LIST_VERSION = "v1";
 }  // namespace
 
