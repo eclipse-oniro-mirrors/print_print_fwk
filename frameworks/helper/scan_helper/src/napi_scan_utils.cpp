@@ -265,7 +265,9 @@ napi_value NapiScanUtils::GetReference(napi_env env, napi_ref callbackRef)
 
 void NapiScanUtils::DeleteReference(napi_env env, napi_ref callbackRef)
 {
-    (void)napi_delete_reference(env, callbackRef);
+    if (env != nullptr && callbackRef != nullptr) {
+        (void)napi_delete_reference(env, callbackRef);
+    }
 }
 
 /* boolean */
