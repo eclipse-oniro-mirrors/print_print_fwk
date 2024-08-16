@@ -75,6 +75,7 @@ public:
     int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) override;
     int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake) override;
+    int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);

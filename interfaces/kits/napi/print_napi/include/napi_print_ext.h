@@ -38,6 +38,7 @@ public:
     static napi_value AddPrinterToCups(napi_env env, napi_callback_info info);
     static napi_value QueryPrinterCapabilityByUri(napi_env env, napi_callback_info info);
     static napi_value DeletePrinterFromCups(napi_env env, napi_callback_info info);
+    static napi_value DiscoverUsbPrinters(napi_env env, napi_callback_info info);
 
 private:
     static bool IsValidPrinterState(uint32_t state);

@@ -1354,5 +1354,20 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0058, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0059, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_DISCOVER_USB_PRINTERS);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, DiscoverUsbPrinters).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
 } // namespace Print
 } // namespace OHOS

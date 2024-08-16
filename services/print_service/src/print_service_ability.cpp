@@ -64,6 +64,10 @@ const std::int32_t START_USER_ID = 100;
 const std::int32_t MAX_USER_ID = 1099;
 const uint32_t UNLOAD_SA_INTERVAL = 90000;
 
+const uint32_t INDEX_ZERO = 0;
+const uint32_t INDEX_THREE = 3;
+const uint32_t SERIAL_LENGTH = 6;
+
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
 static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.ohos.hwprintext";
@@ -104,6 +108,7 @@ static const std::string NOTIFY_INFO_SPOOLER_CLOSED_FOR_CANCELLED = "spooler_clo
 static const std::string NOTIFY_INFO_SPOOLER_CLOSED_FOR_STARTED = "spooler_closed_for_started";
 
 static const std::string PRINTER_ID_DELIMITER = ":";
+static const std::string USB_PRINTER = "usb";
 
 static bool g_publishState = false;
 
@@ -800,7 +805,40 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
     }
     PRINT_HILOGD("QueryPrinterCapabilityByUri started.");
 #ifdef CUPS_ENABLE
-    DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
+    if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER) {
+        std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+        std::string standardizeId = printerId;
+        if (standardizeId.find(extensionId) == std::string::npos) {
+            standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
+        }
+        PRINT_HILOGI("extensionId = %{public}s, printerId : %{public}s", extensionId.c_str(), standardizeId.c_str());
+        auto printerIter = printerInfoList_.find(standardizeId);
+        if (printerIter == printerInfoList_.end()) {
+            PRINT_HILOGE("can not find the printer");
+            return E_PRINT_INVALID_PRINTER;
+        }
+        auto printerInfo = printerIter->second;
+        if (printerInfo->HasOption() && json::accept(printerInfo->GetOption())) {
+            PRINT_HILOGD("QueryPrinterCapabilityByUri ops : %{public}s.", printerInfo->GetOption().c_str());
+            nlohmann::json opsJson = json::parse(printerInfo->GetOption());
+            if (!opsJson.contains("printerMake") || !opsJson["printerMake"].is_string()) {
+                PRINT_HILOGW("can not find printerMake");
+                return E_PRINT_INVALID_PRINTER;
+            }
+            std::string make = opsJson["printerMake"];
+            auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
+                AddPrinterToCups(printerUri, printerInfo->GetPrinterName(), make);
+            if (ret != E_PRINT_NONE) {
+                PRINT_HILOGE("AddPrinterToCups error = %{public}d.", ret);
+                return ret;
+            }
+            DelayedSingleton<PrintCupsClient>::GetInstance()->
+                QueryPrinterCapabilityFromPPD(printerInfo->GetPrinterName(), printerCaps);
+        }
+    } else {
+        DelayedSingleton<PrintCupsClient>::GetInstance()->
+            QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
+    }
 #endif // CUPS_ENABLE
     PRINT_HILOGD("QueryPrinterCapabilityByUri End.");
     WritePrinterPreference(printerId, printerCaps);
@@ -3014,5 +3052,24 @@ void PrintServiceAbility::NotifyAppDeletePrinterWithDefaultPrinter(const std::st
     opsJson["nextDefaultPrinter"] = dafaultPrinterId;
     printerInfo.SetOption(opsJson.dump());
     SendPrinterEventChangeEvent(PRINTER_EVENT_DELETED, printerInfo);
+}
+
+int32_t PrintServiceAbility::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGD("DiscoverUsbPrinters started.");
+#ifdef CUPS_ENABLE
+    int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->DiscoverUsbPrinters(printers);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("DiscoverUsbDevices failed.");
+        return ret;
+    }
+#endif  // CUPS_ENABLE
+    PRINT_HILOGD("DiscoverUsbDevices printers size: %{public}u", printers.size());
+    return E_PRINT_NONE;
 }
 } // namespace OHOS::Print

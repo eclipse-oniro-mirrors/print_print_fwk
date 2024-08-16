@@ -331,6 +331,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004, TestSize.Level1)
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->SetDefaultPrinter(printerId, 0), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->DeletePrinterFromCups(printerUri, printerName, printerMake), E_PRINT_NO_PERMISSION);
+    std::vector<PrinterInfo> printers;
+    EXPECT_EQ(service->DiscoverUsbPrinters(printers), E_PRINT_NO_PERMISSION);
 
     PrintServiceMockPermission::MockPermission();
     EXPECT_EQ(service->StartService(), E_PRINT_NONE);
@@ -1947,6 +1949,15 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128, TestSize.Level1)
     std::string printerId = "Pixlab_0759";
     PrinterInfo info;
     EXPECT_EQ(service->UpdatePrinterCapability(printerId, info), true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0129, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::vector<PrinterInfo> printers;
+    service->DiscoverUsbPrinters(printers);
 }
 
 } // namespace OHOS::Print

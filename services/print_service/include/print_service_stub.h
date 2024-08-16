@@ -72,6 +72,7 @@ private:
     bool OnSetPrinterPreference(MessageParcel &data, MessageParcel &reply);
     bool OnSetDefaultPrinter(MessageParcel &data, MessageParcel &reply);
     bool OnDeletePrinterFromCups(MessageParcel &data, MessageParcel &reply);
+    bool OnDiscoverUsbPrinters(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

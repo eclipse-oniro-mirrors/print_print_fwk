@@ -1507,5 +1507,18 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0076, TestSize.Level1)
     delete jobStatus;
     delete param;
 }
+
+/**
+ * @tc.name: PrintCupsClientTest_0077
+ * @tc.desc: DiscoverUsbPrinters
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0077, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::vector<PrinterInfo> printers;
+    printCupsClient.DiscoverUsbPrinters(printers);
+}
 }  // namespace Print
 }  // namespace OHOS

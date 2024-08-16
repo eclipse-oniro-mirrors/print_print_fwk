@@ -17,6 +17,7 @@
 
 #include <string>
 #include <cups/cups-private.h>
+#include <cups/adminutil.h>
 #include <thread>
 #include <semaphore.h>
 #include <csignal>
@@ -56,6 +57,7 @@ const uint32_t DIR_COUNT = 3;
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_ONE = 1;
 const uint32_t INDEX_TWO = 2;
+const uint32_t INDEX_THREE = 3;
 const uint32_t MAX_RETRY_TIMES = 5;
 const uint32_t BUFFER_LEN = 256;
 const uint32_t DIR_MODE = 0771;
@@ -64,6 +66,7 @@ const uint32_t IP_RIGHT_SHIFT_8 = 8;
 const uint32_t IP_RIGHT_SHIFT_16 = 16;
 const uint32_t IP_RIGHT_SHIFT_24 = 24;
 const uint32_t NUMBER_FOR_SPLICING_SUBSTATE = 100;
+const uint32_t SERIAL_LENGTH = 6;
 
 static bool g_isFirstQueryState = false;
 
@@ -103,6 +106,9 @@ static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string P2P_PRINTER = "p2p";
+static const std::string USB_PRINTER = "usb";
+static const std::string PRINTER_ID_USB_PREFIX = "USB";
+static const std::string PRINTER_MAKE_UNKNOWN = "Unknown";
 static const std::vector<std::string> IGNORE_STATE_LIST = {PRINTER_STATE_WAITING_COMPLETE,
     PRINTER_STATE_NONE,
     PRINTER_STATE_EMPTY,
@@ -114,6 +120,37 @@ static const std::vector<std::string> IGNORE_STATE_LIST = {PRINTER_STATE_WAITING
     PRINTER_STATE_IGNORE_BUSY_MISSING_JOB_STATE_COMPLETED,
     PRINTER_STATE_IGNORE_BUSY_WAITING_COMPLETE_OTHER_REPORT,
     PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT};
+
+static std::vector<PrinterInfo> usbPrinters;
+static void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
+    const char *deviceMakeAndModel, const char *deviceUri, const char *deviceLocation, void *userData)
+{
+    PRINT_HILOGI("Device: uri = %{public}s\n", deviceUri);
+    PRINT_HILOGI("class = %{public}s\n", deviceClass);
+    PRINT_HILOGI("info = %{public}s\n", deviceInfo);
+    PRINT_HILOGI("make-and-model = %{public}s\n", deviceMakeAndModel);
+    PRINT_HILOGI("device-id = %{public}s\n", deviceId);
+    PRINT_HILOGI("location = %{public}s\n", deviceLocation);
+    std::string printerUri(deviceUri);
+    std::string printerMake(deviceMakeAndModel);
+    if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER &&
+        printerMake != PRINTER_MAKE_UNKNOWN) {
+        std::string printerName(deviceInfo);
+        std::string serial = printerUri.substr(printerUri.length() - SERIAL_LENGTH);
+        PrinterInfo info;
+        info.SetPrinterId(PRINTER_ID_USB_PREFIX + "-" + printerName + "-" + serial);
+        info.SetPrinterName(PRINTER_ID_USB_PREFIX + "-" + printerName + "-" + serial);
+        info.SetPrinterState(PRINTER_ADDED);
+        PrinterCapability printerCapability;
+        info.SetCapability(printerCapability);
+        info.SetDescription("usb");
+        nlohmann::json infoOps;
+        infoOps["printerUri"] = printerUri;
+        infoOps["printerMake"] = printerMake;
+        info.SetOption(infoOps.dump());
+        usbPrinters.emplace_back(info);
+    }
+}
 
 PrintCupsClient::PrintCupsClient()
 {
@@ -559,6 +596,36 @@ int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerU
     PRINT_HILOGD("get caps success: %{public}s", cupsLastErrorString());
     ParsePrinterAttributes(response, printerCaps);
     httpClose(http);
+    return E_PRINT_NONE;
+}
+
+int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printerName, PrinterCapability &printerCaps)
+{
+    std::string standardName = PrintUtil::StandardizePrinterName(printerName);
+    PRINT_HILOGI("QueryPrinterCapabilityFromPPD printerName: %{public}s", standardName.c_str());
+
+    cups_dest_t *dest = nullptr;
+    if (printAbility == nullptr) {
+        PRINT_HILOGW("printAbility is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    dest = printAbility->GetNamedDest(CUPS_HTTP_DEFAULT, standardName.c_str(), NULL);
+    if (dest == nullptr) {
+        PRINT_HILOGE("the printer is not found");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    cups_dinfo_t *dinfo = printAbility->CopyDestInfo(CUPS_HTTP_DEFAULT, dest);
+    if (dinfo == nullptr) {
+        PRINT_HILOGE("cupsCopyDestInfo failed");
+        delete dest;
+        dest = nullptr;
+        return E_PRINT_SERVER_FAILURE;
+    }
+
+    ParsePrinterAttributes(dinfo->attrs, printerCaps);
+    printerCaps.Dump();
+    
+    PRINT_HILOGI("QueryPrinterCapabilityFromPPD out\n");
     return E_PRINT_NONE;
 }
 
@@ -1224,8 +1291,24 @@ bool PrintCupsClient::CheckPrinterOnline(const char* printerUri, const std::stri
     char host[BUFFER_LEN];
     char resource[BUFFER_LEN];
     int port;
-    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri, scheme, sizeof(scheme), userpass, sizeof(userpass), host,
-                    sizeof(host), &port, resource, sizeof(resource));
+    char usbPrinterUri[HTTP_MAX_URI];
+
+    std::string uri(printerUri);
+    if (uri.length() > USB_PRINTER.length() && uri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER) {
+        auto pos = printerId.find(PRINTER_ID_USB_PREFIX);
+        if (pos != std::string::npos) {
+            std::string usbPrinterName =
+                PrintUtil::StandardizePrinterName(printerId.substr(pos));
+            httpAssembleURIf(HTTP_URI_CODING_ALL, usbPrinterUri, sizeof(usbPrinterUri), "ipp", NULL,
+                "localhost", CUPS_SEVER_PORT, "/printers/%s", usbPrinterName.c_str());
+            PRINT_HILOGD("CheckPrinterOnline usbPrinterUri: %{public}s", usbPrinterUri);
+            httpSeparateURI(HTTP_URI_CODING_ALL, usbPrinterUri, scheme, sizeof(scheme),
+                userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource));
+        }
+    } else {
+        httpSeparateURI(HTTP_URI_CODING_ALL, printerUri, scheme, sizeof(scheme),
+            userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource));
+    }
     std::string nic;
     if (IsIpConflict(printerId, nic)) {
         http = httpConnect3(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL,
@@ -1506,5 +1589,22 @@ std::string PrintCupsClient::GetIpAddress(unsigned int number)
     unsigned int ip1 = (number << IP_RIGHT_SHIFT_16) >> IP_RIGHT_SHIFT_24;
     unsigned int ip0 = (number << IP_RIGHT_SHIFT_24) >> IP_RIGHT_SHIFT_24;
     return std::to_string(ip3) + "." + std::to_string(ip2) + "." + std::to_string(ip1) + "." + std::to_string(ip0);
+}
+
+int32_t PrintCupsClient::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
+{
+    int longStatus = 0;
+    const char* include_schemes = CUPS_INCLUDE_ALL;
+    const char* exclude_schemes = CUPS_EXCLUDE_NONE;
+    int timeout = CUPS_TIMEOUT_DEFAULT;
+    PRINT_HILOGD("DiscoverUsbPrinters cupsGetDevices");
+    usbPrinters.clear();
+    if (cupsGetDevices(CUPS_HTTP_DEFAULT, timeout, include_schemes, exclude_schemes,
+        DeviceCb, &longStatus) != IPP_OK) {
+        PRINT_HILOGE("lpinfo error : %{public}s", cupsLastErrorString());
+        return E_PRINT_SERVER_FAILURE;
+    }
+    printers = usbPrinters;
+    return E_PRINT_NONE;
 }
 }

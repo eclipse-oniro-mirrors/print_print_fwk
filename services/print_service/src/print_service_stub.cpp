@@ -77,6 +77,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_SET_DEFAULT_PRINTERID] = &PrintServiceStub::OnSetDefaultPrinter;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_DELETE_PRINTER_FROM_CUPS] =
         &PrintServiceStub::OnDeletePrinterFromCups;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_DISCOVER_USB_PRINTERS] = &PrintServiceStub::OnDiscoverUsbPrinters;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -531,6 +532,24 @@ bool PrintServiceStub::OnDeletePrinterFromCups(MessageParcel &data, MessageParce
     int32_t ret = DeletePrinterFromCups(printerUri, printerName, printerMake);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnDeletePrinterFromCups out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnDiscoverUsbPrinters(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnDiscoverUsbPrinters in");
+    std::vector<PrinterInfo> printers;
+    printers.clear();
+    int32_t ret = DiscoverUsbPrinters(printers);
+    reply.WriteInt32(ret);
+    if (ret == E_PRINT_NONE) {
+        uint32_t size = static_cast<uint32_t>(printers.size());
+        reply.WriteUint32(size);
+        for (uint32_t index = 0; index < size; index++) {
+            printers[index].Marshalling(reply);
+        }
+    }
+    PRINT_HILOGD("PrintServiceStub::OnDiscoverUsbPrinters out");
     return ret == E_PRINT_NONE;
 }
 
