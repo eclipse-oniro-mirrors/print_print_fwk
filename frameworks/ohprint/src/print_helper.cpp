@@ -203,19 +203,19 @@ void ParseDefaultPageMargin(const nlohmann::json &cupsOpt, Print_Margin &default
     int topMargin = 0;
     int rightMargin = 0;
     int bottomMargin = 0;
-    if (cupsOpt.contains("media-left-margin-supported") && cupsOpt["media-left-margin-supported"].is_string()) {
+    if (cupsOpt.contains("media-left-margin-supported")) {
         std::string mediaLeftMargin = cupsOpt["media-left-margin-supported"].get<std::string>();
         ConvertStringToInt(mediaLeftMargin.c_str(), leftMargin);
     }
-    if (cupsOpt.contains("media-top-margin-supported") && cupsOpt["media-top-margin-supported"].is_string()) {
+    if (cupsOpt.contains("media-top-margin-supported")) {
         std::string mediaTopMargin = cupsOpt["media-top-margin-supported"].get<std::string>();
         ConvertStringToInt(mediaTopMargin.c_str(), topMargin);
     }
-    if (cupsOpt.contains("media-right-margin-supported") && cupsOpt["media-right-margin-supported"].is_string()) {
+    if (cupsOpt.contains("media-right-margin-supported")) {
         std::string mediaRightMargin = cupsOpt["media-right-margin-supported"].get<std::string>();
         ConvertStringToInt(mediaRightMargin.c_str(), rightMargin);
     }
-    if (cupsOpt.contains("media-bottom-margin-supported") && cupsOpt["media-bottom-margin-supported"].is_string()) {
+    if (cupsOpt.contains("media-bottom-margin-supported")) {
         std::string mediaBottomMargin = cupsOpt["media-bottom-margin-supported"].get<std::string>();
         ConvertStringToInt(mediaBottomMargin.c_str(), bottomMargin);
     }
@@ -324,13 +324,13 @@ void ParseResolutionArray(const nlohmann::json &arrayObject, Print_PrinterInfo &
 
 void ParsePrinterOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePrinterInfo)
 {
-    if (cupsOpt.contains("printer-location") && cupsOpt["printer-location"].is_string()) {
+    if (cupsOpt.contains("printer-location")) {
         std::string pLocation = cupsOpt["printer-location"].get<std::string>();
         PRINT_HILOGD("printer-location: %{public}s", pLocation.c_str());
         nativePrinterInfo.location = CopyString(pLocation);
     }
     std::string keyword = "orientation-requested-supported";
-    if (cupsOpt.contains(keyword) && cupsOpt[keyword].is_string()) {
+    if (cupsOpt.contains(keyword)) {
         std::string orientationArray = cupsOpt[keyword].get<std::string>();
         PRINT_HILOGD("supported orientations: %{public}s", orientationArray.c_str());
         std::vector<uint32_t> orientationVector = PrintUtil::Str2Vec(orientationArray);
@@ -338,7 +338,7 @@ void ParsePrinterOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePri
             orientationVector, nativePrinterInfo.capability.supportedOrientationsCount, ConvertOrientationMode);
     }
     keyword = "orientation-requested-default";
-    if (cupsOpt.contains(keyword) && cupsOpt[keyword].is_string()) {
+    if (cupsOpt.contains(keyword)) {
         std::string orientationString = cupsOpt[keyword].get<std::string>();
         PRINT_HILOGD("default orientation: %{public}s", orientationString.c_str());
         int orientationValue = 0;
@@ -350,7 +350,7 @@ void ParsePrinterOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePri
     keyword = "printer-resolution-supported";
     ParseJsonFieldAsArrayOpt(cupsOpt, keyword, nativePrinterInfo, ParseResolutionArray);
     keyword = "printer-resolution-default";
-    if (cupsOpt.contains(keyword) && cupsOpt[keyword].is_string()) {
+    if (cupsOpt.contains(keyword)) {
         std::string resolutionString = cupsOpt[keyword].get<std::string>();
         if (json::accept(resolutionString)) {
             nlohmann::json resolutionJson = json::parse(resolutionString);
@@ -370,12 +370,12 @@ void ParseCupsCopyOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePr
 
     keyword = "print-quality-supported";
     ParseJsonFieldAsArrayOpt(cupsOpt, keyword, nativePrinterInfo, ParseQualityArray);
-    if (cupsOpt.contains("copies-default") && cupsOpt["copies-default"].is_string()) {
+    if (cupsOpt.contains("copies-default")) {
         std::string defaultCopies = cupsOpt["copies-default"].get<std::string>();
         nativePrinterInfo.defaultValue.defaultCopies = std::stoul(defaultCopies);
         PRINT_HILOGD("ParseCupsCopyOpt copies-default: %{public}s", defaultCopies.c_str());
     }
-    if (cupsOpt.contains("copies-supported") && cupsOpt["copies-supported"].is_string()) {
+    if (cupsOpt.contains("copies-supported")) {
         std::string copySupport = cupsOpt["copies-supported"].get<std::string>();
         nativePrinterInfo.capability.supportedCopies = std::stoul(copySupport);
         PRINT_HILOGD("ParseCupsCopyOpt copies-supported: %{public}s", copySupport.c_str());
