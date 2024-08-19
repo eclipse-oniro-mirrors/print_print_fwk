@@ -3069,7 +3069,7 @@ int32_t PrintServiceAbility::DiscoverUsbPrinters(std::vector<PrinterInfo> &print
         return ret;
     }
 #endif  // CUPS_ENABLE
-    PRINT_HILOGD("DiscoverUsbDevices printers size: %{public}u", printers.size());
+    PRINT_HILOGD("DiscoverUsbDevices printers size: %{public}zu", printers.size());
     return E_PRINT_NONE;
 }
 } // namespace OHOS::Print
