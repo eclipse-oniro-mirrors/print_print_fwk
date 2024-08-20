@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "print_user_data.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
@@ -20,7 +21,6 @@
 #include <streambuf>
 #include "nlohmann/json.hpp"
 
-#include "print_user_data.h"
 #include "print_log.h"
 #include "print_constant.h"
 

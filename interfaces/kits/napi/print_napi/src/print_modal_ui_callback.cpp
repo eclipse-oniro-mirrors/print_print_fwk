@@ -92,7 +92,7 @@ void PrintModalUICallback::OnError(int32_t code, const std::string& name, const 
 
 void PrintModalUICallback::OnResultForModal(int32_t resultCode, const OHOS::AAFwk::Want& result)
 {
-    PRINT_HILOGI("OnResultForModal enter. resultCode is %d", resultCode);
+    PRINT_HILOGI("OnResultForModal enter. resultCode is %{public}d", resultCode);
     if (this->baseContext == nullptr) {
         PRINT_HILOGE("OnResultForModal baseContext is null");
         return;
@@ -273,12 +273,14 @@ napi_value PrintModalUICallback::CreateBusinessError(const napi_env& env, int32_
     napi_status status = napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &message);
     if (status != napi_ok) {
         PRINT_HILOGE("napi create errorMessage failed");
+        return message;
     }
 
     napi_value code = nullptr;
     status = napi_create_int32(env, errCode, &code);
     if (status != napi_ok) {
         PRINT_HILOGE("napi create errorCode failed");
+        return code;
     }
 
     napi_value businessError = nullptr;

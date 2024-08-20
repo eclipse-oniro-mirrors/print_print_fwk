@@ -67,6 +67,7 @@ constexpr int CHANNEL_ONE = 1;
 constexpr int CHANNEL_THREE = 3;
 #ifdef SANE_ENABLE
 constexpr int MAX_PICTURE_DPI = 3000;
+constexpr int MAX_SANE_VALUE_LEN = 2000;
 #endif
 const int64_t INIT_INTERVAL = 5000L;
 const uint32_t ASYNC_CMD_DELAY = 10;
@@ -145,14 +146,19 @@ ScanServiceAbility::ScanServiceAbility(int32_t systemAbilityId, bool runOnCreate
             buffer = nullptr;
     };
 #endif
-
-    cinfo.comps_in_scan = 0;
+    cinfoPtr = static_cast<jpeg_compress_struct *>(malloc(sizeof(jpeg_compress_struct)));
+    if (cinfoPtr == nullptr) {
+        SCAN_HILOGE("cinfoPtr allocated failed");
+        return;
+    }
+    cinfoPtr->comps_in_scan = 0;
 }
 
 ScanServiceAbility::~ScanServiceAbility()
 {
-    free(saneReadBuf);
+    FREE_AND_NULLPTR(saneReadBuf);
     FREE_AND_NULLPTR(jpegbuf)
+    FREE_AND_NULLPTR(cinfoPtr);
     SCAN_HILOGD("~ScanServiceAbility state_  is %{public}d.", static_cast<int>(state_));
 }
 
@@ -372,7 +378,9 @@ bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string
 
 void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
 {
-    info.model = info.model.substr(0, info.model.find("(") - 1);
+    if (info.model.find("(") > 0) {
+        info.model = info.model.substr(0, info.model.find("(") - 1);
+    }
     if (info.deviceId.find(":tcp") != info.deviceId.npos) {
         info.discoverMode = "TCP";
         SCAN_HILOGI("SetScannerSerialNumber discoverMode:[%{public}s]", info.discoverMode.c_str());
@@ -698,7 +706,7 @@ int32_t ScanServiceAbility::SelectScanOptionDesc(
         std::vector<int32_t> optionConstraintNumber;
         int sizeNumber = *(optionDesc->constraint.word_list) + 1;
         for (int i = 0; i < sizeNumber; i++) {
-            SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST: %d", *(optionDesc->constraint.word_list + i));
+            SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST: %{public}d", *(optionDesc->constraint.word_list + i));
             optionConstraintNumber.push_back(*(optionDesc->constraint.word_list + i));
         }
         desc.SetOptionConstraintNumber(optionConstraintNumber);
@@ -710,8 +718,8 @@ int32_t ScanServiceAbility::SelectScanOptionDesc(
             SCAN_HILOGE("sane_get_option_descriptor stringList nullptr");
             return E_SCAN_INVALID_PARAMETER;
         }
-        for (int i = 0; stringList[i] != NULL; i++) {
-            SCAN_HILOGD("SANE_CONSTRAINT_STRING_LIST: %s", stringList[i]);
+        for (int i = 0; stringList[i] != nullptr; i++) {
+            SCAN_HILOGD("SANE_CONSTRAINT_STRING_LIST: %{public}s", stringList[i]);
             optionConstraintString.push_back(std::string(stringList[i]));
         }
         optionConstraintString.push_back(string("null"));
@@ -779,7 +787,10 @@ int32_t ScanServiceAbility::ActionGetValue(SANE_Handle &scannerHandle, ScanOptio
     int32_t valueSize = value.GetValueSize() / sizeof(SANE_Word);
     uint32_t bufSize = (value.GetStrValue().size() + 1)
         > sizeof(int) ? (value.GetStrValue().size() + 1) : sizeof(int);
-
+    if (bufSize == 0 || bufSize > MAX_SANE_VALUE_LEN) {
+        SCAN_HILOGE("malloc value buffer size error");
+        return E_SCAN_GENERIC_FAILURE;
+    }
     void* saneValueBuf = malloc(bufSize);
     ScanOptionValueType valueType = value.GetScanOptionValueType();
     if (!saneValueBuf) {
@@ -796,6 +807,8 @@ int32_t ScanServiceAbility::ActionGetValue(SANE_Handle &scannerHandle, ScanOptio
     status = sane_control_option(scannerHandle, optionIndex, SANE_ACTION_GET_VALUE, saneValueBuf, 0);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
+        free(saneValueBuf);
+        saneValueBuf = nullptr;
         return ScanUtil::ConvertErro(status);
     }
 
@@ -828,6 +841,10 @@ int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptio
     int32_t valueSize = value.GetValueSize() / sizeof(SANE_Word);
     uint32_t bufSize = (value.GetStrValue().size() + 1)
         > sizeof(int) ? (value.GetStrValue().size() + 1) : sizeof(int);
+    if (bufSize == 0 || bufSize > MAX_SANE_VALUE_LEN) {
+        SCAN_HILOGE("malloc value buffer size error");
+        return E_SCAN_GENERIC_FAILURE;
+    }
     void* saneValueBuf = malloc(bufSize);
     if (!saneValueBuf) {
         SCAN_HILOGE("malloc value buffer failed");
@@ -843,7 +860,7 @@ int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptio
     if (valueType == SCAN_VALUE_NUM) {
         int32_t numValue = value.GetNumValue();
         dpi = numValue > 0 && numValue < MAX_PICTURE_DPI ? numValue : 0;
-        *static_cast<int *>(saneValueBuf) = value.GetNumValue(); //
+        *static_cast<int *>(saneValueBuf) = value.GetNumValue();
     } else if (valueType == SCAN_VALUE_NUM_LIST) {
         std::vector<int32_t> numListValue;
         value.GetNumListValue(numListValue);
@@ -1658,8 +1675,8 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
         ofp = NULL;
     }
     {
-        std::lock_guard<std::mutex> autoLock(lock_);
 #ifdef SANE_ENABLE
+        std::lock_guard<std::mutex> autoLock(lock_);
         SANE_Handle scannerHandle = GetScanHandle(scannerId);
         if (scannerHandle != nullptr) {
             SCAN_HILOGI("GeneratePictureSingle finished, doing sane_cancel");
@@ -1696,6 +1713,10 @@ int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress
                 SCAN_HILOGE("StartScanTask error exit after WriteJpegHeader");
                 return scanStatus;
             }
+            if (parm.GetBytesPerLine() == 0 || parm.GetBytesPerLine() > INT32_MAX) {
+                SCAN_HILOGE("GetBytesPerLine is out of limit");
+                return E_SCAN_NONE;
+            }
             jpegbuf = (JSAMPLE*)malloc(parm.GetBytesPerLine());
             if (jpegbuf == nullptr) {
                 SCAN_HILOGE("jpegbuf malloc fail");
@@ -1715,7 +1736,7 @@ int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress
         }
         first_frame = 0;
     } while (!(parm.GetLastFrame()));
-    jpeg_finish_compress(&cinfo);
+    jpeg_finish_compress(cinfoPtr);
     fflush(ofp);
     FREE_AND_NULLPTR(jpegbuf)
     SCAN_HILOGI("end DoScanTask");
@@ -1728,7 +1749,6 @@ int32_t ScanServiceAbility::WriteJpegHeader(ScanParameters &parm, struct jpeg_er
     ScanFrame format = parm.GetFormat();
     int32_t width = parm.GetPixelsPerLine();
     int32_t height = parm.GetLines();
-    struct jpeg_compress_struct* cinfoPtr = &cinfo;
     cinfoPtr->err = jpeg_std_error(jerr);
     cinfoPtr->err->error_exit = [](j_common_ptr cinfo) {
         g_isJpegWriteSuccess = false;
@@ -1846,13 +1866,17 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
             return false;
         }
         if (parm.GetDepth() != 1) {
-            jpeg_write_scanlines(&cinfo, &jpegbuf, bit);
+            jpeg_write_scanlines(cinfoPtr, &jpegbuf, bit);
             i += parm.GetBytesPerLine() - jpegrow;
             left -= parm.GetBytesPerLine() - jpegrow;
             jpegrow = 0;
             continue;
         }
         constexpr int byteBits = 8;
+        if (parm.GetBytesPerLine() * byteBits == 0 || parm.GetBytesPerLine() * byteBits > INT32_MAX) {
+            SCAN_HILOGE("GetBytesPerLine is out of limit");
+            return false;
+        }
         JSAMPLE *buf8 = (JSAMPLE *)malloc(parm.GetBytesPerLine() * byteBits);
         if (buf8 == nullptr) {
             scanProPtr->SetTaskCode(E_SCAN_GENERIC_FAILURE);
@@ -1862,7 +1886,7 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
         for (int col1 = 0; col1 < parm.GetBytesPerLine(); col1++) {
             for (int col8 = 0; col8 < byteBits; col8++) {
                 buf8[col1 * byteBits + col8] = jpegbuf[col1] & (1 << (byteBits - col8 - 1)) ? 0 : 0xff;
-                jpeg_write_scanlines(&cinfo, &buf8, byteBits);
+                jpeg_write_scanlines(cinfoPtr, &buf8, byteBits);
             }
         }
         free(buf8);
