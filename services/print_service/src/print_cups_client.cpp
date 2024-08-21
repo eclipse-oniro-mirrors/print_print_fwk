@@ -297,7 +297,8 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
             chmod(destFilePath.c_str(), filestat.st_mode);
         } else {
             char realSrc[PATH_MAX] = {};
-            if (realpath(srcFilePath.c_str(), realSrc) == nullptr) {
+            if (realpath(srcFilePath.c_str(), realSrc) == nullptr ||
+                realpath(destFilePath.c_str(), realSrc) == nullptr) {
                 PRINT_HILOGE("The realSrc is null.");
                 continue;
             }

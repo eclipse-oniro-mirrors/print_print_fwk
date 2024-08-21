@@ -230,7 +230,7 @@ bool MemSetScannerOptions(Scan_ScannerOptions* scannerOptions, int32_t &optionCo
 {
     for (int i = 0; i < optionCount; i++) {
         auto bufferSize = paraTable.titBuff[i].length() + 1;
-        char* titleBuf = new (std::nothrow) char[bufferSize];
+        char* titleBuf = new(std::nothrow) char[bufferSize];
         if (titleBuf == nullptr) {
             FreeScannerOptionsMemory(scannerOptions);
             return false;
@@ -240,7 +240,12 @@ bool MemSetScannerOptions(Scan_ScannerOptions* scannerOptions, int32_t &optionCo
             FreeScannerOptionsMemory(scannerOptions);
             return false;
         }
-        strncpy_s(titleBuf, bufferSize, paraTable.titBuff[i].c_str(), bufferSize);
+        errno_t err = strncpy_s(titleBuf, bufferSize, paraTable.titBuff[i].c_str(), bufferSize);
+        if (err != 0) {
+            SCAN_HILOGW("strncpy_s fail");
+            FreeScannerOptionsMemory(scannerOptions);
+            return false;
+        }
         scannerOptions->titles[i] = titleBuf;
         bufferSize = paraTable.desBuff[i].length() + 1;
         char* desBuf = new (std::nothrow) char[bufferSize];
