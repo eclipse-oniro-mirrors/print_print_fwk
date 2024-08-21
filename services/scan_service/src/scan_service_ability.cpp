@@ -428,6 +428,7 @@ void ScanServiceAbility::AddFoundUsbScanner(ScanDeviceInfo &info)
 {
     SCAN_HILOGI("AddFoundUsbScanner start model:[%{public}s]", info.model.c_str());
     SyncScannerInfo(info);
+    std::lock_guard<std::mutex> autoLock(clearMapLock_);
 #ifdef DEBUG_ENABLE
     auto it = saneGetUsbDeviceInfoMap.find(info.serialNumber);
     if (it != saneGetUsbDeviceInfoMap.end()) {
@@ -498,9 +499,12 @@ void ScanServiceAbility::SaneGetScanner()
     const SANE_Device **deviceList;
     SANE_Status devicesStatus = SANE_STATUS_GOOD;
     std::lock_guard<std::mutex> autoLock(lock_);
+    {
+        std::lock_guard<std::mutex> autoLock(clearMapLock_);
+        saneGetTcpDeviceInfoMap.clear();
+        saneGetUsbDeviceInfoMap.clear();
+    }
     g_scannerState = SCANNER_SEARCHING;
-    saneGetTcpDeviceInfoMap.clear();
-    saneGetUsbDeviceInfoMap.clear();
     devicesStatus = sane_get_devices(&deviceList, SANE_FALSE);
     if (devicesStatus != SANE_STATUS_GOOD) {
         SCAN_HILOGE("sane_get_devices failed, reason: [%{public}s]", sane_strstatus(devicesStatus));
@@ -528,6 +532,7 @@ void ScanServiceAbility::SaneGetScanner()
             SCAN_HILOGE("SaneGetScanner SetScannerSerialNumber failed, model:[%{public}s]", info.model.c_str());
         }
     }
+    std::lock_guard<std::mutex> autoLock(clearMapLock_);
     for (auto &t : saneGetUsbDeviceInfoMap) {
         SendDeviceInfo(t.second, SCAN_DEVICE_FOUND);
         deviceInfos.emplace_back(t.second);
@@ -1235,6 +1240,7 @@ void ScanServiceAbility::UpdateUsbScannerId(std::string serialNumber, std::strin
     scanDeviceInfoSync.discoverMode = "USB";
     scanDeviceInfoSync.syncMode = "update";
     scanDeviceInfoSync.deviceState = 0;
+    std::lock_guard<std::mutex> autoLock(clearMapLock_);
     auto it = saneGetUsbDeviceInfoMap.find(serialNumber);
     if (it != saneGetUsbDeviceInfoMap.end()) {
         saneGetUsbDeviceInfoMap[serialNumber].deviceId = newDeviceId;
@@ -1383,35 +1389,36 @@ int32_t ScanServiceAbility::AddScanner(const std::string& serialNumber, const st
     }
     auto addScannerExe = [=]() {
 #ifdef SANE_ENABLE
-    std::string uniqueId = discoverMode + serialNumber;
-    ScanSystemData &scanData = ScanSystemData::GetInstance();
-    if (discoverMode == "USB") {
-        auto usbIt = saneGetUsbDeviceInfoMap.find(serialNumber);
-        if (usbIt == saneGetUsbDeviceInfoMap.end() || scanData.IsContainScanner(uniqueId)) {
-            SCAN_HILOGE("Failed to add usb scanner.");
-            return;
+        std::string uniqueId = discoverMode + serialNumber;
+        ScanSystemData &scanData = ScanSystemData::GetInstance();
+        std::lock_guard<std::mutex> autoLock(clearMapLock_);
+        if (discoverMode == "USB") {
+            auto usbIt = saneGetUsbDeviceInfoMap.find(serialNumber);
+            if (usbIt == saneGetUsbDeviceInfoMap.end() || scanData.IsContainScanner(uniqueId)) {
+                SCAN_HILOGE("Failed to add usb scanner.");
+                return;
+            }
+            scanData.InsertScannerInfo(uniqueId, usbIt->second);
+            if (!scanData.SaveScannerMap()) {
+                SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
+                return;
+            }
+            SendDeviceInfo(usbIt->second, SCAN_DEVICE_ADD);
+        } else if (discoverMode == "TCP") {
+            auto tcpIt = saneGetTcpDeviceInfoMap.find(serialNumber);
+            if (tcpIt == saneGetTcpDeviceInfoMap.end() || scanData.IsContainScanner(uniqueId)) {
+                SCAN_HILOGE("Failed to add tcp scanner.");
+                return;
+            }
+            scanData.InsertScannerInfo(uniqueId, tcpIt->second);
+            if (!scanData.SaveScannerMap()) {
+                SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
+                return;
+            }
+            SendDeviceInfo(tcpIt->second, SCAN_DEVICE_ADD);
+        } else {
+            SCAN_HILOGE("discoverMode is invalid.");
         }
-        scanData.InsertScannerInfo(uniqueId, usbIt->second);
-        if (!scanData.SaveScannerMap()) {
-            SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
-            return;
-        }
-        SendDeviceInfo(usbIt->second, SCAN_DEVICE_ADD);
-    } else if (discoverMode == "TCP") {
-        auto tcpIt = saneGetTcpDeviceInfoMap.find(serialNumber);
-        if (tcpIt == saneGetTcpDeviceInfoMap.end() || scanData.IsContainScanner(uniqueId)) {
-            SCAN_HILOGE("Failed to add tcp scanner.");
-            return;
-        }
-        scanData.InsertScannerInfo(uniqueId, tcpIt->second);
-        if (!scanData.SaveScannerMap()) {
-            SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
-            return;
-        }
-        SendDeviceInfo(tcpIt->second, SCAN_DEVICE_ADD);
-    } else {
-        SCAN_HILOGE("discoverMode is invalid.");
-    }
 #endif
     };
     serviceHandler_->PostTask(addScannerExe, ASYNC_CMD_DELAY);
