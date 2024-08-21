@@ -170,8 +170,11 @@ void ScanUsbManager::FormatUsbPort(std::string &port)
 
 std::string ScanUsbManager::getNewDeviceId(std::string oldDeviceId, std::string usbDevicePort)
 {
-    std::string deviceIdHead = oldDeviceId.substr(0, oldDeviceId.find_last_of(":")
-                                                    - USB_DEVICEID_FIRSTID_LEN_3);
+    std::string deviceIdHead = "";
+    if (oldDeviceId.find(":") != std::string::npos &&
+            oldDeviceId.find_last_of(":") >= USB_DEVICEID_FIRSTID_LEN_3) {
+        deviceIdHead = oldDeviceId.substr(0, oldDeviceId.find_last_of(":") - USB_DEVICEID_FIRSTID_LEN_3);
+    }
     std::string firstPort = usbDevicePort.substr(0, usbDevicePort.find("-"));
     std::string secondPort = usbDevicePort.substr(usbDevicePort.find("-") + 1, usbDevicePort.size() - 1);
     SCAN_HILOGI("firstPort = %{public}s, secondPort = %{public}s.",

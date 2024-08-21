@@ -110,22 +110,18 @@ bool ScanMdnsService::onStopDiscoverService()
 void ScanMDnsDiscoveryObserver::HandleServiceFound(const MDnsServiceInfo &info, int32_t retCode)
 {
     MDnsServiceInfo tempInfo = info;
-    SCAN_HILOGD("GetScannerList HandleServiceFound [%{public}s][%{public}s][%{public}d][%{public}s]",
+    SCAN_HILOGD("GetScannerList HandleServiceFound [%{public}s][%{public}s]",
         info.name.c_str(),
-        info.type.c_str(),
-        info.port,
-        info.addr.c_str());
+        info.type.c_str());
     ScanMdnsService::GetInstance().onResolveService(tempInfo);
 }
 
 void ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
 {
     _serviceInfo = info;
-    SCAN_HILOGD("GetScannerList HandleResolveResult [%{public}s][%{public}s][%{public}d][%{public}s]",
+    SCAN_HILOGD("GetScannerList HandleResolveResult [%{public}s][%{public}s]",
         info.name.c_str(),
-        info.type.c_str(),
-        info.port,
-        info.addr.c_str());
+        info.type.c_str());
     MDnsServiceInfo tempInfo = info;
     auto texRecord = tempInfo.GetAttrMap();
     auto textIt = texRecord.begin();
@@ -139,11 +135,9 @@ void ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, i
 void ScanMDnsDiscoveryObserver::HandleStopDiscover(const MDnsServiceInfo &serviceInfo, int32_t retCode)
 {
     MDnsServiceInfo info = serviceInfo;
-    SCAN_HILOGD("GetScannerList HandleStopDiscover [%{public}s][%{public}s][%{public}d][%{public}s]",
+    SCAN_HILOGD("GetScannerList HandleStopDiscover [%{public}s][%{public}s]",
         info.name.c_str(),
-        info.type.c_str(),
-        info.port,
-        info.addr.c_str());
+        info.type.c_str());
 }
 
 void ScanMdnsService::ToMDnsScaner(MDnsServiceInfo &serviceInfo)
@@ -177,8 +171,6 @@ void ScanMdnsService::ToMDnsScaner(MDnsServiceInfo &serviceInfo)
         }
     }
     SCAN_HILOGI("mdns scanner's deviceName:[%{public}s]", scannerInfo->deviceName.c_str());
-    SCAN_HILOGD("mdns scanner's addr:[%{public}s]", scannerInfo->addr.c_str());
-    SCAN_HILOGD("mdns scanner's port:[%{public}s]", scannerInfo->port.c_str());
     ScanServiceAbility::scanDeviceInfoTCPMap_[scannerInfo->addr] = *scannerInfo;
 }
 

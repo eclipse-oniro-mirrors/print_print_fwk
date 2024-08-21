@@ -177,6 +177,8 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t* work, int statusIn)
     BaseContext* context = reinterpret_cast<BaseContext*>(work->data);
     if (context == nullptr) {
         PRINT_HILOGE("context is null");
+        delete work;
+        work = nullptr;
         return;
     }
 

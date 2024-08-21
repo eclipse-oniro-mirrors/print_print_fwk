@@ -41,10 +41,12 @@ bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilit
     }
     std::lock_guard<std::mutex> lock(mutex_);
     if (helper_ == nullptr || !GetProxy()) {
+        PRINT_HILOGE("QueryExtensionInfos helper_ is nullptr or GetProxy() fail.");
         return false;
     }
     std::vector<int> osAccountIds;
     if (!helper_->QueryAccounts(osAccountIds)) {
+        PRINT_HILOGE("QueryAccounts fail.");
         return false;
     }
 

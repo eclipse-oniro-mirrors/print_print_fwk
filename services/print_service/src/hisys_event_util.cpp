@@ -20,7 +20,7 @@
 namespace OHOS::Print {
     using namespace OHOS::HiviewDFX;
 
-    void HisysEventUtil::reportBehaviorEvent(std::string name, int behaviorCode, const std::string &msg)
+    void HisysEventUtil::reportBehaviorEvent(const std::string &name, int behaviorCode, const std::string &msg)
     {
         HiSysEventWrite(
             HW_PRINT_SPOOLER,
@@ -32,7 +32,7 @@ namespace OHOS::Print {
             "MSG", msg);
     }
 
-    void HisysEventUtil::reportFaultEvent(std::string name, int faultCode, std::string scene, std::string msg)
+    void HisysEventUtil::reportFaultEvent(const std::string &name, int faultCode, std::string scene, std::string msg)
     {
         HiSysEventWrite(
             HW_PRINT_SPOOLER,

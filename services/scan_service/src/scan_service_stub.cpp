@@ -271,7 +271,7 @@ bool ScanServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply)
     std::string type = data.ReadString();
     SCAN_HILOGD("ScanServiceStub::OnEventOn type=%{public}s ", type.c_str());
     if (type.empty()) {
-        SCAN_HILOGE("ScanServiceStub::OnEventOn type is null.");
+        SCAN_HILOGE("ScanServiceStub::OnEventOn type is null.");·
         reply.WriteInt32(E_SCAN_RPC_FAILURE);
         return false;
     }
@@ -357,7 +357,6 @@ bool ScanServiceStub::OnGetConnectedScanner(MessageParcel &data, MessageParcel &
 {
     SCAN_HILOGD("ScanServiceStub::OnGetConnectedScanner start");
     std::vector<ScanDeviceInfo> allAddedScanner;
-    allAddedScanner.clear();
     int32_t ret = GetAddedScanner(allAddedScanner);
     reply.WriteInt32(ret);
     if (ret == E_SCAN_NONE) {

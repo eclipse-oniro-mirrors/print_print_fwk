@@ -786,7 +786,7 @@ int32_t ScanServiceAbility::ActionGetValue(SANE_Handle &scannerHandle, ScanOptio
         SCAN_HILOGE("malloc value buffer failed");
         return E_SCAN_GENERIC_FAILURE;
     }
-    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != 0) {
+    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != EOK) {
         SCAN_HILOGE("memset_s failed");
         free(saneValueBuf);
         saneValueBuf = nullptr;
@@ -833,7 +833,7 @@ int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptio
         SCAN_HILOGE("malloc value buffer failed");
         return E_SCAN_GENERIC_FAILURE;
     }
-    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != 0) {
+    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != EOK) {
         SCAN_HILOGE("memset_s failed");
         free(saneValueBuf);
         saneValueBuf = nullptr;
@@ -852,8 +852,12 @@ int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptio
         }
     } else if (valueType == SCAN_VALUE_STR) {
         SCAN_HILOGE("Set scanner mode:[%{public}s]", value.GetStrValue().c_str());
-        strncpy_s(static_cast<char*>(saneValueBuf), bufSize,
+        errno_t err = strncpy_s(static_cast<char*>(saneValueBuf), bufSize,
             value.GetStrValue().c_str(), value.GetStrValue().size());
+        if (err != EOK) {
+            SCAN_HILOGD("strncpy_s arg failed");
+            return;
+        }
     } else if (valueType == SCAN_VALUE_BOOL) {
         *static_cast<int32_t *>(saneValueBuf) = value.GetBoolValue() > 0 ? true : false;
     }
@@ -1838,7 +1842,7 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
             scanProPtr->SetTaskCode(E_SCAN_NO_MEM);
             return false;
         }
-        int ret = memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(),
+        errno_t ret = memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(),
             saneReadBuf + i, parm.GetBytesPerLine() - jpegrow);
         if (ret != ERR_OK) {
             scanProPtr->SetTaskCode(E_SCAN_GENERIC_FAILURE);

@@ -181,8 +181,6 @@ bool ScanCallbackProxy::OnSendSearchMessage(std::string &message)
     SCAN_HILOGD("Enter OnSendSearchMessage");
     SCAN_HILOGD("ScanCallbackProxy::OnSendSearchMessage Start");
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         SCAN_HILOGE("write descriptor failed");
@@ -195,6 +193,8 @@ bool ScanCallbackProxy::OnSendSearchMessage(std::string &message)
         SCAN_HILOGE("Remote() nullptr failed");
         return false;
     }
+    MessageParcel reply;
+    MessageOption option;
     int error = remotePtr->SendRequest(SCAN_CALLBACK_SEND_MESSAGE, data, reply, option);
     if (error != 0) {
         SCAN_HILOGE("SendRequest failed, error %{public}d", error);
@@ -219,7 +219,12 @@ bool ScanCallbackProxy::OnGetDevicesList(std::vector<ScanDeviceInfo> &infos)
     for (size_t i = 0; i < infos.size(); i++) {
         infos[i].Marshalling(data);
     }
-    int error = Remote()->SendRequest(SCAN_CALLBACK_DEVICE_LIST, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SCAN_HILOGE("ScanCallbackProxy::OnGetDevicesList remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(SCAN_CALLBACK_DEVICE_LIST, data, reply, option);
     if (error != 0) {
         SCAN_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
