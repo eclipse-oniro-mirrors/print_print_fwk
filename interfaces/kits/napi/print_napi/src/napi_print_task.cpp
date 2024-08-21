@@ -165,9 +165,7 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
         auto task = new (std::nothrow) PrintTask(printJobName, callback, printAttributes, callerToken);
 
         if (task == nullptr) {
-            PRINT_HILOGE("print task fail");
-            delete callback;
-            NapiPrintUtils::DeleteReference(env, adapterRef);
+            PRINT_HILOGE("print task fail");    // callback结束时自动释放adapterRef
             return nullptr;
         }
         auto finalize = [](napi_env env, void *data, void *hint) {
@@ -176,9 +174,7 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
             delete task;
         };
         if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
-            finalize(env, task, nullptr);
-            delete callback;
-            NapiPrintUtils::DeleteReference(env, adapterRef);
+            finalize(env, task, nullptr);   // finalize里释放了tack，然后函数走完后释放callback，callback中自动释放adapterRef
             return nullptr;
         }
         PRINT_HILOGD("Succeed to allocate print task");

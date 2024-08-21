@@ -1713,10 +1713,6 @@ int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress
                 SCAN_HILOGE("StartScanTask error exit after WriteJpegHeader");
                 return scanStatus;
             }
-            if (parm.GetBytesPerLine() == 0 || parm.GetBytesPerLine() > INT32_MAX) {
-                SCAN_HILOGE("GetBytesPerLine is out of limit");
-                return E_SCAN_NONE;
-            }
             jpegbuf = (JSAMPLE*)malloc(parm.GetBytesPerLine());
             if (jpegbuf == nullptr) {
                 SCAN_HILOGE("jpegbuf malloc fail");
@@ -1873,10 +1869,6 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
             continue;
         }
         constexpr int byteBits = 8;
-        if (parm.GetBytesPerLine() * byteBits == 0 || parm.GetBytesPerLine() * byteBits > INT32_MAX) {
-            SCAN_HILOGE("GetBytesPerLine is out of limit");
-            return false;
-        }
         JSAMPLE *buf8 = (JSAMPLE *)malloc(parm.GetBytesPerLine() * byteBits);
         if (buf8 == nullptr) {
             scanProPtr->SetTaskCode(E_SCAN_GENERIC_FAILURE);

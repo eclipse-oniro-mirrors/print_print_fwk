@@ -1055,10 +1055,11 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     PRINT_HILOGD("start job success, jobId: %{public}d", jobId);
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam { jobParams->serviceAbility,
         jobParams->serviceJobId, jobId, jobParams->printerUri, jobParams->printerName, jobParams->printerId };
-    if (param == nullptr)
-        return;
     g_isFirstQueryState = true;
+    PRINT_HILOGD("MonitorJobState enter, cupsJobId: %{public}d", param->cupsJobId);
     MonitorJobState(param, callback);
+    PRINT_HILOGI("FINISHED MONITORING JOB %{public}d\n", param->cupsJobId);
+    delete param;
 }
 
 void PrintCupsClient::UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState)
@@ -1068,63 +1069,76 @@ void PrintCupsClient::UpdatePrintJobStateInJobParams(JobParameters *jobParams, u
     }
 }
 
+void PrintCupsClient::HandleJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus,
+    JobStatus *prevousJobStatus)
+{
+    QueryJobState(http, param, jobStatus);
+    if (g_isFirstQueryState) {
+        QueryJobStateAgain(http, param, jobStatus);
+    }
+    if (jobStatus->job_state < IPP_JSTATE_CANCELED) {
+        sleep(INTERVAL_FOR_QUERY);
+    }
+    if (jobStatus->job_state == 0) {
+        PRINT_HILOGD("job_state is 0, continue");
+        return;
+    }
+    if (prevousJobStatus != nullptr && prevousJobStatus->job_state == jobStatus->job_state &&
+        strcmp(prevousJobStatus->printer_state_reasons, jobStatus->printer_state_reasons) == 0) {
+        PRINT_HILOGD("the prevous jobState is the same as current, ignore");
+        return;
+    }
+    UpdateJobStatus(prevousJobStatus, jobStatus);
+    JobStatusCallback(param, jobStatus, false);
+}
+
 void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callback)
 {
+    if (param == nullptr) {
+        return;
+    }
     http_t *http = NULL;
     uint32_t fail_connect_times = 0;
-    PRINT_HILOGD("MonitorJobState enter, cupsJobId: %{public}d", param->cupsJobId);
     ippSetPort(CUPS_SEVER_PORT);
     http = httpConnect2(cupsServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
+    if (http == nullptr) {
+        return;
+    }
     JobStatus *jobStatus = new (std::nothrow) JobStatus { {'\0'}, (ipp_jstate_t)0, {'\0'}};
     if (jobStatus == nullptr) {
+        httpClose(http);
         PRINT_HILOGE("new JobStatus returns nullptr");
         return;
     }
     JobStatus *prevousJobStatus = new (std::nothrow) JobStatus { {'\0'}, (ipp_jstate_t)0, {'\0'}};
     if (prevousJobStatus == nullptr) {
+        httpClose(http);
+        delete jobStatus;
         PRINT_HILOGE("new prevousJobStatus returns nullptr");
         return;
     }
     while (jobStatus->job_state < IPP_JSTATE_CANCELED) {
-        if (httpGetFd(http) < 0) {
-            PRINT_HILOGE("http is NULL");
-            httpReconnect2(http, LONG_LONG_TIME_OUT, NULL);
-        }
-        if (httpGetFd(http) > 0 && CheckPrinterOnline(param->printerUri.c_str(), param->printerId)) {
-            fail_connect_times = 0;
-            QueryJobState(http, param, jobStatus);
-            if (g_isFirstQueryState) {
-                QueryJobStateAgain(http, param, jobStatus);
-            }
-        } else if (fail_connect_times < OFFLINE_RETRY_TIMES) {
-            PRINT_HILOGE("unable connect to printer, retry: %{public}d", fail_connect_times);
-            fail_connect_times++;
-            sleep(INTERVAL_FOR_QUERY);
-            continue;
-        } else {
+        if (fail_connect_times > OFFLINE_RETRY_TIMES) {
             PRINT_HILOGE("_start(): The maximum number of connection failures has been exceeded");
             JobStatusCallback(param, jobStatus, true);
             break;
         }
-        if (jobStatus->job_state < IPP_JSTATE_CANCELED)
+        if (httpGetFd(http) < 0) {
+            PRINT_HILOGE("http is NULL");
+            httpReconnect2(http, LONG_LONG_TIME_OUT, NULL);
+        }
+        if (httpGetFd(http) < 0 || !CheckPrinterOnline(param->printerUri.c_str(), param->printerId)) {
+            PRINT_HILOGE("unable connect to printer, retry: %{public}d", fail_connect_times);
+            fail_connect_times++;
             sleep(INTERVAL_FOR_QUERY);
-        if (jobStatus->job_state == 0) {
-            PRINT_HILOGD("job_state is 0, continue");
             continue;
         }
-        if (prevousJobStatus != nullptr && prevousJobStatus->job_state == jobStatus->job_state &&
-        strcmp(prevousJobStatus->printer_state_reasons, jobStatus->printer_state_reasons) == 0) {
-            PRINT_HILOGD("the prevous jobState is the same as current, ignore");
-            continue;
-        }
-        UpdateJobStatus(prevousJobStatus, jobStatus);
-        JobStatusCallback(param, jobStatus, false);
+        fail_connect_times = 0;
+        HandleJobState(http, param, jobStatus, prevousJobStatus);
     }
     httpClose(http);
-    delete param;
     delete jobStatus;
     delete prevousJobStatus;
-    PRINT_HILOGI("FINISHED MONITORING JOB %{public}d\n", param->cupsJobId);
     callback();
 }
 
@@ -1427,15 +1441,9 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     } else {
         params->printQuality = CUPS_PRINT_QUALITY_NORMAL;
     }
-    if (optionJson.contains("jobName"))
-        params->jobName = optionJson["jobName"];
-    else
-        params->jobName = DEFAULT_JOB_NAME;
-    if (optionJson.contains("mediaType")) {
-        params->mediaType = optionJson["mediaType"];
-    } else {
-        params->mediaType = CUPS_MEDIA_TYPE_PLAIN;
-    }
+    params->jobName = optionJson.contains("jobName") ? optionJson["jobName"].get<std::string>() : DEFAULT_JOB_NAME;
+    params->mediaType = optionJson.contains("mediaType") ?
+        optionJson["mediaType"].get<std::string>() : CUPS_MEDIA_TYPE_PLAIN;
     params->serviceAbility = PrintServiceAbility::GetInstance();
     return params;
 }

@@ -39,7 +39,7 @@ class PrintManagerClient : public RefBase {
 public:
     PrintManagerClient();
     ~PrintManagerClient();
-    static sptr<PrintManagerClient> GetInstance();
+    static PrintManagerClient* GetInstance();
 
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
 
@@ -122,8 +122,6 @@ private:
 #define CALL_COMMON_CLIENT(func) runBase(__func__, func)
 
 private:
-    static std::mutex instanceLock_;
-    static sptr<PrintManagerClient> instance_;
     std::recursive_mutex proxyLock_;
     sptr<IPrintService> printServiceProxy_;
     sptr<PrintSaDeathRecipient> deathRecipient_;
