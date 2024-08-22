@@ -786,7 +786,7 @@ int32_t ScanServiceAbility::ActionGetValue(SANE_Handle &scannerHandle, ScanOptio
         SCAN_HILOGE("malloc value buffer failed");
         return E_SCAN_GENERIC_FAILURE;
     }
-    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != EOK) {
+    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != 0) {
         SCAN_HILOGE("memset_s failed");
         free(saneValueBuf);
         saneValueBuf = nullptr;
@@ -833,7 +833,7 @@ int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptio
         SCAN_HILOGE("malloc value buffer failed");
         return E_SCAN_GENERIC_FAILURE;
     }
-    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != EOK) {
+    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != 0) {
         SCAN_HILOGE("memset_s failed");
         free(saneValueBuf);
         saneValueBuf = nullptr;
@@ -1842,7 +1842,7 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
             scanProPtr->SetTaskCode(E_SCAN_NO_MEM);
             return false;
         }
-        errno_t ret = memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(),
+        int ret = memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(),
             saneReadBuf + i, parm.GetBytesPerLine() - jpegrow);
         if (ret != ERR_OK) {
             scanProPtr->SetTaskCode(E_SCAN_GENERIC_FAILURE);

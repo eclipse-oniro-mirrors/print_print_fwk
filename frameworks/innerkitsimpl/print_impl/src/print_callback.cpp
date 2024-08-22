@@ -44,6 +44,8 @@ PrintCallback::~PrintCallback()
         napi_get_uv_event_loop(env_, &loop);
         Param *param = new (std::nothrow) Param;
         if (param == nullptr) {
+            delete ref_;
+            ref_ = nullptr;
             return;
         }
         param->env = env_;
@@ -51,6 +53,8 @@ PrintCallback::~PrintCallback()
         uv_work_t *work = new (std::nothrow) uv_work_t;
         if (work == nullptr) {
             delete param;
+            delete ref_;
+            ref_ = nullptr;
             return;
         }
         work->data = reinterpret_cast<void*>(param);
@@ -59,6 +63,8 @@ PrintCallback::~PrintCallback()
             Param *param_ = reinterpret_cast<Param*>(work->data);
             if (param_ == nullptr) {
                 delete work;
+                delete ref_;
+                ref_ = nullptr;
                 return;
             }
             napi_handle_scope scope = nullptr;
@@ -66,6 +72,8 @@ PrintCallback::~PrintCallback()
             if (scope == nullptr) {
                 delete param_;
                 delete work;
+                delete ref_;
+                ref_ = nullptr;
                 return;
             }
             napi_ref callbackRef_ = param_->callbackRef;
@@ -78,6 +86,8 @@ PrintCallback::~PrintCallback()
             PRINT_HILOGE("Failed to get uv_queue_work.");
             delete param;
             delete work;
+            delete ref_;
+            ref_ = nullptr;
             return;
         }
     }

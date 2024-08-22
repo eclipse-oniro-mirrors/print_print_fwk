@@ -218,6 +218,8 @@ napi_value NapiPrintTask::GetCtor(napi_env env)
     napi_value cons;
     if (globalCtor != nullptr) {
         PRINT_CALL(env, napi_get_reference_value(env, globalCtor, &cons));
+        delete globalCtor;
+        globalCtor = nullptr;
         return cons;
     }
 

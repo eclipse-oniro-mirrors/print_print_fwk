@@ -181,6 +181,8 @@ bool ScanCallbackProxy::OnSendSearchMessage(std::string &message)
     SCAN_HILOGD("Enter OnSendSearchMessage");
     SCAN_HILOGD("ScanCallbackProxy::OnSendSearchMessage Start");
     MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         SCAN_HILOGE("write descriptor failed");
@@ -193,8 +195,6 @@ bool ScanCallbackProxy::OnSendSearchMessage(std::string &message)
         SCAN_HILOGE("Remote() nullptr failed");
         return false;
     }
-    MessageParcel reply;
-    MessageOption option;
     int error = remotePtr->SendRequest(SCAN_CALLBACK_SEND_MESSAGE, data, reply, option);
     if (error != 0) {
         SCAN_HILOGE("SendRequest failed, error %{public}d", error);
