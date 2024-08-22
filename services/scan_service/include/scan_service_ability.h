@@ -161,7 +161,7 @@ private:
     int32_t buffer_size;
     bool batchMode_ = false;
     uint8_t *saneReadBuf;
-    struct jpeg_compress_struct cinfo;
+    struct jpeg_compress_struct *cinfoPtr;
     FILE *ofp = NULL;
     bool isCancel = false;
     int32_t dpi = 0;

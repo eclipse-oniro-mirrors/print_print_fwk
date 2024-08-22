@@ -361,7 +361,7 @@ napi_value NapiPrintExt::AddPrinterToCups(napi_env env, napi_callback_info info)
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToCups(context->printerUri, context->printerName,
             context->printerMake);
-        PRINT_HILOGD("ret: %d", ret);
+        PRINT_HILOGD("ret: %{public}d", ret);
         context->result = (ret == E_PRINT_NONE);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to set cups printer");

@@ -41,22 +41,14 @@ static const std::string UI_EXTENSION_TYPE_NAME = "ability.want.params.uiExtensi
 static const std::string PRINT_UI_EXTENSION_TYPE = "sysDialog/print";
 static const std::string CALLER_PKG_NAME = "caller.pkgName";
 
-std::mutex PrintManagerClient::instanceLock_;
-sptr<PrintManagerClient> PrintManagerClient::instance_ = nullptr;
-
 PrintManagerClient::PrintManagerClient() : printServiceProxy_(nullptr), deathRecipient_(nullptr) {}
 
 PrintManagerClient::~PrintManagerClient() {}
 
-sptr<PrintManagerClient> PrintManagerClient::GetInstance()
+PrintManagerClient* PrintManagerClient::GetInstance()
 {
-    if (instance_ == nullptr) {
-        std::lock_guard<std::mutex> autoLock(instanceLock_);
-        if (instance_ == nullptr) {
-            instance_ = new (std::nothrow) PrintManagerClient();
-        }
-    }
-    return instance_;
+    static PrintManagerClient instance;
+    return &instance;
 }
 
 bool PrintManagerClient::GetPrintServiceProxy()

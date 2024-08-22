@@ -102,6 +102,8 @@ public:
 private:
     void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
     void MonitorJobState(JobMonitorParam *param, CallbackFunc callback);
+    void HandleJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus,
+        JobStatus *prevousJobStatus);
     void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
     bool CheckPrinterOnline(const char* printerUri, const std::string& printerId);
     static void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
