@@ -882,7 +882,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0042, TestSize.Level1)
     std::vector<PrintPageSize> pageSizeList;
     PrintPageSize pageSize;
     pageSizeList.push_back(pageSize);
-    printerCapability2.SetPageSize(pageSizeList);
+    printerCapability2.SetSupportedPageSize(pageSizeList);
     cupsPrinter.printerCapability = printerCapability2;
     systemData->GetPrinterCapabilityFromSystemData(cupsPrinter, printerId, printerCapability);
 }
@@ -1082,7 +1082,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0051, TestSize.Level1)
     std::vector<PrintPageSize> pageSizeList;
     PrintPageSize pageSize;
     pageSizeList.push_back(pageSize);
-    printerCapability.SetPageSize(pageSizeList);
+    printerCapability.SetSupportedPageSize(pageSizeList);
     nlohmann::json opsJson;
     opsJson["printerName"] = "123";
     printerCapability.SetOption(opsJson.dump());

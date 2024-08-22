@@ -63,6 +63,9 @@ public:
     int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
         const uint32_t fd) override;
     int32_t NotifyPrintService(const std::string &jobId, const std::string &type) override;
+    int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo) override;
+    int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo) override;
+    int32_t RemovePrinterFromDiscovery(const std::string &printerId) override;
 
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) override;

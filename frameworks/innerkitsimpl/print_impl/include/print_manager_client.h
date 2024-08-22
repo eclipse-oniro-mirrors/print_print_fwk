@@ -81,6 +81,9 @@ public:
     int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference);
     int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference);
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
+    int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo);
+    int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo);
+    int32_t RemovePrinterFromDiscovery(const std::string &printerId);
 
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);

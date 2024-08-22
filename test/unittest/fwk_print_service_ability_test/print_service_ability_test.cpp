@@ -1155,7 +1155,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0064, TestSize.Level1)
     std::vector<PrintPageSize> pageSizeList;
     PrintPageSize pageSize;
     pageSizeList.push_back(pageSize);
-    caps.SetPageSize(pageSizeList);
+    caps.SetSupportedPageSize(pageSizeList);
     printerInfo->printerCapability = caps;
     service->printSystemData_.addedPrinterMap_[printerId] = printerInfo;
     EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_NONE);
@@ -1958,6 +1958,35 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0129, TestSize.Level1)
     service->helper_ = helper;
     std::vector<PrinterInfo> printers;
     service->DiscoverUsbPrinters(printers);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrinterInfo info;
+    info.SetPrinterId(DEFAULT_EXT_PRINTER_ID);
+    EXPECT_EQ(service->AddPrinterToDiscovery(info), E_PRINT_NONE);
+    EXPECT_EQ(service->UpdatePrinterInDiscovery(info), E_PRINT_NONE);
+    info.SetPrinterId("1234");
+    EXPECT_EQ(service->UpdatePrinterInDiscovery(info), E_PRINT_NONE);
+    
+    std::shared_ptr<PrinterInfo> info1 = std::make_shared<PrinterInfo>();
+    info1->SetPrinterId(DEFAULT_EXT_PRINTER_ID);
+    service->printerInfoList_[DEFAULT_EXT_PRINTER_ID] = info1;
+    EXPECT_EQ(service->RemovePrinterFromDiscovery(DEFAULT_EXT_PRINTER_ID), E_PRINT_NONE);
+    EXPECT_EQ(service->RemovePrinterFromDiscovery(DEFAULT_EXT_PRINTER_ID), E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
+    std::string printerExtId = PrintUtils::GetGlobalId("", printerId);
+    service->printerIdAndPreferenceMap_[printerExtId] = "test";
+    PrinterCapability printerCaps;
+    printerCaps.SetOption("test");
+    std::string printerUri = "usb:ipp://192.168.186.1:631/ipp/print";
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
 }
 
 } // namespace OHOS::Print

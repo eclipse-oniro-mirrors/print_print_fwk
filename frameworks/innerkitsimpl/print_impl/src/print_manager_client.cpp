@@ -384,6 +384,43 @@ int32_t PrintManagerClient::SetPrinterPreference(const std::string &printerId, c
     return ret;
 }
 
+int32_t PrintManagerClient::AddPrinterToDiscovery(const PrinterInfo &printerInfo)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGD("PrintManagerClient AddPrinterToDiscovery start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->AddPrinterToDiscovery(printerInfo);
+        PRINT_HILOGD("PrintManagerClient AddPrinterToDiscovery out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::UpdatePrinterInDiscovery(const PrinterInfo &printerInfo)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    printerInfo.Dump();
+
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->UpdatePrinterInDiscovery(printerInfo);
+        PRINT_HILOGD("PrintManagerClient UpdatePrinterInDiscovery out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::RemovePrinterFromDiscovery(const std::string &printerId)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGD("PrintManagerClient RemovePrinterFromDiscovery start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->RemovePrinterFromDiscovery(printerId);
+        PRINT_HILOGD("PrintManagerClient RemovePrinterFromDiscovery out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
@@ -568,12 +605,12 @@ int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IP
         auto printUiContent = static_cast<OHOS::Ace::UIContent *>(uiContent);
         auto callback = std::make_shared<PrintInnerkitModalUICallback>(printUiContent);
         OHOS::Ace::ModalUIExtensionCallbacks extensionCallbacks = {
-            [callback](int32_t releaseCode) { callback->OnRelease(releaseCode); },
-            [callback](int32_t resultCode, const OHOS::AAFwk::Want& result) {
+            [&callback](int32_t releaseCode) { callback->OnRelease(releaseCode); },
+            [&callback](int32_t resultCode, const OHOS::AAFwk::Want& result) {
                 callback->OnResultForModal(resultCode, result);
             },
-            [callback](const OHOS::AAFwk::WantParams& request) { callback->OnReceive(request); },
-            [callback](int32_t code, const std::string& name, const std::string& message) {
+            [&callback](const OHOS::AAFwk::WantParams& request) { callback->OnReceive(request); },
+            [&callback](int32_t code, const std::string& name, const std::string& message) {
                 callback->OnError(code, name, message);
             }
         };

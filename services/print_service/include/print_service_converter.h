@@ -35,12 +35,6 @@ enum ColorModeCode {
     COLOR_MODE_AUTO = 2
 };
 
-enum PrintQualityCode {
-    PRINT_QUALITY_DRAFT = 3,
-    PRINT_QUALITY_NORMAL = 4,
-    PRINT_QUALITY_HIGH = 5
-};
-
 inline int DpcToDpi(int dpc)
 {
     return dpc * 300 / 120; // 300 DPI = 120 DPC

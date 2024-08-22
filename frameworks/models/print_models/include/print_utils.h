@@ -19,6 +19,8 @@
 #include <string>
 #include "want.h"
 #include "bundle_mgr_client.h"
+#include "print_constant.h"
+#include "print_log.h"
 #include <nlohmann/json.hpp>
 #include <mutex>
 
@@ -36,8 +38,8 @@ class PrintUtils {
 public:
     static std::string ToLower(const std::string &s);
     static std::string GetExtensionId(const std::string &globalId);
-    static std::string GetGlobalId(const std::string& extensionId, const std::string& localId);
-    static std::string GetLocalId(const std::string& globalId, const std::string& extensionId);
+    static std::string GetGlobalId(const std::string &extensionId, const std::string &localId);
+    static std::string GetLocalId(const std::string &globalId, const std::string &extensionId);
     static std::string EncodeExtensionCid(const std::string &extensionId, uint32_t callbackId);
     static bool DecodeExtensionCid(const std::string &cid, std::string &extensionId, uint32_t &callbackId);
     static std::string GetTaskEventId(const std::string &taskId, const std::string &type);
@@ -53,6 +55,71 @@ public:
     static std::string GetPrintJobId();
     static std::string GetEventTypeWithToken(int64_t id, const std::string &type);
     static std::string GetEventType(const std::string &type);
+    template <typename T, typename ReadFunc>
+    static bool readListFromParcel(Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc)
+    {
+        uint32_t vecSize = parcel.ReadUint32();
+        CHECK_IS_EXCEED_PRINT_RANGE_BOOL(vecSize);
+        supportedList.clear();
+        supportedList.reserve(vecSize);  // Allocate the required memory all at once to speed up processing efficiency.
+        for (uint32_t index = 0; index < vecSize; index++) {
+            auto item = readFunc(parcel);
+            if (item.has_value()) {
+                supportedList.emplace_back(std::move(*item));
+            } else {
+                PRINT_HILOGE("Failed on the %{public}d-th read of the list.", index);
+                return false;
+            }
+        }
+        return true;
+    }
+    template <typename T, typename ReadFunc>
+    static bool readListFromParcel(Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc,
+                                   bool *hasSupportedPtr)
+    {
+        if (hasSupportedPtr) {
+            *hasSupportedPtr = parcel.ReadBool();
+            if (*hasSupportedPtr) {
+                return readListFromParcel(parcel, supportedList, readFunc);
+            }
+        } else {
+            PRINT_HILOGE("Func readListFromParcel error! Ptr: hasSupportedPtr is null");
+            return false;
+        }
+        return true;
+    }
+
+    template <typename T, typename WriteFunc>
+    static void WriteListToParcel(Parcel &parcel, const std::vector<T> &list, WriteFunc writeFunc)
+    {
+        uint32_t vecSize = static_cast<uint32_t>(list.size());
+        parcel.WriteUint32(vecSize);
+        for (uint32_t index = 0; index < vecSize; index++) {
+            writeFunc(parcel, list[index]);
+        }
+    }
+    template <typename T, typename WriteFunc>
+    static void WriteListToParcel(Parcel &parcel, const std::vector<T> &list, WriteFunc writeFunc, bool hasFlag)
+    {
+        parcel.WriteBool(hasFlag);
+        if (hasFlag) {
+            WriteListToParcel(parcel, list, writeFunc);
+        }
+    }
+
+    template<typename T>
+    static bool CheckJsonType(const nlohmann::json &j)
+    {
+        if constexpr (std::is_same_v<T, int> || std::is_same_v<T, unsigned int> || std::is_same_v<T, uint32_t>) {
+            return j.is_number_integer();
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            return j.is_string();
+        } else if constexpr (std::is_same_v<T, bool>) {
+            return j.is_boolean();
+        } else {
+            return true; // For complex types, we'll do the check in the conversion function
+        }
+    }
 
 private:
     static std::mutex instanceLock_;

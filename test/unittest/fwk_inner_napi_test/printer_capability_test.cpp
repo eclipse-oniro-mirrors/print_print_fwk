@@ -106,7 +106,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0005, TestSize.Level1)
     PrintPageSize testPagesize;
     testPagesize.SetWidth(1);
     pagesize.emplace_back(testPagesize);
-    capability.SetPageSize(pagesize);
+    capability.SetSupportedPageSize(pagesize);
     capability.GetPageSize(getPagesize);
     EXPECT_EQ(pagesize.size(), getPagesize.size());
 }
@@ -185,7 +185,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0010, TestSize.Level1)
     capability.SetDuplexMode(6);
 
     capability.SetMinMargin(margin);
-    capability.SetPageSize(pagesize);
+    capability.SetSupportedPageSize(pagesize);
     capability.SetResolution(resolutionList);
     Parcel parcel;
     EXPECT_EQ(capability.Marshalling(parcel), true);
@@ -205,7 +205,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0011, TestSize.Level1)
     std::vector<PrintPageSize> pagesize;
     capability.SetColorMode(6);
     capability.SetDuplexMode(6);
-    capability.SetPageSize(pagesize);
+    capability.SetSupportedPageSize(pagesize);
     Parcel parcel;
     EXPECT_EQ(capability.Marshalling(parcel), true);
 }
@@ -225,7 +225,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0012, TestSize.Level1)
     capability.SetColorMode(6);
     capability.SetDuplexMode(6);
     capability.SetMinMargin(margin);
-    capability.SetPageSize(pagesize);
+    capability.SetSupportedPageSize(pagesize);
     capability.SetResolution(resolutionList);
     Parcel parcel;
     capability.Marshalling(parcel);

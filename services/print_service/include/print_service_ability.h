@@ -106,6 +106,9 @@ public:
     int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake) override;
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers) override;
+    int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo) override;
+    int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo) override;
+    int32_t RemovePrinterFromDiscovery(const std::string &printerId) override;
 
 protected:
     void OnStart() override;
@@ -178,13 +181,16 @@ private:
     PrintJobState DetermineUserJobStatus(const std::map<std::string, std::shared_ptr<PrintJob>> &jobList);
     void NotifyAppDeletePrinterWithDefaultPrinter(const std::string &printerId);
     void ChangeDefaultPrinterForDelete(std::shared_ptr<PrintUserData> &userData, const std::string &printerId);
-    bool UpdatePrinterCapability(const std::string &printerId, PrinterInfo &info);
-    bool UpdatePrinterSystemData(const std::string &printerId, PrinterInfo &info);
+    bool UpdatePrinterCapability(const std::string &printerId, const PrinterInfo &info);
+    bool UpdatePrinterSystemData(const std::string &printerId, const PrinterInfo &info);
     uint32_t GetListeningState(const uint32_t subState);
     uint32_t GetListeningState(uint32_t state, uint32_t subState);
     std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
     bool CheckPrintJob(PrintJob &jobInfo);
     bool CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info);
+    int32_t AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
+    bool UpdateSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
+    bool RemoveSinglePrinterInfo(const std::string &printerId);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

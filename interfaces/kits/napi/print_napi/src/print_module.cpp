@@ -57,6 +57,10 @@ static constexpr const char *FUNCTION_SET_PRINTER_PREFERENCE = "setPrinterPrefer
 static constexpr const char *FUNCTION_SET_DEFAULT_PRINTER = "setDefaultPrinter";
 static constexpr const char *FUNCTION_DELETE_PRINTER_FROM_CUPS = "deletePrinterFromCups";
 static constexpr const char *FUNCTION_DISCOVER_USB_PRINTERS = "discoverUsbPrinters";
+static constexpr const char *FUNCTION_ADD_PRINTER_TO_DISCOVERY = "addPrinterToDiscovery";
+static constexpr const char *FUNCTION_UPDATE_PRINTER_IN_DISCOVERY = "updatePrinterInDiscovery";
+static constexpr const char *FUNCTION_REMOVE_PRINTER_FROM_DISCOVERY = "removePrinterFromDiscovery";
+static constexpr const char *FUNCTION_GET_ADDED_PRINTER_INFO_BY_ID = "getAddedPrinterInfoById";
 
 #define PRINT_NAPI_METHOD(name, func)           \
     {                                           \
@@ -101,6 +105,16 @@ static napi_value NapiCreateDuplexModeEnum(napi_env env)
     SetEnumProperty(env, object, "DUPLEX_MODE_NONE", static_cast<int32_t>(DUPLEX_MODE_NONE));
     SetEnumProperty(env, object, "DUPLEX_MODE_LONG_EDGE", static_cast<int32_t>(DUPLEX_MODE_LONG_EDGE));
     SetEnumProperty(env, object, "DUPLEX_MODE_SHORT_EDGE", static_cast<int32_t>(DUPLEX_MODE_SHORT_EDGE));
+    return object;
+}
+
+static napi_value NapiCreateQualityEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_create_object(env, &object);
+    SetEnumProperty(env, object, "QUALITY_DRAFT", static_cast<int32_t>(PRINT_QUALITY_DRAFT));
+    SetEnumProperty(env, object, "QUALITY_NORMAL", static_cast<int32_t>(PRINT_QUALITY_NORMAL));
+    SetEnumProperty(env, object, "QUALITY_HIGH", static_cast<int32_t>(PRINT_QUALITY_HIGH));
     return object;
 }
 
@@ -289,6 +303,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY("PrintDirectionMode", NapiCreateDirectionModeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintColorMode", NapiCreateColorModeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintDuplexMode", NapiCreateDuplexModeEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintQuality", NapiCreateQualityEnum(env)),
         PRINT_NAPI_PROPERTY("PrintPageType", NapiCreatePageTypeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintDocumentAdapterState", NapiCreateDocumentAdapterStateEnum(env)),
         PRINT_NAPI_PROPERTY("PrintFileCreationState", NapiCreateFileCreationStateEnum(env)),
@@ -334,6 +349,10 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_SET_DEFAULT_PRINTER, NapiInnerPrint::SetDefaultPrinter),
         PRINT_NAPI_METHOD(FUNCTION_DELETE_PRINTER_FROM_CUPS, NapiPrintExt::DeletePrinterFromCups),
         PRINT_NAPI_METHOD(FUNCTION_DISCOVER_USB_PRINTERS, NapiPrintExt::DiscoverUsbPrinters),
+        PRINT_NAPI_METHOD(FUNCTION_ADD_PRINTER_TO_DISCOVERY, NapiPrintExt::AddPrinterToDiscovery),
+        PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_IN_DISCOVERY, NapiPrintExt::UpdatePrinterInDiscovery),
+        PRINT_NAPI_METHOD(FUNCTION_REMOVE_PRINTER_FROM_DISCOVERY, NapiPrintExt::RemovePrinterFromDiscovery),
+        PRINT_NAPI_METHOD(FUNCTION_GET_ADDED_PRINTER_INFO_BY_ID, NapiInnerPrint::GetAddedPrinterInfoById),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);

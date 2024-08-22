@@ -48,7 +48,7 @@ public:
 
     static std::shared_ptr<PrintResolution> Unmarshalling(Parcel &parcel);
 
-    void Dump();
+    void Dump() const;
 
 private:
     void ReadFromParcel(Parcel &parcel);
