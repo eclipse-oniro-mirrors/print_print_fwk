@@ -235,37 +235,8 @@ void OH_Print_ReleasePrinterInfo(Print_PrinterInfo *printerInfo)
 
 Print_ErrorCode OH_Print_LaunchPrinterManager()
 {
-    OHOS::AAFwk::AbilityManagerClient::GetInstance()->Connect();
-    OHOS::AAFwk::Want want;
-    want.SetElementName("com.ohos.spooler", "PrinterManagerAbility");
-    auto ret = OHOS::AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
-    PRINT_HILOGI("StartAbility ret = %{public}d", ret);
-    if (ret != 0) {
-        PRINT_HILOGW("Failed to start PrinterManagerAbility");
-        return PRINT_ERROR_GENERIC_FAILURE;
-    }
-    PRINT_HILOGI("Succeed to start PrinterManagerAbility");
-    return PRINT_ERROR_NONE;
-}
-
-int32_t OH_Print_LaunchPrinterPreference(const char* printerName, const char* printerId)
-{
-    std::string id = printerId;
-    std::string name = printerName;
-    std::string preferencesParam = id + "id&name" + name;  // 传参和应用层对齐
-    OHOS::AAFwk::AbilityManagerClient::GetInstance()->Connect();
-    OHOS::AAFwk::Want want;
-    want.SetElementName(preferencesParam, "com.ohos.spooler", "PreferencesAbility", "");
-    std::string thirdAppFlag = "window";
-    want.SetParam("thirdApp", thirdAppFlag.c_str());
-    auto ret = OHOS::AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
-    PRINT_HILOGI("StartAbility ret = %{public}d", ret);
-    if (ret != 0) {
-        PRINT_HILOGW("Failed to start PreferencesAbility");
-        return PRINT_ERROR_GENERIC_FAILURE;
-    }
-    PRINT_HILOGI("Succeed to start PreferencesAbility");
-    return PRINT_ERROR_NONE;
+    PRINT_HILOGW("Ability context is needed to start ability");
+    return PRINT_ERROR_GENERIC_FAILURE;
 }
 
 Print_ErrorCode OH_Print_QueryPrinterProperties(
