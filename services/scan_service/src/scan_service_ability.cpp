@@ -146,7 +146,7 @@ ScanServiceAbility::ScanServiceAbility(int32_t systemAbilityId, bool runOnCreate
             buffer = nullptr;
     };
 #endif
-    cinfoPtr = static_cast<jpeg_compress_struct *>(malloc(sizeof(jpeg_compress_struct)));
+    cinfoPtr = new (std::nothrow) jpeg_compress_struct();
     if (cinfoPtr == nullptr) {
         SCAN_HILOGE("cinfoPtr allocated failed");
         return;
@@ -158,7 +158,7 @@ ScanServiceAbility::~ScanServiceAbility()
 {
     FREE_AND_NULLPTR(saneReadBuf);
     FREE_AND_NULLPTR(jpegbuf)
-    FREE_AND_NULLPTR(cinfoPtr);
+    DELETE_AND_NULLIFY(cinfoPtr);
     SCAN_HILOGD("~ScanServiceAbility state_  is %{public}d.", static_cast<int>(state_));
 }
 
@@ -1775,7 +1775,6 @@ int32_t ScanServiceAbility::WriteJpegHeader(ScanParameters &parm, struct jpeg_er
     SCAN_HILOGI("width:[%{public}d],height:[%{public}d],dpi:[%{public}d]", width, height, dpi);
     jpeg_set_quality(cinfoPtr, JPEG_QUALITY_SEVENTY_FIVE, TRUE);
     jpeg_start_compress(cinfoPtr, TRUE);
-    cinfoPtr = nullptr;
     SCAN_HILOGI("finish write jpegHeader");
     return E_SCAN_NONE;
 }
