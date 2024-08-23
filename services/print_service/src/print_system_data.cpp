@@ -24,9 +24,9 @@
 #include "print_constant.h"
 
 namespace {
-const std::string PRINTER_LIST_FILE = "/data/service/el1/public/print_service/printer_list.json";
+const std::string PRINTER_LIST_FILE = "/data/service/el2/public/print_service/printer_list.json";
 const std::string PRINTER_LIST_VERSION = "v1";
-const std::string PRINT_USER_DATA_FILE = "/data/service/el1/public/print_service/print_user_data.json";
+const std::string PRINT_USER_DATA_FILE = "/data/service/el2/public/print_service/print_user_data.json";
 const std::string PRINT_USER_DATA_VERSION = "v1";
 }  // namespace
 
