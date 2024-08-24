@@ -43,7 +43,6 @@ static bool NativePrinterDiscoverFunction(uint32_t event, const PrinterInfo &inf
     }
     printerDiscoverCallback(static_cast<Print_DiscoveryEvent>(event), nativePrinterInfo);
     OH_Print_ReleasePrinterInfo(nativePrinterInfo);
-    nativePrinterInfo = nullptr;
     return true;
 }
 
@@ -173,6 +172,12 @@ Print_ErrorCode OH_Print_QueryPrinterList(Print_StringList *printerIdList)
         return PRINT_ERROR_GENERIC_FAILURE;
     }
     if (memset_s(printerIdList->list, count * sizeof(char *), 0, count * sizeof(char *)) != 0) {
+        for (int i = 0; i < count; i++) {
+            delete[] printerIdList->list[i];
+            printerIdList->list[i] = nullptr;
+        }
+        delete[] printerIdList->list;
+        printerIdList->list = nullptr;
         PRINT_HILOGW("memset_s fail");
         return PRINT_ERROR_GENERIC_FAILURE;
     }

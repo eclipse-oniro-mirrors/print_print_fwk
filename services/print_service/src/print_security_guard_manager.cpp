@@ -32,11 +32,11 @@ void PrintSecurityGuardManager::receiveJobStateUpdate(const std::string jobId, c
 {
     PRINT_HILOGI("receiveJobStateUpdate jobId:%{public}s, state:%{public}d", jobId.c_str(), printJob.GetJobState());
     auto it = securityMap_.find(jobId);
-    if (it != securityMap_.end() && it -> second !=nullptr) {
-        auto securityGuard = it -> second;
-        securityGuard ->setPrintTypeInfo(printerInfo, printJob);
+    if (it != securityMap_.end() && it->second != nullptr) {
+        auto securityGuard = it->second;
+        securityGuard->setPrintTypeInfo(printerInfo, printJob);
 
-        ReportSecurityInfo(EVENT_ID, VERSION, securityGuard -> ToJsonStr());
+        ReportSecurityInfo(EVENT_ID, VERSION, securityGuard->ToJsonStr());
     } else {
         PRINT_HILOGI("find PrintSecurityGuardInfo empty");
     }

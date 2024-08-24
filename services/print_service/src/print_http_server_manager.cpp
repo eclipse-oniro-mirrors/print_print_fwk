@@ -96,6 +96,10 @@ bool PrintHttpServerManager::CreateServer(std::string printerName, int32_t &port
 
     std::shared_ptr<httplib::Server> newServer = std::make_shared<httplib::Server>();
     int32_t allocPort = HTTP_MIN_PORT;
+    if (newServer == nullptr) {
+        PRINT_HILOGE("newServer is null");
+        return false;
+    }
     if (!AllocatePort(newServer, allocPort)) {
         PRINT_HILOGE("AllocatePort fail, return!");
         return false;
@@ -104,6 +108,10 @@ bool PrintHttpServerManager::CreateServer(std::string printerName, int32_t &port
     printHttpServerMap[printerName] = newServer;
     printHttpPortMap[printerName] = port;
     std::shared_ptr<PrintHttpRequestProcess> newProcess = std::make_shared<PrintHttpRequestProcess>();
+    if (newProcess == nullptr) {
+        PRINT_HILOGE("newProcess is null");
+        return false;
+    }
     printHttpProcessMap[printerName] = newProcess;
     newProcess->SetDeviceName(printerName);
 
@@ -138,6 +146,7 @@ void PrintHttpServerManager::DealUsbDevDetach(const std::string &devStr)
     cJSON *devJson = cJSON_Parse(devStr.c_str());
     if (!devJson) {
         PRINT_HILOGE("Create devJson error");
+        return;
     }
     cJSON *jsonTemp = cJSON_GetObjectItem(devJson, "name");
     if (jsonTemp == nullptr || jsonTemp->valuestring  == NULL) {

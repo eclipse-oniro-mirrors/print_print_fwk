@@ -395,6 +395,10 @@ bool PrintJob::MarshallingParam(Parcel &parcel) const
 std::shared_ptr<PrintJob> PrintJob::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PrintJob>();
+    if (nativeObj == nullptr) {
+        PRINT_HILOGE("nativeObj is nullptr");
+        return nullptr;
+    }
     nativeObj->ReadFromParcel(parcel);
     return nativeObj;
 }

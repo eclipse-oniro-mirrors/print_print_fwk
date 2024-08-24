@@ -15,6 +15,7 @@
 
 #include "print_cups_client.h"
 
+#include <mutex>
 #include <string>
 #include <cups/cups-private.h>
 #include <cups/adminutil.h>
@@ -120,6 +121,7 @@ static const std::vector<std::string> IGNORE_STATE_LIST = {PRINTER_STATE_WAITING
     PRINTER_STATE_IGNORE_BUSY_MISSING_JOB_STATE_COMPLETED,
     PRINTER_STATE_IGNORE_BUSY_WAITING_COMPLETE_OTHER_REPORT,
     PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT};
+std::mutex jobMutex;
 
 static std::vector<PrinterInfo> usbPrinters;
 static void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
@@ -177,7 +179,7 @@ int32_t PrintCupsClient::StartCupsdService()
         }
         const int bufferSize = 96;
         char value[bufferSize] = {0};
-        GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, bufferSize-1);
+        GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, bufferSize - 1);
         PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
         return E_PRINT_NONE;
     }
@@ -358,7 +360,7 @@ void PrintCupsClient::StopCupsdService()
     }
     const int bufferSize = 96;
     char value[bufferSize] = {0};
-    GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, bufferSize-1);
+    GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, bufferSize - 1);
     PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
 }
 
@@ -399,8 +401,9 @@ void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, 
         return;
     }
     for (ipp_attribute_t *attr = response->attrs; attr != NULL; attr = attr->next) {
-        while (attr != NULL && attr->group_tag != IPP_TAG_PRINTER)
+        while (attr != NULL && attr->group_tag != IPP_TAG_PRINTER) {
             attr = attr->next;
+        }
         if (attr == NULL) {
             break;
         }
@@ -416,15 +419,17 @@ void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, 
             attr = attr->next;
         }
         if (ppd_make_model == NULL || ppd_name == NULL) {
-            if (attr == NULL)
+            if (attr == NULL) {
                 break;
-            else
+            } else {
                 continue;
+            }
         }
         ppds.push_back(ppd_name);
         PRINT_HILOGI("ppd: name = %{private}s, make-and-model = %{private}s", ppd_name, ppd_make_model);
-        if (attr == NULL)
+        if (attr == NULL) {
             break;
+        }
     }
 }
 
@@ -444,7 +449,7 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     if (!ppds.empty()) {
         ppd = ppds[0];
         std::string serverBin = CUPS_ROOT_DIR + "/serverbin";
-        mode_t permissions = S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH;
+        mode_t permissions = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH;
         ChangeFilterPermission(serverBin, permissions);
     }
     PRINT_HILOGI("ppd driver: %{public}s", ppd.c_str());
@@ -454,6 +459,7 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     }
     if (printAbility == nullptr) {
         PRINT_HILOGW("printAbility is null");
+        httpClose(http);
         return E_PRINT_SERVER_FAILURE;
     }
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
@@ -591,10 +597,12 @@ int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerU
     if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
         PRINT_HILOGE("set default printers error: %{public}s", cupsLastErrorString());
         ippDelete(response);
+        httpClose(http);
         return E_PRINT_SERVER_FAILURE;
     }
     PRINT_HILOGD("get caps success: %{public}s", cupsLastErrorString());
     ParsePrinterAttributes(response, printerCaps);
+    ippDelete(response);
     httpClose(http);
     return E_PRINT_NONE;
 }
@@ -657,6 +665,7 @@ JobParameters *PrintCupsClient::GetNextJob()
     }
     PRINT_HILOGI("start next job from queue");
 
+    std::lock_guard<std::mutex> lock(jobMutex);
     currentJob_ = jobQueue_.at(0);
     jobQueue_.erase(jobQueue_.begin());
     return currentJob_;
@@ -818,6 +827,7 @@ int32_t PrintCupsClient::SetDefaultPrinter(const std::string &printerName)
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name",
         NULL, cupsUser());
     ippDelete(printAbility->DoRequest(http, request, "/admin/"));
+    httpClose(http);
 
     const char* default_printer = cupsGetDefault();
     PRINT_HILOGI("default_printer=%{public}s", default_printer);
@@ -882,7 +892,7 @@ int32_t PrintCupsClient::QueryPrinterAttrList(const std::string &printerName, co
         return E_PRINT_SERVER_FAILURE;
     }
     for (auto &key : keyList) {
-        const char *ret = cupsGetOption(key.c_str(), dest->num_options, dest ->options);
+        const char *ret = cupsGetOption(key.c_str(), dest->num_options, dest->options);
         if (ret != NULL) {
             std::string valueStr = ret;
             std::string value = key + "&" + valueStr;
@@ -1015,6 +1025,10 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
 }
 void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callback)
 {
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("The jobParams is nullptr");
+        return;
+    }
     http_t *http = nullptr;
     int num_options = 0;
     cups_option_t *options = nullptr;
@@ -1040,8 +1054,9 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
         }
         status = cupsStartDocument(http, jobParams->printerName.c_str(), jobId, jobParams->jobName.c_str(),
             jobParams->documentFormat.c_str(), i == (num_files - 1));
-        if (status == HTTP_STATUS_CONTINUE)
+        if (status == HTTP_STATUS_CONTINUE) {
             bytes = cupsFileRead(fp, buffer, sizeof(buffer));
+        }
         while (status == HTTP_STATUS_CONTINUE && bytes > 0) {
             status = cupsWriteRequestData(http, buffer, (size_t)bytes);
             bytes = cupsFileRead(fp, buffer, sizeof(buffer));
@@ -1060,8 +1075,9 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     PRINT_HILOGD("start job success, jobId: %d", jobId);
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam { jobParams->serviceAbility,
         jobParams->serviceJobId, jobId, jobParams->printerUri, jobParams->printerName, jobParams->printerId };
-    if (param == nullptr)
+    if (param == nullptr) {
         return;
+    }
     g_isFirstQueryState = true;
     MonitorJobState(param, callback);
 }
@@ -1082,7 +1098,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
     http = httpConnect2(cupsServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
     JobStatus *jobStatus = new (std::nothrow) JobStatus { {'\0'}, (ipp_jstate_t)0, {'\0'}};
     JobStatus *prevousJobStatus = new (std::nothrow) JobStatus { {'\0'}, (ipp_jstate_t)0, {'\0'}};
-    while (jobStatus->job_state < IPP_JSTATE_CANCELED) {
+    while (jobStatus != nullptr && jobStatus->job_state < IPP_JSTATE_CANCELED) {
         if (httpGetFd(http) < 0) {
             PRINT_HILOGE("http is NULL");
             httpReconnect2(http, LONG_LONG_TIME_OUT, NULL);
@@ -1103,8 +1119,9 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
             JobStatusCallback(param, jobStatus, true);
             break;
         }
-        if (jobStatus->job_state < IPP_JSTATE_CANCELED)
+        if (jobStatus->job_state < IPP_JSTATE_CANCELED) {
             sleep(INTERVAL_FOR_QUERY);
+        }
         if (jobStatus->job_state == 0) {
             PRINT_HILOGD("job_state is 0, continue");
             continue;

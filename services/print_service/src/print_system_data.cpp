@@ -189,7 +189,6 @@ bool PrintSystemData::SaveCupsPrinterMap()
     PRINT_HILOGD("SaveCupsPrinterMap fd: %{public}d", fd);
     if (fd < 0) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-        close(fd);
         return false;
     }
     nlohmann::json printerMapJson = nlohmann::json::array();

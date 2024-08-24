@@ -147,6 +147,10 @@ int32_t PrintServiceAbility::Init()
     if (helper_ == nullptr) {
         helper_ = std::make_shared<PrintServiceHelper>();
     }
+    if (helper_ == nullptr) {
+        PRINT_HILOGE("PrintServiceHelper create failed.");
+        return E_PRINT_SERVER_FAILURE;
+    }
     DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(helper_);
     if (!g_publishState) {
         bool ret = Publish(PrintServiceAbility::GetInstance());
@@ -159,8 +163,7 @@ int32_t PrintServiceAbility::Init()
     printSystemData_.Init();
     InitPreferenceMap();
     state_ = ServiceRunningState::STATE_RUNNING;
-    PRINT_HILOGI("state_ is %{public}d.", static_cast<int>(state_));
-    PRINT_HILOGI("Init PrintServiceAbility success.");
+    PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
     helper_->PrintSubscribeCommonEvent();
 #ifdef IPPOVERUSB_ENABLE
     PRINT_HILOGD("before PrintIppOverUsbManager Init");
@@ -255,9 +258,8 @@ int32_t PrintServiceAbility::StartService()
             printUserDataMap_.insert(std::make_pair(callerTokenId, userData));
         }
     }
-    PRINT_HILOGI("nativePrint PrintServiceAbility StartService started.");
     printAppCount_++;
-    PRINT_HILOGI("printAppCount_: %{public}u", printAppCount_);
+    PRINT_HILOGI("NativePrint PrintServiceAbility StartService started. PrintAppCount_: %{public}u", printAppCount_);
 #ifdef CUPS_ENABLE
     return DelayedSingleton<PrintCupsClient>::GetInstance()->InitCupsResources();
 #endif // CUPS_ENABLE
@@ -286,6 +288,10 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
     }
     PRINT_HILOGI("CallSpooler jobId: %{public}s", taskId.c_str());
     auto printJob = std::make_shared<PrintJob>();
+    if (printJob == nullptr) {
+        PRINT_HILOGE("printJob is nullptr");
+        return E_PRINT_SERVER_FAILURE;
+    }
     printJob->SetFdList(fdList);
     printJob->SetJobId(taskId);
     printJob->SetJobState(PRINT_JOB_PREPARED);
@@ -1234,6 +1240,10 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
         return E_PRINT_SERVER_FAILURE;
     }
     auto printJob = std::make_shared<PrintJob>();
+    if (printJob == nullptr) {
+        PRINT_HILOGE("create printJob failed.");
+        return E_PRINT_SERVER_FAILURE;
+    }
     printJob->UpdateParams(jobInfo);
     UpdateQueuedJobList(jobId, printJob);
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
@@ -1295,7 +1305,7 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
         queuedJobList_.insert(std::make_pair(jobId, printJob));
         jobOrderList_.insert(std::make_pair(jobOrderId, jobId));
     } else {
-        PRINT_HILOGE("UpdateQueuedJobList out of MAX_JOBQUEUE_NUM");
+        PRINT_HILOGE("UpdateQueuedJobList out of MAX_JOBQUEUE_NUM or jobId not found");
     }
 
     int32_t userId = GetCurrentUserId();
@@ -1559,6 +1569,10 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
             continue;
         }
         auto printerInfo = std::make_shared<PrinterInfo>(info);
+        if (printerInfo == nullptr) {
+            PRINT_HILOGE("create printerInfo failed.");
+            continue;
+        }
         printerInfo->SetPrinterId(PrintUtils::GetGlobalId(extensionId, printerInfo->GetPrinterId()));
         PRINT_HILOGD("AddPrinters printerId = %{public}s", printerInfo->GetPrinterId().c_str());
         printerInfo->SetPrinterState(PRINTER_ADDED);
@@ -1802,7 +1816,7 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
     }
 
     auto eventIt = registeredListeners_.find(PRINT_GET_FILE_EVENT_TYPE);
-    if (eventIt != registeredListeners_.end()) {
+    if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {
         PRINT_HILOGI("print job adapter file created subState[%{public}d]", subState);
         uint32_t fileCompletedState = subState;
         if (subState == PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS) {
@@ -1921,7 +1935,7 @@ void PrintServiceAbility::ReportHisysEvent(
     jobInfo->GetFdList(fdList);
     msg["FILE_NUM"] = fdList.size();
     msg["PAGE_NUM"] = fdList.size();
-    if (printInfo == printerInfoList_.end()) {
+    if (printInfo == printerInfoList_.end() || printInfo->second == nullptr) {
         msg["MODEL"] = "";
     } else {
         msg["MODEL"] = printInfo->second->GetPrinterName();
@@ -2100,6 +2114,10 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
             if (printJobList_.find(jobId) == printJobList_.end()) {
                 PRINT_HILOGI("add printJob from phone, jobId: %{public}s", jobId.c_str());
                 auto printJob = std::make_shared<PrintJob>();
+                if (printJob == nullptr) {
+                    PRINT_HILOGE("printJob is nullptr.");
+                    return E_PRINT_SERVER_FAILURE;
+                }
                 printJob->SetJobId(jobId);
                 printJob->SetJobState(PRINT_JOB_PREPARED);
                 RegisterAdapterListener(jobId);
@@ -2447,7 +2465,7 @@ void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info)
     PRINT_HILOGD("PrintServiceAbility::SendPrinterEvent type %{private}s, %{public}d",
         info.GetPrinterId().c_str(), info.GetPrinterState());
     auto eventIt = registeredListeners_.find(PRINTER_EVENT_TYPE);
-    if (eventIt != registeredListeners_.end()) {
+    if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {
         eventIt->second->OnCallback(info.GetPrinterState(), info);
     }
 }
@@ -2469,7 +2487,7 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     PRINT_HILOGD("PrintServiceAbility::SendPrintJobEvent jobId: %{public}s, state: %{public}d, subState: %{public}d",
         jobInfo.GetJobId().c_str(), jobInfo.GetJobState(), jobInfo.GetSubState());
     auto eventIt = registeredListeners_.find(PRINTJOB_EVENT_TYPE);
-    if (eventIt != registeredListeners_.end()) {
+    if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {
         eventIt->second->OnCallback(jobInfo.GetJobState(), jobInfo);
     }
 
@@ -2506,7 +2524,7 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     if (stateInfo != "") {
         std::string taskEvent = PrintUtils::GetTaskEventId(jobInfo.GetJobId(), stateInfo);
         auto taskEventIt = registeredListeners_.find(taskEvent);
-        if (taskEventIt != registeredListeners_.end()) {
+        if (taskEventIt != registeredListeners_.end() && taskEventIt->second != nullptr) {
             taskEventIt->second->OnCallback();
         }
     }
@@ -2516,7 +2534,7 @@ void PrintServiceAbility::SendExtensionEvent(const std::string &extensionId, con
 {
     PRINT_HILOGD("PrintServiceAbility::SendExtensionEvent type %{public}s", extInfo.c_str());
     auto eventIt = registeredListeners_.find(EXTINFO_EVENT_TYPE);
-    if (eventIt != registeredListeners_.end()) {
+    if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {
         eventIt->second->OnCallback(extensionId, extInfo);
     }
 }
@@ -2524,8 +2542,8 @@ void PrintServiceAbility::SendExtensionEvent(const std::string &extensionId, con
 std::shared_ptr<PrinterInfo> PrintServiceAbility::getPrinterInfo(const std::string printerId)
 {
     auto printerIt = printerInfoList_.find(printerId);
-    if (printerIt != printerInfoList_.end()) {
-        return printerIt ->second;
+    if (printerIt != printerInfoList_.end() && printerIt->second != nullptr) {
+        return printerIt->second;
     }
     return nullptr;
 }
@@ -2984,6 +3002,10 @@ void PrintServiceAbility::DeletePrinterFromUserData(const std::string &printerId
 void PrintServiceAbility::ChangeDefaultPrinterForDelete(
     std::shared_ptr<PrintUserData> &userData, const std::string &printerId)
 {
+    if (userData == nullptr) {
+        PRINT_HILOGE("Get user data failed.");
+        return;
+    }
     userData->DeletePrinter(printerId);
     std::string defaultPrinterId = userData->GetDefaultPrinter();
     bool ret = userData->CheckIfUseLastUsedPrinterForDefault();

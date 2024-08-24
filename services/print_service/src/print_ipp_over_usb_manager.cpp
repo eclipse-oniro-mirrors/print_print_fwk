@@ -62,7 +62,7 @@ bool PrintIppOverUsbManager::ConnectPrinter(const std::string printerId, int32_t
     // printerId: com.ohos.spooler:USB-XXXXX
     auto posColon = printerId.find_first_of(SPLIT_VALUE_COLON);
     if (posColon == std::string::npos) {
-        PRINT_HILOGE("can not find : , return!");
+        PRINT_HILOGE("can not find posColon, return!");
         return false;
     }
     std::string extensionId = printerId.substr(0, posColon);
@@ -94,7 +94,7 @@ void PrintIppOverUsbManager::DisConnectPrinter(const std::string printerId)
     PRINT_HILOGD("DisConnectPrinter printerId = %{public}s", printerId.c_str());
     auto posColon = printerId.find_first_of(SPLIT_VALUE_COLON);
     if (posColon == std::string::npos) {
-        PRINT_HILOGE("can not find : , return!");
+        PRINT_HILOGE("can not find posColon, return!");
         return;
     }
     std::string extensionId = printerId.substr(0, posColon);
