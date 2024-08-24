@@ -141,6 +141,7 @@ void ParseDuplexModeAttributes(ipp_t *response, PrinterCapability &printerCaps)
     } else {
         printerCaps.SetDuplexMode((uint32_t)DUPLEX_MODE_TWO_SIDED_LONG_EDGE);
     }
+    printerCaps.SetSupportedDuplexMode(std::vector<uint32_t>(list.begin(), list.end()));
 
     keyword = "sides-default";
     DuplexModeCode code;
@@ -170,6 +171,7 @@ void ParseColorModeAttributes(ipp_t *response, PrinterCapability &printerCaps)
             break;
         }
     }
+    printerCaps.SetSupportedColorMode(std::vector<uint32_t>(supportedColorModes.begin(), supportedColorModes.end()));
 }
 
 void ParsePageSizeAttributes(ipp_t *response, PrinterCapability &printerCaps)
@@ -178,7 +180,7 @@ void ParsePageSizeAttributes(ipp_t *response, PrinterCapability &printerCaps)
     std::vector<PrintPageSize> supportedPageSizes;
     ParseAttributesToList<PrintPageSize>(response, keyword, supportedPageSizes, ConvertPrintPageSize);
     std::string pageSizeJson = ConvertListToJson<PrintPageSize>(supportedPageSizes, ConvertPageSizeToJson);
-    printerCaps.SetPageSize(supportedPageSizes);
+    printerCaps.SetSupportedPageSize(supportedPageSizes);
     printerCaps.SetPrinterAttrNameAndValue("supportedPageSizeArray", pageSizeJson.c_str());
 
     std::string defaultPageSizeId;
@@ -197,14 +199,18 @@ void ParseQualityAttributes(ipp_t *response, PrinterCapability &printerCaps)
         return;
     }
     nlohmann::json supportedQualities = nlohmann::json::array();
+    std::vector<uint32_t> list;
     for (int i = 0; i < ippGetCount(attrPtr); i++) {
         nlohmann::json jsonObject;
-        jsonObject["quality"] = ippGetInteger(attrPtr, i);
+        uint32_t value = ippGetInteger(attrPtr, i);
+        jsonObject["quality"] = value;
         supportedQualities.push_back(jsonObject);
+        list.emplace_back(value);
     }
     std::string attrString = supportedQualities.dump();
     PRINT_HILOGD("%{public}s: %{public}s", keyword.c_str(), attrString.c_str());
     printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), attrString.c_str());
+    printerCaps.SetSupportedQuality(list);
 }
 
 void ParseCopiesAttributes(ipp_t *response, PrinterCapability &printerCaps)
@@ -234,6 +240,7 @@ void ParseSupportedResolutionAttribute(ipp_t *response, PrinterCapability &print
     int num = ippGetCount(attrPtr);
     PRINT_HILOGD("number of values %{public}d", num);
     nlohmann::json resolutionArray = nlohmann::json::array();
+    std::vector<PrintResolution> list;
     for (int i = 0; i < num; i++) {
         ipp_res_t units = IPP_RES_PER_INCH;
         int xres = 0;
@@ -252,8 +259,13 @@ void ParseSupportedResolutionAttribute(ipp_t *response, PrinterCapability &print
         nlohmann::json object;
         object["horizontalDpi"] = xres;
         object["verticalDpi"] = yres;
+        PrintResolution printResolution;
+        printResolution.SetHorizontalDpi(xres);
+        printResolution.SetVerticalDpi(yres);
+        list.emplace_back(printResolution);
         resolutionArray.push_back(object);
     }
+    printerCaps.SetResolution(list);
     printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), resolutionArray.dump().c_str());
 }
 
@@ -364,12 +376,16 @@ void ParseOrientationAttributes(ipp_t *response, PrinterCapability &printerCaps)
         int num = ippGetCount(attrPtr);
         if (num > 0) {
             nlohmann::json supportedOrientationArray = nlohmann::json::array();
+            std::vector<uint32_t> supportedOrientations;
+            supportedOrientations.reserve(num);
             for (int i = 0; i < ippGetCount(attrPtr); i++) {
                 int orientationEnum = ippGetInteger(attrPtr, i);
                 supportedOrientationArray.push_back(orientationEnum);
+                supportedOrientations.emplace_back(orientationEnum);
                 PRINT_HILOGD("orientation-supported found: %{public}d", orientationEnum);
             }
             printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), supportedOrientationArray.dump().c_str());
+            printerCaps.SetSupportedOrientation(supportedOrientations);
         }
     }
 }
@@ -405,9 +421,26 @@ void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
         options["printerName"] = ippGetString(attrPtr, 0, NULL);
     }
     std::string keyword = "media-type-supported";
-    std::string supportTypes = ConvertIppAttributesToJsonString(response, keyword);
+    std::string supportTypes;
+    std::vector<std::string> list;
+    attrPtr = ippFindAttribute(response, keyword.c_str(), IPP_TAG_KEYWORD);
+    if (attrPtr == nullptr) {
+        supportTypes = "";
+    } else {
+        nlohmann::json jsonArray = nlohmann::json::array();
+        for (int i = 0; i < ippGetCount(attrPtr); i++) {
+            const char *attrString = ippGetString(attrPtr, i, NULL);
+            if (attrString == nullptr) {
+                continue;
+            }
+            jsonArray.push_back(attrString);
+            list.emplace_back(attrString);
+        }
+        supportTypes = jsonArray.dump();
+    }
     PRINT_HILOGD("%{public}s: %{public}s", keyword.c_str(), supportTypes.c_str());
     if (!supportTypes.empty()) {
+        printerCaps.SetSupportedMediaType(list);
         printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), supportTypes.c_str());
     }
 

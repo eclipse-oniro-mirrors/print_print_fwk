@@ -73,6 +73,9 @@ private:
     bool OnSetDefaultPrinter(MessageParcel &data, MessageParcel &reply);
     bool OnDeletePrinterFromCups(MessageParcel &data, MessageParcel &reply);
     bool OnDiscoverUsbPrinters(MessageParcel &data, MessageParcel &reply);
+    bool OnAddPrinterToDiscovery(MessageParcel &data, MessageParcel &reply);
+    bool OnUpdatePrinterInDiscovery(MessageParcel &data, MessageParcel &reply);
+    bool OnRemovePrinterFromDiscovery(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

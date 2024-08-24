@@ -328,7 +328,7 @@ size_t NapiPrintUtils::GetJsVal(napi_env env, napi_callback_info info, napi_valu
 bool NapiPrintUtils::VerifyProperty(
     std::vector<std::string> &names, std::map<std::string, PrintParamStatus> &propertyList)
 {
-    for (auto name : names) {
+    for (const auto& name : names) {
         if (propertyList.find(name) == propertyList.end()) {
             PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
             return false;
@@ -336,9 +336,9 @@ bool NapiPrintUtils::VerifyProperty(
         propertyList[name] = PRINT_PARAM_SET;
     }
 
-    for (auto propertypItem : propertyList) {
-        if (propertypItem.second == PRINT_PARAM_NOT_SET) {
-            PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
+    for (const auto& propertyItem : propertyList) {
+        if (propertyItem.second == PRINT_PARAM_NOT_SET) {
+            PRINT_HILOGE("Missing Property: %{public}s", propertyItem.first.c_str());
             return false;
         }
     }

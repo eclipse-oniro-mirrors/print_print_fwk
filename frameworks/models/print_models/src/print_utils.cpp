@@ -17,8 +17,6 @@
 
 #include <fcntl.h>
 #include "ability.h"
-#include "print_constant.h"
-#include "print_log.h"
 #include "securec.h"
 #include <chrono>
 #include <sstream>

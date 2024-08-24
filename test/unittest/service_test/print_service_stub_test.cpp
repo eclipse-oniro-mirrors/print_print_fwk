@@ -1369,5 +1369,83 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0059, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
+
+/**
+ * @tc.name: PrintServiceStubTest_0060
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0060, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_ADDPRINTERTODISCOVERY);
+
+    PrinterInfo testInfo;
+    std::string testPrinterId = "com.sample.ext:1";
+    testInfo.SetPrinterId(testPrinterId);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    testInfo.Marshalling(data);
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, AddPrinterToDiscovery).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
+/**
+ * @tc.name: PrintServiceStubTest_0061
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0061, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_UPDATEPRINTERINDISCOVERY);
+
+    PrinterInfo testInfo;
+    std::string testPrinterId = "com.sample.ext:1";
+    testInfo.SetPrinterId(testPrinterId);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    testInfo.Marshalling(data);
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, UpdatePrinterInDiscovery).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
+
+/**
+ * @tc.name: PrintServiceStubTest_0062
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0062, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_REMOVEPRINTERFROMDISCOVERY);
+
+    std::string testPrinterId = "com.sample.ext:1";
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteString(testPrinterId));
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, RemovePrinterFromDiscovery).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
 } // namespace Print
 } // namespace OHOS

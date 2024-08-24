@@ -78,6 +78,11 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_DELETE_PRINTER_FROM_CUPS] =
         &PrintServiceStub::OnDeletePrinterFromCups;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_DISCOVER_USB_PRINTERS] = &PrintServiceStub::OnDiscoverUsbPrinters;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERTODISCOVERY] = &PrintServiceStub::OnAddPrinterToDiscovery;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERINDISCOVERY] =
+        &PrintServiceStub::OnUpdatePrinterInDiscovery;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REMOVEPRINTERFROMDISCOVERY] =
+        &PrintServiceStub::OnRemovePrinterFromDiscovery;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -720,4 +725,55 @@ bool PrintServiceStub::OnNotifyPrintService(MessageParcel &data, MessageParcel &
     PRINT_HILOGD("PrintServiceStub::OnNotifyPrintService out");
     return ret == E_PRINT_NONE;
 }
+
+
+bool PrintServiceStub::OnAddPrinterToDiscovery(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnAddPrinterToDiscovery in");
+    auto infoPtr = PrinterInfo::Unmarshalling(data);
+    if (infoPtr == nullptr) {
+        PRINT_HILOGW("invalid printer object");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        PRINT_HILOGD("PrintServiceStub::OnAddPrinterToDiscovery out with failure");
+        return false;
+    }
+    infoPtr->Dump();
+    int32_t ret = AddPrinterToDiscovery(*infoPtr);
+    reply.WriteInt32(ret);
+    PRINT_HILOGD("PrintServiceStub::OnAddPrinterToDiscovery out with ret = %{public}d", ret);
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnUpdatePrinterInDiscovery(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnUpdatePrinterInDiscovery in");
+
+    auto infoPtr = PrinterInfo::Unmarshalling(data);
+    if (infoPtr == nullptr) {
+        PRINT_HILOGE("Failed to unmarshall printer info");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+
+    infoPtr->Dump();
+    int32_t ret = UpdatePrinterInDiscovery(*infoPtr);
+    reply.WriteInt32(ret);
+
+    PRINT_HILOGD("PrintServiceStub::OnUpdatePrinterInDiscovery out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnRemovePrinterFromDiscovery(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("PrintServiceStub::OnRemovePrinterFromDiscovery in");
+
+    std::string printerId = data.ReadString();
+
+    int32_t ret = RemovePrinterFromDiscovery(printerId);
+    reply.WriteInt32(ret);
+
+    PRINT_HILOGD("PrintServiceStub::OnRemovePrinterFromDiscovery out");
+    return ret == E_PRINT_NONE;
+}
+
 } // namespace OHOS::Print

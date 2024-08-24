@@ -82,6 +82,9 @@ public:
     virtual int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake) = 0;
     virtual int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers) = 0;
+    virtual int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo) = 0;
+    virtual int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo) = 0;
+    virtual int32_t RemovePrinterFromDiscovery(const std::string &printerId) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

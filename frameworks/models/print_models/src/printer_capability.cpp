@@ -16,28 +16,38 @@
 #include "printer_capability.h"
 #include "print_constant.h"
 #include "print_log.h"
+#include "print_utils.h"
 
 using json = nlohmann::json;
 namespace OHOS::Print {
-PrinterCapability::PrinterCapability() : colorMode_(0), duplexMode_(0),
-    hasResolution_(false), hasMargin_(false), hasOption_(false), option_("")
+PrinterCapability::PrinterCapability()
+    : colorMode_(0),
+      duplexMode_(0),
+      hasResolution_(false),
+      hasSupportedColorMode_(false),
+      hasSupportedDuplexMode_(false),
+      hasSupportedMediaType_(false),
+      hasSupportedQuality_(false),
+      hasSupportedOrientation_(false),
+      hasMargin_(false),
+      hasOption_(false),
+      option_("")
 {
     pageSizeList_.clear();
     resolutionList_.clear();
     minMargin_.Reset();
+    supportedPageSizeList_.clear();
+    supportedColorModeList_.clear();
+    supportedDuplexModeList_.clear();
+    supportedMediaTypeList_.clear();
+    supportedQualityList_.clear();
+    supportedOrientationList_.clear();
+    printerAttr_group.clear();
 }
 
 PrinterCapability::PrinterCapability(const PrinterCapability &right)
 {
-    colorMode_ = right.colorMode_;
-    duplexMode_ = right.duplexMode_;
-    pageSizeList_.assign(right.pageSizeList_.begin(), right.pageSizeList_.end());
-    hasResolution_ = right.hasResolution_;
-    resolutionList_.assign(right.resolutionList_.begin(), right.resolutionList_.end());
-    hasMargin_ = right.hasMargin_;
-    minMargin_ = right.minMargin_;
-    hasOption_ = right.hasOption_;
-    option_= right.option_;
+    *this = right;
 }
 
 PrinterCapability &PrinterCapability::operator=(const PrinterCapability &right)
@@ -52,13 +62,23 @@ PrinterCapability &PrinterCapability::operator=(const PrinterCapability &right)
         minMargin_ = right.minMargin_;
         hasOption_ = right.hasOption_;
         option_ = right.option_;
+        hasSupportedColorMode_ = right.hasSupportedColorMode_;
+        hasSupportedDuplexMode_ = right.hasSupportedDuplexMode_;
+        hasSupportedMediaType_ = right.hasSupportedMediaType_;
+        hasSupportedQuality_ = right.hasSupportedQuality_;
+        hasSupportedOrientation_ = right.hasSupportedOrientation_;
+        supportedPageSizeList_.assign(right.supportedPageSizeList_.begin(), right.supportedPageSizeList_.end());
+        supportedColorModeList_.assign(right.supportedColorModeList_.begin(), right.supportedColorModeList_.end());
+        supportedDuplexModeList_.assign(right.supportedDuplexModeList_.begin(), right.supportedDuplexModeList_.end());
+        supportedMediaTypeList_.assign(right.supportedMediaTypeList_.begin(), right.supportedMediaTypeList_.end());
+        supportedQualityList_.assign(right.supportedQualityList_.begin(), right.supportedQualityList_.end());
+        supportedOrientationList_.assign(right.supportedOrientationList_.begin(),
+            right.supportedOrientationList_.end());
     }
     return *this;
 }
 
-PrinterCapability::~PrinterCapability()
-{
-}
+PrinterCapability::~PrinterCapability() {}
 
 void PrinterCapability::Reset()
 {
@@ -69,17 +89,23 @@ void PrinterCapability::Reset()
     resolutionList_.clear();
     hasMargin_ = false;
     minMargin_.Reset();
+    hasSupportedColorMode_ = false;
+    hasSupportedDuplexMode_ = false;
+    hasSupportedMediaType_ = false;
+    hasSupportedQuality_ = false;
+    hasSupportedOrientation_ = false;
+    supportedPageSizeList_.clear();
+    supportedColorModeList_.clear();
+    supportedDuplexModeList_.clear();
+    supportedMediaTypeList_.clear();
+    supportedQualityList_.clear();
+    supportedOrientationList_.clear();
 }
 
 void PrinterCapability::SetMinMargin(const PrintMargin &minMargin)
 {
     hasMargin_ = true;
     minMargin_ = minMargin;
-}
-
-void PrinterCapability::SetPageSize(const std::vector<PrintPageSize> &pageSizeList)
-{
-    pageSizeList_.assign(pageSizeList.begin(), pageSizeList.end());
 }
 
 void PrinterCapability::SetResolution(const std::vector<PrintResolution> &resolutionList)
@@ -144,6 +170,96 @@ bool PrinterCapability::HasOption() const
     return hasOption_;
 }
 
+bool PrinterCapability::HasSupportedColorMode() const
+{
+    return hasSupportedColorMode_;
+}
+
+bool PrinterCapability::HasSupportedDuplexMode() const
+{
+    return hasSupportedDuplexMode_;
+}
+
+bool PrinterCapability::HasSupportedMediaType() const
+{
+    return hasSupportedMediaType_;
+}
+
+bool PrinterCapability::HasSupportedQuality() const
+{
+    return hasSupportedQuality_;
+}
+
+bool PrinterCapability::HasSupportedOrientation() const
+{
+    return hasSupportedOrientation_;
+}
+
+void PrinterCapability::GetSupportedPageSize(std::vector<PrintPageSize> &supportedPageSizeList) const
+{
+    supportedPageSizeList.assign(supportedPageSizeList_.begin(), supportedPageSizeList_.end());
+}
+
+void PrinterCapability::GetSupportedColorMode(std::vector<uint32_t> &supportedColorModeList) const
+{
+    supportedColorModeList.assign(supportedColorModeList_.begin(), supportedColorModeList_.end());
+}
+
+void PrinterCapability::GetSupportedDuplexMode(std::vector<uint32_t> &supportedDuplexModeList) const
+{
+    supportedDuplexModeList.assign(supportedDuplexModeList_.begin(), supportedDuplexModeList_.end());
+}
+
+void PrinterCapability::GetSupportedMediaType(std::vector<std::string> &supportedMediaTypeList) const
+{
+    supportedMediaTypeList.assign(supportedMediaTypeList_.begin(), supportedMediaTypeList_.end());
+}
+
+void PrinterCapability::GetSupportedQuality(std::vector<uint32_t> &supportedQualityList) const
+{
+    supportedQualityList.assign(supportedQualityList_.begin(), supportedQualityList_.end());
+}
+
+void PrinterCapability::GetSupportedOrientation(std::vector<uint32_t> &supportedOrientationList) const
+{
+    supportedOrientationList.assign(supportedOrientationList_.begin(), supportedOrientationList_.end());
+}
+
+void PrinterCapability::SetSupportedPageSize(const std::vector<PrintPageSize> &supportedPageSizeList)
+{
+    supportedPageSizeList_.assign(supportedPageSizeList.begin(), supportedPageSizeList.end());
+}
+
+void PrinterCapability::SetSupportedColorMode(const std::vector<uint32_t> &supportedColorModeList)
+{
+    hasSupportedColorMode_ = true;
+    supportedColorModeList_.assign(supportedColorModeList.begin(), supportedColorModeList.end());
+}
+
+void PrinterCapability::SetSupportedDuplexMode(const std::vector<uint32_t> &supportedDuplexModeList)
+{
+    hasSupportedDuplexMode_ = true;
+    supportedDuplexModeList_.assign(supportedDuplexModeList.begin(), supportedDuplexModeList.end());
+}
+
+void PrinterCapability::SetSupportedMediaType(const std::vector<std::string> &supportedMediaTypeList)
+{
+    hasSupportedMediaType_ = true;
+    supportedMediaTypeList_.assign(supportedMediaTypeList.begin(), supportedMediaTypeList.end());
+}
+
+void PrinterCapability::SetSupportedQuality(const std::vector<uint32_t> &supportedQualityList)
+{
+    hasSupportedQuality_ = true;
+    supportedQualityList_.assign(supportedQualityList.begin(), supportedQualityList.end());
+}
+
+void PrinterCapability::SetSupportedOrientation(const std::vector<uint32_t> &supportedOrientationList)
+{
+    hasSupportedOrientation_ = true;
+    supportedOrientationList_.assign(supportedOrientationList.begin(), supportedOrientationList.end());
+}
+
 std::string PrinterCapability::GetOption() const
 {
     return option_;
@@ -151,46 +267,62 @@ std::string PrinterCapability::GetOption() const
 
 bool PrinterCapability::ReadFromParcel(Parcel &parcel)
 {
-    SetColorMode(parcel.ReadUint32());
-    SetDuplexMode(parcel.ReadUint32());
+    PrinterCapability right;
+    right.SetColorMode(parcel.ReadUint32());
+    right.SetDuplexMode(parcel.ReadUint32());
 
-    uint32_t vecSize = parcel.ReadUint32();
-
-    CHECK_IS_EXCEED_PRINT_RANGE_BOOL(vecSize);
-    std::vector<PrintPageSize> pageSizeList;
-    for (uint32_t index = 0; index < vecSize; index++) {
-        auto pageSizePtr = PrintPageSize::Unmarshalling(parcel);
-        if (pageSizePtr != nullptr) {
-            pageSizeList.emplace_back(*pageSizePtr);
-        }
-    }
-    SetPageSize(pageSizeList);
-
-    hasResolution_ = parcel.ReadBool();
-    if (hasResolution_) {
-        std::vector<PrintResolution> resolutionList;
-        vecSize = parcel.ReadUint32();
-        CHECK_IS_EXCEED_PRINT_RANGE_BOOL(vecSize);
-        for (uint32_t index = 0; index < vecSize; index++) {
-            auto resolutionPtr = PrintResolution::Unmarshalling(parcel);
-            if (resolutionPtr != nullptr) {
-                resolutionList.emplace_back(*resolutionPtr);
+    PrintUtils::readListFromParcel<PrintPageSize>(parcel, right.supportedPageSizeList_,
+        [](Parcel& p) -> std::optional<PrintPageSize> {
+            auto ptr = PrintPageSize::Unmarshalling(p);
+            if (ptr) {
+                return std::optional<PrintPageSize>(*ptr);
             }
-        }
-        SetResolution(resolutionList);
-    }
+            return std::nullopt;
+        });
 
-    hasMargin_ = parcel.ReadBool();
-    if (hasMargin_) {
+    PrintUtils::readListFromParcel<PrintResolution>(parcel, right.resolutionList_,
+        [](Parcel& p) -> std::optional<PrintResolution> {
+            auto ptr = PrintResolution::Unmarshalling(p);
+            if (ptr) {
+                return std::optional<PrintResolution>(*ptr);
+            }
+            return std::nullopt;
+        }, &right.hasResolution_);
+
+    PrintUtils::readListFromParcel<uint32_t>(
+        parcel, right.supportedColorModeList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
+        &right.hasSupportedColorMode_);
+
+    PrintUtils::readListFromParcel<uint32_t>(
+        parcel, right.supportedDuplexModeList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
+        &right.hasSupportedDuplexMode_);
+
+    PrintUtils::readListFromParcel<std::string>(
+        parcel, right.supportedMediaTypeList_, [](Parcel &p) { return std::make_optional(p.ReadString()); },
+        &right.hasSupportedMediaType_);
+
+    PrintUtils::readListFromParcel<uint32_t>(
+        parcel, right.supportedQualityList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
+        &right.hasSupportedQuality_);
+
+    PrintUtils::readListFromParcel<uint32_t>(
+        parcel, right.supportedOrientationList_, [](Parcel &p) { return std::make_optional(p.ReadUint32()); },
+        &right.hasSupportedOrientation_);
+
+    right.hasMargin_ = parcel.ReadBool();
+    if (right.hasMargin_) {
         auto marginPtr = PrintMargin::Unmarshalling(parcel);
         if (marginPtr != nullptr) {
-            minMargin_ = *marginPtr;
+            right.SetMinMargin(*marginPtr);
         }
     }
-    hasOption_ = parcel.ReadBool();
-    if (hasOption_) {
-        SetOption(parcel.ReadString());
+
+    right.hasOption_ = parcel.ReadBool();
+    if (right.hasOption_) {
+        right.SetOption(parcel.ReadString());
     }
+
+    *this = right;
     return true;
 }
 
@@ -199,20 +331,33 @@ bool PrinterCapability::Marshalling(Parcel &parcel) const
     parcel.WriteUint32(GetColorMode());
     parcel.WriteUint32(GetDuplexMode());
 
-    uint32_t vecSize = static_cast<uint32_t>(pageSizeList_.size());
-    parcel.WriteUint32(vecSize);
-    for (uint32_t index = 0; index < vecSize; index++) {
-        pageSizeList_[index].Marshalling(parcel);
-    }
+    PrintUtils::WriteListToParcel(
+        parcel, supportedPageSizeList_,
+        [](Parcel &p, const PrintPageSize& item) { item.Marshalling(p); });
 
-    parcel.WriteBool(hasResolution_);
-    if (hasResolution_) {
-        vecSize = static_cast<uint32_t>(resolutionList_.size());
-        parcel.WriteUint32(vecSize);
-        for (uint32_t index = 0; index < vecSize; index++) {
-            resolutionList_[index].Marshalling(parcel);
-        }
-    }
+    PrintUtils::WriteListToParcel(
+        parcel, resolutionList_, [](Parcel& p, const PrintResolution& item) { item.Marshalling(p); },
+        hasResolution_);
+
+    PrintUtils::WriteListToParcel(
+        parcel, supportedColorModeList_, [](Parcel& p, const int& item) { p.WriteUint32(item); },
+        hasSupportedColorMode_);
+
+    PrintUtils::WriteListToParcel(
+        parcel, supportedDuplexModeList_, [](Parcel& p, const int& item) { p.WriteUint32(item); },
+        hasSupportedDuplexMode_);
+
+    PrintUtils::WriteListToParcel(
+        parcel, supportedMediaTypeList_, [](Parcel& p, const std::string& item) { p.WriteString(item); },
+        hasSupportedMediaType_);
+
+    PrintUtils::WriteListToParcel(
+        parcel, supportedQualityList_, [](Parcel& p, const int& item) { p.WriteUint32(item); },
+        hasSupportedQuality_);
+
+    PrintUtils::WriteListToParcel(
+        parcel, supportedOrientationList_, [](Parcel& p, const int& item) { p.WriteUint32(item); },
+        hasSupportedOrientation_);
 
     parcel.WriteBool(hasMargin_);
     if (hasMargin_) {
@@ -232,18 +377,48 @@ std::shared_ptr<PrinterCapability> PrinterCapability::Unmarshalling(Parcel &parc
     return nativeObj;
 }
 
-void PrinterCapability::Dump()
+void PrinterCapability::Dump() const
 {
     PRINT_HILOGD("colorMode_ = %{public}d", colorMode_);
     PRINT_HILOGD("duplexMode_ = %{public}d", duplexMode_);
 
-    for (auto pageItem : pageSizeList_) {
+    for (auto pageItem : supportedPageSizeList_) {
         pageItem.Dump();
     }
 
     if (hasResolution_) {
         for (auto resolutionItem : resolutionList_) {
             resolutionItem.Dump();
+        }
+    }
+
+    if (hasSupportedColorMode_) {
+        for (auto item : supportedColorModeList_) {
+            PRINT_HILOGD("supportedColorModeItem = %{public}d", item);
+        }
+    }
+
+    if (hasSupportedDuplexMode_) {
+        for (auto item : supportedDuplexModeList_) {
+            PRINT_HILOGD("supportedDuplexModeItem = %{public}d", item);
+        }
+    }
+
+    if (hasSupportedMediaType_) {
+        for (auto item : supportedMediaTypeList_) {
+            PRINT_HILOGD("supportedMediaTypeItem = %{public}s", item.c_str());
+        }
+    }
+
+    if (hasSupportedQuality_) {
+        for (auto item : supportedQualityList_) {
+            PRINT_HILOGD("supportedQualityItem = %{public}d", item);
+        }
+    }
+
+    if (hasSupportedOrientation_) {
+        for (auto item : supportedOrientationList_) {
+            PRINT_HILOGD("supportedOrientationItem = %{public}d", item);
         }
     }
 
@@ -255,7 +430,7 @@ void PrinterCapability::Dump()
     }
 }
 
-const char* PrinterCapability::GetPrinterAttrValue(const char* name)
+const char *PrinterCapability::GetPrinterAttrValue(const char *name)
 {
     auto iter = printerAttr_group.find(name);
     if (iter != printerAttr_group.end()) {
@@ -264,19 +439,19 @@ const char* PrinterCapability::GetPrinterAttrValue(const char* name)
         return "";
     }
 }
-    
-void PrinterCapability::SetPrinterAttrNameAndValue(const char* name, const char* value)
+
+void PrinterCapability::SetPrinterAttrNameAndValue(const char *name, const char *value)
 {
     printerAttr_group[name] = value;
 }
 
 nlohmann::json PrinterCapability::GetPrinterAttrGroupJson()
 {
-    nlohmann::json printerAttrGroupJson;
     if (printerAttr_group.size() < 1) {
         PRINT_HILOGI("no printerAttr_group");
-        return printerAttrGroupJson;
+        return "";
     }
+    nlohmann::json printerAttrGroupJson;
     for (auto iter = printerAttr_group.begin(); iter != printerAttr_group.end(); iter++) {
         printerAttrGroupJson[iter->first] = iter->second;
     }
