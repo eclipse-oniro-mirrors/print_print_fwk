@@ -142,6 +142,7 @@ private:
 #endif
     ServiceRunningState state_;
     std::mutex lock_;
+    std::mutex clearMapLock_;
     static std::mutex instanceLock_;
     static sptr<ScanServiceAbility> instance_;
     static std::shared_ptr<AppExecFwk::EventHandler> serviceHandler_;
@@ -160,7 +161,7 @@ private:
     int32_t buffer_size;
     bool batchMode_ = false;
     uint8_t *saneReadBuf;
-    struct jpeg_compress_struct cinfo;
+    struct jpeg_compress_struct *cinfoPtr;
     FILE *ofp = NULL;
     bool isCancel = false;
     int32_t dpi = 0;

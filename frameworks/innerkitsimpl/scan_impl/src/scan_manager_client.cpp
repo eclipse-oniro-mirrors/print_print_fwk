@@ -70,8 +70,12 @@ sptr<IScanService> ScanManagerClient::GetScanServiceProxy()
 
 void ScanManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
 {
-    std::lock_guard<std::mutex> lock(proxyLock_);
-    scanServiceProxy_ = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(proxyLock_);
+        scanServiceProxy_ = nullptr;
+    }
+    
+    std::unique_lock<std::mutex> lock(conditionMutex_);
     ready_ = false;
 }
 
@@ -125,6 +129,7 @@ void ScanManagerClient::LoadServerSuccess()
 
 void ScanManagerClient::LoadServerFail()
 {
+    std::unique_lock<std::mutex> lock(conditionMutex_);
     ready_ = false;
     SCAN_HILOGE("load scan server fail");
 }

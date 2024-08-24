@@ -54,7 +54,7 @@ using namespace std;
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
 using json = nlohmann::json;
-const std::string PRINTER_PREFERENCE_FILE = "/data/service/el1/public/print_service/printer_preference.json";
+const std::string PRINTER_PREFERENCE_FILE = "/data/service/el2/public/print_service/printer_preference.json";
 
 const uint32_t MAX_JOBQUEUE_NUM = 512;
 const uint32_t ASYNC_CMD_DELAY = 10;
@@ -3091,7 +3091,7 @@ int32_t PrintServiceAbility::DiscoverUsbPrinters(std::vector<PrinterInfo> &print
         return ret;
     }
 #endif  // CUPS_ENABLE
-    PRINT_HILOGD("DiscoverUsbDevices printers size: %{public}u", printers.size());
+    PRINT_HILOGD("DiscoverUsbDevices printers size: %{public}zu", printers.size());
     return E_PRINT_NONE;
 }
 } // namespace OHOS::Print

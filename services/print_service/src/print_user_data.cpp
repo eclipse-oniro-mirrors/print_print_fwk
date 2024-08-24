@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "print_user_data.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
@@ -20,7 +21,6 @@
 #include <streambuf>
 #include "nlohmann/json.hpp"
 
-#include "print_user_data.h"
 #include "print_log.h"
 #include "print_constant.h"
 
@@ -29,7 +29,7 @@ namespace Print {
 
 using namespace std;
 
-const std::string PRINT_USER_DATA_FILE = "/data/service/el1/public/print_service/print_user_data.json";
+const std::string PRINT_USER_DATA_FILE = "/data/service/el2/public/print_service/print_user_data.json";
 const std::string PRINT_USER_DATA_VERSION = "v1";
 
 void PrintUserData::RegisterPrinterCallback(const std::string &type, const sptr<IPrintCallback> &listener)
