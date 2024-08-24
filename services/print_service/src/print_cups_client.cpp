@@ -1148,17 +1148,6 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
             fail_connect_times++;
             sleep(INTERVAL_FOR_QUERY);
             continue;
-        } else {
-            PRINT_HILOGE("_start(): The maximum number of connection failures has been exceeded");
-            JobStatusCallback(param, jobStatus, true);
-            break;
-        }
-        if (jobStatus->job_state < IPP_JSTATE_CANCELED) {
-            sleep(INTERVAL_FOR_QUERY);
-        }
-        if (jobStatus->job_state == 0) {
-            PRINT_HILOGD("job_state is 0, continue");
-            continue;
         }
         fail_connect_times = 0;
         HandleJobState(http, param, jobStatus, prevousJobStatus);
