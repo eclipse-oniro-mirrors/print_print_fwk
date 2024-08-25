@@ -3097,10 +3097,6 @@ bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
     }
-
-
-    
-
     return true;
 }
 } // namespace OHOS::Print

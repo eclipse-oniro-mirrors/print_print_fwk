@@ -476,14 +476,14 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
 }
 
 int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, const std::string &printerName,
-    const std::string &printerMake, const std::string &ppdData)
+    const std::string &ppdName, const std::string &ppdData)
 {
-    PRINT_HILOGD("AddPrinterToCupsWithPpd, printerMake: %{public}s", printerMake.c_str());
+    PRINT_HILOGD("AddPrinterToCupsWithPpd, ppdName: %{public}s", ppdName.c_str());
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
     std::vector<string> ppds;
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
-    if (IsPrinterExist(printerUri.c_str(), standardName.c_str(), "Brocadesoft Universal Driver")) {
+    if (IsPrinterExist(printerUri.c_str(), standardName.c_str(), ppdName.c_str())) {
         PRINT_HILOGI("add success, printer has added");
         return E_PRINT_NONE;
     }
@@ -508,8 +508,8 @@ int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, 
         PRINT_HILOGW("ppd not send, status = %{public}d", static_cast<int>(status));
         return E_PRINT_SERVER_FAILURE;
     }
+    ippDelete(request);
     if (status != HTTP_STATUS_OK && status != HTTP_STATUS_CONTINUE) {
-        ippDelete(request);
         PRINT_HILOGW("add error, status = %{public}d", static_cast<int>(status));
         return E_PRINT_SERVER_FAILURE;
     }

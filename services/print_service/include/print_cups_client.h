@@ -82,7 +82,7 @@ public:
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);
     int32_t AddPrinterToCupsWithPpd(const std::string &printerUri, const std::string &printerName,
-        const std::string &printerMake, const std::string &ppdData);
+        const std::string &ppdName, const std::string &ppdData);
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
         PrinterCapability &printerCaps);
     int32_t QueryPrinterStatusByUri(const std::string &printerUri, PrinterStatus &status);
@@ -143,7 +143,8 @@ private:
 
     void ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
         std::vector<std::string> &ppds);
-    ipp_t *QueryPrinterAttributesByUri(const std::string &printerUri, const std::string &nic, int num, const char * const *pattrs);
+    ipp_t *QueryPrinterAttributesByUri(const std::string &printerUri, const std::string &nic, int num,
+        const char * const *pattrs);
 
 private:
     bool toCups = true;

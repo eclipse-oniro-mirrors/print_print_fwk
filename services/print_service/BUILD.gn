@@ -29,6 +29,7 @@ config("print_service_config") {
 ohos_shared_library("print_service") {
   sources = [
     "src/hisys_event_util.cpp",
+    "src/operation_queue.cpp",
     "src/print_bms_death_recipient.cpp",
     "src/print_bms_helper.cpp",
     "src/print_callback_proxy.cpp",
@@ -47,7 +48,7 @@ ohos_shared_library("print_service") {
     "src/print_usb_manager.cpp",
     "src/print_user_data.cpp",
     "src/thread_sync_wait.cpp",
-    "src/operation_queue.cpp",
+    "src/vendor_helper.cpp",
   ]
 
   branch_protector_ret = "pac_ret"
@@ -66,6 +67,7 @@ ohos_shared_library("print_service") {
   ]
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/ohprint/include",
     "${print_utils_path}/include",
   ]
 
