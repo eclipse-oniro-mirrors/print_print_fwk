@@ -46,6 +46,8 @@ public:
     static std::vector<uint32_t> Str2Vec(std::string str);
 
     static void Str2VecStr(std::string& str, std::vector<std::string>& vec);
+
+    static bool startsWith(const std::string& str, const std::string& prefix);
 };
 
 inline std::vector<uint32_t> PrintUtil::Str2Vec(std::string str)
@@ -146,6 +148,14 @@ inline std::string PrintUtil::RemoveUnderlineFromPrinterName(std::string printer
         return name;
     }
     return name.substr(0, MAX_PRINTER_NAME_LENGTH - 1);
+}
+
+inline bool PrintUtil::startsWith(const std::string& str, const std::string& prefix)
+{
+    if (str.length() < prefix.length()) {
+        return false;
+    }
+    return str.compare(0, prefix.length(), prefix) == 0;
 }
 } // namespace OHOS::Print
 

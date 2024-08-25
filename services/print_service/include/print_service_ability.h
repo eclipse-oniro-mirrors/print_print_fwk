@@ -182,7 +182,7 @@ private:
     void NotifyAppDeletePrinterWithDefaultPrinter(const std::string &printerId);
     void ChangeDefaultPrinterForDelete(std::shared_ptr<PrintUserData> &userData, const std::string &printerId);
     bool UpdatePrinterCapability(const std::string &printerId, const PrinterInfo &info);
-    bool UpdatePrinterSystemData(const std::string &printerId, const PrinterInfo &info);
+    bool UpdatePrinterSystemData(const PrinterInfo &info);
     uint32_t GetListeningState(const uint32_t subState);
     uint32_t GetListeningState(uint32_t state, uint32_t subState);
     std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
