@@ -804,5 +804,66 @@ bool PrintSystemData::ParseUserListJsonV1(nlohmann::json &jsonObject, std::vecto
     }
     return true;
 }
+
+std::vector<std::string> PrintSystemData::QueryAddedPrinterIdList()
+{
+    std::vector<std::string> printerIdList;
+    for (auto const &pair : addedPrinterMap_) {
+        printerIdList.push_back(pair.first);
+    }
+    return printerIdList;
+}
+
+std::shared_ptr<PrinterInfo> PrintSystemData::QueryDiscoveredPrinterInfoById(const std::string &printerId)
+{
+    std::lock_guard<std::mutex> lock(discoveredListMutex);
+    auto printerIt = discoveredPrinterInfoList_.find(printerId);
+    if (printerIt != discoveredPrinterInfoList_.end()) {
+        return printerIt ->second;
+    }
+    return nullptr;
+}
+std::shared_ptr<PrinterInfo> PrintSystemData::QueryDiscoveredPrinterInfoByName(const std::string &printerName)
+{
+    std::lock_guard<std::mutex> lock(discoveredListMutex);
+    std::string name = PrintUtil::StandardizePrinterName(printerName);
+    for (auto iter = discoveredPrinterInfoList_.begin(); iter != discoveredPrinterInfoList_.end(); ++iter) {
+        auto printerInfoPtr = iter->second;
+        if (printerInfoPtr == nullptr) {
+            continue;
+        }
+        if (PrintUtil::StandardizePrinterName(printerInfoPtr->GetPrinterName()) != name) {
+            continue;
+        }
+        return printerInfoPtr;
+    }
+    return nullptr;
+}
+
+void PrintSystemData::AddPrinterToDiscovery(std::shared_ptr<PrinterInfo> printerInfo)
+{
+    std::lock_guard<std::mutex> lock(discoveredListMutex);
+    if (printerInfo != nullptr) {
+        discoveredPrinterInfoList_.insert(std::make_pair(printerInfo->GetPrinterId(), printerInfo));
+    }
+}
+
+void PrintSystemData::RemovePrinterFromDiscovery(const std::string &printerId)
+{
+    std::lock_guard<std::mutex> lock(discoveredListMutex);
+    discoveredPrinterInfoList_.erase(printerId);
+}
+
+size_t PrintSystemData::GetDiscoveredPrinterCount()
+{
+    std::lock_guard<std::mutex> lock(discoveredListMutex);
+    return discoveredPrinterInfoList_.size();
+}
+
+void PrintSystemData::ClearDiscoveredPrinterList()
+{
+    std::lock_guard<std::mutex> lock(discoveredListMutex);
+    discoveredPrinterInfoList_.clear();
+}
 }  // namespace Print
 }  // namespace OHOS
