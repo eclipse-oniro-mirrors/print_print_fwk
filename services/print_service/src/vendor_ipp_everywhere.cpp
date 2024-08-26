@@ -173,10 +173,6 @@ std::shared_ptr<PrinterInfo> VendorIppEveryWhere::ConvertCapabilityToInfo(const 
     }
     std::string printerMaker = capJson["make"].get<std::string>();
     std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
-    if (printerInfo == nullptr) {
-        PRINT_HILOGW("printerInfo is null");
-        return nullptr;
-    }
     printerInfo->SetPrinterName(printerName);
     printerInfo->SetUri(printerUri);
     printerInfo->SetPrinterMake(printerMaker);
