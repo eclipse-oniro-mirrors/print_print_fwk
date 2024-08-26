@@ -40,7 +40,6 @@ ohos_fuzztest("ScanHelperFuzzTest") {
 
   external_deps = [
     "ability_base:want",
-    "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "ability_runtime:data_ability_helper",
