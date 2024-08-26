@@ -445,6 +445,45 @@ void TestDeletePrinterFromCups(const uint8_t *data, size_t size, FuzzedDataProvi
     PrintServiceAbility::GetInstance()->DeletePrinterFromCups(printerId, printerName, printerMake);
 }
 
+void TestDiscoverUsbPrinters(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintServiceAbilityMockPermission::MockPermission();
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    std::vector<PrinterInfo> printers;
+    printers.push_back(printerInfo);
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->DiscoverUsbPrinters(printers);
+}
+
+void TestStartNativePrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintServiceAbilityMockPermission::MockPermission();
+    PrintJob testJob;
+    testJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    testJob.SetOption(JOB_OPTIONS);
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->StartNativePrintJob(testJob);
+}
+
+void TestNotifyPrintServiceEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintServiceAbilityMockPermission::MockPermission();
+    PrintServiceAbility::GetInstance()->Init();
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    uint32_t event = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->NotifyPrintServiceEvent(jobId, event);
+}
+
 // below are private test
 void TestUpdateQueuedJobList(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
@@ -683,6 +722,195 @@ void TestSendPrintJobEvent(const uint8_t *data, size_t size, FuzzedDataProvider 
     }
 }
 
+void TestDestroyExtension(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->DestroyExtension();
+}
+
+void TestStartPrintJobCB(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId(jobId);
+    printJob->SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->StartPrintJobCB(jobId, printJob);
+}
+
+void TestCheckPrinterUriDifferent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo->SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo->SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo->SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->CheckPrinterUriDifferent(printerInfo);
+}
+
+void TestUpdatePrinterCapability(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->UpdatePrinterCapability(printerId, printerInfo);
+}
+
+void TestReportCompletedPrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->ReportCompletedPrint(printerId);
+}
+
+void TestReportHisysEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId(jobId);
+    printJob->SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    uint32_t subState = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->ReportHisysEvent(printJob, printerId, subState);
+}
+
+void TestNotifyAppJobQueueChanged(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string applyResult = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->NotifyAppJobQueueChanged(applyResult);
+}
+
+void TestSendPrinterChangeEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    int event = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->SendPrinterChangeEvent(event, printerInfo);
+}
+
+void TestCheckJobQueueBlocked(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintJob printJob;
+    printJob.SetJobId(jobId);
+    printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->CheckJobQueueBlocked(printJob);
+}
+
+void TestReduceAppCount(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->ReduceAppCount();
+}
+
+void TestGetListeningState(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    uint32_t subState = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->GetListeningState(subState);
+}
+
+void TestChangeDefaultPrinterForDelete(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto userData = std::make_shared<PrintUserData>();
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->ChangeDefaultPrinterForDelete(userData, printerId);
+}
+
+void TestGetUserDataByUserId(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->GetUserDataByUserId(userId);
+}
+
+void TestDetermineUserJobStatus(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId(jobId);
+    printJob->SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::map<std::string, std::shared_ptr<PrintJob>> jobList;
+    jobList[jobId] = printJob;
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->DetermineUserJobStatus(jobList);
+}
+
+void TestNotifyCurrentUserChanged(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->NotifyCurrentUserChanged(userId);
+}
+
+void TestWriteEprinterPreference(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterCapability printerCaps;
+    PrintPageSize pageSize;
+    pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::vector<PrintPageSize> pageSizeList;
+    pageSizeList.push_back(pageSize);
+    printerCaps.SetPageSize(pageSizeList);
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->WriteEprinterPreference(printerId, printerCaps);
+}
+
+void TestWritePrinterPreference(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterCapability printerCaps;
+    PrintPageSize pageSize;
+    pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::vector<PrintPageSize> pageSizeList;
+    pageSizeList.push_back(pageSize);
+    printerCaps.SetPageSize(pageSizeList);
+    printerCaps.SetOption(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->WritePrinterPreference(printerId, printerCaps);
+}
+
+void TestReadPreferenceFromFile(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printPreference = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->ReadPreferenceFromFile(printerId, printPreference);
+}
+
+void TestQueryPrinterIdByStandardizeName(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->Init();
+    PrintServiceAbility::GetInstance()->QueryPrinterIdByStandardizeName(printerName);
+}
+
+void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    TestChangeDefaultPrinterForDelete(data, size, dataProvider);
+    TestGetUserDataByUserId(data, size, dataProvider);
+    TestDetermineUserJobStatus(data, size, dataProvider);
+    TestNotifyCurrentUserChanged(data, size, dataProvider);
+    TestWriteEprinterPreference(data, size, dataProvider);
+    TestWritePrinterPreference(data, size, dataProvider);
+    TestReadPreferenceFromFile(data, size, dataProvider);
+    TestQueryPrinterIdByStandardizeName(data, size, dataProvider);
+}
+
 void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestUpdateQueuedJobList(data, size, dataProvider);
@@ -710,6 +938,18 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
     TestCheckIsLastUsedPrinter(data, size, dataProvider);
     TestSetLastUsedPrinter(data, size, dataProvider);
     TestSendPrintJobEvent(data, size, dataProvider);
+    TestDestroyExtension(data, size, dataProvider);
+    TestStartPrintJobCB(data, size, dataProvider);
+    TestCheckPrinterUriDifferent(data, size, dataProvider);
+    TestUpdatePrinterCapability(data, size, dataProvider);
+    TestReportCompletedPrint(data, size, dataProvider);
+    TestReportHisysEvent(data, size, dataProvider);
+    TestNotifyAppJobQueueChanged(data, size, dataProvider);
+    TestSendPrinterChangeEvent(data, size, dataProvider);
+    TestCheckJobQueueBlocked(data, size, dataProvider);
+    TestReduceAppCount(data, size, dataProvider);
+    TestGetListeningState(data, size, dataProvider);
+    TestMoreFunction(data, size, dataProvider);
 }
 
 }  // namespace Print
@@ -768,6 +1008,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::Print::TestSetPrinterPreference(data, size, &dataProvider);
     OHOS::Print::TestSetDefaultPrinter(data, size, &dataProvider);
     OHOS::Print::TestDeletePrinterFromCups(data, size, &dataProvider);
+    OHOS::Print::TestDiscoverUsbPrinters(data, size, &dataProvider);
+    OHOS::Print::TestStartNativePrintJob(data, size, &dataProvider);
+    OHOS::Print::TestNotifyPrintServiceEvent(data, size, &dataProvider);
     OHOS::Print::TestNotPublicFunction(data, size, &dataProvider);
     return 0;
 }

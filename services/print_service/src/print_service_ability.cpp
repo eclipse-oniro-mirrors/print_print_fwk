@@ -984,7 +984,7 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
     }
     std::string printPreference;
     if (printerIdAndPreferenceMap_.size() > 0 && ReadPreferenceFromFile(printerId, printPreference)) {
-        if (!nlohmann::json::accept(printPreference) && !nlohmann::json::accept(printerSetting)) {
+        if (!nlohmann::json::accept(printPreference) || !nlohmann::json::accept(printerSetting)) {
             PRINT_HILOGW("json accept fail");
             return E_PRINT_INVALID_PRINTER;
         }
