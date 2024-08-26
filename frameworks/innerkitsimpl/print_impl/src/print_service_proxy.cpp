@@ -756,6 +756,48 @@ int32_t PrintServiceProxy::NotifyPrintService(const std::string &jobId, const st
     return ret;
 }
 
+int32_t PrintServiceProxy::AddPrinterToDiscovery(const PrinterInfo &printerInfo)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    printerInfo.Marshalling(data);
+    PRINT_HILOGD("PrintServiceProxy AddPrinterToDiscovery started.");
+    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERTODISCOVERY,
+        data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy AddPrinterToDiscovery out. ret = [%{public}d]", ret);
+    return ret;
+}
+
+int32_t PrintServiceProxy::UpdatePrinterInDiscovery(const PrinterInfo& printerInfo)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    printerInfo.Marshalling(data);
+    PRINT_HILOGD("PrintServiceProxy UpdatePrinterInDiscovery started.");
+    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERINDISCOVERY,
+        data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy UpdatePrinterInDiscovery out. ret = [%{public}d]", ret);
+    return ret;
+}
+
+int32_t PrintServiceProxy::RemovePrinterFromDiscovery(const std::string &printerId)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(printerId);
+    PRINT_HILOGD("PrintServiceProxy RemovePrinterFromDiscovery started.");
+    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_REMOVEPRINTERFROMDISCOVERY,
+        data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy RemovePrinterFromDiscovery out. ret = [%{public}d]", ret);
+    return ret;
+}
+
 int32_t PrintServiceProxy::UnregisterAllExtCallback(const std::string &extensionId)
 {
     PRINT_HILOGD("PrintServiceProxy::UnregisterAllExtCallback in");

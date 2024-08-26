@@ -354,13 +354,34 @@ void PrintSystemData::ConvertPrinterCapabilityToJson(PrinterCapability &printerC
 {
     capsJson["colorMode"] = printerCapability.GetColorMode();
     capsJson["duplexMode"] = printerCapability.GetDuplexMode();
+    ConvertPageSizeToJson(printerCapability, capsJson);
+
     if (printerCapability.HasMargin()) {
         ConvertPrintMarginToJson(printerCapability, capsJson);
     }
+
     ConvertPageSizeToJson(printerCapability, capsJson);
+
     if (printerCapability.HasResolution()) {
         ConvertPrintResolutionToJson(printerCapability, capsJson);
     }
+
+    if (printerCapability.HasSupportedColorMode()) {
+        ConvertSupportedColorModeToJson(printerCapability, capsJson);
+    }
+
+    if (printerCapability.HasSupportedDuplexMode()) {
+        ConvertSupportedDuplexModeToJson(printerCapability, capsJson);
+    }
+
+    if (printerCapability.HasSupportedMediaType()) {
+        ConvertSupportedMediaTypeToJson(printerCapability, capsJson);
+    }
+
+    if (printerCapability.HasSupportedQuality()) {
+        ConvertSupportedQualityToJson(printerCapability, capsJson);
+    }
+
     if (printerCapability.HasOption()) {
         std::string options = printerCapability.GetOption();
         if (!nlohmann::json::accept(options)) {
@@ -386,11 +407,55 @@ void PrintSystemData::ConvertPrintResolutionToJson(PrinterCapability &printerCap
     capsJson["resolution"] = resolutionListJson;
 }
 
+void PrintSystemData::ConvertSupportedColorModeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson)
+{
+    nlohmann::json SupportedColorModeListJson = nlohmann::json::array();
+    std::vector<uint32_t> SupportedColorModeList;
+    printerCapability.GetSupportedColorMode(SupportedColorModeList);
+    for (auto iter : SupportedColorModeList) {
+        SupportedColorModeListJson.push_back(iter);
+    }
+    capsJson["supportedColorMode"] = SupportedColorModeListJson;
+}
+
+void PrintSystemData::ConvertSupportedDuplexModeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson)
+{
+    nlohmann::json supportedDuplexModeListJson = nlohmann::json::array();
+    std::vector<uint32_t> supportedDuplexModeList;
+    printerCapability.GetSupportedDuplexMode(supportedDuplexModeList);
+    for (auto iter : supportedDuplexModeList) {
+        supportedDuplexModeListJson.push_back(iter);
+    }
+    capsJson["supportedDuplexMode"] = supportedDuplexModeListJson;
+}
+
+void PrintSystemData::ConvertSupportedMediaTypeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson)
+{
+    nlohmann::json supportedMediaTypeListJson = nlohmann::json::array();
+    std::vector<std::string> supportedMediaTypeList;
+    printerCapability.GetSupportedMediaType(supportedMediaTypeList);
+    for (auto iter : supportedMediaTypeList) {
+        supportedMediaTypeListJson.push_back(iter);
+    }
+    capsJson["supportedMediaType"] = supportedMediaTypeListJson;
+}
+
+void PrintSystemData::ConvertSupportedQualityToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson)
+{
+    nlohmann::json supportedQualityListJson = nlohmann::json::array();
+    std::vector<uint32_t> supportedQualityList;
+    printerCapability.GetSupportedQuality(supportedQualityList);
+    for (auto iter : supportedQualityList) {
+        supportedQualityListJson.push_back(iter);
+    }
+    capsJson["supportedQuality"] = supportedQualityListJson;
+}
+
 void PrintSystemData::ConvertPageSizeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson)
 {
     nlohmann::json pageSizeListJson = nlohmann::json::array();
     std::vector<PrintPageSize> pageSizeList;
-    printerCapability.GetPageSize(pageSizeList);
+    printerCapability.GetSupportedPageSize(pageSizeList);
     for (auto iter : pageSizeList) {
         nlohmann::json pageSizeJson = nlohmann::json::object();
         pageSizeJson["id"] = iter.GetId();
@@ -428,12 +493,13 @@ bool PrintSystemData::ConvertJsonToPrinterCapability(nlohmann::json &capsJson, P
         PRINT_HILOGW("can not find colorMode");
         return false;
     }
-    printerCapability.SetColorMode(capsJson["colorMode"].get<uint32_t>());
-
     if (!capsJson.contains("duplexMode") || !capsJson["duplexMode"].is_number()) {
         PRINT_HILOGW("can not find duplexMode");
         return false;
     }
+
+    printerCapability.SetColorMode(capsJson["colorMode"].get<uint32_t>());
+
     printerCapability.SetDuplexMode(capsJson["duplexMode"].get<uint32_t>());
 
     if (capsJson.contains("minMargin") && capsJson["minMargin"].is_object()) {
@@ -441,140 +507,166 @@ bool PrintSystemData::ConvertJsonToPrinterCapability(nlohmann::json &capsJson, P
         ConvertJsonToPrintMargin(capsJson, printerCapability);
     }
 
-    if (!capsJson.contains("pageSize") || !capsJson["pageSize"].is_array()) {
-        PRINT_HILOGW("can not find pageSize");
+    if (!ConvertJsonToPrintResolution(capsJson, printerCapability)) {
+        PRINT_HILOGW("convert json to print resolution failed");
         return false;
     }
+
     if (!ConvertJsonToPageSize(capsJson, printerCapability)) {
         PRINT_HILOGW("convert json to pageSize failed");
         return false;
     }
 
-    if (capsJson.contains("resolution") && capsJson["resolution"].is_array()) {
-        PRINT_HILOGD("find resolution");
-        if (!ConvertJsonToPrintResolution(capsJson, printerCapability)) {
-            PRINT_HILOGW("convert json to print resolution failed");
-            return false;
-        }
+    if (!ConvertJsonToSupportedColorMode(capsJson, printerCapability)) {
+        PRINT_HILOGW("convert json to supportedColorMode failed.");
+        return false;
+    }
+
+    if (!ConvertJsonToSupportedDuplexMode(capsJson, printerCapability)) {
+        PRINT_HILOGW("convert json to supportedDuplexMode failed.");
+        return false;
+    }
+
+    if (!ConvertJsonToSupportedMediaType(capsJson, printerCapability)) {
+        PRINT_HILOGW("convert json to supportedMediaType failed.");
+        return false;
+    }
+
+    if (!ConvertJsonToSupportedQuality(capsJson, printerCapability)) {
+        PRINT_HILOGW("convert json to supportedQuality failed.");
+        return false;
+    }
+
+    if (!ConvertJsonToSupportedOrientation(capsJson, printerCapability)) {
+        PRINT_HILOGW("convert json to supportedOrientation failed.");
+        return false;
     }
 
     if (capsJson.contains("options") && capsJson["options"].is_object()) {
         PRINT_HILOGD("find options");
         printerCapability.SetOption(capsJson["options"].dump());
     }
-
-    return true;
-}
-
-bool PrintSystemData::ConvertJsonToPrintResolution(nlohmann::json &capsJson, PrinterCapability &printerCapability)
-{
-    nlohmann::json resolutionListJson = capsJson["resolution"];
-    std::vector<PrintResolution> resolutionList;
-    for (auto &item : resolutionListJson.items()) {
-        if (!item.value().is_object()) {
-            PRINT_HILOGW("resolutionList item is not object");
-            return false;
-        }
-        nlohmann::json resolutionJson = item.value();
-        PrintResolution printResolution;
-        if (!resolutionJson.contains("id") || !resolutionJson["id"].is_string()) {
-            PRINT_HILOGW("can not find id");
-            return false;
-        }
-        printResolution.SetId(resolutionJson["id"]);
-        if (!resolutionJson.contains("horizontalDpi") || !resolutionJson["horizontalDpi"].is_number()) {
-            PRINT_HILOGW("can not find horizontalDpi");
-            return false;
-        }
-        printResolution.SetHorizontalDpi(resolutionJson["horizontalDpi"].get<uint32_t>());
-        if (!resolutionJson.contains("verticalDpi") || !resolutionJson["verticalDpi"].is_number()) {
-            PRINT_HILOGW("can not find verticalDpi");
-            return false;
-        }
-        printResolution.SetVerticalDpi(resolutionJson["verticalDpi"].get<uint32_t>());
-        resolutionList.emplace_back(printResolution);
-    }
-    if (resolutionList.size()) {
-        printerCapability.SetResolution(resolutionList);
-    }
-
     return true;
 }
 
 bool PrintSystemData::ConvertJsonToPageSize(nlohmann::json &capsJson, PrinterCapability &printerCapability)
 {
-    nlohmann::json pageSizeListJson = capsJson["pageSize"];
-    std::vector<PrintPageSize> pageSizeList;
-    for (auto &item : pageSizeListJson.items()) {
-        if (!item.value().is_object()) {
-            PRINT_HILOGW("pageSizeListJson item is not object");
-            return false;
+    return ProcessJsonToCapabilityList<PrintPageSize>(
+        capsJson, "pageSize", printerCapability, &PrinterCapability::SetSupportedPageSize,
+        [](const nlohmann::json &item, PrintPageSize &pageSize) -> bool {
+            if (!item.is_object() ||
+                !item.contains("id") ||!PrintUtils::CheckJsonType<std::string>(item["id"]) ||
+                !item.contains("name") ||!PrintUtils::CheckJsonType<std::string>(item["name"]) ||
+                !item.contains("width") ||!PrintUtils::CheckJsonType<uint32_t>(item["width"]) ||
+                !item.contains("height") ||!PrintUtils::CheckJsonType<uint32_t>(item["height"])) {
+                return false;
+            }
+            pageSize.SetId(item["id"].get<std::string>());
+            pageSize.SetName(item["name"].get<std::string>());
+            pageSize.SetWidth(item["width"].get<uint32_t>());
+            pageSize.SetHeight(item["height"].get<uint32_t>());
+            return true;
         }
-        nlohmann::json pageSizeJson = item.value();
-        PrintPageSize pageSize;
-        if (!pageSizeJson.contains("id") || !pageSizeJson["id"].is_string()) {
-            PRINT_HILOGW("can not find id");
-            return false;
-        }
-        pageSize.SetId(pageSizeJson["id"]);
-        if (!pageSizeJson.contains("name") || !pageSizeJson["name"].is_string()) {
-            PRINT_HILOGW("can not find name");
-            return false;
-        }
-        pageSize.SetName(pageSizeJson["name"]);
-        if (!pageSizeJson.contains("width") || !pageSizeJson["width"].is_number()) {
-            PRINT_HILOGW("can not find width");
-            return false;
-        }
-        pageSize.SetWidth(pageSizeJson["width"].get<uint32_t>());
-        if (!pageSizeJson.contains("height") || !pageSizeJson["height"].is_number()) {
-            PRINT_HILOGW("can not find height");
-            return false;
-        }
-        pageSize.SetHeight(pageSizeJson["height"].get<uint32_t>());
-        pageSizeList.emplace_back(pageSize);
-    }
-    if (pageSizeList.size()) {
-        printerCapability.SetPageSize(pageSizeList);
-    }
-
-    return true;
+    );
 }
 
-void PrintSystemData::ConvertJsonToPrintMargin(nlohmann::json &capsJson, PrinterCapability &printerCapability)
+bool PrintSystemData::ConvertJsonToPrintResolution(nlohmann::json &capsJson, PrinterCapability &printerCapability)
+{
+    return ProcessJsonToCapabilityList<PrintResolution>(capsJson, "resolution", printerCapability,
+        &PrinterCapability::SetResolution,
+        [](const nlohmann::json &item, PrintResolution &resolution) -> bool {
+            if (!item.is_object() ||
+                !item.contains("id") || !PrintUtils::CheckJsonType<std::string>(item["id"]) ||
+                !item.contains("horizontalDpi") || !PrintUtils::CheckJsonType<uint32_t>(item["horizontalDpi"]) ||
+                !item.contains("verticalDpi") || !PrintUtils::CheckJsonType<uint32_t>(item["verticalDpi"])) {
+                return false;
+            }
+            resolution.SetId(item["id"].get<std::string>());
+            resolution.SetHorizontalDpi(item["horizontalDpi"].get<uint32_t>());
+            resolution.SetVerticalDpi(item["verticalDpi"].get<uint32_t>());
+            return true;
+        }
+    );
+}
+
+bool PrintSystemData::ConvertJsonToSupportedColorMode(nlohmann::json &capsJson, PrinterCapability &printerCapability)
+{
+    return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedColorMode", printerCapability,
+        &PrinterCapability::SetSupportedColorMode,
+        [](const nlohmann::json &item, uint32_t &colorMode) -> bool {
+            colorMode = item.get<uint32_t>();
+            return true;
+        });
+}
+
+bool PrintSystemData::ConvertJsonToSupportedDuplexMode(nlohmann::json &capsJson, PrinterCapability &printerCapability)
+{
+    return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedDuplexMode", printerCapability,
+        &PrinterCapability::SetSupportedColorMode,
+        [](const nlohmann::json &item, uint32_t &colorMode) -> bool {
+            colorMode = item.get<uint32_t>();
+            return true;
+        });
+}
+
+bool PrintSystemData::ConvertJsonToSupportedMediaType(nlohmann::json &capsJson, PrinterCapability &printerCapability)
+{
+    return ProcessJsonToCapabilityList<std::string>(capsJson, "supportedMediaType", printerCapability,
+        &PrinterCapability::SetSupportedMediaType,
+        [](const nlohmann::json &item, std::string &colorMode) -> bool {
+            colorMode = item.get<std::string>();
+            return true;
+        });
+}
+
+bool PrintSystemData::ConvertJsonToSupportedQuality(nlohmann::json &capsJson, PrinterCapability &printerCapability)
+{
+    return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedQuality", printerCapability,
+        &PrinterCapability::SetSupportedQuality,
+        [](const nlohmann::json &item, uint32_t &colorMode) -> bool {
+            colorMode = item.get<uint32_t>();
+            return true;
+        });
+}
+
+bool PrintSystemData::ConvertJsonToSupportedOrientation(nlohmann::json &capsJson, PrinterCapability &printerCapability)
+{
+    return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedOrientation", printerCapability,
+        &PrinterCapability::SetSupportedOrientation,
+        [](const nlohmann::json &item, uint32_t &colorMode) -> bool {
+            colorMode = item.get<uint32_t>();
+            return true;
+        });
+}
+
+bool PrintSystemData::ConvertJsonToPrintMargin(nlohmann::json &capsJson, PrinterCapability &printerCapability)
 {
     nlohmann::json marginJson = capsJson["minMargin"];
     PrintMargin minMargin;
-    uint32_t marginCount = 0;
-
-    if (marginJson.contains("top") && marginJson["top"].is_number()) {
-        minMargin.SetTop(marginJson["top"].get<uint32_t>());
-        marginCount++;
+    if (!marginJson.is_object() ||
+        !marginJson.contains("top") || !PrintUtils::CheckJsonType<std::string>(marginJson["top"]) ||
+        !marginJson.contains("bottom") || !PrintUtils::CheckJsonType<std::string>(marginJson["bottom"]) ||
+        !marginJson.contains("left") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["left"]) ||
+        !marginJson.contains("right") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["right"])) {
+        PRINT_HILOGE("Invalid format,key is minMargin");
+        return false;
     }
-    if (marginJson.contains("bottom") && marginJson["bottom"].is_number()) {
-        minMargin.SetTop(marginJson["bottom"].get<uint32_t>());
-        marginCount++;
-    }
-    if (marginJson.contains("left") && marginJson["left"].is_number()) {
-        minMargin.SetLeft(marginJson["left"].get<uint32_t>());
-        marginCount++;
-    }
-    if (marginJson.contains("right") && marginJson["right"].is_number()) {
-        minMargin.SetRight(marginJson["right"].get<uint32_t>());
-        marginCount++;
-    }
-    if (marginCount) {
-        printerCapability.SetMinMargin(minMargin);
-    }
+    minMargin.SetTop(marginJson["top"].get<uint32_t>());
+    minMargin.SetTop(marginJson["bottom"].get<uint32_t>());
+    minMargin.SetLeft(marginJson["left"].get<uint32_t>());
+    minMargin.SetRight(marginJson["right"].get<uint32_t>());
+    printerCapability.SetMinMargin(minMargin);
+    PRINT_HILOGD("ProcessJsonToCapabilityList success, key is minMargin");
+    return true;
 }
 
-bool PrintSystemData::GetPrinterCapabilityFromSystemData(
-    CupsPrinterInfo &cupsPrinter, std::string printerId, PrinterCapability &printerCapability)
+bool PrintSystemData::GetPrinterCapabilityFromSystemData(CupsPrinterInfo &cupsPrinter,
+    std::string printerId, PrinterCapability &printerCapability)
 {
     PrinterCapability cupsPrinterCaps = cupsPrinter.printerCapability;
     std::vector<PrintPageSize> pageSizeList;
     cupsPrinterCaps.GetPageSize(pageSizeList);
-    if (pageSizeList.size() != 0) {
+    if (!pageSizeList.empty()) {
         PRINT_HILOGI("find printer capability in system data");
         printerCapability = cupsPrinterCaps;
         return true;

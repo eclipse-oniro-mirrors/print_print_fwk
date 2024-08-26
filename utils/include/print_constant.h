@@ -183,6 +183,12 @@ enum PrintDuplexMode {
     DUPLEX_MODE_SHORT_EDGE = 2,
 };
 
+enum PrintQualityCode {
+    PRINT_QUALITY_DRAFT = 3,
+    PRINT_QUALITY_NORMAL = 4,
+    PRINT_QUALITY_HIGH = 5
+};
+
 enum PrintPageType {
     PAGE_ISO_A3 = 0,
     PAGE_ISO_A4 = 1,

@@ -180,7 +180,7 @@ std::shared_ptr<PrintMargin> PrintMargin::Unmarshalling(Parcel &parcel)
     return nativeObj;
 }
 
-void PrintMargin::Dump()
+void PrintMargin::Dump() const
 {
     if (hasTop_) {
         PRINT_HILOGD("top_ = %{public}d", top_);
