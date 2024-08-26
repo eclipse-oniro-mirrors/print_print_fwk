@@ -16,6 +16,9 @@
 #include "operation_queue.h"
 #include "print_log.h"
 
+namespace {
+const int CHECK_OP_INTERVAL_MS = 1000;
+}
 using namespace OHOS::Print;
 
 void OperationQueue::Run()
@@ -31,7 +34,7 @@ void OperationQueue::Run()
             if (op != nullptr) {
                 op();
             } else {
-                syncWait.Wait(ThreadSyncWait::WAIT_INFINETE);
+                syncWait.Wait(CHECK_OP_INTERVAL_MS);
             }
         }
     });

@@ -74,6 +74,7 @@ static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service
 static const std::string CUPS_RUN_DIR = "/data/service/el1/public/print_service/cups/run";
 static const std::string DEFAULT_PPD_NAME = "everywhere";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
+static const std::string REMOTE_PRINTER_MAKE_MODEL = "Remote Printer";
 static const std::string DEFAULT_USER = "default";
 static const std::string PRINTER_STATE_WAITING_COMPLETE = "cups-waiting-for-job-completed";
 static const std::string PRINTER_STATE_WIFI_NOT_CONFIGURED = "wifi-not-configured-report";
@@ -296,7 +297,8 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
             chmod(destFilePath.c_str(), filestat.st_mode);
         } else {
             char realSrc[PATH_MAX] = {};
-            if (realpath(srcFilePath.c_str(), realSrc) == nullptr) {
+            if (realpath(srcFilePath.c_str(), realSrc) == nullptr ||
+                realpath(destFilePath.c_str(), realSrc) == nullptr) {
                 PRINT_HILOGE("The realSrc is null.");
                 continue;
             }
@@ -466,7 +468,7 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-shared", 1);
     PRINT_HILOGD("IPP_OP_CUPS_ADD_MODIFY_PRINTER cupsDoRequest");
     ippDelete(printAbility->DoRequest(http, request, "/admin/"));
-    if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
+    if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
         PRINT_HILOGE("add error: %s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
     }
@@ -488,7 +490,12 @@ int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, 
         return E_PRINT_NONE;
     }
     ippSetPort(CUPS_SEVER_PORT);
+    _cupsSetError(IPP_STATUS_OK, NULL, 0);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
+    if (request == nullptr) {
+        PRINT_HILOGW("request is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s",
         standardName.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
@@ -505,10 +512,12 @@ int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, 
         status = cupsWriteRequestData(CUPS_HTTP_DEFAULT, ppdData.c_str(), ppdData.length());
     } else {
         ippDelete(request);
+        request = nullptr;
         PRINT_HILOGW("ppd not send, status = %{public}d", static_cast<int>(status));
         return E_PRINT_SERVER_FAILURE;
     }
     ippDelete(request);
+    request = nullptr;
     if (status != HTTP_STATUS_OK && status != HTTP_STATUS_CONTINUE) {
         PRINT_HILOGW("add error, status = %{public}d", static_cast<int>(status));
         return E_PRINT_SERVER_FAILURE;
@@ -596,7 +605,7 @@ ipp_t *PrintCupsClient::QueryPrinterAttributesByUri(const std::string &printerUr
 {
     ipp_t *request = nullptr; /* IPP Request */
     ipp_t *response = nullptr; /* IPP Request */
-    http_t *http = NULL;
+    http_t *http = nullptr;
     char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
     char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
     char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
@@ -618,6 +627,7 @@ ipp_t *PrintCupsClient::QueryPrinterAttributesByUri(const std::string &printerUr
         PRINT_HILOGW("connect printer failed");
         return nullptr;
     }
+    _cupsSetError(IPP_STATUS_OK, NULL, 0);
     request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printerUri.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
@@ -1634,8 +1644,9 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
             return printerExist;
         }
         if (strcmp(ppdName, DEFAULT_PPD_NAME.c_str()) == 0) {
-            // 没查到驱动
-            printerExist = (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL);
+            // 查到everywhere或remote printer驱动
+            printerExist = (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL) ||
+                           (strstr(makeModel, REMOTE_PRINTER_MAKE_MODEL.c_str()) != NULL);
         } else {
             // 查到驱动
             printerExist = !(strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL);
