@@ -74,6 +74,7 @@ static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service
 static const std::string CUPS_RUN_DIR = "/data/service/el1/public/print_service/cups/run";
 static const std::string DEFAULT_PPD_NAME = "everywhere";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
+static const std::string REMOTE_PRINTER_MAKE_MODEL = "Remote Printer";
 static const std::string DEFAULT_USER = "default";
 static const std::string PRINTER_STATE_WAITING_COMPLETE = "cups-waiting-for-job-completed";
 static const std::string PRINTER_STATE_WIFI_NOT_CONFIGURED = "wifi-not-configured-report";
@@ -466,7 +467,7 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-shared", 1);
     PRINT_HILOGD("IPP_OP_CUPS_ADD_MODIFY_PRINTER cupsDoRequest");
     ippDelete(printAbility->DoRequest(http, request, "/admin/"));
-    if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
+    if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
         PRINT_HILOGE("add error: %s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
     }
@@ -1549,8 +1550,9 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
             return printerExist;
         }
         if (strcmp(ppdName, DEFAULT_PPD_NAME.c_str()) == 0) {
-            // 没查到驱动
-            printerExist = (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL);
+            // 查到everywhere或remote printer驱动
+            printerExist = (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL) ||
+                           (strstr(makeModel, REMOTE_PRINTER_MAKE_MODEL.c_str()) != NULL);
         } else {
             // 查到驱动
             printerExist = !(strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != NULL);
