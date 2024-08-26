@@ -878,7 +878,7 @@ int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptio
             value.GetStrValue().c_str(), value.GetStrValue().size());
         if (err != EOK) {
             SCAN_HILOGD("strncpy_s arg failed");
-            return;
+            return E_SCAN_GENERIC_FAILURE;
         }
     } else if (valueType == SCAN_VALUE_BOOL) {
         *static_cast<int32_t *>(saneValueBuf) = value.GetBoolValue() > 0 ? true : false;
