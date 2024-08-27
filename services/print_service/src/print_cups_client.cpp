@@ -477,6 +477,59 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     return E_PRINT_NONE;
 }
 
+int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, const std::string &printerName,
+    const std::string &ppdName, const std::string &ppdData)
+{
+    PRINT_HILOGD("AddPrinterToCupsWithPpd, ppdName: %{public}s", ppdName.c_str());
+    ipp_t *request = nullptr;
+    char uri[HTTP_MAX_URI] = {0};
+    std::vector<string> ppds;
+    std::string standardName = PrintUtil::StandardizePrinterName(printerName);
+    if (IsPrinterExist(printerUri.c_str(), standardName.c_str(), ppdName.c_str())) {
+        PRINT_HILOGI("add success, printer has added");
+        return E_PRINT_NONE;
+    }
+    ippSetPort(CUPS_SEVER_PORT);
+    _cupsSetError(IPP_STATUS_OK, NULL, 0);
+    request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
+    if (request == nullptr) {
+        PRINT_HILOGW("request is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s",
+        standardName.c_str());
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-info", NULL, standardName.c_str());
+    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "device-uri", NULL, printerUri.c_str());
+    ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_IDLE);
+    ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-accepting-jobs", 1);
+    ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-shared", 1);
+    PRINT_HILOGD("IPP_OP_CUPS_ADD_MODIFY_PRINTER cupsDoRequest");
+    http_status_t status = cupsSendRequest(CUPS_HTTP_DEFAULT, request, "/admin/",
+        ippLength(request) + ppdData.length());
+    if (status == HTTP_STATUS_CONTINUE && request->state == IPP_STATE_DATA) {
+        status = cupsWriteRequestData(CUPS_HTTP_DEFAULT, ppdData.c_str(), ppdData.length());
+    } else {
+        ippDelete(request);
+        request = nullptr;
+        PRINT_HILOGW("ppd not send, status = %{public}d", static_cast<int>(status));
+        return E_PRINT_SERVER_FAILURE;
+    }
+    ippDelete(request);
+    request = nullptr;
+    if (status != HTTP_STATUS_OK && status != HTTP_STATUS_CONTINUE) {
+        PRINT_HILOGW("add error, status = %{public}d", static_cast<int>(status));
+        return E_PRINT_SERVER_FAILURE;
+    }
+    if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
+        PRINT_HILOGE("add error: %s", cupsLastErrorString());
+        return E_PRINT_SERVER_FAILURE;
+    }
+    PRINT_HILOGI("add success");
+    return E_PRINT_NONE;
+}
+
 int32_t PrintCupsClient::DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
     const std::string &printerMake)
 {
@@ -547,54 +600,94 @@ int32_t PrintCupsClient::DeleteCupsPrinter(const char *printerName)
     return E_PRINT_NONE;
 }
 
-int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
-    PrinterCapability &printerCaps)
+ipp_t *PrintCupsClient::QueryPrinterAttributesByUri(const std::string &printerUri, const std::string &nic, int num,
+    const char * const *pattrs)
 {
-    PRINT_HILOGD("PrintCupsClient QueryPrinterCapabilityByUri start.");
-    ipp_t *request; /* IPP Request */
-    ipp_t *response; /* IPP Request */
-    http_t *http = NULL;
+    ipp_t *request = nullptr; /* IPP Request */
+    ipp_t *response = nullptr; /* IPP Request */
+    http_t *http = nullptr;
     char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
     char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
     char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
     char resource[HTTP_MAX_URI] = {0}; /* Resource portion of URI */
-    int port; /* Port portion of URI */
-
-    static const char * const pattrs[] = {
-        "all"
-    };
-    PRINT_HILOGD("QueryPrinterCapabilityByUri enter");
+    int port = 0; /* Port portion of URI */
+    PRINT_HILOGD("QueryPrinterAttributesByUri enter");
     if (printAbility == nullptr) {
         PRINT_HILOGW("printAbility is null");
-        return E_PRINT_SERVER_FAILURE;
+        return nullptr;
     }
     httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username), host,
-                    sizeof(host), &port, resource, sizeof(resource));
-
-    std::string nic;
-    if (IsIpConflict(printerId, nic)) {
-        http = httpConnect3(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, TIME_OUT, NULL, nic.c_str());
-    } else {
+        sizeof(host), &port, resource, sizeof(resource));
+    if (nic.empty()) {
         http = httpConnect2(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, TIME_OUT, NULL);
+    } else {
+        http = httpConnect3(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, TIME_OUT, NULL, nic.c_str());
     }
     if (http == nullptr) {
-        PRINT_HILOGD("connect printer failed");
-        return E_PRINT_SERVER_FAILURE;
+        PRINT_HILOGW("connect printer failed");
+        return nullptr;
     }
+    _cupsSetError(IPP_STATUS_OK, NULL, 0);
     request = ippNewRequest(IPP_OP_GET_PRINTER_ATTRIBUTES);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printerUri.c_str());
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
-    ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", 1, NULL, pattrs);
+    ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", num, NULL, pattrs);
     response = printAbility->DoRequest(http, request, "/");
-
+    httpClose(http);
+    http = nullptr;
+    if (response == nullptr) {
+        PRINT_HILOGW("response is null");
+        return nullptr;
+    }
     if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
-        PRINT_HILOGE("set default printers error: %{public}s", cupsLastErrorString());
+        PRINT_HILOGE("get printer attributes error: %{public}s", cupsLastErrorString());
         ippDelete(response);
+        response = nullptr;
+        return nullptr;
+    }
+    return response;
+}
+
+int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
+    PrinterCapability &printerCaps)
+{
+    PRINT_HILOGD("PrintCupsClient QueryPrinterCapabilityByUri start.");
+    static const char * const pattrs[] = {
+        "all"
+    };
+    std::string nic;
+    IsIpConflict(printerId, nic);
+    ipp_t *response = QueryPrinterAttributesByUri(printerUri, nic, sizeof(pattrs) / sizeof(pattrs[0]), pattrs);
+    if (response == nullptr) {
+        PRINT_HILOGW("get attributes fail");
         return E_PRINT_SERVER_FAILURE;
     }
-    PRINT_HILOGD("get caps success: %{public}s", cupsLastErrorString());
+    PRINT_HILOGD("get attributes success");
     ParsePrinterAttributes(response, printerCaps);
-    httpClose(http);
+    ippDelete(response);
+    response = nullptr;
+    return E_PRINT_NONE;
+}
+
+int32_t PrintCupsClient::QueryPrinterStatusByUri(const std::string &printerUri, PrinterStatus &status)
+{
+    PRINT_HILOGD("PrintCupsClient QueryPrinterStatusByUri start.");
+    static const char * const pattrs[] = {
+        "printer-state"
+    };
+    ipp_t *response = QueryPrinterAttributesByUri(printerUri, "", sizeof(pattrs) / sizeof(pattrs[0]), pattrs);
+    if (response == nullptr) {
+        PRINT_HILOGW("get attributes fail");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    PRINT_HILOGD("get attributes success");
+    bool result = ParsePrinterStatusAttributes(response, status);
+    ippDelete(response);
+    response = nullptr;
+    if (!result) {
+        PRINT_HILOGW("parse state failed");
+        return E_PRINT_SERVER_FAILURE;
+    }
     return E_PRINT_NONE;
 }
 

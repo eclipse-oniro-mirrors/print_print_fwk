@@ -330,7 +330,7 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
     PRINT_HILOGD("ConnectPrinter started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
-    if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
+    if (printSystemData_.QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
         PRINT_HILOGE("Invalid printer id");
         return E_PRINT_INVALID_PRINTER;
     }
@@ -375,7 +375,7 @@ int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId)
     PRINT_HILOGD("DisconnectPrinter started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
-    if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
+    if (printSystemData_.QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
         PRINT_HILOGE("Invalid printer id");
         return E_PRINT_INVALID_PRINTER;
     }
@@ -411,7 +411,7 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
 
     PRINT_HILOGD("StartDiscoverPrinter started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    printerInfoList_.clear();
+    printSystemData_.ClearDiscoveredPrinterList();
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> abilityList;
     for (auto extensionId : extensionIds) {
         if (extensionList_.find(extensionId) != extensionList_.end()) {
@@ -686,14 +686,13 @@ int32_t PrintServiceAbility::QueryPrinterProperties(const std::string &printerId
         return E_PRINT_NO_PERMISSION;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    PRINT_HILOGI("printerId %{public}s", printerId.c_str());
-    PrinterInfo printerInfo;
-    int32_t ret = QueryPrinterInfoByPrinterId(printerId, printerInfo);
-    if (ret != E_PRINT_NONE) {
+    PRINT_HILOGD("printerId %{public}s", printerId.c_str());
+    auto printerInfo = printSystemData_.QueryPrinterInfoByPrinterId(printerId);
+    if (printerInfo == nullptr) {
         PRINT_HILOGW("no printerInfo");
         return E_PRINT_INVALID_PRINTER;
     }
-    PRINT_HILOGD("printerInfo %{public}s", printerInfo.GetPrinterName().c_str());
+    PRINT_HILOGD("printerInfo %{public}s", printerInfo->GetPrinterName().c_str());
     for (auto &key : keyList) {
         PRINT_HILOGD("QueryPrinterProperties key %{public}s", key.c_str());
         if (key == "printerPreference") {
@@ -752,26 +751,6 @@ int32_t PrintServiceAbility::AddPrinterToCups(const std::string &printerUri, con
     return E_PRINT_NONE;
 }
 
-std::string PrintServiceAbility::QueryPrinterIdByStandardizeName(const std::string &printerName)
-{
-    PRINT_HILOGD("QueryPrinterIdByStandardizeName printerName : %{public}s.", printerName.c_str());
-    for (auto iter = printerInfoList_.begin(); iter != printerInfoList_.end(); ++iter) {
-        auto printerInfoPtr = iter->second;
-        if (printerInfoPtr == nullptr) {
-            continue;
-        }
-        std::string stdName = PrintUtil::StandardizePrinterName(printerInfoPtr->GetPrinterName());
-        PRINT_HILOGD("QueryPrinterIdByStandardizeName stdName : %{public}s.", stdName.c_str());
-        if (stdName != PrintUtil::StandardizePrinterName(printerName)) {
-            continue;
-        }
-        std::string id = iter->first;
-        PRINT_HILOGD("QueryPrinterIdByStandardizeName printerId : %{public}s.", id.c_str());
-        return id;
-    }
-    return "";
-}
-
 int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
     PrinterCapability &printerCaps)
 {
@@ -790,12 +769,11 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
             standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
         }
         PRINT_HILOGI("extensionId = %{public}s, printerId : %{public}s", extensionId.c_str(), standardizeId.c_str());
-        auto printerIter = printerInfoList_.find(standardizeId);
-        if (printerIter == printerInfoList_.end()) {
+        auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(standardizeId);
+        if (printerInfo == nullptr) {
             PRINT_HILOGE("can not find the printer");
             return E_PRINT_INVALID_PRINTER;
         }
-        auto printerInfo = printerIter->second;
         if (printerInfo->HasOption() && json::accept(printerInfo->GetOption())) {
             PRINT_HILOGD("QueryPrinterCapabilityByUri ops : %{public}s.", printerInfo->GetOption().c_str());
             nlohmann::json opsJson = json::parse(printerInfo->GetOption());
@@ -1289,14 +1267,14 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
     iter->second->UpdateQueuedJobList(jobId, printJob, jobOrderId);
 
     std::string printerId = printJob->GetPrinterId();
-    auto iterator = printerInfoList_.find(printerId);
-    if (iterator != printerInfoList_.end()) {
-        iterator->second->SetPrinterStatus(PRINTER_STATUS_BUSY);
-        iterator->second->SetPrinterName(PrintUtil::RemoveUnderlineFromPrinterName(iterator->second->GetPrinterName()));
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    if (printerInfo != nullptr) {
+        printerInfo->SetPrinterStatus(PRINTER_STATUS_BUSY);
+        printerInfo->SetPrinterName(PrintUtil::RemoveUnderlineFromPrinterName(printerInfo->GetPrinterName()));
         printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_BUSY);
-        iterator->second->SetIsLastUsedPrinter(true);
-        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *iterator->second);
-        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *iterator->second);
+        printerInfo->SetIsLastUsedPrinter(true);
+        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
     }
     SetLastUsedPrinter(printerId);
 }
@@ -1525,16 +1503,14 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
         return E_PRINT_NO_PERMISSION;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    PRINT_HILOGD("AddPrinters started. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
 
-    PRINT_HILOGD("AddPrinters started. Total size is %{public}zd", printerInfoList_.size());
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
-
     for (auto &info : printerInfos) {
         AddSinglePrinterInfo(info, extensionId);
     }
-
-    PRINT_HILOGD("AddPrinters end. Total size is %{public}zd", printerInfoList_.size());
+    PRINT_HILOGD("AddPrinters end. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
     return E_PRINT_NONE;
 }
 
@@ -1545,11 +1521,8 @@ int32_t PrintServiceAbility::RemovePrinters(const std::vector<std::string> &prin
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-
-    auto count = printerInfoList_.size();
-    PRINT_HILOGD("RemovePrinters started. Total size is %{public}zd", count);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-
+    PRINT_HILOGD("RemovePrinters started. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
 
@@ -1562,13 +1535,11 @@ int32_t PrintServiceAbility::RemovePrinters(const std::vector<std::string> &prin
             anyPrinterRemoved = true;
         }
     }
-
     if (!anyPrinterRemoved) {
         PRINT_HILOGE("Invalid printer ids");
         return E_PRINT_INVALID_PARAMETER;
     }
-
-    PRINT_HILOGD("RemovePrinters end. Total size is %{public}zd", printerInfoList_.size());
+    PRINT_HILOGD("RemovePrinters end. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
     return E_PRINT_NONE;
 }
 
@@ -1580,24 +1551,21 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
         return E_PRINT_NO_PERMISSION;
     }
 
-    PRINT_HILOGD("UpdatePrinters started. Total size is %{public}zd", printerInfoList_.size());
+    PRINT_HILOGD("UpdatePrinters started. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
 
     bool isAnyPrinterChanged = false;
-
     for (const auto &info : printerInfos) {
         bool isPrinterChanged = UpdateSinglePrinterInfo(info, extensionId);
         isAnyPrinterChanged |= isPrinterChanged;
     }
-
     if (isAnyPrinterChanged) {
         printSystemData_.SaveCupsPrinterMap();
     }
-
-    PRINT_HILOGD("UpdatePrinters end. Total size is %{private}zd", printerInfoList_.size());
+    PRINT_HILOGD("UpdatePrinters end. Total size is %{private}zd", printSystemData_.GetDiscoveredPrinterCount());
     return E_PRINT_NONE;
 }
 
@@ -1660,14 +1628,15 @@ int32_t PrintServiceAbility::UpdatePrinterState(const std::string &printerId, ui
     PRINT_HILOGD("UpdatePrinterState started. %{private}s, state [%{public}d]", printerExtId.c_str(), state);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
-    if (printerInfoList_.find(printerExtId) == printerInfoList_.end()) {
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerExtId);
+    if (printerInfo == nullptr) {
         PRINT_HILOGD("Invalid printer id");
         return E_PRINT_INVALID_PRINTER;
     }
 
-    printerInfoList_[printerExtId]->SetPrinterState(state);
-    SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfoList_[printerExtId]);
-    SendPrinterEvent(*printerInfoList_[printerExtId]);
+    printerInfo->SetPrinterState(state);
+    SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
+    SendPrinterEvent(*printerInfo);
     PRINT_HILOGD("UpdatePrinterState end.");
     return E_PRINT_NONE;
 }
@@ -1775,12 +1744,12 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
             queuedJobList_.erase(jobId);
         }
         if (printerJobMap_[printerId].empty()) {
-            auto iter = printerInfoList_.find(printerId);
-            if (iter != printerInfoList_.end()) {
-                iter->second->SetPrinterStatus(PRINTER_STATUS_IDLE);
+            auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+            if (printerInfo != nullptr) {
+                printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
                 printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
-                SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *iter->second);
-                SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *iter->second);
+                SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+                SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
             }
         }
         if (IsQueuedJobListEmpty(jobId)) {
@@ -1841,15 +1810,16 @@ void PrintServiceAbility::ReportHisysEvent(
     } else {
         msg["PRINT_TYPE"] = 0;
     }
-    auto printInfo = printerInfoList_.find(printerId);
+
     std::vector<uint32_t> fdList;
     jobInfo->GetFdList(fdList);
     msg["FILE_NUM"] = fdList.size();
     msg["PAGE_NUM"] = fdList.size();
-    if (printInfo == printerInfoList_.end()) {
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    if (printerInfo == nullptr) {
         msg["MODEL"] = "";
     } else {
-        msg["MODEL"] = printInfo->second->GetPrinterName();
+        msg["MODEL"] = printerInfo->GetPrinterName();
     }
     msg["COPIES_SETTING"] = jobInfo->GetCopyNumber();
     std::string option = jobInfo->GetOption();
@@ -1950,8 +1920,8 @@ int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo, std::string
         PRINT_HILOGD("invalid job state [%{public}d]", userData->printJobList_[jobId]->GetJobState());
         return E_PRINT_INVALID_PRINTJOB;
     }
-
-    if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    if (printerInfo == nullptr) {
         PRINT_HILOGD("invalid printer of the print job");
         return E_PRINT_INVALID_PRINTJOB;
     }
@@ -1981,7 +1951,8 @@ int32_t PrintServiceAbility::QueryPrinterCapability(const std::string &printerId
     }
     PRINT_HILOGD("QueryPrinterCapability started %{private}s", printerId.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (printerInfoList_.find(printerId) == printerInfoList_.end()) {
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    if (printerInfo == nullptr) {
         PRINT_HILOGE("Invalid printer id");
         return E_PRINT_INVALID_PRINTER;
     }
@@ -2403,7 +2374,7 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
 
     // notify securityGuard
     if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
-        std::shared_ptr<PrinterInfo> printerInfo = getPrinterInfo(jobInfo.GetPrinterId());
+        auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(jobInfo.GetPrinterId());
         if (printerInfo != nullptr) {
             securityGuardManager_.receiveJobStateUpdate(jobInfo.GetJobId(), *printerInfo, jobInfo);
         } else {
@@ -2447,15 +2418,6 @@ void PrintServiceAbility::SendExtensionEvent(const std::string &extensionId, con
     if (eventIt != registeredListeners_.end()) {
         eventIt->second->OnCallback(extensionId, extInfo);
     }
-}
-
-std::shared_ptr<PrinterInfo> PrintServiceAbility::getPrinterInfo(const std::string printerId)
-{
-    auto printerIt = printerInfoList_.find(printerId);
-    if (printerIt != printerInfoList_.end()) {
-        return printerIt ->second;
-    }
-    return nullptr;
 }
 
 void PrintServiceAbility::SetHelper(const std::shared_ptr<PrintServiceHelper> &helper)
@@ -2900,13 +2862,15 @@ int32_t PrintServiceAbility::AddPrinterToDiscovery(const PrinterInfo &printerInf
     }
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    PRINT_HILOGD("AddPrinterToDiscovery started. Current total size is %{public}zd", printerInfoList_.size());
+    PRINT_HILOGD("AddPrinterToDiscovery started. Current total size is %{public}zd",
+        printSystemData_.GetDiscoveredPrinterCount());
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
 
     int32_t result = AddSinglePrinterInfo(printerInfo, extensionId);
 
-    PRINT_HILOGD("AddPrinterToDiscovery end. New total size is %{public}zd", printerInfoList_.size());
+    PRINT_HILOGD("AddPrinterToDiscovery end. New total size is %{public}zd",
+        printSystemData_.GetDiscoveredPrinterCount());
     return result;
 }
 
@@ -3059,7 +3023,7 @@ int32_t PrintServiceAbility::DiscoverUsbPrinters(std::vector<PrinterInfo> &print
 
 int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId)
 {
-    if (printerInfoList_.find(info.GetPrinterId()) != printerInfoList_.end()) {
+    if (printSystemData_.QueryDiscoveredPrinterInfoById(info.GetPrinterId()) != nullptr) {
         PRINT_HILOGE("duplicate printer id, ignore it");
         return E_PRINT_INVALID_PRINTER;
     }
@@ -3068,7 +3032,7 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
     infoPtr->SetPrinterId(PrintUtils::GetGlobalId(extensionId, infoPtr->GetPrinterId()));
     PRINT_HILOGD("Printer ID = %{public}s", infoPtr->GetPrinterId().c_str());
     infoPtr->SetPrinterState(PRINTER_ADDED);
-    printerInfoList_[infoPtr->GetPrinterId()] = infoPtr;
+    printSystemData_.AddPrinterToDiscovery(infoPtr);
 
     SendPrinterDiscoverEvent(PRINTER_ADDED, *infoPtr);
     SendPrinterEvent(*infoPtr);
@@ -3091,25 +3055,25 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
     printExtId = PrintUtils::GetGlobalId(extensionId, printExtId);
 
     bool isSystemDataUpdated = UpdatePrinterSystemData(info);
-    auto printerIt = printerInfoList_.find(printExtId);
-    if (printerIt == printerInfoList_.end()) {
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printExtId);
+    if (printerInfo == nullptr) {
         PRINT_HILOGE("invalid printer id, ignore it");
         return false;
     }
-    *printerIt->second = info;
-    printerIt->second->SetPrinterState(PRINTER_UPDATE_CAP);
-    printerIt->second->SetPrinterId(printExtId);
-    printerIt->second->Dump();
+    *printerInfo = info;
+    printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
+    printerInfo->SetPrinterId(printExtId);
+    printerInfo->Dump();
 
     bool isCapabilityUpdated = false;
-    if (printerIt->second->HasCapability()) {
+    if (printerInfo->HasCapability()) {
         isCapabilityUpdated = UpdatePrinterCapability(printExtId, info);
     }
 
     bool isChanged = isSystemDataUpdated || isCapabilityUpdated;
     if (isChanged) {
-        SendPrinterEvent(*printerIt->second);
-        SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerIt->second);
+        SendPrinterEvent(*printerInfo);
+        SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
         printSystemData_.SaveCupsPrinterMap();
     }
 
@@ -3118,25 +3082,22 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
 
 bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)
 {
-    auto printerIt = printerInfoList_.find(printerId);
-    if (printerIt == printerInfoList_.end()) {
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    if (printerInfo == nullptr) {
         PRINT_HILOGE("invalid printer id, ignore it");
         return false;
     }
+    printerInfo->SetPrinterState(PRINTER_REMOVED);
+    SendPrinterDiscoverEvent(PRINTER_REMOVED, *printerInfo);
+    SendPrinterEvent(*printerInfo);
+    printSystemData_.RemovePrinterFromDiscovery(printerId);
 
-    PrinterInfo info = *printerIt->second;
-    info.SetPrinterState(PRINTER_REMOVED);
-    SendPrinterDiscoverEvent(PRINTER_REMOVED, info);
-    SendPrinterEvent(info);
-    printerInfoList_.erase(printerIt);
-
-    if (printSystemData_.IsPrinterAdded(info.GetPrinterId())) {
-        info.SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
-        printSystemData_.UpdatePrinterStatus(info.GetPrinterId(), PRINTER_STATUS_UNAVAILABLE);
-        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, info);
-        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, info);
+    if (printSystemData_.IsPrinterAdded(printerId)) {
+        printerInfo->SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
+        printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_UNAVAILABLE);
+        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
     }
-
     return true;
 }
 } // namespace OHOS::Print

@@ -58,6 +58,14 @@ public:
     bool CheckPrinterBusy(const std::string &printerId);
     bool GetAllPrintUser(std::vector<int32_t> &allPrintUserList);
 
+    std::vector<std::string> QueryAddedPrinterIdList();
+    std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &printerId);
+    std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoByName(const std::string &printerName);
+    void AddPrinterToDiscovery(std::shared_ptr<PrinterInfo> printerInfo);
+    void RemovePrinterFromDiscovery(const std::string &printerId);
+    size_t GetDiscoveredPrinterCount();
+    void ClearDiscoveredPrinterList();
+
 private:
     bool ParsePrinterListJsonV1(nlohmann::json& jsonObject);
     bool GetJsonObjectFromFile(nlohmann::json &jsonObject, const std::string &fileName);
@@ -122,6 +130,8 @@ private:
     std::map<std::string, std::shared_ptr<CupsPrinterInfo>> addedPrinterMap_;
     std::map<uint32_t, std::string> addedPrinterOrderList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> addedPrinterInfoList_;
+    std::map<std::string, std::shared_ptr<PrinterInfo>> discoveredPrinterInfoList_;
+    std::mutex discoveredListMutex;
 };
 
 }  // namespace Print

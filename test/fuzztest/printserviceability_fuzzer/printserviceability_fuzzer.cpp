@@ -526,13 +526,6 @@ void TestSendExtensionEvent(const uint8_t *data, size_t size, FuzzedDataProvider
     PrintServiceAbility::GetInstance()->SendExtensionEvent(extensionId, extInfo);
 }
 
-void TestgetPrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrintServiceAbility::GetInstance()->Init();
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->getPrinterInfo(printerId);
-}
-
 void TestCallStatusBar(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintServiceAbility::GetInstance()->Init();
@@ -694,7 +687,6 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
     TestSetPrintJobCanceled(data, size, dataProvider);
     TestCancelUserPrintJobs(data, size, dataProvider);
     TestSendExtensionEvent(data, size, dataProvider);
-    TestgetPrinterInfo(data, size, dataProvider);
     TestCallStatusBar(data, size, dataProvider);
     TestUpdatePrintUserMap(data, size, dataProvider);
     TestnotifyAdapterJobChanged(data, size, dataProvider);

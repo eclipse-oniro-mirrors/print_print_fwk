@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,15 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_CUPS_ATTRIBUTE_H
-#define PRINT_CUPS_ATTRIBUTE_H
+#ifndef THREAD_SYNC_WAIT_H
+#define THREAD_SYNC_WAIT_H
 
-#include <cups/cups-private.h>
-#include "printer_capability.h"
-#include "print_constant.h"
+#include <mutex>
+#include <thread>
 
-namespace OHOS::Print {
-void ParsePrinterAttributes(ipp_t *response, PrinterCapability &printerCaps);
-bool ParsePrinterStatusAttributes(ipp_t *response, PrinterStatus &status);
-} // namespace OHOS::Print
-#endif // PRINT_CUPS_ATTRIBUTE_H
+namespace OHOS {
+namespace Print {
+class ThreadSyncWait {
+public:
+    static const int WAIT_INFINETE = -1;
+    static const int WAIT_NONE = 0;
+    void Wait(int timeout);
+    void Notify();
+
+private:
+    std::mutex waitMutex;
+    std::condition_variable waitCondition;
+};
+}  // namespace Print
+}  // namespace OHOS
+#endif  // THREAD_SYNC_WAIT_H

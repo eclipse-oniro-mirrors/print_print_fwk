@@ -23,6 +23,7 @@ ohos_fuzztest("PrintServiceFuzzTest") {
 
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/ohprint/include",
     "${print_path}/services/print_service/include",
     "${print_utils_path}/include",
   ]

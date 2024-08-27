@@ -21,6 +21,7 @@ ohos_unittest("fwk_print_cups_client_test") {
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/models/print_models/include",
+    "${print_path}/frameworks/ohprint/include",
     "${print_path}/interfaces/kits/napi/print_napi/include",
     "${print_path}/services/print_service/include",
     "//vendor/open_source/cpp-httplib",

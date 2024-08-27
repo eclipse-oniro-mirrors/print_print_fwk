@@ -69,6 +69,7 @@ void TestAttrCount(const std::string &jsonString, int count)
 
 namespace OHOS::Print {
 using PreAttrTestFunc = std::function<void(ipp_t *)>;
+using PostResponseTestFunc = std::function<void(ipp_t *)>;
 using PostAttrTestFunc = std::function<void(PrinterCapability &)>;
 class PrintCupsAttributeTest : public testing::Test {
 public:
@@ -76,7 +77,7 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-
+    void DoTestResponse(PreAttrTestFunc preFunc, PostResponseTestFunc postFunc);
     void DoTest(PreAttrTestFunc preFunc, PostAttrTestFunc postFunc);
 };
 
@@ -92,7 +93,7 @@ void PrintCupsAttributeTest::SetUp(void)
 void PrintCupsAttributeTest::TearDown(void)
 {}
 
-void PrintCupsAttributeTest::DoTest(PreAttrTestFunc preFunc, PostAttrTestFunc postFunc)
+void PrintCupsAttributeTest::DoTestResponse(PreAttrTestFunc preFunc, PostResponseTestFunc postFunc)
 {
     if (preFunc == nullptr || postFunc == nullptr) {
         return;
@@ -111,11 +112,21 @@ void PrintCupsAttributeTest::DoTest(PreAttrTestFunc preFunc, PostAttrTestFunc po
         return;
     }
     preFunc(response);
-    PrinterCapability printerCaps;
-    ParsePrinterAttributes(response, printerCaps);
+    postFunc(response);
     ippDelete(response);
     response = nullptr;
-    postFunc(printerCaps);
+}
+
+void PrintCupsAttributeTest::DoTest(PreAttrTestFunc preFunc, PostAttrTestFunc postFunc)
+{
+    PostResponseTestFunc postResponseFunc = [this, postFunc](ipp_t *response) {
+        PrinterCapability printerCaps;
+        ParsePrinterAttributes(response, printerCaps);
+        if (postFunc != nullptr) {
+            postFunc(printerCaps);
+        }
+    };
+    DoTestResponse(preFunc, postResponseFunc);
 }
 
 /**
@@ -559,7 +570,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0019, TestSize.Level1)
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-make-and-model", nullptr, "Test make and model");
         ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_URI, "printer-uuid", nullptr, "Test printer uuid");
-        ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-name", nullptr, "Test printer name");
+        ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_NAME, "printer-name", nullptr, "Test printer name");
         ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-location", nullptr, "Printer location test");
         ippAddStrings(response,
             IPP_TAG_PRINTER,
@@ -574,5 +585,69 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0019, TestSize.Level1)
         TestAttrCount(mediaTypeString, ATTR_TEST_MEDIA_TYPE_COUNT);
     };
     DoTest(preFunc, postFunc);
+}
+
+/**
+ * @tc.name: PrintCupsAttributeTest_0020
+ * @tc.desc: ParsePrinterStatusAttributes test
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0020, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        ippAddInteger(response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PSTATE_IDLE);
+    };
+    PostResponseTestFunc postFunc = [this](ipp_t *response) {
+        PrinterStatus status = PRINTER_STATUS_UNAVAILABLE;
+        EXPECT_TRUE(ParsePrinterStatusAttributes(response, status));
+        EXPECT_EQ(status, PRINTER_STATUS_IDLE);
+    };
+    DoTestResponse(preFunc, postFunc);
+}
+/**
+ * @tc.name: PrintCupsAttributeTest_0021
+ * @tc.desc: ParsePrinterStatusAttributes test
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0021, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_NAME, "printer-name", nullptr, "Test printer name");
+    };
+    PostResponseTestFunc postFunc = [this](ipp_t *response) {
+        PrinterStatus status = PRINTER_STATUS_UNAVAILABLE;
+        EXPECT_FALSE(ParsePrinterStatusAttributes(response, status));
+    };
+    DoTestResponse(preFunc, postFunc);
+}
+
+/**
+ * @tc.name: PrintCupsAttributeTest_0022
+ * @tc.desc: ParsePrinterStatusAttributes test
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0022, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        ippAddInteger(response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", 0);
+    };
+    PostResponseTestFunc postFunc = [this](ipp_t *response) {
+        PrinterStatus status = PRINTER_STATUS_UNAVAILABLE;
+        EXPECT_FALSE(ParsePrinterStatusAttributes(response, status));
+    };
+    DoTestResponse(preFunc, postFunc);
+}
+
+/**
+ * @tc.name: PrintCupsAttributeTest_0023
+ * @tc.desc: ParsePrinterStatusAttributes test
+ */
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0023, TestSize.Level1)
+{
+    PreAttrTestFunc preFunc = [this](ipp_t *response) {
+        ippAddInteger(response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PSTATE_STOPPED + 1);
+    };
+    PostResponseTestFunc postFunc = [this](ipp_t *response) {
+        PrinterStatus status = PRINTER_STATUS_UNAVAILABLE;
+        EXPECT_FALSE(ParsePrinterStatusAttributes(response, status));
+    };
+    DoTestResponse(preFunc, postFunc);
 }
 }  // namespace OHOS::Print
