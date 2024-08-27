@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_SCAN_OPTION_DESCRIPTOR_FUZZER_H
-#define OHOS_SCAN_OPTION_DESCRIPTOR_FUZZER_H
+#ifndef OHOS_SCAN_CAPI_FUZZER_H
+#define OHOS_SCAN_CAPI_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "scanoptiondescriptor_fuzzer"
+#define FUZZ_PROJECT_NAME "scancapi_fuzzer"
 
-#endif // OHOS_SCAN_OPTION_DESCRIPTOR_FUZZER_H
+#endif // OHOS_SCAN_CAPI_FUZZER_H

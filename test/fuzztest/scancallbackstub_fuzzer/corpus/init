@@ -13,9 +13,4 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_SCAN_HELPER_FUZZER_H
-#define OHOS_SCAN_HELPER_FUZZER_H
-
-#define FUZZ_PROJECT_NAME "scanhelper_fuzzer"
-
-#endif // OHOS_SCAN_HELPER_FUZZER_H
+FUZZ

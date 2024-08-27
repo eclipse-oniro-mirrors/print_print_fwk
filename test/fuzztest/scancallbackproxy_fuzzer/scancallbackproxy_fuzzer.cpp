@@ -16,7 +16,6 @@
 #include "scancallbackproxy_fuzzer.h"
 #include "scan_callback_proxy.h"
 
-
 namespace OHOS {
 namespace Scan {
     constexpr uint8_t MAX_STRING_LENGTH = 255;

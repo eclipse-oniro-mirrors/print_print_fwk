@@ -17,13 +17,12 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 
 ##############################fuzztest##########################################
-ohos_fuzztest("ScanCallbackProxyFuzzTest") {
+ohos_fuzztest("ScanCallBackFuzzTest") {
   module_out_path = fuzz_test_output_path
 
-  fuzz_config_file = "${print_path}/test/fuzztest/scancallbackproxy_fuzzer"
+  fuzz_config_file = "${print_path}/test/fuzztest/scancallback_fuzzer"
 
   include_dirs = [
-    "${print_path}/services/scan_service/include",
     "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
     "${print_utils_path}/include",
   ]
@@ -38,14 +37,7 @@ ohos_fuzztest("ScanCallbackProxyFuzzTest") {
   deps = [
     "${print_path}/frameworks/helper/scan_helper:scan_helper",
     "${print_path}/frameworks/innerkitsimpl/scan_impl:scan_client",
-    "${print_path}/services/scan_service:scan_service",
   ]
-
-  if (sane_enable) {
-    include_dirs += [ "//vendor/open_source/backends/include" ]
-    deps += [ "//vendor/open_source/backends:third_sane" ]
-    cflags_cc = [ "-DSANE_ENABLE" ]
-  }
 
   external_deps = [
     "ability_base:base",
@@ -65,6 +57,7 @@ ohos_fuzztest("ScanCallbackProxyFuzzTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "libjpeg-turbo:turbojpeg",
     "napi:ace_napi",
     "netmanager_base:net_conn_manager_if",
     "netmanager_ext:mdns_manager_if",
@@ -82,7 +75,7 @@ ohos_fuzztest("ScanCallbackProxyFuzzTest") {
     ]
   }
 
-  sources = [ "scancallbackproxy_fuzzer.cpp" ]
+  sources = [ "scancallback_fuzzer.cpp" ]
 }
 
 ###############################################################################
@@ -91,7 +84,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":ScanCallbackProxyFuzzTest",
+    ":ScanCallBackFuzzTest",
   ]
 }
 ###############################################################################

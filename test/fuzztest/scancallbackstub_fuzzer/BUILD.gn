@@ -16,15 +16,16 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
-##############################fuzztest##########################################
-ohos_fuzztest("ScanCallbackProxyFuzzTest") {
+ohos_fuzztest("ScanCallBackStubFuzzTest") {
   module_out_path = fuzz_test_output_path
 
-  fuzz_config_file = "${print_path}/test/fuzztest/scancallbackproxy_fuzzer"
+  fuzz_config_file = "${print_path}/test/fuzztest/scancallbackstub_fuzzer"
 
   include_dirs = [
-    "${print_path}/services/scan_service/include",
+    "//third_party/node/${print_path}/frameworks/helper/scan_helper/src",
+    "//third_party/curl/include",
     "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
+    "${print_path}/frameworks/helper/scan_helper/include",
     "${print_utils_path}/include",
   ]
 
@@ -38,41 +39,21 @@ ohos_fuzztest("ScanCallbackProxyFuzzTest") {
   deps = [
     "${print_path}/frameworks/helper/scan_helper:scan_helper",
     "${print_path}/frameworks/innerkitsimpl/scan_impl:scan_client",
-    "${print_path}/services/scan_service:scan_service",
   ]
 
-  if (sane_enable) {
-    include_dirs += [ "//vendor/open_source/backends/include" ]
-    deps += [ "//vendor/open_source/backends:third_sane" ]
-    cflags_cc = [ "-DSANE_ENABLE" ]
-  }
-
   external_deps = [
-    "ability_base:base",
     "ability_base:want",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
-    "access_token:libaccesstoken_sdk",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
+    "ability_runtime:data_ability_helper",
+    "ability_runtime:napi_base_context",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "core_service:tel_core_service_api",
-    "drivers_interface_usb:libusb_proxy_1.0",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "hitrace:hitrace_meter",
-    "init:libbegetutil",
     "ipc:ipc_core",
     "napi:ace_napi",
-    "netmanager_base:net_conn_manager_if",
-    "netmanager_ext:mdns_manager_if",
-    "os_account:os_account_innerkits",
-    "relational_store:native_rdb",
-    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "usb_manager:usbsrv_client",
   ]
 
   if (security_guard_enabled) {
@@ -82,16 +63,14 @@ ohos_fuzztest("ScanCallbackProxyFuzzTest") {
     ]
   }
 
-  sources = [ "scancallbackproxy_fuzzer.cpp" ]
+  sources = [ "scancallbackstub_fuzzer.cpp" ]
 }
 
-###############################################################################
 group("fuzztest") {
   testonly = true
   deps = []
   deps += [
     # deps file
-    ":ScanCallbackProxyFuzzTest",
+    ":ScanCallBackStubFuzzTest",
   ]
 }
-###############################################################################
