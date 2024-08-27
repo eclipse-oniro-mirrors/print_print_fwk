@@ -156,7 +156,6 @@ void TestDeletePrinterFromCups(const uint8_t *data, size_t size, FuzzedDataProvi
 
 void TestCheckPrinterOnline(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintCupsClient::GetInstance()->CheckPrinterOnline(printerUri.c_str(), printerId);
@@ -164,14 +163,12 @@ void TestCheckPrinterOnline(const uint8_t *data, size_t size, FuzzedDataProvider
 
 void TestGetIpAddress(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     unsigned int number = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
     PrintCupsClient::GetInstance()->GetIpAddress(number);
 }
 
 void TestIsIpConflict(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string nic = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintCupsClient::GetInstance()->IsIpConflict(printerId, nic);
@@ -179,28 +176,24 @@ void TestIsIpConflict(const uint8_t *data, size_t size, FuzzedDataProvider *data
 
 void TestConvertInchTo100MM(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     int num = dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER);
     PrintCupsClient::GetInstance()->ConvertInchTo100MM(num);
 }
 
 void TestGetColorString(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     uint32_t colorCode = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     PrintCupsClient::GetInstance()->GetColorString(colorCode);
 }
 
 void TestGetDulpexString(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     uint32_t duplexCode = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     PrintCupsClient::GetInstance()->GetDulpexString(duplexCode);
 }
 
 void TestGetMedieSize(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     PrintJob printJob;
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
@@ -209,7 +202,6 @@ void TestGetMedieSize(const uint8_t *data, size_t size, FuzzedDataProvider *data
 
 void TestDumpJobParameters(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     JobParameters jobParams;
     jobParams.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintCupsClient::GetInstance()->DumpJobParameters(&jobParams);
@@ -217,7 +209,6 @@ void TestDumpJobParameters(const uint8_t *data, size_t size, FuzzedDataProvider 
 
 void TestBuildJobParameters(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     PrintJob printJob;
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
@@ -227,7 +218,6 @@ void TestBuildJobParameters(const uint8_t *data, size_t size, FuzzedDataProvider
 
 void TestQueryJobState(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     http_t *http;
     JobMonitorParam param;
     param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -237,7 +227,6 @@ void TestQueryJobState(const uint8_t *data, size_t size, FuzzedDataProvider *dat
 
 void TestGetBlockedSubstate(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     JobStatus jobStatus;
     std::string printerReason = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     printerReason.copy(jobStatus.printer_state_reasons, printerReason.length() + 1);
@@ -246,7 +235,6 @@ void TestGetBlockedSubstate(const uint8_t *data, size_t size, FuzzedDataProvider
 
 void TestReportBlockedReason(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     JobMonitorParam param;
     param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     JobStatus jobStatus;
@@ -257,7 +245,6 @@ void TestReportBlockedReason(const uint8_t *data, size_t size, FuzzedDataProvide
 
 void TestJobStatusCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     JobMonitorParam param;
     param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     JobStatus jobStatus;
@@ -269,14 +256,12 @@ void TestJobStatusCallback(const uint8_t *data, size_t size, FuzzedDataProvider 
 
 void TestUpdateJobStatus(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    PrintCupsClient::GetInstance()->InitCupsResources();
     JobStatus prevousJobStatus;
     std::string prevousPrinterReason = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     prevousPrinterReason.copy(prevousJobStatus.printer_state_reasons, prevousPrinterReason.length() + 1);
     JobStatus jobStatus;
     std::string printerReason = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     printerReason.copy(jobStatus.printer_state_reasons, printerReason.length() + 1);
-    bool isOffline = dataProvider->ConsumeBool();
     PrintCupsClient::GetInstance()->UpdateJobStatus(&prevousJobStatus, &jobStatus);
 }
 
