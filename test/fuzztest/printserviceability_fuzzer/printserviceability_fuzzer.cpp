@@ -476,7 +476,6 @@ void TestStartNativePrintJob(const uint8_t *data, size_t size, FuzzedDataProvide
 void TestNotifyPrintServiceEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintServiceAbilityMockPermission::MockPermission();
-    PrintServiceAbility::GetInstance()->Init();
     std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     uint32_t event = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     PrintServiceAbility::GetInstance()->NotifyPrintServiceEvent(jobId, event);
@@ -864,12 +863,6 @@ void TestReadPreferenceFromFile(const uint8_t *data, size_t size, FuzzedDataProv
     PrintServiceAbility::GetInstance()->ReadPreferenceFromFile(printerId, printPreference);
 }
 
-void TestQueryPrinterIdByStandardizeName(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->QueryPrinterIdByStandardizeName(printerName);
-}
-
 void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestChangeDefaultPrinterForDelete(data, size, dataProvider);
@@ -879,11 +872,13 @@ void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *data
     TestWriteEprinterPreference(data, size, dataProvider);
     TestWritePrinterPreference(data, size, dataProvider);
     TestReadPreferenceFromFile(data, size, dataProvider);
-    TestQueryPrinterIdByStandardizeName(data, size, dataProvider);
 }
 
 void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
+    TestDiscoverUsbPrinters(data, size, dataProvider);
+    TestStartNativePrintJob(data, size, dataProvider);
+    TestNotifyPrintServiceEvent(data, size, dataProvider);
     TestUpdateQueuedJobList(data, size, dataProvider);
     TestUpdatePrintJobOptionByPrinterId(data, size, dataProvider);
     TestDelayStartDiscovery(data, size, dataProvider);
@@ -917,7 +912,6 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
     TestNotifyAppJobQueueChanged(data, size, dataProvider);
     TestSendPrinterChangeEvent(data, size, dataProvider);
     TestCheckJobQueueBlocked(data, size, dataProvider);
-    TestReduceAppCount(data, size, dataProvider);
     TestGetListeningState(data, size, dataProvider);
     TestSetHelper(data, size, dataProvider);
     TestMoreFunction(data, size, dataProvider);
@@ -978,9 +972,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::Print::TestSetPrinterPreference(data, size, &dataProvider);
     OHOS::Print::TestSetDefaultPrinter(data, size, &dataProvider);
     OHOS::Print::TestDeletePrinterFromCups(data, size, &dataProvider);
-    OHOS::Print::TestDiscoverUsbPrinters(data, size, &dataProvider);
-    OHOS::Print::TestStartNativePrintJob(data, size, &dataProvider);
-    OHOS::Print::TestNotifyPrintServiceEvent(data, size, &dataProvider);
     OHOS::Print::TestNotPublicFunction(data, size, &dataProvider);
     return 0;
 }
