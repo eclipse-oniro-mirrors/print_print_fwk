@@ -297,8 +297,9 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
             chmod(destFilePath.c_str(), filestat.st_mode);
         } else {
             char realSrc[PATH_MAX] = {};
+            char destSrc[PATH_MAX] = {};
             if (realpath(srcFilePath.c_str(), realSrc) == nullptr ||
-                realpath(destFilePath.c_str(), realSrc) == nullptr) {
+                realpath(destDir, destSrc) == nullptr) {
                 PRINT_HILOGE("The realSrc is null.");
                 continue;
             }
@@ -1672,14 +1673,24 @@ bool PrintCupsClient::IsIpConflict(const std::string &printerId, std::string &ni
         return false;
     }
     bool isWifiConnected = false;
-    Wifi::WifiDevice::GetInstance(OHOS::WIFI_DEVICE_SYS_ABILITY_ID)->IsConnected(isWifiConnected);
+    auto wifiDevice = Wifi::WifiDevice::GetInstance(OHOS::WIFI_DEVICE_SYS_ABILITY_ID);
+    if (!wifiDevice) {
+        PRINT_HILOGE("wifiDevice GetInstance failed.");
+        return false;
+    }
+    wifiDevice->IsConnected(isWifiConnected);
     PRINT_HILOGD("isWifiConnected: %{public}d", isWifiConnected);
     Wifi::WifiP2pLinkedInfo p2pLinkedInfo;
     Wifi::WifiP2p::GetInstance(OHOS::WIFI_P2P_SYS_ABILITY_ID)->QueryP2pLinkedInfo(p2pLinkedInfo);
     PRINT_HILOGD("P2pConnectedState: %{public}d", p2pLinkedInfo.GetConnectState());
     if (isWifiConnected && p2pLinkedInfo.GetConnectState() == Wifi::P2pConnectedState::P2P_CONNECTED) {
         Wifi::IpInfo info;
-        Wifi::WifiDevice::GetInstance(OHOS::WIFI_DEVICE_SYS_ABILITY_ID)->GetIpInfo(info);
+        auto wifiDevice = Wifi::WifiDevice::GetInstance(OHOS::WIFI_DEVICE_SYS_ABILITY_ID);
+        if (!wifiDevice) {
+            PRINT_HILOGE("wifiDevice GetInstance failed.");
+            return false;
+        }
+        wifiDevice->GetIpInfo(info);
         PRINT_HILOGD("wifi server ip: %{private}s", GetIpAddress(info.serverIp).c_str());
         PRINT_HILOGD("p2p go ip: %{private}s", p2pLinkedInfo.GetGroupOwnerAddress().c_str());
         if (GetIpAddress(info.serverIp) == p2pLinkedInfo.GetGroupOwnerAddress()) {
