@@ -885,10 +885,10 @@ int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptio
         SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
         return ScanUtil::ConvertErro(status);
     }
-    
+
     free(saneValueBuf);
     saneValueBuf = nullptr;
-    
+
     return E_SCAN_NONE;
 }
 #endif
