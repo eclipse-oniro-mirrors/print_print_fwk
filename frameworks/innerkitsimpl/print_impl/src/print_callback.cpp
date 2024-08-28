@@ -21,11 +21,11 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintCallback::PrintCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref)
+PrintCallback::PrintCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref), adapter_(nullptr)
 {
 }
 
-PrintCallback::PrintCallback(PrintDocumentAdapter* adapter) :adapter_(adapter)
+PrintCallback::PrintCallback(PrintDocumentAdapter* adapter) : env_(nullptr), ref_(nullptr), adapter_(adapter)
 {
 }
 

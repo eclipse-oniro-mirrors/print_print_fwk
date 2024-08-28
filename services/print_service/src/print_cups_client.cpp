@@ -435,7 +435,6 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
 {
     PRINT_HILOGD("PrintCupsClient AddPrinterToCups start, printerMake: %{public}s", printerMake.c_str());
     ipp_t *request;
-    http_t *http = NULL;
     char uri[HTTP_MAX_URI] = {0};
     std::vector<string> ppds;
     std::string ppd = DEFAULT_PPD_NAME;
@@ -456,7 +455,6 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     }
     if (printAbility == nullptr) {
         PRINT_HILOGW("printAbility is null");
-        httpClose(http);
         return E_PRINT_SERVER_FAILURE;
     }
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
@@ -472,11 +470,10 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-shared", 1);
     PRINT_HILOGD("IPP_OP_CUPS_ADD_MODIFY_PRINTER cupsDoRequest");
     ippDelete(printAbility->DoRequest(http, request, "/admin/"));
-    if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
+    if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
         PRINT_HILOGE("add error: %s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
     }
-    httpClose(http);
     PRINT_HILOGI("add success");
     return E_PRINT_NONE;
 }
@@ -539,7 +536,6 @@ int32_t PrintCupsClient::DeletePrinterFromCups(const std::string &printerUri, co
 {
     PRINT_HILOGD("PrintCupsClient DeletePrinterFromCups start, printerMake: %{public}s", printerMake.c_str());
     ipp_t *request;
-    http_t *http = NULL;
     char uri[HTTP_MAX_URI] = {0};
     std::vector<string> ppds;
     std::string ppd = DEFAULT_PPD_NAME;
@@ -571,12 +567,11 @@ int32_t PrintCupsClient::DeletePrinterFromCups(const std::string &printerUri, co
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "device-uri", NULL, printerUri.c_str());
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", NULL, ppd.c_str());
     PRINT_HILOGD("IPP_OP_CUPS_DELETE_PRINTER cupsDoRequest");
-    ippDelete(printAbility->DoRequest(http, request, "/admin/"));
+    ippDelete(printAbility->DoRequest(NULL, request, "/admin/"));
     if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
         PRINT_HILOGE("delete error: %s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
     }
-    httpClose(http);
     PRINT_HILOGI("delete success");
     return E_PRINT_NONE;
 }
@@ -585,7 +580,6 @@ int32_t PrintCupsClient::DeleteCupsPrinter(const char *printerName)
 {
     ipp_t *request;
     char uri[HTTP_MAX_URI] = {0};
-    http_t *http = NULL;
 
     PRINT_HILOGD("PrintCupsClient DeleteCupsPrinter start: %{private}s", printerName);
     if (printAbility == nullptr) {
@@ -596,7 +590,7 @@ int32_t PrintCupsClient::DeleteCupsPrinter(const char *printerName)
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s", printerName);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
-    ippDelete(printAbility->DoRequest(http, request, "/admin/"));
+    ippDelete(printAbility->DoRequest(NULL, request, "/admin/"));
     if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
         PRINT_HILOGE("DeleteCupsPrinter error: %{public}s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;

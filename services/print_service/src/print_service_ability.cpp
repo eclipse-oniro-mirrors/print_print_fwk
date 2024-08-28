@@ -1011,7 +1011,12 @@ void PrintServiceAbility::InitPreferenceMap()
 bool PrintServiceAbility::WritePreferenceToFile()
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    int32_t fd = open(PRINTER_PREFERENCE_FILE.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0740);
+    char realPidFile[PATH_MAX] = {};
+    if (realpath(PRINTER_PREFERENCE_FILE.c_str(), realPidFile) == nullptr) {
+        PRINT_HILOGE("The realPidFile is null.");
+        return false;
+    }
+    int32_t fd = open(realPidFile, O_CREAT | O_TRUNC | O_RDWR, 0740);
     PRINT_HILOGD("SavePrinterPreferenceMap fd: %{public}d", fd);
     if (fd < 0) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());

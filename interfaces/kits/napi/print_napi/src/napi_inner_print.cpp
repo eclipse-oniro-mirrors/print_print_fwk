@@ -30,6 +30,7 @@ namespace OHOS::Print {
 const std::string PRINTER_EVENT_TYPE = "printerStateChange";
 const std::string PRINTJOB_EVENT_TYPE = "jobStateChange";
 const std::string EXTINFO_EVENT_TYPE = "extInfoChange";
+const uint32_t ARRAY_LENGTH_ONE_THOUSAND = 1000;
 
 napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info info)
 {
@@ -82,6 +83,10 @@ napi_value NapiInnerPrint::StartDiscovery(napi_env env, napi_callback_info info)
 
         uint32_t len = 0;
         napi_get_array_length(env, argv[0], &len);
+        if (len > ARRAY_LENGTH_ONE_THOUSAND) {
+            PRINT_HILOGE("The length of array is too long");
+            return napi_invalid_arg;
+        }
 
         for (uint32_t index = 0; index < len; index++) {
             napi_value value;
