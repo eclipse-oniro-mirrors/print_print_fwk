@@ -340,7 +340,7 @@ void PrintUsbManager::DealUsbDevStatusChange(const std::string &devStr, bool isA
         PRINT_HILOGE("Create devJson error");
         return;
     }
-    UsbDevice *dev = new UsbDevice(devJson);
+    UsbDevice *dev = new (std::nothrow) UsbDevice(devJson);
     if (dev == nullptr) {
         PRINT_HILOGE("Create dev error");
         cJSON_Delete(devJson);
