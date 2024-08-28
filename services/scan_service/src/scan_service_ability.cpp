@@ -883,16 +883,13 @@ int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptio
     } else if (valueType == SCAN_VALUE_BOOL) {
         *static_cast<int32_t *>(saneValueBuf) = value.GetBoolValue() > 0 ? true : false;
     }
-    status = sane_control_option(scannerHandle, optionIndex,
-        SANE_ACTION_SET_VALUE, saneValueBuf, &info);
+    status = sane_control_option(scannerHandle, optionIndex, SANE_ACTION_SET_VALUE, saneValueBuf, &info);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
         return ScanUtil::ConvertErro(status);
     }
-
     free(saneValueBuf);
     saneValueBuf = nullptr;
-
     return E_SCAN_NONE;
 }
 #endif

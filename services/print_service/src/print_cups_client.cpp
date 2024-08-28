@@ -1105,10 +1105,6 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
 }
 void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callback)
 {
-    if (jobParams == nullptr) {
-        PRINT_HILOGE("The jobParams is nullptr");
-        return;
-    }
     http_t *http = nullptr;
     int num_options = 0;
     cups_option_t *options = nullptr;
@@ -1155,9 +1151,6 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     PRINT_HILOGD("start job success, jobId: %{public}d", jobId);
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam { jobParams->serviceAbility,
         jobParams->serviceJobId, jobId, jobParams->printerUri, jobParams->printerName, jobParams->printerId };
-    if (param == nullptr) {
-        return;
-    }
     g_isFirstQueryState = true;
     PRINT_HILOGD("MonitorJobState enter, cupsJobId: %{public}d", param->cupsJobId);
     MonitorJobState(param, callback);
