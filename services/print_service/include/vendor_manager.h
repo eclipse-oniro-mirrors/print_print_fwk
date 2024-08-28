@@ -82,6 +82,7 @@ private:
     std::shared_ptr<VendorDriverBase> FindDriverByVendorName(const std::string &vendorName);
     void StatusMonitorProcess();
     void UpdateAllPrinterStatus();
+    bool WaitNext();
 
 private:
     std::atomic<bool> defaultLoaded{false};
