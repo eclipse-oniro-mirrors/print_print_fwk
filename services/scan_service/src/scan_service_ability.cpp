@@ -874,22 +874,21 @@ int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptio
         }
     } else if (valueType == SCAN_VALUE_STR) {
         SCAN_HILOGE("Set scanner mode:[%{public}s]", value.GetStrValue().c_str());
-        errno_t err = strncpy_s(static_cast<char*>(saneValueBuf), bufSize,
+        strncpy_s(static_cast<char*>(saneValueBuf), bufSize,
             value.GetStrValue().c_str(), value.GetStrValue().size());
-        if (err != EOK) {
-            SCAN_HILOGD("strncpy_s arg failed");
-            return E_SCAN_GENERIC_FAILURE;
-        }
     } else if (valueType == SCAN_VALUE_BOOL) {
         *static_cast<int32_t *>(saneValueBuf) = value.GetBoolValue() > 0 ? true : false;
     }
-    status = sane_control_option(scannerHandle, optionIndex, SANE_ACTION_SET_VALUE, saneValueBuf, &info);
+    status = sane_control_option(scannerHandle, optionIndex,
+        SANE_ACTION_SET_VALUE, saneValueBuf, &info);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
         return ScanUtil::ConvertErro(status);
     }
+    
     free(saneValueBuf);
     saneValueBuf = nullptr;
+    
     return E_SCAN_NONE;
 }
 #endif
