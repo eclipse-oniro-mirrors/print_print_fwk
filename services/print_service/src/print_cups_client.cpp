@@ -470,7 +470,7 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-shared", 1);
     PRINT_HILOGD("IPP_OP_CUPS_ADD_MODIFY_PRINTER cupsDoRequest");
     ippDelete(printAbility->DoRequest(NULL, request, "/admin/"));
-    if (cupsLastError() > IPP_STATUS_OK_EVENT_COMPLETE) {
+    if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
         PRINT_HILOGE("add error: %s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
     }
