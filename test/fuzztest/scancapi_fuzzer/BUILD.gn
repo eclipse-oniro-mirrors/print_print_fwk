@@ -19,7 +19,7 @@ import("//build/test.gni")
 ohos_fuzztest("ScanCapiFuzzTest") {
   module_out_path = fuzz_test_output_path
 
-  fuzz_config_file = "${print_path}/test/fuzztest/scanhelper_fuzzer"
+  fuzz_config_file = "${print_path}/test/fuzztest/scancapi_fuzzer"
 
   include_dirs = [
     "${print_path}/frameworks/ohscan/include",
@@ -43,7 +43,6 @@ ohos_fuzztest("ScanCapiFuzzTest") {
   external_deps = [
     "ability_base:base",
     "ability_base:want",
-    "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "access_token:libaccesstoken_sdk",

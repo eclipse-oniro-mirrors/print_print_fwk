@@ -92,7 +92,7 @@ public:
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
 
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) override;
-    
+
     int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList) override;
     int32_t StartNativePrintJob(PrintJob &printJob) override;
@@ -131,7 +131,6 @@ private:
     bool CheckPermission(const std::string &permissionName);
     void SendQueuePrintJob(const std::string &printerId);
     void NotifyAppJobQueueChanged(const std::string &applyResult);
-    std::shared_ptr<PrinterInfo> getPrinterInfo(const std::string printerId);
     bool isEprint(const std::string &printerId);
     void ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
     void ReportCompletedPrint(const std::string &printerId);
@@ -182,10 +181,9 @@ private:
     void NotifyAppDeletePrinterWithDefaultPrinter(const std::string &printerId);
     void ChangeDefaultPrinterForDelete(std::shared_ptr<PrintUserData> &userData, const std::string &printerId);
     bool UpdatePrinterCapability(const std::string &printerId, const PrinterInfo &info);
-    bool UpdatePrinterSystemData(const std::string &printerId, const PrinterInfo &info);
+    bool UpdatePrinterSystemData(const PrinterInfo &info);
     uint32_t GetListeningState(const uint32_t subState);
     uint32_t GetListeningState(uint32_t state, uint32_t subState);
-    std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
     bool CheckPrintJob(PrintJob &jobInfo);
     bool CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info);
     int32_t AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
@@ -213,7 +211,6 @@ private:
     std::map<std::string, std::string, JobIdCmp> jobOrderList_;
     std::map<std::string, PrintAttributes> printAttributesList_;
 
-    std::map<std::string, std::shared_ptr<PrinterInfo>> printerInfoList_;
     std::map<std::string, std::unordered_map<std::string, bool>> printerJobMap_;
 
     std::string spoolerBundleName_;

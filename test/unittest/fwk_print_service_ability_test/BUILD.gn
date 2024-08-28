@@ -22,6 +22,7 @@ ohos_unittest("fwk_print_service_ability_test") {
     "../fwk_inner_napi_test/mock",
     "../service_test/mock",
     "${print_path}/frameworks/models/print_models/include",
+    "${print_path}/frameworks/ohprint/include",
     "${print_path}/services/print_service/include",
     "${print_utils_path}/include",
   ]

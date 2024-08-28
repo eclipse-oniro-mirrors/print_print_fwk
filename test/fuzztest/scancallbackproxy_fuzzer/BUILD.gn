@@ -50,7 +50,6 @@ ohos_fuzztest("ScanCallbackProxyFuzzTest") {
   external_deps = [
     "ability_base:base",
     "ability_base:want",
-    "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "access_token:libaccesstoken_sdk",

@@ -387,7 +387,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0008, TestSize.Level1)
     std::string printerId ="1234";
     EXPECT_EQ(service->ConnectPrinter(printerId), E_PRINT_INVALID_PRINTER);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
-    service->printerInfoList_[printerId] = info;
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
     service->ConnectPrinter(printerId);
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CONNECT_PRINTER);
@@ -409,7 +409,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0009, TestSize.Level1)
     std::string printerId ="1234";
     EXPECT_EQ(service->DisconnectPrinter(printerId), E_PRINT_INVALID_PRINTER);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
-    service->printerInfoList_[printerId] = info;
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
     service->DisconnectPrinter(printerId);
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CONNECT_PRINTER);
@@ -487,7 +487,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0013, TestSize.Level1)
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     info->SetPrinterId(printerIds[0]);
     std::string printerId = printerIds[0];
-    service->printerInfoList_[printerId] = info;
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
     EXPECT_EQ(service->RemovePrinters(printerIds), E_PRINT_NONE);
     std::vector<std::string> newPrinterIds;
     newPrinterIds.push_back("1234");
@@ -584,10 +584,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0022, TestSize.Level1)
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
     std::string printerId = "1234";
-    EXPECT_EQ(service->getPrinterInfo(printerId), nullptr);
     std::shared_ptr<PrinterInfo> info =std::make_shared<PrinterInfo>();
-    service->printerInfoList_[printerId] = info;
-    service->getPrinterInfo(printerId);
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
+    service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0024, TestSize.Level1)
@@ -900,7 +899,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0048, TestSize.Level1)
     state = PrinterState::PRINTER_ADDED;
     service->UpdatePrinterState(printerId, state);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
-    service->printerInfoList_[printerId] = info;
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
     service->UpdatePrinterState(printerId, state);
 }
 
@@ -1044,7 +1043,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0058, TestSize.Level1)
     service->ReportHisysEvent(jobInfo, printerId, subState);
     std::shared_ptr<PrinterInfo> printInfo = std::make_shared<PrinterInfo>();
     printInfo->SetPrinterName("Direct0759");
-    service->printerInfoList_[printerId] = printInfo;
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = printInfo;
     service->ReportHisysEvent(jobInfo, printerId, subState);
     nlohmann::json infoJson;
     infoJson["printerUri"] = "ipp123";
@@ -1227,10 +1226,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069, TestSize.Level1)
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
     PrinterCapability printerCaps;
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
-    service->printerInfoList_["123"] = nullptr;
+    service->printSystemData_.discoveredPrinterInfoList_["123"] = nullptr;
     auto printerInfo = std::make_shared<PrinterInfo>();
-    service->printerInfoList_["456"] = printerInfo;
-    service->printerInfoList_[printerId] = printerInfo;
+    service->printSystemData_.discoveredPrinterInfoList_["456"] = printerInfo;
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
     service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
 }
 
@@ -1475,7 +1474,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084, TestSize.Level1)
     userData->printJobList_[jobId] = printJob;
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
-    service->printerInfoList_[printerId] = printerInfo;
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
     service->CheckAndSendQueuePrintJob(jobId, state, subState);
 }
 
@@ -1505,7 +1504,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0087, TestSize.Level1)
     std::string printerId = "1234";
     service->QueryPrinterCapability(printerId);
     auto printerInfo = std::make_shared<PrinterInfo>();
-    service->printerInfoList_[printerId] = printerInfo;
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
     service->QueryPrinterCapability(printerId);
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_REQUEST_CAP);
@@ -1812,7 +1811,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112, TestSize.Level1)
     userData->queuedJobList_[jobId] = printJob;
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
-    service->printerInfoList_[printerId] = printerInfo;
+    service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
     service->currentUserId_ = 0;
     service->CheckAndSendQueuePrintJob(jobId, state, subState);
 }
@@ -1932,7 +1931,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0126, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerName = "testPrinterName";
-    service->QueryPrinterIdByStandardizeName(printerName);
+    service->printSystemData_.QueryPrinterIdByStandardizeName(printerName);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0127, TestSize.Level1)
@@ -1972,7 +1971,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130, TestSize.Level1)
     
     std::shared_ptr<PrinterInfo> info1 = std::make_shared<PrinterInfo>();
     info1->SetPrinterId(DEFAULT_EXT_PRINTER_ID);
-    service->printerInfoList_[DEFAULT_EXT_PRINTER_ID] = info1;
+    service->printSystemData_.discoveredPrinterInfoList_[DEFAULT_EXT_PRINTER_ID] = info1;
     EXPECT_EQ(service->RemovePrinterFromDiscovery(DEFAULT_EXT_PRINTER_ID), E_PRINT_NONE);
     EXPECT_EQ(service->RemovePrinterFromDiscovery(DEFAULT_EXT_PRINTER_ID), E_PRINT_INVALID_PRINTER);
 }

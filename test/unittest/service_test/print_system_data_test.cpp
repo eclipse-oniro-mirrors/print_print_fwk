@@ -1144,5 +1144,30 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0054, TestSize.Level1)
     EXPECT_EQ(ret, true);
 }
 
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0055, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::string printerId1 = "1";
+    std::string printerId2 = "2";
+    std::string printerName = "name";
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    EXPECT_NE(printerInfo, nullptr);
+    printerInfo->SetPrinterId(printerId1);
+    printerInfo->SetPrinterName(printerName);
+    systemData->AddPrinterToDiscovery(printerInfo);
+    EXPECT_EQ(systemData->GetDiscoveredPrinterCount(), 1);
+    auto discoveredPrinter = systemData->QueryDiscoveredPrinterInfoById(printerId1);
+    EXPECT_NE(discoveredPrinter, nullptr);
+    discoveredPrinter = systemData->QueryDiscoveredPrinterInfoById(printerId2);
+    EXPECT_EQ(discoveredPrinter, nullptr);
+    discoveredPrinter = systemData->QueryDiscoveredPrinterInfoByName(printerName);
+    EXPECT_NE(discoveredPrinter, nullptr);
+    discoveredPrinter = systemData->QueryDiscoveredPrinterInfoByName(printerId2);
+    EXPECT_EQ(discoveredPrinter, nullptr);
+    systemData->RemovePrinterFromDiscovery(printerId1);
+    EXPECT_EQ(systemData->GetDiscoveredPrinterCount(), 0);
+    systemData->ClearDiscoveredPrinterList();
+}
 }  // namespace Print
 }  // namespace OHOS

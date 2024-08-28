@@ -421,7 +421,7 @@ void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
     if ((attrPtr = ippFindAttribute(response, "printer-uuid", IPP_TAG_URI)) != NULL) {
         options["uuid"] = ippGetString(attrPtr, 0, NULL);
     }
-    if ((attrPtr = ippFindAttribute(response, "printer-name", IPP_TAG_TEXT)) != NULL) {
+    if ((attrPtr = ippFindAttribute(response, "printer-name", IPP_TAG_NAME)) != NULL) {
         options["printerName"] = ippGetString(attrPtr, 0, NULL);
     }
     std::string keyword = "media-type-supported";
@@ -471,5 +471,18 @@ void ParsePrinterAttributes(ipp_t *response, PrinterCapability &printerCaps)
     ParseCopiesAttributes(response, printerCaps);
     ParseOtherAttributes(response, printerCaps);
     SetOptionAttribute(response, printerCaps);
+}
+
+bool ParsePrinterStatusAttributes(ipp_t *response, PrinterStatus &status)
+{
+    ipp_attribute_t *attrPtr = ippFindAttribute(response, "printer-state", IPP_TAG_ENUM);
+    if (attrPtr != NULL) {
+        int enumValue = ippGetInteger(attrPtr, 0) - IPP_PSTATE_IDLE;
+        if (enumValue >= PRINTER_STATUS_IDLE && enumValue <= PRINTER_STATUS_UNAVAILABLE) {
+            status = static_cast<PrinterStatus>(enumValue);
+            return true;
+        }
+    }
+    return false;
 }
 }  // namespace OHOS::Print
