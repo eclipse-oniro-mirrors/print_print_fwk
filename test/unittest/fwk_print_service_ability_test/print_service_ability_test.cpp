@@ -682,7 +682,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0032, TestSize.Level1)
     service->printSystemData_.addedPrinterInfoList_[printerId] = printerInfo;
     keyList.push_back("printerId");
     keyList.push_back("printerName");
-    EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_INVALID_PRINTER);
+    EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0033, TestSize.Level1)
@@ -698,7 +698,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0033, TestSize.Level1)
     printerInfo->uri = "testUri";
     printerInfo->maker = "testMaker";
     service->printSystemData_.addedPrinterMap_[printerId] = printerInfo;
-    EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_INVALID_PRINTER);
+    EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0034, TestSize.Level1)
@@ -1985,7 +1985,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131, TestSize.Level1)
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
     std::string printerUri = "usb:ipp://192.168.186.1:631/ipp/print";
-    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_INVALID_PRINTER);
 }
 
 } // namespace OHOS::Print

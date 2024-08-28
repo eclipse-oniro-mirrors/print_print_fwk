@@ -107,7 +107,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0005, TestSize.Level1)
     testPagesize.SetWidth(1);
     pagesize.emplace_back(testPagesize);
     capability.SetSupportedPageSize(pagesize);
-    capability.GetPageSize(getPagesize);
+    capability.GetSupportedPageSize(getPagesize);
     EXPECT_EQ(pagesize.size(), getPagesize.size());
 }
 
