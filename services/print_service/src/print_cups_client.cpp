@@ -1104,23 +1104,15 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     }
     return true;
 }
-void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callback)
+
+void PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId,
+    CallbackFunc callback)
 {
-    http_t *http = nullptr;
-    int num_options = 0;
-    cups_option_t *options = nullptr;
     cups_file_t *fp = nullptr;
-    uint32_t jobId;
     http_status_t status;
     char buffer[8192];
     ssize_t bytes = -1;
 
-    if (!VerifyPrintJob(jobParams, num_options, jobId, options, http)) {
-        callback();
-        return;
-    }
-    uint32_t num_files = jobParams->fdList.size();
-    PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
     for (uint32_t i = 0; i < num_files; i++) {
         if ((fp = cupsFileOpenFd(jobParams->fdList[i], "rb")) == NULL) {
             PRINT_HILOGE("Unable to open print file, cancel the job");
@@ -1148,6 +1140,22 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
             return;
         }
     }
+}
+
+void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callback)
+{
+    http_t *http = nullptr;
+    int num_options = 0;
+    cups_option_t *options = nullptr;
+    uint32_t jobId;
+
+    if (!VerifyPrintJob(jobParams, num_options, jobId, options, http)) {
+        callback();
+        return;
+    }
+    uint32_t num_files = jobParams->fdList.size();
+    PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
+    HandleFiles(jobParams, num_files, http, jobId, callback);
     jobParams->cupsJobId = jobId;
     PRINT_HILOGD("start job success, jobId: %{public}d", jobId);
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam { jobParams->serviceAbility,
