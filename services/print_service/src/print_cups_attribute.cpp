@@ -310,6 +310,10 @@ void ParseMediaColDefaultAttributes(ipp_t *response, PrinterCapability &printerC
         return;
     }
     ipp_t *defaultMediaCol = defaultMediaPtr->values[0].collection;
+    if (defaultMediaCol == nullptr) {
+        PRINT_HILOGW("defaultMediaCol is null");
+        return;
+    }
     std::vector<std::string> keywordList;
     keywordList.push_back("media-top-margin");
     keywordList.push_back("media-bottom-margin");

@@ -127,12 +127,20 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     if (data.ReadBool()) {
         data.ReadStringVector(&fileList);
         PRINT_HILOGD("Current file is %{public}zd", fileList.size());
-        CHECK_IS_EXCEED_PRINT_RANGE_BOOL(fileList.size());
+        if (fileList.size() > PRINT_MAX_PRINT_COUNT) {
+            PRINT_HILOGE("fileList'size is out of range.");
+            reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
+            return false;
+        }
     }
 
     if (data.ReadBool()) {
         int32_t len = data.ReadInt32();
-        CHECK_IS_EXCEED_PRINT_RANGE_BOOL(len);
+        if (len > PRINT_MAX_PRINT_COUNT) {
+            PRINT_HILOGE("len is out of range.");
+            reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
+            return false;
+        }
         for (int32_t index = 0; index < len; index++) {
             uint32_t fd = static_cast<uint32_t>(data.ReadFileDescriptor());
             PRINT_HILOGD("fdList[%{public}d] = %{public}d", index, fd);
@@ -245,7 +253,11 @@ bool PrintServiceStub::OnAddPrinters(MessageParcel &data, MessageParcel &reply)
     }
     PRINT_HILOGD("OnStartDiscoverPrinter len = %{public}d", len);
 
-    CHECK_IS_EXCEED_PRINT_RANGE_BOOL(len);
+    if (len > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("len is out of range.");
+        reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
+        return false;
+    }
     for (uint32_t i = 0; i < len; i++) {
         auto infoPtr = PrinterInfo::Unmarshalling(data);
         if (infoPtr == nullptr) {
@@ -346,7 +358,11 @@ bool PrintServiceStub::OnRemovePrinters(MessageParcel &data, MessageParcel &repl
     data.ReadStringVector(&printerIds);
     PRINT_HILOGD("OnStartDiscoverPrinter len = %{public}zd", printerIds.size());
 
-    CHECK_IS_EXCEED_PRINT_RANGE_BOOL(printerIds.size());
+    if (printerIds.size() > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("printerIds'size is out of range.");
+        reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
+        return false;
+    }
     int32_t ret = RemovePrinters(printerIds);
     reply.WriteInt32(ret);
 
@@ -365,7 +381,11 @@ bool PrintServiceStub::OnUpdatePrinters(MessageParcel &data, MessageParcel &repl
     }
     PRINT_HILOGD("OnUpdatePrinters len = %{public}d", len);
 
-    CHECK_IS_EXCEED_PRINT_RANGE_BOOL(len);
+    if (len > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("len is out of range.");
+        reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
+        return false;
+    }
     for (uint32_t i = 0; i < len; i++) {
         auto infoPtr = PrinterInfo::Unmarshalling(data);
         if (infoPtr == nullptr) {

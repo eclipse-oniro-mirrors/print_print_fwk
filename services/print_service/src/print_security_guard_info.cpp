@@ -51,7 +51,7 @@ void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, co
             }
         }
     }
-    printTypeInfo_.copyNumber = (int32_t)printJob.GetCopyNumber();
+    printTypeInfo_.copyNumber = static_cast<int32_t>(printJob.GetCopyNumber());
     if (json::accept(printJob.GetOption())) {
         json jobOptionJson = json::parse(printJob.GetOption());
         if (jobOptionJson.contains("printPages") && jobOptionJson["printPages"].is_number()) {
@@ -74,6 +74,7 @@ void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, co
             outcome_ = "failed";
             break;
         default:
+            PRINT_HILOGD("PrintSecurityGuardInfo setPrintTypeInfo unknown subState:%{public}d", subState);
             break;
     }
 }

@@ -357,7 +357,6 @@ bool ScanServiceStub::OnGetConnectedScanner(MessageParcel &data, MessageParcel &
 {
     SCAN_HILOGD("ScanServiceStub::OnGetConnectedScanner start");
     std::vector<ScanDeviceInfo> allAddedScanner;
-    allAddedScanner.clear();
     int32_t ret = GetAddedScanner(allAddedScanner);
     reply.WriteInt32(ret);
     if (ret == E_SCAN_NONE) {

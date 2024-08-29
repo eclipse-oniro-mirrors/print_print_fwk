@@ -80,6 +80,7 @@ auto callbackFunction = [](std::vector<ScanDeviceInfo> &infos) {
         SCAN_HILOGW("memset_s fail");
         FreeDeviceListMemory(devices, 0);
         g_discoverCallback(nullptr, 0);
+        return;
     }
     for (int i = 0; i < deviceCount; i++) {
         Scan_ScannerDevice* device = new (std::nothrow) Scan_ScannerDevice();
@@ -276,6 +277,7 @@ bool MemSetScannerOptions(Scan_ScannerOptions* scannerOptions, int32_t &optionCo
             return false;
         }
         scannerOptions->ranges[i] = rangesBuff;
+        delete[] rangesBuff;
     }
     return true;
 }

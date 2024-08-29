@@ -311,11 +311,15 @@ bool PrintUserData::GetFileData(std::string &fileData)
     std::ifstream ifs(PRINT_USER_DATA_FILE.c_str(), std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
         PRINT_HILOGW("open printer list file fail");
-        int32_t fd = open(PRINT_USER_DATA_FILE.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0740);
+        char realPidFile[PATH_MAX] = {};
+        if (realpath(PRINT_USER_DATA_FILE.c_str(), realPidFile) == nullptr) {
+            PRINT_HILOGE("The realPidFile is null.");
+            return E_PRINT_SERVER_FAILURE;
+        }
+        int32_t fd = open(realPidFile, O_CREAT | O_TRUNC | O_RDWR, 0740);
         PRINT_HILOGI("create file fd: %{public}d", fd);
         if (fd < 0) {
             PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-            close(fd);
             return false;
         }
         nlohmann::json userDataJson = nlohmann::json::object();
@@ -357,11 +361,15 @@ bool PrintUserData::SetUserDataToFile()
         jsonObject["print_user_data"][std::to_string(userId_)] = userData;
         std::string temp = jsonObject.dump();
         PRINT_HILOGI("json temp: %{public}s", temp.c_str());
-        int32_t fd = open(PRINT_USER_DATA_FILE.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0740);
+        char realPidFile[PATH_MAX] = {};
+        if (realpath(PRINT_USER_DATA_FILE.c_str(), realPidFile) == nullptr) {
+            PRINT_HILOGE("The realPidFile is null.");
+            return E_PRINT_SERVER_FAILURE;
+        }
+        int32_t fd = open(realPidFile, O_CREAT | O_TRUNC | O_RDWR, 0740);
         PRINT_HILOGI("SetUserDataToFile fd: %{public}d", fd);
         if (fd < 0) {
             PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-            close(fd);
             return false;
         }
         std::string jsonString = jsonObject.dump();

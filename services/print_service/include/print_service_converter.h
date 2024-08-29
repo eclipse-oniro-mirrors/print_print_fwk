@@ -35,9 +35,12 @@ enum ColorModeCode {
     COLOR_MODE_AUTO = 2
 };
 
+const int CONST_VALUE_300 = 300;
+const int CONST_VALUE_120 = 120;
+
 inline int DpcToDpi(int dpc)
 {
-    return dpc * 300 / 120; // 300 DPI = 120 DPC
+    return dpc * CONST_VALUE_300 / CONST_VALUE_120; // 300 DPI = 120 DPC
 }
 
 template <typename T>

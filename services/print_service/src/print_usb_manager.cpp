@@ -150,7 +150,8 @@ std::string PrintUsbManager::QueryPrinterInfoFromStringDescriptor(
     if (isUsbEnable) {
         ret = UsbSrvClient::GetInstance().ControlTransfer(usbDevicePipe, tctrl, bufferData);
     }
-    if (ret != 0 || bufferData[INDEX_0] == 0) {
+    if (ret != 0 || bufferData[INDEX_0] == 0 ||
+        ((bufferData[INDEX_0] - HTTP_COMMON_CONST_VALUE_2) / HTTP_COMMON_CONST_VALUE_2) < 0) {
         PRINT_HILOGE("ControlTransfer failed ret = %{public}d, buffer length = %{public}d", ret, bufferData[0]);
         return "";
     }
@@ -339,7 +340,12 @@ void PrintUsbManager::DealUsbDevStatusChange(const std::string &devStr, bool isA
         PRINT_HILOGE("Create devJson error");
         return;
     }
-    UsbDevice *dev = new UsbDevice(devJson);
+    UsbDevice *dev = new (std::nothrow) UsbDevice(devJson);
+    if (dev == nullptr) {
+        PRINT_HILOGE("Create dev error");
+        cJSON_Delete(devJson);
+        return;
+    }
     if (!isAttach) {
         std::string printerName = GetPrinterName(dev->GetName());
         PRINT_HILOGI("DealUsbDevStatusChange detached dev->GetName() = %{public}s, printerName = %{public}s.",

@@ -219,7 +219,12 @@ bool ScanCallbackProxy::OnGetDevicesList(std::vector<ScanDeviceInfo> &infos)
     for (size_t i = 0; i < infos.size(); i++) {
         infos[i].Marshalling(data);
     }
-    int error = Remote()->SendRequest(SCAN_CALLBACK_DEVICE_LIST, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        SCAN_HILOGE("ScanCallbackProxy::OnGetDevicesList remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(SCAN_CALLBACK_DEVICE_LIST, data, reply, option);
     if (error != 0) {
         SCAN_HILOGE("SendRequest failed, error %{public}d", error);
         return false;

@@ -138,11 +138,7 @@ std::string ScanSystemData::GetNewDeviceId(std::string oldDeviceId, std::string 
 
 void ScanSystemData::FormatUsbPort(std::string &port)
 {
-    for (auto size = port.size(); size < USB_DEVICEID_FIRSTID_LEN_3; size++) {
-        std::string newString = "0";
-        newString.append(port);
-        port = newString;
-    }
+    port.insert(0, USB_DEVICEID_FIRSTID_LEN_3 - port.size(), '0');
 }
 
 bool ScanSystemData::UpdateScannerIdByUsbDevicePort(const std::string &uniqueId, const std::string &usbDevicePort)
@@ -271,7 +267,6 @@ bool ScanSystemData::SaveScannerMap()
     SCAN_HILOGD("SaveScannerMap fd: %{public}d", fd);
     if (fd < 0) {
         SCAN_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-        close(fd);
         return false;
     }
     nlohmann::json scannerMapJson = nlohmann::json::array();
