@@ -82,6 +82,7 @@ public:
 #ifndef TDD_ENABLE
 private:
 #endif
+    int UvQueueWork(uv_loop_s *loop, uv_work_t *work);
     napi_env env_;
     napi_ref ref_;
     std::function<void(std::vector<ScanDeviceInfo> &infos)> callbackFunction_;

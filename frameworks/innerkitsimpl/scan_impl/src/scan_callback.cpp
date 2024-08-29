@@ -38,6 +38,9 @@ ScanCallback::~ScanCallback()
     SCAN_HILOGI("callback has been destroyed");
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
+    if (loop == nullptr) {
+        return;
+    }
     Param *param = new (std::nothrow) Param;
     if (param == nullptr) {
         return;
@@ -50,29 +53,7 @@ ScanCallback::~ScanCallback()
         return;
     }
     work->data = reinterpret_cast<void*>(param);
-    int retVal = uv_queue_work(loop, work, [](uv_work_t *work) {}, [](uv_work_t *work, int _status) {
-        SCAN_HILOGI("uv_queue_work ScanCallback DeleteReference");
-        if (work == nullptr) {
-            return;
-        }
-        Param *param_ = reinterpret_cast<Param*>(work->data);
-        if (param_ == nullptr) {
-            delete work;
-            return;
-        }
-        napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(param_->env, &scope);
-        if (scope == nullptr) {
-            delete param_;
-            delete work;
-            return;
-        }
-        napi_ref callbackRef_ = param_->callbackRef;
-        NapiScanUtils::DeleteReference(param_->env, callbackRef_);
-        napi_close_handle_scope(param_->env, scope);
-        delete param_;
-        delete work;
-    });
+    int retVal = UvQueueWork(loop, work);
     if (retVal != 0) {
         SCAN_HILOGE("Failed to get uv_queue_work.");
         delete param;
@@ -339,5 +320,36 @@ bool ScanCallback::OnGetDevicesList(std::vector<ScanDeviceInfo> &infos)
     }
     callbackFunction_(infos);
     return true;
+}
+
+int ScanCallback::UvQueueWork(uv_loop_s *loop, uv_work_t *work)
+{
+    if (loop == nullptr || work == nullptr) {
+        return -1; // parameter error
+    }
+    int retVal = uv_queue_work(loop, work, [](uv_work_t *work) {}, [](uv_work_t *work, int status) {
+        SCAN_HILOGI("uv_queue_work ScanCallback DeleteReference");
+        if (work == nullptr) {
+            return;
+        }
+        Param *param = reinterpret_cast<Param*>(work->data);
+        if (param == nullptr) {
+            delete work;
+            return;
+        }
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(param->env, &scope);
+        if (scope == nullptr) {
+            delete param;
+            delete work;
+            return;
+        }
+        napi_ref callbackRef = param->callbackRef;
+        NapiScanUtils::DeleteReference(param->env, callbackRef);
+        napi_close_handle_scope(param->env, scope);
+        delete param;
+        delete work;
+    });
+    return retVal;
 }
 } // namespace OHOS::Scan
