@@ -107,18 +107,16 @@ uint32_t PrintTask::Start(napi_env env, napi_callback_info info)
         }
     }
 
-    if (callerToken_ != nullptr && NEW_PRINT_INTERFACE_SWITCH) {
-        PRINT_HILOGI("call client's new StartPrint interface.");
-        std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
-        CreateDefaultAdapterParam(adapterParam);
-        std::string jobId = PrintUtils::GetPrintJobId();
-        adapterParam->jobId = jobId;
-        taskId_ = jobId;
-        uint32_t ret = CallSpooler(env, info, adapterParam, false);
-        if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("CallSpooler failed.");
-            return ret;
-        }
+    PRINT_HILOGI("call client's StartPrint interface.");
+    std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
+    CreateDefaultAdapterParam(adapterParam);
+    std::string jobId = PrintUtils::GetPrintJobId();
+    adapterParam->jobId = jobId;
+    taskId_ = jobId;
+    uint32_t ret = CallSpooler(env, info, adapterParam, false);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("CallSpooler failed.");
+        return ret;
     }
     return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_);
 }
@@ -264,7 +262,6 @@ void PrintTask::StartUIExtensionAbility(
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_PID, callerPid);
     want.SetParam(CALLER_PKG_NAME, callerPkg);
     want.SetParam(UI_EXTENSION_TYPE_NAME, PRINT_UI_EXTENSION_TYPE);
-    want.SetParam(TOKEN_KEY, callerToken_);
 
     StartUIExtensionAbility(want, asyncContext);
     PRINT_HILOGD("end StartUIExtensionAbility");
