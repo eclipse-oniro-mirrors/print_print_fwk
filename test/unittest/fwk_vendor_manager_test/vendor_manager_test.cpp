@@ -73,6 +73,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0002, TestSize.Level1)
 {
     VendorManager vendorManager;
     EXPECT_TRUE(vendorManager.Init(nullptr, false));
+    EXPECT_TRUE(vendorManager.Init(nullptr, false));
     ThreadSyncWait syncWait;
     vendorManager.StartDiscovery();
     syncWait.Wait(WAIT_TIME_MS);
@@ -101,6 +102,10 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0003, TestSize.Level1)
     EXPECT_FALSE(vendorManager.ConnectPrinterByIp(PRINTER_TEST_IP, "ipp"));
     syncWait.Wait(WAIT_TIME_MS);
     vendorManager.StopStatusMonitor();
+    EXPECT_FALSE(vendorManager.ConnectPrinterByIp("test", ""));
+    EXPECT_FALSE(vendorManager.QueryPrinterInfo("vendor:test", 0));
+    EXPECT_FALSE(vendorManager.QueryPrinterInfo("test:", 0));
+    EXPECT_FALSE(vendorManager.QueryPrinterInfo(":test", 0));
     syncWait.Wait(WAIT_TIME_MS);
     vendorManager.UnInit();
 }
@@ -128,10 +133,12 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0004, TestSize.Level2)
     vendorManager.MonitorPrinterStatus(globalPrinterId, true);
     syncWait.Wait(WAIT_TIME_MS);
     EXPECT_CALL(mock, QueryPrinterCapabilityByUri(_, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(mock, QueryPrinterStatusByUri(_, _)).WillRepeatedly(Return(true));
     EXPECT_TRUE(vendorManager.ConnectPrinterByIp(PRINTER_TEST_IP, "ipp"));
     EXPECT_FALSE(vendorManager.ConnectPrinter(PRINTER_TEST_IP));
     EXPECT_TRUE(vendorManager.ConnectPrinter(globalPrinterId));
     EXPECT_TRUE(vendorManager.QueryPrinterInfo(globalPrinterId, 0));
+    vendorManager.UpdateAllPrinterStatus();
     vendorManager.MonitorPrinterStatus(globalPrinterId, false);
     vendorManager.MonitorPrinterStatus(globalPrinterId, false);
     syncWait.Wait(WAIT_TIME_MS);

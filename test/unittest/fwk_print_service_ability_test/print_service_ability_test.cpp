@@ -1988,4 +1988,74 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_INVALID_PRINTER);
 }
 
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0132, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_TRUE(service->RemoveVendorPrinterFromDiscovery(vendorName, printerId));
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    PrinterInfo info;
+    PrinterInfo info2;
+    info.SetPrinterId(printerId);
+    std::string globalId = VendorManager::GetGlobalPrinterId(vendorName, printerId);
+    EXPECT_EQ(service->QueryVendorPrinterInfo(globalId, info2), E_PRINT_INVALID_PRINTER);
+    EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_EQ(service->QueryVendorPrinterInfo(globalId, info2), E_PRINT_INVALID_PRINTER);
+    EXPECT_TRUE(service->RemoveVendorPrinterFromDiscovery(vendorName, printerId));
+    PrinterCapability cap;
+    info.SetCapability(cap);
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_EQ(service->QueryVendorPrinterInfo(globalId, info2), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0134, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    std::string ppdData;
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    EXPECT_FALSE(service->RemoveVendorPrinterFromCups(vendorName, printerId));
+    EXPECT_FALSE(service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdData));
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_FALSE(service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdData));
+    PrinterCapability cap;
+    info.SetCapability(cap);
+    EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_FALSE(service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdData));
+    info.SetUri("uri");
+    EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_FALSE(service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdData));
+    info.SetPrinterMake("maker");
+    EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
+    service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdData);
+    ppdData = "ppd";
+    service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdData);
+    service->RemoveVendorPrinterFromCups(vendorName, printerId);
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0135, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->TryConnectPrinterByIp(""), E_PRINT_INVALID_PRINTER);
+    std::string param = "{\"protocol\":\"ipp\"}";
+    EXPECT_EQ(service->TryConnectPrinterByIp(param), E_PRINT_INVALID_PRINTER);
+    param = "{\"protocol\":\"ipp\",\"ip\":\"a.b.c.d\"}";
+    EXPECT_EQ(service->TryConnectPrinterByIp(param), E_PRINT_SERVER_FAILURE);
+}
 } // namespace OHOS::Print

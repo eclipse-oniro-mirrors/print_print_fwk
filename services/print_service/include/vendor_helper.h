@@ -33,6 +33,14 @@ void LogPageCapability(const Print_PrinterCapability *capability);
 void LogOtherCapability(const Print_PrinterCapability *capability);
 void LogDefaultValue(const Print_DefaultValue *defaultValue);
 void LogProperties(const Print_PropertyList *propertyList);
+bool UpdateResolutionDefaultValue(PrinterCapability &printerCap, const Print_DefaultValue *defaultValue);
+bool UpdateCopiesCapability(PrinterCapability &printerCap, const Print_PrinterCapability *capability,
+                            const Print_DefaultValue *defaultValue);
+bool UpdateOrientationCapability(PrinterCapability &printerCap, const Print_PrinterCapability *capability,
+                                 const Print_DefaultValue *defaultValue);
+bool UpdateMediaCapability(PrinterCapability &printerCap, const Print_PrinterCapability *capability,
+                           const Print_DefaultValue *defaultValue);
+bool UpdateMarginCapability(PrinterCapability &printerCap, const Print_DefaultValue *defaultValue);
 std::string FindPropertyFromPropertyList(const Print_PropertyList *propertyList, const std::string &keyName);
 bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem);
 bool UpdatePrinterInfoWithCapability(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem,

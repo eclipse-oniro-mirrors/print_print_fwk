@@ -87,18 +87,9 @@ bool VendorIppEveryWhere::OnQueryProperties(const std::string &printerId, const 
 void VendorIppEveryWhere::QueryCapabilityByUri(const std::string &uri)
 {
     PRINT_HILOGI("QueryCapabilityByUri enter");
-    if (vendorManager == nullptr) {
-        PRINT_HILOGW("vendorManager is null");
-        return;
-    }
     auto printerInfo = QueryPrinterInfoByUri(uri);
-    if (printerInfo == nullptr) {
-        PRINT_HILOGW("QueryPrinterInfoByUri fail");
-        return;
-    }
-    PRINT_HILOGI("get printer info success");
-    if (vendorManager->UpdatePrinterToDiscovery(GetVendorName(), *printerInfo) != EXTENSION_ERROR_NONE) {
-        PRINT_HILOGW("UpdatePrinterToDiscovery fail");
+    if (!UpdateCapability(printerInfo)) {
+        PRINT_HILOGW("update capability fail");
         return;
     }
     PRINT_HILOGI("QueryCapabilityByUri quit");
@@ -107,27 +98,54 @@ void VendorIppEveryWhere::QueryCapabilityByUri(const std::string &uri)
 void VendorIppEveryWhere::ConnectPrinterByUri(const std::string &uri)
 {
     PRINT_HILOGI("ConnectPrinterByUri enter");
-    if (vendorManager == nullptr) {
-        PRINT_HILOGW("vendorManager is null");
+    auto printerInfo = QueryPrinterInfoByUri(uri);
+    if (!ConnectPrinter(printerInfo)) {
+        PRINT_HILOGW("connect fail");
         return;
     }
-    auto printerInfo = QueryPrinterInfoByUri(uri);
+    PRINT_HILOGI("ConnectPrinterByUri quit");
+}
+
+bool VendorIppEveryWhere::UpdateCapability(std::shared_ptr<PrinterInfo> printerInfo)
+{
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return false;
+    }
     if (printerInfo == nullptr) {
-        PRINT_HILOGW("ConvertCapabilityToInfo fail");
-        return;
+        PRINT_HILOGW("printerInfo fail");
+        return false;
     }
     PRINT_HILOGI("get printer info success");
     if (vendorManager->UpdatePrinterToDiscovery(GetVendorName(), *printerInfo) != EXTENSION_ERROR_NONE) {
         PRINT_HILOGW("UpdatePrinterToDiscovery fail");
-        return;
+        return false;
+    }
+    return true;
+}
+
+bool VendorIppEveryWhere::ConnectPrinter(std::shared_ptr<PrinterInfo> printerInfo)
+{
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return false;
+    }
+    if (printerInfo == nullptr) {
+        PRINT_HILOGW("printer info fail");
+        return false;
+    }
+    PRINT_HILOGI("get printer info success");
+    if (vendorManager->UpdatePrinterToDiscovery(GetVendorName(), *printerInfo) != EXTENSION_ERROR_NONE) {
+        PRINT_HILOGW("UpdatePrinterToDiscovery fail");
+        return false;
     }
     PRINT_HILOGI("UpdatePrinterToDiscovery success");
     if (vendorManager->AddPrinterToCupsWithPpd(GetVendorName(), printerInfo->GetPrinterId(), "") !=
         EXTENSION_ERROR_NONE) {
         PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
-        return;
+        return false;
     }
-    PRINT_HILOGI("ConnectPrinterByUri quit");
+    return true;
 }
 
 std::shared_ptr<PrinterInfo> VendorIppEveryWhere::QueryPrinterInfoByUri(const std::string &uri)
