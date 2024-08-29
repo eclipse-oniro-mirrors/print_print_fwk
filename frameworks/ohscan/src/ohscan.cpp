@@ -228,7 +228,7 @@ Scan_ScannerOptions* CreateScannerOptions(int32_t &optionCount)
 
 bool CopySingleBuf(char* destBuf, const char* srcBuf, size_t bufferSize)
 {
-    if (destBuf == nullptr) {
+    if (destBuf == nullptr || srcBuf == nullptr) {
         SCAN_HILOGW("CopySingleBuf new fail");
         return false;
     }
@@ -236,8 +236,7 @@ bool CopySingleBuf(char* destBuf, const char* srcBuf, size_t bufferSize)
         SCAN_HILOGE("CopySingleBuf memset_s fail");
         return false;
     }
-    errno_t err = strncpy_s(destBuf, bufferSize, srcBuf, bufferSize);
-    if (err != 0) {
+    if (strncpy_s(destBuf, bufferSize, srcBuf, bufferSize) != 0) {
         SCAN_HILOGE("CopySingleBuf strncpy_s fail");
         return false;
     }
@@ -250,25 +249,27 @@ bool MemSetScannerOptions(Scan_ScannerOptions* scannerOptions, int32_t &optionCo
     for (int i = 0; i < optionCount; i++) {
         auto bufferSize = paraTable.titBuff[i].length() + 1;
         char* titBuff = new(std::nothrow) char[bufferSize];
-        if (CopySingleBuf(titBuff, paraTable.titBuff[i].c_str(), bufferSize)) {
+        if (!CopySingleBuf(titBuff, paraTable.titBuff[i].c_str(), bufferSize)) {
             if (titBuff != nullptr) {
                 delete[] titBuff;
             }
             return false;
         }
         scannerOptions->titles[i] = titBuff;
+
         bufferSize = paraTable.desBuff[i].length() + 1;
         char* desBuff = new (std::nothrow) char[bufferSize];
-        if (CopySingleBuf(desBuff, paraTable.desBuff[i].c_str(), bufferSize)) {
+        if (!CopySingleBuf(desBuff, paraTable.desBuff[i].c_str(), bufferSize)) {
             if (desBuff != nullptr) {
                 delete[] desBuff;
             }
             return false;
         }
         scannerOptions->descriptions[i] = desBuff;
+
         bufferSize = paraTable.rangesBuff[i].length() + 1;
         char* rangesBuff = new (std::nothrow) char[bufferSize];
-        if (CopySingleBuf(rangesBuff, paraTable.rangesBuff[i].c_str(), bufferSize)) {
+        if (!CopySingleBuf(rangesBuff, paraTable.rangesBuff[i].c_str(), bufferSize)) {
             if (rangesBuff != nullptr) {
                 delete[] rangesBuff;
             }
