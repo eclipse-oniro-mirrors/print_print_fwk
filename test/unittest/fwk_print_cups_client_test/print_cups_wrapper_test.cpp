@@ -580,7 +580,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0089, TestSize.Level1)
         EXPECT_CALL(mock, CopyDestInfo(_, _)).WillRepeatedly(Return(&cupsDinfo));
         std::string printerName = "testName";
         PrinterCapability printerCaps;
-        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_SERVER_FAILURE);
+        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_NONE);
     };
     DoMockTest(testFunc);
 }

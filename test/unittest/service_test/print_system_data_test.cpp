@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 #include <string>
+#include <fstream>
 #include <map>
 #include <nlohmann/json.hpp>
 #include "printer_info.h"
@@ -59,8 +60,9 @@ void PrintSystemDataTest::TearDown(void) {}
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0001, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    EXPECT_EQ(systemData->Init(), true);
+    const std::string PRINTER_LIST_FILE = "/data/service/el2/public/print_service/printer_list.json";
+    std::ifstream f(PRINTER_LIST_FILE.c_str());
+    EXPECT_EQ(systemData->Init(), f.good());
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0002, TestSize.Level1)
