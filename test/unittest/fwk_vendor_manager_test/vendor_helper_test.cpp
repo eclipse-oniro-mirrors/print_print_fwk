@@ -71,7 +71,8 @@ static void BuildCapability(Print_PrinterCapability &capability)
     static Print_ColorMode colorModes[] = {COLOR_MODE_MONOCHROME, COLOR_MODE_COLOR};
     static Print_DuplexMode duplexModes[] = {DUPLEX_MODE_ONE_SIDED, DUPLEX_MODE_TWO_SIDED_SHORT_EDGE};
     static Print_PageSize pageSizes[] = {{"ISO_A4", "iso_a4_210x297mm", ISO_A4_WIDTH, ISO_A4_HEIGHT},
-        {"ISO_A3", "iso_a3_297x420mm", ISO_A3_WIDTH, ISO_A3_HEIGHT}};
+        {"ISO_A3", "iso_a3", ISO_A3_WIDTH, ISO_A3_HEIGHT},
+        {"ISO_A4", "iso_a4", ISO_A4_WIDTH, ISO_A4_HEIGHT}};
     static Print_Quality qualities[] = {Print_Quality::PRINT_QUALITY_DRAFT, Print_Quality::PRINT_QUALITY_HIGH};
     static Print_Resolution resolutions[] = {{DPI_A, DPI_A}, {DPI_B, DPI_B}};
     static Print_OrientationMode orientations[] = {ORIENTATION_MODE_PORTRAIT, ORIENTATION_MODE_NONE};
@@ -79,7 +80,7 @@ static void BuildCapability(Print_PrinterCapability &capability)
     capability.supportedColorModes = colorModes;
     capability.supportedDuplexModesCount = DEFAULT_COUNT;
     capability.supportedDuplexModes = duplexModes;
-    capability.supportedPageSizesCount = DEFAULT_COUNT;
+    capability.supportedPageSizesCount = DEFAULT_COUNT + 1;
     capability.supportedPageSizes = pageSizes;
     capability.supportedMediaTypes = "{\"a\",\"b\",\"c\"}";
     capability.supportedQualitiesCount = DEFAULT_COUNT;
@@ -233,6 +234,21 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0010, TestSize.Level1)
     EXPECT_TRUE(ConvertStringVectorToStringList(stringVector, list));
     EXPECT_EQ(list.count, stringVector.size());
     ReleaseStringList(list);
+}
+
+HWTEST_F(VendorHelperTest, VendorHelperTest_0011, TestSize.Level1)
+{
+    PrinterCapability printerCap;
+    Print_PrinterCapability capability = {0};
+    BuildCapability(capability);
+    EXPECT_FALSE(UpdateResolutionDefaultValue(printerCap, nullptr));
+    EXPECT_FALSE(UpdateCopiesCapability(printerCap, nullptr, nullptr));
+    EXPECT_FALSE(UpdateCopiesCapability(printerCap, &capability, nullptr));
+    EXPECT_FALSE(UpdateOrientationCapability(printerCap, nullptr, nullptr));
+    EXPECT_FALSE(UpdateOrientationCapability(printerCap, &capability, nullptr));
+    EXPECT_FALSE(UpdateMediaCapability(printerCap, nullptr, nullptr));
+    EXPECT_FALSE(UpdateMediaCapability(printerCap, &capability, nullptr));
+    EXPECT_FALSE(UpdateMarginCapability(printerCap, nullptr));
 }
 } // namespace Print
 } // namespace OHOS

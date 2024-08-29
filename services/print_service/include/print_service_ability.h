@@ -35,12 +35,13 @@
 #include "print_user_data.h"
 #include "print_system_data.h"
 #include "print_attribute_preference.h"
+#include "vendor_manager.h"
 
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 class IKeyguardStateCallback;
 
-class PrintServiceAbility : public SystemAbility, public PrintServiceStub {
+class PrintServiceAbility : public SystemAbility, public PrintServiceStub, public IPrintServiceAbility {
     DECLARE_SYSTEM_ABILITY(PrintServiceAbility);
 
 public:
@@ -189,6 +190,21 @@ private:
     int32_t AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
     bool UpdateSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
     bool RemoveSinglePrinterInfo(const std::string &printerId);
+public:
+    bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
+    bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
+    bool RemoveVendorPrinterFromDiscovery(const std::string &globalVendorName, const std::string &printerId) override;
+    bool AddVendorPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
+        const std::string &ppdData) override;
+    bool RemoveVendorPrinterFromCups(const std::string &vendorName, const std::string &printerId) override;
+    bool OnVendorStatusUpdate(const std::string &globalVendorName, const std::string &printerId,
+        const PrinterVendorStatus &status) override;
+    bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) override;
+    bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
+private:
+    int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
+    int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
+    int32_t TryConnectPrinterByIp(const std::string &params);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
@@ -230,6 +246,7 @@ private:
     uint32_t printAppCount_;
     uint32_t unloadCount_;
     std::map<std::string, std::string> printerIdAndPreferenceMap_;
+    VendorManager vendorManager;
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_SYSTEM_ABILITY_H

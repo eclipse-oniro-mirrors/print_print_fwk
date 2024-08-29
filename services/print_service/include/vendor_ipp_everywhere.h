@@ -43,6 +43,8 @@ private:
     std::shared_ptr<PrinterInfo> ConvertCapabilityToInfo(const PrinterCapability &printerCap,
         const std::string &printerUri);
     void QueryPrinterStatusByUri(const std::string &uri);
+    bool UpdateCapability(std::shared_ptr<PrinterInfo> printerInfo);
+    bool ConnectPrinter(std::shared_ptr<PrinterInfo> printerInfo);
 
 private:
     OperationQueue opQueue;
