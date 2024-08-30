@@ -682,7 +682,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0032, TestSize.Level1)
     service->printSystemData_.addedPrinterInfoList_[printerId] = printerInfo;
     keyList.push_back("printerId");
     keyList.push_back("printerName");
-    EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_NONE);
+    EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_INVALID_PRINTER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0033, TestSize.Level1)

@@ -203,6 +203,7 @@ public:
     bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
 private:
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
+    int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
     int32_t TryConnectPrinterByIp(const std::string &params);
 
