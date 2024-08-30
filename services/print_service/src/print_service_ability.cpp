@@ -678,12 +678,13 @@ int32_t PrintServiceAbility::QueryPrinterProperties(const std::string &printerId
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGD("printerId %{public}s", printerId.c_str());
-    auto printerInfo = printSystemData_.QueryPrinterInfoByPrinterId(printerId);
-    if (printerInfo == nullptr) {
+    PrinterInfo printerInfo;
+    uint32_t ret = QueryPrinterInfoByPrinterId(printerId, printerInfo);
+    if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("no printerInfo");
         return E_PRINT_INVALID_PRINTER;
     }
-    PRINT_HILOGD("printerInfo %{public}s", printerInfo->GetPrinterName().c_str());
+    PRINT_HILOGD("printerInfo %{public}s", printerInfo.GetPrinterName().c_str());
     for (auto &key : keyList) {
         PRINT_HILOGD("QueryPrinterProperties key %{public}s", key.c_str());
         if (key == "printerPreference") {
@@ -1136,36 +1137,10 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     if (nativePrintJob == nullptr) {
         return E_PRINT_SERVER_FAILURE;
     }
-    auto printerId = nativePrintJob->GetPrinterId();
-    auto extensionId = PrintUtils::GetExtensionId(printerId);
-    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
-    if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
-        return E_PRINT_SERVER_FAILURE;
-    }
     UpdateQueuedJobList(jobId, nativePrintJob);
+    auto printerId = nativePrintJob->GetPrinterId();
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-#ifdef CUPS_ENABLE
-    if (cid.find(PRINT_EXTENSION_BUNDLE_NAME) == string::npos) {
-    NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
-    DelayedSingleton<PrintCupsClient>::GetInstance()->AddCupsPrintJob(printJob);
-    CallStatusBar();
-    return E_PRINT_NONE;
-    }
-#endif // CUPS_ENABLE
-    auto cbFunc = extCallbackMap_[cid];
-    auto callback = [=]() {
-        if (cbFunc != nullptr) {
-            StartPrintJobCB(jobId, nativePrintJob);
-            cbFunc->OnCallback(*nativePrintJob);
-            CallStatusBar();
-        }
-    };
-    if (helper_->IsSyncMode()) {
-        callback();
-    } else {
-        serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
-    }
-    return E_PRINT_NONE;
+    return StartPrintJobInternal(nativePrintJob);
 }
 
 int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
@@ -1183,41 +1158,11 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     }
     auto jobId = jobInfo.GetJobId();
     auto printerId = jobInfo.GetPrinterId();
-    auto extensionId = PrintUtils::GetExtensionId(printerId);
-    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
-    if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
-        return E_PRINT_SERVER_FAILURE;
-    }
     auto printJob = std::make_shared<PrintJob>();
-    if (printJob == nullptr) {
-        PRINT_HILOGE("create printJob failed.");
-        return E_PRINT_SERVER_FAILURE;
-    }
     printJob->UpdateParams(jobInfo);
     UpdateQueuedJobList(jobId, printJob);
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-#ifdef CUPS_ENABLE
-    if (cid.find(PRINT_EXTENSION_BUNDLE_NAME) == string::npos) {
-        NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
-        DelayedSingleton<PrintCupsClient>::GetInstance()->AddCupsPrintJob(jobInfo);
-        CallStatusBar();
-        return E_PRINT_NONE;
-    }
-#endif  // CUPS_ENABLE
-    auto cbFunc = extCallbackMap_[cid];
-    auto callback = [=]() {
-        if (cbFunc != nullptr) {
-            StartPrintJobCB(jobId, printJob);
-            cbFunc->OnCallback(*printJob);
-            CallStatusBar();
-        }
-    };
-    if (helper_->IsSyncMode()) {
-        callback();
-    } else {
-        serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
-    }
-    return E_PRINT_NONE;
+    return StartPrintJobInternal(printJob);
 }
 
 bool PrintServiceAbility::CheckPrintJob(PrintJob &jobInfo)
@@ -3331,7 +3276,41 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
     return E_PRINT_NONE;
 }
 
-
+int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob)
+{
+    if (printJob == nullptr) {
+        PRINT_HILOGW("printJob is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    if (isEprint(printJob->GetPrinterId())) {
+        auto extensionId = PrintUtils::GetExtensionId(printJob->GetPrinterId());
+        std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
+        auto cbIter = extCallbackMap_.find(cid);
+        if (cbIter == extCallbackMap_.end()) {
+            return E_PRINT_SERVER_FAILURE;
+        }
+        auto cbFunc = cbIter->second;
+        auto callback = [=]() {
+            if (cbFunc != nullptr) {
+                StartPrintJobCB(printJob->GetJobId(), printJob);
+                cbFunc->OnCallback(*printJob);
+                CallStatusBar();
+            }
+        };
+        if (helper_->IsSyncMode()) {
+            callback();
+        } else {
+            serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
+        }
+    } else {
+#ifdef CUPS_ENABLE
+        NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
+        DelayedSingleton<PrintCupsClient>::GetInstance()->AddCupsPrintJob(*printJob);
+        CallStatusBar();
+#endif  // CUPS_ENABLE
+    }
+    return E_PRINT_NONE;
+}
 int32_t PrintServiceAbility::QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info)
 {
     auto discoveredInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
