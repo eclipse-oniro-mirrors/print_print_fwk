@@ -129,7 +129,8 @@ PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCrea
       helper_(nullptr),
       isJobQueueBlocked_(false),
       currentUserId_(-1),
-      printAppCount_(0)
+      printAppCount_(0),
+      unloadCount_(0)
 {}
 
 PrintServiceAbility::~PrintServiceAbility()

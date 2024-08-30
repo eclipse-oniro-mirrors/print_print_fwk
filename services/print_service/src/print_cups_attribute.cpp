@@ -202,7 +202,12 @@ void ParseQualityAttributes(ipp_t *response, PrinterCapability &printerCaps)
     std::vector<uint32_t> list;
     for (int i = 0; i < ippGetCount(attrPtr); i++) {
         nlohmann::json jsonObject;
-        uint32_t value = ippGetInteger(attrPtr, i);
+        int quality = ippGetInteger(attrPtr, i);
+        if (quality < 0) {
+            PRINT_HILOGE("%{public}s meet error quality", keyword.c_str());
+            continue;
+        }
+        uint32_t value = static_cast<uint32_t>(quality);
         jsonObject["quality"] = value;
         supportedQualities.push_back(jsonObject);
         list.emplace_back(value);
