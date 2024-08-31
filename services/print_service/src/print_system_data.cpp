@@ -89,7 +89,7 @@ bool PrintSystemData::ParsePrinterListJsonV1(nlohmann::json &jsonObject)
 
 bool PrintSystemData::Init()
 {
-    addedPrinterMap_.clear();
+    addedPrinterMap_.Clear();
     nlohmann::json jsonObject;
     if (!GetJsonObjectFromFile(jsonObject, PRINTER_LIST_FILE)) {
         PRINT_HILOGW("get json from file fail");
@@ -138,19 +138,19 @@ void PrintSystemData::InsertCupsPrinter(
     if (addedPrinterOrderList_.size()) {
         orderId = addedPrinterOrderList_.rbegin()->first;
     }
-    auto iter = addedPrinterMap_.find(printerId);
-    if (iter == addedPrinterMap_.end() || iter->second == nullptr) {
+    auto info = addedPrinterMap_.Find(printerId);
+    if (info == nullptr) {
         PRINT_HILOGI("insert new printer");
-        addedPrinterMap_[printerId] = std::make_shared<CupsPrinterInfo>(printerInfo);
+        addedPrinterMap_.Insert(printerId, printerInfo);
     } else {
         PRINT_HILOGI("update exist printer");
-        iter->second->name = printerInfo.name;
-        iter->second->uri = printerInfo.uri;
-        iter->second->maker = printerInfo.maker;
-        iter->second->printerStatus = printerInfo.printerStatus;
-        iter->second->alias = printerInfo.alias;
+        info->name = printerInfo.name;
+        info->uri = printerInfo.uri;
+        info->maker = printerInfo.maker;
+        info->printerStatus = printerInfo.printerStatus;
+        info->alias = printerInfo.alias;
         if (needUpdateCaps) {
-            iter->second->printerCapability = printerInfo.printerCapability;
+            info->printerCapability = printerInfo.printerCapability;
         }
     }
     if (needUpdateCaps) {
@@ -171,7 +171,7 @@ void PrintSystemData::DeleteCupsPrinter(const std::string &printerId)
 {
     if (!printerId.empty()) {
         PRINT_HILOGI("DeleteCupsPrinter printerId: %{public}s", printerId.c_str());
-        addedPrinterMap_.erase(printerId);
+        addedPrinterMap_.Remove(printerId);
         for (auto printer: addedPrinterOrderList_) {
             if (!strcmp(printerId.c_str(), printer.second.c_str())) {
                 addedPrinterOrderList_.erase(printer.first);
@@ -198,16 +198,12 @@ bool PrintSystemData::SaveCupsPrinterMap()
     }
     nlohmann::json printerMapJson = nlohmann::json::array();
     for (auto printer : addedPrinterOrderList_) {
-        auto iter = addedPrinterMap_.find(printer.second);
-        if (iter == addedPrinterMap_.end()) {
-            continue;
-        }
-        auto info = iter->second;
+        auto info = addedPrinterMap_.Find(printer.second);
         if (info == nullptr) {
             continue;
         }
         nlohmann::json printerJson = nlohmann::json::object();
-        printerJson["id"] = iter->first;
+        printerJson["id"] = printer.second;
         printerJson["name"] = info->name;
         printerJson["uri"] = info->uri;
         printerJson["maker"] = info->maker;
@@ -233,38 +229,25 @@ bool PrintSystemData::SaveCupsPrinterMap()
 
 std::string PrintSystemData::QueryPrinterIdByStandardizeName(const std::string &printerName)
 {
-    for (auto iter = addedPrinterMap_.begin(); iter != addedPrinterMap_.end(); ++iter) {
-        auto info = iter->second;
-        if (info == nullptr) {
-            continue;
-        }
-        std::string name = PrintUtil::StandardizePrinterName(info->name);
-        if (name == PrintUtil::StandardizePrinterName(printerName)) {
-            PRINT_HILOGD("printerId: %{public}s", iter->first.c_str());
-            return iter->first;
-        }
-    }
-    return "";
+    std::string stardardizeName = PrintUtil::StandardizePrinterName(printerName);
+    return addedPrinterMap_.FindKey([this, stardardizeName](const CupsPrinterInfo &cupsPrinter) -> bool {
+        return PrintUtil::StandardizePrinterName(cupsPrinter.name) == stardardizeName;
+    });
 }
 
 bool PrintSystemData::QueryCupsPrinterInfoByPrinterId(const std::string &printerId, CupsPrinterInfo &cupsPrinter)
 {
-    for (auto iter = addedPrinterMap_.begin(); iter != addedPrinterMap_.end(); ++iter) {
-        auto info = iter->second;
-        if (info == nullptr) {
-            continue;
-        }
-        if (printerId == iter->first) {
-            cupsPrinter.name = info->name;
-            cupsPrinter.uri = info->uri;
-            cupsPrinter.maker = info->maker;
-            cupsPrinter.printerCapability = info->printerCapability;
-            cupsPrinter.printerStatus = info->printerStatus;
-            cupsPrinter.alias = info->alias;
-            return true;
-        }
+    auto info = addedPrinterMap_.Find(printerId);
+    if (info == nullptr) {
+        return false;
     }
-    return false;
+    cupsPrinter.name = info->name;
+    cupsPrinter.uri = info->uri;
+    cupsPrinter.maker = info->maker;
+    cupsPrinter.printerCapability = info->printerCapability;
+    cupsPrinter.printerStatus = info->printerStatus;
+    cupsPrinter.alias = info->alias;
+    return true;
 }
 
 void PrintSystemData::QueryPrinterInfoById(const std::string &printerId, PrinterInfo &printerInfo)
@@ -289,20 +272,20 @@ void PrintSystemData::QueryPrinterInfoById(const std::string &printerId, Printer
 
 void PrintSystemData::UpdatePrinterStatus(const std::string& printerId, PrinterStatus printerStatus)
 {
-    auto iter = addedPrinterMap_.find(printerId);
-    if (iter != addedPrinterMap_.end() && iter->second != nullptr) {
-        iter->second->printerStatus = printerStatus;
-        PRINT_HILOGI("UpdatePrinterStatus success, status: %{public}d", iter->second->printerStatus);
+    auto info = addedPrinterMap_.Find(printerId);
+    if (info != nullptr) {
+        info->printerStatus = printerStatus;
+        PRINT_HILOGI("UpdatePrinterStatus success, status: %{public}d", info->printerStatus);
     }
 }
 
 bool PrintSystemData::UpdatePrinterAlias(const std::string& printerId, const std::string& printerAlias)
 {
-    auto iter = addedPrinterMap_.find(printerId);
-    if (iter != addedPrinterMap_.end() && iter->second != nullptr) {
-        if (iter->second->alias != printerAlias) {
-            iter->second->alias = printerAlias;
-            PRINT_HILOGI("UpdatePrinterAlias success, alias: %{public}s", iter->second->alias.c_str());
+    auto info = addedPrinterMap_.Find(printerId);
+    if (info != nullptr) {
+        if (info->alias != printerAlias) {
+            info->alias = printerAlias;
+            PRINT_HILOGI("UpdatePrinterAlias success, alias: %{public}s", info->alias.c_str());
             return true;
         }
         PRINT_HILOGW("Alias is the same, no update needed.");
@@ -333,11 +316,7 @@ std::shared_ptr<PrinterInfo> PrintSystemData::QueryPrinterInfoByPrinterId(const 
 void PrintSystemData::GetAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList)
 {
     for (auto it = addedPrinterOrderList_.rbegin(); it != addedPrinterOrderList_.rend(); ++it) {
-        auto addedPrinterIter = addedPrinterMap_.find(it->second);
-        if (addedPrinterIter == addedPrinterMap_.end()) {
-            continue;
-        }
-        auto info = addedPrinterIter->second;
+        auto info = addedPrinterMap_.Find(it->second);
         if (info == nullptr) {
             continue;
         }
@@ -348,8 +327,8 @@ void PrintSystemData::GetAddedPrinterListFromSystemData(std::vector<std::string>
 
 bool PrintSystemData::IsPrinterAdded(const std::string &printerId)
 {
-    auto iter = addedPrinterMap_.find(printerId);
-    if (iter == addedPrinterMap_.end() || iter->second == nullptr) {
+    auto info = addedPrinterMap_.Find(printerId);
+    if (info == nullptr) {
         return false;
     }
     return true;
@@ -811,11 +790,7 @@ bool PrintSystemData::ParseUserListJsonV1(nlohmann::json &jsonObject, std::vecto
 
 std::vector<std::string> PrintSystemData::QueryAddedPrinterIdList()
 {
-    std::vector<std::string> printerIdList;
-    for (auto const &pair : addedPrinterMap_) {
-        printerIdList.push_back(pair.first);
-    }
-    return printerIdList;
+    return addedPrinterMap_.GetKeyList();
 }
 
 std::shared_ptr<PrinterInfo> PrintSystemData::QueryDiscoveredPrinterInfoById(const std::string &printerId)
