@@ -25,8 +25,6 @@ namespace OHOS::Print {
 #define PRINT_CALLBACK_ADAPTER "printCallback_adapter"
 #define PRINT_GET_FILE_CALLBACK_ADAPTER "getPrintFileCallback_adapter"
 
-#define NEW_PRINT_INTERFACE_SWITCH true
-
 #define PRINT_ASSERT_BASE(env, assertion, message, retVal)  \
     do {                                                    \
         if (!(assertion)) {                                 \
