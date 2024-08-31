@@ -101,6 +101,8 @@ uint32_t PrintTask::Start(napi_env env, napi_callback_info info)
             int32_t fd = PrintUtils::OpenFile(file);
             if (fd < 0) {
                 PRINT_HILOGE("file[%{private}s] is invalid", file.c_str());
+                fdList_.clear();
+                fileList_.clear();
                 return E_PRINT_INVALID_PARAMETER;
             }
             fdList_.emplace_back(fd);
@@ -116,6 +118,8 @@ uint32_t PrintTask::Start(napi_env env, napi_callback_info info)
     uint32_t ret = CallSpooler(env, info, adapterParam, false);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("CallSpooler failed.");
+        fdList_.clear();
+        fileList_.clear();
         return ret;
     }
     return PrintManagerClient::GetInstance()->StartPrint(fileList_, fdList_, taskId_);
