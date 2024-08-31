@@ -130,9 +130,7 @@ static void DeviceCb(const char *deviceClass, const char *deviceId, const char *
 {
     PRINT_HILOGI("Device: uri = %{public}s\n", deviceUri);
     PRINT_HILOGI("class = %{public}s\n", deviceClass);
-    PRINT_HILOGI("info = %{public}s\n", deviceInfo);
     PRINT_HILOGI("make-and-model = %{public}s\n", deviceMakeAndModel);
-    PRINT_HILOGI("device-id = %{public}s\n", deviceId);
     PRINT_HILOGI("location = %{public}s\n", deviceLocation);
     std::string printerUri(deviceUri);
     std::string printerMake(deviceMakeAndModel);
