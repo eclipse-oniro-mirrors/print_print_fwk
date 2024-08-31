@@ -543,6 +543,7 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
     napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[1]);
     sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
     if (callback == nullptr) {
+        NapiPrintUtils::DeleteReference(env, callbackRef);
         PRINT_HILOGE("create print callback object fail");
         return nullptr;
     }
@@ -609,6 +610,7 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
         napi_ref callbackRef = NapiPrintUtils::CreateReference(env, argv[NapiPrintUtils::INDEX_THREE]);
         sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, callbackRef);
         if (callback == nullptr) {
+            NapiPrintUtils::DeleteReference(env, callbackRef);
             PRINT_HILOGE("create startGetPrintFile callback object fail");
             return nullptr;
         }
