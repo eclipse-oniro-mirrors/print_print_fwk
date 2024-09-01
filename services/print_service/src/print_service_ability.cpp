@@ -504,7 +504,7 @@ int32_t PrintServiceAbility::StopDiscoverPrinter()
 int32_t PrintServiceAbility::DestroyExtension()
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -749,7 +749,7 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -926,7 +926,7 @@ int32_t PrintServiceAbility::GetPrinterPreference(const std::string &printerId, 
 int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, const std::string &printerSetting)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
