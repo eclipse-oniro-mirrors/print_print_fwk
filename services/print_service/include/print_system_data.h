@@ -25,6 +25,7 @@
 #include "print_constant.h"
 #include "print_utils.h"
 #include "print_log.h"
+#include "print_map_safe.h"
 
 namespace OHOS {
 namespace Print {
@@ -127,7 +128,7 @@ private:
     }
 
 private:
-    std::map<std::string, std::shared_ptr<CupsPrinterInfo>> addedPrinterMap_;
+    PrintMapSafe<CupsPrinterInfo> addedPrinterMap_;
     std::map<uint32_t, std::string> addedPrinterOrderList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> addedPrinterInfoList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> discoveredPrinterInfoList_;

@@ -492,7 +492,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0013, TestSize.Level1)
     std::vector<std::string> newPrinterIds;
     newPrinterIds.push_back("1234");
     auto cupsPrinter = std::make_shared<CupsPrinterInfo>();
-    service->printSystemData_.addedPrinterMap_[printerId] = cupsPrinter;
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, cupsPrinter);
     service->RemovePrinters(newPrinterIds);
     printerInfos.clear();
     EXPECT_EQ(service->UpdatePrinters(printerInfos), E_PRINT_NONE);
@@ -697,7 +697,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0033, TestSize.Level1)
     printerInfo->name = "testName";
     printerInfo->uri = "testUri";
     printerInfo->maker = "testMaker";
-    service->printSystemData_.addedPrinterMap_[printerId] = printerInfo;
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
     EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_NONE);
 }
 
@@ -741,7 +741,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0036, TestSize.Level1)
     printerInfo->name = "testName";
     printerInfo->uri = "testUri";
     printerInfo->maker = "testMaker";
-    service->printSystemData_.addedPrinterMap_[printerId] = printerInfo;
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
     EXPECT_EQ(service->UpdatePrintJobOptionByPrinterId(printJob2), false);
 
     nlohmann::json infoJson;
@@ -778,7 +778,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0038, TestSize.Level1)
     printerInfo->name = "testName";
     printerInfo->uri = "testUri";
     printerInfo->maker = "testMaker";
-    service->printSystemData_.addedPrinterMap_.insert(std::make_pair(printerId, printerInfo));
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
     printJob.SetOption("test");
     EXPECT_EQ(service->StartNativePrintJob(printJob), E_PRINT_INVALID_PRINTER);
 }
@@ -1156,7 +1156,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0064, TestSize.Level1)
     pageSizeList.push_back(pageSize);
     caps.SetSupportedPageSize(pageSizeList);
     printerInfo->printerCapability = caps;
-    service->printSystemData_.addedPrinterMap_[printerId] = printerInfo;
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
     EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_NONE);
 }
 
@@ -1395,7 +1395,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0079, TestSize.Level1)
     printJob.SetPrinterId(printerId);
     printJob.SetOption(opsJson.dump());
     auto cupsPrinter = std::make_shared<CupsPrinterInfo>();
-    service->printSystemData_.addedPrinterMap_[printerId] = cupsPrinter;
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, cupsPrinter);
     service->StartNativePrintJob(printJob);
     auto extensionId = PrintUtils::GetExtensionId(printerId);
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
@@ -1410,7 +1410,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0080, TestSize.Level1)
     std::string printerId = "123";
     service->SetLastUsedPrinter(printerId);
     auto cupsPrinter = std::make_shared<CupsPrinterInfo>();
-    service->printSystemData_.addedPrinterMap_[printerId] = cupsPrinter;
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, cupsPrinter);
     service->SetLastUsedPrinter(printerId);
 }
 
