@@ -1105,8 +1105,7 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     return true;
 }
 
-void PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId,
-    CallbackFunc callback)
+bool PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId)
 {
     cups_file_t *fp = nullptr;
     http_status_t status;
@@ -1118,8 +1117,7 @@ void PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, 
             PRINT_HILOGE("Unable to open print file, cancel the job");
             cupsCancelJob2(http, jobParams->printerName.c_str(), jobId, 0);
             UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_COMPLETED_FILE_CORRUPT);
-            callback();
-            return;
+            return false;
         }
         status = cupsStartDocument(http, jobParams->printerName.c_str(), jobId, jobParams->jobName.c_str(),
             jobParams->documentFormat.c_str(), i == (num_files - 1));
@@ -1136,10 +1134,10 @@ void PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, 
             PRINT_HILOGE("Unable to queue, error is %{public}s, cancel the job and return...", cupsLastErrorString());
             cupsCancelJob2(http, jobParams->printerUri.c_str(), jobId, 0);
             UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN);
-            callback();
-            return;
+            return false;
         }
     }
+    return true;
 }
 
 void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callback)
@@ -1155,7 +1153,10 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     }
     uint32_t num_files = jobParams->fdList.size();
     PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
-    HandleFiles(jobParams, num_files, http, jobId, callback);
+    if (!HandleFiles(jobParams, num_files, http, jobId)) {
+        callback();
+        return;
+    }
     jobParams->cupsJobId = jobId;
     PRINT_HILOGD("start job success, jobId: %{public}d", jobId);
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam { jobParams->serviceAbility,
