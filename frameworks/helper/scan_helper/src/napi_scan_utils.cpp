@@ -390,12 +390,7 @@ int32_t NapiScanUtils::OpenFile(const std::string &filePath)
     if (!IsPathValid(filePath)) {
         return SCAN_INVALID_ID;
     }
-    char realFilePath[PATH_MAX] = {};
-    if (realpath(filePath.c_str(), realFilePath) == nullptr) {
-        SCAN_HILOGE("The realFilePath is null.");
-        return SCAN_INVALID_ID;
-    }
-    int32_t fd = open(realFilePath, O_RDONLY);
+    int32_t fd = open(filePath.c_str(), O_RDONLY);
     SCAN_HILOGD("fd: %{public}d", fd);
     if (fd < 0) {
         SCAN_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());

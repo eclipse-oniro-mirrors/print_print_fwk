@@ -287,12 +287,7 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
         PRINT_HILOGE("invalid file name");
         return false;
     }
-    char realPidFile[PATH_MAX] = {};
-    if (realpath(fileName.c_str(), realPidFile) == nullptr) {
-        PRINT_HILOGE("The realPidFile is null.");
-        return E_PRINT_SERVER_FAILURE;
-    }
-    auto file = fopen(realPidFile, "rb");
+    auto file = fopen(fileName.c_str(), "rb");
     if (file != nullptr) {
         fclose(file);
         return true;
