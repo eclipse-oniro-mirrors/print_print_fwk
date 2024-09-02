@@ -103,8 +103,7 @@ public:
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps);
 
 private:
-    void HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId,
-        CallbackFunc callback);
+    bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
     void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
     void MonitorJobState(JobMonitorParam *param, CallbackFunc callback);
     void HandleJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus,
