@@ -20,20 +20,22 @@
 #include "scan_log.h"
 
 namespace OHOS::Scan {
-ScanCallback::ScanCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref)
+ScanCallback::ScanCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref), callbackFunction_(nullptr)
 {
 }
 
 ScanCallback::ScanCallback(std::function<void(std::vector<ScanDeviceInfo> &infos)>
-    callbackFunction) : callbackFunction_(callbackFunction)
+    callbackFunction) : env_(nullptr), ref_(nullptr), callbackFunction_(callbackFunction)
 {
 }
 
 ScanCallback::~ScanCallback()
 {
     std::lock_guard<std::mutex> autoLock(mutex_);
+    if (env_ == nullptr || ref_ == nullptr) {
+        return;
+    }
     SCAN_HILOGI("callback has been destroyed");
-
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
     Param *param = new (std::nothrow) Param;

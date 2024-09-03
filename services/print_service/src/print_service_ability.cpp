@@ -54,7 +54,7 @@ using namespace std;
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
 using json = nlohmann::json;
-const std::string PRINTER_PREFERENCE_FILE = "/data/service/el1/public/print_service/printer_preference.json";
+const std::string PRINTER_PREFERENCE_FILE = "/data/service/el2/public/print_service/printer_preference.json";
 
 const uint32_t MAX_JOBQUEUE_NUM = 512;
 const uint32_t ASYNC_CMD_DELAY = 10;
@@ -64,9 +64,10 @@ const std::int32_t START_USER_ID = 100;
 const std::int32_t MAX_USER_ID = 1099;
 const uint32_t UNLOAD_SA_INTERVAL = 90000;
 
-static const std::string SPOOLER_BUNDLE_NAME = "com.huawei.hmos.spooler";
-static const std::string SPOOLER_PACKAGE_NAME = "com.huawei.hmos.spooler";
-static const std::string EPRINTER_ID = "com.huawei.hmos.hwprintext:ePrintID";
+static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
+static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
+static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.ohos.hwprintext";
+static const std::string EPRINTER_ID = "com.ohos.hwprintext:ePrintID";
 static const std::string SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
@@ -1601,7 +1602,8 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
     bool isChanged = false;
     for (auto info: printerInfos) {
         std::string printExtId = info.GetPrinterId();
-        if (printExtId.find(SPOOLER_PACKAGE_NAME) == std::string::npos) {
+        if (printExtId.find(SPOOLER_PACKAGE_NAME) == std::string::npos &&
+            printExtId.find(PRINT_EXTENSION_BUNDLE_NAME) == std::string::npos) {
             printExtId = PrintUtils::GetGlobalId(extensionId, printExtId);
         }
         if (UpdatePrinterSystemData(printExtId, info)) {
@@ -2632,7 +2634,27 @@ void PrintServiceAbility::notifyAdapterJobChanged(const std::string jobId, const
         return;
     }
 
-    uint32_t printAdapterListeningState = GetListeningState(state, subState);
+    uint32_t printAdapterListeningState = PRINT_TASK_FAIL;
+    if (state == PRINT_JOB_SPOOLER_CLOSED) {
+        printAdapterListeningState = GetListeningState(subState);
+    } else if (state == PRINT_JOB_BLOCKED) {
+        printAdapterListeningState = PRINT_TASK_BLOCK;
+    } else {
+        switch (subState) {
+            case PRINT_JOB_COMPLETED_SUCCESS:
+                printAdapterListeningState = PRINT_TASK_SUCCEED;
+                break;
+            case PRINT_JOB_COMPLETED_FAILED:
+                printAdapterListeningState = PRINT_TASK_FAIL;
+                break;
+            case PRINT_JOB_COMPLETED_CANCELLED:
+                printAdapterListeningState = PRINT_TASK_CANCEL;
+                break;
+            default:
+                printAdapterListeningState = PRINT_TASK_FAIL;
+                break;
+        }
+    }
     PRINT_HILOGI("notifyAdapterJobChanged for subState: %{public}d, listeningState: %{public}d",
         subState, printAdapterListeningState);
     eventIt->second->onCallbackAdapterJobStateChanged(jobId, state, printAdapterListeningState);
@@ -2656,32 +2678,6 @@ uint32_t PrintServiceAbility::GetListeningState(const uint32_t subState)
             return PREVIEW_ABILITY_DESTROY;
             break;
     }
-}
-
-uint32_t PrintServiceAbility::GetListeningState(uint32_t state, uint32_t subState)
-{
-    uint32_t printAdapterListeningState = PRINT_TASK_FAIL;
-    if (state == PRINT_JOB_SPOOLER_CLOSED) {
-        printAdapterListeningState = GetListeningState(subState);
-    } else if (state == PRINT_JOB_BLOCKED) {
-        printAdapterListeningState = PRINT_TASK_BLOCK;
-    } else {
-        switch (subState) {
-            case PRINT_JOB_COMPLETED_SUCCESS:
-                printAdapterListeningState = PRINT_TASK_SUCCEED;
-                break;
-            case PRINT_JOB_COMPLETED_FAILED:
-                printAdapterListeningState = PRINT_TASK_FAIL;
-                break;
-            case PRINT_JOB_COMPLETED_CANCELLED:
-                printAdapterListeningState = PRINT_TASK_CANCEL;
-                break;
-            default:
-                printAdapterListeningState = PRINT_TASK_FAIL;
-                break;
-        }
-    }
-    return printAdapterListeningState;
 }
 
 int32_t PrintServiceAbility::CallStatusBar()

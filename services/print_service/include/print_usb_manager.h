@@ -70,7 +70,6 @@ private:
 
 private:
     bool isInit = false;
-    bool isUsbEnable = true;
     std::map<std::string, USB::UsbDevice> printDeviceMap;
     std::map<std::string, std::vector<std::pair<int32_t, int32_t>>> printerIndexMap;
     std::map<std::string, USB::USBDevicePipe> printPipeMap;

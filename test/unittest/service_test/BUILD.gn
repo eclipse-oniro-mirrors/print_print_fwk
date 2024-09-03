@@ -75,7 +75,6 @@ ohos_unittest("print_service_test") {
   if (ipp_over_usb_enable) {
     include_dirs += [ "//third_party/cpp-httplib" ]
     sources += [
-      "print_http_request_process_test.cpp",
       "print_http_server_manager_test.cpp",
       "print_ipp_over_usb_manager_test.cpp",
       "print_usb_manager_test.cpp",

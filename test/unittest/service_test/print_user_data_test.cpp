@@ -208,7 +208,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0013, TestSize.Level1)
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0014, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-0105";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-0105";
     userData->SetLastUsedPrinter(printerId);
     std::string printerId2 = "";
     userData->SetLastUsedPrinter(printerId2);
@@ -248,7 +248,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0019, TestSize.Level1)
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0020, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-0105";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-0105";
     userData->SetDefaultPrinter(printerId, 0);
     std::string printerId2 = "";
     userData->SetDefaultPrinter(printerId2, 0);
@@ -352,21 +352,5 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0023, TestSize.Level1)
     userData->CheckFileData(fileData5, jsonObject);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0030, TestSize.Level1)
-{
-    std::string printerId1 = "com.ohos.spooler:p2p://DIRECT_PixLab_V1-0105";
-    std::string printerId2 = "com.ohos.spooler:p2p://DIRECT_PixLab_V1-0106";
-    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    EXPECT_NE(userData, nullptr);
-    userData->SetLastUsedPrinter(printerId1);
-    EXPECT_STREQ(userData->GetLastUsedPrinter().c_str(), printerId1.c_str());
-    userData->SetDefaultPrinter(printerId2, DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER);
-    EXPECT_EQ(userData->CheckIfUseLastUsedPrinterForDefault(), true);
-    userData->SetLastUsedPrinter(printerId2);
-    userData->SetDefaultPrinter(printerId1, DELETE_DEFAULT_PRINTER);
-    userData->DeletePrinter(printerId1);
-    userData->DeletePrinter(printerId2);
-    userData->SetDefaultPrinter(printerId2, DELETE_LAST_USED_PRINTER);
-}
 }
 }

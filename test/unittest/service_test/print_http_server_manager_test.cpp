@@ -25,7 +25,7 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Print {
 using namespace httplib;
-static const int64_t WAIT_TIME_IN_MS = 2000;
+
 static const std::string IPP_PRINTER =
     R"({"busNum":2,"clazz":0,"configs":[{"attributes":192,"id":1,"interfaces":[{"alternateSetting":0,"clazz":7,)"\
     R"("endpoints":[{"address":1,"attributes":2,"direction":0,"interfaceId":0,"interval":0,"maxPacketSize":512,)"\
@@ -82,12 +82,9 @@ void PrintHttpServerManagerTest::TearDown(void)
 HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_001, TestSize.Level1)
 {
     auto service = std::make_shared<PrintHttpServerManager>();
-    std::string printerName = "HUAWEI PixLab V1-0105";
+    std::string printerName = "PixLab V1-0105";
     int32_t port;
     EXPECT_TRUE(service->CreateServer(printerName, port));
-    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
-    service->StopServer(printerName);
-    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
 }
 
 /**
@@ -99,15 +96,12 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_001, TestSize.Le
 HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_002, TestSize.Level1)
 {
     auto service = std::make_shared<PrintHttpServerManager>();
-    std::string printerName = "HUAWEI PixLab V1-0105";
+    std::string printerName = "PixLab V1-0105";
     int32_t port;
     std::shared_ptr<httplib::Server> newServer = std::make_shared<httplib::Server>();
     EXPECT_NE(newServer, nullptr);
     service->printHttpServerMap[printerName] = newServer;
     service->CreateServer(printerName, port);
-    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
-    service->StopServer(printerName);
-    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
 }
 
 /**
@@ -119,16 +113,13 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_002, TestSize.Le
 HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_003, TestSize.Level1)
 {
     auto service = std::make_shared<PrintHttpServerManager>();
-    std::string printerName = "HUAWEI PixLab V1-0105";
+    std::string printerName = "PixLab V1-0105";
     int32_t port;
     std::shared_ptr<httplib::Server> newServer = std::make_shared<httplib::Server>();
     EXPECT_NE(newServer, nullptr);
     service->printHttpServerMap[printerName] = newServer;
     service->printHttpPortMap[printerName] = 60000;
     service->CreateServer(printerName, port);
-    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
-    service->StopServer(printerName);
-    std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
 }
 
 
@@ -141,7 +132,7 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_003, TestSize.Le
 HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_004, TestSize.Level1)
 {
     OHOS::Print::PrintHttpServerManager printHttpServerManager;
-    std::string printerName = "HUAWEI PixLab V1-0105";
+    std::string printerName = "PixLab V1-0105";
     std::shared_ptr<httplib::Server> newServer = std::make_shared<httplib::Server>();
     EXPECT_NE(newServer, nullptr);
     std::shared_ptr<PrintHttpRequestProcess> newProcess = std::make_shared<PrintHttpRequestProcess>();

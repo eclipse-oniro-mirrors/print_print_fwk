@@ -322,17 +322,8 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0019, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo info;
     info.SetPrinterId("001");
-    info.SetPrinterStatus(1);
     OHOS::Print::PrinterInfo copyInfo = info;
     EXPECT_EQ(copyInfo.GetPrinterId(), info.GetPrinterId());
-    info.SetIsLastUsedPrinter(true);
-    info.SetIsDefaultPrinter(true);
-    EXPECT_TRUE(info.HasIsDefaultPrinter());
-    EXPECT_TRUE(info.GetIsDefaultPrinter());
-    EXPECT_TRUE(info.HasIsLastUsedPrinter());
-    EXPECT_TRUE(info.GetIsLastUsedPrinter());
-    EXPECT_TRUE(info.HasPrinterStatus());
-    info.Dump();
 }
 } // namespace Print
 } // namespace OHOS

@@ -180,7 +180,6 @@ private:
     bool UpdatePrinterCapability(const std::string &printerId, PrinterInfo &info);
     bool UpdatePrinterSystemData(const std::string &printerId, PrinterInfo &info);
     uint32_t GetListeningState(const uint32_t subState);
-    uint32_t GetListeningState(uint32_t state, uint32_t subState);
     std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
     bool CheckPrintJob(PrintJob &jobInfo);
     bool CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info);

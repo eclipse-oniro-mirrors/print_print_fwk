@@ -32,7 +32,7 @@
 
 namespace OHOS::Print {
 
-static const std::string SPOOLER_BUNDLE_NAME = "com.huawei.hmos.spooler";
+static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_PREVIEW_ABILITY_NAME = "PrintServiceExtAbility";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
 static const std::string LAUNCH_PARAMETER_FILE_LIST = "fileList";
