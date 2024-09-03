@@ -194,7 +194,7 @@ bool PrintSystemData::SaveCupsPrinterMap()
         PRINT_HILOGE("The realPidFile is null.");
         return E_PRINT_SERVER_FAILURE;
     }
-    int32_t fd = open(printerListFilePath, O_CREAT | O_TRUNC | O_RDWR, 0740);
+    int32_t fd = open(printerListFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0740);
     PRINT_HILOGD("SaveCupsPrinterMap fd: %{public}d", fd);
     if (fd < 0) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
