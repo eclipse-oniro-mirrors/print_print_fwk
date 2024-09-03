@@ -3348,11 +3348,11 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
     }
     std::string ip = connectParamJson["ip"].get<std::string>();
     vendorManager.SetConnectingPrinter(IP_AUTO, ip);
-    PRINT_HILOGD("connecting printer by ip: %{public}s", ip.c_str());
     if (!vendorManager.ConnectPrinterByIp(ip, "auto")) {
         PRINT_HILOGW("ConnectPrinterByIp fail");
         return E_PRINT_SERVER_FAILURE;
     }
+    PRINT_HILOGD("connecting printer by ip success");
     return E_PRINT_NONE;
 }
 } // namespace OHOS::Print

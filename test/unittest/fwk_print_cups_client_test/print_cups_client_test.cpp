@@ -263,7 +263,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0014, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0015, TestSize.Level1)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
-    printCupsClient->toCups = false;
+    printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
@@ -288,7 +288,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient->BuildJobParameters(testJob);
     printCupsClient->jobQueue_.push_back(jobParams);
-    printCupsClient->toCups = false;
+    printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     delete jobParams;
@@ -305,7 +305,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0018, TestSize.Level1)
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     JobParameters *jobParams = nullptr;
     printCupsClient->jobQueue_.push_back(jobParams);
-    printCupsClient->toCups = false;
+    printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     delete jobParams;
