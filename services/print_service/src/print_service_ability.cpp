@@ -54,7 +54,8 @@ using namespace std;
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
 using json = nlohmann::json;
-const std::string PRINTER_PREFERENCE_FILE = "/data/service/el2/public/print_service/printer_preference.json";
+const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
+const std::string PRINTER_PREFERENCE_FILE = "printer_preference.json";
 
 const uint32_t MAX_JOBQUEUE_NUM = 512;
 const uint32_t ASYNC_CMD_DELAY = 10;
@@ -972,7 +973,8 @@ bool PrintServiceAbility::ReadPreferenceFromFile(const std::string &printerId, s
 void PrintServiceAbility::InitPreferenceMap()
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    std::ifstream ifs(PRINTER_PREFERENCE_FILE.c_str(), std::ios::in | std::ios::binary);
+    std::string printerPreferenceFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_PREFERENCE_FILE;
+    std::ifstream ifs(printerPreferenceFilePath.c_str(), std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
         PRINT_HILOGW("open printer preference file fail");
         return;
@@ -1002,11 +1004,12 @@ bool PrintServiceAbility::WritePreferenceToFile()
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     char realPidFile[PATH_MAX] = {};
-    if (realpath(PRINTER_PREFERENCE_FILE.c_str(), realPidFile) == nullptr) {
+    std::string printerPreferenceFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_PREFERENCE_FILE;
+    if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
         PRINT_HILOGE("The realPidFile is null.");
         return false;
     }
-    int32_t fd = open(realPidFile, O_CREAT | O_TRUNC | O_RDWR, 0740);
+    int32_t fd = open(printerPreferenceFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0740);
     PRINT_HILOGD("SavePrinterPreferenceMap fd: %{public}d", fd);
     if (fd < 0) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());

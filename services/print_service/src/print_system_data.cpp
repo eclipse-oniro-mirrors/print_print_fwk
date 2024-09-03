@@ -24,9 +24,10 @@
 #include "print_constant.h"
 
 namespace {
-const std::string PRINTER_LIST_FILE = "/data/service/el2/public/print_service/printer_list.json";
+const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
+const std::string PRINTER_LIST_FILE = "printer_list.json";
 const std::string PRINTER_LIST_VERSION = "v1";
-const std::string PRINT_USER_DATA_FILE = "/data/service/el2/public/print_service/print_user_data.json";
+const std::string PRINT_USER_DATA_FILE = "print_user_data.json";
 const std::string PRINT_USER_DATA_VERSION = "v1";
 }  // namespace
 
@@ -91,7 +92,8 @@ bool PrintSystemData::Init()
 {
     addedPrinterMap_.Clear();
     nlohmann::json jsonObject;
-    if (!GetJsonObjectFromFile(jsonObject, PRINTER_LIST_FILE)) {
+    std::string printerListFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
+    if (!GetJsonObjectFromFile(jsonObject, printerListFilePath)) {
         PRINT_HILOGW("get json from file fail");
         return false;
     }
@@ -119,7 +121,8 @@ bool PrintSystemData::GetJsonObjectFromFile(nlohmann::json &jsonObject, const st
     std::string version = jsonObject["version"].get<std::string>();
     PRINT_HILOGI("json version: %{public}s", version.c_str());
     std::string fileVersion = "";
-    if (strcmp(fileName.c_str(), PRINTER_LIST_FILE.c_str())) {
+    std::string printerListFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
+    if (strcmp(fileName.c_str(), printerListFilePath.c_str())) {
         fileVersion = PRINTER_LIST_VERSION;
     } else {
         fileVersion = PRINT_USER_DATA_VERSION;
@@ -185,12 +188,13 @@ void PrintSystemData::DeleteCupsPrinter(const std::string &printerId)
 
 bool PrintSystemData::SaveCupsPrinterMap()
 {
+    std::string printerListFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
     char realPidFile[PATH_MAX] = {};
-    if (realpath(PRINTER_LIST_FILE.c_str(), realPidFile) == nullptr) {
+    if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
         PRINT_HILOGE("The realPidFile is null.");
         return E_PRINT_SERVER_FAILURE;
     }
-    int32_t fd = open(realPidFile, O_CREAT | O_TRUNC | O_RDWR, 0740);
+    int32_t fd = open(printerListFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0740);
     PRINT_HILOGD("SaveCupsPrinterMap fd: %{public}d", fd);
     if (fd < 0) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
@@ -586,9 +590,9 @@ bool PrintSystemData::ConvertJsonToSupportedColorMode(nlohmann::json &capsJson, 
 bool PrintSystemData::ConvertJsonToSupportedDuplexMode(nlohmann::json &capsJson, PrinterCapability &printerCapability)
 {
     return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedDuplexMode", printerCapability,
-        &PrinterCapability::SetSupportedColorMode,
-        [](const nlohmann::json &item, uint32_t &colorMode) -> bool {
-            colorMode = item.get<uint32_t>();
+        &PrinterCapability::SetSupportedDuplexMode,
+        [](const nlohmann::json &item, uint32_t &duplexMode) -> bool {
+            duplexMode = item.get<uint32_t>();
             return true;
         });
 }
@@ -597,8 +601,8 @@ bool PrintSystemData::ConvertJsonToSupportedMediaType(nlohmann::json &capsJson, 
 {
     return ProcessJsonToCapabilityList<std::string>(capsJson, "supportedMediaType", printerCapability,
         &PrinterCapability::SetSupportedMediaType,
-        [](const nlohmann::json &item, std::string &colorMode) -> bool {
-            colorMode = item.get<std::string>();
+        [](const nlohmann::json &item, std::string &mediaType) -> bool {
+            mediaType = item.get<std::string>();
             return true;
         });
 }
@@ -607,8 +611,8 @@ bool PrintSystemData::ConvertJsonToSupportedQuality(nlohmann::json &capsJson, Pr
 {
     return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedQuality", printerCapability,
         &PrinterCapability::SetSupportedQuality,
-        [](const nlohmann::json &item, uint32_t &colorMode) -> bool {
-            colorMode = item.get<uint32_t>();
+        [](const nlohmann::json &item, uint32_t &quality) -> bool {
+            quality = item.get<uint32_t>();
             return true;
         });
 }
@@ -617,8 +621,8 @@ bool PrintSystemData::ConvertJsonToSupportedOrientation(nlohmann::json &capsJson
 {
     return ProcessJsonToCapabilityList<uint32_t>(capsJson, "supportedOrientation", printerCapability,
         &PrinterCapability::SetSupportedOrientation,
-        [](const nlohmann::json &item, uint32_t &colorMode) -> bool {
-            colorMode = item.get<uint32_t>();
+        [](const nlohmann::json &item, uint32_t &orientation) -> bool {
+            orientation = item.get<uint32_t>();
             return true;
         });
 }
@@ -664,7 +668,8 @@ bool PrintSystemData::GetPrinterCapabilityFromFile(std::string printerId, Printe
 {
     PRINT_HILOGI("GetPrinterCapabilityFromFile printerId: %{public}s", printerId.c_str());
     nlohmann::json jsonObject;
-    if (!GetJsonObjectFromFile(jsonObject, PRINTER_LIST_FILE)) {
+    std::string printerListFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
+    if (!GetJsonObjectFromFile(jsonObject, printerListFilePath)) {
         PRINT_HILOGW("get json from file fail");
         return false;
     }
@@ -759,7 +764,8 @@ bool PrintSystemData::CheckPrinterBusy(const std::string &printerId)
 bool PrintSystemData::GetAllPrintUser(std::vector<int32_t> &allPrintUserList)
 {
     nlohmann::json jsonObject;
-    if (!GetJsonObjectFromFile(jsonObject, PRINT_USER_DATA_FILE)) {
+    std::string userDataFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINT_USER_DATA_FILE;
+    if (!GetJsonObjectFromFile(jsonObject, userDataFilePath)) {
         PRINT_HILOGW("get json from file fail");
         return false;
     }
