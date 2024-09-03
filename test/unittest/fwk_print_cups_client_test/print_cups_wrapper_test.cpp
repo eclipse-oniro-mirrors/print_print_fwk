@@ -74,16 +74,16 @@ void PrintCupsWrapperTest::DoMockTest(MockTestFunc func)
         return;
     }
     PrintCupsClient printCupsClient;
-    if (printCupsClient.printAbility != nullptr) {
-        delete printCupsClient.printAbility;
-        printCupsClient.printAbility = nullptr;
+    if (printCupsClient.printAbility_ != nullptr) {
+        delete printCupsClient.printAbility_;
+        printCupsClient.printAbility_ = nullptr;
     }
     auto mock = new (std::nothrow) MockPrintCupsWrapper();
     if (mock == nullptr) {
         PRINT_HILOGE("mock is null");
         return;
     }
-    printCupsClient.printAbility = mock;
+    printCupsClient.printAbility_ = mock;
     func(printCupsClient, *mock);
 }
 
@@ -96,9 +96,9 @@ void PrintCupsWrapperTest::DoMockTest(MockTestFunc func)
 HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0001, TestSize.Level1)
 {
     PrintCupsClient printCupsClient;
-    if (printCupsClient.printAbility != nullptr) {
-        delete printCupsClient.printAbility;
-        printCupsClient.printAbility = nullptr;
+    if (printCupsClient.printAbility_ != nullptr) {
+        delete printCupsClient.printAbility_;
+        printCupsClient.printAbility_ = nullptr;
     }
     std::string printerName = "testPrinterName";
     std::string printUri;
@@ -161,9 +161,9 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0003, TestSize.Level1)
 HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0010, TestSize.Level1)
 {
     PrintCupsClient printCupsClient;
-    if (printCupsClient.printAbility != nullptr) {
-        delete printCupsClient.printAbility;
-        printCupsClient.printAbility = nullptr;
+    if (printCupsClient.printAbility_ != nullptr) {
+        delete printCupsClient.printAbility_;
+        printCupsClient.printAbility_ = nullptr;
     }
     std::string printerId = "testPrinterId";
     PrinterInfo info;
@@ -281,9 +281,9 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0015, TestSize.Level1)
 HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0020, TestSize.Level1)
 {
     PrintCupsClient printCupsClient;
-    if (printCupsClient.printAbility != nullptr) {
-        delete printCupsClient.printAbility;
-        printCupsClient.printAbility = nullptr;
+    if (printCupsClient.printAbility_ != nullptr) {
+        delete printCupsClient.printAbility_;
+        printCupsClient.printAbility_ = nullptr;
     }
     JobParameters jobParams;
     EXPECT_EQ(printCupsClient.CheckPrinterMakeModel(&jobParams), false);
@@ -333,9 +333,9 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0022, TestSize.Level1)
 HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0030, TestSize.Level1)
 {
     PrintCupsClient printCupsClient;
-    if (printCupsClient.printAbility != nullptr) {
-        delete printCupsClient.printAbility;
-        printCupsClient.printAbility = nullptr;
+    if (printCupsClient.printAbility_ != nullptr) {
+        delete printCupsClient.printAbility_;
+        printCupsClient.printAbility_ = nullptr;
     }
     std::string name = "testName";
     std::string uri = "testUri";
