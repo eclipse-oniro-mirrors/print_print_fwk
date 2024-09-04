@@ -962,6 +962,9 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
         std::string newPrintPreference = savePrinterPreference.dump();
         PRINT_HILOGI("WriteNewPreferenceToFile %{public}s", newPrintPreference.c_str());
         printerIdAndPreferenceMap_[printerId] = newPrintPreference;
+        PrinterInfo info;
+        printSystemData_.QueryPrinterInfoById(printerId, info);
+        SendPrinterChangeEvent(PRINTER_EVENT_PREFERENCE_CHANGED, info);
         WritePreferenceToFile();
         return E_PRINT_NONE;
     }
