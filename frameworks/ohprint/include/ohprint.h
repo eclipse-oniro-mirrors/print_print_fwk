@@ -122,6 +122,8 @@ typedef enum {
     PRINTER_STATE_CHANGED = 2,
     /** Printer info changed. */
     PRINTER_INFO_CHANGED = 3,
+    /** Printer preference changed. */
+    PRINTER_PREFERENCE_CHANGED = 4,
 } Print_PrinterEvent;
 
 /**
