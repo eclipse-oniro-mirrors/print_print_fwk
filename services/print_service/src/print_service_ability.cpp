@@ -3014,5 +3014,6 @@ void PrintServiceAbility::NotifyAppDeletePrinterWithDefaultPrinter(const std::st
     opsJson["nextDefaultPrinter"] = dafaultPrinterId;
     printerInfo.SetOption(opsJson.dump());
     SendPrinterEventChangeEvent(PRINTER_EVENT_DELETED, printerInfo);
+    SendPrinterChangeEvent(PRINTER_EVENT_DELETED, printerInfo);
 }
 } // namespace OHOS::Print

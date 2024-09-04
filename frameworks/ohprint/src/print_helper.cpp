@@ -462,7 +462,8 @@ void ParsePrinterPreference(const std::string &printerPreference, Print_PrinterI
 
     std::string defaultOrientation = GetSettingItemString(ORIENTATION_STRING, defaultSetting, setting);
     if (!defaultOrientation.empty()) {
-        ConvertOrientationMode(std::atoi(defaultOrientation.c_str()), nativePrinterInfo.defaultValue.defaultOrientation);
+        ConvertOrientationMode(
+            std::atoi(defaultOrientation.c_str()), nativePrinterInfo.defaultValue.defaultOrientation);
     }
 
     nativePrinterInfo.defaultValue.defaultPageSizeId =
