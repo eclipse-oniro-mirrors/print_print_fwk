@@ -22,10 +22,18 @@
 #include "print_util.h"
 #include "ability_manager_client.h"
 #include "print_converter.h"
+#include "print_manager_client.h"
 
 using json = nlohmann::json;
 
 namespace OHOS::Print {
+
+const std::string DUPLEX_STRING = "duplex";
+const std::string ORIENTATION_STRING = "orientation";
+const std::string PAGESIZEID_STRING = "pagesizeId";
+const std::string QUALITY_STRING = "quality";
+const std::string DEFAULT_QUALITY_PREFERENCE = "4";
+
 char *CopyString(const std::string &source)
 {
     auto len = source.length();
@@ -417,6 +425,56 @@ int32_t ParseInfoOption(const std::string &infoOption, Print_PrinterInfo &native
     ParseCupsOptions(cupsOpt, nativePrinterInfo);
     return E_PRINT_NONE;
 }
+
+std::string GetSettingItemString(const std::string key, json defaultSetting, json setting)
+{
+    if (setting.contains(key) && setting[key].is_string() && !setting[key].get<std::string>().empty()) {
+        return setting[key].get<std::string>();
+    } else if (defaultSetting.contains(key) && defaultSetting[key].is_string() &&
+                !defaultSetting[key].get<std::string>().empty()) {
+        return defaultSetting[key].get<std::string>();
+    }
+    if (key == QUALITY_STRING) {
+        return DEFAULT_QUALITY_PREFERENCE;
+    }
+    return "";
+}
+
+void ParsePrinterPreference(const std::string &printerPreference, Print_PrinterInfo &nativePrinterInfo)
+{
+    if (!json::accept(printerPreference)) {
+        PRINT_HILOGW("printerPreference can not parse to json object");
+        return;
+    }
+    nlohmann::json preferenceJson = json::parse(printerPreference);
+    if (!preferenceJson.contains("defaultSetting") || !preferenceJson["defaultSetting"].is_object() ||
+        !preferenceJson.contains("setting") || !preferenceJson["setting"].is_object()) {
+        PRINT_HILOGW("The infoJson does not have a necessary attribute.");
+        return;
+    }
+    json defaultSetting = preferenceJson["defaultSetting"];
+    json setting = preferenceJson["setting"];
+
+    std::string defaultDuplex = GetSettingItemString(DUPLEX_STRING, defaultSetting, setting);
+    if (!defaultDuplex.empty()) {
+        ConvertDuplexMode(std::atoi(defaultDuplex.c_str()), nativePrinterInfo.defaultValue.defaultDuplexMode);
+    }
+
+    std::string defaultOrientation = GetSettingItemString(ORIENTATION_STRING, defaultSetting, setting);
+    if (!defaultOrientation.empty()) {
+        ConvertOrientationMode(
+            std::atoi(defaultOrientation.c_str()), nativePrinterInfo.defaultValue.defaultOrientation);
+    }
+
+    nativePrinterInfo.defaultValue.defaultPageSizeId =
+        CopyString(GetSettingItemString(PAGESIZEID_STRING, defaultSetting, setting));
+
+    std::string defaultQuality = GetSettingItemString(QUALITY_STRING, defaultSetting, setting);
+    if (!defaultQuality.empty()) {
+        ConvertQuality(std::atoi(defaultQuality.c_str()), nativePrinterInfo.defaultValue.defaultPrintQuality);
+    }
+}
+
 Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
 {
     Print_PrinterInfo *nativePrinterInfo = new (std::nothrow) Print_PrinterInfo;
@@ -435,6 +493,9 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     nativePrinterInfo->description = CopyString(info.GetDescription());
     nativePrinterInfo->detailInfo = nullptr;
     nativePrinterInfo->printerState = static_cast<Print_PrinterState>(info.GetPrinterStatus());
+    if (info.HasIsDefaultPrinter() && info.GetIsDefaultPrinter() == true) {
+        nativePrinterInfo->isDefaultPrinter = true;
+    }
     OHOS::Print::PrinterCapability cap;
     info.GetCapability(cap);
     if (cap.HasOption() && json::accept(cap.GetOption())) {
@@ -446,6 +507,14 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     }
     ConvertColorMode(cap.GetColorMode(), nativePrinterInfo->defaultValue.defaultColorMode);
     ConvertDuplexMode(cap.GetDuplexMode(), nativePrinterInfo->defaultValue.defaultDuplexMode);
+
+    std::string printerPreference = "";
+    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(info.GetPrinterId(), printerPreference);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGW("Print_PrinterInfo GetPrinterPreference fail.");
+        return nullptr;
+    }
+    ParsePrinterPreference(printerPreference, *nativePrinterInfo);
     if (info.HasOption()) {
         std::string infoOpt = info.GetOption();
         PRINT_HILOGW("infoOpt json object: %{public}s", infoOpt.c_str());
