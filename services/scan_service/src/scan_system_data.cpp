@@ -263,7 +263,7 @@ void ScanSystemData::GetAddedScannerInfoList(std::vector<ScanDeviceInfo> &infoLi
 
 bool ScanSystemData::SaveScannerMap()
 {
-    int32_t fd = open(SCANNER_LIST_FILE.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0740);
+    int32_t fd = open(SCANNER_LIST_FILE.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
     SCAN_HILOGD("SaveScannerMap fd: %{public}d", fd);
     if (fd < 0) {
         SCAN_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
