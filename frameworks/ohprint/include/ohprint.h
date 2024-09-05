@@ -122,6 +122,8 @@ typedef enum {
     PRINTER_STATE_CHANGED = 2,
     /** Printer info changed. */
     PRINTER_INFO_CHANGED = 3,
+    /** Printer preference changed. */
+    PRINTER_PREFERENCE_CHANGED = 4,
 } Print_PrinterEvent;
 
 /**
@@ -502,8 +504,8 @@ typedef void(*Print_WriteResultCallback)(const char *jobId, uint32_t code);
  *
  * @param jobId The print job id of one print task.
  * @param fd The file descriptor to be written.
- * @param oldAttrs The atrributes of last.
- * @param newAttrs The atrributes of current.
+ * @param oldAttrs The attributes of last.
+ * @param newAttrs The attributes of current.
  * @param writeCallback The Write files result callback.
  * @since 13
  */
@@ -772,7 +774,7 @@ Print_ErrorCode OH_Print_UpdatePrinterProperties(const char *printerId, const Pr
 Print_ErrorCode OH_Print_RestorePrinterProperties(const char *printerId, const Print_StringList *propertyKeyList);
 
 /**
- * @brief This API restores printer properties to default settings based on the list of property keywords.
+ * @brief This API provides capacity to start print service.
  *
  * @permission {@code ohos.permission.PRINT}
  * @param printJobName The name of this print job.

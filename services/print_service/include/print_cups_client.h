@@ -148,8 +148,8 @@ private:
         const char * const *pattrs);
 
 private:
-    bool toCups = true;
-    IPrintAbilityBase* printAbility = nullptr;
+    bool toCups_ = true;
+    IPrintAbilityBase* printAbility_ = nullptr;
     std::vector<JobParameters*> jobQueue_;
     JobParameters *currentJob_ = nullptr;
 };

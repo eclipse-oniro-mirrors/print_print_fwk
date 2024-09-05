@@ -54,7 +54,8 @@ using namespace std;
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
 using json = nlohmann::json;
-const std::string PRINTER_PREFERENCE_FILE = "/data/service/el2/public/print_service/printer_preference.json";
+const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
+const std::string PRINTER_PREFERENCE_FILE = "printer_preference.json";
 
 const uint32_t MAX_JOBQUEUE_NUM = 512;
 const uint32_t ASYNC_CMD_DELAY = 10;
@@ -952,6 +953,9 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
         std::string newPrintPreference = savePrinterPreference.dump();
         PRINT_HILOGI("WriteNewPreferenceToFile %{public}s", newPrintPreference.c_str());
         printerIdAndPreferenceMap_[printerId] = newPrintPreference;
+        PrinterInfo info;
+        printSystemData_.QueryPrinterInfoById(printerId, info);
+        SendPrinterChangeEvent(PRINTER_EVENT_PREFERENCE_CHANGED, info);
         WritePreferenceToFile();
         return E_PRINT_NONE;
     }
@@ -972,7 +976,8 @@ bool PrintServiceAbility::ReadPreferenceFromFile(const std::string &printerId, s
 void PrintServiceAbility::InitPreferenceMap()
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    std::ifstream ifs(PRINTER_PREFERENCE_FILE.c_str(), std::ios::in | std::ios::binary);
+    std::string printerPreferenceFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_PREFERENCE_FILE;
+    std::ifstream ifs(printerPreferenceFilePath.c_str(), std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
         PRINT_HILOGW("open printer preference file fail");
         return;
@@ -1002,11 +1007,12 @@ bool PrintServiceAbility::WritePreferenceToFile()
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     char realPidFile[PATH_MAX] = {};
-    if (realpath(PRINTER_PREFERENCE_FILE.c_str(), realPidFile) == nullptr) {
+    std::string printerPreferenceFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_PREFERENCE_FILE;
+    if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
         PRINT_HILOGE("The realPidFile is null.");
         return false;
     }
-    int32_t fd = open(realPidFile, O_CREAT | O_TRUNC | O_RDWR, 0640);
+    int32_t fd = open(printerPreferenceFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
     PRINT_HILOGD("SavePrinterPreferenceMap fd: %{public}d", fd);
     if (fd < 0) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
@@ -2952,6 +2958,7 @@ void PrintServiceAbility::NotifyAppDeletePrinterWithDefaultPrinter(const std::st
     opsJson["nextDefaultPrinter"] = dafaultPrinterId;
     printerInfo.SetOption(opsJson.dump());
     SendPrinterEventChangeEvent(PRINTER_EVENT_DELETED, printerInfo);
+    SendPrinterChangeEvent(PRINTER_EVENT_DELETED, printerInfo);
 }
 
 int32_t PrintServiceAbility::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
@@ -3342,11 +3349,11 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
     }
     std::string ip = connectParamJson["ip"].get<std::string>();
     vendorManager.SetConnectingPrinter(IP_AUTO, ip);
-    PRINT_HILOGD("connecting printer by ip: %{public}s", ip.c_str());
     if (!vendorManager.ConnectPrinterByIp(ip, "auto")) {
         PRINT_HILOGW("ConnectPrinterByIp fail");
         return E_PRINT_SERVER_FAILURE;
     }
+    PRINT_HILOGD("connecting printer by ip success");
     return E_PRINT_NONE;
 }
 } // namespace OHOS::Print
