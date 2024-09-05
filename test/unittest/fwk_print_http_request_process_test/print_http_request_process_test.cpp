@@ -1046,18 +1046,6 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_054, TestSize.
     EXPECT_EQ(false, printHttpRequestProcess.needWriteSendDoc);
 }
 
-/**
- * @tc.name: PrintHttpRequestProcessTest_055
- * @tc.desc: Verify the ProcessDataFromDevice function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_055, TestSize.Level1)
-{
-    OHOS::Print::PrintHttpRequestProcess printHttpRequestProcess;
-    printHttpRequestProcess.StartWriteDataToPrinterLooper();
-}
-
 }  // namespace Print
 }  // namespace OHOS
 

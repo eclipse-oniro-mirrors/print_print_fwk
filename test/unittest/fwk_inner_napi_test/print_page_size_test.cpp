@@ -202,24 +202,5 @@ HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0012, TestSize.Level1)
     OHOS::Print::PrintPageSize copyPageSize = printpageSize;
     EXPECT_EQ(copyPageSize.GetWidth(), printpageSize.GetWidth());
 }
-
-/**
- * @tc.name: PrintPageSizeTest_0013
- * @tc.desc: MatchPageSize.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0013, TestSize.Level1)
-{
-    PrintPageSize::MatchPageSize("aaa");
-    EXPECT_FALSE(PrintPageSize::MatchPageSize("iso_a4_210x297mm").empty());
-    OHOS::Print::PrintPageSize printPageSize;
-    EXPECT_FALSE(PrintPageSize::FindPageSizeById("ISO_AA", printPageSize));
-    EXPECT_TRUE(PrintPageSize::FindPageSizeById("ISO_A4", printPageSize));
-    OHOS::Print::PrintPageSize size;
-    size.SetId("ISO_A4");
-    EXPECT_TRUE(printPageSize == size);
-}
-
 } // namespace Print
 } // namespace OHOS

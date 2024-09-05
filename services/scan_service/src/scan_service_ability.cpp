@@ -1608,7 +1608,7 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std:
             static_cast<unsigned long>(scanQueue.size()), static_cast<unsigned long>(scanTaskMap.size()));
         SCAN_HILOGI("nowScanId :[%{public}d], nextPicId: [%{public}d]", nowScanId, nextPicId);
         file_name = "scan_tmp"+ std::to_string(nowScanId) +".jpg";
-        std::string outputDir = "/data/service/el1/public/print_service/sane/tmp/";
+        std::string outputDir = "/data/service/el2/public/print_service/sane/tmp/";
         output_file = outputDir.append(file_name);
         ofp = fopen(output_file.c_str(), "w");
         if (ofp == nullptr) {
@@ -1643,7 +1643,7 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
         static_cast<unsigned long>(scanQueue.size()), static_cast<unsigned long>(scanTaskMap.size()));
     SCAN_HILOGI("nowScanId :[%{public}d], nextPicId: [%{public}d]", nowScanId, nextPicId);
     file_name = "scan_tmp"+ std::to_string(nowScanId) +".jpg";
-    std::string outputDir = "/data/service/el1/public/print_service/sane/tmp/";
+    std::string outputDir = "/data/service/el2/public/print_service/sane/tmp/";
     output_file = outputDir.append(file_name);
     ofp = fopen(output_file.c_str(), "w");
     if (ofp == nullptr) {

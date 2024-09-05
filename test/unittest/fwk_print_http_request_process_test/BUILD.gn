@@ -73,17 +73,13 @@ ohos_unittest("fwk_print_http_request_process_test") {
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",
   ]
-  cflags_cc = []
+
   if (cups_enable) {
-    cflags_cc += [ "-DCUPS_ENABLE" ]
+    cflags_cc = [ "-DCUPS_ENABLE" ]
     external_deps += [
       "cups:cups",
       "cups-filters:cupsfilters",
     ]
-  }
-
-  if (ipp_over_usb_enable) {
-    cflags_cc += [ "-DIPPOVERUSB_ENABLE" ]
   }
 
   cflags_cc += [ "-DCPPHTTPLIB_NO_EXCEPTIONS" ]

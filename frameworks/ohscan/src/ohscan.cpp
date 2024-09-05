@@ -74,12 +74,14 @@ auto callbackFunction = [](std::vector<ScanDeviceInfo> &infos) {
     if (devices == nullptr) {
         SCAN_HILOGE("devices is a nullptr");
         g_discoverCallback(nullptr, 0);
+        return;
     }
     int32_t devicesMemSize = deviceCount * sizeof(Scan_ScannerDevice*);
     if (memset_s(devices, devicesMemSize, 0, devicesMemSize) != 0) {
         SCAN_HILOGW("memset_s fail");
         FreeDeviceListMemory(devices, 0);
         g_discoverCallback(nullptr, 0);
+        return;
     }
     for (int i = 0; i < deviceCount; i++) {
         Scan_ScannerDevice* device = new (std::nothrow) Scan_ScannerDevice();
@@ -226,48 +228,56 @@ Scan_ScannerOptions* CreateScannerOptions(int32_t &optionCount)
     return scannerOptions;
 }
 
+bool CopySingleBuf(char* destBuf, const char* srcBuf, size_t bufferSize)
+{
+    if (destBuf == nullptr || srcBuf == nullptr) {
+        SCAN_HILOGW("CopySingleBuf new fail");
+        return false;
+    }
+    if (memset_s(destBuf, bufferSize, 0, bufferSize) != 0) {
+        SCAN_HILOGE("CopySingleBuf memset_s fail");
+        return false;
+    }
+    if (strncpy_s(destBuf, bufferSize, srcBuf, bufferSize) != 0) {
+        SCAN_HILOGE("CopySingleBuf strncpy_s fail");
+        return false;
+    }
+
+    return true;
+}
+
 bool MemSetScannerOptions(Scan_ScannerOptions* scannerOptions, int32_t &optionCount, ScanParaTable &paraTable)
 {
     for (int i = 0; i < optionCount; i++) {
         auto bufferSize = paraTable.titBuff[i].length() + 1;
-        char* titleBuf = new (std::nothrow) char[bufferSize];
-        if (titleBuf == nullptr) {
-            FreeScannerOptionsMemory(scannerOptions);
+        char* titBuff = new(std::nothrow) char[bufferSize];
+        if (!CopySingleBuf(titBuff, paraTable.titBuff[i].c_str(), bufferSize)) {
+            if (titBuff != nullptr) {
+                delete[] titBuff;
+            }
             return false;
         }
-        if (memset_s(titleBuf, bufferSize, 0, bufferSize) != 0) {
-            SCAN_HILOGW("memset_s fail");
-            FreeScannerOptionsMemory(scannerOptions);
-            return false;
-        }
-        strncpy_s(titleBuf, bufferSize, paraTable.titBuff[i].c_str(), bufferSize);
-        scannerOptions->titles[i] = titleBuf;
+        scannerOptions->titles[i] = titBuff;
+
         bufferSize = paraTable.desBuff[i].length() + 1;
-        char* desBuf = new (std::nothrow) char[bufferSize];
-        if (desBuf == nullptr) {
-            FreeScannerOptionsMemory(scannerOptions);
+        char* desBuff = new (std::nothrow) char[bufferSize];
+        if (!CopySingleBuf(desBuff, paraTable.desBuff[i].c_str(), bufferSize)) {
+            if (desBuff != nullptr) {
+                delete[] desBuff;
+            }
             return false;
         }
-        if (memset_s(desBuf, bufferSize, 0, bufferSize) != 0) {
-            SCAN_HILOGW("memset_s fail");
-            FreeScannerOptionsMemory(scannerOptions);
-            return false;
-        }
-        strncpy_s(desBuf, bufferSize, paraTable.desBuff[i].c_str(), bufferSize);
-        scannerOptions->descriptions[i] = desBuf;
+        scannerOptions->descriptions[i] = desBuff;
+
         bufferSize = paraTable.rangesBuff[i].length() + 1;
-        char* rangeBuf = new (std::nothrow) char[bufferSize];
-        if (rangeBuf == nullptr) {
-            FreeScannerOptionsMemory(scannerOptions);
+        char* rangesBuff = new (std::nothrow) char[bufferSize];
+        if (!CopySingleBuf(rangesBuff, paraTable.rangesBuff[i].c_str(), bufferSize)) {
+            if (rangesBuff != nullptr) {
+                delete[] rangesBuff;
+            }
             return false;
         }
-        if (memset_s(rangeBuf, bufferSize, 0, bufferSize) != 0) {
-            SCAN_HILOGW("memset_s fail");
-            FreeScannerOptionsMemory(scannerOptions);
-            return false;
-        }
-        strncpy_s(rangeBuf, bufferSize, paraTable.rangesBuff[i].c_str(), bufferSize);
-        scannerOptions->ranges[i] = rangeBuf;
+        scannerOptions->ranges[i] = rangesBuff;
     }
     return true;
 }
@@ -286,6 +296,7 @@ Scan_ScannerOptions* GetScanParaValue(ScanParaTable &paraTable)
     }
     if (!MemSetScannerOptions(scannerOptions, optionCount, paraTable)) {
         SCAN_HILOGE("MemSetScannerOptions error");
+        FreeScannerOptionsMemory(scannerOptions);
         return nullptr;
     }
     return scannerOptions;

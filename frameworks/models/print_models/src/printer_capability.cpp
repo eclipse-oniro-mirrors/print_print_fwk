@@ -272,11 +272,11 @@ void PrinterCapability::SetPrinterAttrNameAndValue(const char* name, const char*
 
 nlohmann::json PrinterCapability::GetPrinterAttrGroupJson()
 {
-    nlohmann::json printerAttrGroupJson;
     if (printerAttr_group.size() < 1) {
         PRINT_HILOGI("no printerAttr_group");
-        return printerAttrGroupJson;
+        return "";
     }
+    nlohmann::json printerAttrGroupJson;
     for (auto iter = printerAttr_group.begin(); iter != printerAttr_group.end(); iter++) {
         printerAttrGroupJson[iter->first] = iter->second;
     }

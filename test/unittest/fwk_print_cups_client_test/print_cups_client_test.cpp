@@ -193,7 +193,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0009, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "DIRECT-PixLab_V1-0105";
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-0105";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-0105";
     PrinterInfo info;
     info.SetPrinterName(printerName);
     printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
@@ -263,7 +263,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0014, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0015, TestSize.Level1)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
-    printCupsClient->toCups = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
@@ -288,7 +287,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient->BuildJobParameters(testJob);
     printCupsClient->jobQueue_.push_back(jobParams);
-    printCupsClient->toCups = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     delete jobParams;
@@ -305,7 +303,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0018, TestSize.Level1)
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     JobParameters *jobParams = nullptr;
     printCupsClient->jobQueue_.push_back(jobParams);
-    printCupsClient->toCups = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     delete jobParams;
@@ -598,6 +595,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0034, TestSize.Level1)
     JobParameters *jobParams = nullptr;
     bool ret = printCupsClient.CheckPrinterMakeModel(jobParams);
     EXPECT_EQ(ret, false);
+    delete jobParams;
 }
 
 /**
@@ -1450,10 +1448,10 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0074, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0075, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    std::string printerId = "com.huawei.hmos.spooler:usb://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:usb://DIRECT-PixLab_V1-1620";
     std::string nic = "";
     printCupsClient.IsIpConflict(printerId, nic);
-    printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
     printCupsClient.IsIpConflict(printerId, nic);
 }
 
@@ -1507,5 +1505,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0076, TestSize.Level1)
     delete jobStatus;
     delete param;
 }
+
 }  // namespace Print
 }  // namespace OHOS

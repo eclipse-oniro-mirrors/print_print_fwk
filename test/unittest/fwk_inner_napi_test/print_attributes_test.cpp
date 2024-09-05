@@ -72,6 +72,7 @@ HWTEST_F(PrintAttributesTest, PrintAttributesTest_001, TestSize.Level1)
 {
     OHOS::Print::PrintAttributes printAttributes(GetDefaultPrintAttributes());
     printAttributes.Dump();
+    printAttributes.~PrintAttributes();
 }
 
 /**

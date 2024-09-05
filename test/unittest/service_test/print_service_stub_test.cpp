@@ -1029,35 +1029,23 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0041, TestSize.Level1)
 
 HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0042, TestSize.Level1)
 {
-    MessageParcel addData;
-    MessageParcel addReply;
+    MessageParcel data;
+    MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    uint32_t addCode = static_cast<uint32_t>(CMD_ADDPRINTERTOCUPS);
+    uint32_t code = static_cast<uint32_t>(CMD_ADDPRINTERTOCUPS);
 
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
-    std::string printerName = "DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerName = "DIRECT-PixLab_V1-1620";
     std::string printerMake = "PixLab V1 - IPP Everywhere";
-    EXPECT_TRUE(addData.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
-    EXPECT_TRUE(addData.WriteString(printerUri));
-    EXPECT_TRUE(addData.WriteString(printerName));
-    EXPECT_TRUE(addData.WriteString(printerMake));
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(data.WriteString(printerUri));
+    EXPECT_TRUE(data.WriteString(printerName));
+    EXPECT_TRUE(data.WriteString(printerMake));
 
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
     ON_CALL(*stub, AddPrinterToCups).WillByDefault(Return(E_PRINT_NONE));
-    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(addCode, addData, addReply, option)));
-
-    MessageParcel delData;
-    MessageParcel delReply;
-    uint32_t delCode = static_cast<uint32_t>(CMD_DELETE_PRINTER_FROM_CUPS);
-
-    EXPECT_TRUE(delData.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
-    EXPECT_TRUE(delData.WriteString(printerUri));
-    EXPECT_TRUE(delData.WriteString(printerName));
-    EXPECT_TRUE(delData.WriteString(printerMake));
-
-    ON_CALL(*stub, DeletePrinterFromCups).WillByDefault(Return(E_PRINT_NONE));
-    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(delCode, delData, delReply, option)));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
 HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0043, TestSize.Level1)
@@ -1068,7 +1056,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0043, TestSize.Level1)
     uint32_t code = static_cast<uint32_t>(CMD_QUERYPRINTERCAPABILITYBYURI);
 
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
     EXPECT_TRUE(data.WriteString(printerUri));
@@ -1209,7 +1197,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0051, TestSize.Level1)
     MessageOption option(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(CMD_QUERYPRINTERINFOBYPRINTERID);
 
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
     EXPECT_TRUE(data.WriteString(printerId));
 
@@ -1241,7 +1229,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0053, TestSize.Level1)
     MessageOption option(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(CMD_QUERYPRINTERPROPERTIES);
 
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
     std::vector<std::string> keyList;
     keyList.resize(1001);
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
@@ -1287,71 +1275,6 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0055, TestSize.Level1)
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
     EXPECT_EQ(stub->OnRemoteRequest(code, data, reply, option), E_PRINT_RPC_FAILURE);
-}
-
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0056, TestSize.Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(CMD_LOAD_EXT);
-
-    std::string extensionId = "com.sample.ext";
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
-    EXPECT_TRUE(data.WriteStringVector(extensionId));
-
-    auto stub = std::make_shared<MockPrintService>();
-    EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, LoadExtSuccess).WillByDefault(Return(E_PRINT_NONE));
-    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
-}
-
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0057, TestSize.Level1)
-{
-    MessageParcel setData;
-    MessageParcel setReply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t setCode = static_cast<uint32_t>(CMD_SET_PRINTER_PREFERENCE);
-
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
-    std::string printerSetting = R"({"pagesizeId":"","orientation":"","duplex":"","quality":""})";
-    EXPECT_TRUE(setData.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
-    EXPECT_TRUE(setData.WriteString(printerId));
-    EXPECT_TRUE(setData.WriteString(printerSetting));
-
-    auto stub = std::make_shared<MockPrintService>();
-    EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, SetPrinterPreference).WillByDefault(Return(E_PRINT_NONE));
-    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(setCode, setData, setReply, option)));
-
-    MessageParcel getData;
-    MessageParcel getReply;
-    uint32_t getCode = static_cast<uint32_t>(CMD_GET_PRINTER_PREFERENCE);
-
-    EXPECT_TRUE(getData.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
-    EXPECT_TRUE(getData.WriteString(printerId));
-
-    ON_CALL(*stub, GetPrinterPreference).WillByDefault(Return(E_PRINT_NONE));
-    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(getCode, getData, getReply, option)));
-}
-
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0058, TestSize.Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(CMD_SET_DEFAULT_PRINTERID);
-
-    std::string printerId = "com.huawei.hmos.spooler:p2p://DIRECT-HUAWEI_PixLab_V1-1620";
-    uint32_t type = 2;
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
-    EXPECT_TRUE(data.WriteString(printerId));
-    EXPECT_TRUE(data.WriteUint32(type));
-
-    auto stub = std::make_shared<MockPrintService>();
-    EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, SetDefaultPrinter).WillByDefault(Return(E_PRINT_NONE));
-    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
 } // namespace Print

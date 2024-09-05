@@ -23,8 +23,8 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Print {
 
-static const std::string SPOOLER_BUNDLE_NAME = "com.huawei.hmos.spooler";
-static const std::string SPOOLER_PACKAGE_NAME = "com.huawei.hmos.spooler";
+static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
+static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_STATUS_BAR_ABILITY_NAME = "PluginPrintIconExtAbility";
 static const std::string CALLER_PKG_NAME = "caller.pkgName";
 
@@ -153,19 +153,19 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0008, TestSize.Level1)
 }
 
 /**
-* @tc.name: PrintServiceHelperTest_009
+* @tc.name: PrintServiceHelperTest_0013
 * @tc.desc: faultPrint
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0009, TestSize.Level1) {
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_009, TestSize.Level1) {
     PrintServiceHelper helper;
     AAFwk::Want want;
     EXPECT_FALSE(helper.StartAbility(want));
 }
  
 /**
-* @tc.name: PrintServiceHelperTest_0010
+* @tc.name: PrintServiceHelperTest_0014
 * @tc.desc: faultPrint
 * @tc.type: FUNC
 * @tc.require:
@@ -174,19 +174,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0010, TestSize.Level1)
 {
     PrintServiceHelper helper;
     helper.PrintSubscribeCommonEvent();
-    helper.PrintSubscribeCommonEvent();
 }
 
-/**
-* @tc.name: PrintServiceHelperTest_0011
-* @tc.desc: StartPluginPrintIconExtAbility
-* @tc.type: FUNC
-* @tc.require:
-*/
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0011, TestSize.Level1) {
-    PrintServiceHelper helper;
-    AAFwk::Want want;
-    EXPECT_FALSE(helper.StartPluginPrintIconExtAbility(want));
-}
 } // namespace Print
 } // namespace OHOS
