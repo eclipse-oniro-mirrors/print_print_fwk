@@ -1166,7 +1166,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     if (param == nullptr) {
         PRINT_HILOGW("param is null");
         callback();
-        return false;
+        return;
     }
     g_isFirstQueryState = true;
     PRINT_HILOGD("MonitorJobState enter, cupsJobId: %{public}d", param->cupsJobId);
