@@ -105,7 +105,7 @@ typedef struct {
     int32_t (*onQueryProperties)(const char *printerId, const Print_StringList *propertyKeyList);
 } Print_VendorExtension;
 
-Print_VendorExtension* GetPrintVendorExtension();
+Print_VendorExtension* GetPrintVendorExtension(void);
 
 #ifdef __cplusplus
 }

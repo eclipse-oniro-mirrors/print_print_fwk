@@ -1882,12 +1882,6 @@ int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo, std::string
     }
 
     userData->printJobList_[jobId]->UpdateParams(jobInfo);
-    auto cbFunc = extCallbackMap_[cid];
-    if (cbFunc == nullptr) {
-        PRINT_HILOGE("cbFunc is nullptr.");
-        return E_PRINT_SERVER_FAILURE;
-    }
-    auto callback = [=]() { cbFunc->OnCallback(*userData->printJobList_[jobId]); };
     return E_PRINT_NONE;
 }
 

@@ -382,6 +382,7 @@ Print_ErrorCode OH_Print_RestorePrinterProperties(const char *printerId, const P
     return PRINT_ERROR_NONE;
 }
 
+namespace {
 class PrintDocumentAdapterWrapper : public PrintDocumentAdapter {
 public:
     explicit PrintDocumentAdapterWrapper(Print_PrintDocCallback PrintCallback);
@@ -530,6 +531,7 @@ Print_PrintAttributes *PrintDocumentAdapterWrapper::BuildPrintAttributes(const P
     printMargin.rightMargin = margin.GetRight();
     attributes->pageMargin = printMargin;
     return attributes.release();
+}
 }
 
 Print_ErrorCode OH_Print_StartPrintByNative(const char *printJobName,
