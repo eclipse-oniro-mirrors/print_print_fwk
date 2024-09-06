@@ -232,5 +232,10 @@ const std::string PRINTER_DISCOVER_EVENT_TYPE = "printerDiscover";
 const std::string PRINTER_CHANGE_EVENT_TYPE = "printerChange";
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
+const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
+const std::string PRINTER_LIST_FILE = "printer_list.json";
+const std::string PRINTER_LIST_VERSION = "v1";
+const std::string PRINT_USER_DATA_FILE = "print_user_data.json";
+const std::string PRINT_USER_DATA_VERSION = "v1";
 } // namespace OHOS::Print
 #endif // PRINT_CONSTANT_H
