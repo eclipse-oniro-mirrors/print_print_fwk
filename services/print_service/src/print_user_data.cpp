@@ -29,10 +29,6 @@ namespace Print {
 
 using namespace std;
 
-const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
-const std::string PRINT_USER_DATA_FILE = "print_user_data.json";
-const std::string PRINT_USER_DATA_VERSION = "v1";
-
 void PrintUserData::RegisterPrinterCallback(const std::string &type, const sptr<IPrintCallback> &listener)
 {
     registeredListeners_[type] = listener;

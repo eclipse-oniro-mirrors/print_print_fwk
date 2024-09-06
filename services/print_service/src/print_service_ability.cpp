@@ -54,8 +54,6 @@ using namespace std;
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
 using json = nlohmann::json;
-const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
-const std::string PRINTER_PREFERENCE_FILE = "printer_preference.json";
 
 const uint32_t MAX_JOBQUEUE_NUM = 512;
 const uint32_t ASYNC_CMD_DELAY = 10;
@@ -110,6 +108,8 @@ static const std::string NOTIFY_INFO_SPOOLER_CLOSED_FOR_STARTED = "spooler_close
 
 static const std::string PRINTER_ID_DELIMITER = ":";
 static const std::string USB_PRINTER = "usb";
+
+const std::string PRINTER_PREFERENCE_FILE = "printer_preference.json";
 
 static bool g_publishState = false;
 
