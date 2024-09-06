@@ -163,6 +163,7 @@ void PrintModalUICallback::SendMessageBack()
         PRINT_HILOGE("Failed to get uv_queue_work.");
         delete printBaseContext;
         delete work;
+        work = nullptr;
     }
 }
 

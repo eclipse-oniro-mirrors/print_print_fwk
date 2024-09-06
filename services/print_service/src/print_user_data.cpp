@@ -314,7 +314,7 @@ bool PrintUserData::GetFileData(std::string &fileData)
             PRINT_HILOGE("The realPidFile is null.");
             return E_PRINT_SERVER_FAILURE;
         }
-        int32_t fd = open(userDataFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0740);
+        int32_t fd = open(userDataFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
         PRINT_HILOGI("create file fd: %{public}d", fd);
         if (fd < 0) {
             PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
@@ -365,7 +365,7 @@ bool PrintUserData::SetUserDataToFile()
             PRINT_HILOGE("The realPidFile is null.");
             return E_PRINT_SERVER_FAILURE;
         }
-        int32_t fd = open(userDataFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0740);
+        int32_t fd = open(userDataFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
         PRINT_HILOGI("SetUserDataToFile fd: %{public}d", fd);
         if (fd < 0) {
             PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
