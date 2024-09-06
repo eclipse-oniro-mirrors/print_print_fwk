@@ -191,7 +191,7 @@ bool ScanSystemData::UpdateScannerNameByUniqueId(const std::string &uniqueId, co
 {
     std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
     auto iter = addedScannerMap_.find(uniqueId);
-    if (iter != addedScannerMap_.end()) {
+    if (iter != addedScannerMap_.end() && iter->second != nullptr) {
         iter->second->deviceName = deviceName;
     } else {
         SCAN_HILOGE("ScanSystemData UpdateScannerNameByUniqueId fail");
@@ -295,6 +295,7 @@ bool ScanSystemData::SaveScannerMap()
     size_t jsonLength = jsonString.length();
     auto writeLength = write(fd, jsonString.c_str(), jsonLength);
     close(fd);
+    fd = -1;
     SCAN_HILOGI("SaveScannerMap finished");
     if (writeLength < 0) {
         return false;

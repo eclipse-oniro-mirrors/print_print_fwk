@@ -109,7 +109,7 @@ int32_t PrintServiceStub::OnRemoteRequest(
 bool PrintServiceStub::OnStartService(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGD("nativePrint PrintServiceStub::OnStartService in");
-    int32_t ret = E_PRINT_NONE;
+    int32_t ret = E_PRINT_INVALID_PARAMETER;
     if (data.ReadString() == "nativePrint") {
         ret = StartService();
         reply.WriteInt32(ret);

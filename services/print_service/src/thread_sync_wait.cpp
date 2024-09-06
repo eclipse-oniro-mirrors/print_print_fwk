@@ -22,9 +22,6 @@ void ThreadSyncWait::Wait(int timeout)
     if (timeout > 0) {
         std::unique_lock<std::mutex> lock(waitMutex);
         waitCondition.wait_for(lock, std::chrono::milliseconds(timeout));
-    } else if (timeout < 0) {
-        std::unique_lock<std::mutex> lock(waitMutex);
-        waitCondition.wait(lock);
     }
 }
 void ThreadSyncWait::Notify()
