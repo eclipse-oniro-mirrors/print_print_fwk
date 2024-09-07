@@ -564,8 +564,8 @@ Print_ErrorCode OH_Print_StartPrintByNative(const char *printJobName,
     int32_t ret =
         PrintManagerClient::GetInstance()->Print(printJobNameStr, printCb, attributes, uiContent);
     if (ret != PRINT_ERROR_NONE) {
-        PRINT_HILOGE("OH_Print start print start failed.");
-        return PRINT_ERROR_GENERIC_FAILURE;
+        PRINT_HILOGE("OH_Print start print start failed, error code : %{public}d.", ret);
+        return ConvertToNativeErrorCode(ret);
     }
     return PRINT_ERROR_NONE;
 }
