@@ -125,8 +125,7 @@ void ScanSystemData::RefreshUsbDeviceId()
 
 std::string ScanSystemData::GetNewDeviceId(std::string oldDeviceId, std::string usbDevicePort)
 {
-    std::string deviceIdHead = oldDeviceId.substr(0, oldDeviceId.find_last_of(":")
-                                                    - USB_DEVICEID_FIRSTID_LEN_3);
+    std::string deviceIdHead = oldDeviceId.substr(0, oldDeviceId.find_last_of(":") - USB_DEVICEID_FIRSTID_LEN_3);
     std::string firstPort = usbDevicePort.substr(0, usbDevicePort.find("-"));
     std::string secondPort = usbDevicePort.substr(usbDevicePort.find("-") + 1, usbDevicePort.size() - 1);
     SCAN_HILOGI("firstPort = %{public}s, secondPort = %{public}s.",
