@@ -212,7 +212,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001, TestSize.Level1)
         delete new_print_service;
         new_print_service = nullptr;
     }
-    sptr<PrintServiceAbility> service = PrintServiceAbility::GetInstance();
     EXPECT_EQ(PrintServiceAbility::GetInstance()->Init(), E_PRINT_SERVER_FAILURE);
 }
 /**
