@@ -395,6 +395,7 @@ void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
                 it->second.deviceName.find_last_of(" ") + 1, it->second.deviceName.size() - 1);
             SCAN_HILOGI("Set mdns ScannerSerialNumber :[%{public}s]", info.serialNumber.c_str());
         }
+        info.deviceName = it->second.deviceName;
     } else if (info.deviceId.find(":libusb") != info.deviceId.npos) {
         info.discoverMode = "USB";
         SCAN_HILOGI("SetScannerSerialNumber discoverMode:[%{public}s]", info.discoverMode.c_str());
@@ -414,8 +415,8 @@ void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
         } else {
             SCAN_HILOGE("usb %{public}s can't find serialNumber", usbScannerPort.c_str());
         }
+        info.deviceName = info.manufacturer + "-" + info.model + "-" + info.serialNumber;
     }
-    info.deviceName = info.manufacturer + "-" + info.model + "-" + info.serialNumber;
 }
 
 void ScanServiceAbility::SyncScannerInfo(ScanDeviceInfo &info)
