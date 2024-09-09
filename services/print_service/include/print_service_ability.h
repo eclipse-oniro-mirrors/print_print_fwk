@@ -49,7 +49,7 @@ public:
     PrintServiceAbility(int32_t systemAbilityId, bool runOnCreate);
     PrintServiceAbility();
     ~PrintServiceAbility();
-    static sptr<PrintServiceAbility> GetInstance();
+    static PrintServiceAbility* GetInstance();
     int32_t StartService() override;
     int32_t StartPrint(const std::vector<std::string> &fileList,
         const std::vector<uint32_t> &fdList, std::string &taskId) override;
@@ -211,7 +211,6 @@ private:
     PrintSecurityGuardManager securityGuardManager_;
     ServiceRunningState state_;
     static std::mutex instanceLock_;
-    static sptr<PrintServiceAbility> instance_;
     static std::shared_ptr<AppExecFwk::EventHandler> serviceHandler_;
     static std::chrono::time_point<std::chrono::high_resolution_clock> startPrintTime_;
     static std::string ingressPackage;
