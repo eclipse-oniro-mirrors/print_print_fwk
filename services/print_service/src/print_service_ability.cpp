@@ -319,7 +319,6 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
 
 int32_t PrintServiceAbility::StopPrint(const std::string &taskId)
 {
-    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1888,12 +1887,6 @@ int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo, std::string
     }
 
     userData->printJobList_[jobId]->UpdateParams(jobInfo);
-    auto cbFunc = extCallbackMap_[cid];
-    if (cbFunc == nullptr) {
-        PRINT_HILOGE("cbFunc is nullptr.");
-        return E_PRINT_SERVER_FAILURE;
-    }
-    auto callback = [=]() { cbFunc->OnCallback(*userData->printJobList_[jobId]); };
     return E_PRINT_NONE;
 }
 

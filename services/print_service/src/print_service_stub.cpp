@@ -99,7 +99,8 @@ int32_t PrintServiceStub::OnRemoteRequest(
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
         if (requestFunc != nullptr) {
-            return (this->*requestFunc)(data, reply);
+            bool result = (this->*requestFunc)(data, reply);
+            return result ? E_PRINT_NONE : E_PRINT_GENERIC_FAILURE;
         }
     }
     PRINT_HILOGW("default case, need check.");
