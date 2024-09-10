@@ -141,6 +141,8 @@ static void DeviceCb(const char *deviceClass, const char *deviceId, const char *
         PrinterInfo info;
         info.SetPrinterId(PRINTER_ID_USB_PREFIX + "-" + printerName + "-" + serial);
         info.SetPrinterName(PRINTER_ID_USB_PREFIX + "-" + printerName + "-" + serial);
+        info.SetPrinterMake(printerMake);
+        info.SetUri(printerUri);
         info.SetPrinterState(PRINTER_ADDED);
         PrinterCapability printerCapability;
         info.SetCapability(printerCapability);
