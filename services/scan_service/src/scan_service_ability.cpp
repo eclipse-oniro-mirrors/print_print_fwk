@@ -857,7 +857,7 @@ int32_t ScanServiceAbility::ActionSetValueHelper(ScanOptionValue &value, void *s
             *(static_cast<int32_t *>(saneValueBuf) + i) = numListValue[i];
         }
     } else if (valueType == SCAN_VALUE_STR) {
-        SCAN_HILOGE("Set scanner mode:[%{public}s]", value.GetStrValue().c_str());
+        SCAN_HILOGI("Set scanner mode:[%{public}s]", value.GetStrValue().c_str());
         if (strncpy_s(static_cast<char*>(saneValueBuf), bufSize,
             value.GetStrValue().c_str(), value.GetStrValue().size()) != EOK) {
             return E_SCAN_GENERIC_FAILURE;
