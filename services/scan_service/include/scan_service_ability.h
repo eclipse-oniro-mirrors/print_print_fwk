@@ -82,6 +82,7 @@ private:
 #ifdef SANE_ENABLE
     int32_t ActionSetAuto(SANE_Handle &scannerHandle, const int32_t &optionIndex);
     int32_t ActionGetValue(SANE_Handle &scannerHandle, ScanOptionValue &value, const int32_t &optionIndex);
+    void* PrepareSaneValue(const ScanOptionValue &value, uint32_t &bufSize, int32_t &valueSize);
     int32_t ActionSetValue(SANE_Handle &scannerHandle, ScanOptionValue &value,
         const int32_t &optionIndex, int32_t &info);
     int32_t SelectScanOptionDesc(const SANE_Option_Descriptor* &optionDesc, ScanOptionDescriptor &desc);

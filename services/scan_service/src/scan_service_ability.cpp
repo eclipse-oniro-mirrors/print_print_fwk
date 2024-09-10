@@ -838,29 +838,25 @@ int32_t ScanServiceAbility::ActionGetValue(SANE_Handle &scannerHandle, ScanOptio
 #endif
 
 #ifdef SANE_ENABLE
-int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptionValue &value,
-    const int32_t &optionIndex, int32_t &info)
+void* ScanServiceAbility::PrepareSaneValue(const ScanOptionValue &value, uint32_t &bufSize, int32_t &valueSize)
 {
-    SCAN_HILOGD("Set OpScanOptionValue SCAN_ACTION_SET_VALUE");
-    SANE_Status status = SANE_STATUS_GOOD;
-    int32_t valueSize = value.GetValueSize() / sizeof(SANE_Word);
-    uint32_t bufSize = (value.GetStrValue().size() + 1)
-        > sizeof(int) ? (value.GetStrValue().size() + 1) : sizeof(int);
+    valueSize = value.GetValueSize() / sizeof(SANE_Word);
+    bufSize = (value.GetStrValue().size() + 1) > sizeof(int) ? (value.GetStrValue().size() + 1) : sizeof(int);
     if (bufSize == 0 || bufSize > MAX_SANE_VALUE_LEN) {
         SCAN_HILOGE("malloc value buffer size error");
-        return E_SCAN_GENERIC_FAILURE;
+        return nullptr;
     }
     void* saneValueBuf = malloc(bufSize);
     if (!saneValueBuf) {
         SCAN_HILOGE("malloc value buffer failed");
-        return E_SCAN_GENERIC_FAILURE;
+        return nullptr;
     }
     if (memset_s(saneValueBuf, bufSize, 0, bufSize) != 0) {
         SCAN_HILOGE("memset_s failed");
         free(saneValueBuf);
-        saneValueBuf = nullptr;
-        return E_SCAN_GENERIC_FAILURE;
+        return nullptr;
     }
+
     ScanOptionValueType valueType = value.GetScanOptionValueType();
     if (valueType == SCAN_VALUE_NUM) {
         int32_t numValue = value.GetNumValue();
@@ -877,20 +873,39 @@ int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptio
         if (strncpy_s(static_cast<char*>(saneValueBuf), bufSize,
             value.GetStrValue().c_str(), value.GetStrValue().size()) != EOK) {
             SCAN_HILOGD("strncpy_s arg failed");
-            return E_SCAN_GENERIC_FAILURE;
+            free(saneValueBuf);
+            return nullptr;
         }
     } else if (valueType == SCAN_VALUE_BOOL) {
         *static_cast<int32_t *>(saneValueBuf) = value.GetBoolValue() > 0 ? true : false;
     }
+
+    return saneValueBuf;
+}
+#endif
+
+#ifdef SANE_ENABLE
+int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptionValue &value,
+    const int32_t &optionIndex, int32_t &info)
+{
+    SCAN_HILOGD("Set OpScanOptionValue SCAN_ACTION_SET_VALUE");
+    SANE_Status status = SANE_STATUS_GOOD;
+    uint32_t bufSize;
+    int32_t valueSize;
+
+    void* saneValueBuf = PrepareSaneValue(value, bufSize, valueSize);
+    if (!saneValueBuf) {
+        return E_SCAN_GENERIC_FAILURE;
+    }
+
     status = sane_control_option(scannerHandle, optionIndex, SANE_ACTION_SET_VALUE, saneValueBuf, &info);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
+        free(saneValueBuf);
         return ScanUtil::ConvertErro(status);
     }
 
     free(saneValueBuf);
-    saneValueBuf = nullptr;
-
     return E_SCAN_NONE;
 }
 #endif
