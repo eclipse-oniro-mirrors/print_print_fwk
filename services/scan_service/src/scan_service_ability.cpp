@@ -839,6 +839,38 @@ int32_t ScanServiceAbility::ActionGetValue(SANE_Handle &scannerHandle, ScanOptio
 #endif
 
 #ifdef SANE_ENABLE
+int32_t ScanServiceAbility::ActionSetValueHelper(ScanOptionValue &value, void *saneValueBuf,
+    int32_t valueSize, uint32_t bufSize)
+{
+    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != 0) {
+        SCAN_HILOGE("memset_s failed");
+        return E_SCAN_GENERIC_FAILURE;
+    }
+    ScanOptionValueType valueType = value.GetScanOptionValueType();
+    if (valueType == SCAN_VALUE_NUM) {
+        int32_t numValue = value.GetNumValue();
+        dpi = numValue > 0 && numValue < MAX_PICTURE_DPI ? numValue : 0;
+        *static_cast<int *>(saneValueBuf) = value.GetNumValue();
+    } else if (valueType == SCAN_VALUE_NUM_LIST) {
+        std::vector<int32_t> numListValue;
+        value.GetNumListValue(numListValue);
+        for (int i = 0; i < valueSize; i++) {
+            *(static_cast<int32_t *>(saneValueBuf) + i) = numListValue[i];
+        }
+    } else if (valueType == SCAN_VALUE_STR) {
+        SCAN_HILOGI("Set scanner mode:[%{public}s]", value.GetStrValue().c_str());
+        if (strncpy_s(static_cast<char*>(saneValueBuf), bufSize,
+            value.GetStrValue().c_str(), value.GetStrValue().size()) != EOK) {
+            return E_SCAN_GENERIC_FAILURE;
+        }
+    } else if (valueType == SCAN_VALUE_BOOL) {
+        *static_cast<int32_t *>(saneValueBuf) = value.GetBoolValue() > 0 ? true : false;
+    }
+    return E_SCAN_NONE;
+}
+#endif
+
+#ifdef SANE_ENABLE
 int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptionValue &value,
     const int32_t &optionIndex, int32_t &info)
 {
@@ -856,41 +888,24 @@ int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptio
         SCAN_HILOGE("malloc value buffer failed");
         return E_SCAN_GENERIC_FAILURE;
     }
-    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != 0) {
-        SCAN_HILOGE("memset_s failed");
-        free(saneValueBuf);
-        saneValueBuf = nullptr;
-        return E_SCAN_GENERIC_FAILURE;
-    }
-    ScanOptionValueType valueType = value.GetScanOptionValueType();
-    if (valueType == SCAN_VALUE_NUM) {
-        int32_t numValue = value.GetNumValue();
-        dpi = numValue > 0 && numValue < MAX_PICTURE_DPI ? numValue : 0;
-        *static_cast<int *>(saneValueBuf) = value.GetNumValue();
-    } else if (valueType == SCAN_VALUE_NUM_LIST) {
-        std::vector<int32_t> numListValue;
-        value.GetNumListValue(numListValue);
-        for (int i = 0; i < valueSize; i++) {
-            *(static_cast<int32_t *>(saneValueBuf) + i) = numListValue[i];
+    int32_t ret = E_SCAN_NONE;
+    do {
+        ret = ActionSetValueHelper(value, saneValueBuf, valueSize, bufSize);
+        if (ret != E_SCAN_NONE) {
+            SCAN_HILOGE("ActionSetValueHelper failed");
+            break;
         }
-    } else if (valueType == SCAN_VALUE_STR) {
-        SCAN_HILOGE("Set scanner mode:[%{public}s]", value.GetStrValue().c_str());
-        strncpy_s(static_cast<char*>(saneValueBuf), bufSize,
-            value.GetStrValue().c_str(), value.GetStrValue().size());
-    } else if (valueType == SCAN_VALUE_BOOL) {
-        *static_cast<int32_t *>(saneValueBuf) = value.GetBoolValue() > 0 ? true : false;
-    }
-    status = sane_control_option(scannerHandle, optionIndex,
-        SANE_ACTION_SET_VALUE, saneValueBuf, &info);
-    if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
-        return ScanUtil::ConvertErro(status);
-    }
+        status = sane_control_option(scannerHandle, optionIndex, SANE_ACTION_SET_VALUE, saneValueBuf, &info);
+        if (status != SANE_STATUS_GOOD) {
+            SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
+            ret = ScanUtil::ConvertErro(status);
+            break;
+        }
+    } while (0);
 
     free(saneValueBuf);
     saneValueBuf = nullptr;
-
-    return E_SCAN_NONE;
+    return ret;
 }
 #endif
 
