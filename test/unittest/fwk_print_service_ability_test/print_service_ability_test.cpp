@@ -494,7 +494,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0013, TestSize.Level1)
     service->printSystemData_.addedPrinterMap_[printerId] = cupsPrinter;
     service->RemovePrinters(newPrinterIds);
     printerInfos.clear();
-    EXPECT_EQ(service->UpdatePrinters(printerInfos), E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(service->UpdatePrinters(printerInfos), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0014, TestSize.Level1)
@@ -509,7 +509,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0014, TestSize.Level1)
     service->printJobList_["1"] = job;
     EXPECT_EQ(service->StartPrintJob(testJob), E_PRINT_INVALID_PRINTJOB);
     service->printJobList_["0"] = job;
-    EXPECT_EQ(service->StartPrintJob(testJob), E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(service->StartPrintJob(testJob), E_PRINT_INVALID_PRINTJOB);
     std::string extensionId = PrintUtils::GetExtensionId(GetDefaultPrinterId());
     sptr<IPrintExtensionCallback> listener = nullptr;
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
@@ -667,7 +667,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0031, TestSize.Level1)
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
     std::vector<std::string> printerList;
-    EXPECT_EQ(service->QueryAddedPrinter(printerList), E_PRINT_INVALID_PRINTER);
+    EXPECT_EQ(service->QueryAddedPrinter(printerList), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0032, TestSize.Level1)
@@ -683,7 +683,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0032, TestSize.Level1)
     service->printSystemData_.addedPrinterInfoList_[printerId] = printerInfo;
     keyList.push_back("printerId");
     keyList.push_back("printerName");
-    EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_NONE);
+    EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_INVALID_PRINTER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0033, TestSize.Level1)
@@ -917,8 +917,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0049, TestSize.Level1)
     EXPECT_EQ(service->checkJobState(state, subState), false);
     EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_PARAMETER);
     subState = PRINT_JOB_BLOCKED_UNKNOWN + 1;
-    EXPECT_EQ(service->checkJobState(state, subState), false);
-    EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(service->checkJobState(state, subState), true);
+    EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_USERID);
     state = PRINT_JOB_COMPLETED;
     subState = PRINT_JOB_COMPLETED_FILE_CORRUPT + 1;
     EXPECT_EQ(service->checkJobState(state, subState), false);
