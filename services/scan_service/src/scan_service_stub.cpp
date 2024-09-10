@@ -105,7 +105,7 @@ bool ScanServiceStub::OnExitScan(MessageParcel &data, MessageParcel &reply)
     }
     {
         std::lock_guard<std::mutex> autoLock(lock_);
-        ScanServiceAbility::appCount_ = ScanServiceAbility::appCount_-1 >= 0 ? ScanServiceAbility::appCount_-1 : 0;
+        ScanServiceAbility::appCount_ = ScanServiceAbility::appCount_ - 1 >= 0 ? ScanServiceAbility::appCount_ - 1 : 0;
         SCAN_HILOGI("appCount = %{public}d", ScanServiceAbility::appCount_);
         if (ScanServiceAbility::appCount_ == 0) {
             SCAN_HILOGI("connected app number = 0, start unloadSA");

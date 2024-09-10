@@ -99,7 +99,8 @@ int32_t PrintServiceStub::OnRemoteRequest(
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
         if (requestFunc != nullptr) {
-            return (this->*requestFunc)(data, reply);
+            bool result = (this->*requestFunc)(data, reply);
+            return result ? E_PRINT_NONE : E_PRINT_GENERIC_FAILURE;
         }
     }
     PRINT_HILOGW("default case, need check.");
@@ -109,7 +110,7 @@ int32_t PrintServiceStub::OnRemoteRequest(
 bool PrintServiceStub::OnStartService(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGD("nativePrint PrintServiceStub::OnStartService in");
-    int32_t ret = E_PRINT_NONE;
+    int32_t ret = E_PRINT_INVALID_PARAMETER;
     if (data.ReadString() == "nativePrint") {
         ret = StartService();
         reply.WriteInt32(ret);

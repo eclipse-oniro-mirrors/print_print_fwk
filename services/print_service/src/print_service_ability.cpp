@@ -116,7 +116,6 @@ static bool g_publishState = false;
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
 
 std::mutex PrintServiceAbility::instanceLock_;
-sptr<PrintServiceAbility> PrintServiceAbility::instance_;
 std::shared_ptr<AppExecFwk::EventHandler> PrintServiceAbility::serviceHandler_;
 std::chrono::time_point<std::chrono::high_resolution_clock> PrintServiceAbility::startPrintTime_;
 std::string PrintServiceAbility::ingressPackage;
@@ -139,15 +138,10 @@ PrintServiceAbility::~PrintServiceAbility()
     PRINT_HILOGE("~PrintServiceAbility state_  is %{public}d.", static_cast<int>(state_));
 }
 
-sptr<PrintServiceAbility> PrintServiceAbility::GetInstance()
+PrintServiceAbility* PrintServiceAbility::GetInstance()
 {
-    if (instance_ == nullptr) {
-        std::lock_guard<std::mutex> autoLock(instanceLock_);
-        if (instance_ == nullptr) {
-            instance_ = new PrintServiceAbility(PRINT_SERVICE_ID, true);
-        }
-    }
-    return instance_;
+    static PrintServiceAbility instance(PRINT_SERVICE_ID, true);
+    return &instance;
 }
 
 int32_t PrintServiceAbility::Init()
@@ -187,9 +181,6 @@ int32_t PrintServiceAbility::Init()
 void PrintServiceAbility::OnStart()
 {
     PRINT_HILOGI("PrintServiceAbility::Enter OnStart.");
-    if (instance_ == nullptr) {
-        instance_ = this;
-    }
     if (state_ == ServiceRunningState::STATE_RUNNING) {
         PRINT_HILOGI("PrintServiceAbility is already running.");
 #ifdef CUPS_ENABLE
@@ -319,7 +310,6 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
 
 int32_t PrintServiceAbility::StopPrint(const std::string &taskId)
 {
-    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1888,12 +1878,6 @@ int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo, std::string
     }
 
     userData->printJobList_[jobId]->UpdateParams(jobInfo);
-    auto cbFunc = extCallbackMap_[cid];
-    if (cbFunc == nullptr) {
-        PRINT_HILOGE("cbFunc is nullptr.");
-        return E_PRINT_SERVER_FAILURE;
-    }
-    auto callback = [=]() { cbFunc->OnCallback(*userData->printJobList_[jobId]); };
     return E_PRINT_NONE;
 }
 
