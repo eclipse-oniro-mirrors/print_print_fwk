@@ -716,6 +716,8 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printe
     ParsePrinterAttributes(dinfo->attrs, printerCaps);
     printerCaps.Dump();
     
+    cupsFreeDestInfo(dinfo);
+    cupsFreeDests(1, dest);
     PRINT_HILOGI("QueryPrinterCapabilityFromPPD out\n");
     return E_PRINT_NONE;
 }
