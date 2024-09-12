@@ -50,7 +50,6 @@
 #include <streambuf>
 
 namespace OHOS::Print {
-using namespace std;
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
 using json = nlohmann::json;

@@ -26,8 +26,6 @@
 namespace OHOS {
 namespace Print {
 
-using namespace std;
-
 bool PrintSystemData::ParsePrinterListJsonV1(nlohmann::json &jsonObject)
 {
     if (!jsonObject.contains("printer_list") || !jsonObject["printer_list"].is_array()) {

@@ -22,7 +22,6 @@
 #include "cJSON.h"
 
 namespace OHOS::Print {
-using namespace std;
 using namespace OHOS;
 using namespace httplib;
 
@@ -154,8 +153,8 @@ void PrintHttpServerManager::DealUsbDevDetach(const std::string &devStr)
         cJSON_Delete(devJson);
         return;
     }
-    string name = jsonTemp->valuestring;
-    string printerName = DelayedSingleton<PrintUsbManager>::GetInstance()->GetPrinterName(name);
+    std::string name = jsonTemp->valuestring;
+    std::string printerName = DelayedSingleton<PrintUsbManager>::GetInstance()->GetPrinterName(name);
     PRINT_HILOGD("DealUsbDevDetach name: %{public}s, printerName: %{public}s", name.c_str(), printerName.c_str());
     if (printerName.empty()) {
         cJSON_Delete(devJson);
