@@ -708,8 +708,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printe
     cups_dinfo_t *dinfo = printAbility_->CopyDestInfo(CUPS_HTTP_DEFAULT, dest);
     if (dinfo == nullptr) {
         PRINT_HILOGE("cupsCopyDestInfo failed");
-        delete dest;
-        dest = nullptr;
+        cupsFreeDests(1, dest);
         return E_PRINT_SERVER_FAILURE;
     }
 
