@@ -75,9 +75,7 @@ static constexpr const char *FUNCTION_GET_ADDED_PRINTER_INFO_BY_ID = "getAddedPr
 static void SetEnumProperty(napi_env env, napi_value object, const std::string &name, uint32_t value)
 {
     napi_value tempValue = nullptr;
-    if (napi_create_int32(env, value, &tempValue) != napi_ok) {
-        return;
-    }
+    napi_create_int32(env, value, &tempValue);
     napi_set_named_property(env, object, name.c_str(), tempValue);
 }
 
