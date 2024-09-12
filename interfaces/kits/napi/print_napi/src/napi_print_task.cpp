@@ -137,7 +137,7 @@ napi_value NapiPrintTask::PrintByAdapter(napi_env env, napi_callback_info info)
 
 napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, napi_value *argv, napi_value self)
 {
-    if (argc > NapiPrintUtils::ARGC_THREE && argc > NapiPrintUtils::ARGC_TWO) {
+    if (argc > NapiPrintUtils::ARGC_THREE) {
         std::string printJobName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
 
         std::shared_ptr<PrintAttributes> printAttributes =

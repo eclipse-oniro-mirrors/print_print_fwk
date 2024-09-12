@@ -45,19 +45,19 @@ static const std::string CALLER_PKG_NAME = "caller.pkgName";
 PrintTask::PrintTask(const std::vector<std::string> &innerList, const sptr<IRemoteObject> &innerCallerToken_)
     : taskId_("")
 {
-    if (innerList.begin()->find("fd://") == 0) {
-        PRINT_HILOGD("list type: fdlist");
-        for (auto fdPath : innerList) {
-            pathType_ = FD_PATH;
-            uint32_t fd = PrintUtils::GetIdFromFdPath(fdPath);
-            fdList_.emplace_back(fd);
-        }
-    } else {
-        PRINT_HILOGD("list type: filelist");
-        fileList_.assign(innerList.begin(), innerList.end());
-        pathType_ = FILE_PATH_ABSOLUTED;
-        if (fileList_.size() > 0) {
-            if (fileList_.begin()->find("file://") == 0) {
+    if (!innerList.empty()) {
+        if (innerList.begin()->find("fd://") == 0) {
+            PRINT_HILOGD("list type: fdlist");
+            for (auto fdPath : innerList) {
+                pathType_ = FD_PATH;
+                uint32_t fd = PrintUtils::GetIdFromFdPath(fdPath);
+                fdList_.emplace_back(fd);
+            }
+        } else {
+            PRINT_HILOGD("list type: filelist");
+            fileList_.assign(innerList.begin(), innerList.end());
+            pathType_ = FILE_PATH_ABSOLUTED;
+            if (!fileList_.empty() && fileList_.begin()->find("file://") == 0) {
                 pathType_ = FILE_PATH;
             }
         }
@@ -178,10 +178,6 @@ uint32_t PrintTask::CallSpooler(
     }
 
     auto asyncContext = std::make_shared<BaseContext>();
-    if (asyncContext == nullptr) {
-        PRINT_HILOGE("create asyncContext failed.");
-        return E_PRINT_SERVER_FAILURE;
-    }
     asyncContext->env = env;
     asyncContext->requestType = PrintRequestType::REQUEST_TYPE_START;
     if (!ParseAbilityContextReq(env, argv[contextIndex], asyncContext->context, asyncContext->uiExtensionContext)) {
