@@ -510,8 +510,9 @@ void JsPrintExtension::RegisterExtensionCb()
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
+            bool res = JsPrintExtension::jsExtension_->Callback("onDestroy");
             JsPrintExtension::jsExtension_->OnStop();
-            return JsPrintExtension::jsExtension_->Callback("onDestroy");
+            return res;
     });
 }
 } // namespace AbilityRuntime
