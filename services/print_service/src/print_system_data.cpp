@@ -26,8 +26,6 @@
 namespace OHOS {
 namespace Print {
 
-using namespace std;
-
 bool PrintSystemData::ParsePrinterListJsonV1(nlohmann::json &jsonObject)
 {
     if (!jsonObject.contains("printer_list") || !jsonObject["printer_list"].is_array()) {
@@ -130,7 +128,7 @@ void PrintSystemData::InsertCupsPrinter(
     const std::string &printerId, const CupsPrinterInfo &printerInfo, bool needUpdateCaps)
 {
     auto orderId = 0;
-    if (addedPrinterOrderList_.size()) {
+    if (!addedPrinterOrderList_.empty()) {
         orderId = addedPrinterOrderList_.rbegin()->first;
     }
     auto info = addedPrinterMap_.Find(printerId);

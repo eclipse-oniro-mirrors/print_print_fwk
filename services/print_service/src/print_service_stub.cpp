@@ -565,7 +565,6 @@ bool PrintServiceStub::OnDiscoverUsbPrinters(MessageParcel &data, MessageParcel 
 {
     PRINT_HILOGD("PrintServiceStub::OnDiscoverUsbPrinters in");
     std::vector<PrinterInfo> printers;
-    printers.clear();
     int32_t ret = DiscoverUsbPrinters(printers);
     reply.WriteInt32(ret);
     if (ret == E_PRINT_NONE) {

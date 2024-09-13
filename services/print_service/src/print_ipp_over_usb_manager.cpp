@@ -23,7 +23,6 @@
 #include "common_event_support.h"
 
 namespace OHOS::Print {
-using namespace std;
 using namespace OHOS;
 using namespace OHOS::USB;
 using namespace httplib;
