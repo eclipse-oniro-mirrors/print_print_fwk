@@ -107,14 +107,12 @@ void PrintCupsAttributeTest::DoTestResponse(PreAttrTestFunc preFunc, PostRespons
     ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", 1, nullptr, ATTR_TEST_ALL);
     ipp_t *response = ippNewResponse(request);
     ippDelete(request);
-    request = nullptr;
     if (response == nullptr) {
         return;
     }
     preFunc(response);
     postFunc(response);
     ippDelete(response);
-    response = nullptr;
 }
 
 void PrintCupsAttributeTest::DoTest(PreAttrTestFunc preFunc, PostAttrTestFunc postFunc)
