@@ -1274,18 +1274,17 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
     if (jobIt->second->GetJobState() >= PRINT_JOB_QUEUED) {
         std::string extensionId = PrintUtils::GetExtensionId(jobIt->second->GetPrinterId());
         std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CANCEL_PRINT);
+        if (cid.find(PRINT_EXTENSION_BUNDLE_NAME) == string::npos) {
+#ifdef CUPS_ENABLE
+            DelayedSingleton<PrintCupsClient>::GetInstance()->CancelCupsJob(jobIt->second->GetJobId());
+#endif // CUPS_ENABLE
+            return E_PRINT_NONE;
+        }
         if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
             PRINT_HILOGW("CancelPrintJob Not Register Yet!!!");
             UpdatePrintJobState(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
             return E_PRINT_SERVER_FAILURE;
         }
-#ifdef CUPS_ENABLE
-        if (cid.find(PRINT_EXTENSION_BUNDLE_NAME) == string::npos) {
-            DelayedSingleton<PrintCupsClient>::GetInstance()->CancelCupsJob(jobIt->second->GetJobId());
-            return E_PRINT_NONE;
-        }
-#endif // CUPS_ENABLE
-
         auto cbFunc = extCallbackMap_[cid];
         auto tmpPrintJob = userData->queuedJobList_[jobId];
         auto callback = [=]() {
@@ -3064,10 +3063,10 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
         printerInfo->SetPrinterId(globalPrinterId);
         printerInfo->SetPrinterState(PRINTER_ADDED);
         printSystemData_.AddPrinterToDiscovery(printerInfo);
-        SendPrinterDiscoverEvent(PRINTER_ADDED, *printerInfo);
-        SendPrinterEvent(*printerInfo);
-        SendQueuePrintJob(globalPrinterId);
     }
+    SendPrinterDiscoverEvent(PRINTER_ADDED, *printerInfo);
+    SendPrinterEvent(*printerInfo);
+    SendQueuePrintJob(globalPrinterId);
     if (printSystemData_.IsPrinterAdded(printerInfo->GetPrinterId()) &&
         !printSystemData_.CheckPrinterBusy(printerInfo->GetPrinterId())) {
         if (CheckPrinterUriDifferent(printerInfo)) {
