@@ -1056,17 +1056,35 @@ bool PrintServiceAbility::WriteEprinterPreference(const std::string &printerId, 
         return false;
     }
     json printerPreference;
-    std::vector<PrintPageSize> pageSize;
-    printerCaps.GetPageSize(pageSize);
-    json pageSizeList = json::array();
-    for (auto& item : pageSize) {
-        pageSizeList.push_back(item.GetId());
+    std::vector<PrintPageSize> supportedPageSize;
+    printerCaps.GetSupportedPageSize(supportedPageSize);
+    std::vector<std::string> supportedPageSizeStr;
+    for (auto &item : supportedPageSize) {
+        supportedPageSizeStr.push_back(item.GetId());
     }
-    std::vector<std::string> emptyStrArr;
-    printerPreference["pagesizeId"] = pageSizeList;
-    printerPreference["orientation"] = emptyStrArr;
-    printerPreference["duplex"] = {to_string(printerCaps.GetDuplexMode())};
-    printerPreference["quality"] = emptyStrArr;
+    std::vector<uint32_t> supportedDuplexMode;
+    printerCaps.GetSupportedDuplexMode(supportedDuplexMode);
+    std::vector<std::string> supportedDuplexModeStr;
+    for (auto &item : supportedDuplexMode) {
+        supportedDuplexModeStr.push_back(std::to_string(item));
+    }
+    std::vector<uint32_t> supportedOrientation;
+    printerCaps.GetSupportedOrientation(supportedOrientation);
+    std::vector<std::string> supportedOrientationStr;
+    for (auto &item : supportedOrientation) {
+        supportedOrientationStr.push_back(std::to_string(item));
+    }
+    std::vector<uint32_t> supportedQuality;
+    printerCaps.GetSupportedQuality(supportedQuality);
+    std::vector<std::string> supportedQualityStr;
+    for (auto &item : supportedQuality) {
+        supportedQualityStr.push_back(std::to_string(item));
+    }
+
+    printerPreference["pagesizeId"] = supportedPageSizeStr;
+    printerPreference["orientation"] = supportedOrientationStr;
+    printerPreference["duplex"] = supportedDuplexModeStr;
+    printerPreference["quality"] = supportedQualityStr;
     PreferenceSetting preferenceSetting;
     printerPreference["defaultSetting"] = preferenceSetting.BuildPreferenceSettingJson();
     printerPreference["setting"] = preferenceSetting.BuildPreferenceSettingJson();
