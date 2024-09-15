@@ -21,7 +21,6 @@
 #include "cJSON.h"
 
 namespace OHOS::Print {
-using namespace std;
 using namespace OHOS;
 using namespace OHOS::USB;
 
@@ -89,7 +88,7 @@ bool PrintUsbManager::isPrintDevice(USB::UsbDevice &usbdevice, std::string &prin
 
 void PrintUsbManager::RefreshUsbPrinterDevice()
 {
-    vector<UsbDevice> devlist;
+    std::vector<UsbDevice> devlist;
     int32_t ret = ERR_OK;
     if (isUsbEnable) {
         ret = UsbSrvClient::GetInstance().GetDevices(devlist);

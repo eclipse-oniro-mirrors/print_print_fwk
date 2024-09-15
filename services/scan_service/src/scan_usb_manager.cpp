@@ -26,7 +26,6 @@
 #include "scan_usb_manager.h"
 
 namespace OHOS::Scan {
-using namespace std;
 using namespace OHOS;
 using namespace OHOS::USB;
 
@@ -59,7 +58,7 @@ void ScanUsbManager::Init()
 void ScanUsbManager::RefreshUsbDevice()
 {
     SCAN_HILOGI("RefreshDeviceList start");
-    vector<UsbDevice> devlist;
+    std::vector<UsbDevice> devlist;
     auto &UsbSrvClient = UsbSrvClient::GetInstance();
     auto ret = UsbSrvClient.GetDevices(devlist);
     if (ret != ERR_OK) {
@@ -89,7 +88,7 @@ void ScanUsbManager::RefreshUsbDevicePort()
 {
     SCAN_HILOGI("RefreshUsbDevicePort start");
     ScanSystemData::usbSnToPortMap_.clear();
-    vector<UsbDevice> devlist;
+    std::vector<UsbDevice> devlist;
     auto &UsbSrvClient = UsbSrvClient::GetInstance();
     auto ret = UsbSrvClient.GetDevices(devlist);
     if (ret != ERR_OK) {

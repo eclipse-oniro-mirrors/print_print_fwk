@@ -773,7 +773,7 @@ bool PrintSystemData::ParseUserListJsonV1(nlohmann::json &jsonObject, std::vecto
         if (userIdStr.empty()) {
             continue;
         }
-        int32_t userId = std::atoi(userIdStr.c_str());
+        int32_t userId = std::stoi(userIdStr);
         PRINT_HILOGI("ParseUserListJsonV1 userId: %{public}d", userId);
         allPrintUserList.push_back(userId);
     }

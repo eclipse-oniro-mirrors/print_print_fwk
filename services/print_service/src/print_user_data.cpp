@@ -27,8 +27,6 @@
 namespace OHOS {
 namespace Print {
 
-using namespace std;
-
 void PrintUserData::RegisterPrinterCallback(const std::string &type, const sptr<IPrintCallback> &listener)
 {
     registeredListeners_[type] = listener;
