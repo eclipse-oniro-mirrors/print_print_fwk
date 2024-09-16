@@ -52,7 +52,7 @@ bool VendorBsuniDriver::LoadDriverExtension()
         dlclose(bsUniDriverHandler);
         bsUniDriverHandler = nullptr;
     }
-    bsUniDriverHandler = dlopen("/vendor/lib64/libbsUniDiscovery.so", RTLD_NOW);
+    bsUniDriverHandler = dlopen("/vendor/lib64/libbsUniDiscovery.so", RTLD_LAZY | RTLD_NODELETE);
     if (bsUniDriverHandler == nullptr) {
         PRINT_HILOGW("dlopen failed");
         return false;
