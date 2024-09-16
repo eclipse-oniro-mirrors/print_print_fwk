@@ -32,6 +32,7 @@ public:
     virtual void FreeDests(int num, cups_dest_t *dests) = 0;
     virtual ipp_t *DoRequest(http_t *http, ipp_t *request, const char *resource) = 0;
     virtual cups_dinfo_t *CopyDestInfo(http_t *http, cups_dest_t *dest) = 0;
+    virtual void FreeDestInfo(cups_dinfo_t *dinfo) = 0;
 };
 
 class PrintCupsWrapper : public IPrintAbilityBase {
@@ -40,6 +41,7 @@ public:
     void FreeDests(int num, cups_dest_t *dests) override;
     ipp_t *DoRequest(http_t *http, ipp_t *request, const char *resource) override;
     cups_dinfo_t *CopyDestInfo(http_t *http, cups_dest_t *dest) override;
+    void FreeDestInfo(cups_dinfo_t *dinfo) override;
 };
 } // namespace OHOS::Print
 #endif // PRINT_CUPS_WRAPPER_H

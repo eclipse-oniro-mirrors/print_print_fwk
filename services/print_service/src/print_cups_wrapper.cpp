@@ -27,6 +27,11 @@ void PrintCupsWrapper::FreeDests(int num, cups_dest_t *dests)
     cupsFreeDests(num, dests);
 }
 
+void PrintCupsWrapper::FreeDestInfo(cups_dinfo_t *dinfo)
+{
+    cupsFreeDestInfo(dinfo);
+}
+
 ipp_t *PrintCupsWrapper::DoRequest(http_t *http, ipp_t *request, const char *resource)
 {
     return cupsDoRequest(http, request, resource);

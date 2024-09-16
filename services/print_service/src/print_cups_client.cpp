@@ -708,15 +708,15 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printe
     cups_dinfo_t *dinfo = printAbility_->CopyDestInfo(CUPS_HTTP_DEFAULT, dest);
     if (dinfo == nullptr) {
         PRINT_HILOGE("cupsCopyDestInfo failed");
-        cupsFreeDests(1, dest);
+        printAbility_->FreeDests(1, dest);
         return E_PRINT_SERVER_FAILURE;
     }
 
     ParsePrinterAttributes(dinfo->attrs, printerCaps);
     printerCaps.Dump();
     
-    cupsFreeDestInfo(dinfo);
-    cupsFreeDests(1, dest);
+    printAbility_->FreeDestInfo(dinfo);
+    printAbility_->FreeDests(1, dest);
     PRINT_HILOGI("QueryPrinterCapabilityFromPPD out\n");
     return E_PRINT_NONE;
 }
