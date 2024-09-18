@@ -115,6 +115,12 @@ void ScanSystemData::RefreshUsbDeviceId()
         }
         std::string oldDeviceId = scanDevIt.second->deviceId;
         std::string usbPort = it->second;
+        if (oldDeviceId.find_last_of(":") == std::string::npos ||
+            oldDeviceId.find_last_of(":") < USB_DEVICEID_FIRSTID_LEN_3 ||
+            usbPort.find("_") == std::string::npos) {
+            SCAN_HILOGE("oldDeviceId or usbPort string format fail");
+            return;
+        }
         std::string newDeviceId = GetNewDeviceId(oldDeviceId, usbPort);
         scanDevIt.second->deviceId = newDeviceId;
     }
@@ -146,6 +152,12 @@ bool ScanSystemData::UpdateScannerIdByUsbDevicePort(const std::string &uniqueId,
     auto iter = addedScannerMap_.find(uniqueId);
     if (iter != addedScannerMap_.end()) {
         std::string oldDeviceId = iter->second->deviceId;
+        if (oldDeviceId.find_last_of(":") == std::string::npos ||
+            oldDeviceId.find_last_of(":") < USB_DEVICEID_FIRSTID_LEN_3 ||
+            usbDevicePort.find("_") == std::string::npos) {
+            SCAN_HILOGE("oldDeviceId or usbPort string format fail");
+            return false;
+        }
         std::string newDeviceId = GetNewDeviceId(oldDeviceId, usbDevicePort);
         iter->second->deviceId = newDeviceId;
     } else {
