@@ -271,13 +271,12 @@ void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
             if (S_ISLNK(destFilestat.st_mode)) {
                 PRINT_HILOGW("symlink already exists, continue.");
                 continue;
+            }
+            if (std::remove(destFilePath.c_str()) != 0) {
+                PRINT_HILOGE("error deleting file %{public}s err: %{public}s",
+                    destFilePath.c_str(), strerror(errno));
             } else {
-                if (std::remove(destFilePath.c_str()) != 0) {
-                    PRINT_HILOGE("error deleting file %{public}s err: %{public}s",
-                        destFilePath.c_str(), strerror(errno));
-                } else {
-                    PRINT_HILOGW("file successfully deleted");
-                }
+                PRINT_HILOGW("file successfully deleted");
             }
             int ret = symlink(srcFilePath.c_str(), destFilePath.c_str());
             if (!ret) {
