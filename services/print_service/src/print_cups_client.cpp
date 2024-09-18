@@ -240,6 +240,16 @@ void PrintCupsClient::ChangeFilterPermission(const std::string &path, mode_t mod
     closedir(dir);
 }
 
+void PrintCupsClient::SymlinkFile(std::string srcFilePath, std::string destFilePath)
+{
+    int ret = symlink(srcFilePath.c_str(), destFilePath.c_str());
+    if (!ret) {
+        PRINT_HILOGE("symlink success, ret = %{public}d, errno = %{public}d", ret, errno);
+    } else {
+        PRINT_HILOGE("symlink failed, ret = %{public}d, errno = %{public}d", ret, errno);
+    }
+}
+
 void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
 {
     DIR *dir = opendir(srcDir);
@@ -263,11 +273,9 @@ void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
         stat(srcFilePath.c_str(), &filestat);
         if (S_ISDIR(filestat.st_mode)) {
             SymlinkDirectory(srcFilePath.c_str(), destFilePath.c_str());
-        } else {
-            if (lstat(destFilePath.c_str(), &destFilestat) < 0) {
-                PRINT_HILOGE("symlink lstat %{public}s err: %{public}s", destFilePath.c_str(), strerror(errno));
-                continue;
-            }
+        } else if (lstat(destFilePath.c_str(), &destFilestat) == 0) {
+            PRINT_HILOGW("symlink lstat %{public}s err: %{public}s", destFilePath.c_str(), strerror(errno));
+
             if (S_ISLNK(destFilestat.st_mode)) {
                 PRINT_HILOGW("symlink already exists, continue.");
                 continue;
@@ -278,12 +286,10 @@ void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
             } else {
                 PRINT_HILOGW("file successfully deleted");
             }
-            int ret = symlink(srcFilePath.c_str(), destFilePath.c_str());
-            if (!ret) {
-                PRINT_HILOGE("symlink success, ret = %{public}d, errno = %{public}d", ret, errno);
-            } else {
-                PRINT_HILOGE("symlink failed, ret = %{public}d, errno = %{public}d", ret, errno);
-            }
+            SymlinkFile(srcFilePath, destFilePath);
+        } else {
+            PRINT_HILOGE("symlink lstat %{public}s err: %{public}s", destFilePath.c_str(), strerror(errno));
+            SymlinkFile(srcFilePath, destFilePath);
         }
     }
     closedir(dir);
