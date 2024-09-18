@@ -128,10 +128,10 @@ static std::vector<PrinterInfo> usbPrinters;
 static void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
     const char *deviceMakeAndModel, const char *deviceUri, const char *deviceLocation, void *userData)
 {
-    PRINT_HILOGI("Device: uri = %{public}s\n", deviceUri);
-    PRINT_HILOGI("class = %{public}s\n", deviceClass);
-    PRINT_HILOGI("make-and-model = %{public}s\n", deviceMakeAndModel);
-    PRINT_HILOGI("location = %{public}s\n", deviceLocation);
+    PRINT_HILOGD("Device: uri = %{private}s\n", deviceUri);
+    PRINT_HILOGD("class = %{private}s\n", deviceClass);
+    PRINT_HILOGD("make-and-model = %{private}s\n", deviceMakeAndModel);
+    PRINT_HILOGD("location = %{private}s\n", deviceLocation);
     std::string printerUri(deviceUri);
     std::string printerMake(deviceMakeAndModel);
     if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER &&
