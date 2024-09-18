@@ -274,7 +274,7 @@ void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
         if (S_ISDIR(filestat.st_mode)) {
             SymlinkDirectory(srcFilePath.c_str(), destFilePath.c_str());
         } else if (lstat(destFilePath.c_str(), &destFilestat) == 0) {
-            PRINT_HILOGW("symlink lstat %{public}s err: %{public}s", destFilePath.c_str(), strerror(errno));
+            PRINT_HILOGD("symlink lstat %{public}s err: %{public}s", destFilePath.c_str(), strerror(errno));
 
             if (S_ISLNK(destFilestat.st_mode)) {
                 PRINT_HILOGW("symlink already exists, continue.");
