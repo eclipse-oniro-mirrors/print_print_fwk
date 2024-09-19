@@ -137,8 +137,7 @@ ohos_unittest("scan_service_test") {
   ]
 
   if (sane_enable) {
-    include_dirs += [ "//vendor/open_source/backends/include" ]
-    deps += [ "//vendor/open_source/backends:third_sane" ]
+    external_deps += [ "backends:third_sane" ]
     cflags_cc = [ "-DSANE_ENABLE" ]
   }
 

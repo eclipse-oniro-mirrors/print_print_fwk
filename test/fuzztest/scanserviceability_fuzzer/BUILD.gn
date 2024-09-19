@@ -42,12 +42,6 @@ ohos_fuzztest("ScanServiceAbilityFuzzTest") {
     "${print_path}/services/scan_service:scan_service",
   ]
 
-  if (sane_enable) {
-    include_dirs += [ "//vendor/open_source/backends/include" ]
-    deps += [ "//vendor/open_source/backends:third_sane" ]
-    cflags_cc = [ "-DSANE_ENABLE" ]
-  }
-
   external_deps = [
     "ability_base:base",
     "ability_base:want",
@@ -79,6 +73,11 @@ ohos_fuzztest("ScanServiceAbilityFuzzTest") {
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",
   ]
+
+  if (sane_enable) {
+    external_deps += [ "backends:third_sane" ]
+    cflags_cc = [ "-DSANE_ENABLE" ]
+  }
 
   if (security_guard_enabled) {
     external_deps += [

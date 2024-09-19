@@ -47,13 +47,13 @@
         "wifi",
         "cJSON",
         "ace_engine",
-        "libjpeg-turbo"
+        "libjpeg-turbo",
+        "backends"
       ],
       "third_party": [
         "zlib",
         "cups",
-        "cups-filters",
-        "backends"
+        "cups-filters"
       ]
     },
     "build": {
