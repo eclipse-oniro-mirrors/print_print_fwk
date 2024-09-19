@@ -41,12 +41,6 @@ ohos_fuzztest("ScanServiceStubFuzzTest") {
     "${print_path}/services/scan_service:scan_service",
   ]
 
-  if (sane_enable) {
-    include_dirs += [ "//vendor/open_source/backends/include" ]
-    deps += [ "//vendor/open_source/backends:third_sane" ]
-    cflags_cc = [ "-DSANE_ENABLE" ]
-  }
-
   external_deps = [
     "ability_base:base",
     "ability_base:want",
