@@ -283,6 +283,7 @@ void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
             if (std::remove(destFilePath.c_str()) != 0) {
                 PRINT_HILOGE("error deleting file %{public}s err: %{public}s",
                     destFilePath.c_str(), strerror(errno));
+                continue;
             } else {
                 PRINT_HILOGW("file successfully deleted");
             }
