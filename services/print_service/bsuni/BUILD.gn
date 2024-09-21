@@ -56,7 +56,7 @@ if (print_fwk_feature_bsuni_driver) {
   }
 
   ohos_copy("bsuni_driver_ghostscript_bin") {
-    source = [
+    sources = [
       "${bsuni_gsbin_path}/dvipdf",
       "${bsuni_gsbin_path}/eps2eps",
       "${bsuni_gsbin_path}/gs",
@@ -96,7 +96,7 @@ if (print_fwk_feature_bsuni_driver) {
   }
 
   ohos_copy("bsuni_driver_ghostscript_lib") {
-    source = [
+    sources = [
       "${bsuni_gslib_path}/PDFA_def.ps",
       "${bsuni_gslib_path}/PDFX_def.ps",
       "${bsuni_gslib_path}/acctest.ps",
@@ -242,7 +242,7 @@ if (print_fwk_feature_bsuni_driver) {
   }
 
   ohos_copy("bsuni_driver_ghostscript_res_cidfsubst") {
-    source = [ "${bsuni_gsres_path}/CIDFSubst/DroidSansFallback.ttf" ]
+    sources = [ "${bsuni_gsres_path}/CIDFSubst/DroidSansFallback.ttf" ]
     outputs = [ "${target_out_dir}/$target_name/{{source_file_part}}" ]
     part_name = "print_fwk"
     subsystem_name = "print"
@@ -255,7 +255,7 @@ if (print_fwk_feature_bsuni_driver) {
   }
 
   ohos_copy("bsuni_driver_ghostscript_res_cidfont") {
-    source = [ "${bsuni_gsres_path}/CIDFont/ArtifexBullet" ]
+    sources = [ "${bsuni_gsres_path}/CIDFont/ArtifexBullet" ]
     outputs = [ "${target_out_dir}/$target_name/{{source_file_part}}" ]
     part_name = "print_fwk"
     subsystem_name = "print"
@@ -268,7 +268,7 @@ if (print_fwk_feature_bsuni_driver) {
   }
 
   ohos_copy("bsuni_driver_ghostscript_res_cmap") {
-    source = [
+    sources = [
       "${bsuni_gsres_path}/CMap/78-EUC-H",
       "${bsuni_gsres_path}/CMap/78-EUC-V",
       "${bsuni_gsres_path}/CMap/78-H",
@@ -464,7 +464,7 @@ if (print_fwk_feature_bsuni_driver) {
   }
 
   ohos_copy("bsuni_driver_ghostscript_res_colorspace") {
-    source = [
+    sources = [
       "${bsuni_gsres_path}/ColorSpace/DefaultCMYK",
       "${bsuni_gsres_path}/ColorSpace/DefaultGray",
       "${bsuni_gsres_path}/ColorSpace/DefaultRGB",
@@ -484,7 +484,7 @@ if (print_fwk_feature_bsuni_driver) {
   }
 
   ohos_copy("bsuni_driver_ghostscript_res_decoding") {
-    source = [
+    sources = [
       "${bsuni_gsres_path}/Decoding/FCO_Dingbats",
       "${bsuni_gsres_path}/Decoding/FCO_Symbol",
       "${bsuni_gsres_path}/Decoding/FCO_Unicode",
@@ -505,7 +505,7 @@ if (print_fwk_feature_bsuni_driver) {
   }
 
   ohos_copy("bsuni_driver_ghostscript_res_encoding") {
-    source = [
+    sources = [
       "${bsuni_gsres_path}/Encoding/CEEncoding",
       "${bsuni_gsres_path}/Encoding/ExpertEncoding",
       "${bsuni_gsres_path}/Encoding/ExpertSubsetEncoding",
@@ -524,7 +524,7 @@ if (print_fwk_feature_bsuni_driver) {
   }
 
   ohos_copy("bsuni_driver_ghostscript_res_font") {
-    source = [
+    sources = [
       "${bsuni_gsres_path}/Font/C059-BdIta",
       "${bsuni_gsres_path}/Font/C059-Bold",
       "${bsuni_gsres_path}/Font/C059-Italic",
@@ -574,7 +574,7 @@ if (print_fwk_feature_bsuni_driver) {
   }
 
   ohos_copy("bsuni_driver_ghostscript_res_idiomSet") {
-    source = [
+    sources = [
       "${bsuni_gsres_path}/IdiomSet/PPI_CUtils",
       "${bsuni_gsres_path}/IdiomSet/Pscript5Idiom",
     ]
@@ -590,7 +590,7 @@ if (print_fwk_feature_bsuni_driver) {
   }
 
   ohos_copy("bsuni_driver_ghostscript_res_init") {
-    source = [
+    sources = [
       "${bsuni_gsres_path}/Init/FAPIcidfmap",
       "${bsuni_gsres_path}/Init/FAPIconfig",
       "${bsuni_gsres_path}/Init/FAPIfontmap",
@@ -658,7 +658,7 @@ if (print_fwk_feature_bsuni_driver) {
   }
 
   ohos_copy("bsuni_driver_ghostscript_res_substcid") {
-    source = [
+    sources = [
       "${bsuni_gsres_path}/SubstCID/CNS1-WMode",
       "${bsuni_gsres_path}/SubstCID/GB1-WMode",
       "${bsuni_gsres_path}/SubstCID/Japan1-WMode",
