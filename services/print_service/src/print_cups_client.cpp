@@ -1574,8 +1574,8 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
         params->printerAttrsOption_cupsOption = optionJson["cupsOptions"];
     }
     UpdateBorderlessJobParameter(optionJson, params);
-    if (optionJson.contains("printQuality") && optionJson["printQuality"].is_number()) {
-        params->printQuality = GetQulityString(optionJson["printQuality"]);
+    if (optionJson.contains("printQuality") && optionJson["printQuality"].is_string()) {
+        params->printQuality = optionJson["printQuality"].get<std::string>();
     } else {
         params->printQuality = CUPS_PRINT_QUALITY_NORMAL;
     }
