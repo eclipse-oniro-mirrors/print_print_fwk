@@ -171,6 +171,10 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0004, TestSize.Level1)
     EXPECT_EQ(state, PRINTER_IDLE);
     EXPECT_TRUE(ConvertStringToPrinterState("2", state));
     EXPECT_EQ(state, PRINTER_UNAVAILABLE);
+    EXPECT_FALSE(ConvertStringToPrinterState("\"state\"", state));
+    EXPECT_FALSE(ConvertStringToPrinterState("{\"state\":2}", state));
+    EXPECT_TRUE(ConvertStringToPrinterState("{\"state\":\"2\"}", state));
+    EXPECT_EQ(state, PRINTER_UNAVAILABLE);
 }
 
 HWTEST_F(VendorHelperTest, VendorHelperTest_0005, TestSize.Level1)

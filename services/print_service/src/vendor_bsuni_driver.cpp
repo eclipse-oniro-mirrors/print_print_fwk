@@ -52,7 +52,7 @@ bool VendorBsuniDriver::LoadDriverExtension()
         dlclose(bsUniDriverHandler);
         bsUniDriverHandler = nullptr;
     }
-    bsUniDriverHandler = dlopen("/vendor/lib64/libbsUniDiscovery.so", RTLD_LAZY | RTLD_NODELETE);
+    bsUniDriverHandler = dlopen("/system/usr/bsuni_driver/lib64/libbsUniDiscovery.so", RTLD_LAZY | RTLD_NODELETE);
     if (bsUniDriverHandler == nullptr) {
         PRINT_HILOGW("dlopen failed");
         return false;
@@ -428,10 +428,6 @@ int32_t VendorBsuniDriver::OnPrinterCapabilityQueried(const Print_DiscoveryItem 
         PRINT_HILOGD("connecting %{public}s, query propertis", globalPrinterId.c_str());
         std::vector<std::string> keyList;
         keyList.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);
-        keyList.push_back(PRINTER_PROPERTY_KEY_DEVICE_VENDOR);
-        keyList.push_back(PRINTER_PROPERTY_KEY_DEVICE_CAPABILITY);
-        keyList.push_back(PRINTER_PROPERTY_KEY_DEVICE_DEFAULT_VALUE);
-        keyList.push_back(PRINTER_PROPERTY_KEY_DEVICE_SUPPLIES);
         keyList.push_back(PRINTER_PROPERTY_KEY_CUPS_PPD_FILE);
         OnQueryProperties(printerId, keyList);
     }

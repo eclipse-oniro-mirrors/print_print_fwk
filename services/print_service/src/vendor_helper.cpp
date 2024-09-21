@@ -165,7 +165,23 @@ bool ConvertStringToPrinterState(const std::string &stateData, Print_PrinterStat
 {
     long result = 0;
     if (!ConvertStringToLong(stateData.c_str(), result)) {
-        return false;
+        if (!nlohmann::json::accept(stateData)) {
+            PRINT_HILOGW("invalid stateData");
+            return false;
+        }
+        nlohmann::json jsonObject = nlohmann::json::parse(stateData, nullptr, false);
+        if (jsonObject.is_discarded()) {
+            PRINT_HILOGW("stateData discarded");
+            return false;
+        }
+        if (!jsonObject.contains("state") || !jsonObject["state"].is_string()) {
+            PRINT_HILOGW("can not find state");
+            return false;
+        }
+        std::string stateValue = jsonObject["state"].get<std::string>();
+        if (!ConvertStringToLong(stateValue.c_str(), result)) {
+            return false;
+        }
     }
     if (result < 0 || result > PRINTER_UNAVAILABLE) {
         return false;

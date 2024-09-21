@@ -204,7 +204,7 @@ void PrintServiceAbility::OnStart()
         PRINT_HILOGE("PrintServiceAbility Init failed. Try again 5s later");
         return;
     }
-    vendorManager.Init(this, true);
+    vendorManager.Init(GetInstance(), true);
     state_ = ServiceRunningState::STATE_RUNNING;
     return;
 }
