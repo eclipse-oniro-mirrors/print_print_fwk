@@ -33,6 +33,7 @@ const std::string ORIENTATION_STRING = "orientation";
 const std::string PAGESIZEID_STRING = "pagesizeId";
 const std::string QUALITY_STRING = "quality";
 const std::string DEFAULT_QUALITY_PREFERENCE = "4";
+const int NUMBER_BASE = 10;
 
 char *CopyString(const std::string &source)
 {
@@ -371,6 +372,21 @@ void ParsePrinterOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePri
     ParseJsonFieldAsArrayOpt(cupsOpt, keyword, nativePrinterInfo, ParseColorModeArray);
 }
 
+bool ConvertStringToUint32(const char *src, uint32_t &dst)
+{
+    if (src == nullptr) {
+        return false;
+    }
+    errno = 0;
+    char *endPtr = nullptr;
+    dst = strtoul(src, &endPtr, NUMBER_BASE);
+    if (errno == ERANGE || endPtr == src || *endPtr != '\0') {
+        PRINT_HILOGW("ConvertStringToUint32 fail: %{public}s", src);
+        return false;
+    }
+    return true;
+}
+
 void ParseCupsCopyOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePrinterInfo)
 {
     std::string keyword = "sides-supported";
@@ -380,13 +396,23 @@ void ParseCupsCopyOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePr
     ParseJsonFieldAsArrayOpt(cupsOpt, keyword, nativePrinterInfo, ParseQualityArray);
     if (cupsOpt.contains("copies-default") && cupsOpt["copies-default"].is_string()) {
         std::string defaultCopies = cupsOpt["copies-default"].get<std::string>();
-        nativePrinterInfo.defaultValue.defaultCopies = std::stoul(defaultCopies);
-        PRINT_HILOGD("ParseCupsCopyOpt copies-default: %{public}s", defaultCopies.c_str());
+        uint32_t defaultCopiesNum = 0;
+        if (!ConvertStringToUint32(defaultCopies.c_str(), defaultCopiesNum)) {
+            PRINT_HILOGE("copies-default error: %{public}s", defaultCopies.c_str());
+            return;
+        }
+        nativePrinterInfo.defaultValue.defaultCopies = defaultCopiesNum;
+        PRINT_HILOGD("copies-default: %{public}d", defaultCopiesNum);
     }
     if (cupsOpt.contains("copies-supported") && cupsOpt["copies-supported"].is_string()) {
         std::string copySupport = cupsOpt["copies-supported"].get<std::string>();
-        nativePrinterInfo.capability.supportedCopies = std::stoul(copySupport);
-        PRINT_HILOGD("ParseCupsCopyOpt copies-supported: %{public}s", copySupport.c_str());
+        uint32_t copySupportNum = 0;
+        if (!ConvertStringToUint32(copySupport.c_str(), copySupportNum)) {
+            PRINT_HILOGE("copies-supported error: %{public}s", copySupport.c_str());
+            return;
+        }
+        nativePrinterInfo.capability.supportedCopies = copySupportNum;
+        PRINT_HILOGD("copies-supported: %{public}d", copySupportNum);
     }
 }
 
