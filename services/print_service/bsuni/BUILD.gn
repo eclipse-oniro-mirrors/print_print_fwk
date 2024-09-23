@@ -19,7 +19,7 @@ if (print_fwk_feature_bsuni_driver) {
     source = "${bsuni_binary_path}/lib64/libbsUniDiscovery.so"
     part_name = "print_fwk"
     subsystem_name = "print"
-    module_install_dir = "usr/bsuni_driver/lib64"
+    module_install_dir = "bin/uni_print_driver/lib64"
     install_enable = true
   }
 
@@ -27,7 +27,7 @@ if (print_fwk_feature_bsuni_driver) {
     source = "${bsuni_binary_path}/filter/bsUniFilter"
     part_name = "print_fwk"
     subsystem_name = "print"
-    module_install_dir = "usr/bsuni_driver/filter"
+    module_install_dir = "bin/uni_print_driver/filter"
     install_enable = true
   }
 
@@ -35,7 +35,7 @@ if (print_fwk_feature_bsuni_driver) {
     source = "${bsuni_binary_path}/backend/lpd"
     part_name = "print_fwk"
     subsystem_name = "print"
-    module_install_dir = "usr/bsuni_driver/backend"
+    module_install_dir = "bin/uni_print_driver/backend"
     install_enable = true
   }
 
@@ -43,7 +43,7 @@ if (print_fwk_feature_bsuni_driver) {
     source = "${bsuni_binary_path}/backend/socket"
     part_name = "print_fwk"
     subsystem_name = "print"
-    module_install_dir = "usr/bsuni_driver/backend"
+    module_install_dir = "bin/uni_print_driver/backend"
     install_enable = true
   }
 
@@ -51,7 +51,7 @@ if (print_fwk_feature_bsuni_driver) {
     source = "${bsuni_binary_path}/backend/bsUniBackend"
     part_name = "print_fwk"
     subsystem_name = "print"
-    module_install_dir = "usr/bsuni_driver/backend"
+    module_install_dir = "bin/uni_print_driver/backend"
     install_enable = true
   }
 
@@ -91,7 +91,7 @@ if (print_fwk_feature_bsuni_driver) {
     prebuilt = true
     module_source_dir = target_out_dir
     module_install_name = ""
-    module_install_dir = "usr/bsuni_driver/ghostscript/bin"
+    module_install_dir = "bin/uni_print_driver/ghostscript/bin"
     install_enable = true
   }
 
@@ -237,7 +237,7 @@ if (print_fwk_feature_bsuni_driver) {
     module_source_dir = target_out_dir
     module_install_name = ""
     module_install_dir =
-        "usr/bsuni_driver/ghostscript/share/ghostscript/10.03.1/lib"
+        "bin/uni_print_driver/ghostscript/share/ghostscript/10.03.1/lib"
     install_enable = true
   }
 
@@ -250,7 +250,7 @@ if (print_fwk_feature_bsuni_driver) {
     prebuilt = true
     module_source_dir = target_out_dir
     module_install_name = ""
-    module_install_dir = "usr/bsuni_driver/ghostscript/share/ghostscript/10.03.1/Resource/CIDFSubst"
+    module_install_dir = "bin/uni_print_driver/ghostscript/share/ghostscript/10.03.1/Resource/CIDFSubst"
     install_enable = true
   }
 
@@ -263,7 +263,7 @@ if (print_fwk_feature_bsuni_driver) {
     prebuilt = true
     module_source_dir = target_out_dir
     module_install_name = ""
-    module_install_dir = "usr/bsuni_driver/ghostscript/share/ghostscript/10.03.1/Resource/CIDFont"
+    module_install_dir = "bin/uni_print_driver/ghostscript/share/ghostscript/10.03.1/Resource/CIDFont"
     install_enable = true
   }
 
@@ -458,8 +458,7 @@ if (print_fwk_feature_bsuni_driver) {
     prebuilt = true
     module_source_dir = target_out_dir
     module_install_name = ""
-    module_install_dir =
-        "usr/bsuni_driver/ghostscript/share/ghostscript/10.03.1/Resource/CMap"
+    module_install_dir = "bin/uni_print_driver/ghostscript/share/ghostscript/10.03.1/Resource/CMap"
     install_enable = true
   }
 
@@ -479,7 +478,7 @@ if (print_fwk_feature_bsuni_driver) {
     prebuilt = true
     module_source_dir = target_out_dir
     module_install_name = ""
-    module_install_dir = "usr/bsuni_driver/ghostscript/share/ghostscript/10.03.1/Resource/ColorSpace"
+    module_install_dir = "bin/uni_print_driver/ghostscript/share/ghostscript/10.03.1/Resource/ColorSpace"
     install_enable = true
   }
 
@@ -500,7 +499,7 @@ if (print_fwk_feature_bsuni_driver) {
     prebuilt = true
     module_source_dir = target_out_dir
     module_install_name = ""
-    module_install_dir = "usr/bsuni_driver/ghostscript/share/ghostscript/10.03.1/Resource/Decoding"
+    module_install_dir = "bin/uni_print_driver/ghostscript/share/ghostscript/10.03.1/Resource/Decoding"
     install_enable = true
   }
 
@@ -519,7 +518,7 @@ if (print_fwk_feature_bsuni_driver) {
     prebuilt = true
     module_source_dir = target_out_dir
     module_install_name = ""
-    module_install_dir = "usr/bsuni_driver/ghostscript/share/ghostscript/10.03.1/Resource/Encoding"
+    module_install_dir = "bin/uni_print_driver/ghostscript/share/ghostscript/10.03.1/Resource/Encoding"
     install_enable = true
   }
 
@@ -568,8 +567,7 @@ if (print_fwk_feature_bsuni_driver) {
     prebuilt = true
     module_source_dir = target_out_dir
     module_install_name = ""
-    module_install_dir =
-        "usr/bsuni_driver/ghostscript/share/ghostscript/10.03.1/Resource/Font"
+    module_install_dir = "bin/uni_print_driver/ghostscript/share/ghostscript/10.03.1/Resource/Font"
     install_enable = true
   }
 
@@ -585,7 +583,7 @@ if (print_fwk_feature_bsuni_driver) {
     prebuilt = true
     module_source_dir = target_out_dir
     module_install_name = ""
-    module_install_dir = "usr/bsuni_driver/ghostscript/share/ghostscript/10.03.1/Resource/IdiomSet"
+    module_install_dir = "bin/uni_print_driver/ghostscript/share/ghostscript/10.03.1/Resource/IdiomSet"
     install_enable = true
   }
 
@@ -652,8 +650,7 @@ if (print_fwk_feature_bsuni_driver) {
     prebuilt = true
     module_source_dir = target_out_dir
     module_install_name = ""
-    module_install_dir =
-        "usr/bsuni_driver/ghostscript/share/ghostscript/10.03.1/Resource/Init"
+    module_install_dir = "bin/uni_print_driver/ghostscript/share/ghostscript/10.03.1/Resource/Init"
     install_enable = true
   }
 
@@ -671,7 +668,7 @@ if (print_fwk_feature_bsuni_driver) {
     prebuilt = true
     module_source_dir = target_out_dir
     module_install_name = ""
-    module_install_dir = "usr/bsuni_driver/ghostscript/share/ghostscript/10.03.1/Resource/SubstCID"
+    module_install_dir = "bin/uni_print_driver/ghostscript/share/ghostscript/10.03.1/Resource/SubstCID"
     install_enable = true
   }
 }
