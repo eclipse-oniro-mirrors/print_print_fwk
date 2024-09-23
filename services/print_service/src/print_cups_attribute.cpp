@@ -432,7 +432,7 @@ void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
     std::string keyword = "media-type-supported";
     std::string supportTypes;
     std::vector<std::string> list;
-    attrPtr = ippFindAttribute(response, keyword.c_str(), IPP_TAG_KEYWORD);
+    attrPtr = ippFindAttribute(response, keyword.c_str(), IPP_TAG_ZERO);
     if (attrPtr == nullptr) {
         supportTypes = "";
     } else {
