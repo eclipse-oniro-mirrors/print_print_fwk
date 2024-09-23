@@ -204,7 +204,8 @@ void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
         mkdir(destDir, DIR_MODE);
     }
     struct dirent *file;
-    struct stat filestat;
+    struct stat filestat = {};
+    struct stat destFilestat = {};
     while ((file = readdir(dir)) != nullptr) {
         if (!strcmp(file->d_name, ".") || !strcmp(file->d_name, "..")) {
             continue;
@@ -215,14 +216,24 @@ void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
         stat(srcFilePath.c_str(), &filestat);
         if (S_ISDIR(filestat.st_mode)) {
             SymlinkDirectory(srcFilePath.c_str(), destFilePath.c_str());
-        } else {
-            int ret = symlink(srcFilePath.c_str(), destFilePath.c_str());
-            PRINT_HILOGI("symlink ret = %{public}d, errno = %{public}d", ret, errno);
-            if (!ret) {
-                PRINT_HILOGE("symlink success");
-            } else {
-                PRINT_HILOGE("symlink failed");
+        } else if (lstat(destFilePath.c_str(), &destFilestat) == 0) {
+            PRINT_HILOGD("symlink lstat %{public}s err: %{public}s", destFilePath.c_str(), strerror(errno));
+
+            if (S_ISLNK(destFilestat.st_mode)) {
+                PRINT_HILOGW("symlink already exists, continue.");
+                continue;
             }
+            if (std::remove(destFilePath.c_str()) != 0) {
+                PRINT_HILOGE("error deleting file %{public}s err: %{public}s",
+                    destFilePath.c_str(), strerror(errno));
+                continue;
+            } else {
+                PRINT_HILOGW("file successfully deleted");
+            }
+            SymlinkFile(srcFilePath, destFilePath);
+        } else {
+            PRINT_HILOGE("symlink lstat %{public}s err: %{public}s", destFilePath.c_str(), strerror(errno));
+            SymlinkFile(srcFilePath, destFilePath);
         }
     }
     closedir(dir);
@@ -288,13 +299,13 @@ int32_t PrintCupsClient::InitCupsResources()
         {"/system/etc/cups/share/", CUPS_ROOT_DIR + "/datadir", CUPS_ROOT_DIR + "/datadir/mime"}
     };
     for (uint32_t i = 0; i < RESOURCE_COUNT; i++) {
-        if (access(array[i][INDEX_TWO].c_str(), F_OK) != -1) {
-            PRINT_HILOGD("The resource has been copied.");
-            continue;
-        }
         if (!i) {
             SymlinkDirectory(array[i][INDEX_ZERO].c_str(), array[i][INDEX_ONE].c_str());
         } else {
+            if (access(array[i][INDEX_TWO].c_str(), F_OK) != -1) {
+                PRINT_HILOGD("The resource has been copied.");
+                continue;
+            }
             CopyDirectory(array[i][INDEX_ZERO].c_str(), array[i][INDEX_ONE].c_str());
         }
     }
