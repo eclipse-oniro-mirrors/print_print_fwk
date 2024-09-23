@@ -78,7 +78,6 @@ void VendorDriverBase::UpdateAllPrinterStatus()
         vendorStatus->lastCheckTime = currentTime;
         std::vector<std::string> list;
         list.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);
-        list.push_back(PRINTER_PROPERTY_KEY_DEVICE_SUPPLIES);
         OnQueryProperties(pair.first, list);
         if (currentTime < vendorStatus->lastUpdateTime + MONITOR_OFFLINE_TIMEOUT_MS) {
             continue;

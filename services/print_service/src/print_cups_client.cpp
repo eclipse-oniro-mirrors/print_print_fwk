@@ -366,6 +366,10 @@ int32_t PrintCupsClient::InitCupsResources()
             CopyDirectory(array[i][INDEX_ZERO].c_str(), array[i][INDEX_ONE].c_str());
         }
     }
+    std::string dstDir = CUPS_ROOT_DIR + "/serverbin/filter";
+    SymlinkDirectory("/system/usr/bsuni_driver/filter/", dstDir.c_str());
+    dstDir = CUPS_ROOT_DIR + "/serverbin/backend";
+    SymlinkDirectory("/system/usr/bsuni_driver/backend/", dstDir.c_str());
     return StartCupsdService();
 }
 
