@@ -136,11 +136,6 @@ ohos_unittest("scan_service_test") {
     "//third_party/zlib:libz",
   ]
 
-  if (sane_enable) {
-    external_deps += [ "backends:third_sane" ]
-    cflags_cc = [ "-DSANE_ENABLE" ]
-  }
-
   external_deps = [
     "ability_base:base",
     "ability_base:want",

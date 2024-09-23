@@ -92,7 +92,7 @@ ohos_shared_library("scan_service") {
   ]
 
   if (sane_enable) {
-    external_deps += [ "backends:third_sane" ]
+    external_deps += [ "backends:sane" ]
     cflags_cc += [ "-DSANE_ENABLE" ]
   }
 

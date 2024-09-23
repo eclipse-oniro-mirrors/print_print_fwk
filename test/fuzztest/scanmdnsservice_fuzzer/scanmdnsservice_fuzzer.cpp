@@ -26,71 +26,47 @@ namespace Scan {
 
     void TestOnStartDiscoverService(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
-        ScanMdnsService::GetInstance().SetServiceType("_scanner._tcp");
+        std::string serviceName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        ScanMdnsService::GetInstance().SetServiceType(serviceName.c_str());
         ScanMdnsService::GetInstance().onStartDiscoverService();
+        ScanMdnsService::GetInstance().onStopDiscoverService();
     }
 
-    void TestSetServiceInfo(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    void TestSetService(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         MDnsServiceInfo info;
         ScanMdnsService::GetInstance().SetServiceInfo(info);
-    }
-
-    void TestSetMDnsResolveCallBack(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        sptr<ScanMDnsResolveObserver> cb;
-        ScanMdnsService::GetInstance().SetMDnsResolveCallBack(cb);
-    }
-
-    void TestSetMDnsDiscoveryCallBack(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        sptr<ScanMDnsDiscoveryObserver> cb;
-        ScanMdnsService::GetInstance().SetMDnsDiscoveryCallBack(cb);
+        sptr<ScanMDnsResolveObserver> resolveObserve;
+        ScanMdnsService::GetInstance().SetMDnsResolveCallBack(resolveObserve);
+        sptr<ScanMDnsDiscoveryObserver> discoveryObserve;
+        ScanMdnsService::GetInstance().SetMDnsDiscoveryCallBack(discoveryObserve);
         ScanMdnsService::GetInstance().onStartDiscoverService();
-    }
-
-    void TestSetServiceType(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
         std::string stype = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         ScanMdnsService::GetInstance().SetServiceType(stype);
-    }
-
-    void TestGetMDnsResolveCallBack(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
         ScanMdnsService::GetInstance().GetMDnsResolveCallBack();
-    }
-
-    void TestGetMDnsDiscoveryCallBack(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
         ScanMdnsService::GetInstance().GetMDnsDiscoveryCallBack();
-    }
-
-    void TestGetServiceInfo(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
         ScanMdnsService::GetInstance().GetServiceInfo();
     }
 
     void TestGetServiceAttribute(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         MDnsServiceInfo serviceInfo;
+        serviceInfo.name = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         std::string keyStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         ScanMdnsService::GetInstance().GetServiceAttribute(serviceInfo, keyStr);
-    }
-
-    void TestonStopDiscoverService(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        ScanMdnsService::GetInstance().onStopDiscoverService();
     }
 
     void TestonResolveService(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         MDnsServiceInfo serviceInfo;
+        serviceInfo.name = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         ScanMdnsService::GetInstance().onResolveService(serviceInfo);
     }
 
     void TestToMDnsScaner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         MDnsServiceInfo serviceInfo;
+        serviceInfo.name = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         ScanMdnsService::GetInstance().ToMDnsScaner(serviceInfo);
     }
 
@@ -133,15 +109,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
     FuzzedDataProvider dataProvider(data, size);
     OHOS::Scan::TestOnStartDiscoverService(data, size, &dataProvider);
-    OHOS::Scan::TestSetServiceInfo(data, size, &dataProvider);
-    OHOS::Scan::TestSetMDnsResolveCallBack(data, size, &dataProvider);
-    OHOS::Scan::TestSetMDnsDiscoveryCallBack(data, size, &dataProvider);
-    OHOS::Scan::TestSetServiceType(data, size, &dataProvider);
-    OHOS::Scan::TestGetMDnsResolveCallBack(data, size, &dataProvider);
-    OHOS::Scan::TestGetMDnsDiscoveryCallBack(data, size, &dataProvider);
-    OHOS::Scan::TestGetServiceInfo(data, size, &dataProvider);
     OHOS::Scan::TestGetServiceAttribute(data, size, &dataProvider);
-    OHOS::Scan::TestonStopDiscoverService(data, size, &dataProvider);
     OHOS::Scan::TestonResolveService(data, size, &dataProvider);
     OHOS::Scan::TestToMDnsScaner(data, size, &dataProvider);
     OHOS::Scan::TestHandleServiceFound(data, size, &dataProvider);

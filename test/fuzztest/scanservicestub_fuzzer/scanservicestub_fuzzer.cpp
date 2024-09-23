@@ -32,54 +32,6 @@ namespace Scan {
         return true;
     }
 
-    bool TestOnInitScan(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        MessageParcel datas;
-        MessageParcel reply;
-        MessageOption option;
-        if (!WriteInterfaceToken(datas)) {
-            return false;
-        }
-        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_INIT_SCAN, datas, reply, option);
-        return true;
-    }
-
-    bool TestOnExitScan(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        MessageParcel datas;
-        MessageParcel reply;
-        MessageOption option;
-        if (!WriteInterfaceToken(datas)) {
-            return false;
-        }
-        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_EXIT_SCAN, datas, reply, option);
-        return true;
-    }
-
-    bool TestOnGetScannerList(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        MessageParcel datas;
-        MessageParcel reply;
-        MessageOption option;
-        if (!WriteInterfaceToken(datas)) {
-            return false;
-        }
-        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_GET_SCANNER_LIST, datas, reply, option);
-        return true;
-    }
-
-    bool TestOnStopDiscover(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        MessageParcel datas;
-        MessageParcel reply;
-        MessageOption option;
-        if (!WriteInterfaceToken(datas)) {
-            return false;
-        }
-        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_STOP_DISCOVER, datas, reply, option);
-        return true;
-    }
-
     bool TestOnOpenScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         MessageParcel datas;
@@ -90,7 +42,11 @@ namespace Scan {
         }
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         datas.WriteString(scannerId);
+        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_GET_SCANNER_LIST, datas, reply, option);
+        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_STOP_DISCOVER, datas, reply, option);
+        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_INIT_SCAN, datas, reply, option);
         ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_OPEN_SCANNER, datas, reply, option);
+        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_EXIT_SCAN, datas, reply, option);
         return true;
     }
 
@@ -232,18 +188,6 @@ namespace Scan {
         return true;
     }
 
-    bool TestOnGetScannerState(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        MessageParcel datas;
-        MessageParcel reply;
-        MessageOption option;
-        if (!WriteInterfaceToken(datas)) {
-            return false;
-        }
-        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_GET_SCANNER_STATE, datas, reply, option);
-        return true;
-    }
-
     bool TestOnGetScanProgress(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         MessageParcel datas;
@@ -255,6 +199,7 @@ namespace Scan {
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         datas.WriteString(scannerId);
         ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_GET_SCAN_PROGRESS, datas, reply, option);
+        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_GET_SCANNER_STATE, datas, reply, option);
         return true;
     }
 
@@ -302,10 +247,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Scan::TestOnInitScan(data, size, &dataProvider);
-    OHOS::Scan::TestOnExitScan(data, size, &dataProvider);
-    OHOS::Scan::TestOnGetScannerList(data, size, &dataProvider);
-    OHOS::Scan::TestOnStopDiscover(data, size, &dataProvider);
     OHOS::Scan::TestOnOpenScanner(data, size, &dataProvider);
     OHOS::Scan::TestOnCloseScanner(data, size, &dataProvider);
     OHOS::Scan::TestOnGetScanOptionDesc(data, size, &dataProvider);
@@ -316,7 +257,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::TestOnCancelScan(data, size, &dataProvider);
     OHOS::Scan::TestOnSetScanIOMode(data, size, &dataProvider);
     OHOS::Scan::TestOnGetScanSelectFd(data, size, &dataProvider);
-    OHOS::Scan::TestOnGetScannerState(data, size, &dataProvider);
     OHOS::Scan::TestOnGetScanProgress(data, size, &dataProvider);
     OHOS::Scan::TestOnEventOn(data, size, &dataProvider);
     OHOS::Scan::TestOnEventOff(data, size, &dataProvider);

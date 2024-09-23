@@ -133,6 +133,8 @@ void TestSetOptionConstraintRange(const uint8_t* data, size_t size, FuzzedDataPr
     ScanRange optionConstraintRange;
     scanOptDes.SetOptionConstraintRange(optionConstraintRange);
     scanOptDes.GetOptionConstraintRange(optionConstraintRange);
+    std::string optionName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    scanOptDes.SetOptionName(optionName);
 }
 
 void TestScanOptionDescriptor(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
