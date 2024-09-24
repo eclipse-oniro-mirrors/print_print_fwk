@@ -377,7 +377,7 @@ void ParseOrientationAttributes(ipp_t *response, PrinterCapability &printerCaps)
 void ParseOtherAttributes(ipp_t *response, PrinterCapability &printerCaps)
 {
     std::string keyword = "media-source-supported";
-    std::string attrString = ConvertIppAttributesToJsonString(response, keyword, IPP_TAG_ZERO);
+    std::string attrString = ConvertIppAttributesToJsonString(response, keyword, IPP_TAG_KEYWORD);
     PRINT_HILOGD("%{public}s: %{public}s", keyword.c_str(), attrString.c_str());
     if (!attrString.empty()) {
         printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), attrString.c_str());
