@@ -96,9 +96,9 @@ bool ConvertDuplexModeCode(const char *src, DuplexModeCode &dst)
     return true;
 }
 
-std::string ConvertIppAttributesToJsonString(ipp_t *response, const std::string &keyword)
+std::string ConvertIppAttributesToJsonString(ipp_t *response, const std::string &keyword, ipp_tag_t tag)
 {
-    ipp_attribute_t *attrPtr = ippFindAttribute(response, keyword.c_str(), IPP_TAG_KEYWORD);
+    ipp_attribute_t *attrPtr = ippFindAttribute(response, keyword.c_str(), tag);
     if (attrPtr == nullptr) {
         return "";
     }
@@ -377,14 +377,14 @@ void ParseOrientationAttributes(ipp_t *response, PrinterCapability &printerCaps)
 void ParseOtherAttributes(ipp_t *response, PrinterCapability &printerCaps)
 {
     std::string keyword = "media-source-supported";
-    std::string attrString = ConvertIppAttributesToJsonString(response, keyword);
+    std::string attrString = ConvertIppAttributesToJsonString(response, keyword, IPP_TAG_ZERO);
     PRINT_HILOGD("%{public}s: %{public}s", keyword.c_str(), attrString.c_str());
     if (!attrString.empty()) {
         printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), attrString.c_str());
     }
 
     keyword = "multiple-document-handling-supported";
-    attrString = ConvertIppAttributesToJsonString(response, keyword);
+    attrString = ConvertIppAttributesToJsonString(response, keyword, IPP_TAG_KEYWORD);
     PRINT_HILOGD("%{public}s: %{public}s", keyword.c_str(), attrString.c_str());
     if (!attrString.empty()) {
         printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), attrString.c_str());
@@ -405,7 +405,7 @@ void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
         options["printerName"] = ippGetString(attrPtr, 0, NULL);
     }
     std::string keyword = "media-type-supported";
-    std::string supportTypes = ConvertIppAttributesToJsonString(response, keyword);
+    std::string supportTypes = ConvertIppAttributesToJsonString(response, keyword, IPP_TAG_ZERO);
     PRINT_HILOGD("%{public}s: %{public}s", keyword.c_str(), supportTypes.c_str());
     if (!supportTypes.empty()) {
         printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), supportTypes.c_str());
