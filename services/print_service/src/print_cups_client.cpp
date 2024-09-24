@@ -193,6 +193,16 @@ void PrintCupsClient::ChangeFilterPermission(const std::string &path, mode_t mod
     closedir(dir);
 }
 
+void PrintCupsClient::SymlinkFile(std::string srcFilePath, std::string destFilePath)
+{
+    int ret = symlink(srcFilePath.c_str(), destFilePath.c_str());
+    if (!ret) {
+        PRINT_HILOGE("symlink success, ret = %{public}d, errno = %{public}d", ret, errno);
+    } else {
+        PRINT_HILOGE("symlink failed, ret = %{public}d, errno = %{public}d", ret, errno);
+    }
+}
+
 void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
 {
     DIR *dir = opendir(srcDir);
