@@ -28,17 +28,6 @@ constexpr int MAX_SET_NUMBER = 100;
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 
-void TestInitCupsResources(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrintCupsClient::GetInstance()->InitCupsResources();
-}
-
-void TestStopCupsdService(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrintCupsClient::GetInstance()->InitCupsResources();
-    PrintCupsClient::GetInstance()->StopCupsdService();
-}
-
 void TestQueryPPDInformation(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintCupsClient::GetInstance()->InitCupsResources();
@@ -47,6 +36,7 @@ void TestQueryPPDInformation(const uint8_t *data, size_t size, FuzzedDataProvide
     std::vector<std::string> ppds;
     ppds.push_back(ppd);
     PrintCupsClient::GetInstance()->QueryPPDInformation(makeModelStr.c_str(), ppds);
+    PrintCupsClient::GetInstance()->StopCupsdService();
 }
 
 void TestAddPrinterToCups(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -56,6 +46,7 @@ void TestAddPrinterToCups(const uint8_t *data, size_t size, FuzzedDataProvider *
     std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string printerMake = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintCupsClient::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
+    PrintCupsClient::GetInstance()->JobCompleteCallback();
 }
 
 void TestQueryPrinterCapabilityByUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -78,6 +69,8 @@ void TestAddCupsPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *d
 {
     PrintCupsClient::GetInstance()->InitCupsResources();
     PrintJob jobInfo;
+    std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    jobInfo.SetOption(option);
     PrintCupsClient::GetInstance()->AddCupsPrintJob(jobInfo);
 }
 
@@ -132,16 +125,11 @@ void TestQueryPrinterInfoByPrinterId(const uint8_t *data, size_t size, FuzzedDat
     PrintCupsClient::GetInstance()->QueryPrinterInfoByPrinterId(printerId, info);
 }
 
-void TestJobCompleteCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrintCupsClient::GetInstance()->InitCupsResources();
-    PrintCupsClient::GetInstance()->JobCompleteCallback();
-}
-
 void TestCheckPrinterMakeModel(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintCupsClient::GetInstance()->InitCupsResources();
     JobParameters jobParams;
+    jobParams.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintCupsClient::GetInstance()->CheckPrinterMakeModel(&jobParams);
 }
 
@@ -280,8 +268,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
 
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Print::TestInitCupsResources(data, size, &dataProvider);
-    OHOS::Print::TestStopCupsdService(data, size, &dataProvider);
     OHOS::Print::TestQueryPPDInformation(data, size, &dataProvider);
     OHOS::Print::TestAddPrinterToCups(data, size, &dataProvider);
     OHOS::Print::TestQueryPrinterCapabilityByUri(data, size, &dataProvider);
@@ -293,7 +279,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::Print::TestSetDefaultPrinter(data, size, &dataProvider);
     OHOS::Print::TestQueryPrinterAttrList(data, size, &dataProvider);
     OHOS::Print::TestQueryPrinterInfoByPrinterId(data, size, &dataProvider);
-    OHOS::Print::TestJobCompleteCallback(data, size, &dataProvider);
     OHOS::Print::TestCheckPrinterMakeModel(data, size, &dataProvider);
     OHOS::Print::TestDeletePrinterFromCups(data, size, &dataProvider);
     OHOS::Print::TestCheckPrinterOnline(data, size, &dataProvider);

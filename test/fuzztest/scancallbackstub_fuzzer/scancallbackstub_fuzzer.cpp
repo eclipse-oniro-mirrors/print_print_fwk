@@ -21,6 +21,7 @@
 #include "scancallbackstub_fuzzer.h"
 
 namespace OHOS::Scan {
+constexpr uint8_t MAX_STRING_LENGTH = 255;
 constexpr int MAX_SET_NUMBER = 100;
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
@@ -92,6 +93,8 @@ void HandleSendSearchMessageFuzzTest(const uint8_t* data, size_t size, FuzzedDat
 {
     MessageParcel parcelData;
     std::string message = parcelData.ReadString();
+    parcelData.WriteString(message);
+    message = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     parcelData.WriteString(message);
     ScanCallback callBack(nullptr, nullptr);
     MessageParcel reply;

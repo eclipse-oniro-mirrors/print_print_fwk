@@ -541,7 +541,7 @@ void ScanServiceAbility::SaneGetScanner()
             SCAN_HILOGE("SaneGetScanner SetScannerSerialNumber failed, model:[%{public}s]", info.model.c_str());
         }
     }
-    std::lock_guard<std::mutex> autoLock(clearMapLock_);
+    clearMapLock_.lock();
     for (auto &t : saneGetUsbDeviceInfoMap) {
         SendDeviceInfo(t.second, SCAN_DEVICE_FOUND);
         deviceInfos.emplace_back(t.second);
@@ -550,6 +550,7 @@ void ScanServiceAbility::SaneGetScanner()
         SendDeviceInfo(t.second, SCAN_DEVICE_FOUND);
         deviceInfos.emplace_back(t.second);
     }
+    clearMapLock_.unlock();
     g_scannerState = SCANNER_READY;
 }
 #endif
