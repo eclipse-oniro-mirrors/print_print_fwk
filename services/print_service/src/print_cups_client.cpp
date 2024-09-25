@@ -244,7 +244,7 @@ void PrintCupsClient::SymlinkFile(std::string srcFilePath, std::string destFileP
 {
     int ret = symlink(srcFilePath.c_str(), destFilePath.c_str());
     if (!ret) {
-        PRINT_HILOGE("symlink success, ret = %{public}d, errno = %{public}d", ret, errno);
+        PRINT_HILOGD("symlink success, ret = %{public}d, errno = %{public}d", ret, errno);
     } else {
         PRINT_HILOGE("symlink failed, ret = %{public}d, errno = %{public}d", ret, errno);
     }
@@ -277,7 +277,7 @@ void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
             PRINT_HILOGD("symlink lstat %{public}s err: %{public}s", destFilePath.c_str(), strerror(errno));
 
             if (S_ISLNK(destFilestat.st_mode)) {
-                PRINT_HILOGW("symlink already exists, continue.");
+                PRINT_HILOGD("symlink already exists, continue.");
                 continue;
             }
             if (std::remove(destFilePath.c_str()) != 0) {

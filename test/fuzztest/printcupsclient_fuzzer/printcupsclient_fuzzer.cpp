@@ -148,10 +148,8 @@ void TestCheckPrinterMakeModel(const uint8_t *data, size_t size, FuzzedDataProvi
 void TestDeletePrinterFromCups(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintCupsClient::GetInstance()->InitCupsResources();
-    std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string printerMake = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintCupsClient::GetInstance()->DeletePrinterFromCups(printerUri, printerName, printerMake);
+    PrintCupsClient::GetInstance()->DeleteCupsPrinter(printerName.c_str());
 }
 
 void TestCheckPrinterOnline(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
