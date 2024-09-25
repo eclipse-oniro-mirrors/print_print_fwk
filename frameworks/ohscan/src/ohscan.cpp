@@ -277,7 +277,6 @@ bool MemSetScannerOptions(Scan_ScannerOptions* scannerOptions, int32_t &optionCo
             return false;
         }
         scannerOptions->ranges[i] = rangesBuff;
-        delete[] rangesBuff;
     }
     return true;
 }
