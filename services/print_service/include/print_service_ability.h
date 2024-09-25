@@ -171,7 +171,6 @@ private:
         std::vector<std::string>& optAttrs);
     void BuildPrinterAttrComponentByJson(std::string& key, nlohmann::json& jsonArrObject,
         std::vector<std::string> &printerAttrs);
-    std::string StandardizePrinterId(const std::string &printerId);
     bool CheckIsDefaultPrinter(const std::string &printerId);
     bool CheckIsLastUsedPrinter(const std::string &printerId);
     void SetLastUsedPrinter(const std::string &printerId);
