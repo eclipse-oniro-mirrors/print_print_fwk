@@ -2804,8 +2804,9 @@ int32_t PrintServiceAbility::DeletePrinterFromCups(
     PRINT_HILOGD("DeletePrinterFromCups started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 #ifdef CUPS_ENABLE
+    std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     auto ret =
-        DelayedSingleton<PrintCupsClient>::GetInstance()->DeletePrinterFromCups(printerUri, printerName, printerMake);
+        DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("DeletePrinterFromCups error = %{public}d.", ret);
         return ret;
@@ -3204,10 +3205,10 @@ bool PrintServiceAbility::RemoveVendorPrinterFromCups(const std::string &globalV
         return false;
     }
 #ifdef CUPS_ENABLE
-    auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->DeletePrinterFromCups(cupsPrinter.uri,
-        cupsPrinter.name, cupsPrinter.maker);
+    std::string standardName = PrintUtil::StandardizePrinterName(cupsPrinter.name);
+    auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());
     if (ret != E_PRINT_NONE) {
-        PRINT_HILOGW("DeletePrinterFromCups error = %{public}d.", ret);
+        PRINT_HILOGW("DeleteCupsPrinter error = %{public}d.", ret);
         return false;
     }
 #endif  // CUPS_ENABLE

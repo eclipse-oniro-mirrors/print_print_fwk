@@ -451,7 +451,6 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0083, TestSize.Level1)
     std::string name = "testname";
     std::string makeModel = "testmodel";
     printCupsClient.AddPrinterToCups(uri, name, makeModel);
-    printCupsClient.DeletePrinterFromCups(uri, name, makeModel);
     printCupsClient.DeleteCupsPrinter(name.c_str());
     printCupsClient.StopCupsdService();
 }

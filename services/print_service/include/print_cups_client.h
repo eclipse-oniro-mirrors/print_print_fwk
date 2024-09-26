@@ -97,8 +97,6 @@ public:
     int32_t QueryPrinterAttrList(const std::string &printerName, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList);
     int32_t QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info);
-    int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-        const std::string &printerMake);
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps);
 

@@ -244,7 +244,7 @@ void PrintCupsClient::SymlinkFile(std::string srcFilePath, std::string destFileP
 {
     int ret = symlink(srcFilePath.c_str(), destFilePath.c_str());
     if (!ret) {
-        PRINT_HILOGE("symlink success, ret = %{public}d, errno = %{public}d", ret, errno);
+        PRINT_HILOGD("symlink success, ret = %{public}d, errno = %{public}d", ret, errno);
     } else {
         PRINT_HILOGE("symlink failed, ret = %{public}d, errno = %{public}d", ret, errno);
     }
@@ -555,51 +555,6 @@ int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, 
         return E_PRINT_SERVER_FAILURE;
     }
     PRINT_HILOGI("add success");
-    return E_PRINT_NONE;
-}
-
-int32_t PrintCupsClient::DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-    const std::string &printerMake)
-{
-    PRINT_HILOGD("PrintCupsClient DeletePrinterFromCups start, printerMake: %{public}s", printerMake.c_str());
-    ipp_t *request;
-    char uri[HTTP_MAX_URI] = {0};
-    std::vector<string> ppds;
-    std::string ppd = DEFAULT_PPD_NAME;
-    std::string standardName = PrintUtil::StandardizePrinterName(printerName);
-
-    ippSetPort(CUPS_SEVER_PORT);
-    QueryPPDInformation(printerMake.c_str(), ppds);
-    if (!ppds.empty()) {
-        ppd = ppds[0];
-        std::string serverBin = CUPS_ROOT_DIR + "/serverbin";
-        mode_t permissions = S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH;
-        ChangeFilterPermission(serverBin, permissions);
-    }
-    PRINT_HILOGI("ppd driver: %{public}s", ppd.c_str());
-    if (!IsPrinterExist(printerUri.c_str(), standardName.c_str(), ppd.c_str())) {
-        PRINT_HILOGI("printer has not added");
-        return E_PRINT_NONE;
-    }
-    if (printAbility_ == nullptr) {
-        PRINT_HILOGW("printAbility_ is null");
-        return E_PRINT_SERVER_FAILURE;
-    }
-    request = ippNewRequest(IPP_OP_CUPS_DELETE_PRINTER);
-    httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s",
-                     standardName.c_str());
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-info", NULL, standardName.c_str());
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "device-uri", NULL, printerUri.c_str());
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", NULL, ppd.c_str());
-    PRINT_HILOGD("IPP_OP_CUPS_DELETE_PRINTER cupsDoRequest");
-    ippDelete(printAbility_->DoRequest(NULL, request, "/admin/"));
-    if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
-        PRINT_HILOGE("delete error: %s", cupsLastErrorString());
-        return E_PRINT_SERVER_FAILURE;
-    }
-    PRINT_HILOGI("delete success");
     return E_PRINT_NONE;
 }
 
