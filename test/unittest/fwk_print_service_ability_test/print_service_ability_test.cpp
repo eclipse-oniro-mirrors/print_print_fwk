@@ -1231,17 +1231,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069, TestSize.Level1)
     service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0070, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "DIRECT-PixLab_V1-1620";
-    service->StandardizePrinterId(printerId);
-    std::string printerId2 = "p2p://DIRECT-PixLab_V1-1620";
-    service->StandardizePrinterId(printerId2);
-    std::string printerId3 = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
-    service->StandardizePrinterId(printerId3);
-}
-
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0071, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);

@@ -753,14 +753,14 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGD("QueryPrinterCapabilityByUri started.");
+    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::string standardizeId = printerId;
+    if (standardizeId.find(extensionId) == std::string::npos && vendorManager.ExtractVendorName(printerId).empty()) {
+        standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
+    }
+    PRINT_HILOGI("extensionId = %{public}s, printerId : %{public}s", extensionId.c_str(), standardizeId.c_str());
 #ifdef CUPS_ENABLE
     if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER) {
-        std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-        std::string standardizeId = printerId;
-        if (standardizeId.find(extensionId) == std::string::npos) {
-            standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
-        }
-        PRINT_HILOGI("extensionId = %{public}s, printerId : %{public}s", extensionId.c_str(), standardizeId.c_str());
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(standardizeId);
         if (printerInfo == nullptr) {
             PRINT_HILOGE("can not find the printer");
@@ -789,25 +789,8 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
     }
 #endif // CUPS_ENABLE
     PRINT_HILOGD("QueryPrinterCapabilityByUri End.");
-    WritePrinterPreference(printerId, printerCaps);
+    WritePrinterPreference(standardizeId, printerCaps);
     return E_PRINT_NONE;
-}
-
-std::string PrintServiceAbility::StandardizePrinterId(const std::string &printerId)
-{
-    PRINT_HILOGI("printerId: %{public}s", printerId.c_str());
-    std::string standardPrinterId = printerId;
-    auto pos = printerId.find(PRINTER_ID_DELIMITER);
-    if (pos == std::string::npos) {
-        return "";
-    }
-    if (!vendorManager.ExtractVendorName(printerId).empty()) {
-        return printerId;
-    }
-    if (printerId.substr(0, pos) != SPOOLER_BUNDLE_NAME) {
-        standardPrinterId.assign(SPOOLER_BUNDLE_NAME + PRINTER_ID_DELIMITER + printerId);
-    }
-    return standardPrinterId;
 }
 
 void PrintServiceAbility::BuildPrinterPreferenceByDefault(nlohmann::json& capOpt, PreferenceSetting &printerDefaultAttr)
@@ -1039,9 +1022,8 @@ bool PrintServiceAbility::WritePreferenceToFile()
 
 bool PrintServiceAbility::WritePrinterPreference(const std::string &printerId, PrinterCapability &printerCaps)
 {
-    std::string standardPrinterId = StandardizePrinterId(printerId);
     if (printerCaps.HasOption()) {
-        if (printerIdAndPreferenceMap_.count(standardPrinterId)) {
+        if (printerIdAndPreferenceMap_.count(printerId)) {
             return false;
         }
         PrinterPreference printPreference;
@@ -1053,7 +1035,7 @@ bool PrintServiceAbility::WritePrinterPreference(const std::string &printerId, P
         nlohmann::json jsonObject = nlohmann::json::object();
         jsonObject = printPreference.BuildPrinterPreferenceJson();
         std::string savePrinterPreference = jsonObject.dump();
-        printerIdAndPreferenceMap_.insert(std::make_pair(standardPrinterId, savePrinterPreference));
+        printerIdAndPreferenceMap_.insert(std::make_pair(printerId, savePrinterPreference));
         return WritePreferenceToFile();
     }
     return false;
