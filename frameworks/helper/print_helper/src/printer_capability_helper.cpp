@@ -281,7 +281,7 @@ bool PrinterCapabilityHelper::buildSupportedPageSizes(napi_env env, napi_value j
                                                       std::shared_ptr<PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<PrintPageSize>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_PAGESIZES,
-        [&](const std::vector<PrintPageSize>& pageSizes) {
+        [nativeObj](const std::vector<PrintPageSize>& pageSizes) {
             nativeObj->SetSupportedPageSize(pageSizes);
         },
         PrintPageSizeHelper::BuildFromJs);
@@ -291,7 +291,7 @@ bool PrinterCapabilityHelper::buildSupportedResolutions(napi_env env, napi_value
                                                         std::shared_ptr<PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<PrintResolution>(env, jsValue, PARAM_CAPABILITY_RESOLUTION,
-        [&](const std::vector<PrintResolution>& resolutions) {
+        [nativeObj](const std::vector<PrintResolution>& resolutions) {
             nativeObj->SetResolution(resolutions);
         },
         PrintResolutionHelper::BuildFromJs);
@@ -301,7 +301,7 @@ bool PrinterCapabilityHelper::buildSupportedColorModes(napi_env env, napi_value 
                                                        std::shared_ptr <PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_COLORMODES,
-        [&](const std::vector<uint32_t>& colorModes) { nativeObj->SetSupportedColorMode(colorModes); },
+        [nativeObj](const std::vector<uint32_t>& colorModes) { nativeObj->SetSupportedColorMode(colorModes); },
         [](napi_env env, napi_value jsValue) -> std::shared_ptr<uint32_t> {
             uint32_t colorMode = NapiPrintUtils::GetUint32FromValue(env, jsValue);
             return std::make_shared<uint32_t>(colorMode);
@@ -312,7 +312,7 @@ bool PrinterCapabilityHelper::buildSupportedDuplexModes(napi_env env, napi_value
                                                         std::shared_ptr<PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_DUPLEXMODES,
-        [&](const std::vector<uint32_t>& duplexModes) {
+        [nativeObj](const std::vector<uint32_t>& duplexModes) {
             nativeObj->SetSupportedDuplexMode(duplexModes);
         },
         [](napi_env env, napi_value jsValue) -> std::shared_ptr<uint32_t> {
@@ -324,7 +324,7 @@ bool PrinterCapabilityHelper::buildSupportedQualities(napi_env env, napi_value j
                                                       std::shared_ptr<PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_QUALITIES,
-        [&](const std::vector<uint32_t>& qualities) {
+        [nativeObj](const std::vector<uint32_t>& qualities) {
             nativeObj->SetSupportedQuality(qualities);
         },
         [](napi_env env, napi_value jsValue) -> std::shared_ptr<uint32_t> {
@@ -336,7 +336,7 @@ bool PrinterCapabilityHelper::buildSupportedMediaTypes(napi_env env, napi_value 
                                                        std::shared_ptr<PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<std::string>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_MEDIA_TYPES,
-        [&](const std::vector<std::string>& mediaTypes) {
+        [nativeObj](const std::vector<std::string>& mediaTypes) {
             nativeObj->SetSupportedMediaType(mediaTypes);
         },
         [](napi_env env, napi_value jsValue) -> std::shared_ptr<std::string> {
@@ -348,7 +348,7 @@ bool PrinterCapabilityHelper::buildSupportedOrientations(napi_env env, napi_valu
                                                          std::shared_ptr<PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_ORIENTATIONS,
-        [&](const std::vector<uint32_t>& orientations) {
+        [nativeObj](const std::vector<uint32_t>& orientations) {
             nativeObj->SetSupportedOrientation(orientations);
         },
         [](napi_env env, napi_value jsValue) -> std::shared_ptr<uint32_t> {
