@@ -64,6 +64,7 @@ public:
     std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoByName(const std::string &printerName);
     void AddPrinterToDiscovery(std::shared_ptr<PrinterInfo> printerInfo);
     void RemovePrinterFromDiscovery(const std::string &printerId);
+    std::map<std::string, std::shared_ptr<PrinterInfo>> GetDiscoveredPrinterInfo();
     size_t GetDiscoveredPrinterCount();
     void ClearDiscoveredPrinterList();
 

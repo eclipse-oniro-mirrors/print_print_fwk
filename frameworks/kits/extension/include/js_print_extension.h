@@ -121,7 +121,6 @@ private:
     bool InitExtensionObj(JsRuntime &jsRuntime);
     bool InitContextObj(JsRuntime &jsRuntime, napi_value &extObj, std::string &extensionId);
     bool Callback(const std::string funcName);
-    bool CallbackSync(const std::string funcName);
     bool Callback(const std::string funcName, const std::string &printerId);
     bool Callback(const std::string funcName, const Print::PrintJob &job);
     void RegisterDiscoveryCb();

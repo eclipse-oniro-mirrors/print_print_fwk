@@ -840,5 +840,10 @@ void PrintSystemData::ClearDiscoveredPrinterList()
     std::lock_guard<std::mutex> lock(discoveredListMutex);
     discoveredPrinterInfoList_.clear();
 }
+
+std::map<std::string, std::shared_ptr<PrinterInfo>> PrintSystemData::GetDiscoveredPrinterInfo()
+{
+    return discoveredPrinterInfoList_;
+}
 }  // namespace Print
 }  // namespace OHOS
