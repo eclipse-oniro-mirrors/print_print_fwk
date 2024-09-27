@@ -189,6 +189,8 @@ private:
     int32_t AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
     bool UpdateSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
     bool RemoveSinglePrinterInfo(const std::string &printerId);
+    void HandlePrinterStateChangeRegister();
+    void HandlePrinterChangeRegister();
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
@@ -216,6 +218,7 @@ private:
     static std::string ingressPackage;
 
     std::recursive_mutex apiMutex_;
+    std::recursive_mutex apiRegisterMutex_;
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
     std::map<std::string, sptr<IPrintCallback>> adapterListenersByJobId_;
     std::map<std::string, sptr<IPrintExtensionCallback>> extCallbackMap_;

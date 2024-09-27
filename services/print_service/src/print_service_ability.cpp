@@ -624,7 +624,6 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGD("QueryPrinterInfoByPrinterId started %{public}s", printerId.c_str());
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     info.SetPrinterId(printerId);
     OHOS::Print::CupsPrinterInfo cupsPrinter;
     if (printSystemData_.QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter)) {
@@ -2161,54 +2160,43 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
     ManualStart();
     std::string permission = PERMISSION_NAME_PRINT_JOB;
     std::string eventType = type;
-    if (taskId != "") {
+    if (type == PRINT_CALLBACK_ADAPTER || type == PRINTER_CHANGE_EVENT_TYPE || taskId != "") {
         permission = PERMISSION_NAME_PRINT;
-        eventType = PrintUtils::GetTaskEventId(taskId, type);
     }
-
-    if (type == PRINT_CALLBACK_ADAPTER) {
-        permission = PERMISSION_NAME_PRINT;
-        eventType = type;
-    }
-
-    if (type == PRINTER_CHANGE_EVENT_TYPE) {
-        permission = PERMISSION_NAME_PRINT;
-        int32_t callerPid = IPCSkeleton::GetCallingPid();
-        eventType = PrintUtils::GetEventTypeWithToken(callerPid, type);
-    }
-
     if (!CheckPermission(permission)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-
-    if (eventType == "") {
-        PRINT_HILOGE("Invalid event type");
-        return E_PRINT_INVALID_PARAMETER;
-    }
-
     if (listener == nullptr) {
         PRINT_HILOGE("Invalid listener");
         return E_PRINT_INVALID_PARAMETER;
     }
 
+    if (type == PRINT_CALLBACK_ADAPTER) {
+        eventType = type;
+    }
+    if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE) {
+        int32_t callerPid = IPCSkeleton::GetCallingPid();
+        eventType = PrintUtils::GetEventTypeWithToken(callerPid, type);
+    }
+    if (taskId != "") {
+        eventType = PrintUtils::GetTaskEventId(taskId, type);
+    }
+    if (eventType == "") {
+        PRINT_HILOGE("Invalid event type");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+
     PRINT_HILOGD("PrintServiceAbility::On started. type=%{public}s", eventType.c_str());
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    std::lock_guard<std::recursive_mutex> lock(apiRegisterMutex_);
     if (registeredListeners_.find(eventType) == registeredListeners_.end()) {
         registeredListeners_.insert(std::make_pair(eventType, listener));
     } else {
         PRINT_HILOGD("PrintServiceAbility::On Replace listener.");
         registeredListeners_[eventType] = listener;
     }
-    if (PrintUtils::GetEventType(eventType) == PRINTER_CHANGE_EVENT_TYPE) {
-        PRINT_HILOGI("begin on printerChange, StartDiscoverPrinter");
-        std::vector<PrintExtensionInfo> extensionInfos;
-        QueryAllExtension(extensionInfos);
-        std::vector<std::string> extensionIds;
-        StartDiscoverPrinter(extensionIds);
-        printAppCount_++;
-        PRINT_HILOGI("printAppCount_: %{public}u", printAppCount_);
-    }
+    HandlePrinterStateChangeRegister();
+    HandlePrinterChangeRegister();
     PRINT_HILOGD("PrintServiceAbility::On end.");
     return E_PRINT_NONE;
 }
@@ -2237,7 +2225,7 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
     }
 
     PRINT_HILOGD("PrintServiceAbility::Off started.");
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    std::lock_guard<std::recursive_mutex> lock(apiRegisterMutex_);
     auto iter = registeredListeners_.find(eventType);
     if (iter != registeredListeners_.end()) {
         PRINT_HILOGD("PrintServiceAbility::Off delete type=%{public}s object message.", eventType.c_str());
@@ -2294,10 +2282,12 @@ void PrintServiceAbility::SendPrinterChangeEvent(int event, const PrinterInfo &i
 void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info)
 {
     PRINT_HILOGD("PrintServiceAbility::SendPrinterEvent type %{private}s, %{public}d",
-        info.GetPrinterId().c_str(), info.GetPrinterState());
-    auto eventIt = registeredListeners_.find(PRINTER_EVENT_TYPE);
-    if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {
-        eventIt->second->OnCallback(info.GetPrinterState(), info);
+                 info.GetPrinterId().c_str(), info.GetPrinterState());
+    for (auto eventIt: registeredListeners_) {
+        if (PrintUtils::GetEventType(eventIt.first) == PRINTER_EVENT_TYPE && eventIt.second != nullptr) {
+            PRINT_HILOGD("PrintServiceAbility::SendPrinterEvent find PRINTER_CHANGE_EVENT_TYPE");
+            eventIt.second->OnCallback(info.GetPrinterState(), info);
+        }
     }
 }
 
@@ -3353,5 +3343,29 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
     }
     PRINT_HILOGD("connecting printer by ip success");
     return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::HandlePrinterStateChangeRegister()
+{
+    PRINT_HILOGI("begin on printerChange, StartDiscoverPrinter");
+    std::map<std::string, std::shared_ptr<PrinterInfo>> discoveredPrinterInfoList_ =
+            printSystemData_.GetDiscoveredPrinterInfo();
+    for (const auto &pair: discoveredPrinterInfoList_) {
+        std::string key = pair.first;
+        std::shared_ptr<PrinterInfo> printerInfoPtr = pair.second;
+        SendPrinterEvent(*printerInfoPtr);
+    }
+    PRINT_HILOGI("begin on printerChange, StartDiscoverPrinter");
+}
+
+void PrintServiceAbility::HandlePrinterChangeRegister()
+{
+    PRINT_HILOGD("begin on printerChange, StartDiscoverPrinter");
+    std::vector<PrintExtensionInfo> extensionInfos;
+    QueryAllExtension(extensionInfos);
+    std::vector<std::string> extensionIds;
+    StartDiscoverPrinter(extensionIds);
+    printAppCount_++;
+    PRINT_HILOGD("end on printerChange, printAppCount_: %{public}u", printAppCount_);
 }
 } // namespace OHOS::Print
