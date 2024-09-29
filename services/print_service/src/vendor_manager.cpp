@@ -466,7 +466,6 @@ bool VendorManager::IsConnectingPrinter(const std::string &id, const std::string
 
 void VendorManager::SetConnectingPrinter(ConnectMethod method, const std::string &printer)
 {
-    PRINT_HILOGD("SetConnectingPrinter %{public}d, %{public}s", static_cast<int>(method), printer.c_str());
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     connectingMethod = method;
     connectingPrinter = printer;
