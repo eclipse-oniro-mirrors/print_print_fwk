@@ -64,6 +64,10 @@ ohos_shared_library("print_models") {
     "samgr:samgr_proxy",
   ]
 
+  if (build_variant == "user") {
+    cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+  }
+
   install_enable = true
   subsystem_name = "print"
   innerapi_tags = [ "platformsdk" ]

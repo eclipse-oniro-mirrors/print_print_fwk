@@ -43,7 +43,11 @@
 #define SCAN_LOG_TAG "scankit"
 #define SCAN_LOG_DOMAIN 0xD001C00
 
-#define SCAN_MAKE_FILE_NAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#ifdef IS_RELEASE_VERSION
+#define SCAN_MAKE_FILE_NAME ""
+#else
+#define SCAN_MAKE_FILE_NAME (__builtin_strrchr(__FILE_NAME__, '/') ? __builtin_strrchr(__FILE_NAME__, '/') + 1 : __FILE_NAME__)
+#endif
 
 #define SCAN_HILOGF(fmt, ...)                                        								\
     (void)HILOG_IMPL(LOG_CORE, LOG_FATAL, SCAN_LOG_DOMAIN, SCAN_LOG_TAG, "[%{public}s %{public}s %{public}d] " fmt,	\

@@ -78,6 +78,10 @@ ohos_shared_library("ohprint") {
     "samgr:samgr_proxy",
   ]
 
+  if (build_variant == "user") {
+    cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+  }
+
   relative_install_dir = "ndk"
   output_name = "ohprint"
   output_extension = "so"

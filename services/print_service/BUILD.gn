@@ -139,6 +139,10 @@ ohos_shared_library("print_service") {
     cflags_cc += [ "-DSECURITY_GUARDE_ENABLE" ]
   }
 
+  if (build_variant == "user") {
+    cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+  }
+
   subsystem_name = "print"
   part_name = "print_fwk"
 }
