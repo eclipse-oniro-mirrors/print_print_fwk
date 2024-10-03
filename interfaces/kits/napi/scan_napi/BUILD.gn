@@ -67,7 +67,7 @@ ohos_shared_library("scan_napi") {
   if (build_variant == "user") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
   }
-  
+
   relative_install_dir = "module"
   subsystem_name = "print"
   part_name = "print_fwk"
