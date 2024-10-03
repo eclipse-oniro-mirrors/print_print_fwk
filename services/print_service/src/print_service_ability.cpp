@@ -522,15 +522,8 @@ int32_t PrintServiceAbility::DestroyExtension()
         }
  
         auto cbFunc = extCallbackMap_[cid];
-        auto callback = [=]() {
-            if (cbFunc != nullptr) {
-                cbFunc->OnCallback();
-            }
-        };
-        if (helper_->IsSyncMode()) {
-            callback();
-        } else {
-            serviceHandler_->PostTask(callback, 0);
+        if (cbFunc != nullptr) {
+            cbFunc->OnCallback();
         }
     }
     PRINT_HILOGW("DestroyExtension out.");
@@ -2777,12 +2770,7 @@ int32_t PrintServiceAbility::DeletePrinterFromCups(
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 #ifdef CUPS_ENABLE
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
-    auto ret =
-        DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());
-    if (ret != E_PRINT_NONE) {
-        PRINT_HILOGW("DeletePrinterFromCups error = %{public}d.", ret);
-        return ret;
-    }
+    DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());
 #endif  // CUPS_ENABLE
     std::string printerId = printSystemData_.QueryPrinterIdByStandardizeName(printerName);
 #ifdef IPPOVERUSB_ENABLE
