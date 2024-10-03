@@ -46,7 +46,8 @@
 #ifdef IS_RELEASE_VERSION
 #define SCAN_MAKE_FILE_NAME ""
 #else
-#define SCAN_MAKE_FILE_NAME (__builtin_strrchr(__FILE_NAME__, '/') ? __builtin_strrchr(__FILE_NAME__, '/') + 1 : __FILE_NAME__)
+#define SCAN_MAKE_FILE_NAME \
+    (__builtin_strrchr(__FILE_NAME__, '/') ? __builtin_strrchr(__FILE_NAME__, '/') + 1 : __FILE_NAME__)
 #endif
 
 #define SCAN_HILOGF(fmt, ...)                                        								\

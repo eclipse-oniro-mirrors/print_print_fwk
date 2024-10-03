@@ -46,7 +46,8 @@
 #ifdef IS_RELEASE_VERSION
 #define MAKE_FILE_NAME ""
 #else
-#define MAKE_FILE_NAME (__builtin_strrchr(__FILE_NAME__, '/') ? __builtin_strrchr(__FILE_NAME__, '/') + 1 : __FILE_NAME__)
+#define MAKE_FILE_NAME  \
+    (__builtin_strrchr(__FILE_NAME__, '/') ? __builtin_strrchr(__FILE_NAME__, '/') + 1 : __FILE_NAME__)
 #endif
 
 #define PRINT_HILOGF(fmt, ...)                                        								\
