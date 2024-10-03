@@ -43,7 +43,11 @@
 #define PRINT_LOG_TAG "printkit"
 #define PRINT_LOG_DOMAIN 0xD001C00
 
-#define MAKE_FILE_NAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#ifdef IS_RELEASE_VERSION
+#define MAKE_FILE_NAME ""
+#else
+#define MAKE_FILE_NAME (__builtin_strrchr(__FILE_NAME__, '/') ? __builtin_strrchr(__FILE_NAME__, '/') + 1 : __FILE_NAME__)
+#endif
 
 #define PRINT_HILOGF(fmt, ...)                                        								\
     (void)HILOG_IMPL(LOG_CORE, LOG_FATAL, PRINT_LOG_DOMAIN, PRINT_LOG_TAG, "[%{public}s %{public}s %{public}d] " fmt,	\

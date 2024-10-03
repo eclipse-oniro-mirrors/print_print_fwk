@@ -70,6 +70,10 @@ ohos_shared_library("print_helper") {
     "samgr:samgr_proxy",
   ]
 
+  if (build_variant == "user") {
+    cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+  }
+
   #relative_install_dir = "module"
   install_enable = true
   subsystem_name = "print"
