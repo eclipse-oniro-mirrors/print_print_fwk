@@ -102,6 +102,10 @@ ohos_shared_library("print_extension_framework") {
     "napi:ace_napi",
   ]
 
+  if (build_variant == "user") {
+    cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+  }
+
   subsystem_name = "print"
   part_name = "print_fwk"
 }
@@ -136,6 +140,11 @@ ohos_shared_library("print_extension_module") {
     "hisysevent:libhisysevent",
     "napi:ace_napi",
   ]
+
+  if (build_variant == "user") {
+    cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+  }
+
   relative_install_dir = "extensionability"
   subsystem_name = "print"
   part_name = "print_fwk"
