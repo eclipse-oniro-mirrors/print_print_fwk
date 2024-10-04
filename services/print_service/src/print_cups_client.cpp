@@ -1263,8 +1263,8 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
         PRINT_HILOGE("JobStatusCallback param is nullptr");
         return;
     }
-    PRINT_HILOGD("JobStatusCallback enter, job_state: %{public}d", jobStatus->job_state);
-    PRINT_HILOGD("JobStatusCallback enter, printer_state_reasons: %{public}s", jobStatus->printer_state_reasons);
+    PRINT_HILOGI("JobStatusCallback enter, job_state: %{public}d", jobStatus->job_state);
+    PRINT_HILOGI("JobStatusCallback enter, printer_state_reasons: %{public}s", jobStatus->printer_state_reasons);
     if (isOffline) {
         cupsCancelJob2(CUPS_HTTP_DEFAULT, param->printerName.c_str(), param->cupsJobId, 0);
         param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_BLOCKED,
