@@ -55,7 +55,7 @@ ohos_shared_library("printextensionability_napi") {
   external_deps = [ "napi:ace_napi" ]
 
   if (build_variant == "user") {
-    cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+    cflags_cc = [ "-DIS_RELEASE_VERSION" ]
   }
 
   relative_install_dir = "module/app/ability"
