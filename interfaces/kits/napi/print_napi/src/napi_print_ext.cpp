@@ -398,7 +398,7 @@ napi_value NapiPrintExt::QueryPrinterCapabilityByUri(napi_env env, napi_callback
             PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
 
             std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
-            PRINT_HILOGD("printerId : %{private}s", printerUri.c_str());
+            PRINT_HILOGD("printerId : %{private}s", printerId.c_str());
             context->printerId = printerId;
         }
         return napi_ok;

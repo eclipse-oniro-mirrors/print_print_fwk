@@ -13,11 +13,13 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
+cflags_cc = []
+
 config("print_models_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc = [ "-fexceptions" ]
+  cflags_cc += [ "-fexceptions" ]
 }
 ohos_shared_library("print_models") {
   include_dirs = [ "${print_utils_path}/include" ]

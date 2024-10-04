@@ -1537,6 +1537,12 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
         info.GetCapability(printerCaps);
         WriteEprinterPreference(printerId, printerCaps);
     }
+
+    if (printSystemData_.IsPrinterAdded(printerId)) {
+        PRINT_HILOGE("This printer has been added.");
+        return false;
+    }
+
     CupsPrinterInfo cupsPrinterInfo;
     auto output = info;
     cupsPrinterInfo.name = info.GetPrinterName();
