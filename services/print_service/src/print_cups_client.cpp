@@ -94,6 +94,7 @@ static const std::string PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT = "other-report"
 static const std::string PRINTER_STATE_NONE = "none";
 static const std::string PRINTER_STATE_EMPTY = "";
 static const std::string PRINTER_STATE_MEDIA_EMPTY = "media-empty";
+static const std::string PRINTER_STATE_MEDIA_EMPTY_WARNING = "media-empty-warning";
 static const std::string PRINTER_STATE_MEDIA_JAM = "media-jam";
 static const std::string PRINTER_STATE_PAUSED = "paused";
 static const std::string PRINTER_STATE_TONER_LOW = "toner-low";
@@ -1311,7 +1312,10 @@ void PrintCupsClient::ReportBlockedReason(JobMonitorParam *param, JobStatus *job
     }
 
     uint32_t substate = GetBlockedSubstate(jobStatus);
-    if (substate > PRINT_JOB_COMPLETED_SUCCESS) {
+    if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_EMPTY_WARNING.c_str()) != NULL) {
+        param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
+            PRINT_JOB_BLOCKED_BUSY);
+    } else if (substate > PRINT_JOB_COMPLETED_SUCCESS) {
         param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_BLOCKED,
             substate);
     } else if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_NEEDED.c_str()) != NULL) {
