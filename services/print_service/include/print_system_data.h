@@ -55,6 +55,7 @@ public:
     void GetAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList);
     void UpdatePrinterStatus(const std::string &printerId, PrinterStatus printerStatus);
     bool UpdatePrinterAlias(const std::string& printerId, const std::string& printerAlias);
+    void UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &info);
     void QueryPrinterInfoById(const std::string &printerId, PrinterInfo &printerInfo);
     bool CheckPrinterBusy(const std::string &printerId);
     bool GetAllPrintUser(std::vector<int32_t> &allPrintUserList);
