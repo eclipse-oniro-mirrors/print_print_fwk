@@ -578,9 +578,8 @@ int32_t PrintCupsClient::DeleteCupsPrinter(const char *printerName)
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
     ippDelete(printAbility_->DoRequest(NULL, request, "/admin/"));
-    if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
-        PRINT_HILOGE("DeleteCupsPrinter error: %{public}s", cupsLastErrorString());
-        return E_PRINT_SERVER_FAILURE;
+    if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
+        PRINT_HILOGW("DeleteCupsPrinter error: %{public}s", cupsLastErrorString());
     }
     return E_PRINT_NONE;
 }
