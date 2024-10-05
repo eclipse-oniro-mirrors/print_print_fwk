@@ -289,11 +289,11 @@ bool PrintSystemData::UpdatePrinterAlias(const std::string& printerId, const std
     return false;
 }
 
-void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &info)
+void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo)
 {
-    auto info = addedPrinterMap_.Find(info->GetPrinterId());
+    auto info = addedPrinterMap_.Find(printerInfo->GetPrinterId());
     if (info != nullptr) {
-        info->uri = info->GetUri();
+        info->uri = printerInfo->GetUri();
         PRINT_HILOGI("UpdatePrinterUri success");
     }
 }

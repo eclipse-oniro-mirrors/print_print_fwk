@@ -2992,21 +2992,6 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
     return E_PRINT_NONE;
 }
 
-bool PrintServiceAbility::UpdateAddedPrinterInCups(const std::string &printerId)
-{
-    CupsPrinterInfo cupsPrinter;
-    if (printSystemData_.QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter)) {
-        int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
-            AddPrinterToCups(cupsPrinter.uri, cupsPrinter.name, cupsPrinter.maker);
-        if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("UpdateAddedPrinterInCups error = %{public}d", ret);
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
-
 bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId)
 {
     std::string printExtId = info.GetPrinterId();
@@ -3378,5 +3363,20 @@ void PrintServiceAbility::HandlePrinterChangeRegister()
     StartDiscoverPrinter(extensionIds);
     printAppCount_++;
     PRINT_HILOGD("end on printerChange, printAppCount_: %{public}u", printAppCount_);
+}
+
+bool PrintServiceAbility::UpdateAddedPrinterInCups(const std::string &printerId)
+{
+    CupsPrinterInfo cupsPrinter;
+    if (printSystemData_.QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter)) {
+        int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
+            AddPrinterToCups(cupsPrinter.uri, cupsPrinter.name, cupsPrinter.maker);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("UpdateAddedPrinterInCups error = %{public}d.", ret);
+            return false;
+        }
+        return true;
+    }
+    return false;
 }
 } // namespace OHOS::Print
