@@ -79,6 +79,9 @@ static const std::string REMOTE_PRINTER_MAKE_MODEL = "Remote Printer";
 static const std::string DEFAULT_USER = "default";
 static const std::string PRINTER_STATE_WAITING_COMPLETE = "cups-waiting-for-job-completed";
 static const std::string PRINTER_STATE_WIFI_NOT_CONFIGURED = "wifi-not-configured-report";
+static const std::string PRINTER_STATE_MEDIA_LOW_WARNING = "media-low-warning";
+static const std::string PRINTER_STATE_TONER_LOW_WARNING = "toner-low-warning";
+static const std::string PRINTER_STATE_TONER_LOW_REPORT = "toner-low-report";
 static const std::string PRINTER_STATE_IGNORE_HP = "wifi-not-configured-report,cups-waiting-for-job-completed";
 static const std::string PRINTER_STATE_IGNORE_BUSY =
     "cups-ipp-conformance-failure-report,cups-ipp-missing-job-history,cups-waiting-for-job-completed";
@@ -88,13 +91,19 @@ static const std::string PRINTER_STATE_IGNORE_BUSY_MISSING_JOB_STATE =
     "cups-ipp-conformance-failure-report,cups-ipp-missing-job-state";
 static const std::string PRINTER_STATE_IGNORE_BUSY_MISSING_JOB_STATE_COMPLETED =
     "cups-ipp-conformance-failure-report,cups-ipp-missing-job-state,cups-waiting-for-job-completed";
+static const std::string PRINTER_STATE_IGNORE_TONER_LOW_JOB_STATE_COMPLETED =
+    "toner-low-warning,cups-waiting-for-job-completed";
+static const std::string PRINTER_STATE_IGNORE_MEDIA_LOW_JOB_STATE_COMPLETED =
+    "media-low-warning,cups-waiting-for-job-completed";
 static const std::string PRINTER_STATE_IGNORE_BUSY_WAITING_COMPLETE_OTHER_REPORT =
     "cups-waiting-for-job-completed,other-report";
 static const std::string PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT = "other-report";
+static const std::string PRINTER_STATE_IGNORE_MARKER_LOW_WARNING = "marker-supply-low-warning";
+static const std::string PRINTER_STATE_IGNORE_MEDIA_EMPTY_WARNING =
+    "cups-waiting-for-job-completed,media-empty-warning,media-needed";
 static const std::string PRINTER_STATE_NONE = "none";
 static const std::string PRINTER_STATE_EMPTY = "";
 static const std::string PRINTER_STATE_MEDIA_EMPTY = "media-empty";
-static const std::string PRINTER_STATE_MEDIA_EMPTY_WARNING = "media-empty-warning";
 static const std::string PRINTER_STATE_MEDIA_JAM = "media-jam";
 static const std::string PRINTER_STATE_PAUSED = "paused";
 static const std::string PRINTER_STATE_TONER_LOW = "toner-low";
@@ -116,13 +125,20 @@ static const std::vector<std::string> IGNORE_STATE_LIST = {PRINTER_STATE_WAITING
     PRINTER_STATE_NONE,
     PRINTER_STATE_EMPTY,
     PRINTER_STATE_WIFI_NOT_CONFIGURED,
+    PRINTER_STATE_MEDIA_LOW_WARNING,
+    PRINTER_STATE_TONER_LOW_WARNING,
+    PRINTER_STATE_TONER_LOW_REPORT,
     PRINTER_STATE_IGNORE_HP,
     PRINTER_STATE_IGNORE_BUSY,
     PRINTER_STATE_IGNORE_BUSY_COMPLETED,
     PRINTER_STATE_IGNORE_BUSY_MISSING_JOB_STATE,
     PRINTER_STATE_IGNORE_BUSY_MISSING_JOB_STATE_COMPLETED,
+    PRINTER_STATE_IGNORE_TONER_LOW_JOB_STATE_COMPLETED,
+    PRINTER_STATE_IGNORE_MEDIA_LOW_JOB_STATE_COMPLETED,
     PRINTER_STATE_IGNORE_BUSY_WAITING_COMPLETE_OTHER_REPORT,
-    PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT};
+    PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT,
+    PRINTER_STATE_IGNORE_MARKER_LOW_WARNING,
+    PRINTER_STATE_IGNORE_MEDIA_EMPTY_WARNING};
 std::mutex jobMutex;
 
 static std::vector<PrinterInfo> usbPrinters;
@@ -408,7 +424,7 @@ void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std
     if (makeModel) {
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", NULL, makeModel);
     }
- 
+
     PRINT_HILOGD("CUPS_GET_PPDS start.");
     response = printAbility_->DoRequest(CUPS_HTTP_DEFAULT, request, "/");
     if (response == NULL) {
@@ -574,9 +590,8 @@ int32_t PrintCupsClient::DeleteCupsPrinter(const char *printerName)
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
     ippDelete(printAbility_->DoRequest(NULL, request, "/admin/"));
-    if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
-        PRINT_HILOGE("DeleteCupsPrinter error: %{public}s", cupsLastErrorString());
-        return E_PRINT_SERVER_FAILURE;
+    if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
+        PRINT_HILOGW("DeleteCupsPrinter error: %{public}s", cupsLastErrorString());
     }
     return E_PRINT_NONE;
 }
@@ -696,7 +711,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printe
 
     ParsePrinterAttributes(dinfo->attrs, printerCaps);
     printerCaps.Dump();
-    
+
     printAbility_->FreeDestInfo(dinfo);
     printAbility_->FreeDests(1, dest);
     PRINT_HILOGI("QueryPrinterCapabilityFromPPD out\n");
@@ -1312,10 +1327,7 @@ void PrintCupsClient::ReportBlockedReason(JobMonitorParam *param, JobStatus *job
     }
 
     uint32_t substate = GetBlockedSubstate(jobStatus);
-    if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_EMPTY_WARNING.c_str()) != NULL) {
-        param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
-            PRINT_JOB_BLOCKED_BUSY);
-    } else if (substate > PRINT_JOB_COMPLETED_SUCCESS) {
+    if (substate > PRINT_JOB_COMPLETED_SUCCESS) {
         param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_BLOCKED,
             substate);
     } else if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_NEEDED.c_str()) != NULL) {
