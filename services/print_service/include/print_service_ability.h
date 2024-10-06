@@ -189,8 +189,8 @@ private:
     int32_t AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
     bool UpdateSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
     bool RemoveSinglePrinterInfo(const std::string &printerId);
-    void HandlePrinterStateChangeRegister();
-    void HandlePrinterChangeRegister();
+    void HandlePrinterStateChangeRegister(const std::string &eventType);
+    void HandlePrinterChangeRegister(const std::string &eventType);
     bool UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri);
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
