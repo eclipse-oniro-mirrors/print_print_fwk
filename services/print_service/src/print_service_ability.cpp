@@ -2978,7 +2978,7 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
     if (printSystemData_.IsPrinterAdded(infoPtr->GetPrinterId()) &&
         !printSystemData_.CheckPrinterBusy(infoPtr->GetPrinterId())) {
         if (CheckPrinterUriDifferent(infoPtr)) {
-            if (UpdateAddedPrinterInCups(infoPtr->GetPrinterId())) {
+            if (UpdateAddedPrinterInCups(infoPtr->GetPrinterId(), infoPtr->GetUri())) {
                 printSystemData_.UpdatePrinterUri(infoPtr);
                 printSystemData_.SaveCupsPrinterMap();
             }
@@ -3365,12 +3365,12 @@ void PrintServiceAbility::HandlePrinterChangeRegister()
     PRINT_HILOGD("end on printerChange, printAppCount_: %{public}u", printAppCount_);
 }
 
-bool PrintServiceAbility::UpdateAddedPrinterInCups(const std::string &printerId)
+bool PrintServiceAbility::UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri)
 {
     CupsPrinterInfo cupsPrinter;
     if (printSystemData_.QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter)) {
         int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
-            AddPrinterToCups(cupsPrinter.uri, cupsPrinter.name, cupsPrinter.maker);
+            AddPrinterToCups(printerUri, cupsPrinter.name, cupsPrinter.maker);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("UpdateAddedPrinterInCups error = %{public}d.", ret);
             return false;
