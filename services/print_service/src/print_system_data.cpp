@@ -181,7 +181,7 @@ bool PrintSystemData::SaveCupsPrinterMap()
     std::string printerListFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
     char realPidFile[PATH_MAX] = {};
     if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
-        PRINT_HILOGE("The realPidFile is null.");
+        PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
         return E_PRINT_SERVER_FAILURE;
     }
     int32_t fd = open(printerListFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);

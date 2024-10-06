@@ -209,7 +209,7 @@ int32_t PrintCupsClient::StartCupsdService()
     }
     char realPidFile[PATH_MAX] = {};
     if (realpath(pidFile.c_str(), realPidFile) == nullptr) {
-        PRINT_HILOGE("The realPidFile is null.");
+        PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
         return E_PRINT_SERVER_FAILURE;
     }
     int fd;
@@ -341,7 +341,7 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
             char destSrc[PATH_MAX] = {};
             if (realpath(srcFilePath.c_str(), realSrc) == nullptr ||
                 realpath(destDir, destSrc) == nullptr) {
-                PRINT_HILOGE("The realSrc is null.");
+                PRINT_HILOGE("The realSrc is null, errno:%{public}s", std::to_string(errno).c_str());
                 continue;
             }
             FILE *srcFile = fopen(realSrc, "rb");
@@ -938,7 +938,7 @@ ppd_file_t* PrintCupsClient::GetPPDFile(const std::string &printerName)
     PRINT_HILOGI("GetPPDFile started filePath %{public}s", filePath.c_str());
     char realPath[PATH_MAX] = {};
     if (realpath(filePath.c_str(), realPath) == nullptr) {
-        PRINT_HILOGE("The realPidFile is null.");
+        PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
         return nullptr;
     }
     int fd;
