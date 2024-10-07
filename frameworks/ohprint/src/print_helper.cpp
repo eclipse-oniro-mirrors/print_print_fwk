@@ -616,7 +616,12 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
         jsonOptions["mediaType"] = std::string(nativePrintJob.mediaType);
     }
     jsonOptions["borderless"] = nativePrintJob.borderless ? "true" : "false";
-    jsonOptions["printQuality"] = nativePrintJob.printQuality;
+    Print_Quality quality = nativePrintJob.printQuality;
+    if (quality > static_cast<Print_Quality>(PRINT_QUALITY_HIGH)
+        || quality < static_cast<Print_Quality>(PRINT_QUALITY_DRAFT)) {
+        quality = static_cast<Print_Quality>(PRINT_QUALITY_NORMAL);
+    }
+    jsonOptions["printQuality"] = quality;
     jsonOptions["documentFormat"] = GetDocumentFormatString(nativePrintJob.documentFormat);
     if (nativePrintJob.advancedOptions != nullptr) {
         jsonOptions["cupsOptions"] = std::string(nativePrintJob.advancedOptions);
