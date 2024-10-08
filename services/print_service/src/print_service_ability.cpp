@@ -1428,14 +1428,10 @@ void PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
 bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info)
 {
     CupsPrinterInfo cupsPrinter;
-    std::string option = info->GetOption();
-    if (printSystemData_.QueryCupsPrinterInfoByPrinterId(info->GetPrinterId(), cupsPrinter) && json::accept(option)) {
-        json optionJson = json::parse(option);
-        if (optionJson.contains("printerUri") && optionJson["printerUri"].is_string()) {
-            std::string printerUri = optionJson["printerUri"].get<std::string>();
-            if (!printerUri.empty() && printerUri != cupsPrinter.uri) {
-                return true;
-            }
+    if (printSystemData_.QueryCupsPrinterInfoByPrinterId(info->GetPrinterId(), cupsPrinter)) {
+        std::string printerUri = info->GetUri();
+        if (!printerUri.empty() && printerUri != cupsPrinter.uri) {
+            return true;
         }
     }
     return false;
@@ -2983,6 +2979,12 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
 
     if (printSystemData_.IsPrinterAdded(infoPtr->GetPrinterId()) &&
         !printSystemData_.CheckPrinterBusy(infoPtr->GetPrinterId())) {
+        if (CheckPrinterUriDifferent(infoPtr)) {
+            if (UpdateAddedPrinterInCups(infoPtr->GetPrinterId(), infoPtr->GetUri())) {
+                printSystemData_.UpdatePrinterUri(infoPtr);
+                printSystemData_.SaveCupsPrinterMap();
+            }
+        }
         infoPtr->SetPrinterStatus(PRINTER_STATUS_IDLE);
         printSystemData_.UpdatePrinterStatus(infoPtr->GetPrinterId(), PRINTER_STATUS_IDLE);
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *infoPtr);
@@ -3367,5 +3369,20 @@ void PrintServiceAbility::HandlePrinterChangeRegister(const std::string &eventTy
         printAppCount_++;
         PRINT_HILOGD("end HandlePrinterChangeRegister, printAppCount_: %{public}u", printAppCount_);
     }
+}
+
+bool PrintServiceAbility::UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri)
+{
+    CupsPrinterInfo cupsPrinter;
+    if (printSystemData_.QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter)) {
+        int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
+            AddPrinterToCups(printerUri, cupsPrinter.name, cupsPrinter.maker);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("UpdateAddedPrinterInCups error = %{public}d.", ret);
+            return false;
+        }
+        return true;
+    }
+    return false;
 }
 } // namespace OHOS::Print

@@ -412,10 +412,10 @@ void PrinterInfo::Dump() const
         capability_.Dump();
     }
     if (hasUri_) {
-        PRINT_HILOGD("uri: %{private}s", option_.c_str());
+        PRINT_HILOGD("uri: %{private}s", uri_.c_str());
     }
     if (hasPrinterMake_) {
-        PRINT_HILOGD("printerMake: %{private}s", option_.c_str());
+        PRINT_HILOGD("printerMake: %{private}s", printerMake_.c_str());
     }
     if (hasOption_) {
         PRINT_HILOGD("option: %{private}s", option_.c_str());

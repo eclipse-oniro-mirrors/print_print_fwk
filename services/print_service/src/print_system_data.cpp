@@ -289,6 +289,15 @@ bool PrintSystemData::UpdatePrinterAlias(const std::string& printerId, const std
     return false;
 }
 
+void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo)
+{
+    auto info = addedPrinterMap_.Find(printerInfo->GetPrinterId());
+    if (info != nullptr) {
+        info->uri = printerInfo->GetUri();
+        PRINT_HILOGI("UpdatePrinterUri success");
+    }
+}
+
 void PrintSystemData::InsertPrinterInfo(const std::string &printerId, const PrinterInfo &printerInfo)
 {
     auto iter = addedPrinterInfoList_.find(printerId);
@@ -819,7 +828,7 @@ void PrintSystemData::AddPrinterToDiscovery(std::shared_ptr<PrinterInfo> printer
 {
     std::lock_guard<std::mutex> lock(discoveredListMutex);
     if (printerInfo != nullptr) {
-        discoveredPrinterInfoList_.insert(std::make_pair(printerInfo->GetPrinterId(), printerInfo));
+        discoveredPrinterInfoList_[printerInfo->GetPrinterId()] = printerInfo;
     }
 }
 
