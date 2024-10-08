@@ -131,7 +131,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0003, TestSize.Level1)
     printCupsClient.SymlinkDirectory(srcDir, destDir);
 
     struct stat destDirstat = {};
-    EXPECT_EQ(lstat((std::string(destDir) + "/PrintCupsClientTestFileName").c_str(), &destDirstat), 0);
+    EXPECT_EQ(lstat((std::string(destDir)
+                + "/PrintCupsClientTestFileName").c_str(), &destDirstat), 0);
     EXPECT_EQ(S_ISLNK(destDirstat.st_mode), true);
 
     EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / srcDir), 0);
@@ -170,7 +171,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0004, TestSize.Level1)
 
     printCupsClient.CopyDirectory(srcDir, destDir);
 
-    EXPECT_EQ(std::filesystem::is_regular_file(std::string(destDir) + "PrintCupsClientTest/PrintCupsClientTestFileName"), true);
+    EXPECT_EQ(std::filesystem::is_regular_file(
+           std::string(destDir) + "PrintCupsClientTest/PrintCupsClientTestFileName"),
+           true);
     EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / srcDir), 0);
     EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / destDir), 0);
 }
@@ -716,7 +719,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0042, TestSize.Level1)
     printCupsClient.UpdateJobStatus(prevousJobStatus2, jobStatus);
 
     EXPECT_EQ(prevousJobStatus2->job_state, savePrevousJobStatus2->job_state);
-    EXPECT_EQ(std::string(prevousJobStatus2->printer_state_reasons), std::string(savePrevousJobStatus2->printer_state_reasons));
+    EXPECT_EQ(std::string(
+        prevousJobStatus2->printer_state_reasons),
+        std::string(savePrevousJobStatus2->printer_state_reasons));
 
     delete prevousJobStatus;
     delete jobStatus;
