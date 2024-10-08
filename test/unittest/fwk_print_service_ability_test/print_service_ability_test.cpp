@@ -367,9 +367,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0007, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = nullptr;
     service->SetHelper(helper);
+    EXPECT_EQ(service->helper_, helper);
     helper = make_shared<PrintServiceHelper>();
     if (helper != nullptr) {
         service->SetHelper(helper);
+        EXPECT_EQ(service->helper_, helper);
     }
 }
 
@@ -553,7 +555,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0020, TestSize.Level1)
     std::string jobName = "a.jpeg";
     PrintAttributes printAttributes;
     std::string taskId ="1";
-    service->PrintByAdapter(jobName, printAttributes, taskId);
+    EXPECT_EQ(service->PrintByAdapter(jobName, printAttributes, taskId), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0021, TestSize.Level1)
@@ -566,14 +568,14 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0021, TestSize.Level1)
     uint32_t fd = 46;
     sptr<IPrintCallback> listener = nullptr;
     service->adapterListenersByJobId_[jobId] = listener;
-    service->StartGetPrintFile(jobId, printAttributes, fd);
+    EXPECT_EQ(service->StartGetPrintFile(jobId, printAttributes, fd), E_PRINT_NONE);
     service->adapterListenersByJobId_.clear();
  
-    service->StartGetPrintFile(jobId, printAttributes, fd);
+    EXPECT_EQ(service->StartGetPrintFile(jobId, printAttributes, fd), E_PRINT_NONE);
     service->printAttributesList_[jobId] = printAttributes;
-    service->StartGetPrintFile(jobId, printAttributes, fd);
+    EXPECT_EQ(service->StartGetPrintFile(jobId, printAttributes, fd), E_PRINT_NONE);
     std::string newJobId = "2";
-    service->StartGetPrintFile(newJobId, printAttributes, fd);
+    EXPECT_EQ(service->StartGetPrintFile(newJobId, printAttributes, fd), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0022, TestSize.Level1)
@@ -584,7 +586,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0022, TestSize.Level1)
     std::string printerId = "1234";
     std::shared_ptr<PrinterInfo> info =std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
-    service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    EXPECT_EQ(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), info);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0024, TestSize.Level1)
@@ -592,6 +594,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0024, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrintJob jobInfo;
     service->CheckJobQueueBlocked(jobInfo);
+    EXPECT_EQ(service->isJobQueueBlocked_, false);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0025, TestSize.Level1)
@@ -616,8 +619,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0026, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->state_ = ServiceRunningState::STATE_NOT_START;
     service->OnStop();
+    EXPECT_EQ(service->state_, ServiceRunningState::STATE_NOT_START);
     service->state_ = ServiceRunningState::STATE_RUNNING;
     service->OnStop();
+    EXPECT_EQ(service->state_, ServiceRunningState::STATE_NOT_START);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0028, TestSize.Level1)
@@ -706,10 +711,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0034, TestSize.Level1)
     service->helper_ = helper;
     std::string printJobId = "1";
     PrintJob printJob;
-    service->QueryPrintJobById(printJobId, printJob);
+    EXPECT_EQ(service->QueryPrintJobById(printJobId, printJob), E_PRINT_INVALID_USERID);
     int32_t userId = 100;
     service->printUserMap_.insert(std::make_pair(userId, nullptr));
-    service->QueryPrintJobById(printJobId, printJob);
+    EXPECT_EQ(service->QueryPrintJobById(printJobId, printJob), E_PRINT_INVALID_USERID);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0035, TestSize.Level1)
@@ -761,7 +766,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0037, TestSize.Level1)
     service->helper_ = helper;
     PrintJob printJob;
     std::string jobId = GetDefaultJobId();
-    service->AddNativePrintJob(jobId, printJob);
+    auto nativePrintJob = std::make_shared<PrintJob>();
+    nativePrintJob->UpdateParams(printJob);
+    nativePrintJob->Dump();
+    service->AddToPrintJobList(jobId, nativePrintJob);
+    EXPECT_EQ(service->AddNativePrintJob(jobId, printJob), nativePrintJob);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0038, TestSize.Level1)
@@ -814,10 +823,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0041, TestSize.Level1)
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
     std::string jobId = GetDefaultJobId();
-    service->CancelPrintJob(jobId);
+    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_INVALID_USERID);
     int32_t userId = 100;
     service->printUserMap_.insert(std::make_pair(userId, nullptr));
-    service->CancelPrintJob(jobId);
+    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_INVALID_USERID);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0042, TestSize.Level1)
@@ -893,12 +902,12 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0048, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     uint32_t state = PRINTER_UNKNOWN + 1;
     std::string printerId ="1234";
-    service->UpdatePrinterState(printerId, state);
+    EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_INVALID_PARAMETER);
     state = PrinterState::PRINTER_ADDED;
-    service->UpdatePrinterState(printerId, state);
+    EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_INVALID_PRINTER);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
-    service->UpdatePrinterState(printerId, state);
+    EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_INVALID_PRINTER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0049, TestSize.Level1)
@@ -958,14 +967,14 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0052, TestSize.Level1)
     service->printUserMap_[userId] = userData;
     uint32_t state = PRINTER_UNKNOWN;
     uint32_t subState = 0;
-    service->CheckAndSendQueuePrintJob(jobId, state, subState);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_INVALID_PRINTJOB);
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     userData->printJobList_[jobId] = printJob;
     state = PRINT_JOB_BLOCKED;
-    service->CheckAndSendQueuePrintJob(jobId, state, subState);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
     userData->queuedJobList_[jobId] = printJob;
     state = PRINT_JOB_COMPLETED;
-    service->CheckAndSendQueuePrintJob(jobId, state, subState);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0053, TestSize.Level1)
@@ -1085,23 +1094,23 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0061, TestSize.Level1)
     service->userJobMap_[jobId] = userId;
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
-    service->CancelPrintJob(jobId);
+    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_INVALID_PRINTJOB);
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     userData->queuedJobList_[jobId] = printJob;
-    service->CancelPrintJob(jobId);
+    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_NONE);
     printJob->SetJobState(PRINT_JOB_RUNNING);
-    service->CancelPrintJob(jobId);
+    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_NONE);
     printJob->SetPrinterId("1234");
     std::string extensionId = PrintUtils::GetExtensionId("1234");
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CANCEL_PRINT);
     sptr<IPrintExtensionCallback> extCb = nullptr;
     service->extCallbackMap_[cid] = extCb;
-    service->CancelPrintJob(jobId);
+    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_NONE);
     printJob->SetPrinterId("com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620");
     std::string extensionId2 = PrintUtils::GetExtensionId("com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620");
     std::string cid2 = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CANCEL_PRINT);
     service->extCallbackMap_[cid2] = extCb;
-    service->CancelPrintJob(jobId);
+    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0062, TestSize.Level1)
@@ -1172,7 +1181,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0065, TestSize.Level1)
     keyList.emplace_back("quality");
     keyList.emplace_back("test");
     std::vector<std::string> valueList;
-    service->QueryPrinterProperties(printerId, keyList, valueList);
+    EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_INVALID_PRINTER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0066, TestSize.Level1)
@@ -1191,7 +1200,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0066, TestSize.Level1)
     keyList.emplace_back("quality");
     keyList.emplace_back("test");
     std::vector<std::string> valueList;
-    service->QueryPrinterProperties(printerId, keyList, valueList);
+    EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_INVALID_PRINTER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0067, TestSize.Level1)
@@ -1203,7 +1212,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0067, TestSize.Level1)
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
-    service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068, TestSize.Level1)
@@ -1215,7 +1224,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068, TestSize.Level1)
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
-    service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
 }
  
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069, TestSize.Level1)
@@ -1228,7 +1237,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069, TestSize.Level1)
     auto printerInfo = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_["456"] = printerInfo;
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
-    service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0071, TestSize.Level1)
@@ -1272,15 +1281,15 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0073, TestSize.Level1)
     PrinterCapability cap;
     PrinterPreference printPreference;
     cap.SetOption("test");
-    service->BuildPrinterPreference(cap, printPreference);
+    EXPECT_EQ(service->BuildPrinterPreference(cap, printPreference), E_PRINT_INVALID_PARAMETER);
     nlohmann::json capJson;
     capJson["key"] = "value";
     cap.SetOption(capJson.dump());
-    service->BuildPrinterPreference(cap, printPreference);
+    EXPECT_EQ(service->BuildPrinterPreference(cap, printPreference), E_PRINT_INVALID_PARAMETER);
     nlohmann::json capJson2;
     capJson2["cupsOptions"] = "value";
     cap.SetOption(capJson2.dump());
-    service->BuildPrinterPreference(cap, printPreference);
+    EXPECT_EQ(service->BuildPrinterPreference(cap, printPreference), E_PRINT_NONE);
     nlohmann::json capJson3;
     nlohmann::json capOpt3;
     capOpt3["supportedPageSizeArray"] = 123;
@@ -1289,7 +1298,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0073, TestSize.Level1)
     capOpt3["print-quality-supported"] = 123;
     capJson3["cupsOptions"] = capOpt3;
     cap.SetOption(capJson3.dump());
-    service->BuildPrinterPreference(cap, printPreference);
+    EXPECT_EQ(service->BuildPrinterPreference(cap, printPreference), E_PRINT_NONE);
     nlohmann::json capJson4;
     nlohmann::json capOpt4;
     capOpt4["supportedPageSizeArray"] = "123";
@@ -1298,7 +1307,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0073, TestSize.Level1)
     capOpt4["print-quality-supported"] = "123";
     capJson4["cupsOptions"] = capOpt4;
     cap.SetOption(capJson4.dump());
-    service->BuildPrinterPreference(cap, printPreference);
+    EXPECT_EQ(service->BuildPrinterPreference(cap, printPreference), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0074, TestSize.Level1)
@@ -1321,6 +1330,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0074, TestSize.Level1)
     jsonArrObject2.push_back(attrItem2);
     jsonArrObject2.push_back(attrItem3);
     service->BuildPrinterAttrComponentByJson(key, jsonArrObject2, printerAttrs);
+    std::vector<std::string> testPrinterAttrs;
+    for (int i = 0; i < 2; i++) {
+        testPrinterAttrs.push_back("123");
+    }
+    EXPECT_EQ(printerAttrs, testPrinterAttrs);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0075, TestSize.Level1)
@@ -1330,11 +1344,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0075, TestSize.Level1)
     service->helper_ = helper;
     std::string printerId = "123";
     std::string printerPreference = "";
-    service->GetPrinterPreference(printerId, printerPreference);
+    EXPECT_EQ(service->GetPrinterPreference(printerId, printerPreference), E_PRINT_INVALID_PRINTER);
     service->printerIdAndPreferenceMap_["111"] = "123";
-    service->GetPrinterPreference(printerId, printerPreference);
+    EXPECT_EQ(service->GetPrinterPreference(printerId, printerPreference), E_PRINT_INVALID_PRINTER);
     service->printerIdAndPreferenceMap_["123"] = "123";
-    service->GetPrinterPreference(printerId, printerPreference);
+    EXPECT_EQ(service->GetPrinterPreference(printerId, printerPreference), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0076, TestSize.Level1)
@@ -1344,7 +1358,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0076, TestSize.Level1)
     service->helper_ = helper;
     std::string printerId = "123";
     std::string printerSetting = "test";
-    service->SetPrinterPreference(printerId, printerSetting);
+    EXPECT_EQ(service->SetPrinterPreference(printerId, printerSetting), E_PRINT_INVALID_PRINTER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0077, TestSize.Level1)
@@ -1353,9 +1367,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0077, TestSize.Level1)
     std::string printerId = "123";
     std::string printerPreference = "test";
     service->printerIdAndPreferenceMap_["111"] = "123";
-    service->ReadPreferenceFromFile(printerId, printerPreference);
+    EXPECT_EQ(service->ReadPreferenceFromFile(printerId, printerPreference), false);
     service->printerIdAndPreferenceMap_["123"] = "123";
-    service->ReadPreferenceFromFile(printerId, printerPreference);
+    EXPECT_EQ(service->ReadPreferenceFromFile(printerId, printerPreference), true);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0078, TestSize.Level1)
@@ -1366,7 +1380,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0078, TestSize.Level1)
     nlohmann::json printPreferenceJson;
     printPreferenceJson["key"] = "value";
     service->printerIdAndPreferenceMap_["printerId2"] = printPreferenceJson.dump();
-    service->WritePreferenceToFile();
+    EXPECT_EQ(service->WritePreferenceToFile(), true);
     service->InitPreferenceMap();
 }
 
@@ -1442,7 +1456,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0083, TestSize.Level1)
     printJob->SetPrinterId(printerId);
     userData->printJobList_[jobId] = printJob;
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-    service->CheckAndSendQueuePrintJob(jobId, state, subState);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084, TestSize.Level1)
@@ -1462,7 +1476,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084, TestSize.Level1)
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
-    service->CheckAndSendQueuePrintJob(jobId, state, subState);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0085, TestSize.Level1)
@@ -1476,13 +1490,14 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0085, TestSize.Level1)
     service->queuedJobList_[jobId] = printJob;
     service->printAppCount_ = 0;
     service->ReportCompletedPrint(printerId);
+    EXPECT_EQ(service->unloadCount_, 0);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0086, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "";
-    service->isEprint(printerId);
+    EXPECT_EQ(service->isEprint(printerId), false);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0087, TestSize.Level1)
@@ -1653,17 +1668,22 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0099, TestSize.Level1)
     service->isJobQueueBlocked_ = true;
     jobInfo.SetJobState(PRINT_JOB_COMPLETED);
     service->CheckJobQueueBlocked(jobInfo);
+    EXPECT_EQ(service->isJobQueueBlocked_, true);
     service->isJobQueueBlocked_ = false;
     service->CheckJobQueueBlocked(jobInfo);
+    EXPECT_EQ(service->isJobQueueBlocked_, false);
     jobInfo.SetJobState(PRINT_JOB_BLOCKED);
     service->CheckJobQueueBlocked(jobInfo);
+    EXPECT_EQ(service->isJobQueueBlocked_, true);
     int32_t userId = 100;
     service->userJobMap_[jobId] = userId;
     service->currentUserId_ = userId;
     service->CheckJobQueueBlocked(jobInfo);
+    EXPECT_EQ(service->isJobQueueBlocked_, true);
     service->isJobQueueBlocked_ = true;
     jobInfo.SetJobState(PRINT_JOB_COMPLETED);
     service->CheckJobQueueBlocked(jobInfo);
+    EXPECT_EQ(service->isJobQueueBlocked_, true);
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
     auto job = std::make_shared<PrintJob>();
@@ -1673,11 +1693,14 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0099, TestSize.Level1)
     userData->queuedJobList_["1"] = job;
     userData->queuedJobList_["2"] = job2;
     service->CheckJobQueueBlocked(jobInfo);
+    EXPECT_EQ(service->isJobQueueBlocked_, true);
     userData->queuedJobList_.clear();
     userData->queuedJobList_["1"] = job;
     service->CheckJobQueueBlocked(jobInfo);
+    EXPECT_EQ(service->isJobQueueBlocked_, false);
     service->userJobMap_.clear();
     service->CheckJobQueueBlocked(jobInfo);
+    EXPECT_EQ(service->isJobQueueBlocked_, false);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0100, TestSize.Level1)
@@ -1718,13 +1741,13 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0104, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "123";
-    service->GetUserDataByJobId(jobId);
+    EXPECT_EQ(service->GetUserDataByJobId(jobId), nullptr);
     int32_t userId = 100;
     service->userJobMap_[jobId] = userId;
-    service->GetUserDataByJobId(jobId);
+    EXPECT_EQ(service->GetUserDataByJobId(jobId), nullptr);
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
-    service->GetUserDataByJobId(jobId);
+    EXPECT_EQ(service->GetUserDataByJobId(jobId), nullptr);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0105, TestSize.Level1)
@@ -1748,14 +1771,14 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0107, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "1234";
-    service->CheckIsDefaultPrinter(printerId);
+    EXPECT_EQ(service->CheckIsDefaultPrinter(printerId), false);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0108, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "1234";
-    service->CheckIsLastUsedPrinter(printerId);
+    EXPECT_EQ(service->CheckIsLastUsedPrinter(printerId), false);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0109, TestSize.Level1)
@@ -1800,7 +1823,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112, TestSize.Level1)
     auto printerInfo = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
     service->currentUserId_ = 0;
-    service->CheckAndSendQueuePrintJob(jobId, state, subState);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0113, TestSize.Level1)
