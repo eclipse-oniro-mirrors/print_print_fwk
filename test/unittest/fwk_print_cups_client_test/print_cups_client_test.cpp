@@ -20,6 +20,7 @@
 #undef private
 #include "print_constant.h"
 #include "print_log.h"
+#include "fstream"
 
 using namespace testing::ext;
 using json = nlohmann::json;
@@ -30,6 +31,8 @@ static constexpr const char *JOB_OPTIONS =
     "{\"jobName\":\"xx\",\"jobNum\":1,\"mediaType\":\"stationery\",\"documentCategory\":0,\"printQuality\":\"4\","
     "\"printerName\":\"printer1\",\"printerUri\":\"ipp://192.168.0.1:111/ipp/print\",\"borderless\":true,"
     "\"documentFormat\":\"application/pdf\",\"files\":[\"/data/1.pdf\"]}";
+
+const uint32_t DIR_MODE = 0771;
 
 static const std::string PRINTER_STATE_NONE = "none";
 static const std::string PRINTER_STATE_MEDIA_EMPTY = "media-empty";
@@ -110,9 +113,29 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0002, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0003, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    const char *srcDir = "";
-    const char *destDir = "";
+    const char *srcDir = "./PrintCupsClientTest_0003_srcDir";
+    const char *destDir = "./PrintCupsClientTest_0003_destDir";
+
+    if (access(srcDir, F_OK) != 0) {
+        mkdir(srcDir, DIR_MODE);
+    }
+    if (access(destDir, F_OK) != 0) {
+        mkdir (destDir, DIR_MODE);
+    }
+
+    std::string srcFilePath = "./PrintCupsClientTest_0003_srcDir/PrintCupsClientTestFileName";
+    std::ofstream testSrcFile(srcFilePath.c_str(), std::ios::out);
+    EXPECT_EQ(testSrcFile.is_open(), true);
+    testSrcFile.close();
+
     printCupsClient.SymlinkDirectory(srcDir, destDir);
+
+    struct stat destDirstat = {};
+    EXPECT_EQ(lstat((std::string(destDir) + "/PrintCupsClientTestFileName").c_str(), &destDirstat), 0);
+    EXPECT_EQ(S_ISLNK(destDirstat.st_mode), true);
+
+    EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / srcDir), 0);
+    EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / destDir), 0);
 }
 
 /**
@@ -124,9 +147,32 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0003, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0004, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    const char *srcDir = "";
-    const char *destDir = "";
+    const char *srcDir = "./PrintCupsClientTest_0004_srcDir";
+    const char *destDir = "./PrintCupsClientTest_0004_destDir";
+    const char *subSrcDir = "PrintCupsClientTest_0004_srcDir/PrintCupsClientTest";
+
+    if (access(srcDir, F_OK) != 0) {
+        mkdir(srcDir, DIR_MODE);
+    }
+
+    if (access(destDir, F_OK) != 0) {
+        mkdir(destDir, DIR_MODE);
+    }
+
+    if (access(subSrcDir, F_OK) != 0) {
+        mkdir(subSrcDir, DIR_MODE);
+    }
+
+    std::string srcFilePath = std::string(subSrcDir) + "/PrintCupsClientTestFileName";
+    std::ofstream testSrcFile(srcFilePath.c_str(), std::ios::out);
+    EXPECT_EQ(testSrcFile.is_open(), true);
+    testSrcFile.close();
+
     printCupsClient.CopyDirectory(srcDir, destDir);
+
+    EXPECT_EQ(std::filesystem::is_regular_file(std::string(destDir) + "PrintCupsClientTest/PrintCupsClientTestFileName"), true);
+    EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / srcDir), 0);
+    EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / destDir), 0);
 }
 
 /**
@@ -539,7 +585,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0030, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "testPrinterName";
     printCupsClient.StopCupsdService();
-    printCupsClient.GetPPDFile(printerName);
+    ppd_file_t *ppd = printCupsClient.GetPPDFile(printerName);
+    EXPECT_EQ(ppd, nullptr);
 }
 
 /**
@@ -657,12 +704,24 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0042, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     JobStatus *prevousJobStatus = nullptr;
     JobStatus *jobStatus = nullptr;
+
     printCupsClient.UpdateJobStatus(prevousJobStatus, jobStatus);
-    JobStatus *prevousJobStatus2 = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
+
+    EXPECT_EQ(prevousJobStatus, nullptr);
+    EXPECT_EQ(jobStatus, nullptr);
+
+    JobStatus *prevousJobStatus2 = new (std::nothrow) JobStatus{{'1', '\0'}, (ipp_jstate_t)0, {'1', '\0'}};
+    JobStatus *savePrevousJobStatus2 = new (std::nothrow) JobStatus{{'1', '\0'}, (ipp_jstate_t)0, {'1', '\0'}};
+
     printCupsClient.UpdateJobStatus(prevousJobStatus2, jobStatus);
+
+    EXPECT_EQ(prevousJobStatus2->job_state, savePrevousJobStatus2->job_state);
+    EXPECT_EQ(std::string(prevousJobStatus2->printer_state_reasons), std::string(savePrevousJobStatus2->printer_state_reasons));
+
     delete prevousJobStatus;
     delete jobStatus;
     delete prevousJobStatus2;
+    delete savePrevousJobStatus2;
 }
 
 /**
@@ -677,6 +736,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0043, TestSize.Level1)
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     JobStatus *prevousJobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     printCupsClient.UpdateJobStatus(prevousJobStatus, jobStatus);
+
+    EXPECT_EQ(prevousJobStatus->job_state, jobStatus->job_state);
+    EXPECT_EQ(std::string(prevousJobStatus->printer_state_reasons), std::string(jobStatus->printer_state_reasons));
     delete prevousJobStatus;
     delete jobStatus;
 }
@@ -1361,7 +1423,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0069, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    printCupsClient.GetMedieSize(testJob);
+    std::string pageSizeName = printCupsClient.GetMedieSize(testJob);
+    EXPECT_EQ("PrintPageSize", pageSizeName);
 }
 
 /**
@@ -1374,13 +1437,20 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0070, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     uint32_t duplexCode = 0;
-    printCupsClient.GetDulpexString(duplexCode);
+    std::string ret0 = printCupsClient.GetDulpexString(duplexCode);
+    EXPECT_EQ(ret0, CUPS_SIDES_ONE_SIDED);
+
     duplexCode = 1;
-    printCupsClient.GetDulpexString(duplexCode);
+    std::string ret1 = printCupsClient.GetDulpexString(duplexCode);
+    EXPECT_EQ(ret1, CUPS_SIDES_TWO_SIDED_PORTRAIT);
+
     duplexCode = 2;
-    printCupsClient.GetDulpexString(duplexCode);
+    std::string ret2 = printCupsClient.GetDulpexString(duplexCode);
+    EXPECT_EQ(ret2, CUPS_SIDES_TWO_SIDED_LANDSCAPE);
+
     duplexCode = 3;
-    printCupsClient.GetDulpexString(duplexCode);
+    std::string ret3 = printCupsClient.GetDulpexString(duplexCode);
+    EXPECT_EQ(ret3, CUPS_SIDES_ONE_SIDED);
 }
 
 /**
@@ -1393,11 +1463,16 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0071, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     uint32_t colorCode = 0;
-    printCupsClient.GetColorString(colorCode);
+    std::string ret0 = printCupsClient.GetColorString(colorCode);
+    EXPECT_EQ(ret0, CUPS_PRINT_COLOR_MODE_MONOCHROME);
+
     colorCode = 1;
-    printCupsClient.GetColorString(colorCode);
+    std::string ret1 = printCupsClient.GetColorString(colorCode);
+    EXPECT_EQ(ret1, CUPS_PRINT_COLOR_MODE_COLOR);
+
     colorCode = 2;
-    printCupsClient.GetColorString(colorCode);
+    std::string ret2 = printCupsClient.GetColorString(colorCode);
+    EXPECT_EQ(ret2, CUPS_PRINT_COLOR_MODE_AUTO);
 }
 
 /**
@@ -1409,7 +1484,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0071, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0072, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    printCupsClient.IsCupsServerAlive();
+    bool ret = printCupsClient.IsCupsServerAlive();
+    EXPECT_EQ(ret, true);
 }
 
 /**
@@ -1452,9 +1528,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0075, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerId = "com.ohos.spooler:usb://DIRECT-PixLab_V1-1620";
     std::string nic = "";
-    printCupsClient.IsIpConflict(printerId, nic);
+    bool ret1 = printCupsClient.IsIpConflict(printerId, nic);
+    EXPECT_EQ(ret1, false);
+
     printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
-    printCupsClient.IsIpConflict(printerId, nic);
+    bool ret2 = printCupsClient.IsIpConflict(printerId, nic);
+    EXPECT_EQ(ret2, false);
 }
 
 /**
