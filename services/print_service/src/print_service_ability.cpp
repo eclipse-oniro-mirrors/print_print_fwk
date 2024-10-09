@@ -334,13 +334,16 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-
     PRINT_HILOGD("ConnectPrinter started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     vendorManager.ClearConnectingPrinter();
     if (printSystemData_.QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
         PRINT_HILOGI("Invalid printer id, try connect printer by ip");
         return TryConnectPrinterByIp(printerId);
+    }
+    if (printerIdAndPreferenceMap_.find(printerId) != printerIdAndPreferenceMap_.end()) {
+        PRINT_HILOGE("This printer has already existed!");
+        return E_PRINT_SERVER_FAILURE;
     }
     vendorManager.SetConnectingPrinter(ID_AUTO, printerId);
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
@@ -356,7 +359,6 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
         PRINT_HILOGW("ConnectPrinter Not Register Yet!!!");
         return E_PRINT_SERVER_FAILURE;
     }
-
 #ifdef IPPOVERUSB_ENABLE
     int32_t port = 0;
     std::string newPrinterId = printerId;
@@ -370,11 +372,7 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
             cbFunc->OnCallback(newPrinterId);
         }
     };
-    if (helper_->IsSyncMode()) {
-        callback();
-    } else {
-        serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
-    }
+    helper_->IsSyncMode() ? callback() : serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
 #endif // IPPOVERUSB_ENABLE
     return E_PRINT_NONE;
 }
