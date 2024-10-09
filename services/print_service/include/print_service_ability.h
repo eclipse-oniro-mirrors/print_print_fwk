@@ -192,6 +192,7 @@ private:
     void HandlePrinterStateChangeRegister(const std::string &eventType);
     void HandlePrinterChangeRegister(const std::string &eventType);
     bool UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri);
+    int32_t HandleExtensionConnectPrinter(const std::string &printerId);
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;

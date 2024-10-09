@@ -327,6 +327,36 @@ int32_t PrintServiceAbility::StopPrint(const std::string &taskId)
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceAbility::HandleExtensionConnectPrinter(const std::string &printerId)
+{
+    std::string extensionId = PrintUtils::GetExtensionId(printerId);
+    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CONNECT_PRINTER);
+    if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
+        PRINT_HILOGW("ConnectPrinter Not Register Yet!!!");
+        return E_PRINT_SERVER_FAILURE;
+    }
+#ifdef IPPOVERUSB_ENABLE
+    int32_t port = 0;
+    std::string newPrinterId = printerId;
+    auto ret = DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->ConnectPrinter(printerId, port);
+    if (ret && port > 0) {
+        newPrinterId = PrintUtils::GetGlobalId(printerId, std::to_string(port));
+    }
+    auto cbFunc = extCallbackMap_[cid];
+    auto callback = [=]() {
+        if (cbFunc != nullptr) {
+            cbFunc->OnCallback(newPrinterId);
+        }
+    };
+    if (helper_->IsSyncMode()) {
+        callback();
+    } else {
+        serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
+    }
+#endif // IPPOVERUSB_ENABLE
+    return E_PRINT_NONE;
+}
+
 int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
 {
     ManualStart();
@@ -354,27 +384,7 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
         }
         return E_PRINT_NONE;
     }
-    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CONNECT_PRINTER);
-    if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
-        PRINT_HILOGW("ConnectPrinter Not Register Yet!!!");
-        return E_PRINT_SERVER_FAILURE;
-    }
-#ifdef IPPOVERUSB_ENABLE
-    int32_t port = 0;
-    std::string newPrinterId = printerId;
-    auto ret = DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->ConnectPrinter(printerId, port);
-    if (ret && port > 0) {
-        newPrinterId = PrintUtils::GetGlobalId(printerId, std::to_string(port));
-    }
-    auto cbFunc = extCallbackMap_[cid];
-    auto callback = [=]() {
-        if (cbFunc != nullptr) {
-            cbFunc->OnCallback(newPrinterId);
-        }
-    };
-    helper_->IsSyncMode() ? callback() : serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
-#endif // IPPOVERUSB_ENABLE
-    return E_PRINT_NONE;
+    return HandleExtensionConnectPrinter(printerId);
 }
 
 int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId)
