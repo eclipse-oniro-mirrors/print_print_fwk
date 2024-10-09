@@ -98,9 +98,8 @@ static const std::string PRINTER_STATE_IGNORE_MEDIA_LOW_JOB_STATE_COMPLETED =
 static const std::string PRINTER_STATE_IGNORE_BUSY_WAITING_COMPLETE_OTHER_REPORT =
     "cups-waiting-for-job-completed,other-report";
 static const std::string PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT = "other-report";
-static const std::string PRINTER_STATE_IGNORE_MARKER_LOW_WARNING = "marker-supply-low-warning";
-static const std::string PRINTER_STATE_IGNORE_MEDIA_EMPTY_WARNING =
-    "cups-waiting-for-job-completed,media-empty-warning,media-needed";
+static const std::string PRINTER_STATE_MARKER_LOW_WARNING = "marker-supply-low-warning";
+static const std::string PRINTER_STATE_MEDIA_EMPTY_WARNING = "media-empty-warning";
 static const std::string PRINTER_STATE_NONE = "none";
 static const std::string PRINTER_STATE_EMPTY = "";
 static const std::string PRINTER_STATE_MEDIA_EMPTY = "media-empty";
@@ -136,9 +135,7 @@ static const std::vector<std::string> IGNORE_STATE_LIST = {PRINTER_STATE_WAITING
     PRINTER_STATE_IGNORE_TONER_LOW_JOB_STATE_COMPLETED,
     PRINTER_STATE_IGNORE_MEDIA_LOW_JOB_STATE_COMPLETED,
     PRINTER_STATE_IGNORE_BUSY_WAITING_COMPLETE_OTHER_REPORT,
-    PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT,
-    PRINTER_STATE_IGNORE_MARKER_LOW_WARNING,
-    PRINTER_STATE_IGNORE_MEDIA_EMPTY_WARNING};
+    PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT};
 std::mutex jobMutex;
 
 static std::vector<PrinterInfo> usbPrinters;
@@ -1294,6 +1291,12 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
         PRINT_HILOGD("IPP_JOB_PROCESSING");
         std::string printerState(jobStatus->printer_state_reasons);
         if (find(IGNORE_STATE_LIST.begin(), IGNORE_STATE_LIST.end(), printerState) != IGNORE_STATE_LIST.end()) {
+            param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
+                PRINT_JOB_BLOCKED_BUSY);
+        } else if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MARKER_LOW_WARNING.c_str()) != NULL) {
+            param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
+                PRINT_JOB_BLOCKED_BUSY);
+        } else if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_EMPTY_WARNING.c_str()) != NULL) {
             param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
                 PRINT_JOB_BLOCKED_BUSY);
         } else {
