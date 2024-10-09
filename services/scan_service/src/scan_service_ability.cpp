@@ -82,7 +82,6 @@ static bool g_isJpegWriteSuccess = false;
 static const std::string PERMISSION_NAME_SCAN = "ohos.permission.SCAN";
 static const std::string PERMISSION_NAME_SCAN_JOB = "ohos.permission.MANAGE_SCAN_JOB";
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
-static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
 static const std::string SCAN_DEVICE_FOUND_TCP = "scanDeviceFoundTCP";
 static const std::string SCAN_DEVICE_FOUND = "scanDeviceFound";
 static const std::string SCAN_DEVICE_SYNC = "scanDeviceSync";
@@ -279,7 +278,7 @@ SANE_Handle ScanServiceAbility::GetScanHandle(const std::string &scannerId)
 int32_t ScanServiceAbility::InitScan(int32_t &scanVersion)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -301,7 +300,7 @@ int32_t ScanServiceAbility::InitScan(int32_t &scanVersion)
 int32_t ScanServiceAbility::ExitScan()
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -322,7 +321,7 @@ int32_t ScanServiceAbility::ExitScan()
 int32_t ScanServiceAbility::ReInitScan(int32_t &scanVersion)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -558,7 +557,7 @@ void ScanServiceAbility::SaneGetScanner()
 int32_t ScanServiceAbility::GetScannerList()
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         return E_SCAN_NO_PERMISSION;
     }
     if (g_scannerState != SCANNER_READY) {
@@ -592,7 +591,7 @@ int32_t ScanServiceAbility::GetScannerList()
 int32_t ScanServiceAbility::StopDiscover()
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -608,7 +607,7 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
 {
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -655,7 +654,7 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
 {
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -741,7 +740,7 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
 {
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -914,7 +913,7 @@ int32_t ScanServiceAbility::OpScanOptionValue(const std::string scannerId, const
     const ScanOptionOpType op, ScanOptionValue &value, int32_t &info)
 {
     SCAN_HILOGD("ScanServiceAbility OpScanOptionValue start");
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -971,7 +970,7 @@ int32_t ScanServiceAbility::GetScanParameters(const std::string scannerId, ScanP
 {
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -1005,7 +1004,7 @@ int32_t ScanServiceAbility::GetSingleFrameFD(const std::string scannerId, uint32
 {
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -1034,7 +1033,7 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
 {
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -1060,7 +1059,7 @@ int32_t ScanServiceAbility::SetScanIOMode(const std::string scannerId, const boo
 {
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -1086,7 +1085,7 @@ int32_t ScanServiceAbility::GetScanSelectFd(const std::string scannerId, int32_t
 {
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -1243,7 +1242,7 @@ void ScanServiceAbility::SendDeviceInfoSync(const ScanDeviceInfoSync &info, std:
 
 void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::string deviceId)
 {
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return;
     }
@@ -1263,7 +1262,7 @@ void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::str
 
 void ScanServiceAbility::UpdateUsbScannerId(std::string serialNumber, std::string newDeviceId)
 {
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return;
     }
@@ -1337,7 +1336,7 @@ bool ScanServiceAbility::CheckPermission(const std::string &permissionName)
     int result = AccessTokenKit::VerifyAccessToken(tokenId, permissionName);
     if (result != PERMISSION_GRANTED) {
         if (permissionName == PERMISSION_NAME_PRINT) {
-            result = AccessTokenKit::VerifyAccessToken(tokenId, PERMISSION_NAME_PRINT_JOB);
+            result = AccessTokenKit::VerifyAccessToken(tokenId, PERMISSION_NAME_PRINT);
         }
         SCAN_HILOGE("Current tokenId permission is %{public}d", result);
     }
@@ -1347,7 +1346,7 @@ bool ScanServiceAbility::CheckPermission(const std::string &permissionName)
 int32_t ScanServiceAbility::GetScannerState(int32_t &scannerState)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -1361,7 +1360,7 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
 {
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -1413,7 +1412,7 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
 int32_t ScanServiceAbility::AddScanner(const std::string& serialNumber, const std::string& discoverMode)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -1462,7 +1461,7 @@ int32_t ScanServiceAbility::AddScanner(const std::string& serialNumber, const st
 int32_t ScanServiceAbility::DeleteScanner(const std::string& serialNumber, const std::string& discoverMode)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -1492,7 +1491,7 @@ int32_t ScanServiceAbility::DeleteScanner(const std::string& serialNumber, const
 int32_t ScanServiceAbility::GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -1508,7 +1507,7 @@ int32_t ScanServiceAbility::UpdateScannerName(const std::string& serialNumber,
     const std::string& discoverMode, const std::string& deviceName)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -1531,7 +1530,7 @@ int32_t ScanServiceAbility::UpdateScannerName(const std::string& serialNumber,
 
 int32_t ScanServiceAbility::OnStartScan(const std::string scannerId, const bool &batchMode)
 {
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -1556,7 +1555,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
 {
     ManualStart();
     std::lock_guard<std::mutex> autoLock(lock_);
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
