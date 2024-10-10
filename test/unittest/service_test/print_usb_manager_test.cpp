@@ -357,7 +357,7 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_020, TestSize.Level1)
     printUsbManager.isUsbEnable = false;
     OHOS::USB::UsbDevice usbDevice;
     std::string printerName = "HUAWEI PixLab V1-0105";
-    printUsbManager.isPrintDevice(usbDevice, printerName);
+    EXPECT_EQ(printUsbManager.isPrintDevice(usbDevice, printerName), false);
 }
 
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_021, TestSize.Level1)

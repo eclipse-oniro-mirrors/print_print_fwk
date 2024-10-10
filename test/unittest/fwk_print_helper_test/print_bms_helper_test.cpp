@@ -14,7 +14,9 @@
  */
 
 #include <gtest/gtest.h>
+#define private public
 #include "print_bms_helper.h"
+#undef private
 #include "print_constant.h"
 #include "mock_bundle_mgr.h"
 #include "mock_print_service_helper.h"
@@ -60,18 +62,6 @@ void PrintBMSHelperTest::CallRemoteObject(const sptr<MockBundleMgr> &obj,
 }
 
 /**
-* @tc.name: PrintBMSHelperTest_0001
-* @tc.desc: PrintBMSHelper
-* @tc.type: FUNC
-* @tc.require:
-*/
-HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0001, TestSize.Level1)
-{
-    PrintBMSHelper printBMSHelper;
-    printBMSHelper.~PrintBMSHelper();
-}
-
-/**
 * @tc.name: PrintBMSHelperTest_0002
 * @tc.desc: PrintBMSHelper
 * @tc.type: FUNC
@@ -83,6 +73,8 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0002, TestSize.Level1)
     auto helper = std::make_shared<MockPrintServiceHelper>();
     std::shared_ptr<PrintServiceHelper> temp = std::shared_ptr<PrintServiceHelper>(helper);
     printBMSHelper.SetHelper(temp);
+    EXPECT_EQ(printBMSHelper.helper_, temp);
+    EXPECT_EQ(printBMSHelper.sptrBundleMgr_, nullptr);
 }
 
 /**
@@ -121,20 +113,13 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0008, TestSize.Level1)
 */
 HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0010, TestSize.Level1)
 {
+    PrintBMSHelper printBMSHelper;
     const wptr<IRemoteObject> testObj = nullptr;
     DelayedSingleton<PrintBMSHelper>::GetInstance()->ResetProxy(testObj);
-}
-
-/**
-* @tc.name: PrintBMSHelperTest_0011
-* @tc.desc: QueryCallerBundleName fail
-* @tc.type: FUNC
-* @tc.require:
-*/
-HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0011, TestSize.Level1)
-{
-    wptr<IRemoteObject> testObj = new (std::nothrow) MockBundleMgr();
-    DelayedSingleton<PrintBMSHelper>::GetInstance()->ResetProxy(testObj);
+    wptr<IRemoteObject> testObj2 = new (std::nothrow) MockBundleMgr();
+    printBMSHelper.ResetProxy(testObj2);
+    EXPECT_EQ(printBMSHelper.sptrBundleMgr_, nullptr);
+    EXPECT_EQ(printBMSHelper.printBMSDeath_, nullptr);
 }
 }  // namespace Print
 }  // namespace OHOS

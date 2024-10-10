@@ -17,6 +17,8 @@
 #include "print_service_helper.h"
 #include "print_constant.h"
 #include "ipc_skeleton.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
 
 using namespace testing::ext;
 
@@ -49,18 +51,6 @@ void PrintServiceHelperTest::SetUp(void)
 void PrintServiceHelperTest::TearDown(void) {}
 
 /**
-* @tc.name: PrintServiceHelperTest_0001
-* @tc.desc: reportPrintSuccess
-* @tc.type: FUNC
-* @tc.require:
-*/
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0001, TestSize.Level1)
-{
-    PrintServiceHelper helper;
-    helper.~PrintServiceHelper();
-}
-
-/**
 * @tc.name: PrintServiceHelperTest_0002
 * @tc.desc: faultPrint
 * @tc.type: FUNC
@@ -69,7 +59,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0001, TestSize.Level1)
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0002, TestSize.Level1)
 {
     PrintServiceHelper helper;
-    helper.CheckPermission("");
+    EXPECT_EQ(helper.CheckPermission(""), false);
 }
 
 /**
@@ -81,7 +71,8 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0002, TestSize.Level1)
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0003, TestSize.Level1)
 {
     PrintServiceHelper helper;
-    helper.GetBundleMgr();
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    EXPECT_EQ(helper.GetBundleMgr(), systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID));
 }
 
 /**
@@ -94,7 +85,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0004, TestSize.Level1)
 {
     PrintServiceHelper helper;
     std::vector<int> accountList;
-    helper.QueryAccounts(accountList);
+    EXPECT_EQ(helper.QueryAccounts(accountList), true);
 }
 
 /**
@@ -107,7 +98,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0005, TestSize.Level1)
 {
     PrintServiceHelper helper;
     std::vector<int> accountList = {};
-    helper.QueryAccounts(accountList);
+    EXPECT_EQ(helper.QueryAccounts(accountList), true);
 }
 
 /**
@@ -122,7 +113,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0006, TestSize.Level1)
     sptr<AppExecFwk::IBundleMgr> mgr;
     int userId = 0;
     std::vector<AppExecFwk::ExtensionAbilityInfo> extensionInfos;
-    helper.QueryExtension(mgr, userId, extensionInfos);
+    EXPECT_EQ(helper.QueryExtension(mgr, userId, extensionInfos), false);
 }
 
 /**
@@ -137,7 +128,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0007, TestSize.Level1)
     sptr<AppExecFwk::IBundleMgr> mgr;
     int userId = 0;
     std::string userName;
-    helper.QueryNameForUid(mgr, userId, userName);
+    EXPECT_EQ(helper.QueryNameForUid(mgr, userId, userName), false);
 }
 
 /**
@@ -149,7 +140,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0007, TestSize.Level1)
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0008, TestSize.Level1)
 {
     PrintServiceHelper helper;
-    helper.IsSyncMode();
+    EXPECT_EQ(helper.IsSyncMode(), false);
 }
 
 /**

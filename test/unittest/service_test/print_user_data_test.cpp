@@ -203,6 +203,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0013, TestSize.Level1)
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     int32_t userId = 101;
     userData->SetUserId(userId);
+    EXPECT_EQ(userData->userId_, userId);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0014, TestSize.Level1)
@@ -323,33 +324,33 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0023, TestSize.Level1)
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     nlohmann::json jsonObject;
     std::string fileData0 = "test";
-    userData->CheckFileData(fileData0, jsonObject);
+    EXPECT_EQ(userData->CheckFileData(fileData0, jsonObject), false);
 
     nlohmann::json fileJson;
     fileJson["key"] = "value";
     std::string fileData = fileJson.dump();
-    userData->CheckFileData(fileData, jsonObject);
+    EXPECT_EQ(userData->CheckFileData(fileData, jsonObject), false);
 
     nlohmann::json fileJson2;
     fileJson2["version"] = 123;
     std::string fileData2 = fileJson2.dump();
-    userData->CheckFileData(fileData2, jsonObject);
+    EXPECT_EQ(userData->CheckFileData(fileData2, jsonObject), false);
 
     nlohmann::json fileJson3;
     fileJson3["version"] = "123";
     std::string fileData3 = fileJson3.dump();
-    userData->CheckFileData(fileData3, jsonObject);
+    EXPECT_EQ(userData->CheckFileData(fileData3, jsonObject), false);
 
     nlohmann::json fileJson4;
     fileJson4["version"] = "v1";
     std::string fileData4 = fileJson4.dump();
-    userData->CheckFileData(fileData4, jsonObject);
+    EXPECT_EQ(userData->CheckFileData(fileData4, jsonObject), false);
 
     nlohmann::json fileJson5;
     fileJson5["version"] = "v1";
     fileJson5["print_user_data"] = "100";
     std::string fileData5 = fileJson5.dump();
-    userData->CheckFileData(fileData5, jsonObject);
+    EXPECT_EQ(userData->CheckFileData(fileData5, jsonObject), true);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0030, TestSize.Level1)
