@@ -150,6 +150,7 @@ bool PrinterInfoHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
         {PARAM_INFO_PRINTER_MAKE, PRINT_PARAM_OPT},
         {PARAM_INFO_URI, PRINT_PARAM_OPT},
+        {PARAM_INFO_PRINTER_STATUS, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
