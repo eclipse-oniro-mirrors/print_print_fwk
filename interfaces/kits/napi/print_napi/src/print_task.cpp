@@ -41,6 +41,7 @@ static const std::string TOKEN_KEY = "ohos.ability.params.token";
 static const std::string UI_EXTENSION_TYPE_NAME = "ability.want.params.uiExtensionType";
 static const std::string PRINT_UI_EXTENSION_TYPE = "sysDialog/print";
 static const std::string CALLER_PKG_NAME = "caller.pkgName";
+static const std::string ABILITY_PARAMS_STREAM = "ability.params.stream";
 
 PrintTask::PrintTask(const std::vector<std::string> &innerList, const sptr<IRemoteObject> &innerCallerToken_)
     : taskId_("")
@@ -262,6 +263,8 @@ void PrintTask::StartUIExtensionAbility(
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_PID, callerPid);
     want.SetParam(CALLER_PKG_NAME, callerPkg);
     want.SetParam(UI_EXTENSION_TYPE_NAME, PRINT_UI_EXTENSION_TYPE);
+    want.SetParam(ABILITY_PARAMS_STREAM, fileList_);
+    want.SetFlags(AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION);
 
     StartUIExtensionAbility(want, asyncContext);
     PRINT_HILOGD("end StartUIExtensionAbility");
