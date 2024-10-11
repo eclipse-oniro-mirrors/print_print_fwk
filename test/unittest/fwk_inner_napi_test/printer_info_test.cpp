@@ -37,18 +37,6 @@ void PrinterInfoTest::SetUp(void) {}
 void PrinterInfoTest::TearDown(void) {}
 
 /**
- * @tc.name: PrinterInfoTest_0001
- * @tc.desc: Verify the constructor function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterInfoTest, PrinterInfoTest_0001, TestSize.Level1)
-{
-    OHOS::Print::PrinterInfo info;
-    info.Dump();
-}
-
-/**
  * @tc.name: PrinterInfoTest_0002
  * @tc.desc: Verify settings and obtain id function.
  * @tc.type: FUNC

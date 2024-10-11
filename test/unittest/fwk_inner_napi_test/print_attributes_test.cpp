@@ -14,7 +14,9 @@
  */
 
 #include <gtest/gtest.h>
+#define private public
 #include "print_attributes.h"
+#undef private
 #include "print_margin.h"
 #include "print_page_size.h"
 #include "print_range.h"
@@ -72,6 +74,32 @@ HWTEST_F(PrintAttributesTest, PrintAttributesTest_001, TestSize.Level1)
 {
     OHOS::Print::PrintAttributes printAttributes(GetDefaultPrintAttributes());
     printAttributes.Dump();
+    EXPECT_EQ(printAttributes.hasCopyNumber_, true);
+    EXPECT_EQ(printAttributes.copyNumber_, 1);
+
+    EXPECT_EQ(printAttributes.hasPageRange_, true);
+
+    EXPECT_EQ(printAttributes.hasSequential_, true);
+    EXPECT_EQ(printAttributes.isSequential_, true);
+
+    EXPECT_EQ(printAttributes.hasPageSize_, true);
+
+    EXPECT_EQ(printAttributes.hasLandscape_, true);
+    EXPECT_EQ(printAttributes.isLandscape_, true);
+
+    EXPECT_EQ(printAttributes.hasDirectionMode_, true);
+    EXPECT_EQ(printAttributes.directionMode_, 1);
+
+    EXPECT_EQ(printAttributes.hasColorMode_, true);
+    EXPECT_EQ(printAttributes.colorMode_, 1);
+
+    EXPECT_EQ(printAttributes.hasDuplexMode_, true);
+    EXPECT_EQ(printAttributes.duplexMode_, 1);
+
+    EXPECT_EQ(printAttributes.hasMargin_, true);
+
+    EXPECT_EQ(printAttributes.hasOption_, true);
+    EXPECT_EQ(printAttributes.option_, "1");
 }
 
 /**

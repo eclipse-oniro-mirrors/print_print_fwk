@@ -14,7 +14,9 @@
  */
 
 #include <gtest/gtest.h>
+#define private public
 #include "print_range.h"
+#undef private
 #include "printer_capability.h"
 #include "print_margin.h"
 
@@ -37,18 +39,6 @@ void PrintRangeTest::TearDownTestCase(void) {}
 void PrintRangeTest::SetUp(void) {}
 
 void PrintRangeTest::TearDown(void) {}
-
-/**
- * @tc.name: PrintRangeTest_0001
- * @tc.desc: Verify the constructor function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0001, TestSize.Level1)
-{
-    OHOS::Print::PrintRange range;
-    range.Dump();
-}
 
 /**
  * @tc.name: PrintRangeTest_0002
@@ -273,6 +263,10 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0016, TestSize.Level1)
     range.SetEndPage(5);
     range.SetPages({0, 1, 2, 3, 4, 5});
     range.Dump();
+
+    EXPECT_EQ(range.GetStartPage(), 0);
+    EXPECT_EQ(range.GetEndPage(), 5);
+    EXPECT_EQ(range.hasPages_, true);
 }
 
 } // namespace Print

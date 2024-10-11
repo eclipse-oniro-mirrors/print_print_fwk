@@ -182,8 +182,23 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0005, TestSize.Level1)
     Print_DiscoveryItem discoveryItem = {0};
     LogDiscoveryItem(nullptr);
     LogDiscoveryItem(&discoveryItem);
+    EXPECT_EQ(discoveryItem.printerId, nullptr);
+    EXPECT_EQ(discoveryItem.printerName, nullptr);
+    EXPECT_EQ(discoveryItem.description, nullptr);
+    EXPECT_EQ(discoveryItem.location, nullptr);
+    EXPECT_EQ(discoveryItem.makeAndModel, nullptr);
+    EXPECT_EQ(discoveryItem.printerUri, nullptr);
+    EXPECT_EQ(discoveryItem.printerUuid, nullptr);
     BuildDiscoveryItem(discoveryItem);
     LogDiscoveryItem(&discoveryItem);
+    LogDiscoveryItem(&discoveryItem);
+    EXPECT_EQ(discoveryItem.printerId, "printerId");
+    EXPECT_EQ(discoveryItem.printerName, "printerName");
+    EXPECT_EQ(discoveryItem.description, "description");
+    EXPECT_EQ(discoveryItem.location, "location");
+    EXPECT_EQ(discoveryItem.makeAndModel, "makeAndModel");
+    EXPECT_EQ(discoveryItem.printerUri, "printerUri");
+    EXPECT_EQ(discoveryItem.printerUuid, "printerUuid");
 }
 
 HWTEST_F(VendorHelperTest, VendorHelperTest_0006, TestSize.Level1)
@@ -193,9 +208,16 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0006, TestSize.Level1)
     LogOtherCapability(nullptr);
     LogPageCapability(&capability);
     LogOtherCapability(&capability);
+    EXPECT_EQ(capability.supportedPageSizes, nullptr);
+    EXPECT_EQ(capability.supportedMediaTypes, nullptr);
+    EXPECT_EQ(capability.supportedPaperSources, nullptr);
+
     BuildCapability(capability);
     LogPageCapability(&capability);
     LogOtherCapability(&capability);
+    EXPECT_EQ(capability.supportedPageSizes, nullptr);
+    EXPECT_EQ(capability.supportedMediaTypes, "{\"a\",\"b\",\"c\"}");
+    EXPECT_EQ(capability.supportedPaperSources, "{\"a\",\"b\",\"c\"}");
 }
 
 HWTEST_F(VendorHelperTest, VendorHelperTest_0007, TestSize.Level1)
@@ -204,6 +226,10 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0007, TestSize.Level1)
     Print_DefaultValue defaultValue;
     BuildDefaultValue(defaultValue);
     LogDefaultValue(&defaultValue);
+    EXPECT_EQ(defaultValue.defaultMediaType, "a");
+    EXPECT_EQ(defaultValue.defaultPageSizeId, "ISO_A4");
+    EXPECT_EQ(defaultValue.defaultPaperSource, "a");
+    EXPECT_EQ(defaultValue.otherDefaultValues, "default");
 }
 
 HWTEST_F(VendorHelperTest, VendorHelperTest_0008, TestSize.Level1)
@@ -211,6 +237,7 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0008, TestSize.Level1)
     Print_PropertyList propertyList = {0};
     LogProperties(nullptr);
     LogProperties(&propertyList);
+    EXPECT_EQ(propertyList.list, nullptr);
 }
 
 HWTEST_F(VendorHelperTest, VendorHelperTest_0009, TestSize.Level1)

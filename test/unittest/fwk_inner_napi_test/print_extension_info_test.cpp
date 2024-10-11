@@ -50,6 +50,11 @@ HWTEST_F(PrintExtensionInfoTest, PrintExtInfoTest_0001, TestSize.Level1)
     OHOS::Print::PrintExtensionInfo inf;
     inf = info;
     info.Dump();
+    EXPECT_EQ(inf.GetExtensionId(), info.GetExtensionId());
+    EXPECT_EQ(inf.GetVendorId(), info.GetVendorId());
+    EXPECT_EQ(inf.GetVendorName(), info.GetVendorName());
+    EXPECT_EQ(inf.GetVendorIcon(), info.GetVendorIcon());
+    EXPECT_EQ(inf.GetVersion(), info.GetVersion());
 }
 
 /**
