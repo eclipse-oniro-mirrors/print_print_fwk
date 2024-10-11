@@ -102,6 +102,7 @@ static const std::string PRINTER_STATE_MARKER_LOW_WARNING = "marker-supply-low-w
 static const std::string PRINTER_STATE_MEDIA_EMPTY_WARNING = "media-empty-warning";
 static const std::string PRINTER_STATE_NONE = "none";
 static const std::string PRINTER_STATE_EMPTY = "";
+static const std::string PRINTER_STATE_ERROR = "error";
 static const std::string PRINTER_STATE_MEDIA_EMPTY = "media-empty";
 static const std::string PRINTER_STATE_MEDIA_JAM = "media-jam";
 static const std::string PRINTER_STATE_PAUSED = "paused";
@@ -1290,13 +1291,7 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
     } else if (jobStatus->job_state == IPP_JOB_PROCESSING) {
         PRINT_HILOGD("IPP_JOB_PROCESSING");
         std::string printerState(jobStatus->printer_state_reasons);
-        if (find(IGNORE_STATE_LIST.begin(), IGNORE_STATE_LIST.end(), printerState) != IGNORE_STATE_LIST.end()) {
-            param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
-                PRINT_JOB_BLOCKED_BUSY);
-        } else if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MARKER_LOW_WARNING.c_str()) != NULL) {
-            param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
-                PRINT_JOB_BLOCKED_BUSY);
-        } else if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_EMPTY_WARNING.c_str()) != NULL) {
+        if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_ERROR.c_str()) == NULL) {
             param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
                 PRINT_JOB_BLOCKED_BUSY);
         } else {
