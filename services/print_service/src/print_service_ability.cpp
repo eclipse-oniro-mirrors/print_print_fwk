@@ -371,10 +371,6 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
         PRINT_HILOGI("Invalid printer id, try connect printer by ip");
         return TryConnectPrinterByIp(printerId);
     }
-    if (printerIdAndPreferenceMap_.find(printerId) != printerIdAndPreferenceMap_.end()) {
-        PRINT_HILOGE("This printer has already existed!");
-        return E_PRINT_SERVER_FAILURE;
-    }
     vendorManager.SetConnectingPrinter(ID_AUTO, printerId);
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
     if (!vendorManager.ExtractVendorName(extensionId).empty()) {
@@ -1544,11 +1540,6 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
         PrinterCapability printerCaps;
         info.GetCapability(printerCaps);
         WriteEprinterPreference(printerId, printerCaps);
-    }
-
-    if (printSystemData_.IsPrinterAdded(printerId)) {
-        PRINT_HILOGE("This printer has been added.");
-        return false;
     }
 
     CupsPrinterInfo cupsPrinterInfo;
