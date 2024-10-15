@@ -33,12 +33,5 @@ void NapiInnerScanTest::SetUp(void) {}
 
 void NapiInnerScanTest::TearDown(void) {}
 
-/**
- * @tc.name: NapiInnerScanTest_0001
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(NapiInnerScanTest, NapiInnerScanTest_0001, TestSize.Level1) { }
 } // namespace Scan
 } // namespace OHOS

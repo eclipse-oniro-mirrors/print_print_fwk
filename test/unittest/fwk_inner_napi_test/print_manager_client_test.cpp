@@ -82,6 +82,7 @@ void PrintManagerClientTest::CallRemoteObject(const std::shared_ptr<MockPrintSer
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0001, TestSize.Level1)
 {
     PrintManagerClient::GetInstance()->LoadServerFail();
+    EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, false);
 }
 
 /**
@@ -111,7 +112,10 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0002, TestSize.Level1)
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0003, TestSize.Level1)
 {
     PrintManagerClient::GetInstance()->LoadServerFail();
+    EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, false);
+
     PrintManagerClient::GetInstance()->ResetProxy();
+    EXPECT_EQ(PrintManagerClient::GetInstance()->printServiceProxy_, nullptr);
 }
 
 

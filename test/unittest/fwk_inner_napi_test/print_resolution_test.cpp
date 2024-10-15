@@ -50,6 +50,9 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_001, TestSize.Level1)
     OHOS::Print::PrintResolution res;
     res = resolution;
     resolution.Dump();
+    EXPECT_EQ(res.GetId(), resolution.GetId());
+    EXPECT_EQ(res.GetHorizontalDpi(), resolution.GetHorizontalDpi());
+    EXPECT_EQ(res.GetVerticalDpi(), resolution.GetVerticalDpi());
 }
 
 /**

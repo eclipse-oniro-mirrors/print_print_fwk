@@ -333,6 +333,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_012, TestSize.
     size_t contentLength = 0;
     std::vector<uint8_t> readTempBuffer;
     printHttpRequestProcess.GetContentLength(readTempBuffer, index, findContentLength, contentLength);
+    EXPECT_EQ(contentLength, 0);
 }
 
 /**
@@ -360,6 +361,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_013, TestSize.
     std::vector<uint8_t> readTempBuffer;
     readTempBuffer.assign(tempStr.begin(), tempStr.end());
     printHttpRequestProcess.GetContentLength(readTempBuffer, index, findContentLength, contentLength);
+    EXPECT_EQ(contentLength, 0);
 }
 
 /**
@@ -381,6 +383,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_014, TestSize.
     std::vector<uint8_t> readTempBuffer;
     readTempBuffer.assign(tempStr.begin(), tempStr.end());
     printHttpRequestProcess.GetContentLength(readTempBuffer, index, findContentLength, contentLength);
+    EXPECT_EQ(contentLength, 11616);
 }
 
 /**
@@ -397,6 +400,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_015, TestSize.
     size_t begin = 0;
     size_t maxSize = 30;
     printHttpRequestProcess.DumpRespIdCode(readTempBuffer, Operation::Get_Printer_Attributes, begin, maxSize);
+    EXPECT_EQ(printHttpRequestProcess.PrintOperation(Operation::Get_Printer_Attributes), HTTP_OPERATION_GET_ATTR);
 }
 
 /**
@@ -564,7 +568,8 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_022, TestSize.
     std::vector<uint8_t> readTempBuffer;
     readTempBuffer.assign(tempStr.begin(), tempStr.end());
     size_t index = 0;
-    printHttpRequestProcess.CalculateRequestId(readTempBuffer, index, Operation::Get_Printer_Attributes);
+    size_t ret = printHttpRequestProcess.CalculateRequestId(readTempBuffer, index, Operation::Get_Printer_Attributes);
+    EXPECT_EQ(ret, 0);
 }
 
 /**
@@ -577,7 +582,8 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_023, TestSize.
 {
     OHOS::Print::PrintHttpRequestProcess printHttpRequestProcess;
     size_t index = 0;
-    printHttpRequestProcess.CalculateFileDataBeginIndex(index, Operation::Get_Printer_Attributes);
+    size_t ret = printHttpRequestProcess.CalculateFileDataBeginIndex(index, Operation::Get_Printer_Attributes);
+    EXPECT_EQ(ret, index + INDEX_4);
 }
 
 /**
@@ -589,7 +595,8 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_023, TestSize.
 HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_025, TestSize.Level1)
 {
     OHOS::Print::PrintHttpRequestProcess printHttpRequestProcess;
-    printHttpRequestProcess.ProcessDataFromDevice(Operation::Get_Printer_Attributes);
+    bool ret = printHttpRequestProcess.ProcessDataFromDevice(Operation::Get_Printer_Attributes);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -603,6 +610,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_026, TestSize.
     OHOS::Print::PrintHttpRequestProcess printHttpRequestProcess;
     std::vector<uint8_t> readTempBuffer;
     printHttpRequestProcess.GetAttrAgain(Operation::Get_Printer_Attributes, readTempBuffer);
+    EXPECT_EQ(readTempBuffer, std::vector<uint8_t>{});
 }
 
 /**
@@ -748,7 +756,8 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_034, TestSize.
     requestData.set_header("REMOTE_PORT", "39470");
     requestData.set_header("User-Agent", "CUPS/2.4.0 (Linux 5.10.97+; aarch64) IPP/2.0");
     std::string str = "";
-    printHttpRequestProcess.DealRequestHeader(requestData, str);
+    bool ret = printHttpRequestProcess.DealRequestHeader(requestData, str);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -771,7 +780,8 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_035, TestSize.
     requestData.set_header("REMOTE_PORT", "39470");
     requestData.set_header("User-Agent", "CUPS/2.4.0 (Linux 5.10.97+; aarch64) IPP/2.0");
     std::string str = "";
-    printHttpRequestProcess.DealRequestHeader(requestData, str);
+    bool ret = printHttpRequestProcess.DealRequestHeader(requestData, str);
+    EXPECT_EQ(ret, true);
 }
 
 /**
@@ -788,6 +798,12 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_036, TestSize.
     std::string reqData = HTTP_REQ_DATA;
     size_t data_length = 716;
     printHttpRequestProcess.CalcReqIdOperaId(reqData.c_str(), data_length, requestId);
+
+    const char *data = reqData.c_str();
+    size_t expectedRequestId = (uint8_t)(*(data + INDEX_4)) * HTTP_COMMON_CONST_VALUE_1000 +
+        (uint8_t)(*(data + INDEX_5)) * HTTP_COMMON_CONST_VALUE_100 +
+            (uint8_t)(*(data + INDEX_6)) * HTTP_COMMON_CONST_VALUE_10 + (uint8_t)(*(data + INDEX_7));
+    EXPECT_EQ(requestId, expectedRequestId);
 }
 
 /**
@@ -804,6 +820,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_037, TestSize.
     std::string reqData = HTTP_REQ_DATA;
     size_t data_length = 1;
     printHttpRequestProcess.CalcReqIdOperaId(reqData.c_str(), data_length, requestId);
+    EXPECT_EQ(requestId, 0);
 }
 
 /**
@@ -847,6 +864,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_041, TestSize.
     OHOS::Print::PrintHttpRequestProcess printHttpRequestProcess;
     std::string reqData = "t";
     size_t data_length = 1;
+    EXPECT_LT(data_length, REQID_OPERAID_LEN);
     printHttpRequestProcess.DumpReqIdOperaId(reqData.c_str(), data_length);
 }
 
@@ -861,6 +879,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_042, TestSize.
     OHOS::Print::PrintHttpRequestProcess printHttpRequestProcess;
     std::string reqData = "test request data";
     size_t data_length = 15;
+    EXPECT_GT(data_length, REQID_OPERAID_LEN);
     printHttpRequestProcess.DumpReqIdOperaId(reqData.c_str(), data_length);
 }
 
@@ -890,6 +909,17 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_045, TestSize.
     std::string reqData = HTTP_REQ_DATA;
     size_t data_length = 721;
     printHttpRequestProcess.CreateChunk(reqData.c_str(), data_length);
+    EXPECT_EQ(ret, "2d1\r\n\\x02\\x00\\x00\\x0b\\x00\\x00\\x00\\x01\\x01G\\x00\\"
+                "x12attributes-charset\\x00\\x05utf-8H\\x00\\x1battributes-natural-language\\x00\\"
+                "x05en-usE\\x00\\x0bprinter-uri\\x00!ipp://192.168.186.1:631/ipp/printD\\x00\\"
+                "x14requested-attributes\\x00\\x15compression-supportedD\\x00\\x00\\x00\\"
+                "x10copies-supportedD\\x00\\x00\\x00\\x0ccups-versionD\\x00\\x00\\x00\\"
+                "x19document-format-supportedD\\x00\\x00\\x00!job-password-encryption-supportedD\\"
+                "x00\\x00\\x00\\x0dmarker-colorsD\\x00\\x00\\x00\\x12marker-high-levelsD\\x00\\x00\\"
+                "x00\\x0dmarker-levelsD\\x00\\x00\\x00\\x11marker-low-levelsD\\x00\\x00\\x00\\"
+                "x0emarker-messageD\\x00\\x00\\x00\\x0cmarker-namesD\\x00\\x00\\x00\\x0cmarker-typesD\\"
+                "x00\\x00\\x00\\x13media-col-supportedD\\x00\\x00\\x00$multiple-document-handling-supportedD\\"
+                "x00\\x00\\x00\\x14operatio\r\n");
 }
 
 /**

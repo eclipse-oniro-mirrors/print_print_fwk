@@ -49,6 +49,9 @@ HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0001, TestSize.Lev
 {
     OHOS::Print::PrintPreviewAttribute attribute;
     attribute.Dump();
+    EXPECT_FALSE(attribute.HasResult());
+    const uint32_t PRINT_INVALID_ID = 0xFFFFFFFF;
+    EXPECT_EQ(attribute.GetResult(), PRINT_INVALID_ID);
 }
 
 /**

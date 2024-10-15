@@ -21,6 +21,9 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "fstream"
+#define private public
+#include "print_service_ability.h"
+#undef private
 
 using namespace testing::ext;
 using json = nlohmann::json;
@@ -202,18 +205,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0006, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     int32_t ret = printCupsClient.StartCupsdService();
     EXPECT_EQ(ret, E_PRINT_NONE);
-    printCupsClient.StopCupsdService();
-}
-
-/**
- * @tc.name: PrintCupsClientTest_0007
- * @tc.desc: StopCupsdService
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0007, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.StopCupsdService();
 }
 
@@ -690,9 +681,16 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0039, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_NE(jobParams, nullptr);
+    EXPECT_NE(jobParams->serviceAbility, nullptr);
+
     uint32_t state = PRINT_JOB_BLOCKED;
     uint32_t subState = PRINT_JOB_BLOCKED_UNKNOWN;
     printCupsClient.UpdatePrintJobStateInJobParams(jobParams, state, subState);
+
+    auto jobId = jobParams->serviceJobId;
+    auto userData = jobParams->serviceAbility->GetUserDataByJobId(jobId);
+    EXPECT_EQ(userData, nullptr);
     delete jobParams;
 }
 
@@ -1340,8 +1338,11 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0066, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams, nullptr);
+
     testJob.SetOption("test");
     printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams, nullptr);
     delete jobParams;
 }
 
@@ -1363,22 +1364,34 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(R"({"key": "value"})");
-    printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams, nullptr);
+
     json optionJson = json::parse(testJob.GetOption());
     optionJson["printerUri"] = "ipp://192.168.0.1:111/ipp/print";
     optionJson["printerName"] = "printer1";
     optionJson["documentFormat"] = "application/pdf";
     testJob.SetOption(optionJson.dump());
-    printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"]);
+    EXPECT_EQ(jobParams->printerName, PrintUtil::StandardizePrinterName(optionJson["printerName"]));
+    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"]);
+
     optionJson["cupsOptions"] = "testCupsOptions";
     optionJson["printQuality"] = "printQuality";
     optionJson["jobName"] = "jobName";
     optionJson["mediaType"] = "mediaType";
     testJob.SetOption(optionJson.dump());
-    printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->printerAttrsOption_cupsOption, optionJson["cupsOptions"]);
+    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"]);
+    EXPECT_EQ(jobParams->jobName, optionJson["jobName"]);
+    EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"]);
+
     optionJson["printQuality"] = 1;
     testJob.SetOption(optionJson.dump());
-    printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
 }
 
 /**
@@ -1403,6 +1416,15 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0068, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    std::string option = testJob.GetOption();
+    json optionJson = json::parse(option);
+    EXPECT_EQ(jobParams->jobName, optionJson["jobName"]);
+    EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"]);
+    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"]);
+    EXPECT_EQ(jobParams->printerName, optionJson["printerName"]);
+    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"]);
+    EXPECT_EQ(jobParams->borderless, optionJson["documentCategory"]);
+    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"]);
     printCupsClient.DumpJobParameters(jobParams);
     delete jobParams;
 }
