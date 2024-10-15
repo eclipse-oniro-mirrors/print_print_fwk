@@ -542,7 +542,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0019, TestSize.Level1)
     std::string jobId ="1";
     uint32_t state = PRINT_JOB_PREPARED;
     uint32_t subState = PRINT_JOB_COMPLETED_SUCCESS;
-    
+
     state = PRINT_JOB_BLOCKED;
     service->notifyAdapterJobChanged(jobId, state, subState);
 }
@@ -570,7 +570,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0021, TestSize.Level1)
     service->adapterListenersByJobId_[jobId] = listener;
     EXPECT_EQ(service->StartGetPrintFile(jobId, printAttributes, fd), E_PRINT_NONE);
     service->adapterListenersByJobId_.clear();
- 
+
     EXPECT_EQ(service->StartGetPrintFile(jobId, printAttributes, fd), E_PRINT_NONE);
     service->printAttributesList_[jobId] = printAttributes;
     EXPECT_EQ(service->StartGetPrintFile(jobId, printAttributes, fd), E_PRINT_NONE);
@@ -1226,7 +1226,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068, TestSize.Level1)
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
 }
- 
+
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -1978,7 +1978,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130, TestSize.Level1)
     EXPECT_EQ(service->UpdatePrinterInDiscovery(info), E_PRINT_NONE);
     info.SetPrinterId("1234");
     EXPECT_EQ(service->UpdatePrinterInDiscovery(info), E_PRINT_NONE);
-    
+
     std::shared_ptr<PrinterInfo> info1 = std::make_shared<PrinterInfo>();
     info1->SetPrinterId(DEFAULT_EXT_PRINTER_ID);
     service->printSystemData_.discoveredPrinterInfoList_[DEFAULT_EXT_PRINTER_ID] = info1;
@@ -2067,5 +2067,35 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0135, TestSize.Level1)
     EXPECT_EQ(service->TryConnectPrinterByIp(param), E_PRINT_INVALID_PRINTER);
     param = "{\"protocol\":\"ipp\",\"ip\":\"a.b.c.d\"}";
     EXPECT_EQ(service->TryConnectPrinterByIp(param), E_PRINT_SERVER_FAILURE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0136, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    std::string ppdData;
+    PrinterInfo info;
+    info.SetPrinterName(vendorName);
+    info.SetPrinterId(printerId);
+    PrinterCapability cap;
+    info.SetCapability(cap);
+    info.SetUri("uri");
+    info.SetPrinterMake("maker");
+    ppdData = "ppd";
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+    service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdData);
+
+    std::string vendorName1 = "fwk.driver";
+    std::string printerId1 = "testprinter1";
+    PrinterInfo info1;
+    info1.SetPrinterName(vendorName1);
+    info1.SetPrinterId(printerId1);
+    PrinterCapability cap1;
+    info1.SetCapability(cap1);
+    info1.SetUri("uri1");
+    info1.SetPrinterMake("maker1");
+    EXPECT_TRUE(service->RenamePrinterWhenAdded(info1) == "fwk.driver 1");
+    service->RemoveVendorPrinterFromCups(vendorName, printerId);
 }
 } // namespace OHOS::Print

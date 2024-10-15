@@ -513,7 +513,7 @@ int32_t PrintServiceAbility::DestroyExtension()
     }
     PRINT_HILOGD("DestroyExtension started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
- 
+
     for (auto extension : extensionStateList_) {
         if (extension.second < PRINT_EXTENSION_LOADING) {
             continue;
@@ -524,7 +524,7 @@ int32_t PrintServiceAbility::DestroyExtension()
             PRINT_HILOGE("Destroy extension Not Register, BUT State is LOADED");
             continue;
         }
- 
+
         auto cbFunc = extCallbackMap_[cid];
         if (cbFunc != nullptr) {
             cbFunc->OnCallback();
@@ -848,13 +848,13 @@ int32_t PrintServiceAbility::BuildPrinterPreference(PrinterCapability &cap, Prin
         std::string supportedOriOpts = capOpt["orientation-requested-supported"].get<std::string>();
         BuildPrinterPreferenceByOption(key, supportedOriOpts, printPreference.orientation);
     }
-    
+
     key = "duplex";
     if (capOpt.contains("sides-supported") && capOpt["sides-supported"].is_string()) {
         std::string supportedDeplexOpts = capOpt["sides-supported"].get<std::string>();
         BuildPrinterPreferenceByOption(key, supportedDeplexOpts, printPreference.duplex);
     }
-    
+
     key = "quality";
     if (capOpt.contains("print-quality-supported") && capOpt["print-quality-supported"].is_string()) {
         std::string supportedQualityOpts = capOpt["print-quality-supported"].get<std::string>();
@@ -922,7 +922,7 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
         }
         nlohmann::json objectJson = nlohmann::json::parse(printPreference);
         PrinterPreference oldPrintPreference = PrinterPreference::BuildPrinterPreferenceFromJson(objectJson);
-        
+
         PRINT_HILOGD("printerSetting %{public}s", printerSetting.c_str());
         nlohmann::json settingJson = nlohmann::json::parse(printerSetting);
         PreferenceSetting newSetting = PreferenceSetting::BuildPreferenceSettingFromJson(settingJson);
@@ -999,7 +999,7 @@ bool PrintServiceAbility::WritePreferenceToFile()
         return false;
     }
     nlohmann::json printerMapJson = nlohmann::json::array();
-    
+
     for (auto& printPreference : printerIdAndPreferenceMap_) {
         if (json::accept(printPreference.second)) {
             nlohmann::json printPreferenceJson = nlohmann::json::parse(printPreference.second);
@@ -1008,7 +1008,7 @@ bool PrintServiceAbility::WritePreferenceToFile()
             printerMapJson.push_back(objectJson);
         }
     }
-    
+
     nlohmann::json jsonObject;
     jsonObject["printer_list"] = printerMapJson;
     std::string jsonString = jsonObject.dump();
@@ -3059,6 +3059,10 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
             PRINT_HILOGW("allocate printer info fail");
             return false;
         }
+        OHOS::Print::CupsPrinterInfo cupsPrinter;
+        if (printSystemData_.QueryCupsPrinterInfoByPrinterId(globalPrinterId, cupsPrinter)) {
+            printerInfo->SetPrinterName(cupsPrinter.name);
+        }
         printerInfo->SetPrinterId(globalPrinterId);
         printerInfo->SetPrinterState(PRINTER_ADDED);
         printSystemData_.AddPrinterToDiscovery(printerInfo);
@@ -3100,6 +3104,10 @@ bool PrintServiceAbility::UpdateVendorPrinterToDiscovery(const std::string &glob
             printerInfo->SetPrinterId(globalPrinterId);
         }
     }
+    OHOS::Print::CupsPrinterInfo cupsPrinter;
+    if (printSystemData_.QueryCupsPrinterInfoByPrinterId(globalPrinterId, cupsPrinter)) {
+        printerInfo->SetPrinterName(cupsPrinter.name);
+    }
     printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
     SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
     SendPrinterEvent(*printerInfo);
@@ -3127,6 +3135,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
         PRINT_HILOGW("empty capability or invalid printer info");
         return false;
     }
+    printerInfo->SetPrinterName(RenamePrinterWhenAdded(*printerInfo));
     CupsPrinterInfo info;
     info.name = printerInfo->GetPrinterName();
     info.uri = printerInfo->GetUri();
@@ -3385,5 +3394,31 @@ bool PrintServiceAbility::UpdateAddedPrinterInCups(const std::string &printerId,
         return true;
     }
     return false;
+}
+
+std::string PrintServiceAbility::RenamePrinterWhenAdded(const PrinterInfo &info)
+{
+    static uint32_t repeatNameLimit = 10;
+    std::vector<std::string> printerNameList;
+    printSystemData_.GetAddedPrinterListFromSystemData(printerNameList);
+    uint32_t nameIndex = 1;
+    auto printerName = info.GetPrinterName();
+    auto iter = printerNameList.begin();
+    auto end = printerNameList.end();
+    do {
+        iter = std::find(iter, end, printerName);
+        if (iter == end) {
+            break;
+        }
+        printerName = info.GetPrinterName();
+        printerName += " ";
+        printerName += std::to_string(nameIndex);
+        if (nameIndex == repeatNameLimit) {
+            break;
+        }
+        ++nameIndex;
+        iter = printerNameList.begin();
+    } while (iter != end);
+    return printerName;
 }
 } // namespace OHOS::Print
