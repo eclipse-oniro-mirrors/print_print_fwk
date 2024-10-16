@@ -908,7 +908,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_045, TestSize.
     OHOS::Print::PrintHttpRequestProcess printHttpRequestProcess;
     std::string reqData = HTTP_REQ_DATA;
     size_t data_length = 721;
-    printHttpRequestProcess.CreateChunk(reqData.c_str(), data_length);
+    std::string ret = printHttpRequestProcess.CreateChunk(reqData.c_str(), data_length);
     EXPECT_EQ(ret, "2d1\r\n\\x02\\x00\\x00\\x0b\\x00\\x00\\x00\\x01\\x01G\\x00\\"
                 "x12attributes-charset\\x00\\x05utf-8H\\x00\\x1battributes-natural-language\\x00\\"
                 "x05en-usE\\x00\\x0bprinter-uri\\x00!ipp://192.168.186.1:631/ipp/printD\\x00\\"
