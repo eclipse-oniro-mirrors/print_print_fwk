@@ -209,6 +209,7 @@ private:
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
     int32_t TryConnectPrinterByIp(const std::string &params);
+    std::string RenamePrinterWhenAdded(const PrinterInfo &info);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
