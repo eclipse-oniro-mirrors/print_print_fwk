@@ -558,8 +558,7 @@ void TestBuildPrinterPreferenceByDefault(const uint8_t *data, size_t size, Fuzze
     nlohmann::json capOpt = nlohmann::json::parse(optJson);
     PreferenceSetting printerDefaultAttr;
     PrintServiceAbility::GetInstance()->BuildPrinterPreferenceByDefault(capOpt, printerDefaultAttr);
-    std::string capOptRandom = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    capOpt = nlohmann::json::parse(capOptRandom);
+    printerDefaultAttr.pagesizeId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->BuildPrinterPreferenceByDefault(capOpt, printerDefaultAttr);
 }
 
