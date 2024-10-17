@@ -3421,4 +3421,9 @@ std::string PrintServiceAbility::RenamePrinterWhenAdded(const PrinterInfo &info)
     } while (iter != end);
     return printerName;
 }
+
+std::shared_ptr<PrinterInfo> PrintServiceAbility::QueryDiscoveredPrinterInfoById(const std::string &printerId)
+{
+    return printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+}
 } // namespace OHOS::Print
