@@ -1426,12 +1426,16 @@ bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param, const uint32_t 
     char host[BUFFER_LEN] = {0};
     char resource[BUFFER_LEN] = {0};
     int port;
+    if (param == nullptr) {
+        PRINT_HILOGE("param is null");
+    }
     const char* printerUri = param->printerUri.c_str();
     const std::string printerId = param->printerId;
     PRINT_HILOGD("CheckPrinterOnline printerId: %{public}s", printerId.c_str());
 
     if (param->printerUri.length() > USB_PRINTER.length() &&
-        param->printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER) {
+        param->printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER &&
+        param->serviceAbility != nullptr) {
         if (param->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
             PRINT_HILOGI("printer offline");
             return false;
