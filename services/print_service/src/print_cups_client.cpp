@@ -1071,14 +1071,21 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     }
     uint32_t retryCount = 0;
     bool isPrinterOnline = false;
+    JobMonitorParam *monitorParam = new (std::nothrow) JobMonitorParam { jobParams->serviceAbility,
+        jobParams->serviceJobId, jobId, jobParams->printerUri, jobParams->printerName, jobParams->printerId };
+    if (monitorParam == nullptr) {
+        PRINT_HILOGE("monitorParam is null");
+        return false;
+    }
     while (retryCount < MAX_RETRY_TIMES) {
-        if (CheckPrinterOnline(jobParams->printerUri.c_str(), jobParams->printerId)) {
+        if (CheckPrinterOnline(monitorParam)) {
             isPrinterOnline = true;
             break;
         }
         retryCount++;
         sleep(INDEX_ONE);
     }
+    delete monitorParam;
     if (!isPrinterOnline) {
         jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_OFFLINE);
@@ -1238,7 +1245,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
             PRINT_HILOGE("http is NULL");
             httpReconnect2(http, LONG_LONG_TIME_OUT, NULL);
         }
-        if (httpGetFd(http) < 0 || !CheckPrinterOnline(param->printerUri.c_str(), param->printerId)) {
+        if (httpGetFd(http) < 0 || !CheckPrinterOnline(param)) {
             PRINT_HILOGE("unable connect to printer, retry: %{public}d", fail_connect_times);
             fail_connect_times++;
             sleep(INTERVAL_FOR_QUERY);
@@ -1411,7 +1418,7 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
     }
 }
 
-bool PrintCupsClient::CheckPrinterOnline(const char* printerUri, const std::string& printerId)
+bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param)
 {
     http_t *http;
     char scheme[32] = {0};
@@ -1419,19 +1426,18 @@ bool PrintCupsClient::CheckPrinterOnline(const char* printerUri, const std::stri
     char host[BUFFER_LEN] = {0};
     char resource[BUFFER_LEN] = {0};
     int port;
-    char usbPrinterUri[HTTP_MAX_URI] = {0};
+    const char* printerUri = param->printerUri.c_str();
+    const std::string printerId = param->printerId;
+    PRINT_HILOGD("CheckPrinterOnline printerId: %{public}s", printerId.c_str());
 
-    std::string uri(printerUri);
-    if (uri.length() > USB_PRINTER.length() && uri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER) {
-        auto pos = printerId.find(PRINTER_ID_USB_PREFIX);
-        if (pos != std::string::npos) {
-            std::string usbPrinterName =
-                PrintUtil::StandardizePrinterName(printerId.substr(pos));
-            httpAssembleURIf(HTTP_URI_CODING_ALL, usbPrinterUri, sizeof(usbPrinterUri), "ipp", NULL,
-                "localhost", CUPS_SEVER_PORT, "/printers/%s", usbPrinterName.c_str());
-            PRINT_HILOGD("CheckPrinterOnline usbPrinterUri: %{public}s", usbPrinterUri);
-            httpSeparateURI(HTTP_URI_CODING_ALL, usbPrinterUri, scheme, sizeof(scheme),
-                userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource));
+    if (param->printerUri.length() > USB_PRINTER.length() &&
+        param->printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER) {
+        if (param->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
+            PRINT_HILOGI("printer offline");
+            return false;
+        } else {
+            PRINT_HILOGI("printer online");
+            return true;
         }
     } else {
         httpSeparateURI(HTTP_URI_CODING_ALL, printerUri, scheme, sizeof(scheme),
