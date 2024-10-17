@@ -142,9 +142,10 @@ void TestDeletePrinterFromCups(const uint8_t *data, size_t size, FuzzedDataProvi
 
 void TestCheckPrinterOnline(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintCupsClient::GetInstance()->CheckPrinterOnline(printerUri.c_str(), printerId);
+    JobMonitorParam monitorParam;
+    monitorParam.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParam.printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintCupsClient::GetInstance()->CheckPrinterOnline(&monitorParam);
 }
 
 void TestGetIpAddress(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
