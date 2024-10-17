@@ -1073,6 +1073,10 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     bool isPrinterOnline = false;
     JobMonitorParam *monitorParam = new (std::nothrow) JobMonitorParam { jobParams->serviceAbility,
         jobParams->serviceJobId, jobId, jobParams->printerUri, jobParams->printerName, jobParams->printerId };
+    if (monitorParam == nullptr) {
+        PRINT_HILOGE("monitorParam is null");
+        return false;
+    }
     while (retryCount < MAX_RETRY_TIMES) {
         if (CheckPrinterOnline(monitorParam)) {
             isPrinterOnline = true;
