@@ -110,6 +110,7 @@ static const std::string PRINTER_STATE_TONER_LOW = "toner-low";
 static const std::string PRINTER_STATE_TONER_EMPTY = "toner-empty";
 static const std::string PRINTER_STATE_DOOR_EMPTY = "door-open";
 static const std::string PRINTER_STATE_MEDIA_NEEDED = "media-needed";
+static const std::string PRINTER_STATE_MEDIA_NEEDED_ERROR = "media-needed-error";
 static const std::string PRINTER_STATE_MARKER_LOW = "marker-supply-low";
 static const std::string PRINTER_STATE_MARKER_EMPTY = "marker-supply-empty";
 static const std::string PRINTER_STATE_INK_EMPTY = "marker-ink-almost-empty";
@@ -1328,9 +1329,6 @@ void PrintCupsClient::ReportBlockedReason(JobMonitorParam *param, JobStatus *job
     if (substate > PRINT_JOB_COMPLETED_SUCCESS) {
         param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_BLOCKED,
             substate);
-    } else if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_NEEDED.c_str()) != NULL) {
-        param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
-            PRINT_JOB_BLOCKED_BUSY);
     } else {
         param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_UNKNOWN);
@@ -1344,7 +1342,8 @@ uint32_t PrintCupsClient::GetBlockedSubstate(JobStatus *jobStatus)
         return PRINT_JOB_COMPLETED_FAILED;
     }
     uint32_t substate = PRINT_JOB_COMPLETED_SUCCESS;
-    if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_EMPTY.c_str()) != NULL) {
+    if ((strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_EMPTY.c_str()) != NULL) ||
+        (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_NEEDED_ERROR.c_str()) != NULL)) {
         substate = substate * NUMBER_FOR_SPLICING_SUBSTATE + PRINT_JOB_BLOCKED_OUT_OF_PAPER;
     }
     if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_JAM.c_str()) != NULL) {
