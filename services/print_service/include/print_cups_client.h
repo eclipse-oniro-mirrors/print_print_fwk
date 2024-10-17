@@ -107,7 +107,7 @@ private:
     void HandleJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus,
         JobStatus *prevousJobStatus);
     void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
-    bool CheckPrinterOnline(JobMonitorParam *param);
+    bool CheckPrinterOnline(JobMonitorParam *param, const uint32_t timeout);
     static void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
     static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
     static void SymlinkFile(std::string srcFilePath, std::string destFilePath);
