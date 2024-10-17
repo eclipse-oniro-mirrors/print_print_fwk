@@ -1841,7 +1841,6 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
         if (progr > (scanProPtr->GetScanProgress())) {
             scanProPtr->SetScanProgress((int32_t)progr);
         }
-        SCAN_HILOGI(" %{public}lld bytes ; scan progr:%{public}lld", totalBytes, progr);
         if (g_scannerState == SCANNER_CANCELING) {
             std::queue<int32_t> emptyQueue;
             scanQueue.swap(emptyQueue);
@@ -1852,7 +1851,7 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
             return;
         }
         if (saneStatus == SANE_STATUS_EOF) {
-            SCAN_HILOGI("Totally read %{public}lld bytes of frame data", totalBytes);
+            SCAN_HILOGI("sane_read finished.");
             break;
         }
         if (saneStatus != SANE_STATUS_GOOD) {
