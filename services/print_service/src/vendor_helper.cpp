@@ -183,10 +183,17 @@ bool ConvertStringToPrinterState(const std::string &stateData, Print_PrinterStat
             return false;
         }
     }
-    if (result < 0 || result > PRINTER_UNAVAILABLE) {
+    if (result < 0 || result > PRINTER_UNAVAILABLE + 1) {
+        PRINT_HILOGW("invalid state");
         return false;
     }
-    state = static_cast<Print_PrinterState>(result);
+    if (result == PRINTER_UNAVAILABLE + 1) {
+        state = PRINTER_UNAVAILABLE;
+    } else if (result == 1) {
+        state = PRINTER_BUSY;
+    } else {
+        state = PRINTER_IDLE;
+    }
     return true;
 }
 
