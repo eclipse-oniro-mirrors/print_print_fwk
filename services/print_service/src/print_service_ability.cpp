@@ -935,7 +935,10 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
         PrinterInfo info;
         printSystemData_.QueryPrinterInfoById(printerId, info);
         SendPrinterChangeEvent(PRINTER_EVENT_PREFERENCE_CHANGED, info);
-        WritePreferenceToFile();
+        if (WritePreferenceToFile() == false) {
+            PRINT_HILOGE("WritePreferenceToFile fail");
+            return E_PRINT_SERVER_FAILURE;
+        };
         return E_PRINT_NONE;
     }
     return E_PRINT_INVALID_PRINTER;
