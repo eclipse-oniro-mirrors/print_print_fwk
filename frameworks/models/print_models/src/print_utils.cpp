@@ -116,16 +116,19 @@ std::string PrintUtils::GetEventType(const std::string &type)
     return eventType;
 }
 
-int32_t PrintUtils::GetUserIdInEventType(const std::string &type)
+bool CheckUserIdInEventType(const std::string &type, int32_t callerUserId)
 {
     auto userIdPos = type.find(USER_ID_DELIMITER);
     auto eventPos = type.find(TASK_EVENT_DELIMITER);
     if (userIdPos == std::string::npos || eventPos == std::string::npos || userIdPos >= type.length()) {
         return E_PRINT_INVALID_USERID;
     }
-    int32_t userId = std::stoi(type.substr(0, userIdPos));
-    PRINT_HILOGD("userId: %{public}d", userId);
-    return userId;
+    std::string userIdStr = type.substr(0, userIdPos);
+    PRINT_HILOGD("userId: %{public}s", userIdStr.c_str());
+    if (userIdStr == std::to_string(callerUserId)) {
+        return true;
+    }
+    return false;
 }
 
 int32_t PrintUtils::OpenFile(const std::string &filePath)
