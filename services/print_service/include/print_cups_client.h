@@ -99,6 +99,7 @@ public:
     int32_t QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info);
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps);
+    bool CheckPrinterOnline(JobMonitorParam *param, const uint32_t timeout = 3000);
 
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
@@ -107,7 +108,6 @@ private:
     void HandleJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus,
         JobStatus *prevousJobStatus);
     void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
-    bool CheckPrinterOnline(JobMonitorParam *param);
     static void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
     static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
     static void SymlinkFile(std::string srcFilePath, std::string destFilePath);

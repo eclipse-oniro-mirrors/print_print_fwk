@@ -2837,11 +2837,34 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    std::string printerUri;
+    std::string extensionId;
+    std::string printerExtId;
+    std::shared_ptr<PrinterInfo> printerInfo;
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+        PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
+        printerExtId = PrintUtils::GetGlobalId(extensionId, printerId);
+        printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerExtId);
+        if (printerInfo == nullptr) {
+            PRINT_HILOGE("invalid printer id");
+            return E_PRINT_INVALID_PRINTER;
+        }
+        printerUri = printerInfo->GetUri();
+    }
+    bool mdnsPrinter = printerId.find("mdns") != string::npos;
+    const uint32_t waitTime = 1000;
+    JobMonitorParam monitorParam{ nullptr, "", 0, printerUri, "", printerId };
+    PRINT_HILOGD("printerid is %{public}s, printer type is %{public}d", printerId.c_str(), mdnsPrinter);
+    // 连接类型为mdns且为spooler显示的已经连接的打印机才判断是否离线
+    if (!printerUri.empty() && mdnsPrinter &&
+        DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterOnline(&monitorParam, waitTime)) {
+        PRINT_HILOGD("printer is online, do not remove.");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    PRINT_HILOGD("printer uri is empty or priter is offline, printerUri = %{public}s", printerUri.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-
-    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
-
     bool result = RemoveSinglePrinterInfo(PrintUtils::GetGlobalId(extensionId, printerId));
     return result ? E_PRINT_NONE : E_PRINT_INVALID_PRINTER;
 }

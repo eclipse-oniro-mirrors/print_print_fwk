@@ -1417,7 +1417,7 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
     }
 }
 
-bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param)
+bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param, const uint32_t timeout)
 {
     http_t *http;
     char scheme[32] = {0};
@@ -1425,12 +1425,17 @@ bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param)
     char host[BUFFER_LEN] = {0};
     char resource[BUFFER_LEN] = {0};
     int port;
+    if (param == nullptr) {
+        PRINT_HILOGE("param is null");
+        return false;
+    }
     const char* printerUri = param->printerUri.c_str();
     const std::string printerId = param->printerId;
     PRINT_HILOGD("CheckPrinterOnline printerId: %{public}s", printerId.c_str());
 
     if (param->printerUri.length() > USB_PRINTER.length() &&
-        param->printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER) {
+        param->printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER &&
+        param->serviceAbility != nullptr) {
         if (param->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
             PRINT_HILOGI("printer offline");
             return false;
@@ -1444,10 +1449,10 @@ bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param)
     }
     std::string nic;
     if (IsIpConflict(printerId, nic)) {
-        http = httpConnect3(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL,
+        http = httpConnect3(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, timeout, NULL,
             nic.c_str());
     } else {
-        http = httpConnect2(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
+        http = httpConnect2(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, timeout, NULL);
     }
     if (http == nullptr) {
         PRINT_HILOGE("httpConnect2 printer failed");
