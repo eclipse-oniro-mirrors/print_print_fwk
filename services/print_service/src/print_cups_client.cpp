@@ -1078,7 +1078,7 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
         return false;
     }
     while (retryCount < MAX_RETRY_TIMES) {
-        if (CheckPrinterOnline(monitorParam, LONG_TIME_OUT)) {
+        if (CheckPrinterOnline(monitorParam)) {
             isPrinterOnline = true;
             break;
         }
@@ -1245,7 +1245,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
             PRINT_HILOGE("http is NULL");
             httpReconnect2(http, LONG_LONG_TIME_OUT, NULL);
         }
-        if (httpGetFd(http) < 0 || !CheckPrinterOnline(param, LONG_TIME_OUT)) {
+        if (httpGetFd(http) < 0 || !CheckPrinterOnline(param)) {
             PRINT_HILOGE("unable connect to printer, retry: %{public}d", fail_connect_times);
             fail_connect_times++;
             sleep(INTERVAL_FOR_QUERY);
@@ -1418,7 +1418,7 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
     }
 }
 
-bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param, const uint32_t timeout = LONG_TIME_OUT)
+bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param, const uint32_t timeout)
 {
     http_t *http;
     char scheme[32] = {0};
