@@ -99,7 +99,7 @@ public:
     int32_t QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info);
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps);
-    bool CheckPrinterOnline(JobMonitorParam *param, const uint32_t timeout);
+    bool CheckPrinterOnline(JobMonitorParam *param, const uint32_t timeout = 3000);
 
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
