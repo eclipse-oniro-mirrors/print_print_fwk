@@ -945,7 +945,7 @@ bool PrintServiceAbility::ReadPreferenceFromFile(const std::string &printerId, s
 {
     auto iter = printerIdAndPreferenceMap_.find(printerId);
     if (iter != printerIdAndPreferenceMap_.end()) {
-        printPreference = printerIdAndPreferenceMap_[printerId];
+        printPreference = iter->second;
         PRINT_HILOGE("open printer preference find %{public}s", printPreference.c_str());
         return true;
     }
