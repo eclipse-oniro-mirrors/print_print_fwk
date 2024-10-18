@@ -1428,6 +1428,7 @@ bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param, const uint32_t 
     int port;
     if (param == nullptr) {
         PRINT_HILOGE("param is null");
+        return false;
     }
     const char* printerUri = param->printerUri.c_str();
     const std::string printerId = param->printerId;
