@@ -1225,7 +1225,6 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
         printerInfo->SetPrinterStatus(PRINTER_STATUS_BUSY);
         printerInfo->SetPrinterName(PrintUtil::RemoveUnderlineFromPrinterName(printerInfo->GetPrinterName()));
         printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_BUSY);
-        printerInfo->SetIsLastUsedPrinter(true);
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, *printerInfo);

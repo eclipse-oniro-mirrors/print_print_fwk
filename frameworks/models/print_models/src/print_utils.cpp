@@ -123,7 +123,7 @@ int32_t PrintUtils::GetUserIdInEventType(const std::string &type)
     if (userIdPos == std::string::npos || eventPos == std::string::npos || userIdPos >= type.length()) {
         return E_PRINT_INVALID_USERID;
     }
-    int32_t userId = std::stoi(type.substr(0 userIdPos));
+    int32_t userId = std::stoi(type.substr(0, userIdPos));
     PRINT_HILOGD("userId: %{public}d", userId);
     return userId;
 }
