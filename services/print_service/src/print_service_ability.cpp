@@ -2860,7 +2860,7 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
     // 连接类型为mdns且为spooler显示的已经连接的打印机才判断是否离线
     if (!printerUri.empty() && mdnsPrinter &&
         DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterOnline(&monitorParam, waitTime)) {
-        PRINT_HILOGI("printer is online, do not remove.");
+        PRINT_HILOGD("printer is online, do not remove.");
         return E_PRINT_INVALID_PRINTER;
     }
     PRINT_HILOGD("printer uri is empty or priter is offline, printerUri = %{public}s", printerUri.c_str());
