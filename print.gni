@@ -20,9 +20,9 @@ print_utils_path = "${print_path}/utils"
 bsuni_binary_path = "//binary/artifacts/print/bsUniDriver/bsUniDriver"
 bsuni_gsbin_path = "${bsuni_binary_path}/ghostscript/bin"
 bsuni_gslib_path =
-    "${bsuni_binary_path}/ghostscript/share/ghostscript/10.03.1/lib"
+    "${bsuni_binary_path}/ghostscript/share/ghostscript/10.04.0/lib"
 bsuni_gsres_path =
-    "${bsuni_binary_path}/ghostscript/share/ghostscript/10.03.1/Resource"
+    "${bsuni_binary_path}/ghostscript/share/ghostscript/10.04.0/Resource"
 
 if (!defined(global_parts_info) ||
     defined(global_parts_info.security_security_guard)) {
