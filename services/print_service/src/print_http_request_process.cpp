@@ -341,6 +341,9 @@ bool PrintHttpRequestProcess::DealRequestHeader(const httplib::Request &requestD
 
 void PrintHttpRequestProcess::CalcReqIdOperaId(const char *data, size_t dataLength, size_t &requestId)
 {
+    if (data = nullptr) {
+        return;
+    }
     if (dataLength < HTTP_COMMON_CONST_VALUE_8) {
         return;
     }
