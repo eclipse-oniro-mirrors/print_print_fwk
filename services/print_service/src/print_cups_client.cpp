@@ -122,6 +122,8 @@ static const std::string P2P_PRINTER = "p2p";
 static const std::string USB_PRINTER = "usb";
 static const std::string PRINTER_ID_USB_PREFIX = "USB";
 static const std::string PRINTER_MAKE_UNKNOWN = "Unknown";
+static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
+static const std::string VENDOR_MANAGER_PREFIX = "fwk.";
 static const std::vector<std::string> IGNORE_STATE_LIST = {PRINTER_STATE_WAITING_COMPLETE,
     PRINTER_STATE_NONE,
     PRINTER_STATE_EMPTY,
@@ -510,7 +512,6 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_IDLE);
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", NULL, ppd.c_str());
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-accepting-jobs", 1);
-    ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-shared", 1);
     PRINT_HILOGD("IPP_OP_CUPS_ADD_MODIFY_PRINTER cupsDoRequest");
     ippDelete(printAbility_->DoRequest(NULL, request, "/admin/"));
     if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
@@ -1432,10 +1433,11 @@ bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param, const uint32_t 
     const char* printerUri = param->printerUri.c_str();
     const std::string printerId = param->printerId;
     PRINT_HILOGD("CheckPrinterOnline printerId: %{public}s", printerId.c_str());
-
-    if (param->printerUri.length() > USB_PRINTER.length() &&
-        param->printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER &&
-        param->serviceAbility != nullptr) {
+    bool isUsbPrinter = param->printerUri.length() > USB_PRINTER.length() &&
+                        param->printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER;
+    bool isCustomizedExtension = !(PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME) ||
+                                   PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX));
+    if ((isUsbPrinter || isCustomizedExtension) && param->serviceAbility != nullptr) {
         if (param->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
             PRINT_HILOGI("printer offline");
             return false;
