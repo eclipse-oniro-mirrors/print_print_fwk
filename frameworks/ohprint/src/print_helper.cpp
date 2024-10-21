@@ -538,9 +538,9 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(info.GetPrinterId(), printerPreference);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("Print_PrinterInfo GetPrinterPreference fail.");
-        return nullptr;
+    } else {
+        ParsePrinterPreference(printerPreference, *nativePrinterInfo);
     }
-    ParsePrinterPreference(printerPreference, *nativePrinterInfo);
     if (info.HasOption()) {
         std::string infoOpt = info.GetOption();
         PRINT_HILOGW("infoOpt json object: %{public}s", infoOpt.c_str());
