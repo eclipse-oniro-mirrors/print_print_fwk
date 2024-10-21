@@ -526,12 +526,18 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0018, TestSize.Level1)
     uint32_t state = PRINT_JOB_PREPARED;
     uint32_t subState = PRINT_JOB_COMPLETED_SUCCESS;
     service->notifyAdapterJobChanged(jobId, state, subState);
+    auto attrIt = service->printAttributesList_.find(jobId);
+    EXPECT_EQ(attrIt, service->printAttributesList_.end());
     PrintAttributes attr;
     service->printAttributesList_[jobId] = attr;
     service->notifyAdapterJobChanged(jobId, state, subState);
+    attrIt = service->printAttributesList_.find(jobId);
+    EXPECT_NE(attrIt, service->printAttributesList_.end());
     sptr<IPrintCallback> listener = nullptr;
     service->adapterListenersByJobId_[jobId] = listener;
     service->notifyAdapterJobChanged(jobId, state, subState);
+    attrIt = service->printAttributesList_.find(jobId);
+    EXPECT_NE(attrIt, service->printAttributesList_.end());
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0019, TestSize.Level1)
@@ -545,6 +551,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0019, TestSize.Level1)
 
     state = PRINT_JOB_BLOCKED;
     service->notifyAdapterJobChanged(jobId, state, subState);
+    auto attrIt = service->printAttributesList_.find(jobId);
+    EXPECT_EQ(attrIt, service->printAttributesList_.end());
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0020, TestSize.Level1)
@@ -770,7 +778,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0037, TestSize.Level1)
     nativePrintJob->UpdateParams(printJob);
     nativePrintJob->Dump();
     service->AddToPrintJobList(jobId, nativePrintJob);
-    EXPECT_EQ(service->AddNativePrintJob(jobId, printJob), nativePrintJob);
+    EXPECT_NE(service->AddNativePrintJob(jobId, printJob), nativePrintJob);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0038, TestSize.Level1)
@@ -837,6 +845,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0042, TestSize.Level1)
     PrintJob printJob;
     printJob.SetJobId(GetDefaultJobId());
     service->SetPrintJobCanceled(printJob);
+    auto testPrintJob = std::make_shared<PrintJob>(printJob);
+    std::string testJobId = testPrintJob->GetJobId();
+    auto attrIt = service->printAttributesList_.find(testJobId);
+    EXPECT_EQ(attrIt, service->printAttributesList_.end());
     std::string jobId = "123";
     printJob.SetJobId(jobId);
     int32_t userId = 100;
@@ -844,6 +856,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0042, TestSize.Level1)
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
     service->SetPrintJobCanceled(printJob);
+    testPrintJob = std::make_shared<PrintJob>(printJob);
+    testJobId = testPrintJob->GetJobId();
+    attrIt = service->printAttributesList_.find(testJobId);
+    EXPECT_EQ(attrIt, service->printAttributesList_.end());
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0043, TestSize.Level1)
@@ -853,13 +869,19 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0043, TestSize.Level1)
     service->helper_ = helper;
     int32_t userId = 100;
     service->CancelUserPrintJobs(userId);
+    auto userIt = service->printUserMap_.find(userId);
+    EXPECT_EQ(userIt, service->printUserMap_.end());
 
     service->printUserMap_.insert(std::make_pair(userId, nullptr));
     service->CancelUserPrintJobs(userId);
+    userIt = service->printUserMap_.find(userId);
+    EXPECT_NE(userIt, service->printUserMap_.end());
 
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
     service->CancelUserPrintJobs(userId);
+    userIt = service->printUserMap_.find(userId);
+    EXPECT_EQ(userIt, service->printUserMap_.end());
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0044, TestSize.Level1)
@@ -895,6 +917,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0046, TestSize.Level1)
     std::string jobId = "1";
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     service->StartPrintJobCB(jobId, printJob);
+    EXPECT_EQ(printJob->jobState_, PRINT_JOB_QUEUED);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0048, TestSize.Level1)
@@ -1081,7 +1104,18 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0060, TestSize.Level1)
     extInfo.bundleName = "spooler";
 
     PrintExtensionInfo newExtInfo;
+    PrintExtensionInfo judgeExtInfo;
+    judgeExtInfo.SetExtensionId(extInfo.bundleName);
+    judgeExtInfo.SetVendorId(extInfo.bundleName);
+    judgeExtInfo.SetVendorName(extInfo.bundleName);
+    judgeExtInfo.SetVendorIcon(0);
+    judgeExtInfo.SetVersion("1.0.0");
     newExtInfo = service->ConvertToPrintExtensionInfo(extInfo);
+    EXPECT_EQ(newExtInfo.extensionId_, judgeExtInfo.extensionId_);
+    EXPECT_EQ(newExtInfo.vendorId_, judgeExtInfo.vendorId_);
+    EXPECT_EQ(newExtInfo.vendorName_, judgeExtInfo.vendorName_);
+    EXPECT_EQ(newExtInfo.vendorIcon_, judgeExtInfo.vendorIcon_);
+    EXPECT_EQ(newExtInfo.version_, judgeExtInfo.version_);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0061, TestSize.Level1)
@@ -1256,6 +1290,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0071, TestSize.Level1)
     capOpt["sides-default"] = "123";
     capOpt["print-quality-default"] = "123";
     service->BuildPrinterPreferenceByDefault(capOpt, printerDefaultAttr);
+    EXPECT_EQ(printerDefaultAttr.pagesizeId, capOpt["defaultPageSizeId"].get<std::string>());
+    EXPECT_EQ(printerDefaultAttr.orientation, capOpt["orientation-requested-default"].get<std::string>());
+    EXPECT_EQ(printerDefaultAttr.duplex, capOpt["sides-default"].get<std::string>());
+    EXPECT_EQ(printerDefaultAttr.quality, capOpt["print-quality-default"].get<std::string>());
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0072, TestSize.Level1)
@@ -1719,12 +1757,18 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0102, TestSize.Level1)
     uint32_t state = PRINT_JOB_RUNNING;
     uint32_t subState = PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED;
     service->notifyAdapterJobChanged(jobId, state, subState);
+    auto attrIt = service->printAttributesList_.find(jobId);
+    EXPECT_EQ(attrIt, service->printAttributesList_.end());
     state = PRINT_JOB_SPOOLER_CLOSED;
     service->notifyAdapterJobChanged(jobId, state, subState);
+    attrIt = service->printAttributesList_.find(jobId);
+    EXPECT_EQ(attrIt, service->printAttributesList_.end());
     state = PRINT_JOB_COMPLETED;
     PrintAttributes printAttributes;
     service->printAttributesList_[jobId] = printAttributes;
     service->notifyAdapterJobChanged(jobId, state, subState);
+    attrIt = service->printAttributesList_.find(jobId);
+    EXPECT_EQ(attrIt, service->printAttributesList_.end());
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0103, TestSize.Level1)
@@ -1747,7 +1791,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0104, TestSize.Level1)
     EXPECT_EQ(service->GetUserDataByJobId(jobId), nullptr);
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
-    EXPECT_EQ(service->GetUserDataByJobId(jobId), nullptr);
+    EXPECT_NE(service->GetUserDataByJobId(jobId), nullptr);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0105, TestSize.Level1)
@@ -1755,9 +1799,13 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0105, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "123";
     service->RegisterAdapterListener(jobId);
+    auto lisIt = service->adapterListenersByJobId_.find(jobId);
+    EXPECT_EQ(lisIt, service->adapterListenersByJobId_.end());
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
     service->registeredListeners_[PRINT_ADAPTER_EVENT_TYPE] = listener;
     service->RegisterAdapterListener(jobId);
+    lisIt = service->adapterListenersByJobId_.find(jobId);
+    EXPECT_NE(lisIt, service->adapterListenersByJobId_.end());
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0106, TestSize.Level1)

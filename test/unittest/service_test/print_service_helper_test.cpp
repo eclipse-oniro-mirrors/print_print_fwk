@@ -14,7 +14,9 @@
  */
 
 #include <gtest/gtest.h>
+#define private public
 #include "print_service_helper.h"
+#undef private
 #include "print_constant.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
@@ -166,6 +168,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0010, TestSize.Level1)
     PrintServiceHelper helper;
     helper.PrintSubscribeCommonEvent();
     helper.PrintSubscribeCommonEvent();
+    EXPECT_EQ(helper.isSubscribeCommonEvent, true);
 }
 
 /**
