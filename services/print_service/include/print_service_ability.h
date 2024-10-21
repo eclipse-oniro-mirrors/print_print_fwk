@@ -126,7 +126,7 @@ private:
     void SendPrinterDiscoverEvent(int event, const PrinterInfo &info);
     void SendPrinterChangeEvent(int event, const PrinterInfo &info);
     void SendPrinterEvent(const PrinterInfo &info);
-    void SendPrinterEventChangeEvent(PrinterEvent printerEvent, const PrinterInfo &info);
+    void SendPrinterEventChangeEvent(PrinterEvent printerEvent, const PrinterInfo &info, bool isSignalUser = false);
     void SendPrintJobEvent(const PrintJob &jobInfo);
     void SendExtensionEvent(const std::string &extensionId, const std::string &extInfo);
     bool CheckPermission(const std::string &permissionName);
@@ -178,7 +178,7 @@ private:
     void DeletePrinterFromUserData(const std::string &printerId);
     std::shared_ptr<PrintUserData> GetUserDataByUserId(int32_t userId);
     PrintJobState DetermineUserJobStatus(const std::map<std::string, std::shared_ptr<PrintJob>> &jobList);
-    void NotifyAppDeletePrinterWithDefaultPrinter(const std::string &printerId);
+    void NotifyAppDeletePrinter(const std::string &printerId);
     void ChangeDefaultPrinterForDelete(std::shared_ptr<PrintUserData> &userData, const std::string &printerId);
     bool UpdatePrinterCapability(const std::string &printerId, const PrinterInfo &info);
     bool UpdatePrinterSystemData(const PrinterInfo &info);
@@ -193,6 +193,7 @@ private:
     void HandlePrinterChangeRegister(const std::string &eventType);
     bool UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri);
     int32_t HandleExtensionConnectPrinter(const std::string &printerId);
+    bool CheckUserIdInEventType(const std::string &type);
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;

@@ -37,6 +37,7 @@ static std::map<uint32_t, std::string> jobStateMap_;
 const std::string GLOBAL_ID_DELIMITER = ":";
 const std::string EXTENSION_CID_DELIMITER = ":";
 const std::string TASK_EVENT_DELIMITER = "-";
+const std::string USER_ID_DELIMITER = ":";
 const int32_t DEFAULT_FD = 99;
 const int32_t MINIMUN_RANDOM_NUMBER_100 = 100;
 const int32_t MAXIMUN_RANDOM_NUMBER_999 = 999;
@@ -96,9 +97,10 @@ std::string PrintUtils::GetTaskEventId(const std::string &taskId, const std::str
     return type + TASK_EVENT_DELIMITER + taskId;
 }
 
-std::string PrintUtils::GetEventTypeWithToken(int64_t id, const std::string &type)
+std::string PrintUtils::GetEventTypeWithToken(int32_t userId, int64_t pid, const std::string &type)
 {
-    std::string eventType = std::to_string(id) + TASK_EVENT_DELIMITER + type;
+    std::string eventType =
+        std::to_string(userId) + USER_ID_DELIMITER + std::to_string(pid) + TASK_EVENT_DELIMITER + type;
     PRINT_HILOGD("eventType: %{public}s", eventType.c_str());
     return eventType;
 }
@@ -107,11 +109,25 @@ std::string PrintUtils::GetEventType(const std::string &type)
 {
     auto pos = type.find(TASK_EVENT_DELIMITER);
     if (pos == std::string::npos || pos + 1 >= type.length()) {
-        return "";
+        return type;
     }
     std::string eventType = type.substr(pos + 1);
     PRINT_HILOGD("eventType: %{public}s", eventType.c_str());
     return eventType;
+}
+
+bool PrintUtils::CheckUserIdInEventType(const std::string &type, int32_t callerUserId)
+{
+    auto userIdPos = type.find(USER_ID_DELIMITER);
+    if (userIdPos == std::string::npos || userIdPos >= type.length()) {
+        return false;
+    }
+    std::string userIdStr = type.substr(0, userIdPos);
+    PRINT_HILOGD("userId: %{public}s", userIdStr.c_str());
+    if (userIdStr == std::to_string(callerUserId)) {
+        return true;
+    }
+    return false;
 }
 
 int32_t PrintUtils::OpenFile(const std::string &filePath)

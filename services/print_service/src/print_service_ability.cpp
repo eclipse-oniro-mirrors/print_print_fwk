@@ -1228,9 +1228,9 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
         printerInfo->SetPrinterStatus(PRINTER_STATUS_BUSY);
         printerInfo->SetPrinterName(PrintUtil::RemoveUnderlineFromPrinterName(printerInfo->GetPrinterName()));
         printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_BUSY);
-        printerInfo->SetIsLastUsedPrinter(true);
-        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, *printerInfo);
     }
     SetLastUsedPrinter(printerId);
 }
@@ -1553,11 +1553,11 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
     cupsPrinterInfo.printerStatus = PRINTER_STATUS_IDLE;
     info.GetCapability(cupsPrinterInfo.printerCapability);
     printSystemData_.InsertCupsPrinter(printerId, cupsPrinterInfo, true);
-    output.SetIsLastUsedPrinter(true);
     output.SetPrinterStatus(PRINTER_STATUS_IDLE);
     output.SetPrinterId(printerId);
-    SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, output);
+    SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, output, true);
     SendPrinterChangeEvent(PRINTER_EVENT_ADDED, output);
+    SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, output);
     SetLastUsedPrinter(printerId);
     return true;
 }
@@ -2177,8 +2177,9 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
         eventType = type;
     }
     if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE) {
+        int32_t userId = GetCurrentUserId();
         int32_t callerPid = IPCSkeleton::GetCallingPid();
-        eventType = PrintUtils::GetEventTypeWithToken(callerPid, type);
+        eventType = PrintUtils::GetEventTypeWithToken(userId, callerPid, type);
     }
     if (taskId != "") {
         eventType = PrintUtils::GetTaskEventId(taskId, type);
@@ -2212,8 +2213,9 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
     }
     if (type == PRINTER_CHANGE_EVENT_TYPE||type == PRINTER_EVENT_TYPE) {
         permission = PERMISSION_NAME_PRINT;
+        int32_t userId = GetCurrentUserId();
         int32_t callerPid = IPCSkeleton::GetCallingPid();
-        eventType = PrintUtils::GetEventTypeWithToken(callerPid, type);
+        eventType = PrintUtils::GetEventTypeWithToken(userId, callerPid, type);
     }
     if (!CheckPermission(permission)) {
         PRINT_HILOGE("no permission to access print service");
@@ -2292,13 +2294,28 @@ void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info)
     }
 }
 
-void PrintServiceAbility::SendPrinterEventChangeEvent(PrinterEvent printerEvent, const PrinterInfo &info)
+void PrintServiceAbility::SendPrinterEventChangeEvent(
+    PrinterEvent printerEvent, const PrinterInfo &info, bool isSignalUser)
 {
     PRINT_HILOGD("PrintServiceAbility::SendPrinterEventChangeEvent printerId: %{public}s, printerEvent: %{public}d",
         info.GetPrinterId().c_str(), printerEvent);
     for (auto eventIt: registeredListeners_) {
-        if (PrintUtils::GetEventType(eventIt.first) == PRINTER_CHANGE_EVENT_TYPE && eventIt.second != nullptr) {
-            PRINT_HILOGD("PrintServiceAbility::SendPrinterEventChangeEvent find PRINTER_CHANGE_EVENT_TYPE");
+        if (PrintUtils::GetEventType(eventIt.first) != PRINTER_CHANGE_EVENT_TYPE || eventIt.second == nullptr) {
+            continue;
+        }
+        PRINT_HILOGD("PrintServiceAbility::SendPrinterEventChangeEvent eventType = %{public}s",
+            eventIt.first.c_str());
+        if (isSignalUser && CheckUserIdInEventType(eventIt.first)) {
+            PRINT_HILOGI("PrintServiceAbility::SendPrinterEventChangeEvent update info for a signal user");
+            PrinterInfo newInfo(info);
+            newInfo.SetIsLastUsedPrinter(true);
+            eventIt.second->OnCallback(printerEvent, newInfo);
+        } else if (printerEvent == PRINTER_EVENT_LAST_USED_PRINTER_CHANGED) {
+            if (CheckUserIdInEventType(eventIt.first)) {
+                PRINT_HILOGI("PrintServiceAbility::SendPrinterEventChangeEvent last used printer event");
+                eventIt.second->OnCallback(printerEvent, info);
+            }
+        } else {
             eventIt.second->OnCallback(printerEvent, info);
         }
     }
@@ -2786,7 +2803,7 @@ int32_t PrintServiceAbility::DeletePrinterFromCups(
 #endif // IPPOVERUSB_ENABLE
     vendorManager.MonitorPrinterStatus(printerId, false);
     DeletePrinterFromUserData(printerId);
-    NotifyAppDeletePrinterWithDefaultPrinter(printerId);
+    NotifyAppDeletePrinter(printerId);
     printSystemData_.DeleteCupsPrinter(printerId);
     return E_PRINT_NONE;
 }
@@ -2945,7 +2962,7 @@ PrintJobState PrintServiceAbility::DetermineUserJobStatus(
     return PRINT_JOB_RUNNING;
 }
 
-void PrintServiceAbility::NotifyAppDeletePrinterWithDefaultPrinter(const std::string &printerId)
+void PrintServiceAbility::NotifyAppDeletePrinter(const std::string &printerId)
 {
     auto userData = GetCurrentUserData();
     if (userData == nullptr) {
@@ -2955,7 +2972,6 @@ void PrintServiceAbility::NotifyAppDeletePrinterWithDefaultPrinter(const std::st
     std::string dafaultPrinterId = userData->GetDefaultPrinter();
     PrinterInfo printerInfo;
     printSystemData_.QueryPrinterInfoById(printerId, printerInfo);
-    printerInfo.SetPrinterName(PrintUtil::RemoveUnderlineFromPrinterName(printerInfo.GetPrinterName()));
     std::string ops = printerInfo.GetOption();
     if (!json::accept(ops)) {
         PRINT_HILOGW("ops can not parse to json object");
@@ -2966,6 +2982,14 @@ void PrintServiceAbility::NotifyAppDeletePrinterWithDefaultPrinter(const std::st
     printerInfo.SetOption(opsJson.dump());
     SendPrinterEventChangeEvent(PRINTER_EVENT_DELETED, printerInfo);
     SendPrinterChangeEvent(PRINTER_EVENT_DELETED, printerInfo);
+
+    std::string lastUsedPrinterId = userData->GetLastUsedPrinter();
+    if (!lastUsedPrinterId.empty()) {
+        PrinterInfo lastUsedPrinterInfo;
+        printSystemData_.QueryPrinterInfoById(lastUsedPrinterId, lastUsedPrinterInfo);
+        PRINT_HILOGI("NotifyAppDeletePrinter lastUsedPrinterId = %{public}s", lastUsedPrinterId.c_str());
+        SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, lastUsedPrinterInfo);
+    }
 }
 
 int32_t PrintServiceAbility::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
@@ -3192,7 +3216,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
     } else {
         printSystemData_.InsertCupsPrinter(globalPrinterId, info, true);
         printSystemData_.SaveCupsPrinterMap();
-        SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
+        SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     }
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
@@ -3220,7 +3244,7 @@ bool PrintServiceAbility::RemoveVendorPrinterFromCups(const std::string &globalV
 #endif  // CUPS_ENABLE
     vendorManager.MonitorPrinterStatus(globalPrinterId, false);
     DeletePrinterFromUserData(globalPrinterId);
-    NotifyAppDeletePrinterWithDefaultPrinter(globalPrinterId);
+    NotifyAppDeletePrinter(globalPrinterId);
     printSystemData_.DeleteCupsPrinter(globalPrinterId);
     return true;
 }
@@ -3451,5 +3475,16 @@ std::string PrintServiceAbility::RenamePrinterWhenAdded(const PrinterInfo &info)
 std::shared_ptr<PrinterInfo> PrintServiceAbility::QueryDiscoveredPrinterInfoById(const std::string &printerId)
 {
     return printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+}
+
+bool PrintServiceAbility::CheckUserIdInEventType(const std::string &type)
+{
+    int32_t callerUserId = GetCurrentUserId();
+    PRINT_HILOGD("callerUserId = %{public}d", callerUserId);
+    if (PrintUtils::CheckUserIdInEventType(type, callerUserId)) {
+        PRINT_HILOGD("find current user");
+        return true;
+    }
+    return false;
 }
 } // namespace OHOS::Print
