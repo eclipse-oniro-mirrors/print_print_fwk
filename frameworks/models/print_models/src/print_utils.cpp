@@ -119,8 +119,7 @@ std::string PrintUtils::GetEventType(const std::string &type)
 bool PrintUtils::CheckUserIdInEventType(const std::string &type, int32_t callerUserId)
 {
     auto userIdPos = type.find(USER_ID_DELIMITER);
-    auto eventPos = type.find(TASK_EVENT_DELIMITER);
-    if (userIdPos == std::string::npos || eventPos == std::string::npos || userIdPos >= type.length()) {
+    if (userIdPos == std::string::npos || userIdPos >= type.length()) {
         return false;
     }
     std::string userIdStr = type.substr(0, userIdPos);
