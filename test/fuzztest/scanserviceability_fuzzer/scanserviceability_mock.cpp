@@ -23,7 +23,7 @@ namespace Scan {
 void ScanServiceAbilityMock::MockPermission()
 {
     static const char *PERMS[] = {
-        "ohos.permission.MANAGE_PRINT_JOB"
+        "ohos.permission.PRINT"
     };
     uint64_t tokenId;
     NativeTokenInfoParams infoInstance = {

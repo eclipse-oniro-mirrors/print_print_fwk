@@ -167,15 +167,6 @@ namespace Scan {
         const SANE_Range* rangePtr = &range;
         optionDesc.constraint.range = rangePtr;
         ScanServiceAbility::GetInstance()->SelectScanOptionDesc(optionDescPtr, desc);
-
-        optionDesc.constraint_type = SANE_CONSTRAINT_WORD_LIST;
-        int32_t sizeNumber = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        optionDesc.constraint.word_list = &sizeNumber;
-        ScanServiceAbility::GetInstance()->SelectScanOptionDesc(optionDescPtr, desc);
-
-        optionDesc.constraint_type = SANE_CONSTRAINT_STRING_LIST;
-        optionDesc.constraint.string_list = nullptr;
-        ScanServiceAbility::GetInstance()->SelectScanOptionDesc(optionDescPtr, desc);
     }
 
     void TestOnStartScan(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -183,14 +174,6 @@ namespace Scan {
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         bool batchMode = dataProvider->ConsumeBool();
         ScanServiceAbility::GetInstance()->OnStartScan(scannerId, batchMode);
-    }
-
-    void TestStartScanTask(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanServiceAbility::GetInstance()->StartScanTask(scannerId);
-        ScanServiceAbility::GetInstance()->batchMode_ = true;
-        ScanServiceAbility::GetInstance()->StartScanTask(scannerId);
     }
 
     void TestSendDeviceInfoTCP(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -412,36 +395,6 @@ namespace Scan {
         OHOS::Scan::TestGetAddedScanner(data, size, dataProvider);
     }
 
-    void TestPublicFunction(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        if (dataProvider == nullptr) {
-            return;
-        }
-        OHOS::Scan::TestInitScan(data, size, dataProvider);
-        OHOS::Scan::TestGetScannerList(data, size, dataProvider);
-        OHOS::Scan::TestStopDiscover(data, size, dataProvider);
-        OHOS::Scan::TestOpenScanner(data, size, dataProvider);
-        OHOS::Scan::TestCloseScanner(data, size, dataProvider);
-        OHOS::Scan::TestGetScanOptionDesc(data, size, dataProvider);
-        OHOS::Scan::TestStartScan(data, size, dataProvider);
-        OHOS::Scan::TestGetSingleFrameFD(data, size, dataProvider);
-        OHOS::Scan::TestCancelScan(data, size, dataProvider);
-        OHOS::Scan::TestSetScanIOMode(data, size, dataProvider);
-        OHOS::Scan::TestGetScanSelectFd(data, size, dataProvider);
-        OHOS::Scan::TestOn(data, size, dataProvider);
-        OHOS::Scan::TestOff(data, size, dataProvider);
-        OHOS::Scan::TestGetScannerState(data, size, dataProvider);
-        OHOS::Scan::TestSelectScanOptionDesc(data, size, dataProvider);
-        OHOS::Scan::TestOnStartScan(data, size, dataProvider);
-        OHOS::Scan::TestStartScanTask(data, size, dataProvider);
-        OHOS::Scan::TestSendDeviceInfoTCP(data, size, dataProvider);
-        OHOS::Scan::TestSendDeviceInfo(data, size, dataProvider);
-        OHOS::Scan::TestSendDeviceInfoSync(data, size, dataProvider);
-        OHOS::Scan::TestDisConnectUsbScanner(data, size, dataProvider);
-        OHOS::Scan::TestUpdateUsbScannerId(data, size, dataProvider);
-        OHOS::Scan::TestSendInitEvent(data, size, dataProvider);
-        OHOS::Scan::TestSetScannerSerialNumber(data, size, dataProvider);
-    }
 #endif
 
 }
@@ -459,11 +412,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
 #ifdef SANE_ENABLE
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Scan::TestPublicFunction(data, size, &dataProvider);
     OHOS::Scan::ScanServiceAbilityMock::MockPermission();
     OHOS::Scan::TestInitScan(data, size, &dataProvider);
-    // OHOS::Scan::TestGetScannerList(data, size, &dataProvider);
-    // OHOS::Scan::TestStopDiscover(data, size, dataProvider);
+    OHOS::Scan::TestGetScannerList(data, size, &dataProvider);
+    OHOS::Scan::TestStopDiscover(data, size, &dataProvider);
     OHOS::Scan::TestOpenScanner(data, size, &dataProvider);
     OHOS::Scan::TestCloseScanner(data, size, &dataProvider);
     OHOS::Scan::TestGetScanOptionDesc(data, size, &dataProvider);
@@ -477,14 +429,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::TestGetScannerState(data, size, &dataProvider);
     OHOS::Scan::TestSelectScanOptionDesc(data, size, &dataProvider);
     OHOS::Scan::TestOnStartScan(data, size, &dataProvider);
-    OHOS::Scan::TestStartScanTask(data, size, &dataProvider);
     OHOS::Scan::TestSendDeviceInfoTCP(data, size, &dataProvider);
     OHOS::Scan::TestSendDeviceInfo(data, size, &dataProvider);
     OHOS::Scan::TestSendDeviceInfoSync(data, size, &dataProvider);
     OHOS::Scan::TestDisConnectUsbScanner(data, size, &dataProvider);
-    // OHOS::Scan::TestUpdateUsbScannerId(data, size, &dataProvider);
+    OHOS::Scan::TestUpdateUsbScannerId(data, size, &dataProvider);
     OHOS::Scan::TestSendInitEvent(data, size, &dataProvider);
-    // OHOS::Scan::TestSendDeviceSearchEnd(data, size, &dataProvider);
+    OHOS::Scan::TestSendDeviceSearchEnd(data, size, &dataProvider);
     OHOS::Scan::TestSetScannerSerialNumber(data, size, &dataProvider);
     OHOS::Scan::TestNotPublicFunction(data, size, &dataProvider);
 #endif
