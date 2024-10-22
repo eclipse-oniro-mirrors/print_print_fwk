@@ -39,19 +39,6 @@ void PrintPageSizeTest::SetUp(void) {}
 void PrintPageSizeTest::TearDown(void) {}
 
 /**
- * @tc.name: PrintPageSizeTest_0001
- * @tc.desc: Verify the constructor function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0001, TestSize.Level1)
-{
-    OHOS::Print::PrintPageSize printpageSize;
-    OHOS::Print::PrintPageSize::BuildPageSizeMap();
-    printpageSize.Dump();
-}
-
-/**
  * @tc.name: PrintPageSizeTest_0002
  * @tc.desc: Verify the FindPageSizeById function.
  * @tc.type: FUNC

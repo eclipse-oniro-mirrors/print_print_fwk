@@ -39,18 +39,6 @@ void PrinterCapabilityTest::SetUp(void) {}
 void PrinterCapabilityTest::TearDown(void) {}
 
 /**
- * @tc.name: PrinterCapabilityTest_0001
- * @tc.desc: Verify the constructor function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0001, TestSize.Level1)
-{
-    PrinterCapability capability;
-    capability.Dump();
-}
-
-/**
  * @tc.name: PrinterCapabilityTest_0002
  * @tc.desc: Verify settings and obtain colorMode function.
  * @tc.type: FUNC

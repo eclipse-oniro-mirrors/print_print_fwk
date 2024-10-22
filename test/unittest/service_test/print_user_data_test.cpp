@@ -148,6 +148,8 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0008, TestSize.Level1)
     userData->AddToPrintJobList(jobId, printJob);
     std::string newJobId = "2";
     userData->UpdateQueuedJobList(newJobId, printJob, jobOrderId);
+    EXPECT_EQ(userData->queuedJobList_[newJobId], nullptr);
+    EXPECT_EQ(userData->jobOrderList_[jobOrderId], "");
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0009, TestSize.Level1)
@@ -183,8 +185,12 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0011, TestSize.Level1)
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     userData->AddToPrintJobList(jobId, printJob);
     userData->UpdateQueuedJobList(jobId, printJob, jobOrderId);
+    EXPECT_EQ(userData->queuedJobList_[jobId], printJob);
+    EXPECT_EQ(userData->jobOrderList_[jobOrderId], jobId);
     userData->AddToPrintJobList(jobId, printJob);
     userData->UpdateQueuedJobList(jobId, printJob, jobOrderId);
+    EXPECT_EQ(userData->queuedJobList_[jobId], printJob);
+    EXPECT_EQ(userData->jobOrderList_[jobOrderId], jobId);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0012, TestSize.Level1)

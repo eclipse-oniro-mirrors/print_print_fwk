@@ -147,7 +147,16 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_004, TestSize.Level1)
 {
     OHOS::Print::PrintUsbManager printUsbManager;
     printUsbManager.isUsbEnable = false;
+    vector<USB::UsbDevice> devlist;
+    int32_t ret = ERR_OK;
     printUsbManager.RefreshUsbPrinterDevice();
+    if (printUsbManager.isUsbEnable) {
+        ret = USB::UsbSrvClient::GetInstance().GetDevices(devlist);
+    }
+    for (auto& dev : devlist) {
+        auto iter = printUsbManager.printDeviceMap.find(dev.GetName());
+        EXPECT_TRUE(iter != printUsbManager.printDeviceMap.end());
+    }
 }
 
 /**
@@ -302,6 +311,8 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_014, TestSize.Level1)
     OHOS::USB::UsbDevice usbDevice;
     printUsbManager.printDeviceMap[name] = usbDevice;
     printUsbManager.DisConnectUsbPinter(name);
+    EXPECT_EQ(printUsbManager.printPipeMap.find(name), printUsbManager.printPipeMap.end());
+    EXPECT_EQ(printUsbManager.printTranIndexMap.find(name), printUsbManager.printTranIndexMap.end());
 }
 
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_015, TestSize.Level1)
@@ -312,6 +323,8 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_015, TestSize.Level1)
     OHOS::USB::USBDevicePipe usbDevicePipe;
     printUsbManager.printPipeMap[name] = usbDevicePipe;
     printUsbManager.DisConnectUsbPinter(name);
+    EXPECT_NE(printUsbManager.printPipeMap.find(name), printUsbManager.printPipeMap.end());
+    EXPECT_EQ(printUsbManager.printTranIndexMap.find(name), printUsbManager.printTranIndexMap.end());
 }
 
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_016, TestSize.Level1)
@@ -320,6 +333,8 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_016, TestSize.Level1)
     printUsbManager.isUsbEnable = false;
     std::string name = "";
     printUsbManager.DisConnectUsbPinter(name);
+    EXPECT_EQ(printUsbManager.printPipeMap.find(name), printUsbManager.printPipeMap.end());
+    EXPECT_EQ(printUsbManager.printTranIndexMap.find(name), printUsbManager.printTranIndexMap.end());
 }
 
 HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_017, TestSize.Level1)
