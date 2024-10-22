@@ -1806,9 +1806,6 @@ void PrintServiceAbility::NotifyAppJobQueueChanged(const std::string &applyResul
 
 bool PrintServiceAbility::isEprint(const std::string &printerId)
 {
-    if (printerId.length() <= 0) {
-        return false;
-    }
     std::string ePrintID = "ePrintID";
     if (printerId.length() < ePrintID.length()) {
         return false;
