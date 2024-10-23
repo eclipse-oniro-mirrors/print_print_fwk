@@ -493,7 +493,7 @@ napi_value NapiPrintExt::DiscoverUsbPrinters(napi_env env, napi_callback_info in
         uint32_t index = 0;
         for (auto info : context->printerInfos) {
             PRINT_HILOGD("PrinterId = %{public}s", info.GetPrinterId().c_str());
-            PRINT_HILOGD("PrinterName = %{public}s", info.GetPrinterName().c_str());
+            PRINT_HILOGD("PrinterName = %{private}s", info.GetPrinterName().c_str());
             status = napi_set_element(env, *result, index++, PrinterInfoHelper::MakeJsObject(env, info));
         }
         return napi_ok;

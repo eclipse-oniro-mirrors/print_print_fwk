@@ -1625,6 +1625,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0077, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     std::vector<PrinterInfo> printers;
     printCupsClient.DiscoverUsbPrinters(printers);
+    EXPECT_EQ(printers.size(), 0);
 }
 }  // namespace Print
 }  // namespace OHOS
