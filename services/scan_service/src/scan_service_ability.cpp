@@ -1161,11 +1161,11 @@ void ScanServiceAbility::SendGetFrameResEvent(const bool isGetSucc, const int32_
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     SCAN_HILOGE("ScanServiceAbility::SendGetFrameSuccEvent SizeRead %{public}d", sizeRead);
     auto eventIt = registeredListeners_.find(GET_FRAME_RES_EVENT_TYPE);
-    if (eventIt != registeredListeners_.end()) {
-        eventIt->second->OnGetFrameResCallback(isGetSucc, sizeRead);
-    } else {
+    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
         SCAN_HILOGE("%{public}s event not register", GET_FRAME_RES_EVENT_TYPE.c_str());
+        return;
     }
+    eventIt->second->OnGetFrameResCallback(isGetSucc, sizeRead);
 }
 
 void ScanServiceAbility::SendDeviceInfoTCP(const ScanDeviceInfoTCP &info, std::string event)
@@ -1178,12 +1178,11 @@ void ScanServiceAbility::SendDeviceInfoTCP(const ScanDeviceInfoTCP &info, std::s
     }
 
     auto eventIt = registeredListeners_.find(event);
-    if (eventIt != registeredListeners_.end()) {
-        SCAN_HILOGI("GetScannerListSendDeviceInfoTCP event has registered");
-        eventIt->second->OnCallback(info.GetDeviceState(), info);
-    } else {
+    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
         SCAN_HILOGE("GetScannerList SendDeviceInfoTCP event not register");
+        return;
     }
+    eventIt->second->OnCallback(info.GetDeviceState(), info);
 }
 
 void ScanServiceAbility::SendDeviceInfo(const ScanDeviceInfo &info, std::string event)
@@ -1196,12 +1195,11 @@ void ScanServiceAbility::SendDeviceInfo(const ScanDeviceInfo &info, std::string 
     }
 
     auto eventIt = registeredListeners_.find(event);
-    if (eventIt != registeredListeners_.end()) {
-        SCAN_HILOGI("GetScannerList SendDeviceInfo event has registered");
-        eventIt->second->OnCallback(info.GetDeviceState(), info);
-    } else {
+    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
         SCAN_HILOGE("GetScannerList SendDeviceInfo event not register");
+        return;
     }
+    eventIt->second->OnCallback(info.GetDeviceState(), info);
 }
 
 void ScanServiceAbility::SendDeviceList(std::vector<ScanDeviceInfo> &infos, std::string event)
@@ -1214,12 +1212,11 @@ void ScanServiceAbility::SendDeviceList(std::vector<ScanDeviceInfo> &infos, std:
     }
 
     auto eventIt = registeredListeners_.find(event);
-    if (eventIt != registeredListeners_.end()) {
-        SCAN_HILOGE("GetScannerList SendDeviceList event has registered");
-        eventIt->second->OnGetDevicesList(infos);
-    } else {
+    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
         SCAN_HILOGE("GetScannerList SendDeviceList event not register");
+        return;
     }
+    eventIt->second->OnGetDevicesList(infos);
 }
 
 void ScanServiceAbility::SendDeviceInfoSync(const ScanDeviceInfoSync &info, std::string event)
@@ -1232,12 +1229,11 @@ void ScanServiceAbility::SendDeviceInfoSync(const ScanDeviceInfoSync &info, std:
     }
 
     auto eventIt = registeredListeners_.find(event);
-    if (eventIt != registeredListeners_.end()) {
-        SCAN_HILOGI("DealUsbDevStatusChange SendDeviceInfoSync event has registered");
-            eventIt->second->OnCallbackSync(info.GetDeviceState(), info);
-    } else {
+    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
         SCAN_HILOGE("DealUsbDevStatusChange SendDeviceInfoSync event not register");
+        return;
     }
+    eventIt->second->OnCallbackSync(info.GetDeviceState(), info);
 }
 
 void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::string deviceId)
@@ -1295,12 +1291,11 @@ void ScanServiceAbility::SendInitEvent(int32_t &scanVersion, std::string event)
     }
 
     auto eventIt = registeredListeners_.find(event);
-    if (eventIt != registeredListeners_.end()) {
-        SCAN_HILOGE("InitScan SendInitEvent event has registered");
-        eventIt->second->OnScanInitCallback(scanVersion);
-    } else {
+    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
         SCAN_HILOGE("InitScan SendInitEvent event not register");
+        return;
     }
+    eventIt->second->OnScanInitCallback(scanVersion);
 }
 
 void ScanServiceAbility::SendDeviceSearchEnd(std::string &message, std::string event)
@@ -1313,16 +1308,11 @@ void ScanServiceAbility::SendDeviceSearchEnd(std::string &message, std::string e
     }
 
     auto eventIt = registeredListeners_.find(event);
-    if (eventIt != registeredListeners_.end()) {
-        SCAN_HILOGD("SCAN_DEVICE_FOUND event has registered");
-        if (!(eventIt->second)) {
-            SCAN_HILOGE("eventIt null ptr error");
-            return;
-        }
-        eventIt->second->OnSendSearchMessage(message);
-    } else {
+    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
         SCAN_HILOGE("SCAN_DEVICE_FOUND event not register");
+        return;
     }
+    eventIt->second->OnSendSearchMessage(message);
 }
 
 bool ScanServiceAbility::CheckPermission(const std::string &permissionName)
