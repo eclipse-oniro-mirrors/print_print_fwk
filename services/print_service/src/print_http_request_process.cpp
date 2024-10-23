@@ -106,13 +106,7 @@ void PrintHttpRequestProcess::GetContentLength(const std::vector<uint8_t> &readT
                 lenStr += readTempBuffer[lenIndex];
                 lenIndex++;
             }
-            try {
-                contentLength = static_cast<size_t>(std::stoi(lenStr));
-            } catch (std::invalid_argument &e) {
-                PRINT_HILOGE("invalid_argument error: %s", e.what());
-            } catch (std::out_of_range &e) {
-                PRINT_HILOGE("out_of_range error: %s", e.what());
-            }
+            contentLength = static_cast<size_t>(std::stoi(lenStr));
             PRINT_HILOGD("contentLength = %{public}s,  %{public}lu", lenStr.c_str(), contentLength);
         }
     }
