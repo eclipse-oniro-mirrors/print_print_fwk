@@ -422,6 +422,9 @@ void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std
         return;
     }
     request = ippNewRequest(CUPS_GET_PPDS);
+    if (request == nullptr) {
+        return;
+    }
     if (makeModel) {
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", NULL, makeModel);
     }
@@ -439,6 +442,7 @@ void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std
     }
     ParsePPDInfo(response, ppd_make_model, ppd_name, ppds);
     ippDelete(response);
+    ippDelete(request);
 }
 
 void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
