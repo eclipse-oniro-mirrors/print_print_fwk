@@ -198,7 +198,11 @@ uint32_t PrintTask::CallSpooler(
         PRINT_CALL_BASE(env, napi_create_promise(env, &asyncContext->deferred, &result), E_PRINT_INVALID_PARAMETER);
         PRINT_HILOGD("is a promise api");
     }
-    StartUIExtensionAbility(asyncContext, adapterParam);
+    uint32_t ret = StartUIExtensionAbility(asyncContext, adapterParam);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("StartUIExtensionAbility fail");
+        return ret;
+    }
     PRINT_HILOGI("end CallSpooler");
     return E_PRINT_NONE;
 }
@@ -236,18 +240,18 @@ bool PrintTask::ParseAbilityContextReq(napi_env env, const napi_value &obj,
     return true;
 }
 
-void PrintTask::StartUIExtensionAbility(
+uint32_t PrintTask::StartUIExtensionAbility(
     std::shared_ptr<BaseContext> asyncContext, const std::shared_ptr<AdapterParam> &adapterParam)
 {
     PRINT_HILOGD("begin StartUIExtensionAbility");
 
     if (adapterParam == nullptr) {
         PRINT_HILOGE("adapterParam is nullptr.");
-        return;
+        return E_PRINT_INVALID_PARAMETER;
     }
     if ((adapterParam->isCheckFdList && fileList_.empty() && fdList_.empty())) {
         PRINT_HILOGE("to be printed filelist and fdlist are empty.");
-        return;
+        return E_PRINT_INVALID_PARAMETER;
     }
     AAFwk::Want want;
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_PREVIEW_ABILITY_NAME);
@@ -266,9 +270,9 @@ void PrintTask::StartUIExtensionAbility(
     want.SetParam(ABILITY_PARAMS_STREAM, fileList_);
     want.SetFlags(AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION);
 
-    StartUIExtensionAbility(want, asyncContext);
+    uint32_t ret = StartUIExtensionAbility(want, asyncContext);
     PRINT_HILOGD("end StartUIExtensionAbility");
-    return;
+    return ret;
 }
 
 uint32_t PrintTask::StartUIExtensionAbility(OHOS::AAFwk::Want &want, std::shared_ptr<BaseContext> asyncContext)
