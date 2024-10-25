@@ -2015,6 +2015,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0129, TestSize.Level1)
     service->helper_ = helper;
     std::vector<PrinterInfo> printers;
     service->DiscoverUsbPrinters(printers);
+    EXPECT_EQ(printers.size(), 0);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130, TestSize.Level1)

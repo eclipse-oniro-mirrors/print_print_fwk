@@ -723,6 +723,10 @@ int32_t PrintServiceProxy::DiscoverUsbPrinters(std::vector<PrinterInfo> &printer
     }
 
     uint32_t len = reply.ReadUint32();
+    if (len > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("len is out of range.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
     for (uint32_t i = 0; i < len; i++) {
         auto infoPtr = PrinterInfo::Unmarshalling(reply);
         if (infoPtr == nullptr) {
