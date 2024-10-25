@@ -210,7 +210,7 @@ void ScanUsbManager::UpdateUsbScannerId(std::string serialNumber, std::string us
         }
         ScanServiceAbility::usbSnMap[usbDevicePort] = serialNumber;
     } else {
-        SCAN_HILOGI("DealUsbDevStatusChange attached find out usbDevicePort = %{public}s, serialNumber = %{public}s. " 
+        SCAN_HILOGI("DealUsbDevStatusChange attached find out usbDevicePort = %{public}s, serialNumber = %{public}s."
                     "No matched device in saneGetUsbDeviceInfoMap.", usbDevicePort.c_str(), serialNumber.c_str());
         ScanServiceAbility::GetInstance()->GetScannerList();
     }
