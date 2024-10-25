@@ -71,8 +71,7 @@ public:
         PrinterCapability &printerCaps);
     int32_t NotifyPrintServiceEvent(std::string &jobId, uint32_t event);
     int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type);
-    int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-        const std::string &printerMake);
+    int32_t DeletePrinterFromCups(const std::string &printerName);
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info);
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList);
     int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,

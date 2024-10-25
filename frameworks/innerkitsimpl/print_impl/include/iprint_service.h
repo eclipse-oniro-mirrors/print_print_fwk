@@ -79,8 +79,7 @@ public:
     virtual int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference) = 0;
     virtual int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference) = 0;
     virtual int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) = 0;
-    virtual int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-        const std::string &printerMake) = 0;
+    virtual int32_t DeletePrinterFromCups(const std::string &printerName) = 0;
     virtual int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers) = 0;
     virtual int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo) = 0;
     virtual int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo) = 0;

@@ -190,8 +190,7 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-        const std::string &printerMake) override
+    int32_t DeletePrinterFromCups(const std::string &printerName) override
     {
         return E_PRINT_NONE;
     }
@@ -243,7 +242,7 @@ public:
     MOCK_METHOD3(QueryPrinterCapabilityByUri, int32_t(const std::string&, const std::string&, PrinterCapability&));
     MOCK_METHOD2(NotifyPrintServiceEvent, int32_t(std::string&, uint32_t));
     MOCK_METHOD2(SetDefaultPrinter, int32_t(const std::string&, uint32_t));
-    MOCK_METHOD3(DeletePrinterFromCups, int32_t(const std::string&, const std::string&, const std::string&));
+    MOCK_METHOD1(DeletePrinterFromCups, int32_t(const std::string&));
     MOCK_METHOD1(DiscoverUsbPrinters, int32_t(std::vector<PrinterInfo>&));
     MOCK_METHOD1(AddPrinterToDiscovery, int32_t(const PrinterInfo&));
     MOCK_METHOD1(UpdatePrinterInDiscovery, int32_t(const PrinterInfo&));

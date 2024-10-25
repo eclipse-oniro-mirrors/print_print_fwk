@@ -1052,9 +1052,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0042, TestSize.Level1)
     uint32_t delCode = static_cast<uint32_t>(CMD_DELETE_PRINTER_FROM_CUPS);
 
     EXPECT_TRUE(delData.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
-    EXPECT_TRUE(delData.WriteString(printerUri));
     EXPECT_TRUE(delData.WriteString(printerName));
-    EXPECT_TRUE(delData.WriteString(printerMake));
 
     ON_CALL(*stub, DeletePrinterFromCups).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(delCode, delData, delReply, option)));

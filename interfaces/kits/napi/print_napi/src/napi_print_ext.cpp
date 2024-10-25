@@ -432,28 +432,16 @@ napi_value NapiPrintExt::DeletePrinterFromCups(napi_env env, napi_callback_info 
     auto input =
         [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerUri is not a string", napi_string_expected);
 
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerName is not a string", napi_string_expected);
 
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerMake is not a string", napi_string_expected);
-
-        std::string printerUri = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        PRINT_HILOGD("printerUri : %{private}s", printerUri.c_str());
-        context->printerUri = printerUri;
-
-        std::string printerName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
+        std::string printerName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         PRINT_HILOGD("printerName : %{private}s", printerName.c_str());
         context->printerName = printerName;
 
-        std::string printerMake = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
-        PRINT_HILOGD("printerMake : %{private}s", printerMake.c_str());
-        context->printerMake = printerMake;
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
@@ -463,8 +451,7 @@ napi_value NapiPrintExt::DeletePrinterFromCups(napi_env env, napi_callback_info 
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         int32_t ret =
-            PrintManagerClient::GetInstance()->DeletePrinterFromCups(
-                context->printerUri, context->printerName, context->printerMake);
+            PrintManagerClient::GetInstance()->DeletePrinterFromCups(context->printerName);
         PRINT_HILOGD("ret: %d", ret);
         context->result = (ret == E_PRINT_NONE);
         if (ret != E_PRINT_NONE) {

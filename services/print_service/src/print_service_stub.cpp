@@ -552,10 +552,8 @@ bool PrintServiceStub::OnSetDefaultPrinter(MessageParcel &data, MessageParcel &r
 bool PrintServiceStub::OnDeletePrinterFromCups(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnDeletePrinterFromCups in");
-    std::string printerUri = data.ReadString();
     std::string printerName = data.ReadString();
-    std::string printerMake = data.ReadString();
-    int32_t ret = DeletePrinterFromCups(printerUri, printerName, printerMake);
+    int32_t ret = DeletePrinterFromCups(printerName);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnDeletePrinterFromCups out");
     return ret == E_PRINT_NONE;

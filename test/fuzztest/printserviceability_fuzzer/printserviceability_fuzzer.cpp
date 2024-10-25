@@ -394,10 +394,8 @@ void TestSetDefaultPrinter(const uint8_t *data, size_t size, FuzzedDataProvider 
 
 void TestDeletePrinterFromCups(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string printerMake = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->DeletePrinterFromCups(printerId, printerName, printerMake);
+    PrintServiceAbility::GetInstance()->DeletePrinterFromCups(printerName);
 }
 
 void TestDiscoverUsbPrinters(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

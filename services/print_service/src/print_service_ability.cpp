@@ -2780,8 +2780,7 @@ bool PrintServiceAbility::CheckIsLastUsedPrinter(const std::string &printerId)
     return true;
 }
 
-int32_t PrintServiceAbility::DeletePrinterFromCups(
-    const std::string &printerUri, const std::string &printerName, const std::string &printerMake)
+int32_t PrintServiceAbility::DeletePrinterFromCups(const std::string &printerName)
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
