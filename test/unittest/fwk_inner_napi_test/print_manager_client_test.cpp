@@ -2299,7 +2299,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0125, TestSize.Level1)
     PrintAttributes testPrintAttributes;
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     int32_t ret = PrintManagerClient::GetInstance()->Print(printJobName, testListener, testPrintAttributes);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0126, TestSize.Level1)
@@ -2311,7 +2311,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0126, TestSize.Level1)
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     int32_t ret = PrintManagerClient::GetInstance()->
         Print(printJobName, testListener, testPrintAttributes, contextToken);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0127, TestSize.Level1)
@@ -2323,7 +2323,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0127, TestSize.Level1)
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     int32_t ret = PrintManagerClient::GetInstance()->
         Print(printJobName, testListener, testPrintAttributes, taskId);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0128, TestSize.Level1)
@@ -2336,7 +2336,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0128, TestSize.Level1)
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     int32_t ret = PrintManagerClient::GetInstance()->
         Print(printJobName, testListener, testPrintAttributes, taskId, contextToken);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0129, TestSize.Level1)
@@ -2367,7 +2367,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0131, TestSize.Level1)
     };
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     int32_t ret = PrintManagerClient::GetInstance()->runBase(callerFunName, func);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0132, TestSize.Level1)
@@ -2390,7 +2390,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0134, TestSize.Level1)
 {
     MockPrintManagerClient mockPrintManagerClient;
     int32_t ret = mockPrintManagerClient.Init();
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0135, TestSize.Level1)
@@ -2401,7 +2401,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0135, TestSize.Level1)
     std::vector<uint32_t> testFdList = {1, 2};
     std::string testTaskId = "2";
     int32_t ret = mockPrintManagerClient.StartPrint(testFileList, testFdList, testTaskId);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0137, TestSize.Level1)
@@ -2409,7 +2409,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0137, TestSize.Level1)
     MockPrintManagerClient mockPrintManagerClient;
     std::string testTaskId = "2";
     int32_t ret = mockPrintManagerClient.StopPrint(testTaskId);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0138, TestSize.Level1)
@@ -2417,7 +2417,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0138, TestSize.Level1)
     MockPrintManagerClient mockPrintManagerClient;
     std::string printerId = "2";
     int32_t ret = mockPrintManagerClient.ConnectPrinter(printerId);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0139, TestSize.Level1)
@@ -2425,7 +2425,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0139, TestSize.Level1)
     MockPrintManagerClient mockPrintManagerClient;
     std::string printerId = "2";
     int32_t ret = mockPrintManagerClient.DisconnectPrinter(printerId);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0140, TestSize.Level1)
@@ -2433,7 +2433,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0140, TestSize.Level1)
     MockPrintManagerClient mockPrintManagerClient;
     std::vector<PrintExtensionInfo> extensionInfos;
     int32_t ret = mockPrintManagerClient.QueryAllExtension(extensionInfos);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0141, TestSize.Level1)
@@ -2441,7 +2441,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0141, TestSize.Level1)
     MockPrintManagerClient mockPrintManagerClient;
     std::vector<std::string> testExtensionList = {"extensionId-1", "extensionId-2"};
     int32_t ret = mockPrintManagerClient.StartDiscoverPrinter(testExtensionList);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0142, TestSize.Level1)
@@ -2461,11 +2461,11 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0142, TestSize.Level1)
     std::string printerId = "2";
     uint32_t testState = 6;
     ret = mockPrintManagerClient.UpdatePrinterState(printerId, testState);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
     std::string jobId = "jobId-1";
     uint32_t testSubState = 6;
     ret = mockPrintManagerClient.UpdatePrintJobStateOnlyForSystemApp(jobId, testState, testSubState);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0143, TestSize.Level1)
@@ -2492,10 +2492,10 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0143, TestSize.Level1)
     mockPrintManagerClient.StartNativePrintJob(jobinfo);
     std::vector<PrintJob> printJobs;
     ret = mockPrintManagerClient.QueryAllPrintJob(printJobs);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
     std::vector<PrinterInfo> printers;
     ret = mockPrintManagerClient.DiscoverUsbPrinters(printers);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0144, TestSize.Level1)
@@ -2559,9 +2559,9 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0146, TestSize.Level1)
     mockPrintManagerClient.UnregisterAllExtCallback(testExtensionId);
     NativePrinterChangeCallback cb = nullptr;
     ret = mockPrintManagerClient.SetNativePrinterChangeCallback(type, cb);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
     ret = mockPrintManagerClient.LoadExtSuccess(testExtensionId);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0147, TestSize.Level1)
