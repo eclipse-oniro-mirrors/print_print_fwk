@@ -1848,7 +1848,7 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
             SCAN_HILOGE("sane_read failed, reason: [%{public}s]", sane_strstatus(saneStatus));
             ScanErrorCode taskCode = ScanUtil::ConvertErro(saneStatus);
             scanProPtr->SetTaskCode(taskCode);
-            if (taskCode == E_SCAN_IO_ERROR) {
+            if (taskCode == E_SCAN_IO_ERROR || taskCode == E_SCAN_JAMMED) {
                 CleanScanTask(scannerId);
             }
             break;
