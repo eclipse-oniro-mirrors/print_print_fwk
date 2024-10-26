@@ -328,7 +328,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004, TestSize.Level1)
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->SetDefaultPrinter(printerId, 0), E_PRINT_NO_PERMISSION);
-    EXPECT_EQ(service->DeletePrinterFromCups(printerUri, printerName, printerMake), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NO_PERMISSION);
     std::vector<PrinterInfo> printers;
     EXPECT_EQ(service->DiscoverUsbPrinters(printers), E_PRINT_NO_PERMISSION);
 
@@ -1832,10 +1832,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0108, TestSize.Level1)
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0109, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerUri = "111.222.333";
     std::string printerName = "pixlab_0759";
-    std::string printerMake = "pixlab b5";
-    service->DeletePrinterFromCups(printerUri, printerName, printerMake);
+    EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0111, TestSize.Level1)

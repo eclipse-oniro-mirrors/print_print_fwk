@@ -681,15 +681,12 @@ int32_t PrintServiceProxy::SetDefaultPrinter(const std::string &printerId, uint3
     return ret;
 }
 
-int32_t PrintServiceProxy::DeletePrinterFromCups(
-    const std::string &printerUri, const std::string &printerName, const std::string &printerMake)
+int32_t PrintServiceProxy::DeletePrinterFromCups(const std::string &printerName)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(printerUri);
     data.WriteString(printerName);
-    data.WriteString(printerMake);
     PRINT_HILOGD("PrintServiceProxy DeletePrinterFromCups started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {

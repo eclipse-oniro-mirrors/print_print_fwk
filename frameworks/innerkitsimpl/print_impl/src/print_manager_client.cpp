@@ -487,14 +487,13 @@ int32_t PrintManagerClient::SetDefaultPrinter(const std::string &printerId, uint
     return ret;
 }
 
-int32_t PrintManagerClient::DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-    const std::string &printerMake)
+int32_t PrintManagerClient::DeletePrinterFromCups(const std::string &printerName)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     PRINT_HILOGD("PrintManagerClient DeletePrinterFromCups start.");
     int32_t ret = E_PRINT_RPC_FAILURE;
     if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->DeletePrinterFromCups(printerUri, printerName, printerMake);
+        ret = printServiceProxy_->DeletePrinterFromCups(printerName);
         PRINT_HILOGD("PrintManagerClient DeletePrinterFromCups out ret = [%{public}d].", ret);
     }
     return ret;
