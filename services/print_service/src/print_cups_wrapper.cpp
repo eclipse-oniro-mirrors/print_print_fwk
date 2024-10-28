@@ -41,4 +41,9 @@ cups_dinfo_t *PrintCupsWrapper::CopyDestInfo(http_t *http, cups_dest_t *dest)
 {
     return cupsCopyDestInfo(http, dest);
 }
+
+void PrintCupsWrapper::FreeRequest(ipp_t *response)
+{
+    ippDelete(response);
+}
 }

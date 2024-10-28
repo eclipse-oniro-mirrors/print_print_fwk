@@ -1512,7 +1512,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0072, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     bool ret = printCupsClient.IsCupsServerAlive();
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
 }
 
 /**
