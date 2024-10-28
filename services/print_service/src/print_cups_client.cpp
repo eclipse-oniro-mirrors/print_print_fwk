@@ -1048,7 +1048,8 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams)
         PRINT_HILOGW("printAbility_ is null");
         return isMakeModelRight;
     }
-    while (retryCount < MAX_RETRY_TIMES) {
+    const uint32_t GET_OPTION_TIMES = 40;
+    while (retryCount < GET_OPTION_TIMES) {
         dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, jobParams->printerName.c_str(), NULL);
         if (dest != NULL) {
             const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
