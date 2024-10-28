@@ -194,11 +194,8 @@ void ScanUsbManager::UpdateUsbScannerId(std::string serialNumber, std::string us
     }
     auto it = ScanServiceAbility::saneGetUsbDeviceInfoMap.find(serialNumber);
     if (it != ScanServiceAbility::saneGetUsbDeviceInfoMap.end()) {
-#ifdef DEBUG_ENABLE
-        SCAN_HILOGD("DealUsbDevStatusChange attached find out usbDevicePort = %{public}s, serialNumber = %{public}s "
-                    "deviceId = %{public}s.",
-                    usbDevicePort.c_str(), serialNumber.c_str(), it->second.deviceId.c_str());
-#endif
+        SCAN_HILOGD("DealUsbDevStatusChange attached find out usbDevicePort = %{public}s, deviceId = %{public}s.",
+                    usbDevicePort.c_str(), it->second.deviceId.c_str());
         std::string newDeviceId = getNewDeviceId(it->second.deviceId, usbDevicePort);
         ScanServiceAbility::GetInstance()->UpdateUsbScannerId(serialNumber, newDeviceId);
         for (auto &t : ScanServiceAbility::usbSnMap) {
@@ -210,8 +207,8 @@ void ScanUsbManager::UpdateUsbScannerId(std::string serialNumber, std::string us
         }
         ScanServiceAbility::usbSnMap[usbDevicePort] = serialNumber;
     } else {
-        SCAN_HILOGI("DealUsbDevStatusChange attached find out usbDevicePort = %{public}s, serialNumber = %{public}s."
-                    "No matched device in saneGetUsbDeviceInfoMap.", usbDevicePort.c_str(), serialNumber.c_str());
+        SCAN_HILOGD("DealUsbDevStatusChange attached find out usbDevicePort = %{public}s. "
+                    "No matched device in saneGetUsbDeviceInfoMap.", usbDevicePort.c_str());
         ScanServiceAbility::GetInstance()->GetScannerList();
     }
 }
