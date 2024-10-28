@@ -437,12 +437,11 @@ void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std
     }
     if (response->request.status.status_code > IPP_OK_CONFLICT) {
         PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
-        ippDelete(response);
+        printAbility_->FreeRequest(response);
         return;
     }
     ParsePPDInfo(response, ppd_make_model, ppd_name, ppds);
-    ippDelete(response);
-    ippDelete(request);
+    printAbility_->FreeRequest(response);
 }
 
 void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
