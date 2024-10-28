@@ -3390,8 +3390,12 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
         return E_PRINT_INVALID_PRINTER;
     }
     std::string ip = connectParamJson["ip"].get<std::string>();
+    std::string protocol = "auto";
+    if (connectParamJson.contains("protocol") && connectParamJson["protocol"].is_string()) {
+        protocol = connectParamJson["protocol"].get<std::string>();
+    }
     vendorManager.SetConnectingPrinter(IP_AUTO, ip);
-    if (!vendorManager.ConnectPrinterByIp(ip, "auto")) {
+    if (!vendorManager.ConnectPrinterByIp(ip, protocol)) {
         PRINT_HILOGW("ConnectPrinterByIp fail");
         return E_PRINT_SERVER_FAILURE;
     }
