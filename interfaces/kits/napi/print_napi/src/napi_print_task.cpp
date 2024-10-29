@@ -48,7 +48,9 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
             "need 1 or 2 parameter!", napi_invalid_arg);
         napi_status checkStatus = VerifyParameters(env, argc, argv, context);
-        if (checkStatus != napi_ok) {
+        if (argc == NapiPrintUtils::ARGC_ONE) {
+            return napi_ok;
+        } else if (checkStatus != napi_ok) {
             return checkStatus;
         }
 
