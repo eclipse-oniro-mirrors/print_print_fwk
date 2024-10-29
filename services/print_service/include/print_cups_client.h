@@ -145,6 +145,7 @@ private:
         std::vector<std::string> &ppds);
     ipp_t *QueryPrinterAttributesByUri(const std::string &printerUri, const std::string &nic, int num,
         const char * const *pattrs);
+    int32_t ResumePrinter(const std::string &printerName);
 
 private:
     bool toCups_ = true;

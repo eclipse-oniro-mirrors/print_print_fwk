@@ -1164,6 +1164,9 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
         callback();
         return;
     }
+    if (ResumePrinter(jobParams->printerName)) {
+        PRINT_HILOGW("ResumePrinter fail");
+    }
     uint32_t num_files = jobParams->fdList.size();
     PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
     if (!HandleFiles(jobParams, num_files, http, jobId)) {
@@ -1766,6 +1769,29 @@ int32_t PrintCupsClient::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
         return E_PRINT_SERVER_FAILURE;
     }
     printers = usbPrinters;
+    return E_PRINT_NONE;
+}
+
+int32_t PrintCupsClient::ResumePrinter(const std::string &printerName)
+{
+    if (printAbility_ == nullptr) {
+        PRINT_HILOGE("printAbility is null");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    ipp_t *request = nullptr;
+    char uri[HTTP_MAX_URI] = {0};
+    httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s",
+                     printerName.c_str());
+    request = ippNewRequest(IPP_OP_RESUME_PRINTER);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsUser());
+    PRINT_HILOGD("IPP_OP_RESUME_PRINTER cupsDoRequest");
+    ippDelete(printAbility_->DoRequest(NULL, request, "/admin/"));
+    if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
+        PRINT_HILOGE("resume printer error: %s", cupsLastErrorString());
+        return E_PRINT_SERVER_FAILURE;
+    }
+    PRINT_HILOGI("resume printer success");
     return E_PRINT_NONE;
 }
 }
