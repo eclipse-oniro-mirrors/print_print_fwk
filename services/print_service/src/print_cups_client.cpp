@@ -110,11 +110,11 @@ static const std::string PRINTER_STATE_TONER_LOW = "toner-low";
 static const std::string PRINTER_STATE_TONER_EMPTY = "toner-empty";
 static const std::string PRINTER_STATE_DOOR_EMPTY = "door-open";
 static const std::string PRINTER_STATE_MEDIA_NEEDED = "media-needed";
-static const std::string PRINTER_STATE_MEDIA_NEEDED_ERROR = "media-needed-error";
 static const std::string PRINTER_STATE_MARKER_LOW = "marker-supply-low";
 static const std::string PRINTER_STATE_MARKER_EMPTY = "marker-supply-empty";
 static const std::string PRINTER_STATE_INK_EMPTY = "marker-ink-almost-empty";
 static const std::string PRINTER_STATE_COVER_OPEN = "cover-open";
+static const std::string PRINTER_STATE_OTHER = "other";
 static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
@@ -1303,12 +1303,16 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
             PRINT_JOB_COMPLETED_SUCCESS);
     } else if (jobStatus->job_state == IPP_JOB_PROCESSING) {
         PRINT_HILOGD("IPP_JOB_PROCESSING");
-        std::string printerState(jobStatus->printer_state_reasons);
-        if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_ERROR.c_str()) == NULL) {
+        PrinterStatus printerStatus;
+        bool isPrinterStatusAvailable = DelayedSingleton<PrintCupsClient>::GetInstance()->
+            QueryPrinterStatusByUri(param->printerUri, printerStatus) == E_PRINT_NONE;
+        PRINT_HILOGD("is printer status available: %{public}d", isPrinterStatusAvailable);
+        if ((isPrinterStatusAvailable && printerStatus == PRINTER_STATUS_UNAVAILABLE) ||
+            (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_ERROR.c_str()) != NULL)) {
+            ReportBlockedReason(param, jobStatus);
+        } else {
             param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
                 PRINT_JOB_BLOCKED_BUSY);
-        } else {
-            ReportBlockedReason(param, jobStatus);
         }
     } else if (jobStatus->job_state == IPP_JOB_CANCELED || jobStatus->job_state == IPP_JOB_ABORTED ||
         jobStatus->job_state == IPP_JOB_STOPPED) {
@@ -1356,7 +1360,7 @@ uint32_t PrintCupsClient::GetBlockedSubstate(JobStatus *jobStatus)
     }
     uint32_t substate = PRINT_JOB_COMPLETED_SUCCESS;
     if ((strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_EMPTY.c_str()) != NULL) ||
-        (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_NEEDED_ERROR.c_str()) != NULL)) {
+        (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_NEEDED.c_str()) != NULL)) {
         substate = substate * NUMBER_FOR_SPLICING_SUBSTATE + PRINT_JOB_BLOCKED_OUT_OF_PAPER;
     }
     if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_JAM.c_str()) != NULL) {
@@ -1376,6 +1380,9 @@ uint32_t PrintCupsClient::GetBlockedSubstate(JobStatus *jobStatus)
     if ((strstr(jobStatus->printer_state_reasons, PRINTER_STATE_DOOR_EMPTY.c_str()) != NULL) ||
         (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_COVER_OPEN.c_str()) != NULL)) {
         substate = substate * NUMBER_FOR_SPLICING_SUBSTATE + PRINT_JOB_BLOCKED_DOOR_OPEN;
+    }
+    if (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_OTHER.c_str()) != NULL) {
+        substate = substate * NUMBER_FOR_SPLICING_SUBSTATE + PRINT_JOB_BLOCKED_UNKNOWN;
     }
     return substate;
 }
