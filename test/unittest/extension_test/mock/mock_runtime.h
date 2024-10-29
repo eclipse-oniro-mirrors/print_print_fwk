@@ -87,6 +87,16 @@ public:
     {
         return;
     }
+    void PreloadMainAbility(const std::string& moduleName, const std::string& srcPath,
+        const std::string& hapPath,  bool isEsMode, const std::string& srcEntrance) override
+    {
+        return;
+    }
+    void PreloadModule(const std::string& moduleName, const std::string& srcPath,
+        const std::string& hapPath, bool isEsMode, bool useCommonTrunk) override
+    {
+        return;
+    }
     bool RunScript(const std::string& path, const std::string& hapPath, bool useCommonChunk = false)
     {
         return true;
@@ -193,6 +203,16 @@ public:
         return;
     }
     void PreloadSystemModule(const std::string& moduleName) override
+    {
+        return;
+    }
+    void PreloadMainAbility(const std::string& moduleName, const std::string& srcPath,
+        const std::string& hapPath,  bool isEsMode, const std::string& srcEntrance) override
+    {
+        return;
+    }
+    void PreloadModule(const std::string& moduleName, const std::string& srcPath,
+        const std::string& hapPath, bool isEsMode, bool useCommonTrunk) override
     {
         return;
     }
