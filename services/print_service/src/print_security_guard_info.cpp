@@ -61,6 +61,10 @@ void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, co
             printJob.GetFdList(fdList);
             printTypeInfo_.printPages = (int32_t)fdList.size();
         }
+
+        if (jobOptionJson.contains("jobName") && jobOptionJson["jobName"].is_string()) {
+            jobName_ = jobOptionJson["jobName"];
+        }
     }
     uint32_t subState = printJob.GetSubState();
     switch (subState) {
@@ -102,6 +106,7 @@ nlohmann::json PrintSecurityGuardInfo::ToJson()
     securityGuardInfoJson["sourceInfo"] = sourceInfo_;
     securityGuardInfoJson["targetInfo"] = targetInfo_;
     securityGuardInfoJson["extra"] = extra_;
+    securityGuardInfoJson["jobName"] = jobName_;
     return securityGuardInfoJson;
 }
 

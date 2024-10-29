@@ -59,6 +59,7 @@ private:
     std::string targetInfo_{};
     std::string sourceInfo_{};
     std::string extra_{};
+    std::string jobName_{};
     PrintTypeInfo printTypeInfo_;
 
     nlohmann::json ToJson();
