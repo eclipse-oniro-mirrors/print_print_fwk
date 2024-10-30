@@ -28,6 +28,11 @@ bool PrintCallbackProxy::OnCallback()
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
+    auto remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("SendRequest failed, error: remote is null");
+        return false;
+    }
     int error = Remote()->SendRequest(PRINT_CALLBACK_TASK, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
