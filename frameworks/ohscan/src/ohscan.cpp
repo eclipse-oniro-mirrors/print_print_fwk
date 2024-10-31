@@ -250,7 +250,7 @@ bool MemSetScannerOptions(Scan_ScannerOptions* scannerOptions, int32_t &optionCo
 {
     for (int i = 0; i < optionCount; i++) {
         auto bufferSize = paraTable.titBuff[i].length() + 1;
-        char* titBuff = new(std::nothrow) char[bufferSize];
+        char* titBuff = new (std::nothrow) char[bufferSize];
         if (!CopySingleBuf(titBuff, paraTable.titBuff[i].c_str(), bufferSize)) {
             if (titBuff != nullptr) {
                 delete[] titBuff;

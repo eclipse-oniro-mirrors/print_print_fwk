@@ -60,7 +60,7 @@ private:
     bool ParseAbilityContextReq(napi_env env, const napi_value &obj,
         std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> &abilityContext,
         std::shared_ptr<OHOS::AbilityRuntime::UIExtensionContext> &uiExtensionContext);
-    void StartUIExtensionAbility(
+    uint32_t StartUIExtensionAbility(
         std::shared_ptr<BaseContext> asyncContext, const std::shared_ptr<AdapterParam> &adapterParam);
     uint32_t StartUIExtensionAbility(OHOS::AAFwk::Want &want, std::shared_ptr<BaseContext> asyncContext);
     OHOS::Ace::UIContent* GetUIContent(const BaseContext *asyncContext);
