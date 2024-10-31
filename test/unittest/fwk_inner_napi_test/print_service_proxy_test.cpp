@@ -940,7 +940,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0032, TestSize.Level1)
     proxy->RemovePrinterFromDiscovery(testPrinterId);
 }
 
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0031, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0033, TestSize.Level1)
 {
     OHOS::Print::PrinterInfo testInfo1;
     testInfo1.SetOption("option-1");
