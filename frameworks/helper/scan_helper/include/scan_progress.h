@@ -37,6 +37,7 @@ public:
     void SetPictureId(const int32_t pictureId);
     void SetScanTime(SteadyTimePoint nowTime);
     void SetTaskCode(ScanErrorCode taskCode);
+    void SetImageRealPath(const std::string& imageRealPath);
     void Dump() const;
 
     [[nodiscard]] int32_t GetScanProgress() const;
@@ -45,6 +46,7 @@ public:
     [[nodiscard]] int32_t GetPictureId() const;
     [[nodiscard]] SteadyTimePoint GetScanTime() const;
     [[nodiscard]] ScanErrorCode GetTaskCode() const;
+    [[nodiscard]] std::string GetImageRealPath() const;
 
     virtual bool Marshalling(Parcel &parcel) const override;
     static std::shared_ptr<ScanProgress> Unmarshalling(Parcel &parcel);
@@ -58,6 +60,7 @@ private:
     int32_t pictureId;
     SteadyTimePoint timePoint;
     ScanErrorCode taskCode;
+    std::string imageRealPath;
 };
 }  // namespace OHOS::Scan
 #endif  // SCAN_PROGRESS_H

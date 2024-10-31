@@ -31,6 +31,7 @@
 
 #include "accesstoken_kit.h"
 #include "array_wrapper.h"
+#include "file_ex.h"
 #include "int_wrapper.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
@@ -50,6 +51,22 @@
 #include "scan_system_data.h"
 
 namespace OHOS::Scan {
+namespace {
+static int32_t GetElapsedSeconds(const SteadyTimePoint& preTime)
+{
+    auto nowTime = std::chrono::steady_clock::now();
+    auto elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(nowTime - preTime);
+    return elapsedTime.count();
+}
+
+static int32_t GetRandomNumber(const int32_t& lowerBoundary, const int32_t& upperBoundary)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(lowerBoundary, upperBoundary);
+    return dis(gen);
+}
+};
 using namespace std;
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
@@ -314,6 +331,16 @@ int32_t ScanServiceAbility::ExitScan()
     std::queue<int32_t> empty;
     scanQueue.swap(empty);
     scanTaskMap.clear();
+    for (const auto& [imagePath, fd] : imageFdMap_) {
+        constexpr int32_t INVALID_FILE_DESCRIPTOR = -1;
+        if (fd != INVALID_FILE_DESCRIPTOR) {
+            close(fd);
+        }
+        if (FileExists(imagePath)) {
+            unlink(imagePath.c_str());
+        }
+    }
+    imageFdMap_.clear();
     SCAN_HILOGI("ScanServiceAbility ExitScan end");
     return E_SCAN_NONE;
 }
@@ -1354,7 +1381,6 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-    SCAN_HILOGI("ScanServiceAbility GetScanProgress start");
 
 #ifdef SANE_ENABLE
     if (scanQueue.empty()) {
@@ -1375,27 +1401,24 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
     }
     auto scanProgress = frontProg.GetScanProgress();
     if (scanProgress == SCAN_PROGRESS_100) {
-        SCAN_HILOGE("get scan picture successfully!");
+        SCAN_HILOGI("get scan picture successfully!");
         prog = frontProg;
+        int32_t fd = open(prog.GetImageRealPath().c_str(), O_RDONLY);
+        prog.SetScanPictureFd(fd);
+        imageFdMap_[prog.GetImageRealPath()] = fd;
         prog.Dump();
         scanQueue.pop();
         return E_SCAN_NONE;
     }
-    auto nowTime = std::chrono::steady_clock::now();
+    int32_t randomNumber = GetRandomNumber(SCAN_PROGRESS_10, SCAN_PROGRESS_19);
     auto preTime = scanTaskMap[frontPicId].GetScanTime();
-    auto elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(nowTime - preTime);
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(SCAN_PROGRESS_10, SCAN_PROGRESS_19);
-    int32_t randomNumber = dis(gen);
-    if (elapsedTime.count() >= 1 && scanProgress < SCAN_PROGRESS_80) {
+    if (GetElapsedSeconds(preTime) >= 1 && scanProgress < SCAN_PROGRESS_80) {
         scanTaskMap[frontPicId].SetScanProgress(scanProgress + randomNumber);
-        scanTaskMap[frontPicId].SetScanTime(nowTime);
+        scanTaskMap[frontPicId].SetScanTime(std::chrono::steady_clock::now());
     }
     prog = scanTaskMap[frontPicId];
     prog.Dump();
 #endif
-    SCAN_HILOGI("ScanServiceAbility GetScanProgress end");
     return E_SCAN_NONE;
 }
 
@@ -1611,7 +1634,7 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std:
     bool firstScan = true;
     do {
         if (!firstScan) {
-            SCAN_HILOGE("not first scan");
+            SCAN_HILOGI("not first scan");
             status = StartScan(scannerId, batchMode_);
             if (status != E_SCAN_NONE) {
                 SCAN_HILOGE("ScanTask restart fail");
@@ -1620,13 +1643,10 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std:
             auto it = scanTaskMap.find(nextPicId - 2); // nextPicId - 2 is to find a PicId before nowScanId.
             (it->second).SetIsFinal(false);
             it->second.SetScanProgress(SCAN_PROGRESS_100);
-            SCAN_HILOGE("ScanTask restart success, status:[%{public}d]", status);
+            SCAN_HILOGI("ScanTask restart success, status:[%{public}d]", status);
         }
         auto it = scanTaskMap.find(nextPicId - 1);
         int32_t nowScanId = it->first;
-        SCAN_HILOGI("scanQueue.size:[%{public}lu], scanTaskMap.size:[%{public}lu]",
-            static_cast<unsigned long>(scanQueue.size()), static_cast<unsigned long>(scanTaskMap.size()));
-        SCAN_HILOGI("nowScanId :[%{public}d], nextPicId: [%{public}d]", nowScanId, nextPicId);
         file_name = "scan_tmp" + std::to_string(nowScanId) + ".jpg";
         std::string outputDir = "/data/service/el2/public/print_service/sane/tmp/";
         if (!std::filesystem::exists(outputDir)) {
@@ -1637,22 +1657,23 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std:
         ofp = fopen(output_file.c_str(), "w");
         if (ofp == nullptr) {
             SCAN_HILOGE("file [%{public}s] open fail", output_file.c_str());
-            return ;
+            return;
         }
-        SCAN_HILOGI("create picture file [%{public}s] open", output_file.c_str());
         scanProPtr = &(scanTaskMap[nowScanId]);
 #ifdef SANE_ENABLE
         status = DoScanTask(scannerId, scanProPtr);
 #endif
-        SCAN_HILOGE("ScanTask status:[%{public}d]", status);
-        auto fd = open(output_file.c_str(), O_RDONLY);
-        scanProPtr->SetScanPictureFd(fd);
+        if (ofp != nullptr) {
+            fclose(ofp);
+            ofp = nullptr;
+        }
+        scanProPtr->SetImageRealPath(output_file);
         firstScan = false;
     } while (status == E_SCAN_EOF);
     if (status == E_SCAN_NO_DOCS) {
         auto it = scanTaskMap.find(nextPicId - 1);
         it->second.SetScanProgress(SCAN_PROGRESS_100);
-        SCAN_HILOGI("ScanTask batch mode exit successfully [%{public}d]", status);
+        SCAN_HILOGI("ScanTask batch mode exit successfully.");
     } else {
         SCAN_HILOGE("ScanTask error exit[%{public}d]", status);
     }
@@ -1663,9 +1684,6 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
 {
     auto it = scanTaskMap.find(nextPicId - 1);
     int32_t nowScanId = it->first;
-    SCAN_HILOGI("scanQueue.size:[%{public}lu], scanTaskMap.size:[%{public}lu]",
-        static_cast<unsigned long>(scanQueue.size()), static_cast<unsigned long>(scanTaskMap.size()));
-    SCAN_HILOGI("nowScanId :[%{public}d], nextPicId: [%{public}d]", nowScanId, nextPicId);
     file_name = "scan_tmp" + std::to_string(nowScanId) + ".jpg";
     std::string outputDir = "/data/service/el2/public/print_service/sane/tmp/";
     if (!std::filesystem::exists(outputDir)) {
@@ -1676,24 +1694,21 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
     ofp = fopen(output_file.c_str(), "w");
     if (ofp == nullptr) {
         SCAN_HILOGE("file [%{public}s] open fail", output_file.c_str());
-        return ;
+        return;
     }
-    SCAN_HILOGI("create picture file [%{public}s] open", output_file.c_str());
     scanProPtr = &(scanTaskMap[nowScanId]);
 #ifdef SANE_ENABLE
     status = DoScanTask(scannerId, scanProPtr);
 #endif
-    SCAN_HILOGE("ScanTask status:[%{public}d]", status);
     if (status == E_SCAN_EOF) {
-        auto fd = open(output_file.c_str(), O_RDONLY);
-        scanProPtr->SetScanPictureFd(fd);
+        scanProPtr->SetImageRealPath(output_file);
         scanProPtr->SetScanProgress(SCAN_PROGRESS_100);
     } else {
         SCAN_HILOGE("ScanTask error exit[%{public}d]", status);
     }
-    if (ofp) {
+    if (ofp != nullptr) {
         fclose(ofp);
-        ofp = NULL;
+        ofp = nullptr;
     }
     {
 #ifdef SANE_ENABLE

@@ -38,7 +38,6 @@ namespace Scan {
 
     void TestGetScannerList(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
-        OHOS::Scan::ScanServiceAbilityMock::MockPermission();
         int32_t scanVersion = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
         ScanServiceAbility::GetInstance()->InitScan(scanVersion);
         ScanServiceAbility::GetInstance()->GetScannerList();

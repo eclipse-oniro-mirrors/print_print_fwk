@@ -20,7 +20,7 @@
 namespace OHOS::Scan {
 using SteadyTimePoint = std::chrono::steady_clock::time_point;
 ScanProgress::ScanProgress() : progress(0),
-    fd(0), isFinal(true), pictureId(0), taskCode(E_SCAN_GOOD)
+    fd(0), isFinal(true), pictureId(0), taskCode(E_SCAN_GOOD), imageRealPath("")
 {}
 
 ScanProgress::ScanProgress(const ScanProgress &right)
@@ -31,6 +31,7 @@ ScanProgress::ScanProgress(const ScanProgress &right)
     pictureId = right.pictureId;
     timePoint = right.timePoint;
     taskCode = right.taskCode;
+    imageRealPath = right.imageRealPath;
 }
 
 ScanProgress &ScanProgress::operator=(const ScanProgress &right)
@@ -42,6 +43,7 @@ ScanProgress &ScanProgress::operator=(const ScanProgress &right)
         pictureId = right.pictureId;
         timePoint = right.timePoint;
         taskCode = right.taskCode;
+        imageRealPath = right.imageRealPath;
     }
     return *this;
 }
@@ -79,6 +81,12 @@ void ScanProgress::SetTaskCode(ScanErrorCode taskCode)
     this->taskCode = taskCode;
 }
 
+void ScanProgress::SetImageRealPath(const std::string& imageRealPath)
+{
+    this->imageRealPath = imageRealPath;
+}
+
+
 int32_t ScanProgress::GetScanProgress() const
 {
     return progress;
@@ -109,6 +117,11 @@ ScanErrorCode ScanProgress::GetTaskCode() const
     return taskCode;
 }
 
+std::string ScanProgress::GetImageRealPath() const
+{
+    return imageRealPath;
+}
+
 void ScanProgress::ReadFromParcel(Parcel &parcel)
 {
     auto mesgParcel = static_cast<MessageParcel*>(&parcel);
@@ -135,12 +148,12 @@ std::shared_ptr<ScanProgress> ScanProgress::Unmarshalling(Parcel &parcel)
 
 void ScanProgress::Dump() const
 {
-    SCAN_HILOGI("ScanProgress Dump");
-    SCAN_HILOGI("ScanProgress: progress = %{public}d", progress);
-    SCAN_HILOGI("ScanProgress: fd = %{public}d", fd);
-    SCAN_HILOGI("ScanProgress: isFinal = %{public}d", isFinal);
-    SCAN_HILOGI("ScanProgress: pictureId = %{public}d", pictureId);
-    SCAN_HILOGI("ScanProgress: taskCode = %{public}d", taskCode);
+    SCAN_HILOGD("ScanProgress Dump");
+    SCAN_HILOGD("ScanProgress: progress = %{public}d", progress);
+    SCAN_HILOGD("ScanProgress: fd = %{public}d", fd);
+    SCAN_HILOGD("ScanProgress: isFinal = %{public}d", isFinal);
+    SCAN_HILOGD("ScanProgress: pictureId = %{public}d", pictureId);
+    SCAN_HILOGD("ScanProgress: taskCode = %{public}d", taskCode);
 }
 
 } // namespace OHOS::Scan
