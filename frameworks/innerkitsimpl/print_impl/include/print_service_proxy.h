@@ -66,6 +66,7 @@ public:
     int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo) override;
     int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo) override;
     int32_t RemovePrinterFromDiscovery(const std::string &printerId) override;
+    int32_t UpdatePrinterInSystem(const PrinterInfo& printerInfo) override;
 
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) override;

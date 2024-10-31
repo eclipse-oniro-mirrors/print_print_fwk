@@ -84,6 +84,7 @@ public:
     virtual int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo) = 0;
     virtual int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo) = 0;
     virtual int32_t RemovePrinterFromDiscovery(const std::string &printerId) = 0;
+    virtual int32_t UpdatePrinterInSystem(const PrinterInfo &printerInfo) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

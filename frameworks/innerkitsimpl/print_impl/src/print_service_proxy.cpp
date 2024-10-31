@@ -1004,6 +1004,25 @@ int32_t PrintServiceProxy::RemovePrinterFromDiscovery(const std::string &printer
     return ret;
 }
 
+int32_t PrintServiceProxy::UpdatePrinterInSystem(const PrinterInfo& printerInfo)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    printerInfo.Marshalling(data);
+    PRINT_HILOGD("PrintServiceProxy UpdatePrinterInSystem started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy UpdatePrinterInSystem remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERINSYSTEM,
+        data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy UpdatePrinterInSystem out. ret = [%{public}d]", ret);
+    return ret;
+}
+
 int32_t PrintServiceProxy::UnregisterAllExtCallback(const std::string &extensionId)
 {
     PRINT_HILOGD("PrintServiceProxy::UnregisterAllExtCallback in");

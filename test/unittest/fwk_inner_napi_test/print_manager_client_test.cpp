@@ -2664,7 +2664,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0157, TestSize.Level1)
 }
 
 /**
-* @tc.name: PrintManagerClientTest_0023
+* @tc.name: PrintManagerClientTest_0158
 * @tc.desc: AddPrinterToDiscovery failed case.
 * @tc.type: FUNC
 * @tc.require:
@@ -2679,7 +2679,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0158, TestSize.Level1)
 }
 
 /**
-* @tc.name: PrintManagerClientTest_0023
+* @tc.name: PrintManagerClientTest_0159
 * @tc.desc: UpdatePrinterInDiscovery failed case.
 * @tc.type: FUNC
 * @tc.require:
@@ -2695,7 +2695,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0159, TestSize.Level1)
 
 /**
 * @tc.name: PrintManagerClientTest_0160
-* @tc.desc: UpdatePrinterInDiscovery failed case.
+* @tc.desc: RemovePrinterFromDiscovery failed case.
 * @tc.type: FUNC
 * @tc.require:
 */
@@ -2705,6 +2705,21 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0160, TestSize.Level1)
     PrintManagerClient::GetInstance()->LoadServerFail();
     PrintManagerClient::GetInstance()->ResetProxy();
     int32_t ret = PrintManagerClient::GetInstance()->RemovePrinterFromDiscovery(printerId);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+/**
+* @tc.name: PrintManagerClientTest_0161
+* @tc.desc: UpdatePrinterInSystem failed case.
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0161, TestSize.Level1)
+{
+    PrinterInfo info;
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterInSystem(info);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 

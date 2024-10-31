@@ -109,6 +109,7 @@ public:
     int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo) override;
     int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo) override;
     int32_t RemovePrinterFromDiscovery(const std::string &printerId) override;
+    int32_t UpdatePrinterInSystem(const PrinterInfo &printerInfo) override;
 
 protected:
     void OnStart() override;

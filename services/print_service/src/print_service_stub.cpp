@@ -83,6 +83,8 @@ PrintServiceStub::PrintServiceStub()
         &PrintServiceStub::OnUpdatePrinterInDiscovery;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REMOVEPRINTERFROMDISCOVERY] =
         &PrintServiceStub::OnRemovePrinterFromDiscovery;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERINSYSTEM] =
+        &PrintServiceStub::OnUpdatePrinterInSystem;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -791,6 +793,25 @@ bool PrintServiceStub::OnRemovePrinterFromDiscovery(MessageParcel &data, Message
     reply.WriteInt32(ret);
 
     PRINT_HILOGD("PrintServiceStub::OnRemovePrinterFromDiscovery out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnUpdatePrinterInSystem(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnUpdatePrinterInSystem in");
+
+    auto infoPtr = PrinterInfo::Unmarshalling(data);
+    if (infoPtr == nullptr) {
+        PRINT_HILOGE("Failed to unmarshall printer info");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+
+    infoPtr->Dump();
+    int32_t ret = UpdatePrinterInSystem(*infoPtr);
+    reply.WriteInt32(ret);
+
+    PRINT_HILOGD("PrintServiceStub::OnUpdatePrinterInSystem out");
     return ret == E_PRINT_NONE;
 }
 

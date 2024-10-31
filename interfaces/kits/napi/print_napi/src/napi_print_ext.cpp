@@ -639,6 +639,56 @@ napi_value NapiPrintExt::RemovePrinterFromDiscovery(napi_env env, napi_callback_
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiPrintExt::UpdatePrinterInSystem(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter UpdatePrinterInSystem---->");
+    auto context = std::make_shared<NapiPrintExtContext>();
+
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value* argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should have 1 parameter!", napi_invalid_arg);
+        napi_valuetype valuetype;
+        napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
+        PRINT_ASSERT_BASE(env, valuetype == napi_object, " parameter is not an object!", napi_invalid_arg);
+
+        auto printerInfoPtr = PrinterInfoHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        if (printerInfoPtr == nullptr) {
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            PRINT_HILOGE("UpdatePrinterInSystem PrinterInfo format error!");
+            return napi_invalid_arg;
+        }
+
+        context->printerInfos.emplace_back(*printerInfoPtr);
+        PRINT_HILOGD("UpdatePrinterInSystem printerId = %{public}s", printerInfoPtr->GetPrinterId().c_str());
+
+        return napi_ok;
+    };
+
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
+        return status;
+    };
+
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (context->printerInfos.empty()) {
+            context->result = false;
+            PRINT_HILOGE("UpdatePrinterInSystem printerInfos is empty!");
+            return;
+        }
+        int32_t ret = PrintManagerClient::GetInstance()->UpdatePrinterInSystem(context->printerInfos.front());
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("UpdatePrinterInSystem Failed to update printer");
+        }
+    };
+
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 bool NapiPrintExt::IsValidPrinterState(uint32_t state)
 {
     if (state >= PRINTER_ADDED && state < PRINTER_UNKNOWN) {

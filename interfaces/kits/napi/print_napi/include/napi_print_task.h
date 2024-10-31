@@ -45,6 +45,7 @@ private:
         const std::shared_ptr<PrintTaskContext> context);
     static napi_value PrintByAdapter(napi_env env, napi_callback_info info);
     static napi_value ParsePrintAdapterParameter(napi_env env, size_t argc, napi_value *argv, napi_value self);
+    static napi_value CreatePrintTask(napi_env env, napi_callback_info info);
 
 private:
     static __thread napi_ref globalCtor;
