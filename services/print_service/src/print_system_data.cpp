@@ -639,7 +639,7 @@ bool PrintSystemData::ConvertJsonToPrintMargin(nlohmann::json &capsJson, Printer
         return false;
     }
     minMargin.SetTop(marginJson["top"].get<uint32_t>());
-    minMargin.SetTop(marginJson["bottom"].get<uint32_t>());
+    minMargin.SetBottom(marginJson["bottom"].get<uint32_t>());
     minMargin.SetLeft(marginJson["left"].get<uint32_t>());
     minMargin.SetRight(marginJson["right"].get<uint32_t>());
     printerCapability.SetMinMargin(minMargin);
