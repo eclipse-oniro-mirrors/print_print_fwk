@@ -3064,7 +3064,6 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
     std::string printExtId = info.GetPrinterId();
     printExtId = PrintUtils::GetGlobalId(extensionId, printExtId);
 
-    bool isSystemDataUpdated = UpdatePrinterSystemData(info);
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printExtId);
     if (printerInfo == nullptr) {
         PRINT_HILOGE("invalid printer id, ignore it");
@@ -3080,14 +3079,13 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
         isCapabilityUpdated = UpdatePrinterCapability(printExtId, info);
     }
 
-    bool isChanged = isSystemDataUpdated || isCapabilityUpdated;
-    if (isChanged) {
+    if (isCapabilityUpdated) {
         SendPrinterEvent(*printerInfo);
         SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
         printSystemData_.SaveCupsPrinterMap();
     }
 
-    return isChanged;
+    return isCapabilityUpdated;
 }
 
 bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)
