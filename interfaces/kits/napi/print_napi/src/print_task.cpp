@@ -199,12 +199,8 @@ uint32_t PrintTask::CallSpooler(
         PRINT_HILOGD("is a promise api");
     }
     uint32_t ret = StartUIExtensionAbility(asyncContext, adapterParam);
-    if (ret != E_PRINT_NONE) {
-        PRINT_HILOGE("StartUIExtensionAbility fail");
-        return ret;
-    }
     PRINT_HILOGI("end CallSpooler");
-    return E_PRINT_NONE;
+    return ret;
 }
 
 bool PrintTask::ParseAbilityContextReq(napi_env env, const napi_value &obj,
@@ -271,6 +267,9 @@ uint32_t PrintTask::StartUIExtensionAbility(
     want.SetFlags(AAFwk::Want::FLAG_AUTH_READ_URI_PERMISSION);
 
     uint32_t ret = StartUIExtensionAbility(want, asyncContext);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("StartUIExtensionAbility fail");
+    }
     PRINT_HILOGD("end StartUIExtensionAbility");
     return ret;
 }
