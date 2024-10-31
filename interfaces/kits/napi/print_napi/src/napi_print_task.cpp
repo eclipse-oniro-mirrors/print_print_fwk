@@ -42,14 +42,21 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
     if ((paramCount > NapiPrintUtils::ARGC_THREE) && type == napi_string) {
         return PrintByAdapter(env, info);
     }
+    return CreatePrintTask(env, info);
+}
 
+napi_value NapiPrintTask::CreatePrintTask(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGI("CreatePrintTask start ---->");
     auto context = std::make_shared<PrintTaskContext>();
     auto input = [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
             "need 1 or 2 parameter!", napi_invalid_arg);
         napi_status checkStatus = VerifyParameters(env, argc, argv, context);
-        if (checkStatus != napi_ok) {
+        if (argc == NapiPrintUtils::ARGC_ONE) {
+            return napi_ok;
+        } else if (checkStatus != napi_ok) {
             return checkStatus;
         }
 
