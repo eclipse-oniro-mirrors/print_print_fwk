@@ -151,6 +151,7 @@ private:
     std::recursive_mutex apiMutex_;
     std::recursive_mutex scanMutex_;
     uint64_t currentJobId_;
+    std::map<std::string, int32_t> imageFdMap_;
 #ifdef SANE_ENABLE
     std::function<void(SANE_Handle scannerHandle, uint32_t fd)> getSingleFrameFDExe;
 #endif
@@ -163,10 +164,10 @@ private:
     bool batchMode_ = false;
     uint8_t *saneReadBuf;
     struct jpeg_compress_struct *cinfoPtr;
-    FILE *ofp = NULL;
+    FILE *ofp = nullptr;
     bool isCancel = false;
     int32_t dpi = 0;
-    JSAMPLE *jpegbuf = NULL;
+    JSAMPLE *jpegbuf = nullptr;
 };
 } // namespace OHOS::Scan
 #endif // SCAN_SYSTEM_ABILITY_H
