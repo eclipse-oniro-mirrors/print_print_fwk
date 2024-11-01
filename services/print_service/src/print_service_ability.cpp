@@ -2885,6 +2885,24 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
     return result ? E_PRINT_NONE : E_PRINT_INVALID_PRINTER;
 }
 
+int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInfo)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    if (!UpdatePrinterSystemData(printerInfo)) {
+        PRINT_HILOGE("UpdatePrinterSystemData failed");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+
+    printSystemData_.SaveCupsPrinterMap();
+    return E_PRINT_NONE;
+}
+
 void PrintServiceAbility::DeletePrinterFromUserData(const std::string &printerId)
 {
     std::vector<int32_t> allPrintUserList;
@@ -3046,7 +3064,6 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
     std::string printExtId = info.GetPrinterId();
     printExtId = PrintUtils::GetGlobalId(extensionId, printExtId);
 
-    bool isSystemDataUpdated = UpdatePrinterSystemData(info);
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printExtId);
     if (printerInfo == nullptr) {
         PRINT_HILOGE("invalid printer id, ignore it");
@@ -3062,14 +3079,13 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
         isCapabilityUpdated = UpdatePrinterCapability(printExtId, info);
     }
 
-    bool isChanged = isSystemDataUpdated || isCapabilityUpdated;
-    if (isChanged) {
+    if (isCapabilityUpdated) {
         SendPrinterEvent(*printerInfo);
         SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
         printSystemData_.SaveCupsPrinterMap();
     }
 
-    return isChanged;
+    return isCapabilityUpdated;
 }
 
 bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)

@@ -41,7 +41,12 @@ napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
     if ((paramCount > NapiPrintUtils::ARGC_THREE) && type == napi_string) {
         return PrintByAdapter(env, info);
     }
+    return CreatePrintTask(env, info);
+}
 
+napi_value NapiPrintTask::CreatePrintTask(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGI("CreatePrintTask start ---->");
     auto context = std::make_shared<PrintTaskContext>();
     auto input = [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {

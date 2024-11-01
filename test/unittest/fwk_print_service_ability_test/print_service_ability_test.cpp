@@ -2145,4 +2145,17 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0136, TestSize.Level1)
     EXPECT_TRUE(service->RenamePrinterWhenAdded(info1) == "fwk.driver 1");
     service->RemoveVendorPrinterFromCups(vendorName, printerId);
 }
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0137, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrinterInfo info;
+    info.SetPrinterId(DEFAULT_EXT_PRINTER_ID);
+    EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_INVALID_PARAMETER);
+
+    nlohmann::json infoJson;
+    infoJson["alias"] = "testPrinterName";
+    info.SetOption(infoJson.dump());
+    EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_NONE);
+}
 } // namespace OHOS::Print

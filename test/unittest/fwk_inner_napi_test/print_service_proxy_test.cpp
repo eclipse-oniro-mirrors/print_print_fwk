@@ -940,5 +940,29 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0032, TestSize.Level1)
     proxy->RemovePrinterFromDiscovery(testPrinterId);
 }
 
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0033, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo testInfo1;
+    testInfo1.SetOption("option-1");
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, UpdatePrinterInSystem(_)).Times(Exactly(1)).WillOnce(
+        [&testInfo1](const PrinterInfo &printerInfo) {
+            EXPECT_EQ(testInfo1.GetOption(), printerInfo.GetOption());
+            return E_PRINT_NONE;
+    });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+    });
+    proxy->UpdatePrinterInSystem(testInfo1);
+}
+
 } // namespace Print
 } // namespace OHOS

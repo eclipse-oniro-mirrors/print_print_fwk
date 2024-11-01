@@ -42,6 +42,7 @@ public:
     static napi_value AddPrinterToDiscovery(napi_env env, napi_callback_info info);
     static napi_value UpdatePrinterInDiscovery(napi_env env, napi_callback_info info);
     static napi_value RemovePrinterFromDiscovery(napi_env env, napi_callback_info info);
+    static napi_value UpdatePrinterInSystem(napi_env env, napi_callback_info info);
 
 private:
     static bool IsValidPrinterState(uint32_t state);
