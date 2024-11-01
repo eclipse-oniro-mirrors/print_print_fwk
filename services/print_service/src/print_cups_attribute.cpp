@@ -179,9 +179,7 @@ void ParsePageSizeAttributes(ipp_t *response, PrinterCapability &printerCaps)
     std::string keyword = "media-supported";
     std::vector<PrintPageSize> supportedPageSizes;
     ParseAttributesToList<PrintPageSize>(response, keyword, supportedPageSizes, ConvertPrintPageSize);
-    std::string pageSizeJson = ConvertListToJson<PrintPageSize>(supportedPageSizes, ConvertPageSizeToJson);
     printerCaps.SetSupportedPageSize(supportedPageSizes);
-    printerCaps.SetPrinterAttrNameAndValue("supportedPageSizeArray", pageSizeJson.c_str());
 
     std::string defaultPageSizeId;
     keyword = "media-default";

@@ -33,6 +33,7 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "printer_info.h"
+#include "print_service_converter.h"
 #include "print_utils.h"
 #include "string_wrapper.h"
 #include "system_ability_definition.h"
@@ -838,8 +839,10 @@ int32_t PrintServiceAbility::BuildPrinterPreference(PrinterCapability &cap, Prin
     nlohmann::json capOpt = capJson["cupsOptions"];
 
     std::string key = "id";
-    if (capOpt.contains("supportedPageSizeArray") && capOpt["supportedPageSizeArray"].is_string()) {
-        std::string supportedPageSizeOpts = capOpt["supportedPageSizeArray"].get<std::string>();
+    std::vector<PrintPageSize> supportedPageSizes;
+    cap.GetSupportedPageSize(supportedPageSizes);
+    if (supportedPageSizes.size() > 0) {
+        std::string supportedPageSizeOpts = ConvertListToJson<PrintPageSize>(supportedPageSizes, ConvertPageSizeToJson);
         BuildPrinterPreferenceByOption(key, supportedPageSizeOpts, printPreference.pagesizeId);
     }
 

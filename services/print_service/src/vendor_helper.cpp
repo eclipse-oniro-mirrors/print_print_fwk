@@ -471,8 +471,6 @@ bool UpdatePageSizeCapability(PrinterCapability &printerCap, const Print_Printer
                      capability->supportedPageSizes[i].height);
     }
     printerCap.SetSupportedPageSize(pageSizeList);
-    std::string pageSizeJson = ConvertListToJson<PrintPageSize>(pageSizeList, ConvertPageSizeToJson);
-    printerCap.SetPrinterAttrNameAndValue("supportedPageSizeArray", pageSizeJson.c_str());
     return true;
 }
 
