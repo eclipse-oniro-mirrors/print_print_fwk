@@ -110,7 +110,6 @@ void PrintUsbManager::RefreshUsbPrinterDevice()
 
 std::string PrintUsbManager::GetProductName(UsbDevice &usbDevice)
 {
-    PRINT_HILOGI("getProductName dev.GetName() = %{public}s.", usbDevice.GetName().c_str());
     USBDevicePipe usbDevicePipe;
     int32_t openDeviceRet = UEC_OK;
     if (isUsbEnable) {

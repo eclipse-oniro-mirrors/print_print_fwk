@@ -347,8 +347,6 @@ void PrintSystemData::ConvertPrinterCapabilityToJson(PrinterCapability &printerC
         ConvertPrintMarginToJson(printerCapability, capsJson);
     }
 
-    ConvertPageSizeToJson(printerCapability, capsJson);
-
     if (printerCapability.HasResolution()) {
         ConvertPrintResolutionToJson(printerCapability, capsJson);
     }
