@@ -180,30 +180,23 @@ void ReleasePrinterInfo(Print_PrinterInfo &printerInfo)
     ReleaseDefaultValue(printerInfo.defaultValue);
 }
 
-void PageSizeArrayConvert(const nlohmann::json &pageSizeJsonArray, Print_PrinterInfo &nativePrinterInfo)
+void PageSizeArrayConvert(const OHOS::Print::PrinterCapability &cap, Print_PrinterInfo &nativePrinterInfo)
 {
     ReleaseCapabilityPageSizes(nativePrinterInfo.capability);
-    PRINT_HILOGI("pageSizeJsonArray size = %{public}zu", pageSizeJsonArray.size());
-    std::vector<Print_PageSize> pageSizeVector;
-    for (auto &item : pageSizeJsonArray) {
-        Print_PageSize pageSize = {0};
-        if (!item.contains("id") || !item.contains("name") || !item.contains("width") || !item.contains("height")) {
-            PRINT_HILOGW("field missing");
-            continue;
-        }
-        if (!item["id"].is_string() || !item["name"].is_string() || !item["width"].is_number() ||
-            !item["height"].is_number()) {
-            PRINT_HILOGW("incorrect type");
-            continue;
-        }
-        pageSize.id = CopyString(item["id"].get<std::string>());
-        pageSize.name = CopyString(item["name"].get<std::string>());
-        pageSize.width = item["width"];
-        pageSize.height = item["height"];
-        pageSizeVector.push_back(pageSize);
+    std::vector<PrintPageSize> pageSizeVector;
+    std::vector<Print_PageSize> nativePageSizeVector;
+    cap.GetSupportedPageSize(pageSizeVector);
+    for (const auto &pageSize : pageSizeVector) {
+        nativePageSizeVector.push_back({
+            CopyString(pageSize.GetId()),
+            CopyString(pageSize.GetName()),
+            pageSize.GetWidth(),
+            pageSize.GetHeight()
+        });
     }
-    nativePrinterInfo.capability.supportedPageSizes = CopyArray<Print_PageSize>(pageSizeVector,
+    nativePrinterInfo.capability.supportedPageSizes = CopyArray<Print_PageSize>(nativePageSizeVector,
         nativePrinterInfo.capability.supportedPageSizesCount);
+    PRINT_HILOGI("nativePageSizeVector size = %{public}zu", nativePageSizeVector.size());
 }
 
 void ParseDefaultPageMargin(const nlohmann::json &cupsOpt, Print_Margin &defaultMargin)
@@ -422,10 +415,8 @@ void ParseCupsOptions(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePr
     ParseDefaultPageMargin(cupsOpt, nativePrinterInfo.defaultValue.defaultMargin);
     ParseCupsCopyOpt(cupsOpt, nativePrinterInfo);
     ParseMediaOpt(cupsOpt, nativePrinterInfo);
-    std::string keyword = "supportedPageSizeArray";
-    ParseJsonFieldAsArrayOpt(cupsOpt, keyword, nativePrinterInfo, PageSizeArrayConvert);
     nlohmann::json advancedCapJson;
-    keyword = "multiple-document-handling-supported";
+    std::string keyword = "multiple-document-handling-supported";
     AddJsonFieldStringToJsonObject(cupsOpt, keyword, advancedCapJson);
     nativePrinterInfo.capability.advancedCapability = CopyString(advancedCapJson.dump().c_str());
 }
@@ -524,6 +515,7 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     }
     OHOS::Print::PrinterCapability cap;
     info.GetCapability(cap);
+    PageSizeArrayConvert(cap, *nativePrinterInfo);
     if (cap.HasOption() && json::accept(cap.GetOption())) {
         nlohmann::json capJson = json::parse(cap.GetOption());
         if (capJson.contains("cupsOptions") && capJson["cupsOptions"].is_object()) {
