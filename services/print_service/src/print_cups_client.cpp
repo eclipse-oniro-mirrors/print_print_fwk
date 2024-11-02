@@ -1676,8 +1676,16 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
     dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, printerName, NULL);
     if (dest != NULL) {
         const char *deviceUri = cupsGetOption("device-uri", dest->num_options, dest->options);
+        if (deviceUri == nullptr) {
+            PRINT_HILOGD("deviceUri is null");
+            return false;
+        }
         PRINT_HILOGD("deviceUri=%{private}s", deviceUri);
         const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
+        if (makeModel == nullptr) {
+            PRINT_HILOGD("makeModel is null");
+            return false;
+        }
         PRINT_HILOGD("makeModel=%{private}s", makeModel);
         int printerState = cupsGetIntegerOption("printer-state", dest->num_options, dest->options);
         PRINT_HILOGD("printerState=%{private}d", printerState);
