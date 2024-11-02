@@ -104,6 +104,15 @@ bool ConvertJsonToStringList(const std::string &jsonString, std::vector<std::str
     return true;
 }
 
+std::string GetStringValueFromJson(const nlohmann::json &jsonObject, const std::string &key)
+{
+    if (!jsonObject.contains(key) || !jsonObject[key].is_string()) {
+        PRINT_HILOGW("can not find %{public}s", key.c_str());
+        return "";
+    }
+    return jsonObject[key].get<std::string>();
+}
+
 bool ConvertStringToLong(const char *src, long &dst)
 {
     if (src == nullptr) {
@@ -164,24 +173,24 @@ bool ConvertQualityToJson(const Print_Quality &code, nlohmann::json &jsonObject)
 bool ConvertStringToPrinterState(const std::string &stateData, Print_PrinterState &state)
 {
     long result = 0;
-    if (!ConvertStringToLong(stateData.c_str(), result)) {
-        if (!nlohmann::json::accept(stateData)) {
-            PRINT_HILOGW("invalid stateData");
-            return false;
-        }
-        nlohmann::json jsonObject = nlohmann::json::parse(stateData, nullptr, false);
-        if (jsonObject.is_discarded()) {
-            PRINT_HILOGW("stateData discarded");
-            return false;
-        }
-        if (!jsonObject.contains("state") || !jsonObject["state"].is_string()) {
-            PRINT_HILOGW("can not find state");
-            return false;
-        }
-        std::string stateValue = jsonObject["state"].get<std::string>();
-        if (!ConvertStringToLong(stateValue.c_str(), result)) {
-            return false;
-        }
+    if (!nlohmann::json::accept(stateData)) {
+        PRINT_HILOGW("invalid stateData");
+        return false;
+    }
+    nlohmann::json jsonObject = nlohmann::json::parse(stateData, nullptr, false);
+    if (jsonObject.is_discarded()) {
+        PRINT_HILOGW("stateData discarded");
+        return false;
+    }
+    std::string stateValue = GetStringValueFromJson(jsonObject, "state");
+    if (!ConvertStringToLong(stateValue.c_str(), result)) {
+        return false;
+    }
+    std::string reasonValue = GetStringValueFromJson(jsonObject, "reason");
+    if (reasonValue == "shutdown") {
+        PRINT_HILOGD("printer shutdown");
+        state = PRINTER_UNAVAILABLE;
+        return true;
     }
     if (result < 0 || result > PRINTER_UNAVAILABLE + 1) {
         PRINT_HILOGW("invalid state");
