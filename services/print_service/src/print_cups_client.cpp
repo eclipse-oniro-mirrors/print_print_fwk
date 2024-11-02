@@ -786,7 +786,7 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         PRINT_HILOGE("FillBorderlessOptions Params is nullptr");
         return num_options;
     }
-    if (jobParams->borderless == 1 && jobParams->mediaType == CUPS_MEDIA_TYPE_PHOTO_GLOSSY) {
+    if (jobParams->borderless == TRUE) {
         PRINT_HILOGD("borderless job options");
         std::vector<MediaSize> mediaSizes;
         mediaSizes.push_back({ CUPS_MEDIA_4X6, 4000, 6000 });
@@ -1521,17 +1521,15 @@ void PrintCupsClient::UpdateBorderlessJobParameter(json& optionJson, JobParamete
     if (params == nullptr) {
         return;
     }
-    if (optionJson.contains("documentCategory") && optionJson["documentCategory"].is_number()) {
-        params->borderless = optionJson["documentCategory"];
-    } else if (optionJson.contains("borderless") && optionJson["borderless"].is_string()) {
+    if (optionJson.contains("borderless") && optionJson["borderless"].is_string()) {
         std::string isBorderless = optionJson["borderless"].get<std::string>();
         if (isBorderless == "true") {
-            params->borderless = 1; // 1: borderless
+            params->borderless = TRUE;
         } else {
-            params->borderless = 0;
+            params->borderless = FALSE;
         }
     } else {
-        params->borderless = 0;
+        params->borderless = TRUE;
     }
 }
 
