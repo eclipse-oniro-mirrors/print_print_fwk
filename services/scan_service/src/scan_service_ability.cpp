@@ -597,8 +597,7 @@ int32_t ScanServiceAbility::GetScannerList()
     std::lock_guard<std::mutex> autoLock(lock_);
     // tcp
     auto exec_tcp = [=]() {
-        ScanMdnsService::GetInstance().SetServiceType("_scanner._tcp");
-        ScanMdnsService::GetInstance().onStartDiscoverService();
+        ScanMdnsService::OnStartDiscoverService();
     };
     auto exec_sane_getscaner = [=]() {
         deviceInfos.clear();
@@ -624,10 +623,13 @@ int32_t ScanServiceAbility::StopDiscover()
     }
     SCAN_HILOGD("ScanServiceAbility StopDiscover start");
 
-    ScanMdnsService::GetInstance().onStopDiscoverService();
-
-    SCAN_HILOGD("ScanServiceAbility StopDiscover end");
-    return E_SCAN_NONE;
+    if (ScanMdnsService::OnStopDiscoverService()) {
+        SCAN_HILOGD("ScanServiceAbility StopDiscover end successful.");
+        return E_SCAN_NONE;
+    } else {
+        SCAN_HILOGE("ScanServiceAbility StopDiscover fail.");
+        return E_SCAN_SERVER_FAILURE;
+    }
 }
 
 int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)

@@ -23,10 +23,6 @@
 #include "mdns_common.h"
 #include "scanner_info.h"
 #include "scan_log.h"
-#ifdef SANE_ENABLE
-#include "sane/sane.h"
-#include "sane/saneopts.h"
-#endif
 #include "scan_service_ability.h"
 
 namespace OHOS::Scan {
@@ -65,34 +61,10 @@ public:
 
 class ScanMdnsService {
 public:
-    ScanMdnsService(const ScanMdnsService&) = delete;
-    ScanMdnsService& operator=(const ScanMdnsService&) = delete;
-    static ScanMdnsService& GetInstance()
-    {
-        static ScanMdnsService instance;
-        return instance;
-    }
-    void SetServiceInfo(const MDnsServiceInfo& info);
-    void SetMDnsResolveCallBack(sptr<ScanMDnsResolveObserver>& cb);
-    void SetMDnsDiscoveryCallBack(sptr<ScanMDnsDiscoveryObserver>& cb);
-    void SetServiceType(std::string stype);
-    sptr<ScanMDnsResolveObserver> GetMDnsResolveCallBack();
-    sptr<ScanMDnsDiscoveryObserver> GetMDnsDiscoveryCallBack();
-    MDnsServiceInfo& GetServiceInfo();
-    static std::string GetServiceAttribute(MDnsServiceInfo& serviceInfo, std::string keyStr);
-
-    bool onStartDiscoverService();
-    bool onStopDiscoverService();
-    bool onResolveService(MDnsServiceInfo& serviceInfo);
-    void ToMDnsScaner(MDnsServiceInfo& serviceInfo);
-
-public:
-    sptr<ScanMDnsDiscoveryObserver> _scanMDnsDiscoveryCallBack;
-    sptr<ScanMDnsResolveObserver> _scanMDnsResolveCallBack;
-    
+    static bool OnStartDiscoverService();
+    static bool OnStopDiscoverService();
 private:
-    ScanMdnsService(){};
-    MDnsServiceInfo _serviceInfo;
+    static std::map<std::string, sptr<ScanMDnsDiscoveryObserver>> discoveryCallBackPtrs_;
 };
 }
 #endif // !SCAN_MDNS_SERVICE_H
