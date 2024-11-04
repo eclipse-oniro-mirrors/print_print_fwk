@@ -93,17 +93,23 @@ bool PrintHttpServerManager::CreateServer(std::string printerName, int32_t &port
         return false;
     }
 
+    if (port < HTTP_MIN_PORT || port > HTTP_MAX_PORT) {
+        PRINT_HILOGE("port error!");
+        return false;
+    }
+
     std::shared_ptr<httplib::Server> newServer = std::make_shared<httplib::Server>();
-    int32_t allocPort = HTTP_MIN_PORT;
     if (newServer == nullptr) {
         PRINT_HILOGE("newServer is null");
         return false;
     }
-    if (!AllocatePort(newServer, allocPort)) {
-        PRINT_HILOGE("AllocatePort fail, return!");
+
+    if (!newServer->bind_to_port(LOCAL_HOST, port)) {
+        PRINT_HILOGE("bind to port : %{public}d failed.", port);
         return false;
     }
-    port = allocPort;
+    PRINT_HILOGI("bind to port : %{public}d success.", port);
+    
     printHttpServerMap[printerName] = newServer;
     printHttpPortMap[printerName] = port;
     std::shared_ptr<PrintHttpRequestProcess> newProcess = std::make_shared<PrintHttpRequestProcess>();

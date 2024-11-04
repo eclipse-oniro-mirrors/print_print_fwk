@@ -47,6 +47,7 @@
 #ifdef IPPOVERUSB_ENABLE
 #include "print_ipp_over_usb_manager.h"
 #endif // IPPOVERUSB_ENABLE
+#include "uri.h"
 #include <fstream>
 #include <streambuf>
 
@@ -337,16 +338,11 @@ int32_t PrintServiceAbility::HandleExtensionConnectPrinter(const std::string &pr
         return E_PRINT_SERVER_FAILURE;
     }
 #ifdef IPPOVERUSB_ENABLE
-    int32_t port = 0;
-    std::string newPrinterId = printerId;
-    auto ret = DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->ConnectPrinter(printerId, port);
-    if (ret && port > 0) {
-        newPrinterId = PrintUtils::GetGlobalId(printerId, std::to_string(port));
-    }
+    ConnectIppOverUsbPrinter(printerId);
     auto cbFunc = extCallbackMap_[cid];
     auto callback = [=]() {
         if (cbFunc != nullptr) {
-            cbFunc->OnCallback(newPrinterId);
+            cbFunc->OnCallback(printerId);
         }
     };
     if (helper_->IsSyncMode()) {
@@ -1195,8 +1191,7 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
 {
     PRINT_HILOGI("enter UpdateQueuedJobList, jobId: %{public}s.", jobId.c_str());
 #ifdef IPPOVERUSB_ENABLE
-    int32_t port = 0;
-    DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->ConnectPrinter(printJob->GetPrinterId(), port);
+    ConnectIppOverUsbPrinter(printJob->GetPrinterId());
 #endif // IPPOVERUSB_ENABLE
     std::string jobOrderId = GetPrintJobOrderId();
     if (jobOrderId == "0") {
@@ -3505,5 +3500,19 @@ bool PrintServiceAbility::CheckUserIdInEventType(const std::string &type)
         return true;
     }
     return false;
+}
+
+void PrintServiceAbility::ConnectIppOverUsbPrinter(const std::string &printerId)
+{
+#ifdef IPPOVERUSB_ENABLE
+    auto printerInfo = printSystemData_.QueryDiscoveryedPrinterInfoById(printerId);
+    if (printerInfo == nullptr) {
+        PRINT_HILOGD("ConnectIppOverUsbPrinter get printer info failed.");
+        return;
+    }
+    OHOS::Uri uri(printerInfo->GetUri());
+    int32_t port = uri.GetPort();
+    DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->ConnectPrinter(printerId, port);
+#endif
 }
 } // namespace OHOS::Print
