@@ -3505,7 +3505,7 @@ bool PrintServiceAbility::CheckUserIdInEventType(const std::string &type)
 void PrintServiceAbility::ConnectIppOverUsbPrinter(const std::string &printerId)
 {
 #ifdef IPPOVERUSB_ENABLE
-    auto printerInfo = printSystemData_.QueryDiscoveryedPrinterInfoById(printerId);
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo == nullptr) {
         PRINT_HILOGD("ConnectIppOverUsbPrinter get printer info failed.");
         return;
