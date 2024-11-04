@@ -25,7 +25,6 @@ group("fuzztest") {
     "scancapi_fuzzer:fuzztest",
     "scanhelper_fuzzer:fuzztest",
     "scanmanagerclient_fuzzer:fuzztest",
-    "scanmdnsservice_fuzzer:fuzztest",
     "scanserviceability_fuzzer:fuzztest",
     "scanservicestub_fuzzer:fuzztest",
     "scanusbmanager_fuzzer:fuzztest",

@@ -15,11 +15,6 @@
 
 #include <gtest/gtest.h>
 #include "mock_bundle_mgr.h"
-#include "scan_service_ability.h"
-#include "scan_constant.h"
-#include "system_ability_definition.h"
-#include "scan_utils.h"
-#include "mock_scan_callback_proxy.h"
 #include "scan_mdns_service.h"
 
 namespace OHOS {
@@ -30,21 +25,13 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
-    std::shared_ptr<ScanMdnsService> scanMdnsPtr;
-    std::shared_ptr<ScanServiceAbility> scanServicePtr;
 };
 
 void ScanMdnsServiceTest::SetUpTestCase(void) {}
 
 void ScanMdnsServiceTest::TearDownTestCase(void) {}
 
-void ScanMdnsServiceTest::SetUp(void)
-{
-    scanMdnsPtr = ScanMdnsService::GetInstance();
-    scanServicePtr = ScanServiceAbility::GetInstance();
-    EXPECT_NE(scanMdnsPtr, nullptr);
-    EXPECT_NE(scanServicePtr, nullptr);
-}
+void ScanMdnsServiceTest::SetUp(void) {}
 
 void ScanMdnsServiceTest::TearDown(void) {}
 
@@ -56,9 +43,8 @@ void ScanMdnsServiceTest::TearDown(void) {}
  */
 HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0001, TestSize.Level1)
 {
-    scanMdnsPtr->SetServiceType("_scanner._tcp");
-    scanMdnsPtr->onStartDiscoverService();
-    EXPECT_NE(scanServicePtr->scanDeviceInfoTCPMap_.size(), 0);
+    EXPECT_EQ(ScanMdnsService::OnStartDiscoverService(), true);
+    EXPECT_EQ(ScanMdnsService::OnStopDiscoverService(), true);
 }
 
 /**
@@ -69,22 +55,7 @@ HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0001, TestSize.Level1)
  */
 HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0002, TestSize.Level1)
 {
-    scanMdnsPtr->SetServiceType("_scanner._tcp");
-    scanMdnsPtr->onStartDiscoverService();
-    EXPECT_NE(scanServicePtr->_scanMDnsDiscoveryCallBack, nullptr);
-}
-
-/**
- * @tc.name: ScanMdnsServiceTest_0003
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0003, TestSize.Level1)
-{
-    scanMdnsPtr->SetServiceType("_scanner._tcp");
-    scanMdnsPtr->onStartDiscoverService();
-    EXPECT_NE(scanServicePtr->_scanMDnsResolveCallBack, nullptr);
+    EXPECT_EQ(ScanMdnsService::OnStopDiscoverService(), true);
 }
 
 } // namespace Scan
