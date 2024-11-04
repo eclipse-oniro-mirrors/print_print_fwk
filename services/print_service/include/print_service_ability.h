@@ -212,6 +212,7 @@ private:
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
     int32_t TryConnectPrinterByIp(const std::string &params);
     std::string RenamePrinterWhenAdded(const PrinterInfo &info);
+    void ConnectIppOverUsbPrinter(const std::string &printerId);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
