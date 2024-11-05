@@ -136,10 +136,7 @@ size_t PrintHttpRequestProcess::CalculateRequestId(
     std::vector<uint8_t> &readTempBuffer, size_t index, Operation operation)
 {
     size_t readSize = readTempBuffer.size();
-    if ((index + HTTP_COMMON_CONST_VALUE_8) < readSize &&
-        (index + HTTP_COMMON_CONST_VALUE_9) < readSize &&
-        (index + HTTP_COMMON_CONST_VALUE_10) < readSize &&
-        (index + HTTP_COMMON_CONST_VALUE_11) < readSize) {
+    if ((index + HTTP_COMMON_CONST_VALUE_11) < readSize) {
         DumpRespIdCode(readTempBuffer, operation, index + HTTP_COMMON_CONST_VALUE_4, readSize);
         return readTempBuffer[index + HTTP_COMMON_CONST_VALUE_8] *
                 pow(HTTP_COMMON_CONST_VALUE_10, HTTP_COMMON_CONST_VALUE_3) +

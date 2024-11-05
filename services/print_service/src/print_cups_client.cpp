@@ -431,7 +431,7 @@ void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std
 
     PRINT_HILOGD("CUPS_GET_PPDS start.");
     response = printAbility_->DoRequest(CUPS_HTTP_DEFAULT, request, "/");
-    if (response == NULL) {
+    if (response == nullptr) {
         PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
         return;
     }
@@ -450,17 +450,17 @@ void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, 
     if (response == nullptr) {
         return;
     }
-    for (ipp_attribute_t *attr = response->attrs; attr != NULL; attr = attr->next) {
-        while (attr != NULL && attr->group_tag != IPP_TAG_PRINTER) {
+    for (ipp_attribute_t *attr = response->attrs; attr != nullptr; attr = attr->next) {
+        while (attr != nullptr && attr->group_tag != IPP_TAG_PRINTER) {
             attr = attr->next;
         }
-        if (attr == NULL) {
+        if (attr == nullptr) {
             break;
         }
-        ppd_make_model = NULL;
-        ppd_name = NULL;
+        ppd_make_model = nullptr;
+        ppd_name = nullptr;
 
-        while (attr != NULL && attr->group_tag == IPP_TAG_PRINTER) {
+        while (attr != nullptr && attr->group_tag == IPP_TAG_PRINTER) {
             if (!strcmp(attr->name, "ppd-make-and-model") && attr->value_tag == IPP_TAG_TEXT) {
                 ppd_make_model = attr->values[0].string.text;
             } else if (!strcmp(attr->name, "ppd-name") && attr->value_tag == IPP_TAG_NAME) {
@@ -468,11 +468,11 @@ void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, 
             }
             attr = attr->next;
         }
-        if (ppd_make_model != NULL && ppd_name != NULL) {
+        if (ppd_make_model != nullptr && ppd_name != nullptr) {
             ppds.push_back(ppd_name);
             PRINT_HILOGI("ppd: name = %{private}s, make-and-model = %{private}s", ppd_name, ppd_make_model);
         }
-        if (attr == NULL) {
+        if (attr == nullptr) {
             break;
         }
     }
@@ -876,7 +876,7 @@ int32_t PrintCupsClient::QueryAddedPrinterList(std::vector<std::string> &printer
         }
     }
     printerNameList.clear();
-    cups_dest_t *dests = NULL;
+    cups_dest_t *dests = nullptr;
     int num = cupsGetDests(&dests);
     PRINT_HILOGI("QueryAddedPrinterList, num: %{public}d.", num);
     for (int i = 0; i < num; i++) {
@@ -975,7 +975,7 @@ int32_t PrintCupsClient::QueryPrinterAttrList(const std::string &printerName, co
     }
     for (auto &key : keyList) {
         const char *ret = cupsGetOption(key.c_str(), dest->num_options, dest->options);
-        if (ret != NULL) {
+        if (ret != nullptr) {
             std::string valueStr = ret;
             std::string value = key + "&" + valueStr;
             valueList.emplace_back(value);
@@ -1050,7 +1050,7 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams)
     const uint32_t GET_OPTION_TIMES = 40;
     while (retryCount < GET_OPTION_TIMES) {
         dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, jobParams->printerName.c_str(), NULL);
-        if (dest != NULL) {
+        if (dest != nullptr) {
             const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
             PRINT_HILOGD("makeModel=%{private}s", makeModel);
             if (makeModel != nullptr && strcmp(makeModel, "Local Raw Printer") != 0) {
@@ -1126,7 +1126,7 @@ bool PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, 
     ssize_t bytes = -1;
 
     for (uint32_t i = 0; i < num_files; i++) {
-        if ((fp = cupsFileOpenFd(jobParams->fdList[i], "rb")) == NULL) {
+        if ((fp = cupsFileOpenFd(jobParams->fdList[i], "rb")) == nullptr) {
             PRINT_HILOGE("Unable to open print file, cancel the job");
             cupsCancelJob2(http, jobParams->printerName.c_str(), jobId, 0);
             UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_COMPLETED_FILE_CORRUPT);
@@ -1224,7 +1224,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
     if (param == nullptr) {
         return;
     }
-    http_t *http = NULL;
+    http_t *http = nullptr;
     uint32_t fail_connect_times = 0;
     ippSetPort(CUPS_SEVER_PORT);
     http = httpConnect2(cupsServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
@@ -1417,13 +1417,13 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
         ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", jattrsLen, NULL, jattrs);
         PRINT_HILOGD("get job state from cups service: start");
         response = printAbility_->DoRequest(http, request, "/");
-        if ((attr = ippFindAttribute(response, "job-state", IPP_TAG_ENUM)) != NULL) {
+        if ((attr = ippFindAttribute(response, "job-state", IPP_TAG_ENUM)) != nullptr) {
             jobStatus->job_state = (ipp_jstate_t)ippGetInteger(attr, 0);
         }
-        if ((attr = ippFindAttribute(response, "job-state-reasons", IPP_TAG_KEYWORD)) != NULL) {
+        if ((attr = ippFindAttribute(response, "job-state-reasons", IPP_TAG_KEYWORD)) != nullptr) {
             ippAttributeString(attr, jobStatus->job_state_reasons, sizeof(jobStatus->job_state_reasons));
         }
-        if ((attr = ippFindAttribute(response, "job-printer-state-reasons", IPP_TAG_KEYWORD)) != NULL) {
+        if ((attr = ippFindAttribute(response, "job-printer-state-reasons", IPP_TAG_KEYWORD)) != nullptr) {
             ippAttributeString(attr, jobStatus->printer_state_reasons, sizeof(jobStatus->printer_state_reasons));
         }
         PRINT_HILOGE("JOB %{public}d: %{public}s (%{public}s), PRINTER: %{public}s\n", param->cupsJobId,
@@ -1672,7 +1672,7 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         return printerExist;
     }
     dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, printerName, NULL);
-    if (dest != NULL) {
+    if (dest != nullptr) {
         const char *deviceUri = cupsGetOption("device-uri", dest->num_options, dest->options);
         if (deviceUri == nullptr) {
             PRINT_HILOGD("deviceUri is null");
