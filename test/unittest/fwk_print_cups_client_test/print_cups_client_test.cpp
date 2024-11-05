@@ -175,7 +175,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0004, TestSize.Level1)
     printCupsClient.CopyDirectory(srcDir, destDir);
 
     EXPECT_EQ(std::filesystem::is_regular_file(
-           std::string(destDir) + "PrintCupsClientTest/PrintCupsClientTestFileName"),
+           std::string(destDir) + "/PrintCupsClientTest/PrintCupsClientTestFileName"),
            true);
     EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / srcDir), 0);
     EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / destDir), 0);
