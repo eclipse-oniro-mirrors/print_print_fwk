@@ -339,7 +339,13 @@ bool JsPrintExtension::Callback(std::string funcName)
         delete param;
         delete work;
     };
-    JsPrintCallback::Call(env, workParam, afterCallback);
+    bool ret = JsPrintCallback::Call(env, workParam, afterCallback);
+    if (!ret) {
+        delete workParam;
+        workParam = nullptr;
+        PRINT_HILOGE("Callback fail, delete param");
+        return false;
+    }
     return true;
 }
 
@@ -379,7 +385,13 @@ bool JsPrintExtension::Callback(const std::string funcName, const std::string &p
         delete param;
         delete work;
     };
-    JsPrintCallback::Call(env, workParam, afterCallback);
+    bool ret = JsPrintCallback::Call(env, workParam, afterCallback);
+    if (!ret) {
+        delete workParam;
+        workParam = nullptr;
+        PRINT_HILOGE("Callback fail, delete param");
+        return false;
+    }
     return true;
 }
 
@@ -419,7 +431,13 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
         delete param;
         delete work;
     };
-    JsPrintCallback::Call(env, workParam, afterCallback);
+    bool ret = JsPrintCallback::Call(env, workParam, afterCallback);
+    if (!ret) {
+        delete workParam;
+        workParam = nullptr;
+        PRINT_HILOGE("Callback fail, delete param");
+        return false;
+    }
     return true;
 }
 
