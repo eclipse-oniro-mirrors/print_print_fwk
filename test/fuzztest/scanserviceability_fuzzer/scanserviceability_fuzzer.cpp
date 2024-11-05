@@ -172,7 +172,18 @@ namespace Scan {
     {
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         bool batchMode = dataProvider->ConsumeBool();
-        ScanServiceAbility::GetInstance()->OnStartScan(scannerId, batchMode);
+        auto scanSaPtr = ScanServiceAbility::GetInstance();
+        if (scanSaPtr == nullptr) {
+            return;
+        }
+        scanSaPtr->OnStartScan(scannerId, batchMode);
+        int32_t userId = scanSaPtr->GetCurrentUserId();
+        scanSaPtr->ObtainUserCacheDirectory(userId);
+        userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        scanSaPtr->ObtainUserCacheDirectory(userId);
+        constexpr int32_t DEFAULT_USERID = 100;
+        userId = DEFAULT_USERID;
+        scanSaPtr->ObtainUserCacheDirectory(userId);
     }
 
     void TestSendDeviceInfoTCP(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
