@@ -58,8 +58,13 @@ bool JsPrintCallback::Call(napi_env env, void *data, uv_after_work_cb afterCallb
         return false;
     }
     work->data = data;
-    uv_queue_work_with_qos(
-        loop, work, [](uv_work_t *work) {}, afterCallback, uv_qos_user_initiated);
+    int retVal = uv_queue_work_with_qos(loop, work,
+                                        [](uv_work_t *work) {}, afterCallback, uv_qos_user_initiated);
+    if (retVal != 0) {
+        PRINT_HILOGE("Failed to create uv work");
+        delete work;
+        return false;
+    }
     return true;
 }
 
