@@ -54,9 +54,7 @@ napi_value NapiPrintTask::CreatePrintTask(napi_env env, napi_callback_info info)
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
             "need 1 or 2 parameter!", napi_invalid_arg);
         napi_status checkStatus = VerifyParameters(env, argc, argv, context);
-        if (argc == NapiPrintUtils::ARGC_ONE) {
-            return napi_ok;
-        } else if (checkStatus != napi_ok) {
+        if (argc == NapiPrintUtils::ARGC_TWO && checkStatus != napi_ok) {
             return checkStatus;
         }
 
@@ -73,7 +71,7 @@ napi_value NapiPrintTask::CreatePrintTask(napi_env env, napi_callback_info info)
         if (task != nullptr) {
             ret = task->Start(env, info);
         }
-        if (ret != E_PRINT_NONE) {
+        if (argc == NapiPrintUtils::ARGC_TWO && ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to start print task");
             context->SetErrorIndex(ret);
         }
