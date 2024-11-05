@@ -91,6 +91,8 @@ static bool InitUvWorkCallbackEnv(uv_work_t *work, napi_handle_scope &scope)
     }
     if (work->data == nullptr) {
         PRINT_HILOGE("data is nullptr");
+        delete work;
+        work = nullptr;
         return false;
     }
     CallbackParam *cbParam = reinterpret_cast<CallbackParam *>(work->data);
@@ -98,7 +100,9 @@ static bool InitUvWorkCallbackEnv(uv_work_t *work, napi_handle_scope &scope)
     if (scope == nullptr) {
         PRINT_HILOGE("fail to open scope");
         delete cbParam;
-        work->data = nullptr;
+        cbParam = nullptr;
+        delete work;
+        work = nullptr;
         return false;
     }
     return true;
@@ -122,12 +126,12 @@ static void PrintTaskAfterCallFun(uv_work_t *work, int status)
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run PrintTaskAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -150,12 +154,12 @@ static void PrinterAfterCallFun(uv_work_t *work, int status)
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run PrinterAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -180,12 +184,12 @@ static void PrintJobAfterCallFun(uv_work_t *work, int status)
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run PrintJobAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -210,12 +214,12 @@ static void ExtensionAfterCallFun(uv_work_t *work, int status)
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run ExtensionAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -263,12 +267,12 @@ static void PrintAdapterAfterCallFun(uv_work_t *work, int status)
 
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run PrintAdapterAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -297,12 +301,12 @@ static void PrintAdapterJobStateChangedAfterCallFun(uv_work_t *work, int status)
 
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run PrintAdapterJobStateChangedAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -324,12 +328,12 @@ static void PrintAdapterGetFileAfterCallFun(uv_work_t *work, int status)
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run PrintAdapterGetFileAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 

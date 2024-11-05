@@ -412,8 +412,8 @@ void PrintCupsClient::StopCupsdService()
 
 void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds)
 {
-    ipp_t *request;
-    ipp_t *response;
+    ipp_t *request = nullptr;
+    ipp_t *response = nullptr;
     const char *ppd_make_model;
     const char *ppd_name;
 
@@ -482,7 +482,7 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     const std::string &printerMake)
 {
     PRINT_HILOGD("PrintCupsClient AddPrinterToCups start, printerMake: %{public}s", printerMake.c_str());
-    ipp_t *request;
+    ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
     std::vector<string> ppds;
     std::string ppd = DEFAULT_PPD_NAME;
@@ -580,7 +580,7 @@ int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, 
 
 int32_t PrintCupsClient::DeleteCupsPrinter(const char *printerName)
 {
-    ipp_t *request;
+    ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
 
     PRINT_HILOGD("PrintCupsClient DeleteCupsPrinter start: %{private}s", printerName);
@@ -889,7 +889,7 @@ int32_t PrintCupsClient::QueryAddedPrinterList(std::vector<std::string> &printer
 
 int32_t PrintCupsClient::SetDefaultPrinter(const std::string &printerName)
 {
-    http_t *http;
+    http_t *http = nullptr;
     if (printAbility_ == nullptr) {
         PRINT_HILOGW("printAbility_ is null");
         return E_PRINT_SERVER_FAILURE;
@@ -900,7 +900,7 @@ int32_t PrintCupsClient::SetDefaultPrinter(const std::string &printerName)
         PRINT_HILOGE("cups server is not alive");
         return E_PRINT_SERVER_FAILURE;
     }
-    ipp_t *request;         /* IPP Request */
+    ipp_t *request = nullptr;         /* IPP Request */
     char uri[HTTP_MAX_URI] = {0}; /* URI for printer/class */
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL,
         "localhost", 0, "/printers/%s", printerName.c_str());
@@ -1224,7 +1224,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
     if (param == nullptr) {
         return;
     }
-    http_t *http = NULL;
+    http_t *http = nullptr;
     uint32_t fail_connect_times = 0;
     ippSetPort(CUPS_SEVER_PORT);
     http = httpConnect2(cupsServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
@@ -1435,7 +1435,7 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
 
 bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param, const uint32_t timeout)
 {
-    http_t *http;
+    http_t *http = nullptr;
     char scheme[32] = {0};
     char userpass[BUFFER_LEN] = {0};
     char host[BUFFER_LEN] = {0};
@@ -1645,7 +1645,7 @@ std::string PrintCupsClient::GetColorString(uint32_t colorCode)
 
 bool PrintCupsClient::IsCupsServerAlive()
 {
-    http_t *http;
+    http_t *http = nullptr;
     ippSetPort(CUPS_SEVER_PORT);
     http = httpConnect2(cupsServer(), ippPort(), NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
     if (http == nullptr) {
