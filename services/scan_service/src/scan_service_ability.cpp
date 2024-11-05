@@ -89,6 +89,9 @@ constexpr int MAX_SANE_VALUE_LEN = 2000;
 const int64_t INIT_INTERVAL = 5000L;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t UNLOAD_SYSTEMABILITY_DELAY = 1000 * 30;
+constexpr int32_t INVALID_USER_ID = -1;
+constexpr int32_t START_USER_ID = 100;
+constexpr int32_t MAX_USER_ID = 1099;
 
 static int32_t g_scannerState = SCANNER_READY;
 #ifdef SANE_ENABLE
@@ -125,7 +128,7 @@ std::map<std::string, std::string> ScanServiceAbility::usbSnMap;
 
 ScanServiceAbility::ScanServiceAbility(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START),
-    currentJobId_(SCAN_CONSTRAINT_NONE)
+    currentJobId_(SCAN_CONSTRAINT_NONE), currentUseScannerUserId_(INVALID_USER_ID)
 {
     buffer_size = ONE_MB;
     saneReadBuf = static_cast<uint8_t *>(malloc(buffer_size));
@@ -1549,6 +1552,11 @@ int32_t ScanServiceAbility::OnStartScan(const std::string scannerId, const bool 
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    std::string userCachedImageDir = ObtainUserCacheDirectory(GetCurrentUserId());
+    if (!std::filesystem::exists(userCachedImageDir)) {
+        SCAN_HILOGE("The user directory %{public}s does not exist.", userCachedImageDir.c_str());
+        return E_SCAN_GENERIC_FAILURE;
+    }
     std::queue<int32_t> emptyQueue;
     scanQueue.swap(emptyQueue);
     int32_t status = StartScan(scannerId, batchMode_);
@@ -1556,6 +1564,7 @@ int32_t ScanServiceAbility::OnStartScan(const std::string scannerId, const bool 
         SCAN_HILOGE("Start Scan error");
         return status;
     }
+    currentUseScannerUserId_ = GetCurrentUserId();
     batchMode_ = batchMode;
     g_scannerState = SCANNER_SCANING;
     auto exe = [=]() {
@@ -1650,12 +1659,12 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std:
         auto it = scanTaskMap.find(nextPicId - 1);
         int32_t nowScanId = it->first;
         file_name = "scan_tmp" + std::to_string(nowScanId) + ".jpg";
-        std::string outputDir = "/data/service/el2/public/print_service/sane/tmp/";
+        std::string outputDir = ObtainUserCacheDirectory(currentUseScannerUserId_);
         if (!std::filesystem::exists(outputDir)) {
-            SCAN_HILOGE("outputDir not exist");
+            SCAN_HILOGE("outputDir %{public}s does not exist.", outputDir.c_str());
             return;
         }
-        output_file = outputDir.append(file_name);
+        output_file = outputDir.append("/").append(file_name);
         ofp = fopen(output_file.c_str(), "w");
         if (ofp == nullptr) {
             SCAN_HILOGE("file [%{public}s] open fail", output_file.c_str());
@@ -1687,12 +1696,12 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
     auto it = scanTaskMap.find(nextPicId - 1);
     int32_t nowScanId = it->first;
     file_name = "scan_tmp" + std::to_string(nowScanId) + ".jpg";
-    std::string outputDir = "/data/service/el2/public/print_service/sane/tmp/";
+    std::string outputDir = ObtainUserCacheDirectory(currentUseScannerUserId_);
     if (!std::filesystem::exists(outputDir)) {
-        SCAN_HILOGE("outputDir not exist");
+        SCAN_HILOGE("outputDir %{public}s does not exist.", outputDir.c_str());
         return;
     }
-    output_file = outputDir.append(file_name);
+    output_file = outputDir.append("/").append(file_name);
     ofp = fopen(output_file.c_str(), "w");
     if (ofp == nullptr) {
         SCAN_HILOGE("file [%{public}s] open fail", output_file.c_str());
@@ -1881,7 +1890,6 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
 
 bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanParameters &parm, ScanProgress *scanProPtr)
 {
-    SCAN_HILOGI("start write jpeg picture data");
     constexpr int bit = 1;
     int i = 0;
     int left = curReadSize;
@@ -1927,7 +1935,30 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
         return false;
     }
     jpegrow += left;
-    SCAN_HILOGI("finish write jpeg picture data");
     return true;
 }
+
+int32_t ScanServiceAbility::GetCurrentUserId()
+{
+    constexpr int32_t UID_TRANSFORM_DIVISOR = 200000;
+    int32_t userId = IPCSkeleton::GetCallingUid() / UID_TRANSFORM_DIVISOR;
+    if (userId < START_USER_ID || userId > MAX_USER_ID) {
+        SCAN_HILOGE("userId %{public}d is out of range.", userId);
+        return INVALID_USER_ID;
+    }
+    SCAN_HILOGD("Current userId = %{public}d.", userId);
+    return userId;
+}
+
+std::string ScanServiceAbility::ObtainUserCacheDirectory(const int32_t& userId)
+{
+    if (userId < START_USER_ID || userId > MAX_USER_ID) {
+        SCAN_HILOGE("Invalid userId %{public}d.", userId);
+        return "";
+    }
+    std::ostringstream oss;
+    oss << "/data/service/el2" << userId << "/print_service";
+    return oss.str();
+}
+
 }  // namespace OHOS::Scan

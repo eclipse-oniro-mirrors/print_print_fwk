@@ -138,6 +138,8 @@ private:
     bool GetTcpDeviceIp(const std::string &deviceId, std::string &ip);
     void CleanScanTask(const std::string &scannerId);
     void SendDeviceList(std::vector<ScanDeviceInfo> &info, std::string event);
+    int32_t GetCurrentUserId();
+    std::string ObtainUserCacheDirectory(const int32_t& userId);
 #ifdef SANE_ENABLE
     std::map<std::string, SANE_Handle> scannerHandleList_;
 #endif
@@ -151,6 +153,7 @@ private:
     std::recursive_mutex apiMutex_;
     std::recursive_mutex scanMutex_;
     uint64_t currentJobId_;
+    int32_t currentUseScannerUserId_;
     std::map<std::string, int32_t> imageFdMap_;
 #ifdef SANE_ENABLE
     std::function<void(SANE_Handle scannerHandle, uint32_t fd)> getSingleFrameFDExe;
