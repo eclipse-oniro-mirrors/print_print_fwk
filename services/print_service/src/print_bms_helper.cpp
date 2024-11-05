@@ -115,7 +115,6 @@ void PrintBMSHelper::ResetProxy(const wptr<IRemoteObject> &remote)
         PRINT_HILOGD("need reset");
         serviceRemote->RemoveDeathRecipient(printBMSDeath_);
         sptrBundleMgr_ = nullptr;
-        delete printBMSDeath_;
         printBMSDeath_ = nullptr;
     }
 }
