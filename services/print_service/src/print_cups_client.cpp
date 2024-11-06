@@ -1533,6 +1533,31 @@ void PrintCupsClient::UpdateBorderlessJobParameter(json& optionJson, JobParamete
     }
 }
 
+void PrintCupsClient::UpdateJobParameterByOption(json& optionJson, JobParameters *params)
+{
+    if (optionJson.contains("cupsOptions") && optionJson["cupsOptions"].is_string()) {
+        params->printerAttrsOption_cupsOption = optionJson["cupsOptions"];
+    }
+
+    if (optionJson.contains("printQuality") && optionJson["printQuality"].is_string()) {
+        params->printQuality = optionJson["printQuality"].get<std::string>();
+    } else {
+        params->printQuality = CUPS_PRINT_QUALITY_NORMAL;
+    }
+
+    if (optionJson.contains("jobName") && optionJson["jobName"].is_string()) {
+        params->jobName = optionJson["jobName"].get<std::string>();
+    } else {
+        params->jobName = DEFAULT_JOB_NAME;
+    }
+
+    if (optionJson.contains("mediaType") && optionJson["mediaType"].is_string()) {
+        params->mediaType = optionJson["mediaType"].get<std::string>();
+    } else {
+        params->mediaType = CUPS_MEDIA_TYPE_PLAIN;
+    }
+}
+
 JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
 {
     JobParameters *params = nullptr;
@@ -1547,8 +1572,9 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     }
     json optionJson = json::parse(option);
     PRINT_HILOGD("test optionJson: %{private}s", optionJson.dump().c_str());
-    if (!optionJson.contains("printerUri") || !optionJson.contains("printerName")
-        || !optionJson.contains("documentFormat")) {
+    if (!optionJson.contains("printerUri") || !optionJson["printerUri"].is_string() ||
+        !optionJson.contains("printerName") || !optionJson["printerName"].is_string() ||
+        !optionJson.contains("documentFormat") || !optionJson["documentFormat"].is_string()) {
         PRINT_HILOGE("The option does not have a necessary attribute.");
         return params;
     }
@@ -1568,18 +1594,8 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     params->printerName = PrintUtil::StandardizePrinterName(optionJson["printerName"]);
     params->printerUri = optionJson["printerUri"];
     params->documentFormat = optionJson["documentFormat"];
-    if (optionJson.contains("cupsOptions")) {
-        params->printerAttrsOption_cupsOption = optionJson["cupsOptions"];
-    }
+    UpdateJobParameterByOption(optionJson, params);
     UpdateBorderlessJobParameter(optionJson, params);
-    if (optionJson.contains("printQuality") && optionJson["printQuality"].is_string()) {
-        params->printQuality = optionJson["printQuality"].get<std::string>();
-    } else {
-        params->printQuality = CUPS_PRINT_QUALITY_NORMAL;
-    }
-    params->jobName = optionJson.contains("jobName") ? optionJson["jobName"].get<std::string>() : DEFAULT_JOB_NAME;
-    params->mediaType = optionJson.contains("mediaType") ?
-        optionJson["mediaType"].get<std::string>() : CUPS_MEDIA_TYPE_PLAIN;
     params->serviceAbility = PrintServiceAbility::GetInstance();
     return params;
 }

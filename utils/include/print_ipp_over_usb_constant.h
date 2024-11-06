@@ -157,6 +157,7 @@ const int USB_WRITE_INTERVAL = 50;
 const int CPP_HTTP_OK = 1;
 const int CPP_HTTP_FAIL = 0;
 const int REQID_OPERAID_LEN = 8;
+const int USB_CONTROLTRANSFER_READ_TIMEOUT = 2000;
 
 const char HTTP_MSG_CHAR_1 = '1';
 const char HTTP_MSG_CHAR_2E = '.';

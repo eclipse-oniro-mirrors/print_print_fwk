@@ -133,6 +133,7 @@ private:
     void JobCompleteCallback();
 
     void UpdateBorderlessJobParameter(json& optionJson, JobParameters *params);
+    void UpdateJobParameterByOption(json& optionJson, JobParameters *params);
     JobParameters* BuildJobParameters(const PrintJob &jobInfo);
     std::string GetColorString(uint32_t colorCode);
     std::string GetMedieSize(const PrintJob &jobInfo);

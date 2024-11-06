@@ -35,16 +35,16 @@ public:
     static PreferenceSetting BuildPreferenceSettingFromJson(const json& printerAttr)
     {
         PreferenceSetting preferenceSetting;
-        if (printerAttr.contains("pagesizeId")) {
+        if (printerAttr.contains("pagesizeId") && printerAttr["pagesizeId"].is_string()) {
             preferenceSetting.pagesizeId = printerAttr.at("pagesizeId").get<std::string>();
         }
-        if (printerAttr.contains("orientation")) {
+        if (printerAttr.contains("orientation") && printerAttr["orientation"].is_string()) {
             preferenceSetting.orientation = printerAttr.at("orientation").get<std::string>();
         }
-        if (printerAttr.contains("duplex")) {
+        if (printerAttr.contains("duplex") && printerAttr["duplex"].is_string()) {
             preferenceSetting.duplex = printerAttr.at("duplex").get<std::string>();
         }
-        if (printerAttr.contains("quality")) {
+        if (printerAttr.contains("quality") && printerAttr["quality"].is_string()) {
             preferenceSetting.quality = printerAttr.at("quality").get<std::string>();
         }
         return preferenceSetting;
