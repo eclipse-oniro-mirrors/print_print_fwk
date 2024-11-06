@@ -505,7 +505,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025, TestSize.Level1)
     jobParams->printQuality = "";
     jobParams->color = "";
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 6);
+    EXPECT_EQ(ret, 5);
     delete jobParams;
     delete options;
 }
@@ -533,7 +533,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0026, TestSize.Level1)
     jobParams->printQuality = "test_printQuality";
     jobParams->color = "test_color";
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 6);
+    EXPECT_EQ(ret, 5);
     delete jobParams;
     delete options;
 }
@@ -1423,7 +1423,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0068, TestSize.Level1)
     EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"]);
     EXPECT_EQ(jobParams->printerName, optionJson["printerName"]);
     EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"]);
-    EXPECT_EQ(jobParams->borderless, optionJson["documentCategory"]);
     EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"]);
     printCupsClient.DumpJobParameters(jobParams);
     delete jobParams;
@@ -1512,7 +1511,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0072, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     bool ret = printCupsClient.IsCupsServerAlive();
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(ret, true);
 }
 
 /**

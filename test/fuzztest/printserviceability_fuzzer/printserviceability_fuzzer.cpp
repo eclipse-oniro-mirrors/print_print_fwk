@@ -531,7 +531,6 @@ void TestBuildPrinterPreference(const uint8_t *data, size_t size, FuzzedDataProv
 {
     std::string option = "{\
         \"cupsOptions\" : {\
-            \"supportedPageSizeArray\" : \"String\",\
             \"orientation-requested-supported\" : \"String\",\
             \"print-quality-supported\" : \"String\"\
         }\
@@ -575,7 +574,6 @@ void TestBuildPrinterAttrComponentByJson(const uint8_t *data, size_t size, Fuzze
     std::string key = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string arrObject = "{\
         \"cupsOptions\" : [\
-            \"supportedPageSizeArray\", \
             \"orientation-requested-supported\", \
             \"print-quality-supported\"\
         ]\
