@@ -19,6 +19,7 @@
 #include "ability.h"
 #include "napi_base_context.h"
 #include "scan_log.h"
+#include "scan_util.h"
 #include "securec.h"
 
 namespace OHOS::Scan {
@@ -376,7 +377,11 @@ bool NapiScanUtils::DecodeExtensionCid(const std::string &cid, std::string &exte
         return false;
     }
     extensionId = cid.substr(0, pos);
-    callbackId = static_cast<uint32_t>(atoi(cid.substr(pos + 1).c_str()));
+    int32_t callbackIdTmp = 0;
+    if (!ScanUtil::ConvertToInt(cid.substr(pos + 1), callbackIdTmp)) {
+        return false;
+    }
+    callbackId = static_cast<uint32_t>(callbackIdTmp);
     return true;
 }
 

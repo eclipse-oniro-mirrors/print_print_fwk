@@ -154,7 +154,7 @@ void PrintHttpServerManager::DealUsbDevDetach(const std::string &devStr)
         return;
     }
     cJSON *jsonTemp = cJSON_GetObjectItem(devJson, "name");
-    if (jsonTemp == nullptr || jsonTemp->valuestring  == NULL) {
+    if (jsonTemp == nullptr || jsonTemp->valuestring  == nullptr) {
         PRINT_HILOGE("The devJson does not have a necessary attribute.");
         cJSON_Delete(devJson);
         return;

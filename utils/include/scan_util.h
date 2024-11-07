@@ -17,6 +17,7 @@
 #define SCAN_UTIL_H
 
 #include <algorithm>
+#include <charconv>
 #include <iostream>
 #include <sstream>
 #include <list>
@@ -31,6 +32,7 @@ public:
     #ifdef SANE_ENABLE
     static ScanErrorCode ConvertErro(const SANE_Status status);
     #endif
+    static bool ConvertToInt(const std::string& str, int32_t& value);
 };
 #ifdef SANE_ENABLE
 inline ScanErrorCode ScanUtil::ConvertErro(const SANE_Status status)
@@ -38,6 +40,11 @@ inline ScanErrorCode ScanUtil::ConvertErro(const SANE_Status status)
     return static_cast<ScanErrorCode> (status + E_SCAN_GOOD);
 }
 #endif
+inline bool ScanUtil::ConvertToInt(const std::string& str, int32_t& value)
+{
+    auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
+    return ec == std::errc{} && ptr == str.data() + str.size();
+}
 } // namespace OHOS::Scan
 
 #endif // SCAN_UTIL_H

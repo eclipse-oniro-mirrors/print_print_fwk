@@ -34,7 +34,7 @@ bool ParseAttributeToValue(ipp_t *response, const std::string &keyword, T &value
         PRINT_HILOGW("attrPtr is null");
         return false;
     }
-    const char *attrString = ippGetString(attrPtr, 0, NULL);
+    const char *attrString = ippGetString(attrPtr, 0, nullptr);
     if (attrString == nullptr) {
         PRINT_HILOGW("attrString is null");
         return false;
@@ -63,7 +63,7 @@ bool ParseAttributesToList(ipp_t *response, const std::string &keyword, std::vec
     int num = ippGetCount(attrPtr);
     PRINT_HILOGD("number of values %{public}d", num);
     for (int i = 0; i < num; i++) {
-        const char *attrString = ippGetString(attrPtr, i, NULL);
+        const char *attrString = ippGetString(attrPtr, i, nullptr);
         if (attrString == nullptr) {
             PRINT_HILOGW("attrString is null");
             continue;
@@ -104,7 +104,7 @@ std::string ConvertIppAttributesToJsonString(ipp_t *response, const std::string 
     }
     nlohmann::json jsonArray = nlohmann::json::array();
     for (int i = 0; i < ippGetCount(attrPtr); i++) {
-        const char *attrString = ippGetString(attrPtr, i, NULL);
+        const char *attrString = ippGetString(attrPtr, i, nullptr);
         if (attrString == nullptr) {
             continue;
         }
@@ -116,15 +116,15 @@ std::string ConvertIppAttributesToJsonString(ipp_t *response, const std::string 
 void SetCapabilityGroupAttribute(ipp_t *response, PrinterCapability &printerCaps)
 {
     ipp_attribute_t *attrPtr;
-    if ((attrPtr = ippFindAttribute(response, "printer-state", IPP_TAG_ENUM)) != NULL) {
+    if ((attrPtr = ippFindAttribute(response, "printer-state", IPP_TAG_ENUM)) != nullptr) {
         printerCaps.SetPrinterAttrNameAndValue("printer-state",
             ippEnumString("printer-state", ippGetInteger(attrPtr, 0)));
     }
-    if ((attrPtr = ippFindAttribute(response, "printer-info", IPP_TAG_TEXTLANG)) != NULL) {
-        printerCaps.SetPrinterAttrNameAndValue("printer-info", ippGetString(attrPtr, 0, NULL));
+    if ((attrPtr = ippFindAttribute(response, "printer-info", IPP_TAG_TEXTLANG)) != nullptr) {
+        printerCaps.SetPrinterAttrNameAndValue("printer-info", ippGetString(attrPtr, 0, nullptr));
     }
-    if ((attrPtr = ippFindAttribute(response, "printer-location", IPP_TAG_TEXT)) != NULL) {
-        printerCaps.SetPrinterAttrNameAndValue("printer-location", ippGetString(attrPtr, 0, NULL));
+    if ((attrPtr = ippFindAttribute(response, "printer-location", IPP_TAG_TEXT)) != nullptr) {
+        printerCaps.SetPrinterAttrNameAndValue("printer-location", ippGetString(attrPtr, 0, nullptr));
     }
 }
 
@@ -337,32 +337,32 @@ void ParseMediaColDefaultAttributes(ipp_t *response, PrinterCapability &printerC
     }
     attrPtr = ippFindAttribute(defaultMediaCol, "media-source", IPP_TAG_KEYWORD);
     if (attrPtr != nullptr) {
-        PRINT_HILOGD("media-source-default found: %{public}s", ippGetString(attrPtr, 0, NULL));
-        printerCaps.SetPrinterAttrNameAndValue("media-source-default", ippGetString(attrPtr, 0, NULL));
+        PRINT_HILOGD("media-source-default found: %{public}s", ippGetString(attrPtr, 0, nullptr));
+        printerCaps.SetPrinterAttrNameAndValue("media-source-default", ippGetString(attrPtr, 0, nullptr));
     }
     attrPtr = ippFindAttribute(defaultMediaCol, "media-type", IPP_TAG_KEYWORD);
     if (attrPtr != nullptr) {
-        PRINT_HILOGD("media-type-default found: %{public}s", ippGetString(attrPtr, 0, NULL));
-        printerCaps.SetPrinterAttrNameAndValue("media-type-default", ippGetString(attrPtr, 0, NULL));
+        PRINT_HILOGD("media-type-default found: %{public}s", ippGetString(attrPtr, 0, nullptr));
+        printerCaps.SetPrinterAttrNameAndValue("media-type-default", ippGetString(attrPtr, 0, nullptr));
     }
 }
 
 void ParseMediaMarginAttributes(ipp_t *response, PrinterCapability &printerCaps)
 {
     ipp_attribute_t *attrPtr;
-    if ((attrPtr = ippFindAttribute(response, "media-bottom-margin-supported", IPP_TAG_INTEGER)) != NULL) {
+    if ((attrPtr = ippFindAttribute(response, "media-bottom-margin-supported", IPP_TAG_INTEGER)) != nullptr) {
         printerCaps.SetPrinterAttrNameAndValue("media-bottom-margin-supported",
             std::to_string(ippGetInteger(attrPtr, 0)).c_str());
     }
-    if ((attrPtr = ippFindAttribute(response, "media-top-margin-supported", IPP_TAG_INTEGER)) != NULL) {
+    if ((attrPtr = ippFindAttribute(response, "media-top-margin-supported", IPP_TAG_INTEGER)) != nullptr) {
         printerCaps.SetPrinterAttrNameAndValue("media-top-margin-supported",
             std::to_string(ippGetInteger(attrPtr, 0)).c_str());
     }
-    if ((attrPtr = ippFindAttribute(response, "media-left-margin-supported", IPP_TAG_INTEGER)) != NULL) {
+    if ((attrPtr = ippFindAttribute(response, "media-left-margin-supported", IPP_TAG_INTEGER)) != nullptr) {
         printerCaps.SetPrinterAttrNameAndValue("media-left-margin-supported",
             std::to_string(ippGetInteger(attrPtr, 0)).c_str());
     }
-    if ((attrPtr = ippFindAttribute(response, "media-right-margin-supported", IPP_TAG_INTEGER)) != NULL) {
+    if ((attrPtr = ippFindAttribute(response, "media-right-margin-supported", IPP_TAG_INTEGER)) != nullptr) {
         printerCaps.SetPrinterAttrNameAndValue("media-right-margin-supported",
             std::to_string(ippGetInteger(attrPtr, 0)).c_str());
     }
@@ -372,14 +372,14 @@ void ParseOrientationAttributes(ipp_t *response, PrinterCapability &printerCaps)
 {
     std::string keyword = "orientation-requested-default";
     ipp_attribute_t *attrPtr = ippFindAttribute(response, keyword.c_str(), IPP_TAG_ENUM);
-    if (attrPtr != NULL) {
+    if (attrPtr != nullptr) {
         int orientationEnum = ippGetInteger(attrPtr, 0);
         printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), std::to_string(orientationEnum).c_str());
         PRINT_HILOGD("orientation-default found: %{public}d", orientationEnum);
     }
     keyword = "orientation-requested-supported";
     attrPtr = ippFindAttribute(response, keyword.c_str(), IPP_TAG_ENUM);
-    if (attrPtr != NULL) {
+    if (attrPtr != nullptr) {
         int num = ippGetCount(attrPtr);
         if (num > 0) {
             nlohmann::json supportedOrientationArray = nlohmann::json::array();
@@ -418,14 +418,14 @@ void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
 {
     ipp_attribute_t *attrPtr;
     nlohmann::json options;
-    if ((attrPtr = ippFindAttribute(response, "printer-make-and-model", IPP_TAG_TEXT)) != NULL) {
-        options["make"] = ippGetString(attrPtr, 0, NULL);
+    if ((attrPtr = ippFindAttribute(response, "printer-make-and-model", IPP_TAG_TEXT)) != nullptr) {
+        options["make"] = ippGetString(attrPtr, 0, nullptr);
     }
-    if ((attrPtr = ippFindAttribute(response, "printer-uuid", IPP_TAG_URI)) != NULL) {
-        options["uuid"] = ippGetString(attrPtr, 0, NULL);
+    if ((attrPtr = ippFindAttribute(response, "printer-uuid", IPP_TAG_URI)) != nullptr) {
+        options["uuid"] = ippGetString(attrPtr, 0, nullptr);
     }
-    if ((attrPtr = ippFindAttribute(response, "printer-name", IPP_TAG_NAME)) != NULL) {
-        options["printerName"] = ippGetString(attrPtr, 0, NULL);
+    if ((attrPtr = ippFindAttribute(response, "printer-name", IPP_TAG_NAME)) != nullptr) {
+        options["printerName"] = ippGetString(attrPtr, 0, nullptr);
     }
     std::string keyword = "media-type-supported";
     std::string supportTypes;
@@ -436,7 +436,7 @@ void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
     } else {
         nlohmann::json jsonArray = nlohmann::json::array();
         for (int i = 0; i < ippGetCount(attrPtr); i++) {
-            const char *attrString = ippGetString(attrPtr, i, NULL);
+            const char *attrString = ippGetString(attrPtr, i, nullptr);
             if (attrString == nullptr) {
                 continue;
             }
@@ -479,7 +479,7 @@ void ParsePrinterAttributes(ipp_t *response, PrinterCapability &printerCaps)
 bool ParsePrinterStatusAttributes(ipp_t *response, PrinterStatus &status)
 {
     ipp_attribute_t *attrPtr = ippFindAttribute(response, "printer-state", IPP_TAG_ENUM);
-    if (attrPtr != NULL) {
+    if (attrPtr != nullptr) {
         int enumValue = ippGetInteger(attrPtr, 0) - IPP_PSTATE_IDLE;
         if (enumValue >= PRINTER_STATUS_IDLE && enumValue <= PRINTER_STATUS_UNAVAILABLE) {
             status = static_cast<PrinterStatus>(enumValue);

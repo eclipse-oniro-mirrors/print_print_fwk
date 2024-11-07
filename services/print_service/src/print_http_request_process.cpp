@@ -18,6 +18,7 @@
 #include <cmath>
 #include "print_log.h"
 #include "print_ipp_over_usb_util.h"
+#include "print_util.h"
 #include "usb_errors.h"
 
 namespace OHOS::Print {
@@ -106,7 +107,12 @@ void PrintHttpRequestProcess::GetContentLength(const std::vector<uint8_t> &readT
                 lenStr += readTempBuffer[lenIndex];
                 lenIndex++;
             }
-            contentLength = static_cast<size_t>(std::stoi(lenStr));
+            int32_t contentLengthTmp = 0;
+            if (!PrintUtil::ConvertToInt(lenStr, contentLengthTmp)) {
+                PRINT_HILOGE("lenStr [%{public}s] can not parse to number.", lenStr.c_str());
+                return;
+            }
+            contentLength = static_cast<size_t>(contentLengthTmp);
             PRINT_HILOGD("contentLength = %{public}s,  %{public}lu", lenStr.c_str(), contentLength);
         }
     }

@@ -35,7 +35,7 @@ PrintSecurityGuardInfo::PrintSecurityGuardInfo(const std::string callPkg, const 
 #endif
 }
 
-void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob)
+void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob)
 {
     std::string printerId = printerInfo.GetPrinterId();
     std::string description = printerInfo.GetDescription();
@@ -78,7 +78,7 @@ void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, co
             outcome_ = "failed";
             break;
         default:
-            PRINT_HILOGD("PrintSecurityGuardInfo setPrintTypeInfo unknown subState:%{public}d", subState);
+            PRINT_HILOGD("PrintSecurityGuardInfo SetPrintTypeInfo unknown subState:%{public}d", subState);
             break;
     }
 }

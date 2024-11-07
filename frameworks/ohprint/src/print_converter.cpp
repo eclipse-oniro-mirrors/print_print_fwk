@@ -55,8 +55,7 @@ bool ConvertStringToInt(const char *src, int &dst)
     if (src == nullptr) {
         return false;
     }
-    dst = atoi(src);
-    if (errno == ERANGE) {
+    if (!PrintUtil::ConvertToInt(std::string(src), dst)) {
         PRINT_HILOGW("ConvertStringToInt fail: %{public}s", src);
         return false;
     }

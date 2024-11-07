@@ -16,23 +16,30 @@
 #ifndef PRINT_USER_DATA_H
 #define PRINT_USER_DATA_H
 
+#include <charconv>
 #include <string>
 #include <map>
 #include <deque>
 #include <mutex>
 
 #include "printer_info.h"
+#include "print_util.h"
 #include "iprint_callback.h"
 
 namespace OHOS {
 namespace Print {
-
 using namespace std;
-
 struct JobIdCmp {
     bool operator()(const std::string a, const std::string b) const
     {
-        return atoi(a.c_str()) > atoi(b.c_str());
+        int32_t numA = 0;
+        int32_t numB = 0;
+        if (PrintUtil::ConvertToInt(a, numA) && PrintUtil::ConvertToInt(b, numB)) {
+            return numA > numB;
+        } else {
+            // If invalid, By default, the number A is greater than the number B.
+            return true;
+        }
     }
 };
 

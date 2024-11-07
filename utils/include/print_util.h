@@ -17,6 +17,7 @@
 #define PRINT_UTIL_H
 
 #include <algorithm>
+#include <charconv>
 #include <iostream>
 #include <sstream>
 #include <list>
@@ -48,6 +49,8 @@ public:
     static void Str2VecStr(std::string& str, std::vector<std::string>& vec);
 
     static bool startsWith(const std::string& str, const std::string& prefix);
+
+    static bool ConvertToInt(const std::string& str, int32_t& value);
 };
 
 inline std::vector<uint32_t> PrintUtil::Str2Vec(std::string str)
@@ -61,7 +64,11 @@ inline std::vector<uint32_t> PrintUtil::Str2Vec(std::string str)
     std::istringstream is(str);
     std::string temp;
     while (getline(is, temp, ',')) {
-        vec.push_back(stoi(temp));
+        int32_t tempNum = 0;
+        if (!ConvertToInt(temp, tempNum)) {
+            return {};
+        }
+        vec.push_back(tempNum);
     }
     return vec;
 }
@@ -157,6 +164,13 @@ inline bool PrintUtil::startsWith(const std::string& str, const std::string& pre
     }
     return str.compare(0, prefix.length(), prefix) == 0;
 }
+
+inline bool PrintUtil::ConvertToInt(const std::string& str, int32_t& value)
+{
+    auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
+    return ec == std::errc{} && ptr == str.data() + str.size();
+}
+
 } // namespace OHOS::Print
 
 #endif // PRINT_UTIL_H
