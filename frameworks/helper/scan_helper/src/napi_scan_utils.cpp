@@ -283,7 +283,7 @@ napi_value NapiScanUtils::CreateBoolean(napi_env env, bool value)
 
 bool NapiScanUtils::GetBooleanFromValue(napi_env env, napi_value value)
 {
-    bool ret = 0;
+    bool ret = false;
     SCAN_CALL_BASE(env, napi_get_value_bool(env, value, &ret), 0);
     return ret;
 }
@@ -330,11 +330,13 @@ std::string NapiScanUtils::ToLower(const std::string &s)
 std::string NapiScanUtils::GetValueString(napi_env env, napi_value value)
 {
     std::string resultValue = "";
-    char value_string[256];
+    char value_string[256] = { 0 };
     size_t value_size = 256;
-    size_t result;
-    napi_get_value_string_utf8(env, value, value_string, value_size, &result);
-    resultValue = value_string;
+    size_t result = 0;
+    napi_status status = napi_get_value_string_utf8(env, value, value_string, value_size, &result);
+    if (status == napi_ok && result > 0) {
+        resultValue = value_string;
+    }
     return resultValue;
 }
 
@@ -420,7 +422,7 @@ uint32_t NapiScanUtils::GetIdFromFdPath(const std::string &fdPath)
 {
     std::string fd_str = fdPath.substr(fdPath.rfind('/') + 1, fdPath.length());
     std::stringstream getStrStream(fd_str);
-    uint32_t fd;
+    uint32_t fd = 0;
     if (!(getStrStream >> fd)) {
         SCAN_HILOGD("failed to convert to uint32");
     }

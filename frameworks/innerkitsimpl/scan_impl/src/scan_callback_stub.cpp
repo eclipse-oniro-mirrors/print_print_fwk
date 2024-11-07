@@ -44,7 +44,7 @@ int32_t ScanCallbackStub::OnRemoteRequest(
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
         if (requestFunc != nullptr) {
-            return (this->*requestFunc)(data, reply);
+            return static_cast<int32_t>((this->*requestFunc)(data, reply));
         }
     }
     SCAN_HILOGW("default case, need check.");

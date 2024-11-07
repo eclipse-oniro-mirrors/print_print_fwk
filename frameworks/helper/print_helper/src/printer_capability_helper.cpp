@@ -106,6 +106,7 @@ bool PrinterCapabilityHelper::CreateResolutionList(napi_env env, napi_value &jsP
     napi_value jsResolutionList = nullptr;
     PRINT_CALL_BASE(env, napi_create_array(env, &jsResolutionList), false);
     std::vector<PrintResolution> resolutionList;
+    cap.GetResolution(resolutionList);
     uint32_t arrLength = resolutionList.size();
 
     for (uint32_t index = 0; index < arrLength; index++) {
