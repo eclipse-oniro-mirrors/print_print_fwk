@@ -891,15 +891,15 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0044, TestSize.Level1)
     service->helper_ = helper;
     PrintJob printJob;
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
-    service->SendQueuePrintJob(printerId);
+    EXPECT_EQ(service->SendQueuePrintJob(printerId), false);
 
     std::string jobId = GetDefaultJobId();
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-    service->SendQueuePrintJob(printerId);
+    EXPECT_EQ(service->SendQueuePrintJob(printerId), false);
     int32_t userId = 100;
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
-    service->SendQueuePrintJob(printerId);
+    EXPECT_EQ(service->SendQueuePrintJob(printerId), false);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0045, TestSize.Level1)
@@ -1059,7 +1059,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0057, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     int event = 0;
     PrinterInfo info;
-    service->SendPrinterChangeEvent(event, info);
+    EXPECT_EQ(service->SendPrinterChangeEvent(event, info), 0);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0058, TestSize.Level1)
@@ -1068,20 +1068,20 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0058, TestSize.Level1)
     std::shared_ptr<PrintJob> jobInfo = std::make_shared<PrintJob>();
     std::string printerId = "1234";
     uint32_t subState = 0;
-    service->ReportHisysEvent(jobInfo, printerId, subState);
+    EXPECT_NE(service->ReportHisysEvent(jobInfo, printerId, subState), 0);
     printerId = "ePrintID";
-    service->ReportHisysEvent(jobInfo, printerId, subState);
+    EXPECT_NE(service->ReportHisysEvent(jobInfo, printerId, subState), 0);
     std::shared_ptr<PrinterInfo> printInfo = std::make_shared<PrinterInfo>();
     printInfo->SetPrinterName("Direct0759");
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printInfo;
-    service->ReportHisysEvent(jobInfo, printerId, subState);
+    EXPECT_NE(service->ReportHisysEvent(jobInfo, printerId, subState), 0);
     nlohmann::json infoJson;
     infoJson["printerUri"] = "ipp123";
     jobInfo->SetOption(infoJson.dump());
-    service->ReportHisysEvent(jobInfo, printerId, subState);
+    EXPECT_NE(service->ReportHisysEvent(jobInfo, printerId, subState), 0);
     infoJson["jobDescription"] = "testPrinter";
     jobInfo->SetOption(infoJson.dump());
-    service->ReportHisysEvent(jobInfo, printerId, subState);
+    EXPECT_NE(service->ReportHisysEvent(jobInfo, printerId, subState), 0);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0059, TestSize.Level1)
@@ -1621,7 +1621,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0093, TestSize.Level1)
     service->printUserDataMap_[101] = userData;
     int event = 0;
     PrinterInfo info;
-    service->SendPrinterDiscoverEvent(event, info);
+    EXPECT_NE(service->SendPrinterDiscoverEvent(event, info), 0);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0094, TestSize.Level1)
@@ -1632,7 +1632,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0094, TestSize.Level1)
     service->printUserDataMap_[101] = userData;
     int event = 0;
     PrinterInfo info;
-    service->SendPrinterChangeEvent(event, info);
+    EXPECT_NE(service->SendPrinterChangeEvent(event, info), 0);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0095, TestSize.Level1)
@@ -1651,15 +1651,15 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0096, TestSize.Level1)
     PrinterInfo info;
     PrinterEvent printerEvent = PRINTER_EVENT_STATE_CHANGED;
     service->registeredListeners_["test"] = nullptr;
-    service->SendPrinterEventChangeEvent(printerEvent, info);
+    EXPECT_EQ(service->SendPrinterEventChangeEvent(printerEvent, info), 0);
 
     std::string eventType = "123" + PRINTER_CHANGE_EVENT_TYPE;
     service->registeredListeners_[eventType] = nullptr;
-    service->SendPrinterEventChangeEvent(printerEvent, info);
+    EXPECT_EQ(service->SendPrinterEventChangeEvent(printerEvent, info), 0);
 
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
     service->registeredListeners_[eventType] = listener;
-    service->SendPrinterEventChangeEvent(printerEvent, info);
+    EXPECT_EQ(service->SendPrinterEventChangeEvent(printerEvent, info), 0);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0097, TestSize.Level1)
@@ -1691,10 +1691,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0098, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string extensionId = "123";
     std::string extInfo = "123";
-    service->SendExtensionEvent(extensionId, extInfo);
+    EXPECT_EQ(service->SendExtensionEvent(extensionId, extInfo), 0);
     sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
     service->registeredListeners_[EXTINFO_EVENT_TYPE] = listener;
-    service->SendExtensionEvent(extensionId, extInfo);
+    EXPECT_NE(service->SendExtensionEvent(extensionId, extInfo), 0);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0099, TestSize.Level1)
@@ -1987,7 +1987,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0126, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerName = "testPrinterName";
-    service->printSystemData_.QueryPrinterIdByStandardizeName(printerName);
+    EXPECT_EQ(service->printSystemData_.QueryPrinterIdByStandardizeName(printerName), "");
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0127, TestSize.Level1)

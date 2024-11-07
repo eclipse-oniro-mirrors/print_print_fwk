@@ -104,7 +104,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0002, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string path = "";
     mode_t mode = 16;
-    printCupsClient.ChangeFilterPermission(path, mode);
+    EXPECT_EQ(printCupsClient.ChangeFilterPermission(path, mode), true);
 }
 
 /**
