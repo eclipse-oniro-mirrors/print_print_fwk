@@ -1966,7 +1966,7 @@ std::string ScanServiceAbility::ObtainUserCacheDirectory(const int32_t& userId)
         return "";
     }
     std::ostringstream oss;
-    oss << "/data/service/el2" << userId << "/print_service";
+    oss << "/data/service/el2/" << userId << "/print_service";
     return oss.str();
 }
 

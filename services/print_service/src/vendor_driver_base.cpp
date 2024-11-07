@@ -32,6 +32,10 @@ VendorDriverBase::~VendorDriverBase() {}
 
 bool VendorDriverBase::Init(IPrinterVendorManager *manager)
 {
+    if (manager == nullptr) {
+        PRINT_HILOGE("manager is a nullptr.");
+        return false;
+    }
     vendorManager = manager;
     return true;
 }
