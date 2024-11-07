@@ -1683,6 +1683,12 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     CheckJobQueueBlocked(*jobIt->second);
 
     auto printerId = jobIt->second->GetPrinterId();
+    auto printerInfo = printSystemData_.QueryPrinterInfoByPrinterId(printerId);
+    if (printerInfo == nullptr) {
+        PRINT_HILOGE("Invalid printerId");
+        return E_PRINT_INVALID_PRINTER;
+    }
+
     if (state == PRINT_JOB_BLOCKED) {
         ReportHisysEvent(jobIt->second, printerId, subState);
     }
@@ -1693,13 +1699,10 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
             queuedJobList_.erase(jobId);
         }
         if (printerJobMap_[printerId].empty()) {
-            auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
-            if (printerInfo != nullptr) {
-                printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-                printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
-                SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-                SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-            }
+            printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
+            printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
+            SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+            SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         }
         if (IsQueuedJobListEmpty(jobId)) {
             ReportCompletedPrint(printerId);
@@ -3037,7 +3040,6 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
 
     SendPrinterDiscoverEvent(PRINTER_ADDED, *infoPtr);
     SendPrinterEvent(*infoPtr);
-    SendQueuePrintJob(infoPtr->GetPrinterId());
 
     if (printSystemData_.IsPrinterAdded(infoPtr->GetPrinterId()) &&
         !printSystemData_.CheckPrinterBusy(infoPtr->GetPrinterId())) {
@@ -3128,7 +3130,6 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
     }
     SendPrinterDiscoverEvent(PRINTER_ADDED, *printerInfo);
     SendPrinterEvent(*printerInfo);
-    SendQueuePrintJob(globalPrinterId);
     if (printSystemData_.IsPrinterAdded(printerInfo->GetPrinterId()) &&
         !printSystemData_.CheckPrinterBusy(printerInfo->GetPrinterId())) {
         if (CheckPrinterUriDifferent(printerInfo)) {
