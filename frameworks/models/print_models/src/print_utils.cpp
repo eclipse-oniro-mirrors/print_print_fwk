@@ -15,14 +15,15 @@
 
 #include "print_utils.h"
 
-#include <fcntl.h>
-#include "ability.h"
-#include "securec.h"
 #include <chrono>
-#include <sstream>
 #include <cstdlib>
 #include <ctime>
+#include <fcntl.h>
 #include <random>
+#include <sstream>
+#include "ability.h"
+#include "print_util.h"
+#include "securec.h"
 
 namespace OHOS::Print {
 
@@ -88,7 +89,11 @@ bool PrintUtils::DecodeExtensionCid(const std::string &cid, std::string &extensi
         return false;
     }
     extensionId = cid.substr(0, pos);
-    callbackId = static_cast<uint32_t>(atoi(cid.substr(pos + 1).c_str()));
+    int32_t callbackIdTmp = 0;
+    if (!PrintUtil::ConvertToInt(cid.substr(pos + 1), callbackIdTmp)) {
+        return false;
+    }
+    callbackId = static_cast<uint32_t>(callbackIdTmp);
     return true;
 }
 
@@ -300,7 +305,7 @@ std::string PrintUtils::GetPrintJobId()
     ss << timestamp;
 
     std::random_device rd;
-    std::mt19937 gen((unsigned int)time(NULL));
+    std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(MINIMUN_RANDOM_NUMBER_100, MAXIMUN_RANDOM_NUMBER_999);
     int32_t randomNumber = dis(gen);
     std::string jobId = ss.str() + "_" + std::to_string(randomNumber);

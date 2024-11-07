@@ -23,6 +23,7 @@
 #include "ability_manager_client.h"
 #include "print_converter.h"
 #include "print_manager_client.h"
+#include "print_util.h"
 
 using json = nlohmann::json;
 
@@ -473,23 +474,31 @@ void ParsePrinterPreference(const std::string &printerPreference, Print_PrinterI
     json setting = preferenceJson["setting"];
 
     std::string defaultDuplex = GetSettingItemString(DUPLEX_STRING, defaultSetting, setting);
-    if (!defaultDuplex.empty()) {
-        ConvertDuplexMode(std::atoi(defaultDuplex.c_str()), nativePrinterInfo.defaultValue.defaultDuplexMode);
+    int32_t defaultDuplexNum = 0;
+    if (!PrintUtil::ConvertToInt(defaultDuplex, defaultDuplexNum)) {
+        PRINT_HILOGE("defaultDuplex %{public}s can not parse to number", defaultDuplex.c_str());
+        return;
     }
+    ConvertDuplexMode(defaultDuplexNum, nativePrinterInfo.defaultValue.defaultDuplexMode);
 
     std::string defaultOrientation = GetSettingItemString(ORIENTATION_STRING, defaultSetting, setting);
-    if (!defaultOrientation.empty()) {
-        ConvertOrientationMode(
-            std::atoi(defaultOrientation.c_str()), nativePrinterInfo.defaultValue.defaultOrientation);
+    int32_t defaultOrientationNum = 0;
+    if (!PrintUtil::ConvertToInt(defaultOrientation, defaultOrientationNum)) {
+        PRINT_HILOGE("%{public}s is incorrectly formatted.", defaultOrientation.c_str());
+        return;
     }
+    ConvertOrientationMode(defaultOrientationNum, nativePrinterInfo.defaultValue.defaultOrientation);
 
     nativePrinterInfo.defaultValue.defaultPageSizeId =
         CopyString(GetSettingItemString(PAGESIZEID_STRING, defaultSetting, setting));
 
     std::string defaultQuality = GetSettingItemString(QUALITY_STRING, defaultSetting, setting);
-    if (!defaultQuality.empty()) {
-        ConvertQuality(std::atoi(defaultQuality.c_str()), nativePrinterInfo.defaultValue.defaultPrintQuality);
+    int32_t defaultQualityNum = 0;
+    if (!PrintUtil::ConvertToInt(defaultQuality, defaultQualityNum)) {
+        PRINT_HILOGE("defaultQuality %{public}s can not parse to number", defaultQuality.c_str());
+        return;
     }
+    ConvertQuality(defaultQualityNum, nativePrinterInfo.defaultValue.defaultPrintQuality);
 }
 
 Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)

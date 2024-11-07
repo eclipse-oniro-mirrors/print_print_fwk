@@ -780,7 +780,11 @@ bool PrintSystemData::ParseUserListJsonV1(nlohmann::json &jsonObject, std::vecto
         if (userIdStr.empty()) {
             continue;
         }
-        int32_t userId = std::stoi(userIdStr);
+        int32_t userId = 0;
+        if (!PrintUtil::ConvertToInt(userIdStr, userId)) {
+            PRINT_HILOGE("userIdStr [%{public}s] can not parse to number.", userIdStr.c_str());
+            return false;
+        }
         PRINT_HILOGI("ParseUserListJsonV1 userId: %{public}d", userId);
         allPrintUserList.push_back(userId);
     }

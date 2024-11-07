@@ -47,7 +47,7 @@ struct PrintTypeInfo {
 public:
     PrintSecurityGuardInfo(const std::string callPkg, const std::vector<std::string> &fileList);
     std::string ToJsonStr();
-    void setPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob);
+    void SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob);
 
 private:
     int32_t subType_{};

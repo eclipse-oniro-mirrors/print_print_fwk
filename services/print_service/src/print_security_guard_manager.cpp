@@ -36,13 +36,13 @@ void PrintSecurityGuardManager::receiveJobStateUpdate(const std::string jobId, c
     if (it != securityMap_.end() && it->second != nullptr) {
         PRINT_HILOGI("find PrintSecurityGuardInfo");
         auto securityGuard = it->second;
-        securityGuard->setPrintTypeInfo(printerInfo, printJob);
+        securityGuard->SetPrintTypeInfo(printerInfo, printJob);
         securityInfo = securityGuard->ToJsonStr();
     } else {
         PRINT_HILOGI("find PrintSecurityGuardInfo empty");
         std::vector<std::string> fileList;
         auto securityGuard = std::make_shared<PrintSecurityGuardInfo>("", fileList);
-        securityGuard->setPrintTypeInfo(printerInfo, printJob);
+        securityGuard->SetPrintTypeInfo(printerInfo, printJob);
         securityInfo = securityGuard->ToJsonStr();
     }
     ReportSecurityInfo(EVENT_ID, VERSION, securityInfo);
