@@ -1626,5 +1626,45 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0077, TestSize.Level1)
     printCupsClient.DiscoverUsbPrinters(printers);
     EXPECT_EQ(printers.size(), 0);
 }
+
+/**
+ * @tc.name: PrintCupsClientTest_0078
+ * @tc.desc: BuildJobParameters
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0078, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(R"({"key": "value"})");
+
+    json optionJson = json::parse(testJob.GetOption());
+    optionJson["printerUri"] = 1;
+    optionJson["printerName"] = "printer1";
+    optionJson["documentFormat"] = "application/pdf";
+    testJob.SetOption(optionJson.dump());
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"]);
+
+    optionJson["printerUri"] = "ipp://192.168.0.1:111/ipp/print";
+    optionJson["printerName"] = 1;
+    testJob.SetOption(optionJson.dump());
+    jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->printerName, PrintUtil::StandardizePrinterName(optionJson["printerName"]));
+
+    optionJson["printerName"] = "printer1";
+    optionJson["documentFormat"] = 1;
+    testJob.SetOption(optionJson.dump());
+    jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"]);
+}
 }  // namespace Print
 }  // namespace OHOS

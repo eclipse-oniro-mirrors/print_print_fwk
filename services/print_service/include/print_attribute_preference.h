@@ -35,16 +35,16 @@ public:
     static PreferenceSetting BuildPreferenceSettingFromJson(const json& printerAttr)
     {
         PreferenceSetting preferenceSetting;
-        if (printerAttr.contains("pagesizeId")) {
+        if (printerAttr.contains("pagesizeId") && printerAttr["pagesizeId"].is_string()) {
             preferenceSetting.pagesizeId = printerAttr.at("pagesizeId").get<std::string>();
         }
-        if (printerAttr.contains("orientation")) {
+        if (printerAttr.contains("orientation") && printerAttr["orientation"].is_string()) {
             preferenceSetting.orientation = printerAttr.at("orientation").get<std::string>();
         }
-        if (printerAttr.contains("duplex")) {
+        if (printerAttr.contains("duplex") && printerAttr["duplex"].is_string()) {
             preferenceSetting.duplex = printerAttr.at("duplex").get<std::string>();
         }
-        if (printerAttr.contains("quality")) {
+        if (printerAttr.contains("quality") && printerAttr["quality"].is_string()) {
             preferenceSetting.quality = printerAttr.at("quality").get<std::string>();
         }
         return preferenceSetting;
@@ -73,26 +73,35 @@ public:
         : pagesizeId(pagesizeId), orientation(orientation), duplex(duplex), quality(quality),
           defaultSetting(defaultSetting), setting(setting) {}
 
+    static void GetArrayFromJson(const json& value, std::vector<std::string> &target, const std::string& key)
+    {
+        if (value.contains(key) && value.is_object()) {
+            const json& jsonValue = value.at(key);
+            for (auto &element : jsonValue.items()) {
+                nlohmann::json item = element.value();
+                if (!item.is_string()) {
+                    PRINT_HILOGW("this item in preference is not string");
+                    continue;
+                }
+                target.emplace_back(item.get<std::string>());
+            }
+        } else {
+            PRINT_HILOGW("can not find target array in preference, key: %{public}s", key.c_str());
+        }
+    }
+
     static PrinterPreference BuildPrinterPreferenceFromJson(const json& printerAttrs)
     {
         PrinterPreference printerPreference;
-        if (printerAttrs.contains("pagesizeId")) {
-            printerPreference.pagesizeId = printerAttrs.at("pagesizeId").get<std::vector<std::string>>();
-        }
-        if (printerAttrs.contains("orientation")) {
-            printerPreference.orientation = printerAttrs.at("orientation").get<std::vector<std::string>>();
-        }
-        if (printerAttrs.contains("duplex")) {
-            printerPreference.duplex = printerAttrs.at("duplex").get<std::vector<std::string>>();
-        }
-        if (printerAttrs.contains("quality")) {
-            printerPreference.quality = printerAttrs.at("quality").get<std::vector<std::string>>();
-        }
-        if (printerAttrs.contains("defaultSetting")) {
+        GetArrayFromJson(printerAttrs, printerPreference.pagesizeId, "pagesizeId");
+        GetArrayFromJson(printerAttrs, printerPreference.orientation, "orientation");
+        GetArrayFromJson(printerAttrs, printerPreference.duplex, "duplex");
+        GetArrayFromJson(printerAttrs, printerPreference.quality, "quality");
+        if (printerAttrs.contains("defaultSetting") && printerAttrs["defaultSetting"].is_object()) {
             printerPreference.defaultSetting =
                 PreferenceSetting::BuildPreferenceSettingFromJson(printerAttrs.at("defaultSetting"));
         }
-        if (printerAttrs.contains("setting")) {
+        if (printerAttrs.contains("setting") && printerAttrs["setting"].is_object()) {
             printerPreference.setting = PreferenceSetting::BuildPreferenceSettingFromJson(printerAttrs.at("setting"));
         }
         return printerPreference;

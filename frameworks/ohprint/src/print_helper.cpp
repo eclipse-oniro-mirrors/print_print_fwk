@@ -230,27 +230,27 @@ void ParseDefaultPageMargin(const nlohmann::json &cupsOpt, Print_Margin &default
 
 void ParseMediaOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePrinterInfo)
 {
-    if (cupsOpt.contains("defaultPageSizeId")) {
+    if (cupsOpt.contains("defaultPageSizeId") && cupsOpt["defaultPageSizeId"].is_string()) {
         std::string defaultPageSizeId = cupsOpt["defaultPageSizeId"].get<std::string>();
         PRINT_HILOGD("defaultPageSizeId %{public}s", defaultPageSizeId.c_str());
         nativePrinterInfo.defaultValue.defaultPageSizeId = CopyString(defaultPageSizeId);
     }
-    if (cupsOpt.contains("media-type-supported")) {
+    if (cupsOpt.contains("media-type-supported") && cupsOpt["media-type-supported"].is_string()) {
         std::string mediaTypeSupported = cupsOpt["media-type-supported"].get<std::string>();
         PRINT_HILOGD("cupsOptionsStr media-type-supported %{public}s", mediaTypeSupported.c_str());
         nativePrinterInfo.capability.supportedMediaTypes = CopyString(mediaTypeSupported);
     }
-    if (cupsOpt.contains("media-type-default")) {
+    if (cupsOpt.contains("media-type-default") && cupsOpt["media-type-default"].is_string()) {
         std::string mediaTypeDefault = cupsOpt["media-type-default"].get<std::string>();
         PRINT_HILOGD("cupsOptionsStr media-type-default %{public}s", mediaTypeDefault.c_str());
         nativePrinterInfo.defaultValue.defaultMediaType = CopyString(mediaTypeDefault);
     }
-    if (cupsOpt.contains("media-source-default")) {
+    if (cupsOpt.contains("media-source-default") && cupsOpt["media-source-default"].is_string()) {
         std::string mediaSourceDefault = cupsOpt["media-source-default"].get<std::string>();
         PRINT_HILOGD("cupsOptionsStr media-source-default %{public}s", mediaSourceDefault.c_str());
         nativePrinterInfo.defaultValue.defaultPaperSource = CopyString(mediaSourceDefault);
     }
-    if (cupsOpt.contains("media-source-supported")) {
+    if (cupsOpt.contains("media-source-supported") && cupsOpt["media-source-supported"].is_string()) {
         std::string mediaSourceSupported = cupsOpt["media-source-supported"].get<std::string>();
         PRINT_HILOGD("cupsOptionsStr media-source-supported %{public}s", mediaSourceSupported.c_str());
         nativePrinterInfo.capability.supportedPaperSources = CopyString(mediaSourceSupported);
@@ -429,7 +429,8 @@ int32_t ParseInfoOption(const std::string &infoOption, Print_PrinterInfo &native
         return E_PRINT_INVALID_PARAMETER;
     }
     nlohmann::json infoJson = json::parse(infoOption);
-    if (!infoJson.contains("printerUri") || !infoJson.contains("make")) {
+    if (!infoJson.contains("printerUri") || !infoJson["printerUri"].is_string() ||
+        !infoJson.contains("make") || !infoJson["make"].is_string()) {
         PRINT_HILOGW("The infoJson does not have a necessary attribute.");
         return E_PRINT_INVALID_PARAMETER;
     }

@@ -143,7 +143,7 @@ std::string PrintUsbManager::QueryPrinterInfoFromStringDescriptor(
     uint16_t index = USB_INDEX_LANGUAGE_ID_ENGLISH;
     int32_t timeOut = HTTP_COMMON_CONST_VALUE_500;
     const HDI::Usb::V1_0::UsbCtrlTransfer tctrl = {requestType, request, value, index, timeOut};
-    std::vector<uint8_t> bufferData(HTTP_COMMON_CONST_VALUE_100, 0);
+    std::vector<uint8_t> bufferData(USB_CONTROLTRANSFER_READ_TIMEOUT, 0);
     int32_t ret = 0;
     if (isUsbEnable) {
         ret = UsbSrvClient::GetInstance().ControlTransfer(usbDevicePipe, tctrl, bufferData);
