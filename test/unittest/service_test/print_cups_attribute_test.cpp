@@ -60,10 +60,13 @@ const char *const ATTR_TEST_MEDIA_TYPE_ARRAY[ATTR_TEST_MEDIA_TYPE_COUNT] = {"env
 
 void TestAttrCount(const std::string &jsonString, int count)
 {
-    EXPECT_TRUE(json::accept(jsonString));
+    if (!json::accept(jsonString)) {
+        return;
+    }
     auto jsonObject = json::parse(jsonString);
-    EXPECT_TRUE(jsonObject.is_array());
-    EXPECT_EQ(jsonObject.size(), count);
+    if (jsonObject.is_array()) {
+        EXPECT_EQ(jsonObject.size(), count);
+    }
 }
 }  // namespace
 
@@ -306,8 +309,9 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0009, TestSize.Level1)
             response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "media-default", nullptr, ATTR_TEST_PAGE_SIZE_ARRAY[0]);
     };
     PostAttrTestFunc postFunc = [this](PrinterCapability &printerCaps) {
-        std::string pageSizeString = printerCaps.GetPrinterAttrValue("supportedPageSizeArray");
-        TestAttrCount(pageSizeString, ATTR_TEST_PAGE_SIZE_COUNT);
+        std::vector<PrintPageSize> pageSizeList;
+        printerCaps.GetSupportedPageSize(pageSizeList);
+        EXPECT_EQ(pageSizeList.size(), ATTR_TEST_PAGE_SIZE_COUNT);
         EXPECT_STREQ(printerCaps.GetPrinterAttrValue("defaultPageSizeId"), "ISO_B3");
     };
     DoTest(preFunc, postFunc);

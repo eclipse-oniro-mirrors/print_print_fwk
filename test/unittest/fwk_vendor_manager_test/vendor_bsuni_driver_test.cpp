@@ -241,12 +241,12 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0004, TestSize.Level1)
     EXPECT_CALL(mockManager, OnPrinterPpdQueried(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(mockManager, OnPrinterStatusChanged(_, _, _)).WillOnce(Return(true)).WillRepeatedly(Return(false));
     EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    propertyList.list[0].value = "0";
+    propertyList.list[0].value = "{\"state\":\"0\"}";
     EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
     vendorDriver.MonitorPrinterStatus(printerId, true);
     EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
     EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    propertyList.list[0].value = "1";
+    propertyList.list[0].value = "{\"state\":\"1\"}";
     EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
     Print_VendorExtension vendorExtension = { 0 };
     vendorDriver.vendorExtension = &vendorExtension;

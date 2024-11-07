@@ -1330,7 +1330,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0073, TestSize.Level1)
     EXPECT_EQ(service->BuildPrinterPreference(cap, printPreference), E_PRINT_NONE);
     nlohmann::json capJson3;
     nlohmann::json capOpt3;
-    capOpt3["supportedPageSizeArray"] = 123;
     capOpt3["orientation-requested-supported"] = 123;
     capOpt3["sides-supported"] = 123;
     capOpt3["print-quality-supported"] = 123;
@@ -1339,7 +1338,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0073, TestSize.Level1)
     EXPECT_EQ(service->BuildPrinterPreference(cap, printPreference), E_PRINT_NONE);
     nlohmann::json capJson4;
     nlohmann::json capOpt4;
-    capOpt4["supportedPageSizeArray"] = "123";
     capOpt4["orientation-requested-supported"] = "123";
     capOpt4["sides-supported"] = "123";
     capOpt4["print-quality-supported"] = "123";
