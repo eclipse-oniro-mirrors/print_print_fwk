@@ -427,7 +427,6 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
 
     PRINT_HILOGD("StartDiscoverPrinter started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    printSystemData_.ClearDiscoveredPrinterList();
     std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
     for (auto &printerId : printerIdList) {
         vendorManager.MonitorPrinterStatus(printerId, true);
