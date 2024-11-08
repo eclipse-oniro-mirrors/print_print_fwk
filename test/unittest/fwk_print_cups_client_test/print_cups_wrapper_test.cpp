@@ -565,7 +565,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0088, TestSize.Level1)
     printCupsClient.CopyDirectory(srcDir.c_str(), dstDir1.c_str());
     printCupsClient.SymlinkDirectory(srcDir.c_str(), dstDir2.c_str());
     mode_t permissions = S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH;
-    printCupsClient.ChangeFilterPermission(dstDir1, permissions);
+    EXPECT_EQ(printCupsClient.ChangeFilterPermission(dstDir1, permissions), true);
 }
 
 /**

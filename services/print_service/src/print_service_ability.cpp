@@ -1381,27 +1381,27 @@ void PrintServiceAbility::NotifyCurrentUserChanged(const int32_t userId)
     PRINT_HILOGD("NotifyAppCurrentUserChanged end");
 }
 
-void PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
+bool PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
 {
     if (printerJobMap_[printerId].empty()) {
-        return;
+        return false;
     }
 
     auto userData = GetCurrentUserData();
     if (userData == nullptr) {
         PRINT_HILOGE("Get user data failed.");
-        return;
+        return false;
     }
     auto jobId = printerJobMap_[printerId].begin()->first;
     auto jobIt = userData->queuedJobList_.find(jobId);
     if (jobIt == userData->queuedJobList_.end()) {
         PRINT_HILOGE("invalid print job, jobId:%{public}s", jobId.c_str());
-        return;
+        return false;
     }
 
     if (jobIt->second->GetJobState() != PRINT_JOB_PREPARED) {
         PRINT_HILOGE("job state isn't prepared, jobId:%{public}s", jobId.c_str());
-        return;
+        return false;
     }
 
     auto extensionId = PrintUtils::GetExtensionId(printerId);
@@ -1409,7 +1409,7 @@ void PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
 #ifdef CUPS_ENABLE
     if (cid.find(PRINT_EXTENSION_BUNDLE_NAME) != string::npos) {
     PRINT_HILOGD("not eprint extension, no need SendQueuePrintJob");
-    return;
+    return false;
     }
 #endif // CUPS_ENABLE
 
@@ -1428,6 +1428,7 @@ void PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
     } else {
         serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
     }
+    return true;
 }
 
 bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info)
@@ -1748,7 +1749,7 @@ void PrintServiceAbility::ReportCompletedPrint(const std::string &printerId)
     HisysEventUtil::reportPrintSuccess(msg.dump());
 }
 
-void PrintServiceAbility::ReportHisysEvent(
+int32_t PrintServiceAbility::ReportHisysEvent(
     const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState)
 {
     json msg;
@@ -1790,6 +1791,7 @@ void PrintServiceAbility::ReportHisysEvent(
     msg["PRINT_STYLE_SETTING"] = jobInfo->GetDuplexMode();
     msg["FAIL_REASON_CODE"] = subState;
     HisysEventUtil::faultPrint("PRINT_JOB_BLOCKED", msg.dump());
+    return msg.size();
 }
 
 void PrintServiceAbility::NotifyAppJobQueueChanged(const std::string &applyResult)
@@ -2256,26 +2258,32 @@ PrintExtensionInfo PrintServiceAbility::ConvertToPrintExtensionInfo(const AppExe
     return printExtInfo;
 }
 
-void PrintServiceAbility::SendPrinterDiscoverEvent(int event, const PrinterInfo &info)
+int32_t PrintServiceAbility::SendPrinterDiscoverEvent(int event, const PrinterInfo &info)
 {
+    int32_t num = 0;
     PRINT_HILOGD("PrintServiceAbility::SendPrinterDiscoverEvent type %{private}s, %{public}d",
         info.GetPrinterId().c_str(), event);
     for (auto &item : printUserDataMap_) {
         if (item.second != nullptr) {
             item.second->SendPrinterEvent(PRINTER_DISCOVER_EVENT_TYPE, event, info);
+            num++;
         }
     }
+    return num;
 }
 
-void PrintServiceAbility::SendPrinterChangeEvent(int event, const PrinterInfo &info)
+int32_t PrintServiceAbility::SendPrinterChangeEvent(int event, const PrinterInfo &info)
 {
+    int32_t num = 0;
     PRINT_HILOGD("PrintServiceAbility::SendPrinterChangeEvent type %{private}s, %{public}d",
         info.GetPrinterId().c_str(), event);
     for (auto &item : printUserDataMap_) {
         if (item.second != nullptr) {
             item.second->SendPrinterEvent(PRINTER_CHANGE_EVENT_TYPE, event, info);
+            num++;
         }
     }
+    return num;
 }
 
 void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info)
@@ -2290,9 +2298,10 @@ void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info)
     }
 }
 
-void PrintServiceAbility::SendPrinterEventChangeEvent(
+int32_t PrintServiceAbility::SendPrinterEventChangeEvent(
     PrinterEvent printerEvent, const PrinterInfo &info, bool isSignalUser)
 {
+    int32_t num = 0;
     PRINT_HILOGD("PrintServiceAbility::SendPrinterEventChangeEvent printerId: %{public}s, printerEvent: %{public}d",
         info.GetPrinterId().c_str(), printerEvent);
     for (auto eventIt: registeredListeners_) {
@@ -2306,15 +2315,19 @@ void PrintServiceAbility::SendPrinterEventChangeEvent(
             PrinterInfo newInfo(info);
             newInfo.SetIsLastUsedPrinter(true);
             eventIt.second->OnCallback(printerEvent, newInfo);
+            num++;
         } else if (printerEvent == PRINTER_EVENT_LAST_USED_PRINTER_CHANGED) {
             if (CheckUserIdInEventType(eventIt.first)) {
                 PRINT_HILOGI("PrintServiceAbility::SendPrinterEventChangeEvent last used printer event");
                 eventIt.second->OnCallback(printerEvent, info);
+                num++;
             }
         } else {
             eventIt.second->OnCallback(printerEvent, info);
+            num++;
         }
     }
+    return num;
 }
 
 void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
@@ -2365,13 +2378,16 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     }
 }
 
-void PrintServiceAbility::SendExtensionEvent(const std::string &extensionId, const std::string &extInfo)
+int32_t PrintServiceAbility::SendExtensionEvent(const std::string &extensionId, const std::string &extInfo)
 {
+    int32_t num = 0;
     PRINT_HILOGD("PrintServiceAbility::SendExtensionEvent type %{public}s", extInfo.c_str());
     auto eventIt = registeredListeners_.find(EXTINFO_EVENT_TYPE);
     if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {
         eventIt->second->OnCallback(extensionId, extInfo);
+        num++;
     }
+    return num;
 }
 
 void PrintServiceAbility::SetHelper(const std::shared_ptr<PrintServiceHelper> &helper)

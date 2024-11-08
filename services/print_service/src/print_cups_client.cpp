@@ -230,11 +230,11 @@ int32_t PrintCupsClient::StartCupsdService()
     return E_PRINT_NONE;
 }
 
-void PrintCupsClient::ChangeFilterPermission(const std::string &path, mode_t mode)
+bool PrintCupsClient::ChangeFilterPermission(const std::string &path, mode_t mode)
 {
     DIR *dir = opendir(path.c_str());
     if (dir == nullptr) {
-        return;
+        return false;
     }
     struct dirent *entry;
     while ((entry = readdir(dir)) != nullptr) {
@@ -256,6 +256,7 @@ void PrintCupsClient::ChangeFilterPermission(const std::string &path, mode_t mod
         }
     }
     closedir(dir);
+    return true;
 }
 
 void PrintCupsClient::SymlinkFile(std::string srcFilePath, std::string destFilePath)
@@ -494,7 +495,8 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
         ppd = ppds[0];
         std::string serverBin = CUPS_ROOT_DIR + "/serverbin";
         mode_t permissions = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH;
-        ChangeFilterPermission(serverBin, permissions);
+        int ret = ChangeFilterPermission(serverBin, permissions);
+        PRINT_HILOGI("ChangeFilterPermission result: %{public}d", ret);
     }
     PRINT_HILOGI("ppd driver: %{public}s", ppd.c_str());
     if (IsPrinterExist(printerUri.c_str(), standardName.c_str(), ppd.c_str())) {

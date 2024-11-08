@@ -113,7 +113,7 @@ private:
     static void SymlinkFile(std::string srcFilePath, std::string destFilePath);
     static void SymlinkDirectory(const char *srcDir, const char *destDir);
     static void CopyDirectory(const char *srcDir, const char *destDir);
-    static void ChangeFilterPermission(const std::string &path, mode_t mode);
+    static bool ChangeFilterPermission(const std::string &path, mode_t mode);
     bool CheckPrinterMakeModel(JobParameters *jobParams);
     bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
         cups_option_t *options, http_t *http);

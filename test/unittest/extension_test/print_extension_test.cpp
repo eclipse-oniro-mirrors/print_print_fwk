@@ -48,19 +48,19 @@ void PrintExtensionTest::TearDown(void) {}
 HWTEST_F(PrintExtensionTest, PrintExtensionTest_0001, TestSize.Level1)
 {
     std::unique_ptr<Runtime> runtime = nullptr;
-    PrintExtension::Create(runtime);
+    EXPECT_NE(PrintExtension::Create(runtime), nullptr);
 }
 
 HWTEST_F(PrintExtensionTest, PrintExtensionTest_0002, TestSize.Level1)
 {
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntime>();
-    PrintExtension::Create(runtime);
+    EXPECT_NE(PrintExtension::Create(runtime), nullptr);
 }
 
 HWTEST_F(PrintExtensionTest, PrintExtensionTest_0003, TestSize.Level1)
 {
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeJS>();
-    PrintExtension::Create(runtime);
+    EXPECT_NE(PrintExtension::Create(runtime), nullptr);
 }
 
 HWTEST_F(PrintExtensionTest, PrintExtensionTest_0004, TestSize.Level1)
@@ -71,7 +71,9 @@ HWTEST_F(PrintExtensionTest, PrintExtensionTest_0004, TestSize.Level1)
     std::shared_ptr<AbilityHandler> handler = nullptr;
     sptr<IRemoteObject> token = nullptr;
     PrintExtension* printExtension = PrintExtension::Create(runtime);
-    printExtension->CreateAndInitContext(record, application, handler, token);
+    std::shared_ptr<PrintExtensionContext> context;
+    context = printExtension->CreateAndInitContext(record, application, handler, token);
+    EXPECT_NE(context, nullptr);
 }
 } // namespace AbilityRuntime
 } // namespace OHOS

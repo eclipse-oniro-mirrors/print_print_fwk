@@ -18,6 +18,8 @@
 #include "print_constant.h"
 #include "print_log.h"
 
+#include "mock_hisys_event_util.h"
+
 using namespace testing::ext;
 
 namespace OHOS {
@@ -46,7 +48,9 @@ void HisysEventUtilTest::TearDown(void) {}
 */
 HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0001, TestSize.Level1)
 {
-    HisysEventUtil::reportPrintSuccess("printSuccess");
+    OHOS::Print::HisysEventUtil util;
+    util->reportPrintSuccess("printSuccess");
+    EXPECT_CALL(util, reportBehaviorEvent(_, _, _)).Times(1);
 }
 
 /**
@@ -57,7 +61,9 @@ HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0001, TestSize.Level1)
 */
 HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0002, TestSize.Level1)
 {
-    HisysEventUtil::faultPrint("printfault", "errCode");
+    OHOS::Print::HisysEventUtil util;
+    util->faultPrint("printfault", "errCode");
+    EXPECT_CALL(util, reportFaultEvent(_, _, _, _)).Times(1);
 }
 } // namespace Print
 } // namespace OHOS

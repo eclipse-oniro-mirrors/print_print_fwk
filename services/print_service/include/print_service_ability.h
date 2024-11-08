@@ -123,17 +123,17 @@ private:
     bool StartAbility(const AAFwk::Want &want);
     PrintExtensionInfo ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo);
     bool DelayStartDiscovery(const std::string &extensionId);
-    void SendPrinterDiscoverEvent(int event, const PrinterInfo &info);
-    void SendPrinterChangeEvent(int event, const PrinterInfo &info);
+    int32_t SendPrinterDiscoverEvent(int event, const PrinterInfo &info);
+    int32_t SendPrinterChangeEvent(int event, const PrinterInfo &info);
     void SendPrinterEvent(const PrinterInfo &info);
-    void SendPrinterEventChangeEvent(PrinterEvent printerEvent, const PrinterInfo &info, bool isSignalUser = false);
+    int32_t SendPrinterEventChangeEvent(PrinterEvent printerEvent, const PrinterInfo &info, bool isSignalUser = false);
     void SendPrintJobEvent(const PrintJob &jobInfo);
-    void SendExtensionEvent(const std::string &extensionId, const std::string &extInfo);
+    int32_t SendExtensionEvent(const std::string &extensionId, const std::string &extInfo);
     bool CheckPermission(const std::string &permissionName);
-    void SendQueuePrintJob(const std::string &printerId);
+    bool SendQueuePrintJob(const std::string &printerId);
     void NotifyAppJobQueueChanged(const std::string &applyResult);
     bool isEprint(const std::string &printerId);
-    void ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
+    int32_t ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
     void ReportCompletedPrint(const std::string &printerId);
     void CheckJobQueueBlocked(const PrintJob &jobInfo);
     int32_t CallSpooler(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
