@@ -147,11 +147,13 @@ int32_t PrintUserData::SetLastUsedPrinter(const std::string &printerId)
 
 std::string PrintUserData::GetLastUsedPrinter()
 {
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     return lastUsedPrinterId_;
 }
 
 int32_t PrintUserData::SetDefaultPrinter(const std::string &printerId, uint32_t type)
 {
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     PRINT_HILOGI("begin SetDefaultPrinter");
     PRINT_HILOGI("printerId: %{public}s", printerId.c_str());
     PRINT_HILOGI("type: %{public}d", type);
@@ -188,6 +190,7 @@ void PrintUserData::DeletePrinter(const std::string &printerId)
 {
     DeletePrinterFromUsedPrinterList(printerId);
     if (!strcmp(lastUsedPrinterId_.c_str(), printerId.c_str())) {
+        std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
         if (usedPrinterList_.size()) {
             auto it = usedPrinterList_.begin();
             lastUsedPrinterId_ = *it;

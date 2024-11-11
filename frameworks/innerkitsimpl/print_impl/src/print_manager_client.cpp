@@ -685,6 +685,7 @@ int32_t PrintManagerClient::runBase(const char* callerFunName, std::function<int
         return ret;
     }
 
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     ret = func(printServiceProxy_);
     PRINT_HILOGI("PrintManagerClient %{public}s end ret = [%{public}d].", callerFunName, ret);
     return ret;
@@ -700,6 +701,7 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     }
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
     std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     auto it = extCallbackMap_.find(extensionCID);
     if (it == extCallbackMap_.end()) {
         callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
@@ -711,7 +713,6 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
         callbackStub = it->second;
         callbackStub->SetExtCallback(cb);
     }
-    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     int32_t ret = E_PRINT_RPC_FAILURE;
     if (LoadServer() && GetPrintServiceProxy()) {
         ret = printServiceProxy_->RegisterExtCallback(extensionCID, callbackStub);
@@ -862,14 +863,14 @@ int32_t PrintManagerClient::LoadExtSuccess(const std::string &extensionId)
 
 bool PrintManagerClient::LoadServer()
 {
-    if (ready_) {
-        return true;
-    }
-    std::lock_guard<std::mutex> lock(loadMutex_);
-    if (ready_) {
-        return true;
+    {
+        std::unique_lock<std::mutex> lock(conditionMutex_);
+        if (ready_) {
+            return true;
+        }
     }
 
+    std::lock_guard<std::mutex> lock(loadMutex_);
     auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sm == nullptr) {
         PRINT_HILOGE("GetSystemAbilityManager return null");
@@ -910,6 +911,7 @@ void PrintManagerClient::LoadServerSuccess()
 
 void PrintManagerClient::LoadServerFail()
 {
+    std::unique_lock<std::mutex> lock(conditionMutex_);
     ready_ = false;
     PRINT_HILOGE("load print server fail");
 }
