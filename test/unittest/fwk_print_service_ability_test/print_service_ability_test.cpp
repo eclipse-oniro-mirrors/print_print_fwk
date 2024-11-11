@@ -2155,6 +2155,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0137, TestSize.Level1)
     nlohmann::json infoJson;
     infoJson["alias"] = "testPrinterName";
     info.SetOption(infoJson.dump());
-    EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_NONE);
+    EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_INVALID_PARAMETER);
 }
 } // namespace OHOS::Print

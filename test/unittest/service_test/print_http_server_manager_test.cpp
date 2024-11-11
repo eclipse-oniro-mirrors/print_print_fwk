@@ -83,7 +83,7 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_001, TestSize.Le
 {
     auto service = std::make_shared<PrintHttpServerManager>();
     std::string printerName = "HUAWEI PixLab V1-0105";
-    int32_t port;
+    int32_t port = HTTP_MIN_PORT;
     EXPECT_TRUE(service->CreateServer(printerName, port));
     std::this_thread::sleep_for(std::chrono::milliseconds(WAIT_TIME_IN_MS));
     service->StopServer(printerName);

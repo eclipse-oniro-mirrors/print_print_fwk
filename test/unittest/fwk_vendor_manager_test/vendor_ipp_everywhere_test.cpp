@@ -60,7 +60,7 @@ void VendorIppEverywhereTest::TearDown(void) {}
 HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0001, TestSize.Level1)
 {
     VendorIppEveryWhere vendorDriver;
-    EXPECT_TRUE(vendorDriver.Init(nullptr));
+    EXPECT_EQ(vendorDriver.Init(nullptr), false);
     vendorDriver.OnCreate();
     ThreadSyncWait syncWait;
     syncWait.Wait(WAIT_TIME_MS);
@@ -76,7 +76,7 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0001, TestSize.Level1)
 HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0002, TestSize.Level2)
 {
     VendorIppEveryWhere vendorDriver;
-    EXPECT_TRUE(vendorDriver.Init(nullptr));
+    EXPECT_EQ(vendorDriver.Init(nullptr), false);
     EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "protocol"));
     EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "auto"));
     EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp"));
