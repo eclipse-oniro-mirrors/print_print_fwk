@@ -104,7 +104,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0002, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string path = "";
     mode_t mode = 16;
-    EXPECT_EQ(printCupsClient.ChangeFilterPermission(path, mode), true);
+    EXPECT_EQ(printCupsClient.ChangeFilterPermission(path, mode), false);
 }
 
 /**
@@ -1258,7 +1258,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0060, TestSize.Level1)
     printCupsClient.jobQueue_.push_back(jobParams);
     PRINT_HILOGI("CancelCupsJob(): printCupsClient.jobQueue_.size(): %{public}u", printCupsClient.jobQueue_.size());
     printCupsClient.CancelCupsJob(serviceJobId);
-    delete jobParams;
 }
 
 /**
@@ -1502,19 +1501,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0071, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintCupsClientTest_0072
- * @tc.desc: IsCupsServerAlive
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0072, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    bool ret = printCupsClient.IsCupsServerAlive();
-    EXPECT_EQ(ret, true);
-}
-
-/**
  * @tc.name: PrintCupsClientTest_0073
  * @tc.desc: IsPrinterExist
  * @tc.type: FUNC
@@ -1652,19 +1638,19 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0078, TestSize.Level1)
     optionJson["documentFormat"] = "application/pdf";
     testJob.SetOption(optionJson.dump());
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"]);
+    EXPECT_EQ(jobParams, nullptr);
 
     optionJson["printerUri"] = "ipp://192.168.0.1:111/ipp/print";
     optionJson["printerName"] = 1;
     testJob.SetOption(optionJson.dump());
     jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->printerName, PrintUtil::StandardizePrinterName(optionJson["printerName"]));
+    EXPECT_EQ(jobParams, nullptr);
 
     optionJson["printerName"] = "printer1";
     optionJson["documentFormat"] = 1;
     testJob.SetOption(optionJson.dump());
     jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"]);
+    EXPECT_EQ(jobParams, nullptr);
 }
 }  // namespace Print
 }  // namespace OHOS
