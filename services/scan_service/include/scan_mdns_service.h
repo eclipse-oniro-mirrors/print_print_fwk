@@ -63,6 +63,7 @@ class ScanMdnsService {
 public:
     static bool OnStartDiscoverService();
     static bool OnStopDiscoverService();
+    static bool FindDeviceNameByIp(const std::string& ip, std::string& deviceName);
 private:
     static std::map<std::string, sptr<ScanMDnsDiscoveryObserver>> discoveryCallBackPtrs_;
 };
