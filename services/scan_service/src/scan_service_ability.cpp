@@ -66,6 +66,15 @@ static int32_t GetRandomNumber(const int32_t& lowerBoundary, const int32_t& uppe
     std::uniform_int_distribution<> dis(lowerBoundary, upperBoundary);
     return dis(gen);
 }
+
+static std::string GetLastWord(const std::string& str)
+{
+    size_t pos = str.find_last_of(' ');
+    if (pos == std::string::npos) {
+        return str;
+    }
+    return str.substr(pos + 1);
+}
 };
 using namespace std;
 using namespace OHOS::HiviewDFX;
@@ -121,7 +130,6 @@ int32_t ScanServiceAbility::appCount_ = 0;
 std::mutex ScanServiceAbility::instanceLock_;
 sptr<ScanServiceAbility> ScanServiceAbility::instance_;
 std::shared_ptr<AppExecFwk::EventHandler> ScanServiceAbility::serviceHandler_;
-std::map<std::string, ScanDeviceInfoTCP> ScanServiceAbility::scanDeviceInfoTCPMap_;
 std::map<std::string, ScanDeviceInfo> ScanServiceAbility::saneGetUsbDeviceInfoMap;
 std::map<std::string, ScanDeviceInfo> ScanServiceAbility::saneGetTcpDeviceInfoMap;
 std::map<std::string, std::string> ScanServiceAbility::usbSnMap;
@@ -421,22 +429,28 @@ void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
     }
     if (info.deviceId.find(":tcp") != info.deviceId.npos) {
         info.discoverMode = "TCP";
-        SCAN_HILOGI("SetScannerSerialNumber discoverMode:[%{public}s]", info.discoverMode.c_str());
         std::string ip;
         if (!GetTcpDeviceIp(info.deviceId, ip)) {
             SCAN_HILOGE("cannot get device's ip");
             return;
         }
-        auto it = scanDeviceInfoTCPMap_.find(ip);
-        if (it != scanDeviceInfoTCPMap_.end()) {
-            info.serialNumber = it->second.deviceName.substr(
-                it->second.deviceName.find_last_of(" ") + 1, it->second.deviceName.size() - 1);
-            SCAN_HILOGI("Set mdns ScannerSerialNumber :[%{public}s]", info.serialNumber.c_str());
-            info.deviceName = it->second.deviceName;
+        int32_t count = 0;
+        constexpr int32_t MAX_WAIT_COUNT = 5;
+        constexpr int32_t WAIT_TIME = 1;
+        std::string deviceName;
+        bool find = ScanMdnsService::FindDeviceNameByIp(ip, deviceName);
+        while (!find && count < MAX_WAIT_COUNT) {
+            sleep(WAIT_TIME);
+            SCAN_HILOGW("wait a second");
+            find = ScanMdnsService::FindDeviceNameByIp(ip, deviceName);
+            count++;
+        }
+        if (find) {
+            info.serialNumber = GetLastWord(deviceName);
+            info.deviceName = deviceName;
         }
     } else if (info.deviceId.find(":libusb") != info.deviceId.npos) {
         info.discoverMode = "USB";
-        SCAN_HILOGI("SetScannerSerialNumber discoverMode:[%{public}s]", info.discoverMode.c_str());
         std::string firstId;
         std::string secondId;
         if (!GetUsbDevicePort(info.deviceId, firstId, secondId)) {
@@ -444,7 +458,6 @@ void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
             return;
         }
         std::string usbScannerPort = firstId + "-" + secondId;
-        SCAN_HILOGI("usbScannerPort: firstId-secondId [%{public}s]", usbScannerPort.c_str());
         DelayedSingleton<ScanUsbManager>::GetInstance()->RefreshUsbDevice();
         auto it = usbSnMap.find(usbScannerPort);
         if (it != usbSnMap.end() && it->second != "") {
@@ -558,6 +571,7 @@ void ScanServiceAbility::SaneGetScanner()
         g_scannerState = SCANNER_READY;
         return;
     }
+    ScanMdnsService::OnStartDiscoverService();
     for (const SANE_Device **currentDevice = deviceList; *currentDevice != nullptr; ++currentDevice) {
         ScanDeviceInfo info;
         if (!SetScannerInfo(currentDevice, info)) {
@@ -565,10 +579,6 @@ void ScanServiceAbility::SaneGetScanner()
             continue;
         }
         SetScannerSerialNumber(info);
-#ifdef DEBUG_ENABLE
-        SCAN_HILOGD("SaneGetScanner serialNumber:[%{public}s] discoverMode:[%{public}s",
-                    info.serialNumber.c_str(), info.discoverMode.c_str());
-#endif
         if (info.serialNumber != "" && info.discoverMode == "USB") {
             SCAN_HILOGI("SaneGetScanner AddFoundUsbScanner model:[%{public}s]", info.model.c_str());
             AddFoundUsbScanner(info);
@@ -579,6 +589,7 @@ void ScanServiceAbility::SaneGetScanner()
             SCAN_HILOGE("SaneGetScanner SetScannerSerialNumber failed, model:[%{public}s]", info.model.c_str());
         }
     }
+    ScanMdnsService::OnStopDiscoverService();
     clearMapLock_.lock();
     for (auto &t : saneGetUsbDeviceInfoMap) {
         SendDeviceInfo(t.second, SCAN_DEVICE_FOUND);
@@ -607,10 +618,6 @@ int32_t ScanServiceAbility::GetScannerList()
     InitScan(version);
     SCAN_HILOGD("ScanServiceAbility GetScannerList start");
     std::lock_guard<std::mutex> autoLock(lock_);
-    // tcp
-    auto exec_tcp = [=]() {
-        ScanMdnsService::OnStartDiscoverService();
-    };
     auto exec_sane_getscaner = [=]() {
         deviceInfos.clear();
 #ifdef SANE_ENABLE
@@ -620,7 +627,6 @@ int32_t ScanServiceAbility::GetScannerList()
         SendDeviceSearchEnd(message, SCAN_DEVICE_FOUND);
         SendDeviceList(deviceInfos, GET_SCANNER_DEVICE_LIST);
     };
-    serviceHandler_->PostTask(exec_tcp, ASYNC_CMD_DELAY);
     serviceHandler_->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
     SCAN_HILOGD("ScanServiceAbility GetScannerList end");
     return E_SCAN_NONE;
@@ -1161,6 +1167,11 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
 
     SCAN_HILOGD("ScanServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    constexpr int32_t MAX_LISTENERS_COUNT = 1000;
+    if (registeredListeners_.size() > MAX_LISTENERS_COUNT) {
+        SCAN_HILOGE("Exceeded the maximum number of registration.");
+        return E_SCAN_GENERIC_FAILURE;
+    }
     if (registeredListeners_.find(eventType) == registeredListeners_.end()) {
         const auto temp = registeredListeners_.insert(std::make_pair(eventType, listener));
         if (!temp.second) {

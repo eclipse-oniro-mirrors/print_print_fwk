@@ -2189,6 +2189,11 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
 
     PRINT_HILOGD("PrintServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    constexpr int32_t MAX_LISTENERS_COUNT = 1000;
+    if (registeredListeners_.size() > MAX_LISTENERS_COUNT) {
+        PRINT_HILOGE("Exceeded the maximum number of registration.");
+        return E_PRINT_GENERIC_FAILURE;
+    }
     if (registeredListeners_.find(eventType) == registeredListeners_.end()) {
         registeredListeners_.insert(std::make_pair(eventType, listener));
     } else {

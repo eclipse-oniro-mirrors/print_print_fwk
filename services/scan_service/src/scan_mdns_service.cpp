@@ -19,6 +19,8 @@
 namespace OHOS::Scan {
 using namespace OHOS::NetManagerStandard;
 namespace {
+std::map<std::string, ScanDeviceInfoTCP> g_ipTpScannerInfo;
+std::mutex g_lock;
 static std::string GetServiceAttribute(MDnsServiceInfo &info, const std::string& key)
 {
     TxtRecord attrMap = info.GetAttrMap();
@@ -42,8 +44,12 @@ std::map<std::string, sptr<ScanMDnsDiscoveryObserver>> ScanMdnsService::discover
 
 bool ScanMdnsService::OnStartDiscoverService()
 {
-    const std::vector<std::string> scannerServiceTypes = { "_scanner._tcp", "_ipp._tcp" };
+    const std::vector<std::string> scannerServiceTypes = { "_ipp._tcp" };
     constexpr int32_t MDNS_PORT = 5353;
+    {
+        std::lock_guard<std::mutex> autoLock(g_lock);
+        g_ipTpScannerInfo.clear();
+    }
     for (const auto& type : scannerServiceTypes) {
         MDnsServiceInfo mdnsInfo;
         mdnsInfo.type = type;
@@ -82,6 +88,17 @@ bool ScanMdnsService::OnStopDiscoverService()
         discoveryCallBackPtr = nullptr;
     }
     discoveryCallBackPtrs_.clear();
+    return true;
+}
+
+bool ScanMdnsService::FindDeviceNameByIp(const std::string& ip, std::string& deviceName)
+{
+    std::lock_guard<std::mutex> autoLock(g_lock);
+    if (g_ipTpScannerInfo.find(ip) == g_ipTpScannerInfo.end()) {
+        SCAN_HILOGW("cannot find scanner info in map.");
+        return false;
+    }
+    deviceName = g_ipTpScannerInfo[ip].deviceName;
     return true;
 }
 
@@ -132,7 +149,10 @@ void ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, i
         }
     }
     SCAN_HILOGI("mdns scanner's deviceName:[%{public}s]", scannerInfo->deviceName.c_str());
-    ScanServiceAbility::scanDeviceInfoTCPMap_[scannerInfo->addr] = *scannerInfo;
+    {
+        std::lock_guard<std::mutex> autoLock(g_lock);
+        g_ipTpScannerInfo[scannerInfo->addr] = *scannerInfo;
+    }
 }
 
 void ScanMDnsDiscoveryObserver::HandleStopDiscover(const MDnsServiceInfo &serviceInfo, int32_t retCode)
