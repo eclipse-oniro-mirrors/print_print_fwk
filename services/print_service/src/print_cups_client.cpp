@@ -141,6 +141,7 @@ static const std::vector<std::string> IGNORE_STATE_LIST = {PRINTER_STATE_WAITING
     PRINTER_STATE_IGNORE_BUSY_WAITING_COMPLETE_OTHER_REPORT,
     PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT};
 std::mutex jobMutex;
+std::mutex usbPrintersLock_;
 
 static std::vector<PrinterInfo> usbPrinters;
 static void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
@@ -169,6 +170,7 @@ static void DeviceCb(const char *deviceClass, const char *deviceId, const char *
         infoOps["printerUri"] = printerUri;
         infoOps["printerMake"] = printerMake;
         info.SetOption(infoOps.dump());
+        std::lock_guard<std::mutex> lock(usbPrintersLock_);
         usbPrinters.emplace_back(info);
     }
 }
@@ -1804,6 +1806,7 @@ int32_t PrintCupsClient::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
     const char* exclude_schemes = CUPS_EXCLUDE_NONE;
     int timeout = CUPS_TIMEOUT_DEFAULT;
     PRINT_HILOGD("DiscoverUsbPrinters cupsGetDevices");
+    std::lock_guard<std::mutex> lock(usbPrintersLock_);
     usbPrinters.clear();
     if (cupsGetDevices(CUPS_HTTP_DEFAULT, timeout, include_schemes, exclude_schemes,
         DeviceCb, &longStatus) != IPP_OK) {
