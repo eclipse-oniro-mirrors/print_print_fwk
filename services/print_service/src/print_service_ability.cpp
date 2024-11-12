@@ -153,14 +153,18 @@ sptr<PrintServiceAbility> PrintServiceAbility::GetInstance()
 
 int32_t PrintServiceAbility::Init()
 {
-    if (helper_ == nullptr) {
-        helper_ = std::make_shared<PrintServiceHelper>();
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        if (helper_ == nullptr) {
+            helper_ = std::make_shared<PrintServiceHelper>();
+        }
+        if (helper_ == nullptr) {
+            PRINT_HILOGE("PrintServiceHelper create failed.");
+            return E_PRINT_SERVER_FAILURE;
+        }
+        DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(helper_);
+        helper_->PrintSubscribeCommonEvent();
     }
-    if (helper_ == nullptr) {
-        PRINT_HILOGE("PrintServiceHelper create failed.");
-        return E_PRINT_SERVER_FAILURE;
-    }
-    DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(helper_);
     if (!g_publishState) {
         bool ret = Publish(PrintServiceAbility::GetInstance());
         if (!ret) {
@@ -173,7 +177,6 @@ int32_t PrintServiceAbility::Init()
     InitPreferenceMap();
     state_ = ServiceRunningState::STATE_RUNNING;
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
-    helper_->PrintSubscribeCommonEvent();
 #ifdef IPPOVERUSB_ENABLE
     PRINT_HILOGD("before PrintIppOverUsbManager Init");
     DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->Init();
@@ -261,11 +264,11 @@ int32_t PrintServiceAbility::StartService()
         return E_PRINT_NO_PERMISSION;
     }
     int64_t callerTokenId = static_cast<int64_t>(IPCSkeleton::GetCallingTokenID());
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto iter = printUserDataMap_.find(callerTokenId);
     if (iter == printUserDataMap_.end()) {
         auto userData = std::make_shared<PrintUserData>();
         if (userData != nullptr) {
-            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
             printUserDataMap_.insert(std::make_pair(callerTokenId, userData));
         }
     }
@@ -1333,12 +1336,12 @@ void PrintServiceAbility::SetPrintJobCanceled(PrintJob &jobinfo)
 
 void PrintServiceAbility::CancelUserPrintJobs(const int32_t userId)
 {
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto removedUser = printUserMap_.find(userId);
     if (removedUser == printUserMap_.end()) {
         PRINT_HILOGE("User dose not exist.");
         return;
     }
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (removedUser->second == nullptr) {
         PRINT_HILOGE("PrintUserData is nullptr.");
         return;
@@ -1935,6 +1938,7 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
         return E_PRINT_INVALID_PARAMETER;
     }
 
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     switch (event) {
         case APPLICATION_CREATED:
             if (printJobList_.find(jobId) == printJobList_.end()) {
@@ -2069,6 +2073,7 @@ int32_t PrintServiceAbility::RegisterExtCallback(const std::string &extensionCID
 
     PRINT_HILOGD("extensionCID = %{public}s, extensionId = %{public}s", extensionCID.c_str(), extensionId.c_str());
 
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto extensionStateIt = extensionStateList_.find(extensionId);
     if (extensionStateIt == extensionStateList_.end()) {
         PRINT_HILOGE("Invalid extension id");
@@ -2091,7 +2096,6 @@ int32_t PrintServiceAbility::RegisterExtCallback(const std::string &extensionCID
         return E_PRINT_INVALID_PARAMETER;
     }
 
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (extCallbackMap_.find(extensionCID) == extCallbackMap_.end()) {
         extCallbackMap_.insert(std::make_pair(extensionCID, listener));
     } else {

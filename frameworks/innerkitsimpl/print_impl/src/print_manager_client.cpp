@@ -685,6 +685,7 @@ int32_t PrintManagerClient::runBase(const char* callerFunName, std::function<int
         return ret;
     }
 
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     ret = func(printServiceProxy_);
     PRINT_HILOGI("PrintManagerClient %{public}s end ret = [%{public}d].", callerFunName, ret);
     return ret;
@@ -815,12 +816,14 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
 
 int32_t PrintManagerClient::UnregisterAllExtCallback(const std::string &extensionId)
 {
-    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
-    PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback start.");
     int32_t ret = E_PRINT_RPC_FAILURE;
-    if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->UnregisterAllExtCallback(extensionId);
-        PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback out ret = [%{public}d].", ret);
+    {
+        std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+        PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback start.");
+        if (LoadServer() && GetPrintServiceProxy()) {
+            ret = printServiceProxy_->UnregisterAllExtCallback(extensionId);
+            PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback out ret = [%{public}d].", ret);
+        }
     }
     extCallbackMap_.clear();
     return ret;
@@ -862,14 +865,14 @@ int32_t PrintManagerClient::LoadExtSuccess(const std::string &extensionId)
 
 bool PrintManagerClient::LoadServer()
 {
-    if (ready_) {
-        return true;
-    }
-    std::lock_guard<std::mutex> lock(loadMutex_);
-    if (ready_) {
-        return true;
+    {
+        std::unique_lock<std::mutex> lock(conditionMutex_);
+        if (ready_) {
+            return true;
+        }
     }
 
+    std::lock_guard<std::mutex> lock(loadMutex_);
     auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sm == nullptr) {
         PRINT_HILOGE("GetSystemAbilityManager return null");
@@ -910,6 +913,7 @@ void PrintManagerClient::LoadServerSuccess()
 
 void PrintManagerClient::LoadServerFail()
 {
+    std::unique_lock<std::mutex> lock(conditionMutex_);
     ready_ = false;
     PRINT_HILOGE("load print server fail");
 }

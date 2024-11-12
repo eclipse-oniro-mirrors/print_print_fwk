@@ -91,6 +91,7 @@ bool JsPrintCallback::BuildJsWorker(napi_value jsObj, const std::string &name,
         return false;
     }
 
+    std::unique_lock<std::mutex> conditionLock(conditionMutex_);
     jsParam_.self = shared_from_this();
     jsParam_.nativeEngine = jsRuntime_.GetNapiEnv();
     jsParam_.jsObj = jsObj;
