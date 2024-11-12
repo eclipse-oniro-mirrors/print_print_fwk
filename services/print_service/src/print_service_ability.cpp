@@ -153,14 +153,18 @@ sptr<PrintServiceAbility> PrintServiceAbility::GetInstance()
 
 int32_t PrintServiceAbility::Init()
 {
-    if (helper_ == nullptr) {
-        helper_ = std::make_shared<PrintServiceHelper>();
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        if (helper_ == nullptr) {
+            helper_ = std::make_shared<PrintServiceHelper>();
+        }
+        if (helper_ == nullptr) {
+            PRINT_HILOGE("PrintServiceHelper create failed.");
+            return E_PRINT_SERVER_FAILURE;
+        }
+        DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(helper_);
+        helper_->PrintSubscribeCommonEvent();
     }
-    if (helper_ == nullptr) {
-        PRINT_HILOGE("PrintServiceHelper create failed.");
-        return E_PRINT_SERVER_FAILURE;
-    }
-    DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(helper_);
     if (!g_publishState) {
         bool ret = Publish(PrintServiceAbility::GetInstance());
         if (!ret) {
@@ -173,7 +177,6 @@ int32_t PrintServiceAbility::Init()
     InitPreferenceMap();
     state_ = ServiceRunningState::STATE_RUNNING;
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
-    helper_->PrintSubscribeCommonEvent();
 #ifdef IPPOVERUSB_ENABLE
     PRINT_HILOGD("before PrintIppOverUsbManager Init");
     DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->Init();
@@ -2393,7 +2396,6 @@ int32_t PrintServiceAbility::SendExtensionEvent(const std::string &extensionId, 
 
 void PrintServiceAbility::SetHelper(const std::shared_ptr<PrintServiceHelper> &helper)
 {
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     helper_ = helper;
     DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(helper_);
 }

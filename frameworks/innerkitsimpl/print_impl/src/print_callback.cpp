@@ -339,7 +339,6 @@ static void PrintAdapterGetFileAfterCallFun(uv_work_t *work, int status)
 
 bool PrintCallback::onBaseCallback(std::function<void(CallbackParam*)> paramFun, uv_after_work_cb after_work_cb)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
     if (loop == nullptr) {
@@ -358,6 +357,8 @@ bool PrintCallback::onBaseCallback(std::function<void(CallbackParam*)> paramFun,
         delete work;
         return false;
     } else {
+        std::lock_guard<std::mutex> lock(mutex_);
+
         param->env = env_;
         param->ref = ref_;
         param->mutexPtr = &mutex_;
