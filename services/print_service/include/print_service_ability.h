@@ -254,6 +254,7 @@ private:
     uint32_t printAppCount_;
     uint32_t unloadCount_;
     std::map<std::string, std::string> printerIdAndPreferenceMap_;
+    std::recursive_mutex printerPreferenceMapMutex_;
     VendorManager vendorManager;
 };
 }  // namespace OHOS::Print
