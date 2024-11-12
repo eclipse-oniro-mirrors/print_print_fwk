@@ -119,7 +119,7 @@ uint32_t PrintTask::Start(napi_env env, napi_callback_info info)
     uint32_t ret = CallSpooler(env, info, adapterParam, false);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("CallSpooler failed.");
-        for (auto fd : fdlist_) {
+        for (auto fd : fdList_) {
             close(fd);
         }
         fdList_.clear();
