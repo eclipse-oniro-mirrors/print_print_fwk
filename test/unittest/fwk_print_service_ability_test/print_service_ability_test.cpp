@@ -994,6 +994,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0052, TestSize.Level1)
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     userData->printJobList_[jobId] = printJob;
     state = PRINT_JOB_BLOCKED;
+    std::string printerId = "1234";
+    printJob->SetPrinterId(printerId);
+    service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    service->printSystemData_.addedPrinterInfoList_[printerId] = printerInfo;
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
     userData->queuedJobList_[jobId] = printJob;
     state = PRINT_JOB_COMPLETED;
@@ -1492,7 +1497,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0083, TestSize.Level1)
     printJob->SetPrinterId(printerId);
     userData->printJobList_[jobId] = printJob;
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_INVALID_PRINTER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084, TestSize.Level1)
@@ -1867,6 +1872,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112, TestSize.Level1)
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
+    service->printSystemData_.addedPrinterInfoList_[printerId] = printerInfo;
     service->currentUserId_ = 0;
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
