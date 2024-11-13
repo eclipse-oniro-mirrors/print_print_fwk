@@ -29,6 +29,7 @@ public:
     void TearDown() override
     {
         delete printIppOverUsbManager;
+        printIppOverUsbManager = nullptr;
     }
 };
 HWTEST_F(PrintIppOverUsbManagerTest, ConnectPrinter_ShouldReturnFalse_WhenPrinterIdIsEmpty, TestSize.Level0)

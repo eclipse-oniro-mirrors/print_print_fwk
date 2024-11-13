@@ -35,6 +35,7 @@ public:
     void TearDown() override
     {
         delete printUsbManager;
+        printUsbManager = nullptr;
     }
     virtual std::string GetPrinterName(const std::string &name)
     {
@@ -74,7 +75,8 @@ HWTEST_F(PrintUsbManagerTest, isPrintDevice_ShouldReturnFalse_WhenInterfaceCount
     EXPECT_FALSE(printUsbManager->isPrintDevice(usbDevice, printerName));
 }
 
-HWTEST_F(PrintUsbManagerTest, isPrintDevice_ShouldReturnTrue_WhenInterfaceCountIsGreaterThanOrEqualToTwo, TestSize.Level0)
+HWTEST_F(PrintUsbManagerTest,
+    isPrintDevice_ShouldReturnTrue_WhenInterfaceCountIsGreaterThanOrEqualToTwo, TestSize.Level0)
 {
     usbDevice.SetConfigCount(1);
     usbDevice.GetConfigs()[0].SetInterfaceCount(2);
@@ -130,7 +132,8 @@ HWTEST_F(PrintUsbManagerTest, GetProductName_ShouldReturnEmptyString_WhenDeviceH
 HWTEST_F(PrintUsbManagerTest, GetProductName_ShouldReturnCorrectName_WhenDeviceHasLongName, Level0)
 {
     usbDevice.name = "ThisIsALongDeviceNameThatExceedsTheMaximumAllowedLengthForTheProductName";
-    EXPECT_EQ(printUsbManager->GetProductName(usbDevice), "ThisIsALongDeviceNameThatExceedsTheMaximumAllowedLengthForTheProductName");
+    EXPECT_EQ(printUsbManager->GetProductName(usbDevice),
+        "ThisIsALongDeviceNameThatExceedsTheMaximumAllowedLengthForTheProductName");
 }
 
 HWTEST_F(PrintUsbManagerTest, GetProductName_ShouldReturnEmptyString_WhenDeviceIsNull, Level0)
@@ -169,27 +172,31 @@ TEST_F(nullTest, QueryPrinterInfoFromStringDescriptor_ShouldReturnEmptyString_Wh
     EXPECT_EQ(result, "");
 }
 
-HWTEST_F(PrintUsbManagerTest, PrintUsbManager_AllocateInterface_ShouldReturnFalse_WhenSurfaceProducerIsNull, TestSize.Level0)
+HWTEST_F(PrintUsbManagerTest,
+    PrintUsbManager_AllocateInterface_ShouldReturnFalse_WhenSurfaceProducerIsNull, TestSize.Level0)
 {
     printerName = "printer1";
     usbDevice.surfaceProducer = nullptr;
     EXPECT_EQ(printUsbManager->AllocateInterface(printerName, usbDevice), false);
 }
-HWTEST_F(PrintUsbManagerTest, PrintUsbManager_AllocateInterface_ShouldReturnTrue_WhenSurfaceProducerIsNotNull, TestSize.Level0)
+HWTEST_F(PrintUsbManagerTest,
+    PrintUsbManager_AllocateInterface_ShouldReturnTrue_WhenSurfaceProducerIsNotNull, TestSize.Level0)
 {
     printerName = "printer1";
     usbDevice.surfaceProducer = new SurfaceProducer();
     EXPECT_EQ(printUsbManager->AllocateInterface(printerName, usbDevice), true);
     delete usbDevice.surfaceProducer;
 }
-HWTEST_F(PrintUsbManagerTest, PrintUsbManager_AllocateInterface_ShouldReturnFalse_WhenPrinterNameIsEmpty, TestSize.Level0)
+HWTEST_F(PrintUsbManagerTest,
+    PrintUsbManager_AllocateInterface_ShouldReturnFalse_WhenPrinterNameIsEmpty, TestSize.Level0)
 {
     printerName = "";
     usbDevice.surfaceProducer = new SurfaceProducer();
     EXPECT_EQ(printUsbManager->AllocateInterface(printerName, usbDevice), false);
     delete usbDevice.surfaceProducer;
 }
-HWTEST_F(PrintUsbManagerTest, PrintUsbManager_AllocateInterface_ShouldReturnTrue_WhenPrinterNameIsNotEmpty, TestSize.Level0)
+HWTEST_F(PrintUsbManagerTest,
+    PrintUsbManager_AllocateInterface_ShouldReturnTrue_WhenPrinterNameIsNotEmpty, TestSize.Level0)
 {
     printerName = "printer1";
     usbDevice.surfaceProducer = new SurfaceProducer();

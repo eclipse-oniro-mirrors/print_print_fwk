@@ -29,43 +29,33 @@ public:
     void TearDown() override
     {
         delete printHttpRequestProcess;
+        printHttpRequestProcess = nullptr;
     }
 };
 
-HWTEST_F(PrintHttpRequestProcessTest, PrintOperation_ShouldReturnHTTP_OPERATION_GET_ATTR_WhenOperationIsGet_Printer_Attributes, Level0)
+HWTEST_F(PrintHttpRequestProcessTest,
+    PrintOperation_ShouldReturnHTTP_OPERATION_GET_ATTR_WhenOperationIsGet_Printer_Attributes, Level0)
 {
-    // Arrange
     Operation operation = Operation::Get_Printer_Attributes;
-    // Act
     std::string result = printHttpRequestProcess->PrintOperation(operation);
-
-    // Assert
     EXPECT_EQ(result, HTTP_OPERATION_GET_ATTR);
 }
 
-HWTEST_F(PrintHttpRequestProcessTest, PrintOperation_ShouldReturnHTTP_OPERATION_SEND_DOC_WhenOperationIsSend_Document, Level0)
+HWTEST_F(PrintHttpRequestProcessTest,
+    PrintOperation_ShouldReturnHTTP_OPERATION_SEND_DOC_WhenOperationIsSend_Document, Level0)
 {
-    // Arrange
     Operation operation = Operation::Send_Document;
-    // Act
     std::string result = printHttpRequestProcess->PrintOperation(operation);
-
-    // Assert
     EXPECT_EQ(result, HTTP_OPERATION_SEND_DOC);
 }
 
 HWTEST_F(PrintHttpRequestProcessTest, PrintOperation_ShouldReturnHTTP_OPERATION_COMMON_WhenOperationIsOther, Level0)
 {
-    // Arrange
-    Operation operation = static_cast<Operation>(3); // Assuming there are only 3 operations
-    // Act
+    Operation operation = static_cast<Operation>(3);
     std::string result = printHttpRequestProcess->PrintOperation(operation);
-
-    // Assert
     EXPECT_EQ(result, HTTP_OPERATION_COMMON);
 }
 
-// 测试用例1: 当readTempBuffer为空时，应返回0
 HWTEST_F(PrintHttpRequestProcessTest, NeedOffset_ShouldReturnZero_WhenBufferIsEmpty, Level0)
 {
     std::vector<uint8_t> readTempBuffer;
@@ -73,7 +63,6 @@ HWTEST_F(PrintHttpRequestProcessTest, NeedOffset_ShouldReturnZero_WhenBufferIsEm
     EXPECT_EQ(process.NeedOffset(readTempBuffer), 0);
 }
 
-// 测试用例2: 当readTempBuffer中包含非0值时，应返回非0
 HWTEST_F(PrintHttpRequestProcessTest, NeedOffset_ShouldReturnNonZero_WhenBufferContainsNonZeroValues, Level0)
 {
     std::vector<uint8_t> readTempBuffer = {1, 2, 3, 4, 5};
@@ -81,7 +70,6 @@ HWTEST_F(PrintHttpRequestProcessTest, NeedOffset_ShouldReturnNonZero_WhenBufferC
     EXPECT_NE(process.NeedOffset(readTempBuffer), 0);
 }
 
-// 测试用例3: 当readTempBuffer中全部为0时，应返回0
 HWTEST_F(PrintHttpRequestProcessTest, NeedOffset_ShouldReturnZero_WhenBufferContainsOnlyZeroes, Level0)
 {
     std::vector<uint8_t> readTempBuffer = {0, 0, 0, 0, 0};
@@ -89,7 +77,6 @@ HWTEST_F(PrintHttpRequestProcessTest, NeedOffset_ShouldReturnZero_WhenBufferCont
     EXPECT_EQ(process.NeedOffset(readTempBuffer), 0);
 }
 
-// 测试用例4: 当readTempBuffer包含多个非0值时，应返回非0
 HWTEST_F(PrintHttpRequestProcessTest, NeedOffset_ShouldReturnNonZero_WhenBufferContainsMultipleNonZeroValues, Level0)
 {
     std::vector<uint8_t> readTempBuffer = {1, 2, 3, 0, 0};
@@ -97,7 +84,6 @@ HWTEST_F(PrintHttpRequestProcessTest, NeedOffset_ShouldReturnNonZero_WhenBufferC
     EXPECT_NE(process.NeedOffset(readTempBuffer), 0);
 }
 
-// 测试用例5: 当readTempBuffer包含负值时，应返回非0
 HWTEST_F(PrintHttpRequestProcessTest, NeedOffset_ShouldReturnNonZero_WhenBufferContainsNegativeValues, Level0)
 {
     std::vector<uint8_t> readTempBuffer = {-1, -2, -3, -4, -5};
@@ -105,8 +91,8 @@ HWTEST_F(PrintHttpRequestProcessTest, NeedOffset_ShouldReturnNonZero_WhenBufferC
     EXPECT_NE(process.NeedOffset(readTempBuffer), 0);
 }
 
-// 测试用例6: 当readTempBuffer包含混合正负值时，应返回非0
-HWTEST_F(PrintHttpRequestProcessTest, NeedOffset_ShouldReturnNonZero_WhenBufferContainsMixedPositiveAndNegativeValues, Level0)
+HWTEST_F(PrintHttpRequestProcessTest,
+    NeedOffset_ShouldReturnNonZero_WhenBufferContainsMixedPositiveAndNegativeValues, Level0)
 {
     std::vector<uint8_t> readTempBuffer = {1, -2, 3, -4, 5};
     PrintHttpRequestProcess process;
@@ -125,7 +111,8 @@ TEST_F(PrintHttpRequestProcessTest, GetContentLength_ShouldReturnCorrectLength_W
     PrintHttpRequestProcess process;
     std::vector<uint8_t> buffer = {1, 2, 3, 4, 5};
     size_t index = 2;
-    EXPECT_EQ(process.GetContentLength(buffer, index), 3);
+    size_t len = 3;
+    EXPECT_EQ(process.GetContentLength(buffer, index), len);
 }
 TEST_F(PrintHttpRequestProcessTest, GetContentLength_ShouldReturnZero_WhenIndexIsOutOfRange)
 {
@@ -134,7 +121,8 @@ TEST_F(PrintHttpRequestProcessTest, GetContentLength_ShouldReturnZero_WhenIndexI
     size_t index = 10;
     EXPECT_EQ(process.GetContentLength(buffer, index), 0);
 }
-TEST_F(PrintHttpRequestProcessTest, GetContentLength_ShouldReturnCorrectLength_WhenBufferIsNotEmptyAndIndexIsOutOfRange)
+TEST_F(PrintHttpRequestProcessTest,
+    GetContentLength_ShouldReturnCorrectLength_WhenBufferIsNotEmptyAndIndexIsOutOfRange)
 {
     PrintHttpRequestProcess process;
     std::vector<uint8_t> buffer = {1, 2, 3, 4, 5};
@@ -147,7 +135,6 @@ TEST_F(PrintHttpRequestProcessTest, DumpRespIdCode_ShouldReturnNullptr_WhenBuffe
     std::vector<uint8_t> readTempBuffer;
     PrintHttpRequestProcess printHttpRequestProcess;
     printHttpRequestProcess.DumpRespIdCode(readTempBuffer);
-    // 断言预期结果
     EXPECT_EQ(nullptr, printHttpRequestProcess.DumpRespIdCode(readTempBuffer));
 }
 TEST_F(PrintHttpRequestProcessTest, DumpRespIdCode_ShouldReturnNotNullptr_WhenBufferIsNotEmpty)
@@ -155,7 +142,6 @@ TEST_F(PrintHttpRequestProcessTest, DumpRespIdCode_ShouldReturnNotNullptr_WhenBu
     std::vector<uint8_t> readTempBuffer = {1, 2, 3, 4};
     PrintHttpRequestProcess printHttpRequestProcess;
     printHttpRequestProcess.DumpRespIdCode(readTempBuffer);
-    // 断言预期结果
     EXPECT_NE(nullptr, printHttpRequestProcess.DumpRespIdCode(readTempBuffer));
 }
 TEST_F(PrintHttpRequestProcessTest, DumpRespIdCode_ShouldReturnNotNullptr_WhenBufferContainsSpecialCharacters)
@@ -163,7 +149,6 @@ TEST_F(PrintHttpRequestProcessTest, DumpRespIdCode_ShouldReturnNotNullptr_WhenBu
     std::vector<uint8_t> readTempBuffer = {0x00, 0xFF, 0x01, 0xFE};
     PrintHttpRequestProcess printHttpRequestProcess;
     printHttpRequestProcess.DumpRespIdCode(readTempBuffer);
-    // 断言预期结果
     EXPECT_NE(nullptr, printHttpRequestProcess.DumpRespIdCode(readTempBuffer));
 }
 
@@ -211,46 +196,37 @@ TEST_F(PrintHttpRequestProcessTest, CalculateRequestId_ShouldReturnZero_WhenSurf
 
 TEST_F(PrintHttpRequestProcessTest, CalculateRequestId_ShouldReturnNonZero_WhenSurfaceProducerIsNotNull)
 {
-    // Mock the IConsumerSurface and IBufferProducer interfaces
     Mock<IConsumerSurface> mockSurface;
     Mock<IBufferProducer> mockProducer;
-    // Set up the expectations
     EXPECT_CALL(mockSurface, GetProducer()).WillOnce(Return(&mockProducer));
-    // Call the method under test
     size_t requestId = printHttpRequestProcess->CalculateRequestId(&mockSurface);
-    // Assert the result
     EXPECT_NE(requestId, 0);
 }
 
-TEST_F(PrintHttpRequestProcessTest, CalculateRequestId_ShouldReturnNonZero_WhenSurfaceProducerIsNotNullAndCreatePhotoOutputReturnsSuccess)
+TEST_F(PrintHttpRequestProcessTest,
+    CalculateRequestId_ShouldReturnNonZero_WhenSurfaceProducerIsNotNullAndCreatePhotoOutputReturnsSuccess)
 {
-    // Mock the IConsumerSurface and IBufferProducer interfaces
     Mock<IConsumerSurface> mockSurface;
     Mock<IBufferProducer> mockProducer;
-    // Set up the expectations
     EXPECT_CALL(mockSurface, GetProducer()).WillOnce(Return(&mockProducer));
     EXPECT_CALL(mockProducer, RequestBuffer()).WillOnce(Return(true));
-    // Call the method under test
     size_t requestId = printHttpRequestProcess->CalculateRequestId(&mockSurface);
-    // Assert the result
     EXPECT_NE(requestId, 0);
 }
 
-TEST_F(PrintHttpRequestProcessTest, CalculateRequestId_ShouldReturnZero_WhenSurfaceProducerIsNotNullAndCreatePhotoOutputReturnsFailure)
+TEST_F(PrintHttpRequestProcessTest,
+    CalculateRequestId_ShouldReturnZero_WhenSurfaceProducerIsNotNullAndCreatePhotoOutputReturnsFailure)
 {
-    // Mock the IConsumerSurface and IBufferProducer interfaces
     Mock<IConsumerSurface> mockSurface;
     Mock<IBufferProducer> mockProducer;
-    // Set up the expectations
     EXPECT_CALL(mockSurface, GetProducer()).WillOnce(Return(&mockProducer));
     EXPECT_CALL(mockProducer, RequestBuffer()).WillOnce(Return(false));
-    // Call the method under test
     size_t requestId = printHttpRequestProcess->CalculateRequestId(&mockSurface);
-    // Assert the result
     EXPECT_EQ(requestId, 0);
 }
 
-HWTEST_F(PrintHttpRequestProcessTest, CalculateFileDataBeginIndex_ShouldReturnIndexPlusOne_WhenOperationIsREADAndIndexIsZero, Level0)
+HWTEST_F(PrintHttpRequestProcessTest,
+    CalculateFileDataBeginIndex_ShouldReturnIndexPlusOne_WhenOperationIsREADAndIndexIsZero, Level0)
 {
     PrintHttpRequestProcess process;
     size_t index = 0;
@@ -258,8 +234,8 @@ HWTEST_F(PrintHttpRequestProcessTest, CalculateFileDataBeginIndex_ShouldReturnIn
     EXPECT_EQ(process.CalculateFileDataBeginIndex(index, operation), 1);
 }
 
-// 测试用例2：当operation为WRITE时，index为0
-HWTEST_F(PrintHttpRequestProcessTest, CalculateFileDataBeginIndex_ShouldReturnIndexPlusOne_WhenOperationIsWRITEAndIndexIsZero, Level0)
+HWTEST_F(PrintHttpRequestProcessTest,
+    CalculateFileDataBeginIndex_ShouldReturnIndexPlusOne_WhenOperationIsWRITEAndIndexIsZero, Level0)
 {
     PrintHttpRequestProcess process;
     size_t index = 0;
@@ -267,8 +243,8 @@ HWTEST_F(PrintHttpRequestProcessTest, CalculateFileDataBeginIndex_ShouldReturnIn
     EXPECT_EQ(process.CalculateFileDataBeginIndex(index, operation), 1);
 }
 
-// 测试用例3：当operation为READ时，index为非零值
-HWTEST_F(PrintHttpRequestProcessTest, CalculateFileDataBeginIndex_ShouldReturnIndexPlusOne_WhenOperationIsREADAndIndexIsNonZero, Level0)
+HWTEST_F(PrintHttpRequestProcessTest,
+    CalculateFileDataBeginIndex_ShouldReturnIndexPlusOne_WhenOperationIsREADAndIndexIsNonZero, Level0)
 {
     PrintHttpRequestProcess process;
     size_t index = 5;
@@ -276,8 +252,8 @@ HWTEST_F(PrintHttpRequestProcessTest, CalculateFileDataBeginIndex_ShouldReturnIn
     EXPECT_EQ(process.CalculateFileDataBeginIndex(index, operation), 6);
 }
 
-// 测试用例4：当operation为WRITE时，index为非零值
-HWTEST_F(PrintHttpRequestProcessTest, CalculateFileDataBeginIndex_ShouldReturnIndexPlusOne_WhenOperationIsWRITEAndIndexIsNonZero, Level0)
+HWTEST_F(PrintHttpRequestProcessTest,
+    CalculateFileDataBeginIndex_ShouldReturnIndexPlusOne_WhenOperationIsWRITEAndIndexIsNonZero, Level0)
 {
     PrintHttpRequestProcess process;
     size_t index = 5;
@@ -326,8 +302,6 @@ TEST_F(PrintHttpRequestProcessTest, GetAttrAgain_ShouldReturnNonNullptr_WhenSurf
     PrintHttpRequestProcess printHttpRequestProcess;
     Operation operation;
     std::vector<uint8_t> tmVector;
-    // Assuming there is a way to set up a non-null surfaceProducer
-    // printHttpRequestProcess.surfaceProducer = ...
     EXPECT_NE(printHttpRequestProcess.GetAttrAgain(operation, tmVector), nullptr);
 }
 TEST_F(PrintHttpRequestProcessTest, GetAttrAgain_ShouldReturnNullptr_WhenOperationIsInvalid)
@@ -335,8 +309,6 @@ TEST_F(PrintHttpRequestProcessTest, GetAttrAgain_ShouldReturnNullptr_WhenOperati
     PrintHttpRequestProcess printHttpRequestProcess;
     Operation operation;
     std::vector<uint8_t> tmVector;
-    // Assuming there is a way to set up an invalid operation
-    // operation.isValid = false;
     EXPECT_EQ(printHttpRequestProcess.GetAttrAgain(operation, tmVector), nullptr);
 }
 TEST_F(PrintHttpRequestProcessTest, GetAttrAgain_ShouldReturnNonNullptr_WhenOperationIsValid)
@@ -344,8 +316,6 @@ TEST_F(PrintHttpRequestProcessTest, GetAttrAgain_ShouldReturnNonNullptr_WhenOper
     PrintHttpRequestProcess printHttpRequestProcess;
     Operation operation;
     std::vector<uint8_t> tmVector;
-    // Assuming there is a way to set up a valid operation
-    // operation.isValid = true;
     EXPECT_NE(printHttpRequestProcess.GetAttrAgain(operation, tmVector), nullptr);
 }
 TEST_F(PrintHttpRequestProcessTest, GetAttrAgain_ShouldReturnNullptr_WhenTmVectorIsEmpty)
@@ -369,9 +339,6 @@ TEST_F(PrintHttpRequestProcessTest, ProcessHttpResponse_ShouldReturnNullptr_When
     httplib::Response responseData;
     size_t requestId = 1;
     printHttpRequestProcess.ProcessHttpResponse(responseData, requestId);
-    // 由于ProcessHttpResponse方法内部没有返回值，我们无法直接断言其返回值，
-    // 但可以通过观察其对responseData和requestId的处理来断言其行为。
-    // 例如，如果responseData被修改，我们可以断言其内容。
     EXPECT_EQ(responseData.body, "");
 }
 
@@ -380,9 +347,7 @@ TEST_F(PrintHttpRequestProcessTest, ProcessHttpResponse_ShouldHandleRequestId_Wh
     PrintHttpRequestProcess printHttpRequestProcess;
     httplib::Response responseData;
     size_t requestId = 1;
-    // 假设ProcessHttpResponse内部会根据requestId处理responseData
     printHttpRequestProcess.ProcessHttpResponse(responseData, requestId);
-    // 断言requestId被正确处理
     EXPECT_EQ(responseData.body, "1");
 }
 
@@ -391,11 +356,10 @@ TEST_F(PrintHttpRequestProcessTest, ProcessHttpResponse_ShouldHandleResponseData
     PrintHttpRequestProcess printHttpRequestProcess;
     httplib::Response responseData;
     size_t requestId = 1;
-    // 假设ProcessHttpResponse内部会根据responseData处理requestId
     responseData.body = "test";
     printHttpRequestProcess.ProcessHttpResponse(responseData, requestId);
-    // 断言responseData被正确处理
-    EXPECT_EQ(requestId, 4);
+    size_t ret = 4;
+    EXPECT_EQ(requestId, ret);
 }
 
 TEST_F(PrintHttpRequestProcessTest, ProcessHttpResponse_ShouldHandleBoth_WhenSurfaceProducerIsNotNull)
@@ -403,10 +367,8 @@ TEST_F(PrintHttpRequestProcessTest, ProcessHttpResponse_ShouldHandleBoth_WhenSur
     PrintHttpRequestProcess printHttpRequestProcess;
     httplib::Response responseData;
     size_t requestId = 1;
-    // 假设ProcessHttpResponse内部会根据responseData和requestId处理
     responseData.body = "test";
     printHttpRequestProcess.ProcessHttpResponse(responseData, requestId);
-    // 断言responseData和requestId都被正确处理
     EXPECT_EQ(responseData.body, "test4");
 }
 
@@ -561,28 +523,32 @@ HWTEST_F(PrintHttpRequestProcessTest, CreateChunk_ShouldReturnEmptyString_WhenDa
     EXPECT_EQ(result, "");
 }
 // 测试用例2: 测试data为空，data_length不为0的情况
-HWTEST_F(PrintHttpRequestProcessTest, CreateChunk_ShouldReturnCorrectString_WhenDataIsNullAndDataLengthIsNotZero, Level0)
+HWTEST_F(PrintHttpRequestProcessTest,
+    CreateChunk_ShouldReturnCorrectString_WhenDataIsNullAndDataLengthIsNotZero, Level0)
 {
     PrintHttpRequestProcess process;
     std::string result = process.CreateChunk(nullptr, 10);
     EXPECT_EQ(result, "A\r\n"); // 假设HTTP_MSG_STRING_R_AND_N为"\r\n"
 }
 // 测试用例3: 测试data不为空，data_length为0的情况
-HWTEST_F(PrintHttpRequestProcessTest, CreateChunk_ShouldReturnCorrectString_WhenDataIsNotNullAndDataLengthIsZero, Level0)
+HWTEST_F(PrintHttpRequestProcessTest,
+    CreateChunk_ShouldReturnCorrectString_WhenDataIsNotNullAndDataLengthIsZero, Level0)
 {
     PrintHttpRequestProcess process;
     std::string result = process.CreateChunk("test", 0);
     EXPECT_EQ(result, "0\r\n\r\n"); // 假设HTTP_MSG_STRING_R_AND_N为"\r\n"
 }
 // 测试用例4: 测试data不为空，data_length不为0的情况
-HWTEST_F(PrintHttpRequestProcessTest, CreateChunk_ShouldReturnCorrectString_WhenDataIsNotNullAndDataLengthIsNotZero, Level0)
+HWTEST_F(PrintHttpRequestProcessTest,
+    CreateChunk_ShouldReturnCorrectString_WhenDataIsNotNullAndDataLengthIsNotZero, Level0)
 {
     PrintHttpRequestProcess process;
     std::string result = process.CreateChunk("test", 4);
     EXPECT_EQ(result, "4\r\ntest\r\n"); // 假设HTTP_MSG_STRING_R_AND_N为"\r\n"
 }
 // 测试用例5: 测试data包含特殊字符，data_length不为0的情况
-HWTEST_F(PrintHttpRequestProcessTest, CreateChunk_ShouldReturnCorrectString_WhenDataContainsSpecialCharacters, Level0)
+HWTEST_F(PrintHttpRequestProcessTest,
+    CreateChunk_ShouldReturnCorrectString_WhenDataContainsSpecialCharacters, Level0)
 {
     PrintHttpRequestProcess process;
     std::string result = process.CreateChunk("test\r\n", 7);

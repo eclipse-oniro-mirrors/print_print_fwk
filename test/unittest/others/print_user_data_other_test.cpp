@@ -38,6 +38,7 @@ public:
     void TearDown() override
     {
         delete printUserData;
+        printUserData = nullptr;
     }
 };
 
@@ -202,7 +203,8 @@ HWTEST_F(PrintUserDataTest, UpdateQueuedJobList_ShouldAddJobToQueuedJobList_When
     EXPECT_EQ(printUserData->queuedJobList_[jobId], printJob);
 }
 
-HWTEST_F(PrintUserDataTest, UpdateQueuedJobList_ShouldUpdateJobInQueuedJobList_WhenJobIdIsAlreadyInList, TestSize.Level0)
+HWTEST_F(PrintUserDataTest,
+    UpdateQueuedJobList_ShouldUpdateJobInQueuedJobList_WhenJobIdIsAlreadyInList, TestSize.Level0)
 {
     printUserData->queuedJobList_[jobId] = printJob;
     auto newPrintJob = std::make_shared<PrintJob>();
@@ -216,7 +218,8 @@ HWTEST_F(PrintUserDataTest, UpdateQueuedJobList_ShouldAddJobIdToJobOrderList_Whe
     EXPECT_EQ(printUserData->jobOrderList_[jobOrderId], jobId);
 }
 
-HWTEST_F(PrintUserDataTest, UpdateQueuedJobList_ShouldUpdateJobIdInJobOrderList_WhenJobIdIsAlreadyInList, TestSize.Level0)
+HWTEST_F(PrintUserDataTest,
+    UpdateQueuedJobList_ShouldUpdateJobIdInJobOrderList_WhenJobIdIsAlreadyInList, TestSize.Level0)
 {
     printUserData->jobOrderList_[jobOrderId] = jobId;
     auto newJobId = "newJobId";
@@ -277,7 +280,8 @@ TEST_F(PrintUserDataTest, QueryAllPrintJob_Test_WithMultipleJobs)
     printUserData.queuedJobList_["1011"] = new PrintJob();
     printUserData.QueryAllPrintJob(printJobs);
     EXPECT_FALSE(printJobs.empty());
-    EXPECT_EQ(printJobs.size(), 2);
+    size_t jobSize = 2;
+    EXPECT_EQ(printJobs.size(), jobSize);
 }
 TEST_F(PrintUserDataTest, QueryAllPrintJob_Test_WithNonExistingJob)
 {
@@ -451,7 +455,8 @@ TEST_F(PrintUserDataTest, DeletePrinterFromUsedPrinterList_Test_Multiple)
     printUserData.usedPrinterList_.push_back("printer2");
     printUserData.usedPrinterList_.push_back("printer3");
     printUserData.DeletePrinterFromUsedPrinterList("printer2");
-    EXPECT_EQ(printUserData.usedPrinterList_.size(), 2);
+    int listSize = 2;
+    EXPECT_EQ(printUserData.usedPrinterList_.size(), listSize);
     EXPECT_EQ(printUserData.usedPrinterList_[0], "printer1");
     EXPECT_EQ(printUserData.usedPrinterList_[1], "printer3");
 }
@@ -460,8 +465,9 @@ TEST_F(PrintUserDataTest, ParseUserData_ShouldReturn_WhenFileDataNotAvailable)
 {
     PrintUserData printUserData;
     // Mock the GetFileData method to return false indicating file data is not available
-    printUserData.GetFileData = { return false;
-};
+    printUserData.GetFileData = {
+        return false;
+    };
 printUserData.ParseUserData();
 // Assert that the method does not crash or throw exceptions
 EXPECT_NO_THROW(printUserData.ParseUserData());
@@ -471,11 +477,13 @@ TEST_F(PrintUserDataTest, ParseUserData_ShouldReturn_WhenFileDataAvailableButInv
 {
     PrintUserData printUserData;
     // Mock the GetFileData method to return true indicating file data is available
-    printUserData.GetFileData = { return true;
-};
+    printUserData.GetFileData = {
+        return true;
+    };
 // Mock the CheckFileData method to return false indicating file data is invalid
-printUserData.CheckFileData = [](const std::string &, nlohmann::json &)
-{ return false; };
+printUserData.CheckFileData = [](const std::string &, nlohmann::json &) {
+    return false;
+};
 printUserData.ParseUserData();
 // Assert that the method does not crash or throw exceptions
 EXPECT_NO_THROW(printUserData.ParseUserData());
@@ -485,11 +493,14 @@ TEST_F(PrintUserDataTest, ParseUserData_ShouldParse_WhenFileDataAvailableAndVali
 {
     PrintUserData printUserData;
     // Mock the GetFileData method to return true indicating file data is available
-    printUserData.GetFileData = { return true;
-};
+    printUserData.GetFileData = {
+        return true;
+    };
 // Mock the CheckFileData method to return true indicating file data is valid
 printUserData.CheckFileData = [](const std::string &, nlohmann::json &)
-{ return true; };
+{
+    return true;
+};
 // Mock the ParseUserDataFromJson method to do nothing
 printUserData.ParseUserDataFromJson = [](const nlohmann::json &) {};
 printUserData.ParseUserData();
@@ -502,52 +513,51 @@ TEST_F(PrintUserDataTest, ParseUserDataFromJson_Test)
     nlohmann::json jsonObject;
     PrintUserData printUserData;
     printUserData.ParseUserDataFromJson(jsonObject);
-    // 断言预期的结果，例如：
-    // EXPECT_EQ(printUserData.defaultPrinterId_, "");
-    // EXPECT_EQ(printUserData.lastUsedPrinterId_, "");
-    // EXPECT_EQ(printUserData.useLastUsedPrinterForDefault_, false);
+    EXPECT_EQ(printUserData.defaultPrinterId_, "");
+    EXPECT_EQ(printUserData.lastUsedPrinterId_, "");
+    EXPECT_EQ(printUserData.useLastUsedPrinterForDefault_, false);
 }
 TEST_F(PrintUserDataTest, ParseUserDataFromJson_Test_WithUserData)
 {
     nlohmann::json jsonObject;
     jsonObject["print_user_data"] = {
-        {"1", {{"defaultPrinter", "printer1"}, {"lastUsedPrinter", "printer2"}, {"useLastUsedPrinterForDefault", true}, {"usedPrinterList", undefined{nlohmann::json jsonArray;
-    jsonArray.push_back("printer3");
-    return jsonArray;
-}
-()
-}
-}
-}
-}
-;
+        {
+            "1",
+            {
+                {"defaultPrinter", "printer1"},
+                {"lastUsedPrinter", "printer2"},
+                {"useLastUsedPrinterForDefault", true},
+                {"usedPrinterList", undefined{
+                    nlohmann::json jsonArray;jsonArray.push_back("printer3");return jsonArray;}()}
+            }
+        }
+    };
 PrintUserData printUserData;
 printUserData.ParseUserDataFromJson(jsonObject);
-// 断言预期的结果，例如：
-// EXPECT_EQ(printUserData.defaultPrinterId_, "printer1");
-// EXPECT_EQ(printUserData.lastUsedPrinterId_, "printer2");
-// EXPECT_EQ(printUserData.useLastUsedPrinterForDefault_, true);
+EXPECT_EQ(printUserData.defaultPrinterId_, "printer1");
+EXPECT_EQ(printUserData.lastUsedPrinterId_, "printer2");
+EXPECT_EQ(printUserData.useLastUsedPrinterForDefault_, true);
 }
 TEST_F(PrintUserDataTest, ParseUserDataFromJson_Test_WithUserData_MissingDefaultPrinter)
 {
     nlohmann::json jsonObject;
     jsonObject["print_user_data"] = {
-        {"1", {{"lastUsedPrinter", "printer2"}, {"useLastUsedPrinterForDefault", true}, {"usedPrinterList", undefined{nlohmann::json jsonArray;
-    jsonArray.push_back("printer3");
-    return jsonArray;
-}
-()
-}
-}
-}
-}
-;
+        {
+            "1",
+            {
+                {"defaultPrinter", "printer1"},
+                {"lastUsedPrinter", "printer2"},
+                {"useLastUsedPrinterForDefault", true},
+                {"usedPrinterList", undefined{
+                    nlohmann::json jsonArray;jsonArray.push_back("printer3");return jsonArray;}()}
+            }
+        }
+    };
 PrintUserData printUserData;
 printUserData.ParseUserDataFromJson(jsonObject);
-// 断言预期的结果，例如：
-// EXPECT_EQ(printUserData.defaultPrinterId_, "");
-// EXPECT_EQ(printUserData.lastUsedPrinterId_, "printer2");
-// EXPECT_EQ(printUserData.useLastUsedPrinterForDefault_, true);
+EXPECT_EQ(printUserData.defaultPrinterId_, "");
+EXPECT_EQ(printUserData.lastUsedPrinterId_, "printer2");
+EXPECT_EQ(printUserData.useLastUsedPrinterForDefault_, true);
 }
 
 TEST_F(PrintUserDataTest, ConvertJsonToUsedPrinterList_Test)
@@ -565,7 +575,8 @@ TEST_F(PrintUserDataTest, ConvertJsonToUsedPrinterList_Test_Invalid)
     PrintUserData printUserData;
     nlohmann::json userData;
     userData["usedPrinterList"] = nlohmann::json::array();
-    userData["usedPrinterList"].push_back(123); // Invalid value
+    int printerId = 123;
+    userData["usedPrinterList"].push_back(printerId); // Invalid value
     userData["usedPrinterList"].push_back("printer2");
     EXPECT_FALSE(printUserData.ConvertJsonToUsedPrinterList(userData));
 }

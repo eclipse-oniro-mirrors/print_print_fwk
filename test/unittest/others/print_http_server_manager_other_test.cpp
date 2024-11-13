@@ -31,6 +31,7 @@ public:
     void TearDown() override
     {
         delete manager;
+        manager = nullptr;
     }
 };
 
