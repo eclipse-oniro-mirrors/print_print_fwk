@@ -88,14 +88,12 @@ TEST_F(PrintHttpServerManagerTest, CreateServer_ShouldReturnTrue_WhenPrinterName
 TEST_F(PrintHttpServerManagerTest, CreateServer_ShouldReturnFalse_WhenCreateServerFails)
 {
     int32_t port;
-    // Assuming CreateServer implementation will fail when port is already in use
     ASSERT_FALSE(manager->CreateServer("printer", port));
 }
 
 TEST_F(PrintHttpServerManagerTest, CreateServer_ShouldReturnTrue_WhenCreateServerSucceeds)
 {
     int32_t port;
-    // Assuming CreateServer implementation will succeed when port is not in use
     ASSERT_TRUE(manager->CreateServer("printer", port));
 }
 
@@ -106,11 +104,6 @@ HWTEST_F(PrintHttpServerManagerTest, StopServer_ShouldReturnFalse_WhenServerNotR
 
 HWTEST_F(PrintHttpServerManagerTest, StopServer_ShouldReturnTrue_WhenServerRunning, TestSize.Level0)
 {
-    // 假设在某种条件下，服务器已经启动
-    // 这里我们需要模拟启动服务器的逻辑
-    // 例如，我们可能需要模拟一个HTTP请求来启动服务器
-    // 但是，由于这是一个复杂的系统测试，我们可能需要使用集成测试而不是单元测试
-    // 这里我们只是一个示例，所以我们假设服务器已经启动
     EXPECT_TRUE(manager->StopServer(printerName));
 }
 
@@ -119,10 +112,6 @@ TEST_F(nullTest, DealUsbDevDetach_ShouldReturnNull_WhenDevStrIsEmpty)
     PrintHttpServerManager manager;
     std::string devStr = "";
     manager.DealUsbDevDetach(devStr);
-    // 由于DealUsbDevDetach方法内部没有返回值，我们无法直接断言其返回值，
-    // 但可以通过观察其对类内部状态的改变或者其他行为来验证其正确性。
-    // 例如，如果DealUsbDevDetach方法修改了类内部的某个成员变量，我们可以检查这个变量是否符合预期。
-    // 由于我们没有方法的实现细节，所以这里只能假设一个可能的行为。
     EXPECT_EQ(manager.someInternalState, expectedValueAfterMethodInvocation);
 }
 
@@ -131,7 +120,6 @@ TEST_F(nullTest, DealUsbDevDetach_ShouldReturnNull_WhenDevStrIsInvalid)
     PrintHttpServerManager manager;
     std::string devStr = "invalid_device";
     manager.DealUsbDevDetach(devStr);
-    // 同上，我们无法直接断言返回值，但可以通过观察内部状态或其他行为来验证。
     EXPECT_EQ(manager.someInternalState, expectedValueAfterMethodInvocation);
 }
 
@@ -140,7 +128,6 @@ TEST_F(nullTest, DealUsbDevDetach_ShouldReturnNull_WhenDevStrIsValid)
     PrintHttpServerManager manager;
     std::string devStr = "valid_device";
     manager.DealUsbDevDetach(devStr);
-    // 同上，我们无法直接断言返回值，但可以通过观察内部状态或其他行为来验证。
     EXPECT_EQ(manager.someInternalState, expectedValueAfterMethodInvocation);
 }
 

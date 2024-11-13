@@ -169,24 +169,12 @@ TEST_F(nullTest, QueryPrinterInfoFromStringDescriptor_ShouldReturnEmptyString_Wh
     EXPECT_EQ(result, "");
 }
 
-/**
-
-@tc.name : PrintUsbManager_AllocateInterface_ShouldReturnFalse_WhenSurfaceProducerIsNull
-@tc.number: PrintUsbManager_AllocateInterface_Test_001
-@tc.desc : Test when surfaceProducer is nullptr then AllocateInterface returns false
-*/
 HWTEST_F(PrintUsbManagerTest, PrintUsbManager_AllocateInterface_ShouldReturnFalse_WhenSurfaceProducerIsNull, TestSize.Level0)
 {
     printerName = "printer1";
     usbDevice.surfaceProducer = nullptr;
     EXPECT_EQ(printUsbManager->AllocateInterface(printerName, usbDevice), false);
 }
-/**
-
-@tc.name : PrintUsbManager_AllocateInterface_ShouldReturnTrue_WhenSurfaceProducerIsNotNull
-@tc.number: PrintUsbManager_AllocateInterface_Test_002
-@tc.desc : Test when surfaceProducer is not null then AllocateInterface returns true
-*/
 HWTEST_F(PrintUsbManagerTest, PrintUsbManager_AllocateInterface_ShouldReturnTrue_WhenSurfaceProducerIsNotNull, TestSize.Level0)
 {
     printerName = "printer1";
@@ -194,12 +182,6 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManager_AllocateInterface_ShouldReturnTrue
     EXPECT_EQ(printUsbManager->AllocateInterface(printerName, usbDevice), true);
     delete usbDevice.surfaceProducer;
 }
-/**
-
-@tc.name : PrintUsbManager_AllocateInterface_ShouldReturnFalse_WhenPrinterNameIsEmpty
-@tc.number: PrintUsbManager_AllocateInterface_Test_003
-@tc.desc : Test when printerName is empty then AllocateInterface returns false
-*/
 HWTEST_F(PrintUsbManagerTest, PrintUsbManager_AllocateInterface_ShouldReturnFalse_WhenPrinterNameIsEmpty, TestSize.Level0)
 {
     printerName = "";
@@ -207,12 +189,6 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManager_AllocateInterface_ShouldReturnFals
     EXPECT_EQ(printUsbManager->AllocateInterface(printerName, usbDevice), false);
     delete usbDevice.surfaceProducer;
 }
-/**
-
-@tc.name : PrintUsbManager_AllocateInterface_ShouldReturnTrue_WhenPrinterNameIsNotEmpty
-@tc.number: PrintUsbManager_AllocateInterface_Test_004
-@tc.desc : Test when printerName is not empty then AllocateInterface returns true
-*/
 HWTEST_F(PrintUsbManagerTest, PrintUsbManager_AllocateInterface_ShouldReturnTrue_WhenPrinterNameIsNotEmpty, TestSize.Level0)
 {
     printerName = "printer1";
@@ -369,12 +345,6 @@ TEST_F(nullTest, DealUsbDevStatusChange_ShouldReturnNull_WhenSurfaceProducerIsNu
     std::string devStr = "testDevice";
     bool isAttach = false;
     printUsbManager.DealUsbDevStatusChange(devStr, isAttach);
-    // 由于DealUsbDevStatusChange方法内部没有返回值，我们无法直接断言其返回值，
-    // 但可以通过观察方法的副作用或者其他可观察的行为来验证其正确性。
-    // 例如，如果DealUsbDevStatusChange方法应该在处理后改变某些状态，我们可以检查这些状态是否符合预期。
-    // 由于我们没有方法的实现细节，所以这里我们只能假设一个可能的行为：如果surfaceProducer为null，方法应该在内部处理。
-    // 因此，我们假设DealUsbDevStatusChange方法在处理后改变了某些状态，我们可以检查这些状态是否符合预期。
-    // 这里我们假设DealUsbDevStatusChange方法在处理后改变了某个布尔值status，我们可以检查这个值是否为true。
     EXPECT_TRUE(printUsbManager.status);
 }
 
@@ -384,9 +354,6 @@ TEST_F(nullTest, DealUsbDevStatusChange_ShouldReturnNonNull_WhenSurfaceProducerI
     std::string devStr = "testDevice";
     bool isAttach = true;
     printUsbManager.DealUsbDevStatusChange(devStr, isAttach);
-    // 同上，由于我们没有方法的实现细节，我们只能假设一个可能的行为：如果surfaceProducer不为null，方法应该在内部处理。
-    // 因此，我们假设DealUsbDevStatusChange方法在处理后改变了某些状态，我们可以检查这些状态是否符合预期。
-    // 这里我们假设DealUsbDevStatusChange方法在处理后改变了某个布尔值status，我们可以检查这个值是否为false。
     EXPECT_FALSE(printUsbManager.status);
 }
 

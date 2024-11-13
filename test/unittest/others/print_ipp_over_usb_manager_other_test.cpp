@@ -62,13 +62,8 @@ HWTEST_F(PrintIppOverUsbManagerTest, ConnectPrinter_ShouldReturnTrue_WhenPortIsV
 
 TEST_F(PrintIppOverUsbManagerTest, DisConnectPrinter_Should_Disconnect_When_PrinterId_Is_Valid)
 {
-    // Arrange
     std::string printerId = "validPrinterId";
-    // Act
     printIppOverUsbManager->DisConnectPrinter(printerId);
-    // Assert
-    // Since we cannot directly assert the state change in the method under test,
-    // we can only assert that the method call completes without throwing an exception.
     EXPECT_NO_THROW(printIppOverUsbManager->DisConnectPrinter(printerId));
 }
 
