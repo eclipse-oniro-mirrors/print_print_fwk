@@ -497,15 +497,14 @@ TEST_F(PrintUserDataTest, ParseUserData_ShouldParse_WhenFileDataAvailableAndVali
         return true;
     };
 // Mock the CheckFileData method to return true indicating file data is valid
-printUserData.CheckFileData = [](const std::string &, nlohmann::json &)
-{
-    return true;
-};
-// Mock the ParseUserDataFromJson method to do nothing
-printUserData.ParseUserDataFromJson = [](const nlohmann::json &) {};
-printUserData.ParseUserData();
-// Assert that the method does not crash or throw exceptions
-EXPECT_NO_THROW(printUserData.ParseUserData());
+    printUserData.CheckFileData = [](const std::string &, nlohmann::json &) {
+        return true;
+    };
+    // Mock the ParseUserDataFromJson method to do nothing
+    printUserData.ParseUserDataFromJson = [](const nlohmann::json &) {};
+    printUserData.ParseUserData();
+    // Assert that the method does not crash or throw exceptions
+    EXPECT_NO_THROW(printUserData.ParseUserData());
 }
 
 TEST_F(PrintUserDataTest, ParseUserDataFromJson_Test)
