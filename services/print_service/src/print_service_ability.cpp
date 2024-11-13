@@ -893,6 +893,7 @@ int32_t PrintServiceAbility::GetPrinterPreference(const std::string &printerId, 
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    std::lock_guard<std::recursive_mutex> preferenceLock(printerPreferenceMapMutex_);
     int printerPreferenceNum = static_cast<int>(printerIdAndPreferenceMap_.size());
     if (printerPreferenceNum <= 0) {
         InitPreferenceMap();
@@ -911,6 +912,7 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    std::lock_guard<std::recursive_mutex> preferenceLock(printerPreferenceMapMutex_);
     int printerPreferenceNum = static_cast<int>(printerIdAndPreferenceMap_.size());
     if (printerPreferenceNum <= 0) {
         InitPreferenceMap();
@@ -947,6 +949,7 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
 
 bool PrintServiceAbility::ReadPreferenceFromFile(const std::string &printerId, std::string& printPreference)
 {
+    std::lock_guard<std::recursive_mutex> preferenceLock(printerPreferenceMapMutex_);
     auto iter = printerIdAndPreferenceMap_.find(printerId);
     if (iter != printerIdAndPreferenceMap_.end()) {
         printPreference = iter->second;
@@ -959,6 +962,7 @@ bool PrintServiceAbility::ReadPreferenceFromFile(const std::string &printerId, s
 void PrintServiceAbility::InitPreferenceMap()
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    std::lock_guard<std::recursive_mutex> preferenceLock(printerPreferenceMapMutex_);
     std::string printerPreferenceFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_PREFERENCE_FILE;
     std::ifstream ifs(printerPreferenceFilePath.c_str(), std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
@@ -1003,6 +1007,7 @@ bool PrintServiceAbility::WritePreferenceToFile()
     }
     nlohmann::json printerMapJson = nlohmann::json::array();
 
+    std::lock_guard<std::recursive_mutex> preferenceLock(printerPreferenceMapMutex_);
     for (auto& printPreference : printerIdAndPreferenceMap_) {
         if (json::accept(printPreference.second)) {
             nlohmann::json printPreferenceJson = nlohmann::json::parse(printPreference.second);
@@ -1023,6 +1028,7 @@ bool PrintServiceAbility::WritePreferenceToFile()
 
 bool PrintServiceAbility::WritePrinterPreference(const std::string &printerId, PrinterCapability &printerCaps)
 {
+    std::lock_guard<std::recursive_mutex> preferenceLock(printerPreferenceMapMutex_);
     if (printerCaps.HasOption()) {
         if (printerIdAndPreferenceMap_.count(printerId)) {
             return false;
@@ -1044,6 +1050,7 @@ bool PrintServiceAbility::WritePrinterPreference(const std::string &printerId, P
 
 bool PrintServiceAbility::WriteEprinterPreference(const std::string &printerId, PrinterCapability &printerCaps)
 {
+    std::lock_guard<std::recursive_mutex> preferenceLock(printerPreferenceMapMutex_);
     if (printerIdAndPreferenceMap_.count(printerId)) {
         return false;
     }
