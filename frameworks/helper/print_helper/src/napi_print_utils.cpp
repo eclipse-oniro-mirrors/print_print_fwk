@@ -346,4 +346,13 @@ bool NapiPrintUtils::VerifyProperty(
     }
     return true;
 }
+
+std::string NapiPrintUtils::GetPrintErrorMsg(int32_t errorCode)
+{
+    auto msg = PRINT_ERROR_MSG_MAP.find(static_cast<PrintErrorCode>(errorCode));
+    if (msg != PRINT_ERROR_MSG_MAP.end()) {
+        return msg->second;
+    }
+    return "";
+}
 }  // namespace OHOS::Print

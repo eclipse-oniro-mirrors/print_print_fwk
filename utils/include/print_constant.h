@@ -17,6 +17,7 @@
 #define PRINT_CONSTANT_H
 
 #include <string>
+#include <map>
 
 namespace OHOS::Print {
 #define PRINT_RET_NONE
@@ -239,5 +240,14 @@ const std::string PRINTER_LIST_FILE = "printer_list.json";
 const std::string PRINTER_LIST_VERSION = "v1";
 const std::string PRINT_USER_DATA_FILE = "print_user_data.json";
 const std::string PRINT_USER_DATA_VERSION = "v1";
+
+const std::string E_PRINT_MSG_NONE = "none";
+const std::string E_PRINT_MSG_NO_PERMISSION = "the application does not hace permission";
+const std::string E_PRINT_MSG_INVALID_PARAMETER = "parameter error";
+static std::map<PrintErrorCode, const std::string> PRINT_ERROR_MSG_MAP {
+    {E_PRINT_NONE,                  E_PRINT_MSG_NONE                },
+    {E_PRINT_NO_PERMISSION,         E_PRINT_MSG_NO_PERMISSION       },
+    {E_PRINT_INVALID_PARAMETER,     E_PRINT_MSG_INVALID_PARAMETER   },
+};
 } // namespace OHOS::Print
 #endif // PRINT_CONSTANT_H
