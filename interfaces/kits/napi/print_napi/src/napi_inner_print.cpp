@@ -754,12 +754,11 @@ napi_value NapiInnerPrint::NotifyPrintServiceEvent(napi_env env, napi_callback_i
     auto input =
         [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
+            PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
+                              "should 1 or 2 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "jobId is not a string", napi_string_expected);
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_number, "event is not a number", napi_number_expected);
         std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         uint32_t event = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_ONE]);
         PRINT_HILOGI("jobId: %{public}s, event : %{public}d", jobId.c_str(), event);
