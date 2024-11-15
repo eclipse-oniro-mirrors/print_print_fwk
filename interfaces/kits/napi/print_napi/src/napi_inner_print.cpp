@@ -533,7 +533,8 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
 
     if (!NapiInnerPrint::IsSupportType(type)) {
         PRINT_HILOGE("Event On type : %{public}s not support", type.c_str());
-        return NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
+        NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
+        return nullptr;
     }
 
     valuetype = napi_undefined;
@@ -550,7 +551,8 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
     int32_t ret = PrintManagerClient::GetInstance()->On("", type, callback);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to register event");
-        return NapiThrowError(env, ret);
+        NapiThrowError(env, ret);
+        return nullptr;
     }
     return nullptr;
 }
@@ -573,7 +575,8 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
 
     if (!NapiInnerPrint::IsSupportType(type)) {
         PRINT_HILOGE("Event Off type : %{public}s not support", type.c_str());
-        return NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
+        NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
+        return nullptr;
     }
 
     if (argc == NapiPrintUtils::ARGC_TWO) {
@@ -585,7 +588,8 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
     int32_t ret = PrintManagerClient::GetInstance()->Off("", type);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to unregister event");
-        return NapiThrowError(env, ret);
+        NapiThrowError(env, ret);
+        return nullptr;
     }
     return nullptr;
 }
@@ -613,6 +617,7 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
         int32_t retCallback = PrintManagerClient::GetInstance()->On("", PRINT_GET_FILE_CALLBACK_ADAPTER, callback);
         if (retCallback != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to register startGetPrintFile callback");
+            NapiThrowError(env, retCallback);
             return nullptr;
         }
     }
@@ -627,7 +632,8 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
         int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, *printAttributes, fd);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to StartGetPrintFile");
-            return NapiThrowError(env, ret);
+            NapiThrowError(env, ret);
+            return nullptr;
         }
     }
     return nullptr;
@@ -892,12 +898,11 @@ bool NapiInnerPrint::IsValidDefaultPrinterType(uint32_t type)
     return false;
 }
 
-napi_value NapiInnerPrint::NapiThrowError(napi_env env, const int32_t errCode)
+void NapiInnerPrint::NapiThrowError(napi_env env, const int32_t errCode)
 {
     napi_value result = nullptr;
     napi_create_error(env, NapiPrintUtils::CreateInt32(env, errCode),
         NapiPrintUtils::CreateStringUtf8(env, NapiPrintUtils::GetPrintErrorMsg(errCode)), &result);
     napi_throw(env, result);
-    return nullptr;
 }
 } // namespace OHOS::Print
