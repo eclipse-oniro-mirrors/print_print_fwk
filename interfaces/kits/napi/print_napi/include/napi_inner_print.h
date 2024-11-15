@@ -59,6 +59,7 @@ private:
     static bool IsSupportType(const std::string& type);
     static bool IsValidApplicationEvent(uint32_t event);
     static bool IsValidDefaultPrinterType(uint32_t type);
+    static napi_value NapiThrowError(napi_env env, int32_t errCode);
 
 private:
     struct InnerPrintContext : public PrintAsyncCall::Context {
