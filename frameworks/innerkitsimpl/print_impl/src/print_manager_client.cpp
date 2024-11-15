@@ -94,6 +94,8 @@ void PrintManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &remote)
         serviceRemote->RemoveDeathRecipient(deathRecipient_);
         printServiceProxy_ = nullptr;
         deathRecipient_ = nullptr;
+        std::unique_lock<std::mutex> lock(conditionMutex_);
+        ready_ = false;
     }
 }
 
