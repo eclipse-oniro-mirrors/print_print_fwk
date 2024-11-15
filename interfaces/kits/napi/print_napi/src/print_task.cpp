@@ -100,13 +100,17 @@ uint32_t PrintTask::Start(napi_env env, napi_callback_info info)
     if (pathType_ == FILE_PATH_ABSOLUTED) {
         for (auto file : fileList_) {
             int32_t fd = PrintUtils::OpenFile(file);
-            if (fd < 0) {
-                PRINT_HILOGE("file[%{private}s] is invalid", file.c_str());
-                fdList_.clear();
-                fileList_.clear();
-                return E_PRINT_INVALID_PARAMETER;
+            if (fd >= 0) {
+                fdList_.emplace_back(fd);
+                continue;
             }
-            fdList_.emplace_back(fd);
+            PRINT_HILOGE("file[%{private}s] is invalid", file.c_str());
+            for (auto fd : fdList_) {
+                close(fd);
+            }
+            fdList_.clear();
+            fileList_.clear();
+            return E_PRINT_INVALID_PARAMETER;
         }
     }
 
