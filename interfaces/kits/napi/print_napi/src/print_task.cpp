@@ -42,6 +42,8 @@ static const std::string UI_EXTENSION_TYPE_NAME = "ability.want.params.uiExtensi
 static const std::string PRINT_UI_EXTENSION_TYPE = "sysDialog/print";
 static const std::string CALLER_PKG_NAME = "caller.pkgName";
 static const std::string ABILITY_PARAMS_STREAM = "ability.params.stream";
+static const std::string LAUNCH_PARAMETER_FILE_LIST_SIZE = "fileListSize";
+static const int32_t MAX_FILE_LIST_SIZE = 100;
 
 PrintTask::PrintTask(const std::vector<std::string> &innerList, const sptr<IRemoteObject> &innerCallerToken_)
     : taskId_("")
@@ -259,7 +261,12 @@ uint32_t PrintTask::StartUIExtensionAbility(
     AAFwk::Want want;
     want.SetElementName(SPOOLER_BUNDLE_NAME, SPOOLER_PREVIEW_ABILITY_NAME);
     want.SetParam(LAUNCH_PARAMETER_JOB_ID, adapterParam->jobId);
-    want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList_);
+    if (fileList_.size() <= MAX_FILE_LIST_SIZE) {
+        want.SetParam(LAUNCH_PARAMETER_FILE_LIST, fileList_);
+    } else {
+        PRINT_HILOGW("fileList exceeds the maximum length.");
+    }
+    want.SetParam(LAUNCH_PARAMETER_FILE_LIST_SIZE, static_cast<int>(fileList_.size()));
     PrintUtils::BuildAdapterParam(adapterParam, want);
     int32_t callerTokenId = static_cast<int32_t>(IPCSkeleton::GetCallingTokenID());
     int32_t callerUid = IPCSkeleton::GetCallingUid();
