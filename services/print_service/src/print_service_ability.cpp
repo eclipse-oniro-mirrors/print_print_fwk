@@ -1548,11 +1548,10 @@ int32_t PrintServiceAbility::RemovePrinters(const std::vector<std::string> &prin
     }
 
     auto count = printerInfoList_.size();
-    PRINT_HILOGD("RemovePrinters started. Total size is %{public}zd", count);
+    PRINT_HILOGI("RemovePrinters started. Total size is %{public}zd", count);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
 
     for (auto printerId : printerIds) {
         printerId = PrintUtils::GetGlobalId(extensionId, printerId);
@@ -1561,6 +1560,24 @@ int32_t PrintServiceAbility::RemovePrinters(const std::vector<std::string> &prin
         if (printerIt == printerInfoList_.end()) {
             PRINT_HILOGE("invalid printer id, ingore it");
             continue;
+        }
+        std::string option = printerIt->second->GetOption();
+        std::string printerUri = "";
+        if (json::accept(option)) {
+            json jsonObj = json::parse(option);
+            if (jsonObj.contains("printerUri") && jsonObj["printerUri"].is_string()) {
+                printerUri = jsonObj["printerUri"];
+            }
+        }
+        bool mdnsPrinter = printerId.find("mdns") != string::npos;
+        const uint32_t waitTime = 1000;
+        JobMonitorParam monitorParam{nullptr, "", 0, printerUri, "", printerId};
+        PRINT_HILOGD("printerid is %{public}s, printer type is %{public}d", printerId.c_str(), mdnsPrinter);
+        // 连接类型为mdns且为spooler显示的已经连接的打印机才判断是否离线
+        if (!printerUri.empty() && mdnsPrinter &&
+            DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterOnline(&monitorParam, waitTime)) {
+            PRINT_HILOGI("printer is online, do not remove.");
+            return E_PRINT_INVALID_PRINTER;
         }
         PrinterInfo info = *printerIt->second;
         info.SetPrinterState(PRINTER_REMOVED);
@@ -1574,11 +1591,7 @@ int32_t PrintServiceAbility::RemovePrinters(const std::vector<std::string> &prin
             SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, info);
         }
     }
-    if (count == printerInfoList_.size()) {
-        PRINT_HILOGE("Invalid printer ids");
-        return E_PRINT_INVALID_PARAMETER;
-    }
-    PRINT_HILOGD("RemovePrinters end. Total size is %{public}zd", printerInfoList_.size());
+    PRINT_HILOGI("RemovePrinters end. Total size is %{public}zd", printerInfoList_.size());
     return E_PRINT_NONE;
 }
 
