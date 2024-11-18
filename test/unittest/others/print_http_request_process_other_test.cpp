@@ -500,19 +500,19 @@ TEST_F(PrintHttpRequestProcessTest, DumpReqIdOperaId_ShouldPrintData_WhenDataIsN
 {
     char data[REQID_OPERAID_LEN] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
     PrintHttpRequestProcess::DumpReqIdOperaId(data, REQID_OPERAID_LEN);
-    // 由于PRINT_HILOGD是宏，我们无法直接验证其输出，但可以假设它被正确调用
+    EXPECT_EQ(process.result, "processed");
 }
 TEST_F(PrintHttpRequestProcessTest, DumpReqIdOperaId_ShouldNotPrintData_WhenDataIsNull)
 {
     char *data = nullptr;
     PrintHttpRequestProcess::DumpReqIdOperaId(data, REQID_OPERAID_LEN);
-    // 由于PRINT_HILOGD是宏，我们无法直接验证其输出，但可以假设它没有被调用
+    EXPECT_EQ(process.result, "");
 }
 TEST_F(PrintHttpRequestProcessTest, DumpReqIdOperaId_ShouldNotPrintData_WhenDataLengthIsLessThanREQID_OPERAID_LEN)
 {
     char data[REQID_OPERAID_LEN - 1] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
     PrintHttpRequestProcess::DumpReqIdOperaId(data, REQID_OPERAID_LEN - 1);
-    // 由于PRINT_HILOGD是宏，我们无法直接验证其输出，但可以假设它没有被调用
+    EXPECT_EQ(process.result, "");
 }
 
 // 测试用例1: 测试data为空，data_length为0的情况
