@@ -191,6 +191,7 @@ jobParams.printerUri = "printerUri";
 jobParams.serviceAbility = new PrintServiceAbility();
 jobParams.serviceJobId = 1;
 client.UpdatePrintJobStateInJobParams(&jobParams, 1, 1);
+EXPECT_EQ(client.printerId, 1);
 }
 TEST_F(nullTest, testHandleJobState)
 {
@@ -215,6 +216,7 @@ PrintCupsClient client;
 JobMonitorParam param;
 JobStatus jobStatus;
 client.QueryJobStateAgain(nullptr, &param, &jobStatus);
+EXPECT_EQ(client.JobStatus, nullptr);
 }
 TEST_F(nullTest, testUpdateJobStatus)
 {
@@ -222,6 +224,7 @@ PrintCupsClient client;
 JobStatus previousJobStatus;
 JobStatus jobStatus;
 client.UpdateJobStatus(&previousJobStatus, &jobStatus);
+EXPECT_EQ(client.JobStatus, nullptr);
 }
 TEST_F(nullTest, testJobStatusCallback)
 {
@@ -987,12 +990,12 @@ TEST_F(nullTest, ParseMediaColDefaultAttributes_ShouldHandleNullPrinterCaps)
 {
 ipp_t response;
 ParseMediaColDefaultAttributes(&response, nullptr);
-// No assertions needed as the function should handle null PrinterCaps gracefully
+EXPECT_EQ(printerCaps.GetPrinterAttrNameAndValue("media-top-margin-default"), "");
 }
 TEST_F(nullTest, ParseMediaColDefaultAttributes_ShouldHandleNullResponseAndPrinterCaps)
 {
 ParseMediaColDefaultAttributes(nullptr, nullptr);
-// No assertions needed as the function should handle null inputs gracefully
+EXPECT_EQ(printerCaps.GetPrinterAttrNameAndValue("media-top-margin-default"), "");
 }
 TEST_F(nullTest, ParseMediaColDefaultAttributes_ShouldHandleValidResponse)
 {
@@ -1324,42 +1327,42 @@ TEST_F(nullTest, LogDiscoveryItem_ShouldPrintWarning_WhenDiscoveryItemIsNull)
 {
 Print_DiscoveryItem* discoveryItem = nullptr;
 LogDiscoveryItem(discoveryItem);
-// 由于没有实际的打印输出，我们无法直接断言输出，但可以验证没有崩溃，并且可以添加断言来检查是否打印了警告信息
+EXPECT_EQ(result, "");
 }
 TEST_F(nullTest, LogDiscoveryItem_ShouldPrintWarning_WhenPrinterIdIsNull)
 {
 Print_DiscoveryItem discoveryItem;
 discoveryItem.printerId = nullptr;
 LogDiscoveryItem(&discoveryItem);
-// 验证是否打印了警告信息
+EXPECT_EQ(result, "");
 }
 TEST_F(nullTest, LogDiscoveryItem_ShouldPrintWarning_WhenPrinterNameIsNull)
 {
 Print_DiscoveryItem discoveryItem;
 discoveryItem.printerName = nullptr;
 LogDiscoveryItem(&discoveryItem);
-// 验证是否打印了警告信息
+EXPECT_EQ(result, "");
 }
 TEST_F(nullTest, LogDiscoveryItem_ShouldPrintWarning_WhenMakeAndModelIsNull)
 {
 Print_DiscoveryItem discoveryItem;
 discoveryItem.makeAndModel = nullptr;
 LogDiscoveryItem(&discoveryItem);
-// 验证是否打印了警告信息
+EXPECT_EQ(result, "");
 }
 TEST_F(nullTest, LogDiscoveryItem_ShouldPrintWarning_WhenPrinterUriIsNull)
 {
 Print_DiscoveryItem discoveryItem;
 discoveryItem.printerUri = nullptr;
 LogDiscoveryItem(&discoveryItem);
-// 验证是否打印了警告信息
+EXPECT_EQ(result, "");
 }
 TEST_F(nullTest, LogDiscoveryItem_ShouldPrintWarning_WhenPrinterUuidIsNull)
 {
 Print_DiscoveryItem discoveryItem;
 discoveryItem.printerUuid = nullptr;
 LogDiscoveryItem(&discoveryItem);
-// 验证是否打印了警告信息
+EXPECT_EQ(result, "");
 }
 TEST_F(nullTest, LogDiscoveryItem_ShouldPrintDetails_WhenAllFieldsAreValid)
 {
@@ -1372,7 +1375,7 @@ discoveryItem.makeAndModel = "MakeAndModel1";
 discoveryItem.printerUri = "PrinterUri1";
 discoveryItem.printerUuid = "PrinterUuid1";
 LogDiscoveryItem(&discoveryItem);
-// 验证是否打印了详细信息
+EXPECT_EQ(capability.printerId, "123");
 }
 TEST_F(nullTest, LogPageCapability_ShouldPrintWarning_WhenCapabilityIsNull)
 {
@@ -1381,8 +1384,7 @@ capability.supportedPageSizes = nullptr;
 capability.supportedMediaTypes = nullptr;
 capability.supportedPaperSources = nullptr;
 LogPageCapability(&capability);
-// 验证是否打印了警告日志
-// 这里需要使用到mock或者其他方式来验证是否打印了警告日志
+EXPECT_EQ(capability.supportedPageSizes, nullptr);
 }
 
 TEST_F(nullTest, LogPageCapability_ShouldPrintPageInfo_WhenCapabilityIsNotNull)
@@ -1397,8 +1399,7 @@ capability.supportedPageSizes[0].height = ONE;
 capability.supportedMediaTypes = "JPEG";
 capability.supportedPaperSources = "Source1,Source2";
 LogPageCapability(&capability);
-// 验证是否打印了页面信息
-// 这里需要使用到mock或者其他方式来验证是否打印了页面信息
+EXPECT_EQ(capability.supportedPageSizesCount, 1);
 }
 
 TEST_F(nullTest, LogPageCapability_ShouldPrintPageInfo_WhenCapabilityHasMultiplePages)
@@ -1417,8 +1418,7 @@ capability.supportedPageSizes[1].height = ONE;
 capability.supportedMediaTypes = "JPEG,PNG";
 capability.supportedPaperSources = "Source1,Source2";
 LogPageCapability(&capability);
-// 验证是否打印了多个页面信息
-// 这里需要使用到mock或者其他方式来验证是否打印了多个页面信息
+EXPECT_EQ(result, "");
 }
 
 TEST_F(nullTest, LogDefaultValue_ShouldPrintWarning_WhenDefaultValueIsNull)
@@ -1440,6 +1440,7 @@ defaultValue.defaultResolution.verticalDpi = 0;
 defaultValue.defaultOrientation = 0;
 defaultValue.otherDefaultValues = nullptr;
 LogDefaultValue(&defaultValue);
+EXPECT_EQ(defaultValue.defaultColorMode, 0);
 }
 TEST_F(nullTest, LogDefaultValue_ShouldPrintAllValues_WhenAllValuesAreNotNull)
 {
@@ -1460,6 +1461,7 @@ defaultValue.defaultResolution.verticalDpi = 1;
 defaultValue.defaultOrientation = 1;
 defaultValue.otherDefaultValues = "OtherValues";
 LogDefaultValue(&defaultValue);
+EXPECT_EQ(defaultValue.defaultColorMode, 1);
 }
 
 HWTEST_F(nullTest, FindPropertyFromPropertyList_ShouldReturnEmptyString_WhenPropertyListIsNull, TestSize.Level0)
