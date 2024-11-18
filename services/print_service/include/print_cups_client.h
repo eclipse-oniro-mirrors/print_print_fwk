@@ -97,12 +97,12 @@ public:
     int32_t QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info);
     int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);
+    bool CheckPrinterOnline(JobMonitorParam *param, const uint32_t timeout = 3000);
 
 private:
-    static void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
-    static void MonitorJobState(JobMonitorParam *param, CallbackFunc callback);
+    void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
+    void MonitorJobState(JobMonitorParam *param, CallbackFunc callback);
     static void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
-    static bool CheckPrinterOnline(const char* printerUri, std::string printerId);
     static void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
     static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
     static void SymlinkFile(std::string srcFilePath, std::string destFilePath);
@@ -110,7 +110,7 @@ private:
     static void CopyDirectory(const char *srcDir, const char *destDir);
     static void ChangeFilterPermission(const std::string &path, mode_t mode);
     static bool CheckPrinterMakeModel(JobParameters *jobParams);
-    static bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
+    bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
         cups_option_t *options, http_t *http);
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);

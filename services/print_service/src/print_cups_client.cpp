@@ -351,7 +351,7 @@ void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std
     request = ippNewRequest(CUPS_GET_PPDS);
     if (makeModel)
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", NULL, makeModel);
- 
+
     PRINT_HILOGD("CUPS_GET_PPDS start.");
     if ((response = cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/")) != NULL) {
         if (response->request.status.status_code > IPP_OK_CONFLICT) {
@@ -868,14 +868,23 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     }
     uint32_t retryCount = 0;
     bool isPrinterOnline = false;
+
+    JobMonitorParam *monitorParam = new (std::nothrow) JobMonitorParam { jobParams->serviceAbility,
+        jobParams->serviceJobId, jobId, jobParams->printerUri, jobParams->printerName, jobParams->printerId };
+    if (monitorParam == nullptr) {
+        PRINT_HILOGE("monitorParam is null");
+        return false;
+    }
     while (retryCount < MAX_RETRY_TIMES) {
-        if (CheckPrinterOnline(jobParams->printerUri.c_str(), jobParams->printerId)) {
+        if (CheckPrinterOnline(monitorParam)) {
             isPrinterOnline = true;
             break;
         }
         retryCount++;
         sleep(INDEX_ONE);
     }
+    delete monitorParam;
+    monitorParam = nullptr;
     if (!isPrinterOnline) {
         jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_OFFLINE);
@@ -971,7 +980,7 @@ void PrintCupsClient::MonitorJobState(JobMonitorParam *param, CallbackFunc callb
             PRINT_HILOGE("http is NULL");
             httpReconnect2(http, LONG_LONG_TIME_OUT, NULL);
         }
-        if (httpGetFd(http) > 0 && CheckPrinterOnline(param->printerUri.c_str(), param->printerId)) {
+        if (httpGetFd(http) > 0 && CheckPrinterOnline(param)) {
             fail_connect_times = 0;
             QueryJobState(http, param, jobStatus);
             if (g_isFirstQueryState) {
@@ -1151,22 +1160,29 @@ void PrintCupsClient::QueryJobState(http_t *http, JobMonitorParam *param, JobSta
     }
 }
 
-bool PrintCupsClient::CheckPrinterOnline(const char* printerUri, std::string printerId)
+bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param, const uint32_t timeout)
 {
     http_t *http;
-    char scheme[32];
-    char userpass[BUFFER_LEN];
-    char host[BUFFER_LEN];
-    char resource[BUFFER_LEN];
+    char scheme[32] = {0};
+    char userpass[BUFFER_LEN] = {0};
+    char host[BUFFER_LEN] = {0};
+    char resource[BUFFER_LEN] = {0};
     int port;
+    if (param == nullptr) {
+        PRINT_HILOGE("param is null");
+        return false;
+    }
+    const char* printerUri = param->printerUri.c_str();
+    const std::string printerId = param->printerId;
+    PRINT_HILOGD("CheckPrinterOnline printerId: %{public}s", printerId.c_str());
     httpSeparateURI(HTTP_URI_CODING_ALL, printerUri, scheme, sizeof(scheme), userpass, sizeof(userpass), host,
                     sizeof(host), &port, resource, sizeof(resource));
     std::string nic;
     if (IsIpConflict(printerId, nic)) {
-        http = httpConnect3(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL,
-            nic.c_str());
+        http = httpConnect3(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, timeout, NULL,
+                            nic.c_str());
     } else {
-        http = httpConnect2(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, NULL);
+        http = httpConnect2(host, port, NULL, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, timeout, NULL);
     }
     if (http == nullptr) {
         PRINT_HILOGE("httpConnect2 printer failed");
