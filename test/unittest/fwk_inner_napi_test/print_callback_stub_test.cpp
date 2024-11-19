@@ -95,7 +95,7 @@ HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0003, TestSize.Level1)
     auto callback = std::make_shared<MockPrintCallbackStub>();
     EXPECT_NE(callback, nullptr);
     EXPECT_CALL(*callback, OnCallback()).Times(1);
-    EXPECT_TRUE(static_cast<bool>(callback->OnRemoteRequest(code, data, reply, option)));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
 }
 
 MATCHER_P(PrinterInfoMatcher, oParam, "Match Printer Info")
@@ -135,7 +135,7 @@ HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0004, TestSize.Level1)
     EXPECT_NE(callback, nullptr);
     EXPECT_CALL(*callback, OnCallback(testState,
         Matcher<const PrinterInfo&>(PrinterInfoMatcher(testInfo)))).Times(1).WillOnce(Return(true));
-    EXPECT_TRUE(static_cast<bool>(callback->OnRemoteRequest(code, data, reply, option)));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
     EXPECT_TRUE(reply.ReadBool());
 }
 
@@ -164,7 +164,7 @@ HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0005, TestSize.Level1)
     EXPECT_NE(callback, nullptr);
     EXPECT_CALL(*callback, OnCallback(testState,
         Matcher<const PrintJob&>(PrintJobMatcher(testJob)))).Times(1).WillOnce(Return(true));
-    EXPECT_TRUE(static_cast<bool>(callback->OnRemoteRequest(code, data, reply, option)));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
     EXPECT_TRUE(reply.ReadBool());
 }
 
@@ -189,7 +189,7 @@ HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0006, TestSize.Level1)
     auto callback = std::make_shared<MockPrintCallbackStub>();
     EXPECT_NE(callback, nullptr);
     EXPECT_CALL(*callback, OnCallback(extensionId, extInfo)).Times(1).WillOnce(Return(true));
-    EXPECT_TRUE(static_cast<bool>(callback->OnRemoteRequest(code, data, reply, option)));
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
     EXPECT_TRUE(reply.ReadBool());
 }
 }  // namespace Print

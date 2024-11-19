@@ -506,6 +506,10 @@ int32_t ScanServiceProxy::GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedS
         return ret;
     }
     uint32_t len = reply.ReadUint32();
+    if (len > SCAN_MAX_COUNT) {
+        SCAN_HILOGE("len is out of range.");
+        return E_SCAN_INVALID_PARAMETER;
+    }
     for (uint32_t i = 0; i < len; i++) {
         auto infoPtr = ScanDeviceInfo::Unmarshalling(reply);
         if (infoPtr == nullptr) {
