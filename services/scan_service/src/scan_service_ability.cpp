@@ -186,6 +186,7 @@ ScanServiceAbility::~ScanServiceAbility()
     FREE_AND_NULLPTR(saneReadBuf);
     FREE_AND_NULLPTR(jpegbuf)
     DELETE_AND_NULLIFY(cinfoPtr);
+    DELETE_AND_NULLIFY(ofp);
     SCAN_HILOGD("~ScanServiceAbility state_  is %{public}d.", static_cast<int>(state_));
 }
 

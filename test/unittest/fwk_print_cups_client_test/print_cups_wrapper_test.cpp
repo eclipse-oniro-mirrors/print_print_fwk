@@ -514,11 +514,11 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0086, TestSize.Level1)
     printCupsClient.UpdateBorderlessJobParameter(optionJson, jobParams);
     jobParams = new JobParameters();
     printCupsClient.UpdateBorderlessJobParameter(optionJson, jobParams);
-    optionJson["borderless"] = "false";
+    optionJson["isBorderless"] = false;
     printCupsClient.UpdateBorderlessJobParameter(optionJson, jobParams);
     EXPECT_EQ(jobParams->borderless, 0);
 
-    optionJson["borderless"] = "true";
+    optionJson["isBorderless"] = true;
     printCupsClient.UpdateBorderlessJobParameter(optionJson, jobParams);
     EXPECT_EQ(jobParams->borderless, 1);
 
