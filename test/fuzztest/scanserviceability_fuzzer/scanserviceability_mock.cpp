@@ -15,6 +15,7 @@
 
 #include "scan_service_ability_mock.h"
 
+#include "accesstoken_kit.h"
 #include "nativetoken_kit.h"
 #include "token_setproc.h"
 
@@ -22,22 +23,25 @@ namespace OHOS {
 namespace Scan {
 void ScanServiceAbilityMock::MockPermission()
 {
+    const int32_t permsNum = 2;
     static const char *PERMS[] = {
-        "ohos.permission.MANAGE_PRINT_JOB"
+        "ohos.permission.MANAGE_USB_CONFIG",
+        "ohos.permission.PRINT"
     };
     uint64_t tokenId;
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
-        .permsNum = 1,
+        .permsNum = permsNum,
         .aclsNum = 0,
         .dcaps = nullptr,
         .perms = PERMS,
         .acls = nullptr,
-        .processName = "scan_service",
+        .processName = "scan_service_test",
         .aplStr = "system_core",
     };
     tokenId = GetAccessTokenId(&infoInstance);
     SetSelfTokenID(tokenId);
+    OHOS::Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
 }
 }
 }
