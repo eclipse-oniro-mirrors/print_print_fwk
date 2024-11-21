@@ -44,7 +44,7 @@ std::map<std::string, sptr<ScanMDnsDiscoveryObserver>> ScanMdnsService::discover
 
 bool ScanMdnsService::OnStartDiscoverService()
 {
-    const std::vector<std::string> scannerServiceTypes = { "_ipp._tcp" };
+    const std::vector<std::string> scannerServiceTypes = { "_scanner._tcp" };
     constexpr int32_t MDNS_PORT = 5353;
     {
         std::lock_guard<std::mutex> autoLock(g_lock);

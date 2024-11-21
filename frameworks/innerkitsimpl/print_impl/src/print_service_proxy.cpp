@@ -167,6 +167,10 @@ int32_t PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &ex
     }
 
     uint32_t len = reply.ReadUint32();
+    if (len > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("len is out of range.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
     for (uint32_t i = 0; i < len; i++) {
         auto infoPtr = PrintExtensionInfo::Unmarshalling(reply);
         if (infoPtr == nullptr) {
@@ -560,6 +564,10 @@ int32_t PrintServiceProxy::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
     }
 
     uint32_t len = reply.ReadUint32();
+    if (len > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("len is out of range.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
     for (uint32_t i = 0; i < len; i++) {
         auto jobPtr = PrintJob::Unmarshalling(reply);
         if (jobPtr == nullptr) {

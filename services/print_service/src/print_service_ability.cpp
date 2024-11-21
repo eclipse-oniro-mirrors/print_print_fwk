@@ -1693,7 +1693,7 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     CheckJobQueueBlocked(*jobIt->second);
 
     auto printerId = jobIt->second->GetPrinterId();
-    auto printerInfo = printSystemData_.QueryPrinterInfoByPrinterId(printerId);
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo == nullptr) {
         PRINT_HILOGE("Invalid printerId");
         return E_PRINT_INVALID_PRINTER;

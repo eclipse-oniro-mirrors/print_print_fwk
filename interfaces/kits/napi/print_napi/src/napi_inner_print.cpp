@@ -533,6 +533,7 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
 
     if (!NapiInnerPrint::IsSupportType(type)) {
         PRINT_HILOGE("Event On type : %{public}s not support", type.c_str());
+        NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
         return nullptr;
     }
 
@@ -550,6 +551,7 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
     int32_t ret = PrintManagerClient::GetInstance()->On("", type, callback);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Failed to register event");
+        NapiThrowError(env, ret);
         return nullptr;
     }
     return nullptr;
@@ -558,40 +560,38 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
 napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
-    auto context = std::make_shared<InnerPrintContext>();
-    auto input =
-        [context](
-            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
-        napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "type is not a string", napi_string_expected);
-        std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        if (!NapiInnerPrint::IsSupportType(type)) {
-            PRINT_HILOGE("Event Off type : %{public}s not support", context->type.c_str());
-            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-            return napi_invalid_arg;
-        }
-        context->type = type;
-        PRINT_HILOGD("event type : %{public}s", context->type.c_str());
-        return napi_ok;
-    };
-    auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        napi_status status = napi_get_boolean(env, context->result, result);
-        PRINT_HILOGD("context->result = %{public}d", context->result);
-        return status;
-    };
-    auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->Off("", context->type);
-        context->result = ret == E_PRINT_NONE;
-        if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("Failed to unregister event");
-            context->SetErrorIndex(ret);
-        }
-    };
-    context->SetAction(std::move(input), std::move(output));
-    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
-    return asyncCall.Call(env, exec);
+    size_t argc = NapiPrintUtils::MAX_ARGC;
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+    napi_value thisVal = nullptr;
+    void *data = nullptr;
+    PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
+    PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO, "need 1-2 parameter!");
+
+    napi_valuetype valuetype;
+    PRINT_CALL(env, napi_typeof(env, argv[0], &valuetype));
+    PRINT_ASSERT(env, valuetype == napi_string, "type is not a string");
+    std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
+    PRINT_HILOGD("type : %{public}s", type.c_str());
+
+    if (!NapiInnerPrint::IsSupportType(type)) {
+        PRINT_HILOGE("Event Off type : %{public}s not support", type.c_str());
+        NapiThrowError(env, E_PRINT_INVALID_PARAMETER);
+        return nullptr;
+    }
+
+    if (argc == NapiPrintUtils::ARGC_TWO) {
+        valuetype = napi_undefined;
+        napi_typeof(env, argv[1], &valuetype);
+        PRINT_ASSERT(env, valuetype == napi_function, "callback is not a function");
+    }
+
+    int32_t ret = PrintManagerClient::GetInstance()->Off("", type);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("Failed to unregister event");
+        NapiThrowError(env, ret);
+        return nullptr;
+    }
+    return nullptr;
 }
 
 napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info info)
@@ -617,6 +617,7 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
         int32_t retCallback = PrintManagerClient::GetInstance()->On("", PRINT_GET_FILE_CALLBACK_ADAPTER, callback);
         if (retCallback != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to register startGetPrintFile callback");
+            NapiThrowError(env, retCallback);
             return nullptr;
         }
     }
@@ -631,6 +632,7 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
         int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, *printAttributes, fd);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to StartGetPrintFile");
+            NapiThrowError(env, ret);
             return nullptr;
         }
     }
@@ -754,14 +756,13 @@ napi_value NapiInnerPrint::NotifyPrintServiceEvent(napi_env env, napi_callback_i
     auto input =
         [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
+            PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
+                              "should 1 or 2 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "jobId is not a string", napi_string_expected);
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_number, "event is not a number", napi_number_expected);
-        std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        uint32_t event = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_ONE]);
+        uint32_t event = NapiPrintUtils::GetUint32FromValue(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
         PRINT_HILOGI("jobId: %{public}s, event : %{public}d", jobId.c_str(), event);
         if (!IsValidApplicationEvent(event)) {
             PRINT_HILOGE("invalid event");
@@ -895,5 +896,13 @@ bool NapiInnerPrint::IsValidDefaultPrinterType(uint32_t type)
         return true;
     }
     return false;
+}
+
+void NapiInnerPrint::NapiThrowError(napi_env env, const int32_t errCode)
+{
+    napi_value result = nullptr;
+    napi_create_error(env, NapiPrintUtils::CreateInt32(env, errCode),
+        NapiPrintUtils::CreateStringUtf8(env, NapiPrintUtils::GetPrintErrorMsg(errCode)), &result);
+    napi_throw(env, result);
 }
 } // namespace OHOS::Print

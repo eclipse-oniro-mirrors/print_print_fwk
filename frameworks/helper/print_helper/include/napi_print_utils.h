@@ -78,6 +78,7 @@ public:
 
     static size_t GetJsVal(napi_env env, napi_callback_info info, napi_value argv[], size_t length);
     static bool VerifyProperty(std::vector<std::string> &names, std::map<std::string, PrintParamStatus> &propertyList);
+    static std::string GetPrintErrorMsg(int32_t errorCode);
 };
 } // namespace OHOS::Print
 #endif // NAPI_PRINT_UTILS_H

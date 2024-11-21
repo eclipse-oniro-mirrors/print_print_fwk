@@ -110,15 +110,19 @@ bool JsPrintExtension::InitContextObj(JsRuntime &jsRuntime, napi_value &extObj, 
     napi_env engine = jsRuntime.GetNapiEnv();
     napi_value contextObj = CreateJsPrintExtensionContext(engine, context, extensionId);
     auto shellContextRef = jsRuntime.LoadSystemModule("PrintExtensionContext", &contextObj, NapiPrintUtils::ARGC_ONE);
+    if (shellContextRef == nullptr) {
+        PRINT_HILOGE("Failed to load print extension context ref");
+        return false;
+    }
     contextObj = shellContextRef->GetNapiValue();
-    PRINT_HILOGD("JsPrintExtension::Init Bind.");
-    context->Bind(jsRuntime, shellContextRef.release());
-    PRINT_HILOGD("JsPrintExtension::napi_set_named_property.");
-    napi_set_named_property(engine, extObj, "context", contextObj);
     if (contextObj == nullptr) {
         PRINT_HILOGE("Failed to get Print extension native object");
         return false;
     }
+    PRINT_HILOGD("JsPrintExtension::Init Bind.");
+    context->Bind(jsRuntime, shellContextRef.release());
+    PRINT_HILOGD("JsPrintExtension::napi_set_named_property.");
+    napi_set_named_property(engine, extObj, "context", contextObj);
 
     napi_wrap(engine, contextObj, new std::weak_ptr<AbilityRuntime::Context>(context),
         [](napi_env, void *data, void *) {

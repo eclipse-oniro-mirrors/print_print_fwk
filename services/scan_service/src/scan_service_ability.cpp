@@ -186,6 +186,7 @@ ScanServiceAbility::~ScanServiceAbility()
     FREE_AND_NULLPTR(saneReadBuf);
     FREE_AND_NULLPTR(jpegbuf)
     DELETE_AND_NULLIFY(cinfoPtr);
+    DELETE_AND_NULLIFY(ofp);
     SCAN_HILOGD("~ScanServiceAbility state_  is %{public}d.", static_cast<int>(state_));
 }
 
@@ -1680,10 +1681,12 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std:
         int32_t nowScanId = it->first;
         file_name = "scan_tmp" + std::to_string(nowScanId) + ".jpg";
         std::string outputDir = ObtainUserCacheDirectory(currentUseScannerUserId_);
-        if (!std::filesystem::exists(outputDir)) {
-            SCAN_HILOGE("outputDir %{public}s does not exist.", outputDir.c_str());
+        char canonicalPath[PATH_MAX] = { 0 };
+        if (realpath(outputDir.c_str(), canonicalPath) == nullptr) {
+            SCAN_HILOGE("The real output dir is null, errno:%{public}s", std::to_string(errno).c_str());
             return;
         }
+        outputDir = canonicalPath;
         output_file = outputDir.append("/").append(file_name);
         ofp = fopen(output_file.c_str(), "w");
         if (ofp == nullptr) {
@@ -1717,10 +1720,12 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
     int32_t nowScanId = it->first;
     file_name = "scan_tmp" + std::to_string(nowScanId) + ".jpg";
     std::string outputDir = ObtainUserCacheDirectory(currentUseScannerUserId_);
-    if (!std::filesystem::exists(outputDir)) {
-        SCAN_HILOGE("outputDir %{public}s does not exist.", outputDir.c_str());
+    char canonicalPath[PATH_MAX] = { 0 };
+    if (realpath(outputDir.c_str(), canonicalPath) == nullptr) {
+        SCAN_HILOGE("The real output dir is null, errno:%{public}s", std::to_string(errno).c_str());
         return;
     }
+    outputDir = canonicalPath;
     output_file = outputDir.append("/").append(file_name);
     ofp = fopen(output_file.c_str(), "w");
     if (ofp == nullptr) {

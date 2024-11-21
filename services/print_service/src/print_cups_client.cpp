@@ -1550,13 +1550,9 @@ void PrintCupsClient::UpdateBorderlessJobParameter(json& optionJson, JobParamete
     if (params == nullptr) {
         return;
     }
-    if (optionJson.contains("borderless") && optionJson["borderless"].is_string()) {
-        std::string isBorderless = optionJson["borderless"].get<std::string>();
-        if (isBorderless == "true") {
-            params->borderless = TRUE;
-        } else {
-            params->borderless = FALSE;
-        }
+    if (optionJson.contains("isBorderless") && optionJson["isBorderless"].is_boolean()) {
+        bool isBorderless = optionJson["isBorderless"].get<bool>();
+        params->borderless = isBorderless ? TRUE : FALSE;
     } else {
         params->borderless = TRUE;
     }
