@@ -80,7 +80,7 @@ HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0002, TestSize.Level1)
     EXPECT_CALL(mock, QueryDiscoveredPrinterInfoById(_, _)).WillOnce(Return(nullptr))
         .WillRepeatedly(Return(std::make_shared<PrinterInfo>()));
     EXPECT_CALL(mock, AddPrinterToCupsWithPpd(_, _, _)).WillRepeatedly(Return(EXTENSION_ERROR_NONE));
-    EXPECT_CALL(mock, QueryPrinterInfoByPrinterId(_, _)).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(mock, QueryPrinterInfoByPrinterId(_, _, _)).WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(mock, UpdatePrinterToDiscovery(_, _)).WillRepeatedly(Return(EXTENSION_ERROR_NONE));
     vendorDriver.privatePrinterPpdMap.insert(std::make_pair(printerId, std::vector(1, defaultPpd)));
     EXPECT_FALSE(vendorDriver.OnQueryCapability(printerId, defaultTimeout));
@@ -98,7 +98,7 @@ HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0003, TestSize.Level1)
     EXPECT_CALL(mock, QueryDiscoveredPrinterInfoById(_, _)).WillRepeatedly(Return(std::make_shared<PrinterInfo>()));
     EXPECT_CALL(mock, AddPrinterToCupsWithPpd(_, _, _)).WillOnce(Return(EXTENSION_ERROR_INVALID_PRINTER))
         .WillRepeatedly(Return(EXTENSION_ERROR_NONE));
-    EXPECT_CALL(mock, QueryPrinterInfoByPrinterId(_, _)).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(mock, QueryPrinterInfoByPrinterId(_, _, _)).WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(mock, UpdatePrinterToDiscovery(_, _)).WillRepeatedly(Return(EXTENSION_ERROR_NONE));
     vendorDriver.privatePrinterPpdMap.insert(std::make_pair(printerId, std::vector(1, defaultPpd)));
     EXPECT_FALSE(vendorDriver.OnQueryCapability(printerId, defaultTimeout));
@@ -115,7 +115,7 @@ HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0004, TestSize.Level1)
     EXPECT_TRUE(vendorDriver.Init(&mock));
     EXPECT_CALL(mock, QueryDiscoveredPrinterInfoById(_, _)).WillRepeatedly(Return(std::make_shared<PrinterInfo>()));
     EXPECT_CALL(mock, AddPrinterToCupsWithPpd(_, _, _)).WillRepeatedly(Return(EXTENSION_ERROR_NONE));
-    EXPECT_CALL(mock, QueryPrinterInfoByPrinterId(_, _)).WillOnce(Return(E_PRINT_UNKNOWN))
+    EXPECT_CALL(mock, QueryPrinterInfoByPrinterId(_, _, _)).WillOnce(Return(E_PRINT_UNKNOWN))
         .WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(mock, UpdatePrinterToDiscovery(_, _)).WillRepeatedly(Return(EXTENSION_ERROR_NONE));
     vendorDriver.privatePrinterPpdMap.insert(std::make_pair(printerId, std::vector(1, defaultPpd)));
@@ -133,7 +133,7 @@ HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0005, TestSize.Level1)
     EXPECT_TRUE(vendorDriver.Init(&mock));
     EXPECT_CALL(mock, QueryDiscoveredPrinterInfoById(_, _)).WillRepeatedly(Return(std::make_shared<PrinterInfo>()));
     EXPECT_CALL(mock, AddPrinterToCupsWithPpd(_, _, _)).WillRepeatedly(Return(EXTENSION_ERROR_NONE));
-    EXPECT_CALL(mock, QueryPrinterInfoByPrinterId(_, _)).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(mock, QueryPrinterInfoByPrinterId(_, _, _)).WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(mock, UpdatePrinterToDiscovery(_, _)).WillOnce(Return(EXTENSION_ERROR_INVALID_PRINTER))
         .WillRepeatedly(Return(EXTENSION_ERROR_NONE));
     vendorDriver.privatePrinterPpdMap.insert(std::make_pair(printerId, std::vector(1, defaultPpd)));
@@ -154,7 +154,7 @@ HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0006, TestSize.Level2)
         DoAll(SetArgReferee<1>(std::vector<std::string>(1, defaultPpd)), Return(true)));
     EXPECT_CALL(mock, QueryDiscoveredPrinterInfoById(_, _)).WillRepeatedly(Return(std::make_shared<PrinterInfo>()));
     EXPECT_CALL(mock, AddPrinterToCupsWithPpd(_, _, _)).WillRepeatedly(Return(EXTENSION_ERROR_NONE));
-    EXPECT_CALL(mock, QueryPrinterInfoByPrinterId(_, _)).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(mock, QueryPrinterInfoByPrinterId(_, _, _)).WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(mock, UpdatePrinterToDiscovery(_, _)).WillRepeatedly(Return(EXTENSION_ERROR_NONE));
     EXPECT_FALSE(vendorDriver.OnQueryCapability(printerId, defaultTimeout));
 
