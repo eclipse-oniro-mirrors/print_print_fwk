@@ -57,6 +57,7 @@ ohos_shared_library("print_service") {
     "src/print_usb_manager.cpp",
     "src/print_user_data.cpp",
     "src/thread_sync_wait.cpp",
+    "src/vendor_ppd_driver.cpp",
     "src/vendor_bsuni_driver.cpp",
     "src/vendor_driver_base.cpp",
     "src/vendor_helper.cpp",

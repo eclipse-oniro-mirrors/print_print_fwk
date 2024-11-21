@@ -276,5 +276,24 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0009, TestSize.Level2)
     syncWait.Wait(WAIT_TIME_MS);
     vendorManager.UnInit();
 }
+
+HWTEST_F(VendorManagerTest, VendorManagerTest_0010, TestSize.Level1)
+{
+    MockPrintServiceAbility mock;
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    auto vendorPpdDriver = std::make_shared<VendorPpdDriver>();
+    ASSERT_NE(vendorPpdDriver, nullptr);
+    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorPpdDriver));
+    std::string vendorName = vendorPpdDriver->GetVendorName();
+    std::string globalVendorName = VendorManager::GetGlobalVendorName(vendorName);
+    std::string printerId = PRINTER_TEST_IP;
+    std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
+    std::string ppdData;
+    PrinterInfo printerInfo;
+    EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_INVALID_PRINTER);
+    vendorManager.UnInit();
+}
 }  // namespace Print
 }  // namespace OHOS

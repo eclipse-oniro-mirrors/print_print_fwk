@@ -59,6 +59,11 @@ public:
     virtual void ClearConnectingPrinter() = 0;
     virtual bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) = 0;
     virtual bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) = 0;
+    virtual std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &vendorName,
+        const std::string &printerId) = 0;
+    virtual int32_t QueryPrinterInfoByPrinterId(const std::string &vendorName, const std::string &printerId,
+        PrinterInfo &info) = 0;
+    virtual bool QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds) = 0;
 };
 
 class VendorDriverBase {

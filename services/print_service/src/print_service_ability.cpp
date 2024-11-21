@@ -2934,6 +2934,12 @@ int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInf
     return E_PRINT_NONE;
 }
 
+bool PrintServiceAbility::QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds)
+{
+    DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPPDInformation(makeModel, ppds);
+    return !ppds.empty();
+}
+
 void PrintServiceAbility::DeletePrinterFromUserData(const std::string &printerId)
 {
     std::vector<int32_t> allPrintUserList;
@@ -3239,6 +3245,50 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
         ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithPpd(info.uri, info.name,
             "Brocadesoft Universal Driver", ppdData);
     }
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
+        return false;
+    }
+#endif // CUPS_ENABLE
+    info.printerStatus = PRINTER_STATUS_IDLE;
+    printerInfo->GetCapability(info.printerCapability);
+    WritePrinterPreference(globalPrinterId, info.printerCapability);
+    printerInfo->SetPrinterState(PRINTER_CONNECTED);
+    printerInfo->SetIsLastUsedPrinter(true);
+    printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
+    SetLastUsedPrinter(globalPrinterId);
+    if (printSystemData_.IsPrinterAdded(globalPrinterId)) {
+        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+    } else {
+        printSystemData_.InsertCupsPrinter(globalPrinterId, info, true);
+        printSystemData_.SaveCupsPrinterMap();
+        SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
+        SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
+    }
+    SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
+    vendorManager.MonitorPrinterStatus(globalPrinterId, true);
+    return true;
+}
+
+bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::string &globalVendorName,
+    const std::string &printerId, const std::string &ppdData)
+{
+    auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    if (printerInfo == nullptr) {
+        PRINT_HILOGW("printerInfo is null");
+        return false;
+    }
+    printerInfo->SetPrinterName(RenamePrinterWhenAdded(*printerInfo));
+    CupsPrinterInfo info;
+    info.name = printerInfo->GetPrinterName();
+    info.uri = printerInfo->GetUri();
+    info.maker = printerInfo->GetPrinterMake();
+#ifdef CUPS_ENABLE
+    int32_t ret = E_PRINT_NONE;
+    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithSpecificPpd(info.uri, info.name,
+        ppdData);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
         return false;

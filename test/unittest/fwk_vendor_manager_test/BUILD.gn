@@ -34,6 +34,7 @@ ohos_unittest("fwk_vendor_manager_test") {
 
   sources = [
     "operation_queue_test.cpp",
+    "vendor_ppd_driver_test.cpp",
     "vendor_bsuni_driver_test.cpp",
     "vendor_helper_test.cpp",
     "vendor_ipp_everywhere_test.cpp",

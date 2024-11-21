@@ -81,6 +81,8 @@ public:
     void QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds);
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);
+    int32_t AddPrinterToCupsWithSpecificPpd(const std::string &printerUri, const std::string &printerName,
+        const std::string &ppd);
     int32_t AddPrinterToCupsWithPpd(const std::string &printerUri, const std::string &printerName,
         const std::string &ppdName, const std::string &ppdData);
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,

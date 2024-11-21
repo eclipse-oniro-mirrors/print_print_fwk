@@ -33,11 +33,16 @@ public:
                                                   const std::string &printerId) = 0;
     virtual bool AddVendorPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
                                                const std::string &ppdData) = 0;
+    virtual bool AddVendorPrinterToCupsWithSpecificPpd(const std::string &globalVendorName,
+                                                const std::string &printerId, const std::string &ppdData) = 0;
     virtual bool RemoveVendorPrinterFromCups(const std::string &vendorName, const std::string &printerId) = 0;
     virtual bool OnVendorStatusUpdate(const std::string &globalVendorName, const std::string &printerId,
                                       const PrinterVendorStatus &status) = 0;
     virtual bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) = 0;
     virtual bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) = 0;
+    virtual std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &printerId) = 0;
+    virtual int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) = 0;
+    virtual bool QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds) = 0;
 };
 
 class VendorManager : public IPrinterVendorManager {
@@ -76,6 +81,11 @@ public:
     void ClearConnectingPrinter() override;
     bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) override;
     bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
+    std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &vendorName,
+        const std::string &printerId) override;
+    int32_t QueryPrinterInfoByPrinterId(const std::string &vendorName, const std::string &printerId,
+        PrinterInfo &info) override;
+    bool QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds) override;
 
 private:
     std::shared_ptr<VendorDriverBase> FindDriverByPrinterId(const std::string &globalPrinterId);
@@ -83,6 +93,8 @@ private:
     void StatusMonitorProcess();
     void UpdateAllPrinterStatus();
     bool WaitNext();
+    bool IsPrivatePpdDriver(const std::string &vendorName, const PrinterInfo &printerInfo);
+    bool IsPrivatePpdDriver(const std::string &vendorName);
 
 private:
     std::atomic<bool> defaultLoaded{false};
