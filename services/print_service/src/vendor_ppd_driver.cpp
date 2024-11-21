@@ -73,7 +73,8 @@ std::string VendorPpdDriver::GetVendorName()
     return "driver.ppd";
 }
 
-bool VendorPpdDriver::QueryPpdByPrinterId(const std::string &printerId, std::vector<std::string> &ppds) {
+bool VendorPpdDriver::QueryPpdByPrinterId(const std::string &printerId, std::vector<std::string> &ppds)
+{
     PRINT_HILOGD("QueryPpdByPrinterId enter.");
     auto iter = privatePrinterPpdMap.find(printerId);
     if (iter != privatePrinterPpdMap.end()) {
@@ -120,7 +121,7 @@ std::shared_ptr<PrinterInfo> VendorPpdDriver::QueryPrinterCapabilityFromPpd(cons
     }
     std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
     PrinterInfo info;
-    if (vendorManager->QueryPrinterInfoByPrinterId(printerId, info) != E_PRINT_NONE) {
+    if (vendorManager->QueryPrinterInfoByPrinterId(GetVendorName(), printerId, info) != E_PRINT_NONE) {
         return nullptr;
     }
     *printerInfo = info;
