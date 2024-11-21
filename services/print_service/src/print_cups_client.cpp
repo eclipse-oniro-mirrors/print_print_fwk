@@ -501,7 +501,8 @@ int32_t PrintCupsClient::AddPrinterToCupsWithSpecificPpd(const std::string &prin
     if (ppd != DEFAULT_PPD_NAME) {
         std::string serverBin = CUPS_ROOT_DIR + "/serverbin";
         mode_t permissions = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH;
-        ChangeFilterPermission(serverBin, permissions);
+        int ret = ChangeFilterPermission(serverBin, permissions);
+        PRINT_HILOGI("ChangeFilterPermission result: %{public}d", ret);
     }
     PRINT_HILOGI("ppd driver: %{public}s", ppd.c_str());
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
@@ -509,12 +510,12 @@ int32_t PrintCupsClient::AddPrinterToCupsWithSpecificPpd(const std::string &prin
         PRINT_HILOGI("add success, printer has added");
         return E_PRINT_NONE;
     }
-    if (printAbility == nullptr) {
-        PRINT_HILOGW("printAbility is null");
+    if (printAbility_ == nullptr) {
+        PRINT_HILOGW("printAbility_ is null");
         return E_PRINT_SERVER_FAILURE;
     }
 
-    ipp_t *request;
+    ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
     ippSetPort(CUPS_SEVER_PORT);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
@@ -528,7 +529,7 @@ int32_t PrintCupsClient::AddPrinterToCupsWithSpecificPpd(const std::string &prin
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", nullptr, ppd.c_str());
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-accepting-jobs", 1);
     PRINT_HILOGD("IPP_OP_CUPS_ADD_MODIFY_PRINTER cupsDoRequest");
-    ippDelete(printAbility->DoRequest(nullptr, request, "/admin/"));
+    ippDelete(printAbility_->DoRequest(nullptr, request, "/admin/"));
     if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
         PRINT_HILOGE("add error: %s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
