@@ -17,6 +17,7 @@
 #define private public
 #include "vendor_manager.h"
 #undef private
+#include "vendor_ppd_driver.h"
 #include "print_constant.h"
 #include "print_log.h"
 #include "vendor_ipp_everywhere.h"
