@@ -419,12 +419,10 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
         option["printerUri"] = std::string(discoveryItem->printerUri);
         option["make"] = std::string(discoveryItem->makeAndModel);
         std::string detailInfoStr = std::string(discoveryItem->detailInfo);
-        if (nlohmann::json::accept(detailInfoStr)) {
-            nlohmann::json detailInfo = nlohmann::json::parse(detailInfoStr);
-            if (!detailInfo.is_null() && detailInfo.contains("bsunidriver_support") &&
-                detailInfo["bsunidriver_support"].is_string()) {
-                option["bsunidriverSupport"] = detailInfo["bsunidriver_support"].get<std::string>();
-            }
+        nlohmann::json detailInfo = nlohmann::json::parse(detailInfoStr);
+        if (!detailInfo.is_null() && detailInfo.contains("bsunidriver_support") &&
+            detailInfo["bsunidriver_support"].is_string()) {
+            option["bsunidriverSupport"] = detailInfo["bsunidriver_support"].get<std::string>();
         }
         info.SetOption(option.dump());
     }
