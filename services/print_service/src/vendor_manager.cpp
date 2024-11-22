@@ -20,8 +20,6 @@
 #include "vendor_ipp_everywhere.h"
 #include "vendor_ppd_driver.h"
 #include "print_log.h"
-#include "vendor_ppd_driver.h"
-#include "print_utils.h"
 #include "print_utils.h"
 
 using namespace OHOS::Print;
@@ -469,7 +467,11 @@ bool VendorManager::IsPrivatePpdDriver(const std::string &vendorName, const Prin
     PRINT_HILOGD("IsPrivatePpdDriver vendorName=%{public}s", vendorName.c_str());
     PRINT_HILOGD("IsPrivatePpdDriver printerName=%{public}s", printerInfo.GetPrinterName().c_str());
     if (vendorName == "driver.bsuni") {
-        nlohmann::json option = nlohmann::json::parse(std::string(printerInfo.GetOption()));
+        std::string optionStr = std::string(printerInfo.GetOption());
+        if (!nlohmann::json::accept(optionStr)) {
+            return false;
+        }
+        nlohmann::json option = nlohmann::json::parse(optionStr);
         if (option != nullptr && option.contains("bsunidriverSupport") && option["bsunidriverSupport"].is_string()) {
             PRINT_HILOGD("IsPrivatePpdDriver bsunidriverSupport=%{public}s",
                 std::string(option["bsunidriverSupport"]).c_str());
