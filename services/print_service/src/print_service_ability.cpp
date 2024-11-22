@@ -3162,22 +3162,22 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
             printerInfo->SetPrinterName(cupsPrinter.name);
         }
         printerInfo->SetPrinterId(globalPrinterId);
-        printerInfo->SetPrinterState(PRINTER_ADDED);
         printSystemData_.AddPrinterToDiscovery(printerInfo);
     }
+    printerInfo->SetPrinterState(PRINTER_ADDED);
     SendPrinterDiscoverEvent(PRINTER_ADDED, *printerInfo);
     SendPrinterEvent(*printerInfo);
     if (printSystemData_.IsPrinterAdded(printerInfo->GetPrinterId()) &&
         !printSystemData_.CheckPrinterBusy(printerInfo->GetPrinterId())) {
-        if (CheckPrinterUriDifferent(printerInfo)) {
-            PRINT_HILOGW("different printer uri, ignore it");
-        } else {
-            PRINT_HILOGI("added printer, update status to idle");
-            printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-            printSystemData_.UpdatePrinterStatus(printerInfo->GetPrinterId(), PRINTER_STATUS_IDLE);
-            SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-            SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        if (CheckPrinterUriDifferent(printerInfo) &&
+            UpdateAddedPrinterInCups(printerInfo->GetPrinterId(), printerInfo->GetUri())) {
+            printSystemData_.UpdatePrinterUri(printerInfo);
+            printSystemData_.SaveCupsPrinterMap();
         }
+        printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
+        printSystemData_.UpdatePrinterStatus(printerInfo->GetPrinterId(), PRINTER_STATUS_IDLE);
+        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
     }
     return true;
 }
