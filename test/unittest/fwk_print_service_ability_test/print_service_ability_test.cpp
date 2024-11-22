@@ -2164,4 +2164,15 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0137, TestSize.Level1)
     info.SetOption(infoJson.dump());
     EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_INVALID_PARAMETER);
 }
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0138, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrinterInfo info;
+    info.SetPrinterId(DEFAULT_EXT_PRINTER_ID);
+    std::string type = "testType";
+    EXPECT_EQ(service->CheckUserIdInEventType(type), false);
+    type = PRINTER_CHANGE_EVENT_TYPE;
+    EXPECT_EQ(service->CheckUserIdInEventType(type), false);
+}
 } // namespace OHOS::Print

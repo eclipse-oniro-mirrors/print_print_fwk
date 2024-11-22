@@ -1652,5 +1652,113 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0078, TestSize.Level1)
     jobParams = printCupsClient.BuildJobParameters(testJob);
     EXPECT_EQ(jobParams, nullptr);
 }
+
+/**
+ * @tc.name: PrintCupsClientTest_0079
+ * @tc.desc: HandleFiles
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0079, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    http_t *http = nullptr;
+    PrintJob testJob;
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    int32_t numFiles = 1;
+    int32_t jobId = 1;
+    EXPECT_EQ(printCupsClient.HandleFiles(jobParams, numFiles, http, jobId), false);
+    jobParams = nullptr;
+    EXPECT_EQ(printCupsClient.HandleFiles(jobParams, numFiles, http, jobId), false);
+    delete http;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0080
+ * @tc.desc: HandleJobState
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0080, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    http_t *http = nullptr;
+    JobStatus *prevousJobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
+    JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
+        jobParams->serviceJobId,
+        1,
+        "ipp://192.168.186.1:631/ipp/print",
+        "DIRECT-PixLab_V1-0105"};
+
+    printCupsClient.HandleJobState(http, param, jobStatus, prevousJobStatus);
+    EXPECT_NE(prevousJobStatus, nullptr);
+    printCupsClient.QueryJobStateAgain(http, param, jobStatus);
+    printCupsClient.HandleJobState(http, param, jobStatus, prevousJobStatus);
+    EXPECT_NE(prevousJobStatus, nullptr);
+    delete prevousJobStatus;
+    delete jobStatus;
+    delete param;
+    delete http;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0081
+ * @tc.desc: MonitorJobState
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0081, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    CallbackFunc callback = [this](){};
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
+        jobParams->serviceJobId,
+        1,
+        "ipp://192.168.186.1:631/ipp/print",
+        "DIRECT-PixLab_V1-0105"};
+
+    printCupsClient.MonitorJobState(param, callback);
+    EXPECT_NE(param, nullptr);
+    param = nullptr;
+    printCupsClient.MonitorJobState(param, callback);
+    delete param;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0082
+ * @tc.desc: ResumePrinter
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0082, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string printerName = "testPrinterName";
+    EXPECT_EQ(printCupsClient.ResumePrinter(printerName), E_PRINT_SERVER_FAILURE);
+    printCupsClient.printAbility_ = nullptr;
+    EXPECT_EQ(printCupsClient.ResumePrinter(printerName), E_PRINT_SERVER_FAILURE);
+}
+
 }  // namespace Print
 }  // namespace OHOS

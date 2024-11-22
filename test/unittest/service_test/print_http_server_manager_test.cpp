@@ -152,6 +152,49 @@ HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_004, TestSize.Le
     printHttpServerManager.StopServer(printerName);
 }
 
+/**
+ * @tc.name: PrintHttpServerManagerTest_005
+ * @tc.desc: Verify the AllocatePort function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_005, TestSize.Level1)
+{
+    OHOS::Print::PrintHttpServerManager printHttpServerManager;
+    std::string printerName = "HUAWEI PixLab V1-0105";
+    std::shared_ptr<httplib::Server> newServer = std::make_shared<httplib::Server>();
+    EXPECT_NE(newServer, nullptr);
+    std::shared_ptr<PrintHttpRequestProcess> newProcess = std::make_shared<PrintHttpRequestProcess>();
+    EXPECT_NE(newProcess, nullptr);
+    int32_t port = 0;
+    printHttpServerManager.printHttpServerMap[printerName] = newServer;
+    EXPECT_EQ(printHttpServerManager.AllocatePort(newServer, port), true);
+    printHttpServerManager.printHttpPortMap[printerName] = 60000;
+    printHttpServerManager.printHttpProcessMap[printerName] = newProcess;
+    EXPECT_EQ(printHttpServerManager.AllocatePort(newServer, port), true);
+}
+
+/**
+ * @tc.name: PrintHttpServerManagerTest_006
+ * @tc.desc: Verify the DealUsbDevDetch function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintHttpServerManagerTest, PrintHttpServerManagerTest_006, TestSize.Level1)
+{
+    OHOS::Print::PrintHttpServerManager printHttpServerManager;
+    std::string printerName = "HUAWEI PixLab V1-0105";
+    std::shared_ptr<httplib::Server> newServer = std::make_shared<httplib::Server>();
+    EXPECT_NE(newServer, nullptr);
+    std::shared_ptr<PrintHttpRequestProcess> newProcess = std::make_shared<PrintHttpRequestProcess>();
+    EXPECT_NE(newProcess, nullptr);
+    printHttpServerManager.printHttpServerMap[printerName] = newServer;
+    printHttpServerManager.printHttpPortMap[printerName] = 60000;
+    printHttpServerManager.printHttpProcessMap[printerName] = newProcess;
+    std::string devStr = "";
+    printHttpServerManager.DealUsbDevDetach(devStr);
+}
+
 }  // namespace Print
 }  // namespace OHOS
 #endif // IPPOVERUSB_ENABLE
