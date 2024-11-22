@@ -35,6 +35,10 @@ public:
     MOCK_METHOD0(ClearConnectingPrinter, void ());
     MOCK_METHOD2(QueryPrinterCapabilityByUri, bool (const std::string &, PrinterCapability &));
     MOCK_METHOD2(QueryPrinterStatusByUri, bool (const std::string &, PrinterStatus &));
+    MOCK_METHOD2(QueryDiscoveredPrinterInfoById, std::shared_ptr<PrinterInfo>(const std::string &,
+        const std::string &));
+    MOCK_METHOD3(QueryPrinterInfoByPrinterId, int32_t(const std::string &, const std::string &, PrinterInfo &));
+    MOCK_METHOD2(QueryPPDInformation, bool(const char *, std::vector<std::string> &));
 };
 }  // namespace Print
 }  // namespace OHOS

@@ -485,22 +485,27 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     const std::string &printerMake)
 {
     PRINT_HILOGD("PrintCupsClient AddPrinterToCups start, printerMake: %{public}s", printerMake.c_str());
-    ipp_t *request = nullptr;
-    char uri[HTTP_MAX_URI] = {0};
-    std::vector<string> ppds;
     std::string ppd = DEFAULT_PPD_NAME;
-    std::string standardName = PrintUtil::StandardizePrinterName(printerName);
-
-    ippSetPort(CUPS_SEVER_PORT);
+    std::vector<string> ppds;
     QueryPPDInformation(printerMake.c_str(), ppds);
     if (!ppds.empty()) {
         ppd = ppds[0];
+    }
+    PRINT_HILOGI("ppd driver: %{public}s", ppd.c_str());
+    return AddPrinterToCupsWithSpecificPpd(printerUri, printerName, ppd);
+}
+
+int32_t PrintCupsClient::AddPrinterToCupsWithSpecificPpd(const std::string &printerUri, const std::string &printerName,
+    const std::string &ppd)
+{
+    if (ppd != DEFAULT_PPD_NAME) {
         std::string serverBin = CUPS_ROOT_DIR + "/serverbin";
         mode_t permissions = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH;
         int ret = ChangeFilterPermission(serverBin, permissions);
         PRINT_HILOGI("ChangeFilterPermission result: %{public}d", ret);
     }
     PRINT_HILOGI("ppd driver: %{public}s", ppd.c_str());
+    std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     if (IsPrinterExist(printerUri.c_str(), standardName.c_str(), ppd.c_str())) {
         PRINT_HILOGI("add success, printer has added");
         return E_PRINT_NONE;
@@ -509,6 +514,10 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
         PRINT_HILOGW("printAbility_ is null");
         return E_PRINT_SERVER_FAILURE;
     }
+
+    ipp_t *request = nullptr;
+    char uri[HTTP_MAX_URI] = {0};
+    ippSetPort(CUPS_SEVER_PORT);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s",
                      standardName.c_str());

@@ -18,7 +18,11 @@
 #include "vendor_helper.h"
 #include "vendor_bsuni_driver.h"
 #include "vendor_ipp_everywhere.h"
+#include "vendor_ppd_driver.h"
 #include "print_log.h"
+#include "vendor_ppd_driver.h"
+#include "print_utils.h"
+#include "print_utils.h"
 
 using namespace OHOS::Print;
 namespace {
@@ -83,17 +87,23 @@ bool VendorManager::Init(IPrintServiceAbility *sa, bool loadDefault)
         return true;
     }
     PRINT_HILOGI("load default vendor...");
+    bool loadSuccessFlag = true;
     auto vendorBsUni = std::make_shared<VendorBsuniDriver>();
     if (!LoadVendorDriver(vendorBsUni)) {
         PRINT_HILOGW("BsUni driver load fail");
         auto vendorIppEverywhere = std::make_shared<VendorIppEveryWhere>();
         if (!LoadVendorDriver(vendorIppEverywhere)) {
             PRINT_HILOGW("IppEverywhere driver load fail");
-            return false;
+            loadSuccessFlag = false;
         }
     }
+    auto vendorPpdDriver = std::make_shared<VendorPpdDriver>();
+    if (!LoadVendorDriver(vendorPpdDriver)) {
+        PRINT_HILOGW("Backend driver load fail");
+        loadSuccessFlag = false;
+    }
     PRINT_HILOGI("Init quit");
-    return true;
+    return loadSuccessFlag;
 }
 
 void VendorManager::UnInit()
@@ -240,7 +250,21 @@ int32_t VendorManager::AddPrinterToDiscovery(const std::string &vendorName, cons
         PRINT_HILOGW("printServiceAbility is null");
         return EXTENSION_ERROR_CALLBACK_FAIL;
     }
-    if (!printServiceAbility->AddVendorPrinterToDiscovery(GetGlobalVendorName(vendorName), printerInfo)) {
+    std::string realVendorName = std::string(vendorName);
+    if (IsPrivatePpdDriver(vendorName, printerInfo)) {
+        realVendorName = "driver.ppd";
+        auto vendorDriver = FindDriverByVendorName(realVendorName);
+        if (vendorDriver == nullptr) {
+            PRINT_HILOGW("vendorDriver is null");
+            return EXTENSION_ERROR_INVALID_PRINTER;
+        }
+        if (!vendorDriver->OnQueryProperties(printerInfo.GetPrinterId(),
+            std::vector<std::string>(1, printerInfo.GetPrinterMake()))) {
+            PRINT_HILOGW("query ppd fail");
+            return EXTENSION_ERROR_INVALID_PRINTER;
+        }
+    }
+    if (!printServiceAbility->AddVendorPrinterToDiscovery(GetGlobalVendorName(realVendorName), printerInfo)) {
         PRINT_HILOGW("AddPrinterToDiscovery fail");
         return EXTENSION_ERROR_CALLBACK_FAIL;
     }
@@ -287,9 +311,19 @@ int32_t VendorManager::AddPrinterToCupsWithPpd(const std::string &vendorName, co
         return EXTENSION_ERROR_CALLBACK_FAIL;
     }
     std::string globalVendorName = GetGlobalVendorName(vendorName);
-    if (!printServiceAbility->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdData)) {
-        PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
-        return EXTENSION_ERROR_CALLBACK_FAIL;
+    if (IsPrivatePpdDriver(vendorName)) {
+        PRINT_HILOGD("AddPrinterToCupsWithPpd vendorName=%{public}s", vendorName.c_str());
+        PRINT_HILOGD("AddPrinterToCupsWithPpd printerId=%{public}s", printerId.c_str());
+        if (!printServiceAbility->AddVendorPrinterToCupsWithSpecificPpd(globalVendorName,
+            VendorManager::ExtractPrinterId(printerId), ppdData)) {
+            PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
+            return EXTENSION_ERROR_CALLBACK_FAIL;
+        }
+    } else {
+        if (!printServiceAbility->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdData)) {
+            PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
+            return EXTENSION_ERROR_CALLBACK_FAIL;
+        }
     }
     PRINT_HILOGI("AddPrinterToCupsWithPpd quit");
     return EXTENSION_ERROR_NONE;
@@ -430,6 +464,26 @@ bool VendorManager::WaitNext()
     return true;
 }
 
+bool VendorManager::IsPrivatePpdDriver(const std::string &vendorName, const PrinterInfo &printerInfo)
+{
+    PRINT_HILOGD("IsPrivatePpdDriver vendorName=%{public}s", vendorName.c_str());
+    PRINT_HILOGD("IsPrivatePpdDriver printerName=%{public}s", printerInfo.GetPrinterName().c_str());
+    if (vendorName == "driver.bsuni") {
+        nlohmann::json option = nlohmann::json::parse(std::string(printerInfo.GetOption()));
+        if (option != nullptr && option.contains("bsunidriverSupport") && option["bsunidriverSupport"].is_string()) {
+            PRINT_HILOGD("IsPrivatePpdDriver bsunidriverSupport=%{public}s",
+                std::string(option["bsunidriverSupport"]).c_str());
+            return std::string(option["bsunidriverSupport"]) == "false";
+        }
+    }
+    return false;
+}
+
+bool VendorManager::IsPrivatePpdDriver(const std::string &vendorName)
+{
+    return vendorName == "driver.ppd";
+}
+
 bool VendorManager::MonitorPrinterStatus(const std::string &globalPrinterId, bool on)
 {
     std::string globalVendorName = ExtractGlobalVendorName(globalPrinterId);
@@ -495,4 +549,31 @@ bool VendorManager::QueryPrinterStatusByUri(const std::string &uri, PrinterStatu
         return false;
     }
     return printServiceAbility->QueryPrinterStatusByUri(uri, status);
+}
+
+std::shared_ptr<PrinterInfo> VendorManager::QueryDiscoveredPrinterInfoById(const std::string &vendorName,
+    const std::string &printerId)
+{
+    auto globalPrinterId = PrintUtils::GetGlobalId(VendorManager::GetGlobalVendorName(vendorName), printerId);
+    return printServiceAbility->QueryDiscoveredPrinterInfoById(globalPrinterId);
+}
+
+int32_t VendorManager::QueryPrinterInfoByPrinterId(const std::string &vendorName, const std::string &printerId,
+    PrinterInfo &info)
+{
+    if (printServiceAbility == nullptr) {
+        PRINT_HILOGW("QueryPrinterInfoByPrinterId printServiceAbility is null");
+        return false;
+    }
+    auto globalPrinterId = PrintUtils::GetGlobalId(VendorManager::GetGlobalVendorName(vendorName), printerId);
+    return printServiceAbility->QueryPrinterInfoByPrinterId(globalPrinterId, info);
+}
+
+bool VendorManager::QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds)
+{
+    if (printServiceAbility == nullptr) {
+        PRINT_HILOGW("QueryPPDInformation printServiceAbility is null");
+        return false;
+    }
+    return printServiceAbility->QueryPPDInformation(makeModel, ppds);
 }

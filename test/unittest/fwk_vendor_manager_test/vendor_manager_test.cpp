@@ -17,6 +17,7 @@
 #define private public
 #include "vendor_manager.h"
 #undef private
+#include "vendor_ppd_driver.h"
 #include "print_constant.h"
 #include "print_log.h"
 #include "vendor_ipp_everywhere.h"
@@ -274,6 +275,25 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0009, TestSize.Level2)
     vendorManager.UnInit();
     EXPECT_TRUE(vendorManager.Init(&mock, true));
     syncWait.Wait(WAIT_TIME_MS);
+    vendorManager.UnInit();
+}
+
+HWTEST_F(VendorManagerTest, VendorManagerTest_0010, TestSize.Level1)
+{
+    MockPrintServiceAbility mock;
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    auto vendorPpdDriver = std::make_shared<VendorPpdDriver>();
+    ASSERT_NE(vendorPpdDriver, nullptr);
+    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorPpdDriver));
+    std::string vendorName = vendorPpdDriver->GetVendorName();
+    std::string globalVendorName = VendorManager::GetGlobalVendorName(vendorName);
+    std::string printerId = PRINTER_TEST_IP;
+    std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
+    std::string ppdData;
+    PrinterInfo printerInfo;
+    EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_INVALID_PRINTER);
     vendorManager.UnInit();
 }
 }  // namespace Print

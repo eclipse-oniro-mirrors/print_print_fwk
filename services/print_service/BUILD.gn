@@ -62,6 +62,7 @@ ohos_shared_library("print_service") {
     "src/vendor_helper.cpp",
     "src/vendor_ipp_everywhere.cpp",
     "src/vendor_manager.cpp",
+    "src/vendor_ppd_driver.cpp",
   ]
 
   branch_protector_ret = "pac_ret"
