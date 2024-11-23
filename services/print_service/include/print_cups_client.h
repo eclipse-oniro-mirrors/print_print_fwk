@@ -112,7 +112,7 @@ private:
     void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
     static void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
     static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
-    static void SymlinkFile(std::string srcFilePath, std::string destFilePath);
+    static void SymlinkFile(std::string &srcFilePath, std::string &destFilePath);
     static void SymlinkDirectory(const char *srcDir, const char *destDir);
     static void CopyDirectory(const char *srcDir, const char *destDir);
     static bool ChangeFilterPermission(const std::string &path, mode_t mode);

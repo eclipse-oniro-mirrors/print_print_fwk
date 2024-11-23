@@ -120,6 +120,7 @@ static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string P2P_PRINTER = "p2p";
 static const std::string USB_PRINTER = "usb";
+static const std::string SERIAL = "serial=";
 static const std::string PRINTER_ID_USB_PREFIX = "USB";
 static const std::string PRINTER_MAKE_UNKNOWN = "Unknown";
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
@@ -143,6 +144,24 @@ static const std::vector<std::string> IGNORE_STATE_LIST = {PRINTER_STATE_WAITING
 std::mutex jobMutex;
 std::mutex usbPrintersLock_;
 
+static std::string GetUsbPrinterSerial(const std::string &deviceUri)
+{
+    auto pos = deviceUri.find(SERIAL);
+    if (pos == std::string::npos || pos + SERIAL.length() > deviceUri.length()) {
+        return "";
+    }
+    std::string remainingStr = deviceUri.substr(pos + SERIAL.length());
+    pos = remainingStr.find("&");
+    if (pos == std::string::npos || pos >= remainingStr.length()) {
+        return remainingStr.substr(remainingStr.length() - SERIAL_LENGTH);
+    }
+    std::string serial = remainingStr.substr(0, pos);
+    if (pos > SERIAL_LENGTH) {
+        return serial.substr(serial.length() - SERIAL_LENGTH);
+    }
+    return serial;
+}
+
 static std::vector<PrinterInfo> usbPrinters;
 static void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
     const char *deviceMakeAndModel, const char *deviceUri, const char *deviceLocation, void *userData)
@@ -156,7 +175,8 @@ static void DeviceCb(const char *deviceClass, const char *deviceId, const char *
     if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER &&
         printerMake != PRINTER_MAKE_UNKNOWN) {
         std::string printerName(deviceInfo);
-        std::string serial = printerUri.substr(printerUri.length() - SERIAL_LENGTH);
+        std::string serial = GetUsbPrinterSerial(deviceUri);
+        PRINT_HILOGD("serial = %{private}s\n", serial.c_str());
         PrinterInfo info;
         info.SetPrinterId(PRINTER_ID_USB_PREFIX + "-" + printerName + "-" + serial);
         info.SetPrinterName(PRINTER_ID_USB_PREFIX + "-" + printerName + "-" + serial);
@@ -261,7 +281,7 @@ bool PrintCupsClient::ChangeFilterPermission(const std::string &path, mode_t mod
     return true;
 }
 
-void PrintCupsClient::SymlinkFile(std::string srcFilePath, std::string destFilePath)
+void PrintCupsClient::SymlinkFile(std::string &srcFilePath, std::string &destFilePath)
 {
     int ret = symlink(srcFilePath.c_str(), destFilePath.c_str());
     if (!ret) {
