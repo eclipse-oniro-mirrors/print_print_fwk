@@ -18,6 +18,7 @@
 #include "scan_log.h"
 #include "scan_callback.h"
 #include "scan_manager_client.h"
+#include "scan_util.h"
 #include "napi_inner_scan.h"
 
 
@@ -701,8 +702,12 @@ napi_value NapiInnerScan::AddScanner(napi_env env, napi_callback_info info)
         SCAN_ASSERT_BASE(env, valuetype == napi_string, "scanner serialNumber is not a string", napi_string_expected);
         std::string serialNumber = NapiScanUtils::GetStringFromValueUtf8(env, argv[NapiScanUtils::INDEX_ZERO]);
         SCAN_HILOGD("serialNumber : %{public}s", serialNumber.c_str());
-        context->serialNumber = serialNumber;
-
+        std::string ip;
+        if (ScanUtil::ExtractIpAddresses(serialNumber, ip)) {
+            context->serialNumber = ip;
+        } else {
+            context->serialNumber = serialNumber;
+        }
         SCAN_CALL_BASE(env, napi_typeof(env, argv[NapiScanUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
         SCAN_ASSERT_BASE(env, valuetype == napi_string, "discoverMode is not a string", napi_string_expected);
         std::string discoverMode = NapiScanUtils::GetStringFromValueUtf8(env, argv[NapiScanUtils::INDEX_ONE]);
@@ -740,7 +745,12 @@ napi_value NapiInnerScan::DeleteScanner(napi_env env, napi_callback_info info)
         SCAN_ASSERT_BASE(env, valuetype == napi_string, "scanner serialNumber is not a string", napi_string_expected);
         std::string serialNumber = NapiScanUtils::GetStringFromValueUtf8(env, argv[NapiScanUtils::INDEX_ZERO]);
         SCAN_HILOGD("serialNumber : %{public}s", serialNumber.c_str());
-        context->serialNumber = serialNumber;
+        std::string ip;
+        if (ScanUtil::ExtractIpAddresses(serialNumber, ip)) {
+            context->serialNumber = ip;
+        } else {
+            context->serialNumber = serialNumber;
+        }
 
         SCAN_CALL_BASE(env, napi_typeof(env, argv[NapiScanUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
         SCAN_ASSERT_BASE(env, valuetype == napi_string, "discoverMode is not a string", napi_string_expected);
@@ -808,7 +818,12 @@ napi_value NapiInnerScan::UpdateScannerName(napi_env env, napi_callback_info inf
         SCAN_ASSERT_BASE(env, valuetype == napi_string, "scanner serialNumber is not a string", napi_string_expected);
         std::string serialNumber = NapiScanUtils::GetStringFromValueUtf8(env, argv[NapiScanUtils::INDEX_ZERO]);
         SCAN_HILOGD("serialNumber : %{public}s", serialNumber.c_str());
-        context->serialNumber = serialNumber;
+        std::string ip;
+        if (ScanUtil::ExtractIpAddresses(serialNumber, ip)) {
+            context->serialNumber = ip;
+        } else {
+            context->serialNumber = serialNumber;
+        }
 
         SCAN_CALL_BASE(env, napi_typeof(env, argv[NapiScanUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
         SCAN_ASSERT_BASE(env, valuetype == napi_string, "discoverMode is not a string", napi_string_expected);

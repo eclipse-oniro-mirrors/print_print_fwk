@@ -446,9 +446,12 @@ void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
             find = ScanMdnsService::FindDeviceNameByIp(ip, deviceName);
             count++;
         }
+        info.uniqueId = ip;
         if (find) {
             info.serialNumber = GetLastWord(deviceName);
             info.deviceName = deviceName;
+        } else {
+            info.deviceName = info.manufacturer + "-" + info.model;
         }
     } else if (info.deviceId.find(":libusb") != info.deviceId.npos) {
         info.discoverMode = "USB";
@@ -464,6 +467,7 @@ void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
         if (it != usbSnMap.end() && it->second != "") {
             SCAN_HILOGI("set serialNumber [%{public}s]", usbSnMap[usbScannerPort].c_str());
             info.serialNumber = usbSnMap[usbScannerPort];
+            info.uniqueId = usbSnMap[usbScannerPort];
         } else {
             SCAN_HILOGE("usb %{public}s can't find serialNumber", usbScannerPort.c_str());
         }
@@ -497,7 +501,12 @@ void ScanServiceAbility::AddFoundUsbScanner(ScanDeviceInfo &info)
                     saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
     }
 #endif
-    saneGetUsbDeviceInfoMap[info.serialNumber] = info;
+    if (info.serialNumber != "") {
+        saneGetTcpDeviceInfoMap[info.serialNumber] = info;
+    }
+    if (info.uniqueId != "") {
+        saneGetTcpDeviceInfoMap[info.uniqueId] = info;
+    }
 #ifdef DEBUG_ENABLE
     SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{public}s] of serialNumber:[%{public}s]",
                 saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
@@ -516,7 +525,12 @@ void ScanServiceAbility::AddFoundTcpScanner(ScanDeviceInfo &info)
                     saneGetTcpDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
     }
 #endif
-    saneGetTcpDeviceInfoMap[info.serialNumber] = info;
+    if (info.serialNumber != "") {
+        saneGetTcpDeviceInfoMap[info.serialNumber] = info;
+    }
+    if (info.uniqueId != "") {
+        saneGetTcpDeviceInfoMap[info.uniqueId] = info;
+    }
 #ifdef DEBUG_ENABLE
     SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{public}s] of serialNumber:[%{public}s]",
                 saneGetTcpDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
@@ -580,10 +594,10 @@ void ScanServiceAbility::SaneGetScanner()
             continue;
         }
         SetScannerSerialNumber(info);
-        if (info.serialNumber != "" && info.discoverMode == "USB") {
+        if (info.discoverMode == "USB") {
             SCAN_HILOGI("SaneGetScanner AddFoundUsbScanner model:[%{public}s]", info.model.c_str());
             AddFoundUsbScanner(info);
-        } else if (info.serialNumber != "" && info.discoverMode == "TCP") {
+        } else if (info.discoverMode == "TCP") {
             SCAN_HILOGI("SaneGetScanner AddFoundTcpScanner model:[%{public}s]", info.model.c_str());
             AddFoundTcpScanner(info);
         } else {
