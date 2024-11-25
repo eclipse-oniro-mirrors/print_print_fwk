@@ -292,8 +292,8 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0010, TestSize.Level1)
     std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
     std::string ppdData;
     PrinterInfo printerInfo;
-    EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_INVALID_PRINTER);
+    EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(false));
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
     vendorManager.UnInit();
 }
 }  // namespace Print
