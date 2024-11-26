@@ -39,6 +39,7 @@ static constexpr const char *PARAM_INFO_DISCOVERMODE = "discoverMode";
 static constexpr const char *PARAM_INFO_SERIALNUMBER = "serialNumber";
 static constexpr const char *PARAM_INFO_DEVICENAME = "deviceName";
 static constexpr const char *PARAM_INFO_SYNCMODE = "syncMode";
+static constexpr const char *PARAM_UNIQUE_ID = "uniqueId";
 
 napi_value ScannerInfoHelperTCP::MakeJsObject(napi_env env, const ScanDeviceInfoTCP &info)
 {
@@ -70,6 +71,7 @@ napi_value ScannerInfoHelper::MakeJsObject(napi_env env, const ScanDeviceInfo &i
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_DISCOVERMODE, info.GetDiscoverMode());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_SERIALNUMBER, info.GetSerialNumber());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_DEVICENAME, info.GetDeviceName());
+    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_UNIQUE_ID, info.GetUniqueId());
     return jsObj;
 }
 

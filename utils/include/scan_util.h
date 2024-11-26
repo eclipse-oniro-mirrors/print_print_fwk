@@ -22,6 +22,7 @@
 #include <sstream>
 #include <list>
 #include <vector>
+#include <regex>
 #include <string>
 
 #include "scan_log.h"
@@ -33,6 +34,7 @@ public:
     static ScanErrorCode ConvertErro(const SANE_Status status);
     #endif
     static bool ConvertToInt(const std::string& str, int32_t& value);
+    static bool ExtractIpAddresses(const std::string& str, std::string& ip);
 };
 #ifdef SANE_ENABLE
 inline ScanErrorCode ScanUtil::ConvertErro(const SANE_Status status)
@@ -44,6 +46,17 @@ inline bool ScanUtil::ConvertToInt(const std::string& str, int32_t& value)
 {
     auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
     return ec == std::errc{} && ptr == str.data() + str.size();
+}
+inline bool ScanUtil::ExtractIpAddresses(const std::string& str, std::string& ip)
+{
+    std::regex ipRegex(R"((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b))");
+    std::smatch match;
+    if (std::regex_search(str, match, ipRegex)) {
+        ip = match[0];
+        return true;
+    } else {
+        return false;
+    }
 }
 } // namespace OHOS::Scan
 

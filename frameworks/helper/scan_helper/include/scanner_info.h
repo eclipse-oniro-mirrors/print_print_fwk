@@ -104,6 +104,7 @@ public:
     void SetDiscoverMode(const std::string &newDiscoverMode);
     void SetSerialNumber(const std::string &newSerialNumber);
     void SetDeviceName(const std::string &newDeviceName);
+    void SetUniqueId(const std::string &uniqueId);
 
     [[nodiscard]] const std::string &GetDeviceId() const;
     [[nodiscard]] const std::string &GetManufacturer() const;
@@ -113,6 +114,7 @@ public:
     [[nodiscard]] const std::string &GetDiscoverMode() const;
     [[nodiscard]] const std::string &GetSerialNumber() const;
     [[nodiscard]] const std::string &GetDeviceName() const;
+    [[nodiscard]] const std::string &GetUniqueId() const;
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
@@ -134,6 +136,7 @@ private:
     std::string discoverMode;
     std::string serialNumber;
     std::string deviceName;
+    std::string uniqueId;
 };
 
 class ScanDeviceInfoSync final : public Parcelable {

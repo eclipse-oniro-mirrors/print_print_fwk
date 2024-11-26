@@ -213,6 +213,7 @@ ScanDeviceInfo::ScanDeviceInfo()
     discoverMode = "";
     serialNumber = "";
     deviceName = "";
+    uniqueId = "";
 }
 
 ScanDeviceInfo::ScanDeviceInfo(const ScanDeviceInfo &right)
@@ -225,6 +226,7 @@ ScanDeviceInfo::ScanDeviceInfo(const ScanDeviceInfo &right)
     discoverMode = right.discoverMode;
     serialNumber = right.serialNumber;
     deviceName = right.deviceName;
+    uniqueId = right.uniqueId;
 }
 
 ScanDeviceInfo &ScanDeviceInfo::operator=(const ScanDeviceInfo &right)
@@ -238,6 +240,7 @@ ScanDeviceInfo &ScanDeviceInfo::operator=(const ScanDeviceInfo &right)
         discoverMode = right.discoverMode;
         serialNumber = right.serialNumber;
         deviceName = right.deviceName;
+        uniqueId = right.uniqueId;
     }
     return *this;
 }
@@ -323,6 +326,16 @@ const std::string& ScanDeviceInfo::GetDeviceName() const
     return deviceName;
 }
 
+void ScanDeviceInfo::SetUniqueId(const std::string& uniqueId)
+{
+    this->uniqueId = uniqueId;
+}
+
+const std::string& ScanDeviceInfo::GetUniqueId() const
+{
+    return uniqueId;
+}
+
 bool ScanDeviceInfo::ReadFromParcel(Parcel &parcel)
 {
     SetDeviceId(parcel.ReadString());
@@ -332,6 +345,7 @@ bool ScanDeviceInfo::ReadFromParcel(Parcel &parcel)
     SetDiscoverMode(parcel.ReadString());
     SetSerialNumber(parcel.ReadString());
     SetDeviceName(parcel.ReadString());
+    SetUniqueId(parcel.ReadString());
     return true;
 }
 
@@ -344,6 +358,7 @@ bool ScanDeviceInfo::Marshalling(Parcel &parcel) const
     parcel.WriteString(discoverMode);
     parcel.WriteString(serialNumber);
     parcel.WriteString(deviceName);
+    parcel.WriteString(uniqueId);
     return true;
 }
 

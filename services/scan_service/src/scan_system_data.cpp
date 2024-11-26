@@ -33,7 +33,7 @@ std::map<std::string, std::string> ScanSystemData::usbSnToPortMap_;
 bool ScanSystemData::CheckJsonObjectValue(const nlohmann::json& object)
 {
     const std::vector<std::string> keyList = {"deviceId", "manufacturer", "model", "deviceType",
-        "discoverMode", "serialNumber", "deviceName"};
+        "discoverMode", "serialNumber", "deviceName", "uniqueId"};
     for (auto key : keyList) {
         if (!object.contains(key) || !object[key].is_string()) {
             SCAN_HILOGW("can not find %{public}s", key.c_str());
@@ -62,7 +62,10 @@ bool ScanSystemData::ParseScannerListJsonV1(nlohmann::json& jsonObject)
         scanDeviceInfo.discoverMode = object["discoverMode"];
         scanDeviceInfo.serialNumber = object["serialNumber"];
         scanDeviceInfo.deviceName = object["deviceName"];
-        std::string uniqueId = scanDeviceInfo.discoverMode + scanDeviceInfo.serialNumber;
+        scanDeviceInfo.uniqueId = object["uniqueId"];
+        std::string serialNumber = scanDeviceInfo.discoverMode + scanDeviceInfo.serialNumber;
+        InsertScannerInfo(serialNumber, scanDeviceInfo);
+        std::string uniqueId = scanDeviceInfo.discoverMode + scanDeviceInfo.uniqueId;
         InsertScannerInfo(uniqueId, scanDeviceInfo);
     }
     RefreshUsbDeviceId();
@@ -188,6 +191,7 @@ void ScanSystemData::InsertScannerInfo(const std::string &uniqueId, const ScanDe
         iter->second->deviceType = scannerInfo.deviceType;
         iter->second->serialNumber = scannerInfo.serialNumber;
         iter->second->deviceName = scannerInfo.deviceName;
+        iter->second->uniqueId = scannerInfo.uniqueId;
     }
 }
 
@@ -227,6 +231,7 @@ bool ScanSystemData::UpdateScannerInfoByUniqueId(const std::string &uniqueId, co
         iter->second->deviceType = scannerInfo.deviceType;
         iter->second->serialNumber = scannerInfo.serialNumber;
         iter->second->deviceName = scannerInfo.deviceName;
+        iter->second->uniqueId = scannerInfo.uniqueId;
         return true;
     }
     SCAN_HILOGE("ScanSystemData UpdateScannerInfoByUniqueId not found scannerInfo");
@@ -253,8 +258,9 @@ bool ScanSystemData::QueryScannerInfoByUniqueId(const std::string &uniqueId, Sca
         if (info == nullptr) {
             continue;
         }
-        std::string iterUniqueId = info->discoverMode + info->serialNumber;
-        if (uniqueId == iterUniqueId) {
+        std::string iterSn = info->discoverMode + info->serialNumber;
+        std::string iterUniqueId = info->discoverMode + info->uniqueId;
+        if (uniqueId == iterSn || uniqueId == iterUniqueId) {
             scannerInfo.deviceId = info->deviceId;
             scannerInfo.manufacturer = info->manufacturer;
             scannerInfo.model = info->model;
@@ -262,6 +268,7 @@ bool ScanSystemData::QueryScannerInfoByUniqueId(const std::string &uniqueId, Sca
             scannerInfo.discoverMode = info->discoverMode;
             scannerInfo.serialNumber = info->serialNumber;
             scannerInfo.deviceName = info->deviceName;
+            scannerInfo.uniqueId = info->uniqueId;
             return true;
         }
     }
@@ -302,6 +309,7 @@ bool ScanSystemData::SaveScannerMap()
             scannerJson["discoverMode"] = info->discoverMode;
             scannerJson["serialNumber"] = info->serialNumber;
             scannerJson["deviceName"] = info->deviceName;
+            scannerJson["uniqueId"] = info->uniqueId;
             scannerMapJson.push_back(scannerJson);
         }
     }
