@@ -60,7 +60,6 @@ ohos_unittest("print_service_test") {
     "${print_path}/services/print_service:print_service",
     "//third_party/googletest:gmock_main",
     "//third_party/jsoncpp:jsoncpp",
-    "//third_party/zlib:libz",
   ]
 
   if (cups_enable) {
@@ -133,7 +132,6 @@ ohos_unittest("scan_service_test") {
     "${print_path}/services/scan_service:scan_service",
     "//third_party/googletest:gmock_main",
     "//third_party/jsoncpp:jsoncpp",
-    "//third_party/zlib:libz",
   ]
 
   external_deps = [
