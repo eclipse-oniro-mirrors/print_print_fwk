@@ -502,10 +502,10 @@ void ScanServiceAbility::AddFoundUsbScanner(ScanDeviceInfo &info)
     }
 #endif
     if (info.serialNumber != "") {
-        saneGetTcpDeviceInfoMap[info.serialNumber] = info;
+        saneGetUsbDeviceInfoMap[info.serialNumber] = info;
     }
     if (info.uniqueId != "") {
-        saneGetTcpDeviceInfoMap[info.uniqueId] = info;
+        saneGetUsbDeviceInfoMap[info.uniqueId] = info;
     }
 #ifdef DEBUG_ENABLE
     SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{public}s] of serialNumber:[%{public}s]",
