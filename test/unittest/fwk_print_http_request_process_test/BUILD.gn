@@ -50,7 +50,6 @@ ohos_unittest("fwk_print_http_request_process_test") {
     "${print_path}/services/print_service:print_service",
     "//third_party/cJSON:cjson",
     "//third_party/googletest:gmock_main",
-    "//third_party/zlib:libz",
   ]
 
   external_deps = [
