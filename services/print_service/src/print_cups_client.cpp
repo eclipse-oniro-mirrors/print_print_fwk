@@ -821,7 +821,7 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         PRINT_HILOGE("FillBorderlessOptions Params is nullptr");
         return num_options;
     }
-    if (jobParams->borderless == TRUE) {
+    if (jobParams->mediaType == CUPS_MEDIA_TYPE_PHOTO_GLOSSY && jobParams->borderless == TRUE) {
         PRINT_HILOGD("borderless job options");
         std::vector<MediaSize> mediaSizes;
         mediaSizes.push_back({ CUPS_MEDIA_4X6, 4000, 6000 });
