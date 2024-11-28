@@ -85,7 +85,7 @@ bool ScanServiceStub::OnInitScan(MessageParcel &data, MessageParcel &reply)
     }
     if (isSaneInit_) {
         SCAN_HILOGW("is isSaneInit_ed");
-        return E_SCAN_NONE;
+        return true;
     }
     ret = InitScan(scanVersion);
     isSaneInit_ = true;
