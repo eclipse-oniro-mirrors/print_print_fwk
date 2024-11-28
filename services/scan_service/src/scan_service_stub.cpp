@@ -179,6 +179,10 @@ bool ScanServiceStub::OnOpScanOptionValue(MessageParcel &data, MessageParcel &re
     ScanOptionOpType op = (ScanOptionOpType) data.ReadUint32();
     ScanOptionValue value;
     auto scanOptionValue = ScanOptionValue::Unmarshalling(data);
+    if (scanOptionValue == nullptr) {
+        SCAN_HILOGE("scanOptionValue is a nullptr.");
+        return false;
+    }
     value = *scanOptionValue;
     int32_t info;
     int32_t ret = OpScanOptionValue(scannerId, optionIndex, op, value, info);
