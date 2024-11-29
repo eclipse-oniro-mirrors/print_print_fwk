@@ -161,7 +161,12 @@ void JsPrintExtension::OnStop()
 {
     PrintExtension::OnStop();
     PRINT_HILOGD("jws JsPrintExtension OnStop begin.");
-    bool ret = ConnectionManager::GetInstance().DisconnectCaller(GetContext()->GetToken());
+    auto context = GetContext();
+    if (context == nullptr) {
+        PRINT_HILOGE("Failed to get context");
+        return;
+    }
+    bool ret = ConnectionManager::GetInstance().DisconnectCaller(context->GetToken());
     if (ret) {
         PRINT_HILOGD("The Print extension connection is not disconnected.");
     }

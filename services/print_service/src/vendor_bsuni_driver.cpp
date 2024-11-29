@@ -15,6 +15,7 @@
 
 #include "vendor_bsuni_driver.h"
 #include <dlfcn.h>
+#include "parameter.h"
 #include "print_log.h"
 #include "vendor_helper.h"
 
@@ -52,7 +53,11 @@ bool VendorBsuniDriver::LoadDriverExtension()
         dlclose(bsUniDriverHandler);
         bsUniDriverHandler = nullptr;
     }
-    bsUniDriverHandler = dlopen("/system/bin/uni_print_driver/lib64/libbsUniDiscovery.so", RTLD_LAZY | RTLD_NODELETE);
+    const std::string DRIVER_SO_PATH = "print.libbsUniDiscovery.so.path";
+    constexpr int BUFFER_SIZE = 96;
+    char value[BUFFER_SIZE] = {0};
+    GetParameter(DRIVER_SO_PATH.c_str(), "", value, BUFFER_SIZE - 1);
+    bsUniDriverHandler = dlopen(value, RTLD_LAZY | RTLD_NODELETE);
     if (bsUniDriverHandler == nullptr) {
         PRINT_HILOGW("dlopen failed");
         return false;
