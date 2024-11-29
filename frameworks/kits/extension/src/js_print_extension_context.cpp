@@ -429,10 +429,12 @@ napi_value CreateJsMetadataArray(napi_env &engine, const std::vector<AppExecFwk:
 {
     PRINT_HILOGD("CreateJsMetadataArray");
     napi_value arrayValue = nullptr;
-    napi_create_array_with_length(engine, info.size(), &arrayValue);
-    uint32_t index = 0;
-    for (const auto &item : info) {
-        napi_set_element(engine, arrayValue, index++, CreateJsMetadata(engine, item));
+    napi_status ret = napi_create_array_with_length(engine, info.size(), &arrayValue);
+    if (ret != napi_ok && arrayValue != nullptr) {
+        uint32_t index = 0;
+        for (const auto &item: info) {
+            napi_set_element(engine, arrayValue, index++, CreateJsMetadata(engine, item));
+        }
     }
     return arrayValue;
 }

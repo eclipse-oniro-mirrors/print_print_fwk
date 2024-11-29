@@ -20,13 +20,15 @@
 using namespace OHOS::Print;
 using json = nlohmann::json;
 
+static const std::string VENDOR_NAME = "driver.ipp.everywhere";
+
 VendorIppEveryWhere::VendorIppEveryWhere() {}
 
 VendorIppEveryWhere::~VendorIppEveryWhere() {}
 
 std::string VendorIppEveryWhere::GetVendorName()
 {
-    return "driver.ipp.everywhere";
+    return VENDOR_NAME;
 }
 
 bool VendorIppEveryWhere::Init(IPrinterVendorManager *manager)
