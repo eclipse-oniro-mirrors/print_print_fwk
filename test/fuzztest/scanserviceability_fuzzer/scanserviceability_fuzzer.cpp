@@ -242,13 +242,11 @@ namespace Scan {
         std::string ip = "192.168.223.1";
         ScanDeviceInfoTCP scanDeviceInfoTCP;
         scanDeviceInfoTCP.deviceName = "Pantum 6666 54QWER";
-        ScanServiceAbility::scanDeviceInfoTCPMap_[ip] = scanDeviceInfoTCP;
         ScanServiceAbility::GetInstance()->SetScannerSerialNumber(tcpInfo);
 
         tcpInfo.deviceId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         ip = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         scanDeviceInfoTCP.deviceName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanServiceAbility::scanDeviceInfoTCPMap_[ip] = scanDeviceInfoTCP;
         ScanServiceAbility::GetInstance()->SetScannerSerialNumber(tcpInfo);
 
         ScanDeviceInfo usbInfo;
@@ -291,9 +289,10 @@ namespace Scan {
     {
         ScanOptionDescriptor desc;
         SANE_Option_Descriptor optionDesc;
-        optionDesc.name = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        optionDesc.title = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        optionDesc.desc = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        std::string name = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        std::string title = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        optionDesc.name = name.c_str();
+        optionDesc.title = title.c_str();
         ScanServiceAbility::GetInstance()->SetScanOptionDescriptor(desc, &optionDesc);
     }
     

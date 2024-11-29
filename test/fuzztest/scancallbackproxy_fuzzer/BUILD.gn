@@ -69,6 +69,11 @@ ohos_fuzztest("ScanCallbackProxyFuzzTest") {
     "usb_manager:usbsrv_client",
   ]
 
+  if (sane_enable) {
+    external_deps += [ "backends:sane" ]
+    cflags_cc = [ "-DSANE_ENABLE" ]
+  }
+
   if (security_guard_enabled) {
     external_deps += [
       "security_guard:libsg_collect_sdk",
