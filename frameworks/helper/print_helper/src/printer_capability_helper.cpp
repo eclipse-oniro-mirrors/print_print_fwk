@@ -39,7 +39,10 @@ napi_value PrinterCapabilityHelper::MakeJsObject(napi_env env, const PrinterCapa
 {
     napi_value jsObj = nullptr;
     PRINT_CALL(env, napi_create_object(env, &jsObj));
-
+    if (jsObj == nullptr) {
+        PRINT_HILOGI("Failed to create js object");
+        return nullptr;
+    }
     NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_CAPABILITY_COLORMODE, cap.GetColorMode());
     NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_CAPABILITY_DUPLEXMODE, cap.GetDuplexMode());
 
