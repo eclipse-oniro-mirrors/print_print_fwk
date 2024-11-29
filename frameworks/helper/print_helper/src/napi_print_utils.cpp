@@ -299,10 +299,9 @@ void NapiPrintUtils::SetBooleanProperty(napi_env env, napi_value object, const s
 void NapiPrintUtils::DefineProperties(
     napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties)
 {
-    napi_property_descriptor descriptors[properties.size()];
-    std::copy(properties.begin(), properties.end(), descriptors);
+    std::vector<napi_property_descriptor> descriptors(properties.begin(), properties.end());
 
-    (void)napi_define_properties(env, object, properties.size(), descriptors);
+    (void)napi_define_properties(env, object, properties.size(), descriptors.data());
 }
 
 std::string NapiPrintUtils::GetValueString(napi_env env, napi_value value)
