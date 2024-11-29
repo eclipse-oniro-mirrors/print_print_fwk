@@ -112,7 +112,7 @@ bool ParseJsonFieldAsInt(const nlohmann::json &cupsOpt, const std::string &key, 
         return false;
     }
     std::string jsonString = cupsOpt[key].get<std::string>();
-    if (ConvertStringToInt(jsonString.c_str(), value)) {
+    if (!jsonString.empty() && ConvertStringToInt(jsonString.c_str(), value)) {
         return true;
     }
     return false;
@@ -368,7 +368,7 @@ void ParsePrinterOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePri
 
 bool ConvertStringToUint32(const char *src, uint32_t &dst)
 {
-    if (src == nullptr) {
+    if (src == nullptr && src[0] == '\0') {
         return false;
     }
     errno = 0;
