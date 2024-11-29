@@ -58,6 +58,14 @@ void TestQueryPrinterCapabilityByUri(const uint8_t *data, size_t size, FuzzedDat
     PrintCupsClient::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerName, printerCaps);
 }
 
+void TestQueryPrinterStatusByUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintCupsClient::GetInstance()->InitCupsResources();
+    std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterStatus status = PRINTER_STATUS_UNAVAILABLE;
+    PrintCupsClient::GetInstance()->QueryPrinterStatusByUri(printerUri, status);
+}
+
 void TestDeleteCupsPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintCupsClient::GetInstance()->InitCupsResources();
@@ -270,6 +278,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::Print::TestQueryPPDInformation(data, size, &dataProvider);
     OHOS::Print::TestAddPrinterToCups(data, size, &dataProvider);
     OHOS::Print::TestQueryPrinterCapabilityByUri(data, size, &dataProvider);
+    OHOS::Print::TestQueryPrinterStatusByUri(data, size, &dataProvider);
     OHOS::Print::TestDeleteCupsPrinter(data, size, &dataProvider);
     OHOS::Print::TestAddCupsPrintJob(data, size, &dataProvider);
     OHOS::Print::TestCancelCupsJob(data, size, &dataProvider);
