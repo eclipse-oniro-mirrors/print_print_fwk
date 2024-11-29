@@ -313,7 +313,7 @@ bool PrintUserData::GetFileData(std::string &fileData)
         char realPidFile[PATH_MAX] = {};
         if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
             PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
-            return E_PRINT_SERVER_FAILURE;
+            return false;
         }
         int32_t fd = open(userDataFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
         PRINT_HILOGI("create file fd: %{public}d", fd);
@@ -364,7 +364,7 @@ bool PrintUserData::SetUserDataToFile()
         std::string userDataFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINT_USER_DATA_FILE;
         if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
             PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
-            return E_PRINT_SERVER_FAILURE;
+            return false;
         }
         int32_t fd = open(userDataFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
         PRINT_HILOGI("SetUserDataToFile fd: %{public}d", fd);
