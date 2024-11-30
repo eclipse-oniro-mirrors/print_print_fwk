@@ -63,8 +63,6 @@ bool ScanSystemData::ParseScannerListJsonV1(nlohmann::json& jsonObject)
         scanDeviceInfo.serialNumber = object["serialNumber"];
         scanDeviceInfo.deviceName = object["deviceName"];
         scanDeviceInfo.uniqueId = object["uniqueId"];
-        std::string serialNumber = scanDeviceInfo.discoverMode + scanDeviceInfo.serialNumber;
-        InsertScannerInfo(serialNumber, scanDeviceInfo);
         std::string uniqueId = scanDeviceInfo.discoverMode + scanDeviceInfo.uniqueId;
         InsertScannerInfo(uniqueId, scanDeviceInfo);
     }
