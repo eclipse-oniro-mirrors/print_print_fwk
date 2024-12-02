@@ -368,7 +368,7 @@ void ParsePrinterOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePri
 
 bool ConvertStringToUint32(const char *src, uint32_t &dst)
 {
-    if (src == nullptr && src[0] == '\0') {
+    if (src == nullptr || src[0] == '\0') {
         return false;
     }
     errno = 0;

@@ -442,12 +442,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0023, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    jobParams->borderless = 1;
+    jobParams->borderless = 0;
     jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(numOptions, 0);
+    int ret = printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 2);
     delete jobParams;
     delete options;
 }
@@ -476,8 +476,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0024, TestSize.Level1)
     jobParams->mediaSize = CUPS_MEDIA_4X6;
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(numOptions, 0);
+    int ret = printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 1);
     delete jobParams;
     delete options;
 }
@@ -505,7 +505,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025, TestSize.Level1)
     jobParams->printQuality = "";
     jobParams->color = "";
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 5);
+    EXPECT_EQ(ret, 6);
     delete jobParams;
     delete options;
 }
@@ -532,6 +532,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0026, TestSize.Level1)
     jobParams->duplex = "test_duplex";
     jobParams->printQuality = "test_printQuality";
     jobParams->color = "test_color";
+    jobParams->borderless = 1;
+    jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
+    jobParams->mediaSize = CUPS_MEDIA_4X6;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
     EXPECT_EQ(ret, 5);
     delete jobParams;
