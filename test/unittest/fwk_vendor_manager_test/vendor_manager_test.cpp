@@ -22,6 +22,7 @@
 #include "print_log.h"
 #include "vendor_ipp_everywhere.h"
 #include "mock/mock_print_service_ability.h"
+#include "mock/mock_vendor_ppd_driver.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -294,6 +295,35 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0010, TestSize.Level1)
     PrinterInfo printerInfo;
     EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(false));
     EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
+    vendorManager.UnInit();
+}
+
+HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
+{
+    MockPrintServiceAbility mock;
+    MockVendorPpdDriver mockVendorPpdDriver;
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    auto vendorPpdDriver = std::make_shared<VendorPpdDriver>();
+    ASSERT_NE(vendorPpdDriver, nullptr);
+    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorPpdDriver));
+    std::string vendorName = "driver.bsuni";
+    std::string globalVendorName = VendorManager::GetGlobalVendorName(vendorName);
+    std::string printerId = PRINTER_TEST_IP;
+    std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
+    std::string ppdData;
+    PrinterInfo printerInfo;
+
+    std::string option = "{\"bsunidriverSupport\": \"true\"}";
+    printerInfo.SetOption(option);
+    EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(true));
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
+
+    option = "{\"bsunidriverSupport\": \"false\"}";
+    printerInfo.SetOption(option);
+    EXPECT_CALL(mockVendorPpdDriver, OnQueryProperties(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_INVALID_PRINTER);
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
     vendorManager.UnInit();
 }
 }  // namespace Print
