@@ -27,7 +27,7 @@ namespace {
 const std::string VENDOR_MANAGER_PREFIX = "fwk.";
 const std::string GLOBAL_ID_DELIMITER = ":";
 const int MONITOR_CHECK_INTERVAL_MS = 1000;
-const size_t IP_LENGTH_MIN = 10;
+const size_t IP_LENGTH_MIN = 7;
 }
 
 VendorManager::VendorManager() {}
