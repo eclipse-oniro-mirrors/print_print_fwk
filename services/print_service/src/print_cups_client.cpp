@@ -76,6 +76,7 @@ static const std::string CUPS_RUN_DIR = "/data/service/el1/public/print_service/
 static const std::string DEFAULT_PPD_NAME = "everywhere";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
 static const std::string REMOTE_PRINTER_MAKE_MODEL = "Remote Printer";
+static const std::string BSUNI_PPD_NAME = "Brocadesoft Universal Driver";
 static const std::string DEFAULT_USER = "default";
 static const std::string PRINTER_STATE_WAITING_COMPLETE = "cups-waiting-for-job-completed";
 static const std::string PRINTER_STATE_WIFI_NOT_CONFIGURED = "wifi-not-configured-report";
@@ -1762,7 +1763,11 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
                            (strstr(makeModel, REMOTE_PRINTER_MAKE_MODEL.c_str()) != nullptr);
         } else {
             // 查到驱动
-            printerExist = !(strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != nullptr);
+            if (strcmp(ppdName, BSUNI_PPD_NAME.c_str()) == 0) {
+                printerExist = (strstr(makeModel, BSUNI_PPD_NAME.c_str()) != nullptr);
+            } else {
+                printerExist = !(strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != nullptr);
+            }
             if (!printerExist) {
                 // 私有驱动已卸载，需要先删除打印机再添加，不然下发任务找不到驱动
                 DeleteCupsPrinter(printerName);

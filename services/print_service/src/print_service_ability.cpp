@@ -3544,6 +3544,9 @@ bool PrintServiceAbility::UpdateAddedPrinterInCups(const std::string &printerId,
 std::string PrintServiceAbility::RenamePrinterWhenAdded(const PrinterInfo &info)
 {
     static uint32_t repeatNameLimit = 10;
+    if (printSystemData_.IsPrinterAdded(info.GetPrinterId())) { // 相同ID已添加，沿用之前的名字，更新信息
+        return info.GetPrinterName();
+    }
     std::vector<std::string> printerNameList;
     printSystemData_.GetAddedPrinterListFromSystemData(printerNameList);
     uint32_t nameIndex = 1;
