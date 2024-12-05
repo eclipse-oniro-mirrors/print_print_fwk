@@ -308,6 +308,15 @@ bool PrintSystemData::UpdatePrinterAlias(const std::string& printerId, const std
     return false;
 }
 
+void PrintSystemData::UpdatePrinterUri(const std::string &printerId, const std::string &printerUri)
+{
+    auto printerInfo = addedPrinterMap_.find(printerId);
+    if (printerInfo != addedPrinterMap_.end()) {
+        printerInfo->second->uri = printerUri;
+        PRINT_HILOGI("UpdatePrinterUri success");
+    }
+}
+
 void PrintSystemData::InsertPrinterInfo(const std::string &printerId, const PrinterInfo &printerInfo)
 {
     auto iter = addedPrinterInfoList_.find(printerId);

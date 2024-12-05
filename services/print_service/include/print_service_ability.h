@@ -183,6 +183,7 @@ private:
     std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
     bool CheckPrintJob(PrintJob &jobInfo);
     bool CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info);
+    bool UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printUri);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
