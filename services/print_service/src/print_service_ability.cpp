@@ -1488,7 +1488,14 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
         json optionJson = json::parse(option);
         if (optionJson.contains("printerUri") && optionJson["printerUri"].is_string()) {
             std::string printerUri = optionJson["printerUri"].get<std::string>();
-            if (!printerUri.empty() && printerUri != cupsPrinter.uri) {
+            if (printerUri.empty() || printerUri == cupsPrinter.uri) {
+                PRINT_HILOGI("same printer uri,ignore it");
+                return false;
+            }
+            if (UpdateAddedPrinterInCups(info->GetPrinterId(), printerUri)) {
+                printSystemData_.UpdatePrinterUri(info->GetPrinterId(), printerUri);
+                printSystemData_.SaveCupsPrinterMap();
+                PRINT_HILOGI("different printer uri,save it uri");
                 return true;
             }
         }
@@ -1517,7 +1524,8 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
         }
         auto printerInfo = std::make_shared<PrinterInfo>(info);
         printerInfo->SetPrinterId(PrintUtils::GetGlobalId(extensionId, printerInfo->GetPrinterId()));
-        PRINT_HILOGD("AddPrinters printerId = %{public}s", printerInfo->GetPrinterId().c_str());
+        PRINT_HILOGI("AddPrinters printerId = %{public}s", printerInfo->GetPrinterId().c_str());
+        PRINT_HILOGI("AddPrinters printerOption = %{public}s", printerInfo->GetOption().c_str());
         printerInfo->SetPrinterState(PRINTER_ADDED);
         printerInfoList_[printerInfo->GetPrinterId()] = printerInfo;
         SendPrinterDiscoverEvent(PRINTER_ADDED, *printerInfo);
@@ -1526,7 +1534,7 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
         if (printSystemData_.IsPrinterAdded(printerInfo->GetPrinterId()) &&
             !printSystemData_.CheckPrinterBusy(printerInfo->GetPrinterId())) {
             if (CheckPrinterUriDifferent(printerInfo)) {
-                PRINT_HILOGW("different printer uri, ignore it");
+                PRINT_HILOGI("addPrinter and different printer uri, save it uri");
             } else {
                 printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
                 printSystemData_.UpdatePrinterStatus(printerInfo->GetPrinterId(), PRINTER_STATUS_IDLE);
@@ -1646,6 +1654,8 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
 
 bool PrintServiceAbility::UpdatePrinterSystemData(const std::string &printerId, PrinterInfo &info)
 {
+    std::shared_ptr<PrinterInfo> printerInfoPtr = std::make_shared<PrinterInfo>(info);
+    CheckPrinterUriDifferent(printerInfoPtr);
     std::string option = info.GetOption();
     if (json::accept(option)) {
         json optionJson = json::parse(option);
@@ -3018,4 +3028,22 @@ void PrintServiceAbility::NotifyAppDeletePrinterWithDefaultPrinter(const std::st
     SendPrinterEventChangeEvent(PRINTER_EVENT_DELETED, printerInfo);
     SendPrinterChangeEvent(PRINTER_EVENT_DELETED, printerInfo);
 }
+
+bool PrintServiceAbility::UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printUri)
+{
+    CupsPrinterInfo cupsPrinter;
+#ifdef CUPS_ENABLE
+    if (printSystemData_.QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter)) {
+        int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
+                AddPrinterToCups(cupsPrinter.uri, cupsPrinter.name, cupsPrinter.maker);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("UpdateAddedPrinterInCups error = %{public}d.", ret);
+            return false;
+        }
+        return true;
+    }
+#endif //CUPS_ENABLE
+    return false;
+}
+
 } // namespace OHOS::Print
