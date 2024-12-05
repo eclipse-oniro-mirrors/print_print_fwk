@@ -999,12 +999,6 @@ bool PrintServiceAbility::WritePreferenceToFile()
         PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
         return false;
     }
-    int32_t fd = open(printerPreferenceFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
-    PRINT_HILOGD("SavePrinterPreferenceMap fd: %{public}d", fd);
-    if (fd < 0) {
-        PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-        return false;
-    }
     nlohmann::json printerMapJson = nlohmann::json::array();
 
     std::lock_guard<std::recursive_mutex> preferenceLock(printerPreferenceMapMutex_);
@@ -1019,8 +1013,21 @@ bool PrintServiceAbility::WritePreferenceToFile()
 
     nlohmann::json jsonObject;
     jsonObject["printer_list"] = printerMapJson;
-    std::string jsonString = jsonObject.dump();
+    std::string jsonString;
+    try {
+        jsonString = jsonObject.dump();
+    }
+    catch (const std::exception& e) {
+        PRINT_HILOGE("jsonObject dump fail");
+        return false;
+    }
     size_t jsonLength = jsonString.length();
+    int32_t fd = open(printerPreferenceFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
+    PRINT_HILOGD("SavePrinterPreferenceMap fd: %{public}d", fd);
+    if (fd < 0) {
+        PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
+        return false;
+    }
     auto writeLength = write(fd, jsonString.c_str(), jsonLength);
     close(fd);
     return (size_t)writeLength == jsonLength;
