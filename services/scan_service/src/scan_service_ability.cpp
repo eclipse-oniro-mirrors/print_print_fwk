@@ -683,6 +683,10 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
         return E_SCAN_DEVICE_BUSY;
     }
 #ifdef SANE_ENABLE
+    if (scannerHandleList_.find(scannerId) != scannerHandleList_.end()) {
+        SCAN_HILOGD("scannerId %{public}s is already opened", scannerId.c_str());
+        return E_SCAN_NONE;
+    }
     SANE_Handle scannerHandle = 0;
     SANE_String_Const scannerIdCstr = scannerId.c_str();
     SANE_Status status = sane_open(scannerIdCstr, &scannerHandle);
@@ -1960,8 +1964,8 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
         }
         for (int col1 = 0; col1 < parm.GetBytesPerLine(); col1++) {
             for (int col8 = 0; col8 < byteBits; col8++) {
-                buf8[col1 * byteBits + col8] = jpegbuf[col1] & (1 << (byteBits - col8 - 1)) ? 0 : 0xff;
-                jpeg_write_scanlines(cinfoPtr, &buf8, byteBits);
+                buf8[col1 * byteBits + col8] = jpegbuf[col1] & (1 << (byteBits - col8 - bit)) ? 0 : 0xff;
+                jpeg_write_scanlines(cinfoPtr, &buf8, bit);
             }
         }
         free(buf8);
