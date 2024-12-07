@@ -207,17 +207,14 @@ HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0008, TestSize.Level1)
     uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINT_JOB_ADAPTER);
 
     std::string jobId = "job:1234";
-    auto oldAttrs = PrintAttributes::Unmarshalling(data);
-    auto newAttrs = PrintAttributes::Unmarshalling(data);
-    if (oldAttrs == nullptr || newAttrs == nullptr) {
-        return;
-    }
+    PrintAttributes oldAttrs;
+    PrintAttributes newAttrs;
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
     auto callback = std::make_shared<MockPrintCallbackStub>();
     EXPECT_NE(callback, nullptr);
-    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
-    EXPECT_TRUE(reply.ReadBool());
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
+    EXPECT_FALSE(reply.ReadBool());
 }
 
 /**
