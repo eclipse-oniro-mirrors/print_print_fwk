@@ -1350,7 +1350,8 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
         PRINT_HILOGD("is printer status available: %{public}d", isPrinterStatusAvailable);
         if ((isPrinterStatusAvailable && printerStatus == PRINTER_STATUS_UNAVAILABLE) ||
             (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_ERROR.c_str()) != nullptr) ||
-            (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_EMPTY.c_str()) != nullptr)) {
+            (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_EMPTY.c_str()) != nullptr) ||
+            (strstr(jobStatus->printer_state_reasons, PRINTER_STATE_MEDIA_JAM.c_str()) != nullptr)) {
             ReportBlockedReason(param, jobStatus);
         } else {
             param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,

@@ -338,13 +338,13 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
     EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
     vendorName = "driver.bsuni";
     EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
-    printerInfo.setOption("");
+    printerInfo.SetOption("");
     EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
-    printerInfo.setOption("{\"key\": \"value\"}");
+    printerInfo.SetOption("{\"key\": \"value\"}");
     EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
-    printerInfo.setOption("{\"bsunidriver_support\": \"true\"}");
+    printerInfo.SetOption("{\"bsunidriverSupport\": \"true\"}");
     EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
-    printerInfo.setOption("{\"bsunidriver_support\": \"false\"}");
+    printerInfo.SetOption("{\"bsunidriverSupport\": \"false\"}");
     EXPECT_TRUE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
 }
 }  // namespace Print

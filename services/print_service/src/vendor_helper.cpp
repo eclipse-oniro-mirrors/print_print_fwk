@@ -60,6 +60,10 @@ bool ConvertArrayToList(const T1 *array, uint32_t count, std::vector<T2> &list, 
     for (uint32_t i = 0; i < count; ++i) {
         T2 data;
         if (convertType(array[i], data)) {
+            if (std::find(list.begin(), list.end(), data) != list.end()) {
+                PRINT_HILOGW("ignore the same item");
+                continue;
+            }
             list.push_back(data);
         }
     }
