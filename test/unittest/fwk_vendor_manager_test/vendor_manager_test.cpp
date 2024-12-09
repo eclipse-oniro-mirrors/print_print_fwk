@@ -330,7 +330,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
     vendorManager.UnInit();
 }
 
-HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
+HWTEST_F(VendorManagerTest, VendorManagerTest_0012, TestSize.Level1)
 {
     VendorManager vendorManager;
     PrinterInfo printerInfo;
