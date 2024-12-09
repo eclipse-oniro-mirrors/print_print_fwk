@@ -2175,4 +2175,32 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0138, TestSize.Level1)
     type = PRINTER_CHANGE_EVENT_TYPE;
     EXPECT_EQ(service->CheckUserIdInEventType(type), false);
 }
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0139, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string vendorName = "fwk.driver";
+    std::string printerId = "testprinter";
+    std::string ppdData;
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    EXPECT_FALSE(service->RemoveVendorPrinterFromCups(vendorName, printerId));
+    EXPECT_FALSE(service->AddVendorPrinterToCupsWithSpecificPpd(vendorName, printerId, ppdData));
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_FALSE(service->AddVendorPrinterToCupsWithSpecificPpd(vendorName, printerId, ppdData));
+    PrinterCapability cap;
+    info.SetCapability(cap);
+    EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_FALSE(service->AddVendorPrinterToCupsWithSpecificPpd(vendorName, printerId, ppdData));
+    info.SetUri("uri");
+    EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_FALSE(service->AddVendorPrinterToCupsWithSpecificPpd(vendorName, printerId, ppdData));
+    info.SetPrinterMake("maker");
+    EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
+    service->AddVendorPrinterToCupsWithSpecificPpd(vendorName, printerId, ppdData);
+    ppdData = "ppd";
+    service->AddVendorPrinterToCupsWithSpecificPpd(vendorName, printerId, ppdData);
+    service->RemoveVendorPrinterFromCups(vendorName, printerId);
+    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+}
 } // namespace OHOS::Print

@@ -279,5 +279,37 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0011, TestSize.Level1)
     EXPECT_FALSE(UpdateMediaCapability(printerCap, &capability, nullptr));
     EXPECT_FALSE(UpdateMarginCapability(printerCap, nullptr));
 }
+
+HWTEST_F(VendorHelperTest, VendorHelperTest_0012, TestSize.Level1)
+{
+    PrinterInfo printerInfo;
+    EXPECT_FALSE(UpdatePrinterInfoWithDiscovery(printerInfo, nullptr));
+    Print_DiscoveryItem discoveryItem;
+    EXPECT_FALSE(UpdatePrinterInfoWithDiscovery(printerInfo, discoveryItem));
+    discoveryItem->printerId = new char[20];
+    EXPECT_FALSE(UpdatePrinterInfoWithDiscovery(printerInfo, discoveryItem));
+    discoveryItem->printerName = new char[20];
+    EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, discoveryItem));
+    discoveryItem.description = new char[50];
+    EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, discoveryItem));
+    discoveryItem.printerUri = new char[50];
+    EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, discoveryItem));
+    discoveryItem.makeAndModel = new char[50];
+    EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, discoveryItem));
+    discoveryItem.detailInfo = new char[100];
+    EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, discoveryItem));
+    discoveryItem.detailInfo = "detailInfo";
+    EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, discoveryItem));
+    discoveryItem.detailInfo ="{\"key\":\"value\"}";
+    EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, discoveryItem));
+    discoveryItem.detailInfo = "{\"bsunidriver_support\": \"false\"}";
+    EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, discoveryItem));
+    delete[] discoveryItem.printerId;
+    delete[] discoveryItem.printerName;
+    delete[] discoveryItem.description;
+    delete[] discoveryItem.makeAndModel;
+    delete[] discoveryItem.printerUri;
+    delete[] discoveryItem.printerUuid;
+}
 } // namespace Print
 } // namespace OHOS

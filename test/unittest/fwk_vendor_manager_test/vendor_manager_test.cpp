@@ -179,10 +179,13 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0006, TestSize.Level2)
     EXPECT_TRUE(vendorManager.Init(nullptr, false));
     EXPECT_FALSE(vendorManager.LoadVendorDriver(nullptr));
     PrinterInfo printerInfo;
+    std::string ppdDriverVendorName = "driver.ppd";
     EXPECT_EQ(vendorManager.AddPrinterToDiscovery("", printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(ppdDriverVendorName, printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.UpdatePrinterToDiscovery("", printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromDiscovery("", ""), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd("", "", ""), EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(ppdDriverVendorName, "", ""), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromCups("", ""), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_FALSE(vendorManager.OnPrinterPpdQueried("", PRINTER_TEST_IP, ""));
     EXPECT_FALSE(vendorManager.MonitorPrinterStatus(":id", true));
@@ -325,6 +328,24 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
     EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_INVALID_PRINTER);
     EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
     vendorManager.UnInit();
+}
+
+HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
+{
+    VendorManager vendorManager;
+    PrinterInfo printerInfo;
+    std::string vendorName = "test";
+    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
+    vendorName = "driver.bsuni";
+    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
+    printerInfo.setOption("");
+    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
+    printerInfo.setOption("{\"key\": \"value\"}");
+    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
+    printerInfo.setOption("{\"bsunidriver_support\": \"true\"}");
+    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
+    printerInfo.setOption("{\"bsunidriver_support\": \"false\"}");
+    EXPECT_TRUE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
 }
 }  // namespace Print
 }  // namespace OHOS
