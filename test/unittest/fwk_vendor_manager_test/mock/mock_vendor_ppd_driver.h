@@ -17,7 +17,7 @@
 #define MOCK_VENDOR_PPD_DRIVER_H
 
 #include <gmock/gmock.h>
-#include "vendor_vendor_ppd_driver.h"
+#include "vendor_ppd_driver.h"
 
 namespace OHOS {
 namespace Print {
