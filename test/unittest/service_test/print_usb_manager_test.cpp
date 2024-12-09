@@ -103,6 +103,8 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_001, TestSize.Level1)
     printUsbManager.isUsbEnable = false;
     printUsbManager.Init();
     EXPECT_EQ(true, printUsbManager.isInit);
+    printUsbManager.Init();
+    EXPECT_EQ(true, printUsbManager.isInit);
 }
 
 /**
@@ -119,6 +121,9 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_002, TestSize.Level1)
     printUsbManager.printDeviceMap[printerName] = usbDevice;
     bool ret = printUsbManager.isExistIppOverUsbPrinter(printerName);
     EXPECT_EQ(true, ret);
+    printerName = "";
+    ret = printUsbManager.isExistIppOverUsbPrinter(printerName);
+    EXPECT_EQ(false, ret);
 }
 
 /**
@@ -134,6 +139,9 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_003, TestSize.Level1)
     OHOS::USB::UsbDevice usbDevice;
     std::string printerName;
     bool ret = printUsbManager.isPrintDevice(usbDevice, printerName);
+    EXPECT_EQ(false, ret);
+    printerName = "";
+    ret = printUsbManager.isPrintDevice(usbDevice, printerName);
     EXPECT_EQ(false, ret);
 }
 
@@ -157,6 +165,9 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_004, TestSize.Level1)
         auto iter = printUsbManager.printDeviceMap.find(dev.GetName());
         EXPECT_TRUE(iter != printUsbManager.printDeviceMap.end());
     }
+    OHOS::USB::UsbDevice usbDevice;
+    printUsbManager.GetProductName(usbDevice);
+    printUsbManager.RefreshUsbPrinterDevice();
 }
 
 /**
@@ -172,6 +183,8 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_005, TestSize.Level1)
     OHOS::USB::UsbDevice usbDevice;
     std::string printerName = printUsbManager.GetProductName(usbDevice);
     EXPECT_EQ("-", printerName);
+    printUsbManager.isUsbEnable = true;
+    printerName = printUsbManager.GetProductName(usbDevice);
 }
 
 /**
@@ -189,6 +202,9 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_006, TestSize.Level1)
     std::string printerInfo =
         printUsbManager.QueryPrinterInfoFromStringDescriptor(usbDevicePipe, indexInStringDescriptor);
     EXPECT_EQ("", printerInfo);
+    printUsbManager.isUsbEnable = true;
+    printerInfo =
+        printUsbManager.QueryPrinterInfoFromStringDescriptor(usbDevicePipe, indexInStringDescriptor);
 }
 
 /**
@@ -300,6 +316,11 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_013, TestSize.Level1)
     OHOS::USB::USBDevicePipe usbDevicePipe;
     OHOS::USB::UsbDevice usbDevice;
     bool ret = printUsbManager.AllocateInterface(name, usbDevice, usbDevicePipe);
+    EXPECT_EQ(false, ret);
+    std::vector<std::pair<int32_t, int32_t>> printerIndex;
+    printUsbManager.printerIndexMap[name] = printerIndex;
+    printUsbManager.isUsbEnable = true;
+    ret = printUsbManager.AllocateInterface(name, usbDevice, usbDevicePipe);
     EXPECT_EQ(false, ret);
 }
 
