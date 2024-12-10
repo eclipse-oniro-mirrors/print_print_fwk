@@ -34,6 +34,8 @@ struct JobParameters {
     uint32_t cupsJobId;
     uint32_t borderless;
     uint32_t numCopies;
+    bool isAutoRotate;
+    bool isLandscape;
     std::string duplex;
     std::string printQuality;
     std::string jobName;
@@ -120,6 +122,7 @@ private:
     bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
         cups_option_t *options, http_t *http);
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
     static void UpdateJobStatus(JobStatus *prevousJobStatus, JobStatus *jobStatus);

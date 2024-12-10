@@ -834,6 +834,7 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
     }
     if (jobParams->mediaType == CUPS_MEDIA_TYPE_PHOTO_GLOSSY && jobParams->borderless == TRUE) {
         PRINT_HILOGD("borderless job options");
+        num_options = cupsAddOption("print-scaling", "fill", num_options, options);
         std::vector<MediaSize> mediaSizes;
         mediaSizes.push_back({ CUPS_MEDIA_4X6, 4000, 6000 });
         mediaSizes.push_back({ CUPS_MEDIA_5X7, 5000, 7000 });
@@ -877,6 +878,26 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
     return num_options;
 }
 
+int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
+{
+    if (jobParams->isAutoRotate) {
+        PRINT_HILOGE("AutoRotate is Open, skip FillLandscapeOptions");
+        return num_options;
+    }
+    num_options = cupsAddOption("pdfAutoRotate", "false", num_options, options);
+
+    if (jobParams->mediaType != CUPS_MEDIA_TYPE_PHOTO_GLOSSY || jobParams->borderless != TRUE) {
+        num_options = cupsAddOption("fit-to-page", "true", num_options, options);
+    }
+
+    if (jobParams->isLandscape) {
+        num_options = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_LANDSCAPE, num_options, options);
+    } else {
+        num_options = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_PORTRAIT, num_options, options);
+    }
+    return num_options;
+}
+
 int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams == nullptr) {
@@ -904,6 +925,11 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     } else {
         num_options = cupsAddOption(CUPS_PRINT_COLOR_MODE, CUPS_PRINT_COLOR_MODE_AUTO, num_options, options);
     }
+
+    num_options = FillLandscapeOptions(jobParams, num_options, options);
+    
+    num_options = cupsAddOption("Collate", "true", num_options, options);    // pdftopdf: Force collate print
+
     std::string nic;
     if (IsIpConflict(jobParams->printerId, nic)) {
         num_options = cupsAddOption("nic", nic.c_str(), num_options, options);
@@ -1642,6 +1668,12 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
         PRINT_HILOGE("new JobParameters returns nullptr");
         return params;
     }
+    if (!optionJson.contains("isAutoRotate") || !optionJson["isAutoRotate"].is_boolean()) {
+        // default autoRotate if option dont't contains it
+        params->isAutoRotate = true;
+    } else {
+        params->isAutoRotate = optionJson["isAutoRotate"];
+    }
     jobInfo.GetFdList(params->fdList);
     params->serviceJobId = jobInfo.GetJobId();
     params->numCopies = jobInfo.GetCopyNumber();
@@ -1653,6 +1685,7 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     params->printerName = PrintUtil::StandardizePrinterName(optionJson["printerName"]);
     params->printerUri = optionJson["printerUri"];
     params->documentFormat = optionJson["documentFormat"];
+    params->isLandscape = jobInfo.GetIsLandscape();
     UpdateJobParameterByOption(optionJson, params);
     UpdateBorderlessJobParameter(optionJson, params);
     params->serviceAbility = PrintServiceAbility::GetInstance();
@@ -1678,6 +1711,8 @@ void PrintCupsClient::DumpJobParameters(JobParameters* jobParams)
     PRINT_HILOGD("jobParams->mediaSize: %{public}s", jobParams->mediaSize.c_str());
     PRINT_HILOGD("jobParams->mediaType: %{public}s", jobParams->mediaType.c_str());
     PRINT_HILOGD("jobParams->color: %{public}s", jobParams->color.c_str());
+    PRINT_HILOGD("jobParams->isLandscape: %{public}d", jobParams->isLandscape);
+    PRINT_HILOGD("jobParams->isAutoRotate: %{public}d", jobParams->isAutoRotate);
     PRINT_HILOGD("jobParams->printerAttrsOption_cupsOption: %{public}s",
         jobParams->printerAttrsOption_cupsOption.c_str());
 }
