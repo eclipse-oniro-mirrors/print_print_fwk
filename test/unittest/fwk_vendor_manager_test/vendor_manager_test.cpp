@@ -22,6 +22,7 @@
 #include "print_log.h"
 #include "vendor_ipp_everywhere.h"
 #include "mock/mock_print_service_ability.h"
+#include "mock/mock_vendor_ppd_driver.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -178,10 +179,13 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0006, TestSize.Level2)
     EXPECT_TRUE(vendorManager.Init(nullptr, false));
     EXPECT_FALSE(vendorManager.LoadVendorDriver(nullptr));
     PrinterInfo printerInfo;
+    std::string ppdDriverVendorName = "driver.ppd";
     EXPECT_EQ(vendorManager.AddPrinterToDiscovery("", printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(ppdDriverVendorName, printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.UpdatePrinterToDiscovery("", printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromDiscovery("", ""), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd("", "", ""), EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(ppdDriverVendorName, "", ""), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromCups("", ""), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_FALSE(vendorManager.OnPrinterPpdQueried("", PRINTER_TEST_IP, ""));
     EXPECT_FALSE(vendorManager.MonitorPrinterStatus(":id", true));
@@ -295,6 +299,53 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0010, TestSize.Level1)
     EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(false));
     EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
     vendorManager.UnInit();
+}
+
+HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
+{
+    MockPrintServiceAbility mock;
+    MockVendorPpdDriver mockVendorPpdDriver;
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    auto vendorPpdDriver = std::make_shared<VendorPpdDriver>();
+    ASSERT_NE(vendorPpdDriver, nullptr);
+    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorPpdDriver));
+    std::string vendorName = "driver.bsuni";
+    std::string globalVendorName = VendorManager::GetGlobalVendorName(vendorName);
+    std::string printerId = PRINTER_TEST_IP;
+    std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
+    std::string ppdData;
+    PrinterInfo printerInfo;
+
+    std::string option = "{\"bsunidriverSupport\": \"true\"}";
+    printerInfo.SetOption(option);
+    EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(true));
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
+
+    option = "{\"bsunidriverSupport\": \"false\"}";
+    printerInfo.SetOption(option);
+    EXPECT_CALL(mockVendorPpdDriver, OnQueryProperties(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_INVALID_PRINTER);
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
+    vendorManager.UnInit();
+}
+
+HWTEST_F(VendorManagerTest, VendorManagerTest_0012, TestSize.Level1)
+{
+    VendorManager vendorManager;
+    PrinterInfo printerInfo;
+    std::string vendorName = "test";
+    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
+    vendorName = "driver.bsuni";
+    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
+    printerInfo.SetOption("");
+    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
+    printerInfo.SetOption("{\"key\": \"value\"}");
+    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
+    printerInfo.SetOption("{\"bsunidriverSupport\": \"true\"}");
+    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
+    printerInfo.SetOption("{\"bsunidriverSupport\": \"false\"}");
+    EXPECT_TRUE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
 }
 }  // namespace Print
 }  // namespace OHOS
