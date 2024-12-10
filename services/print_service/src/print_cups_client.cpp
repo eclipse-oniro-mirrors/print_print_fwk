@@ -151,14 +151,13 @@ static std::string GetUsbPrinterSerial(const std::string &deviceUri)
     if (pos == std::string::npos || pos + SERIAL.length() > deviceUri.length()) {
         return "";
     }
-    std::string remainingStr = deviceUri.substr(pos + SERIAL.length());
-    pos = remainingStr.find("&");
-    if (pos == std::string::npos || pos >= remainingStr.length()) {
-        return remainingStr.substr(remainingStr.length() - SERIAL_LENGTH);
+    std::string serial = deviceUri.substr(pos + SERIAL.length());
+    pos = serial.find("&");
+    if (pos != std::string::npos && pos < serial.length()) {
+        serial = serial.substr(0, pos);
     }
-    std::string serial = remainingStr.substr(0, pos);
-    if (pos > SERIAL_LENGTH) {
-        return serial.substr(serial.length() - SERIAL_LENGTH);
+    if (serial.length() > SERIAL_LENGTH) {
+        serial = serial.substr(serial.length() - SERIAL_LENGTH);
     }
     return serial;
 }
@@ -167,20 +166,31 @@ static std::vector<PrinterInfo> usbPrinters;
 static void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
     const char *deviceMakeAndModel, const char *deviceUri, const char *deviceLocation, void *userData)
 {
+    if  (deviceClass == nullptr || deviceId == nullptr || deviceInfo == nullptr || deviceMakeAndModel == nullptr ||
+        deviceUri == nullptr) {
+        PRINT_HILOGW("null params");
+        return;
+    }
     PRINT_HILOGD("Device: uri = %{private}s\n", deviceUri);
     PRINT_HILOGD("class = %{private}s\n", deviceClass);
     PRINT_HILOGD("make-and-model = %{private}s\n", deviceMakeAndModel);
-    PRINT_HILOGD("location = %{private}s\n", deviceLocation);
+    if (deviceLocation != nullptr) {
+        PRINT_HILOGD("location = %{private}s\n", deviceLocation);
+    }
     std::string printerUri(deviceUri);
     std::string printerMake(deviceMakeAndModel);
     if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER &&
         printerMake != PRINTER_MAKE_UNKNOWN) {
         std::string printerName(deviceInfo);
-        std::string serial = GetUsbPrinterSerial(deviceUri);
+        std::string serial = GetUsbPrinterSerial(printerUri);
         PRINT_HILOGD("serial = %{private}s\n", serial.c_str());
+        std::string id = PRINTER_ID_USB_PREFIX + "-" + printerName;
+        if (!serial.empty()) {
+            id += "-" + serial;
+        }
         PrinterInfo info;
-        info.SetPrinterId(PRINTER_ID_USB_PREFIX + "-" + printerName + "-" + serial);
-        info.SetPrinterName(PRINTER_ID_USB_PREFIX + "-" + printerName + "-" + serial);
+        info.SetPrinterId(id);
+        info.SetPrinterName(id);
         info.SetPrinterMake(printerMake);
         info.SetUri(printerUri);
         info.SetPrinterState(PRINTER_ADDED);
@@ -1838,14 +1848,19 @@ int32_t PrintCupsClient::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
     const char* exclude_schemes = CUPS_EXCLUDE_NONE;
     int timeout = CUPS_TIMEOUT_DEFAULT;
     PRINT_HILOGD("DiscoverUsbPrinters cupsGetDevices");
-    std::lock_guard<std::mutex> lock(usbPrintersLock_);
-    usbPrinters.clear();
+    {
+        std::lock_guard<std::mutex> lock(usbPrintersLock_);
+        usbPrinters.clear();
+    }
     if (cupsGetDevices(CUPS_HTTP_DEFAULT, timeout, include_schemes, exclude_schemes,
         DeviceCb, &longStatus) != IPP_OK) {
         PRINT_HILOGE("lpinfo error : %{public}s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
     }
-    printers = usbPrinters;
+    {
+        std::lock_guard<std::mutex> lock(usbPrintersLock_);
+        printers = usbPrinters;
+    }
     return E_PRINT_NONE;
 }
 
