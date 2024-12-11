@@ -20,7 +20,9 @@
 #include <streambuf>
 #include "scan_log.h"
 #include "scan_usb_manager.h"
+#include "scan_util.h"
 #include "scan_system_data.h"
+#include "scan_service_ability.h"
 
 namespace {
 const std::string SCANNER_LIST_FILE = "/data/service/el2/public/print_service/sane/tmp/scanner_list.json";
@@ -63,6 +65,7 @@ bool ScanSystemData::ParseScannerListJsonV1(nlohmann::json& jsonObject)
         scanDeviceInfo.serialNumber = object["serialNumber"];
         scanDeviceInfo.deviceName = object["deviceName"];
         scanDeviceInfo.uniqueId = object["uniqueId"];
+        scanDeviceInfo.uuid = object["uuid"];
         std::string uniqueId = scanDeviceInfo.discoverMode + scanDeviceInfo.uniqueId;
         InsertScannerInfo(uniqueId, scanDeviceInfo);
     }
@@ -116,18 +119,61 @@ void ScanSystemData::RefreshUsbDeviceId()
         }
         std::string oldDeviceId = scanDevIt.second->deviceId;
         std::string usbPort = it->second;
-        if (oldDeviceId.find_last_of(":") == std::string::npos ||
-            oldDeviceId.find_last_of(":") < USB_DEVICEID_FIRSTID_LEN_3 ||
-            usbPort.find("_") == std::string::npos) {
-            SCAN_HILOGE("oldDeviceId or usbPort string format fail");
+        std::string newDeviceId = ReplaceDeviceIdUsbPort(oldDeviceId, usbPort);
+        if (newDeviceId == "" || newDeviceId == oldDeviceId) {
+            SCAN_HILOGD("cannot update usb deviceId.");
+            continue;
+        }
+        scanDevIt.second->deviceId = newDeviceId;
+        ScanDeviceInfoSync syncInfo;
+        syncInfo.deviceId = newDeviceId;
+        syncInfo.serialNumber = serialNumber;
+        syncInfo.oldDeviceId = oldDeviceId;
+        syncInfo.discoverMode = "USB";
+        auto saPtr = ScanServiceAbility::GetInstance();
+        if (saPtr == nullptr) {
+            SCAN_HILOGE("saPtr is a nullptr");
             return;
         }
-        std::string newDeviceId = GetNewDeviceId(oldDeviceId, usbPort);
-        scanDevIt.second->deviceId = newDeviceId;
+        saPtr->UpdateScannerId(syncInfo);
     }
     if (!SaveScannerMap()) {
         SCAN_HILOGW("Failed to save the JSON file.");
     }
+}
+
+std::string ScanSystemData::ReplaceDeviceIdUsbPort(const std::string& deviceId, const std::string& usbPort)
+{
+    constexpr int32_t invalidPort = -1;
+    int32_t start = invalidPort;
+    int32_t end = invalidPort;
+    char dash;
+    std::istringstream(usbPort) >> start >> dash >> end;
+    if (start < 0 || end < 0 || dash != '-') {
+        SCAN_HILOGE("usbPort format is error");
+        return "";
+    }
+    std::ostringstream oss;
+    char zero = '0';
+    constexpr int32_t portWidth = 3;
+    oss << std::setw(portWidth) << std::setfill(zero) << start;
+    std::string formattedStart = oss.str();
+    oss.str("");
+    oss << std::setw(portWidth) << std::setfill(zero) << end;
+    std::string formattedEnd = oss.str();
+    size_t pos1 = deviceId.rfind(':');
+    if (pos1 == std::string::npos) {
+        SCAN_HILOGE("deviceId format is error");
+        return "";
+    }
+    size_t pos2 = deviceId.rfind(':', pos1 - 1);
+    if (pos2 == std::string::npos) {
+        SCAN_HILOGE("deviceId format is error");
+        return "";
+    }
+    std::string newDeviceId = deviceId.substr(0, pos2 + 1).append(formattedStart).append(":").append(formattedEnd);
+    SCAN_HILOGD("new deviceId = %{private}s", newDeviceId.c_str());
+    return newDeviceId;
 }
 
 std::string ScanSystemData::GetNewDeviceId(std::string oldDeviceId, std::string usbDevicePort)
@@ -157,15 +203,14 @@ bool ScanSystemData::UpdateScannerIdByUsbDevicePort(const std::string &uniqueId,
 {
     std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
     auto iter = addedScannerMap_.find(uniqueId);
-    if (iter != addedScannerMap_.end()) {
+    if (iter != addedScannerMap_.end() && iter->second != nullptr) {
         std::string oldDeviceId = iter->second->deviceId;
-        if (oldDeviceId.find_last_of(":") == std::string::npos ||
-            oldDeviceId.find_last_of(":") < USB_DEVICEID_FIRSTID_LEN_3 ||
-            usbDevicePort.find("_") == std::string::npos) {
-            SCAN_HILOGE("oldDeviceId or usbPort string format fail");
+        std::string newDeviceId = ReplaceDeviceIdUsbPort(oldDeviceId, usbDevicePort);
+        SCAN_HILOGD("newDeviceId : %{private}s", newDeviceId.c_str());
+        if (newDeviceId == "" || newDeviceId == oldDeviceId) {
+            SCAN_HILOGD("cannot update usb deviceId.");
             return false;
         }
-        std::string newDeviceId = GetNewDeviceId(oldDeviceId, usbDevicePort);
         iter->second->deviceId = newDeviceId;
     } else {
         SCAN_HILOGE("ScanSystemData UpdateScannerIdByUsbDevicePort fail");
@@ -190,6 +235,7 @@ void ScanSystemData::InsertScannerInfo(const std::string &uniqueId, const ScanDe
         iter->second->serialNumber = scannerInfo.serialNumber;
         iter->second->deviceName = scannerInfo.deviceName;
         iter->second->uniqueId = scannerInfo.uniqueId;
+        iter->second->uuid = scannerInfo.uuid;
     }
 }
 
@@ -308,6 +354,7 @@ bool ScanSystemData::SaveScannerMap()
             scannerJson["serialNumber"] = info->serialNumber;
             scannerJson["deviceName"] = info->deviceName;
             scannerJson["uniqueId"] = info->uniqueId;
+            scannerJson["uuid"] = info->uuid;
             scannerMapJson.push_back(scannerJson);
         }
     }
@@ -336,5 +383,43 @@ bool ScanSystemData::IsContainScanner(const std::string &uniqueId)
         return false;
     }
 }
+
+std::pair<std::string, std::string> ScanSystemData::UpdateNetScannerByUuid(const std::string &uuid,
+    const std::string& ip)
+{
+    std::string oldKey;
+    std::shared_ptr<ScanDeviceInfo> scannerInfo;
+    std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
+    for (const auto& [key, info] : addedScannerMap_) {
+        if (info != nullptr && info->uuid == uuid) {
+            oldKey = key;
+            scannerInfo = info;
+            break;
+        }
+    }
+    if (oldKey == "" || scannerInfo == nullptr) {
+        SCAN_HILOGE("Cannot find scanner by uuid");
+        return std::make_pair("", "");
+    }
+    std::string oldDeviceId = scannerInfo->deviceId;
+    std::string newDeviceId = ScanUtil::ReplaceIpAddress(oldDeviceId, ip);
+    if (newDeviceId == scannerInfo->deviceId) {
+        SCAN_HILOGE("Get new device Id fail.");
+        return std::make_pair("", "");
+    }
+    SCAN_HILOGD("newdeviceId = %{private}s", newDeviceId.c_str());
+    addedScannerMap_.erase(oldKey);
+    std::string newKey = "TCP" + ip;
+    scannerInfo->deviceId = newDeviceId;
+    scannerInfo->uniqueId = ip;
+    auto it = addedScannerMap_.find(newKey);
+    if (it == addedScannerMap_.end()) {
+        addedScannerMap_.insert(std::make_pair(newKey, scannerInfo));
+    } else {
+        it->second = scannerInfo;
+    }
+    return std::make_pair(oldDeviceId, newDeviceId);
+}
+
 }  // namespace Scan
 }  // namespace OHOS

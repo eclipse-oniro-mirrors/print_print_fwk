@@ -214,6 +214,7 @@ ScanDeviceInfo::ScanDeviceInfo()
     serialNumber = "";
     deviceName = "";
     uniqueId = "";
+    uuid = "";
 }
 
 ScanDeviceInfo::ScanDeviceInfo(const ScanDeviceInfo &right)
@@ -227,6 +228,7 @@ ScanDeviceInfo::ScanDeviceInfo(const ScanDeviceInfo &right)
     serialNumber = right.serialNumber;
     deviceName = right.deviceName;
     uniqueId = right.uniqueId;
+    uuid = right.uuid;
 }
 
 ScanDeviceInfo &ScanDeviceInfo::operator=(const ScanDeviceInfo &right)
@@ -241,6 +243,7 @@ ScanDeviceInfo &ScanDeviceInfo::operator=(const ScanDeviceInfo &right)
         serialNumber = right.serialNumber;
         deviceName = right.deviceName;
         uniqueId = right.uniqueId;
+        uuid = right.uuid;
     }
     return *this;
 }
@@ -336,6 +339,16 @@ const std::string& ScanDeviceInfo::GetUniqueId() const
     return uniqueId;
 }
 
+void ScanDeviceInfo::SetUuid(const std::string& uuid)
+{
+    this->uuid = uuid;
+}
+
+const std::string& ScanDeviceInfo::GetUuid() const
+{
+    return uuid;
+}
+
 bool ScanDeviceInfo::ReadFromParcel(Parcel &parcel)
 {
     SetDeviceId(parcel.ReadString());
@@ -381,6 +394,7 @@ ScanDeviceInfoSync::ScanDeviceInfoSync()
     serialNumber = "";
     syncMode = "";
     deviceState = 0;
+    oldDeviceId = "";
 }
 
 ScanDeviceInfoSync::ScanDeviceInfoSync(const ScanDeviceInfoSync &right)
@@ -390,6 +404,7 @@ ScanDeviceInfoSync::ScanDeviceInfoSync(const ScanDeviceInfoSync &right)
     serialNumber = right.serialNumber;
     syncMode = right.syncMode;
     deviceState = right.deviceState;
+    oldDeviceId = right.oldDeviceId;
 }
 
 ScanDeviceInfoSync &ScanDeviceInfoSync::operator=(const ScanDeviceInfoSync &right)
@@ -400,6 +415,7 @@ ScanDeviceInfoSync &ScanDeviceInfoSync::operator=(const ScanDeviceInfoSync &righ
         serialNumber = right.serialNumber;
         syncMode = right.syncMode;
         deviceState = right.deviceState;
+        oldDeviceId = right.oldDeviceId;
     }
     return *this;
 }
@@ -455,12 +471,33 @@ const uint32_t& ScanDeviceInfoSync::GetDeviceState() const
     return deviceState;
 }
 
+void ScanDeviceInfoSync::SetOldDeviceId(const std::string& oldDeviceId)
+{
+    this->oldDeviceId = oldDeviceId;
+}
+
+const std::string& ScanDeviceInfoSync::GetOldDeviceId() const
+{
+    return oldDeviceId;
+}
+
+void ScanDeviceInfoSync::SetUniqueId(const std::string& uniqueId)
+{
+    this->uniqueId = uniqueId;
+}
+
+const std::string& ScanDeviceInfoSync::GetUniqueId() const
+{
+    return uniqueId;
+}
+
 void ScanDeviceInfoSync::ReadFromParcel(Parcel &parcel)
 {
     SetDeviceId(parcel.ReadString());
     SetDiscoverMode(parcel.ReadString());
     SetSerialNumber(parcel.ReadString());
     SetSyncMode(parcel.ReadString());
+    SetOldDeviceId(parcel.ReadString());
 }
 
 bool ScanDeviceInfoSync::Marshalling(Parcel &parcel) const
@@ -469,6 +506,7 @@ bool ScanDeviceInfoSync::Marshalling(Parcel &parcel) const
     parcel.WriteString(discoverMode);
     parcel.WriteString(serialNumber);
     parcel.WriteString(syncMode);
+    parcel.WriteString(oldDeviceId);
     return true;
 }
 

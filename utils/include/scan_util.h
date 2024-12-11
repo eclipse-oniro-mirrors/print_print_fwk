@@ -22,10 +22,15 @@
 #include <sstream>
 #include <list>
 #include <vector>
+#include <iomanip>
 #include <regex>
 #include <string>
-
+#include "scan_constant.h"
 #include "scan_log.h"
+#ifdef SANE_ENABLE
+#include "sane/sane.h"
+#include "sane/saneopts.h"
+#endif
 
 namespace OHOS::Scan {
 class ScanUtil {
@@ -35,6 +40,7 @@ public:
     #endif
     static bool ConvertToInt(const std::string& str, int32_t& value);
     static bool ExtractIpAddresses(const std::string& str, std::string& ip);
+    static std::string ReplaceIpAddress(const std::string& deviceId, const std::string& newIp);
 };
 #ifdef SANE_ENABLE
 inline ScanErrorCode ScanUtil::ConvertErro(const SANE_Status status)
@@ -57,6 +63,11 @@ inline bool ScanUtil::ExtractIpAddresses(const std::string& str, std::string& ip
     } else {
         return false;
     }
+}
+inline std::string ScanUtil::ReplaceIpAddress(const std::string& deviceId, const std::string& newIp)
+{
+    std::regex ipRegex(R"((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b))");
+    return std::regex_replace(deviceId, ipRegex, newIp);
 }
 } // namespace OHOS::Scan
 

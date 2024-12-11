@@ -76,7 +76,7 @@ public:
         const std::string& discoverMode, const std::string& deviceName) override;
     int32_t OnStartScan(const std::string scannerId, const bool &batchMode);
     void DisConnectUsbScanner(std::string serialNumber, std::string newDeviceId); // public
-    void UpdateUsbScannerId(std::string serialNumber, std::string newDeviceId); // public
+    void UpdateScannerId(const ScanDeviceInfoSync& usbSyncInfo); // public
 
 private:
 #ifdef SANE_ENABLE
