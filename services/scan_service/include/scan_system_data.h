@@ -43,6 +43,8 @@ public:
     void GetAddedScannerInfoList(std::vector<ScanDeviceInfo> &infoList);
     bool SaveScannerMap();
     bool IsContainScanner(const std::string &uniqueId);
+    std::pair<std::string, std::string> UpdateNetScannerByUuid(const std::string &uuid, const std::string& ip);
+    static std::string ReplaceDeviceIdUsbPort(const std::string& deviceId, const std::string& usbPort);
     static std::map<std::string, std::string> usbSnToPortMap_;
 
 private:

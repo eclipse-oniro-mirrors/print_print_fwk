@@ -216,9 +216,14 @@ namespace Scan {
 
     void TestUpdateUsbScannerId(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
-        std::string serialNumber = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        std::string newDeviceId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanServiceAbility::GetInstance()->UpdateUsbScannerId(serialNumber, newDeviceId);
+        std::string discoverMode = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        ScanDeviceInfoSync usbSyncInfo;
+        usbSyncInfo.discoverMode = discoverMode;
+        ScanServiceAbility::GetInstance()->UpdateScannerId(usbSyncInfo);
+        usbSyncInfo.discoverMode = "USB";
+        ScanServiceAbility::GetInstance()->UpdateScannerId(usbSyncInfo);
+        usbSyncInfo.discoverMode = "TCP";
+        ScanServiceAbility::GetInstance()->UpdateScannerId(usbSyncInfo);
     }
 
     void TestSendInitEvent(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)

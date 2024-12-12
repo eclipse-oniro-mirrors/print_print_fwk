@@ -24,6 +24,7 @@
 #include "common_event_support.h"
 #include "scan_system_data.h"
 #include "scan_usb_manager.h"
+#include "scanner_info.h"
 
 namespace OHOS::Scan {
 using namespace OHOS;
@@ -194,20 +195,26 @@ void ScanUsbManager::UpdateUsbScannerId(std::string serialNumber, std::string us
     }
     auto it = ScanServiceAbility::saneGetUsbDeviceInfoMap.find(serialNumber);
     if (it != ScanServiceAbility::saneGetUsbDeviceInfoMap.end()) {
-        SCAN_HILOGD("DealUsbDevStatusChange attached find out usbDevicePort = %{public}s, deviceId = %{public}s.",
+        SCAN_HILOGD("DealUsbDevStatusChange attached find out usbDevicePort = %{private}s, deviceId = %{private}s.",
                     usbDevicePort.c_str(), it->second.deviceId.c_str());
         std::string newDeviceId = getNewDeviceId(it->second.deviceId, usbDevicePort);
-        ScanServiceAbility::GetInstance()->UpdateUsbScannerId(serialNumber, newDeviceId);
+        ScanDeviceInfoSync syncInfo;
+        syncInfo.deviceId = newDeviceId;
+        syncInfo.serialNumber = serialNumber;
+        syncInfo.oldDeviceId = it->second.deviceId;
+        syncInfo.discoverMode = "USB";
+        syncInfo.syncMode = "update";
+        ScanServiceAbility::GetInstance()->UpdateScannerId(syncInfo);
         for (auto &t : ScanServiceAbility::usbSnMap) {
             if (t.second == serialNumber) {
-                SCAN_HILOGD("UpdateUsbScannerId usbSnMap erase %{public}s.", t.first.c_str());
+                SCAN_HILOGD("UpdateUsbScannerId usbSnMap erase %{private}s.", t.first.c_str());
                 ScanServiceAbility::usbSnMap.erase(t.first);
                 break;
             }
         }
         ScanServiceAbility::usbSnMap[usbDevicePort] = serialNumber;
     } else {
-        SCAN_HILOGD("DealUsbDevStatusChange attached find out usbDevicePort = %{public}s. "
+        SCAN_HILOGD("DealUsbDevStatusChange attached find out usbDevicePort = %{private}s. "
                     "No matched device in saneGetUsbDeviceInfoMap.", usbDevicePort.c_str());
         ScanServiceAbility::GetInstance()->GetScannerList();
     }

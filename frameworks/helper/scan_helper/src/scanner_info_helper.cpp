@@ -30,6 +30,7 @@ static constexpr const char *PARAM_TCP_FEEDER = "feeder";
 
 
 static constexpr const char *PARAM_SCANNERID = "deviceId";
+static constexpr const char *PARAM_OLD_SCANNERID = "oldDeviceId";
 static constexpr const char *PARAM_MANUFACTURER = "manufacturer";
 static constexpr const char *PARAM_MODEL = "model";
 static constexpr const char *PARAM_DEVICETYPE = "deviceType";
@@ -83,11 +84,13 @@ napi_value ScannerInfoSyncHelper::MakeJsObject(napi_env env, const ScanDeviceInf
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_DISCOVERMODE, info.GetDiscoverMode());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_SERIALNUMBER, info.GetSerialNumber());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_SYNCMODE, info.GetSyncMode());
+    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_OLD_SCANNERID, info.GetOldDeviceId());
 #ifdef DEBUG_ENABLE
-    SCAN_HILOGD("ScannerInfoSyncHelper MakeJsObject DeviceId = %{public}s, DiscoverMode = %{public}s,"
-                "SerialNumber = %{public}s SyncMode = %{public}s.",
+    SCAN_HILOGD("ScannerInfoSyncHelper MakeJsObject DeviceId = %{private}s, DiscoverMode = %{private}s,"
+                "SerialNumber = %{private}s SyncMode = %{private}s., oldDeviceId = %{private}s",
                 info.GetDeviceId().c_str(), info.GetDiscoverMode().c_str(),
-                info.GetSerialNumber().c_str(), info.GetSyncMode().c_str());
+                info.GetSerialNumber().c_str(), info.GetSyncMode().c_str(),
+                info.GetOldDeviceId().c_str());
 #endif
     return jsObj;
 }
