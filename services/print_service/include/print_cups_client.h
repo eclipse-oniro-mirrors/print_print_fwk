@@ -112,7 +112,7 @@ private:
     void HandleJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus,
         JobStatus *prevousJobStatus);
     void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
-    static void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
+    void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
     static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
     static void SymlinkFile(std::string &srcFilePath, std::string &destFilePath);
     static void SymlinkDirectory(const char *srcDir, const char *destDir);
@@ -151,7 +151,8 @@ private:
         std::vector<std::string> &ppds);
     ipp_t *QueryPrinterAttributesByUri(const std::string &printerUri, const std::string &nic, int num,
         const char * const *pattrs);
-    int32_t ResumePrinter(const std::string &printerName);
+    bool ResumePrinter(const std::string &printerName);
+    bool CancelPrinterJob(int cupsJobId);
 
 private:
     bool toCups_ = true;
