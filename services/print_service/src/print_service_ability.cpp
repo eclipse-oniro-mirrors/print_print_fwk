@@ -1408,7 +1408,7 @@ void PrintServiceAbility::CancelUserPrintJobs(const int32_t userId)
         userJobMap_.erase(jobIt.first);
     }
     printUserMap_.erase(userId);
-    PRINT_HILOGI("remove user-%{publis}d success.", userId);
+    PRINT_HILOGI("remove user-%{public}d success.", userId);
 }
 
 void PrintServiceAbility::NotifyCurrentUserChanged(const int32_t userId)
@@ -1753,7 +1753,6 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
             return E_PRINT_INVALID_PRINTJOB;
         }
     }
-
     jobIt->second->SetJobState(state);
     jobIt->second->SetSubState(subState);
     SendPrintJobEvent(*jobIt->second);
@@ -1761,12 +1760,6 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     CheckJobQueueBlocked(*jobIt->second);
 
     auto printerId = jobIt->second->GetPrinterId();
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
-    if (printerInfo == nullptr) {
-        PRINT_HILOGE("Invalid printerId");
-        return E_PRINT_INVALID_PRINTER;
-    }
-
     if (state == PRINT_JOB_BLOCKED) {
         ReportHisysEvent(jobIt->second, printerId, subState);
     }
@@ -1776,18 +1769,21 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
             userData->queuedJobList_.erase(jobId);
             queuedJobList_.erase(jobId);
         }
-        if (printerJobMap_[printerId].empty()) {
-            printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-            printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
-            SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-            SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        auto iter = printerJobMap_.find(printerId);
+        if (iter == printerJobMap_.end() || iter->second.empty()) {
+            auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+            if (printerInfo != nullptr) {
+                printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
+                printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
+                SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+                SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+            }
         }
         if (IsQueuedJobListEmpty(jobId)) {
             ReportCompletedPrint(printerId);
         }
         SendQueuePrintJob(printerId);
     }
-
     PRINT_HILOGD("CheckAndSendQueuePrintJob end.");
     return E_PRINT_NONE;
 }
