@@ -1767,9 +1767,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0082, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "testPrinterName";
-    EXPECT_EQ(printCupsClient.ResumePrinter(printerName), E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(printCupsClient.ResumePrinter(printerName), false);
     printCupsClient.printAbility_ = nullptr;
-    EXPECT_EQ(printCupsClient.ResumePrinter(printerName), E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(printCupsClient.ResumePrinter(printerName), false);
 }
 
 /**

@@ -1391,17 +1391,22 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
             ReportBlockedReason(param, jobStatus);
         } else {
             param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
-                PRINT_JOB_BLOCKED_BUSY);
+                                                       PRINT_JOB_BLOCKED_BUSY);
         }
-    } else if (jobStatus->job_state == IPP_JOB_CANCELED || jobStatus->job_state == IPP_JOB_ABORTED ||
-        jobStatus->job_state == IPP_JOB_STOPPED) {
+        return;
+    }
+    if (jobStatus->job_state == IPP_JOB_CANCELED || jobStatus->job_state == IPP_JOB_ABORTED) {
         param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_COMPLETED,
-            PRINT_JOB_COMPLETED_CANCELLED);
+                                                   PRINT_JOB_COMPLETED_CANCELLED);
+    } else if (jobStatus->job_state == IPP_JOB_STOPPED) {
+        param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_COMPLETED,
+                                                   PRINT_JOB_COMPLETED_CANCELLED);
+        if (CancelPrinterJob(param->cupsJobId)) {
+            PRINT_HILOGW("CancelPrinterJob fail");
+        }
     } else if (jobStatus->job_state == IPP_JOB_PENDING || jobStatus->job_state == IPP_JOB_HELD) {
         param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_QUEUED,
-            PRINT_JOB_BLOCKED_UNKNOWN);
-    } else {
-        PRINT_HILOGE("wrong job state: %{public}d", jobStatus->job_state);
+                                                   PRINT_JOB_BLOCKED_UNKNOWN);
     }
 }
 
@@ -1899,7 +1904,7 @@ int32_t PrintCupsClient::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
     return E_PRINT_NONE;
 }
 
-int32_t PrintCupsClient::ResumePrinter(const std::string &printerName)
+bool PrintCupsClient::ResumePrinter(const std::string &printerName)
 {
     if (printAbility_ == nullptr) {
         PRINT_HILOGE("printAbility is null");
@@ -1916,9 +1921,26 @@ int32_t PrintCupsClient::ResumePrinter(const std::string &printerName)
     ippDelete(printAbility_->DoRequest(nullptr, request, "/admin/"));
     if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
         PRINT_HILOGE("resume printer error: %s", cupsLastErrorString());
-        return E_PRINT_SERVER_FAILURE;
+        return false;
     }
     PRINT_HILOGI("resume printer success");
-    return E_PRINT_NONE;
+    return true;
+}
+
+bool PrintCupsClient::CancelPrinterJob(int cupsJobId)
+{
+    char job_uri[1024];
+    httpAssembleURIf(HTTP_URI_CODING_ALL, job_uri, sizeof(job_uri), "ipp", nullptr,
+                     "localhost", 0, "/jobs/%d", cupsJobId);
+    PRINT_HILOGE("cancel job_uri: %s", job_uri);
+    ipp_t *cancel_request = ippNewRequest(IPP_OP_CANCEL_JOB);
+    ippAddString(cancel_request, IPP_TAG_OPERATION, IPP_TAG_URI, "job-uri", nullptr, job_uri);
+    ippDelete(printAbility_->DoRequest(nullptr, cancel_request, "/admin/"));
+    if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
+        PRINT_HILOGE("cancel printJob error: %s", cupsLastErrorString());
+        return false;
+    }
+    PRINT_HILOGI("cancel printJob success");
+    return true;
 }
 }
