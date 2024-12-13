@@ -89,6 +89,10 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0003, TestSize.Level1)
     std::shared_ptr<PrintServiceHelper> temp = nullptr;
     DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(temp);
     EXPECT_FALSE(DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryExtensionInfos(resultInfo));
+    auto helper = std::make_shared<MockPrintServiceHelper>();
+    temp = std::shared_ptr<PrintServiceHelper>(helper);
+    DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(temp);
+    EXPECT_FALSE(DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryExtensionInfos(resultInfo));
 }
 
 /**
@@ -103,6 +107,24 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0008, TestSize.Level1)
     std::shared_ptr<PrintServiceHelper> temp = nullptr;
     DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(temp);
     EXPECT_EQ(DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName(), testName);
+}
+
+/**
+* @tc.name: PrintBMSHelperTest_0009
+* @tc.desc: QueryCallerBundleName fail
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0009, TestSize.Level1)
+{
+    PrintBMSHelper printBMSHelper;
+    std::shared_ptr<PrintServiceHelper> temp = nullptr;
+    DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(temp);
+    EXPECT_EQ(DelayedSingleton<PrintBMSHelper>::GetInstance()->GetProxy(), false);
+    auto helper = std::make_shared<MockPrintServiceHelper>();
+    temp = std::shared_ptr<PrintServiceHelper>(helper);
+    DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(temp);
+    EXPECT_EQ(DelayedSingleton<PrintBMSHelper>::GetInstance()->GetProxy(), false);
 }
 
 /**
