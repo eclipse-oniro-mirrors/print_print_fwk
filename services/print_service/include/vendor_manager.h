@@ -21,6 +21,7 @@
 #include <mutex>
 #include <thread>
 #include "vendor_driver_base.h"
+#include "vendor_driver_group.h"
 
 namespace OHOS {
 namespace Print {
@@ -76,7 +77,7 @@ public:
     bool MonitorPrinterStatus(const std::string &globalPrinterId, bool on);
     void StartStatusMonitor();
     void StopStatusMonitor();
-    bool IsConnectingPrinter(const std::string &id, const std::string &uri) override;
+    bool IsConnectingPrinter(const std::string &globalPrinterId, const std::string &uri) override;
     void SetConnectingPrinter(ConnectMethod method, const std::string &printer) override;
     void ClearConnectingPrinter() override;
     bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) override;
@@ -86,21 +87,23 @@ public:
     int32_t QueryPrinterInfoByPrinterId(const std::string &vendorName, const std::string &printerId,
         PrinterInfo &info) override;
     bool QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds) override;
-
-private:
     std::shared_ptr<VendorDriverBase> FindDriverByPrinterId(const std::string &globalPrinterId);
     std::shared_ptr<VendorDriverBase> FindDriverByVendorName(const std::string &vendorName);
+
+private:
     void StatusMonitorProcess();
     void UpdateAllPrinterStatus();
     bool WaitNext();
     bool IsPrivatePpdDriver(const std::string &vendorName, const PrinterInfo &printerInfo);
     bool IsPrivatePpdDriver(const std::string &vendorName);
+    bool IsWlanGroupDriver(const std::string &bothPrinterId);
 
 private:
     std::atomic<bool> defaultLoaded{false};
     IPrintServiceAbility *printServiceAbility = nullptr;
     std::map<std::string, std::shared_ptr<VendorDriverBase>> vendorMap;
     std::mutex vendorMapMutex;
+    std::shared_ptr<VendorDriverGroup> wlanGroupDriver = nullptr;
     std::thread statusMonitorThread;
     bool statusMonitorOn = false;
     std::mutex statusMonitorMutex;

@@ -80,6 +80,7 @@ public:
     virtual bool OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol);
     virtual bool OnQueryProperties(const std::string &printerId, const std::vector<std::string> &propertyKeys);
     virtual std::string GetVendorName() = 0;
+    virtual int32_t OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo);
 
     void UpdateAllPrinterStatus();
     bool MonitorPrinterStatus(const std::string &printerId, bool on);

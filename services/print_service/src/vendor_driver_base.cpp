@@ -63,6 +63,11 @@ bool VendorDriverBase::OnQueryProperties(const std::string &printerId, const std
     return false;
 }
 
+int32_t VendorDriverBase::OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo)
+{
+    return 0;
+}
+
 void VendorDriverBase::UpdateAllPrinterStatus()
 {
     std::lock_guard<std::mutex> lock(statusMapMutex);

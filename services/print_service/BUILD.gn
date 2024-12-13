@@ -59,10 +59,12 @@ ohos_shared_library("print_service") {
     "src/thread_sync_wait.cpp",
     "src/vendor_bsuni_driver.cpp",
     "src/vendor_driver_base.cpp",
+    "src/vendor_driver_group.cpp",
     "src/vendor_helper.cpp",
     "src/vendor_ipp_everywhere.cpp",
     "src/vendor_manager.cpp",
     "src/vendor_ppd_driver.cpp",
+    "src/vendor_wlan_group.cpp",
   ]
 
   branch_protector_ret = "pac_ret"

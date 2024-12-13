@@ -19,6 +19,10 @@
 
 using namespace OHOS::Print;
 using json = nlohmann::json;
+namespace {
+const std::string VENDOR_IPP_START = "ipp://";
+const std::string VENDOR_IPP_END = ":631/ipp/print";
+}
 
 static const std::string VENDOR_NAME = "driver.ipp.everywhere";
 
@@ -28,7 +32,7 @@ VendorIppEveryWhere::~VendorIppEveryWhere() {}
 
 std::string VendorIppEveryWhere::GetVendorName()
 {
-    return VENDOR_NAME;
+    return VENDOR_IPP_EVERYWHERE;
 }
 
 bool VendorIppEveryWhere::Init(IPrinterVendorManager *manager)
@@ -137,6 +141,13 @@ bool VendorIppEveryWhere::ConnectPrinter(std::shared_ptr<PrinterInfo> printerInf
         return false;
     }
     PRINT_HILOGI("get printer info success");
+    std::string printerId(printerInfo->GetUri());
+    ConvertPrinterIdByUri(printerId);
+    auto discoveredInfo = vendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
+    if (discoveredInfo != nullptr) {
+        printerInfo->SetPrinterId(printerId);
+        printerInfo->SetPrinterName(discoveredInfo->GetPrinterName());
+    }
     if (vendorManager->UpdatePrinterToDiscovery(GetVendorName(), *printerInfo) != EXTENSION_ERROR_NONE) {
         PRINT_HILOGW("UpdatePrinterToDiscovery fail");
         return false;
@@ -218,4 +229,20 @@ void VendorIppEveryWhere::QueryPrinterStatusByUri(const std::string &uri)
         return;
     }
     OnPrinterStateQueried(uri, static_cast<Print_PrinterState>(status));
+}
+
+bool VendorIppEveryWhere::ConvertPrinterIdByUri(std::string &uri)
+{
+    if (uri.empty()) {
+        return false;
+    }
+    auto pos_start = uri.find(VENDOR_IPP_START);
+    auto pos_end = uri.find(VENDOR_IPP_END);
+    if (pos_start == std::string::npos || uri.length() <= pos_start + 1 ||
+        pos_end == std::string::npos || uri.length() <= pos_end + 1) {
+        return false;
+    }
+    uri = uri.substr(pos_start + VENDOR_IPP_START.length(), pos_end - pos_start - VENDOR_IPP_START.length());
+    PRINT_HILOGD("ConvertPrinterIdByUri seccess");
+    return true;
 }

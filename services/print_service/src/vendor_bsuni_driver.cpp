@@ -23,6 +23,8 @@ using namespace OHOS::Print;
 namespace {
 std::mutex g_driverMutex;
 VendorBsuniDriver *g_driverWrapper = nullptr;
+const std::string VENDOR_BACKEND_DELIMITER = "://";
+const std::string VENDOR_BSUNI_BACKEND = "bsUniBackend";
 }
 
 void VendorBsuniDriver::SetDriverWrapper(VendorBsuniDriver *driver)
@@ -301,7 +303,7 @@ void VendorBsuniDriver::OnStopDiscovery()
 
 std::string VendorBsuniDriver::GetVendorName()
 {
-    return "driver.bsuni";
+    return VENDOR_BSUNI_DRIVER;
 }
 
 bool VendorBsuniDriver::OnQueryCapability(const std::string &printerId, int timeout)
@@ -420,11 +422,15 @@ int32_t VendorBsuniDriver::OnPrinterCapabilityQueried(const Print_DiscoveryItem 
         PRINT_HILOGW("printerInfo is null");
         return EXTENSION_INVALID_PARAMETER;
     }
-    vendorManager->UpdatePrinterToDiscovery(GetVendorName(), *printerInfo);
     std::string printerUri;
     if (printer != nullptr && printer->printerUri != nullptr) {
         printerUri = std::string(printer->printerUri);
+        if (!ConvertBsUri(printerUri)) {
+            return EXTENSION_ERROR_INVALID_PRINTER;
+        }
+        printerInfo->SetUri(printerUri);
     }
+    vendorManager->UpdatePrinterToDiscovery(GetVendorName(), *printerInfo);
     std::string printerId = printerInfo->GetPrinterId();
     std::string globalPrinterId = GetGlobalPrinterId(printerId);
     bool connecting = vendorManager->IsConnectingPrinter(globalPrinterId, printerUri);
@@ -439,4 +445,18 @@ int32_t VendorBsuniDriver::OnPrinterCapabilityQueried(const Print_DiscoveryItem 
     syncWait.Notify();
     PRINT_HILOGD("OnPrinterCapabilityQueried quit");
     return EXTENSION_ERROR_NONE;
+}
+
+bool VendorBsuniDriver::ConvertBsUri(std::string &uri)
+{
+    if (uri.empty()) {
+        return false;
+    }
+    auto pos = uri.find(VENDOR_BACKEND_DELIMITER);
+    if (pos == std::string::npos || uri.length() <= pos + 1) {
+        return false;
+    }
+    uri = VENDOR_BSUNI_BACKEND + uri.substr(pos);
+    PRINT_HILOGD("ConvertBsUri seccess");
+    return true;
 }

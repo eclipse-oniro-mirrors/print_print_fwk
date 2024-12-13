@@ -1494,7 +1494,14 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
     CupsPrinterInfo cupsPrinter;
     if (printSystemData_.QueryCupsPrinterInfoByPrinterId(info->GetPrinterId(), cupsPrinter)) {
         std::string printerUri = info->GetUri();
-        if (!printerUri.empty() && printerUri != cupsPrinter.uri) {
+        auto exceptBackendUri = [=](std::string uri) -> std::string {
+            auto pos = uri.find("://");
+            if (pos == std::string::npos || uri.length() <= pos + 1) {
+                return "";
+            }
+            return uri.substr(pos + 1);
+        };
+        if (!printerUri.empty() && exceptBackendUri(printerUri) != exceptBackendUri(cupsPrinter.uri)) {
             return true;
         }
     }
@@ -2957,7 +2964,11 @@ int32_t PrintServiceAbility::AddPrinterToDiscovery(const PrinterInfo &printerInf
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-
+    if (PrintUtil::startsWith(printerInfo.GetPrinterId(), "mdns://") &&
+        vendorManager.FindDriverByVendorName(VENDOR_BSUNI_DRIVER) != nullptr) {
+        PRINT_HILOGD("AddPrinterToDiscovery skip %{public}s", printerInfo.GetPrinterId().c_str());
+        return E_PRINT_NONE;
+    }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGD("AddPrinterToDiscovery started. Current total size is %{public}zd",
         printSystemData_.GetDiscoveredPrinterCount());
@@ -3408,6 +3419,13 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
         PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
         return false;
     }
+    PrinterCapability printerCaps;
+    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
+        QueryPrinterCapabilityFromPPD(printerInfo->GetPrinterName(), printerCaps);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGW("QueryPrinterCapabilityFromPPD error = %{public}d.", ret);
+    }
+    printerInfo->SetCapability(printerCaps);
 #endif // CUPS_ENABLE
     info.printerStatus = PRINTER_STATUS_IDLE;
     printerInfo->GetCapability(info.printerCapability);
