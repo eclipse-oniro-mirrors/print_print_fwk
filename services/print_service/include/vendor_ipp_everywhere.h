@@ -45,6 +45,7 @@ private:
     void QueryPrinterStatusByUri(const std::string &uri);
     bool UpdateCapability(std::shared_ptr<PrinterInfo> printerInfo);
     bool ConnectPrinter(std::shared_ptr<PrinterInfo> printerInfo);
+    bool ConvertPrinterIdByUri(std::string &uri);
 
 private:
     OperationQueue opQueue;

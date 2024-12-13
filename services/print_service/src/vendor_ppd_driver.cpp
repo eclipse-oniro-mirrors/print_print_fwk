@@ -36,6 +36,7 @@ bool VendorPpdDriver::OnQueryCapability(const std::string &printerId, int timeou
         return false;
     }
     std::shared_ptr<PrinterInfo> printerInfo = QueryPrinterCapabilityFromPpd(printerId, ppds[0]);
+    printerInfo->SetPrinterId(printerId);
     if (!UpdateCapability(printerInfo)) {
         PRINT_HILOGW("OnQueryCapability update capability fail.");
         return false;
@@ -70,7 +71,7 @@ bool VendorPpdDriver::OnQueryProperties(const std::string &printerId, const std:
 
 std::string VendorPpdDriver::GetVendorName()
 {
-    return "driver.ppd";
+    return VENDOR_PPD_DRIVER;
 }
 
 bool VendorPpdDriver::QueryPpdByPrinterId(const std::string &printerId, std::vector<std::string> &ppds)

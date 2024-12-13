@@ -405,7 +405,6 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
     }
     info.SetPrinterId(std::string(discoveryItem->printerId));
     std::string name(discoveryItem->printerName);
-    name += " UNI";
     info.SetPrinterName(name);
     if (discoveryItem->description != nullptr) {
         info.SetDescription(std::string(discoveryItem->description));
