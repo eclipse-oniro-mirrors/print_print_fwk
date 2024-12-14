@@ -18,6 +18,10 @@
 #include "print_utils.h"
 
 using namespace OHOS::Print;
+namespace {
+    const std::string VENDOR_BSUNI_URI_START = "://";
+    const std::string VENDOR_BSUNI_URI_END = ":";
+}
 
 VendorWlanGroup::VendorWlanGroup(VendorManager *vendorManager) : parentVendorManager(vendorManager) {}
 
@@ -49,7 +53,9 @@ bool VendorWlanGroup::OnQueryCapability(const std::string &printerId, int timeou
     if (IsBsunidriverSupport(printerId)) {
         printerVendorGroupList_[printerId] = VENDOR_BSUNI_DRIVER;
         auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
-        if (bsuniDriver != nullptr && bsuniDriver->OnQueryCapability(printerId, timeout)) {
+        auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
+        if (bsuniDriver != nullptr && printerInfo != nullptr &&
+            bsuniDriver->OnQueryCapability(ExtractBsUniPrinterIdByPrinterInfo(*printerInfo), timeout)) {
             PRINT_HILOGI("on query capability on bsuni vendor seccess.");
             return true;
         }
@@ -98,7 +104,16 @@ int32_t VendorWlanGroup::OnPrinterDiscovered(const std::string &vendorName, cons
         PRINT_HILOGE("VendorManager is null.");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    return vendorManager->AddPrinterToDiscovery(GetVendorName(), printerInfo);
+    return vendorManager->AddPrinterToDiscovery(GetVendorName(), ConvertPrinterInfoId(printerInfo));
+}
+
+int32_t VendorWlanGroup::OnUpdatePrinterToDiscovery(const std::string &vendorName, const PrinterInfo &printerInfo)
+{
+    if (vendorManager == nullptr) {
+        PRINT_HILOGE("VendorManager is null.");
+        return EXTENSION_ERROR_CALLBACK_NULL;
+    }
+    return vendorManager->UpdatePrinterToDiscovery(GetVendorName(), ConvertPrinterInfoId(printerInfo));
 }
 
 int32_t VendorWlanGroup::OnPrinterRemoved(const std::string &vendorName, const std::string &printerId)
@@ -108,7 +123,9 @@ int32_t VendorWlanGroup::OnPrinterRemoved(const std::string &vendorName, const s
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
     RemovePrinterVendorGroupById(printerId);
-    return vendorManager->RemovePrinterFromDiscovery(GetVendorName(), printerId);
+    std::string id(VendorManager::ExtractPrinterId(printerId));
+    QueryBsUniPrinterIdByUuidPrinterId(id);
+    return vendorManager->RemovePrinterFromDiscovery(GetVendorName(), id);
 }
 
 bool VendorWlanGroup::IsGroupDriver(const std::string &bothPrinterId)
@@ -116,6 +133,21 @@ bool VendorWlanGroup::IsGroupDriver(const std::string &bothPrinterId)
     std::string printerId(VendorManager::ExtractPrinterId(bothPrinterId));
     auto iter = printerVendorGroupList_.find(printerId);
     return (iter != printerVendorGroupList_.end() && !iter->second.empty());
+}
+
+bool VendorWlanGroup::ConvertGroupDriver(std::string &printerId, std::string &vendorName)
+{
+    printerId = VendorManager::ExtractPrinterId(printerId);
+    if (vendorName == VENDOR_BSUNI_DRIVER) {
+        QueryBsUniPrinterIdByUuidPrinterId(printerId);
+        return false;
+    }
+    auto iter = printerVendorGroupList_.find(printerId);
+    if (iter != printerVendorGroupList_.end() && !iter->second.empty()) {
+        vendorName = VENDOR_WLAN_GROUP;
+        return true;
+    }
+    return false;
 }
 
 bool VendorWlanGroup::IsBsunidriverSupport(const std::string &printerId)
@@ -149,4 +181,49 @@ std::string VendorWlanGroup::ConvertGroupGlobalPrinterId(const std::string &both
 {
     std::string printerId(VendorManager::ExtractPrinterId(bothPrinterId));
     return PrintUtils::GetGlobalId(VendorManager::GetGlobalVendorName(GetVendorName()), printerId);
+}
+
+void VendorWlanGroup::QueryBsUniPrinterIdByUuidPrinterId(std::string &bsUniPrinterId)
+{
+    std::lock_guard<std::mutex> lock(uuidMapMutex);
+    auto item = printerIdToUuidMap_.find(bsUniPrinterId);
+    if (item != printerIdToUuidMap_.end() && !item->second.empty()) {
+        bsUniPrinterId = std::string(item->second);
+    }
+}
+
+void VendorWlanGroup::UpdateMappedPrinterId(const std::string &bsUniPrinterId, const std::string printerId)
+{
+    std::lock_guard<std::mutex> lock(uuidMapMutex);
+    printerIdToUuidMap_[bsUniPrinterId] = printerId;
+}
+
+PrinterInfo VendorWlanGroup::ConvertPrinterInfoId(const PrinterInfo &printerInfo)
+{
+    PrinterInfo info(printerInfo);
+    if (printerInfo.HasOption() && nlohmann::json::accept(std::string(printerInfo.GetOption()))) {
+        nlohmann::json option = nlohmann::json::parse(std::string(printerInfo.GetOption()));
+        if (option != nullptr && option.contains("printer-uuid") && option["printer-uuid"].is_string()) {
+            info.SetPrinterId(std::string(option["printer-uuid"]));
+            PRINT_HILOGD("Convert PrinterId with uuid");
+            return info;
+        }
+    }
+    return printerInfo;
+}
+
+std::string VendorWlanGroup::ExtractBsUniPrinterIdByPrinterInfo(const PrinterInfo &printerInfo)
+{
+    std::string uri(printerInfo.GetUri());
+    if (uri.empty()) {
+        return "";
+    }
+    auto pos_start = uri.find_first_of(VENDOR_BSUNI_URI_START);
+    auto pos_end = uri.find_last_of(VENDOR_BSUNI_URI_END);
+    if (pos_start == std::string::npos || uri.length() <= pos_start + 1 ||
+        pos_start == std::string::npos || uri.length() <= pos_start + 1) {
+        return "";
+    }
+    return uri.substr(pos_start + VENDOR_BSUNI_URI_START.length(),
+        pos_end - pos_start - VENDOR_BSUNI_URI_START.length());
 }

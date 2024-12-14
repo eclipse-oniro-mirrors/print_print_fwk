@@ -263,6 +263,9 @@ int32_t VendorManager::AddPrinterToDiscovery(const std::string &vendorName, cons
 int32_t VendorManager::UpdatePrinterToDiscovery(const std::string &vendorName, const PrinterInfo &printerInfo)
 {
     PRINT_HILOGI("UpdatePrinterToDiscovery enter");
+    if (vendorName == VENDOR_BSUNI_DRIVER && wlanGroupDriver != nullptr) {
+        return wlanGroupDriver->OnUpdatePrinterToDiscovery(vendorName, printerInfo);
+    }
     if (printServiceAbility == nullptr) {
         PRINT_HILOGW("printServiceAbility is null");
         return EXTENSION_ERROR_CALLBACK_FAIL;
