@@ -812,12 +812,24 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
         return E_SCAN_NO_PERMISSION;
     }
     SCAN_HILOGD("ScanServiceAbility GetScanOptionDesc start");
-    SCAN_HILOGI("optionIndex [%{public}d]", optionIndex);
+    SCAN_HILOGD("optionIndex [%{public}d]", optionIndex);
 
 #ifdef SANE_ENABLE
     auto scannerHandle = GetScanHandle(scannerId);
     if (scannerHandle == nullptr) {
         SCAN_HILOGE("ScanServiceAbility GetScanOptionDesc error exit");
+        return E_SCAN_INVALID_PARAMETER;
+    }
+    ScanOptionValue value;
+    int32_t index = 0;
+    value.SetScanOptionValueType(SCAN_VALUE_NUM);
+    int32_t ret = ActionGetValue(scannerHandle, value, index);
+    if (ret != E_SCAN_NONE) {
+        SCAN_HILOGD("ActionGetValue error, ret = [%{public}d]", ret);
+        return ret;
+    }
+    if (optionIndex < 0 || optionIndex >= value.GetNumValue()) {
+        SCAN_HILOGE("OptionIndex is out of range, maxIndex = [%{public}d]", value.GetNumValue());
         return E_SCAN_INVALID_PARAMETER;
     }
     const SANE_Option_Descriptor *optionDesc = sane_get_option_descriptor(scannerHandle, optionIndex);
