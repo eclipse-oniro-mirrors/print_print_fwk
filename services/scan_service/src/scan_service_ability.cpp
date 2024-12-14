@@ -339,6 +339,7 @@ int32_t ScanServiceAbility::ExitScan()
     std::lock_guard<std::mutex> autoLock(lock_);
 #ifdef SANE_ENABLE
     for (const auto& scannerHandle : scannerHandleList_) {
+        sane_cancel(scannerHandle.second);
         sane_close(scannerHandle.second);
     }
     scannerHandleList_.clear();
@@ -371,8 +372,12 @@ int32_t ScanServiceAbility::ReInitScan(int32_t &scanVersion)
     }
     SCAN_HILOGD("ScanServiceAbility ReInitScan start");
 #ifdef SANE_ENABLE
-    sane_exit();
+    for (const auto& scannerHandle : scannerHandleList_) {
+        sane_cancel(scannerHandle.second);
+        sane_close(scannerHandle.second);
+    }
     scannerHandleList_.clear();
+    sane_exit();
     g_scannerState = SCANNER_READY;
     std::queue<int32_t> empty;
     scanQueue.swap(empty);
@@ -737,6 +742,7 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
     scanTaskMap.clear();
     std::queue<int32_t> emptyQueue;
     scanQueue.swap(emptyQueue);
+    sane_cancel(scannerHandle);
     sane_close(scannerHandle);
     scannerHandleList_.erase(scannerId);
 #endif
