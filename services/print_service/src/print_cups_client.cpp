@@ -77,6 +77,7 @@ static const std::string DEFAULT_PPD_NAME = "everywhere";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
 static const std::string REMOTE_PRINTER_MAKE_MODEL = "Remote Printer";
 static const std::string BSUNI_PPD_NAME = "Brocadesoft Universal Driver";
+static const std::string LOCAL_RAW_PRINTER_PPD_NAME = "Local Raw Printer";
 static const std::string DEFAULT_USER = "default";
 static const std::string PRINTER_STATE_WAITING_COMPLETE = "cups-waiting-for-job-completed";
 static const std::string PRINTER_STATE_WIFI_NOT_CONFIGURED = "wifi-not-configured-report";
@@ -1812,6 +1813,9 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
             // 查到everywhere或remote printer驱动
             printerExist = (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != nullptr) ||
                            (strstr(makeModel, REMOTE_PRINTER_MAKE_MODEL.c_str()) != nullptr);
+        } else if (strcmp(ppdName, LOCAL_RAW_PRINTER_PPD_NAME.c_str()) == 0) {
+            // 查到ppd-name为Local Raw Printer
+            printerExist = false;
         } else {
             // 查到驱动
             if (strcmp(ppdName, BSUNI_PPD_NAME.c_str()) == 0) {
