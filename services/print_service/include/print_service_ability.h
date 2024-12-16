@@ -216,7 +216,6 @@ private:
     int32_t TryConnectPrinterByIp(const std::string &params);
     std::string RenamePrinterWhenAdded(const PrinterInfo &info);
     void ConnectIppOverUsbPrinter(const std::string &printerId);
-    bool CheckCallerIsSystemApp();
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

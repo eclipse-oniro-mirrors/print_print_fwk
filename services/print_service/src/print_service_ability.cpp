@@ -44,7 +44,6 @@
 #include "print_security_guard_manager.h"
 #include "hisys_event_util.h"
 #include "nlohmann/json.hpp"
-#include "tokenid_kit.h"
 #ifdef IPPOVERUSB_ENABLE
 #include "print_ipp_over_usb_manager.h"
 #endif // IPPOVERUSB_ENABLE
@@ -361,11 +360,7 @@ int32_t PrintServiceAbility::HandleExtensionConnectPrinter(const std::string &pr
 int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -391,10 +386,6 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
 int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -432,11 +423,7 @@ int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId)
 int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string> &extensionIds)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -481,11 +468,7 @@ bool PrintServiceAbility::DelayStartDiscovery(const std::string &extensionId)
 int32_t PrintServiceAbility::StopDiscoverPrinter()
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -553,11 +536,7 @@ int32_t PrintServiceAbility::DestroyExtension()
 int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -588,10 +567,6 @@ int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &
 int32_t PrintServiceAbility::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -614,11 +589,7 @@ int32_t PrintServiceAbility::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
 int32_t PrintServiceAbility::QueryAddedPrinter(std::vector<std::string> &printerList)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -644,11 +615,7 @@ int32_t PrintServiceAbility::QueryAddedPrinter(std::vector<std::string> &printer
 int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -677,16 +644,20 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
         if (!vendorManager.ExtractVendorName(extensionId).empty()) {
             return QueryVendorPrinterInfo(printerId, info);
         }
+#ifdef CUPS_ENABLE
         int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterInfoByPrinterId(printerId, info);
         if (ret != 0) {
             PRINT_HILOGE("cups QueryPrinterInfoByPrinterId fail, ret = %{public}d", ret);
             return E_PRINT_INVALID_PRINTER;
         }
+#endif  // CUPS_ENABLE
     }
     if (CheckIsDefaultPrinter(printerId)) {
+        PRINT_HILOGI("is default printer");
         info.SetIsDefaultPrinter(true);
     }
     if (CheckIsLastUsedPrinter(printerId)) {
+        PRINT_HILOGI("is last used printer");
         info.SetIsLastUsedPrinter(true);
     }
     return E_PRINT_NONE;
@@ -727,10 +698,6 @@ int32_t PrintServiceAbility::QueryPrinterProperties(const std::string &printerId
 int32_t PrintServiceAbility::QueryPrintJobById(std::string &printJobId, PrintJob &printJob)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1200,10 +1167,6 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
 {
     startPrintTime_ = std::chrono::high_resolution_clock::now();
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1316,10 +1279,6 @@ void PrintServiceAbility::StartPrintJobCB(const std::string &jobId, const std::s
 int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1511,10 +1470,6 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
 int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printerInfos)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1534,10 +1489,6 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
 int32_t PrintServiceAbility::RemovePrinters(const std::vector<std::string> &printerIds)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1567,10 +1518,6 @@ int32_t PrintServiceAbility::RemovePrinters(const std::vector<std::string> &prin
 int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &printerInfos)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1639,10 +1586,6 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
 int32_t PrintServiceAbility::UpdatePrinterState(const std::string &printerId, uint32_t state)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1690,10 +1633,6 @@ int32_t PrintServiceAbility::UpdatePrintJobStateOnlyForSystemApp(
     const std::string &jobId, uint32_t state, uint32_t subState)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (state != PRINT_JOB_CREATE_FILE_COMPLETED && !CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1898,10 +1837,6 @@ bool PrintServiceAbility::isEprint(const std::string &printerId)
 int32_t PrintServiceAbility::UpdateExtensionInfo(const std::string &extInfo)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1925,10 +1860,6 @@ int32_t PrintServiceAbility::UpdateExtensionInfo(const std::string &extInfo)
 int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo, std::string &previewResult)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -1978,10 +1909,6 @@ int32_t PrintServiceAbility::RequestPreview(const PrintJob &jobInfo, std::string
 int32_t PrintServiceAbility::QueryPrinterCapability(const std::string &printerId)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -2018,10 +1945,6 @@ int32_t PrintServiceAbility::QueryPrinterCapability(const std::string &printerId
 int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_t event)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -2106,19 +2029,6 @@ bool PrintServiceAbility::CheckPermission(const std::string &permissionName)
         return false;
     }
     return helper_->CheckPermission(permissionName);
-}
-
-bool PrintServiceAbility::CheckCallerIsSystemApp()
-{
-    auto callerToken = IPCSkeleton::GetCallingTokenID();
-    auto tokenType = AccessTokenKit::GetTokenTypeFlag(callerToken);
-    if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
-        tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
-        PRINT_HILOGD("tokenType check passed.");
-        return true;
-    }
-    auto accessTokenId = IPCSkeleton::GetCallingFullTokenID();
-    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenId);
 }
 
 int32_t PrintServiceAbility::RegisterPrinterCallback(const std::string &type, const sptr<IPrintCallback> &listener)
@@ -2268,14 +2178,10 @@ int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId)
 int32_t PrintServiceAbility::On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener)
 {
     ManualStart();
-    std::string permission = PERMISSION_NAME_PRINT;
+    std::string permission = PERMISSION_NAME_PRINT_JOB;
     std::string eventType = type;
-    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE) {
-        permission = PERMISSION_NAME_PRINT_JOB;
-        if (!CheckCallerIsSystemApp()) {
-            PRINT_HILOGE("Non-system applications use system APIS!");
-            return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-        }
+    if (type == PRINT_CALLBACK_ADAPTER || type == PRINTER_CHANGE_EVENT_TYPE || taskId != "") {
+        permission = PERMISSION_NAME_PRINT;
     }
     if (!CheckPermission(permission)) {
         PRINT_HILOGE("no permission to access print service");
@@ -2285,9 +2191,11 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
         PRINT_HILOGE("Invalid listener");
         return E_PRINT_INVALID_PARAMETER;
     }
+
     if (type == PRINT_CALLBACK_ADAPTER) {
         eventType = type;
-    } else if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE) {
+    }
+    if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE) {
         int32_t userId = GetCurrentUserId();
         int32_t callerPid = IPCSkeleton::GetCallingPid();
         eventType = PrintUtils::GetEventTypeWithToken(userId, callerPid, type);
@@ -2299,6 +2207,7 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
         PRINT_HILOGE("Invalid event type");
         return E_PRINT_INVALID_PARAMETER;
     }
+
     PRINT_HILOGD("PrintServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     constexpr int32_t MAX_LISTENERS_COUNT = 1000;
@@ -2314,28 +2223,20 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
     }
     HandlePrinterStateChangeRegister(eventType);
     HandlePrinterChangeRegister(eventType);
+    PRINT_HILOGD("PrintServiceAbility::On end.");
     return E_PRINT_NONE;
 }
 
 int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &type)
 {
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
-    std::string permission = PERMISSION_NAME_PRINT;
-    if (type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE || type == PRINTER_EVENT_TYPE) {
-        permission = PERMISSION_NAME_PRINT_JOB;
-        if (!CheckCallerIsSystemApp()) {
-            PRINT_HILOGE("Non-system applications use system APIS!");
-            return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-        }
-    }
+    std::string permission = PERMISSION_NAME_PRINT_JOB;
     std::string eventType = type;
     if (taskId != "") {
+        permission = PERMISSION_NAME_PRINT;
         eventType = PrintUtils::GetTaskEventId(taskId, type);
     }
     if (type == PRINTER_CHANGE_EVENT_TYPE||type == PRINTER_EVENT_TYPE) {
+        permission = PERMISSION_NAME_PRINT;
         int32_t userId = GetCurrentUserId();
         int32_t callerPid = IPCSkeleton::GetCallingPid();
         eventType = PrintUtils::GetEventTypeWithToken(userId, callerPid, type);
@@ -2581,10 +2482,6 @@ int32_t PrintServiceAbility::StartGetPrintFile(const std::string &jobId, const P
     const uint32_t fd)
 {
     ManualStart();
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -2613,11 +2510,8 @@ int32_t PrintServiceAbility::StartGetPrintFile(const std::string &jobId, const P
 
 int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const std::string &type)
 {
-    if (!CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        return E_PRINT_ILLEGAL_USE_OF_SYSTEM_API;
-    }
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    std::string permission = PERMISSION_NAME_PRINT_JOB;
+    if (!CheckPermission(permission)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -2908,7 +2802,6 @@ bool PrintServiceAbility::CheckIsDefaultPrinter(const std::string &printerId)
         return false;
     }
     if (printerId != userData->GetDefaultPrinter()) {
-        PRINT_HILOGE("is not default printer");
         return false;
     }
     return true;
@@ -2923,7 +2816,6 @@ bool PrintServiceAbility::CheckIsLastUsedPrinter(const std::string &printerId)
         return false;
     }
     if (printerId != userData->GetLastUsedPrinter()) {
-        PRINT_HILOGE("is not last used printer.");
         return false;
     }
     return true;
