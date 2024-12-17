@@ -60,6 +60,7 @@ private:
     static bool IsValidApplicationEvent(uint32_t event);
     static bool IsValidDefaultPrinterType(uint32_t type);
     static void NapiThrowError(napi_env env, int32_t errCode);
+    static bool CheckCallerIsSystemApp();
 
 private:
     struct InnerPrintContext : public PrintAsyncCall::Context {

@@ -48,6 +48,7 @@ private:
     static bool IsValidPrinterState(uint32_t state);
     static bool IsValidPrintJobState(uint32_t state);
     static bool IsValidPrintJobSubState(uint32_t subState);
+    static void NapiThrowError(napi_env env, const int32_t errCode);
 
 private:
     struct NapiPrintExtContext : public PrintAsyncCall::Context {

@@ -46,6 +46,7 @@ private:
     bool OnStartPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnCancelPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnUpdatePrinterState(MessageParcel &data, MessageParcel &reply);
+    bool OnUpdatePrintJobStateForNormalApp(MessageParcel &data, MessageParcel &reply);
     bool OnUpdatePrintJobStateOnlyForSystemApp(MessageParcel &data, MessageParcel &reply);
     bool OnUpdateExtensionInfo(MessageParcel &data, MessageParcel &reply);
     bool OnRequestPreview(MessageParcel &data, MessageParcel &reply);

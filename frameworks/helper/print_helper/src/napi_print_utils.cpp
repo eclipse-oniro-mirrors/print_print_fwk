@@ -16,10 +16,12 @@
 #include "napi_print_utils.h"
 
 #include "ability.h"
+#include "accesstoken_kit.h"
 #include "napi_base_context.h"
 #include "print_constant.h"
 #include "print_log.h"
 #include "securec.h"
+#include "tokenid_kit.h"
 
 namespace OHOS::Print {
 static constexpr const int MAX_STRING_LENGTH = 65536;
@@ -353,5 +355,18 @@ std::string NapiPrintUtils::GetPrintErrorMsg(int32_t errorCode)
         return msg->second;
     }
     return "";
+}
+
+bool NapiPrintUtils::CheckCallerIsSystemApp()
+{
+    auto callerToken = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        PRINT_HILOGD("tokenType check passed.");
+        return true;
+    }
+    auto accessTokenId = IPCSkeleton::GetCallingFullTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenId);
 }
 }  // namespace OHOS::Print
