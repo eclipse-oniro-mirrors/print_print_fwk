@@ -31,15 +31,23 @@ public:
     int32_t OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo) override;
     int32_t OnPrinterRemoved(const std::string &vendorName, const std::string &printerId) override;
     bool IsGroupDriver(const std::string &bothPrinterId) override;
+    bool ConvertGroupDriver(std::string &printerId, std::string &vendorName) override;
     std::string ConvertGroupGlobalPrinterId(const std::string &bothPrinterId) override;
+    int32_t OnUpdatePrinterToDiscovery(const std::string &vendorName, const PrinterInfo &printerInfo) override;
 
 private:
     bool IsBsunidriverSupport(const std::string &printerId);
     void RemovePrinterVendorGroupById(const std::string &printerId);
+    std::string ExtractBsUniPrinterIdByPrinterInfo(const PrinterInfo &rinterInfo);
+    void QueryBsUniPrinterIdByUuidPrinterId(std::string &bsUniPrinterId);
+    void UpdateMappedPrinterId(const std::string &bsUniPrinterId, const std::string printerId);
+    PrinterInfo ConvertPrinterInfoId(const PrinterInfo &priterInfo);
 
 private:
     VendorManager* parentVendorManager = nullptr;
     std::map<std::string, std::string> printerVendorGroupList_;
+    std::map<std::string, std::string> printerIdToUuidMap_;
+    std::mutex uuidMapMutex;
 };
 }  // namespace Print
 }  // namespace OHOS

@@ -27,6 +27,9 @@ public:
     virtual int32_t OnPrinterRemoved(const std::string &vendorName, const std::string &printerId);
     virtual bool IsGroupDriver(const std::string &bothPrinterId);
     virtual std::string ConvertGroupGlobalPrinterId(const std::string &bothPrinterId);
+    virtual bool ConvertGroupDriver(std::string &printerId, std::string &vendorName) = 0;
+    virtual int32_t OnUpdatePrinterToDiscovery(const std::string &vendorName, const PrinterInfo &printerInfo) = 0;
+
 private:
 };
 }  // namespace Print
