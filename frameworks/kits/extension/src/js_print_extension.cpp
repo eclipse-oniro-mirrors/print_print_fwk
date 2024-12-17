@@ -49,7 +49,18 @@ JsPrintExtension *JsPrintExtension::Create(const std::unique_ptr<Runtime> &runti
 
 JsPrintExtension::JsPrintExtension(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime),
     extensionId_("") {}
-JsPrintExtension::~JsPrintExtension() = default;
+JsPrintExtension::~JsPrintExtension()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    if (jsExtension_ != nullptr) {
+        jsExtension_ = nullptr;
+    }
+    if (jsObj_) {
+        jsRuntime_.FreeNativeReference(std::move(jsObj_));
+    }
+    PRINT_HILOGI("JsPrintExtension destroyed");
+}
+
 
 void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
     const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
