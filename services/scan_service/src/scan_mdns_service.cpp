@@ -49,6 +49,11 @@ std::map<std::string, sptr<ScanMDnsDiscoveryObserver>> ScanMdnsService::discover
 bool ScanMdnsService::isListening_ = false;
 std::mutex ScanMdnsService::discoveryCallBackPtrsLock_;
 
+void ScanMdnsService::InsertIpToScannerInfo(const std::string& ip, ScanDeviceInfoTCP& scanDeviceInfoTCP)
+{
+    g_ipToScannerInfo.insert(std::make_pair(ip, scanDeviceInfoTCP));
+}
+
 bool ScanMdnsService::OnStartDiscoverService()
 {
     if (isListening_) {

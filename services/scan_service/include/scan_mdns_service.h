@@ -75,6 +75,7 @@ public:
 
 class ScanMdnsService {
 public:
+    static void InsertIpToScannerInfo(const std::string& ip, ScanDeviceInfoTCP& scanDeviceInfoTCP);
     static bool OnStartDiscoverService();
     static bool OnStopDiscoverService();
     static bool FindNetScannerInfoByIp(const std::string& ip, ScanDeviceInfoTCP& netScannerInfo);
