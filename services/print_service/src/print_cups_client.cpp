@@ -1816,17 +1816,15 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         } else if (strcmp(ppdName, LOCAL_RAW_PRINTER_PPD_NAME.c_str()) == 0) {
             // 查到ppd-name为Local Raw Printer
             printerExist = false;
+        } else if (strstr(makeModel, LOCAL_RAW_PRINTER_PPD_NAME.c_str()) != nullptr) {
+            printerExist = false;
+            PRINT_HILOGI("Printer makeModel is Local Raw Printer");
         } else {
-            // 查到驱动
-            if (strcmp(ppdName, BSUNI_PPD_NAME.c_str()) == 0) {
-                printerExist = (strstr(makeModel, BSUNI_PPD_NAME.c_str()) != nullptr);
-            } else {
-                printerExist = !(strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != nullptr);
-            }
-            if (!printerExist) {
-                // 私有驱动已卸载，需要先删除打印机再添加，不然下发任务找不到驱动
-                DeleteCupsPrinter(printerName);
-            }
+            printerExist = true;
+        }
+        if (!printerExist) {
+            // 驱动异常，标识打印机删除
+            DeleteCupsPrinter(printerName);
         }
         printAbility_->FreeDests(1, dest);
     }

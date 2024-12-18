@@ -148,6 +148,24 @@ static napi_value NapiCreateQualityEnum(napi_env env)
     return object;
 }
 
+static napi_value NapiCreateOrientationEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
+    SetEnumProperty(env, object, "ORIENTATION_MODE_PORTRAIT", static_cast<int32_t>(PRINT_ORIENTATION_MODE_PORTRAIT));
+    SetEnumProperty(env, object, "ORIENTATION_MODE_LANDSCAPE", static_cast<int32_t>(PRINT_ORIENTATION_MODE_LANDSCAPE));
+    SetEnumProperty(env, object, "ORIENTATION_MODE_REVERSE_LANDSCAPE",
+                    static_cast<int32_t>(PRINT_ORIENTATION_MODE_REVERSE_LANDSCAPE));
+    SetEnumProperty(env, object, "ORIENTATION_MODE_REVERSE_PORTRAIT",
+                    static_cast<int32_t>(PRINT_ORIENTATION_MODE_REVERSE_PORTRAIT));
+    SetEnumProperty(env, object, "ORIENTATION_MODE_NONE", static_cast<int32_t>(PRINT_ORIENTATION_MODE_NONE));
+    return object;
+}
+
 static napi_value NapiCreatePageTypeEnum(napi_env env)
 {
     napi_value object = nullptr;
@@ -377,6 +395,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY("PrintColorMode", NapiCreateColorModeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintDuplexMode", NapiCreateDuplexModeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintQuality", NapiCreateQualityEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintOrientationMode", NapiCreateOrientationEnum(env)),
         PRINT_NAPI_PROPERTY("PrintPageType", NapiCreatePageTypeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintDocumentAdapterState", NapiCreateDocumentAdapterStateEnum(env)),
         PRINT_NAPI_PROPERTY("PrintFileCreationState", NapiCreateFileCreationStateEnum(env)),
