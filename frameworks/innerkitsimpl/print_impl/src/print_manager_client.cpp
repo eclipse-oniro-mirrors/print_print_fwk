@@ -217,6 +217,9 @@ int32_t PrintManagerClient::AddPrinters(const std::vector<PrinterInfo> &printerI
         ret = printServiceProxy_->AddPrinters(printerInfos);
         PRINT_HILOGD("PrintManagerClient AddPrinters out ret = [%{public}d].", ret);
     }
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("Failed to query printerList");
+    }
     return ret;
 }
 
@@ -252,6 +255,19 @@ int32_t PrintManagerClient::UpdatePrinterState(const std::string &printerId, uin
     if (LoadServer() && GetPrintServiceProxy()) {
         ret = printServiceProxy_->UpdatePrinterState(printerId, state);
         PRINT_HILOGD("PrintManagerClient UpdatePrinterState out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::UpdatePrintJobStateForNormalApp(
+    const std::string &jobId, uint32_t state, uint32_t subState)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGI("PrintManagerClient UpdatePrintJobStateForNormalApp start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->UpdatePrintJobStateForNormalApp(jobId, state, subState);
+        PRINT_HILOGI("PrintManagerClient UpdatePrintJobStateForNormalApp out ret = [%{public}d].", ret);
     }
     return ret;
 }

@@ -644,20 +644,16 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
         if (!vendorManager.ExtractVendorName(extensionId).empty()) {
             return QueryVendorPrinterInfo(printerId, info);
         }
-#ifdef CUPS_ENABLE
         int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterInfoByPrinterId(printerId, info);
         if (ret != 0) {
             PRINT_HILOGE("cups QueryPrinterInfoByPrinterId fail, ret = %{public}d", ret);
             return E_PRINT_INVALID_PRINTER;
         }
-#endif  // CUPS_ENABLE
     }
     if (CheckIsDefaultPrinter(printerId)) {
-        PRINT_HILOGI("is default printer");
         info.SetIsDefaultPrinter(true);
     }
     if (CheckIsLastUsedPrinter(printerId)) {
-        PRINT_HILOGI("is last used printer");
         info.SetIsLastUsedPrinter(true);
     }
     return E_PRINT_NONE;
@@ -1629,11 +1625,22 @@ bool PrintServiceAbility::checkJobState(uint32_t state, uint32_t subState)
     return true;
 }
 
+int32_t PrintServiceAbility::UpdatePrintJobStateForNormalApp(
+    const std::string &jobId, uint32_t state, uint32_t subState)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    return UpdatePrintJobState(jobId, state, subState);
+}
+
 int32_t PrintServiceAbility::UpdatePrintJobStateOnlyForSystemApp(
     const std::string &jobId, uint32_t state, uint32_t subState)
 {
     ManualStart();
-    if (state != PRINT_JOB_CREATE_FILE_COMPLETED && !CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -2178,10 +2185,10 @@ int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId)
 int32_t PrintServiceAbility::On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener)
 {
     ManualStart();
-    std::string permission = PERMISSION_NAME_PRINT_JOB;
+    std::string permission = PERMISSION_NAME_PRINT;
     std::string eventType = type;
-    if (type == PRINT_CALLBACK_ADAPTER || type == PRINTER_CHANGE_EVENT_TYPE || taskId != "") {
-        permission = PERMISSION_NAME_PRINT;
+    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE) {
+        permission = PERMISSION_NAME_PRINT_JOB;
     }
     if (!CheckPermission(permission)) {
         PRINT_HILOGE("no permission to access print service");
@@ -2191,11 +2198,9 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
         PRINT_HILOGE("Invalid listener");
         return E_PRINT_INVALID_PARAMETER;
     }
-
     if (type == PRINT_CALLBACK_ADAPTER) {
         eventType = type;
-    }
-    if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE) {
+    } else if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE) {
         int32_t userId = GetCurrentUserId();
         int32_t callerPid = IPCSkeleton::GetCallingPid();
         eventType = PrintUtils::GetEventTypeWithToken(userId, callerPid, type);
@@ -2207,7 +2212,6 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
         PRINT_HILOGE("Invalid event type");
         return E_PRINT_INVALID_PARAMETER;
     }
-
     PRINT_HILOGD("PrintServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     constexpr int32_t MAX_LISTENERS_COUNT = 1000;
@@ -2223,20 +2227,20 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
     }
     HandlePrinterStateChangeRegister(eventType);
     HandlePrinterChangeRegister(eventType);
-    PRINT_HILOGD("PrintServiceAbility::On end.");
     return E_PRINT_NONE;
 }
 
 int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &type)
 {
-    std::string permission = PERMISSION_NAME_PRINT_JOB;
+    std::string permission = PERMISSION_NAME_PRINT;
+    if (type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE || type == PRINTER_EVENT_TYPE) {
+        permission = PERMISSION_NAME_PRINT_JOB;
+    }
     std::string eventType = type;
     if (taskId != "") {
-        permission = PERMISSION_NAME_PRINT;
         eventType = PrintUtils::GetTaskEventId(taskId, type);
     }
     if (type == PRINTER_CHANGE_EVENT_TYPE||type == PRINTER_EVENT_TYPE) {
-        permission = PERMISSION_NAME_PRINT;
         int32_t userId = GetCurrentUserId();
         int32_t callerPid = IPCSkeleton::GetCallingPid();
         eventType = PrintUtils::GetEventTypeWithToken(userId, callerPid, type);
@@ -2510,8 +2514,7 @@ int32_t PrintServiceAbility::StartGetPrintFile(const std::string &jobId, const P
 
 int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const std::string &type)
 {
-    std::string permission = PERMISSION_NAME_PRINT_JOB;
-    if (!CheckPermission(permission)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
@@ -2802,6 +2805,7 @@ bool PrintServiceAbility::CheckIsDefaultPrinter(const std::string &printerId)
         return false;
     }
     if (printerId != userData->GetDefaultPrinter()) {
+        PRINT_HILOGE("is not default printer");
         return false;
     }
     return true;
@@ -2816,6 +2820,7 @@ bool PrintServiceAbility::CheckIsLastUsedPrinter(const std::string &printerId)
         return false;
     }
     if (printerId != userData->GetLastUsedPrinter()) {
+        PRINT_HILOGE("is not last used printer.");
         return false;
     }
     return true;

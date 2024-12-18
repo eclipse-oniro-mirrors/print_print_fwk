@@ -339,6 +339,28 @@ int32_t PrintServiceProxy::UpdatePrinterState(const std::string &printerId, uint
     return ret;
 }
 
+int32_t PrintServiceProxy::UpdatePrintJobStateForNormalApp(
+    const std::string &jobId, uint32_t state, uint32_t subState)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(jobId);
+    data.WriteUint32(state);
+    data.WriteUint32(subState);
+    PRINT_HILOGI("PrintServiceProxy UpdatePrintJobStateForNormalApp started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy UpdatePrintJobStateForNormalApp remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(
+        OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTJOBSTATE_FORNORMALAPP, data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGI("PrintServiceProxy UpdatePrintJobStateForNormalApp out. ret = [%{public}d]", ret);
+    return ret;
+}
+
 int32_t PrintServiceProxy::UpdatePrintJobStateOnlyForSystemApp(
     const std::string &jobId, uint32_t state, uint32_t subState)
 {
@@ -355,7 +377,7 @@ int32_t PrintServiceProxy::UpdatePrintJobStateOnlyForSystemApp(
         return E_PRINT_RPC_FAILURE;
     }
     int32_t ret = remote->SendRequest(
-        OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTJOBSTATE, data, reply, option);
+        OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTJOBSTATE_FORSYSTEMAPP, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy UpdatePrintJobStateOnlyForSystemApp out. ret = [%{public}d]", ret);
     return ret;

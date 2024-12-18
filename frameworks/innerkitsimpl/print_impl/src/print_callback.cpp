@@ -245,7 +245,7 @@ static void PrintAdapterAfterCallFun(uv_work_t *work, int status)
             std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, args[0]);
             uint32_t replyState = NapiPrintUtils::GetUint32FromValue(env, args[1]);
 
-            PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(
+            PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(
                 jobId, PRINT_JOB_CREATE_FILE_COMPLETED, replyState);
             PRINT_HILOGI("from js return jobId:%{public}s, replyState:%{public}d", jobId.c_str(), replyState);
             return nullptr;
@@ -426,7 +426,7 @@ bool PrintCallback::OnCallbackAdapterLayout(
         PRINT_HILOGI("OnCallbackAdapterLayout run c++");
         adapter_->onStartLayoutWrite(jobId, oldAttrs, newAttrs, fd, [](std::string jobId, uint32_t state) {
             PRINT_HILOGI("onStartLayoutWrite write over, jobId:%{public}s state: %{public}d", jobId.c_str(), state);
-            PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(
+            PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(
                 jobId, PRINT_JOB_CREATE_FILE_COMPLETED, state);
         });
         return true;
