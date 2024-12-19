@@ -34,6 +34,10 @@ public:
     bool ConvertGroupDriver(std::string &printerId, std::string &vendorName) override;
     std::string ConvertGroupGlobalPrinterId(const std::string &bothPrinterId) override;
     int32_t OnUpdatePrinterToDiscovery(const std::string &vendorName, const PrinterInfo &printerInfo) override;
+    bool IsConnectingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) override;
+    void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
+    bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
+                                     const std::string &ppdData) override;
 
 private:
     bool IsBsunidriverSupport(const std::string &printerId);

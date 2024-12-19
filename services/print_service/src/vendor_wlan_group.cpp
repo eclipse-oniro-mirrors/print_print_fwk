@@ -21,6 +21,7 @@ using namespace OHOS::Print;
 namespace {
     const std::string VENDOR_BSUNI_URI_START = "://";
     const std::string VENDOR_BSUNI_URI_END = ":";
+    const std::string VENDOR_CONVERTED_PRINTERID = "uuid";
 }
 
 VendorWlanGroup::VendorWlanGroup(VendorManager *vendorManager) : parentVendorManager(vendorManager) {}
@@ -128,8 +129,50 @@ int32_t VendorWlanGroup::OnPrinterRemoved(const std::string &vendorName, const s
     return vendorManager->RemovePrinterFromDiscovery(GetVendorName(), id);
 }
 
+bool VendorWlanGroup::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri)
+{
+    if (vendorManager == nullptr) {
+        PRINT_HILOGE("VendorManager is null.");
+        return false;
+    }
+    std::string printerId(VendorManager::ExtractPrinterId(globalPrinterIdOrIp));
+    QueryBsUniPrinterIdByUuidPrinterId(printerId);
+    printerId = GetGlobalPrinterId(printerId);
+    return vendorManager->IsConnectingPrinter(printerId, uri);
+}
+
+void VendorWlanGroup::SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp)
+{
+    if (vendorManager == nullptr) {
+        PRINT_HILOGE("VendorManager is null.");
+        return;
+    }
+    std::string printerId(VendorManager::ExtractPrinterId(globalPrinterIdOrIp));
+    QueryBsUniPrinterIdByUuidPrinterId(printerId);
+    printerId = GetGlobalPrinterId(printerId);
+    vendorManager->SetConnectingPrinter(method, printerId);
+}
+
+bool VendorWlanGroup::OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
+                                          const std::string &ppdData)
+{
+    if (vendorManager == nullptr) {
+        PRINT_HILOGE("VendorManager is null.");
+        return false;
+    }
+    std::string id(printerId);
+    QueryBsUniPrinterIdByUuidPrinterId(id);
+    id = GetGlobalPrinterId(id);
+    return vendorManager->OnPrinterPpdQueried(GetVendorName(), id, ppdData);
+}
+
+
 bool VendorWlanGroup::IsGroupDriver(const std::string &bothPrinterId)
 {
+    if (bothPrinterId.find(VENDOR_CONVERTED_PRINTERID) != std::string::npos) {
+        PRINT_HILOGD("printerId has be converted whit uuid, is group driver!.");
+        return true;
+    }
     std::string printerId(VendorManager::ExtractPrinterId(bothPrinterId));
     auto iter = printerVendorGroupList_.find(printerId);
     return (iter != printerVendorGroupList_.end() && !iter->second.empty());
@@ -205,6 +248,7 @@ PrinterInfo VendorWlanGroup::ConvertPrinterInfoId(const PrinterInfo &printerInfo
         nlohmann::json option = nlohmann::json::parse(std::string(printerInfo.GetOption()));
         if (option != nullptr && option.contains("printer-uuid") && option["printer-uuid"].is_string()) {
             info.SetPrinterId(std::string(option["printer-uuid"]));
+            UpdateMappedPrinterId(printerInfo.GetPrinterId(), std::string(option["printer-uuid"]));
             PRINT_HILOGD("Convert PrinterId with uuid");
             return info;
         }
