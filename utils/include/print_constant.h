@@ -260,8 +260,8 @@ static std::map<PrintErrorCode, const std::string> PRINT_ERROR_MSG_MAP {
 };
 
 const std::string VENDOR_WLAN_GROUP = "driver.wlan.group";
-const std::string VENDOR_BSUNI_DRIVER = "driver.bsuni.driver";
-const std::string VENDOR_PPD_DRIVER = "driver.ppd.driver";
+const std::string VENDOR_BSUNI_DRIVER = "driver.bsuni";
+const std::string VENDOR_PPD_DRIVER = "driver.ppd";
 const std::string VENDOR_IPP_EVERYWHERE = "driver.ipp.everywhere";
 } // namespace OHOS::Print
 #endif // PRINT_CONSTANT_H

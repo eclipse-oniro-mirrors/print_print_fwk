@@ -346,12 +346,14 @@ bool VendorManager::OnPrinterPpdQueried(const std::string &vendorName, const std
                                         const std::string &ppdData)
 {
     PRINT_HILOGI("OnPrinterPpdQueried enter");
+    if (vendorName == VENDOR_BSUNI_DRIVER && wlanGroupDriver != nullptr) {
+        return wlanGroupDriver->OnPrinterPpdQueried(vendorName, printerId, ppdData);
+    }
     if (printServiceAbility == nullptr) {
         PRINT_HILOGW("printServiceAbility is null");
         return false;
     }
-    auto targetVendorName = IsWlanGroupDriver(printerId) ? VENDOR_WLAN_GROUP : vendorName;
-    std::string globalVendorName = GetGlobalVendorName(targetVendorName);
+    std::string globalVendorName = GetGlobalVendorName(vendorName);
     std::string globalPrinterId = GetGlobalPrinterId(globalVendorName, printerId);
     PRINT_HILOGD("global printer id %{public}s", globalPrinterId.c_str());
     if (!IsConnectingPrinter(globalPrinterId, "")) {
@@ -484,7 +486,7 @@ bool VendorManager::IsPrivatePpdDriver(const std::string &vendorName, const Prin
 
 bool VendorManager::IsPrivatePpdDriver(const std::string &vendorName)
 {
-    return vendorName == "driver.ppd";
+    return vendorName == VENDOR_PPD_DRIVER;
 }
 
 bool VendorManager::MonitorPrinterStatus(const std::string &globalPrinterId, bool on)
@@ -508,14 +510,15 @@ bool VendorManager::MonitorPrinterStatus(const std::string &globalPrinterId, boo
     return vendorDriver->MonitorPrinterStatus(printerId, on);
 }
 
-bool VendorManager::IsConnectingPrinter(const std::string &glpbalPrinterId, const std::string &uri)
+bool VendorManager::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri)
 {
-    std::string printerId = ExtractPrinterId(glpbalPrinterId);
-    std::string id = GetGlobalPrinterId(GetGlobalVendorName(VENDOR_WLAN_GROUP), printerId);
+    if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER) != std::string::npos && wlanGroupDriver != nullptr) {
+        return wlanGroupDriver->IsConnectingPrinter(globalPrinterIdOrIp, uri);
+    }
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     if (isConnecting && !connectingPrinter.empty()) {
         if (connectingMethod == ID_AUTO) {
-            return id == connectingPrinter;
+            return globalPrinterIdOrIp == connectingPrinter;
         } else {
             return uri.find(connectingPrinter) != std::string::npos;
         }
@@ -523,15 +526,15 @@ bool VendorManager::IsConnectingPrinter(const std::string &glpbalPrinterId, cons
     return false;
 }
 
-void VendorManager::SetConnectingPrinter(ConnectMethod method, const std::string &printer)
+void VendorManager::SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp)
 {
-    std::string printerId(printer);
-    if (wlanGroupDriver != nullptr && wlanGroupDriver->IsGroupDriver(printer)) {
-        printerId = wlanGroupDriver->ConvertGroupGlobalPrinterId(printer);
+    if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER) != std::string::npos && wlanGroupDriver != nullptr) {
+        wlanGroupDriver->SetConnectingPrinter(method, globalPrinterIdOrIp);
+        return;
     }
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     connectingMethod = method;
-    connectingPrinter = printerId;
+    connectingPrinter = globalPrinterIdOrIp;
     isConnecting = true;
 }
 

@@ -421,6 +421,9 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
         option["printerName"] = name;
         option["printerUri"] = std::string(discoveryItem->printerUri);
         option["make"] = std::string(discoveryItem->makeAndModel);
+        if (discoveryItem->printerUuid != nullptr) {
+            option["printer-uuid"] = std::string(discoveryItem->printerUuid);
+        }
         if (discoveryItem->detailInfo != nullptr && nlohmann::json::accept(std::string(discoveryItem->detailInfo))) {
             nlohmann::json detailInfo = nlohmann::json::parse(std::string(discoveryItem->detailInfo));
             if (!detailInfo.is_null() && detailInfo.contains("bsunidriver_support") &&

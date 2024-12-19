@@ -77,8 +77,8 @@ public:
     bool MonitorPrinterStatus(const std::string &globalPrinterId, bool on);
     void StartStatusMonitor();
     void StopStatusMonitor();
-    bool IsConnectingPrinter(const std::string &globalPrinterId, const std::string &uri) override;
-    void SetConnectingPrinter(ConnectMethod method, const std::string &printer) override;
+    bool IsConnectingPrinter(const std::string &globalPrinterIdOrIP, const std::string &uri) override;
+    void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIP) override;
     void ClearConnectingPrinter() override;
     bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) override;
     bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
