@@ -28,9 +28,13 @@ public:
     std::string orientation;
     std::string duplex;
     std::string quality;
+    std::string mediaType;
+    bool hasMargin;
     PreferenceSetting() {};
-    PreferenceSetting(std::string pagesizeId, std::string orientation, std::string duplex, std::string quality)
-        : pagesizeId(pagesizeId), orientation(orientation), duplex(duplex), quality(quality) {}
+    PreferenceSetting(std::string pagesizeId, std::string orientation, std::string duplex, std::string quality,
+        std::string mediaType, bool hasMargin)
+        : pagesizeId(pagesizeId), orientation(orientation), duplex(duplex), quality(quality),
+        mediaType(mediaType), hasMargin(hasMargin) {}
 
     static PreferenceSetting BuildPreferenceSettingFromJson(const json& printerAttr)
     {
@@ -47,13 +51,25 @@ public:
         if (printerAttr.contains("quality") && printerAttr["quality"].is_string()) {
             preferenceSetting.quality = printerAttr.at("quality").get<std::string>();
         }
+        if (printerAttr.contains("mediaType") && printerAttr["mediaType"].is_string()) {
+            preferenceSetting.mediaType = printerAttr.at("mediaType").get<std::string>();
+        }
+        if (printerAttr.contains("hasMargin") && printerAttr["hasMargin"].is_boolean()) {
+            preferenceSetting.hasMargin = printerAttr.at("hasMargin").get<bool>();
+        }
         return preferenceSetting;
     }
 
     json BuildPreferenceSettingJson() const
     {
-        return json{{"pagesizeId", pagesizeId}, {"orientation", orientation},
-            {"duplex", duplex}, {"quality", quality}};
+        return json{
+            {"pagesizeId", pagesizeId},
+            {"orientation", orientation},
+            {"duplex", duplex},
+            {"quality", quality},
+            {"mediaType", mediaType},
+            {"hasMargin", hasMargin}
+        };
     }
     ~PreferenceSetting() {};
 };
@@ -64,14 +80,15 @@ public:
     std::vector<std::string> orientation;
     std::vector<std::string> duplex;
     std::vector<std::string> quality;
+    std::vector<std::string> mediaType;
     PreferenceSetting defaultSetting;
     PreferenceSetting setting;
     PrinterPreference() {};
     PrinterPreference(std::vector<std::string> pagesizeId, std::vector<std::string> orientation,
-        std::vector<std::string> duplex, std::vector<std::string> quality,
+        std::vector<std::string> duplex, std::vector<std::string> quality, std::vector<std::string> mediaType,
         PreferenceSetting defaultSetting, PreferenceSetting setting)
         : pagesizeId(pagesizeId), orientation(orientation), duplex(duplex), quality(quality),
-          defaultSetting(defaultSetting), setting(setting) {}
+          mediaType(mediaType), defaultSetting(defaultSetting), setting(setting) {}
 
     static void GetArrayFromJson(const json& value, std::vector<std::string> &target, const std::string& key)
     {
@@ -97,6 +114,7 @@ public:
         GetArrayFromJson(printerAttrs, printerPreference.orientation, "orientation");
         GetArrayFromJson(printerAttrs, printerPreference.duplex, "duplex");
         GetArrayFromJson(printerAttrs, printerPreference.quality, "quality");
+        GetArrayFromJson(printerAttrs, printerPreference.mediaType, "mediaType");
         if (printerAttrs.contains("defaultSetting") && printerAttrs["defaultSetting"].is_object()) {
             printerPreference.defaultSetting =
                 PreferenceSetting::BuildPreferenceSettingFromJson(printerAttrs.at("defaultSetting"));
@@ -114,6 +132,7 @@ public:
             {"orientation", orientation},
             {"duplex", duplex},
             {"quality", quality},
+            {"mediaType", mediaType},
             {"defaultSetting", defaultSetting.BuildPreferenceSettingJson()},
             {"setting", setting.BuildPreferenceSettingJson()}
         };
