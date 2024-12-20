@@ -800,6 +800,10 @@ void PrintServiceAbility::BuildPrinterPreferenceByDefault(nlohmann::json& capOpt
     if (capOpt.contains("print-quality-default") && capOpt["print-quality-default"].is_string()) {
         printerDefaultAttr.quality = capOpt["print-quality-default"].get<std::string>();
     }
+    if (capOpt.contains("media-type-default") && capOpt["media-type-default"].is_string()) {
+        printerDefaultAttr.mediaType = capOpt["media-type-default"].get<std::string>();
+    }
+    printerDefaultAttr.hasMargin = true;
 }
 
 void PrintServiceAbility::BuildPrinterPreferenceByOption(std::string& key, std::string& supportedOpts,
@@ -856,6 +860,12 @@ int32_t PrintServiceAbility::BuildPrinterPreference(PrinterCapability &cap, Prin
     if (capOpt.contains("print-quality-supported") && capOpt["print-quality-supported"].is_string()) {
         std::string supportedQualityOpts = capOpt["print-quality-supported"].get<std::string>();
         BuildPrinterPreferenceByOption(key, supportedQualityOpts, printPreference.quality);
+    }
+
+    std::vector<std::string> supportedMediaTypes;
+    cap.GetSupportedMediaType(supportedMediaTypes);
+    if (supportedMediaTypes.size() > 0) {
+        printPreference.mediaType = supportedMediaTypes;
     }
 
     BuildPrinterPreferenceByDefault(capOpt, printPreference.defaultSetting);
@@ -1083,10 +1093,14 @@ bool PrintServiceAbility::WriteEprinterPreference(const std::string &printerId, 
         supportedQualityStr.push_back(std::to_string(item));
     }
 
+    std::vector<std::string> supportedMediaTypeStr;
+    printerCaps.GetSupportedMediaType(supportedMediaTypeStr);
+
     printerPreference["pagesizeId"] = supportedPageSizeStr;
     printerPreference["orientation"] = supportedOrientationStr;
     printerPreference["duplex"] = supportedDuplexModeStr;
     printerPreference["quality"] = supportedQualityStr;
+    printerPreference["mediaType"] = supportedMediaTypeStr;
     PreferenceSetting preferenceSetting;
     printerPreference["defaultSetting"] = preferenceSetting.BuildPreferenceSettingJson();
     printerPreference["setting"] = preferenceSetting.BuildPreferenceSettingJson();
