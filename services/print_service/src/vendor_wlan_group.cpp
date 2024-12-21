@@ -162,7 +162,6 @@ bool VendorWlanGroup::OnPrinterPpdQueried(const std::string &vendorName, const s
     }
     std::string id(printerId);
     QueryBsUniPrinterIdByUuidPrinterId(id);
-    id = GetGlobalPrinterId(id);
     return vendorManager->OnPrinterPpdQueried(GetVendorName(), id, ppdData);
 }
 
