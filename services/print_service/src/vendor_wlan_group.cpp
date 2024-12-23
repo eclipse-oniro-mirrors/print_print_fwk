@@ -16,15 +16,20 @@
 #include "vendor_wlan_group.h"
 #include "print_log.h"
 #include "print_utils.h"
+#include "file_ex.h"
 
 using namespace OHOS::Print;
 namespace {
     const std::string VENDOR_BSUNI_URI_START = "://";
     const std::string VENDOR_BSUNI_URI_END = ":";
     const std::string VENDOR_CONVERTED_PRINTERID = "uuid";
+    const std::string VENDOR_BSUNI_GS_PATH = "/system/bin/uni_print_driver/ghostscript/bin/gs";
 }
 
-VendorWlanGroup::VendorWlanGroup(VendorManager *vendorManager) : parentVendorManager(vendorManager) {}
+VendorWlanGroup::VendorWlanGroup(VendorManager *vendorManager) : parentVendorManager(vendorManager)
+{
+    hasGs = FileExists(VENDOR_BSUNI_GS_PATH);
+}
 
 std::string VendorWlanGroup::GetVendorName()
 {
@@ -199,15 +204,21 @@ bool VendorWlanGroup::IsBsunidriverSupport(const std::string &printerId)
     if (printerInfo == nullptr) {
         return false;
     }
-    if (printerInfo->HasOption() && nlohmann::json::accept(std::string(printerInfo->GetOption()))) {
-        nlohmann::json option = nlohmann::json::parse(std::string(printerInfo->GetOption()));
-        if (option != nullptr && option.contains("bsunidriverSupport") && option["bsunidriverSupport"].is_string()) {
-            PRINT_HILOGD("IsPrivatePpdDriver bsunidriverSupport=%{public}s",
-                std::string(option["bsunidriverSupport"]).c_str());
-            return std::string(option["bsunidriverSupport"]) == "true";
+    std::string supportValue;
+    if (printerInfo->HasOption() && nlohmann::json::accept(printerInfo->GetOption())) {
+        nlohmann::json option = nlohmann::json::parse(printerInfo->GetOption());
+        if (option.contains("bsunidriverSupport") && option["bsunidriverSupport"].is_string()) {
+            supportValue = option["bsunidriverSupport"].get<std::string>();
         }
     }
-    return false;
+    PRINT_HILOGD("IsBsunidriverSupport bsunidriverSupport=%{public}s", supportValue.c_str());
+    if (supportValue == "true") {
+        return true;
+    } else if (supportValue == "need_gs") {
+        return hasGs;
+    } else {
+        return false;
+    }
 }
 
 void VendorWlanGroup::RemovePrinterVendorGroupById(const std::string &printerId)

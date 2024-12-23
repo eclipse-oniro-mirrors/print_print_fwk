@@ -52,6 +52,7 @@ private:
     std::map<std::string, std::string> printerVendorGroupList_;
     std::map<std::string, std::string> printerIdToUuidMap_;
     std::mutex uuidMapMutex;
+    bool hasGs = false;
 };
 }  // namespace Print
 }  // namespace OHOS

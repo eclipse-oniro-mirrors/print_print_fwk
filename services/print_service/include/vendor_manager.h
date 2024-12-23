@@ -94,7 +94,6 @@ private:
     void StatusMonitorProcess();
     void UpdateAllPrinterStatus();
     bool WaitNext();
-    bool IsPrivatePpdDriver(const std::string &vendorName, const PrinterInfo &printerInfo);
     bool IsPrivatePpdDriver(const std::string &vendorName);
     bool IsWlanGroupDriver(const std::string &bothPrinterId);
 

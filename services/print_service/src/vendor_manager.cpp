@@ -468,22 +468,6 @@ bool VendorManager::WaitNext()
     return true;
 }
 
-bool VendorManager::IsPrivatePpdDriver(const std::string &vendorName, const PrinterInfo &printerInfo)
-{
-    PRINT_HILOGD("IsPrivatePpdDriver vendorName=%{public}s", vendorName.c_str());
-    PRINT_HILOGD("IsPrivatePpdDriver printerName=%{public}s", printerInfo.GetPrinterName().c_str());
-    if (vendorName == "driver.bsuni" && printerInfo.HasOption() &&
-        nlohmann::json::accept(std::string(printerInfo.GetOption()))) {
-        nlohmann::json option = nlohmann::json::parse(std::string(printerInfo.GetOption()));
-        if (option != nullptr && option.contains("bsunidriverSupport") && option["bsunidriverSupport"].is_string()) {
-            PRINT_HILOGD("IsPrivatePpdDriver bsunidriverSupport=%{public}s",
-                std::string(option["bsunidriverSupport"]).c_str());
-            return std::string(option["bsunidriverSupport"]) == "false";
-        }
-    }
-    return false;
-}
-
 bool VendorManager::IsPrivatePpdDriver(const std::string &vendorName)
 {
     return vendorName == VENDOR_PPD_DRIVER;
