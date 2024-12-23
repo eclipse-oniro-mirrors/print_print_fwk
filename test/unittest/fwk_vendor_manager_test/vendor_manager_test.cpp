@@ -333,19 +333,11 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
 HWTEST_F(VendorManagerTest, VendorManagerTest_0012, TestSize.Level1)
 {
     VendorManager vendorManager;
-    PrinterInfo printerInfo;
     std::string vendorName = "test";
-    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
+    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName));
     vendorName = "driver.bsuni";
-    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
-    printerInfo.SetOption("");
-    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
-    printerInfo.SetOption("{\"key\": \"value\"}");
-    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
-    printerInfo.SetOption("{\"bsunidriverSupport\": \"true\"}");
-    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
-    printerInfo.SetOption("{\"bsunidriverSupport\": \"false\"}");
-    EXPECT_TRUE(vendorManager.IsPrivatePpdDriver(vendorName, printerInfo));
+    EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName));
+    EXPECT_TRUE(vendorManager.IsPrivatePpdDriver(VENDOR_PPD_DRIVER));
 }
 }  // namespace Print
 }  // namespace OHOS
