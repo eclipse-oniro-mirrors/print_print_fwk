@@ -15,16 +15,15 @@
 
 #include "print_utils.h"
 
-#include <fcntl.h>
-#include "ability.h"
-#include "print_constant.h"
-#include "print_log.h"
-#include "securec.h"
 #include <chrono>
-#include <sstream>
 #include <cstdlib>
 #include <ctime>
+#include <fcntl.h>
 #include <random>
+#include <sstream>
+#include "ability.h"
+#include "print_util.h"
+#include "securec.h"
 
 namespace OHOS::Print {
 
@@ -39,6 +38,7 @@ static std::map<uint32_t, std::string> jobStateMap_;
 const std::string GLOBAL_ID_DELIMITER = ":";
 const std::string EXTENSION_CID_DELIMITER = ":";
 const std::string TASK_EVENT_DELIMITER = "-";
+const std::string USER_ID_DELIMITER = ":";
 const int32_t DEFAULT_FD = 99;
 const int32_t MINIMUN_RANDOM_NUMBER_100 = 100;
 const int32_t MAXIMUN_RANDOM_NUMBER_999 = 999;
@@ -89,7 +89,11 @@ bool PrintUtils::DecodeExtensionCid(const std::string &cid, std::string &extensi
         return false;
     }
     extensionId = cid.substr(0, pos);
-    callbackId = static_cast<uint32_t>(atoi(cid.substr(pos + 1).c_str()));
+    int32_t callbackIdTmp = 0;
+    if (!PrintUtil::ConvertToInt(cid.substr(pos + 1), callbackIdTmp)) {
+        return false;
+    }
+    callbackId = static_cast<uint32_t>(callbackIdTmp);
     return true;
 }
 
@@ -98,9 +102,10 @@ std::string PrintUtils::GetTaskEventId(const std::string &taskId, const std::str
     return type + TASK_EVENT_DELIMITER + taskId;
 }
 
-std::string PrintUtils::GetEventTypeWithToken(int64_t id, const std::string &type)
+std::string PrintUtils::GetEventTypeWithToken(int32_t userId, int64_t pid, const std::string &type)
 {
-    std::string eventType = std::to_string(id) + TASK_EVENT_DELIMITER + type;
+    std::string eventType =
+        std::to_string(userId) + USER_ID_DELIMITER + std::to_string(pid) + TASK_EVENT_DELIMITER + type;
     PRINT_HILOGD("eventType: %{public}s", eventType.c_str());
     return eventType;
 }
@@ -109,11 +114,25 @@ std::string PrintUtils::GetEventType(const std::string &type)
 {
     auto pos = type.find(TASK_EVENT_DELIMITER);
     if (pos == std::string::npos || pos + 1 >= type.length()) {
-        return "";
+        return type;
     }
     std::string eventType = type.substr(pos + 1);
     PRINT_HILOGD("eventType: %{public}s", eventType.c_str());
     return eventType;
+}
+
+bool PrintUtils::CheckUserIdInEventType(const std::string &type, int32_t callerUserId)
+{
+    auto userIdPos = type.find(USER_ID_DELIMITER);
+    if (userIdPos == std::string::npos || userIdPos >= type.length()) {
+        return false;
+    }
+    std::string userIdStr = type.substr(0, userIdPos);
+    PRINT_HILOGD("userId: %{public}s", userIdStr.c_str());
+    if (userIdStr == std::to_string(callerUserId)) {
+        return true;
+    }
+    return false;
 }
 
 int32_t PrintUtils::OpenFile(const std::string &filePath)
@@ -150,7 +169,7 @@ uint32_t PrintUtils::GetIdFromFdPath(const std::string &fdPath)
 {
     std::string fd_str = fdPath.substr(fdPath.rfind('/') + 1, fdPath.length());
     std::stringstream getStrStream(fd_str);
-    uint32_t fd;
+    uint32_t fd = 0;
     if (!(getStrStream >> fd)) {
         PRINT_HILOGD("failed to convert to uint32");
     }
@@ -286,7 +305,7 @@ std::string PrintUtils::GetPrintJobId()
     ss << timestamp;
 
     std::random_device rd;
-    std::mt19937 gen((unsigned int)time(NULL));
+    std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(MINIMUN_RANDOM_NUMBER_100, MAXIMUN_RANDOM_NUMBER_999);
     int32_t randomNumber = dis(gen);
     std::string jobId = ss.str() + "_" + std::to_string(randomNumber);

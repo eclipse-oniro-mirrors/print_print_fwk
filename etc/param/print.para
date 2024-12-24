@@ -12,3 +12,4 @@
 # limitations under the License.
 
 print.cupsd.ready=false
+print.libbsUniDiscovery.so.path=/system/bin/uni_print_driver/lib64/libbsUniDiscovery.so

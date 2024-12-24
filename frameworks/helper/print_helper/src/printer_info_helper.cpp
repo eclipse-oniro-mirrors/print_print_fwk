@@ -22,7 +22,7 @@
 namespace OHOS::Print {
 static constexpr const char *PARAM_INFO_PRINTERID = "printerId";
 static constexpr const char *PARAM_INFO_PRINTERNAME = "printerName";
-static constexpr const char *PARAM_INFO_PRINTERSTATE = "printerState";
+static constexpr const char *PARAM_INFO_PRINTERSTATE = "printerState"; // Property in API 10, deprecated in API 12
 static constexpr const char *PARAM_INFO_PRINTERICON = "printerIcon";
 static constexpr const char *PARAM_INFO_DESCRIPTION = "description";
 static constexpr const char *PARAM_INFO_CAPABILITY = "capability";
@@ -30,6 +30,8 @@ static constexpr const char *PARAM_JOB_OPTION = "options";
 static constexpr const char *PARAM_INFO_IS_DAFAULT_PRINTER = "isDefaultPrinter";
 static constexpr const char *PARAM_INFO_IS_LAST_USED_PRINTER = "isLastUsedPrinter";
 static constexpr const char *PARAM_INFO_PRINTER_STATUS = "printerStatus";
+static constexpr const char *PARAM_INFO_PRINTER_MAKE = "printerMake";
+static constexpr const char *PARAM_INFO_URI = "uri";
 
 napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info)
 {
@@ -52,6 +54,14 @@ napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info
         info.GetCapability(cap);
         napi_value jsCapability = PrinterCapabilityHelper::MakeJsObject(env, cap);
         PRINT_CALL(env, napi_set_named_property(env, jsObj, PARAM_INFO_CAPABILITY, jsCapability));
+    }
+
+    if (info.HasPrinterMake()) {
+        NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_PRINTER_MAKE, info.GetPrinterMake());
+    }
+
+    if (info.HasUri()) {
+        NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_URI, info.GetUri());
     }
 
     if (info.HasOption()) {
@@ -91,13 +101,6 @@ std::shared_ptr<PrinterInfo> PrinterInfoHelper::BuildFromJs(napi_env env, napi_v
     nativeObj->SetPrinterId(printerId);
     nativeObj->SetPrinterName(printerName);
 
-    uint32_t printerState = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_INFO_PRINTERSTATE);
-    if (printerState >= PRINTER_UNKNOWN) {
-        PRINT_HILOGE("Invalid printer state");
-        return nullptr;
-    }
-    nativeObj->SetPrinterState(printerState);
-
     auto jsIcon = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_PRINTERICON);
     if (jsIcon != nullptr) {
         nativeObj->SetPrinterIcon(NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_INFO_PRINTERICON));
@@ -118,6 +121,16 @@ std::shared_ptr<PrinterInfo> PrinterInfoHelper::BuildFromJs(napi_env env, napi_v
         nativeObj->SetCapability(*capabilityPtr);
     }
 
+    auto jsPrinterMake = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_PRINTER_MAKE);
+    if (jsPrinterMake != nullptr) {
+        nativeObj->SetPrinterMake(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_PRINTER_MAKE));
+    }
+
+    auto jsUri = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_URI);
+    if (jsUri != nullptr) {
+        nativeObj->SetUri(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_URI));
+    }
+
     auto jsOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_OPTION);
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION));
@@ -130,11 +143,14 @@ bool PrinterInfoHelper::ValidateProperty(napi_env env, napi_value object)
     std::map<std::string, PrintParamStatus> propertyList = {
         {PARAM_INFO_PRINTERID, PRINT_PARAM_NOT_SET},
         {PARAM_INFO_PRINTERNAME, PRINT_PARAM_NOT_SET},
-        {PARAM_INFO_PRINTERSTATE, PRINT_PARAM_NOT_SET},
+        {PARAM_INFO_PRINTERSTATE, PRINT_PARAM_OPT},
         {PARAM_INFO_PRINTERICON, PRINT_PARAM_OPT},
         {PARAM_INFO_DESCRIPTION, PRINT_PARAM_OPT},
         {PARAM_INFO_CAPABILITY, PRINT_PARAM_OPT},
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
+        {PARAM_INFO_PRINTER_MAKE, PRINT_PARAM_OPT},
+        {PARAM_INFO_URI, PRINT_PARAM_OPT},
+        {PARAM_INFO_PRINTER_STATUS, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);

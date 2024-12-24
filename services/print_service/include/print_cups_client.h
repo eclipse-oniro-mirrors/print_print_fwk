@@ -19,11 +19,10 @@
 #include <vector>
 #include <string>
 #include <functional>
-#include <cups/cups-private.h>
-#include <cups/ppd.h>
 #include <nlohmann/json.hpp>
 
 #include "singleton.h"
+#include "print_cups_wrapper.h"
 #include "print_service_ability.h"
 #include "print_job.h"
 
@@ -35,6 +34,8 @@ struct JobParameters {
     uint32_t cupsJobId;
     uint32_t borderless;
     uint32_t numCopies;
+    bool isAutoRotate;
+    bool isLandscape;
     std::string duplex;
     std::string printQuality;
     std::string jobName;
@@ -82,8 +83,13 @@ public:
     void QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds);
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);
+    int32_t AddPrinterToCupsWithSpecificPpd(const std::string &printerUri, const std::string &printerName,
+        const std::string &ppd);
+    int32_t AddPrinterToCupsWithPpd(const std::string &printerUri, const std::string &printerName,
+        const std::string &ppdName, const std::string &ppdData);
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
         PrinterCapability &printerCaps);
+    int32_t QueryPrinterStatusByUri(const std::string &printerUri, PrinterStatus &status);
     int32_t DeleteCupsPrinter(const char *printerName);
     void AddCupsPrintJob(const PrintJob &jobInfo);
     void CancelCupsJob(std::string serviceJobId);
@@ -95,36 +101,44 @@ public:
     int32_t QueryPrinterAttrList(const std::string &printerName, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList);
     int32_t QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info);
-    int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-        const std::string &printerMake);
+    int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
+    int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps);
     bool CheckPrinterOnline(JobMonitorParam *param, const uint32_t timeout = 3000);
 
 private:
+    bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
     void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
     void MonitorJobState(JobMonitorParam *param, CallbackFunc callback);
-    static void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
-    static void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
+    void HandleJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus,
+        JobStatus *prevousJobStatus);
+    void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
+    void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
     static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
-    static void SymlinkFile(std::string srcFilePath, std::string destFilePath);
+    static void SymlinkFile(std::string &srcFilePath, std::string &destFilePath);
     static void SymlinkDirectory(const char *srcDir, const char *destDir);
     static void CopyDirectory(const char *srcDir, const char *destDir);
-    static void ChangeFilterPermission(const std::string &path, mode_t mode);
-    static bool CheckPrinterMakeModel(JobParameters *jobParams);
+    static bool ChangeFilterPermission(const std::string &path, mode_t mode);
+    bool CheckPrinterMakeModel(JobParameters *jobParams);
     bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
         cups_option_t *options, http_t *http);
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
+    static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
     static void UpdateJobStatus(JobStatus *prevousJobStatus, JobStatus *jobStatus);
     static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState);
     static std::string GetIpAddress(unsigned int number);
     static bool IsIpConflict(const std::string &printerId, std::string &nic);
-    static void QueryJobStateAgain(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
+    void QueryJobStateAgain(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
     static uint32_t GetBlockedSubstate(JobStatus *jobStatus);
 
     int32_t StartCupsdService();
+    JobParameters *GetNextJob();
     void StartNextJob();
     void JobCompleteCallback();
+
+    void UpdateBorderlessJobParameter(json& optionJson, JobParameters *params);
+    void UpdateJobParameterByOption(json& optionJson, JobParameters *params);
     JobParameters* BuildJobParameters(const PrintJob &jobInfo);
     std::string GetColorString(uint32_t colorCode);
     std::string GetMedieSize(const PrintJob &jobInfo);
@@ -135,8 +149,14 @@ private:
 
     void ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
         std::vector<std::string> &ppds);
+    ipp_t *QueryPrinterAttributesByUri(const std::string &printerUri, const std::string &nic, int num,
+        const char * const *pattrs);
+    bool ResumePrinter(const std::string &printerName);
+    bool CancelPrinterJob(int cupsJobId);
 
 private:
+    bool toCups_ = true;
+    IPrintAbilityBase* printAbility_ = nullptr;
     std::vector<JobParameters*> jobQueue_;
     JobParameters *currentJob_ = nullptr;
 };

@@ -16,6 +16,7 @@
       "SystemCapability.Print.PrintFramework"
     ],
     "features": [
+      "print_fwk_feature_bsuni_driver"
     ],
     "adapted_system_type": [
       "standard"
@@ -47,13 +48,13 @@
         "wifi",
         "cJSON",
         "ace_engine",
-        "libjpeg-turbo"
+        "libjpeg-turbo",
+        "backends"
       ],
       "third_party": [
         "zlib",
         "cups",
-        "cups-filters",
-        "backends"
+        "cups-filters"
       ]
     },
     "build": {
@@ -86,7 +87,8 @@
          "//base/print/print_fwk/etc/init:cups_service.cfg",
          "//base/print/print_fwk/etc/param:print.para",
          "//base/print/print_fwk/etc/param:print.para.dac",
-         "//base/print/print_fwk/etc/init:scanservice.cfg"
+         "//base/print/print_fwk/etc/init:scanservice.cfg",
+         "//base/print/print_fwk/services/print_service/bsuni:bsuni_driver_group"
       ]
     },
     "inner_kits": [
@@ -139,6 +141,7 @@
       "//base/print/print_fwk/test/unittest/fwk_print_service_ability_test:fwk_print_service_ability_test",
       "//base/print/print_fwk/test/unittest/service_test:print_service_test",
       "//base/print/print_fwk/test/unittest/extension_test:print_ext_test",
+      "//base/print/print_fwk/test/unittest/fwk_vendor_manager_test:fwk_vendor_manager_test",
       "//base/print/print_fwk/test/fuzztest:fuzztest"
     ]
     },

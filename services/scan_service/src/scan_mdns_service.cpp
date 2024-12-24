@@ -13,196 +13,242 @@
  * limitations under the License.
  */
 
+#include <thread>
+#include <queue>
 #include "scan_mdns_service.h"
+#include "scan_system_data.h"
+#include "securec.h"
 #include "mdns_common.h"
 
-#define SCAN_MDNS_PORT 5353
+#define TXT_MAX 256
 
 namespace OHOS::Scan {
 using namespace OHOS::NetManagerStandard;
-
-void ScanMdnsService::SetServiceType(std::string stype)
+namespace {
+std::map<std::string, ScanDeviceInfoTCP> g_ipToScannerInfo;
+std::mutex g_ipToScannerInfoLock;
+std::queue<ScanDeviceInfoSync> g_infoQueue;
+std::mutex g_infoQueueLock;
+static std::string GetServiceAttribute(MDnsServiceInfo &info, const std::string& key)
 {
-    _serviceInfo.type = stype;
-    _serviceInfo.port = SCAN_MDNS_PORT;
-    _scanMDnsDiscoveryCallBack = new (std::nothrow) ScanMDnsDiscoveryObserver(_serviceInfo);
-    _scanMDnsResolveCallBack = new (std::nothrow) ScanMDnsResolveObserver(_serviceInfo);
-}
-
-MDnsServiceInfo &ScanMdnsService::GetServiceInfo()
-{
-    return _serviceInfo;
-}
-
-void ScanMdnsService::SetServiceInfo(const MDnsServiceInfo &info)
-{
-    _serviceInfo = info;
-}
-
-sptr<ScanMDnsDiscoveryObserver> ScanMdnsService::GetMDnsDiscoveryCallBack()
-{
-    return _scanMDnsDiscoveryCallBack;
-}
-
-void ScanMdnsService::SetMDnsDiscoveryCallBack(sptr<ScanMDnsDiscoveryObserver> &cb)
-{
-    _scanMDnsDiscoveryCallBack = cb;
-}
-
-sptr<ScanMDnsResolveObserver> ScanMdnsService::GetMDnsResolveCallBack()
-{
-    return _scanMDnsResolveCallBack;
-}
-
-void ScanMdnsService::SetMDnsResolveCallBack(sptr<ScanMDnsResolveObserver> &cb)
-{
-    _scanMDnsResolveCallBack = cb;
-}
-
-bool ScanMdnsService::onStartDiscoverService()
-{
-    if (_scanMDnsDiscoveryCallBack == nullptr) {
-        SCAN_HILOGE("GetScannerList onStartDiscoverService1 nullptr");
-        return false;
-    }
-    SCAN_HILOGI("GetScannerList onStartDiscoverService begin");
-    int32_t ret = DelayedSingleton<MDnsClient>::GetInstance()->StartDiscoverService(
-        _serviceInfo.type, _scanMDnsDiscoveryCallBack);
-    if (ret != NETMANAGER_EXT_SUCCESS) {
-        return false;
-    }
-    SCAN_HILOGI("GetScannerList onStartDiscoverService end");
-    return true;
-}
-
-bool ScanMdnsService::onResolveService(MDnsServiceInfo &serviceInfo)
-{
-    SCAN_HILOGI("GetScannerList onResolveService");
-    if (_scanMDnsResolveCallBack == nullptr) {
-        SCAN_HILOGE("GetScannerList _scanMDnsResolveCallBack null fail");
-        return false;
-    }
-    int32_t ret = DelayedSingleton<MDnsClient>::GetInstance()->ResolveService(serviceInfo, _scanMDnsResolveCallBack);
-    if (ret != NETMANAGER_EXT_SUCCESS) {
-        SCAN_HILOGE("GetScannerList onResolveService false");
-        return false;
-    }
-    SCAN_HILOGI("GetScannerList onResolveService1 success");
-    return true;
-}
-
-bool ScanMdnsService::onStopDiscoverService()
-{
-    SCAN_HILOGI("GetScannerList onStopDiscoverService");
-    if (_scanMDnsDiscoveryCallBack == nullptr) {
-        SCAN_HILOGE("GetScannerList _scanMDnsDiscoveryCallBack null fail");
-        return false;
-    }
-    int32_t ret = DelayedSingleton<MDnsClient>::GetInstance()->StopDiscoverService(_scanMDnsDiscoveryCallBack);
-    if (ret != NETMANAGER_EXT_SUCCESS) {
-        SCAN_HILOGE("GetScannerList onStopDiscoverService false");
-        return false;
-    }
-    SCAN_HILOGI("GetScannerList onStopDiscoverService success");
-    return true;
-}
-
-void ScanMDnsDiscoveryObserver::HandleServiceFound(const MDnsServiceInfo &info, int32_t retCode)
-{
-    MDnsServiceInfo tempInfo = info;
-    SCAN_HILOGD("GetScannerList HandleServiceFound [%{public}s][%{public}s][%{public}d][%{public}s]",
-        info.name.c_str(),
-        info.type.c_str(),
-        info.port,
-        info.addr.c_str());
-    ScanMdnsService::GetInstance().onResolveService(tempInfo);
-}
-
-void ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
-{
-    _serviceInfo = info;
-    SCAN_HILOGD("GetScannerList HandleResolveResult [%{public}s][%{public}s][%{public}d][%{public}s]",
-        info.name.c_str(),
-        info.type.c_str(),
-        info.port,
-        info.addr.c_str());
-    MDnsServiceInfo tempInfo = info;
-    auto texRecord = tempInfo.GetAttrMap();
-    auto textIt = texRecord.begin();
-    for (; textIt != texRecord.end(); textIt++) {
-        SCAN_HILOGD("GetScannerList startHandleServiceResolve keys [%{public}s]", textIt->first.c_str());
-    }
-
-    ScanMdnsService::GetInstance().ToMDnsScaner(tempInfo);
-}
-
-void ScanMDnsDiscoveryObserver::HandleStopDiscover(const MDnsServiceInfo &serviceInfo, int32_t retCode)
-{
-    MDnsServiceInfo info = serviceInfo;
-    SCAN_HILOGD("GetScannerList HandleStopDiscover [%{public}s][%{public}s][%{public}d][%{public}s]",
-        info.name.c_str(),
-        info.type.c_str(),
-        info.port,
-        info.addr.c_str());
-}
-
-void ScanMdnsService::ToMDnsScaner(MDnsServiceInfo &serviceInfo)
-{
-    std::unique_ptr<ScanDeviceInfoTCP> scannerInfo = std::make_unique<ScanDeviceInfoTCP>();
-    scannerInfo->addr = serviceInfo.addr;
-    scannerInfo->deviceName = serviceInfo.name;
-    scannerInfo->port = std::to_string(serviceInfo.port);
-    std::vector<std::string> keys = {"UUID", "adminur", "button", "feeder", "mdl", "mfg", "mote", "txtvers", "ty"};
-    for (auto key : keys) {
-        std::string value = ScanMdnsService::GetServiceAttribute(serviceInfo, key);
-        if (value.empty()) {
-            SCAN_HILOGW("GetScannerList key [%{public}s] is empty", key.c_str());
-            continue;
-        }
-        SCAN_HILOGD("GetScannerList key:[%{public}s] value:[%{public}s]", key.c_str(), value.c_str());
-        if (key == "UUID") {
-            scannerInfo->uuid = value;
-        } else if (key == "mdl") {
-            scannerInfo->model = value;
-        } else if (key == "mfg") {
-            scannerInfo->manufacturer = value;
-        } else if (key == "ty") {
-            scannerInfo->deviceType = value;
-        } else if (key == "port") {
-            scannerInfo->port = value;
-        } else if (key == "button") {
-            scannerInfo->button = value;
-        } else if (key == "feeder") {
-            scannerInfo->feeder = value;
-        }
-    }
-    SCAN_HILOGI("mdns scanner's deviceName:[%{public}s]", scannerInfo->deviceName.c_str());
-    SCAN_HILOGD("mdns scanner's addr:[%{public}s]", scannerInfo->addr.c_str());
-    SCAN_HILOGD("mdns scanner's port:[%{public}s]", scannerInfo->port.c_str());
-    ScanServiceAbility::scanDeviceInfoTCPMap_[scannerInfo->addr] = *scannerInfo;
-}
-
-std::string ScanMdnsService::GetServiceAttribute(MDnsServiceInfo &serviceInfo, std::string keyStr)
-{
-    SCAN_HILOGD("GetScannerList GetServiceAttribute keyStr [%{public}s]", keyStr.c_str());
-    TxtRecord attrMap = serviceInfo.GetAttrMap();
+    TxtRecord attrMap = info.GetAttrMap();
     auto attrArrSize = attrMap.size();
     if (attrArrSize < 1) {
         SCAN_HILOGE("can not get attr");
         return "";
     }
-    auto attrIt = attrMap.find(keyStr);
-    if (attrIt == attrMap.end()) {
-        SCAN_HILOGE("can not find key");
+    auto it = attrMap.find(key);
+    if (it == attrMap.end() || it->second.empty()) {
+        SCAN_HILOGE("can not find key, key = [%{public}s]", key.c_str());
         return "";
     }
-    std::string value = "";
-    if (!attrMap[keyStr].empty()) {
-        value += std::accumulate(attrMap[keyStr].begin(), attrMap[keyStr].end(), "");
-    }
+    return std::string(it->second.begin(), it->second.end());
+}
+}
+std::map<std::string, sptr<ScanMDnsDiscoveryObserver>> ScanMdnsService::discoveryCallBackPtrs_;
+bool ScanMdnsService::isListening_ = false;
+std::mutex ScanMdnsService::discoveryCallBackPtrsLock_;
 
-    return value;
+void ScanMdnsService::InsertIpToScannerInfo(const std::string& ip, ScanDeviceInfoTCP& scanDeviceInfoTCP)
+{
+    g_ipToScannerInfo.insert(std::make_pair(ip, scanDeviceInfoTCP));
 }
 
+bool ScanMdnsService::OnStartDiscoverService()
+{
+    if (isListening_) {
+        SCAN_HILOGD("scanner's mdns discovery is already started.");
+        return true;
+    }
+    const std::vector<std::string> scannerServiceTypes = { "_scanner._tcp" };
+    constexpr int32_t MDNS_PORT = 5353;
+    {
+        std::lock_guard<std::mutex> autoLock(g_ipToScannerInfoLock);
+        g_ipToScannerInfo.clear();
+    }
+    for (const auto& type : scannerServiceTypes) {
+        MDnsServiceInfo mdnsInfo;
+        mdnsInfo.type = type;
+        mdnsInfo.port = MDNS_PORT;
+        sptr<ScanMDnsDiscoveryObserver> callbackPtr = new (std::nothrow) ScanMDnsDiscoveryObserver(mdnsInfo);
+        if (callbackPtr == nullptr) {
+            SCAN_HILOGE("scanMDnsDiscoveryCallBack_ is a nullptr.");
+            OnStopDiscoverService();
+            return false;
+        }
+        int32_t ret = DelayedSingleton<MDnsClient>::GetInstance()->StartDiscoverService(
+            mdnsInfo.type, callbackPtr);
+        if (ret != NETMANAGER_EXT_SUCCESS) {
+            SCAN_HILOGE("mdns service [%{public}s] startDiscover failed, ret = [%{public}d].",
+                mdnsInfo.type.c_str(), ret);
+            OnStopDiscoverService();
+            return false;
+        }
+        {
+            std::lock_guard<std::mutex> autoLock(discoveryCallBackPtrsLock_);
+            auto it = discoveryCallBackPtrs_.find(type);
+            if (it == discoveryCallBackPtrs_.end()) {
+                discoveryCallBackPtrs_.insert(std::make_pair(type, callbackPtr));
+            } else {
+                it->second = callbackPtr;
+            }
+            isListening_ = true;
+            std::thread updateScannerId(UpdateScannerIdThread);
+            updateScannerId.detach();
+        }
+    }
+    return true;
+}
+
+void ScanMdnsService::UpdateScannerIdThread()
+{
+    auto saPtr = ScanServiceAbility::GetInstance();
+    if (saPtr == nullptr) {
+        SCAN_HILOGE("saPtr is a nullptr");
+        return;
+    }
+    while (isListening_) {
+        {
+            std::lock_guard<std::mutex> autoLock(g_infoQueueLock);
+            while (!g_infoQueue.empty()) {
+                saPtr->UpdateScannerId(g_infoQueue.front());
+                g_infoQueue.pop();
+            }
+        }
+        constexpr int32_t sleepTime = 100000; // 100ms
+        usleep(sleepTime);
+    }
+}
+
+bool ScanMdnsService::OnStopDiscoverService()
+{
+    for (auto& [serviceName, discoveryCallBackPtr] : discoveryCallBackPtrs_) {
+        if (discoveryCallBackPtr == nullptr) {
+            continue;
+        }
+        int32_t ret = DelayedSingleton<MDnsClient>::GetInstance()->StopDiscoverService(discoveryCallBackPtr);
+        if (ret != NETMANAGER_EXT_SUCCESS) {
+            SCAN_HILOGE("mdns service [%{public}s] startDiscover failed, ret = [%{public}d].",
+                serviceName.c_str(), ret);
+            return false;
+        }
+        discoveryCallBackPtr = nullptr;
+    }
+    {
+        std::lock_guard<std::mutex> autoLock(discoveryCallBackPtrsLock_);
+        discoveryCallBackPtrs_.clear();
+        isListening_ = false;
+    }
+    return true;
+}
+
+bool ScanMdnsService::FindNetScannerInfoByIp(const std::string& ip, ScanDeviceInfoTCP& netScannerInfo)
+{
+    std::lock_guard<std::mutex> autoLock(g_ipToScannerInfoLock);
+    auto it = g_ipToScannerInfo.find(ip);
+    if (it == g_ipToScannerInfo.end()) {
+        SCAN_HILOGW("cannot find scanner info in map.");
+        return false;
+    }
+    netScannerInfo = it->second;
+    return true;
+}
+
+void ScanMDnsDiscoveryObserver::HandleServiceFound(const MDnsServiceInfo &info, int32_t retCode)
+{
+    SCAN_HILOGD("Found mdns service info, name = [%{private}s]", info.name.c_str());
+    sptr<ScanMDnsResolveObserver> scanMDnsResolveCallBack_ = new (std::nothrow) ScanMDnsResolveObserver(info);
+    if (scanMDnsResolveCallBack_ == nullptr) {
+        SCAN_HILOGE("scanMDnsResolveCallBack_ is a nullptr.");
+        return;
+    }
+    int32_t ret = DelayedSingleton<MDnsClient>::GetInstance()->ResolveService(info, scanMDnsResolveCallBack_);
+    if (ret != NETMANAGER_EXT_SUCCESS) {
+        SCAN_HILOGE("mdns ResolveService failed, ret = [%{public}d].", ret);
+    }
+}
+
+void ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
+{
+    MDnsServiceInfo tempInfo = info;
+    SCAN_HILOGD("MDnsInfo name = [%{private}s], type = [%{private}s]", info.name.c_str(), info.type.c_str());
+    std::unique_ptr<ScanDeviceInfoTCP> scannerInfo = std::make_unique<ScanDeviceInfoTCP>();
+    scannerInfo->addr = tempInfo.addr;
+    scannerInfo->deviceName = tempInfo.name;
+    scannerInfo->port = std::to_string(tempInfo.port);
+    const std::string uuidKey = "UUID";
+    std::string uuidValue = GetServiceAttribute(tempInfo, uuidKey);
+    scannerInfo->uuid = uuidValue;
+    {
+        std::lock_guard<std::mutex> autoLock(g_ipToScannerInfoLock);
+        auto it = g_ipToScannerInfo.find(scannerInfo->addr);
+        if (it == g_ipToScannerInfo.end()) {
+            g_ipToScannerInfo.insert(std::make_pair(scannerInfo->addr, *scannerInfo));
+        } else {
+            it->second = *scannerInfo;
+        }
+    }
+    ScanSystemData &scanData = ScanSystemData::GetInstance();
+    auto pair = scanData.UpdateNetScannerByUuid(uuidValue, scannerInfo->addr);
+    if (pair.second == "") {
+        SCAN_HILOGE("UpdateNetScannerByUuid fail.");
+        return;
+    }
+    if (!scanData.SaveScannerMap()) {
+        SCAN_HILOGW("SaveScannerMap fail");
+    }
+    ScanDeviceInfoSync syncInfo;
+    syncInfo.deviceId = pair.second;
+    syncInfo.oldDeviceId = pair.first;
+    syncInfo.discoverMode = "TCP";
+    syncInfo.uniqueId = scannerInfo->addr;
+    syncInfo.syncMode = "update";
+    {
+        std::lock_guard<std::mutex> autoLock(g_infoQueueLock);
+        g_infoQueue.push(syncInfo);
+    }
+    {
+        std::lock_guard<std::mutex> autoLock(g_ipToScannerInfoLock);
+        auto it = g_ipToScannerInfo.find(scannerInfo->addr);
+        if (it == g_ipToScannerInfo.end()) {
+            g_ipToScannerInfo.insert(std::make_pair(scannerInfo->addr, *scannerInfo));
+        } else {
+            it->second = *scannerInfo;
+        }
+    }
+}
+
+void ScanMDnsDiscoveryObserver::HandleServiceLost(const MDnsServiceInfo &info, int32_t retCode)
+{
+    SCAN_HILOGD("Loss mdns service info, name = [%{private}s]", info.name.c_str());
+    sptr<ScanMDnsLossResolveObserver> callBack = new (std::nothrow) ScanMDnsLossResolveObserver(info);
+    if (callBack == nullptr) {
+        SCAN_HILOGE("callBack is a nullptr");
+        return;
+    }
+    int32_t ret = DelayedSingleton<MDnsClient>::GetInstance()->ResolveService(info, callBack);
+    if (ret != NETMANAGER_EXT_SUCCESS) {
+        SCAN_HILOGE("mdns ResolveService failed, ret = %{public}d", ret);
+    }
+}
+
+void ScanMDnsLossResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
+{
+    MDnsServiceInfo tempInfo = info;
+    SCAN_HILOGD("mdnsloss name = [%{private}s], type = [%{private}s]", info.name.c_str(), info.type.c_str());
+    {
+        std::lock_guard<std::mutex> autoLock(g_ipToScannerInfoLock);
+        std::string ip = info.addr;
+        auto it = g_ipToScannerInfo.find(ip);
+        if (it != g_ipToScannerInfo.end()) {
+            g_ipToScannerInfo.erase(it);
+        }
+    }
+}
+
+void ScanMDnsDiscoveryObserver::HandleStopDiscover(const MDnsServiceInfo &serviceInfo, int32_t retCode)
+{
+    SCAN_HILOGD("Stop mdns service info, name = [%{private}s]", serviceInfo.name.c_str());
+}
 
 }  // namespace OHOS::Scan

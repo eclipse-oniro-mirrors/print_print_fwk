@@ -47,7 +47,6 @@ ohos_unittest("fwk_print_helper_test") {
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service:print_service",
     "//third_party/googletest:gmock_main",
-    "//third_party/zlib:libz",
   ]
 
   external_deps = [

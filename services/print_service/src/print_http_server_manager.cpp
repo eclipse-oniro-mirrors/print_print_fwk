@@ -22,7 +22,6 @@
 #include "cJSON.h"
 
 namespace OHOS::Print {
-using namespace std;
 using namespace OHOS;
 using namespace httplib;
 
@@ -94,16 +93,30 @@ bool PrintHttpServerManager::CreateServer(std::string printerName, int32_t &port
         return false;
     }
 
-    std::shared_ptr<httplib::Server> newServer = std::make_shared<httplib::Server>();
-    int32_t allocPort = HTTP_MIN_PORT;
-    if (!AllocatePort(newServer, allocPort)) {
-        PRINT_HILOGE("AllocatePort fail, return!");
+    if (port < HTTP_MIN_PORT || port > HTTP_MAX_PORT) {
+        PRINT_HILOGE("port error!");
         return false;
     }
-    port = allocPort;
+
+    std::shared_ptr<httplib::Server> newServer = std::make_shared<httplib::Server>();
+    if (newServer == nullptr) {
+        PRINT_HILOGE("newServer is null");
+        return false;
+    }
+
+    if (!newServer->bind_to_port(LOCAL_HOST, port)) {
+        PRINT_HILOGE("bind to port : %{public}d failed.", port);
+        return false;
+    }
+    PRINT_HILOGI("bind to port : %{public}d success.", port);
+    
     printHttpServerMap[printerName] = newServer;
     printHttpPortMap[printerName] = port;
     std::shared_ptr<PrintHttpRequestProcess> newProcess = std::make_shared<PrintHttpRequestProcess>();
+    if (newProcess == nullptr) {
+        PRINT_HILOGE("newProcess is null");
+        return false;
+    }
     printHttpProcessMap[printerName] = newProcess;
     newProcess->SetDeviceName(printerName);
 
@@ -138,15 +151,16 @@ void PrintHttpServerManager::DealUsbDevDetach(const std::string &devStr)
     cJSON *devJson = cJSON_Parse(devStr.c_str());
     if (!devJson) {
         PRINT_HILOGE("Create devJson error");
+        return;
     }
     cJSON *jsonTemp = cJSON_GetObjectItem(devJson, "name");
-    if (jsonTemp == nullptr || jsonTemp->valuestring  == NULL) {
+    if (jsonTemp == nullptr || jsonTemp->valuestring  == nullptr) {
         PRINT_HILOGE("The devJson does not have a necessary attribute.");
         cJSON_Delete(devJson);
         return;
     }
-    string name = jsonTemp->valuestring;
-    string printerName = DelayedSingleton<PrintUsbManager>::GetInstance()->GetPrinterName(name);
+    std::string name = jsonTemp->valuestring;
+    std::string printerName = DelayedSingleton<PrintUsbManager>::GetInstance()->GetPrinterName(name);
     PRINT_HILOGD("DealUsbDevDetach name: %{public}s, printerName: %{public}s", name.c_str(), printerName.c_str());
     if (printerName.empty()) {
         cJSON_Delete(devJson);

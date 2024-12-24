@@ -26,19 +26,10 @@ namespace Scan {
     constexpr size_t FOO_MAX_LEN = 1024;
     constexpr size_t U32_AT_SIZE = 4;
 
-    void TestRefreshUsbDevice(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        DelayedSingleton<ScanUsbManager>::GetInstance()->RefreshUsbDevice();
-    }
-
-    void TestInit(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        DelayedSingleton<ScanUsbManager>::GetInstance()->Init();
-    }
-
-
     void TestDealUsbDevStatusChange(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
+        DelayedSingleton<ScanUsbManager>::GetInstance()->Init();
+        DelayedSingleton<ScanUsbManager>::GetInstance()->RefreshUsbDevice();
         std::string devStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         bool isAttach = dataProvider->ConsumeBool();
         std::string devStrOne = "2-3";
@@ -46,10 +37,6 @@ namespace Scan {
         DelayedSingleton<ScanUsbManager>::GetInstance()->DealUsbDevStatusChange(devStrOne, true);
         ScanServiceAbility::usbSnMap[devStrOne] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         DelayedSingleton<ScanUsbManager>::GetInstance()->DealUsbDevStatusChange(devStrOne, false);
-    }
-
-    void TestGetDeviceSerialNumber(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
         USB::USBDevicePipe usbDevicePipe;
         DelayedSingleton<ScanUsbManager>::GetInstance()->GetDeviceSerialNumber(usbDevicePipe);
     }
@@ -109,10 +96,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Scan::TestRefreshUsbDevice(data, size, &dataProvider);
-    OHOS::Scan::TestInit(data, size, &dataProvider);
     OHOS::Scan::TestDealUsbDevStatusChange(data, size, &dataProvider);
-    OHOS::Scan::TestGetDeviceSerialNumber(data, size, &dataProvider);
     OHOS::Scan::TestUsbUpdateUsbScannerId(data, size, &dataProvider);
     OHOS::Scan::TestUsbDisConnectUsbScanner(data, size, &dataProvider);
 

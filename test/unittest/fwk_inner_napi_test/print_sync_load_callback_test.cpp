@@ -18,7 +18,9 @@
 #include "iservice_registry.h"
 #include "isystem_ability_load_callback.h"
 #include "print_log.h"
+#define private public
 #include "print_manager_client.h"
+#undef private
 #include "system_ability_definition.h"
 
 using namespace testing::ext;
@@ -53,7 +55,9 @@ HWTEST_F(PrintSyncLoadCallbackTest, PrintSyncLoadCallbackTest_0001, TestSize.Lev
     int32_t systemAbilityId = 0;
     const sptr<IRemoteObject> remoteObject;
     printSyncLoadCallback.OnLoadSystemAbilitySuccess(systemAbilityId, remoteObject);
+    EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, true);
     printSyncLoadCallback.OnLoadSystemAbilityFail(systemAbilityId);
+    EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, true);
 }
 } // namespace Print
 } // namespace OHOS

@@ -39,18 +39,6 @@ void PrinterCapabilityTest::SetUp(void) {}
 void PrinterCapabilityTest::TearDown(void) {}
 
 /**
- * @tc.name: PrinterCapabilityTest_0001
- * @tc.desc: Verify the constructor function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0001, TestSize.Level1)
-{
-    PrinterCapability capability;
-    capability.Dump();
-}
-
-/**
  * @tc.name: PrinterCapabilityTest_0002
  * @tc.desc: Verify settings and obtain colorMode function.
  * @tc.type: FUNC
@@ -106,8 +94,8 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0005, TestSize.Level1)
     PrintPageSize testPagesize;
     testPagesize.SetWidth(1);
     pagesize.emplace_back(testPagesize);
-    capability.SetPageSize(pagesize);
-    capability.GetPageSize(getPagesize);
+    capability.SetSupportedPageSize(pagesize);
+    capability.GetSupportedPageSize(getPagesize);
     EXPECT_EQ(pagesize.size(), getPagesize.size());
 }
 
@@ -185,7 +173,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0010, TestSize.Level1)
     capability.SetDuplexMode(6);
 
     capability.SetMinMargin(margin);
-    capability.SetPageSize(pagesize);
+    capability.SetSupportedPageSize(pagesize);
     capability.SetResolution(resolutionList);
     Parcel parcel;
     EXPECT_EQ(capability.Marshalling(parcel), true);
@@ -205,7 +193,7 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0011, TestSize.Level1)
     std::vector<PrintPageSize> pagesize;
     capability.SetColorMode(6);
     capability.SetDuplexMode(6);
-    capability.SetPageSize(pagesize);
+    capability.SetSupportedPageSize(pagesize);
     Parcel parcel;
     EXPECT_EQ(capability.Marshalling(parcel), true);
 }
@@ -225,12 +213,13 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0012, TestSize.Level1)
     capability.SetColorMode(6);
     capability.SetDuplexMode(6);
     capability.SetMinMargin(margin);
-    capability.SetPageSize(pagesize);
+    capability.SetSupportedPageSize(pagesize);
     capability.SetResolution(resolutionList);
     Parcel parcel;
     capability.Marshalling(parcel);
     auto result = OHOS::Print::PrinterCapability::Unmarshalling(parcel);
     EXPECT_NE(nullptr, result);
+    capability.Dump();
 }
 
 /**
@@ -259,6 +248,23 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0014, TestSize.Level1)
     capability.SetColorMode(6);
     PrinterCapability copyCapability = capability;
     EXPECT_EQ((uint32_t)6, capability.GetColorMode());
+}
+
+/**
+ * @tc.name: PrinterCapabilityTest_0015
+ * @tc.desc: GetPrinterAttrValue.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0015, TestSize.Level1)
+{
+    PrinterCapability capability;
+    capability.GetPrinterAttrGroupJson();
+    capability.SetPrinterAttrNameAndValue("key1", "value1");
+    capability.SetPrinterAttrNameAndValue("key2", "value2");
+    EXPECT_STREQ(capability.GetPrinterAttrValue("key1"), "value1");
+    EXPECT_STREQ(capability.GetPrinterAttrValue("key"), "");
+    capability.ClearCurPrinterAttrGroup();
 }
 } // namespace Print
 } // namespace OHOS

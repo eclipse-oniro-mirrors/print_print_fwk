@@ -29,8 +29,12 @@ bool PrintExtensionCallbackProxy::OnCallback()
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
-
-    int error = Remote()->SendRequest(PRINT_EXTCB, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_EXTCB, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
@@ -48,8 +52,12 @@ bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId)
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
-
-    int error = Remote()->SendRequest(PRINT_EXTCB_PRINTER, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_EXTCB_PRINTER, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
@@ -67,7 +75,12 @@ bool PrintExtensionCallbackProxy::OnCallback(const PrintJob &job)
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     job.Marshalling(data);
-    int error = Remote()->SendRequest(PRINT_EXTCB_PRINTJOB, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_EXTCB_PRINTJOB, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
@@ -85,7 +98,12 @@ bool PrintExtensionCallbackProxy::OnCallback(const std::string &printerId, Print
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
-    int error = Remote()->SendRequest(PRINT_EXTCB_PRINTCAPABILITY, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_EXTCB_PRINTCAPABILITY, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;

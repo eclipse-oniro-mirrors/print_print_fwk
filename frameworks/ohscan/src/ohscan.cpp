@@ -23,6 +23,7 @@
 #include "scan_manager_client.h"
 #include "scan_constant.h"
 #include "scan_log.h"
+#include "scan_util.h"
 #include "scanner_info.h"
 #include "scan_option_value.h"
 #include "ohscan.h"
@@ -74,7 +75,6 @@ auto callbackFunction = [](std::vector<ScanDeviceInfo> &infos) {
     if (devices == nullptr) {
         SCAN_HILOGE("devices is a nullptr");
         g_discoverCallback(nullptr, 0);
-        return;
     }
     int32_t devicesMemSize = deviceCount * sizeof(Scan_ScannerDevice*);
     if (memset_s(devices, devicesMemSize, 0, devicesMemSize) != 0) {
@@ -301,6 +301,37 @@ Scan_ScannerOptions* GetScanParaValue(ScanParaTable &paraTable)
     }
     return scannerOptions;
 }
+
+int32_t GetScanOptionValue(const uint32_t& valueType, const ValueMap& valueMap,
+    const char* value, ScanOptionValue& scanOptionValue)
+{
+    std::string strvalue = std::string(value);
+    if (valueType == SCAN_INT_TYPE) {
+        if (!valueMap.numList.count(strvalue)) {
+            SCAN_HILOGE("not exit this value: %{public}s", strvalue.c_str());
+            return SCAN_ERROR_INVALID_PARAMETER;
+        }
+        int32_t intValue = 0;
+        if (!ScanUtil::ConvertToInt(strvalue, intValue)) {
+            SCAN_HILOGE("strvalue : %{public}s can not parse to number.", strvalue.c_str());
+            return SCAN_ERROR_GENERIC_FAILURE;
+        }
+        scanOptionValue.SetNumValue(intValue);
+        scanOptionValue.SetScanOptionValueType(SCAN_VALUE_NUM);
+    } else if (valueType == SCAN_STRING_TYPE) {
+        if (!valueMap.strList.count(strvalue)) {
+            SCAN_HILOGE("not exit this value: %{public}s", strvalue.c_str());
+            return SCAN_ERROR_INVALID_PARAMETER;
+        }
+        scanOptionValue.SetStrValue(strvalue);
+        scanOptionValue.SetScanOptionValueType(SCAN_VALUE_STR);
+    } else {
+        SCAN_HILOGE("not exist this type: %{public}u", valueType);
+        return SCAN_ERROR_GENERIC_FAILURE;
+    }
+    return SCAN_ERROR_NONE;
+}
+
 }
 
 int32_t OH_Scan_Init()
@@ -429,33 +460,18 @@ int32_t OH_Scan_SetScannerParameter(const char* scannerId, const int32_t option,
         return SCAN_ERROR_INVALID_PARAMETER;
     }
     auto t = g_valueMap[scannerId].find(option);
+    ScanOptionValue scanOptionValue;
     uint32_t valueType = g_valueMap[scannerId][option].valueType;
-    std::string strvalue = std::string(value);
-    ScanOptionValue optionValue;
-
-    if (valueType == SCAN_INT_TYPE) {
-        if (!t->second.numList.count(strvalue)) {
-            SCAN_HILOGE("not exit this value: [%{public}s]", strvalue.c_str());
-            return SCAN_ERROR_INVALID_PARAMETER;
-        }
-        optionValue.SetNumValue(std::stoi(strvalue));
-        optionValue.SetScanOptionValueType(SCAN_VALUE_NUM);
-    } else if (valueType == SCAN_STRING_TYPE) {
-        if (!t->second.strList.count(strvalue)) {
-            SCAN_HILOGE("not exit this value: [%{public}s]", strvalue.c_str());
-            return SCAN_ERROR_INVALID_PARAMETER;
-        }
-        optionValue.SetStrValue(strvalue);
-        optionValue.SetScanOptionValueType(SCAN_VALUE_STR);
-    } else {
-        SCAN_HILOGI("not exist this type ");
-        return SCAN_ERROR_GENERIC_FAILURE;
+    int32_t ret = GetScanOptionValue(valueType, t->second, value, scanOptionValue);
+    if (ret != SCAN_ERROR_NONE) {
+        SCAN_HILOGE("GetScanOptionValue failed, ErxrorCode: [%{public}d]", ret);
+        return ret;
     }
-
+    
     int32_t optionIndex = t->second.optionIndex;
-    int32_t info;
-    int32_t ret = client->OpScanOptionValue(std::string(scannerId),
-        optionIndex, SCAN_ACTION_SET_VALUE, optionValue, info);
+    int32_t info = 0;
+    ret = client->OpScanOptionValue(std::string(scannerId),
+        optionIndex, SCAN_ACTION_SET_VALUE, scanOptionValue, info);
     if (ret != SCAN_ERROR_NONE) {
         SCAN_HILOGE("SetScannerParameter failed, ErxrorCode: [%{public}d]", ret);
         return ret;

@@ -46,6 +46,8 @@ public:
     virtual int32_t RemovePrinters(const std::vector<std::string> &printerIds) = 0;
     virtual int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) = 0;
     virtual int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) = 0;
+    virtual int32_t UpdatePrintJobStateForNormalApp(
+        const std::string &jobId, uint32_t state, uint32_t subState) = 0;
     virtual int32_t UpdatePrintJobStateOnlyForSystemApp(
         const std::string &jobId, uint32_t state, uint32_t subState) = 0;
     virtual int32_t UpdateExtensionInfo(const std::string &extensionId) = 0;
@@ -79,8 +81,12 @@ public:
     virtual int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference) = 0;
     virtual int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference) = 0;
     virtual int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) = 0;
-    virtual int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-        const std::string &printerMake) = 0;
+    virtual int32_t DeletePrinterFromCups(const std::string &printerName) = 0;
+    virtual int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers) = 0;
+    virtual int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo) = 0;
+    virtual int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo) = 0;
+    virtual int32_t RemovePrinterFromDiscovery(const std::string &printerId) = 0;
+    virtual int32_t UpdatePrinterInSystem(const PrinterInfo &printerInfo) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

@@ -823,5 +823,146 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0026, TestSize.Level1)
     std::string testJobId = "jobId-123";
     EXPECT_EQ(E_PRINT_RPC_FAILURE, proxy->NotifyPrintServiceEvent(testJobId, 0));
 }
+
+/**
+ * @tc.name: PrintServiceProxyTest_0028
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0028, TestSize.Level1)
+{
+    std::string testType = "type";
+    sptr<IPrintCallback> testListener = new (std::nothrow) DummyPrintCallbackStub();
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_EQ(E_PRINT_NONE, proxy->RegisterPrinterCallback(testType, testListener));
+}
+
+/**
+ * @tc.name: PrintServiceProxyTest_0029
+ * @tc.desc: Verify the DiscoverUsbPrinters function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0029, TestSize.Level1)
+{
+    std::vector<PrinterInfo> testPrinters = {};
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, DiscoverUsbPrinters(_)).Times(Exactly(1)).WillOnce(
+        [&testPrinters](std::vector<PrinterInfo> &printers) {
+            EXPECT_EQ(testPrinters.size(), printers.size());
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    proxy->DiscoverUsbPrinters(testPrinters);
+}
+
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0030, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo testInfo1;
+    testInfo1.SetOption("option-1");
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, AddPrinterToDiscovery(_)).Times(Exactly(1)).WillOnce(
+        [&testInfo1](const PrinterInfo &printerInfo) {
+            EXPECT_EQ(testInfo1.GetOption(), printerInfo.GetOption());
+            return E_PRINT_NONE;
+    });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+    });
+    proxy->AddPrinterToDiscovery(testInfo1);
+}
+
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0031, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo testInfo1;
+    testInfo1.SetOption("option-1");
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, UpdatePrinterInDiscovery(_)).Times(Exactly(1)).WillOnce(
+        [&testInfo1](const PrinterInfo &printerInfo) {
+            EXPECT_EQ(testInfo1.GetOption(), printerInfo.GetOption());
+            return E_PRINT_NONE;
+    });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+    });
+    proxy->UpdatePrinterInDiscovery(testInfo1);
+}
+
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0032, TestSize.Level1)
+{
+    std::string testPrinterId = "111";
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, RemovePrinterFromDiscovery(_)).Times(Exactly(1)).WillOnce(
+        [&testPrinterId](const std::string &printerId) {
+            EXPECT_EQ(testPrinterId, printerId);
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+    });
+    proxy->RemovePrinterFromDiscovery(testPrinterId);
+}
+
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0033, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo testInfo1;
+    testInfo1.SetOption("option-1");
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, UpdatePrinterInSystem(_)).Times(Exactly(1)).WillOnce(
+        [&testInfo1](const PrinterInfo &printerInfo) {
+            EXPECT_EQ(testInfo1.GetOption(), printerInfo.GetOption());
+            return E_PRINT_NONE;
+    });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+    });
+    proxy->UpdatePrinterInSystem(testInfo1);
+}
+
 } // namespace Print
 } // namespace OHOS

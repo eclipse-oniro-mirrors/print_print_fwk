@@ -76,6 +76,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t UpdatePrintJobStateForNormalApp(const std::string &jobId, uint32_t state, uint32_t subState) override
+    {
+        return E_PRINT_NONE;
+    }
     int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState) override
     {
         return E_PRINT_NONE;
@@ -190,8 +194,27 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-        const std::string &printerMake) override
+    int32_t DeletePrinterFromCups(const std::string &printerName) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t AddPrinterToDiscovery(const PrinterInfo& printerInfo) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t UpdatePrinterInDiscovery(const PrinterInfo& printerInfo) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t RemovePrinterFromDiscovery(const std::string& printerId) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t UpdatePrinterInSystem(const PrinterInfo& printerInfo) override
     {
         return E_PRINT_NONE;
     }
@@ -212,6 +235,7 @@ public:
     MOCK_METHOD1(RemovePrinters, int32_t(const std::vector<std::string>&));
     MOCK_METHOD1(UpdatePrinters, int32_t(const std::vector<PrinterInfo>&));
     MOCK_METHOD2(UpdatePrinterState, int32_t(const std::string&, uint32_t));
+    MOCK_METHOD3(UpdatePrintJobStateForNormalApp, int32_t(const std::string&, uint32_t, uint32_t));
     MOCK_METHOD3(UpdatePrintJobStateOnlyForSystemApp, int32_t(const std::string&, uint32_t, uint32_t));
     MOCK_METHOD1(UpdateExtensionInfo, int32_t(const std::string&));
     MOCK_METHOD2(RequestPreview, int32_t(const PrintJob&, std::string&));
@@ -227,7 +251,12 @@ public:
     MOCK_METHOD3(QueryPrinterCapabilityByUri, int32_t(const std::string&, const std::string&, PrinterCapability&));
     MOCK_METHOD2(NotifyPrintServiceEvent, int32_t(std::string&, uint32_t));
     MOCK_METHOD2(SetDefaultPrinter, int32_t(const std::string&, uint32_t));
-    MOCK_METHOD3(DeletePrinterFromCups, int32_t(const std::string&, const std::string&, const std::string&));
+    MOCK_METHOD1(DeletePrinterFromCups, int32_t(const std::string&));
+    MOCK_METHOD1(DiscoverUsbPrinters, int32_t(std::vector<PrinterInfo>&));
+    MOCK_METHOD1(AddPrinterToDiscovery, int32_t(const PrinterInfo&));
+    MOCK_METHOD1(UpdatePrinterInDiscovery, int32_t(const PrinterInfo&));
+    MOCK_METHOD1(RemovePrinterFromDiscovery, int32_t(const std::string&));
+    MOCK_METHOD1(UpdatePrinterInSystem, int32_t(const PrinterInfo&));
 };
 } // namespace Print
 } // namespace OHOS

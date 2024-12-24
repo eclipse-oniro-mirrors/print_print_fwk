@@ -36,15 +36,23 @@ public:
     bool DeleteScannerInfo(const std::string &uniqueId);
     bool UpdateScannerNameByUniqueId(const std::string &uniqueId, const std::string &deviceName);
     bool UpdateScannerInfoByUniqueId(const std::string &uniqueId, const ScanDeviceInfo &scannerInfo);
+    bool UpdateScannerIdByUsbDevicePort(const std::string &uniqueId, const std::string &usbDevicePort);
     bool QueryScannerNameByUniqueId(const std::string &uniqueId, std::string &deviceName);
     bool QueryScannerInfoByUniqueId(const std::string &uniqueId, ScanDeviceInfo &scannerInfo);
+    void RefreshUsbDeviceId();
     void GetAddedScannerInfoList(std::vector<ScanDeviceInfo> &infoList);
     bool SaveScannerMap();
+    bool IsContainScanner(const std::string &uniqueId);
+    std::pair<std::string, std::string> UpdateNetScannerByUuid(const std::string &uuid, const std::string& ip);
+    static std::string ReplaceDeviceIdUsbPort(const std::string& deviceId, const std::string& usbPort);
+    static std::map<std::string, std::string> usbSnToPortMap_;
 
 private:
-    std::map<std::string, std::shared_ptr<ScanDeviceInfo>> addedScannerMap_;
     bool ParseScannerListJsonV1(nlohmann::json& jsonObject);
     bool CheckJsonObjectValue(const nlohmann::json& object);
+    void FormatUsbPort(std::string &port);
+    std::string GetNewDeviceId(std::string oldDeviceId, std::string usbDevicePort);
+    std::map<std::string, std::shared_ptr<ScanDeviceInfo>> addedScannerMap_;
     std::mutex addedScannerMapLock_;
 };
 

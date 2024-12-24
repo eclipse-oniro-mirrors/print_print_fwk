@@ -103,7 +103,7 @@ inline void PrintIppOverUsbUtil::MakeHeader(size_t startLine, size_t endline, co
 {
     // 提取key和value
     size_t theSplitIndex = startLine; // ":" 所在的位置
-    while (data[theSplitIndex] != CODE_SPLIT_VALUE_COLON && theSplitIndex < endline) {
+    while (theSplitIndex < endline && data[theSplitIndex] != CODE_SPLIT_VALUE_COLON) {
         theSplitIndex++;
     }
     std::string keyString;

@@ -47,7 +47,7 @@ struct PrintTypeInfo {
 public:
     PrintSecurityGuardInfo(const std::string callPkg, const std::vector<std::string> &fileList);
     std::string ToJsonStr();
-    void setPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob);
+    void SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob);
 
 private:
     int32_t subType_{};
@@ -59,6 +59,7 @@ private:
     std::string targetInfo_{};
     std::string sourceInfo_{};
     std::string extra_{};
+    std::string jobName_{};
     PrintTypeInfo printTypeInfo_;
 
     nlohmann::json ToJson();

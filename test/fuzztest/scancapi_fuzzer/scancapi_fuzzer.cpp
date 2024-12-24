@@ -18,7 +18,6 @@
 #include "ohscan.h"
 #include "scancapi_fuzzer.h"
 
-
 namespace OHOS {
 namespace Scan {
 constexpr uint8_t MAX_STRING_LENGTH = 255;
@@ -26,28 +25,16 @@ constexpr int MAX_SET_NUMBER = 100;
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 
-void OHScanInitFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    OH_Scan_Init();
-}
-
 void DiscoveryCallBack(Scan_ScannerDevice** devices, int32_t deviceCount) {}
-
-void OHScanStartScannerDiscoveryFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    OH_Scan_StartScannerDiscovery(DiscoveryCallBack);
-}
 
 void OHScanOpenScannerFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
+    OH_Scan_Init();
+    OH_Scan_StartScannerDiscovery(DiscoveryCallBack);
     std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     OH_Scan_OpenScanner(scannerId.c_str());
-}
-
-void OHScanCloseScannerFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     OH_Scan_CloseScanner(scannerId.c_str());
+    OH_Scan_Exit();
 }
 
 void OHScanGetScannerParameterFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -102,10 +89,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Scan::OHScanInitFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::OHScanStartScannerDiscoveryFuzzTest(data, size, &dataProvider);
     OHOS::Scan::OHScanOpenScannerFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::OHScanCloseScannerFuzzTest(data, size, &dataProvider);
     OHOS::Scan::OHScanGetScannerParameterFuzzTest(data, size, &dataProvider);
     OHOS::Scan::OHScanSetScannerParameterFuzzTest(data, size, &dataProvider);
     OHOS::Scan::OHScanStartScanFuzzTest(data, size, &dataProvider);

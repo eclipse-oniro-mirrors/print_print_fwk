@@ -56,6 +56,13 @@ static constexpr const char *FUNCTION_GET_PRINTER_PREFERENCE = "getPrinterPrefer
 static constexpr const char *FUNCTION_SET_PRINTER_PREFERENCE = "setPrinterPreference";
 static constexpr const char *FUNCTION_SET_DEFAULT_PRINTER = "setDefaultPrinter";
 static constexpr const char *FUNCTION_DELETE_PRINTER_FROM_CUPS = "deletePrinterFromCups";
+static constexpr const char *FUNCTION_DISCOVER_USB_PRINTERS = "discoverUsbPrinters";
+static constexpr const char *FUNCTION_ADD_PRINTER_TO_DISCOVERY = "addPrinterToDiscovery";
+static constexpr const char *FUNCTION_UPDATE_PRINTER_IN_DISCOVERY = "updatePrinterInDiscovery";
+static constexpr const char *FUNCTION_REMOVE_PRINTER_FROM_DISCOVERY = "removePrinterFromDiscovery";
+static constexpr const char *FUNCTION_GET_ADDED_PRINTER_INFO_BY_ID = "getAddedPrinterInfoById";
+static constexpr const char *FUNCTION_GET_PRINTER_INFORMATION_BY_ID = "getPrinterInformationById";
+static constexpr const char *FUNCTION_UPDATE_PRINTER_IN_SYSTEM = "updatePrinterInSystem";
 
 #define PRINT_NAPI_METHOD(name, func)           \
     {                                           \
@@ -69,15 +76,31 @@ static constexpr const char *FUNCTION_DELETE_PRINTER_FROM_CUPS = "deletePrinterF
 
 static void SetEnumProperty(napi_env env, napi_value object, const std::string &name, uint32_t value)
 {
+    if (name.empty()) {
+        PRINT_HILOGE("Property name cannot be an empty string");
+        return;
+    }
     napi_value tempValue = nullptr;
-    napi_create_int32(env, value, &tempValue);
-    napi_set_named_property(env, object, name.c_str(), tempValue);
+    napi_status status = napi_create_int32(env, value, &tempValue);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create int32 value for enum %s", name.c_str());
+        return;
+    }
+    status = napi_set_named_property(env, object, name.c_str(), tempValue);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to set property %s", name.c_str());
+        return;
+    }
 }
 
 static napi_value NapiCreateDirectionModeEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "DIRECTION_MODE_AUTO", static_cast<int32_t>(DIRECTION_MODE_AUTO));
     SetEnumProperty(env, object, "DIRECTION_MODE_PORTRAIT", static_cast<int32_t>(DIRECTION_MODE_PORTRAIT));
     SetEnumProperty(env, object, "DIRECTION_MODE_LANDSCAPE", static_cast<int32_t>(DIRECTION_MODE_LANDSCAPE));
@@ -87,7 +110,11 @@ static napi_value NapiCreateDirectionModeEnum(napi_env env)
 static napi_value NapiCreateColorModeEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "COLOR_MODE_MONOCHROME", static_cast<int32_t>(PRINT_COLOR_MODE_MONOCHROME));
     SetEnumProperty(env, object, "COLOR_MODE_COLOR", static_cast<int32_t>(PRINT_COLOR_MODE_COLOR));
     return object;
@@ -96,17 +123,57 @@ static napi_value NapiCreateColorModeEnum(napi_env env)
 static napi_value NapiCreateDuplexModeEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "DUPLEX_MODE_NONE", static_cast<int32_t>(DUPLEX_MODE_NONE));
     SetEnumProperty(env, object, "DUPLEX_MODE_LONG_EDGE", static_cast<int32_t>(DUPLEX_MODE_LONG_EDGE));
     SetEnumProperty(env, object, "DUPLEX_MODE_SHORT_EDGE", static_cast<int32_t>(DUPLEX_MODE_SHORT_EDGE));
     return object;
 }
 
+static napi_value NapiCreateQualityEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
+    SetEnumProperty(env, object, "QUALITY_DRAFT", static_cast<int32_t>(PRINT_QUALITY_DRAFT));
+    SetEnumProperty(env, object, "QUALITY_NORMAL", static_cast<int32_t>(PRINT_QUALITY_NORMAL));
+    SetEnumProperty(env, object, "QUALITY_HIGH", static_cast<int32_t>(PRINT_QUALITY_HIGH));
+    return object;
+}
+
+static napi_value NapiCreateOrientationEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
+    SetEnumProperty(env, object, "ORIENTATION_MODE_PORTRAIT", static_cast<int32_t>(PRINT_ORIENTATION_MODE_PORTRAIT));
+    SetEnumProperty(env, object, "ORIENTATION_MODE_LANDSCAPE", static_cast<int32_t>(PRINT_ORIENTATION_MODE_LANDSCAPE));
+    SetEnumProperty(env, object, "ORIENTATION_MODE_REVERSE_LANDSCAPE",
+                    static_cast<int32_t>(PRINT_ORIENTATION_MODE_REVERSE_LANDSCAPE));
+    SetEnumProperty(env, object, "ORIENTATION_MODE_REVERSE_PORTRAIT",
+                    static_cast<int32_t>(PRINT_ORIENTATION_MODE_REVERSE_PORTRAIT));
+    SetEnumProperty(env, object, "ORIENTATION_MODE_NONE", static_cast<int32_t>(PRINT_ORIENTATION_MODE_NONE));
+    return object;
+}
+
 static napi_value NapiCreatePageTypeEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "PAGE_ISO_A3", static_cast<int32_t>(PAGE_ISO_A3));
     SetEnumProperty(env, object, "PAGE_ISO_A4", static_cast<int32_t>(PAGE_ISO_A4));
     SetEnumProperty(env, object, "PAGE_ISO_A5", static_cast<int32_t>(PAGE_ISO_A5));
@@ -125,7 +192,11 @@ static napi_value NapiCreatePageTypeEnum(napi_env env)
 static napi_value NapiCreateDocumentAdapterStateEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "PREVIEW_DESTROY", static_cast<int32_t>(PREVIEW_ABILITY_DESTROY));
     SetEnumProperty(env, object, "PRINT_TASK_SUCCEED", static_cast<int32_t>(PRINT_TASK_SUCCEED));
     SetEnumProperty(env, object, "PRINT_TASK_FAIL", static_cast<int32_t>(PRINT_TASK_FAIL));
@@ -137,7 +208,11 @@ static napi_value NapiCreateDocumentAdapterStateEnum(napi_env env)
 static napi_value NapiCreateFileCreationStateEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "PRINT_FILE_CREATED", static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS));
     SetEnumProperty(env, object, "PRINT_FILE_CREATION_FAILED", static_cast<int32_t>(PRINT_FILE_CREATED_FAIL));
     SetEnumProperty(env, object, "PRINT_FILE_CREATED_UNRENDERED",
@@ -148,7 +223,11 @@ static napi_value NapiCreateFileCreationStateEnum(napi_env env)
 static napi_value NapiCreatePrinterStateEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "PRINTER_ADDED", static_cast<int32_t>(PRINTER_ADDED));
     SetEnumProperty(env, object, "PRINTER_REMOVED", static_cast<int32_t>(PRINTER_REMOVED));
     SetEnumProperty(env, object, "PRINTER_CAPABILITY_UPDATED", static_cast<int32_t>(PRINTER_UPDATE_CAP));
@@ -161,7 +240,11 @@ static napi_value NapiCreatePrinterStateEnum(napi_env env)
 static napi_value NapiCreatePrintJobStateEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "PRINT_JOB_PREPARE", static_cast<int32_t>(PRINT_JOB_PREPARED));
     SetEnumProperty(env, object, "PRINT_JOB_QUEUED", static_cast<int32_t>(PRINT_JOB_QUEUED));
     SetEnumProperty(env, object, "PRINT_JOB_RUNNING", static_cast<int32_t>(PRINT_JOB_RUNNING));
@@ -173,7 +256,10 @@ static napi_value NapiCreatePrintJobStateEnum(napi_env env)
 static napi_value NapiCreatePrintJobSubStateEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    if (napi_create_object(env, &object) != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_SUCCESS", static_cast<int32_t>(PRINT_JOB_COMPLETED_SUCCESS));
     SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_FAILED", static_cast<int32_t>(PRINT_JOB_COMPLETED_FAILED));
     SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_CANCELLED", static_cast<int32_t>(PRINT_JOB_COMPLETED_CANCELLED));
@@ -222,7 +308,11 @@ static napi_value NapiCreatePrintJobSubStateEnum(napi_env env)
 static napi_value NapiCreatePrintErrorCodeEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "E_PRINT_NONE", static_cast<int32_t>(E_PRINT_NONE));
     SetEnumProperty(env, object, "E_PRINT_NO_PERMISSION", static_cast<int32_t>(E_PRINT_NO_PERMISSION));
     SetEnumProperty(env, object, "E_PRINT_INVALID_PARAMETER", static_cast<int32_t>(E_PRINT_INVALID_PARAMETER));
@@ -239,7 +329,11 @@ static napi_value NapiCreatePrintErrorCodeEnum(napi_env env)
 static napi_value NapiCreatePrintStatusEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "PRINTER_STATUS_IDLE", static_cast<int32_t>(PRINTER_STATUS_IDLE));
     SetEnumProperty(env, object, "PRINTER_STATUS_BUSY", static_cast<int32_t>(PRINTER_STATUS_BUSY));
     SetEnumProperty(env, object, "PRINTER_STATUS_UNAVAILABLE", static_cast<int32_t>(PRINTER_STATUS_UNAVAILABLE));
@@ -249,7 +343,11 @@ static napi_value NapiCreatePrintStatusEnum(napi_env env)
 static napi_value NapiCreatePrintEventEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "PRINTER_EVENT_ADDED", static_cast<int32_t>(PRINTER_EVENT_ADDED));
     SetEnumProperty(env, object, "PRINTER_EVENT_DELETED", static_cast<int32_t>(PRINTER_EVENT_DELETED));
     SetEnumProperty(env, object, "PRINTER_EVENT_STATE_CHANGED", static_cast<int32_t>(PRINTER_EVENT_STATE_CHANGED));
@@ -260,7 +358,11 @@ static napi_value NapiCreatePrintEventEnum(napi_env env)
 static napi_value NapiCreateApplicationEventEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(env, object, "APPLICATION_CREATED", static_cast<int32_t>(APPLICATION_CREATED));
     SetEnumProperty(
         env, object, "APPLICATION_CLOSED_FOR_STARTED", static_cast<int32_t>(APPLICATION_CLOSED_FOR_STARTED));
@@ -272,7 +374,11 @@ static napi_value NapiCreateApplicationEventEnum(napi_env env)
 static napi_value NapiCreateDefaultPrinterTypeEnum(napi_env env)
 {
     napi_value object = nullptr;
-    napi_create_object(env, &object);
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
     SetEnumProperty(
         env, object, "DEFAULT_PRINTER_TYPE_SETTED_BY_USER", static_cast<int32_t>(DEFAULT_PRINTER_TYPE_SETTED_BY_USER));
     SetEnumProperty(env,
@@ -288,6 +394,8 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY("PrintDirectionMode", NapiCreateDirectionModeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintColorMode", NapiCreateColorModeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintDuplexMode", NapiCreateDuplexModeEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintQuality", NapiCreateQualityEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintOrientationMode", NapiCreateOrientationEnum(env)),
         PRINT_NAPI_PROPERTY("PrintPageType", NapiCreatePageTypeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintDocumentAdapterState", NapiCreateDocumentAdapterStateEnum(env)),
         PRINT_NAPI_PROPERTY("PrintFileCreationState", NapiCreateFileCreationStateEnum(env)),
@@ -332,6 +440,13 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_SET_PRINTER_PREFERENCE, NapiInnerPrint::SetPrinterPreference),
         PRINT_NAPI_METHOD(FUNCTION_SET_DEFAULT_PRINTER, NapiInnerPrint::SetDefaultPrinter),
         PRINT_NAPI_METHOD(FUNCTION_DELETE_PRINTER_FROM_CUPS, NapiPrintExt::DeletePrinterFromCups),
+        PRINT_NAPI_METHOD(FUNCTION_DISCOVER_USB_PRINTERS, NapiPrintExt::DiscoverUsbPrinters),
+        PRINT_NAPI_METHOD(FUNCTION_ADD_PRINTER_TO_DISCOVERY, NapiPrintExt::AddPrinterToDiscovery),
+        PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_IN_DISCOVERY, NapiPrintExt::UpdatePrinterInDiscovery),
+        PRINT_NAPI_METHOD(FUNCTION_REMOVE_PRINTER_FROM_DISCOVERY, NapiPrintExt::RemovePrinterFromDiscovery),
+        PRINT_NAPI_METHOD(FUNCTION_GET_ADDED_PRINTER_INFO_BY_ID, NapiInnerPrint::GetAddedPrinterInfoById),
+        PRINT_NAPI_METHOD(FUNCTION_GET_PRINTER_INFORMATION_BY_ID, NapiInnerPrint::GetAddedPrinterInfoById),
+        PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_IN_SYSTEM, NapiPrintExt::UpdatePrinterInSystem),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);

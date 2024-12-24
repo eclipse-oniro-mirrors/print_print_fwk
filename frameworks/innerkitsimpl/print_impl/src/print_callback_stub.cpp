@@ -44,7 +44,8 @@ int32_t PrintCallbackStub::OnRemoteRequest(
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
         if (requestFunc != nullptr) {
-            return (this->*requestFunc)(data, reply);
+            bool result = (this->*requestFunc)(data, reply);
+            return result ? E_PRINT_NONE : E_PRINT_SERVER_FAILURE;
         }
     }
     PRINT_HILOGW("default case, need check.");
@@ -97,7 +98,7 @@ bool PrintCallbackStub::HandlePrintAdapterJobEvent(MessageParcel &data, MessageP
     std::string jobId = data.ReadString();
     auto oldAttrs = PrintAttributes::Unmarshalling(data);
     auto newAttrs = PrintAttributes::Unmarshalling(data);
-    if (newAttrs == nullptr) {
+    if (newAttrs == nullptr || oldAttrs == nullptr) {
         PRINT_HILOGE("invalid print attributes object");
         return false;
     }

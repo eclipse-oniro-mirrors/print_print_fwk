@@ -13,11 +13,13 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
+cflags_cc = []
+
 config("print_ndk_config") {
   visibility = [ ":*" ]
   include_dirs = []
 
-  cflags_cc = [ "-fno-exceptions" ]
+  cflags_cc += [ "-fno-exceptions" ]
 }
 ohos_shared_library("ohprint") {
   include_dirs = [
@@ -77,6 +79,10 @@ ohos_shared_library("ohprint") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  if (build_variant == "user") {
+    cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+  }
 
   relative_install_dir = "ndk"
   output_name = "ohprint"

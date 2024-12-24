@@ -35,12 +35,13 @@
 #include "print_user_data.h"
 #include "print_system_data.h"
 #include "print_attribute_preference.h"
+#include "vendor_manager.h"
 
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 class IKeyguardStateCallback;
 
-class PrintServiceAbility : public SystemAbility, public PrintServiceStub {
+class PrintServiceAbility : public SystemAbility, public PrintServiceStub, public IPrintServiceAbility {
     DECLARE_SYSTEM_ABILITY(PrintServiceAbility);
 
 public:
@@ -64,6 +65,7 @@ public:
     int32_t RemovePrinters(const std::vector<std::string> &printerIds) override;
     int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) override;
+    int32_t UpdatePrintJobStateForNormalApp(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdateExtensionInfo(const std::string &extInfo) override;
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override;
@@ -92,7 +94,7 @@ public:
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
 
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) override;
-    
+
     int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList) override;
     int32_t StartNativePrintJob(PrintJob &printJob) override;
@@ -103,8 +105,13 @@ public:
     int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference) override;
     int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference) override;
     int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) override;
-    int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-        const std::string &printerMake) override;
+    int32_t DeletePrinterFromCups(const std::string &printerName) override;
+    int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers) override;
+    int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo) override;
+    int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo) override;
+    int32_t RemovePrinterFromDiscovery(const std::string &printerId) override;
+    int32_t UpdatePrinterInSystem(const PrinterInfo &printerInfo) override;
+    bool QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds) override;
 
 protected:
     void OnStart() override;
@@ -118,18 +125,17 @@ private:
     bool StartAbility(const AAFwk::Want &want);
     PrintExtensionInfo ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo);
     bool DelayStartDiscovery(const std::string &extensionId);
-    void SendPrinterDiscoverEvent(int event, const PrinterInfo &info);
-    void SendPrinterChangeEvent(int event, const PrinterInfo &info);
+    int32_t SendPrinterDiscoverEvent(int event, const PrinterInfo &info);
+    int32_t SendPrinterChangeEvent(int event, const PrinterInfo &info);
     void SendPrinterEvent(const PrinterInfo &info);
-    void SendPrinterEventChangeEvent(PrinterEvent printerEvent, const PrinterInfo &info);
+    int32_t SendPrinterEventChangeEvent(PrinterEvent printerEvent, const PrinterInfo &info, bool isSignalUser = false);
     void SendPrintJobEvent(const PrintJob &jobInfo);
-    void SendExtensionEvent(const std::string &extensionId, const std::string &extInfo);
+    int32_t SendExtensionEvent(const std::string &extensionId, const std::string &extInfo);
     bool CheckPermission(const std::string &permissionName);
-    void SendQueuePrintJob(const std::string &printerId);
+    bool SendQueuePrintJob(const std::string &printerId);
     void NotifyAppJobQueueChanged(const std::string &applyResult);
-    std::shared_ptr<PrinterInfo> getPrinterInfo(const std::string printerId);
     bool isEprint(const std::string &printerId);
-    void ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
+    int32_t ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
     void ReportCompletedPrint(const std::string &printerId);
     void CheckJobQueueBlocked(const PrintJob &jobInfo);
     int32_t CallSpooler(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
@@ -167,7 +173,6 @@ private:
         std::vector<std::string>& optAttrs);
     void BuildPrinterAttrComponentByJson(std::string& key, nlohmann::json& jsonArrObject,
         std::vector<std::string> &printerAttrs);
-    std::string StandardizePrinterId(const std::string &printerId);
     bool CheckIsDefaultPrinter(const std::string &printerId);
     bool CheckIsLastUsedPrinter(const std::string &printerId);
     void SetLastUsedPrinter(const std::string &printerId);
@@ -175,14 +180,43 @@ private:
     void DeletePrinterFromUserData(const std::string &printerId);
     std::shared_ptr<PrintUserData> GetUserDataByUserId(int32_t userId);
     PrintJobState DetermineUserJobStatus(const std::map<std::string, std::shared_ptr<PrintJob>> &jobList);
-    void NotifyAppDeletePrinterWithDefaultPrinter(const std::string &printerId);
+    void NotifyAppDeletePrinter(const std::string &printerId);
     void ChangeDefaultPrinterForDelete(std::shared_ptr<PrintUserData> &userData, const std::string &printerId);
-    bool UpdatePrinterCapability(const std::string &printerId, PrinterInfo &info);
-    bool UpdatePrinterSystemData(const std::string &printerId, PrinterInfo &info);
+    bool UpdatePrinterCapability(const std::string &printerId, const PrinterInfo &info);
+    bool UpdatePrinterSystemData(const PrinterInfo &info);
     uint32_t GetListeningState(const uint32_t subState);
-    std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
+    uint32_t GetListeningState(uint32_t state, uint32_t subState);
     bool CheckPrintJob(PrintJob &jobInfo);
     bool CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info);
+    int32_t AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
+    bool UpdateSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId);
+    bool RemoveSinglePrinterInfo(const std::string &printerId);
+    void HandlePrinterStateChangeRegister(const std::string &eventType);
+    void HandlePrinterChangeRegister(const std::string &eventType);
+    bool UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri);
+    int32_t HandleExtensionConnectPrinter(const std::string &printerId);
+    bool CheckUserIdInEventType(const std::string &type);
+public:
+    bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
+    bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
+    bool RemoveVendorPrinterFromDiscovery(const std::string &globalVendorName, const std::string &printerId) override;
+    bool AddVendorPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
+        const std::string &ppdData) override;
+    bool AddVendorPrinterToCupsWithSpecificPpd(const std::string &globalVendorName,
+        const std::string &printerId, const std::string &ppdData) override;
+    bool RemoveVendorPrinterFromCups(const std::string &vendorName, const std::string &printerId) override;
+    bool OnVendorStatusUpdate(const std::string &globalVendorName, const std::string &printerId,
+        const PrinterVendorStatus &status) override;
+    bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) override;
+    bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
+    std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &printerId) override;
+private:
+    int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
+    int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
+    int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
+    int32_t TryConnectPrinterByIp(const std::string &params);
+    std::string RenamePrinterWhenAdded(const PrinterInfo &info);
+    void ConnectIppOverUsbPrinter(const std::string &printerId);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;
@@ -205,7 +239,6 @@ private:
     std::map<std::string, std::string, JobIdCmp> jobOrderList_;
     std::map<std::string, PrintAttributes> printAttributesList_;
 
-    std::map<std::string, std::shared_ptr<PrinterInfo>> printerInfoList_;
     std::map<std::string, std::unordered_map<std::string, bool>> printerJobMap_;
 
     std::string spoolerBundleName_;
@@ -225,6 +258,8 @@ private:
     uint32_t printAppCount_;
     uint32_t unloadCount_;
     std::map<std::string, std::string> printerIdAndPreferenceMap_;
+    std::recursive_mutex printerPreferenceMapMutex_;
+    VendorManager vendorManager;
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_SYSTEM_ABILITY_H

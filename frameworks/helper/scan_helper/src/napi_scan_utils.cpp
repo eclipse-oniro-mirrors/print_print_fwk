@@ -19,6 +19,7 @@
 #include "ability.h"
 #include "napi_base_context.h"
 #include "scan_log.h"
+#include "scan_util.h"
 #include "securec.h"
 
 namespace OHOS::Scan {
@@ -282,7 +283,7 @@ napi_value NapiScanUtils::CreateBoolean(napi_env env, bool value)
 
 bool NapiScanUtils::GetBooleanFromValue(napi_env env, napi_value value)
 {
-    bool ret = 0;
+    bool ret = false;
     SCAN_CALL_BASE(env, napi_get_value_bool(env, value, &ret), 0);
     return ret;
 }
@@ -329,11 +330,13 @@ std::string NapiScanUtils::ToLower(const std::string &s)
 std::string NapiScanUtils::GetValueString(napi_env env, napi_value value)
 {
     std::string resultValue = "";
-    char value_string[256];
+    char value_string[256] = { 0 };
     size_t value_size = 256;
-    size_t result;
-    napi_get_value_string_utf8(env, value, value_string, value_size, &result);
-    resultValue = value_string;
+    size_t result = 0;
+    napi_status status = napi_get_value_string_utf8(env, value, value_string, value_size, &result);
+    if (status == napi_ok && result > 0) {
+        resultValue = value_string;
+    }
     return resultValue;
 }
 
@@ -376,7 +379,11 @@ bool NapiScanUtils::DecodeExtensionCid(const std::string &cid, std::string &exte
         return false;
     }
     extensionId = cid.substr(0, pos);
-    callbackId = static_cast<uint32_t>(atoi(cid.substr(pos + 1).c_str()));
+    int32_t callbackIdTmp = 0;
+    if (!ScanUtil::ConvertToInt(cid.substr(pos + 1), callbackIdTmp)) {
+        return false;
+    }
+    callbackId = static_cast<uint32_t>(callbackIdTmp);
     return true;
 }
 
@@ -390,12 +397,7 @@ int32_t NapiScanUtils::OpenFile(const std::string &filePath)
     if (!IsPathValid(filePath)) {
         return SCAN_INVALID_ID;
     }
-    char realFilePath[PATH_MAX] = {};
-    if (realpath(filePath.c_str(), realFilePath) == nullptr) {
-        SCAN_HILOGE("The realFilePath is null.");
-        return SCAN_INVALID_ID;
-    }
-    int32_t fd = open(realFilePath, O_RDONLY);
+    int32_t fd = open(filePath.c_str(), O_RDONLY);
     SCAN_HILOGD("fd: %{public}d", fd);
     if (fd < 0) {
         SCAN_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
@@ -420,7 +422,7 @@ uint32_t NapiScanUtils::GetIdFromFdPath(const std::string &fdPath)
 {
     std::string fd_str = fdPath.substr(fdPath.rfind('/') + 1, fdPath.length());
     std::stringstream getStrStream(fd_str);
-    uint32_t fd;
+    uint32_t fd = 0;
     if (!(getStrStream >> fd)) {
         SCAN_HILOGD("failed to convert to uint32");
     }

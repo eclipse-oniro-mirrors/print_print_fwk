@@ -38,19 +38,6 @@ void PrintMarginTest::SetUp(void) {}
 void PrintMarginTest::TearDown(void) {}
 
 /**
- * @tc.name: PrintMarginTest_001
- * @tc.desc: Verify the bottom function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintMarginTest, PrintMarginTest_001, TestSize.Level1)
-{
-    OHOS::Print::PrintMargin margin;
-    margin.Dump();
-    margin.~PrintMargin();
-}
-
-/**
  * @tc.name: PrintMarginTest_002
  * @tc.desc: Verify the getBottom function.
  * @tc.type: FUNC

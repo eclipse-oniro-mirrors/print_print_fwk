@@ -41,22 +41,14 @@ static const std::string UI_EXTENSION_TYPE_NAME = "ability.want.params.uiExtensi
 static const std::string PRINT_UI_EXTENSION_TYPE = "sysDialog/print";
 static const std::string CALLER_PKG_NAME = "caller.pkgName";
 
-std::mutex PrintManagerClient::instanceLock_;
-sptr<PrintManagerClient> PrintManagerClient::instance_ = nullptr;
-
 PrintManagerClient::PrintManagerClient() : printServiceProxy_(nullptr), deathRecipient_(nullptr) {}
 
 PrintManagerClient::~PrintManagerClient() {}
 
-sptr<PrintManagerClient> PrintManagerClient::GetInstance()
+PrintManagerClient* PrintManagerClient::GetInstance()
 {
-    if (instance_ == nullptr) {
-        std::lock_guard<std::mutex> autoLock(instanceLock_);
-        if (instance_ == nullptr) {
-            instance_ = new PrintManagerClient;
-        }
-    }
-    return instance_;
+    static PrintManagerClient instance;
+    return &instance;
 }
 
 bool PrintManagerClient::GetPrintServiceProxy()
@@ -225,6 +217,9 @@ int32_t PrintManagerClient::AddPrinters(const std::vector<PrinterInfo> &printerI
         ret = printServiceProxy_->AddPrinters(printerInfos);
         PRINT_HILOGD("PrintManagerClient AddPrinters out ret = [%{public}d].", ret);
     }
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("Failed to query printerList");
+    }
     return ret;
 }
 
@@ -260,6 +255,19 @@ int32_t PrintManagerClient::UpdatePrinterState(const std::string &printerId, uin
     if (LoadServer() && GetPrintServiceProxy()) {
         ret = printServiceProxy_->UpdatePrinterState(printerId, state);
         PRINT_HILOGD("PrintManagerClient UpdatePrinterState out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::UpdatePrintJobStateForNormalApp(
+    const std::string &jobId, uint32_t state, uint32_t subState)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGI("PrintManagerClient UpdatePrintJobStateForNormalApp start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->UpdatePrintJobStateForNormalApp(jobId, state, subState);
+        PRINT_HILOGI("PrintManagerClient UpdatePrintJobStateForNormalApp out ret = [%{public}d].", ret);
     }
     return ret;
 }
@@ -386,6 +394,56 @@ int32_t PrintManagerClient::SetPrinterPreference(const std::string &printerId, c
     return ret;
 }
 
+int32_t PrintManagerClient::AddPrinterToDiscovery(const PrinterInfo &printerInfo)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGD("PrintManagerClient AddPrinterToDiscovery start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->AddPrinterToDiscovery(printerInfo);
+        PRINT_HILOGD("PrintManagerClient AddPrinterToDiscovery out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::UpdatePrinterInDiscovery(const PrinterInfo &printerInfo)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    printerInfo.Dump();
+
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->UpdatePrinterInDiscovery(printerInfo);
+        PRINT_HILOGD("PrintManagerClient UpdatePrinterInDiscovery out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::RemovePrinterFromDiscovery(const std::string &printerId)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGD("PrintManagerClient RemovePrinterFromDiscovery start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->RemovePrinterFromDiscovery(printerId);
+        PRINT_HILOGD("PrintManagerClient RemovePrinterFromDiscovery out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::UpdatePrinterInSystem(const PrinterInfo &printerInfo)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    printerInfo.Dump();
+
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->UpdatePrinterInSystem(printerInfo);
+        PRINT_HILOGD("PrintManagerClient UpdatePrinterInSystem out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
@@ -460,15 +518,26 @@ int32_t PrintManagerClient::SetDefaultPrinter(const std::string &printerId, uint
     return ret;
 }
 
-int32_t PrintManagerClient::DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-    const std::string &printerMake)
+int32_t PrintManagerClient::DeletePrinterFromCups(const std::string &printerName)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     PRINT_HILOGD("PrintManagerClient DeletePrinterFromCups start.");
     int32_t ret = E_PRINT_RPC_FAILURE;
     if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->DeletePrinterFromCups(printerUri, printerName, printerMake);
+        ret = printServiceProxy_->DeletePrinterFromCups(printerName);
         PRINT_HILOGD("PrintManagerClient DeletePrinterFromCups out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGD("PrintManagerClient DiscoverUsbPrinters start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->DiscoverUsbPrinters(printers);
+        PRINT_HILOGD("PrintManagerClient DiscoverUsbPrinters out ret = [%{public}d].", ret);
     }
     return ret;
 }
@@ -634,6 +703,7 @@ int32_t PrintManagerClient::runBase(const char* callerFunName, std::function<int
         return ret;
     }
 
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     ret = func(printServiceProxy_);
     PRINT_HILOGI("PrintManagerClient %{public}s end ret = [%{public}d].", callerFunName, ret);
     return ret;
@@ -764,12 +834,14 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
 
 int32_t PrintManagerClient::UnregisterAllExtCallback(const std::string &extensionId)
 {
-    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
-    PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback start.");
     int32_t ret = E_PRINT_RPC_FAILURE;
-    if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->UnregisterAllExtCallback(extensionId);
-        PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback out ret = [%{public}d].", ret);
+    {
+        std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+        PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback start.");
+        if (LoadServer() && GetPrintServiceProxy()) {
+            ret = printServiceProxy_->UnregisterAllExtCallback(extensionId);
+            PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback out ret = [%{public}d].", ret);
+        }
     }
     extCallbackMap_.clear();
     return ret;
@@ -811,14 +883,14 @@ int32_t PrintManagerClient::LoadExtSuccess(const std::string &extensionId)
 
 bool PrintManagerClient::LoadServer()
 {
-    if (ready_) {
-        return true;
-    }
-    std::lock_guard<std::mutex> lock(loadMutex_);
-    if (ready_) {
-        return true;
+    {
+        std::unique_lock<std::mutex> lock(conditionMutex_);
+        if (ready_) {
+            return true;
+        }
     }
 
+    std::lock_guard<std::mutex> lock(loadMutex_);
     auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (sm == nullptr) {
         PRINT_HILOGE("GetSystemAbilityManager return null");
@@ -859,6 +931,7 @@ void PrintManagerClient::LoadServerSuccess()
 
 void PrintManagerClient::LoadServerFail()
 {
+    std::unique_lock<std::mutex> lock(conditionMutex_);
     ready_ = false;
     PRINT_HILOGE("load print server fail");
 }

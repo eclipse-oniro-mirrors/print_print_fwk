@@ -23,10 +23,6 @@
 #include "mdns_common.h"
 #include "scanner_info.h"
 #include "scan_log.h"
-#ifdef SANE_ENABLE
-#include "sane/sane.h"
-#include "sane/saneopts.h"
-#endif
 #include "scan_service_ability.h"
 
 namespace OHOS::Scan {
@@ -38,7 +34,7 @@ public:
     virtual ~ScanMDnsDiscoveryObserver() = default;
     void HandleStartDiscover(const MDnsServiceInfo &serviceInfo, int32_t retCode) override{}
     void HandleStopDiscover(const MDnsServiceInfo &serviceInfo, int32_t retCode) override;
-    void HandleServiceLost(const MDnsServiceInfo &serviceInfo, int32_t retCode) override{}
+    void HandleServiceLost(const MDnsServiceInfo &serviceInfo, int32_t retCode) override;
     void HandleServiceFound(const MDnsServiceInfo &info, int32_t retCode) override;
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
     {
@@ -63,36 +59,31 @@ public:
     MDnsServiceInfo _serviceInfo;
 };
 
+class ScanMDnsLossResolveObserver : public ResolveCallbackStub {
+public:
+    explicit ScanMDnsLossResolveObserver(const MDnsServiceInfo &info):_serviceInfo(info) {}
+    virtual ~ScanMDnsLossResolveObserver() = default;
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption& option) override
+    {
+        SCAN_HILOGD("GetScannerList ScanMDnsLossResolveObserver OnRemoteRequest");
+        return ResolveCallbackStub::OnRemoteRequest(code, data, reply, option);
+    }
+    void HandleResolveResult(const MDnsServiceInfo& info, int32_t retCode) override;
+public:
+    MDnsServiceInfo _serviceInfo;
+};
+
 class ScanMdnsService {
 public:
-    ScanMdnsService(const ScanMdnsService&) = delete;
-    ScanMdnsService& operator=(const ScanMdnsService&) = delete;
-    static ScanMdnsService& GetInstance()
-    {
-        static ScanMdnsService instance;
-        return instance;
-    }
-    void SetServiceInfo(const MDnsServiceInfo& info);
-    void SetMDnsResolveCallBack(sptr<ScanMDnsResolveObserver>& cb);
-    void SetMDnsDiscoveryCallBack(sptr<ScanMDnsDiscoveryObserver>& cb);
-    void SetServiceType(std::string stype);
-    sptr<ScanMDnsResolveObserver> GetMDnsResolveCallBack();
-    sptr<ScanMDnsDiscoveryObserver> GetMDnsDiscoveryCallBack();
-    MDnsServiceInfo& GetServiceInfo();
-    static std::string GetServiceAttribute(MDnsServiceInfo& serviceInfo, std::string keyStr);
-
-    bool onStartDiscoverService();
-    bool onStopDiscoverService();
-    bool onResolveService(MDnsServiceInfo& serviceInfo);
-    void ToMDnsScaner(MDnsServiceInfo& serviceInfo);
-
-public:
-    sptr<ScanMDnsDiscoveryObserver> _scanMDnsDiscoveryCallBack;
-    sptr<ScanMDnsResolveObserver> _scanMDnsResolveCallBack;
-    
+    static void InsertIpToScannerInfo(const std::string& ip, ScanDeviceInfoTCP& scanDeviceInfoTCP);
+    static bool OnStartDiscoverService();
+    static bool OnStopDiscoverService();
+    static bool FindNetScannerInfoByIp(const std::string& ip, ScanDeviceInfoTCP& netScannerInfo);
 private:
-    ScanMdnsService(){};
-    MDnsServiceInfo _serviceInfo;
+    static void UpdateScannerIdThread();
+    static std::map<std::string, sptr<ScanMDnsDiscoveryObserver>> discoveryCallBackPtrs_;
+    static std::mutex discoveryCallBackPtrsLock_;
+    static bool isListening_;
 };
 }
 #endif // !SCAN_MDNS_SERVICE_H

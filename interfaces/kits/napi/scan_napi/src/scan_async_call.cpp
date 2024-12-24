@@ -157,8 +157,10 @@ void ScanAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         uint32_t errorIndex = E_SCAN_NONE;
         if (context->paramStatus != napi_ok) {
             errorIndex = E_SCAN_INVALID_PARAMETER;
-        } else {
+        } else if (context->ctx != nullptr) {
             errorIndex = context->ctx->GetErrorIndex();
+        } else {
+            errorIndex = E_SCAN_GENERIC_FAILURE;
         }
         SCAN_HILOGE("ErrorMessage: [%{public}s], ErrorIndex:[%{public}d]",
             GetErrorText(errorIndex).c_str(), errorIndex);

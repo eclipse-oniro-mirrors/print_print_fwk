@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 #include <string>
+#include <fstream>
 #include <map>
 #include <nlohmann/json.hpp>
 #include "printer_info.h"
@@ -59,18 +60,21 @@ void PrintSystemDataTest::TearDown(void) {}
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0001, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_EQ(systemData->Init(), false);
+    const std::string PRINTER_LIST_FILE = "/data/service/el2/public/print_service/printer_list.json";
+    std::ifstream f(PRINTER_LIST_FILE.c_str());
+    EXPECT_EQ(systemData->Init(), f.good());
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0002, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
     CupsPrinterInfo cupsPrinterInfo;
     systemData->InsertCupsPrinter(printerId, cupsPrinterInfo, false);
-    cupsPrinterInfo.name = "PixLab_V1-0105";
+    cupsPrinterInfo.name = "HUAWEI_PixLab_V1-0105";
     cupsPrinterInfo.uri = "ipp://192.168.186.1:631/ipp/print";
-    cupsPrinterInfo.maker = "PixLab V1";
+    cupsPrinterInfo.maker = "HUAWEI PixLab V1";
     systemData->InsertCupsPrinter(printerId, cupsPrinterInfo, false);
     std::map<std::string, std::shared_ptr<CupsPrinterInfo>> addedPrinterMap;
     addedPrinterMap[printerId] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
@@ -80,15 +84,17 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0002, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0003, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     EXPECT_EQ(systemData->SaveCupsPrinterMap(), true);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0004, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerName = "Direct Pixlab1620";
     EXPECT_EQ(systemData->QueryPrinterIdByStandardizeName(printerName), "");
-    systemData->addedPrinterMap_["1234"] = nullptr;
+    systemData->addedPrinterMap_.Insert("1234", nullptr);
     systemData->QueryPrinterIdByStandardizeName(printerName);
     EXPECT_EQ(systemData->SaveCupsPrinterMap(), true);
 }
@@ -96,6 +102,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0004, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0005, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerName = "Direct Pixlab1620";
     EXPECT_EQ(systemData->QueryPrinterIdByStandardizeName(printerName), "");
     std::string re = systemData->QueryPrinterIdByStandardizeName(printerName);
@@ -113,6 +120,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0005, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0006, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
     CupsPrinterInfo cupsPrinterInfo1;
     cupsPrinterInfo1.name = "Direct Pixlab1620";
@@ -130,6 +138,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0006, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0007, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
     PrinterInfo printerInfo;
     systemData->InsertPrinterInfo(printerId, printerInfo);
@@ -141,6 +150,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0007, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0008, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
     EXPECT_EQ(systemData->QueryPrinterInfoByPrinterId(printerId), nullptr);
     std::shared_ptr<PrinterInfo> result = std::make_shared<PrinterInfo>();
@@ -159,11 +169,12 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0008, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0009, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json printerMapJson = nlohmann::json::array();
     nlohmann::json printerJson;
     printerJson["id"] = "com.ohos.spooler:mdns://9e9561ad-0e30-1000-8000-9c9561ad0e30";
-    printerJson["maker"] = "PixLab V1";
-    printerJson["name"] = "PixLab_V1-0105";
+    printerJson["maker"] = "HUAWEI PixLab V1";
+    printerJson["name"] = "HUAWEI_PixLab_V1-0105";
     printerJson["uri"] = "ipp://192.168.186.1:631/ipp/print";
     printerMapJson.push_back(printerJson);
     nlohmann::json jsonObject;
@@ -171,13 +182,14 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0009, TestSize.Level1)
     jsonObject["printer_list"] = printerMapJson;
     EXPECT_EQ(systemData->ParsePrinterListJsonV1(printerMapJson), false);
     EXPECT_EQ(systemData->ParsePrinterListJsonV1(jsonObject), true);
-    std::string printerName = systemData->QueryPrinterIdByStandardizeName("PixLab_V1-0105");
+    std::string printerName = systemData->QueryPrinterIdByStandardizeName("HUAWEI_PixLab_V1-0105");
     EXPECT_EQ(systemData->SaveCupsPrinterMap(), true);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0010, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json printerMapJson;
     printerMapJson["printer"] = "1234";
     EXPECT_EQ(systemData->ParsePrinterListJsonV1(printerMapJson), false);
@@ -188,20 +200,22 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0010, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0011, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    systemData->addedPrinterMap_["1"] = nullptr;
+    EXPECT_NE(systemData, nullptr);
+    systemData->addedPrinterMap_.Insert("1", nullptr);
     systemData->SaveCupsPrinterMap();
     CupsPrinterInfo cupsPrinterInfo;
     cupsPrinterInfo.name = "print";
     cupsPrinterInfo.uri = "123";
     cupsPrinterInfo.maker = "print";
-    systemData->addedPrinterMap_["2"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("2", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     systemData->SaveCupsPrinterMap();
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0012, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    systemData->addedPrinterMap_["1"] = nullptr;
+    EXPECT_NE(systemData, nullptr);
+    systemData->addedPrinterMap_.Insert("1", nullptr);
     std::string printerName = "Direct";
     systemData->QueryPrinterIdByStandardizeName(printerName);
     systemData->SaveCupsPrinterMap();
@@ -209,46 +223,49 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0012, TestSize.Level1)
     cupsPrinterInfo.name = "Direct";
     cupsPrinterInfo.uri = "123";
     cupsPrinterInfo.maker = "print";
-    systemData->addedPrinterMap_["2"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("2", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     systemData->QueryPrinterIdByStandardizeName(printerName);
     cupsPrinterInfo.name = "223";
-    systemData->addedPrinterMap_["4"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("4", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     systemData->QueryPrinterIdByStandardizeName(printerName);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0013, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
     CupsPrinterInfo cupsPrinterInfo2;
-    systemData->addedPrinterMap_["1"] = nullptr;
+    systemData->addedPrinterMap_.Insert("1", nullptr);
     systemData->QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinterInfo2);
     systemData->SaveCupsPrinterMap();
     CupsPrinterInfo cupsPrinterInfo;
     cupsPrinterInfo.name = "Direct Pixlab1620";
     cupsPrinterInfo.uri = "123";
     cupsPrinterInfo.maker = "print";
-    systemData->addedPrinterMap_["123"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("123", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     CupsPrinterInfo cupsPrinterInfo3;
-    systemData->addedPrinterMap_["11"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo3);
+    systemData->addedPrinterMap_.Insert("11", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo3));
     systemData->QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinterInfo2);
-    systemData->addedPrinterMap_["1234"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("1234", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     systemData->QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinterInfo2);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0014, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
     PrinterInfo printerInfo;
     systemData->InsertPrinterInfo(printerId, printerInfo);
-    systemData->addedPrinterMap_["1"] = nullptr;
+    systemData->addedPrinterMap_.Insert("1", nullptr);
     systemData->InsertPrinterInfo(printerId, printerInfo);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0015, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
     PrinterInfo printerInfo;
     systemData->addedPrinterInfoList_["1"] = nullptr;
@@ -260,18 +277,20 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0015, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0016, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
     CupsPrinterInfo cupsPrinterInfo;
     systemData->InsertCupsPrinter(printerId, cupsPrinterInfo, false);
-    systemData->addedPrinterMap_["1234"] = nullptr;
+    systemData->addedPrinterMap_.Insert("1234", nullptr);
     systemData->InsertCupsPrinter(printerId, cupsPrinterInfo, false);
-    systemData->addedPrinterMap_["1234"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("1234", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     systemData->InsertCupsPrinter(printerId, cupsPrinterInfo, false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0017, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json printerMapJson = nlohmann::json::array();
     nlohmann::json printerJson;
     printerJson["id"] = 123;
@@ -288,6 +307,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0017, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0018, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json printerMapJson = nlohmann::json::array();
     nlohmann::json printerJson;
     printerMapJson.push_back(printerJson);
@@ -336,6 +356,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0018, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0019, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json printerMapJson = nlohmann::json::array();
     nlohmann::json printerJson;
     printerMapJson.push_back(printerJson);
@@ -369,6 +390,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0019, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0020, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json printerMapJson = nlohmann::json::array();
     nlohmann::json printerJson;
     printerJson["id"] = "123";
@@ -387,6 +409,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0020, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0021, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json printerMapJson = nlohmann::json::array();
     nlohmann::json printerJson;
     printerJson["id"] = "123";
@@ -405,49 +428,53 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0021, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0022, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
     CupsPrinterInfo cupsPrinterInfo;
-    systemData->addedPrinterMap_["1234"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("1234", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     systemData->InsertCupsPrinter(printerId, cupsPrinterInfo, true);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0023, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
     CupsPrinterInfo cupsPrinterInfo;
-    systemData->addedPrinterMap_["1234"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("1234", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     systemData->DeleteCupsPrinter(printerId);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0024, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
-    systemData->addedPrinterMap_["1"] = nullptr;
+    systemData->addedPrinterMap_.Insert("1", nullptr);
     CupsPrinterInfo cupsPrinterInfo;
     cupsPrinterInfo.name = "Direct";
     cupsPrinterInfo.uri = "123";
     cupsPrinterInfo.maker = "print";
-    systemData->addedPrinterMap_["2"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("2", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     CupsPrinterInfo cupsPrinterInfo2;
     cupsPrinterInfo2.name = "Direct";
     cupsPrinterInfo2.uri = "123";
     cupsPrinterInfo2.maker = "print";
-    systemData->addedPrinterMap_["1234"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo2);
+    systemData->addedPrinterMap_.Insert("1234", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo2));
     systemData->UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0025, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
-    systemData->addedPrinterMap_["1"] = nullptr;
+    systemData->addedPrinterMap_.Insert("1", nullptr);
     CupsPrinterInfo cupsPrinterInfo;
     cupsPrinterInfo.name = "Direct";
     cupsPrinterInfo.uri = "123";
     cupsPrinterInfo.maker = "print";
-    systemData->addedPrinterMap_["2"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("2", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     std::vector<std::string> printerNameList;
     systemData->GetAddedPrinterListFromSystemData(printerNameList);
 }
@@ -455,21 +482,23 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0025, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0026, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::vector<std::string> printerNameList;
     systemData->GetAddedPrinterListFromSystemData(printerNameList);
-    systemData->addedPrinterMap_["1"] = nullptr;
+    systemData->addedPrinterMap_.Insert("1", nullptr);
     systemData->GetAddedPrinterListFromSystemData(printerNameList);
     CupsPrinterInfo cupsPrinterInfo;
     cupsPrinterInfo.name = "Direct";
     cupsPrinterInfo.uri = "123";
     cupsPrinterInfo.maker = "print";
-    systemData->addedPrinterMap_["1"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("1", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     systemData->GetAddedPrinterListFromSystemData(printerNameList);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0027, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     PrinterCapability printerCapability;
     nlohmann::json capsJson;
     systemData->ConvertPrinterCapabilityToJson(printerCapability, capsJson);
@@ -478,6 +507,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0027, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0028, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     PrinterCapability printerCapability;
     PrintMargin minMargin;
     printerCapability.SetMinMargin(minMargin);
@@ -492,6 +522,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0028, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0029, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     PrinterCapability printerCapability;
     PrintMargin minMargin;
     printerCapability.SetMinMargin(minMargin);
@@ -507,6 +538,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0029, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0030, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     PrinterCapability printerCapability;
     PrintMargin minMargin;
     printerCapability.SetMinMargin(minMargin);
@@ -517,6 +549,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0030, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0031, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     PrinterCapability printerCapability;
     PrintMargin minMargin;
     minMargin.SetTop(100);
@@ -531,6 +564,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0031, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0032, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json capsJson;
     PrinterCapability printerCapability;
     systemData->ConvertJsonToPrinterCapability(capsJson, printerCapability);
@@ -581,6 +615,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0032, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0033, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json capsJson;
     PrinterCapability printerCapability;
     nlohmann::json resolutionListJson = nlohmann::json::array();
@@ -610,6 +645,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0033, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0034, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json capsJson;
     PrinterCapability printerCapability;
     nlohmann::json resolutionListJson = nlohmann::json::array();
@@ -647,6 +683,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0034, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0035, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json capsJson;
     PrinterCapability printerCapability;
     nlohmann::json resolutionListJson = nlohmann::json::array();
@@ -657,6 +694,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0035, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0036, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json capsJson;
     PrinterCapability printerCapability;
     nlohmann::json pageSizeListJson = nlohmann::json::array();
@@ -687,6 +725,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0036, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0037, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json capsJson;
     PrinterCapability printerCapability;
     nlohmann::json pageSizeListJson = nlohmann::json::array();
@@ -727,6 +766,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0037, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0038, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json capsJson;
     PrinterCapability printerCapability;
     nlohmann::json pageSizeListJson = nlohmann::json::array();
@@ -753,6 +793,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0038, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0039, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json capsJson;
     PrinterCapability printerCapability;
     nlohmann::json marginJson = nlohmann::json::object();
@@ -799,6 +840,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0039, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0040, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json capsJson;
     PrinterCapability printerCapability;
     nlohmann::json marginJson = nlohmann::json::object();
@@ -821,6 +863,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0040, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0041, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     CupsPrinterInfo cupsPrinter;
     std::string printerId = "123";
     PrinterCapability printerCapability;
@@ -830,6 +873,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0041, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0042, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     CupsPrinterInfo cupsPrinter;
     std::string printerId = "123";
     PrinterCapability printerCapability;
@@ -840,7 +884,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0042, TestSize.Level1)
     std::vector<PrintPageSize> pageSizeList;
     PrintPageSize pageSize;
     pageSizeList.push_back(pageSize);
-    printerCapability2.SetPageSize(pageSizeList);
+    printerCapability2.SetSupportedPageSize(pageSizeList);
     cupsPrinter.printerCapability = printerCapability2;
     systemData->GetPrinterCapabilityFromSystemData(cupsPrinter, printerId, printerCapability);
 }
@@ -848,6 +892,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0042, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0043, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json object;
     std::string printerId = "123";
     systemData->CheckPrinterInfoJson(object, printerId);
@@ -856,6 +901,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0043, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0044, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json object;
     object["id"] = 123;
     std::string printerId = "123";
@@ -895,6 +941,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0044, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0045, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     nlohmann::json object;
     object["id"] = "123";
     object["name"] = "123";
@@ -931,21 +978,23 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0045, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0046, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "123";
     systemData->IsPrinterAdded(printerId);
-    systemData->addedPrinterMap_["123"] = nullptr;
+    systemData->addedPrinterMap_.Insert("123", nullptr);
     systemData->IsPrinterAdded(printerId);
     CupsPrinterInfo cupsPrinterInfo;
     cupsPrinterInfo.name = "Direct";
     cupsPrinterInfo.uri = "123";
     cupsPrinterInfo.maker = "print";
-    systemData->addedPrinterMap_["123"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("123", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     systemData->IsPrinterAdded(printerId);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0047, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
     PrinterInfo printerInfo;
     systemData->QueryPrinterInfoById(printerId, printerInfo);
@@ -953,13 +1002,14 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0047, TestSize.Level1)
     cupsPrinterInfo.name = "Direct Pixlab1620";
     cupsPrinterInfo.uri = "123";
     cupsPrinterInfo.maker = "print";
-    systemData->addedPrinterMap_["1234"] = std::make_shared<CupsPrinterInfo>(cupsPrinterInfo);
+    systemData->addedPrinterMap_.Insert("1234", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     systemData->QueryPrinterInfoById(printerId, printerInfo);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0048, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId;
     nlohmann::json jsonObject;
     PrinterCapability printerCapability;
@@ -986,6 +1036,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0048, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0049, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId;
     PrinterCapability printerCapability;
     nlohmann::json jsonObject;
@@ -1006,6 +1057,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0049, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0050, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId;
     PrinterCapability printerCapability;
     nlohmann::json jsonObject;
@@ -1026,12 +1078,13 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0050, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0051, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "123";
     PrinterCapability printerCapability;
     std::vector<PrintPageSize> pageSizeList;
     PrintPageSize pageSize;
     pageSizeList.push_back(pageSize);
-    printerCapability.SetPageSize(pageSizeList);
+    printerCapability.SetSupportedPageSize(pageSizeList);
     nlohmann::json opsJson;
     opsJson["printerName"] = "123";
     printerCapability.SetOption(opsJson.dump());
@@ -1053,9 +1106,70 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0051, TestSize.Level1)
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0052, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
     std::string printerId = "";
     systemData->DeleteCupsPrinter(printerId);
 }
 
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0053, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::string printerId = "1234";
+    std::string printerAlias = "1234";
+    systemData->UpdatePrinterAlias(printerId, printerAlias);
+
+    CupsPrinterInfo cupsPrinterInfo;
+    cupsPrinterInfo.alias = printerAlias;
+    systemData->addedPrinterMap_.Insert(printerId, std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
+
+    bool ret = systemData->UpdatePrinterAlias(printerId, "");
+    EXPECT_EQ(ret, true);
+
+    systemData->UpdatePrinterAlias(printerId, printerAlias);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0054, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::string printerId1 = "1";
+    CupsPrinterInfo cupsPrinterInfo1;
+    systemData->addedPrinterMap_.Insert(printerId1, std::make_shared<CupsPrinterInfo>(cupsPrinterInfo1));
+    systemData->CheckPrinterBusy(printerId1);
+
+    std::string printerId2 = "2";
+    CupsPrinterInfo cupsPrinterInfo2;
+    cupsPrinterInfo2.printerStatus = PRINTER_STATUS_BUSY;
+    systemData->addedPrinterMap_.Insert(printerId2, std::make_shared<CupsPrinterInfo>(cupsPrinterInfo2));
+    bool ret = systemData->CheckPrinterBusy(printerId2);
+    EXPECT_EQ(ret, true);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0055, TestSize.Level1)
+{
+    auto systemData = std::make_shared<PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::string printerId1 = "1";
+    std::string printerId2 = "2";
+    std::string printerName = "name";
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    EXPECT_NE(printerInfo, nullptr);
+    printerInfo->SetPrinterId(printerId1);
+    printerInfo->SetPrinterName(printerName);
+    systemData->AddPrinterToDiscovery(printerInfo);
+    EXPECT_EQ(systemData->GetDiscoveredPrinterCount(), 1);
+    auto discoveredPrinter = systemData->QueryDiscoveredPrinterInfoById(printerId1);
+    EXPECT_NE(discoveredPrinter, nullptr);
+    discoveredPrinter = systemData->QueryDiscoveredPrinterInfoById(printerId2);
+    EXPECT_EQ(discoveredPrinter, nullptr);
+    discoveredPrinter = systemData->QueryDiscoveredPrinterInfoByName(printerName);
+    EXPECT_NE(discoveredPrinter, nullptr);
+    discoveredPrinter = systemData->QueryDiscoveredPrinterInfoByName(printerId2);
+    EXPECT_EQ(discoveredPrinter, nullptr);
+    systemData->RemovePrinterFromDiscovery(printerId1);
+    EXPECT_EQ(systemData->GetDiscoveredPrinterCount(), 0);
+    systemData->ClearDiscoveredPrinterList();
+}
 }  // namespace Print
 }  // namespace OHOS

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "print_user_data.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
@@ -20,17 +21,11 @@
 #include <streambuf>
 #include "nlohmann/json.hpp"
 
-#include "print_user_data.h"
 #include "print_log.h"
 #include "print_constant.h"
 
 namespace OHOS {
 namespace Print {
-
-using namespace std;
-
-const std::string PRINT_USER_DATA_FILE = "/data/service/el2/public/print_service/print_user_data.json";
-const std::string PRINT_USER_DATA_VERSION = "v1";
 
 void PrintUserData::RegisterPrinterCallback(const std::string &type, const sptr<IPrintCallback> &listener)
 {
@@ -152,11 +147,13 @@ int32_t PrintUserData::SetLastUsedPrinter(const std::string &printerId)
 
 std::string PrintUserData::GetLastUsedPrinter()
 {
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     return lastUsedPrinterId_;
 }
 
 int32_t PrintUserData::SetDefaultPrinter(const std::string &printerId, uint32_t type)
 {
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     PRINT_HILOGI("begin SetDefaultPrinter");
     PRINT_HILOGI("printerId: %{public}s", printerId.c_str());
     PRINT_HILOGI("type: %{public}d", type);
@@ -193,6 +190,7 @@ void PrintUserData::DeletePrinter(const std::string &printerId)
 {
     DeletePrinterFromUsedPrinterList(printerId);
     if (!strcmp(lastUsedPrinterId_.c_str(), printerId.c_str())) {
+        std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
         if (usedPrinterList_.size()) {
             auto it = usedPrinterList_.begin();
             lastUsedPrinterId_ = *it;
@@ -308,14 +306,19 @@ void PrintUserData::ConvertUsedPrinterListToJson(nlohmann::json &usedPrinterList
 bool PrintUserData::GetFileData(std::string &fileData)
 {
     PRINT_HILOGI("begin GetFileData");
-    std::ifstream ifs(PRINT_USER_DATA_FILE.c_str(), std::ios::in | std::ios::binary);
+    std::string userDataFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINT_USER_DATA_FILE;
+    std::ifstream ifs(userDataFilePath.c_str(), std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
         PRINT_HILOGW("open printer list file fail");
-        int32_t fd = open(PRINT_USER_DATA_FILE.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0740);
+        char realPidFile[PATH_MAX] = {};
+        if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
+            PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
+            return false;
+        }
+        int32_t fd = open(userDataFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
         PRINT_HILOGI("create file fd: %{public}d", fd);
         if (fd < 0) {
             PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-            close(fd);
             return false;
         }
         nlohmann::json userDataJson = nlohmann::json::object();
@@ -357,11 +360,16 @@ bool PrintUserData::SetUserDataToFile()
         jsonObject["print_user_data"][std::to_string(userId_)] = userData;
         std::string temp = jsonObject.dump();
         PRINT_HILOGI("json temp: %{public}s", temp.c_str());
-        int32_t fd = open(PRINT_USER_DATA_FILE.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0740);
+        char realPidFile[PATH_MAX] = {};
+        std::string userDataFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINT_USER_DATA_FILE;
+        if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
+            PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
+            return false;
+        }
+        int32_t fd = open(userDataFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
         PRINT_HILOGI("SetUserDataToFile fd: %{public}d", fd);
         if (fd < 0) {
             PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-            close(fd);
             return false;
         }
         std::string jsonString = jsonObject.dump();

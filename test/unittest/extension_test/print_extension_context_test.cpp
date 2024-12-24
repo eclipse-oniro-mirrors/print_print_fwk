@@ -82,19 +82,19 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0005, TestSize.Lev
     AAFwk::Want want;
     sptr<AbilityConnectCallback> connectCallback;
     PrintExtensionContext printExtensionContext;
-    printExtensionContext.DisconnectAbility(want, connectCallback);
+    EXPECT_NE(printExtensionContext.DisconnectAbility(want, connectCallback), ERR_OK);
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0006, TestSize.Level1)
 {
     PrintExtensionContext printExtensionContext;
-    printExtensionContext.TerminateAbility();
+    EXPECT_NE(printExtensionContext.TerminateAbility(), ERR_OK);
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0007, TestSize.Level1)
 {
     PrintExtensionContext printExtensionContext;
-    printExtensionContext.GetAbilityInfoType();
+    EXPECT_EQ(printExtensionContext.GetAbilityInfoType(), AppExecFwk::AbilityType::UNKNOWN);
 }
 } // namespace AbilityRuntime
 } // namespace OHOS

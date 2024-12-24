@@ -23,6 +23,9 @@
 #include "printer_info.h"
 #include "printer_capability.h"
 #include "print_constant.h"
+#include "print_utils.h"
+#include "print_log.h"
+#include "print_map_safe.h"
 
 namespace OHOS {
 namespace Print {
@@ -52,9 +55,19 @@ public:
     void GetAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList);
     void UpdatePrinterStatus(const std::string &printerId, PrinterStatus printerStatus);
     bool UpdatePrinterAlias(const std::string& printerId, const std::string& printerAlias);
+    void UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo);
     void QueryPrinterInfoById(const std::string &printerId, PrinterInfo &printerInfo);
     bool CheckPrinterBusy(const std::string &printerId);
     bool GetAllPrintUser(std::vector<int32_t> &allPrintUserList);
+
+    std::vector<std::string> QueryAddedPrinterIdList();
+    std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &printerId);
+    std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoByName(const std::string &printerName);
+    void AddPrinterToDiscovery(std::shared_ptr<PrinterInfo> printerInfo);
+    void RemovePrinterFromDiscovery(const std::string &printerId);
+    std::map<std::string, std::shared_ptr<PrinterInfo>> GetDiscoveredPrinterInfo();
+    size_t GetDiscoveredPrinterCount();
+    void ClearDiscoveredPrinterList();
 
 private:
     bool ParsePrinterListJsonV1(nlohmann::json& jsonObject);
@@ -63,10 +76,19 @@ private:
     void ConvertPrintMarginToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
     void ConvertPageSizeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
     void ConvertPrintResolutionToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
+    void ConvertSupportedColorModeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
+    void ConvertSupportedDuplexModeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
+    void ConvertSupportedMediaTypeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
+    void ConvertSupportedQualityToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
     bool ConvertJsonToPrinterCapability(nlohmann::json &capsJson, PrinterCapability &printerCapability);
-    void ConvertJsonToPrintMargin(nlohmann::json &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToPrintMargin(nlohmann::json &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToPageSize(nlohmann::json &capsJson, PrinterCapability &printerCapability);
     bool ConvertJsonToPrintResolution(nlohmann::json &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToSupportedColorMode(nlohmann::json &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToSupportedDuplexMode(nlohmann::json &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToSupportedMediaType(nlohmann::json &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToSupportedQuality(nlohmann::json &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToSupportedOrientation(nlohmann::json &capsJson, PrinterCapability &printerCapability);
     bool GetPrinterCapabilityFromFile(std::string printerId, PrinterCapability &printerCapability);
     bool CheckPrinterInfoJson(nlohmann::json &object, std::string &printerId);
     bool GetPrinterCapabilityFromJson(
@@ -74,10 +96,45 @@ private:
     bool ParseUserListJsonV1(
         nlohmann::json &jsonObject, std::vector<int32_t> &allPrintUserList);
 
+    template<typename T>
+    bool ProcessJsonToCapabilityList(nlohmann::json &capsJson,
+                                     const std::string &key,
+                                     PrinterCapability &printerCapability,
+                                     void (PrinterCapability::*setter)(const std::vector <T> &),
+                                     std::function<bool(const nlohmann::json &, T &)> converter)
+    {
+        if (!capsJson.contains(key) || !capsJson[key].is_array()) {
+            PRINT_HILOGW("Cannot find %{public}s or it's not an array", key.c_str());
+            return true;
+        }
+        PRINT_HILOGD("find Capability %{public}s success", key.c_str());
+        std::vector<T> resultList;
+        for (const auto &item: capsJson[key]) {
+            if (!PrintUtils::CheckJsonType<T>(item)) {
+                PRINT_HILOGE("%{public}s item has incorrect type", key.c_str());
+                return false;
+            }
+            T object;
+            bool ret = converter(item, object);
+            if (!ret) {
+                PRINT_HILOGE("Invalid format,key is %{public}s", key.c_str());
+                return false;
+            }
+            resultList.push_back(object);
+        }
+        if (!resultList.empty()) {
+            (printerCapability.*setter)(resultList);
+        }
+        PRINT_HILOGD("processCapabilityList success, %{public}s", key.c_str());
+        return true;
+    }
+
 private:
-    std::map<std::string, std::shared_ptr<CupsPrinterInfo>> addedPrinterMap_;
+    PrintMapSafe<CupsPrinterInfo> addedPrinterMap_;
     std::map<uint32_t, std::string> addedPrinterOrderList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> addedPrinterInfoList_;
+    std::map<std::string, std::shared_ptr<PrinterInfo>> discoveredPrinterInfoList_;
+    std::mutex discoveredListMutex;
 };
 
 }  // namespace Print

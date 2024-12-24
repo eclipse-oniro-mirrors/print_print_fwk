@@ -46,6 +46,7 @@ private:
     bool OnStartPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnCancelPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnUpdatePrinterState(MessageParcel &data, MessageParcel &reply);
+    bool OnUpdatePrintJobStateForNormalApp(MessageParcel &data, MessageParcel &reply);
     bool OnUpdatePrintJobStateOnlyForSystemApp(MessageParcel &data, MessageParcel &reply);
     bool OnUpdateExtensionInfo(MessageParcel &data, MessageParcel &reply);
     bool OnRequestPreview(MessageParcel &data, MessageParcel &reply);
@@ -72,6 +73,11 @@ private:
     bool OnSetPrinterPreference(MessageParcel &data, MessageParcel &reply);
     bool OnSetDefaultPrinter(MessageParcel &data, MessageParcel &reply);
     bool OnDeletePrinterFromCups(MessageParcel &data, MessageParcel &reply);
+    bool OnDiscoverUsbPrinters(MessageParcel &data, MessageParcel &reply);
+    bool OnAddPrinterToDiscovery(MessageParcel &data, MessageParcel &reply);
+    bool OnUpdatePrinterInDiscovery(MessageParcel &data, MessageParcel &reply);
+    bool OnRemovePrinterFromDiscovery(MessageParcel &data, MessageParcel &reply);
+    bool OnUpdatePrinterInSystem(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

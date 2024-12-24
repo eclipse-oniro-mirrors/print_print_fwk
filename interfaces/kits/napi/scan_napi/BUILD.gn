@@ -13,11 +13,13 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
+cflags_cc = []
+
 config("scan_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc = [ "-fexceptions" ]
+  cflags_cc += [ "-fexceptions" ]
 }
 
 ohos_shared_library("scan_napi") {
@@ -63,6 +65,11 @@ ohos_shared_library("scan_napi") {
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
+
+  if (build_variant == "user") {
+    cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+  }
+
   relative_install_dir = "module"
   subsystem_name = "print"
   part_name = "print_fwk"

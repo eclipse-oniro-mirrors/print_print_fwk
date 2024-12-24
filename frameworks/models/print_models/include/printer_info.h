@@ -42,6 +42,10 @@ public:
 
     void SetCapability(const PrinterCapability &capability);
 
+    void SetUri(const std::string &uri);
+
+    void SetPrinterMake(const std::string &printerMake);
+
     void SetOption(const std::string &option);
 
     void SetIsDefaultPrinter(bool isDefaultPrinter);
@@ -53,16 +57,28 @@ public:
     [[nodiscard]] const std::string &GetPrinterId() const;
 
     [[nodiscard]] const std::string &GetPrinterName() const;
+    
+    [[nodiscard]] bool HasPrinterIcon() const;
 
     [[nodiscard]] uint32_t GetPrinterIcon() const;
 
     [[nodiscard]] uint32_t GetPrinterState() const;
+
+    [[nodiscard]] bool HasDescription() const;
 
     [[nodiscard]] const std::string &GetDescription() const;
 
     [[nodiscard]] bool HasCapability() const;
 
     void GetCapability(PrinterCapability &cap) const;
+
+    [[nodiscard]] bool HasUri() const;
+
+    [[nodiscard]] std::string GetUri() const;
+
+    [[nodiscard]] bool HasPrinterMake() const;
+
+    [[nodiscard]] std::string GetPrinterMake() const;
 
     [[nodiscard]] bool HasOption() const;
 
@@ -84,10 +100,14 @@ public:
 
     static std::shared_ptr<PrinterInfo> Unmarshalling(Parcel &parcel);
 
-    void Dump();
+    void Dump() const;
 
 private:
     bool ReadFromParcel(Parcel &parcel);
+
+    void ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel);
+
+    bool ValidateAll();
 
 private:
     std::string printerId_;
@@ -96,29 +116,41 @@ private:
 
     uint32_t printerState_;
 
+    bool hasPrinterIcon_;
+
     uint32_t printerIcon_;
 
+    bool hasDescription_;
+
     std::string description_;
+
+    bool hasPrinterStatus_;
+
+    uint32_t printerStatus_;
 
     bool hasCapability_;
 
     PrinterCapability capability_;
 
+    bool hasUri_;
+
+    std::string uri_;
+
+    bool hasPrinterMake_;
+
+    std::string printerMake_;
+
     bool hasOption_;
 
     std::string option_;
 
-    bool hasIsDefaultPrinter_;
+    bool hasIsDefaultPrinter_; // Deprecated, to be removed in a future version.
 
-    bool isDefaultPrinter_;
+    bool isDefaultPrinter_; // Deprecated, to be removed in a future version.
 
-    bool hasIsLastUsedPrinter_;
+    bool hasIsLastUsedPrinter_; // Deprecated, to be removed in a future version.
 
-    bool isLastUsedPrinter_;
-
-    bool hasPrinterStatus_;
-
-    uint32_t printerStatus_;
+    bool isLastUsedPrinter_; // Deprecated, to be removed in a future version.
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_INFO_H

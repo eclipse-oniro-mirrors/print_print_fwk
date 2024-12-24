@@ -46,7 +46,6 @@ private:
     bool OnDisConnectScanner(MessageParcel &data, MessageParcel &reply);
     bool OnGetConnectedScanner(MessageParcel &data, MessageParcel &reply);
     bool OnUpdateScannerName(MessageParcel &data, MessageParcel &reply);
-    bool OnAddPrinter(MessageParcel &data, MessageParcel &reply);
 
     bool OnEventOn(MessageParcel &data, MessageParcel &reply);
     bool OnEventOff(MessageParcel &data, MessageParcel &reply);

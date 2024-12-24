@@ -40,6 +40,7 @@ public:
     int32_t RemovePrinters(const std::vector<std::string> &printerIds) override;
     int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) override;
+    int32_t UpdatePrintJobStateForNormalApp(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState) override;
     int32_t UpdateExtensionInfo(const std::string &extensionId) override;
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult) override;
@@ -63,6 +64,10 @@ public:
     int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
         const uint32_t fd) override;
     int32_t NotifyPrintService(const std::string &jobId, const std::string &type) override;
+    int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo) override;
+    int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo) override;
+    int32_t RemovePrinterFromDiscovery(const std::string &printerId) override;
+    int32_t UpdatePrinterInSystem(const PrinterInfo& printerInfo) override;
 
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) override;
@@ -73,8 +78,8 @@ public:
     int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference) override;
     int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference) override;
     int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) override;
-    int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-        const std::string &printerMake) override;
+    int32_t DeletePrinterFromCups(const std::string &printerName) override;
+    int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);

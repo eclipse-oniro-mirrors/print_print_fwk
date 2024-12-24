@@ -49,7 +49,18 @@ JsPrintExtension *JsPrintExtension::Create(const std::unique_ptr<Runtime> &runti
 
 JsPrintExtension::JsPrintExtension(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime),
     extensionId_("") {}
-JsPrintExtension::~JsPrintExtension() = default;
+JsPrintExtension::~JsPrintExtension()
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    if (jsExtension_ != nullptr) {
+        jsExtension_ = nullptr;
+    }
+    if (jsObj_) {
+        jsRuntime_.FreeNativeReference(std::move(jsObj_));
+    }
+    PRINT_HILOGI("JsPrintExtension destroyed");
+}
+
 
 void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
     const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
@@ -110,15 +121,19 @@ bool JsPrintExtension::InitContextObj(JsRuntime &jsRuntime, napi_value &extObj, 
     napi_env engine = jsRuntime.GetNapiEnv();
     napi_value contextObj = CreateJsPrintExtensionContext(engine, context, extensionId);
     auto shellContextRef = jsRuntime.LoadSystemModule("PrintExtensionContext", &contextObj, NapiPrintUtils::ARGC_ONE);
+    if (shellContextRef == nullptr) {
+        PRINT_HILOGE("Failed to load print extension context ref");
+        return false;
+    }
     contextObj = shellContextRef->GetNapiValue();
-    PRINT_HILOGD("JsPrintExtension::Init Bind.");
-    context->Bind(jsRuntime, shellContextRef.release());
-    PRINT_HILOGD("JsPrintExtension::napi_set_named_property.");
-    napi_set_named_property(engine, extObj, "context", contextObj);
     if (contextObj == nullptr) {
         PRINT_HILOGE("Failed to get Print extension native object");
         return false;
     }
+    PRINT_HILOGD("JsPrintExtension::Init Bind.");
+    context->Bind(jsRuntime, shellContextRef.release());
+    PRINT_HILOGD("JsPrintExtension::napi_set_named_property.");
+    napi_set_named_property(engine, extObj, "context", contextObj);
 
     napi_wrap(engine, contextObj, new std::weak_ptr<AbilityRuntime::Context>(context),
         [](napi_env, void *data, void *) {
@@ -157,7 +172,12 @@ void JsPrintExtension::OnStop()
 {
     PrintExtension::OnStop();
     PRINT_HILOGD("jws JsPrintExtension OnStop begin.");
-    bool ret = ConnectionManager::GetInstance().DisconnectCaller(GetContext()->GetToken());
+    auto context = GetContext();
+    if (context == nullptr) {
+        PRINT_HILOGE("Failed to get context");
+        return;
+    }
+    bool ret = ConnectionManager::GetInstance().DisconnectCaller(context->GetToken());
     if (ret) {
         PRINT_HILOGD("The Print extension connection is not disconnected.");
     }
@@ -529,7 +549,7 @@ void JsPrintExtension::RegisterExtensionCb()
                 return false;
             }
             JsPrintExtension::jsExtension_->OnStop();
-            return JsPrintExtension::jsExtension_->Callback("onDestroy");
+            return true;
     });
 }
 } // namespace AbilityRuntime
