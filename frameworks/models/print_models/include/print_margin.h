@@ -61,7 +61,7 @@ public:
 
     static std::shared_ptr<PrintMargin> Unmarshalling(Parcel &parcel);
 
-    void Dump();
+    void Dump() const;
 
 private:
     void ReadFromParcel(Parcel &parcel);

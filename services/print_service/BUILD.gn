@@ -23,17 +23,30 @@ config("print_service_config") {
     "${print_path}/frameworks/models/print_models/include",
   ]
 
-  cflags_cc += [ "-fexceptions" ]
+  cflags_cc += [
+    "-fno-exceptions",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-flto",
+    "--save-temps",
+    "-Os",
+  ]
 }
 
 ohos_shared_library("print_service") {
   sources = [
     "src/hisys_event_util.cpp",
+    "src/operation_queue.cpp",
     "src/print_bms_death_recipient.cpp",
     "src/print_bms_helper.cpp",
     "src/print_callback_proxy.cpp",
     "src/print_event_subscriber.cpp",
     "src/print_extension_callback_proxy.cpp",
+    "src/print_http_request_process.cpp",
+    "src/print_http_server_manager.cpp",
+    "src/print_ipp_over_usb_manager.cpp",
     "src/print_security_guard_info.cpp",
     "src/print_security_guard_manager.cpp",
     "src/print_service_ability.cpp",
@@ -41,7 +54,17 @@ ohos_shared_library("print_service") {
     "src/print_service_helper.cpp",
     "src/print_service_stub.cpp",
     "src/print_system_data.cpp",
+    "src/print_usb_manager.cpp",
     "src/print_user_data.cpp",
+    "src/thread_sync_wait.cpp",
+    "src/vendor_bsuni_driver.cpp",
+    "src/vendor_driver_base.cpp",
+    "src/vendor_driver_group.cpp",
+    "src/vendor_helper.cpp",
+    "src/vendor_ipp_everywhere.cpp",
+    "src/vendor_manager.cpp",
+    "src/vendor_ppd_driver.cpp",
+    "src/vendor_wlan_group.cpp",
   ]
 
   branch_protector_ret = "pac_ret"
@@ -60,6 +83,7 @@ ohos_shared_library("print_service") {
   ]
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/ohprint/include",
     "${print_utils_path}/include",
   ]
 
@@ -92,8 +116,11 @@ ohos_shared_library("print_service") {
 
   if (cups_enable) {
     include_dirs += [ "//third_party/cups/cups-2.4.0" ]
-    sources += [ "src/print_cups_attribute.cpp" ]
-    sources += [ "src/print_cups_client.cpp" ]
+    sources += [
+      "src/print_cups_attribute.cpp",
+      "src/print_cups_client.cpp",
+      "src/print_cups_wrapper.cpp",
+    ]
     cflags_cc += [ "-DCUPS_ENABLE" ]
     deps += [
       "//third_party/cups:third_party_cups",
@@ -122,6 +149,10 @@ ohos_shared_library("print_service") {
     ]
 
     cflags_cc += [ "-DSECURITY_GUARDE_ENABLE" ]
+  }
+
+  if (build_variant == "user") {
+    cflags_cc += [ "-DIS_RELEASE_VERSION" ]
   }
 
   subsystem_name = "print"

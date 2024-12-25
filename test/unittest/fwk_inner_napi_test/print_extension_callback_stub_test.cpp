@@ -90,7 +90,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0003, Te
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
     PrintExtensionCallbackStub callback;
-    EXPECT_FALSE(callback.OnRemoteRequest(code, data, reply, option));
+    EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
 }
 
 /**
@@ -112,7 +112,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0004, Te
         return true;
     };
     callback.SetExtCallback(extCb);
-    EXPECT_TRUE(callback.OnRemoteRequest(code, data, reply, option));
+    EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
 }
 
 /**
@@ -130,7 +130,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0005, Te
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
     PrintExtensionCallbackStub callback;
-    EXPECT_FALSE(callback.OnRemoteRequest(code, data, reply, option));
+    EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
 }
 
 /**
@@ -152,7 +152,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0006, Te
         return true;
     };
     callback.SetPrintJobCallback(printJobCb);
-    EXPECT_TRUE(callback.OnRemoteRequest(code, data, reply, option));
+    EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
 }
 
 /**
@@ -170,7 +170,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0007, Te
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
     PrintExtensionCallbackStub callback;
-    EXPECT_FALSE(callback.OnRemoteRequest(code, data, reply, option));
+    EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
 }
 
 /**
@@ -195,7 +195,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0008, Te
         return true;
     };
     callback.SetPrinterCallback(printerCb);
-    EXPECT_TRUE(callback.OnRemoteRequest(code, data, reply, option));
+    EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
 }
 
 /**
@@ -213,7 +213,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0009, Te
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
     PrintExtensionCallbackStub callback;
-    EXPECT_FALSE(callback.OnRemoteRequest(code, data, reply, option));
+    EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
 }
 
 /**
@@ -241,7 +241,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0010, Te
         return true;
     };
     callback.SetCapabilityCallback(testCb);
-    EXPECT_TRUE(callback.OnRemoteRequest(code, data, reply, option));
+    EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
     auto result = PrinterCapability::Unmarshalling(reply);
     EXPECT_NE(result, nullptr);
 }

@@ -35,7 +35,7 @@ PrintSecurityGuardInfo::PrintSecurityGuardInfo(const std::string callPkg, const 
 #endif
 }
 
-void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob)
+void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, const PrintJob &printJob)
 {
     std::string printerId = printerInfo.GetPrinterId();
     std::string description = printerInfo.GetDescription();
@@ -51,7 +51,7 @@ void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, co
             }
         }
     }
-    printTypeInfo_.copyNumber = (int32_t)printJob.GetCopyNumber();
+    printTypeInfo_.copyNumber = static_cast<int32_t>(printJob.GetCopyNumber());
     if (json::accept(printJob.GetOption())) {
         json jobOptionJson = json::parse(printJob.GetOption());
         if (jobOptionJson.contains("printPages") && jobOptionJson["printPages"].is_number()) {
@@ -60,6 +60,10 @@ void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, co
             std::vector<uint32_t> fdList;
             printJob.GetFdList(fdList);
             printTypeInfo_.printPages = (int32_t)fdList.size();
+        }
+
+        if (jobOptionJson.contains("jobName") && jobOptionJson["jobName"].is_string()) {
+            jobName_ = jobOptionJson["jobName"];
         }
     }
     uint32_t subState = printJob.GetSubState();
@@ -74,6 +78,7 @@ void PrintSecurityGuardInfo::setPrintTypeInfo(const PrinterInfo &printerInfo, co
             outcome_ = "failed";
             break;
         default:
+            PRINT_HILOGD("PrintSecurityGuardInfo SetPrintTypeInfo unknown subState:%{public}d", subState);
             break;
     }
 }
@@ -101,6 +106,7 @@ nlohmann::json PrintSecurityGuardInfo::ToJson()
     securityGuardInfoJson["sourceInfo"] = sourceInfo_;
     securityGuardInfoJson["targetInfo"] = targetInfo_;
     securityGuardInfoJson["extra"] = extra_;
+    securityGuardInfoJson["jobName"] = jobName_;
     return securityGuardInfoJson;
 }
 

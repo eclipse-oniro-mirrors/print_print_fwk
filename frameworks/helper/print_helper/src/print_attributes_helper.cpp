@@ -110,6 +110,10 @@ std::shared_ptr<PrintAttributes> PrintAttributesHelper::BuildFromJs(napi_env env
 void PrintAttributesHelper::BuildJsWorkerIsLegal(napi_env env, napi_value jsValue,
     std::shared_ptr<PrintAttributes> &nativeObj)
 {
+    if (nativeObj == nullptr) {
+        PRINT_HILOGE("nativeObj is nullptr");
+        return;
+    }
     napi_value jsPageRange = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PAGERANGE);
     if (jsPageRange != nullptr) {
         auto pageRangePtr = PrintRangeHelper::BuildFromJs(env, jsPageRange);

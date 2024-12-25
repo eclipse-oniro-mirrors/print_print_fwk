@@ -41,12 +41,6 @@ ohos_fuzztest("ScanUsbManagerFuzzTest") {
     "${print_path}/services/scan_service:scan_service",
   ]
 
-  if (sane_enable) {
-    include_dirs += [ "//vendor/open_source/backends/include" ]
-    deps += [ "//vendor/open_source/backends:third_sane" ]
-    cflags_cc = [ "-DSANE_ENABLE" ]
-  }
-
   external_deps = [
     "ability_base:base",
     "ability_base:want",
@@ -59,7 +53,6 @@ ohos_fuzztest("ScanUsbManagerFuzzTest") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "core_service:tel_core_service_api",
-    "distributed_notification_service:ans_innerkits",
     "drivers_interface_usb:libusb_proxy_1.0",
     "eventhandler:libeventhandler",
     "hilog:libhilog",

@@ -16,10 +16,12 @@
 #include "napi_print_utils.h"
 
 #include "ability.h"
+#include "accesstoken_kit.h"
 #include "napi_base_context.h"
 #include "print_constant.h"
 #include "print_log.h"
 #include "securec.h"
+#include "tokenid_kit.h"
 
 namespace OHOS::Print {
 static constexpr const int MAX_STRING_LENGTH = 65536;
@@ -299,20 +301,21 @@ void NapiPrintUtils::SetBooleanProperty(napi_env env, napi_value object, const s
 void NapiPrintUtils::DefineProperties(
     napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties)
 {
-    napi_property_descriptor descriptors[properties.size()];
-    std::copy(properties.begin(), properties.end(), descriptors);
+    std::vector<napi_property_descriptor> descriptors(properties.begin(), properties.end());
 
-    (void)napi_define_properties(env, object, properties.size(), descriptors);
+    (void)napi_define_properties(env, object, properties.size(), descriptors.data());
 }
 
 std::string NapiPrintUtils::GetValueString(napi_env env, napi_value value)
 {
     std::string resultValue = "";
-    char value_string[256];
+    char value_string[256] = { 0 };
     size_t value_size = 256;
-    size_t result;
-    napi_get_value_string_utf8(env, value, value_string, value_size, &result);
-    resultValue = value_string;
+    size_t result = 0;
+    napi_status status = napi_get_value_string_utf8(env, value, value_string, value_size, &result);
+    if (status == napi_ok && result > 0) {
+        resultValue = value_string;
+    }
     return resultValue;
 }
 
@@ -328,7 +331,7 @@ size_t NapiPrintUtils::GetJsVal(napi_env env, napi_callback_info info, napi_valu
 bool NapiPrintUtils::VerifyProperty(
     std::vector<std::string> &names, std::map<std::string, PrintParamStatus> &propertyList)
 {
-    for (auto name : names) {
+    for (const auto& name : names) {
         if (propertyList.find(name) == propertyList.end()) {
             PRINT_HILOGE("Invalid property: %{public}s", name.c_str());
             return false;
@@ -336,12 +339,34 @@ bool NapiPrintUtils::VerifyProperty(
         propertyList[name] = PRINT_PARAM_SET;
     }
 
-    for (auto propertypItem : propertyList) {
-        if (propertypItem.second == PRINT_PARAM_NOT_SET) {
-            PRINT_HILOGE("Missing Property: %{public}s", propertypItem.first.c_str());
+    for (const auto& propertyItem : propertyList) {
+        if (propertyItem.second == PRINT_PARAM_NOT_SET) {
+            PRINT_HILOGE("Missing Property: %{public}s", propertyItem.first.c_str());
             return false;
         }
     }
     return true;
+}
+
+std::string NapiPrintUtils::GetPrintErrorMsg(int32_t errorCode)
+{
+    auto msg = PRINT_ERROR_MSG_MAP.find(static_cast<PrintErrorCode>(errorCode));
+    if (msg != PRINT_ERROR_MSG_MAP.end()) {
+        return msg->second;
+    }
+    return "";
+}
+
+bool NapiPrintUtils::CheckCallerIsSystemApp()
+{
+    auto callerToken = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        PRINT_HILOGD("tokenType check passed.");
+        return true;
+    }
+    auto accessTokenId = IPCSkeleton::GetCallingFullTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenId);
 }
 }  // namespace OHOS::Print

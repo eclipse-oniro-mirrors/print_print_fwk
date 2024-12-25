@@ -17,13 +17,12 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 
 ##############################fuzztest##########################################
-ohos_fuzztest("ScanMdnsServiceFuzzTest") {
+ohos_fuzztest("ScanCallBackFuzzTest") {
   module_out_path = fuzz_test_output_path
 
-  fuzz_config_file = "${print_path}/test/fuzztest/scanmdnsservice_fuzzer"
+  fuzz_config_file = "${print_path}/test/fuzztest/scancallback_fuzzer"
 
   include_dirs = [
-    "${print_path}/services/scan_service/include",
     "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
     "${print_utils_path}/include",
   ]
@@ -38,19 +37,11 @@ ohos_fuzztest("ScanMdnsServiceFuzzTest") {
   deps = [
     "${print_path}/frameworks/helper/scan_helper:scan_helper",
     "${print_path}/frameworks/innerkitsimpl/scan_impl:scan_client",
-    "${print_path}/services/scan_service:scan_service",
   ]
-
-  if (sane_enable) {
-    include_dirs += [ "//vendor/open_source/backends/include" ]
-    deps += [ "//vendor/open_source/backends:third_sane" ]
-    cflags_cc = [ "-DSANE_ENABLE" ]
-  }
 
   external_deps = [
     "ability_base:base",
     "ability_base:want",
-    "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "access_token:libaccesstoken_sdk",
@@ -59,7 +50,6 @@ ohos_fuzztest("ScanMdnsServiceFuzzTest") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "core_service:tel_core_service_api",
-    "distributed_notification_service:ans_innerkits",
     "drivers_interface_usb:libusb_proxy_1.0",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -85,7 +75,7 @@ ohos_fuzztest("ScanMdnsServiceFuzzTest") {
     ]
   }
 
-  sources = [ "scanmdnsservice_fuzzer.cpp" ]
+  sources = [ "scancallback_fuzzer.cpp" ]
 }
 
 ###############################################################################
@@ -94,7 +84,7 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
-    ":ScanMdnsServiceFuzzTest",
+    ":ScanCallBackFuzzTest",
   ]
 }
 ###############################################################################

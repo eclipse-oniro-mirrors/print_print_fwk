@@ -41,11 +41,5 @@ void PrintSaDeathRecipientTest::SetUp(void) {}
 
 void PrintSaDeathRecipientTest::TearDown(void) {}
 
-HWTEST_F(PrintSaDeathRecipientTest, PrintSaDeathRecipientTest_0001, TestSize.Level1)
-{
-    wptr<IRemoteObject> remote;
-    PrintSaDeathRecipient rec;
-    rec.OnRemoteDied(remote);
-}
 }  // namespace Print
 }  // namespace OHOS

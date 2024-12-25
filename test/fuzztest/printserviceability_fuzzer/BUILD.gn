@@ -25,6 +25,7 @@ ohos_fuzztest("PrintServiceAbilityFuzzTest") {
   include_dirs = [
     "mock",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/ohprint/include",
     "${print_utils_path}/include",
     "//vendor/open_source/cpp-httplib",
   ]

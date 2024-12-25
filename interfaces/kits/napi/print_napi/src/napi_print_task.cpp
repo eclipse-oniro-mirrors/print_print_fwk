@@ -30,7 +30,6 @@ static constexpr const char *FUNCTION_OFF = "off";
 
 namespace OHOS::Print {
 __thread napi_ref NapiPrintTask::globalCtor = nullptr;
-std::mutex g_printTaskMutex;
 
 napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
 {
@@ -143,7 +142,7 @@ napi_value NapiPrintTask::PrintByAdapter(napi_env env, napi_callback_info info)
 
 napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, napi_value *argv, napi_value self)
 {
-    if (argc > NapiPrintUtils::ARGC_THREE && argc > NapiPrintUtils::ARGC_TWO) {
+    if (argc > NapiPrintUtils::ARGC_THREE) {
         std::string printJobName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
 
         std::shared_ptr<PrintAttributes> printAttributes =
@@ -157,6 +156,7 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
         sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(env, adapterRef);
         if (callback == nullptr) {
             PRINT_HILOGE("callback parameter error");
+            NapiPrintUtils::DeleteReference(env, adapterRef);
             return nullptr;
         }
 
@@ -170,7 +170,7 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
         auto task = new (std::nothrow) PrintTask(printJobName, callback, printAttributes, callerToken);
 
         if (task == nullptr) {
-            PRINT_HILOGE("print task fail");
+            PRINT_HILOGE("print task fail");    // callback结束时自动释放adapterRef
             return nullptr;
         }
         auto finalize = [](napi_env env, void *data, void *hint) {
@@ -179,7 +179,7 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
             delete task;
         };
         if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
-            finalize(env, task, nullptr);
+            finalize(env, task, nullptr);   // finalize里释放了tack，然后函数走完后释放callback，callback中自动释放adapterRef
             return nullptr;
         }
         PRINT_HILOGD("Succeed to allocate print task");
@@ -219,7 +219,6 @@ napi_value NapiPrintTask::WrapVoidToJS(napi_env env)
 
 napi_value NapiPrintTask::GetCtor(napi_env env)
 {
-    std::lock_guard<std::mutex> lock(g_printTaskMutex);
     napi_value cons;
     if (globalCtor != nullptr) {
         PRINT_CALL(env, napi_get_reference_value(env, globalCtor, &cons));

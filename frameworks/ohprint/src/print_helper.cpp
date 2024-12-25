@@ -23,6 +23,7 @@
 #include "ability_manager_client.h"
 #include "print_converter.h"
 #include "print_manager_client.h"
+#include "print_util.h"
 
 using json = nlohmann::json;
 
@@ -33,6 +34,7 @@ const std::string ORIENTATION_STRING = "orientation";
 const std::string PAGESIZEID_STRING = "pagesizeId";
 const std::string QUALITY_STRING = "quality";
 const std::string DEFAULT_QUALITY_PREFERENCE = "4";
+const int NUMBER_BASE = 10;
 
 char *CopyString(const std::string &source)
 {
@@ -110,7 +112,7 @@ bool ParseJsonFieldAsInt(const nlohmann::json &cupsOpt, const std::string &key, 
         return false;
     }
     std::string jsonString = cupsOpt[key].get<std::string>();
-    if (ConvertStringToInt(jsonString.c_str(), value)) {
+    if (!jsonString.empty() && ConvertStringToInt(jsonString.c_str(), value)) {
         return true;
     }
     return false;
@@ -179,30 +181,23 @@ void ReleasePrinterInfo(Print_PrinterInfo &printerInfo)
     ReleaseDefaultValue(printerInfo.defaultValue);
 }
 
-void PageSizeArrayConvert(const nlohmann::json &pageSizeJsonArray, Print_PrinterInfo &nativePrinterInfo)
+void PageSizeArrayConvert(const OHOS::Print::PrinterCapability &cap, Print_PrinterInfo &nativePrinterInfo)
 {
     ReleaseCapabilityPageSizes(nativePrinterInfo.capability);
-    PRINT_HILOGI("pageSizeJsonArray size = %{public}zu", pageSizeJsonArray.size());
-    std::vector<Print_PageSize> pageSizeVector;
-    for (auto &item : pageSizeJsonArray) {
-        Print_PageSize pageSize = {0};
-        if (!item.contains("id") || !item.contains("name") || !item.contains("width") || !item.contains("height")) {
-            PRINT_HILOGW("field missing");
-            continue;
-        }
-        if (!item["id"].is_string() || !item["name"].is_string() || !item["width"].is_number() ||
-            !item["height"].is_number()) {
-            PRINT_HILOGW("incorrect type");
-            continue;
-        }
-        pageSize.id = CopyString(item["id"].get<std::string>());
-        pageSize.name = CopyString(item["name"].get<std::string>());
-        pageSize.width = item["width"];
-        pageSize.height = item["height"];
-        pageSizeVector.push_back(pageSize);
+    std::vector<PrintPageSize> pageSizeVector;
+    std::vector<Print_PageSize> nativePageSizeVector;
+    cap.GetSupportedPageSize(pageSizeVector);
+    for (const auto &pageSize : pageSizeVector) {
+        nativePageSizeVector.push_back({
+            CopyString(pageSize.GetId()),
+            CopyString(pageSize.GetName()),
+            pageSize.GetWidth(),
+            pageSize.GetHeight()
+        });
     }
-    nativePrinterInfo.capability.supportedPageSizes = CopyArray<Print_PageSize>(pageSizeVector,
+    nativePrinterInfo.capability.supportedPageSizes = CopyArray<Print_PageSize>(nativePageSizeVector,
         nativePrinterInfo.capability.supportedPageSizesCount);
+    PRINT_HILOGI("nativePageSizeVector size = %{public}zu", nativePageSizeVector.size());
 }
 
 void ParseDefaultPageMargin(const nlohmann::json &cupsOpt, Print_Margin &defaultMargin)
@@ -235,27 +230,27 @@ void ParseDefaultPageMargin(const nlohmann::json &cupsOpt, Print_Margin &default
 
 void ParseMediaOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePrinterInfo)
 {
-    if (cupsOpt.contains("defaultPageSizeId")) {
+    if (cupsOpt.contains("defaultPageSizeId") && cupsOpt["defaultPageSizeId"].is_string()) {
         std::string defaultPageSizeId = cupsOpt["defaultPageSizeId"].get<std::string>();
         PRINT_HILOGD("defaultPageSizeId %{public}s", defaultPageSizeId.c_str());
         nativePrinterInfo.defaultValue.defaultPageSizeId = CopyString(defaultPageSizeId);
     }
-    if (cupsOpt.contains("media-type-supported")) {
+    if (cupsOpt.contains("media-type-supported") && cupsOpt["media-type-supported"].is_string()) {
         std::string mediaTypeSupported = cupsOpt["media-type-supported"].get<std::string>();
         PRINT_HILOGD("cupsOptionsStr media-type-supported %{public}s", mediaTypeSupported.c_str());
         nativePrinterInfo.capability.supportedMediaTypes = CopyString(mediaTypeSupported);
     }
-    if (cupsOpt.contains("media-type-default")) {
+    if (cupsOpt.contains("media-type-default") && cupsOpt["media-type-default"].is_string()) {
         std::string mediaTypeDefault = cupsOpt["media-type-default"].get<std::string>();
         PRINT_HILOGD("cupsOptionsStr media-type-default %{public}s", mediaTypeDefault.c_str());
         nativePrinterInfo.defaultValue.defaultMediaType = CopyString(mediaTypeDefault);
     }
-    if (cupsOpt.contains("media-source-default")) {
+    if (cupsOpt.contains("media-source-default") && cupsOpt["media-source-default"].is_string()) {
         std::string mediaSourceDefault = cupsOpt["media-source-default"].get<std::string>();
         PRINT_HILOGD("cupsOptionsStr media-source-default %{public}s", mediaSourceDefault.c_str());
         nativePrinterInfo.defaultValue.defaultPaperSource = CopyString(mediaSourceDefault);
     }
-    if (cupsOpt.contains("media-source-supported")) {
+    if (cupsOpt.contains("media-source-supported") && cupsOpt["media-source-supported"].is_string()) {
         std::string mediaSourceSupported = cupsOpt["media-source-supported"].get<std::string>();
         PRINT_HILOGD("cupsOptionsStr media-source-supported %{public}s", mediaSourceSupported.c_str());
         nativePrinterInfo.capability.supportedPaperSources = CopyString(mediaSourceSupported);
@@ -371,6 +366,21 @@ void ParsePrinterOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePri
     ParseJsonFieldAsArrayOpt(cupsOpt, keyword, nativePrinterInfo, ParseColorModeArray);
 }
 
+bool ConvertStringToUint32(const char *src, uint32_t &dst)
+{
+    if (src == nullptr || src[0] == '\0') {
+        return false;
+    }
+    errno = 0;
+    char *endPtr = nullptr;
+    dst = strtoul(src, &endPtr, NUMBER_BASE);
+    if (errno == ERANGE || endPtr == src || *endPtr != '\0') {
+        PRINT_HILOGW("ConvertStringToUint32 fail: %{public}s", src);
+        return false;
+    }
+    return true;
+}
+
 void ParseCupsCopyOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePrinterInfo)
 {
     std::string keyword = "sides-supported";
@@ -380,13 +390,23 @@ void ParseCupsCopyOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePr
     ParseJsonFieldAsArrayOpt(cupsOpt, keyword, nativePrinterInfo, ParseQualityArray);
     if (cupsOpt.contains("copies-default") && cupsOpt["copies-default"].is_string()) {
         std::string defaultCopies = cupsOpt["copies-default"].get<std::string>();
-        nativePrinterInfo.defaultValue.defaultCopies = std::stoul(defaultCopies);
-        PRINT_HILOGD("ParseCupsCopyOpt copies-default: %{public}s", defaultCopies.c_str());
+        uint32_t defaultCopiesNum = 0;
+        if (!ConvertStringToUint32(defaultCopies.c_str(), defaultCopiesNum)) {
+            PRINT_HILOGE("copies-default error: %{public}s", defaultCopies.c_str());
+            return;
+        }
+        nativePrinterInfo.defaultValue.defaultCopies = defaultCopiesNum;
+        PRINT_HILOGD("copies-default: %{public}d", defaultCopiesNum);
     }
     if (cupsOpt.contains("copies-supported") && cupsOpt["copies-supported"].is_string()) {
         std::string copySupport = cupsOpt["copies-supported"].get<std::string>();
-        nativePrinterInfo.capability.supportedCopies = std::stoul(copySupport);
-        PRINT_HILOGD("ParseCupsCopyOpt copies-supported: %{public}s", copySupport.c_str());
+        uint32_t copySupportNum = 0;
+        if (!ConvertStringToUint32(copySupport.c_str(), copySupportNum)) {
+            PRINT_HILOGE("copies-supported error: %{public}s", copySupport.c_str());
+            return;
+        }
+        nativePrinterInfo.capability.supportedCopies = copySupportNum;
+        PRINT_HILOGD("copies-supported: %{public}d", copySupportNum);
     }
 }
 
@@ -396,10 +416,8 @@ void ParseCupsOptions(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePr
     ParseDefaultPageMargin(cupsOpt, nativePrinterInfo.defaultValue.defaultMargin);
     ParseCupsCopyOpt(cupsOpt, nativePrinterInfo);
     ParseMediaOpt(cupsOpt, nativePrinterInfo);
-    std::string keyword = "supportedPageSizeArray";
-    ParseJsonFieldAsArrayOpt(cupsOpt, keyword, nativePrinterInfo, PageSizeArrayConvert);
     nlohmann::json advancedCapJson;
-    keyword = "multiple-document-handling-supported";
+    std::string keyword = "multiple-document-handling-supported";
     AddJsonFieldStringToJsonObject(cupsOpt, keyword, advancedCapJson);
     nativePrinterInfo.capability.advancedCapability = CopyString(advancedCapJson.dump().c_str());
 }
@@ -411,7 +429,8 @@ int32_t ParseInfoOption(const std::string &infoOption, Print_PrinterInfo &native
         return E_PRINT_INVALID_PARAMETER;
     }
     nlohmann::json infoJson = json::parse(infoOption);
-    if (!infoJson.contains("printerUri") || !infoJson.contains("make")) {
+    if (!infoJson.contains("printerUri") || !infoJson["printerUri"].is_string() ||
+        !infoJson.contains("make") || !infoJson["make"].is_string()) {
         PRINT_HILOGW("The infoJson does not have a necessary attribute.");
         return E_PRINT_INVALID_PARAMETER;
     }
@@ -456,23 +475,31 @@ void ParsePrinterPreference(const std::string &printerPreference, Print_PrinterI
     json setting = preferenceJson["setting"];
 
     std::string defaultDuplex = GetSettingItemString(DUPLEX_STRING, defaultSetting, setting);
-    if (!defaultDuplex.empty()) {
-        ConvertDuplexMode(std::atoi(defaultDuplex.c_str()), nativePrinterInfo.defaultValue.defaultDuplexMode);
+    int32_t defaultDuplexNum = 0;
+    if (!PrintUtil::ConvertToInt(defaultDuplex, defaultDuplexNum)) {
+        PRINT_HILOGE("defaultDuplex %{public}s can not parse to number", defaultDuplex.c_str());
+        return;
     }
+    ConvertDuplexMode(defaultDuplexNum, nativePrinterInfo.defaultValue.defaultDuplexMode);
 
     std::string defaultOrientation = GetSettingItemString(ORIENTATION_STRING, defaultSetting, setting);
-    if (!defaultOrientation.empty()) {
-        ConvertOrientationMode(
-            std::atoi(defaultOrientation.c_str()), nativePrinterInfo.defaultValue.defaultOrientation);
+    int32_t defaultOrientationNum = 0;
+    if (!PrintUtil::ConvertToInt(defaultOrientation, defaultOrientationNum)) {
+        PRINT_HILOGE("%{public}s is incorrectly formatted.", defaultOrientation.c_str());
+        return;
     }
+    ConvertOrientationMode(defaultOrientationNum, nativePrinterInfo.defaultValue.defaultOrientation);
 
     nativePrinterInfo.defaultValue.defaultPageSizeId =
         CopyString(GetSettingItemString(PAGESIZEID_STRING, defaultSetting, setting));
 
     std::string defaultQuality = GetSettingItemString(QUALITY_STRING, defaultSetting, setting);
-    if (!defaultQuality.empty()) {
-        ConvertQuality(std::atoi(defaultQuality.c_str()), nativePrinterInfo.defaultValue.defaultPrintQuality);
+    int32_t defaultQualityNum = 0;
+    if (!PrintUtil::ConvertToInt(defaultQuality, defaultQualityNum)) {
+        PRINT_HILOGE("defaultQuality %{public}s can not parse to number", defaultQuality.c_str());
+        return;
     }
+    ConvertQuality(defaultQualityNum, nativePrinterInfo.defaultValue.defaultPrintQuality);
 }
 
 Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
@@ -498,6 +525,7 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     }
     OHOS::Print::PrinterCapability cap;
     info.GetCapability(cap);
+    PageSizeArrayConvert(cap, *nativePrinterInfo);
     if (cap.HasOption() && json::accept(cap.GetOption())) {
         nlohmann::json capJson = json::parse(cap.GetOption());
         if (capJson.contains("cupsOptions") && capJson["cupsOptions"].is_object()) {
@@ -590,7 +618,12 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
         jsonOptions["mediaType"] = std::string(nativePrintJob.mediaType);
     }
     jsonOptions["borderless"] = nativePrintJob.borderless ? "true" : "false";
-    jsonOptions["printQuality"] = nativePrintJob.printQuality;
+    Print_Quality quality = nativePrintJob.printQuality;
+    if (quality > static_cast<Print_Quality>(PRINT_QUALITY_HIGH)
+        || quality < static_cast<Print_Quality>(PRINT_QUALITY_DRAFT)) {
+        quality = static_cast<Print_Quality>(PRINT_QUALITY_NORMAL);
+    }
+    jsonOptions["printQuality"] = quality;
     jsonOptions["documentFormat"] = GetDocumentFormatString(nativePrintJob.documentFormat);
     if (nativePrintJob.advancedOptions != nullptr) {
         jsonOptions["cupsOptions"] = std::string(nativePrintJob.advancedOptions);

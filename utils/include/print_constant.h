@@ -17,6 +17,7 @@
 #define PRINT_CONSTANT_H
 
 #include <string>
+#include <map>
 
 namespace OHOS::Print {
 #define PRINT_RET_NONE
@@ -65,6 +66,7 @@ namespace OHOS::Print {
 enum PrintErrorCode {
     E_PRINT_NONE = 0,
     E_PRINT_NO_PERMISSION = 201,
+    E_PRINT_ILLEGAL_USE_OF_SYSTEM_API = 202,
     E_PRINT_INVALID_PARAMETER = 401,
     E_PRINT_GENERIC_FAILURE = 13100001,
     E_PRINT_RPC_FAILURE = 13100002,
@@ -183,6 +185,20 @@ enum PrintDuplexMode {
     DUPLEX_MODE_SHORT_EDGE = 2,
 };
 
+enum PrintQualityCode {
+    PRINT_QUALITY_DRAFT = 3,
+    PRINT_QUALITY_NORMAL = 4,
+    PRINT_QUALITY_HIGH = 5
+};
+
+enum PrintOrientationMode {
+    PRINT_ORIENTATION_MODE_PORTRAIT = 0,
+    PRINT_ORIENTATION_MODE_LANDSCAPE= 1,
+    PRINT_ORIENTATION_MODE_REVERSE_LANDSCAPE = 2,
+    PRINT_ORIENTATION_MODE_REVERSE_PORTRAIT = 3,
+    PRINT_ORIENTATION_MODE_NONE = 4
+};
+
 enum PrintPageType {
     PAGE_ISO_A3 = 0,
     PAGE_ISO_A4 = 1,
@@ -216,6 +232,7 @@ enum PrinterEvent {
     PRINTER_EVENT_STATE_CHANGED = 2,
     PRINTER_EVENT_INFO_CHANGED = 3,
     PRINTER_EVENT_PREFERENCE_CHANGED = 4,
+    PRINTER_EVENT_LAST_USED_PRINTER_CHANGED = 5,
 };
 
 enum DefaultPrinterType {
@@ -227,5 +244,24 @@ const std::string PRINTER_DISCOVER_EVENT_TYPE = "printerDiscover";
 const std::string PRINTER_CHANGE_EVENT_TYPE = "printerChange";
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
+const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
+const std::string PRINTER_LIST_FILE = "printer_list.json";
+const std::string PRINTER_LIST_VERSION = "v1";
+const std::string PRINT_USER_DATA_FILE = "print_user_data.json";
+const std::string PRINT_USER_DATA_VERSION = "v1";
+
+const std::string E_PRINT_MSG_NONE = "none";
+const std::string E_PRINT_MSG_NO_PERMISSION = "the application does not hace permission";
+const std::string E_PRINT_MSG_INVALID_PARAMETER = "parameter error";
+static std::map<PrintErrorCode, const std::string> PRINT_ERROR_MSG_MAP {
+    {E_PRINT_NONE,                  E_PRINT_MSG_NONE                },
+    {E_PRINT_NO_PERMISSION,         E_PRINT_MSG_NO_PERMISSION       },
+    {E_PRINT_INVALID_PARAMETER,     E_PRINT_MSG_INVALID_PARAMETER   },
+};
+
+const std::string VENDOR_WLAN_GROUP = "driver.wlan.group";
+const std::string VENDOR_BSUNI_DRIVER = "driver.bsuni";
+const std::string VENDOR_PPD_DRIVER = "driver.ppd";
+const std::string VENDOR_IPP_EVERYWHERE = "driver.ipp.everywhere";
 } // namespace OHOS::Print
 #endif // PRINT_CONSTANT_H

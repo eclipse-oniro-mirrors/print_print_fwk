@@ -38,11 +38,17 @@ public:
     static napi_value AddPrinterToCups(napi_env env, napi_callback_info info);
     static napi_value QueryPrinterCapabilityByUri(napi_env env, napi_callback_info info);
     static napi_value DeletePrinterFromCups(napi_env env, napi_callback_info info);
+    static napi_value DiscoverUsbPrinters(napi_env env, napi_callback_info info);
+    static napi_value AddPrinterToDiscovery(napi_env env, napi_callback_info info);
+    static napi_value UpdatePrinterInDiscovery(napi_env env, napi_callback_info info);
+    static napi_value RemovePrinterFromDiscovery(napi_env env, napi_callback_info info);
+    static napi_value UpdatePrinterInSystem(napi_env env, napi_callback_info info);
 
 private:
     static bool IsValidPrinterState(uint32_t state);
     static bool IsValidPrintJobState(uint32_t state);
     static bool IsValidPrintJobSubState(uint32_t subState);
+    static void NapiThrowError(napi_env env, const int32_t errCode);
 
 private:
     struct NapiPrintExtContext : public PrintAsyncCall::Context {

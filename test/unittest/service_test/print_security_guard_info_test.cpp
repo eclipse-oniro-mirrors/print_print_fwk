@@ -44,7 +44,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0001, TestSize.L
     PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
     PrinterInfo printerInfo;
     PrintJob printJob;
-    printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
+    printSecurityGuardInfo.SetPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
 
@@ -55,7 +55,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0002, TestSize.L
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId("EPRINT_printer");
     PrintJob printJob;
-    printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
+    printSecurityGuardInfo.SetPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
 
@@ -69,7 +69,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0003, TestSize.L
     printerInfo.SetOption(option);
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_COMPLETED_SUCCESS);
-    printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
+    printSecurityGuardInfo.SetPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
 
@@ -83,7 +83,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0004, TestSize.L
     printerInfo.SetOption(option);
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_COMPLETED_CANCELLED);
-    printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
+    printSecurityGuardInfo.SetPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
 
@@ -97,7 +97,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0005, TestSize.L
     printerInfo.SetOption(option);
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_COMPLETED_FAILED);
-    printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
+    printSecurityGuardInfo.SetPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
 
@@ -111,7 +111,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0006, TestSize.L
     printerInfo.SetOption(option);
     PrintJob printJob;
     printJob.SetSubState(PRINT_JOB_COMPLETED_FILE_CORRUPT);
-    printSecurityGuardInfo.setPrintTypeInfo(printerInfo, printJob);
+    printSecurityGuardInfo.SetPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
 } // namespace Print

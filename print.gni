@@ -17,6 +17,18 @@ c_utils_path = "//commonlibrary/c_utils"
 
 print_path = "//base/print/print_fwk"
 print_utils_path = "${print_path}/utils"
+bsuni_binary_path = "//binary/artifacts/print/bsUniDriver/bsUniDriver"
+bsuni_gsbin_path = "${bsuni_binary_path}/ghostscript/bin"
+bsuni_gslib_path =
+    "${bsuni_binary_path}/ghostscript/share/ghostscript/10.04.0/lib"
+bsuni_gsres_path =
+    "${bsuni_binary_path}/ghostscript/share/ghostscript/10.04.0/Resource"
+
+bsuni_binary_install_path = "bin/uni_print_driver"
+bsuni_gsbin_install_path = "${bsuni_binary_install_path}/ghostscript/bin"
+bsuni_gslib_install_path =
+    "${bsuni_binary_install_path}/ghostscript/share/ghostscript/10.04.0/lib"
+bsuni_gsres_install_path = "${bsuni_binary_install_path}/ghostscript/share/ghostscript/10.04.0/Resource"
 
 if (!defined(global_parts_info) ||
     defined(global_parts_info.security_security_guard)) {
@@ -27,4 +39,8 @@ if (!defined(global_parts_info) ||
 cups_enable = true
 debug_enable = false
 ipp_over_usb_enable = false
-sane_enable = false
+sane_enable = true
+
+declare_args() {
+  print_fwk_feature_bsuni_driver = false
+}

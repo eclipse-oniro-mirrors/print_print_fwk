@@ -13,9 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_SCAN_MDNS_SERVICE_FUZZER_H
-#define OHOS_SCAN_MDNS_SERVICE_FUZZER_H
+#include "vendor_driver_group.h"
+#include "print_log.h"
 
-#define FUZZ_PROJECT_NAME "scanmdnsservice_fuzzer"
+using namespace OHOS::Print;
 
-#endif // OHOS_SCAN_MDNS_SERVICE_FUZZER_H
+int32_t VendorDriverGroup::OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo)
+{
+    return 0;
+}
+
+int32_t VendorDriverGroup::OnPrinterRemoved(const std::string &vendorName, const std::string &printerId)
+{
+    return 0;
+}
+
+bool VendorDriverGroup::IsGroupDriver(const std::string &bothPrinterId)
+{
+    return 0;
+}
+
+std::string VendorDriverGroup::ConvertGroupGlobalPrinterId(const std::string &bothPrinterId)
+{
+    return "";
+}

@@ -28,7 +28,12 @@ bool PrintCallbackProxy::OnCallback()
     MessageOption option;
 
     data.WriteInterfaceToken(GetDescriptor());
-    int error = Remote()->SendRequest(PRINT_CALLBACK_TASK, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("SendRequest failed, error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_CALLBACK_TASK, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
@@ -49,7 +54,12 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrinterInfo &info)
     data.WriteUint32(state);
     info.Marshalling(data);
 
-    int error = Remote()->SendRequest(PRINT_CALLBACK_PRINTER, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("SendRequest failed, error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_CALLBACK_PRINTER, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
@@ -70,7 +80,12 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrintJob &info)
     data.WriteUint32(state);
     info.Marshalling(data);
 
-    int error = Remote()->SendRequest(PRINT_CALLBACK_PRINT_JOB, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("SendRequest failed, error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_CALLBACK_PRINT_JOB, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
@@ -90,7 +105,12 @@ bool PrintCallbackProxy::OnCallback(const std::string &extensionId, const std::s
     data.WriteString(extensionId);
     data.WriteString(info);
 
-    int error = Remote()->SendRequest(PRINT_CALLBACK_EXTINFO, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("SendRequest failed, error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_CALLBACK_EXTINFO, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
@@ -117,7 +137,12 @@ bool PrintCallbackProxy::OnCallbackAdapterLayout(const std::string &jobId, const
     newAttrs.Marshalling(data);
     data.WriteFileDescriptor(fd);
 
-    int error = Remote()->SendRequest(PRINT_CALLBACK_PRINT_JOB_ADAPTER, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("SendRequest failed, error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_CALLBACK_PRINT_JOB_ADAPTER, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
@@ -143,7 +168,12 @@ bool PrintCallbackProxy::onCallbackAdapterJobStateChanged(const std::string jobI
     data.WriteUint32(state);
     data.WriteUint32(subState);
 
-    int error = Remote()->SendRequest(PRINT_CALLBACK_PRINT_JOB_CHANGED_ADAPTER, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("SendRequest failed, error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_CALLBACK_PRINT_JOB_CHANGED_ADAPTER, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
@@ -166,7 +196,12 @@ bool PrintCallbackProxy::OnCallbackAdapterGetFile(uint32_t state)
 
     data.WriteUint32(state);
 
-    int error = Remote()->SendRequest(PRINT_CALLBACK_PRINT_GET_FILE_ADAPTER, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("SendRequest failed, error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_CALLBACK_PRINT_GET_FILE_ADAPTER, data, reply, option);
     if (error != 0) {
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;

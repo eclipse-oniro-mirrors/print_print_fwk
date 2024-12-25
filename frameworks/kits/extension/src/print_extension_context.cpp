@@ -59,7 +59,7 @@ bool PrintExtensionContext::ConnectAbility(
 ErrCode PrintExtensionContext::StartAbilityWithAccount(const AAFwk::Want &want, int accountId) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    PRINT_HILOGD("%{public}d accountId:", accountId);
+    PRINT_HILOGD("%{private}d accountId:", accountId);
     ErrCode err =
         AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, token_, ILLEGAL_REQUEST_CODE, accountId);
     PRINT_HILOGD("%{public}s. End calling StartAbilityWithAccount. ret=%{public}d", __func__, err);

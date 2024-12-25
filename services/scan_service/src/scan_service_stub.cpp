@@ -47,7 +47,6 @@ ScanServiceStub::ScanServiceStub()
     cmdMap_[CMD_DISCONNECT_SCANNER] = &ScanServiceStub::OnDisConnectScanner;
     cmdMap_[CMD_GET_CONNECTED_SCANNER] = &ScanServiceStub::OnGetConnectedScanner;
     cmdMap_[CMD_UPDATE_SCANNER_NAME] = &ScanServiceStub::OnUpdateScannerName;
-    cmdMap_[CMD_ADD_PRINTER] = &ScanServiceStub::OnAddPrinter;
     cmdMap_[CMD_ON] = &ScanServiceStub::OnEventOn;
     cmdMap_[CMD_OFF] = &ScanServiceStub::OnEventOff;
 }
@@ -66,7 +65,8 @@ int32_t ScanServiceStub::OnRemoteRequest(
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
         if (requestFunc != nullptr) {
-            return (this->*requestFunc)(data, reply);
+            bool result = (this->*requestFunc)(data, reply);
+            return result ? E_SCAN_NONE : E_SCAN_SERVER_FAILURE;
         }
     }
     SCAN_HILOGW("default case, need check.");
@@ -85,7 +85,7 @@ bool ScanServiceStub::OnInitScan(MessageParcel &data, MessageParcel &reply)
     }
     if (isSaneInit_) {
         SCAN_HILOGW("is isSaneInit_ed");
-        return E_SCAN_NONE;
+        return true;
     }
     ret = InitScan(scanVersion);
     isSaneInit_ = true;
@@ -106,7 +106,7 @@ bool ScanServiceStub::OnExitScan(MessageParcel &data, MessageParcel &reply)
     }
     {
         std::lock_guard<std::mutex> autoLock(lock_);
-        ScanServiceAbility::appCount_ = ScanServiceAbility::appCount_-1 >= 0 ? ScanServiceAbility::appCount_-1 : 0;
+        ScanServiceAbility::appCount_ = ScanServiceAbility::appCount_ - 1 >= 0 ? ScanServiceAbility::appCount_ - 1 : 0;
         SCAN_HILOGI("appCount = %{public}d", ScanServiceAbility::appCount_);
         if (ScanServiceAbility::appCount_ == 0) {
             SCAN_HILOGI("connected app number = 0, start unloadSA");
@@ -179,6 +179,10 @@ bool ScanServiceStub::OnOpScanOptionValue(MessageParcel &data, MessageParcel &re
     ScanOptionOpType op = (ScanOptionOpType) data.ReadUint32();
     ScanOptionValue value;
     auto scanOptionValue = ScanOptionValue::Unmarshalling(data);
+    if (scanOptionValue == nullptr) {
+        SCAN_HILOGE("scanOptionValue is a nullptr.");
+        return false;
+    }
     value = *scanOptionValue;
     int32_t info;
     int32_t ret = OpScanOptionValue(scannerId, optionIndex, op, value, info);
@@ -358,7 +362,6 @@ bool ScanServiceStub::OnGetConnectedScanner(MessageParcel &data, MessageParcel &
 {
     SCAN_HILOGD("ScanServiceStub::OnGetConnectedScanner start");
     std::vector<ScanDeviceInfo> allAddedScanner;
-    allAddedScanner.clear();
     int32_t ret = GetAddedScanner(allAddedScanner);
     reply.WriteInt32(ret);
     if (ret == E_SCAN_NONE) {
@@ -381,17 +384,6 @@ bool ScanServiceStub::OnUpdateScannerName(MessageParcel &data, MessageParcel &re
     int32_t ret = UpdateScannerName(serialNumber, discoverMode, deviceName);
     reply.WriteInt32(ret);
     SCAN_HILOGD("ScanServiceStub::OnUpdateScannerName end");
-    return ret == E_SCAN_NONE;
-}
-
-bool ScanServiceStub::OnAddPrinter(MessageParcel &data, MessageParcel &reply)
-{
-    SCAN_HILOGD("ScanServiceStub::OnAddPrinter start");
-    std::string serialNumber = data.ReadString();
-    std::string discoverMode = data.ReadString();
-    int32_t ret = AddPrinter(serialNumber, discoverMode);
-    reply.WriteInt32(ret);
-    SCAN_HILOGD("ScanServiceStub::OnAddPrinter end");
     return ret == E_SCAN_NONE;
 }
 

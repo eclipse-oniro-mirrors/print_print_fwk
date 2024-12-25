@@ -53,11 +53,14 @@ public:
     static napi_value GetPrinterPreference(napi_env env, napi_callback_info info);
     static napi_value SetPrinterPreference(napi_env env, napi_callback_info info);
     static napi_value SetDefaultPrinter(napi_env env, napi_callback_info info);
+    static napi_value GetAddedPrinterInfoById(napi_env env, napi_callback_info info);
 
 private:
     static bool IsSupportType(const std::string& type);
     static bool IsValidApplicationEvent(uint32_t event);
     static bool IsValidDefaultPrinterType(uint32_t type);
+    static void NapiThrowError(napi_env env, int32_t errCode);
+    static bool CheckCallerIsSystemApp();
 
 private:
     struct InnerPrintContext : public PrintAsyncCall::Context {

@@ -39,7 +39,7 @@ class PrintManagerClient : public RefBase {
 public:
     PrintManagerClient();
     ~PrintManagerClient();
-    static sptr<PrintManagerClient> GetInstance();
+    static PrintManagerClient* GetInstance();
 
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
 
@@ -59,6 +59,7 @@ public:
     int32_t StartPrintJob(PrintJob &jobinfo);
     int32_t CancelPrintJob(const std::string &jobId);
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state);
+    int32_t UpdatePrintJobStateForNormalApp(const std::string &jobId, uint32_t state, uint32_t subState);
     int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState);
     int32_t UpdateExtensionInfo(const std::string &extensionId);
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult);
@@ -71,8 +72,7 @@ public:
         PrinterCapability &printerCaps);
     int32_t NotifyPrintServiceEvent(std::string &jobId, uint32_t event);
     int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type);
-    int32_t DeletePrinterFromCups(const std::string &printerUri, const std::string &printerName,
-        const std::string &printerMake);
+    int32_t DeletePrinterFromCups(const std::string &printerName);
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info);
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList);
     int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
@@ -80,6 +80,11 @@ public:
     int32_t StartNativePrintJob(PrintJob &printJob);
     int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference);
     int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference);
+    int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
+    int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo);
+    int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo);
+    int32_t RemovePrinterFromDiscovery(const std::string &printerId);
+    int32_t UpdatePrinterInSystem(const PrinterInfo &printerInfo);
 
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);
@@ -121,8 +126,6 @@ private:
 #define CALL_COMMON_CLIENT(func) runBase(__func__, func)
 
 private:
-    static std::mutex instanceLock_;
-    static sptr<PrintManagerClient> instance_;
     std::recursive_mutex proxyLock_;
     sptr<IPrintService> printServiceProxy_;
     sptr<PrintSaDeathRecipient> deathRecipient_;

@@ -68,6 +68,15 @@ static int32_t GetRandomNumber(const int32_t& lowerBoundary, const int32_t& uppe
     return dis(gen);
 }
 #endif
+
+static std::string GetLastWord(const std::string& str)
+{
+    size_t pos = str.find_last_of(' ');
+    if (pos == std::string::npos) {
+        return str;
+    }
+    return str.substr(pos + 1);
+}
 };
 using namespace std;
 using namespace OHOS::HiviewDFX;
@@ -86,10 +95,14 @@ constexpr int CHANNEL_ONE = 1;
 constexpr int CHANNEL_THREE = 3;
 #ifdef SANE_ENABLE
 constexpr int MAX_PICTURE_DPI = 3000;
+constexpr int MAX_SANE_VALUE_LEN = 2000;
 #endif
 const int64_t INIT_INTERVAL = 5000L;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t UNLOAD_SYSTEMABILITY_DELAY = 1000 * 30;
+constexpr int32_t INVALID_USER_ID = -1;
+constexpr int32_t START_USER_ID = 100;
+constexpr int32_t MAX_USER_ID = 1099;
 
 static int32_t g_scannerState = SCANNER_READY;
 #ifdef SANE_ENABLE
@@ -119,14 +132,13 @@ int32_t ScanServiceAbility::appCount_ = 0;
 std::mutex ScanServiceAbility::instanceLock_;
 sptr<ScanServiceAbility> ScanServiceAbility::instance_;
 std::shared_ptr<AppExecFwk::EventHandler> ScanServiceAbility::serviceHandler_;
-std::map<std::string, ScanDeviceInfoTCP> ScanServiceAbility::scanDeviceInfoTCPMap_;
 std::map<std::string, ScanDeviceInfo> ScanServiceAbility::saneGetUsbDeviceInfoMap;
 std::map<std::string, ScanDeviceInfo> ScanServiceAbility::saneGetTcpDeviceInfoMap;
 std::map<std::string, std::string> ScanServiceAbility::usbSnMap;
 
 ScanServiceAbility::ScanServiceAbility(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START),
-    currentJobId_(SCAN_CONSTRAINT_NONE)
+    currentJobId_(SCAN_CONSTRAINT_NONE), currentUseScannerUserId_(INVALID_USER_ID)
 {
     buffer_size = ONE_MB;
     saneReadBuf = static_cast<uint8_t *>(malloc(buffer_size));
@@ -163,14 +175,20 @@ ScanServiceAbility::ScanServiceAbility(int32_t systemAbilityId, bool runOnCreate
             buffer = nullptr;
     };
 #endif
-
-    cinfo.comps_in_scan = 0;
+    cinfoPtr = new (std::nothrow) jpeg_compress_struct();
+    if (cinfoPtr == nullptr) {
+        SCAN_HILOGE("cinfoPtr allocated failed");
+        return;
+    }
+    cinfoPtr->comps_in_scan = 0;
 }
 
 ScanServiceAbility::~ScanServiceAbility()
 {
-    free(saneReadBuf);
+    FREE_AND_NULLPTR(saneReadBuf);
     FREE_AND_NULLPTR(jpegbuf)
+    DELETE_AND_NULLIFY(cinfoPtr);
+    DELETE_AND_NULLIFY(ofp);
     SCAN_HILOGD("~ScanServiceAbility state_  is %{public}d.", static_cast<int>(state_));
 }
 
@@ -270,6 +288,7 @@ void ScanServiceAbility::UnloadSystemAbility()
             return;
         }
         this->ExitScan();
+        ScanMdnsService::OnStopDiscoverService();
         SCAN_HILOGI("unload system ability successfully");
     };
     serviceHandler_->PostTask(unloadTask, UNLOAD_SYSTEMABILITY_DELAY);
@@ -306,6 +325,7 @@ int32_t ScanServiceAbility::InitScan(int32_t &scanVersion)
 #endif
     DelayedSingleton<ScanUsbManager>::GetInstance()->Init();
     ScanSystemData::GetInstance().Init();
+    ScanMdnsService::OnStartDiscoverService();
     SCAN_HILOGI("ScanServiceAbility InitScan end, scanVersion = [%{public}d]", scanVersion);
     return E_SCAN_NONE;
 }
@@ -320,8 +340,12 @@ int32_t ScanServiceAbility::ExitScan()
     SCAN_HILOGI("ScanServiceAbility ExitScan start");
     std::lock_guard<std::mutex> autoLock(lock_);
 #ifdef SANE_ENABLE
-    sane_exit();
+    for (const auto& scannerHandle : scannerHandleList_) {
+        sane_cancel(scannerHandle.second);
+        sane_close(scannerHandle.second);
+    }
     scannerHandleList_.clear();
+    sane_exit();
 #endif
     g_scannerState = SCANNER_READY;
     std::queue<int32_t> empty;
@@ -350,8 +374,12 @@ int32_t ScanServiceAbility::ReInitScan(int32_t &scanVersion)
     }
     SCAN_HILOGD("ScanServiceAbility ReInitScan start");
 #ifdef SANE_ENABLE
-    sane_exit();
+    for (const auto& scannerHandle : scannerHandleList_) {
+        sane_cancel(scannerHandle.second);
+        sane_close(scannerHandle.second);
+    }
     scannerHandleList_.clear();
+    sane_exit();
     g_scannerState = SCANNER_READY;
     std::queue<int32_t> empty;
     scanQueue.swap(empty);
@@ -375,8 +403,17 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
     if (std::regex_match(deviceId, match, pattern)) {
         constexpr size_t STRING_POS_THREE = 3;
         constexpr size_t STRING_POS_FOUR = 4;
-        firstId = std::to_string(std::stoi(match[STRING_POS_THREE]));
-        secondId = std::to_string(std::stoi(match[STRING_POS_FOUR]));
+        std::string firstIdTmp = match[STRING_POS_THREE].str();
+        std::string secondIdTmp = match[STRING_POS_FOUR].str();
+        int32_t firstNumTmp = 0;
+        int32_t secondNumTmp = 0;
+        if (!ScanUtil::ConvertToInt(firstIdTmp, firstNumTmp) ||
+            !ScanUtil::ConvertToInt(secondIdTmp, secondNumTmp)) {
+            SCAN_HILOGE("parse [%{public}s]:[%{public}s] fail", firstIdTmp.c_str(), secondIdTmp.c_str());
+            return false;
+        }
+        firstId = std::to_string(firstNumTmp);
+        secondId = std::to_string(secondNumTmp);
         return true;
     } else {
         SCAN_HILOGE("In USB mode, the deviceId string format does not match");
@@ -400,24 +437,34 @@ bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string
 
 void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
 {
-    info.model = info.model.substr(0, info.model.find("(") - 1);
     if (info.deviceId.find(":tcp") != info.deviceId.npos) {
         info.discoverMode = "TCP";
-        SCAN_HILOGI("SetScannerSerialNumber discoverMode:[%{public}s]", info.discoverMode.c_str());
         std::string ip;
         if (!GetTcpDeviceIp(info.deviceId, ip)) {
             SCAN_HILOGE("cannot get device's ip");
             return;
         }
-        auto it = scanDeviceInfoTCPMap_.find(ip);
-        if (it != scanDeviceInfoTCPMap_.end()) {
-            info.serialNumber = it->second.deviceName.substr(
-                it->second.deviceName.find_last_of(" ") + 1, it->second.deviceName.size() - 1);
-            SCAN_HILOGI("Set mdns ScannerSerialNumber :[%{public}s]", info.serialNumber.c_str());
+        int32_t count = 0;
+        constexpr int32_t MAX_WAIT_COUNT = 5;
+        constexpr int32_t WAIT_TIME = 1;
+        ScanDeviceInfoTCP netScannerInfo;
+        bool find = ScanMdnsService::FindNetScannerInfoByIp(ip, netScannerInfo);
+        while (!find && count < MAX_WAIT_COUNT) {
+            sleep(WAIT_TIME);
+            SCAN_HILOGW("wait a second");
+            find = ScanMdnsService::FindNetScannerInfoByIp(ip, netScannerInfo);
+            count++;
+        }
+        info.uniqueId = ip;
+        if (find) {
+            info.serialNumber = GetLastWord(netScannerInfo.deviceName);
+            info.uuid = netScannerInfo.uuid;
+            info.deviceName = netScannerInfo.deviceName;
+        } else {
+            info.deviceName = info.manufacturer + "-" + info.model;
         }
     } else if (info.deviceId.find(":libusb") != info.deviceId.npos) {
         info.discoverMode = "USB";
-        SCAN_HILOGI("SetScannerSerialNumber discoverMode:[%{public}s]", info.discoverMode.c_str());
         std::string firstId;
         std::string secondId;
         if (!GetUsbDevicePort(info.deviceId, firstId, secondId)) {
@@ -425,17 +472,17 @@ void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
             return;
         }
         std::string usbScannerPort = firstId + "-" + secondId;
-        SCAN_HILOGI("usbScannerPort: firstId-secondId [%{public}s]", usbScannerPort.c_str());
         DelayedSingleton<ScanUsbManager>::GetInstance()->RefreshUsbDevice();
         auto it = usbSnMap.find(usbScannerPort);
         if (it != usbSnMap.end() && it->second != "") {
-            SCAN_HILOGI("set serialNumber [%{public}s]", usbSnMap[usbScannerPort].c_str());
-            info.serialNumber = usbSnMap[usbScannerPort];
+            SCAN_HILOGD("set serialNumber [%{private}s]", it->second.c_str());
+            info.serialNumber = it->second;
+            info.uniqueId = it->second;
         } else {
-            SCAN_HILOGE("usb %{public}s can't find serialNumber", usbScannerPort.c_str());
+            SCAN_HILOGE("usb can't find serialNumber");
         }
+        info.deviceName = info.manufacturer + "-" + info.model + "-" + info.serialNumber;
     }
-    info.deviceName = info.manufacturer + "-" + info.model + "-" + info.serialNumber;
 }
 
 void ScanServiceAbility::SyncScannerInfo(ScanDeviceInfo &info)
@@ -456,6 +503,7 @@ void ScanServiceAbility::AddFoundUsbScanner(ScanDeviceInfo &info)
 {
     SCAN_HILOGI("AddFoundUsbScanner start model:[%{public}s]", info.model.c_str());
     SyncScannerInfo(info);
+    std::lock_guard<std::mutex> autoLock(clearMapLock_);
 #ifdef DEBUG_ENABLE
     auto it = saneGetUsbDeviceInfoMap.find(info.serialNumber);
     if (it != saneGetUsbDeviceInfoMap.end()) {
@@ -463,7 +511,12 @@ void ScanServiceAbility::AddFoundUsbScanner(ScanDeviceInfo &info)
                     saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
     }
 #endif
-    saneGetUsbDeviceInfoMap[info.serialNumber] = info;
+    if (info.serialNumber != "") {
+        saneGetUsbDeviceInfoMap[info.serialNumber] = info;
+    }
+    if (info.uniqueId != "") {
+        saneGetUsbDeviceInfoMap[info.uniqueId] = info;
+    }
 #ifdef DEBUG_ENABLE
     SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{public}s] of serialNumber:[%{public}s]",
                 saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
@@ -482,7 +535,12 @@ void ScanServiceAbility::AddFoundTcpScanner(ScanDeviceInfo &info)
                     saneGetTcpDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
     }
 #endif
-    saneGetTcpDeviceInfoMap[info.serialNumber] = info;
+    if (info.serialNumber != "") {
+        saneGetTcpDeviceInfoMap[info.serialNumber] = info;
+    }
+    if (info.uniqueId != "") {
+        saneGetTcpDeviceInfoMap[info.uniqueId] = info;
+    }
 #ifdef DEBUG_ENABLE
     SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{public}s] of serialNumber:[%{public}s]",
                 saneGetTcpDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
@@ -526,9 +584,12 @@ void ScanServiceAbility::SaneGetScanner()
     const SANE_Device **deviceList;
     SANE_Status devicesStatus = SANE_STATUS_GOOD;
     std::lock_guard<std::mutex> autoLock(lock_);
+    {
+        std::lock_guard<std::mutex> autoLock(clearMapLock_);
+        saneGetTcpDeviceInfoMap.clear();
+        saneGetUsbDeviceInfoMap.clear();
+    }
     g_scannerState = SCANNER_SEARCHING;
-    saneGetTcpDeviceInfoMap.clear();
-    saneGetUsbDeviceInfoMap.clear();
     devicesStatus = sane_get_devices(&deviceList, SANE_FALSE);
     if (devicesStatus != SANE_STATUS_GOOD) {
         SCAN_HILOGE("sane_get_devices failed, reason: [%{public}s]", sane_strstatus(devicesStatus));
@@ -542,20 +603,17 @@ void ScanServiceAbility::SaneGetScanner()
             continue;
         }
         SetScannerSerialNumber(info);
-#ifdef DEBUG_ENABLE
-        SCAN_HILOGD("SaneGetScanner serialNumber:[%{public}s] discoverMode:[%{public}s",
-                    info.serialNumber.c_str(), info.discoverMode.c_str());
-#endif
-        if (info.serialNumber != "" && info.discoverMode == "USB") {
+        if (info.discoverMode == "USB") {
             SCAN_HILOGI("SaneGetScanner AddFoundUsbScanner model:[%{public}s]", info.model.c_str());
             AddFoundUsbScanner(info);
-        } else if (info.serialNumber != "" && info.discoverMode == "TCP") {
+        } else if (info.discoverMode == "TCP") {
             SCAN_HILOGI("SaneGetScanner AddFoundTcpScanner model:[%{public}s]", info.model.c_str());
             AddFoundTcpScanner(info);
         } else {
             SCAN_HILOGE("SaneGetScanner SetScannerSerialNumber failed, model:[%{public}s]", info.model.c_str());
         }
     }
+    clearMapLock_.lock();
     for (auto &t : saneGetUsbDeviceInfoMap) {
         SendDeviceInfo(t.second, SCAN_DEVICE_FOUND);
         deviceInfos.emplace_back(t.second);
@@ -564,6 +622,7 @@ void ScanServiceAbility::SaneGetScanner()
         SendDeviceInfo(t.second, SCAN_DEVICE_FOUND);
         deviceInfos.emplace_back(t.second);
     }
+    clearMapLock_.unlock();
     g_scannerState = SCANNER_READY;
 }
 #endif
@@ -582,11 +641,6 @@ int32_t ScanServiceAbility::GetScannerList()
     InitScan(version);
     SCAN_HILOGD("ScanServiceAbility GetScannerList start");
     std::lock_guard<std::mutex> autoLock(lock_);
-    // tcp
-    auto exec_tcp = [=]() {
-        ScanMdnsService::GetInstance().SetServiceType("_scanner._tcp");
-        ScanMdnsService::GetInstance().onStartDiscoverService();
-    };
     auto exec_sane_getscaner = [=]() {
         deviceInfos.clear();
 #ifdef SANE_ENABLE
@@ -596,7 +650,6 @@ int32_t ScanServiceAbility::GetScannerList()
         SendDeviceSearchEnd(message, SCAN_DEVICE_FOUND);
         SendDeviceList(deviceInfos, GET_SCANNER_DEVICE_LIST);
     };
-    serviceHandler_->PostTask(exec_tcp, ASYNC_CMD_DELAY);
     serviceHandler_->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
     SCAN_HILOGD("ScanServiceAbility GetScannerList end");
     return E_SCAN_NONE;
@@ -611,10 +664,13 @@ int32_t ScanServiceAbility::StopDiscover()
     }
     SCAN_HILOGD("ScanServiceAbility StopDiscover start");
 
-    ScanMdnsService::GetInstance().onStopDiscoverService();
-
-    SCAN_HILOGD("ScanServiceAbility StopDiscover end");
-    return E_SCAN_NONE;
+    if (ScanMdnsService::OnStopDiscoverService()) {
+        SCAN_HILOGD("ScanServiceAbility StopDiscover end successful.");
+        return E_SCAN_NONE;
+    } else {
+        SCAN_HILOGE("ScanServiceAbility StopDiscover fail.");
+        return E_SCAN_SERVER_FAILURE;
+    }
 }
 
 int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
@@ -635,6 +691,10 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
         return E_SCAN_DEVICE_BUSY;
     }
 #ifdef SANE_ENABLE
+    if (scannerHandleList_.find(scannerId) != scannerHandleList_.end()) {
+        SCAN_HILOGD("scannerId %{public}s is already opened", scannerId.c_str());
+        return E_SCAN_NONE;
+    }
     SANE_Handle scannerHandle = 0;
     SANE_String_Const scannerIdCstr = scannerId.c_str();
     SANE_Status status = sane_open(scannerIdCstr, &scannerHandle);
@@ -684,6 +744,7 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
     scanTaskMap.clear();
     std::queue<int32_t> emptyQueue;
     scanQueue.swap(emptyQueue);
+    sane_cancel(scannerHandle);
     sane_close(scannerHandle);
     scannerHandleList_.erase(scannerId);
 #endif
@@ -726,7 +787,7 @@ int32_t ScanServiceAbility::SelectScanOptionDesc(
         std::vector<int32_t> optionConstraintNumber;
         int sizeNumber = *(optionDesc->constraint.word_list) + 1;
         for (int i = 0; i < sizeNumber; i++) {
-            SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST: %d", *(optionDesc->constraint.word_list + i));
+            SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST: %{public}d", *(optionDesc->constraint.word_list + i));
             optionConstraintNumber.push_back(*(optionDesc->constraint.word_list + i));
         }
         desc.SetOptionConstraintNumber(optionConstraintNumber);
@@ -738,8 +799,8 @@ int32_t ScanServiceAbility::SelectScanOptionDesc(
             SCAN_HILOGE("sane_get_option_descriptor stringList nullptr");
             return E_SCAN_INVALID_PARAMETER;
         }
-        for (int i = 0; stringList[i] != NULL; i++) {
-            SCAN_HILOGD("SANE_CONSTRAINT_STRING_LIST: %s", stringList[i]);
+        for (int i = 0; stringList[i] != nullptr; i++) {
+            SCAN_HILOGD("SANE_CONSTRAINT_STRING_LIST: %{public}s", stringList[i]);
             optionConstraintString.push_back(std::string(stringList[i]));
         }
         optionConstraintString.push_back(string("null"));
@@ -759,12 +820,24 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
         return E_SCAN_NO_PERMISSION;
     }
     SCAN_HILOGD("ScanServiceAbility GetScanOptionDesc start");
-    SCAN_HILOGI("optionIndex [%{public}d]", optionIndex);
+    SCAN_HILOGD("optionIndex [%{public}d]", optionIndex);
 
 #ifdef SANE_ENABLE
     auto scannerHandle = GetScanHandle(scannerId);
     if (scannerHandle == nullptr) {
         SCAN_HILOGE("ScanServiceAbility GetScanOptionDesc error exit");
+        return E_SCAN_INVALID_PARAMETER;
+    }
+    ScanOptionValue value;
+    int32_t index = 0;
+    value.SetScanOptionValueType(SCAN_VALUE_NUM);
+    int32_t ret = ActionGetValue(scannerHandle, value, index);
+    if (ret != E_SCAN_NONE) {
+        SCAN_HILOGD("ActionGetValue error, ret = [%{public}d]", ret);
+        return ret;
+    }
+    if (optionIndex < 0 || optionIndex >= value.GetNumValue()) {
+        SCAN_HILOGE("OptionIndex is out of range, maxIndex = [%{public}d]", value.GetNumValue());
         return E_SCAN_INVALID_PARAMETER;
     }
     const SANE_Option_Descriptor *optionDesc = sane_get_option_descriptor(scannerHandle, optionIndex);
@@ -807,7 +880,10 @@ int32_t ScanServiceAbility::ActionGetValue(SANE_Handle &scannerHandle, ScanOptio
     int32_t valueSize = value.GetValueSize() / sizeof(SANE_Word);
     uint32_t bufSize = (value.GetStrValue().size() + 1)
         > sizeof(int) ? (value.GetStrValue().size() + 1) : sizeof(int);
-
+    if (bufSize == 0 || bufSize > MAX_SANE_VALUE_LEN) {
+        SCAN_HILOGE("malloc value buffer size error");
+        return E_SCAN_GENERIC_FAILURE;
+    }
     void* saneValueBuf = malloc(bufSize);
     ScanOptionValueType valueType = value.GetScanOptionValueType();
     if (!saneValueBuf) {
@@ -824,6 +900,8 @@ int32_t ScanServiceAbility::ActionGetValue(SANE_Handle &scannerHandle, ScanOptio
     status = sane_control_option(scannerHandle, optionIndex, SANE_ACTION_GET_VALUE, saneValueBuf, 0);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
+        free(saneValueBuf);
+        saneValueBuf = nullptr;
         return ScanUtil::ConvertErro(status);
     }
 
@@ -848,6 +926,38 @@ int32_t ScanServiceAbility::ActionGetValue(SANE_Handle &scannerHandle, ScanOptio
 #endif
 
 #ifdef SANE_ENABLE
+int32_t ScanServiceAbility::ActionSetValueHelper(ScanOptionValue &value, void *saneValueBuf,
+    int32_t valueSize, uint32_t bufSize)
+{
+    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != 0) {
+        SCAN_HILOGE("memset_s failed");
+        return E_SCAN_GENERIC_FAILURE;
+    }
+    ScanOptionValueType valueType = value.GetScanOptionValueType();
+    if (valueType == SCAN_VALUE_NUM) {
+        int32_t numValue = value.GetNumValue();
+        dpi = numValue > 0 && numValue < MAX_PICTURE_DPI ? numValue : 0;
+        *static_cast<int *>(saneValueBuf) = value.GetNumValue();
+    } else if (valueType == SCAN_VALUE_NUM_LIST) {
+        std::vector<int32_t> numListValue;
+        value.GetNumListValue(numListValue);
+        for (int i = 0; i < valueSize; i++) {
+            *(static_cast<int32_t *>(saneValueBuf) + i) = numListValue[i];
+        }
+    } else if (valueType == SCAN_VALUE_STR) {
+        SCAN_HILOGI("Set scanner mode:[%{public}s]", value.GetStrValue().c_str());
+        if (strncpy_s(static_cast<char*>(saneValueBuf), bufSize,
+            value.GetStrValue().c_str(), value.GetStrValue().size()) != EOK) {
+            return E_SCAN_GENERIC_FAILURE;
+        }
+    } else if (valueType == SCAN_VALUE_BOOL) {
+        *static_cast<int32_t *>(saneValueBuf) = value.GetBoolValue() > 0 ? true : false;
+    }
+    return E_SCAN_NONE;
+}
+#endif
+
+#ifdef SANE_ENABLE
 int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptionValue &value,
     const int32_t &optionIndex, int32_t &info)
 {
@@ -856,46 +966,33 @@ int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptio
     int32_t valueSize = value.GetValueSize() / sizeof(SANE_Word);
     uint32_t bufSize = (value.GetStrValue().size() + 1)
         > sizeof(int) ? (value.GetStrValue().size() + 1) : sizeof(int);
+    if (bufSize == 0 || bufSize > MAX_SANE_VALUE_LEN) {
+        SCAN_HILOGE("malloc value buffer size error");
+        return E_SCAN_GENERIC_FAILURE;
+    }
     void* saneValueBuf = malloc(bufSize);
     if (!saneValueBuf) {
         SCAN_HILOGE("malloc value buffer failed");
         return E_SCAN_GENERIC_FAILURE;
     }
-    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != 0) {
-        SCAN_HILOGE("memset_s failed");
-        free(saneValueBuf);
-        saneValueBuf = nullptr;
-        return E_SCAN_GENERIC_FAILURE;
-    }
-    ScanOptionValueType valueType = value.GetScanOptionValueType();
-    if (valueType == SCAN_VALUE_NUM) {
-        int32_t numValue = value.GetNumValue();
-        dpi = numValue > 0 && numValue < MAX_PICTURE_DPI ? numValue : 0;
-        *static_cast<int *>(saneValueBuf) = value.GetNumValue(); //
-    } else if (valueType == SCAN_VALUE_NUM_LIST) {
-        std::vector<int32_t> numListValue;
-        value.GetNumListValue(numListValue);
-        for (int i = 0; i < valueSize; i++) {
-            *(static_cast<int32_t *>(saneValueBuf) + i) = numListValue[i];
+    int32_t ret = E_SCAN_NONE;
+    do {
+        ret = ActionSetValueHelper(value, saneValueBuf, valueSize, bufSize);
+        if (ret != E_SCAN_NONE) {
+            SCAN_HILOGE("ActionSetValueHelper failed");
+            break;
         }
-    } else if (valueType == SCAN_VALUE_STR) {
-        SCAN_HILOGE("Set scanner mode:[%{public}s]", value.GetStrValue().c_str());
-        strncpy_s(static_cast<char*>(saneValueBuf), bufSize,
-            value.GetStrValue().c_str(), value.GetStrValue().size());
-    } else if (valueType == SCAN_VALUE_BOOL) {
-        *static_cast<int32_t *>(saneValueBuf) = value.GetBoolValue() > 0 ? true : false;
-    }
-    status = sane_control_option(scannerHandle, optionIndex,
-        SANE_ACTION_SET_VALUE, saneValueBuf, &info);
-    if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
-        return ScanUtil::ConvertErro(status);
-    }
+        status = sane_control_option(scannerHandle, optionIndex, SANE_ACTION_SET_VALUE, saneValueBuf, &info);
+        if (status != SANE_STATUS_GOOD) {
+            SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
+            ret = ScanUtil::ConvertErro(status);
+            break;
+        }
+    } while (0);
 
     free(saneValueBuf);
     saneValueBuf = nullptr;
-
-    return E_SCAN_NONE;
+    return ret;
 }
 #endif
 
@@ -1110,6 +1207,11 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
 
     SCAN_HILOGD("ScanServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    constexpr int32_t MAX_LISTENERS_COUNT = 1000;
+    if (registeredListeners_.size() > MAX_LISTENERS_COUNT) {
+        SCAN_HILOGE("Exceeded the maximum number of registration.");
+        return E_SCAN_GENERIC_FAILURE;
+    }
     if (registeredListeners_.find(eventType) == registeredListeners_.end()) {
         const auto temp = registeredListeners_.insert(std::make_pair(eventType, listener));
         if (!temp.second) {
@@ -1246,26 +1348,37 @@ void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::str
 #endif
 }
 
-void ScanServiceAbility::UpdateUsbScannerId(std::string serialNumber, std::string newDeviceId)
+void ScanServiceAbility::UpdateScannerId(const ScanDeviceInfoSync& syncInfo)
 {
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return;
     }
-    SCAN_HILOGD("UpdateUsbScannerId start newDeviceId:%{public}s", newDeviceId.c_str());
-    ScanDeviceInfoSync scanDeviceInfoSync;
-    scanDeviceInfoSync.serialNumber = serialNumber;
-    scanDeviceInfoSync.deviceId = newDeviceId;
-    scanDeviceInfoSync.discoverMode = "USB";
-    scanDeviceInfoSync.syncMode = "update";
-    scanDeviceInfoSync.deviceState = 0;
-    auto it = saneGetUsbDeviceInfoMap.find(serialNumber);
-    if (it != saneGetUsbDeviceInfoMap.end()) {
-        saneGetUsbDeviceInfoMap[serialNumber].deviceId = newDeviceId;
+    SCAN_HILOGD("UpdateScannerId start newDeviceId:[%{private}s]", syncInfo.deviceId.c_str());
+    ScanDeviceInfoSync scanDeviceInfoSync = syncInfo;
+    std::lock_guard<std::mutex> autoLock(clearMapLock_);
+    if (scanDeviceInfoSync.discoverMode == "USB") {
+        auto it = saneGetUsbDeviceInfoMap.find(scanDeviceInfoSync.serialNumber);
+        if (it != saneGetUsbDeviceInfoMap.end()) {
+            it->second.deviceId = syncInfo.deviceId;
+        }
         SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
+    } else if (scanDeviceInfoSync.discoverMode == "TCP") {
+        std::string oldIp;
+        ScanUtil::ExtractIpAddresses(scanDeviceInfoSync.oldDeviceId, oldIp);
+        auto it = saneGetTcpDeviceInfoMap.find(oldIp);
+        if (it != saneGetTcpDeviceInfoMap.end()) {
+            auto info = it->second;
+            saneGetTcpDeviceInfoMap.erase(it);
+            info.deviceId = scanDeviceInfoSync.deviceId;
+            saneGetTcpDeviceInfoMap.insert(std::make_pair(scanDeviceInfoSync.uniqueId, info));
+        }
+        SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
+    } else {
+        SCAN_HILOGE("invalid discover mode %{public}s", scanDeviceInfoSync.discoverMode.c_str());
     }
 #ifdef DEBUG_ENABLE
-    SCAN_HILOGD("GetScannerList UpdateUsbScannerId serialNumber:%{public}s newDeviceId:%{public}s",
+    SCAN_HILOGD("GetScannerList UpdateUsbScannerId serialNumber:%{private}s newDeviceId:%{private}s",
                 serialNumber.c_str(), newDeviceId.c_str());
 #endif
 }
@@ -1391,40 +1504,45 @@ int32_t ScanServiceAbility::AddScanner(const std::string& serialNumber, const st
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-    SCAN_HILOGI("ScanServiceAbility AddScanner start");
-
+    if (discoverMode != "USB" && discoverMode != "TCP") {
+        SCAN_HILOGE("discoverMode is a invalid parameter.");
+        return E_SCAN_INVALID_PARAMETER;
+    }
+    auto addScannerExe = [=]() {
 #ifdef SANE_ENABLE
-    std::string uniqueId = discoverMode + serialNumber;
-    if (discoverMode == "USB") {
-        auto usbIt = saneGetUsbDeviceInfoMap.find(serialNumber);
-        if (usbIt != saneGetUsbDeviceInfoMap.end()) {
-            ScanSystemData::GetInstance().InsertScannerInfo(uniqueId, usbIt->second);
-            if (!ScanSystemData::GetInstance().SaveScannerMap()) {
+        std::string uniqueId = discoverMode + serialNumber;
+        ScanSystemData &scanData = ScanSystemData::GetInstance();
+        std::lock_guard<std::mutex> autoLock(clearMapLock_);
+        if (discoverMode == "USB") {
+            auto usbIt = saneGetUsbDeviceInfoMap.find(serialNumber);
+            if (usbIt == saneGetUsbDeviceInfoMap.end() || scanData.IsContainScanner(uniqueId)) {
+                SCAN_HILOGE("Failed to add usb scanner.");
+                return;
+            }
+            scanData.InsertScannerInfo(uniqueId, usbIt->second);
+            if (!scanData.SaveScannerMap()) {
                 SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
-                return E_SCAN_GENERIC_FAILURE;
+                return;
             }
             SendDeviceInfo(usbIt->second, SCAN_DEVICE_ADD);
-        } else {
-            SCAN_HILOGE("ScanServiceAbility AddScanner not found the USB scanner");
-        }
-    } else if (discoverMode == "TCP") {
-        auto tcpIt = saneGetTcpDeviceInfoMap.find(serialNumber);
-        if (tcpIt != saneGetTcpDeviceInfoMap.end()) {
-            ScanSystemData::GetInstance().InsertScannerInfo(uniqueId, tcpIt->second);
-            if (!ScanSystemData::GetInstance().SaveScannerMap()) {
+        } else if (discoverMode == "TCP") {
+            auto tcpIt = saneGetTcpDeviceInfoMap.find(serialNumber);
+            if (tcpIt == saneGetTcpDeviceInfoMap.end() || scanData.IsContainScanner(uniqueId)) {
+                SCAN_HILOGE("Failed to add tcp scanner.");
+                return;
+            }
+            scanData.InsertScannerInfo(uniqueId, tcpIt->second);
+            if (!scanData.SaveScannerMap()) {
                 SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
-                return E_SCAN_GENERIC_FAILURE;
+                return;
             }
             SendDeviceInfo(tcpIt->second, SCAN_DEVICE_ADD);
         } else {
-            SCAN_HILOGE("ScanServiceAbility AddScanner not found the TCP scanner");
+            SCAN_HILOGE("discoverMode is invalid.");
         }
-    } else {
-        SCAN_HILOGE("ScanServiceAbility AddScanner invalid parameter");
-        return E_SCAN_INVALID_PARAMETER;
-    }
 #endif
-    SCAN_HILOGI("ScanServiceAbility AddScanner end");
+    };
+    serviceHandler_->PostTask(addScannerExe, ASYNC_CMD_DELAY);
     return E_SCAN_NONE;
 }
 
@@ -1498,25 +1616,16 @@ int32_t ScanServiceAbility::UpdateScannerName(const std::string& serialNumber,
     return E_SCAN_NONE;
 }
 
-int32_t ScanServiceAbility::AddPrinter(const std::string& serialNumber, const std::string& discoverMode)
-{
-    ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
-        SCAN_HILOGE("no permission to access scan service");
-        return E_SCAN_NO_PERMISSION;
-    }
-    auto exe = [=]() {
-        AddScanner(serialNumber, discoverMode);
-    };
-    serviceHandler_->PostTask(exe, ASYNC_CMD_DELAY);
-    return E_SCAN_NONE;
-}
-
 int32_t ScanServiceAbility::OnStartScan(const std::string scannerId, const bool &batchMode)
 {
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
+    }
+    std::string userCachedImageDir = ObtainUserCacheDirectory(GetCurrentUserId());
+    if (!std::filesystem::exists(userCachedImageDir)) {
+        SCAN_HILOGE("The user directory %{public}s does not exist.", userCachedImageDir.c_str());
+        return E_SCAN_GENERIC_FAILURE;
     }
     std::queue<int32_t> emptyQueue;
     scanQueue.swap(emptyQueue);
@@ -1525,6 +1634,7 @@ int32_t ScanServiceAbility::OnStartScan(const std::string scannerId, const bool 
         SCAN_HILOGE("Start Scan error");
         return status;
     }
+    currentUseScannerUserId_ = GetCurrentUserId();
     batchMode_ = batchMode;
     g_scannerState = SCANNER_SCANING;
     auto exe = [=]() {
@@ -1619,8 +1729,14 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std:
         auto it = scanTaskMap.find(nextPicId - 1);
         int32_t nowScanId = it->first;
         file_name = "scan_tmp" + std::to_string(nowScanId) + ".jpg";
-        std::string outputDir = "/data/service/el2/public/print_service/sane/tmp/";
-        output_file = outputDir.append(file_name);
+        std::string outputDir = ObtainUserCacheDirectory(currentUseScannerUserId_);
+        char canonicalPath[PATH_MAX] = { 0 };
+        if (realpath(outputDir.c_str(), canonicalPath) == nullptr) {
+            SCAN_HILOGE("The real output dir is null, errno:%{public}s", std::to_string(errno).c_str());
+            return;
+        }
+        outputDir = canonicalPath;
+        output_file = outputDir.append("/").append(file_name);
         ofp = fopen(output_file.c_str(), "w");
         if (ofp == nullptr) {
             SCAN_HILOGE("file [%{public}s] open fail", output_file.c_str());
@@ -1652,8 +1768,14 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
     auto it = scanTaskMap.find(nextPicId - 1);
     int32_t nowScanId = it->first;
     file_name = "scan_tmp" + std::to_string(nowScanId) + ".jpg";
-    std::string outputDir = "/data/service/el2/public/print_service/sane/tmp/";
-    output_file = outputDir.append(file_name);
+    std::string outputDir = ObtainUserCacheDirectory(currentUseScannerUserId_);
+    char canonicalPath[PATH_MAX] = { 0 };
+    if (realpath(outputDir.c_str(), canonicalPath) == nullptr) {
+        SCAN_HILOGE("The real output dir is null, errno:%{public}s", std::to_string(errno).c_str());
+        return;
+    }
+    outputDir = canonicalPath;
+    output_file = outputDir.append("/").append(file_name);
     ofp = fopen(output_file.c_str(), "w");
     if (ofp == nullptr) {
         SCAN_HILOGE("file [%{public}s] open fail", output_file.c_str());
@@ -1674,8 +1796,8 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
         ofp = nullptr;
     }
     {
-        std::lock_guard<std::mutex> autoLock(lock_);
 #ifdef SANE_ENABLE
+        std::lock_guard<std::mutex> autoLock(lock_);
         SANE_Handle scannerHandle = GetScanHandle(scannerId);
         if (scannerHandle != nullptr) {
             SCAN_HILOGI("GeneratePictureSingle finished, doing sane_cancel");
@@ -1731,7 +1853,7 @@ int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress
         }
         first_frame = 0;
     } while (!(parm.GetLastFrame()));
-    jpeg_finish_compress(&cinfo);
+    jpeg_finish_compress(cinfoPtr);
     fflush(ofp);
     FREE_AND_NULLPTR(jpegbuf)
     SCAN_HILOGI("end DoScanTask");
@@ -1744,7 +1866,6 @@ int32_t ScanServiceAbility::WriteJpegHeader(ScanParameters &parm, struct jpeg_er
     ScanFrame format = parm.GetFormat();
     int32_t width = parm.GetPixelsPerLine();
     int32_t height = parm.GetLines();
-    struct jpeg_compress_struct* cinfoPtr = &cinfo;
     cinfoPtr->err = jpeg_std_error(jerr);
     cinfoPtr->err->error_exit = [](j_common_ptr cinfo) {
         g_isJpegWriteSuccess = false;
@@ -1775,7 +1896,6 @@ int32_t ScanServiceAbility::WriteJpegHeader(ScanParameters &parm, struct jpeg_er
     SCAN_HILOGI("width:[%{public}d],height:[%{public}d],dpi:[%{public}d]", width, height, dpi);
     jpeg_set_quality(cinfoPtr, JPEG_QUALITY_SEVENTY_FIVE, TRUE);
     jpeg_start_compress(cinfoPtr, TRUE);
-    cinfoPtr = nullptr;
     SCAN_HILOGI("finish write jpegHeader");
     return E_SCAN_NONE;
 }
@@ -1811,7 +1931,6 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
         if (progr > (scanProPtr->GetScanProgress())) {
             scanProPtr->SetScanProgress((int32_t)progr);
         }
-        SCAN_HILOGI(" %{public}ld bytes ; scan progr:%{public}lu", totalBytes, progr);
         if (g_scannerState == SCANNER_CANCELING) {
             std::queue<int32_t> emptyQueue;
             scanQueue.swap(emptyQueue);
@@ -1822,14 +1941,14 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
             return;
         }
         if (saneStatus == SANE_STATUS_EOF) {
-            SCAN_HILOGI("Totally read %{public}ld bytes of frame data", totalBytes);
+            SCAN_HILOGI("sane_read finished.");
             break;
         }
         if (saneStatus != SANE_STATUS_GOOD) {
             SCAN_HILOGE("sane_read failed, reason: [%{public}s]", sane_strstatus(saneStatus));
             ScanErrorCode taskCode = ScanUtil::ConvertErro(saneStatus);
             scanProPtr->SetTaskCode(taskCode);
-            if (taskCode == E_SCAN_IO_ERROR) {
+            if (taskCode == E_SCAN_IO_ERROR || taskCode == E_SCAN_JAMMED) {
                 CleanScanTask(scannerId);
             }
             break;
@@ -1845,7 +1964,6 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
 
 bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanParameters &parm, ScanProgress *scanProPtr)
 {
-    SCAN_HILOGI("start write jpeg picture data");
     constexpr int bit = 1;
     int i = 0;
     int left = curReadSize;
@@ -1862,7 +1980,7 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
             return false;
         }
         if (parm.GetDepth() != 1) {
-            jpeg_write_scanlines(&cinfo, &jpegbuf, bit);
+            jpeg_write_scanlines(cinfoPtr, &jpegbuf, bit);
             i += parm.GetBytesPerLine() - jpegrow;
             left -= parm.GetBytesPerLine() - jpegrow;
             jpegrow = 0;
@@ -1877,8 +1995,8 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
         }
         for (int col1 = 0; col1 < parm.GetBytesPerLine(); col1++) {
             for (int col8 = 0; col8 < byteBits; col8++) {
-                buf8[col1 * byteBits + col8] = jpegbuf[col1] & (1 << (byteBits - col8 - 1)) ? 0 : 0xff;
-                jpeg_write_scanlines(&cinfo, &buf8, byteBits);
+                buf8[col1 * byteBits + col8] = jpegbuf[col1] & (1 << (byteBits - col8 - bit)) ? 0 : 0xff;
+                jpeg_write_scanlines(cinfoPtr, &buf8, bit);
             }
         }
         free(buf8);
@@ -1891,7 +2009,30 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
         return false;
     }
     jpegrow += left;
-    SCAN_HILOGI("finish write jpeg picture data");
     return true;
 }
+
+int32_t ScanServiceAbility::GetCurrentUserId()
+{
+    constexpr int32_t UID_TRANSFORM_DIVISOR = 200000;
+    int32_t userId = IPCSkeleton::GetCallingUid() / UID_TRANSFORM_DIVISOR;
+    if (userId < START_USER_ID || userId > MAX_USER_ID) {
+        SCAN_HILOGE("userId %{public}d is out of range.", userId);
+        return INVALID_USER_ID;
+    }
+    SCAN_HILOGD("Current userId = %{public}d.", userId);
+    return userId;
+}
+
+std::string ScanServiceAbility::ObtainUserCacheDirectory(const int32_t& userId)
+{
+    if (userId < START_USER_ID || userId > MAX_USER_ID) {
+        SCAN_HILOGE("Invalid userId %{public}d.", userId);
+        return "";
+    }
+    std::ostringstream oss;
+    oss << "/data/service/el2/" << userId << "/print_service";
+    return oss.str();
+}
+
 }  // namespace OHOS::Scan

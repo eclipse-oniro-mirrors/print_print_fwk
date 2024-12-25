@@ -74,15 +74,15 @@ public:
     int32_t GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner) override;
     int32_t UpdateScannerName(const std::string& serialNumber,
         const std::string& discoverMode, const std::string& deviceName) override;
-    int32_t AddPrinter(const std::string& serialNumber, const std::string& discoverMode) override;
     int32_t OnStartScan(const std::string scannerId, const bool &batchMode);
     void DisConnectUsbScanner(std::string serialNumber, std::string newDeviceId); // public
-    void UpdateUsbScannerId(std::string serialNumber, std::string newDeviceId); // public
+    void UpdateScannerId(const ScanDeviceInfoSync& usbSyncInfo); // public
 
 private:
 #ifdef SANE_ENABLE
     int32_t ActionSetAuto(SANE_Handle &scannerHandle, const int32_t &optionIndex);
     int32_t ActionGetValue(SANE_Handle &scannerHandle, ScanOptionValue &value, const int32_t &optionIndex);
+    int32_t ActionSetValueHelper(ScanOptionValue &value, void *saneValueBuf, int32_t valueSize, uint32_t bufSize);
     int32_t ActionSetValue(SANE_Handle &scannerHandle, ScanOptionValue &value,
         const int32_t &optionIndex, int32_t &info);
     int32_t SelectScanOptionDesc(const SANE_Option_Descriptor* &optionDesc, ScanOptionDescriptor &desc);
@@ -138,11 +138,14 @@ private:
     bool GetTcpDeviceIp(const std::string &deviceId, std::string &ip);
     void CleanScanTask(const std::string &scannerId);
     void SendDeviceList(std::vector<ScanDeviceInfo> &info, std::string event);
+    int32_t GetCurrentUserId();
+    std::string ObtainUserCacheDirectory(const int32_t& userId);
 #ifdef SANE_ENABLE
     std::map<std::string, SANE_Handle> scannerHandleList_;
 #endif
     ServiceRunningState state_;
     std::mutex lock_;
+    std::mutex clearMapLock_;
     static std::mutex instanceLock_;
     static sptr<ScanServiceAbility> instance_;
     static std::shared_ptr<AppExecFwk::EventHandler> serviceHandler_;
@@ -150,6 +153,7 @@ private:
     std::recursive_mutex apiMutex_;
     std::recursive_mutex scanMutex_;
     uint64_t currentJobId_;
+    int32_t currentUseScannerUserId_;
     std::map<std::string, int32_t> imageFdMap_;
 #ifdef SANE_ENABLE
     std::function<void(SANE_Handle scannerHandle, uint32_t fd)> getSingleFrameFDExe;
@@ -162,7 +166,7 @@ private:
     int32_t buffer_size;
     bool batchMode_ = false;
     uint8_t *saneReadBuf;
-    struct jpeg_compress_struct cinfo;
+    struct jpeg_compress_struct *cinfoPtr;
     FILE *ofp = nullptr;
     bool isCancel = false;
     int32_t dpi = 0;

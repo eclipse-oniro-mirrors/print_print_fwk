@@ -32,13 +32,3 @@ void ScanModuleTest::TearDownTestCase(void) {}
 void ScanModuleTest::SetUp(void) {}
 
 void ScanModuleTest::TearDown(void) {}
-
-/**
- * @tc.name: ScanModuleTest_0001
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScanModuleTest, ScanModuleTest_0001, TestSize.Level1) { }
-} // namespace Scan
-} // namespace OHOS

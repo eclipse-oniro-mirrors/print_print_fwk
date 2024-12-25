@@ -52,11 +52,10 @@ Print_PrinterState ConvertPrinterState(uint32_t state)
 
 bool ConvertStringToInt(const char *src, int &dst)
 {
-    if (src == nullptr) {
+    if (src == nullptr || src[0] == '\0') {
         return false;
     }
-    dst = atoi(src);
-    if (errno == ERANGE) {
+    if (!PrintUtil::ConvertToInt(std::string(src), dst)) {
         PRINT_HILOGW("ConvertStringToInt fail: %{public}s", src);
         return false;
     }

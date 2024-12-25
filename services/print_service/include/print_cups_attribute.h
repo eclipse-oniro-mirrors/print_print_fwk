@@ -18,8 +18,10 @@
 
 #include <cups/cups-private.h>
 #include "printer_capability.h"
+#include "print_constant.h"
 
 namespace OHOS::Print {
 void ParsePrinterAttributes(ipp_t *response, PrinterCapability &printerCaps);
+bool ParsePrinterStatusAttributes(ipp_t *response, PrinterStatus &status);
 } // namespace OHOS::Print
 #endif // PRINT_CUPS_ATTRIBUTE_H

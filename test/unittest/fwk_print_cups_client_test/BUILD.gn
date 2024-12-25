@@ -21,6 +21,7 @@ ohos_unittest("fwk_print_cups_client_test") {
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/models/print_models/include",
+    "${print_path}/frameworks/ohprint/include",
     "${print_path}/interfaces/kits/napi/print_napi/include",
     "${print_path}/services/print_service/include",
     "//vendor/open_source/cpp-httplib",
@@ -50,7 +51,6 @@ ohos_unittest("fwk_print_cups_client_test") {
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service:print_service",
     "//third_party/googletest:gmock_main",
-    "//third_party/zlib:libz",
   ]
 
   external_deps = [
@@ -76,7 +76,10 @@ ohos_unittest("fwk_print_cups_client_test") {
 
   if (cups_enable) {
     include_dirs += [ "//third_party/cups/cups-2.4.0" ]
-    sources += [ "print_cups_client_test.cpp" ]
+    sources += [
+      "print_cups_client_test.cpp",
+      "print_cups_wrapper_test.cpp",
+    ]
     cflags_cc += [ "-DCUPS_ENABLE" ]
     external_deps += [
       "cJSON:cjson",

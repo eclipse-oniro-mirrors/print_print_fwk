@@ -60,7 +60,6 @@ ohos_unittest("print_service_test") {
     "${print_path}/services/print_service:print_service",
     "//third_party/googletest:gmock_main",
     "//third_party/jsoncpp:jsoncpp",
-    "//third_party/zlib:libz",
   ]
 
   if (cups_enable) {
@@ -75,6 +74,7 @@ ohos_unittest("print_service_test") {
   if (ipp_over_usb_enable) {
     include_dirs += [ "//third_party/cpp-httplib" ]
     sources += [
+      "print_http_request_process_test.cpp",
       "print_http_server_manager_test.cpp",
       "print_ipp_over_usb_manager_test.cpp",
       "print_usb_manager_test.cpp",
@@ -132,14 +132,7 @@ ohos_unittest("scan_service_test") {
     "${print_path}/services/scan_service:scan_service",
     "//third_party/googletest:gmock_main",
     "//third_party/jsoncpp:jsoncpp",
-    "//third_party/zlib:libz",
   ]
-
-  if (sane_enable) {
-    include_dirs += [ "//vendor/open_source/backends/include" ]
-    deps += [ "//vendor/open_source/backends:third_sane" ]
-    cflags_cc = [ "-DSANE_ENABLE" ]
-  }
 
   external_deps = [
     "ability_base:base",

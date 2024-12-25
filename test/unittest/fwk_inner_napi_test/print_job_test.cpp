@@ -13,11 +13,17 @@
  * limitations under the License.
  */
 #include <gtest/gtest.h>
+#define private public
 #include "print_job.h"
+#undef private
 #include "print_page_size.h"
 #include "print_range.h"
+#define private public
 #include "print_margin.h"
+#undef private
+#define private public
 #include "print_preview_attribute.h"
+#undef private
 #include "print_log.h"
 #include "print_constant.h"
 
@@ -42,18 +48,6 @@ void PrintJobTest::SetUp(void) {}
 void PrintJobTest::TearDown(void) {}
 
 /**
- * @tc.name: PrintExtInfoTest_0001
- * @tc.desc: Verify the PrintExtensionInfo function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintJobTest, PrintJobTest_0001, TestSize.Level1)
-{
-    PrintJob job;
-    job.Dump();
-}
-
-/**
  * @tc.name: PrintJobTest_0002
  * @tc.desc: Verify the PrintExtensionInfo function.
  * @tc.type: FUNC
@@ -66,10 +60,23 @@ HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1)
     OHOS::Print::PrintMargin margin;
 
     attr.SetResult(1);
+    EXPECT_EQ(attr.hasResult_, true);
+    EXPECT_EQ(attr.result_, 1);
+
     job.SetPreview(attr);
+    EXPECT_EQ(job.hasPreview_, true);
+
     margin.SetBottom(1);
+    EXPECT_EQ(margin.hasBottom_, true);
+    EXPECT_EQ(margin.bottom_, 1);
+
     job.SetMargin(margin);
+    EXPECT_EQ(job.hasMargin_, true);
+
     job.SetOption("option");
+    EXPECT_EQ(job.hasOption_, true);
+    EXPECT_EQ(job.option_, "option");
+
     job.Dump();
 }
 

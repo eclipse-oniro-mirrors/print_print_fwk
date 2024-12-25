@@ -19,6 +19,7 @@
 #ifdef IPPOVERUSB_ENABLE
 
 #include <map>
+#include <unordered_map>
 #include <string>
 #include <utility>
 #include "singleton.h"
@@ -70,7 +71,8 @@ private:
 
 private:
     bool isInit = false;
-    std::map<std::string, USB::UsbDevice> printDeviceMap;
+    bool isUsbEnable = true;
+    std::unordered_map<std::string, USB::UsbDevice> printDeviceMap;
     std::map<std::string, std::vector<std::pair<int32_t, int32_t>>> printerIndexMap;
     std::map<std::string, USB::USBDevicePipe> printPipeMap;
     std::map<std::string, PrinterTranIndex> printTranIndexMap;

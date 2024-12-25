@@ -32,13 +32,3 @@ void ScanServiceProxyTest::TearDownTestCase(void) {}
 void ScanServiceProxyTest::SetUp(void) {}
 
 void ScanServiceProxyTest::TearDown(void) {}
-
-/**
- * @tc.name: ScanServiceProxyTest_0001
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(ScanServiceProxyTest, ScanServiceProxyTest_0001, TestSize.Level1) { }
-} // namespace Scan
-} // namespace OHOS

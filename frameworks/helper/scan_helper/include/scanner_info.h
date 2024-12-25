@@ -104,6 +104,8 @@ public:
     void SetDiscoverMode(const std::string &newDiscoverMode);
     void SetSerialNumber(const std::string &newSerialNumber);
     void SetDeviceName(const std::string &newDeviceName);
+    void SetUniqueId(const std::string &uniqueId);
+    void SetUuid(const std::string &uuid);
 
     [[nodiscard]] const std::string &GetDeviceId() const;
     [[nodiscard]] const std::string &GetManufacturer() const;
@@ -113,6 +115,8 @@ public:
     [[nodiscard]] const std::string &GetDiscoverMode() const;
     [[nodiscard]] const std::string &GetSerialNumber() const;
     [[nodiscard]] const std::string &GetDeviceName() const;
+    [[nodiscard]] const std::string &GetUniqueId() const;
+    [[nodiscard]] const std::string &GetUuid() const;
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
@@ -134,6 +138,8 @@ private:
     std::string discoverMode;
     std::string serialNumber;
     std::string deviceName;
+    std::string uniqueId;
+    std::string uuid;
 };
 
 class ScanDeviceInfoSync final : public Parcelable {
@@ -151,12 +157,16 @@ public:
     void SetSerialNumber(const std::string &newSerialNumber);
     void SetSyncMode(const std::string &newSyncMode);
     void SetDeviceState(const uint32_t &newDeviceState);
+    void SetOldDeviceId(const std::string &oldDeviceId);
+    void SetUniqueId(const std::string &uniqueId);
 
     [[nodiscard]] const std::string &GetDeviceId() const;
     [[nodiscard]] const std::string &GetDiscoverMode() const;
     [[nodiscard]] const std::string &GetSerialNumber() const;
     [[nodiscard]] const std::string &GetSyncMode() const;
     [[nodiscard]] const uint32_t &GetDeviceState() const;
+    [[nodiscard]] const std::string &GetOldDeviceId() const;
+    [[nodiscard]] const std::string &GetUniqueId() const;
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
@@ -175,6 +185,8 @@ private:
     std::string serialNumber;
     std::string syncMode;
     uint32_t deviceState;
+    std::string oldDeviceId;
+    std::string uniqueId;
 };
 
 } // namespace OHOS::Scan

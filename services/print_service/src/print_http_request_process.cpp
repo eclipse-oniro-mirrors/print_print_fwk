@@ -18,6 +18,7 @@
 #include <cmath>
 #include "print_log.h"
 #include "print_ipp_over_usb_util.h"
+#include "print_util.h"
 #include "usb_errors.h"
 
 namespace OHOS::Print {
@@ -106,7 +107,12 @@ void PrintHttpRequestProcess::GetContentLength(const std::vector<uint8_t> &readT
                 lenStr += readTempBuffer[lenIndex];
                 lenIndex++;
             }
-            contentLength = static_cast<size_t>(std::stoi(lenStr));
+            int32_t contentLengthTmp = 0;
+            if (!PrintUtil::ConvertToInt(lenStr, contentLengthTmp)) {
+                PRINT_HILOGE("lenStr [%{public}s] can not parse to number.", lenStr.c_str());
+                return;
+            }
+            contentLength = static_cast<size_t>(contentLengthTmp);
             PRINT_HILOGD("contentLength = %{public}s,  %{public}lu", lenStr.c_str(), contentLength);
         }
     }
@@ -136,13 +142,17 @@ size_t PrintHttpRequestProcess::CalculateRequestId(
     std::vector<uint8_t> &readTempBuffer, size_t index, Operation operation)
 {
     size_t readSize = readTempBuffer.size();
-    DumpRespIdCode(readTempBuffer, operation, index + HTTP_COMMON_CONST_VALUE_4, readSize);
-    return readTempBuffer[index + HTTP_COMMON_CONST_VALUE_8] *
-               pow(HTTP_COMMON_CONST_VALUE_10, HTTP_COMMON_CONST_VALUE_3) +
-           readTempBuffer[index + HTTP_COMMON_CONST_VALUE_9] *
-               pow(HTTP_COMMON_CONST_VALUE_10, HTTP_COMMON_CONST_VALUE_2) +
-           readTempBuffer[index + HTTP_COMMON_CONST_VALUE_10] * HTTP_COMMON_CONST_VALUE_10 +
-           readTempBuffer[index + HTTP_COMMON_CONST_VALUE_11];
+    if ((index + HTTP_COMMON_CONST_VALUE_11) < readSize) {
+        DumpRespIdCode(readTempBuffer, operation, index + HTTP_COMMON_CONST_VALUE_4, readSize);
+        return readTempBuffer[index + HTTP_COMMON_CONST_VALUE_8] *
+                pow(HTTP_COMMON_CONST_VALUE_10, HTTP_COMMON_CONST_VALUE_3) +
+            readTempBuffer[index + HTTP_COMMON_CONST_VALUE_9] *
+                pow(HTTP_COMMON_CONST_VALUE_10, HTTP_COMMON_CONST_VALUE_2) +
+            readTempBuffer[index + HTTP_COMMON_CONST_VALUE_10] * HTTP_COMMON_CONST_VALUE_10 +
+            readTempBuffer[index + HTTP_COMMON_CONST_VALUE_11];
+    }
+    PRINT_HILOGE("Invalid index");
+    return 0;
 }
 
 size_t PrintHttpRequestProcess::CalculateFileDataBeginIndex(size_t index, Operation operation)
@@ -185,9 +195,12 @@ bool PrintHttpRequestProcess::ProcessDataFromDevice(Operation operation)
             }
             tmVector.push_back(readTempBuffer[index]);
         }
+        int count = 0;
+        int maxCount = 50;
         // 一次读取的报文长度小于 Content-Length字段的值则需再读取一次
-        while (tmVector.size() < readSize + contentLength) {
+        while (tmVector.size() < readSize + contentLength && count < maxCount) {
             GetAttrAgain(operation, tmVector);
+            count++;
         }
         if (fileDataBeginIndex > HTTP_COMMON_CONST_VALUE_4) {
             requestId = CalculateRequestId(tmVector, fileDataBeginIndex - HTTP_COMMON_CONST_VALUE_4, operation);
@@ -325,6 +338,9 @@ bool PrintHttpRequestProcess::DealRequestHeader(const httplib::Request &requestD
 
 void PrintHttpRequestProcess::CalcReqIdOperaId(const char *data, size_t dataLength, size_t &requestId)
 {
+    if (data == nullptr) {
+        return;
+    }
     if (dataLength < HTTP_COMMON_CONST_VALUE_8) {
         return;
     }

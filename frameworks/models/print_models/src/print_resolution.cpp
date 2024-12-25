@@ -100,7 +100,7 @@ std::shared_ptr<PrintResolution> PrintResolution::Unmarshalling(Parcel &parcel)
     return nativeObj;
 }
 
-void PrintResolution::Dump()
+void PrintResolution::Dump() const
 {
     PRINT_HILOGD("id_ = %{public}s", id_.c_str());
     PRINT_HILOGD("horizontalDpi_ = %{public}d", horizontalDpi_);

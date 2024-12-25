@@ -23,7 +23,6 @@ ScanCallbackStub::ScanCallbackStub()
 {
     cmdMap_[SCAN_CALLBACK_DEVICE_TCP] = &ScanCallbackStub::HandleDeviceInfoTcpEvent;
     cmdMap_[SCAN_CALLBACK_DEVICE] = &ScanCallbackStub::HandleDeviceInfoEvent;
-    cmdMap_[SCAN_CALLBACK_DEVICE] = &ScanCallbackStub::HandleDeviceInfoEvent;
     cmdMap_[SCAN_CALLBACK_DEVICE_SYNC] = &ScanCallbackStub::HandleDeviceInfoSyncEvent;
     cmdMap_[SCAN_CALLBACK_GET_FRAME_RES] = &ScanCallbackStub::HandleGetFrameResEvent;
     cmdMap_[SCAN_CALLBACK_SCAN_INIT] = &ScanCallbackStub::HandleGetFrameResEvent;
@@ -45,7 +44,8 @@ int32_t ScanCallbackStub::OnRemoteRequest(
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
         if (requestFunc != nullptr) {
-            return (this->*requestFunc)(data, reply);
+            bool result = (this->*requestFunc)(data, reply);
+            return result ? E_SCAN_NONE : E_SCAN_SERVER_FAILURE;
         }
     }
     SCAN_HILOGW("default case, need check.");

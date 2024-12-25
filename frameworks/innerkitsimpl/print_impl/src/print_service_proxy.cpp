@@ -44,7 +44,12 @@ int32_t PrintServiceProxy::StartService()
     const std::string ndkInfo = "nativePrint";
     data.WriteString(ndkInfo);
     PRINT_HILOGI("nativePrint PrintServiceProxy StartService started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_START_SERVICE, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy StartService remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_START_SERVICE, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy CMD_START_SERVICE ret = [%{public}d]", ret);
     return ret;
@@ -77,7 +82,12 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
     data.WriteString(taskId);
 
     PRINT_HILOGD("PrintServiceProxy StartPrint started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_START_PRINT, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy StartPrint remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_START_PRINT, data, reply, option);
     ret = GetResult(ret, reply);
     taskId = reply.ReadString();
     PRINT_HILOGD("PrintServiceProxy StartPrint ret = [%{public}d] TaskId = %{public}s", ret, taskId.c_str());
@@ -91,7 +101,12 @@ int32_t PrintServiceProxy::StopPrint(const std::string &taskId)
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(taskId);
     PRINT_HILOGD("PrintServiceProxy StopPrint started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STOP_PRINT, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy StopPrint remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STOP_PRINT, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy StopPrint out. ret = [%{public}d]", ret);
     return ret;
@@ -104,7 +119,12 @@ int32_t PrintServiceProxy::ConnectPrinter(const std::string &printerId)
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
     PRINT_HILOGD("PrintServiceProxy ConnectPrinter started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTER, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy ConnectPrinter remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTER, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy ConnectPrinter out. ret = [%{public}d]", ret);
     return ret;
@@ -117,7 +137,12 @@ int32_t PrintServiceProxy::DisconnectPrinter(const std::string &printerId)
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
     PRINT_HILOGD("PrintServiceProxy DisconnectPrinter started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_DISCONNECTPRINTER, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy DisconnectPrinter remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_DISCONNECTPRINTER, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy DisconnectPrinter out. ret = [%{public}d]", ret);
     return ret;
@@ -129,7 +154,12 @@ int32_t PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &ex
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     PRINT_HILOGD("PrintServiceProxy QueryAllExtension started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLEXTENSION, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy QueryAllExtension remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLEXTENSION, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGD("PrintServiceProxy QueryAllExtension Failed.");
@@ -137,6 +167,10 @@ int32_t PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &ex
     }
 
     uint32_t len = reply.ReadUint32();
+    if (len > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("len is out of range.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
     for (uint32_t i = 0; i < len; i++) {
         auto infoPtr = PrintExtensionInfo::Unmarshalling(reply);
         if (infoPtr == nullptr) {
@@ -156,7 +190,12 @@ int32_t PrintServiceProxy::StartDiscoverPrinter(const std::vector<std::string> &
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteStringVector(extensionList);
     PRINT_HILOGD("PrintServiceProxy StartDiscoverPrinter started.");
-    int32_t ret = Remote()->SendRequest(
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy StartDiscoverPrinter remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(
         OHOS::Print::IPrintInterfaceCode::CMD_STARTDISCOVERPRINTER, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy StartDiscoverPrinter out. ret = [%{public}d]", ret);
@@ -169,7 +208,12 @@ int32_t PrintServiceProxy::StopDiscoverPrinter()
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     PRINT_HILOGD("PrintServiceProxy StopDiscoverPrinter started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STOPDISCOVERPRINTER, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy StopDiscoverPrinter remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STOPDISCOVERPRINTER, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy StopDiscoverPrinter out. ret = [%{public}d]", ret);
     return ret;
@@ -183,7 +227,12 @@ int32_t PrintServiceProxy::StartPrintJob(PrintJob &jobinfo)
     data.WriteInterfaceToken(GetDescriptor());
     jobinfo.Marshalling(data);
     PRINT_HILOGD("PrintServiceProxy StartPrintJob started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STARTPRINTJOB, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy StartPrintJob remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STARTPRINTJOB, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy StartPrintJob out. ret = [%{public}d]", ret);
     return ret;
@@ -197,7 +246,12 @@ int32_t PrintServiceProxy::CancelPrintJob(const std::string &jobId)
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(jobId);
     PRINT_HILOGD("PrintServiceProxy CancelPrintJob started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_CANCELPRINTJOB, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy CancelPrintJob remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_CANCELPRINTJOB, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy CancelPrintJob out. ret = [%{public}d]", ret);
     return ret;
@@ -214,7 +268,12 @@ int32_t PrintServiceProxy::AddPrinters(const std::vector<PrinterInfo> &printerIn
         printerInfos[i].Marshalling(data);
     }
     PRINT_HILOGD("PrintServiceProxy AddPrinters started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERS, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy AddPrinters remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERS, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy AddPrinters out. ret = [%{public}d]", ret);
     return ret;
@@ -228,7 +287,12 @@ int32_t PrintServiceProxy::RemovePrinters(const std::vector<std::string> &printe
     data.WriteStringVector(printerIds);
 
     PRINT_HILOGD("PrintServiceProxy RemovePrinters started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_REMOVEPRINTERS, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy RemovePrinters remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_REMOVEPRINTERS, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy RemovePrinters out. ret = [%{public}d]", ret);
     return ret;
@@ -245,7 +309,12 @@ int32_t PrintServiceProxy::UpdatePrinters(const std::vector<PrinterInfo> &printe
         printerInfos[i].Marshalling(data);
     }
     PRINT_HILOGD("PrintServiceProxy UpdatePrinters started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERS, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy UpdatePrinters remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERS, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy UpdatePrinters out. ret = [%{public}d]", ret);
     return ret;
@@ -259,9 +328,36 @@ int32_t PrintServiceProxy::UpdatePrinterState(const std::string &printerId, uint
     data.WriteString(printerId);
     data.WriteUint32(state);
     PRINT_HILOGD("PrintServiceProxy UpdatePrinterState started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERSTATE, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy UpdatePrinterState remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERSTATE, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy UpdatePrinterState out. ret = [%{public}d]", ret);
+    return ret;
+}
+
+int32_t PrintServiceProxy::UpdatePrintJobStateForNormalApp(
+    const std::string &jobId, uint32_t state, uint32_t subState)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(jobId);
+    data.WriteUint32(state);
+    data.WriteUint32(subState);
+    PRINT_HILOGI("PrintServiceProxy UpdatePrintJobStateForNormalApp started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy UpdatePrintJobStateForNormalApp remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(
+        OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTJOBSTATE_FORNORMALAPP, data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGI("PrintServiceProxy UpdatePrintJobStateForNormalApp out. ret = [%{public}d]", ret);
     return ret;
 }
 
@@ -275,8 +371,13 @@ int32_t PrintServiceProxy::UpdatePrintJobStateOnlyForSystemApp(
     data.WriteUint32(state);
     data.WriteUint32(subState);
     PRINT_HILOGD("PrintServiceProxy UpdatePrintJobStateOnlyForSystemApp started.");
-    int32_t ret = Remote()->SendRequest(
-        OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTJOBSTATE, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy UpdatePrintJobStateOnlyForSystemApp remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(
+        OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTJOBSTATE_FORSYSTEMAPP, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy UpdatePrintJobStateOnlyForSystemApp out. ret = [%{public}d]", ret);
     return ret;
@@ -289,7 +390,12 @@ int32_t PrintServiceProxy::UpdateExtensionInfo(const std::string &extInfo)
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(extInfo);
     PRINT_HILOGD("PrintServiceProxy UpdateExtensionInfo started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UPDATEEXTENSIONINFO, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy UpdateExtensionInfo remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UPDATEEXTENSIONINFO, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy UpdateExtensionInfo out. ret = [%{public}d]", ret);
     return ret;
@@ -302,7 +408,12 @@ int32_t PrintServiceProxy::RequestPreview(const PrintJob &jobinfo, std::string &
     data.WriteInterfaceToken(GetDescriptor());
     jobinfo.Marshalling(data);
     PRINT_HILOGD("PrintServiceProxy RequestPreview started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_REQUESTPREVIEW, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy RequestPreview remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_REQUESTPREVIEW, data, reply, option);
     ret = GetResult(ret, reply);
     previewResult = reply.ReadString();
     PRINT_HILOGD("PrintServiceProxy RequestPreview ret = [%{public}d] previewResult = %{public}s",
@@ -317,7 +428,12 @@ int32_t PrintServiceProxy::QueryPrinterCapability(const std::string &printerId)
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterCapability started.");
-    int32_t ret = Remote()->SendRequest(
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy QueryPrinterCapability remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(
         OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITY, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterCapability out. ret = [%{public}d]", ret);
@@ -332,7 +448,12 @@ int32_t PrintServiceProxy::QueryPrinterInfoByPrinterId(const std::string &printe
     data.WriteString(printerId);
     info.Marshalling(data);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterInfoByPrinterId started.");
-    int32_t ret = Remote()->SendRequest(
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy QueryPrinterInfoByPrinterId remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(
         OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERINFOBYPRINTERID, data, reply, option);
     ret = GetResult(ret, reply);
     auto printerInfoPtr = PrinterInfo::Unmarshalling(reply);
@@ -351,7 +472,12 @@ int32_t PrintServiceProxy::QueryAddedPrinter(std::vector<std::string> &printerNa
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     PRINT_HILOGD("PrintServiceProxy QueryAddedPrinter started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYADDEDPRINTER, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy QueryAddedPrinter remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYADDEDPRINTER, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy QueryAddedPrinter out. ret = [%{public}d]", ret);
     reply.ReadStringVector(&printerNameList);
@@ -368,11 +494,16 @@ int32_t PrintServiceProxy::QueryPrinterProperties(const std::string &printerId,
     data.WriteString(printerId);
     data.WriteStringVector(keyList);
     PRINT_HILOGD("PrintServiceProxy QueryPrinterProperties started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERPROPERTIES, data, reply,
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy QueryPrinterProperties remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERPROPERTIES, data, reply,
         option);
     ret = GetResult(ret, reply);
     reply.ReadStringVector(&valueList);
-    PRINT_HILOGD("PrintServiceProxy RemovePrinters out. ret = [%{public}d]", ret);
+    PRINT_HILOGD("PrintServiceProxy QueryPrinterProperties out. ret = [%{public}d]", ret);
     return ret;
 }
 
@@ -382,11 +513,16 @@ int32_t PrintServiceProxy::StartNativePrintJob(PrintJob &printJob)
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     printJob.Marshalling(data);
-    PRINT_HILOGD("PrintServiceProxy RequestPreview started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STARTNATIVEPRINTJOB, data, reply,
+    PRINT_HILOGD("PrintServiceProxy StartNativePrintJob started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy StartNativePrintJob remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STARTNATIVEPRINTJOB, data, reply,
         option);
     ret = GetResult(ret, reply);
-    PRINT_HILOGD("PrintServiceProxy RemovePrinters out. ret = [%{public}d]", ret);
+    PRINT_HILOGD("PrintServiceProxy StartNativePrintJob out. ret = [%{public}d]", ret);
     return ret;
 }
 
@@ -397,7 +533,12 @@ int32_t PrintServiceProxy::GetPrinterPreference(const std::string &printerId, st
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
     PRINT_HILOGD("PrintServiceProxy GetPrinterPreference started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_PREFERENCE,
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy GetPrinterPreference remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_PREFERENCE,
         data, reply, option);
     ret = GetResult(ret, reply);
     printerPreference = reply.ReadString();
@@ -414,7 +555,12 @@ int32_t PrintServiceProxy::SetPrinterPreference(const std::string &printerId, co
     data.WriteString(printerId);
     data.WriteString(printerPreference);
     PRINT_HILOGI("PrintServiceProxy SetPrinterPreference started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_SET_PRINTER_PREFERENCE,
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy SetPrinterPreference remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_SET_PRINTER_PREFERENCE,
         data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGI("PrintServiceProxy SetPrinterPreference ret = [%{public}d]", ret);
@@ -427,7 +573,12 @@ int32_t PrintServiceProxy::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     PRINT_HILOGD("PrintServiceProxy QueryAllPrintJob started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLPRINTJOB, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy QueryAllPrintJob remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLPRINTJOB, data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGD("PrintServiceProxy QueryAllPrintJob Failed.");
@@ -435,6 +586,10 @@ int32_t PrintServiceProxy::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
     }
 
     uint32_t len = reply.ReadUint32();
+    if (len > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("len is out of range.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
     for (uint32_t i = 0; i < len; i++) {
         auto jobPtr = PrintJob::Unmarshalling(reply);
         if (jobPtr == nullptr) {
@@ -453,8 +608,13 @@ int32_t PrintServiceProxy::QueryPrintJobById(std::string &printJobId, PrintJob &
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printJobId);
-    PRINT_HILOGD("PrintServiceProxy QueryAllPrintJob started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTJOBBYID, data, reply, option);
+    PRINT_HILOGD("PrintServiceProxy QueryPrintJobById started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy QueryPrintJobById remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTJOBBYID, data, reply, option);
     ret = GetResult(ret, reply);
     auto printJobPtr = PrintJob::Unmarshalling(reply);
     if (printJobPtr == nullptr) {
@@ -499,7 +659,7 @@ int32_t PrintServiceProxy::QueryPrinterCapabilityByUri(const std::string &printe
     PRINT_HILOGD("PrintServiceProxy QueryPrinterCapabilityByUri started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        PRINT_HILOGE("PrintServiceProxy AddPrinterToCups remote is null");
+        PRINT_HILOGE("PrintServiceProxy QueryPrinterCapabilityByUri remote is null");
         return E_PRINT_RPC_FAILURE;
     }
     int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITYBYURI,
@@ -519,7 +679,12 @@ int32_t PrintServiceProxy::NotifyPrintServiceEvent(std::string &jobId, uint32_t 
     data.WriteString(jobId);
     data.WriteUint32(event);
     PRINT_HILOGD("PrintServiceProxy NotifyPrintServiceEvent started.");
-    int32_t ret = Remote()->SendRequest(
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy NotifyPrintServiceEvent remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(
         OHOS::Print::IPrintInterfaceCode::CMD_NOTIFY_PRINT_SERVICE_EVENT, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy NotifyPrintServiceEvent out. ret = [%{public}d]", ret);
@@ -534,28 +699,71 @@ int32_t PrintServiceProxy::SetDefaultPrinter(const std::string &printerId, uint3
     data.WriteString(printerId);
     data.WriteUint32(type);
     PRINT_HILOGD("PrintServiceProxy SetDefaultPrinter started.");
-    int32_t ret =
-        Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_SET_DEFAULT_PRINTERID, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy SetDefaultPrinter remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(
+        OHOS::Print::IPrintInterfaceCode::CMD_SET_DEFAULT_PRINTERID, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy SetDefaultPrinter out. ret = [%{public}d]", ret);
     return ret;
 }
 
-int32_t PrintServiceProxy::DeletePrinterFromCups(
-    const std::string &printerUri, const std::string &printerName, const std::string &printerMake)
+int32_t PrintServiceProxy::DeletePrinterFromCups(const std::string &printerName)
 {
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(printerUri);
     data.WriteString(printerName);
-    data.WriteString(printerMake);
     PRINT_HILOGD("PrintServiceProxy DeletePrinterFromCups started.");
-    int32_t ret =
-        Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_DELETE_PRINTER_FROM_CUPS, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy DeletePrinterFromCups remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(
+        OHOS::Print::IPrintInterfaceCode::CMD_DELETE_PRINTER_FROM_CUPS, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy DeletePrinterFromCups out. ret = [%{public}d]", ret);
     return ret;
+}
+
+int32_t PrintServiceProxy::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    PRINT_HILOGD("PrintServiceProxy DiscoverUsbPrinters started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy DiscoverUsbPrinters remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->
+        SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_DISCOVER_USB_PRINTERS, data, reply, option);
+    ret = GetResult(ret, reply);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGD("PrintServiceProxy DiscoverUsbPrinters Failed.");
+        return ret;
+    }
+
+    uint32_t len = reply.ReadUint32();
+    if (len > PRINT_MAX_PRINT_COUNT) {
+        PRINT_HILOGE("len is out of range.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    for (uint32_t i = 0; i < len; i++) {
+        auto infoPtr = PrinterInfo::Unmarshalling(reply);
+        if (infoPtr == nullptr) {
+            PRINT_HILOGE("wrong printerInfo from data");
+            return E_PRINT_GENERIC_FAILURE;
+        }
+        printers.emplace_back(*infoPtr);
+    }
+    PRINT_HILOGD("PrintServiceProxy DiscoverUsbPrinters succeeded.");
+    return E_PRINT_NONE;
 }
 
 int32_t PrintServiceProxy::On(const std::string taskId, const std::string &type, const sptr<IPrintCallback> &listener)
@@ -577,7 +785,12 @@ int32_t PrintServiceProxy::On(const std::string taskId, const std::string &type,
     data.WriteString(taskId);
     data.WriteString(type);
     data.WriteRemoteObject(listener->AsObject().GetRefPtr());
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ON, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy On remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ON, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy On out. ret = [%{public}d]", ret);
     return ret;
@@ -597,7 +810,12 @@ int32_t PrintServiceProxy::Off(const std::string taskId, const std::string &type
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(taskId);
     data.WriteString(type);
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_OFF, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy Off remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_OFF, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy Off out. ret = [%{public}d]", ret);
     return ret;
@@ -621,7 +839,12 @@ int32_t PrintServiceProxy::RegisterPrinterCallback(const std::string &type, cons
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(type);
     data.WriteRemoteObject(listener->AsObject().GetRefPtr());
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_REG_PRINTER_CB, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy RegisterPrinterCallback remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_REG_PRINTER_CB, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy RegisterPrinterCallback out. ret = [%{public}d]", ret);
     return ret;
@@ -640,7 +863,12 @@ int32_t PrintServiceProxy::UnregisterPrinterCallback(const std::string &type)
 
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(type);
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UNREG_PRINTER_CB, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy UnregisterPrinterCallback remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UNREG_PRINTER_CB, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy UnregisterPrinterCallback out. ret = [%{public}d]", ret);
     return ret;
@@ -662,7 +890,12 @@ int32_t PrintServiceProxy::RegisterExtCallback(const std::string &extensionCID,
     data.WriteString(extensionCID);
     data.WriteRemoteObject(listener->AsObject().GetRefPtr());
 
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_REG_EXT_CB, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy RegisterExtCallback remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_REG_EXT_CB, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy RegisterExtCallback out. ret = [%{public}d]", ret);
     return ret;
@@ -680,7 +913,12 @@ int32_t PrintServiceProxy::PrintByAdapter(const std::string printJobName, const 
     printAttributes.Marshalling(data);
     data.WriteString(taskId);
     PRINT_HILOGD("PrintServiceProxy PrintByAdapter started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STARTPRINTJOB_BY_ADAPTER,
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy PrintByAdapter remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STARTPRINTJOB_BY_ADAPTER,
         data, reply, option);
     if (ret != ERR_NONE) {
         PRINT_HILOGE("PrintByAdapter, rpc error code = %{public}d", ret);
@@ -702,7 +940,12 @@ int32_t PrintServiceProxy::StartGetPrintFile(const std::string &jobId, const Pri
     printAttributes.Marshalling(data);
     data.WriteFileDescriptor(fd);
     PRINT_HILOGI("PrintServiceProxy StartGetPrintFile started.");
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_START_GET_FILE, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy StartGetPrintFile remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_START_GET_FILE, data, reply, option);
     if (ret != ERR_NONE) {
         PRINT_HILOGE("StartGetPrintFile, rpc error code = %{public}d", ret);
         return E_PRINT_RPC_FAILURE;
@@ -722,10 +965,91 @@ int32_t PrintServiceProxy::NotifyPrintService(const std::string &jobId, const st
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(jobId);
     data.WriteString(type);
-    int32_t ret = Remote()->SendRequest(
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy NotifyPrintService remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(
         OHOS::Print::IPrintInterfaceCode::CMD_NOTIFY_PRINT_SERVICE, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy NotifyPrintService out. ret = [%{public}d]", ret);
+    return ret;
+}
+
+int32_t PrintServiceProxy::AddPrinterToDiscovery(const PrinterInfo &printerInfo)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    printerInfo.Marshalling(data);
+    PRINT_HILOGD("PrintServiceProxy AddPrinterToDiscovery started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy AddPrinterToDiscovery remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERTODISCOVERY,
+        data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy AddPrinterToDiscovery out. ret = [%{public}d]", ret);
+    return ret;
+}
+
+int32_t PrintServiceProxy::UpdatePrinterInDiscovery(const PrinterInfo& printerInfo)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    printerInfo.Marshalling(data);
+    PRINT_HILOGD("PrintServiceProxy UpdatePrinterInDiscovery started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy UpdatePrinterInDiscovery remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERINDISCOVERY,
+        data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy UpdatePrinterInDiscovery out. ret = [%{public}d]", ret);
+    return ret;
+}
+
+int32_t PrintServiceProxy::RemovePrinterFromDiscovery(const std::string &printerId)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(printerId);
+    PRINT_HILOGD("PrintServiceProxy RemovePrinterFromDiscovery started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy RemovePrinterFromDiscovery remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_REMOVEPRINTERFROMDISCOVERY,
+        data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy RemovePrinterFromDiscovery out. ret = [%{public}d]", ret);
+    return ret;
+}
+
+int32_t PrintServiceProxy::UpdatePrinterInSystem(const PrinterInfo& printerInfo)
+{
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    printerInfo.Marshalling(data);
+    PRINT_HILOGD("PrintServiceProxy UpdatePrinterInSystem started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy UpdatePrinterInSystem remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERINSYSTEM,
+        data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy UpdatePrinterInSystem out. ret = [%{public}d]", ret);
     return ret;
 }
 
@@ -736,7 +1060,12 @@ int32_t PrintServiceProxy::UnregisterAllExtCallback(const std::string &extension
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(extensionId);
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UNREG_EXT_CB, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy UnregisterAllExtCallback remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UNREG_EXT_CB, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy UnregisterAllExtCallback out. ret = [%{public}d]", ret);
     return ret;
@@ -749,7 +1078,12 @@ int32_t PrintServiceProxy::LoadExtSuccess(const std::string &extensionId)
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(extensionId);
-    int32_t ret = Remote()->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_LOAD_EXT, data, reply, option);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy LoadExtSuccess remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_LOAD_EXT, data, reply, option);
     ret = GetResult(ret, reply);
     PRINT_HILOGD("PrintServiceProxy LoadExtSuccess out. ret = [%{public}d]", ret);
     return ret;

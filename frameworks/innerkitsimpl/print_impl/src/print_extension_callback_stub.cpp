@@ -43,7 +43,8 @@ int32_t PrintExtensionCallbackStub::OnRemoteRequest(
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
         if (requestFunc != nullptr) {
-            return (this->*requestFunc)(data, reply);
+            bool result = (this->*requestFunc)(data, reply);
+            return result ? E_PRINT_NONE : E_PRINT_SERVER_FAILURE;
         }
     }
     PRINT_HILOGW("default case, need check.");

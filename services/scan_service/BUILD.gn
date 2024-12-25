@@ -59,12 +59,6 @@ ohos_shared_library("scan_service") {
     "${print_path}/frameworks/innerkitsimpl/scan_impl:scan_client",
   ]
 
-  if (sane_enable) {
-    include_dirs += [ "//vendor/open_source/backends/include" ]
-    deps += [ "//vendor/open_source/backends:third_sane" ]
-    cflags_cc += [ "-DSANE_ENABLE" ]
-  }
-
   if (debug_enable) {
     cflags_cc += [ "-DDEBUG_ENABLE" ]
   }
@@ -96,6 +90,10 @@ ohos_shared_library("scan_service") {
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",
   ]
+
+  if (build_variant == "user") {
+    cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+  }
 
   subsystem_name = "print"
   part_name = "print_fwk"

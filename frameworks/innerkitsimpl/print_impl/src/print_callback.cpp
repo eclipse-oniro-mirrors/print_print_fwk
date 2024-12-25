@@ -21,11 +21,11 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintCallback::PrintCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref)
+PrintCallback::PrintCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref), adapter_(nullptr)
 {
 }
 
-PrintCallback::PrintCallback(PrintDocumentAdapter* adapter) :adapter_(adapter)
+PrintCallback::PrintCallback(PrintDocumentAdapter* adapter) : env_(nullptr), ref_(nullptr), adapter_(adapter)
 {
 }
 
@@ -91,6 +91,8 @@ static bool InitUvWorkCallbackEnv(uv_work_t *work, napi_handle_scope &scope)
     }
     if (work->data == nullptr) {
         PRINT_HILOGE("data is nullptr");
+        delete work;
+        work = nullptr;
         return false;
     }
     CallbackParam *cbParam = reinterpret_cast<CallbackParam *>(work->data);
@@ -98,7 +100,9 @@ static bool InitUvWorkCallbackEnv(uv_work_t *work, napi_handle_scope &scope)
     if (scope == nullptr) {
         PRINT_HILOGE("fail to open scope");
         delete cbParam;
-        work->data = nullptr;
+        cbParam = nullptr;
+        delete work;
+        work = nullptr;
         return false;
     }
     return true;
@@ -122,12 +126,12 @@ static void PrintTaskAfterCallFun(uv_work_t *work, int status)
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run PrintTaskAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -150,12 +154,12 @@ static void PrinterAfterCallFun(uv_work_t *work, int status)
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run PrinterAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -180,12 +184,12 @@ static void PrintJobAfterCallFun(uv_work_t *work, int status)
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run PrintJobAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -210,12 +214,12 @@ static void ExtensionAfterCallFun(uv_work_t *work, int status)
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run ExtensionAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -241,7 +245,7 @@ static void PrintAdapterAfterCallFun(uv_work_t *work, int status)
             std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, args[0]);
             uint32_t replyState = NapiPrintUtils::GetUint32FromValue(env, args[1]);
 
-            PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(
+            PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(
                 jobId, PRINT_JOB_CREATE_FILE_COMPLETED, replyState);
             PRINT_HILOGI("from js return jobId:%{public}s, replyState:%{public}d", jobId.c_str(), replyState);
             return nullptr;
@@ -263,12 +267,12 @@ static void PrintAdapterAfterCallFun(uv_work_t *work, int status)
 
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run PrintAdapterAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -297,12 +301,12 @@ static void PrintAdapterJobStateChangedAfterCallFun(uv_work_t *work, int status)
 
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run PrintAdapterJobStateChangedAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -324,12 +328,12 @@ static void PrintAdapterGetFileAfterCallFun(uv_work_t *work, int status)
             callbackValues, &callbackResult);
         napi_close_handle_scope(cbParam->env, scope);
         PRINT_HILOGI("OnCallback end run PrintAdapterGetFileAfterCallFun success");
-        if (work != nullptr) {
-            delete work;
-            work = nullptr;
-        }
         delete cbParam;
         cbParam = nullptr;
+    }
+    if (work != nullptr) {
+        delete work;
+        work = nullptr;
     }
 }
 
@@ -422,7 +426,7 @@ bool PrintCallback::OnCallbackAdapterLayout(
         PRINT_HILOGI("OnCallbackAdapterLayout run c++");
         adapter_->onStartLayoutWrite(jobId, oldAttrs, newAttrs, fd, [](std::string jobId, uint32_t state) {
             PRINT_HILOGI("onStartLayoutWrite write over, jobId:%{public}s state: %{public}d", jobId.c_str(), state);
-            PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(
+            PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(
                 jobId, PRINT_JOB_CREATE_FILE_COMPLETED, state);
         });
         return true;

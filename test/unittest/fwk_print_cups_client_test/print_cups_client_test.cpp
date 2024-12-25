@@ -20,6 +20,10 @@
 #undef private
 #include "print_constant.h"
 #include "print_log.h"
+#include "fstream"
+#define private public
+#include "print_service_ability.h"
+#undef private
 
 using namespace testing::ext;
 using json = nlohmann::json;
@@ -29,7 +33,9 @@ namespace Print {
 static constexpr const char *JOB_OPTIONS =
     "{\"jobName\":\"xx\",\"jobNum\":1,\"mediaType\":\"stationery\",\"documentCategory\":0,\"printQuality\":\"4\","
     "\"printerName\":\"printer1\",\"printerUri\":\"ipp://192.168.0.1:111/ipp/print\",\"borderless\":true,"
-    "\"documentFormat\":\"application/pdf\",\"files\":[\"/data/1.pdf\"]}";
+    "\"documentFormat\":\"application/pdf\",\"files\":[\"/data/1.pdf\"],\"isAutoRotate\":true}";
+
+const uint32_t DIR_MODE = 0771;
 
 static const std::string PRINTER_STATE_NONE = "none";
 static const std::string PRINTER_STATE_MEDIA_EMPTY = "media-empty";
@@ -98,7 +104,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0002, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string path = "";
     mode_t mode = 16;
-    printCupsClient.ChangeFilterPermission(path, mode);
+    EXPECT_EQ(printCupsClient.ChangeFilterPermission(path, mode), false);
 }
 
 /**
@@ -110,9 +116,30 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0002, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0003, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    const char *srcDir = "";
-    const char *destDir = "";
+    const char *srcDir = "./PrintCupsClientTest_0003_srcDir";
+    const char *destDir = "./PrintCupsClientTest_0003_destDir";
+
+    if (access(srcDir, F_OK) != 0) {
+        mkdir(srcDir, DIR_MODE);
+    }
+    if (access(destDir, F_OK) != 0) {
+        mkdir (destDir, DIR_MODE);
+    }
+
+    std::string srcFilePath = "./PrintCupsClientTest_0003_srcDir/PrintCupsClientTestFileName";
+    std::ofstream testSrcFile(srcFilePath.c_str(), std::ios::out);
+    EXPECT_EQ(testSrcFile.is_open(), true);
+    testSrcFile.close();
+
     printCupsClient.SymlinkDirectory(srcDir, destDir);
+
+    struct stat destDirstat = {};
+    EXPECT_EQ(lstat((std::string(destDir)
+                + "/PrintCupsClientTestFileName").c_str(), &destDirstat), 0);
+    EXPECT_EQ(S_ISLNK(destDirstat.st_mode), true);
+
+    EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / srcDir), 0);
+    EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / destDir), 0);
 }
 
 /**
@@ -124,9 +151,34 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0003, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0004, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    const char *srcDir = "";
-    const char *destDir = "";
+    const char *srcDir = "./PrintCupsClientTest_0004_srcDir";
+    const char *destDir = "./PrintCupsClientTest_0004_destDir";
+    const char *subSrcDir = "PrintCupsClientTest_0004_srcDir/PrintCupsClientTest";
+
+    if (access(srcDir, F_OK) != 0) {
+        mkdir(srcDir, DIR_MODE);
+    }
+
+    if (access(destDir, F_OK) != 0) {
+        mkdir(destDir, DIR_MODE);
+    }
+
+    if (access(subSrcDir, F_OK) != 0) {
+        mkdir(subSrcDir, DIR_MODE);
+    }
+
+    std::string srcFilePath = std::string(subSrcDir) + "/PrintCupsClientTestFileName";
+    std::ofstream testSrcFile(srcFilePath.c_str(), std::ios::out);
+    EXPECT_EQ(testSrcFile.is_open(), true);
+    testSrcFile.close();
+
     printCupsClient.CopyDirectory(srcDir, destDir);
+
+    EXPECT_EQ(std::filesystem::is_regular_file(
+           std::string(destDir) + "/PrintCupsClientTest/PrintCupsClientTestFileName"),
+           true);
+    EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / srcDir), 0);
+    EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / destDir), 0);
 }
 
 /**
@@ -153,18 +205,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0006, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     int32_t ret = printCupsClient.StartCupsdService();
     EXPECT_EQ(ret, E_PRINT_NONE);
-    printCupsClient.StopCupsdService();
-}
-
-/**
- * @tc.name: PrintCupsClientTest_0007
- * @tc.desc: StopCupsdService
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0007, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.StopCupsdService();
 }
 
@@ -263,6 +303,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0014, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0015, TestSize.Level1)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
@@ -287,6 +328,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient->BuildJobParameters(testJob);
     printCupsClient->jobQueue_.push_back(jobParams);
+    printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     delete jobParams;
@@ -303,6 +345,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0018, TestSize.Level1)
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     JobParameters *jobParams = nullptr;
     printCupsClient->jobQueue_.push_back(jobParams);
+    printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
     delete jobParams;
@@ -399,12 +442,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0023, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    jobParams->borderless = 1;
+    jobParams->borderless = 0;
     jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(numOptions, 0);
+    int ret = printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 2);
     delete jobParams;
     delete options;
 }
@@ -433,8 +476,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0024, TestSize.Level1)
     jobParams->mediaSize = CUPS_MEDIA_4X6;
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(numOptions, 0);
+    int ret = printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(ret, 2);
     delete jobParams;
     delete options;
 }
@@ -461,8 +504,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025, TestSize.Level1)
     jobParams->duplex = "";
     jobParams->printQuality = "";
     jobParams->color = "";
+    jobParams->isAutoRotate = true;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 6);
+    EXPECT_EQ(ret, 7);
     delete jobParams;
     delete options;
 }
@@ -489,8 +533,11 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0026, TestSize.Level1)
     jobParams->duplex = "test_duplex";
     jobParams->printQuality = "test_printQuality";
     jobParams->color = "test_color";
+    jobParams->borderless = 1;
+    jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
+    jobParams->mediaSize = CUPS_MEDIA_4X6;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 6);
+    EXPECT_EQ(ret, 7);
     delete jobParams;
     delete options;
 }
@@ -536,7 +583,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0030, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "testPrinterName";
     printCupsClient.StopCupsdService();
-    printCupsClient.GetPPDFile(printerName);
+    ppd_file_t *ppd = printCupsClient.GetPPDFile(printerName);
+    EXPECT_EQ(ppd, nullptr);
 }
 
 /**
@@ -595,7 +643,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0034, TestSize.Level1)
     JobParameters *jobParams = nullptr;
     bool ret = printCupsClient.CheckPrinterMakeModel(jobParams);
     EXPECT_EQ(ret, false);
-    delete jobParams;
 }
 
 /**
@@ -638,9 +685,16 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0039, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_NE(jobParams, nullptr);
+    EXPECT_NE(jobParams->serviceAbility, nullptr);
+
     uint32_t state = PRINT_JOB_BLOCKED;
     uint32_t subState = PRINT_JOB_BLOCKED_UNKNOWN;
     printCupsClient.UpdatePrintJobStateInJobParams(jobParams, state, subState);
+
+    auto jobId = jobParams->serviceJobId;
+    auto userData = jobParams->serviceAbility->GetUserDataByJobId(jobId);
+    EXPECT_EQ(userData, nullptr);
     delete jobParams;
 }
 
@@ -655,12 +709,26 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0042, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     JobStatus *prevousJobStatus = nullptr;
     JobStatus *jobStatus = nullptr;
+
     printCupsClient.UpdateJobStatus(prevousJobStatus, jobStatus);
-    JobStatus *prevousJobStatus2 = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
+
+    EXPECT_EQ(prevousJobStatus, nullptr);
+    EXPECT_EQ(jobStatus, nullptr);
+
+    JobStatus *prevousJobStatus2 = new (std::nothrow) JobStatus{{'1', '\0'}, (ipp_jstate_t)0, {'1', '\0'}};
+    JobStatus *savePrevousJobStatus2 = new (std::nothrow) JobStatus{{'1', '\0'}, (ipp_jstate_t)0, {'1', '\0'}};
+
     printCupsClient.UpdateJobStatus(prevousJobStatus2, jobStatus);
+
+    EXPECT_EQ(prevousJobStatus2->job_state, savePrevousJobStatus2->job_state);
+    EXPECT_EQ(std::string(
+        prevousJobStatus2->printer_state_reasons),
+        std::string(savePrevousJobStatus2->printer_state_reasons));
+
     delete prevousJobStatus;
     delete jobStatus;
     delete prevousJobStatus2;
+    delete savePrevousJobStatus2;
 }
 
 /**
@@ -675,6 +743,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0043, TestSize.Level1)
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     JobStatus *prevousJobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     printCupsClient.UpdateJobStatus(prevousJobStatus, jobStatus);
+
+    EXPECT_EQ(prevousJobStatus->job_state, jobStatus->job_state);
+    EXPECT_EQ(std::string(prevousJobStatus->printer_state_reasons), std::string(jobStatus->printer_state_reasons));
     delete prevousJobStatus;
     delete jobStatus;
 }
@@ -1191,7 +1262,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0060, TestSize.Level1)
     printCupsClient.jobQueue_.push_back(jobParams);
     PRINT_HILOGI("CancelCupsJob(): printCupsClient.jobQueue_.size(): %{public}u", printCupsClient.jobQueue_.size());
     printCupsClient.CancelCupsJob(serviceJobId);
-    delete jobParams;
 }
 
 /**
@@ -1271,8 +1341,11 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0066, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams, nullptr);
+
     testJob.SetOption("test");
     printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams, nullptr);
     delete jobParams;
 }
 
@@ -1293,23 +1366,42 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067, TestSize.Level1)
     pageSize.SetId("pgid-1234");
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
+    testJob.SetIsLandscape(true);
     testJob.SetOption(R"({"key": "value"})");
-    printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams, nullptr);
+
     json optionJson = json::parse(testJob.GetOption());
     optionJson["printerUri"] = "ipp://192.168.0.1:111/ipp/print";
     optionJson["printerName"] = "printer1";
     optionJson["documentFormat"] = "application/pdf";
     testJob.SetOption(optionJson.dump());
-    printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"]);
+    EXPECT_EQ(jobParams->printerName, PrintUtil::StandardizePrinterName(optionJson["printerName"]));
+    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"]);
+
     optionJson["cupsOptions"] = "testCupsOptions";
     optionJson["printQuality"] = "printQuality";
     optionJson["jobName"] = "jobName";
     optionJson["mediaType"] = "mediaType";
     testJob.SetOption(optionJson.dump());
-    printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->printerAttrsOption_cupsOption, optionJson["cupsOptions"]);
+    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"]);
+    EXPECT_EQ(jobParams->jobName, optionJson["jobName"]);
+    EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"]);
+
     optionJson["printQuality"] = 1;
     testJob.SetOption(optionJson.dump());
-    printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
+
+    EXPECT_EQ(jobParams->isAutoRotate, true);   // default true
+    optionJson["isAutoRotate"] = false;
+    testJob.SetOption(optionJson.dump());
+    jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->isAutoRotate, optionJson["isAutoRotate"]);
 }
 
 /**
@@ -1334,6 +1426,15 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0068, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    std::string option = testJob.GetOption();
+    json optionJson = json::parse(option);
+    EXPECT_EQ(jobParams->jobName, optionJson["jobName"]);
+    EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"]);
+    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"]);
+    EXPECT_EQ(jobParams->printerName, optionJson["printerName"]);
+    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"]);
+    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"]);
+    EXPECT_EQ(jobParams->isAutoRotate, optionJson["isAutoRotate"]);
     printCupsClient.DumpJobParameters(jobParams);
     delete jobParams;
 }
@@ -1359,7 +1460,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0069, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    printCupsClient.GetMedieSize(testJob);
+    std::string pageSizeName = printCupsClient.GetMedieSize(testJob);
+    EXPECT_EQ("PrintPageSize", pageSizeName);
 }
 
 /**
@@ -1372,13 +1474,20 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0070, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     uint32_t duplexCode = 0;
-    printCupsClient.GetDulpexString(duplexCode);
+    std::string ret0 = printCupsClient.GetDulpexString(duplexCode);
+    EXPECT_EQ(ret0, CUPS_SIDES_ONE_SIDED);
+
     duplexCode = 1;
-    printCupsClient.GetDulpexString(duplexCode);
+    std::string ret1 = printCupsClient.GetDulpexString(duplexCode);
+    EXPECT_EQ(ret1, CUPS_SIDES_TWO_SIDED_PORTRAIT);
+
     duplexCode = 2;
-    printCupsClient.GetDulpexString(duplexCode);
+    std::string ret2 = printCupsClient.GetDulpexString(duplexCode);
+    EXPECT_EQ(ret2, CUPS_SIDES_TWO_SIDED_LANDSCAPE);
+
     duplexCode = 3;
-    printCupsClient.GetDulpexString(duplexCode);
+    std::string ret3 = printCupsClient.GetDulpexString(duplexCode);
+    EXPECT_EQ(ret3, CUPS_SIDES_ONE_SIDED);
 }
 
 /**
@@ -1391,23 +1500,16 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0071, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     uint32_t colorCode = 0;
-    printCupsClient.GetColorString(colorCode);
-    colorCode = 1;
-    printCupsClient.GetColorString(colorCode);
-    colorCode = 2;
-    printCupsClient.GetColorString(colorCode);
-}
+    std::string ret0 = printCupsClient.GetColorString(colorCode);
+    EXPECT_EQ(ret0, CUPS_PRINT_COLOR_MODE_MONOCHROME);
 
-/**
- * @tc.name: PrintCupsClientTest_0072
- * @tc.desc: IsCupsServerAlive
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0072, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    printCupsClient.IsCupsServerAlive();
+    colorCode = 1;
+    std::string ret1 = printCupsClient.GetColorString(colorCode);
+    EXPECT_EQ(ret1, CUPS_PRINT_COLOR_MODE_COLOR);
+
+    colorCode = 2;
+    std::string ret2 = printCupsClient.GetColorString(colorCode);
+    EXPECT_EQ(ret2, CUPS_PRINT_COLOR_MODE_AUTO);
 }
 
 /**
@@ -1450,9 +1552,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0075, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerId = "com.ohos.spooler:usb://DIRECT-PixLab_V1-1620";
     std::string nic = "";
-    printCupsClient.IsIpConflict(printerId, nic);
+    bool ret1 = printCupsClient.IsIpConflict(printerId, nic);
+    EXPECT_EQ(ret1, false);
+
     printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
-    printCupsClient.IsIpConflict(printerId, nic);
+    bool ret2 = printCupsClient.IsIpConflict(printerId, nic);
+    EXPECT_EQ(ret2, false);
 }
 
 /**
@@ -1504,6 +1609,295 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0076, TestSize.Level1)
     delete jobParams;
     delete jobStatus;
     delete param;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0077
+ * @tc.desc: DiscoverUsbPrinters
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0077, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::vector<PrinterInfo> printers;
+    printCupsClient.DiscoverUsbPrinters(printers);
+    EXPECT_EQ(printers.size(), 0);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0078
+ * @tc.desc: BuildJobParameters
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0078, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(R"({"key": "value"})");
+
+    json optionJson = json::parse(testJob.GetOption());
+    optionJson["printerUri"] = 1;
+    optionJson["printerName"] = "printer1";
+    optionJson["documentFormat"] = "application/pdf";
+    testJob.SetOption(optionJson.dump());
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams, nullptr);
+
+    optionJson["printerUri"] = "ipp://192.168.0.1:111/ipp/print";
+    optionJson["printerName"] = 1;
+    testJob.SetOption(optionJson.dump());
+    jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams, nullptr);
+
+    optionJson["printerName"] = "printer1";
+    optionJson["documentFormat"] = 1;
+    testJob.SetOption(optionJson.dump());
+    jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams, nullptr);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0079
+ * @tc.desc: HandleFiles
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0079, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    http_t *http = nullptr;
+    PrintJob testJob;
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    int32_t numFiles = 1;
+    int32_t jobId = 1;
+    EXPECT_EQ(printCupsClient.HandleFiles(jobParams, numFiles, http, jobId), false);
+    jobParams = nullptr;
+    EXPECT_EQ(printCupsClient.HandleFiles(jobParams, numFiles, http, jobId), false);
+    delete http;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0080
+ * @tc.desc: HandleJobState
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0080, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    http_t *http = nullptr;
+    JobStatus *prevousJobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
+    JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
+        jobParams->serviceJobId,
+        1,
+        "ipp://192.168.186.1:631/ipp/print",
+        "DIRECT-PixLab_V1-0105"};
+
+    printCupsClient.HandleJobState(http, param, jobStatus, prevousJobStatus);
+    EXPECT_NE(prevousJobStatus, nullptr);
+    printCupsClient.QueryJobStateAgain(http, param, jobStatus);
+    printCupsClient.HandleJobState(http, param, jobStatus, prevousJobStatus);
+    EXPECT_NE(prevousJobStatus, nullptr);
+    delete prevousJobStatus;
+    delete jobStatus;
+    delete param;
+    delete http;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0081
+ * @tc.desc: MonitorJobState
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0081, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    CallbackFunc callback = [this](){};
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
+        jobParams->serviceJobId,
+        1,
+        "ipp://192.168.186.1:631/ipp/print",
+        "DIRECT-PixLab_V1-0105"};
+
+    printCupsClient.MonitorJobState(param, callback);
+    EXPECT_NE(param, nullptr);
+    param = nullptr;
+    printCupsClient.MonitorJobState(param, callback);
+    delete param;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0082
+ * @tc.desc: ResumePrinter
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0082, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string printerName = "testPrinterName";
+    EXPECT_EQ(printCupsClient.ResumePrinter(printerName), false);
+    printCupsClient.printAbility_ = nullptr;
+    EXPECT_EQ(printCupsClient.ResumePrinter(printerName), false);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0083
+ * @tc.desc: FillLandscapeOptions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0083, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetIsLandscape(true);
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    jobParams->isAutoRotate = true;
+    jobParams->borderless = 1;
+    jobParams->isLandscape = true;
+    jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(numOptions, 0);
+    delete jobParams;
+    delete options;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0084
+ * @tc.desc: FillLandscapeOptions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0084, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetIsLandscape(true);
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    jobParams->isAutoRotate = false;
+    jobParams->borderless = 1;
+    jobParams->isLandscape = true;
+    jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(numOptions, 0);
+    delete jobParams;
+    delete options;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0085
+ * @tc.desc: FillLandscapeOptions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0085, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetIsLandscape(true);
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    jobParams->isAutoRotate = false;
+    jobParams->borderless = 0;
+    jobParams->isLandscape = false;
+    jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(numOptions, 0);
+    delete jobParams;
+    delete options;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0086
+ * @tc.desc: FillLandscapeOptions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0086, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetIsLandscape(true);
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    jobParams->isAutoRotate = false;
+    jobParams->borderless = 1;
+    jobParams->isLandscape = true;
+    jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
+    int numOptions = 0;
+    cups_option_t *options = nullptr;
+    printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options);
+    EXPECT_EQ(numOptions, 0);
+    delete jobParams;
+    delete options;
 }
 
 }  // namespace Print

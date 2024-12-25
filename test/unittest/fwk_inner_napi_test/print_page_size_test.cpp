@@ -39,19 +39,6 @@ void PrintPageSizeTest::SetUp(void) {}
 void PrintPageSizeTest::TearDown(void) {}
 
 /**
- * @tc.name: PrintPageSizeTest_0001
- * @tc.desc: Verify the constructor function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0001, TestSize.Level1)
-{
-    OHOS::Print::PrintPageSize printpageSize;
-    OHOS::Print::PrintPageSize::BuildPageSizeMap();
-    printpageSize.Dump();
-}
-
-/**
  * @tc.name: PrintPageSizeTest_0002
  * @tc.desc: Verify the FindPageSizeById function.
  * @tc.type: FUNC
@@ -202,5 +189,24 @@ HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0012, TestSize.Level1)
     OHOS::Print::PrintPageSize copyPageSize = printpageSize;
     EXPECT_EQ(copyPageSize.GetWidth(), printpageSize.GetWidth());
 }
+
+/**
+ * @tc.name: PrintPageSizeTest_0013
+ * @tc.desc: MatchPageSize.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0013, TestSize.Level1)
+{
+    PrintPageSize::MatchPageSize("aaa");
+    EXPECT_FALSE(PrintPageSize::MatchPageSize("iso_a4_210x297mm").empty());
+    OHOS::Print::PrintPageSize printPageSize;
+    EXPECT_FALSE(PrintPageSize::FindPageSizeById("ISO_AA", printPageSize));
+    EXPECT_TRUE(PrintPageSize::FindPageSizeById("ISO_A4", printPageSize));
+    OHOS::Print::PrintPageSize size;
+    size.SetId("ISO_A4");
+    EXPECT_TRUE(printPageSize == size);
+}
+
 } // namespace Print
 } // namespace OHOS
