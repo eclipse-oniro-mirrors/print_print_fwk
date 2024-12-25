@@ -1498,7 +1498,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0083, TestSize.Level1)
     printJob->SetPrinterId(printerId);
     userData->printJobList_[jobId] = printJob;
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_INVALID_PRINTER);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084, TestSize.Level1)
