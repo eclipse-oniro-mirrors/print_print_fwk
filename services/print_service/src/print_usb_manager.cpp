@@ -292,9 +292,9 @@ int32_t PrintUsbManager::BulkTransferWrite(std::string printerName, const Operat
         do {
             writeRet = UsbSrvClient::GetInstance().BulkTransfer(usbDevicePipe, pointWrite, vectorRequestBuffer,
                 USB_BULKTRANSFER_WRITE_TIMEOUT);
-        } while (writeRet == EORROR_HDF_DEV_ERR_IO_FAILURE &&
-            UsbSrvClient::GetInstance().ClaimInterface(usbDevicePipe, useInterface, true) >= 0 &&
-            claimRetryCount++ < CLAIM_INTERFACE_RETRY_MAX_TIMES);
+        } while (claimRetryCount++ < CLAIM_INTERFACE_RETRY_MAX_TIMES &&
+            writeRet == EORROR_HDF_DEV_ERR_IO_FAILURE &&
+            UsbSrvClient::GetInstance().ClaimInterface(usbDevicePipe, useInterface, true) >= 0);
     }
     return writeRet;
 }
@@ -332,9 +332,9 @@ int32_t PrintUsbManager::BulkTransferRead(std::string printerName, const Operati
         do {
             readFromUsbRes = UsbSrvClient::GetInstance().BulkTransfer(usbDevicePipe, pointRead, readTempBUffer,
                 USB_BULKTRANSFER_READ_TIMEOUT);
-        } while (readFromUsbRes == EORROR_HDF_DEV_ERR_IO_FAILURE &&
-            UsbSrvClient::GetInstance().ClaimInterface(usbDevicePipe, useInterface, true) >= 0 &&
-            claimRetryCount++ < CLAIM_INTERFACE_RETRY_MAX_TIMES);
+        } while (claimRetryCount++ < CLAIM_INTERFACE_RETRY_MAX_TIMES &&
+            readFromUsbRes == EORROR_HDF_DEV_ERR_IO_FAILURE &&
+            UsbSrvClient::GetInstance().ClaimInterface(usbDevicePipe, useInterface, true) >= 0);
     }
     return readFromUsbRes;
 }

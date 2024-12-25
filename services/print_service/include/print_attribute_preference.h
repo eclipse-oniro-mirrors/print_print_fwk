@@ -29,7 +29,7 @@ public:
     std::string duplex;
     std::string quality;
     std::string mediaType;
-    bool hasMargin;
+    bool hasMargin = true;
     PreferenceSetting() {};
     PreferenceSetting(std::string pagesizeId, std::string orientation, std::string duplex, std::string quality,
         std::string mediaType, bool hasMargin)
