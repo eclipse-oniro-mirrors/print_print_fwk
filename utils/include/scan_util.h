@@ -25,29 +25,26 @@
 #include <iomanip>
 #include <regex>
 #include <string>
+#include "sane_info.h"
 #include "scan_constant.h"
 #include "scan_log.h"
-#ifdef SANE_ENABLE
-#include "sane/sane.h"
-#include "sane/saneopts.h"
-#endif
 
 namespace OHOS::Scan {
 class ScanUtil {
 public:
-    #ifdef SANE_ENABLE
-    static ScanErrorCode ConvertErro(const SANE_Status status);
-    #endif
+    static ScanErrorCode ConvertErro(const SaneStatus status);
     static bool ConvertToInt(const std::string& str, int32_t& value);
     static bool ExtractIpAddresses(const std::string& str, std::string& ip);
     static std::string ReplaceIpAddress(const std::string& deviceId, const std::string& newIp);
 };
-#ifdef SANE_ENABLE
-inline ScanErrorCode ScanUtil::ConvertErro(const SANE_Status status)
+inline ScanErrorCode ScanUtil::ConvertErro(const SaneStatus status)
 {
-    return static_cast<ScanErrorCode> (status + E_SCAN_GOOD);
+    if (status < SANE_STATUS_NO_PERMISSION) {
+        return static_cast<ScanErrorCode> (status + E_SCAN_GOOD);
+    } else {
+        return static_cast<ScanErrorCode> (status);
+    }
 }
-#endif
 inline bool ScanUtil::ConvertToInt(const std::string& str, int32_t& value)
 {
     auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);

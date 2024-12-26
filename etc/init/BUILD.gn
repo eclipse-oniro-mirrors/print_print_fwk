@@ -56,3 +56,17 @@ ohos_prebuilt_etc("scanservice.cfg") {
   part_name = "print_fwk"
   subsystem_name = "print"
 }
+
+ohos_prebuilt_etc("saneservice.cfg") {
+  source = "saneservice.cfg"
+  relative_install_dir = "init"
+  part_name = "print_fwk"
+  subsystem_name = "print"
+}
+
+ohos_prebuilt_etc("saneservice.rc") {
+  source = "saneservice.rc"
+  relative_install_dir = "init"
+  part_name = "print_fwk"
+  subsystem_name = "print"
+}

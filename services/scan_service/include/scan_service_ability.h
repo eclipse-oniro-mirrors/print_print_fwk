@@ -31,10 +31,6 @@
 #include "scan_constant.h"
 #include "scan_service_stub.h"
 #include "system_ability.h"
-#ifdef SANE_ENABLE
-#include "sane/sane.h"
-#include "sane/saneopts.h"
-#endif
 #include "scanner_info.h"
 #include "scan_mdns_service.h"
 #include "scan_option_descriptor.h"
@@ -79,14 +75,10 @@ public:
     void UpdateScannerId(const ScanDeviceInfoSync& usbSyncInfo); // public
 
 private:
-#ifdef SANE_ENABLE
-    int32_t ActionSetAuto(SANE_Handle &scannerHandle, const int32_t &optionIndex);
-    int32_t ActionGetValue(SANE_Handle &scannerHandle, ScanOptionValue &value, const int32_t &optionIndex);
-    int32_t ActionSetValueHelper(ScanOptionValue &value, void *saneValueBuf, int32_t valueSize, uint32_t bufSize);
-    int32_t ActionSetValue(SANE_Handle &scannerHandle, ScanOptionValue &value,
-        const int32_t &optionIndex, int32_t &info);
-    int32_t SelectScanOptionDesc(const SANE_Option_Descriptor* &optionDesc, ScanOptionDescriptor &desc);
-#endif
+    int32_t ActionSetAuto(const std::string &scannerId, const int32_t &optionIndex);
+    int32_t ActionGetValue(const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex);
+    int32_t ActionSetValue(const std::string &scannerId, ScanOptionValue &value,
+                           const int32_t &optionIndex, int32_t &info);
     int32_t DoScanTask(const std::string scannerId, ScanProgress* scanProPtr);
     void StartScanTask(const std::string scannerId);
     void SendDeviceInfoTCP(const ScanDeviceInfoTCP &info, std::string event);
@@ -98,7 +90,6 @@ private:
     void SaneGetScanner();
     void SyncScannerInfo(ScanDeviceInfo &info);
 public:
-    static std::map<std::string, ScanDeviceInfoTCP> scanDeviceInfoTCPMap_;
     static std::map<std::string, ScanDeviceInfo> saneGetUsbDeviceInfoMap;
     static std::map<std::string, ScanDeviceInfo> saneGetTcpDeviceInfoMap;
     static std::map<std::string, std::string> usbSnMap;
@@ -112,13 +103,9 @@ private:
     int32_t ServiceInit();
     void InitServiceHandler();
     void ManualStart();
-    int32_t ReInitScan(int32_t &scanVersion);
+    int32_t ReInitScan();
     bool CheckPermission(const std::string &permissionName);
     void SendGetFrameResEvent(const bool isGetSucc, const int32_t sizeRead);
-#ifdef SANE_ENABLE
-    void SetScanOptionDescriptor(ScanOptionDescriptor &desc, const SANE_Option_Descriptor *optionDesc);
-    SANE_Handle GetScanHandle(const std::string &scannerId);
-#endif
     int32_t WriteJpegHeader(ScanParameters &parm, struct jpeg_error_mgr* jerr);
     void GeneratePicture(const std::string &scannerId, std::string &file_name,
         std::string &output_file, int32_t &status, ScanProgress* &scanProPtr);
@@ -131,18 +118,15 @@ private:
         std::string &output_file, int32_t &status, ScanProgress* &scanProPtr);
     void AddFoundUsbScanner(ScanDeviceInfo &info);
     void AddFoundTcpScanner(ScanDeviceInfo &info);
-#ifdef SANE_ENABLE
-    bool SetScannerInfo(const SANE_Device** &currentDevice, ScanDeviceInfo &info);
-#endif
     bool GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId);
     bool GetTcpDeviceIp(const std::string &deviceId, std::string &ip);
     void CleanScanTask(const std::string &scannerId);
     void SendDeviceList(std::vector<ScanDeviceInfo> &info, std::string event);
     int32_t GetCurrentUserId();
     std::string ObtainUserCacheDirectory(const int32_t& userId);
-#ifdef SANE_ENABLE
-    std::map<std::string, SANE_Handle> scannerHandleList_;
-#endif
+    void SetScanProgr(int64_t &totalBytes, const int64_t& hundredPercent,
+        ScanProgress* scanProPtr, const int32_t& curReadSize);
+    std::set<std::string> openedScannerList_;
     ServiceRunningState state_;
     std::mutex lock_;
     std::mutex clearMapLock_;
@@ -155,13 +139,10 @@ private:
     uint64_t currentJobId_;
     int32_t currentUseScannerUserId_;
     std::map<std::string, int32_t> imageFdMap_;
-#ifdef SANE_ENABLE
-    std::function<void(SANE_Handle scannerHandle, uint32_t fd)> getSingleFrameFDExe;
-#endif
     std::function<void()> cyclicCallExe;
     std::queue<int32_t> scanQueue;
     std::map<int32_t, ScanProgress> scanTaskMap;
-    std::vector<ScanDeviceInfo> deviceInfos;
+    std::vector<ScanDeviceInfo> deviceInfos_;
     int32_t nextPicId = 1;
     int32_t buffer_size;
     bool batchMode_ = false;
