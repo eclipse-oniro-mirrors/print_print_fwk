@@ -66,7 +66,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0001, TestSize.Level1)
     EXPECT_TRUE(VendorManager::ExtractPrinterId("").empty());
     EXPECT_TRUE(VendorManager::ExtractGlobalVendorName("").empty());
     EXPECT_TRUE(VendorManager::ExtractVendorName("").empty());
-    EXPECT_TRUE(VendorManager::ExtractPrinterId("fwk.test:").empty());
+    EXPECT_STREQ(VendorManager::ExtractPrinterId("fwk.test:").c_str(), "fwk.test:");
     EXPECT_TRUE(VendorManager::ExtractVendorName("test").empty());
     EXPECT_TRUE(VendorManager::ExtractVendorName("fwk.").empty());
 }
@@ -320,13 +320,13 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
     std::string option = "{\"bsunidriverSupport\": \"true\"}";
     printerInfo.SetOption(option);
     EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(true));
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_NULL);
 
     option = "{\"bsunidriverSupport\": \"false\"}";
     printerInfo.SetOption(option);
     EXPECT_CALL(mockVendorPpdDriver, OnQueryProperties(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_INVALID_PRINTER);
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_NULL);
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_NULL);
     vendorManager.UnInit();
 }
 

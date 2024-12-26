@@ -51,6 +51,7 @@ std::mutex ScanMdnsService::discoveryCallBackPtrsLock_;
 
 void ScanMdnsService::InsertIpToScannerInfo(const std::string& ip, ScanDeviceInfoTCP& scanDeviceInfoTCP)
 {
+    std::lock_guard<std::mutex> autoLock(g_ipToScannerInfoLock);
     g_ipToScannerInfo.insert(std::make_pair(ip, scanDeviceInfoTCP));
 }
 

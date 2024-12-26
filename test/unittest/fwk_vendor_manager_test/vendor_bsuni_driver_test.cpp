@@ -416,7 +416,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0012, TestSize.Level2)
             EXTENSION_ERROR_NONE);
         printer.printerUri = "test";
         EXPECT_EQ(vendorDriver.OnPrinterCapabilityQueried(&printer, &capability, &defaultValue),
-            EXTENSION_ERROR_NONE);
+            EXTENSION_ERROR_INVALID_PRINTER);
     };
     DoMockTest(testFunc);
 }

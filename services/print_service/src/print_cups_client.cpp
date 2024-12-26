@@ -1910,7 +1910,7 @@ bool PrintCupsClient::ResumePrinter(const std::string &printerName)
 {
     if (printAbility_ == nullptr) {
         PRINT_HILOGE("printAbility is null");
-        return E_PRINT_SERVER_FAILURE;
+        return false;
     }
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
