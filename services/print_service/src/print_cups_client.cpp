@@ -663,6 +663,10 @@ ipp_t *PrintCupsClient::QueryPrinterAttributesByUri(const std::string &printerUr
     }
     httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username), host,
         sizeof(host), &port, resource, sizeof(resource));
+    if (port != IPP_PORT && strcasestr(scheme, "ipp") == nullptr) {
+        PRINT_HILOGW("not ipp protocol");
+        return nullptr;
+    }
     if (nic.empty()) {
         http = httpConnect2(host, port, nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, TIME_OUT, nullptr);
     } else {
