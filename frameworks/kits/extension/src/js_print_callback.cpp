@@ -103,7 +103,7 @@ uv_work_t* JsPrintCallback::BuildJsWorker(napi_value jsObj, const std::string &n
     jsParam_.isSync = isSync;
     jsParam_.isCompleted = false;
     worker->data = &jsParam_;
-    return true;
+    return worker;
 }
 
 napi_value JsPrintCallback::Exec(
@@ -121,7 +121,7 @@ napi_value JsPrintCallback::Exec(
         PRINT_HILOGE("Failed to build JS worker");
         return nullptr;
     }
-    
+
     if (UvQueueWork(loop, worker) != 0) {
         PRINT_HILOGE("Failed to uv_queue_work");
         PRINT_SAFE_DELETE(worker);
@@ -146,7 +146,7 @@ int JsPrintCallback::UvQueueWork(uv_loop_s* loop, uv_work_t* worker)
         loop, worker, [](uv_work_t *work) {},
         [](uv_work_t *work, int statusInt) {
             if (work == nullptr) {
-                PRINT_HILOGE("worker is nullptr!");
+                PRINT_HILOGE("work is nullptr!");
                 return;
             }
             auto jsWorkParam = reinterpret_cast<JsPrintCallback::JsWorkParam*>(work->data);
