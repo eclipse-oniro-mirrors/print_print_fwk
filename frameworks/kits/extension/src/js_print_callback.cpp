@@ -27,13 +27,14 @@
 #include "napi_remote_object.h"
 #include "print_log.h"
 #include "print_manager_client.h"
+#include "print_constant.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Print;
 
-JsPrintCallback::JsPrintCallback(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime), jsWorker_(nullptr) {}
+JsPrintCallback::JsPrintCallback(JsRuntime &jsRuntime) : jsRuntime_(jsRuntime) {}
 
 uv_loop_s* JsPrintCallback::GetJsLoop(JsRuntime &jsRuntime)
 {
@@ -68,13 +69,13 @@ bool JsPrintCallback::Call(napi_env env, void *data, uv_after_work_cb afterCallb
     return true;
 }
 
-bool JsPrintCallback::BuildJsWorker(napi_value jsObj, const std::string &name,
+uv_work_t* JsPrintCallback::BuildJsWorker(napi_value jsObj, const std::string &name,
     napi_value const *argv, size_t argc, bool isSync)
 {
     napi_value obj = jsObj;
     if (obj == nullptr) {
         PRINT_HILOGE("Failed to get PrintExtension object");
-        return false;
+        return nullptr;
     }
 
     napi_env env = jsRuntime_.GetNapiEnv();
@@ -82,13 +83,13 @@ bool JsPrintCallback::BuildJsWorker(napi_value jsObj, const std::string &name,
     napi_get_named_property(env, obj, name.c_str(), &method);
     if (method == nullptr) {
         PRINT_HILOGE("Failed to get '%{public}s' from PrintExtension object", name.c_str());
-        return false;
+        return nullptr;
     }
 
-    jsWorker_ = new (std::nothrow) uv_work_t;
-    if (jsWorker_ == nullptr) {
+    uv_work_t *worker = new (std::nothrow) uv_work_t;
+    if (worker == nullptr) {
         PRINT_HILOGE("Failed to create uv work");
-        return false;
+        return nullptr;
     }
 
     std::unique_lock<std::mutex> conditionLock(conditionMutex_);
@@ -101,8 +102,8 @@ bool JsPrintCallback::BuildJsWorker(napi_value jsObj, const std::string &name,
     jsParam_.jsResult = nullptr;
     jsParam_.isSync = isSync;
     jsParam_.isCompleted = false;
-    jsWorker_->data = &jsParam_;
-    return true;
+    worker->data = &jsParam_;
+    return worker;
 }
 
 napi_value JsPrintCallback::Exec(
@@ -115,26 +116,17 @@ napi_value JsPrintCallback::Exec(
         PRINT_HILOGE("Failed to acquire js event loop");
         return nullptr;
     }
-    if (!BuildJsWorker(jsObj, name, argv, argc, isSync)) {
+    uv_work_t *worker = BuildJsWorker(jsObj, name, argv, argc, isSync);
+    if (worker == nullptr) {
         PRINT_HILOGE("Failed to build JS worker");
         return nullptr;
     }
-    uv_queue_work(
-        loop, jsWorker_, [](uv_work_t *work) {},
-        [](uv_work_t *work, int statusInt) {
-            auto jsWorkParam = reinterpret_cast<JsPrintCallback::JsWorkParam*>(work->data);
-            if (jsWorkParam != nullptr) {
-                napi_call_function(jsWorkParam->nativeEngine, jsWorkParam->jsObj,
-                    jsWorkParam->jsMethod, jsWorkParam->argc, jsWorkParam->argv, &(jsWorkParam->jsResult));
-                jsWorkParam->isCompleted = true;
-                if (jsWorkParam->isSync) {
-                    jsWorkParam->self = nullptr;
-                } else {
-                    std::unique_lock<std::mutex> lock(jsWorkParam->self->conditionMutex_);
-                    jsWorkParam->self->syncCon_.notify_one();
-                }
-            }
-        });
+
+    if (UvQueueWork(loop, worker) != 0) {
+        PRINT_HILOGE("Failed to uv_queue_work");
+        PRINT_SAFE_DELETE(worker);
+        return nullptr;
+    }
     if (isSync) {
         std::unique_lock<std::mutex> conditionLock(conditionMutex_);
         auto waitStatus = syncCon_.wait_for(
@@ -146,6 +138,35 @@ napi_value JsPrintCallback::Exec(
         return jsParam_.jsResult;
     }
     return nullptr;
+}
+
+int JsPrintCallback::UvQueueWork(uv_loop_s* loop, uv_work_t* worker)
+{
+    return uv_queue_work(
+        loop, worker, [](uv_work_t *work) {},
+        [](uv_work_t *work, int statusInt) {
+            if (work == nullptr) {
+                PRINT_HILOGE("work is nullptr!");
+                return;
+            }
+            auto jsWorkParam = reinterpret_cast<JsPrintCallback::JsWorkParam*>(work->data);
+            if (jsWorkParam == nullptr) {
+                PRINT_HILOGE("jsWorkParam is nullptr!");
+                PRINT_SAFE_DELETE(work);
+                return;
+            }
+            napi_call_function(jsWorkParam->nativeEngine, jsWorkParam->jsObj,
+                jsWorkParam->jsMethod, jsWorkParam->argc, jsWorkParam->argv, &(jsWorkParam->jsResult));
+            jsWorkParam->isCompleted = true;
+            if (jsWorkParam->isSync) {
+                jsWorkParam->self = nullptr;
+            } else {
+                std::unique_lock<std::mutex> lock(jsWorkParam->self->conditionMutex_);
+                jsWorkParam->self->syncCon_.notify_one();
+            }
+            PRINT_SAFE_DELETE(jsWorkParam);
+            PRINT_SAFE_DELETE(work);
+        });
 }
 } // namespace AbilityRuntime
 } // namespace OHOS

@@ -62,6 +62,11 @@ namespace OHOS::Print {
 #define CHECK_IS_EXCEED_PRINT_RANGE_VOID(count)     CHECK_IS_EXCEED_PRINT_RANGE_BASE(count, PRINT_RET_NONE)
 #define CHECK_IS_EXCEED_PRINT_RANGE_INT(count)      CHECK_IS_EXCEED_PRINT_RANGE_BASE(count, E_PRINT_INVALID_PARAMETER)
 
+#define PRINT_SAFE_DELETE(ptr) \
+    if ((ptr) != nullptr) { \
+        delete (ptr); \
+        (ptr) = nullptr; \
+    }
 
 enum PrintErrorCode {
     E_PRINT_NONE = 0,

@@ -36,8 +36,9 @@ public:
 
 private:
     uv_loop_s *GetJsLoop(JsRuntime &jsRuntime);
-    bool BuildJsWorker(napi_value jsObj, const std::string &name,
+    uv_work_t* BuildJsWorker(napi_value jsObj, const std::string &name,
         napi_value const *argv, size_t argc, bool isSync);
+    int UvQueueWork(uv_loop_s* loop, uv_work_t* worker);
 
 private:
     struct JsWorkParam {
@@ -65,7 +66,6 @@ private:
     };
 
     JsRuntime &jsRuntime_;
-    uv_work_t *jsWorker_;
 
     JsPrintCallback::JsWorkParam jsParam_;
 
