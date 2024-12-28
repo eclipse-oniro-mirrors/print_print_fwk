@@ -29,5 +29,6 @@ group("fuzztest") {
     "scanserviceability_fuzzer:fuzztest",
     "scanservicestub_fuzzer:fuzztest",
     "scanusbmanager_fuzzer:fuzztest",
+    "vendormanager_fuzzer:fuzztest",
   ]
 }
