@@ -760,6 +760,193 @@ void TestReadPreferenceFromFile(const uint8_t *data, size_t size, FuzzedDataProv
     PrintServiceAbility::GetInstance()->ReadPreferenceFromFile(printerId, printPreference);
 }
 
+void TestHandleExtensionConnectPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->HandleExtensionConnectPrinter(printerId);
+}
+
+void TestSendQueuePrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->SendQueuePrintJob(printerId);
+}
+
+void TestUpdatePrinterSystemData(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->UpdatePrinterSystemData(printerInfo);
+}
+
+void TestUnloadSystemAbility(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintServiceAbility::GetInstance()->UnloadSystemAbility();
+}
+
+void TestAddPrinterToDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->AddPrinterToDiscovery(printerInfo);
+}
+
+void TestUpdatePrinterInDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->UpdatePrinterInDiscovery(printerInfo);
+}
+
+void TestRemovePrinterFromDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->RemovePrinterFromDiscovery(printerId);
+}
+
+void TestUpdatePrinterInSystem(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->UpdatePrinterInSystem(printerInfo);
+}
+
+void TestDeletePrinterFromUserData(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->DeletePrinterFromUserData(printerId);
+}
+
+void TestNotifyAppDeletePrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->NotifyAppDeletePrinter(printerId);
+}
+
+void TestAddVendorPrinterToDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->AddVendorPrinterToDiscovery(globalVendorName, printerInfo);
+}
+
+void TestUpdateVendorPrinterToDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->UpdateVendorPrinterToDiscovery(globalVendorName, printerInfo);
+}
+
+void TestRemoveVendorPrinterFromDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->RemoveVendorPrinterFromDiscovery(globalVendorName, printerId);
+}
+
+void TestAddVendorPrinterToCupsWithPpd(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdData = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdData);
+}
+
+void TestAddVendorPrinterToCupsWithSpecificPpd(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdData = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->AddVendorPrinterToCupsWithSpecificPpd(globalVendorName, printerId, ppdData);
+}
+
+void TestRemoveVendorPrinterFromCups(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->RemoveVendorPrinterFromCups(globalVendorName, printerId);
+}
+
+void TestOnVendorStatusUpdate(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterVendorStatus printerVendorStatus;
+    PrintServiceAbility::GetInstance()->OnVendorStatusUpdate(globalVendorName, printerId, printerVendorStatus);
+}
+
+void TestQueryVendorPrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->QueryVendorPrinterInfo(printerId, printerInfo);
+}
+
+void TestHandlePrinterStateChangeRegister(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string eventType = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->HandlePrinterStateChangeRegister(eventType);
+}
+
+void TestHandlePrinterChangeRegister(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string eventType = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->HandlePrinterChangeRegister(eventType);
+}
+
+void TestUpdateAddedPrinterInCups(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->UpdateAddedPrinterInCups(printerId, printerUri);
+}
+
+void TestRenamePrinterWhenAdded(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->RenamePrinterWhenAdded(printerInfo);
+}
+
+void TestQueryDiscoveredPrinterInfoById(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->QueryDiscoveredPrinterInfoById(printerId);
+}
+
+void TestCheckUserIdInEventType(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->CheckUserIdInEventType(type);
+}
+
 void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestChangeDefaultPrinterForDelete(data, size, dataProvider);
@@ -769,6 +956,30 @@ void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *data
     TestWriteEprinterPreference(data, size, dataProvider);
     TestWritePrinterPreference(data, size, dataProvider);
     TestReadPreferenceFromFile(data, size, dataProvider);
+    TestHandleExtensionConnectPrinter(data, size, dataProvider);
+    TestSendQueuePrintJob(data, size, dataProvider);
+    TestUpdatePrinterSystemData(data, size, dataProvider);
+    TestUnloadSystemAbility(data, size, dataProvider);
+    TestAddPrinterToDiscovery(data, size, dataProvider);
+    TestUpdatePrinterInDiscovery(data, size, dataProvider);
+    TestRemovePrinterFromDiscovery(data, size, dataProvider);
+    TestUpdatePrinterInSystem(data, size, dataProvider);
+    TestDeletePrinterFromUserData(data, size, dataProvider);
+    TestNotifyAppDeletePrinter(data, size, dataProvider);
+    TestAddVendorPrinterToDiscovery(data, size, dataProvider);
+    TestUpdateVendorPrinterToDiscovery(data, size, dataProvider);
+    TestRemoveVendorPrinterFromDiscovery(data, size, dataProvider);
+    TestAddVendorPrinterToCupsWithPpd(data, size, dataProvider);
+    TestAddVendorPrinterToCupsWithSpecificPpd(data, size, dataProvider);
+    TestRemoveVendorPrinterFromCups(data, size, dataProvider);
+    TestOnVendorStatusUpdate(data, size, dataProvider);
+    TestQueryVendorPrinterInfo(data, size, dataProvider);
+    TestHandlePrinterStateChangeRegister(data, size, dataProvider);
+    TestHandlePrinterChangeRegister(data, size, dataProvider);
+    TestUpdateAddedPrinterInCups(data, size, dataProvider);
+    TestRenamePrinterWhenAdded(data, size, dataProvider);
+    TestQueryDiscoveredPrinterInfoById(data, size, dataProvider);
+    TestCheckUserIdInEventType(data, size, dataProvider);
 }
 
 void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
