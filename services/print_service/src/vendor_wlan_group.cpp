@@ -275,7 +275,8 @@ std::string VendorWlanGroup::ExtractBsUniPrinterIdByPrinterInfo(const PrinterInf
     auto pos_start = uri.find_first_of(VENDOR_BSUNI_URI_START);
     auto pos_end = uri.find_last_of(VENDOR_BSUNI_URI_END);
     if (pos_start == std::string::npos || uri.length() <= pos_start + 1 ||
-        pos_start == std::string::npos || uri.length() <= pos_start + 1) {
+        pos_end == std::string::npos || uri.length() <= pos_end + 1 ||
+        pos_end - pos_start <= VENDOR_BSUNI_URI_START.length()) {
         return "";
     }
     return uri.substr(pos_start + VENDOR_BSUNI_URI_START.length(),
