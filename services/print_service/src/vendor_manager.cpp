@@ -371,8 +371,10 @@ bool VendorManager::OnPrinterPpdQueried(const std::string &vendorName, const std
 bool VendorManager::OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                            const PrinterVendorStatus &status)
 {
-    auto targetVendorName = IsWlanGroupDriver(printerId) ? VENDOR_WLAN_GROUP : vendorName;
-    std::string globalVendorName = GetGlobalVendorName(targetVendorName);
+    if (vendorName == VENDOR_BSUNI_DRIVER && wlanGroupDriver != nullptr) {
+        return wlanGroupDriver->OnPrinterStatusChanged(vendorName, printerId, status);
+    }
+    std::string globalVendorName = GetGlobalVendorName(vendorName);
     if (printServiceAbility != nullptr) {
         return printServiceAbility->OnVendorStatusUpdate(globalVendorName, printerId, status);
     }

@@ -38,6 +38,9 @@ public:
     void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
     bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                                      const std::string &ppdData) override;
+    bool MonitorPrinterStatus(const std::string &printerId, bool on) override;
+    bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
+                                const PrinterVendorStatus &status) override;
 
 private:
     bool IsBsunidriverSupport(const std::string &printerId);
@@ -46,6 +49,7 @@ private:
     void QueryBsUniPrinterIdByUuidPrinterId(std::string &bsUniPrinterId);
     void UpdateMappedPrinterId(const std::string &bsUniPrinterId, const std::string printerId);
     PrinterInfo ConvertPrinterInfoId(const PrinterInfo &priterInfo);
+    std::string QuerySourceVendorDriverById(const std::string &printerId);
 
 private:
     VendorManager* parentVendorManager = nullptr;
