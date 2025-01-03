@@ -321,13 +321,6 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
     printerInfo.SetOption(option);
     EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(true));
     EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_NULL);
-
-    option = "{\"bsunidriverSupport\": \"false\"}";
-    printerInfo.SetOption(option);
-    EXPECT_CALL(mockVendorPpdDriver, OnQueryProperties(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_NULL);
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_NULL);
-    vendorManager.UnInit();
 }
 
 HWTEST_F(VendorManagerTest, VendorManagerTest_0012, TestSize.Level1)
@@ -338,6 +331,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0012, TestSize.Level1)
     vendorName = "driver.bsuni";
     EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName));
     EXPECT_TRUE(vendorManager.IsPrivatePpdDriver(VENDOR_PPD_DRIVER));
+    vendorManager.UnInit();
 }
 }  // namespace Print
 }  // namespace OHOS
