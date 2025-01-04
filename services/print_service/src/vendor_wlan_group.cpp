@@ -106,16 +106,16 @@ bool VendorWlanGroup::OnQueryCapabilityByIp(const std::string &printerIp, const 
 
 int32_t VendorWlanGroup::OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo)
 {
-    if (vendorManager == nullptr) {
+    if (parentVendorManager == nullptr) {
         PRINT_HILOGE("VendorManager is null.");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    return vendorManager->AddPrinterToDiscovery(GetVendorName(), ConvertPrinterInfoId(printerInfo));
+    return parentVendorManager->AddPrinterToDiscovery(GetVendorName(), ConvertPrinterInfoId(printerInfo));
 }
 
 int32_t VendorWlanGroup::OnUpdatePrinterToDiscovery(const std::string &vendorName, const PrinterInfo &printerInfo)
 {
-    if (vendorManager == nullptr) {
+    if (parentVendorManager == nullptr) {
         PRINT_HILOGE("VendorManager is null.");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
@@ -123,31 +123,31 @@ int32_t VendorWlanGroup::OnUpdatePrinterToDiscovery(const std::string &vendorNam
         PRINT_HILOGI("OnUpdatePrinterToDiscovery PrinterAddedByIp");
         return parentVendorManager->UpdatePrinterToDiscovery(GetVendorName(), ConvertIpPrinterName(printerInfo));
     }
-    return vendorManager->UpdatePrinterToDiscovery(GetVendorName(), ConvertPrinterInfoId(printerInfo));
+    return parentVendorManager->UpdatePrinterToDiscovery(GetVendorName(), ConvertPrinterInfoId(printerInfo));
 }
 
 int32_t VendorWlanGroup::OnPrinterRemoved(const std::string &vendorName, const std::string &printerId)
 {
-    if (vendorManager == nullptr) {
+    if (parentVendorManager == nullptr) {
         PRINT_HILOGE("VendorManager is null.");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
     RemovePrinterVendorGroupById(printerId);
     std::string id(VendorManager::ExtractPrinterId(printerId));
     QueryBsUniPrinterIdByUuidPrinterId(id);
-    return vendorManager->RemovePrinterFromDiscovery(GetVendorName(), id);
+    return parentVendorManager->RemovePrinterFromDiscovery(GetVendorName(), id);
 }
 
 bool VendorWlanGroup::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri)
 {
-    if (vendorManager == nullptr) {
+    if (parentVendorManager == nullptr) {
         PRINT_HILOGE("VendorManager is null.");
         return false;
     }
     std::string printerId(VendorManager::ExtractPrinterId(globalPrinterIdOrIp));
     QueryBsUniPrinterIdByUuidPrinterId(printerId);
     printerId = GetGlobalPrinterId(printerId);
-    return vendorManager->IsConnectingPrinter(printerId, uri);
+    return parentVendorManager->IsConnectingPrinter(printerId, uri);
 }
 
 ConnectMethod VendorWlanGroup::GetConnectingMethod(const std::string &globalPrinterIdOrIp)
@@ -164,26 +164,26 @@ ConnectMethod VendorWlanGroup::GetConnectingMethod(const std::string &globalPrin
 
 void VendorWlanGroup::SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp)
 {
-    if (vendorManager == nullptr) {
+    if (parentVendorManager == nullptr) {
         PRINT_HILOGE("VendorManager is null.");
         return;
     }
     std::string printerId(VendorManager::ExtractPrinterId(globalPrinterIdOrIp));
     QueryBsUniPrinterIdByUuidPrinterId(printerId);
     printerId = GetGlobalPrinterId(printerId);
-    vendorManager->SetConnectingPrinter(method, printerId);
+    parentVendorManager->SetConnectingPrinter(method, printerId);
 }
 
 bool VendorWlanGroup::OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                                           const std::string &ppdData)
 {
-    if (vendorManager == nullptr) {
+    if (parentVendorManager == nullptr) {
         PRINT_HILOGE("VendorManager is null.");
         return false;
     }
     std::string id(printerId);
     QueryBsUniPrinterIdByUuidPrinterId(id);
-    return vendorManager->OnPrinterPpdQueried(GetVendorName(), id, ppdData);
+    return parentVendorManager->OnPrinterPpdQueried(GetVendorName(), id, ppdData);
 }
 
 
@@ -244,6 +244,16 @@ void VendorWlanGroup::RemovePrinterVendorGroupById(const std::string &printerId)
         PRINT_HILOGD("remove printer from vendor group list");
         printerVendorGroupList_.erase(printerId);
     }
+}
+
+std::string VendorWlanGroup::QuerySourceVendorDriverById(const std::string &printerId)
+{
+    auto iter = printerVendorGroupList_.find(printerId);
+    if (iter != printerVendorGroupList_.end()) {
+        return iter->second;
+    }
+    PRINT_HILOGE("query printer vendor driver failed");
+    return "";
 }
 
 std::string VendorWlanGroup::ConvertGroupGlobalPrinterId(const std::string &bothPrinterId)
@@ -322,6 +332,48 @@ std::string VendorWlanGroup::ExtractBsUniPrinterIdByPrinterInfo(const PrinterInf
         pos_end - pos_start <= VENDOR_BSUNI_URI_START.length()) {
         return "";
     }
-    return uri.substr(pos_start + VENDOR_BSUNI_URI_START.length(),
+    std::string printerId = uri.substr(pos_start + VENDOR_BSUNI_URI_START.length(),
         pos_end - pos_start - VENDOR_BSUNI_URI_START.length());
+        UpdateMappedPrinterId(printerId, printerInfo.GetPrinterId());
+    return printerId;
+}
+
+bool VendorWlanGroup::MonitorPrinterStatus(const std::string &printerId, bool on)
+{
+    if (parentVendorManager == nullptr) {
+        PRINT_HILOGE("VendorManager is null.");
+        return false;
+    }
+    if (QuerySourceVendorDriverById(printerId) == VENDOR_IPP_EVERYWHERE) {
+        auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
+        if (ippEverywhereDriver != nullptr) {
+            PRINT_HILOGI("start MonitorPrinterStatus by ippEverywhere");
+            return ippEverywhereDriver->MonitorPrinterStatus(printerId, on);
+        }
+    } else {
+        PrinterInfo printerInfo;
+        auto ret = parentVendorManager->QueryPrinterInfoByPrinterId(GetVendorName(), printerId, printerInfo);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("get printerInfo failed.");
+            return ret;
+        }
+        auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
+        if (bsuniDriver != nullptr) {
+            PRINT_HILOGI("start MonitorPrinterStatus by bsuni");
+            return bsuniDriver->MonitorPrinterStatus(ExtractBsUniPrinterIdByPrinterInfo(printerInfo), on);
+        }
+    }
+    return false;
+}
+
+bool VendorWlanGroup::OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
+                                             const PrinterVendorStatus &status)
+{
+    if (parentVendorManager == nullptr) {
+        PRINT_HILOGE("VendorManager is null.");
+        return false;
+    }
+    std::string id(printerId);
+    QueryBsUniPrinterIdByUuidPrinterId(id);
+    return parentVendorManager->OnPrinterStatusChanged(GetVendorName(), id, status);
 }

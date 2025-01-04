@@ -82,9 +82,9 @@ public:
     virtual bool OnQueryProperties(const std::string &printerId, const std::vector<std::string> &propertyKeys);
     virtual std::string GetVendorName() = 0;
     virtual int32_t OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo);
+    virtual bool MonitorPrinterStatus(const std::string &printerId, bool on);
 
     void UpdateAllPrinterStatus();
-    bool MonitorPrinterStatus(const std::string &printerId, bool on);
     std::shared_ptr<PrinterVendorStatus> GetMonitorVendorStatus(const std::string &printerId);
     std::string GetGlobalVendorName();
     std::string GetGlobalPrinterId(const std::string &printerId);
