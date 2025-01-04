@@ -121,7 +121,7 @@ int32_t VendorWlanGroup::OnUpdatePrinterToDiscovery(const std::string &vendorNam
     }
     if (CheckPrinterAddedByIp(printerInfo.GetPrinterId())) {
         PRINT_HILOGI("OnUpdatePrinterToDiscovery PrinterAddedByIp");
-        return vendorManager->UpdatePrinterToDiscovery(GetVendorName(), ConvertIpPrinterName(printerInfo));
+        return parentVendorManager->UpdatePrinterToDiscovery(GetVendorName(), ConvertIpPrinterName(printerInfo));
     }
     return vendorManager->UpdatePrinterToDiscovery(GetVendorName(), ConvertPrinterInfoId(printerInfo));
 }
@@ -152,14 +152,14 @@ bool VendorWlanGroup::IsConnectingPrinter(const std::string &globalPrinterIdOrIp
 
 ConnectMethod VendorWlanGroup::GetConnectingMethod(const std::string &globalPrinterIdOrIp)
 {
-    if (vendorManager == nullptr) {
+    if (parentVendorManager == nullptr) {
         PRINT_HILOGE("VendorManager is null.");
         return ID_AUTO;
     }
     std::string printerId(VendorManager::ExtractPrinterId(globalPrinterIdOrIp));
     QueryBsUniPrinterIdByUuidPrinterId(printerId);
     printerId = GetGlobalPrinterId(printerId);
-    return vendorManager->GetConnectingMethod(printerId);
+    return parentVendorManager->GetConnectingMethod(printerId);
 }
 
 void VendorWlanGroup::SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp)
@@ -267,7 +267,11 @@ void VendorWlanGroup::QueryBsUniPrinterIdByUuidPrinterId(std::string &bsUniPrint
 
 bool VendorWlanGroup::CheckPrinterAddedByIp(const std::string &printerId)
 {
-    ConnectMethod connectingMethod = vendorManager->GetConnectingMethod(printerId);
+    if (parentVendorManager == nullptr) {
+        PRINT_HILOGE("VendorManager is null.");
+        return false;
+    }
+    ConnectMethod connectingMethod = parentVendorManager->GetConnectingMethod(printerId);
     PRINT_HILOGI("CheckPrinterAddedByIp connectingMethod : %{public}d", connectingMethod);
     if (connectingMethod == IP_AUTO) {
         return true;
