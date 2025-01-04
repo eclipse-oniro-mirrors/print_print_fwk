@@ -39,6 +39,7 @@ public:
         const std::string &));
     MOCK_METHOD3(QueryPrinterInfoByPrinterId, int32_t (const std::string &, const std::string &, PrinterInfo &));
     MOCK_METHOD2(QueryPPDInformation, bool (const char *, std::vector<std::string> &));
+    MOCK_METHOD1(GetConnectingMethod, ConnectMethod (const std::string &));
 };
 }  // namespace Print
 }  // namespace OHOS

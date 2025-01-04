@@ -3444,6 +3444,7 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     printSystemData_.SaveCupsPrinterMap();
     SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
     SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
+    vendorManager.SetConnectingPrinter(ID_AUTO, "");
     printSystemData_.RemoveIpPrinterFromList(globalPrinterId);
     return true;
 }
