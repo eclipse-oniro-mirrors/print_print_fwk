@@ -367,7 +367,7 @@ bool VendorManager::OnPrinterPpdQueried(const std::string &vendorName, const std
         PRINT_HILOGW("not connecting");
         return false;
     }
-    if (GetConnectingMethod(printerId) == IP_AUTO &&
+    if (GetConnectingMethod(globalPrinterId) == IP_AUTO &&
         printServiceAbility->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdData)) {
         PRINT_HILOGI("AddIpPrinterToCupsWithPpd succeed");
         return true;

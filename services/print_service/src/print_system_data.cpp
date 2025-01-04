@@ -83,7 +83,7 @@ bool PrintSystemData::ConvertJsonToCupsPrinterInfo(nlohmann::json &object)
     if (object.contains("alias") && object["alias"].is_string()) {
         info.alias = object["alias"];
     }
-    if (object.contains("printerStatus") && object["printerStatus"].is_number)) {
+    if (object.contains("printerStatus") && object["printerStatus"].is_number()) {
         info.printerStatus = object["printerStatus"];
     }
     InsertCupsPrinter(id, info, true);

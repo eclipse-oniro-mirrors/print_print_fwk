@@ -99,7 +99,7 @@ private:
         std::string printerId, nlohmann::json &jsonObject, PrinterCapability &printerCapability);
     bool ParseUserListJsonV1(
         nlohmann::json &jsonObject, std::vector<int32_t> &allPrintUserList);
-    bool ConvertJsonToCupsPrinterInfo(nlohmann::json &jsonObject);
+    bool ConvertJsonToCupsPrinterInfo(nlohmann::json &object);
 
     template<typename T>
     bool ProcessJsonToCapabilityList(nlohmann::json &capsJson,
