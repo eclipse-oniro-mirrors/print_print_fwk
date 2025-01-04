@@ -273,7 +273,7 @@ int32_t VendorManager::UpdatePrinterToDiscovery(const std::string &vendorName, c
     auto targetVendorName = IsWlanGroupDriver(printerInfo.GetPrinterId()) ? VENDOR_WLAN_GROUP : vendorName;
     std::string globalVendorName = GetGlobalVendorName(targetVendorName);
     std::string printerId = printerInfo.GetPrinterId();
-    if (GetConnectingMethod(printerId) == IP_AUTO && IsConnectingPrinter(printer, "") &&
+    if (GetConnectingMethod(printerId) == IP_AUTO && IsConnectingPrinter(printerId, "") &&
         printServiceAbility->AddIpPrinterToSystemData(globalVendorName, printerInfo)) {
         PRINT_HILOGI("AddIpPrinterToSystemData succeed");
         return EXTENSION_ERROR_NONE;

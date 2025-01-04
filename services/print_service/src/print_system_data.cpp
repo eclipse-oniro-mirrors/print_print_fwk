@@ -42,7 +42,7 @@ bool PrintSystemData::ParsePrinterListJsonV1(nlohmann::json &jsonObject)
     return true;
 }
 
-bool PrintSystemData::ConvertJsonToCupsPrinterInfo(nlohmann::json &jsonObject)
+bool PrintSystemData::ConvertJsonToCupsPrinterInfo(nlohmann::json &object)
 {
     if (!object.contains("id") || !object["id"].is_string()) {
         PRINT_HILOGW("can not find id");

@@ -269,7 +269,7 @@ bool VendorWlanGroup::CheckPrinterAddedByIp(const std::string &printerId)
 {
     ConnectMethod connectingMethod = vendorManager->GetConnectingMethod(printerId);
     PRINT_HILOGI("CheckPrinterAddedByIp connectingMethod : %{public}d", connectingMethod);
-    if (connectingMethod = IP_AUTO) {
+    if (connectingMethod == IP_AUTO) {
         return true;
     }
     return false;
