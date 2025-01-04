@@ -43,4 +43,5 @@ sane_enable = true
 
 declare_args() {
   print_fwk_feature_bsuni_driver = false
+  print_fwk_feature_bsuni_ghostscript = false
 }
