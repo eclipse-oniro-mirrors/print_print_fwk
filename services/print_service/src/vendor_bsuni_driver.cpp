@@ -435,7 +435,7 @@ int32_t VendorBsuniDriver::OnPrinterCapabilityQueried(const Print_DiscoveryItem 
     std::string globalPrinterId = GetGlobalPrinterId(printerId);
     bool connecting = vendorManager->IsConnectingPrinter(globalPrinterId, printerUri);
     if (connecting) {
-        vendorManager->SetConnectingPrinter(ID_AUTO, globalPrinterId);
+        vendorManager->SetConnectingPrinter(vendorManager->GetConnectingMethod(printerId), globalPrinterId);
         PRINT_HILOGD("connecting %{public}s, query propertis", globalPrinterId.c_str());
         std::vector<std::string> keyList;
         keyList.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);

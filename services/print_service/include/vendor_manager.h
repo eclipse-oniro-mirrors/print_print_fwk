@@ -44,6 +44,9 @@ public:
     virtual std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &printerId) = 0;
     virtual int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) = 0;
     virtual bool QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds) = 0;
+    virtual bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) = 0;
+    virtual bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
+                                           const std::string &ppdData) = 0;
 };
 
 class VendorManager : public IPrinterVendorManager {
@@ -78,6 +81,7 @@ public:
     void StartStatusMonitor();
     void StopStatusMonitor();
     bool IsConnectingPrinter(const std::string &globalPrinterIdOrIP, const std::string &uri) override;
+    ConnectMethod GetConnectingMethod(const std::string &globalPrinterIdOrIp) override;
     void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIP) override;
     void ClearConnectingPrinter() override;
     bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) override;

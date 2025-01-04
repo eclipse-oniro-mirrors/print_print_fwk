@@ -64,6 +64,7 @@ public:
     virtual int32_t QueryPrinterInfoByPrinterId(const std::string &vendorName, const std::string &printerId,
         PrinterInfo &info) = 0;
     virtual bool QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds) = 0;
+    virtual ConnectMethod GetConnectingMethod(const std::string &id) = 0;
 };
 
 class VendorDriverBase {

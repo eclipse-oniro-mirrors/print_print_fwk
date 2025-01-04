@@ -34,47 +34,59 @@ bool PrintSystemData::ParsePrinterListJsonV1(nlohmann::json &jsonObject)
     }
     for (auto &element : jsonObject["printer_list"].items()) {
         nlohmann::json object = element.value();
-        if (!object.contains("id") || !object["id"].is_string()) {
-            PRINT_HILOGW("can not find id");
+        if (!ConvertJsonToCupsPrinterInfo(object)) {
+            PRINT_HILOGW("can not find necessary param");
             continue;
         }
-        std::string id = object["id"];
-        if (!object.contains("name") || !object["name"].is_string()) {
-            PRINT_HILOGW("can not find name");
-            continue;
-        }
-        std::string name = object["name"];
-        if (!object.contains("uri") || !object["uri"].is_string()) {
-            PRINT_HILOGW("can not find uri");
-            continue;
-        }
-        std::string uri = object["uri"];
-        if (!object.contains("maker") || !object["maker"].is_string()) {
-            PRINT_HILOGW("can not find maker");
-            continue;
-        }
-        std::string maker = object["maker"];
-        if (!object.contains("capability") || !object["capability"].is_object()) {
-            PRINT_HILOGW("can not find capability");
-            continue;
-        }
-        nlohmann::json capsJson = object["capability"];
-        PrinterCapability printerCapability;
-        if (!ConvertJsonToPrinterCapability(capsJson, printerCapability)) {
-            PRINT_HILOGW("convert json to printer capability failed");
-            continue;
-        }
-        printerCapability.Dump();
-        CupsPrinterInfo info;
-        info.name = name;
-        info.uri = uri;
-        info.maker = maker;
-        info.printerCapability = printerCapability;
-        if (object.contains("alias") && object["alias"].is_string()) {
-            info.alias = object["alias"];
-        }
-        InsertCupsPrinter(id, info, true);
     }
+    return true;
+}
+
+bool PrintSystemData::ConvertJsonToCupsPrinterInfo(nlohmann::json &object)
+{
+    if (!object.contains("id") || !object["id"].is_string()) {
+        PRINT_HILOGW("can not find id");
+        return false;
+    }
+    std::string id = object["id"];
+    if (!object.contains("name") || !object["name"].is_string()) {
+        PRINT_HILOGW("can not find name");
+        return false;
+    }
+    std::string name = object["name"];
+    if (!object.contains("uri") || !object["uri"].is_string()) {
+        PRINT_HILOGW("can not find uri");
+        return false;
+    }
+    std::string uri = object["uri"];
+    if (!object.contains("maker") || !object["maker"].is_string()) {
+        PRINT_HILOGW("can not find maker");
+        return false;
+    }
+    std::string maker = object["maker"];
+    if (!object.contains("capability") || !object["capability"].is_object()) {
+        PRINT_HILOGW("can not find capability");
+        return false;
+    }
+    nlohmann::json capsJson = object["capability"];
+    PrinterCapability printerCapability;
+    if (!ConvertJsonToPrinterCapability(capsJson, printerCapability)) {
+        PRINT_HILOGW("convert json to printer capability failed");
+        return false;
+    }
+    printerCapability.Dump();
+    CupsPrinterInfo info;
+    info.name = name;
+    info.uri = uri;
+    info.maker = maker;
+    info.printerCapability = printerCapability;
+    if (object.contains("alias") && object["alias"].is_string()) {
+        info.alias = object["alias"];
+    }
+    if (object.contains("printerStatus") && object["printerStatus"].is_number()) {
+        info.printerStatus = object["printerStatus"];
+    }
+    InsertCupsPrinter(id, info, true);
     return true;
 }
 
@@ -202,6 +214,9 @@ bool PrintSystemData::SaveCupsPrinterMap()
         printerJson["uri"] = info->uri;
         printerJson["maker"] = info->maker;
         printerJson["alias"] = info->alias;
+        if (QueryIpPrinterInfoById(printer.second) != nullptr) {
+            printerJson["printerStatus"] = info->printerStatus;
+        }
         nlohmann::json capsJson;
         ConvertPrinterCapabilityToJson(info->printerCapability, capsJson);
         printerJson["capability"] = capsJson;
@@ -855,6 +870,30 @@ void PrintSystemData::ClearDiscoveredPrinterList()
 std::map<std::string, std::shared_ptr<PrinterInfo>> PrintSystemData::GetDiscoveredPrinterInfo()
 {
     return discoveredPrinterInfoList_;
+}
+
+void PrintSystemData::AddIpPrinterToList(std::shared_ptr<PrinterInfo> printerInfo)
+{
+    std::lock_guard<std::mutex> lock(connectingIpPrinterListMutex);
+    if (printerInfo != nullptr) {
+        connectingIpPrinterInfoList_[printerInfo->GetPrinterId()] = printerInfo;
+    }
+}
+
+void PrintSystemData::RemoveIpPrinterFromList(const std::string &printerId)
+{
+    std::lock_guard<std::mutex> lock(connectingIpPrinterListMutex);
+    connectingIpPrinterInfoList_.erase(printerId);
+}
+
+std::shared_ptr<PrinterInfo> PrintSystemData::QueryIpPrinterInfoById(const std::string &printerId)
+{
+    std::lock_guard<std::mutex> lock(connectingIpPrinterListMutex);
+    auto printerIt = connectingIpPrinterInfoList_.find(printerId);
+    if (printerIt != connectingIpPrinterInfoList_.end()) {
+        return printerIt ->second;
+    }
+    return nullptr;
 }
 }  // namespace Print
 }  // namespace OHOS

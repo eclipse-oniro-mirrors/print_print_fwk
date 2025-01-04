@@ -272,6 +272,12 @@ int32_t VendorManager::UpdatePrinterToDiscovery(const std::string &vendorName, c
     }
     auto targetVendorName = IsWlanGroupDriver(printerInfo.GetPrinterId()) ? VENDOR_WLAN_GROUP : vendorName;
     std::string globalVendorName = GetGlobalVendorName(targetVendorName);
+    std::string printerId = printerInfo.GetPrinterId();
+    if (GetConnectingMethod(printerId) == IP_AUTO && IsConnectingPrinter(printerId, "") &&
+        printServiceAbility->AddIpPrinterToSystemData(globalVendorName, printerInfo)) {
+        PRINT_HILOGI("AddIpPrinterToSystemData succeed");
+        return EXTENSION_ERROR_NONE;
+    }
     if (!printServiceAbility->UpdateVendorPrinterToDiscovery(globalVendorName, printerInfo)) {
         PRINT_HILOGW("UpdatePrinterToDiscovery fail");
         return EXTENSION_ERROR_CALLBACK_FAIL;
@@ -279,6 +285,7 @@ int32_t VendorManager::UpdatePrinterToDiscovery(const std::string &vendorName, c
     PRINT_HILOGI("UpdatePrinterToDiscovery quit");
     return EXTENSION_ERROR_NONE;
 }
+
 int32_t VendorManager::RemovePrinterFromDiscovery(const std::string &vendorName, const std::string &printerId)
 {
     PRINT_HILOGI("RemovePrinterFromDiscovery enter");
@@ -359,6 +366,11 @@ bool VendorManager::OnPrinterPpdQueried(const std::string &vendorName, const std
     if (!IsConnectingPrinter(globalPrinterId, "")) {
         PRINT_HILOGW("not connecting");
         return false;
+    }
+    if (GetConnectingMethod(globalPrinterId) == IP_AUTO &&
+        printServiceAbility->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdData)) {
+        PRINT_HILOGI("AddIpPrinterToCupsWithPpd succeed");
+        return true;
     }
     if (!printServiceAbility->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdData)) {
         PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
@@ -501,10 +513,15 @@ bool VendorManager::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, 
     if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER) != std::string::npos && wlanGroupDriver != nullptr) {
         return wlanGroupDriver->IsConnectingPrinter(globalPrinterIdOrIp, uri);
     }
+    PRINT_HILOGI("IsConnectingPrinter globalPrinterIdOrIp: %{public}s, connectingPrinter: %{public}s",
+        globalPrinterIdOrIp.c_str(), connectingPrinter.c_str());
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     if (isConnecting && !connectingPrinter.empty()) {
         if (connectingMethod == ID_AUTO) {
             return globalPrinterIdOrIp == connectingPrinter;
+        } else if (connectingMethod == IP_AUTO) {
+            return (globalPrinterIdOrIp.find(connectingPrinter) != std::string::npos) ||
+                (connectingPrinter.find(globalPrinterIdOrIp) != std::string::npos);
         } else {
             return uri.find(connectingPrinter) != std::string::npos;
         }
@@ -584,4 +601,16 @@ bool VendorManager::IsWlanGroupDriver(const std::string &bothPrinterId)
         return false;
     }
     return wlanGroupDriver->IsGroupDriver(bothPrinterId);
+}
+
+ConnectMethod VendorManager::GetConnectingMethod(const std::string &globalPrinterIdOrIp)
+{
+    if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER) != std::string::npos && wlanGroupDriver != nullptr) {
+        return wlanGroupDriver->GetConnectingMethod(globalPrinterIdOrIp);
+    }
+    if (!IsConnectingPrinter(globalPrinterIdOrIp, "")) {
+        PRINT_HILOGW("not connecting");
+        return ID_AUTO;
+    }
+    return connectingMethod;
 }

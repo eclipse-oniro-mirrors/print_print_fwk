@@ -69,6 +69,10 @@ public:
     size_t GetDiscoveredPrinterCount();
     void ClearDiscoveredPrinterList();
 
+    void AddIpPrinterToList(std::shared_ptr<PrinterInfo> printerInfo);
+    void RemoveIpPrinterFromList(const std::string &printerId);
+    std::shared_ptr<PrinterInfo> QueryIpPrinterInfoById(const std::string &printerId);
+
 private:
     bool ParsePrinterListJsonV1(nlohmann::json& jsonObject);
     bool GetJsonObjectFromFile(nlohmann::json &jsonObject, const std::string &fileName);
@@ -95,6 +99,7 @@ private:
         std::string printerId, nlohmann::json &jsonObject, PrinterCapability &printerCapability);
     bool ParseUserListJsonV1(
         nlohmann::json &jsonObject, std::vector<int32_t> &allPrintUserList);
+    bool ConvertJsonToCupsPrinterInfo(nlohmann::json &object);
 
     template<typename T>
     bool ProcessJsonToCapabilityList(nlohmann::json &capsJson,
@@ -134,7 +139,9 @@ private:
     std::map<uint32_t, std::string> addedPrinterOrderList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> addedPrinterInfoList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> discoveredPrinterInfoList_;
+    std::map<std::string, std::shared_ptr<PrinterInfo>> connectingIpPrinterInfoList_;
     std::mutex discoveredListMutex;
+    std::mutex connectingIpPrinterListMutex;
 };
 
 }  // namespace Print

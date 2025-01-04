@@ -35,6 +35,7 @@ public:
     std::string ConvertGroupGlobalPrinterId(const std::string &bothPrinterId) override;
     int32_t OnUpdatePrinterToDiscovery(const std::string &vendorName, const PrinterInfo &printerInfo) override;
     bool IsConnectingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) override;
+    ConnectMethod GetConnectingMethod(const std::string &globalPrinterIdOrIp) override;
     void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
     bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                                      const std::string &ppdData) override;
@@ -49,6 +50,8 @@ private:
     void QueryBsUniPrinterIdByUuidPrinterId(std::string &bsUniPrinterId);
     void UpdateMappedPrinterId(const std::string &bsUniPrinterId, const std::string printerId);
     PrinterInfo ConvertPrinterInfoId(const PrinterInfo &priterInfo);
+    bool CheckPrinterAddedByIp(const std::string &printerId);
+    PrinterInfo ConvertIpPrinterName(const PrinterInfo &printerInfo);
     std::string QuerySourceVendorDriverById(const std::string &printerId);
 
 private:

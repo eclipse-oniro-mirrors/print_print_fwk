@@ -30,6 +30,7 @@ public:
     virtual bool ConvertGroupDriver(std::string &printerId, std::string &vendorName) = 0;
     virtual int32_t OnUpdatePrinterToDiscovery(const std::string &vendorName, const PrinterInfo &printerInfo) = 0;
     virtual bool IsConnectingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) = 0;
+    virtual ConnectMethod GetConnectingMethod(const std::string &globalPrinterIdOrIp) = 0;
     virtual void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) = 0;
     virtual bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                                      const std::string &ppdData) = 0;
