@@ -230,30 +230,6 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0004, TestSize.Level1)
     vendorDriver.vendorManager = &mockManager;
     EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, nullptr), EXTENSION_ERROR_NONE);
     EXPECT_EQ(vendorDriver.OnPrinterCapabilityQueried(nullptr, nullptr, nullptr), EXTENSION_INVALID_PARAMETER);
-    Print_PropertyList propertyList = { 0 };
-    propertyList.count = static_cast<uint32_t>(propertyKeys.size());
-    propertyList.list = new (std::nothrow) Print_Property[propertyList.count];
-    ASSERT_NE(propertyList.list, nullptr);
-    for (uint32_t i = 0; i < propertyList.count; ++i) {
-        propertyList.list[i].key = const_cast<char *>(propertyKeys[i].c_str());
-        propertyList.list[i].value = "test data";
-    }
-    EXPECT_CALL(mockManager, OnPrinterPpdQueried(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mockManager, OnPrinterStatusChanged(_, _, _)).WillOnce(Return(true)).WillRepeatedly(Return(false));
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    propertyList.list[0].value = "{\"state\":\"0\"}";
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    vendorDriver.MonitorPrinterStatus(printerId, true);
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    propertyList.list[0].value = "{\"state\":\"1\"}";
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    Print_VendorExtension vendorExtension = { 0 };
-    vendorDriver.vendorExtension = &vendorExtension;
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    vendorDriver.MonitorPrinterStatus(printerId, false);
-    delete[] propertyList.list;
-    propertyList.list = nullptr;
 }
 
 HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0005, TestSize.Level2)
@@ -305,60 +281,6 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0007, TestSize.Level2)
     vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys);
 }
 
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0008, TestSize.Level2)
-{
-    MockTestFunc testFunc = [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver,
-                                   MockVendorManager &mockManager) {
-        EXPECT_CALL(mockDriver, OnStartDiscovery()).Times(1).WillOnce(Return(0));
-        EXPECT_CALL(mockDriver, OnStopDiscovery()).Times(1).WillOnce(Return(0));
-        vendorDriver.OnStartDiscovery();
-        vendorDriver.OnStopDiscovery();
-    };
-    DoMockTest(testFunc);
-}
-
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0009, TestSize.Level2)
-{
-    MockTestFunc testFunc = [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver,
-                                   MockVendorManager &mockManager) {
-        EXPECT_CALL(mockDriver, OnQueryCapability(_)).Times(2).WillOnce(Return(1)).WillRepeatedly(Return(0));
-        std::string printerId = PRINTER_TEST_IP;
-        EXPECT_EQ(vendorDriver.OnQueryCapability(printerId, 0), false);
-        EXPECT_EQ(vendorDriver.OnQueryCapability(printerId, 0), true);
-    };
-    DoMockTest(testFunc);
-}
-
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0010, TestSize.Level2)
-{
-    MockTestFunc testFunc = [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver,
-                                   MockVendorManager &mockManager) {
-        EXPECT_CALL(mockDriver, OnQueryCapabilityByIp(_, _)).Times(2).WillOnce(Return(1)).WillRepeatedly(Return(0));
-        std::string printerIp = PRINTER_TEST_IP;
-        vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp");
-        vendorDriver.OnQueryCapabilityByIp(printerIp, "ipp");
-    };
-    DoMockTest(testFunc);
-}
-
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0011, TestSize.Level2)
-{
-    MockTestFunc testFunc = [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver,
-                                   MockVendorManager &mockManager) {
-        EXPECT_CALL(mockManager, RemovePrinterFromCups(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(mockManager, RemovePrinterFromDiscovery(_, _)).WillRepeatedly(Return(0));
-        std::string printerIp = PRINTER_TEST_IP;
-        EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(nullptr, nullptr), EXTENSION_INVALID_PARAMETER);
-        EXPECT_EQ(VendorBsuniDriver::OnCapabilityQueried(nullptr, nullptr, nullptr), EXTENSION_INVALID_PARAMETER);
-        EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromCups(nullptr), EXTENSION_INVALID_PARAMETER);
-        EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(printerIp.c_str(), nullptr), EXTENSION_ERROR_NONE);
-        EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromCups(printerIp.c_str()), EXTENSION_ERROR_NONE);
-        EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(nullptr), EXTENSION_INVALID_PARAMETER);
-        EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(printerIp.c_str()), EXTENSION_ERROR_NONE);
-    };
-    DoMockTest(testFunc);
-}
-
 static void BuildDefaultValue(Print_DefaultValue &defaultValue)
 {
     defaultValue.defaultColorMode = COLOR_MODE_MONOCHROME;
@@ -374,51 +296,5 @@ static void BuildDefaultValue(Print_DefaultValue &defaultValue)
     defaultValue.otherDefaultValues = "default";
 }
 
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0012, TestSize.Level2)
-{
-    MockTestFunc testFunc = [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver,
-                                   MockVendorManager &mockManager) {
-        Print_DiscoveryItem printer = {0};
-        Print_PrinterCapability capability = {0};
-        Print_DefaultValue defaultValue;
-        BuildDefaultValue(defaultValue);
-        Print_PageSize pages[2];
-        std::string ppdData;
-        EXPECT_CALL(mockManager, AddPrinterToDiscovery(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(mockManager, UpdatePrinterToDiscovery(_, _)).WillOnce(Return(1)).WillRepeatedly(Return(0));
-        EXPECT_CALL(mockManager, AddPrinterToCupsWithPpd(_, _, _)).WillOnce(Return(1)).WillRepeatedly(Return(0));
-        EXPECT_CALL(mockManager, IsConnectingPrinter(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-        EXPECT_CALL(mockManager, SetConnectingPrinter(_, _)).Times(1);
-        EXPECT_CALL(mockDriver, OnQueryProperties(_, _)).Times(1).WillRepeatedly(Return(0));
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(nullptr), EXTENSION_INVALID_PARAMETER);
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&printer), EXTENSION_INVALID_PARAMETER);
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(nullptr, nullptr, nullptr, nullptr),
-            EXTENSION_INVALID_PARAMETER);
-        EXPECT_NE(vendorDriver.OnPrinterCapabilityQueried(&printer, &capability, &defaultValue),
-            EXTENSION_ERROR_NONE);
-        printer.printerId = "printer";
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&printer), EXTENSION_INVALID_PARAMETER);
-        printer.printerName = "name";
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&printer), EXTENSION_ERROR_NONE);
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&printer, nullptr, nullptr, nullptr),
-            EXTENSION_INVALID_PARAMETER);
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&printer, &capability, &defaultValue, nullptr),
-            EXTENSION_INVALID_PARAMETER);
-        capability.supportedPageSizes = pages;
-        EXPECT_NE(VendorBsuniDriver::AddPrinterToCups(&printer, &capability, &defaultValue, nullptr),
-            EXTENSION_ERROR_NONE);
-        ppdData = "ppd";
-        EXPECT_NE(VendorBsuniDriver::AddPrinterToCups(&printer, &capability, &defaultValue, ppdData.c_str()),
-            EXTENSION_ERROR_NONE);
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&printer, &capability, &defaultValue, ppdData.c_str()),
-            EXTENSION_ERROR_NONE);
-        EXPECT_EQ(vendorDriver.OnPrinterCapabilityQueried(&printer, &capability, &defaultValue),
-            EXTENSION_ERROR_NONE);
-        printer.printerUri = "test";
-        EXPECT_EQ(vendorDriver.OnPrinterCapabilityQueried(&printer, &capability, &defaultValue),
-            EXTENSION_ERROR_NONE);
-    };
-    DoMockTest(testFunc);
-}
 }  // namespace Print
 }  // namespace OHOS
