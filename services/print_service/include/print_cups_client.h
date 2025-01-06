@@ -80,6 +80,7 @@ public:
 
     int32_t InitCupsResources();
     void StopCupsdService();
+    bool IsCupsServerAlive();
     void QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds);
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);
@@ -144,7 +145,6 @@ private:
     std::string GetMedieSize(const PrintJob &jobInfo);
     std::string GetDulpexString(uint32_t duplexCode);
     void DumpJobParameters(JobParameters* jobParams);
-    bool IsCupsServerAlive();
     bool IsPrinterExist(const char *printerUri, const char *printerName, const char *ppdName);
 
     void ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
