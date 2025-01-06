@@ -1729,6 +1729,10 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     auto printerId = jobIt->second->GetPrinterId();
     if (state == PRINT_JOB_BLOCKED) {
         ReportHisysEvent(jobIt->second, printerId, subState);
+        if (subState == PRINT_JOB_BLOCKED_OFFLINE) {
+            PRINT_HILOGI("erase offline state job from printerJobMap");
+            printerJobMap_[printerId].erase(jobId);
+        }
     }
     if (state == PRINT_JOB_COMPLETED) {
         if (jobInQueue) {
@@ -1736,16 +1740,7 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
             userData->queuedJobList_.erase(jobId);
             queuedJobList_.erase(jobId);
         }
-        auto iter = printerJobMap_.find(printerId);
-        if (iter == printerJobMap_.end() || iter->second.empty()) {
-            auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
-            if (printerInfo != nullptr) {
-                printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-                printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
-                SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-                SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-            }
-        }
+        ReportPrinterIdle(printerId);
         if (IsQueuedJobListEmpty(jobId)) {
             ReportCompletedPrint(printerId);
         }
@@ -1753,6 +1748,20 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     }
     PRINT_HILOGD("CheckAndSendQueuePrintJob end.");
     return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::ReportPrinterIdle(const std::string &printerId)
+{
+    auto iter = printerJobMap_.find(printerId);
+    if (iter == printerJobMap_.end() || iter->second.empty()) {
+        auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+        if (printerInfo != nullptr) {
+            printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
+            printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
+            SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+            SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        }
+    }
 }
 
 bool PrintServiceAbility::IsQueuedJobListEmpty(const std::string &jobId)
@@ -3384,7 +3393,7 @@ bool PrintServiceAbility::AddIpPrinterToSystemData(const std::string &globalVend
 {
     PRINT_HILOGI("AddIpPrinterToSystemData");
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, info.GetPrinterId());
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    auto printerInfo = printSystemData_.QueryIpPrinterInfoById(globalPrinterId);
     if (printerInfo == nullptr) {
         PRINT_HILOGI("new printer, add it");
         printerInfo = std::make_shared<PrinterInfo>(info);
@@ -3406,7 +3415,7 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     const std::string &printerId, const std::string &ppdData)
 {
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
+    auto printerInfo = printSystemData_.QueryIpPrinterInfoById(globalPrinterId);
     if (printerInfo == nullptr) {
         PRINT_HILOGW("printerInfo is null");
         return false;
