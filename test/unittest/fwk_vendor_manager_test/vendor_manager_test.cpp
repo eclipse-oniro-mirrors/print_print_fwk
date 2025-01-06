@@ -169,6 +169,8 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0005, TestSize.Level2)
     EXPECT_TRUE(vendorManager.IsConnectingPrinter(globalPrinterId, ""));
     vendorManager.SetConnectingPrinter(ConnectMethod::IP_AUTO, printerId);
     EXPECT_FALSE(vendorManager.IsConnectingPrinter(globalPrinterId, ""));
+    vendorManager.SetConnectingPrinter(ConnectMethod::IP_IPP, printerId);
+    EXPECT_FALSE(vendorManager.IsConnectingPrinter(globalPrinterId, ""));
     EXPECT_TRUE(vendorManager.IsConnectingPrinter(globalPrinterId, printerId));
     vendorManager.UnInit();
 }
@@ -320,7 +322,8 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
     std::string option = "{\"bsunidriverSupport\": \"true\"}";
     printerInfo.SetOption(option);
     EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(true));
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_NULL);
+    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
+    vendorManager.UnInit();
 }
 
 HWTEST_F(VendorManagerTest, VendorManagerTest_0012, TestSize.Level1)
@@ -331,7 +334,6 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0012, TestSize.Level1)
     vendorName = "driver.bsuni";
     EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName));
     EXPECT_TRUE(vendorManager.IsPrivatePpdDriver(VENDOR_PPD_DRIVER));
-    vendorManager.UnInit();
 }
 }  // namespace Print
 }  // namespace OHOS
