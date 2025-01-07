@@ -419,10 +419,16 @@ int32_t PrintCupsClient::InitCupsResources()
             CopyDirectory(array[i][INDEX_ZERO].c_str(), array[i][INDEX_ONE].c_str());
         }
     }
+    const std::string driverDir = "/system/bin/uni_print_driver";
+    std::string srcDir = driverDir + "/filter";
     std::string dstDir = CUPS_ROOT_DIR + "/serverbin/filter";
-    SymlinkDirectory("/system/bin/uni_print_driver/filter/", dstDir.c_str());
+    SymlinkDirectory(srcDir.c_str(), dstDir.c_str());
+    srcDir = driverDir + "/backend";
     dstDir = CUPS_ROOT_DIR + "/serverbin/backend";
-    SymlinkDirectory("/system/bin/uni_print_driver/backend/", dstDir.c_str());
+    SymlinkDirectory(srcDir.c_str(), dstDir.c_str());
+    srcDir = driverDir + "/backend/ipp";
+    dstDir = CUPS_ROOT_DIR + "/serverbin/backend/http";
+    SymlinkFile(srcDir, dstDir);
     return StartCupsdService();
 }
 
