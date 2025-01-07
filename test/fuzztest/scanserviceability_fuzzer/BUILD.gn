@@ -51,6 +51,7 @@ ohos_fuzztest("ScanServiceAbilityFuzzTest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "backends:sane",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
@@ -73,11 +74,6 @@ ohos_fuzztest("ScanServiceAbilityFuzzTest") {
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",
   ]
-
-  if (sane_enable) {
-    external_deps += [ "backends:sane" ]
-    cflags_cc = [ "-DSANE_ENABLE" ]
-  }
 
   if (security_guard_enabled) {
     external_deps += [

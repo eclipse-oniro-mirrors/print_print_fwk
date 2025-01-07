@@ -28,6 +28,9 @@ config("scan_service_config") {
 
 ohos_shared_library("scan_service") {
   sources = [
+    "src/sane_manager_client.cpp",
+    "src/sane_sa_death_recipient.cpp",
+    "src/sane_service_load_callback.cpp",
     "src/scan_callback_proxy.cpp",
     "src/scan_event_subscriber.cpp",
     "src/scan_mdns_service.cpp",
@@ -55,6 +58,7 @@ ohos_shared_library("scan_service") {
   ]
 
   deps = [
+    "${print_path}/frameworks/ISaneBackends:sane_backends",
     "${print_path}/frameworks/helper/scan_helper:scan_helper",
     "${print_path}/frameworks/innerkitsimpl/scan_impl:scan_client",
   ]
@@ -70,6 +74,7 @@ ohos_shared_library("scan_service") {
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "access_token:libaccesstoken_sdk",
+    "backends:sane",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "cJSON:cjson",
@@ -90,11 +95,6 @@ ohos_shared_library("scan_service") {
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",
   ]
-
-  if (sane_enable) {
-    external_deps += [ "backends:sane" ]
-    cflags_cc += [ "-DSANE_ENABLE" ]
-  }
 
   if (build_variant == "user") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]

@@ -49,6 +49,11 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "scan_system_data.h"
+#include "sane_manager_client.h"
+#include "sane_option_descriptor.h"
+#include "sane_device.h"
+#include "sane_control_param.h"
+#include "sane_picture_data.h"
 
 namespace OHOS::Scan {
 namespace {
@@ -81,20 +86,14 @@ using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
 using SteadyTimePoint = std::chrono::steady_clock::time_point;
 
-constexpr int ONE_MB = 1024 * 1024; // default buffersize 1MB
+constexpr int ONE_KB = 1024; // default buffersize 1KB
 constexpr int SCAN_PROGRESS_100 = 100;
-#ifdef SANE_ENABLE
 constexpr int SCAN_PROGRESS_10 = 10;
 constexpr int SCAN_PROGRESS_19 = 19;
 constexpr int SCAN_PROGRESS_80 = 80;
-#endif
 constexpr int JPEG_QUALITY_SEVENTY_FIVE = 75;
 constexpr int CHANNEL_ONE = 1;
 constexpr int CHANNEL_THREE = 3;
-#ifdef SANE_ENABLE
-constexpr int MAX_PICTURE_DPI = 3000;
-constexpr int MAX_SANE_VALUE_LEN = 2000;
-#endif
 const int64_t INIT_INTERVAL = 5000L;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t UNLOAD_SYSTEMABILITY_DELAY = 1000 * 30;
@@ -103,9 +102,6 @@ constexpr int32_t START_USER_ID = 100;
 constexpr int32_t MAX_USER_ID = 1099;
 
 static int32_t g_scannerState = SCANNER_READY;
-#ifdef SANE_ENABLE
-static bool g_hasOpenScannerFaild = false;
-#endif
 static bool g_hasIoFaild = false;
 static bool g_isJpegWriteSuccess = false;
 static const std::string PERMISSION_NAME_SCAN = "ohos.permission.SCAN";
@@ -138,41 +134,9 @@ ScanServiceAbility::ScanServiceAbility(int32_t systemAbilityId, bool runOnCreate
     : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START),
     currentJobId_(SCAN_CONSTRAINT_NONE), currentUseScannerUserId_(INVALID_USER_ID)
 {
-    buffer_size = ONE_MB;
+    constexpr int32_t oneHundred = 100;
+    buffer_size = ONE_KB * oneHundred;
     saneReadBuf = static_cast<uint8_t *>(malloc(buffer_size));
-#ifdef SANE_ENABLE
-    getSingleFrameFDExe = [=](SANE_Handle scannerHandle, uint32_t fd) {
-            int32_t totalReadSize = 0;
-            int32_t curReadSize = 0;
-            uint8_t *buffer = static_cast<uint8_t *>(malloc(buffer_size));
-            if (!buffer) {
-                SCAN_HILOGE("malloc memory for buffer failed!!!");
-                SendGetFrameResEvent(false, totalReadSize);
-                return;
-            }
-            SANE_Status status = SANE_STATUS_GOOD;
-            while (true) {
-                status = sane_read(scannerHandle, buffer, buffer_size, &curReadSize);
-                if (status == SANE_STATUS_EOF) {
-                    SCAN_HILOGD("Totally read %{public}d bytes of frame data", totalReadSize);
-                    SendGetFrameResEvent(true, totalReadSize);
-                    break;
-                }
-                if (status != SANE_STATUS_GOOD) {
-                    SCAN_HILOGE("sane_read failed, reason: [%{public}s]", sane_strstatus(status));
-                    g_scannerState = SCANNER_READY;
-                    SendGetFrameResEvent(false, totalReadSize);
-                    break;
-                }
-                write(fd, buffer, curReadSize);
-                totalReadSize += curReadSize;
-                SCAN_HILOGD("sane_read success, current read: %{public}d Bytes, already read %{public}d Bytes",
-                    curReadSize, totalReadSize);
-            }
-            free(buffer);
-            buffer = nullptr;
-    };
-#endif
     cinfoPtr = new (std::nothrow) jpeg_compress_struct();
     if (cinfoPtr == nullptr) {
         SCAN_HILOGE("cinfoPtr allocated failed");
@@ -275,6 +239,9 @@ void ScanServiceAbility::UnloadSystemAbility()
             SCAN_HILOGW("appCount is not equal to zerro");
             return;
         }
+        this->ExitScan();
+        SaneManagerClient::GetInstance()->UnloadSystemAbility();
+        ScanMdnsService::OnStopDiscoverService();
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {
             SCAN_HILOGE("get samgr failed");
@@ -285,25 +252,10 @@ void ScanServiceAbility::UnloadSystemAbility()
             SCAN_HILOGE("unload system ability failed");
             return;
         }
-        this->ExitScan();
-        ScanMdnsService::OnStopDiscoverService();
         SCAN_HILOGI("unload system ability successfully");
     };
     serviceHandler_->PostTask(unloadTask, UNLOAD_SYSTEMABILITY_DELAY);
 }
-
-#ifdef SANE_ENABLE
-SANE_Handle ScanServiceAbility::GetScanHandle(const std::string &scannerId)
-{
-    auto scannerIt = scannerHandleList_.find(scannerId);
-    if (scannerIt == scannerHandleList_.end()) {
-        SCAN_HILOGE("ScannerId: [%{public}s] is not openned!!!", scannerId.c_str());
-        return nullptr;
-    }
-
-    return scannerHandleList_[scannerId];
-}
-#endif
 
 int32_t ScanServiceAbility::InitScan(int32_t &scanVersion)
 {
@@ -314,13 +266,11 @@ int32_t ScanServiceAbility::InitScan(int32_t &scanVersion)
     }
     ExitScan();
     SCAN_HILOGI("ScanServiceAbility InitScan start");
-#ifdef SANE_ENABLE
-    SANE_Status status = sane_init(&scanVersion, nullptr);
+    SaneStatus status = SaneManagerClient::GetInstance()->SaneInit();
     if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_init failed, reason: [%{public}s]", sane_strstatus(status));
+        SCAN_HILOGE("SaneInit failed, status: [%{public}u]", status);
         return ScanUtil::ConvertErro(status);
     }
-#endif
     DelayedSingleton<ScanUsbManager>::GetInstance()->Init();
     ScanSystemData::GetInstance().Init();
     ScanMdnsService::OnStartDiscoverService();
@@ -337,14 +287,12 @@ int32_t ScanServiceAbility::ExitScan()
     }
     SCAN_HILOGI("ScanServiceAbility ExitScan start");
     std::lock_guard<std::mutex> autoLock(lock_);
-#ifdef SANE_ENABLE
-    for (const auto& scannerHandle : scannerHandleList_) {
-        sane_cancel(scannerHandle.second);
-        sane_close(scannerHandle.second);
+    for (const auto& scannerId : openedScannerList_) {
+        SaneManagerClient::GetInstance()->SaneCancel(scannerId);
+        SaneManagerClient::GetInstance()->SaneClose(scannerId);
     }
-    scannerHandleList_.clear();
-    sane_exit();
-#endif
+    openedScannerList_.clear();
+    SaneManagerClient::GetInstance()->SaneExit();
     g_scannerState = SCANNER_READY;
     std::queue<int32_t> empty;
     scanQueue.swap(empty);
@@ -363,7 +311,7 @@ int32_t ScanServiceAbility::ExitScan()
     return E_SCAN_NONE;
 }
 
-int32_t ScanServiceAbility::ReInitScan(int32_t &scanVersion)
+int32_t ScanServiceAbility::ReInitScan()
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
@@ -371,26 +319,19 @@ int32_t ScanServiceAbility::ReInitScan(int32_t &scanVersion)
         return E_SCAN_NO_PERMISSION;
     }
     SCAN_HILOGD("ScanServiceAbility ReInitScan start");
-#ifdef SANE_ENABLE
-    for (const auto& scannerHandle : scannerHandleList_) {
-        sane_cancel(scannerHandle.second);
-        sane_close(scannerHandle.second);
-    }
-    scannerHandleList_.clear();
-    sane_exit();
+    SaneManagerClient::GetInstance()->SaneExit();
+    openedScannerList_.clear();
     g_scannerState = SCANNER_READY;
     std::queue<int32_t> empty;
     scanQueue.swap(empty);
     scanTaskMap.clear();
-
-    SANE_Status status = sane_init(&scanVersion, nullptr);
+    SaneStatus status = SaneManagerClient::GetInstance()->SaneInit();
     if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("ReInitScan sane_init failed, reason: [%{public}s]", sane_strstatus(status));
+        SCAN_HILOGE("SaneInit failed, status: [%{public}u]", status);
         return ScanUtil::ConvertErro(status);
     }
-#endif
+
     DelayedSingleton<ScanUsbManager>::GetInstance()->Init();
-    SCAN_HILOGD("ScanServiceAbility ReInitScan end, scanVersion = [%{public}d]", scanVersion);
     return E_SCAN_NONE;
 }
 
@@ -546,60 +487,27 @@ void ScanServiceAbility::AddFoundTcpScanner(ScanDeviceInfo &info)
     SCAN_HILOGI("AddFoundTcpScanner end: model:[%{public}s]", info.model.c_str());
 }
 
-#ifdef SANE_ENABLE
-bool ScanServiceAbility::SetScannerInfo(const SANE_Device** &currentDevice, ScanDeviceInfo &info)
-{
-    SCAN_HILOGI("SetScannerInfo start.");
-    const std::string nullString = "";
-    if ((*currentDevice)->name != nullptr && (*currentDevice)->name != nullString) {
-        info.deviceId = (*currentDevice)->name;
-    } else {
-        SCAN_HILOGE("SaneGetScanner current_device's name is null.");
-        return false;
-    }
-    if ((*currentDevice)->vendor != nullptr) {
-        info.manufacturer = (*currentDevice)->vendor;
-    }
-    if ((*currentDevice)->model != nullptr) {
-        info.model = (*currentDevice)->model;
-    }
-    if ((*currentDevice)->type != nullptr) {
-        info.deviceType = (*currentDevice)->type;
-    }
-#ifdef DEBUG_ENABLE
-    SCAN_HILOGD("SetScannerInfo deviceId:[%{public}s] manufacturer:[%{public}s]"
-                "model:[%{public}s] deviceType:[%{public}s]",
-                info.deviceId.c_str(), info.manufacturer.c_str(), info.model.c_str(), info.deviceType.c_str());
-#endif
-    SCAN_HILOGI("SetScannerInfo end.");
-    return true;
-}
-#endif
-
-#ifdef SANE_ENABLE
 void ScanServiceAbility::SaneGetScanner()
 {
-    const SANE_Device **deviceList;
-    SANE_Status devicesStatus = SANE_STATUS_GOOD;
     std::lock_guard<std::mutex> autoLock(lock_);
-    {
-        std::lock_guard<std::mutex> autoLock(clearMapLock_);
-        saneGetTcpDeviceInfoMap.clear();
-        saneGetUsbDeviceInfoMap.clear();
-    }
+    clearMapLock_.lock();
+    saneGetTcpDeviceInfoMap.clear();
+    saneGetUsbDeviceInfoMap.clear();
+    clearMapLock_.unlock();
     g_scannerState = SCANNER_SEARCHING;
-    devicesStatus = sane_get_devices(&deviceList, SANE_FALSE);
-    if (devicesStatus != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_get_devices failed, reason: [%{public}s]", sane_strstatus(devicesStatus));
+    std::vector<SaneDevice> deviceInfos;
+    SaneStatus status = SaneManagerClient::GetInstance()->SaneGetDevices(deviceInfos);
+    if (status != SANE_STATUS_GOOD) {
+        SCAN_HILOGE("SaneGetDevices failed, ret: [%{public}u]", status);
         g_scannerState = SCANNER_READY;
         return;
     }
-    for (const SANE_Device **currentDevice = deviceList; *currentDevice != nullptr; ++currentDevice) {
+    for (const auto& device: deviceInfos) {
         ScanDeviceInfo info;
-        if (!SetScannerInfo(currentDevice, info)) {
-            SCAN_HILOGE("SaneGetScanner SetScannerInfo failed");
-            continue;
-        }
+        info.deviceId = device.name_;
+        info.manufacturer = device.vendor_;
+        info.model = device.model_;
+        info.deviceType = device.type_;
         SetScannerSerialNumber(info);
         if (info.discoverMode == "USB") {
             SCAN_HILOGI("SaneGetScanner AddFoundUsbScanner model:[%{public}s]", info.model.c_str());
@@ -614,16 +522,15 @@ void ScanServiceAbility::SaneGetScanner()
     clearMapLock_.lock();
     for (auto &t : saneGetUsbDeviceInfoMap) {
         SendDeviceInfo(t.second, SCAN_DEVICE_FOUND);
-        deviceInfos.emplace_back(t.second);
+        deviceInfos_.emplace_back(t.second);
     }
     for (auto &t : saneGetTcpDeviceInfoMap) {
         SendDeviceInfo(t.second, SCAN_DEVICE_FOUND);
-        deviceInfos.emplace_back(t.second);
+        deviceInfos_.emplace_back(t.second);
     }
     clearMapLock_.unlock();
     g_scannerState = SCANNER_READY;
 }
-#endif
 
 int32_t ScanServiceAbility::GetScannerList()
 {
@@ -640,13 +547,11 @@ int32_t ScanServiceAbility::GetScannerList()
     SCAN_HILOGD("ScanServiceAbility GetScannerList start");
     std::lock_guard<std::mutex> autoLock(lock_);
     auto exec_sane_getscaner = [=]() {
-        deviceInfos.clear();
-#ifdef SANE_ENABLE
+        deviceInfos_.clear();
         SaneGetScanner();
-#endif
         std::string message = "EOF";
         SendDeviceSearchEnd(message, SCAN_DEVICE_FOUND);
-        SendDeviceList(deviceInfos, GET_SCANNER_DEVICE_LIST);
+        SendDeviceList(deviceInfos_, GET_SCANNER_DEVICE_LIST);
     };
     serviceHandler_->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
     SCAN_HILOGD("ScanServiceAbility GetScannerList end");
@@ -688,36 +593,26 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
         SCAN_HILOGE("OpenScanner scannerState not ready");
         return E_SCAN_DEVICE_BUSY;
     }
-#ifdef SANE_ENABLE
-    if (scannerHandleList_.find(scannerId) != scannerHandleList_.end()) {
+    if (openedScannerList_.find(scannerId) != openedScannerList_.end()) {
         SCAN_HILOGD("scannerId %{public}s is already opened", scannerId.c_str());
         return E_SCAN_NONE;
     }
-    SANE_Handle scannerHandle = 0;
-    SANE_String_Const scannerIdCstr = scannerId.c_str();
-    SANE_Status status = sane_open(scannerIdCstr, &scannerHandle);
+    SaneStatus status = SaneManagerClient::GetInstance()->SaneOpen(scannerId);
     if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_open failed, reason: [%{public}s], retry one times", sane_strstatus(status));
-        g_hasOpenScannerFaild = true;
-    }
-    if (g_hasOpenScannerFaild == true) {
-        int32_t scanVersion = 0;
-        int32_t ret = ReInitScan(scanVersion);
+        SCAN_HILOGE("sane_open failed, ret: [%{public}u], retry one times", status);
+        int32_t ret = ReInitScan();
         if (ret != E_SCAN_NONE) {
             SCAN_HILOGE("ScanServiceAbility OpenScanner ReInitScan failed !!!");
             return ret;
         }
-        status = sane_open(scannerIdCstr, &scannerHandle);
-        g_hasOpenScannerFaild = false;
+        status = SaneManagerClient::GetInstance()->SaneOpen(scannerId);
     }
 
     if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_open failed, reason: [%{public}s]", sane_strstatus(status));
+        SCAN_HILOGE("SaneOpen failed, status: [%{public}u]", status);
         return ScanUtil::ConvertErro(status);
     }
-
-    scannerHandleList_[scannerId] = scannerHandle;
-#endif
+    openedScannerList_.insert(scannerId);
     SCAN_HILOGI("ScanServiceAbility OpenScanner end");
     return E_SCAN_NONE;
 }
@@ -731,82 +626,18 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
         return E_SCAN_NO_PERMISSION;
     }
     SCAN_HILOGI("ScanServiceAbility CloseScanner start");
-
-#ifdef SANE_ENABLE
-
-    auto scannerHandle = GetScanHandle(scannerId);
-    if (scannerHandle == nullptr) {
-        SCAN_HILOGE("ScanServiceAbility CloseScanner error exit");
-        return E_SCAN_INVALID_PARAMETER;
-    }
     scanTaskMap.clear();
     std::queue<int32_t> emptyQueue;
     scanQueue.swap(emptyQueue);
-    sane_cancel(scannerHandle);
-    sane_close(scannerHandle);
-    scannerHandleList_.erase(scannerId);
-#endif
+    SaneStatus status = SaneManagerClient::GetInstance()->SaneClose(scannerId);
+    if (status != SANE_STATUS_GOOD) {
+        SCAN_HILOGE("SaneClose failed, status: [%{public}u]", status);
+        return ScanUtil::ConvertErro(status);
+    }
+    openedScannerList_.erase(scannerId);
     SCAN_HILOGI("ScanServiceAbility CloseScanner end");
     return E_SCAN_NONE;
 }
-
-#ifdef SANE_ENABLE
-void ScanServiceAbility::SetScanOptionDescriptor(ScanOptionDescriptor &desc, const SANE_Option_Descriptor *optionDesc)
-{
-    if (optionDesc->name != nullptr) {
-        desc.SetOptionName(std::string(optionDesc->name));
-    }
-    if (optionDesc->title != nullptr) {
-        desc.SetOptionTitle(std::string(optionDesc->title));
-    }
-    if (optionDesc->desc != nullptr) {
-        desc.SetOptionDesc(std::string(optionDesc->desc));
-    }
-    desc.SetOptionType(optionDesc->type);
-    desc.SetOptionUnit(optionDesc->unit);
-    desc.SetOptionSize(optionDesc->size);
-    desc.SetOptionCap(optionDesc->cap);
-    desc.SetOptionConstraintType(optionDesc->constraint_type);
-}
-#endif
-
-#ifdef SANE_ENABLE
-int32_t ScanServiceAbility::SelectScanOptionDesc(
-    const SANE_Option_Descriptor* &optionDesc, ScanOptionDescriptor &desc)
-{
-    if (optionDesc->constraint_type == SANE_CONSTRAINT_RANGE && optionDesc->constraint.range != nullptr) {
-        ScanRange scanRange;
-        scanRange.SetMinValue(optionDesc->constraint.range->min);
-        scanRange.SetMaxValue(optionDesc->constraint.range->max);
-        scanRange.SetQuantValue(optionDesc->constraint.range->quant);
-        desc.SetOptionConstraintRange(scanRange);
-    } else if (optionDesc->constraint_type == SANE_CONSTRAINT_WORD_LIST
-        && optionDesc->constraint.word_list != nullptr) {
-        std::vector<int32_t> optionConstraintNumber;
-        int sizeNumber = *(optionDesc->constraint.word_list) + 1;
-        for (int i = 0; i < sizeNumber; i++) {
-            SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST: %{public}d", *(optionDesc->constraint.word_list + i));
-            optionConstraintNumber.push_back(*(optionDesc->constraint.word_list + i));
-        }
-        desc.SetOptionConstraintNumber(optionConstraintNumber);
-    } else if (optionDesc->constraint_type == SANE_CONSTRAINT_STRING_LIST
-        && optionDesc->constraint.string_list != nullptr) {
-        std::vector<std::string> optionConstraintString;
-        const SANE_String_Const* stringList = optionDesc->constraint.string_list;
-        if (stringList == nullptr) {
-            SCAN_HILOGE("sane_get_option_descriptor stringList nullptr");
-            return E_SCAN_INVALID_PARAMETER;
-        }
-        for (int i = 0; stringList[i] != nullptr; i++) {
-            SCAN_HILOGD("SANE_CONSTRAINT_STRING_LIST: %{public}s", stringList[i]);
-            optionConstraintString.push_back(std::string(stringList[i]));
-        }
-        optionConstraintString.push_back(string("null"));
-        desc.SetOptionConstraintString(optionConstraintString);
-    }
-    return E_SCAN_NONE;
-}
-#endif
 
 int32_t ScanServiceAbility::GetScanOptionDesc(
     const std::string scannerId, const int32_t optionIndex, ScanOptionDescriptor &desc)
@@ -817,182 +648,115 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-    SCAN_HILOGD("ScanServiceAbility GetScanOptionDesc start");
+    SCAN_HILOGI("ScanServiceAbility GetScanOptionDesc start");
     SCAN_HILOGD("optionIndex [%{public}d]", optionIndex);
-
-#ifdef SANE_ENABLE
-    auto scannerHandle = GetScanHandle(scannerId);
-    if (scannerHandle == nullptr) {
-        SCAN_HILOGE("ScanServiceAbility GetScanOptionDesc error exit");
-        return E_SCAN_INVALID_PARAMETER;
+    SaneOptionDescriptor saneDesc;
+    SaneStatus status = SaneManagerClient::GetInstance()->SaneGetOptionDescriptor(scannerId, optionIndex, saneDesc);
+    if (status != SANE_STATUS_GOOD) {
+        SCAN_HILOGE("SaneGetOptionDescriptor failed, status: [%{public}u]", status);
+        return ScanUtil::ConvertErro(status);
     }
-    ScanOptionValue value;
-    int32_t index = 0;
-    value.SetScanOptionValueType(SCAN_VALUE_NUM);
-    int32_t ret = ActionGetValue(scannerHandle, value, index);
-    if (ret != E_SCAN_NONE) {
-        SCAN_HILOGD("ActionGetValue error, ret = [%{public}d]", ret);
-        return ret;
+    desc.SetOptionName(saneDesc.optionName_);
+    desc.SetOptionTitle(saneDesc.optionTitle_);
+    desc.SetOptionDesc(saneDesc.optionDesc_);
+    desc.SetOptionType(saneDesc.optionType_);
+    desc.SetOptionUnit(saneDesc.optionUnit_);
+    desc.SetOptionSize(saneDesc.optionSize_);
+    desc.SetOptionCap(saneDesc.optionCap_);
+    desc.SetOptionConstraintType(saneDesc.optionConstraintType_);
+    if (saneDesc.optionConstraintType_ == SANE_CONSTRAINT_RANGE) {
+        ScanRange scanRange;
+        scanRange.SetMinValue(saneDesc.minValue_);
+        scanRange.SetMaxValue(saneDesc.maxValue_);
+        scanRange.SetQuantValue(saneDesc.quantValue_);
+        desc.SetOptionConstraintRange(scanRange);
+    } else if (saneDesc.optionConstraintType_ == SANE_CONSTRAINT_WORD_LIST) {
+        std::vector<int32_t> optionConstraintNumber;
+        for (const auto& number : saneDesc.optionConstraintNumber_) {
+            SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST : %{public}d", number);
+            optionConstraintNumber.push_back(number);
+        }
+        desc.SetOptionConstraintNumber(optionConstraintNumber);
+    } else if (saneDesc.optionConstraintType_ == SANE_CONSTRAINT_STRING_LIST) {
+        std::vector<std::string> optionConstraintString;
+        std::vector<std::string>& stringList = saneDesc.optionConstraintString_;
+        for (auto& str : stringList) {
+            SCAN_HILOGD("SANE_CONSTRAINT_STRING_LIST %{public}s", str.c_str());
+            optionConstraintString.push_back(str);
+        }
+        desc.SetOptionConstraintString(optionConstraintString);
     }
-    if (optionIndex < 0 || optionIndex >= value.GetNumValue()) {
-        SCAN_HILOGE("OptionIndex is out of range, maxIndex = [%{public}d]", value.GetNumValue());
-        return E_SCAN_INVALID_PARAMETER;
-    }
-    const SANE_Option_Descriptor *optionDesc = sane_get_option_descriptor(scannerHandle, optionIndex);
-    if (optionDesc == nullptr) {
-        SCAN_HILOGE("sane_get_option_descriptor failed, ScannerId: [%{public}s]", scannerId.c_str());
-        return E_SCAN_INVALID_PARAMETER;
-    }
-    SetScanOptionDescriptor(desc, optionDesc);
-    int32_t state = SelectScanOptionDesc(optionDesc, desc);
-    if (state != E_SCAN_NONE) {
-        SCAN_HILOGE("ScanServiceAbility GetScanOptionDesc error exit");
-        return state;
-    }
-
-#endif
-    SCAN_HILOGD("ScanServiceAbility GetScanOptionDesc end");
+    desc.Dump();
+    SCAN_HILOGI("ScanServiceAbility GetScanOptionDesc end");
     return E_SCAN_NONE;
 }
 
-#ifdef SANE_ENABLE
-int32_t ScanServiceAbility::ActionSetAuto(SANE_Handle &scannerHandle, const int32_t &optionIndex)
+int32_t ScanServiceAbility::ActionSetAuto(const std::string &scannerId, const int32_t &optionIndex)
 {
     SCAN_HILOGD("Set OpScanOptionValue SCAN_ACTION_SET_AUTO");
-    SANE_Status status = SANE_STATUS_GOOD;
-    status = sane_control_option(scannerHandle, optionIndex, SANE_ACTION_SET_AUTO, 0, 0);
+    SaneStatus status = SANE_STATUS_GOOD;
+    SaneControlParam controlParam;
+    controlParam.option_ = optionIndex;
+    controlParam.action_ = static_cast<SaneAction>(SANE_ACTION_SET_AUTO);
+    SaneOutParam outParam;
+    status = SaneManagerClient::GetInstance()->SaneControlOption(scannerId, controlParam, outParam);
     if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
+        SCAN_HILOGE("SaneControlOption failed, status: [%{public}d]", status);
         return ScanUtil::ConvertErro(status);
     }
     return E_SCAN_NONE;
 }
-#endif
 
-#ifdef SANE_ENABLE
-int32_t ScanServiceAbility::ActionGetValue(SANE_Handle &scannerHandle, ScanOptionValue &value,
+int32_t ScanServiceAbility::ActionGetValue(const std::string &scannerId, ScanOptionValue &value,
     const int32_t &optionIndex)
 {
     SCAN_HILOGD("Set OpScanOptionValue SCAN_ACTION_GET_VALUE");
-    SANE_Status status = SANE_STATUS_GOOD;
-    int32_t valueSize = value.GetValueSize() / sizeof(SANE_Word);
-    uint32_t bufSize = (value.GetStrValue().size() + 1)
-        > sizeof(int) ? (value.GetStrValue().size() + 1) : sizeof(int);
-    if (bufSize == 0 || bufSize > MAX_SANE_VALUE_LEN) {
-        SCAN_HILOGE("malloc value buffer size error");
-        return E_SCAN_GENERIC_FAILURE;
-    }
-    void* saneValueBuf = malloc(bufSize);
+    SaneStatus status = SANE_STATUS_GOOD;
     ScanOptionValueType valueType = value.GetScanOptionValueType();
-    if (!saneValueBuf) {
-        SCAN_HILOGE("malloc value buffer failed");
-        return E_SCAN_GENERIC_FAILURE;
-    }
-    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != 0) {
-        SCAN_HILOGE("memset_s failed");
-        free(saneValueBuf);
-        saneValueBuf = nullptr;
-        return E_SCAN_GENERIC_FAILURE;
-    }
-
-    status = sane_control_option(scannerHandle, optionIndex, SANE_ACTION_GET_VALUE, saneValueBuf, 0);
+    SaneControlParam controlParam;
+    controlParam.option_ = optionIndex;
+    controlParam.action_ = SANE_ACTION_GET_VALUE;
+    controlParam.valueType_ = static_cast<int32_t>(valueType);
+    controlParam.valueSize_ = value.GetValueSize();
+    SaneOutParam outParam;
+    status = SaneManagerClient::GetInstance()->SaneControlOption(scannerId, controlParam, outParam);
     if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
-        free(saneValueBuf);
-        saneValueBuf = nullptr;
+        SCAN_HILOGE("sane_control_option failed, status: [%{public}d]", status);
         return ScanUtil::ConvertErro(status);
     }
-
     if (valueType == SCAN_VALUE_NUM) {
-        value.SetNumValue(*static_cast<int *>(saneValueBuf));
+        value.SetNumValue(outParam.valueNumber_);
     } else if (valueType == SCAN_VALUE_NUM_LIST) {
-        std::vector<int32_t> numListValue;
-        for (int i = 0; i < valueSize; i++) {
-            numListValue.emplace_back(*(static_cast<int32_t *>(saneValueBuf) + i));
-        }
+        std::vector<int32_t> numListValue = outParam.valueNumList_;
         value.SetNumListValue(numListValue);
     } else if (valueType == SCAN_VALUE_STR) {
-        value.SetStrValue(*static_cast<std::string*>(saneValueBuf));
+        value.SetStrValue(outParam.valueStr_);
     } else if (valueType == SCAN_VALUE_BOOL) {
-        value.SetBoolValue(*static_cast<int32_t *>(saneValueBuf) > 0 ? true : false);
-    }
-
-    free(saneValueBuf);
-    saneValueBuf = nullptr;
-    return E_SCAN_NONE;
-}
-#endif
-
-#ifdef SANE_ENABLE
-int32_t ScanServiceAbility::ActionSetValueHelper(ScanOptionValue &value, void *saneValueBuf,
-    int32_t valueSize, uint32_t bufSize)
-{
-    if (memset_s(saneValueBuf, bufSize, 0, bufSize) != 0) {
-        SCAN_HILOGE("memset_s failed");
-        return E_SCAN_GENERIC_FAILURE;
-    }
-    ScanOptionValueType valueType = value.GetScanOptionValueType();
-    if (valueType == SCAN_VALUE_NUM) {
-        int32_t numValue = value.GetNumValue();
-        dpi = numValue > 0 && numValue < MAX_PICTURE_DPI ? numValue : 0;
-        *static_cast<int *>(saneValueBuf) = value.GetNumValue();
-    } else if (valueType == SCAN_VALUE_NUM_LIST) {
-        std::vector<int32_t> numListValue;
-        value.GetNumListValue(numListValue);
-        for (int i = 0; i < valueSize; i++) {
-            *(static_cast<int32_t *>(saneValueBuf) + i) = numListValue[i];
-        }
-    } else if (valueType == SCAN_VALUE_STR) {
-        SCAN_HILOGI("Set scanner mode:[%{public}s]", value.GetStrValue().c_str());
-        if (strncpy_s(static_cast<char*>(saneValueBuf), bufSize,
-            value.GetStrValue().c_str(), value.GetStrValue().size()) != EOK) {
-            return E_SCAN_GENERIC_FAILURE;
-        }
-    } else if (valueType == SCAN_VALUE_BOOL) {
-        *static_cast<int32_t *>(saneValueBuf) = value.GetBoolValue() > 0 ? true : false;
+        value.SetBoolValue(outParam.valueBool_);
     }
     return E_SCAN_NONE;
 }
-#endif
 
-#ifdef SANE_ENABLE
-int32_t ScanServiceAbility::ActionSetValue(SANE_Handle &scannerHandle, ScanOptionValue &value,
+int32_t ScanServiceAbility::ActionSetValue(const std::string &scannerId, ScanOptionValue &value,
     const int32_t &optionIndex, int32_t &info)
 {
-    SCAN_HILOGD("Set OpScanOptionValue SCAN_ACTION_SET_VALUE");
-    SANE_Status status = SANE_STATUS_GOOD;
-    int32_t valueSize = value.GetValueSize() / sizeof(SANE_Word);
-    uint32_t bufSize = (value.GetStrValue().size() + 1)
-        > sizeof(int) ? (value.GetStrValue().size() + 1) : sizeof(int);
-    if (bufSize == 0 || bufSize > MAX_SANE_VALUE_LEN) {
-        SCAN_HILOGE("malloc value buffer size error");
-        return E_SCAN_GENERIC_FAILURE;
+    SCAN_HILOGI("Set OpScanOptionValue SCAN_ACTION_SET_VALUE");
+    SaneStatus status = SANE_STATUS_GOOD;
+    SaneControlParam controlParam;
+    controlParam.option_ = optionIndex;
+    controlParam.action_ = static_cast<SaneAction>(SANE_ACTION_SET_VALUE);
+    controlParam.valueType_ = static_cast<int32_t>(value.GetScanOptionValueType());
+    controlParam.valueNumber_ = static_cast<int32_t>(value.GetNumValue());
+    controlParam.valueStr_ = value.GetStrValue();
+    SaneOutParam outParam;
+    status = SaneManagerClient::GetInstance()->SaneControlOption(scannerId, controlParam, outParam);
+    if (status != SANE_STATUS_GOOD) {
+        SCAN_HILOGE("SaneControlOption failed, ret = [%{public}d]", status);
+        return status;
     }
-    void* saneValueBuf = malloc(bufSize);
-    if (!saneValueBuf) {
-        SCAN_HILOGE("malloc value buffer failed");
-        return E_SCAN_GENERIC_FAILURE;
-    }
-    int32_t ret = E_SCAN_NONE;
-    do {
-        ret = ActionSetValueHelper(value, saneValueBuf, valueSize, bufSize);
-        if (ret != E_SCAN_NONE) {
-            SCAN_HILOGE("ActionSetValueHelper failed");
-            break;
-        }
-        status = sane_control_option(scannerHandle, optionIndex, SANE_ACTION_SET_VALUE, saneValueBuf, &info);
-        if (status != SANE_STATUS_GOOD) {
-            SCAN_HILOGE("sane_control_option failed, reason: [%{public}s]", sane_strstatus(status));
-            ret = ScanUtil::ConvertErro(status);
-            break;
-        }
-    } while (0);
-
-    free(saneValueBuf);
-    saneValueBuf = nullptr;
-    return ret;
+    info = outParam.info_;
+    return status;
 }
-#endif
 
 int32_t ScanServiceAbility::OpScanOptionValue(const std::string scannerId, const int32_t optionIndex,
     const ScanOptionOpType op, ScanOptionValue &value, int32_t &info)
@@ -1004,10 +768,10 @@ int32_t ScanServiceAbility::OpScanOptionValue(const std::string scannerId, const
     }
     SCAN_HILOGI("optionIndex [%{public}d]", optionIndex);
     int32_t state = E_SCAN_NONE;
-#ifdef SANE_ENABLE
+
     if (g_hasIoFaild) {
         SCAN_HILOGI("OpScanOptionValue try to reOpenScanner start");
-        int32_t openRet = OpenScanner(scannerId);
+        int32_t openRet = SaneManagerClient::GetInstance()->SaneOpen(scannerId);
         if (openRet != E_SCAN_NONE) {
             SCAN_HILOGE("OpScanOptionValue try to reOpenScanner failed");
             return E_SCAN_DEVICE_BUSY;
@@ -1017,22 +781,17 @@ int32_t ScanServiceAbility::OpScanOptionValue(const std::string scannerId, const
 
     std::lock_guard<std::mutex> autoLock(lock_);
 
-    auto scannerHandle = GetScanHandle(scannerId);
-    if (scannerHandle == nullptr) {
-        SCAN_HILOGE("ScanServiceAbility OpScanOptionValue error exit");
-        return E_SCAN_INVALID_PARAMETER;
-    }
     SCAN_HILOGD("ScanServiceAbility OpScanOptionValue start to dump value");
     value.Dump();
     switch (op) {
         case SCAN_ACTION_SET_AUTO:
-            state = ActionSetAuto(scannerHandle, optionIndex);
+            state = ActionSetAuto(scannerId, optionIndex);
             break;
         case SCAN_ACTION_GET_VALUE:
-            state = ActionGetValue(scannerHandle, value, optionIndex);
+            state = ActionGetValue(scannerId, value, optionIndex);
             break;
         case SCAN_ACTION_SET_VALUE:
-            state = ActionSetValue(scannerHandle, value, optionIndex, info);
+            state = ActionSetValue(scannerId, value, optionIndex, info);
             break;
         default:
             SCAN_HILOGE("ScanServiceAbility OpScanOptionValue not find ScanOptionOpType");
@@ -1045,7 +804,6 @@ int32_t ScanServiceAbility::OpScanOptionValue(const std::string scannerId, const
 
     SCAN_HILOGD("ScanServiceAbility OpScanOptionValue start to dump value");
     value.Dump();
-#endif
     SCAN_HILOGD("ScanServiceAbility OpScanOptionValue end");
     return state;
 }
@@ -1060,27 +818,19 @@ int32_t ScanServiceAbility::GetScanParameters(const std::string scannerId, ScanP
         return E_SCAN_NO_PERMISSION;
     }
     SCAN_HILOGD("ScanServiceAbility GetScanParameters start");
-
-#ifdef SANE_ENABLE
-    auto scannerHandle = GetScanHandle(scannerId);
-    if (scannerHandle == nullptr) {
-        SCAN_HILOGE("ScanServiceAbility GetScanParameters error exit");
-        return E_SCAN_INVALID_PARAMETER;
-    }
-    SANE_Parameters parameters;
-    SANE_Status status = sane_get_parameters(scannerHandle, &parameters);
+    SaneParameters saneParams;
+    SaneStatus status = SaneManagerClient::GetInstance()->SaneGetParameters(scannerId, saneParams);
     if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_get_parameters failed, reason: [%{public}s]", sane_strstatus(status));
+        SCAN_HILOGE("SaneGetParameters failed, status: [%{public}u]", status);
         return ScanUtil::ConvertErro(status);
     }
-    para.SetFormat((ScanFrame)parameters.format);
-    para.SetLastFrame((bool)parameters.last_frame);
-    para.SetBytesPerLine(parameters.bytes_per_line);
-    para.SetPixelsPerLine(parameters.pixels_per_line);
-    para.SetLines(parameters.lines);
-    para.SetDepth(parameters.depth);
+    para.SetFormat(static_cast<ScanFrame>(saneParams.format_));
+    para.SetLastFrame(saneParams.lastFrame_);
+    para.SetBytesPerLine(saneParams.bytesPerLine_);
+    para.SetPixelsPerLine(saneParams.pixelsPerLine_);
+    para.SetLines(saneParams.lines_);
+    para.SetDepth(saneParams.depth_);
     para.Dump();
-#endif
     SCAN_HILOGD("ScanServiceAbility GetScanParameters end");
     return E_SCAN_NONE;
 }
@@ -1094,22 +844,6 @@ int32_t ScanServiceAbility::GetSingleFrameFD(const std::string scannerId, uint32
         return E_SCAN_NO_PERMISSION;
     }
     SCAN_HILOGD("ScanServiceAbility GetSingleFrameFD start");
-
-#ifdef SANE_ENABLE
-    auto scannerHandle = GetScanHandle(scannerId);
-    if (scannerHandle == nullptr) {
-        SCAN_HILOGE("ScanServiceAbility GetSingleFrameFD error exit");
-        return E_SCAN_INVALID_PARAMETER;
-    }
-#ifdef SANE_ENABLE
-    auto exeFrameFD = this->getSingleFrameFDExe;
-    auto exe = [=]() {
-        exeFrameFD(scannerHandle, fd);
-    };
-#endif
-    serviceHandler_->PostTask(exe, ASYNC_CMD_DELAY);
-
-#endif
     SCAN_HILOGD("ScanServiceAbility GetSingleFrameFD end");
     return E_SCAN_NONE;
 }
@@ -1123,11 +857,10 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
         return E_SCAN_NO_PERMISSION;
     }
     SCAN_HILOGI("ScanServiceAbility CancelScan start");
-#ifdef SANE_ENABLE
-    auto scannerHandle = GetScanHandle(scannerId);
-    if (scannerHandle != nullptr) {
-        SCAN_HILOGW("start sane_cancel");
-        sane_cancel(scannerHandle);
+    SaneStatus saneStatus = SaneManagerClient::GetInstance()->SaneCancel(scannerId);
+    if (saneStatus != SANE_STATUS_GOOD) {
+        SCAN_HILOGE("SaneCancel failed, status: [%{public}u]", saneStatus);
+        return ScanUtil::ConvertErro(saneStatus);
     }
     std::queue<int32_t> emptyQueue;
     scanQueue.swap(emptyQueue);
@@ -1135,7 +868,6 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
         SCAN_HILOGW("ScannerState change to SCANNER_CANCELING");
         g_scannerState = SCANNER_CANCELING;
     }
-#endif
     SCAN_HILOGI("ScanServiceAbility CancelScan end");
     return E_SCAN_NONE;
 }
@@ -1149,19 +881,6 @@ int32_t ScanServiceAbility::SetScanIOMode(const std::string scannerId, const boo
         return E_SCAN_NO_PERMISSION;
     }
     SCAN_HILOGD("ScanServiceAbility SetScanIOMode start");
-
-#ifdef SANE_ENABLE
-    auto scannerHandle = GetScanHandle(scannerId);
-    if (scannerHandle == nullptr) {
-        SCAN_HILOGE("ScanServiceAbility SetScanIOMode error exit");
-        return E_SCAN_INVALID_PARAMETER;
-    }
-    SANE_Status status = sane_set_io_mode(scannerHandle, isNonBlocking);
-    if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_set_io_mode failed, reason: [%{public}s]", sane_strstatus(status));
-        return ScanUtil::ConvertErro(status);
-    }
-#endif
     SCAN_HILOGE("ScanServiceAbility SetScanIOMode end");
     return E_SCAN_NONE;
 }
@@ -1175,20 +894,6 @@ int32_t ScanServiceAbility::GetScanSelectFd(const std::string scannerId, int32_t
         return E_SCAN_NO_PERMISSION;
     }
     SCAN_HILOGD("ScanServiceAbility GetScanSelectFd start");
-
-#ifdef SANE_ENABLE
-    auto scannerHandle = GetScanHandle(scannerId);
-    if (scannerHandle == nullptr) {
-        SCAN_HILOGE("ScanServiceAbility GetScanSelectFd error exit");
-        return E_SCAN_INVALID_PARAMETER;
-    }
-    SANE_Status status = sane_get_select_fd(scannerHandle, &fd);
-    if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_set_io_mode failed, reason: [%{public}s]", sane_strstatus(status));
-        return ScanUtil::ConvertErro(status);
-    }
-#endif
-    SCAN_HILOGE("ScanServiceAbility GetScanSelectFd end");
     return E_SCAN_NONE;
 }
 
@@ -1455,7 +1160,6 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
         return E_SCAN_NO_PERMISSION;
     }
 
-#ifdef SANE_ENABLE
     if (scanQueue.empty()) {
         SCAN_HILOGE("Not exist scan progress");
         if (g_hasIoFaild) {
@@ -1491,7 +1195,6 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
     }
     prog = scanTaskMap[frontPicId];
     prog.Dump();
-#endif
     return E_SCAN_NONE;
 }
 
@@ -1507,7 +1210,6 @@ int32_t ScanServiceAbility::AddScanner(const std::string& serialNumber, const st
         return E_SCAN_INVALID_PARAMETER;
     }
     auto addScannerExe = [=]() {
-#ifdef SANE_ENABLE
         std::string uniqueId = discoverMode + serialNumber;
         ScanSystemData &scanData = ScanSystemData::GetInstance();
         std::lock_guard<std::mutex> autoLock(clearMapLock_);
@@ -1538,7 +1240,6 @@ int32_t ScanServiceAbility::AddScanner(const std::string& serialNumber, const st
         } else {
             SCAN_HILOGE("discoverMode is invalid.");
         }
-#endif
     };
     serviceHandler_->PostTask(addScannerExe, ASYNC_CMD_DELAY);
     return E_SCAN_NONE;
@@ -1553,7 +1254,6 @@ int32_t ScanServiceAbility::DeleteScanner(const std::string& serialNumber, const
     }
     SCAN_HILOGI("ScanServiceAbility DeleteScanner start");
 
-#ifdef SANE_ENABLE
     std::string uniqueId = discoverMode + serialNumber;
     ScanDeviceInfo scannerInfo;
     if (!ScanSystemData::GetInstance().QueryScannerInfoByUniqueId(uniqueId, scannerInfo)) {
@@ -1569,7 +1269,6 @@ int32_t ScanServiceAbility::DeleteScanner(const std::string& serialNumber, const
         return E_SCAN_GENERIC_FAILURE;
     }
     SendDeviceInfo(scannerInfo, SCAN_DEVICE_DEL);
-#endif
     SCAN_HILOGI("ScanServiceAbility DeleteScanner end");
     return E_SCAN_NONE;
 }
@@ -1582,9 +1281,7 @@ int32_t ScanServiceAbility::GetAddedScanner(std::vector<ScanDeviceInfo>& allAdde
         return E_SCAN_NO_PERMISSION;
     }
     SCAN_HILOGI("ScanServiceAbility GetAddedScanner start");
-#ifdef SANE_ENABLE
     ScanSystemData::GetInstance().GetAddedScannerInfoList(allAddedScanner);
-#endif
     SCAN_HILOGI("ScanServiceAbility GetAddedScanner end");
     return E_SCAN_NONE;
 }
@@ -1599,7 +1296,6 @@ int32_t ScanServiceAbility::UpdateScannerName(const std::string& serialNumber,
     }
     SCAN_HILOGI("ScanServiceAbility UpdateScannerName start");
 
-#ifdef SANE_ENABLE
     std::string uniqueId = discoverMode + serialNumber;
     if (!ScanSystemData::GetInstance().UpdateScannerNameByUniqueId(uniqueId, deviceName)) {
         SCAN_HILOGE("ScanServiceAbility UpdateScannerNameByUniqueId fail");
@@ -1609,7 +1305,6 @@ int32_t ScanServiceAbility::UpdateScannerName(const std::string& serialNumber,
         SCAN_HILOGE("ScanServiceAbility UpdateScannerName SaveScannerMap fail");
         return E_SCAN_GENERIC_FAILURE;
     }
-#endif
     SCAN_HILOGI("ScanServiceAbility UpdateScannerName end");
     return E_SCAN_NONE;
 }
@@ -1653,20 +1348,14 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
     }
     SCAN_HILOGI("ScanServiceAbility StartScan start");
 
-#ifdef SANE_ENABLE
     if (g_scannerState == SCANNER_CANCELING) {
         SCAN_HILOGE("scan task is canceling");
         return E_SCAN_DEVICE_BUSY;
     }
-    auto scannerHandle = GetScanHandle(scannerId);
-    if (scannerHandle == nullptr) {
-        SCAN_HILOGE("ScanServiceAbility StartScan error exit");
-        return E_SCAN_INVALID_PARAMETER;
-    }
-    SANE_Status saneStatus = sane_start(scannerHandle);
+    SaneStatus saneStatus = SaneManagerClient::GetInstance()->SaneStart(scannerId);
     if (saneStatus != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_start failed, reason: [%{public}s], sane sane_cancel start", sane_strstatus(saneStatus));
-        sane_cancel(scannerHandle);
+        SCAN_HILOGE("SaneStart failed, status is %{public}u", saneStatus);
+        SaneManagerClient::GetInstance()->SaneCancel(scannerId);
         auto it = scanTaskMap.find(nextPicId);
         if (it != scanTaskMap.end() && it != scanTaskMap.begin()) {
             it--;
@@ -1681,7 +1370,6 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
     auto nowTime = std::chrono::steady_clock::now();
     scanTaskMap[nextPicId].SetScanTime(nowTime);
     nextPicId++;
-#endif
     SCAN_HILOGI("ScanServiceAbility StartScan end");
     return E_SCAN_NONE;
 }
@@ -1741,9 +1429,7 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std:
             return;
         }
         scanProPtr = &(scanTaskMap[nowScanId]);
-#ifdef SANE_ENABLE
         status = DoScanTask(scannerId, scanProPtr);
-#endif
         if (ofp != nullptr) {
             fclose(ofp);
             ofp = nullptr;
@@ -1780,9 +1466,7 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
         return;
     }
     scanProPtr = &(scanTaskMap[nowScanId]);
-#ifdef SANE_ENABLE
     status = DoScanTask(scannerId, scanProPtr);
-#endif
     if (status == E_SCAN_EOF) {
         scanProPtr->SetImageRealPath(output_file);
         scanProPtr->SetScanProgress(SCAN_PROGRESS_100);
@@ -1794,18 +1478,12 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
         ofp = nullptr;
     }
     {
-#ifdef SANE_ENABLE
         std::lock_guard<std::mutex> autoLock(lock_);
-        SANE_Handle scannerHandle = GetScanHandle(scannerId);
-        if (scannerHandle != nullptr) {
-            SCAN_HILOGI("GeneratePictureSingle finished, doing sane_cancel");
-            sane_cancel(scannerHandle);
-        }
-#endif
+        SCAN_HILOGI("GeneratePictureSingle finished, doning sane_cancel");
+        SaneManagerClient::GetInstance()->SaneCancel(scannerId);
     }
 }
 
-#ifdef SANE_ENABLE
 int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress* scanProPtr)
 {
     int32_t first_frame = 1;
@@ -1857,7 +1535,6 @@ int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress
     SCAN_HILOGI("end DoScanTask");
     return scanStatus;
 }
-#endif
 
 int32_t ScanServiceAbility::WriteJpegHeader(ScanParameters &parm, struct jpeg_error_mgr* jerr)
 {
@@ -1905,29 +1582,48 @@ void ScanServiceAbility::CleanScanTask(const std::string &scannerId)
     g_hasIoFaild = true;
 }
 
-#ifdef SANE_ENABLE
+void ScanServiceAbility::SetScanProgr(int64_t &totalBytes, const int64_t& hundredPercent,
+    ScanProgress* scanProPtr, const int32_t& curReadSize)
+{
+    if (hundredPercent == 0) {
+        SCAN_HILOGE("hundredPercent equals zero.");
+        return;
+    }
+    if (scanProPtr == nullptr) {
+        SCAN_HILOGE("scanProPtr is a nullptr.");
+        return;
+    }
+    totalBytes += static_cast<int64_t>(curReadSize);
+    int64_t progr = ((totalBytes * SCAN_PROGRESS_100) / hundredPercent);
+    if (progr >= SCAN_PROGRESS_100) {
+        progr = SCAN_PROGRESS_100 - 1;
+    }
+    if (progr > (scanProPtr->GetScanProgress())) {
+        scanProPtr->SetScanProgress(static_cast<int32_t>(progr));
+    }
+}
+
 void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *scanProPtr,
     int32_t &scanStatus, ScanParameters &parm)
 {
-    int32_t curReadSize = 0;
     int64_t totalBytes = 0;
     int jpegrow = 0;
-    SANE_Handle scannerHandle = GetScanHandle(scannerId);
-    int64_t hundred_percent = ((int64_t)parm.GetBytesPerLine()) * parm.GetLines() * (((SANE_Frame)parm.GetFormat()
-        == SANE_FRAME_RGB || (SANE_Frame)parm.GetFormat() == SANE_FRAME_GRAY) ?  CHANNEL_ONE : CHANNEL_THREE);
-    if (hundred_percent == 0) {
-        scanStatus = E_SCAN_INVAL;
-        return;
-    }
-    while (true) {
-        SANE_Status saneStatus = sane_read(scannerHandle, saneReadBuf, buffer_size, &curReadSize);
+    int64_t hundredPercent = ((int64_t)parm.GetBytesPerLine()) * parm.GetLines() * (((SaneFrame)parm.GetFormat()
+        == SANE_FRAME_RGB || (SaneFrame)parm.GetFormat() == SANE_FRAME_GRAY) ? CHANNEL_ONE : CHANNEL_THREE);
+    scanStatus = E_SCAN_GOOD;
+    while (scanStatus == E_SCAN_GOOD) {
+        SanePictureData pictureData;
+        SaneStatus saneStatus = SaneManagerClient::GetInstance()->
+            SaneRead(scannerId, buffer_size, pictureData);
         scanStatus = ScanUtil::ConvertErro(saneStatus);
-        totalBytes += (int64_t)curReadSize;
-        int64_t progr = ((totalBytes * SCAN_PROGRESS_100) / hundred_percent);
-        if (progr >= SCAN_PROGRESS_100)
-            progr = SCAN_PROGRESS_100 - 1;
-        if (progr > (scanProPtr->GetScanProgress())) {
-            scanProPtr->SetScanProgress((int32_t)progr);
+        if (pictureData.size_ == INVALID_DATA) {
+            SCAN_HILOGE("sane_read failed, reason: [%{public}d]", saneStatus);
+            ScanErrorCode taskCode = ScanUtil::ConvertErro(SaneStatus(saneStatus));
+            scanProPtr->SetTaskCode(taskCode);
+            if (taskCode == E_SCAN_IO_ERROR || taskCode == E_SCAN_JAMMED) {
+                CleanScanTask(scannerId);
+            }
+            break;
         }
         if (g_scannerState == SCANNER_CANCELING) {
             std::queue<int32_t> emptyQueue;
@@ -1936,29 +1632,25 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
             scanTaskMap.erase(nextPicId);
             scanStatus = E_SCAN_NONE;
             SCAN_HILOGE("scan task is canceled");
-            return;
+            break;
+        }
+        auto ret = memcpy_s(saneReadBuf, buffer_size, pictureData.valueBuffer_.data(), pictureData.valueBuffer_.size());
+        if (ret != ERR_OK) {
+            scanProPtr->SetTaskCode(E_SCAN_GENERIC_FAILURE);
+            SCAN_HILOGE("memcpy_s failed, errorCode:[%{public}d]", ret);
+            break;
+        }
+        SetScanProgr(totalBytes, hundredPercent, scanProPtr, pictureData.size_);
+        if (!WritePicData(jpegrow, pictureData.size_, parm, scanProPtr)) {
+            SCAN_HILOGE("WritePicData fail");
+            break;
         }
         if (saneStatus == SANE_STATUS_EOF) {
             SCAN_HILOGI("sane_read finished.");
             break;
         }
-        if (saneStatus != SANE_STATUS_GOOD) {
-            SCAN_HILOGE("sane_read failed, reason: [%{public}s]", sane_strstatus(saneStatus));
-            ScanErrorCode taskCode = ScanUtil::ConvertErro(saneStatus);
-            scanProPtr->SetTaskCode(taskCode);
-            if (taskCode == E_SCAN_IO_ERROR || taskCode == E_SCAN_JAMMED) {
-                CleanScanTask(scannerId);
-            }
-            break;
-        }
-
-        if (!WritePicData(jpegrow, curReadSize, parm, scanProPtr)) {
-            SCAN_HILOGI("WritePicData fail");
-            return;
-        }
     }
 }
-#endif
 
 bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanParameters &parm, ScanProgress *scanProPtr)
 {
