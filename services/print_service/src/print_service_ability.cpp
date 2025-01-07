@@ -2700,6 +2700,17 @@ std::shared_ptr<PrintUserData> PrintServiceAbility::GetCurrentUserData()
 int32_t PrintServiceAbility::GetCurrentUserId()
 {
     int32_t userId = IPCSkeleton::GetCallingUid() / UID_TRANSFORM_DIVISOR;
+    if (userId <= 0 && helper_ != nullptr) {
+        PRINT_HILOGD("print sa calling, use current active userId");
+        std::vector<int32_t> userIds;
+        helper_->QueryAccounts(userIds);
+        if (userIds.empty()) {
+            PRINT_HILOGE("get use current active userId failed");
+            userId = -1;
+        } else {
+            userId = userIds[0];
+        }
+    }
     PRINT_HILOGI("Current userId = %{public}d", userId);
     if (userId < START_USER_ID) {
         PRINT_HILOGE("id %{public}d is system reserved", userId);
