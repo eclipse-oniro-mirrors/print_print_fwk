@@ -23,12 +23,11 @@ namespace {
     const std::string VENDOR_BSUNI_URI_START = "://";
     const std::string VENDOR_BSUNI_URI_END = ":";
     const std::string VENDOR_CONVERTED_PRINTERID = "uuid";
-    const std::string VENDOR_BSUNI_GS_PATH = "/system/bin/uni_print_driver/ghostscript/bin/gs";
 }
 
 VendorWlanGroup::VendorWlanGroup(VendorManager *vendorManager) : parentVendorManager(vendorManager)
 {
-    hasGs = FileExists(VENDOR_BSUNI_GS_PATH);
+    hasGs = FileExists("/system/bin/uni_print_driver/ghostscript/bin/gs");
 }
 
 std::string VendorWlanGroup::GetVendorName()
