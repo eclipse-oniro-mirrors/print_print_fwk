@@ -1733,7 +1733,7 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
             auto iter = printerJobMap_.find(printerId);
             if (iter != printerJobMap_.end()) {
                 PRINT_HILOGI("erase offline state job from printerJobMap");
-                printerJobMap_[printerId].erase(jobId);
+                iter->second.erase(jobId);
             }
         }
     }
