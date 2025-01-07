@@ -220,6 +220,7 @@ private:
     int32_t TryConnectPrinterByIp(const std::string &params);
     std::string RenamePrinterWhenAdded(const PrinterInfo &info);
     void ConnectIppOverUsbPrinter(const std::string &printerId);
+    void UnregisterPrintTaskCallback(const std::string &jobId, const uint32_t state, const uint32_t subState);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

@@ -1996,9 +1996,12 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
             PRINT_HILOGI("printAppCount_: %{public}u", printAppCount_);
             break;
         case APPLICATION_CLOSED_FOR_STARTED:
+            PRINT_HILOGI("Spooler Closed for started jobId : %{public}s", jobId.c_str());
             ReduceAppCount();
             break;
         case APPLICATION_CLOSED_FOR_CANCELED:
+            PRINT_HILOGI("Spooler Closed for canceled jobId : %{public}s", jobId.c_str());
+            UnregisterPrintTaskCallback(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED);
             ReduceAppCount();
             break;
         default:
@@ -2571,6 +2574,7 @@ void PrintServiceAbility::notifyAdapterJobChanged(const std::string jobId, const
     }
 
     PRINT_HILOGI("get adapterListenersByJobId_ %{public}s", jobId.c_str());
+    UnregisterPrintTaskCallback(jobId, state, subState);
     auto eventIt = adapterListenersByJobId_.find(jobId);
     if (eventIt == adapterListenersByJobId_.end() || eventIt->second == nullptr) {
         return;
@@ -3707,5 +3711,19 @@ void PrintServiceAbility::ConnectIppOverUsbPrinter(const std::string &printerId)
     int32_t port = uri.GetPort();
     DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->ConnectPrinter(printerId, port);
 #endif
+}
+
+void PrintServiceAbility::UnregisterPrintTaskCallback(const std::string &jobId, const uint32_t state,
+    const uint32_t subState)
+{
+    if (subState == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED || state == PRINT_JOB_COMPLETED) {
+        std::vector<std::string> printTaskEventList = {EVENT_BLOCK, EVENT_SUCCESS, EVENT_FAIL, EVENT_CANCEL};
+        for (auto event : printTaskEventList) {
+            int32_t ret = Off(jobId, event);
+            if (ret != E_PRINT_NONE) {
+                PRINT_HILOGW("UnregisterPrintTaskCallback failed, ret = %{public}d", ret);
+            }
+        }
+    }
 }
 } // namespace OHOS::Print
