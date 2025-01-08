@@ -746,7 +746,10 @@ int32_t ScanServiceAbility::ActionSetValue(const std::string &scannerId, ScanOpt
     controlParam.option_ = optionIndex;
     controlParam.action_ = static_cast<SaneAction>(SANE_ACTION_SET_VALUE);
     controlParam.valueType_ = static_cast<int32_t>(value.GetScanOptionValueType());
-    controlParam.valueNumber_ = static_cast<int32_t>(value.GetNumValue());
+    int32_t numValue = value.GetNumValue();
+    controlParam.valueNumber_ = numValue;
+    constexpr int32_t MAX_PICTURE_DPI = 3000;
+    dpi = numValue > 0 && numValue < MAX_PICTURE_DPI ? numValue : dpi;
     controlParam.valueStr_ = value.GetStrValue();
     SaneOutParam outParam;
     status = SaneManagerClient::GetInstance()->SaneControlOption(scannerId, controlParam, outParam);

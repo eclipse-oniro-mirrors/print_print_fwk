@@ -36,7 +36,6 @@
         "eventhandler",
         "hisysevent",
         "hilog",
-        "hitrace",
         "init",
         "ipc",
         "napi",
