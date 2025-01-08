@@ -116,7 +116,7 @@ static const std::vector<std::string> PRINT_TASK_EVENT_LIST = {EVENT_BLOCK, EVEN
 
 static bool g_publishState = false;
 
-REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
+const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(PrintServiceAbility::GetInstance().GetRefPtr());
 
 std::mutex PrintServiceAbility::instanceLock_;
 sptr<PrintServiceAbility> PrintServiceAbility::instance_;
@@ -167,6 +167,15 @@ int32_t PrintServiceAbility::Init()
         DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(helper_);
         helper_->PrintSubscribeCommonEvent();
     }
+    printSystemData_.Init();
+    InitPreferenceMap();
+    vendorManager.Init(GetInstance(), true);
+#ifdef CUPS_ENABLE
+    int32_t initCupsRet = DelayedSingleton<PrintCupsClient>::GetInstance()->InitCupsResources();
+    if (initCupsRet != ERR_OK) {
+        return initCupsRet;
+    }
+#endif
     if (!g_publishState) {
         bool ret = Publish(PrintServiceAbility::GetInstance());
         if (!ret) {
@@ -175,8 +184,6 @@ int32_t PrintServiceAbility::Init()
         }
         g_publishState = true;
     }
-    printSystemData_.Init();
-    InitPreferenceMap();
     state_ = ServiceRunningState::STATE_RUNNING;
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
 #ifdef IPPOVERUSB_ENABLE
@@ -184,9 +191,6 @@ int32_t PrintServiceAbility::Init()
     DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->Init();
     PRINT_HILOGD("end PrintIppOverUsbManager Init");
 #endif // IPPOVERUSB_ENABLE
-#ifdef CUPS_ENABLE
-    return DelayedSingleton<PrintCupsClient>::GetInstance()->InitCupsResources();
-#endif  // CUPS_ENABLE
     return ERR_OK;
 }
 
@@ -211,8 +215,6 @@ void PrintServiceAbility::OnStart()
         PRINT_HILOGE("PrintServiceAbility Init failed. Try again 5s later");
         return;
     }
-    vendorManager.Init(GetInstance(), true);
-    state_ = ServiceRunningState::STATE_RUNNING;
     return;
 }
 
@@ -235,7 +237,9 @@ void PrintServiceAbility::ManualStart()
         OnStart();
     } else {
 #ifdef CUPS_ENABLE
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsCupsServerAlive()) {
         DelayedSingleton<PrintCupsClient>::GetInstance()->InitCupsResources();
+    }
 #endif  // CUPS_ENABLE
     }
 }
