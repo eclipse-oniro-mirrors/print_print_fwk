@@ -112,6 +112,8 @@ static const std::string USB_PRINTER = "usb";
 
 const std::string PRINTER_PREFERENCE_FILE = "printer_preference.json";
 
+static const std::vector<std::string> PRINT_TASK_EVENT_LIST = {EVENT_BLOCK, EVENT_SUCCESS, EVENT_FAIL, EVENT_CANCEL};
+
 static bool g_publishState = false;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
@@ -1977,10 +1979,10 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
     }
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    PRINT_HILOGI("NotifyPrintServiceEvent jobId : %{public}s, event : %{public}d", jobId.c_str(), event);
     switch (event) {
         case APPLICATION_CREATED:
             if (printJobList_.find(jobId) == printJobList_.end()) {
-                PRINT_HILOGI("add printJob from phone, jobId: %{public}s", jobId.c_str());
                 auto printJob = std::make_shared<PrintJob>();
                 if (printJob == nullptr) {
                     PRINT_HILOGE("printJob is nullptr.");
@@ -1996,15 +1998,14 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
             PRINT_HILOGI("printAppCount_: %{public}u", printAppCount_);
             break;
         case APPLICATION_CLOSED_FOR_STARTED:
-            PRINT_HILOGI("Spooler Closed for started jobId : %{public}s", jobId.c_str());
             ReduceAppCount();
             break;
         case APPLICATION_CLOSED_FOR_CANCELED:
-            PRINT_HILOGI("Spooler Closed for canceled jobId : %{public}s", jobId.c_str());
             UnregisterPrintTaskCallback(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED);
             ReduceAppCount();
             break;
         default:
+            PRINT_HILOGW("unsupported event");
             break;
     }
     return E_PRINT_NONE;
@@ -3717,11 +3718,12 @@ void PrintServiceAbility::UnregisterPrintTaskCallback(const std::string &jobId, 
     const uint32_t subState)
 {
     if (subState == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED || state == PRINT_JOB_COMPLETED) {
-        std::vector<std::string> printTaskEventList = {EVENT_BLOCK, EVENT_SUCCESS, EVENT_FAIL, EVENT_CANCEL};
-        for (auto event : printTaskEventList) {
+        for (auto event : PRINT_TASK_EVENT_LIST) {
             int32_t ret = Off(jobId, event);
             if (ret != E_PRINT_NONE) {
-                PRINT_HILOGW("UnregisterPrintTaskCallback failed, ret = %{public}d", ret);
+                PRINT_HILOGW(
+                    "UnregisterPrintTaskCallback failed, ret = %{public}d, jobId = %{public}s, event = %{public}s",
+                    ret, jobId.c_str(), event.c_str());
             }
         }
     }
