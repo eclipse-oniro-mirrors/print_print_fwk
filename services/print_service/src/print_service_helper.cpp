@@ -27,8 +27,8 @@
 #include "common_event_support.h"
 
 namespace OHOS::Print {
-const uint32_t MAX_RETRY_TIMES = 3;
-const uint32_t START_ABILITY_INTERVAL = 2;
+const uint32_t MAX_RETRY_TIMES = 2;
+const uint32_t START_ABILITY_INTERVAL = 200;
 using namespace Security::AccessToken;
 
 PrintServiceHelper::~PrintServiceHelper()
@@ -61,11 +61,13 @@ bool PrintServiceHelper::StartAbility(const AAFwk::Want &want)
     while (retry++ < MAX_RETRY_TIMES) {
         PRINT_HILOGD("PrintServiceHelper::StartAbility %{public}s %{public}s",
             element.GetBundleName().c_str(), element.GetAbilityName().c_str());
-        if (AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want) == 0) {
+        auto ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want);
+        if (!ret) {
             break;
+        } else {
+            PRINT_HILOGE("PrintServiceHelper::StartAbility failed, err is %{public}d, retry is %{public}d", ret, retry);
+            std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
         }
-        std::this_thread::sleep_for(std::chrono::seconds(START_ABILITY_INTERVAL));
-        PRINT_HILOGD("PrintServiceHelper::StartAbility %{public}d", retry);
     }
     if (retry > MAX_RETRY_TIMES) {
         PRINT_HILOGE("PrintServiceHelper::StartAbility --> failed ");
@@ -94,7 +96,7 @@ bool PrintServiceHelper::StartPluginPrintIconExtAbility(const AAFwk::Want &want)
             PRINT_HILOGI("PrintServiceHelper::StartPluginPrintIconExtAbility ConnectAbility success");
             break;
         }
-        std::this_thread::sleep_for(std::chrono::seconds(START_ABILITY_INTERVAL));
+        std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
         PRINT_HILOGE("PrintServiceHelper::StartPluginPrintIconExtAbility %{public}d", retry);
     }
     if (retry > MAX_RETRY_TIMES) {
