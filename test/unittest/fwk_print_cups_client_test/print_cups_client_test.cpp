@@ -1675,12 +1675,23 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0079, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     http_t *http = nullptr;
-    PrintJob testJob;
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = nullptr;
     int32_t numFiles = 1;
     int32_t jobId = 1;
     EXPECT_EQ(printCupsClient.HandleFiles(jobParams, numFiles, http, jobId), false);
-    jobParams = nullptr;
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    testJob.SetColorMode(1);
+    testJob.SetCopyNumber(1);
+    testJob.SetDuplexMode(0);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    jobParams = printCupsClient.BuildJobParameters(testJob);
     EXPECT_EQ(printCupsClient.HandleFiles(jobParams, numFiles, http, jobId), false);
     delete http;
 }
