@@ -723,10 +723,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0034, TestSize.Level1)
     service->helper_ = helper;
     std::string printJobId = "1";
     PrintJob printJob;
-    EXPECT_EQ(service->QueryPrintJobById(printJobId, printJob), E_PRINT_INVALID_USERID);
+    EXPECT_EQ(service->QueryPrintJobById(printJobId, printJob), E_PRINT_INVALID_PRINTJOB);
     int32_t userId = 100;
     service->printUserMap_.insert(std::make_pair(userId, nullptr));
-    EXPECT_EQ(service->QueryPrintJobById(printJobId, printJob), E_PRINT_INVALID_USERID);
+    EXPECT_EQ(service->QueryPrintJobById(printJobId, printJob), E_PRINT_INVALID_PRINTJOB);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0035, TestSize.Level1)

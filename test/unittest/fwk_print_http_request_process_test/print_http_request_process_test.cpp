@@ -1088,6 +1088,18 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_055, TestSize.
     printHttpRequestProcess.StartWriteDataToPrinterLooper();
 }
 
+/**
+ * @tc.name: PrintHttpRequestProcessTest_056
+ * @tc.desc: Verify the ProcessDataFromDevice function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_056, TestSize.Level1)
+{
+    OHOS::Print::PrintHttpRequestProcess printHttpRequestProcess;
+    printHttpRequestProcess.StartReadSendDocDataFraomPrinterLooper();
+}
+
 }  // namespace Print
 }  // namespace OHOS
 
