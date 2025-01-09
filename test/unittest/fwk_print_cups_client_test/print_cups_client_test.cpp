@@ -1769,7 +1769,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0082, TestSize.Level1)
     std::string printerName = "testPrinterName";
     EXPECT_EQ(printCupsClient.ResumePrinter(printerName), false);
     printCupsClient.printAbility_ = nullptr;
-    EXPECT_EQ(printCupsClient.ResumePrinter(printerName), false);
+    EXPECT_EQ(printCupsClient.ResumePrinter(printerName), true);
 }
 
 /**

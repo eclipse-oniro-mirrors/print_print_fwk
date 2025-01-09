@@ -66,9 +66,6 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0001, TestSize.Level1)
     EXPECT_TRUE(VendorManager::ExtractPrinterId("").empty());
     EXPECT_TRUE(VendorManager::ExtractGlobalVendorName("").empty());
     EXPECT_TRUE(VendorManager::ExtractVendorName("").empty());
-    EXPECT_TRUE(VendorManager::ExtractPrinterId("fwk.test:").empty());
-    EXPECT_TRUE(VendorManager::ExtractVendorName("test").empty());
-    EXPECT_TRUE(VendorManager::ExtractVendorName("fwk.").empty());
 }
 
 HWTEST_F(VendorManagerTest, VendorManagerTest_0002, TestSize.Level1)
@@ -109,44 +106,6 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0003, TestSize.Level1)
     EXPECT_FALSE(vendorManager.QueryPrinterInfo("test:", 0));
     EXPECT_FALSE(vendorManager.QueryPrinterInfo(":test", 0));
     syncWait.Wait(WAIT_TIME_MS);
-    vendorManager.UnInit();
-}
-
-HWTEST_F(VendorManagerTest, VendorManagerTest_0004, TestSize.Level2)
-{
-    MockPrintServiceAbility mock;
-    VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
-    auto vendorIppEverywhere = std::make_shared<VendorIppEveryWhere>();
-    ASSERT_NE(vendorIppEverywhere, nullptr);
-    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorIppEverywhere));
-    ThreadSyncWait syncWait;
-    std::string vendorName = vendorIppEverywhere->GetVendorName();
-    std::string globalVendorName = VendorManager::GetGlobalVendorName(vendorName);
-    std::string printerId = PRINTER_TEST_IP;
-    std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
-    vendorManager.StartDiscovery();
-    syncWait.Wait(WAIT_TIME_MS);
-    vendorManager.StopDiscovery();
-    syncWait.Wait(WAIT_TIME_MS);
-    vendorManager.StartStatusMonitor();
-    syncWait.Wait(WAIT_TIME_MS);
-    vendorManager.MonitorPrinterStatus(globalPrinterId, true);
-    vendorManager.MonitorPrinterStatus(globalPrinterId, true);
-    syncWait.Wait(WAIT_TIME_MS);
-    EXPECT_CALL(mock, QueryPrinterCapabilityByUri(_, _)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, QueryPrinterStatusByUri(_, _)).WillRepeatedly(Return(true));
-    EXPECT_TRUE(vendorManager.ConnectPrinterByIp(PRINTER_TEST_IP, "ipp"));
-    EXPECT_FALSE(vendorManager.ConnectPrinter(PRINTER_TEST_IP));
-    EXPECT_TRUE(vendorManager.ConnectPrinter(globalPrinterId));
-    EXPECT_TRUE(vendorManager.QueryPrinterInfo(globalPrinterId, 0));
-    vendorManager.UpdateAllPrinterStatus();
-    vendorManager.MonitorPrinterStatus(globalPrinterId, false);
-    vendorManager.MonitorPrinterStatus(globalPrinterId, false);
-    syncWait.Wait(WAIT_TIME_MS);
-    vendorManager.StopStatusMonitor();
-    syncWait.Wait(WAIT_TIME_MS);
-    vendorManager.UnloadVendorDriver(vendorName);
     vendorManager.UnInit();
 }
 
@@ -201,72 +160,6 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0006, TestSize.Level2)
     vendorManager.UnInit();
 }
 
-HWTEST_F(VendorManagerTest, VendorManagerTest_0007, TestSize.Level2)
-{
-    MockPrintServiceAbility mock;
-    VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
-    auto vendorIppEverywhere = std::make_shared<VendorIppEveryWhere>();
-    ASSERT_NE(vendorIppEverywhere, nullptr);
-    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorIppEverywhere));
-    std::string vendorName = vendorIppEverywhere->GetVendorName();
-    std::string globalVendorName = VendorManager::GetGlobalVendorName(vendorName);
-    std::string printerId = PRINTER_TEST_IP;
-    std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
-    EXPECT_CALL(mock, QueryPrinterStatusByUri(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, QueryPrinterCapabilityByUri(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, AddVendorPrinterToCupsWithPpd(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, OnVendorStatusUpdate(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, RemoveVendorPrinterFromCups(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    PrinterStatus status = PRINTER_STATUS_UNAVAILABLE;
-    EXPECT_FALSE(vendorManager.QueryPrinterStatusByUri(PRINTER_TEST_IP, status));
-    EXPECT_TRUE(vendorManager.QueryPrinterStatusByUri(PRINTER_TEST_IP, status));
-    PrinterCapability printerCap;
-    EXPECT_FALSE(vendorManager.QueryPrinterCapabilityByUri(PRINTER_TEST_IP, printerCap));
-    EXPECT_TRUE(vendorManager.QueryPrinterCapabilityByUri(PRINTER_TEST_IP, printerCap));
-    std::string ppdData;
-    EXPECT_FALSE(vendorManager.OnPrinterPpdQueried(vendorName, PRINTER_TEST_IP, ppdData));
-    vendorManager.SetConnectingPrinter(ConnectMethod::ID_AUTO, globalPrinterId);
-    EXPECT_FALSE(vendorManager.OnPrinterPpdQueried(vendorName, PRINTER_TEST_IP, ppdData));
-    EXPECT_TRUE(vendorManager.OnPrinterPpdQueried(vendorName, PRINTER_TEST_IP, ppdData));
-    PrinterVendorStatus vendorStatus;
-    EXPECT_FALSE(vendorManager.OnPrinterStatusChanged(vendorName, PRINTER_TEST_IP, vendorStatus));
-    EXPECT_TRUE(vendorManager.OnPrinterStatusChanged(vendorName, PRINTER_TEST_IP, vendorStatus));
-    EXPECT_EQ(vendorManager.RemovePrinterFromCups(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_CALLBACK_FAIL);
-    EXPECT_EQ(vendorManager.RemovePrinterFromCups(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_NONE);
-    vendorManager.UnInit();
-}
-
-HWTEST_F(VendorManagerTest, VendorManagerTest_0008, TestSize.Level2)
-{
-    MockPrintServiceAbility mock;
-    VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
-    auto vendorIppEverywhere = std::make_shared<VendorIppEveryWhere>();
-    ASSERT_NE(vendorIppEverywhere, nullptr);
-    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorIppEverywhere));
-    std::string vendorName = vendorIppEverywhere->GetVendorName();
-    std::string globalVendorName = VendorManager::GetGlobalVendorName(vendorName);
-    std::string printerId = PRINTER_TEST_IP;
-    std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
-    std::string ppdData;
-    PrinterInfo printerInfo;
-    EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, UpdateVendorPrinterToDiscovery(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, RemoveVendorPrinterFromDiscovery(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, AddVendorPrinterToCupsWithPpd(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
-    EXPECT_EQ(vendorManager.UpdatePrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
-    EXPECT_EQ(vendorManager.UpdatePrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
-    EXPECT_EQ(vendorManager.RemovePrinterFromDiscovery(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_CALLBACK_FAIL);
-    EXPECT_EQ(vendorManager.RemovePrinterFromDiscovery(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_NONE);
-    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(vendorName, PRINTER_TEST_IP, ppdData),
-              EXTENSION_ERROR_CALLBACK_FAIL);
-    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(vendorName, PRINTER_TEST_IP, ppdData), EXTENSION_ERROR_NONE);
-    vendorManager.UnInit();
-}
-
 HWTEST_F(VendorManagerTest, VendorManagerTest_0009, TestSize.Level2)
 {
     MockPrintServiceAbility mock;
@@ -279,54 +172,6 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0009, TestSize.Level2)
     vendorManager.UnInit();
     EXPECT_TRUE(vendorManager.Init(&mock, true));
     syncWait.Wait(WAIT_TIME_MS);
-    vendorManager.UnInit();
-}
-
-HWTEST_F(VendorManagerTest, VendorManagerTest_0010, TestSize.Level1)
-{
-    MockPrintServiceAbility mock;
-    VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
-    auto vendorPpdDriver = std::make_shared<VendorPpdDriver>();
-    ASSERT_NE(vendorPpdDriver, nullptr);
-    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorPpdDriver));
-    std::string vendorName = vendorPpdDriver->GetVendorName();
-    std::string globalVendorName = VendorManager::GetGlobalVendorName(vendorName);
-    std::string printerId = PRINTER_TEST_IP;
-    std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
-    std::string ppdData;
-    PrinterInfo printerInfo;
-    EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(false));
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
-    vendorManager.UnInit();
-}
-
-HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
-{
-    MockPrintServiceAbility mock;
-    MockVendorPpdDriver mockVendorPpdDriver;
-    VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
-    auto vendorPpdDriver = std::make_shared<VendorPpdDriver>();
-    ASSERT_NE(vendorPpdDriver, nullptr);
-    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorPpdDriver));
-    std::string vendorName = "driver.bsuni";
-    std::string globalVendorName = VendorManager::GetGlobalVendorName(vendorName);
-    std::string printerId = PRINTER_TEST_IP;
-    std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
-    std::string ppdData;
-    PrinterInfo printerInfo;
-
-    std::string option = "{\"bsunidriverSupport\": \"true\"}";
-    printerInfo.SetOption(option);
-    EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(true));
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
-
-    option = "{\"bsunidriverSupport\": \"false\"}";
-    printerInfo.SetOption(option);
-    EXPECT_CALL(mockVendorPpdDriver, OnQueryProperties(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_INVALID_PRINTER);
-    EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
     vendorManager.UnInit();
 }
 

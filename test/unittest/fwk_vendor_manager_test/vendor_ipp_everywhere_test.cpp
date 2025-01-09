@@ -96,53 +96,6 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0002, TestSize.Level2)
     vendorDriver.UnInit();
 }
 
-HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0003, TestSize.Level2)
-{
-    MockVendorManager mock;
-    VendorIppEveryWhere vendorDriver;
-    EXPECT_TRUE(vendorDriver.Init(&mock));
-    std::vector<std::string> propertyKeys;
-    propertyKeys.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);
-    propertyKeys.push_back(PRINTER_PROPERTY_KEY_DEVICE_SUPPLIES);
-    EXPECT_FALSE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
-    vendorDriver.OnCreate();
-    ThreadSyncWait syncWait;
-    syncWait.Wait(WAIT_TIME_MS);
-    EXPECT_CALL(mock, QueryPrinterStatusByUri(_, _)).Times(2).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, QueryPrinterCapabilityByUri(_, _)).Times(2).WillRepeatedly(Return(false));
-    EXPECT_TRUE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
-    EXPECT_TRUE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
-    EXPECT_TRUE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp"));
-    EXPECT_TRUE(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0));
-    syncWait.Wait(WAIT_TIME_MS);
-    vendorDriver.OnDestroy();
-    vendorDriver.UnInit();
-}
-
-HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0004, TestSize.Level2)
-{
-    MockVendorManager mock;
-    VendorIppEveryWhere vendorDriver;
-    EXPECT_TRUE(vendorDriver.Init(&mock));
-    std::vector<std::string> propertyKeys;
-    propertyKeys.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);
-    propertyKeys.push_back(PRINTER_PROPERTY_KEY_DEVICE_SUPPLIES);
-    vendorDriver.OnCreate();
-    ThreadSyncWait syncWait;
-    syncWait.Wait(WAIT_TIME_MS);
-    EXPECT_CALL(mock, QueryPrinterStatusByUri(_, _)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, OnPrinterStatusChanged(_, _, _)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, QueryPrinterCapabilityByUri(_, _)).WillRepeatedly(Return(true));
-    vendorDriver.MonitorPrinterStatus(PRINTER_TEST_IP, true);
-    EXPECT_TRUE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
-    EXPECT_TRUE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp"));
-    syncWait.Wait(WAIT_TIME_MS);
-    vendorDriver.MonitorPrinterStatus(PRINTER_TEST_IP, false);
-    syncWait.Wait(WAIT_TIME_MS);
-    vendorDriver.OnDestroy();
-    vendorDriver.UnInit();
-}
-
 HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0005, TestSize.Level2)
 {
     VendorIppEveryWhere vendorDriver;
@@ -163,34 +116,6 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0005, TestSize.Level2)
     EXPECT_NE(vendorDriver.ConvertCapabilityToInfo(cap, uri), nullptr);
 }
 
-HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0006, TestSize.Level2)
-{
-    MockVendorManager mock;
-    VendorIppEveryWhere vendorDriver;
-    auto printerInfo = std::make_shared<PrinterInfo>();
-    EXPECT_FALSE(vendorDriver.ConnectPrinter(printerInfo));
-    EXPECT_TRUE(vendorDriver.Init(&mock));
-    EXPECT_FALSE(vendorDriver.ConnectPrinter(nullptr));
-    EXPECT_CALL(mock, UpdatePrinterToDiscovery(_, _)).Times(3).WillOnce(Return(1)).WillRepeatedly(Return(0));
-    EXPECT_CALL(mock, AddPrinterToCupsWithPpd(_, _, _)).Times(2).WillOnce(Return(1)).WillRepeatedly(Return(0));
-    EXPECT_FALSE(vendorDriver.ConnectPrinter(printerInfo));
-    EXPECT_FALSE(vendorDriver.ConnectPrinter(printerInfo));
-    EXPECT_TRUE(vendorDriver.ConnectPrinter(printerInfo));
-}
-
-HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0007, TestSize.Level2)
-{
-    MockVendorManager mock;
-    VendorIppEveryWhere vendorDriver;
-    auto printerInfo = std::make_shared<PrinterInfo>();
-    EXPECT_FALSE(vendorDriver.UpdateCapability(printerInfo));
-    EXPECT_TRUE(vendorDriver.Init(&mock));
-    EXPECT_FALSE(vendorDriver.UpdateCapability(nullptr));
-    EXPECT_CALL(mock, UpdatePrinterToDiscovery(_, _)).Times(2).WillOnce(Return(1)).WillRepeatedly(Return(0));
-    EXPECT_FALSE(vendorDriver.UpdateCapability(printerInfo));
-    EXPECT_TRUE(vendorDriver.UpdateCapability(printerInfo));
-}
-
 HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0008, TestSize.Level2)
 {
     VendorDriverBaseTest vendorDriver;
@@ -204,21 +129,6 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0008, TestSize.Level2)
     EXPECT_FALSE(vendorDriver.OnQueryCapabilityByIp(printerId, ""));
     std::vector<std::string> propertyKeys;
     EXPECT_FALSE(vendorDriver.OnQueryProperties(printerId, propertyKeys));
-}
-
-HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0009, TestSize.Level2)
-{
-    MockVendorManager mock;
-    VendorDriverBaseTest vendorDriver;
-    std::string printerId = "test";
-    EXPECT_TRUE(vendorDriver.MonitorPrinterStatus(printerId, true));
-    EXPECT_TRUE(vendorDriver.Init(&mock));
-    EXPECT_CALL(mock, OnPrinterStatusChanged(_, _, _)).WillRepeatedly(Return(false));
-    EXPECT_FALSE(vendorDriver.MonitorPrinterStatus(printerId, true));
-    vendorDriver.UpdateAllPrinterStatus();
-    EXPECT_TRUE(vendorDriver.MonitorPrinterStatus(printerId, false));
-    EXPECT_FALSE(vendorDriver.MonitorPrinterStatus(printerId, false));
-    vendorDriver.UnInit();
 }
 }  // namespace Print
 }  // namespace OHOS

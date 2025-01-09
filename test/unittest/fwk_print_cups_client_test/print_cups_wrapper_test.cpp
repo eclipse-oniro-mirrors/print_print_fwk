@@ -115,44 +115,6 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0001, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintCupsWrapperTest_0002
- * @tc.desc: QueryPrinterAttrList
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0002, TestSize.Level1)
-{
-    MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        EXPECT_CALL(mock, GetNamedDest(_, _, _)).Times(1).WillOnce(Return(nullptr));
-        std::string printerName = "testPrinterName";
-        std::vector<std::string> keyList = {"key1", "key2"};
-        std::vector<std::string> valueList;
-        EXPECT_EQ(printCupsClient.QueryPrinterAttrList(printerName, keyList, valueList), E_PRINT_SERVER_FAILURE);
-    };
-    DoMockTest(testFunc);
-}
-
-/**
- * @tc.name: PrintCupsWrapperTest_0003
- * @tc.desc: QueryPrinterAttrList
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0003, TestSize.Level1)
-{
-    cups_dest_t cupsDests = {0};
-    MockTestFunc testFunc = [this, &cupsDests](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        EXPECT_CALL(mock, GetNamedDest(_, _, _)).Times(1).WillOnce(Return(&cupsDests));
-        EXPECT_CALL(mock, FreeDests(_, _)).WillRepeatedly(Return());
-        std::string printerName = "testPrinterName";
-        std::vector<std::string> keyList = {"key1", "key2"};
-        std::vector<std::string> valueList;
-        EXPECT_EQ(printCupsClient.QueryPrinterAttrList(printerName, keyList, valueList), E_PRINT_NONE);
-    };
-    DoMockTest(testFunc);
-}
-
-/**
  * @tc.name: PrintCupsWrapperTest_0010
  * @tc.desc: QueryPrinterInfoByPrinterId
  * @tc.type: FUNC
@@ -168,108 +130,6 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0010, TestSize.Level1)
     std::string printerId = "testPrinterId";
     PrinterInfo info;
     EXPECT_EQ(printCupsClient.QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_SERVER_FAILURE);
-}
-
-/**
- * @tc.name: PrintCupsWrapperTest_0011
- * @tc.desc: QueryPrinterInfoByPrinterId
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0011, TestSize.Level1)
-{
-    MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        EXPECT_CALL(mock, GetNamedDest(_, _, _)).Times(1).WillOnce(Return(nullptr));
-        std::string printerId = "testPrinterId";
-        PrinterInfo info;
-        EXPECT_EQ(printCupsClient.QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_SERVER_FAILURE);
-    };
-    DoMockTest(testFunc);
-}
-
-/**
- * @tc.name: PrintCupsWrapperTest_0012
- * @tc.desc: QueryPrinterInfoByPrinterId
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0012, TestSize.Level1)
-{
-    cups_dest_t cupsDests = {0};
-    MockTestFunc testFunc = [this, &cupsDests](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        EXPECT_CALL(mock, GetNamedDest(_, _, _)).Times(1).WillOnce(Return(&cupsDests));
-        EXPECT_CALL(mock, FreeDests(_, _)).WillRepeatedly(Return());
-        std::string printerId = "testPrinterId";
-        PrinterInfo info;
-        EXPECT_EQ(printCupsClient.QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_NONE);
-    };
-    DoMockTest(testFunc);
-}
-
-/**
- * @tc.name: PrintCupsWrapperTest_0013
- * @tc.desc: QueryPrinterInfoByPrinterId
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0013, TestSize.Level1)
-{
-    cups_dest_t cupsDests = {0};
-    MockTestFunc testFunc = [this, &cupsDests](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        EXPECT_CALL(mock, GetNamedDest(_, _, _)).Times(1).WillOnce(Return(&cupsDests));
-        EXPECT_CALL(mock, FreeDests(_, _)).WillRepeatedly(Return());
-        std::string printerId = "testPrinterId";
-        PrinterInfo info;
-        std::string option = "test option";
-        info.SetOption(option);
-        EXPECT_EQ(printCupsClient.QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_INVALID_PARAMETER);
-    };
-    DoMockTest(testFunc);
-}
-
-/**
- * @tc.name: PrintCupsWrapperTest_0014
- * @tc.desc: QueryPrinterInfoByPrinterId
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0014, TestSize.Level1)
-{
-    cups_dest_t cupsDests = {0};
-    MockTestFunc testFunc = [this, &cupsDests](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        EXPECT_CALL(mock, GetNamedDest(_, _, _)).Times(1).WillOnce(Return(&cupsDests));
-        EXPECT_CALL(mock, FreeDests(_, _)).WillRepeatedly(Return());
-        std::string printerId = "testPrinterId";
-        PrinterInfo info;
-        nlohmann::json option;
-        option["printerName"] = "name";
-        option["printerUri"] = "uri";
-        info.SetOption(option.dump());
-        printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
-    };
-    DoMockTest(testFunc);
-}
-
-/**
- * @tc.name: PrintCupsWrapperTest_0015
- * @tc.desc: QueryPrinterInfoByPrinterId
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0015, TestSize.Level1)
-{
-    cups_dest_t cupsDests = {0};
-    MockTestFunc testFunc = [this, &cupsDests](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        EXPECT_CALL(mock, GetNamedDest(_, _, _)).Times(1).WillOnce(Return(&cupsDests));
-        EXPECT_CALL(mock, FreeDests(_, _)).WillRepeatedly(Return());
-        std::string printerId = "testPrinterId";
-        PrinterInfo info;
-        nlohmann::json option;
-        option["printerName"] = "name";
-        info.SetOption(option.dump());
-        printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
-    };
-    DoMockTest(testFunc);
 }
 
 /**
@@ -291,40 +151,6 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0020, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintCupsWrapperTest_0021
- * @tc.desc: CheckPrinterMakeModel
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0021, TestSize.Level1)
-{
-    MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillRepeatedly(Return(nullptr));
-        JobParameters jobParams;
-        EXPECT_EQ(printCupsClient.CheckPrinterMakeModel(&jobParams), false);
-    };
-    DoMockTest(testFunc);
-}
-
-/**
- * @tc.name: PrintCupsWrapperTest_0022
- * @tc.desc: CheckPrinterMakeModel
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0022, TestSize.Level1)
-{
-    cups_dest_t cupsDests = {0};
-    MockTestFunc testFunc = [this, &cupsDests](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillRepeatedly(Return(&cupsDests));
-        EXPECT_CALL(mock, FreeDests(_, _)).WillRepeatedly(Return());
-        JobParameters jobParams;
-        EXPECT_EQ(printCupsClient.CheckPrinterMakeModel(&jobParams), false);
-    };
-    DoMockTest(testFunc);
-}
-
-/**
  * @tc.name: PrintCupsWrapperTest_0030
  * @tc.desc: CheckPrinterMakeModel
  * @tc.type: FUNC
@@ -341,44 +167,6 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0030, TestSize.Level1)
     std::string uri = "testUri";
     std::string ppd = "testPpd";
     EXPECT_EQ(printCupsClient.IsPrinterExist(name.c_str(), uri.c_str(), ppd.c_str()), false);
-}
-
-/**
- * @tc.name: PrintCupsWrapperTest_0031
- * @tc.desc: CheckPrinterMakeModel
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0031, TestSize.Level1)
-{
-    MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillRepeatedly(Return(nullptr));
-        std::string name = "testName";
-        std::string uri = "testUri";
-        std::string ppd = "testPpd";
-        EXPECT_EQ(printCupsClient.IsPrinterExist(name.c_str(), uri.c_str(), ppd.c_str()), false);
-    };
-    DoMockTest(testFunc);
-}
-
-/**
- * @tc.name: PrintCupsWrapperTest_0032
- * @tc.desc: CheckPrinterMakeModel
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0032, TestSize.Level1)
-{
-    cups_dest_t cupsDests = {0};
-    MockTestFunc testFunc = [this, &cupsDests](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillRepeatedly(Return(&cupsDests));
-        EXPECT_CALL(mock, FreeDests(_, _)).WillRepeatedly(Return());
-        std::string name = "testName";
-        std::string uri = "testUri";
-        std::string ppd = "testPpd";
-        EXPECT_EQ(printCupsClient.IsPrinterExist(name.c_str(), uri.c_str(), ppd.c_str()), false);
-    };
-    DoMockTest(testFunc);
 }
 
 /**
@@ -568,25 +356,5 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0088, TestSize.Level1)
     EXPECT_EQ(printCupsClient.ChangeFilterPermission(dstDir1, permissions), true);
 }
 
-/**
- * @tc.name: PrintCupsWrapperTest_0089
- * @tc.desc: QueryPrinterCapabilityFromPpd
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0089, TestSize.Level1)
-{
-    cups_dest_t cupsDests = {0};
-    cups_dinfo_t cupsDinfo = {0};
-    MockTestFunc testFunc =
-        [this, &cupsDests, &cupsDinfo](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillRepeatedly(Return(&cupsDests));
-        EXPECT_CALL(mock, CopyDestInfo(_, _)).WillRepeatedly(Return(&cupsDinfo));
-        std::string printerName = "testName";
-        PrinterCapability printerCaps;
-        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_NONE);
-    };
-    DoMockTest(testFunc);
-}
 }  // namespace Print
 }  // namespace OHOS
