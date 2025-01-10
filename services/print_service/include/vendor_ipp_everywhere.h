@@ -39,6 +39,7 @@ public:
 private:
     void QueryCapabilityByUri(const std::string &uri);
     void ConnectPrinterByUri(const std::string &uri);
+    void ConnectPrinterByPrinterIdAndUri(const std::string &printerId, const std::string &uri);
     std::shared_ptr<PrinterInfo> QueryPrinterInfoByUri(const std::string &uri);
     std::shared_ptr<PrinterInfo> ConvertCapabilityToInfo(const PrinterCapability &printerCap,
         const std::string &printerUri);

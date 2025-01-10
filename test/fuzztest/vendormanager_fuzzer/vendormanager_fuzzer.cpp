@@ -116,9 +116,9 @@ void TestWlanGroupOtherFunction(const uint8_t *data, size_t size, FuzzedDataProv
     vendorWlanGroup->OnPrinterPpdQueried(DEFAULT_VENDOR_NAME, printerId, ppdData);
     vendorWlanGroup->ConvertGroupDriver(printerId, vendorName);
     vendorWlanGroup->ConvertGroupGlobalPrinterId(printerId);
-    vendorWlanGroup->QueryBsUniPrinterIdByUuidPrinterId(printerId);
-    vendorWlanGroup->UpdateMappedPrinterId(printerId, printerBsuriId);
-    vendorWlanGroup->ExtractBsUniPrinterIdByPrinterInfo(printerInfo);
+    vendorWlanGroup->GetGroupPrinterId(printerId);
+    vendorWlanGroup->UpdateGroupPrinter(printerId, printerBsuriId);
+    vendorWlanGroup->ExtractPrinterIdByPrinterInfo(printerInfo);
 
     // other function without vendorManager
     vendorWlanGroup->vendorManager = nullptr;
@@ -126,9 +126,9 @@ void TestWlanGroupOtherFunction(const uint8_t *data, size_t size, FuzzedDataProv
     vendorWlanGroup->OnPrinterPpdQueried(DEFAULT_VENDOR_NAME, printerId, ppdData);
     vendorWlanGroup->ConvertGroupDriver(printerId, vendorName);
     vendorWlanGroup->ConvertGroupGlobalPrinterId(printerId);
-    vendorWlanGroup->QueryBsUniPrinterIdByUuidPrinterId(printerId);
-    vendorWlanGroup->UpdateMappedPrinterId(printerId, printerBsuriId);
-    vendorWlanGroup->ExtractBsUniPrinterIdByPrinterInfo(printerInfo);
+    vendorWlanGroup->GetGroupPrinterId(printerId);
+    vendorWlanGroup->UpdateGroupPrinter(printerId, printerBsuriId);
+    vendorWlanGroup->ExtractPrinterIdByPrinterInfo(printerInfo);
 }
 
 void TestPpdDriverConnectPrinterActions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

@@ -614,3 +614,10 @@ ConnectMethod VendorManager::GetConnectingMethod(const std::string &globalPrinte
     }
     return connectingMethod;
 }
+
+void VendorManager::OnDeletePrinterFromCups(const std::string &printerId)
+{
+    if (wlanGroupDriver != nullptr) {
+        wlanGroupDriver->OnDeletePrinterFromCups(printerId);
+    }
+}
