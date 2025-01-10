@@ -1097,7 +1097,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_055, TestSize.
 HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_056, TestSize.Level1)
 {
     OHOS::Print::PrintHttpRequestProcess printHttpRequestProcess;
-    printHttpRequestProcess.StartReadSendDocDataFraomPrinterLooper();
+    printHttpRequestProcess.StartReadSendDocDataFromPrinterLooper();
 }
 
 }  // namespace Print
