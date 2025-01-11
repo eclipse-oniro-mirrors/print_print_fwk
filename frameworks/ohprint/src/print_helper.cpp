@@ -197,35 +197,104 @@ void PageSizeArrayConvert(const OHOS::Print::PrinterCapability &cap, Print_Print
     }
     nativePrinterInfo.capability.supportedPageSizes = CopyArray<Print_PageSize>(nativePageSizeVector,
         nativePrinterInfo.capability.supportedPageSizesCount);
-    PRINT_HILOGI("nativePageSizeVector size = %{public}zu", nativePageSizeVector.size());
+    PRINT_HILOGD("Get nativePageSizeVector size = %{public}zu from printerCap", nativePageSizeVector.size());
 }
 
-void ParseDefaultPageMargin(const nlohmann::json &cupsOpt, Print_Margin &defaultMargin)
+void DuplexArrayConvert(const OHOS::Print::PrinterCapability &cap, Print_PrinterInfo &nativePrinterInfo)
 {
-    int leftMargin = 0;
-    int topMargin = 0;
-    int rightMargin = 0;
-    int bottomMargin = 0;
-    if (cupsOpt.contains("media-left-margin-supported") && cupsOpt["media-left-margin-supported"].is_string()) {
-        std::string mediaLeftMargin = cupsOpt["media-left-margin-supported"].get<std::string>();
-        ConvertStringToInt(mediaLeftMargin.c_str(), leftMargin);
+    std::vector<uint32_t> pageDuplexVector;
+    cap.GetSupportedDuplexMode(pageDuplexVector);
+    nativePrinterInfo.capability.supportedDuplexModes = CopyArray<uint32_t, Print_DuplexMode>(
+        pageDuplexVector, nativePrinterInfo.capability.supportedDuplexModesCount, ConvertDuplexMode);
+    PRINT_HILOGD("Get pageDuplexVector size = %{public}zu from printerCap", pageDuplexVector.size());
+}
+
+void ColorModeArrayConvert(const OHOS::Print::PrinterCapability &cap, Print_PrinterInfo &nativePrinterInfo)
+{
+    std::vector<uint32_t> colorModeVector;
+    cap.GetSupportedColorMode(colorModeVector);
+    nativePrinterInfo.capability.supportedColorModes = CopyArray<uint32_t, Print_ColorMode>(
+        colorModeVector, nativePrinterInfo.capability.supportedColorModesCount, ConvertColorMode);
+    PRINT_HILOGD("Get colorModeVector size = %{public}zu from printerCap", colorModeVector.size());
+}
+
+void OrientationArrayConvert(const OHOS::Print::PrinterCapability &cap, Print_PrinterInfo &nativePrinterInfo)
+{
+    std::vector<uint32_t> orientationVector;
+    cap.GetSupportedOrientation(orientationVector);
+    nativePrinterInfo.capability.supportedOrientations = CopyArray<uint32_t, Print_OrientationMode>(
+        orientationVector, nativePrinterInfo.capability.supportedOrientationsCount, ConvertOrientationMode);
+    PRINT_HILOGD("Get orientationVector size = %{public}zu from printerCap", orientationVector.size());
+}
+
+void ResolutionArrayConvert(const OHOS::Print::PrinterCapability &cap, Print_PrinterInfo &nativePrinterInfo)
+{
+    std::vector<PrintResolution> resolutionVector;
+    std::vector<Print_Resolution> nativeResolutionVector;
+    cap.GetResolution(resolutionVector);
+    for (const auto &resolution : resolutionVector) {
+        nativeResolutionVector.push_back({resolution.GetHorizontalDpi(), resolution.GetVerticalDpi()});
     }
-    if (cupsOpt.contains("media-top-margin-supported") && cupsOpt["media-top-margin-supported"].is_string()) {
-        std::string mediaTopMargin = cupsOpt["media-top-margin-supported"].get<std::string>();
-        ConvertStringToInt(mediaTopMargin.c_str(), topMargin);
+    nativePrinterInfo.capability.supportedResolutions =
+        CopyArray<Print_Resolution>(nativeResolutionVector, nativePrinterInfo.capability.supportedResolutionsCount);
+    PRINT_HILOGD("Get nativeResolutionVector size = %{public}zu from printerCap", nativeResolutionVector.size());
+}
+
+void QualityArrayConvert(const OHOS::Print::PrinterCapability &cap, Print_PrinterInfo &nativePrinterInfo)
+{
+    std::vector<uint32_t> qualityVector;
+    cap.GetSupportedQuality(qualityVector);
+    nativePrinterInfo.capability.supportedQualities = CopyArray<uint32_t, Print_Quality>(
+        qualityVector, nativePrinterInfo.capability.supportedQualitiesCount, ConvertQuality);
+    PRINT_HILOGD("Get qualityVector size = %{public}zu from printerCap", qualityVector.size());
+}
+
+void MediaTypeArrayConvert(const OHOS::Print::PrinterCapability &cap, Print_PrinterInfo &nativePrinterInfo)
+{
+    std::vector<std::string> mediaTypeVector;
+    cap.GetSupportedMediaType(mediaTypeVector);
+    if (mediaTypeVector.size() > 0) {
+        nlohmann::json mediaTypeJson(mediaTypeVector);
+        nativePrinterInfo.capability.supportedMediaTypes = CopyString(mediaTypeJson.dump());
     }
-    if (cupsOpt.contains("media-right-margin-supported") && cupsOpt["media-right-margin-supported"].is_string()) {
-        std::string mediaRightMargin = cupsOpt["media-right-margin-supported"].get<std::string>();
-        ConvertStringToInt(mediaRightMargin.c_str(), rightMargin);
+    PRINT_HILOGD("Get mediaTypeVector size = %{public}zu from printerCap", mediaTypeVector.size());
+}
+
+void DefaultPageMarginConvert(const OHOS::Print::PrinterCapability &cap, Print_PrinterInfo &nativePrinterInfo)
+{
+    uint32_t leftMargin = 0;
+    uint32_t topMargin = 0;
+    uint32_t rightMargin = 0;
+    uint32_t bottomMargin = 0;
+    PrintMargin margin;
+    cap.GetMinMargin(margin);
+    if (margin.HasLeft()) {
+        leftMargin = margin.GetLeft();
     }
-    if (cupsOpt.contains("media-bottom-margin-supported") && cupsOpt["media-bottom-margin-supported"].is_string()) {
-        std::string mediaBottomMargin = cupsOpt["media-bottom-margin-supported"].get<std::string>();
-        ConvertStringToInt(mediaBottomMargin.c_str(), bottomMargin);
+    if (margin.HasTop()) {
+        topMargin = margin.GetTop();
     }
-    defaultMargin.leftMargin = static_cast<uint32_t>(leftMargin);
-    defaultMargin.topMargin = static_cast<uint32_t>(topMargin);
-    defaultMargin.rightMargin = static_cast<uint32_t>(rightMargin);
-    defaultMargin.bottomMargin = static_cast<uint32_t>(bottomMargin);
+    if (margin.HasRight()) {
+        rightMargin = margin.GetRight();
+    }
+    if (margin.HasBottom()) {
+        bottomMargin = margin.GetBottom();
+    }
+    nativePrinterInfo.defaultValue.defaultMargin = {leftMargin, topMargin, rightMargin, bottomMargin};
+}
+
+void SetNativePrinterInfoFromCap(const OHOS::Print::PrinterCapability &cap, Print_PrinterInfo &nativePrinterInfo)
+{
+    PageSizeArrayConvert(cap, nativePrinterInfo);
+    DuplexArrayConvert(cap, nativePrinterInfo);
+    ColorModeArrayConvert(cap, nativePrinterInfo);
+    OrientationArrayConvert(cap, nativePrinterInfo);
+    MediaTypeArrayConvert(cap, nativePrinterInfo);
+    ResolutionArrayConvert(cap, nativePrinterInfo);
+    DefaultPageMarginConvert(cap, nativePrinterInfo);
+    QualityArrayConvert(cap, nativePrinterInfo);
+    ConvertColorMode(cap.GetColorMode(), nativePrinterInfo.defaultValue.defaultColorMode);
+    ConvertDuplexMode(cap.GetDuplexMode(), nativePrinterInfo.defaultValue.defaultDuplexMode);
 }
 
 void ParseMediaOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePrinterInfo)
@@ -257,33 +326,6 @@ void ParseMediaOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePrint
     }
 }
 
-void ParseColorModeArray(const nlohmann::json &arrayObject, Print_PrinterInfo &nativePrinterInfo)
-{
-    std::vector<uint32_t> list;
-    std::string key = "color";
-    ConvertJsonArrayToIntList(arrayObject, key, list);
-    nativePrinterInfo.capability.supportedColorModes = CopyArray<uint32_t, Print_ColorMode>(
-        list, nativePrinterInfo.capability.supportedColorModesCount, ConvertColorMode);
-}
-
-void ParseDuplexModeArray(const nlohmann::json &arrayObject, Print_PrinterInfo &nativePrinterInfo)
-{
-    std::vector<uint32_t> list;
-    std::string key = "duplex";
-    ConvertJsonArrayToIntList(arrayObject, key, list);
-    nativePrinterInfo.capability.supportedDuplexModes = CopyArray<uint32_t, Print_DuplexMode>(
-        list, nativePrinterInfo.capability.supportedDuplexModesCount, ConvertDuplexMode);
-}
-
-void ParseQualityArray(const nlohmann::json &arrayObject, Print_PrinterInfo &nativePrinterInfo)
-{
-    std::vector<uint32_t> list;
-    std::string key = "quality";
-    ConvertJsonArrayToIntList(arrayObject, key, list);
-    nativePrinterInfo.capability.supportedQualities =
-        CopyArray<uint32_t, Print_Quality>(list, nativePrinterInfo.capability.supportedQualitiesCount, ConvertQuality);
-}
-
 bool ParseResolutionObject(const nlohmann::json &jsonObject, Print_Resolution &resolution)
 {
     if (!jsonObject.contains("horizontalDpi")) {
@@ -309,22 +351,6 @@ bool ParseResolutionObject(const nlohmann::json &jsonObject, Print_Resolution &r
     return true;
 }
 
-void ParseResolutionArray(const nlohmann::json &arrayObject, Print_PrinterInfo &nativePrinterInfo)
-{
-    std::vector<Print_Resolution> list;
-    PRINT_HILOGI("ParseResolutionArray arrayObject size = %{public}zu", arrayObject.size());
-    for (auto &item : arrayObject) {
-        Print_Resolution resolution;
-        if (!ParseResolutionObject(item, resolution)) {
-            PRINT_HILOGW("ParseResolutionObject fail");
-            continue;
-        }
-        list.push_back(resolution);
-    }
-    nativePrinterInfo.capability.supportedResolutions =
-        CopyArray<Print_Resolution>(list, nativePrinterInfo.capability.supportedResolutionsCount);
-}
-
 void ParsePrinterOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePrinterInfo)
 {
     if (cupsOpt.contains("printer-location") && cupsOpt["printer-location"].is_string()) {
@@ -332,15 +358,7 @@ void ParsePrinterOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePri
         PRINT_HILOGD("printer-location: %{public}s", pLocation.c_str());
         nativePrinterInfo.location = CopyString(pLocation);
     }
-    std::string keyword = "orientation-requested-supported";
-    if (cupsOpt.contains(keyword) && cupsOpt[keyword].is_string()) {
-        std::string orientationArray = cupsOpt[keyword].get<std::string>();
-        PRINT_HILOGD("supported orientations: %{public}s", orientationArray.c_str());
-        std::vector<uint32_t> orientationVector = PrintUtil::Str2Vec(orientationArray);
-        nativePrinterInfo.capability.supportedOrientations = CopyArray<uint32_t, Print_OrientationMode>(
-            orientationVector, nativePrinterInfo.capability.supportedOrientationsCount, ConvertOrientationMode);
-    }
-    keyword = "orientation-requested-default";
+    std::string keyword = "orientation-requested-default";
     if (cupsOpt.contains(keyword) && cupsOpt[keyword].is_string()) {
         std::string orientationString = cupsOpt[keyword].get<std::string>();
         PRINT_HILOGD("default orientation: %{public}s", orientationString.c_str());
@@ -350,8 +368,6 @@ void ParsePrinterOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePri
             ConvertOrientationMode(defaultOrientation, nativePrinterInfo.defaultValue.defaultOrientation);
         }
     }
-    keyword = "printer-resolution-supported";
-    ParseJsonFieldAsArrayOpt(cupsOpt, keyword, nativePrinterInfo, ParseResolutionArray);
     keyword = "printer-resolution-default";
     if (cupsOpt.contains(keyword) && cupsOpt[keyword].is_string()) {
         std::string resolutionString = cupsOpt[keyword].get<std::string>();
@@ -362,8 +378,6 @@ void ParsePrinterOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePri
             }
         }
     }
-    keyword = "print-color-mode-supported";
-    ParseJsonFieldAsArrayOpt(cupsOpt, keyword, nativePrinterInfo, ParseColorModeArray);
 }
 
 bool ConvertStringToUint32(const char *src, uint32_t &dst)
@@ -383,11 +397,6 @@ bool ConvertStringToUint32(const char *src, uint32_t &dst)
 
 void ParseCupsCopyOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePrinterInfo)
 {
-    std::string keyword = "sides-supported";
-    ParseJsonFieldAsArrayOpt(cupsOpt, keyword, nativePrinterInfo, ParseDuplexModeArray);
-
-    keyword = "print-quality-supported";
-    ParseJsonFieldAsArrayOpt(cupsOpt, keyword, nativePrinterInfo, ParseQualityArray);
     if (cupsOpt.contains("copies-default") && cupsOpt["copies-default"].is_string()) {
         std::string defaultCopies = cupsOpt["copies-default"].get<std::string>();
         uint32_t defaultCopiesNum = 0;
@@ -413,7 +422,6 @@ void ParseCupsCopyOpt(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePr
 void ParseCupsOptions(const nlohmann::json &cupsOpt, Print_PrinterInfo &nativePrinterInfo)
 {
     ParsePrinterOpt(cupsOpt, nativePrinterInfo);
-    ParseDefaultPageMargin(cupsOpt, nativePrinterInfo.defaultValue.defaultMargin);
     ParseCupsCopyOpt(cupsOpt, nativePrinterInfo);
     ParseMediaOpt(cupsOpt, nativePrinterInfo);
     nlohmann::json advancedCapJson;
@@ -525,7 +533,9 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     }
     OHOS::Print::PrinterCapability cap;
     info.GetCapability(cap);
-    PageSizeArrayConvert(cap, *nativePrinterInfo);
+
+    SetNativePrinterInfoFromCap(cap, *nativePrinterInfo);
+
     if (cap.HasOption() && json::accept(cap.GetOption())) {
         nlohmann::json capJson = json::parse(cap.GetOption());
         if (capJson.contains("cupsOptions") && capJson["cupsOptions"].is_object()) {
@@ -533,8 +543,6 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
             ParseCupsOptions(cupsJson, *nativePrinterInfo);
         }
     }
-    ConvertColorMode(cap.GetColorMode(), nativePrinterInfo->defaultValue.defaultColorMode);
-    ConvertDuplexMode(cap.GetDuplexMode(), nativePrinterInfo->defaultValue.defaultDuplexMode);
 
     std::string printerPreference = "";
     int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(info.GetPrinterId(), printerPreference);
@@ -612,7 +620,10 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     PRINT_HILOGI("SetOptionInPrintJob in.");
     nlohmann::json jsonOptions;
     if (nativePrintJob.jobName != nullptr) {
-        jsonOptions["jobName"] = std::string(nativePrintJob.jobName);
+        std::string documentName = std::string(nativePrintJob.jobName);
+        jsonOptions["jobName"] = documentName;
+        jsonOptions["jobDesArr"] = {documentName, "0", "1"};
+        jsonOptions["isDocument"] = true;
     }
     if (nativePrintJob.mediaType != nullptr) {
         jsonOptions["mediaType"] = std::string(nativePrintJob.mediaType);
