@@ -90,7 +90,7 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0002, TestSize.Level2)
     syncWait.Wait(WAIT_TIME_MS);
     EXPECT_TRUE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp"));
     EXPECT_TRUE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
-    EXPECT_TRUE(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0));
+    EXPECT_FALSE(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0));
     syncWait.Wait(WAIT_TIME_MS);
     vendorDriver.OnDestroy();
     vendorDriver.UnInit();
@@ -109,11 +109,11 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0003, TestSize.Level2)
     ThreadSyncWait syncWait;
     syncWait.Wait(WAIT_TIME_MS);
     EXPECT_CALL(mock, QueryPrinterStatusByUri(_, _)).Times(2).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, QueryPrinterCapabilityByUri(_, _)).Times(2).WillRepeatedly(Return(false));
+    EXPECT_CALL(mock, QueryPrinterCapabilityByUri(_, _)).Times(1).WillRepeatedly(Return(false));
     EXPECT_TRUE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
     EXPECT_TRUE(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys));
     EXPECT_TRUE(vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp"));
-    EXPECT_TRUE(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0));
+    EXPECT_FALSE(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0));
     syncWait.Wait(WAIT_TIME_MS);
     vendorDriver.OnDestroy();
     vendorDriver.UnInit();

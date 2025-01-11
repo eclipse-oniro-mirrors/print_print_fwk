@@ -39,26 +39,28 @@ public:
     void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
     bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                                      const std::string &ppdData) override;
-    bool MonitorPrinterStatus(const std::string &printerId, bool on) override;
+    bool MonitorPrinterStatus(const std::string &groupPrinterId, bool on) override;
     bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                 const PrinterVendorStatus &status) override;
 
 private:
-    bool IsBsunidriverSupport(const std::string &printerId);
-    void RemovePrinterVendorGroupById(const std::string &printerId);
-    std::string ExtractBsUniPrinterIdByPrinterInfo(const PrinterInfo &rinterInfo);
-    void QueryBsUniPrinterIdByUuidPrinterId(std::string &bsUniPrinterId);
-    void UpdateMappedPrinterId(const std::string &bsUniPrinterId, const std::string printerId);
+    bool IsBsunidriverSupport(const std::string &groupPrinterId);
+    void RemoveGroupPrinterFromVendorGroupList(const std::string &groupPrinterId);
+    std::string ExtractPrinterIdByPrinterInfo(const PrinterInfo &printerInfo);
+    std::string GetGroupPrinterId(const std::string &printerId);
+    void UpdateGroupPrinter(const std::string &printerId, const std::string &groupPrinterId);
+    bool HasGroupPrinter(const std::string &printerId);
+    void RemovedGroupPrinter(const std::string &printerId);
     PrinterInfo ConvertPrinterInfoId(const PrinterInfo &priterInfo);
     bool CheckPrinterAddedByIp(const std::string &printerId);
     PrinterInfo ConvertIpPrinterName(const PrinterInfo &printerInfo);
-    std::string QuerySourceVendorDriverById(const std::string &printerId);
+    std::string QueryVendorDriverByGroupPrinterId(const std::string &groupPrinterId);
 
 private:
     VendorManager* parentVendorManager = nullptr;
     std::map<std::string, std::string> printerVendorGroupList_;
-    std::map<std::string, std::string> printerIdToUuidMap_;
-    std::mutex uuidMapMutex;
+    std::map<std::string, std::string> groupPrinterIdMap_;
+    std::mutex groupPrinterIdMapMutex;
     bool hasGs = false;
 };
 }  // namespace Print

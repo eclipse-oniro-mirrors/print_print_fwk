@@ -60,7 +60,21 @@ void VendorIppEveryWhere::OnStopDiscovery() {}
 
 bool VendorIppEveryWhere::OnQueryCapability(const std::string &printerId, int timeout)
 {
-    auto op = std::bind(&VendorIppEveryWhere::QueryCapabilityByUri, this, printerId);
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return false;
+    }
+    auto printerInfo = vendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
+    if (printerInfo == nullptr) {
+        PRINT_HILOGW("invalid printerId");
+        return false;
+    }
+    std::string printerUri(printerInfo->GetUri());
+    if (printerUri.find(VENDOR_IPP_START) == std::string::npos) {
+        PRINT_HILOGW("ipp everywhere not support");
+        return false;
+    }
+    auto op = std::bind(&VendorIppEveryWhere::ConnectPrinterByPrinterIdAndUri, this, printerId, printerUri);
     return opQueue.Push(op);
 }
 
@@ -112,6 +126,18 @@ void VendorIppEveryWhere::ConnectPrinterByUri(const std::string &uri)
     PRINT_HILOGI("ConnectPrinterByUri quit");
 }
 
+void VendorIppEveryWhere::ConnectPrinterByPrinterIdAndUri(const std::string &printerId, const std::string &uri)
+{
+    PRINT_HILOGI("ConnectPrinterByPrinterIdAndUri enter");
+    auto printerInfo = QueryPrinterInfoByUri(uri);
+    printerInfo->SetPrinterId(printerId);
+    if (!ConnectPrinter(printerInfo)) {
+        PRINT_HILOGW("connect fail");
+        return;
+    }
+    PRINT_HILOGI("ConnectPrinterByPrinterIdAndUri quit");
+}
+
 bool VendorIppEveryWhere::UpdateCapability(std::shared_ptr<PrinterInfo> printerInfo)
 {
     if (vendorManager == nullptr) {
@@ -141,11 +167,8 @@ bool VendorIppEveryWhere::ConnectPrinter(std::shared_ptr<PrinterInfo> printerInf
         return false;
     }
     PRINT_HILOGI("get printer info success");
-    std::string printerId(printerInfo->GetUri());
-    ConvertPrinterIdByUri(printerId);
-    auto discoveredInfo = vendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
+    auto discoveredInfo = vendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerInfo->GetPrinterId());
     if (discoveredInfo != nullptr) {
-        printerInfo->SetPrinterId(printerId);
         printerInfo->SetPrinterName(discoveredInfo->GetPrinterName());
     }
     if (vendorManager->UpdatePrinterToDiscovery(GetVendorName(), *printerInfo) != EXTENSION_ERROR_NONE) {
@@ -238,8 +261,8 @@ bool VendorIppEveryWhere::ConvertPrinterIdByUri(std::string &uri)
     }
     auto pos_start = uri.find(VENDOR_IPP_START);
     auto pos_end = uri.find(VENDOR_IPP_END);
-    if (pos_start == std::string::npos || uri.length() <= pos_start + 1 ||
-        pos_end == std::string::npos || uri.length() <= pos_end + 1) {
+    if (pos_start == std::string::npos || uri.length() <= pos_start + VENDOR_IPP_START.length() ||
+        pos_end == std::string::npos || pos_end - pos_start <= VENDOR_IPP_START.length()) {
         return false;
     }
     uri = uri.substr(pos_start + VENDOR_IPP_START.length(), pos_end - pos_start - VENDOR_IPP_START.length());
