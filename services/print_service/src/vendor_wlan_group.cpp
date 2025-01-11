@@ -132,6 +132,8 @@ int32_t VendorWlanGroup::OnPrinterRemoved(const std::string &vendorName, const s
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
     std::string groupPrinterId = GetGroupPrinterId(printerId);
+    RemoveGroupPrinterFromVendorGroupList(printerId);
+    RemovedGroupPrinter(printerId);
     return parentVendorManager->RemovePrinterFromDiscovery(GetVendorName(), groupPrinterId);
 }
 
@@ -396,12 +398,3 @@ bool VendorWlanGroup::OnPrinterStatusChanged(const std::string &vendorName, cons
     return parentVendorManager->OnPrinterStatusChanged(GetVendorName(), groupPrinterId, status);
 }
 
-void VendorWlanGroup::OnDeletePrinterFromCups(const std::string &printerId)
-{
-    if (parentVendorManager == nullptr) {
-        PRINT_HILOGE("VendorManager is null.");
-        return;
-    }
-    RemoveGroupPrinterFromVendorGroupList(printerId);
-    RemovedGroupPrinter(printerId);
-}

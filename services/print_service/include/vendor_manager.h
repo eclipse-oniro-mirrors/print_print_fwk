@@ -93,7 +93,6 @@ public:
     bool QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds) override;
     std::shared_ptr<VendorDriverBase> FindDriverByPrinterId(const std::string &globalPrinterId);
     std::shared_ptr<VendorDriverBase> FindDriverByVendorName(const std::string &vendorName);
-    void OnDeletePrinterFromCups(const std::string &printerId);
 
 private:
     void StatusMonitorProcess();

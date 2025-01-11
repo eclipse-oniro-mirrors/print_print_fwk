@@ -2890,7 +2890,6 @@ int32_t PrintServiceAbility::DeletePrinterFromCups(const std::string &printerNam
     DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->DisConnectPrinter(printerId);
 #endif // IPPOVERUSB_ENABLE
     vendorManager.MonitorPrinterStatus(printerId, false);
-    vendorManager.OnDeletePrinterFromCups(printerId);
     DeletePrinterFromUserData(printerId);
     NotifyAppDeletePrinter(printerId);
     printSystemData_.DeleteCupsPrinter(printerId);

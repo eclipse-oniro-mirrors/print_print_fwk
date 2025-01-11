@@ -42,7 +42,6 @@ public:
     bool MonitorPrinterStatus(const std::string &groupPrinterId, bool on) override;
     bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                 const PrinterVendorStatus &status) override;
-    void OnDeletePrinterFromCups(const std::string &printerId) override;
 
 private:
     bool IsBsunidriverSupport(const std::string &groupPrinterId);

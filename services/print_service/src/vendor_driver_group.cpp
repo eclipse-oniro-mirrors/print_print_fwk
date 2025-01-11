@@ -37,5 +37,3 @@ std::string VendorDriverGroup::ConvertGroupGlobalPrinterId(const std::string &bo
 {
     return "";
 }
-
-void VendorDriverGroup::OnDeletePrinterFromCups(const std::string &printerId) { return; }
