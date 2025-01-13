@@ -447,7 +447,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0023, TestSize.Level1)
     int numOptions = 0;
     cups_option_t *options = nullptr;
     int ret = printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(ret, 2);
+    EXPECT_EQ(ret, 3);
     delete jobParams;
     delete options;
 }
@@ -506,7 +506,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025, TestSize.Level1)
     jobParams->color = "";
     jobParams->isAutoRotate = true;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 7);
+    EXPECT_EQ(ret, 8);
     delete jobParams;
     delete options;
 }
@@ -1804,9 +1804,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0083, TestSize.Level1)
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
     jobParams->isAutoRotate = true;
-    jobParams->borderless = 1;
     jobParams->isLandscape = true;
-    jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
     int numOptions = 0;
     cups_option_t *options = nullptr;
     printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options);
@@ -1835,10 +1833,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0084, TestSize.Level1)
     testJob.SetIsLandscape(true);
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    jobParams->isAutoRotate = false;
-    jobParams->borderless = 1;
-    jobParams->isLandscape = true;
-    jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
+    jobParams->isAutoRotate = true;
+    jobParams->isLandscape = false;
     int numOptions = 0;
     cups_option_t *options = nullptr;
     printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options);
@@ -1868,9 +1864,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0085, TestSize.Level1)
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
     jobParams->isAutoRotate = false;
-    jobParams->borderless = 0;
     jobParams->isLandscape = false;
-    jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
     int numOptions = 0;
     cups_option_t *options = nullptr;
     printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options);
@@ -1900,9 +1894,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0086, TestSize.Level1)
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
     jobParams->isAutoRotate = false;
-    jobParams->borderless = 1;
     jobParams->isLandscape = true;
-    jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
     int numOptions = 0;
     cups_option_t *options = nullptr;
     printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options);
