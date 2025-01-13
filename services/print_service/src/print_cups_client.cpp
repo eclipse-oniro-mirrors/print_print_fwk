@@ -866,7 +866,6 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
             meidaWidth = floorf(ConvertInchTo100MM(mediaSizes[0].WidthInInches));
             mediaHeight = floorf(ConvertInchTo100MM(mediaSizes[0].HeightInInches));
         }
-        PRINT_HILOGD("meidaWidth: %f, mediaHeight: %f", meidaWidth, mediaHeight);
         std::stringstream value;
         value << "{media-size={x-dimension=" << meidaWidth << " y-dimension=" << mediaHeight;
         value << "} media-bottom-margin=" << 0 << " media-left-margin=" << 0 << " media-right-margin=" << 0;
@@ -875,6 +874,7 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         num_options = cupsAddOption("media-col", value.str().c_str(), num_options, options);
     } else {
         PRINT_HILOGD("not borderless job options");
+        num_options = cupsAddOption("fit-to-page", "true", num_options, options);
         if (!jobParams->mediaSize.empty()) {
             num_options = cupsAddOption(CUPS_MEDIA, jobParams->mediaSize.c_str(), num_options, options);
         } else {
@@ -896,11 +896,6 @@ int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_opti
         return num_options;
     }
     num_options = cupsAddOption("pdfAutoRotate", "false", num_options, options);
-
-    if (jobParams->mediaType != CUPS_MEDIA_TYPE_PHOTO_GLOSSY || jobParams->borderless != TRUE) {
-        num_options = cupsAddOption("fit-to-page", "true", num_options, options);
-    }
-
     if (jobParams->isLandscape) {
         num_options = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_LANDSCAPE, num_options, options);
     } else {
