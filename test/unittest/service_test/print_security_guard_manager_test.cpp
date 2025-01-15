@@ -14,7 +14,9 @@
  */
 
 #include <gtest/gtest.h>
+#define private public
 #include "print_security_guard_manager.h"
+#undef private
 #include "print_constant.h"
 #include "print_log.h"
 
@@ -50,7 +52,9 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0001, Test
     std::vector<std::string> fileList;
     PrinterInfo printerInfo;
     PrintJob printJob;
+    int num = printSerPrintSecurityGuardManager.securityMap_.size();
     printSerPrintSecurityGuardManager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
+    EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.size(), num+1);
     printSerPrintSecurityGuardManager.receiveJobStateUpdate("jobId-2", printerInfo, printJob);
 }
 
@@ -66,7 +70,9 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0002, Test
     std::vector<std::string> fileList;
     PrinterInfo printerInfo;
     PrintJob printJob;
+    int num = printSerPrintSecurityGuardManager.securityMap_.size();
     printSerPrintSecurityGuardManager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
+    EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.size(), num+1);
     printSerPrintSecurityGuardManager.receiveJobStateUpdate("jobId-1", printerInfo, printJob);
 }
 } // namespace Print

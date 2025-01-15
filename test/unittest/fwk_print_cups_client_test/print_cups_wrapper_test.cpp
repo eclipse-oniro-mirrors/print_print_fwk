@@ -467,7 +467,8 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0084, TestSize.Level1)
     JobStatus jobStatus = {0};
     constexpr size_t len = sizeof(jobStatus.printer_state_reasons);
     strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_MEDIA_EMPTY.c_str());
-    printCupsClient.GetBlockedSubstate(&jobStatus);
+    EXPECT_EQ(printCupsClient.GetBlockedSubstate(&jobStatus),
+        PRINT_JOB_COMPLETED_SUCCESS * 100 + PRINT_JOB_BLOCKED_OUT_OF_PAPER);
     strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_MEDIA_JAM.c_str());
     printCupsClient.GetBlockedSubstate(&jobStatus);
     strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_TONER_EMPTY.c_str());

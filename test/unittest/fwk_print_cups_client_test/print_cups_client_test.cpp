@@ -219,7 +219,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0008, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "DIRECT-PixLab_V1-0105";
     printCupsClient.SetDefaultPrinter(printerName);
-    printCupsClient.StartCupsdService();
+    EXPECT_EQ(printCupsClient.StartCupsdService(), E_PRINT_NONE);
     printCupsClient.SetDefaultPrinter(printerName);
 }
 
@@ -236,7 +236,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0009, TestSize.Level1)
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-0105";
     PrinterInfo info;
     info.SetPrinterName(printerName);
-    printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
+    EXPECT_EQ(printCupsClient.QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_SERVER_FAILURE);
 }
 
 /**
@@ -554,7 +554,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0027, TestSize.Level1)
     std::vector<std::string> printerNameList;
     printerNameList.push_back("testPrinterName");
     printCupsClient.StopCupsdService();
-    printCupsClient.QueryAddedPrinterList(printerNameList);
+    EXPECT_EQ(printCupsClient.QueryAddedPrinterList(printerNameList), E_PRINT_NONE);
 }
 
 /**
@@ -569,7 +569,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0028, TestSize.Level1)
     std::vector<std::string> printerNameList;
     printerNameList.push_back("testPrinterName");
     printCupsClient.StartCupsdService();
-    printCupsClient.QueryAddedPrinterList(printerNameList);
+    EXPECT_EQ(printCupsClient.QueryAddedPrinterList(printerNameList), E_PRINT_NONE);
 }
 
 /**
@@ -597,7 +597,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0031, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "testPrinterName";
-    printCupsClient.StartCupsdService();
+    EXPECT_EQ(printCupsClient.StartCupsdService(), E_PRINT_NONE);
     printCupsClient.GetPPDFile(printerName);
 }
 
@@ -613,7 +613,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0032, TestSize.Level1)
     std::string printerName = "testPrinterName";
     std::vector<std::string> keyList;
     std::vector<std::string> valueList;
-    printCupsClient.QueryPrinterAttrList(printerName, keyList, valueList);
+    EXPECT_EQ(printCupsClient.QueryPrinterAttrList(printerName, keyList, valueList), E_PRINT_SERVER_FAILURE);
 }
 
 /**
@@ -628,7 +628,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0033, TestSize.Level1)
     std::string printerId = "testPrinterId";
     PrinterInfo info;
     info.SetPrinterName("testPrinterName");
-    printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
+    EXPECT_EQ(printCupsClient.QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_SERVER_FAILURE);
 }
 
 /**
@@ -769,6 +769,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0044, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     bool isOffline = true;
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
@@ -801,6 +802,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0045, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     bool isOffline = false;
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
@@ -834,6 +836,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0046, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     bool isOffline = false;
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
@@ -877,6 +880,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0047, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     bool isOffline = false;
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
@@ -920,6 +924,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0048, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     bool isOffline = false;
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
@@ -953,6 +958,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0049, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     bool isOffline = false;
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
@@ -986,6 +992,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0050, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     bool isOffline = false;
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
@@ -1019,6 +1026,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0051, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     bool isOffline = false;
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
@@ -1052,6 +1060,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0052, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     bool isOffline = false;
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
@@ -1078,6 +1087,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0053, TestSize.Level1)
     JobStatus *jobStatus = nullptr;
     JobMonitorParam *param = nullptr;
     printCupsClient.ReportBlockedReason(param, jobStatus);
+    EXPECT_EQ(param, nullptr);
     delete jobStatus;
     delete param;
 }
@@ -1101,6 +1111,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0054, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility = nullptr,
         jobParams->serviceJobId,
@@ -1132,6 +1143,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0055, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
         jobParams->serviceJobId,
@@ -1180,6 +1192,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0056, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
         jobParams->serviceJobId,
@@ -1213,6 +1226,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0057, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
         jobParams->serviceJobId,
@@ -1236,7 +1250,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0057, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0059, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
+    int num = printCupsClient.jobQueue_.size();
     printCupsClient.CancelCupsJob(GetDefaultJobId());
+    if (num > 0) {
+        num = num - 1;
+    }
+    EXPECT_EQ(printCupsClient.jobQueue_.size(), num);
 }
 
 /**
@@ -1259,6 +1278,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0060, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     printCupsClient.jobQueue_.push_back(jobParams);
     PRINT_HILOGI("CancelCupsJob(): printCupsClient.jobQueue_.size(): %{public}u", printCupsClient.jobQueue_.size());
     printCupsClient.CancelCupsJob(serviceJobId);
@@ -1284,6 +1304,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0061, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     printCupsClient.jobQueue_.push_back(jobParams);
     printCupsClient.currentJob_ = jobParams;
     printCupsClient.CancelCupsJob(serviceJobId);
@@ -1310,6 +1331,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0062, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     PrintJob testJob2;
     testJob2.SetJobId(serviceJobId);
     testJob2.SetFdList(files);
@@ -1524,7 +1546,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0073, TestSize.Level1)
     const char *printerUri = "ipp://192.168.186.1:631/ipp/print";
     const char *printerName = "DIRECT-PixLab_V1-0105";
     const char *ppdName = "DIRECT-PixLab_V1-0105.ppd";
-    printCupsClient.IsPrinterExist(printerUri, printerName, ppdName);
+    EXPECT_EQ(printCupsClient.IsPrinterExist(printerUri, printerName, ppdName), E_PRINT_NONE);
 }
 
 /**
@@ -1579,6 +1601,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0076, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     JobStatus *jobStatus = new (std::nothrow) JobStatus{{'\0'}, (ipp_jstate_t)0, {'\0'}};
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam{jobParams->serviceAbility,
         jobParams->serviceJobId,
