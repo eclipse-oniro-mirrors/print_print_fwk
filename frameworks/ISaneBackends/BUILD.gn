@@ -22,9 +22,8 @@ idl_interface_sources = [
 idl_gen_interface("sane_backends_interface") {
   src_idl = rebase_path("ISaneBackends.idl")
   dst_file = string_join(",", idl_interface_sources)
-  hitrace = "HITRACE_TAG_ABILITY_MANAGER"
-  log_domainid = "0xD003900"
-  log_tag = "SaneBackendsService"
+  log_domainid = "0xD001C00"
+  log_tag = "scankit"
 }
 
 config("sane_config") {
@@ -59,7 +58,7 @@ ohos_shared_library("sane_backends") {
     "src/sane_picture_data.cpp",
   ]
   sources += filter_include(output_values, [ "*.cpp" ])
-  defines = [ "AMS_LOG_TAG = \"SaneBackendsService\"" ]
+  defines = [ "AMS_LOG_TAG = \"scankit\"" ]
   deps = [ ":sane_backends_interface" ]
   external_deps = [
     "ability_base:want",
@@ -67,7 +66,6 @@ ohos_shared_library("sane_backends") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog:libhilog",
-    "hitrace:hitrace_meter",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

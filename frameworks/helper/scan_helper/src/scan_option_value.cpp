@@ -159,18 +159,18 @@ std::shared_ptr<ScanOptionValue> ScanOptionValue::Unmarshalling(Parcel &parcel)
 
 void ScanOptionValue::Dump()
 {
-    SCAN_HILOGE("ValueType = %{public}d", valueType_);
-    SCAN_HILOGE("ValueSize = %{public}d", valueSize_);
+    SCAN_HILOGD("ValueType = %{public}d", valueType_);
+    SCAN_HILOGD("ValueSize = %{public}d", valueSize_);
     if (valueType_ == SCAN_VALUE_NUM) {
-        SCAN_HILOGE("NumValue = %{public}d", numValue_);
+        SCAN_HILOGD("NumValue = %{public}d", numValue_);
     } else if (valueType_ == SCAN_VALUE_NUM_LIST) {
         for (auto &num : numListValue_) {
-            SCAN_HILOGE("NumValue = %{public}d", num);
+            SCAN_HILOGD("NumValue = %{public}d", num);
         }
     } else if (valueType_ == SCAN_VALUE_STR) {
-        SCAN_HILOGE("StrValue = %{public}s", strValue_.c_str());
+        SCAN_HILOGD("StrValue = %{public}s", strValue_.c_str());
     } else if (valueType_ == SCAN_VALUE_BOOL) {
-        SCAN_HILOGE("BoolValue = %{public}d", boolValue_);
+        SCAN_HILOGD("BoolValue = %{public}d", boolValue_);
     }
 }
 } // namespace OHOS::Scan

@@ -466,7 +466,7 @@ ErrCode SaneServerManager::SaneRead(const std::string& scannerId,
         pictureData.size_ = INVALID_DATA;
         return ERR_OK;
     }
-    pictureData.size_ = buflen;
+    pictureData.size_ = curReadSize > 0 ? curReadSize : buflen;
     pictureData.data_ = valueBuffer;
     SCAN_HILOGI("SaneRead end");
     return ERR_OK;
