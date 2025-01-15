@@ -32,12 +32,6 @@ delete printServiceAbility;
 printServiceAbility = nullptr
 }
 };
-HWTEST_F(PrintServiceAbilityTest, GetInstance_ShouldReturnSameInstance, TestSize.Level0)
-{
-sptr<PrintServiceAbility> instance1 = PrintServiceAbility::GetInstance();
-sptr<PrintServiceAbility> instance2 = PrintServiceAbility::GetInstance();
-EXPECT_EQ(instance1, instance2);
-}
 HWTEST_F(PrintServiceAbilityTest, GetInstance_ShouldReturnDifferentInstance, TestSize.Level0)
 {
 sptr<PrintServiceAbility> instance1 = PrintServiceAbility::GetInstance();

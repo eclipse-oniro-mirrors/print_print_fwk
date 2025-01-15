@@ -418,7 +418,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0012, TestSize.Level1)
         [&testPrinterIds](const std::vector<std::string> &printerIds) {
             EXPECT_EQ(testPrinterIds.size(), printerIds.size());
             for (size_t index = 0; index < testPrinterIds.size(); index++) {
-                EXPECT_EQ(testPrinterIds[index], testPrinterIds[index]);
+                EXPECT_EQ(testPrinterIds[index], printerIds[index]);
             }
             return E_PRINT_NONE;
         });

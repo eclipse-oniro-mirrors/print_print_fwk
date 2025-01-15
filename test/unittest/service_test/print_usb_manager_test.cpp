@@ -282,12 +282,16 @@ HWTEST_F(PrintUsbManagerTest, PrintUsbManagerTest_011, TestSize.Level1)
     std::string devStr = IPP_PRINTER;
     std::string devStrNull = "";
     printUsbManager.DealUsbDevStatusChange(devStr, isAttach);
+    EXPECT_EQ(printUsbManager.printDeviceMap.size(), 1);
     isAttach = false;
     printUsbManager.DealUsbDevStatusChange(devStr, isAttach);
+    EXPECT_EQ(printUsbManager.printDeviceMap.size(), 0);
     printUsbManager.DealUsbDevStatusChange(devStrNull, isAttach);
+    EXPECT_EQ(printUsbManager.printDeviceMap.size(), 0);
     isAttach = true;
     devStr = NON_IPP_PRINTER;
     printUsbManager.DealUsbDevStatusChange(NON_IPP_PRINTER, isAttach);
+    EXPECT_EQ(printUsbManager.printDeviceMap.size(), 0);
 }
 
 /**

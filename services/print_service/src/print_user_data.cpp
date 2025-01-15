@@ -221,17 +221,18 @@ void PrintUserData::DeletePrinterFromUsedPrinterList(const std::string &printerI
     }
 }
 
-void PrintUserData::ParseUserData()
+bool PrintUserData::ParseUserData()
 {
     std::string fileData = "";
     if (!GetFileData(fileData)) {
         PRINT_HILOGW("get file data failed");
-        return;
+        return false;
     }
     nlohmann::json jsonObject;
     if (CheckFileData(fileData, jsonObject)) {
         ParseUserDataFromJson(jsonObject);
     }
+    return true;
 }
 
 void PrintUserData::ParseUserDataFromJson(nlohmann::json &jsonObject)
