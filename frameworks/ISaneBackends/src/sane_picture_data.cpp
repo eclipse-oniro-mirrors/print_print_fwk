@@ -45,11 +45,21 @@ bool SanePictureData::Marshalling(Parcel &parcel) const
 
 SanePictureData* SanePictureData::Unmarshalling(Parcel &parcel)
 {
-    SanePictureData* obj = new SanePictureData();
+    SanePictureData* obj = new (std::nothrow) SanePictureData();
+    if (obj == nullptr) {
+        SCAN_HILOGE("obj is a nullptr.");
+        return nullptr;
+    }
     int32_t dataSize = parcel.ReadInt32();
     obj->size_ = dataSize;
     if (dataSize == INVALID_DATA) {
+        SCAN_HILOGW("No data was read because of the failure");
         return obj;
+    }
+    if (dataSize > MAX_BUFLEN) {
+        SCAN_HILOGE("dataSize [%{public}d] exceeded the maximum value.", dataSize);
+        delete obj;
+        return nullptr;
     }
     const uint8_t* data = parcel.ReadBuffer(static_cast<size_t>(obj->size_));
     if (data == nullptr) {

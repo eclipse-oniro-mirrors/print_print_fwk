@@ -34,7 +34,11 @@ bool SaneParameters::Marshalling(Parcel &parcel) const
 
 SaneParameters* SaneParameters::Unmarshalling(Parcel &parcel)
 {
-    SaneParameters* obj = new SaneParameters();
+    SaneParameters* obj = new (std::nothrow) SaneParameters();
+    if (obj == nullptr) {
+        SCAN_HILOGE("obj is a nullptr.");
+        return nullptr;
+    }
     obj->format_ = static_cast<SaneFrame>(parcel.ReadInt32());
     obj->lastFrame_ = parcel.ReadInt32();
     obj->bytesPerLine_ = parcel.ReadInt32();

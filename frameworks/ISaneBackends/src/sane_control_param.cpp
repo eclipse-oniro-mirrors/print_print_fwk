@@ -14,6 +14,7 @@
  */
 
 #include "sane_control_param.h"
+#include "scan_log.h"
 #include "message_parcel.h"
 
 namespace OHOS::Scan {
@@ -33,7 +34,11 @@ bool SaneControlParam::Marshalling(Parcel &parcel) const
 
 SaneControlParam* SaneControlParam::Unmarshalling(Parcel &parcel)
 {
-    SaneControlParam* obj = new SaneControlParam();
+    SaneControlParam* obj = new (std::nothrow) SaneControlParam();
+    if (obj == nullptr) {
+        SCAN_HILOGE("obj is a nullptr.");
+        return nullptr;
+    }
     obj->option_ = parcel.ReadInt32();
     obj->action_ = static_cast<SaneAction>(parcel.ReadInt32());
     obj->valueType_ = parcel.ReadInt32();
