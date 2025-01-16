@@ -426,8 +426,10 @@ int32_t PrintCupsClient::InitCupsResources()
     srcDir = driverDir + "/backend";
     dstDir = CUPS_ROOT_DIR + "/serverbin/backend";
     SymlinkDirectory(srcDir.c_str(), dstDir.c_str());
-    srcDir = driverDir + "/backend/ipp";
+    srcDir = "/system/bin/cups/backend/ipp";
     dstDir = CUPS_ROOT_DIR + "/serverbin/backend/http";
+    SymlinkFile(srcDir, dstDir);
+    dstDir = CUPS_ROOT_DIR + "/serverbin/backend/ipps";
     SymlinkFile(srcDir, dstDir);
     return StartCupsdService();
 }
