@@ -41,7 +41,11 @@ bool SaneOptionDescriptor::Marshalling(Parcel &parcel) const
 
 SaneOptionDescriptor* SaneOptionDescriptor::Unmarshalling(Parcel &parcel)
 {
-    SaneOptionDescriptor* obj = new SaneOptionDescriptor();
+    SaneOptionDescriptor* obj = new (std::nothrow) SaneOptionDescriptor();
+    if (obj == nullptr) {
+        SCAN_HILOGE("obj is a nullptr.");
+        return nullptr;
+    }
     obj->optionName_ = parcel.ReadString();
     obj->optionTitle_ = parcel.ReadString();
     obj->optionDesc_ = parcel.ReadString();

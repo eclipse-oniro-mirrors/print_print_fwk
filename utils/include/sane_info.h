@@ -18,6 +18,7 @@
 
 namespace OHOS::Scan {
 constexpr int32_t INVALID_DATA = -1;
+constexpr int32_t MAX_BUFLEN = 1024 * 1024 * 1024; // 1G
 enum SaneStatus {
     SANE_STATUS_GOOD = 0, // everything A-OK
     SANE_STATUS_UNSUPPORTED, // operation is not supported

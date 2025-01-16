@@ -15,6 +15,7 @@
 
 #include "message_parcel.h"
 #include "sane_device.h"
+#include "scan_log.h"
 
 namespace OHOS::Scan {
 bool SaneDevice::Marshalling(Parcel &parcel) const
@@ -29,7 +30,11 @@ bool SaneDevice::Marshalling(Parcel &parcel) const
 
 SaneDevice* SaneDevice::Unmarshalling(Parcel &parcel)
 {
-    SaneDevice* obj = new SaneDevice();
+    SaneDevice* obj = new (std::nothrow) SaneDevice();
+    if (obj == nullptr) {
+        SCAN_HILOGE("obj is a nullptr.");
+        return nullptr;
+    }
     obj->name_ = parcel.ReadString();
     obj->vendor_ = parcel.ReadString();
     obj->model_ = parcel.ReadString();

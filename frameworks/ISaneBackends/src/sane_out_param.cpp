@@ -15,6 +15,7 @@
 
 #include "message_parcel.h"
 #include "sane_out_param.h"
+#include "scan_log.h"
 
 namespace OHOS::Scan {
 SaneOutParam::SaneOutParam() : info_(0), valueNumber_(0), valueBool_(true) {}
@@ -31,7 +32,11 @@ bool SaneOutParam::Marshalling(Parcel &parcel) const
 
 SaneOutParam* SaneOutParam::Unmarshalling(Parcel &parcel)
 {
-    SaneOutParam* obj = new SaneOutParam();
+    SaneOutParam* obj = new (std::nothrow) SaneOutParam();
+    if (obj == nullptr) {
+        SCAN_HILOGE("obj is a nullptr.");
+        return nullptr;
+    }
     obj->info_ = parcel.ReadInt32();
     obj->valueNumber_ = parcel.ReadInt32();
     std::vector<int32_t>& value = obj->valueNumList_;
