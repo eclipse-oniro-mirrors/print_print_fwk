@@ -21,6 +21,8 @@
 #include "parcel.h"
 
 namespace OHOS::Scan {
+const int32_t MAX_BUFSIZE = 1024 * 1024 * 1024; // 1G
+
 SanePictureData::SanePictureData() : data_(nullptr), size_(0) {}
 SanePictureData::~SanePictureData()
 {
@@ -47,6 +49,9 @@ SanePictureData* SanePictureData::Unmarshalling(Parcel &parcel)
 {
     SanePictureData* obj = new SanePictureData();
     int32_t dataSize = parcel.ReadInt32();
+    if (dataSize > MAX_BUFSIZE) {
+        return obj;
+    }
     obj->size_ = dataSize;
     if (dataSize == INVALID_DATA) {
         return obj;

@@ -121,10 +121,20 @@ napi_value JsPrintCallback::Exec(
         PRINT_HILOGE("Failed to build JS worker");
         return nullptr;
     }
-
-    if (UvQueueWork(loop, worker) != 0) {
-        PRINT_HILOGE("Failed to uv_queue_work");
-        PRINT_SAFE_DELETE(worker);
+    PRINT_SAFE_DELETE(worker);
+    auto task = [jsWorkParam = &jsParam_]() {
+        napi_call_function(jsWorkParam->nativeEngine, jsWorkParam->jsObj,
+            jsWorkParam->jsMethod, jsWorkParam->argc, jsWorkParam->argv, &(jsWorkParam->jsResult));
+        jsWorkParam->isCompleted = true;
+        if (jsWorkParam->isSync) {
+            jsWorkParam->self = nullptr;
+        } else {
+            std::unique_lock<std::mutex> lock(jsWorkParam->self->conditionMutex_);
+            jsWorkParam->self->syncCon_.notify_one();
+        }
+    };
+    if (napi_send_event(jsParam_.nativeEngine, task, napi_eprio_low) != napi_ok) {
+        PRINT_HILOGE("Failed to send event");
         return nullptr;
     }
     if (isSync) {
@@ -138,35 +148,6 @@ napi_value JsPrintCallback::Exec(
         return jsParam_.jsResult;
     }
     return nullptr;
-}
-
-int JsPrintCallback::UvQueueWork(uv_loop_s* loop, uv_work_t* worker)
-{
-    return uv_queue_work(
-        loop, worker, [](uv_work_t *work) {},
-        [](uv_work_t *work, int statusInt) {
-            if (work == nullptr) {
-                PRINT_HILOGE("work is nullptr!");
-                return;
-            }
-            auto jsWorkParam = reinterpret_cast<JsPrintCallback::JsWorkParam*>(work->data);
-            if (jsWorkParam == nullptr) {
-                PRINT_HILOGE("jsWorkParam is nullptr!");
-                PRINT_SAFE_DELETE(work);
-                return;
-            }
-            napi_call_function(jsWorkParam->nativeEngine, jsWorkParam->jsObj,
-                jsWorkParam->jsMethod, jsWorkParam->argc, jsWorkParam->argv, &(jsWorkParam->jsResult));
-            jsWorkParam->isCompleted = true;
-            if (jsWorkParam->isSync) {
-                jsWorkParam->self = nullptr;
-            } else {
-                std::unique_lock<std::mutex> lock(jsWorkParam->self->conditionMutex_);
-                jsWorkParam->self->syncCon_.notify_one();
-            }
-            PRINT_SAFE_DELETE(jsWorkParam);
-            PRINT_SAFE_DELETE(work);
-        });
 }
 } // namespace AbilityRuntime
 } // namespace OHOS
