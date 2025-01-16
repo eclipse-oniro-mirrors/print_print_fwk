@@ -49,7 +49,7 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0001, TestSize.Lev
 {
     AAFwk::Want want;
     PrintExtensionContext printExtensionContext;
-    printExtensionContext.StartAbility(want);
+    EXPECT_NE(printExtensionContext.StartAbility(want), ERR_OK);
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0002, TestSize.Level1)
@@ -57,7 +57,7 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0002, TestSize.Lev
     AAFwk::Want want;
     AAFwk::StartOptions startOptions;
     PrintExtensionContext printExtensionContext;
-    printExtensionContext.StartAbility(want, startOptions);
+    EXPECT_NE(printExtensionContext.StartAbility(want, startOptions), ERR_OK);
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0003, TestSize.Level1)
@@ -65,7 +65,7 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0003, TestSize.Lev
     AAFwk::Want want;
     int accountId = 0;
     PrintExtensionContext printExtensionContext;
-    printExtensionContext.StartAbilityWithAccount(want, accountId);
+    EXPECT_NE(printExtensionContext.StartAbilityWithAccount(want, accountId), ERR_OK);
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0004, TestSize.Level1)
@@ -74,7 +74,7 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0004, TestSize.Lev
     int accountId = 0;
     AAFwk::StartOptions startOptions;
     PrintExtensionContext printExtensionContext;
-    printExtensionContext.StartAbilityWithAccount(want, accountId, startOptions);
+    EXPECT_NE(printExtensionContext.StartAbilityWithAccount(want, accountId, startOptions), ERR_OK);
 }
 
 HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0005, TestSize.Level1)

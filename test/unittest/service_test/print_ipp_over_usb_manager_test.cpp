@@ -54,7 +54,7 @@ HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_002, TestSize.Le
     OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
     std::string printerId = "com.ohos.spooler:USB-PixLab V1-0159";
     int32_t port = 60000;
-    printIppOverUsbManager.ConnectPrinter(printerId, port);
+    EXPECT_EQ(printIppOverUsbManager.ConnectPrinter(printerId, port), true);
 }
 
 /**
@@ -68,7 +68,7 @@ HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_003, TestSize.Le
     OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
     std::string printerId = "com.ohos.spoolerUSB-PixLab V1-0159";
     int32_t port = 60000;
-    printIppOverUsbManager.ConnectPrinter(printerId, port);
+    EXPECT_EQ(printIppOverUsbManager.ConnectPrinter(printerId, port), false);
 }
 
 /**
@@ -82,7 +82,7 @@ HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_004, TestSize.Le
     OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
     std::string printerId = "com.ohos.test:USB-PixLab V1-0159";
     int32_t port = 60000;
-    printIppOverUsbManager.ConnectPrinter(printerId, port);
+    EXPECT_EQ(printIppOverUsbManager.ConnectPrinter(printerId, port), false);
 }
 
 /**
@@ -96,7 +96,7 @@ HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_005, TestSize.Le
     OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
     std::string printerId = "com.ohos.spooler:USB-PixLab V1-0159";
     int32_t port = 60000;
-    printIppOverUsbManager.ConnectPrinter(printerId, port);
+    EXPECT_EQ(printIppOverUsbManager.ConnectPrinter(printerId, port), false);
 }
 
 /**
@@ -110,6 +110,7 @@ HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_006, TestSize.Le
     OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
     std::string printerId = "com.ohos.spooler:USB-PixLab V1-0159";
     printIppOverUsbManager.DisConnectPrinter(printerId);
+    EXPECT_EQ(printerId, "com.ohos.spooler:USB-PixLab V1-0159");
 }
 
 /**
@@ -123,6 +124,7 @@ HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_007, TestSize.Le
     OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
     std::string printerId = "com.ohos.spoolerUSB-PixLab V1-0159";
     printIppOverUsbManager.DisConnectPrinter(printerId);
+    EXPECT_EQ(printerId, "com.ohos.spoolerUSB-PixLab V1-0159");
 }
 
 /**
@@ -136,6 +138,7 @@ HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_008, TestSize.Le
     OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
     std::string printerId = "com.ohos.test:USB-PixLab V1-0159";
     printIppOverUsbManager.DisConnectPrinter(printerId);
+    EXPECT_EQ(printerId, "com.ohos.test:USB-PixLab V1-0159");
 }
 
 /**
@@ -149,6 +152,7 @@ HWTEST_F(PrintIppOverUsbManagerTest, PrintIppOverUsbManagerTest_009, TestSize.Le
     OHOS::Print::PrintIppOverUsbManager printIppOverUsbManager;
     std::string printerId = "com.ohos.spooler:USB-PixLab V1-0159";
     printIppOverUsbManager.DisConnectPrinter(printerId);
+    EXPECT_EQ(printerId, "com.ohos.spooler:USB-PixLab V1-0159");
 }
 
 }  // namespace Print

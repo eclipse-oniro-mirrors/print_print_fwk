@@ -188,7 +188,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0002, TestSize.Level2)
 {
     MockVendorManager mockManager;
     VendorBsuniDriver vendorDriver;
-    vendorDriver.Init(&mockManager);
+    EXPECT_EQ(vendorDriver.Init(&mockManager), false);
     vendorDriver.UnInit();
 }
 
@@ -276,7 +276,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0006, TestSize.Level2)
     vendorDriver.OnCreate();
     vendorDriver.OnDestroy();
     vendorDriver.OnStartDiscovery();
-    vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0);
+    EXPECT_EQ(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0), false);
     vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp");
     std::vector<std::string> propertyKeys;
     vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys);
@@ -299,7 +299,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0007, TestSize.Level2)
     vendorDriver.OnCreate();
     vendorDriver.OnDestroy();
     vendorDriver.OnStartDiscovery();
-    vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0);
+    EXPECT_EQ(vendorDriver.OnQueryCapability(PRINTER_TEST_IP, 0), true);
     vendorDriver.OnQueryCapabilityByIp(PRINTER_TEST_IP, "ipp");
     std::vector<std::string> propertyKeys;
     vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys);
