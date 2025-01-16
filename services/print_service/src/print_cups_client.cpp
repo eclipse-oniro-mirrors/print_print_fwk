@@ -1239,7 +1239,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     http_t *http = nullptr;
     int num_options = 0;
     cups_option_t *options = nullptr;
-    uint32_t jobId;
+    uint32_t jobId = 0;
 
     if (!VerifyPrintJob(jobParams, num_options, jobId, options, http)) {
         callback();

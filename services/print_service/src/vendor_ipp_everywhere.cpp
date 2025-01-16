@@ -130,6 +130,10 @@ void VendorIppEveryWhere::ConnectPrinterByPrinterIdAndUri(const std::string &pri
 {
     PRINT_HILOGI("ConnectPrinterByPrinterIdAndUri enter");
     auto printerInfo = QueryPrinterInfoByUri(uri);
+    if (printerInfo == nullptr) {
+        PRINT_HILOGW("connect fail");
+        return;
+    }
     printerInfo->SetPrinterId(printerId);
     if (!ConnectPrinter(printerInfo)) {
         PRINT_HILOGW("connect fail");
