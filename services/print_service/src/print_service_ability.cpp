@@ -44,9 +44,6 @@
 #include "print_security_guard_manager.h"
 #include "hisys_event_util.h"
 #include "nlohmann/json.hpp"
-#ifdef IPPOVERUSB_ENABLE
-#include "print_ipp_over_usb_manager.h"
-#endif // IPPOVERUSB_ENABLE
 #include "uri.h"
 #include <fstream>
 #include <streambuf>
@@ -186,11 +183,6 @@ int32_t PrintServiceAbility::Init()
     }
     state_ = ServiceRunningState::STATE_RUNNING;
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
-#ifdef IPPOVERUSB_ENABLE
-    PRINT_HILOGD("before PrintIppOverUsbManager Init");
-    DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->Init();
-    PRINT_HILOGD("end PrintIppOverUsbManager Init");
-#endif // IPPOVERUSB_ENABLE
     return ERR_OK;
 }
 
@@ -346,20 +338,6 @@ int32_t PrintServiceAbility::HandleExtensionConnectPrinter(const std::string &pr
         PRINT_HILOGW("ConnectPrinter Not Register Yet!!!");
         return E_PRINT_SERVER_FAILURE;
     }
-#ifdef IPPOVERUSB_ENABLE
-    ConnectIppOverUsbPrinter(printerId);
-    auto cbFunc = extCallbackMap_[cid];
-    auto callback = [=]() {
-        if (cbFunc != nullptr) {
-            cbFunc->OnCallback(printerId);
-        }
-    };
-    if (helper_->IsSyncMode()) {
-        callback();
-    } else {
-        serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
-    }
-#endif // IPPOVERUSB_ENABLE
     return E_PRINT_NONE;
 }
 
@@ -1221,9 +1199,6 @@ bool PrintServiceAbility::CheckPrintJob(PrintJob &jobInfo)
 void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
 {
     PRINT_HILOGI("enter UpdateQueuedJobList, jobId: %{public}s.", jobId.c_str());
-#ifdef IPPOVERUSB_ENABLE
-    ConnectIppOverUsbPrinter(printJob->GetPrinterId());
-#endif // IPPOVERUSB_ENABLE
     std::string jobOrderId = GetPrintJobOrderId();
     if (jobOrderId == "0") {
         jobOrderList_.clear();
@@ -2886,9 +2861,6 @@ int32_t PrintServiceAbility::DeletePrinterFromCups(const std::string &printerNam
     DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());
 #endif  // CUPS_ENABLE
     std::string printerId = printSystemData_.QueryPrinterIdByStandardizeName(printerName);
-#ifdef IPPOVERUSB_ENABLE
-    DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->DisConnectPrinter(printerId);
-#endif // IPPOVERUSB_ENABLE
     vendorManager.MonitorPrinterStatus(printerId, false);
     DeletePrinterFromUserData(printerId);
     NotifyAppDeletePrinter(printerId);
@@ -3725,20 +3697,6 @@ bool PrintServiceAbility::CheckUserIdInEventType(const std::string &type)
         return true;
     }
     return false;
-}
-
-void PrintServiceAbility::ConnectIppOverUsbPrinter(const std::string &printerId)
-{
-#ifdef IPPOVERUSB_ENABLE
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
-    if (printerInfo == nullptr) {
-        PRINT_HILOGD("ConnectIppOverUsbPrinter get printer info failed.");
-        return;
-    }
-    OHOS::Uri uri(printerInfo->GetUri());
-    int32_t port = uri.GetPort();
-    DelayedSingleton<PrintIppOverUsbManager>::GetInstance()->ConnectPrinter(printerId, port);
-#endif
 }
 
 void PrintServiceAbility::UnregisterPrintTaskCallback(const std::string &jobId, const uint32_t state,
