@@ -38,7 +38,6 @@ if (!defined(global_parts_info) ||
 }
 cups_enable = true
 debug_enable = false
-ipp_over_usb_enable = false
 
 declare_args() {
   print_fwk_feature_bsuni_driver = false

@@ -129,19 +129,6 @@ ohos_shared_library("print_service") {
     external_deps += [ "cJSON:cjson" ]
   }
 
-  if (ipp_over_usb_enable) {
-    include_dirs += [ "//third_party/cpp-httplib" ]
-    sources += [
-      "src/print_http_request_process.cpp",
-      "src/print_http_server_manager.cpp",
-      "src/print_ipp_over_usb_manager.cpp",
-      "src/print_usb_manager.cpp",
-    ]
-    cflags_cc += [ "-DCPPHTTPLIB_NO_EXCEPTIONS" ]
-    cflags_cc += [ "-DCPPHTTPLIB_RECV_BUFSIZ=4096ul" ]
-    cflags_cc += [ "-DIPPOVERUSB_ENABLE" ]
-  }
-
   if (security_guard_enabled) {
     external_deps += [
       "security_guard:libsg_collect_sdk",

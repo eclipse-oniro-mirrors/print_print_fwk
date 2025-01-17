@@ -14,7 +14,6 @@
  */
 
 #include <gtest/gtest.h>
-#include "print_usb_manager.h"
 
 using namespace testing;
 using namespace testing::ext;
