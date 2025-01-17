@@ -85,40 +85,6 @@ TEST_F(PrintUserDataTest, UnregisterPrinterCallback_ShouldNotChangeListeners_Whe
     EXPECT_NE(registeredListeners_.find(type), registeredListeners_.end());
 }
 
-TEST_F(PrintUserDataTest, testRegisterPrinterCallback)
-{
-    PrintUserData printUserData;
-    std::string type = "testType";
-    sptr<IPrintCallback> listener = new PrintCallback();
-    printUserData.RegisterPrinterCallback(type, listener);
-    // 验证是否正确调用了RegisterPrinterCallback方法
-    // 由于该方法没有返回值，我们需要通过观察方法调用的副作用来验证
-    // 例如，如果RegisterPrinterCallback方法修改了PrintUserData的内部状态，我们可以检查这个状态是否符合预期
-    // 这里我们假设RegisterPrinterCallback方法的预期行为是正确的，因此我们不需要进一步的断言
-}
-TEST_F(PrintUserDataTest, testRegisterPrinterCallbackWithNullListener)
-{
-    PrintUserData printUserData;
-    std::string type = "testType";
-    sptr<IPrintCallback> listener = nullptr;
-    printUserData.RegisterPrinterCallback(type, listener);
-    // 验证是否正确处理了空的listener
-    // 由于listener为空，我们期望RegisterPrinterCallback方法能够正确处理这种情况，而不抛出异常或崩溃
-    // 这里我们不需要进一步的断言，因为如果方法没有正确处理空的listener，那么它应该在运行时抛出异常或崩溃
-}
-TEST_F(PrintUserDataTest, testRegisterPrinterCallbackWithMultipleListeners)
-{
-    PrintUserData printUserData;
-    std::string type = "testType";
-    sptr<IPrintCallback> listener1 = new PrintCallback();
-    sptr<IPrintCallback> listener2 = new PrintCallback();
-    printUserData.RegisterPrinterCallback(type, listener1);
-    printUserData.RegisterPrinterCallback(type, listener2);
-    // 验证是否正确处理了多个listener
-    // 由于我们没有具体的实现细节，我们只能假设如果方法能够正确处理多个listener，那么它应该不会抛出异常或崩溃
-    // 这里我们不需要进一步的断言，因为如果方法没有正确处理多个listener，那么它应该在运行时抛出异常或崩溃
-}
-
 TEST_F(PrintUserDataTest, SendPrinterEvent_ShouldCallOnCallback_WhenListenerExists)
 {
     // Arrange

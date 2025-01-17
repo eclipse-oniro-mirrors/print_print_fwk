@@ -58,7 +58,7 @@ public:
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs);
     int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type);
     int32_t SetLastUsedPrinter(const std::string &printerId);
-    void ParseUserData();
+    bool ParseUserData();
     void SetUserId(int32_t userId);
     std::string GetLastUsedPrinter();
     std::string GetDefaultPrinter();

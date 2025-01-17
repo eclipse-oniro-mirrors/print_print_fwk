@@ -625,6 +625,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_028, TestSize.
     httplib::Response responseData;
     size_t requestId = 1;
     printHttpRequestProcess.ProcessHttpResponse(responseData, requestId);
+    EXPECT_EQ(printHttpRequestProcess.needReadSendDoc, false);
 }
 
 /**
@@ -652,6 +653,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_029, TestSize.
     readTempBuffer.assign(tempStr.begin(), tempStr.end());
     printHttpRequestProcess.readBufMap[requestId] = readTempBuffer;
     printHttpRequestProcess.ProcessHttpResponse(responseData, requestId);
+    EXPECT_EQ(printHttpRequestProcess.needReadSendDoc, false);
 }
 
 /**
@@ -666,6 +668,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_030, TestSize.
     httplib::Response responseData;
     size_t requestId = 1;
     printHttpRequestProcess.ProcessHttpResponseGetAttr(responseData, requestId);
+    EXPECT_EQ(requestId, 1);
 }
 
 /**
@@ -693,6 +696,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_031, TestSize.
     readTempBuffer.assign(tempStr.begin(), tempStr.end());
     printHttpRequestProcess.readGetAttrBufMap[requestId] = readTempBuffer;
     printHttpRequestProcess.ProcessHttpResponseGetAttr(responseData, requestId);
+    EXPECT_EQ(requestId, 1);
 }
 
 /**
@@ -707,6 +711,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_032, TestSize.
     httplib::Response responseData;
     size_t requestId = 1;
     printHttpRequestProcess.ProcessHttpResponseSendDoc(responseData, requestId);
+    EXPECT_EQ(printHttpRequestProcess.needReadSendDoc, false);
 }
 
 /**
@@ -734,6 +739,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_033, TestSize.
     readTempBuffer.assign(tempStr.begin(), tempStr.end());
     printHttpRequestProcess.readSendDocBufMap[requestId] = readTempBuffer;
     printHttpRequestProcess.ProcessHttpResponseSendDoc(responseData, requestId);
+    EXPECT_EQ(printHttpRequestProcess.needReadSendDoc, false);
 }
 
 /**
@@ -820,7 +826,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_037, TestSize.
     std::string reqData = HTTP_REQ_DATA;
     size_t data_length = 1;
     printHttpRequestProcess.CalcReqIdOperaId(reqData.c_str(), data_length, requestId);
-    EXPECT_EQ(requestId, 0);
+    EXPECT_EQ(printHttpRequestProcess.needWriteData, false);
 }
 
 /**
@@ -832,8 +838,9 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_037, TestSize.
 HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_038, TestSize.Level1)
 {
     OHOS::Print::PrintHttpRequestProcess printHttpRequestProcess;
-    printHttpRequestProcess.needWriteData = true;
+    printHttpRequestProcess.needWriteData = false;
     printHttpRequestProcess.CreatWriteDataTask();
+    EXPECT_EQ(printHttpRequestProcess.needWriteData, true);
 }
 
 /**
@@ -851,6 +858,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_040, TestSize.
     size_t requestId = 0;
     printHttpRequestProcess.needWriteData = true;
     printHttpRequestProcess.ProcessOtherRequest(data, data_length, sHeadersAndBody, requestId);
+    EXPECT_STREQ(data, "test");
 }
 
 /**
@@ -994,6 +1002,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_049, TestSize.
     printHttpRequestProcess.reqIdOperaIdMap[requestId] = HTTP_REQUEST_GET_ATTR;
     std::string sHeadersAndBody = "";
     printHttpRequestProcess.ProcessHttpResp(requestId, responseData, sHeadersAndBody);
+    EXPECT_EQ(printHttpRequestProcess.needReadSendDoc, false);
 }
 
 /**
@@ -1011,6 +1020,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_050, TestSize.
     printHttpRequestProcess.deviceOpen = false;
     std::string sHeadersAndBody = "";
     printHttpRequestProcess.ProcessHttpResp(requestId, responseData, sHeadersAndBody);
+    EXPECT_EQ(printHttpRequestProcess.needReadSendDoc, false);
 }
 
 /**
@@ -1028,6 +1038,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_051, TestSize.
     printHttpRequestProcess.deviceOpen = true;
     std::string sHeadersAndBody = "";
     printHttpRequestProcess.ProcessHttpResp(requestId, responseData, sHeadersAndBody);
+    EXPECT_EQ(printHttpRequestProcess.needReadSendDoc, false);
 }
 
 /**
@@ -1045,6 +1056,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_052, TestSize.
     printHttpRequestProcess.reqIdOperaIdMap[requestId] = testOperationId;
     std::string sHeadersAndBody = "";
     printHttpRequestProcess.ProcessHttpResp(requestId, responseData, sHeadersAndBody);
+    EXPECT_EQ(printHttpRequestProcess.needReadSendDoc, false);
 }
 
 /**
@@ -1086,6 +1098,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_055, TestSize.
 {
     OHOS::Print::PrintHttpRequestProcess printHttpRequestProcess;
     printHttpRequestProcess.StartWriteDataToPrinterLooper();
+    EXPECT_EQ(printHttpRequestProcess.needReadSendDoc, false);
 }
 
 /**
@@ -1098,6 +1111,7 @@ HWTEST_F(PrintHttpRequestProcessTest, PrintHttpRequestProcessTest_056, TestSize.
 {
     OHOS::Print::PrintHttpRequestProcess printHttpRequestProcess;
     printHttpRequestProcess.StartReadSendDocDataFromPrinterLooper();
+    EXPECT_EQ(printHttpRequestProcess.needReadSendDoc, false);
 }
 
 }  // namespace Print

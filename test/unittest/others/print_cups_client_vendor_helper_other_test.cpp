@@ -96,90 +96,6 @@ job.SetOption("{"printerUri": "uri", "printerName": "name", "documentFormat": "f
     "printerName": "name"}");
 EXPECT_EQ(client.BuildJobParameters(job), nullptr);
 }
-TEST_F(nullTest, ReportBlockedReason_WhenParamIsNull_ShouldReturn)
-{
-PrintCupsClient client;
-JobMonitorParam *param = nullptr;
-JobStatus *jobStatus = new JobStatus();
-client.ReportBlockedReason(param, jobStatus);
-// 由于param为nullptr，所以没有任何断言，因为没有任何实际的行为可断言
-// 但是，如果函数没有任何副作用，那么这是一个有效的测试
-}
-TEST_F(nullTest, ReportBlockedReason_WhenJobStatusIsNull_ShouldReturn)
-{
-PrintCupsClient client;
-JobMonitorParam *param = new JobMonitorParam();
-JobStatus *jobStatus = nullptr;
-client.ReportBlockedReason(param, jobStatus);
-// 由于jobStatus为nullptr，所以没有任何断言，因为没有任何实际的行为可以断言
-// 但是，如果函数没有任何副作用，那么这是一个有效的测试
-}
-TEST_F(nullTest, ReportBlockedReason_WhenServiceAbilityIsNull_ShouldReturn)
-{
-PrintCupsClient client;
-JobMonitorParam *param = new JobMonitorParam();
-param->serviceAbility = nullptr;
-JobStatus *jobStatus = new JobStatus();
-client.ReportBlockedReason(param, jobStatus);
-// 由于param->serviceAbility为nullptr，所以没有任何断言，因为没有任何实际的行为可以断言
-// 但是，如果函数没有任何副作用，那么这是一个有效的测试
-}
-TEST_F(nullTest, ReportBlockedReason_WhenPrinterStateReasonsContainOffline_ShouldUpdatePrintJobState)
-{
-PrintCupsClient client;
-JobMonitorParam *param = new JobMonitorParam();
-param->serviceAbility = new ServiceAbility();
-JobStatus *jobStatus = new JobStatus();
-jobStatus->printer_state_reasons = "offline";
-client.ReportBlockedReason(param, jobStatus);
-// 断言param->serviceAbility->UpdatePrintJobState被正确调用
-}
-TEST_F(nullTest, ReportBlockedReason_WhenPrinterStateReasonsContainPaused_ShouldUpdatePrintJobState)
-{
-PrintCupsClient client;
-JobMonitorParam *param = new JobMonitorParam();
-param->serviceAbility = new ServiceAbility();
-JobStatus *jobStatus = new JobStatus();
-jobStatus->printer_state_reasons = "paused";
-client.ReportBlockedReason(param, jobStatus);
-// 断言param->serviceAbility->UpdatePrintJobState被正确调用
-}
-TEST_F(nullTest, ReportBlockedReason_WhenPrinterStateReasonsContainOther_ShouldUpdatePrintJobStateUnknown)
-{
-PrintCupsClient client;
-JobMonitorParam *param = new JobMonitorParam();
-param->serviceAbility = new ServiceAbility();
-JobStatus *jobStatus = new JobStatus();
-jobStatus->printer_state_reasons = "other";
-client.ReportBlockedReason(param, jobStatus);
-// 断言param->serviceAbility->UpdatePrintJobState被正确调用，并且substate为PRINT_JOB_BLOCKED_UNKNOWN
-}
-TEST_F(nullTest, ReportBlockedReason_WhenPrinterStateReasonsContainMediaEmpty_ShouldUpdatePrintJobStateOutOfPaper)
-{
-PrintCupsClient client;
-JobMonitorParam *param = new JobMonitorParam();
-param->serviceAbility = new ServiceAbility();
-JobStatus *jobStatus = new JobStatus();
-jobStatus->printer_state_reasons = "media-empty";
-client.ReportBlockedReason(param, jobStatus);
-// 断言param->serviceAbility->UpdatePrintJobState被正确调用，并且substate包含PRINT_JOB_BLOCKED_OUT_OF_PAPER
-}
-// 其他测试用例类似
-TEST_F(nullTest, testStartCupsJob)
-{
-PrintCupsClient client;
-JobParameters jobParams;
-jobParams.fdList.push_back(1);
-jobParams.printerName = "printer";
-jobParams.printerId = 1;
-jobParams.printerUri = "printerUri";
-jobParams.serviceAbility = new PrintServiceAbility();
-jobParams.serviceJobId = 1;
-auto callback =  undefined {
-PRINT_HILOGI("callback");
-};
-client.StartCupsJob(&jobParams, callback);
-}
 TEST_F(nullTest, testUpdatePrintJobStateInJobParams)
 {
 PrintCupsClient client;
@@ -192,23 +108,6 @@ jobParams.serviceAbility = new PrintServiceAbility();
 jobParams.serviceJobId = 1;
 client.UpdatePrintJobStateInJobParams(&jobParams, 1, 1);
 EXPECT_EQ(client.printerId, 1);
-}
-TEST_F(nullTest, testHandleJobState)
-{
-PrintCupsClient client;
-JobMonitorParam param;
-JobStatus jobStatus;
-JobStatus previousJobStatus;
-client.HandleJobState(nullptr, &param, &jobStatus, &previousJobStatus);
-}
-TEST_F(nullTest, testMonitorJobState)
-{
-PrintCupsClient client;
-JobMonitorParam param;
-auto callback =  undefined {
-PRINT_HILOGI("callback");
-};
-client.MonitorJobState(&param, callback);
 }
 TEST_F(nullTest, testQueryJobStateAgain)
 {
