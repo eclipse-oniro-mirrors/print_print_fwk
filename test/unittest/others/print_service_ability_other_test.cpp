@@ -115,7 +115,6 @@ EXPECT_CALL(*printServiceAbility.GetInstance(), Publish()).WillOnce(Return(true)
 EXPECT_CALL(*printServiceAbility.printSystemData, Init()).WillOnce(Return());
 EXPECT_CALL(*printServiceAbility.InitPreferenceMap(),).WillOnce(Return());
 EXPECT_CALL(*printServiceAbility.helper, PrintSubscribeCommonEvent()).WillOnce(Return());
-EXPECT_CALL(*printServiceAbility.DelayedSingleton<PrintIppOverUsbManager>::GetInstance(), Init()).WillOnce(Return());
 EXPECT_EQ(printServiceAbility.Init(), ERR_OK);
 }
 
@@ -128,7 +127,6 @@ EXPECT_CALL(*printServiceAbility.GetInstance(), Publish()).WillOnce(Return(true)
 EXPECT_CALL(*printServiceAbility.printSystemData, Init()).WillOnce(Return());
 EXPECT_CALL(*printServiceAbility.InitPreferenceMap(),).WillOnce(Return());
 EXPECT_CALL(*printServiceAbility.helper, PrintSubscribeCommonEvent()).WillOnce(Return());
-EXPECT_CALL(*printServiceAbility.DelayedSingleton<PrintIppOverUsbManager>::GetInstance(), Init()).WillOnce(Return());
 EXPECT_CALL(*printServiceAbility.DelayedSingleton<PrintCupsClient>::GetInstance(),
     InitCupsResources()).WillOnce(Return(ERR_OK));
 EXPECT_EQ(printServiceAbility.Init(), ERR_OK);
@@ -143,7 +141,6 @@ EXPECT_CALL(*printServiceAbility.GetInstance(), Publish()).WillOnce(Return(true)
 EXPECT_CALL(*printServiceAbility.printSystemData, Init()).WillOnce(Return());
 EXPECT_CALL(*printServiceAbility.InitPreferenceMap(),).WillOnce(Return());
 EXPECT_CALL(*printServiceAbility.helper, PrintSubscribeCommonEvent()).WillOnce(Return());
-EXPECT_CALL(*printServiceAbility.DelayedSingleton<PrintIppOverUsbManager>::GetInstance(), Init()).WillOnce(Return());
 EXPECT_CALL(*printServiceAbility.DelayedSingleton<PrintCupsClient>::GetInstance(),
     InitCupsResources()).WillOnce(Return(ERR_OK));
 EXPECT_EQ(printServiceAbility.Init(), ERR_OK);

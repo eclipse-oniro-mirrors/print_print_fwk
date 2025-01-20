@@ -40,7 +40,6 @@
 #include "print_security_guard_manager.h"
 #include "hisys_event_util.h"
 #include "nlohmann/json.hpp"
-#include "print_ipp_over_usb_manager.h"
 #include "mock_print_callback_proxy.h"
 #include "mock_print_extension_callback_proxy.h"
 

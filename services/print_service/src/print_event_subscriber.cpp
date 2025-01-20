@@ -16,8 +16,6 @@
 #include "print_event_subscriber.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "print_usb_manager.h"
-#include "print_http_server_manager.h"
 #include "print_log.h"
 #include "print_service_ability.h"
 
@@ -33,17 +31,6 @@ PrintEventSubscriber::~PrintEventSubscriber()
 void PrintEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
     std::string action = data.GetWant().GetAction();
-#ifdef IPPOVERUSB_ENABLE
-    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USB_DEVICE_ATTACHED) {
-        std::string devStr = data.GetData();
-        DelayedSingleton<PrintUsbManager>::GetInstance()->DealUsbDevStatusChange(devStr, true);
-    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USB_DEVICE_DETACHED) {
-        std::string devStr = data.GetData();
-        DelayedSingleton<PrintHttpServerManager>::GetInstance()->DealUsbDevDetach(devStr);
-        DelayedSingleton<PrintUsbManager>::GetInstance()->DealUsbDevStatusChange(devStr, false);
-    }
-#endif // IPPOVERUSB_ENABLE
-
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
         int32_t userId = data.GetCode();
         PRINT_HILOGI("user switched, current userId: %{public}d", userId);

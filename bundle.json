@@ -143,7 +143,6 @@
       "//base/print/print_fwk/test/unittest/fwk_inner_napi_test:print_fwk_inner_napi_test",
       "//base/print/print_fwk/test/unittest/fwk_print_cups_client_test:fwk_print_cups_client_test",
       "//base/print/print_fwk/test/unittest/fwk_print_helper_test:fwk_print_helper_test",
-      "//base/print/print_fwk/test/unittest/fwk_print_http_request_process_test:fwk_print_http_request_process_test",
       "//base/print/print_fwk/test/unittest/fwk_print_service_ability_test:fwk_print_service_ability_test",
       "//base/print/print_fwk/test/unittest/service_test:print_service_test",
       "//base/print/print_fwk/test/unittest/extension_test:print_ext_test",
