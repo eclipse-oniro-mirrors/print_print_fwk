@@ -31,7 +31,6 @@ PrintEventSubscriber::~PrintEventSubscriber()
 void PrintEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
     std::string action = data.GetWant().GetAction();
-
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
         int32_t userId = data.GetCode();
         PRINT_HILOGI("user switched, current userId: %{public}d", userId);
