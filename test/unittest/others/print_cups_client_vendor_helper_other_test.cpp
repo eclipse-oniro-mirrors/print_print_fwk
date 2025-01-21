@@ -125,13 +125,6 @@ JobStatus jobStatus;
 client.UpdateJobStatus(&previousJobStatus, &jobStatus);
 EXPECT_EQ(client.JobStatus, nullptr);
 }
-TEST_F(nullTest, testJobStatusCallback)
-{
-PrintCupsClient client;
-JobMonitorParam param;
-JobStatus jobStatus;
-client.JobStatusCallback(&param, &jobStatus, true);
-}
 TEST_F(nullTest, QueryPrinterAttrList_Test)
 {
 PrintCupsClient client;

@@ -174,7 +174,7 @@ uint32_t PrintTask::CallSpooler(
     size_t contextIndex = isPrintByAdapter ? NapiPrintUtils::INDEX_THREE : NapiPrintUtils::INDEX_ONE;
     size_t callBackIndex = isPrintByAdapter ? NapiPrintUtils::INDEX_FOUR : NapiPrintUtils::INDEX_TWO;
     size_t argMaxNum = isPrintByAdapter ? NapiPrintUtils::ARGC_FIVE : NapiPrintUtils::ARGC_THREE;
-    napi_value argv[NapiPrintUtils::ARGC_FOUR] = {0};
+    napi_value argv[NapiPrintUtils::ARGC_FIVE] = {0};
     napi_value thisArg = nullptr;
     void *data = nullptr;
     napi_value result = nullptr;
