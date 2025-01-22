@@ -1690,9 +1690,9 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanPar
         for (int col1 = 0; col1 < parm.GetBytesPerLine(); col1++) {
             for (int col8 = 0; col8 < byteBits; col8++) {
                 buf8[col1 * byteBits + col8] = jpegbuf[col1] & (1 << (byteBits - col8 - bit)) ? 0 : 0xff;
-                jpeg_write_scanlines(cinfoPtr, &buf8, bit);
             }
         }
+        jpeg_write_scanlines(cinfoPtr, &buf8, bit);
         free(buf8);
         i += parm.GetBytesPerLine() - jpegrow;
         left -= parm.GetBytesPerLine() - jpegrow;
