@@ -103,7 +103,7 @@ std::shared_ptr<ScanRange> ScanRange::Unmarshalling(Parcel &parcel)
     return nativeObj;
 }
 
-void ScanRange::Dump()
+void ScanRange::Dump() const
 {
     SCAN_HILOGD("MinValue = %{public}d", minValue_);
     SCAN_HILOGD("MaxValue = %{public}d", maxValue_);
