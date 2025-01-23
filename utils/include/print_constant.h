@@ -268,12 +268,5 @@ const std::string VENDOR_WLAN_GROUP = "driver.wlan.group";
 const std::string VENDOR_BSUNI_DRIVER = "driver.bsuni";
 const std::string VENDOR_PPD_DRIVER = "driver.ppd";
 const std::string VENDOR_IPP_EVERYWHERE = "driver.ipp.everywhere";
-
-const float CUPS_MEDIA_A4_WIDTH_IN_INCHES = 8268;
-const float CUPS_MEDIA_A4_HEIGHT_IN_INCHES = 11692;
-const float CUPS_MEDIA_4X6_WIDTH_IN_INCHES = 4000;
-const float CUPS_MEDIA_4X6_HEIGHT_IN_INCHES = 6000;
-const float CUPS_MEDIA_5X7_WIDTH_IN_INCHES = 5000;
-const float CUPS_MEDIA_5X7_HEIGHT_IN_INCHES = 7000;
 } // namespace OHOS::Print
 #endif // PRINT_CONSTANT_H
