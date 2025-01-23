@@ -462,11 +462,13 @@ void ScanServiceAbility::AddFoundUsbScanner(ScanDeviceInfo &info)
                     saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
     }
 #endif
-    if (info.serialNumber != "") {
-        saneGetUsbDeviceInfoMap[info.serialNumber] = info;
+    auto itSN = saneGetUsbDeviceInfoMap.find(info.serialNumber);
+    if (info.serialNumber != "" && itSN != saneGetUsbDeviceInfoMap.end()) {
+        itSN->second = info;
     }
-    if (info.uniqueId != "") {
-        saneGetUsbDeviceInfoMap[info.uniqueId] = info;
+    auto itUI = saneGetUsbDeviceInfoMap.find(info.uniqueId);
+    if (info.uniqueId != "" && itUI != saneGetUsbDeviceInfoMap.end()) {
+        itUI->second = info;
     }
 #ifdef DEBUG_ENABLE
     SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{private}s] of serialNumber:[%{private}s]",
