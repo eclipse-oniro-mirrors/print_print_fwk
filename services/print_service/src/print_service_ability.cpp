@@ -338,7 +338,7 @@ int32_t PrintServiceAbility::HandleExtensionConnectPrinter(const std::string &pr
         PRINT_HILOGW("ConnectPrinter Not Register Yet!!!");
         return E_PRINT_SERVER_FAILURE;
     }
-    auto cbFunc = extCallbackMap_;
+    auto cbFunc = extCallbackMap_[cid];
     auto callback = [=]() {
         if (cbFunc != nullptr) {
             cbFunc->OnCallBack(printerId);
