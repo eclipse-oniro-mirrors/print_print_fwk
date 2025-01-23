@@ -374,53 +374,63 @@ bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string
     }
 }
 
+void ScanServiceAbility::SetScannerSerialNumberByTCP(ScanDeviceInfo &info) {
+    info.discoverMode = "TCP";
+    std::string ip;
+    if (!GetTcpDeviceIp(info.deviceId, ip)) {
+        SCAN_HILOGE("cannot get device's ip");
+        return;
+    }
+    int32_t count = 0;
+    constexpr int32_t MAX_WAIT_COUNT = 5;
+    constexpr int32_t WAIT_TIME = 1;
+    ScanDeviceInfoTCP netScannerInfo;
+    bool findNetScannerInfoByIp = ScanMdnsService::FindNetScannerInfoByIp(ip, netScannerInfo);
+    do {
+        sleep(WAIT_TIME);
+        SCAN_HILOGW("wait a second");
+        findNetScannerInfoByIp = ScanMdnsService::FindNetScannerInfoByIp(ip, netScannerInfo);
+        count++;
+    } while (!findNetScannerInfoByIp && count < MAX_WAIT_COUNT);
+    info.uniqueId = ip;
+    if (findNetScannerInfoByIp) {
+        info.serialNumber = GetLastWord(netScannerInfo.deviceName);
+        info.uuid = netScannerInfo.uuid;
+        info.deviceName = netScannerInfo.deviceName;
+    } else {
+        info.deviceName = info.manufacturer + "-" + info.model;
+    }
+}
+
+void ScanServiceAbility::SetScannerSerialNumberByUSB(ScanDeviceInfo &info) {
+    info.discoverMode = "USB";
+    std::string firstId;
+    std::string secondId;
+    if (!GetUsbDevicePort(info.deviceId, firstId, secondId)) {
+        SCAN_HILOGE("cannot get usb's port");
+        return;
+    }
+    std::string usbScannerPort = firstId + "-" + secondId;
+    DelayedSingleton<ScanUsbManager>::GetInstance()->RefreshUsbDevice();
+    auto it = usbSnMap.find(usbScannerPort);
+    if (it != usbSnMap.end() && it->second != "") {
+        SCAN_HILOGD("set serialNumber [%{private}s]", it->second.c_str());
+        info.serialNumber = it->second;
+        info.uniqueId = it->second;
+    } else {
+        SCAN_HILOGE("usb can't find serialNumber");
+    }
+    info.deviceName = info.manufacturer + "-" + info.model + "-" + info.serialNumber;
+}
+
 void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
 {
     if (info.deviceId.find(":tcp") != info.deviceId.npos) {
-        info.discoverMode = "TCP";
-        std::string ip;
-        if (!GetTcpDeviceIp(info.deviceId, ip)) {
-            SCAN_HILOGE("cannot get device's ip");
-            return;
-        }
-        int32_t count = 0;
-        constexpr int32_t MAX_WAIT_COUNT = 5;
-        constexpr int32_t WAIT_TIME = 1;
-        ScanDeviceInfoTCP netScannerInfo;
-        bool find = ScanMdnsService::FindNetScannerInfoByIp(ip, netScannerInfo);
-        while (!find && count < MAX_WAIT_COUNT) {
-            sleep(WAIT_TIME);
-            SCAN_HILOGW("wait a second");
-            find = ScanMdnsService::FindNetScannerInfoByIp(ip, netScannerInfo);
-            count++;
-        }
-        info.uniqueId = ip;
-        if (find) {
-            info.serialNumber = GetLastWord(netScannerInfo.deviceName);
-            info.uuid = netScannerInfo.uuid;
-            info.deviceName = netScannerInfo.deviceName;
-        } else {
-            info.deviceName = info.manufacturer + "-" + info.model;
-        }
+        SetScannerSerialNumberByTCP(info);
     } else if (info.deviceId.find(":libusb") != info.deviceId.npos) {
-        info.discoverMode = "USB";
-        std::string firstId;
-        std::string secondId;
-        if (!GetUsbDevicePort(info.deviceId, firstId, secondId)) {
-            SCAN_HILOGE("cannot get usb's port");
-            return;
-        }
-        std::string usbScannerPort = firstId + "-" + secondId;
-        DelayedSingleton<ScanUsbManager>::GetInstance()->RefreshUsbDevice();
-        auto it = usbSnMap.find(usbScannerPort);
-        if (it != usbSnMap.end() && it->second != "") {
-            SCAN_HILOGD("set serialNumber [%{private}s]", it->second.c_str());
-            info.serialNumber = it->second;
-            info.uniqueId = it->second;
-        } else {
-            SCAN_HILOGE("usb can't find serialNumber");
-        }
-        info.deviceName = info.manufacturer + "-" + info.model + "-" + info.serialNumber;
+        SetScannerSerialNumberByUSB(info);
+    }  else {
+        SCAN_HILOGE("Unknown scanner connect method");
     }
 }
 
@@ -446,7 +456,7 @@ void ScanServiceAbility::AddFoundUsbScanner(ScanDeviceInfo &info)
 #ifdef DEBUG_ENABLE
     auto it = saneGetUsbDeviceInfoMap.find(info.serialNumber);
     if (it != saneGetUsbDeviceInfoMap.end()) {
-        SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{public}s] of serialNumber:[%{public}s] has change",
+        SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{public}s] of serialNumber:[%{private}s] has change",
                     saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
     }
 #endif
@@ -457,7 +467,7 @@ void ScanServiceAbility::AddFoundUsbScanner(ScanDeviceInfo &info)
         saneGetUsbDeviceInfoMap[info.uniqueId] = info;
     }
 #ifdef DEBUG_ENABLE
-    SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{public}s] of serialNumber:[%{public}s]",
+    SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{public}s] of serialNumber:[%{private}s]",
                 saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
 #endif
     SCAN_HILOGI("AddFoundUsbScanner end model:[%{public}s]", info.model.c_str());
@@ -470,7 +480,7 @@ void ScanServiceAbility::AddFoundTcpScanner(ScanDeviceInfo &info)
 #ifdef DEBUG_ENABLE
     auto it = saneGetTcpDeviceInfoMap.find(info.serialNumber);
     if (it != saneGetTcpDeviceInfoMap.end()) {
-        SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{public}s] of serialNumber:[%{public}s] has change",
+        SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{public}s] of serialNumber:[%{private}s] has change",
                     saneGetTcpDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
     }
 #endif
@@ -481,7 +491,7 @@ void ScanServiceAbility::AddFoundTcpScanner(ScanDeviceInfo &info)
         saneGetTcpDeviceInfoMap[info.uniqueId] = info;
     }
 #ifdef DEBUG_ENABLE
-    SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{public}s] of serialNumber:[%{public}s]",
+    SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{public}s] of serialNumber:[%{private}s]",
                 saneGetTcpDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
 #endif
     SCAN_HILOGI("AddFoundTcpScanner end: model:[%{public}s]", info.model.c_str());
@@ -1049,7 +1059,7 @@ void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::str
     scanDeviceInfoSync.deviceState = 0;
     SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
 #ifdef DEBUG_ENABLE
-    SCAN_HILOGD("GetScannerList delete end serialNumber:%{public}s newDeviceId:%{public}s",
+    SCAN_HILOGD("GetScannerList delete end serialNumber:%{private}s newDeviceId:%{public}s",
                 serialNumber.c_str(), deviceId.c_str());
 #endif
 }

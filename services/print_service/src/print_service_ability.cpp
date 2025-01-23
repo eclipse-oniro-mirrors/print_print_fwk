@@ -341,7 +341,7 @@ int32_t PrintServiceAbility::HandleExtensionConnectPrinter(const std::string &pr
     auto cbFunc = extCallbackMap_[cid];
     auto callback = [=]() {
         if (cbFunc != nullptr) {
-            cbFunc->OnCallBack(printerId);
+            cbFunc->OnCallback(printerId);
         }
     };
     if (helper_->IsSyncMode()) {
