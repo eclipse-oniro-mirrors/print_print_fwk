@@ -62,13 +62,65 @@ bool ConvertPageSizeId(const char *src, std::string &id)
     return !id.empty();
 }
 
+bool ConvertCustomPageSizeFromPwgName(const char *src, PrintPageSize &dst)
+{
+    if (src == nullptr) {
+        PRINT_HILOGE("IPP media-supported src is empty");
+        return false;
+    }
+    std::string pwgNameStr(src);
+    size_t lastPartPos = pwgNameStr.find_last_of('_');
+    size_t firstPartPos = pwgNameStr.find_first_of('_');
+    if (lastPartPos == std::string::npos || firstPartPos == std::string::npos ||
+        lastPartPos + 1 >= pwgNameStr.size() || lastPartPos - firstPartPos - 1 < 0) {
+        PRINT_HILOGE("IPP media-supported do not found \"_\"");
+        return false;
+    }
+    std::string middleNmae = pwgNameStr.substr(firstPartPos + 1, lastPartPos - firstPartPos - 1);
+    if (middleNmae == "max" || middleNmae == "min") {
+        PRINT_HILOGE("IPP media-supported contains max or min");
+        return false;
+    }
+    std::string sizeName = pwgNameStr.substr(lastPartPos + 1);
+    size_t xPos = sizeName.find('x');
+    if (xPos == std::string::npos || xPos + 1 >= sizeName.size() ||
+        sizeName.size() - xPos - PAGE_SIZE_UNIT_LENGTH - 1 < 0 || sizeName.size() - PAGE_SIZE_UNIT_LENGTH < 0) {
+        PRINT_HILOGE("IPP media-supported do not found \"x\"");
+        return false;
+    }
+    std::string widthStr = sizeName.substr(0, xPos);
+    std::string lengthStr = sizeName.substr(xPos + 1, sizeName.size() - xPos - PAGE_SIZE_UNIT_LENGTH - 1);
+    std::string unit = sizeName.substr(sizeName.size() - PAGE_SIZE_UNIT_LENGTH);
+    uint32_t width = 0;
+    uint32_t length = 0;
+    if (unit == "mm") {
+        width = round(std::stof(widthStr) * HUNDRED_OF_MILLIMETRE_TO_INCH);
+        length = round(std::stof(lengthStr) * HUNDRED_OF_MILLIMETRE_TO_INCH);
+    } else if (unit == "in") {
+        width = round(std::stof(widthStr) * ONE_THOUSAND_INCH);
+        length = round(std::stof(lengthStr) * ONE_THOUSAND_INCH);
+    } else {
+        PRINT_HILOGE("IPP media-supported do not found unitstr");
+        return false;
+    }
+    std::string pwgName = CUSTOM_PREFIX + sizeName;
+    dst = PrintPageSize(pwgName, pwgName, width, length);
+    return true;
+}
+
 bool ConvertPrintPageSize(const char *src, PrintPageSize &dst)
 {
+    if (src == nullptr) {
+        PRINT_HILOGE("ConvertPrintPageSize is empty");
+        return false;
+    }
     std::string id;
     if (ConvertPageSizeId(src, id)) {
+        PRINT_HILOGI("IPP media-supported match pageId: %{public}s", id.c_str());
         return PrintPageSize::FindPageSizeById(id, dst);
     }
-    return false;
+    // Not standard, use custom page size
+    return ConvertCustomPageSizeFromPwgName(src, dst);
 }
 
 bool ConvertPageSizeToJson(const PrintPageSize &pageSize, nlohmann::json &jsonObject)
