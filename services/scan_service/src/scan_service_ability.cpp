@@ -456,7 +456,7 @@ void ScanServiceAbility::AddFoundUsbScanner(ScanDeviceInfo &info)
 #ifdef DEBUG_ENABLE
     auto it = saneGetUsbDeviceInfoMap.find(info.serialNumber);
     if (it != saneGetUsbDeviceInfoMap.end()) {
-        SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{public}s] of serialNumber:[%{private}s] has change",
+        SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{private}s] of serialNumber:[%{private}s] has change",
                     saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
     }
 #endif
@@ -467,7 +467,7 @@ void ScanServiceAbility::AddFoundUsbScanner(ScanDeviceInfo &info)
         saneGetUsbDeviceInfoMap[info.uniqueId] = info;
     }
 #ifdef DEBUG_ENABLE
-    SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{public}s] of serialNumber:[%{private}s]",
+    SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{private}s] of serialNumber:[%{private}s]",
                 saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
 #endif
     SCAN_HILOGI("AddFoundUsbScanner end model:[%{public}s]", info.model.c_str());
@@ -480,7 +480,7 @@ void ScanServiceAbility::AddFoundTcpScanner(ScanDeviceInfo &info)
 #ifdef DEBUG_ENABLE
     auto it = saneGetTcpDeviceInfoMap.find(info.serialNumber);
     if (it != saneGetTcpDeviceInfoMap.end()) {
-        SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{public}s] of serialNumber:[%{private}s] has change",
+        SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{private}s] of serialNumber:[%{private}s] has change",
                     saneGetTcpDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
     }
 #endif
@@ -491,7 +491,7 @@ void ScanServiceAbility::AddFoundTcpScanner(ScanDeviceInfo &info)
         saneGetTcpDeviceInfoMap[info.uniqueId] = info;
     }
 #ifdef DEBUG_ENABLE
-    SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{public}s] of serialNumber:[%{private}s]",
+    SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{private}s] of serialNumber:[%{private}s]",
                 saneGetTcpDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
 #endif
     SCAN_HILOGI("AddFoundTcpScanner end: model:[%{public}s]", info.model.c_str());
