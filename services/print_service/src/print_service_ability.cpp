@@ -344,7 +344,7 @@ int32_t PrintServiceAbility::HandleExtensionConnectPrinter(const std::string &pr
             cbFunc->OnCallBack(printerId);
         }
     };
-    if (helper_->IsSyncMode()){
+    if (helper_->IsSyncMode()) {
         callback();
     } else {
         serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
