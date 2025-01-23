@@ -374,7 +374,7 @@ bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string
     }
 }
 
-void ScanServiceAbility::SetScannerSerialNumberByTCP(ScanDeviceInfo &info) 
+void ScanServiceAbility::SetScannerSerialNumberByTCP(ScanDeviceInfo &info)
 {
     info.discoverMode = "TCP";
     std::string ip;
@@ -403,7 +403,7 @@ void ScanServiceAbility::SetScannerSerialNumberByTCP(ScanDeviceInfo &info)
     }
 }
 
-void ScanServiceAbility::SetScannerSerialNumberByUSB(ScanDeviceInfo &info) 
+void ScanServiceAbility::SetScannerSerialNumberByUSB(ScanDeviceInfo &info)
 {
     info.discoverMode = "USB";
     std::string firstId;
