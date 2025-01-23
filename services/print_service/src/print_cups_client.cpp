@@ -68,6 +68,7 @@ const uint32_t IP_RIGHT_SHIFT_16 = 16;
 const uint32_t IP_RIGHT_SHIFT_24 = 24;
 const uint32_t NUMBER_FOR_SPLICING_SUBSTATE = 100;
 const uint32_t SERIAL_LENGTH = 6;
+const uint32_t CUPSD_CONTROL_PARAM_SIZE = 96;
 
 static bool g_isFirstQueryState = false;
 
@@ -218,6 +219,16 @@ PrintCupsClient::~PrintCupsClient()
         delete printAbility_;
         printAbility_ = nullptr;
     }
+    for (auto jobItem : jobQueue_) {
+        if (jobItem != nullptr) {
+            delete jobItem;
+            jobItem = nullptr;
+        }
+    }
+    if (currentJob_ != nullptr) {
+        delete currentJob_;
+        currentJob_ = nullptr;
+    }
 }
 
 int32_t PrintCupsClient::StartCupsdService()
@@ -230,9 +241,8 @@ int32_t PrintCupsClient::StartCupsdService()
             PRINT_HILOGD("SetParameter failed: %{public}d.", result);
             return E_PRINT_SERVER_FAILURE;
         }
-        const int bufferSize = 96;
-        char value[bufferSize] = {0};
-        GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, bufferSize - 1);
+        char value[CUPSD_CONTROL_PARAM_SIZE] = {0};
+        GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, CUPSD_CONTROL_PARAM_SIZE - 1);
         PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
         return E_PRINT_NONE;
     }
@@ -245,6 +255,10 @@ int32_t PrintCupsClient::StartCupsdService()
     char realPidFile[PATH_MAX] = {};
     if (realpath(pidFile.c_str(), realPidFile) == nullptr) {
         PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
+        return E_PRINT_SERVER_FAILURE;
+    }
+    if (access(realPidFile, F_OK) != 0) {
+        PRINT_HILOGE("realPidFile is not exist");
         return E_PRINT_SERVER_FAILURE;
     }
     int fd;
@@ -266,8 +280,13 @@ int32_t PrintCupsClient::StartCupsdService()
 
 bool PrintCupsClient::ChangeFilterPermission(const std::string &path, mode_t mode)
 {
+    if (path.empty() || access(path.c_str(), F_OK) != 0) {
+        PRINT_HILOGE("File is not exist");
+        return false;
+    }
     DIR *dir = opendir(path.c_str());
     if (dir == nullptr) {
+        PRINT_HILOGE("Failed to open Dir: %{private}s", path.c_str());
         return false;
     }
     struct dirent *entry;

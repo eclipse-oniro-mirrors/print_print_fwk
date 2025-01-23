@@ -170,11 +170,11 @@ uint32_t PrintTask::CallSpooler(
         PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
         return E_PRINT_NO_PERMISSION;
     }
-    size_t argc = isPrintByAdapter ? NapiPrintUtils::ARGC_FOUR : NapiPrintUtils::ARGC_TWO;
+    size_t argc = NapiPrintUtils::MAX_ARGC;
     size_t contextIndex = isPrintByAdapter ? NapiPrintUtils::INDEX_THREE : NapiPrintUtils::INDEX_ONE;
     size_t callBackIndex = isPrintByAdapter ? NapiPrintUtils::INDEX_FOUR : NapiPrintUtils::INDEX_TWO;
     size_t argMaxNum = isPrintByAdapter ? NapiPrintUtils::ARGC_FIVE : NapiPrintUtils::ARGC_THREE;
-    napi_value argv[NapiPrintUtils::ARGC_FOUR] = {0};
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
     napi_value thisArg = nullptr;
     void *data = nullptr;
     napi_value result = nullptr;
