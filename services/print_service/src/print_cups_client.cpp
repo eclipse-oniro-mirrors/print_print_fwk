@@ -39,7 +39,6 @@
 #include "print_utils.h"
 #include "print_service_converter.h"
 #include "print_cups_attribute.h"
-#include "print_page_size.h"
 
 namespace OHOS::Print {
 using namespace std;
@@ -73,6 +72,12 @@ const uint32_t CUPSD_CONTROL_PARAM_SIZE = 96;
 const uint32_t FREE_ONE_PRINTER = 1;
 const uint32_t DEFAULT_BUFFER_SIZE_8K = 8192;
 const uint32_t DEFAULT_BUFFER_SIZE_4K = 4096;
+const uint32_t ISO_A4_WIDTH = 8268;
+const uint32_t ISO_A4_HEIGHT = 11692;
+const uint32_t PHOTO_5R_WIDTH = 5000;
+const uint32_t PHOTO_5R_HEIGHT = 7000;
+const uint32_t PHOTO_4R_WIDTH = 4000;
+const uint32_t PHOTO_4R_HEIGHT = 6000;
 
 static bool g_isFirstQueryState = false;
 
