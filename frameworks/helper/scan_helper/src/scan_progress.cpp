@@ -19,31 +19,31 @@
 
 namespace OHOS::Scan {
 using SteadyTimePoint = std::chrono::steady_clock::time_point;
-ScanProgress::ScanProgress() : progress(0),
-    fd(0), isFinal(true), pictureId(0), taskCode(E_SCAN_GOOD), imageRealPath("")
+ScanProgress::ScanProgress() : progress_(0),
+    fd_(0), isFinal_(true), pictureId_(0), taskCode_(E_SCAN_GOOD), imageRealPath_("")
 {}
 
 ScanProgress::ScanProgress(const ScanProgress &right)
 {
-    progress = right.progress;
-    fd = right.fd;
-    isFinal = right.isFinal;
-    pictureId = right.pictureId;
-    timePoint = right.timePoint;
-    taskCode = right.taskCode;
-    imageRealPath = right.imageRealPath;
+    progress_ = right.progress_;
+    fd_ = right.fd_;
+    isFinal_ = right.isFinal_;
+    pictureId_ = right.pictureId_;
+    timePoint_ = right.timePoint_;
+    taskCode_ = right.taskCode_;
+    imageRealPath_ = right.imageRealPath_;
 }
 
 ScanProgress &ScanProgress::operator=(const ScanProgress &right)
 {
     if (this != &right) {
-        progress = right.progress;
-        fd = right.fd;
-        isFinal = right.isFinal;
-        pictureId = right.pictureId;
-        timePoint = right.timePoint;
-        taskCode = right.taskCode;
-        imageRealPath = right.imageRealPath;
+        progress_ = right.progress_;
+        fd_ = right.fd_;
+        isFinal_ = right.isFinal_;
+        pictureId_ = right.pictureId_;
+        timePoint_ = right.timePoint_;
+        taskCode_ = right.taskCode_;
+        imageRealPath_ = right.imageRealPath_;
     }
     return *this;
 }
@@ -53,73 +53,73 @@ ScanProgress::~ScanProgress()
 
 void ScanProgress::SetScanProgress(const int32_t progress)
 {
-    this->progress = progress;
+    this->progress_ = progress;
 }
 
 void ScanProgress::SetScanPictureFd(const int32_t fd)
 {
-    this->fd = fd;
+    this->fd_ = fd;
 }
 
 void ScanProgress::SetIsFinal(const bool isFinal)
 {
-    this->isFinal = isFinal;
+    this->isFinal_ = isFinal;
 }
 
 void ScanProgress::SetPictureId(const int32_t pictureId)
 {
-    this->pictureId = pictureId;
+    this->pictureId_ = pictureId;
 }
 
 void ScanProgress::SetScanTime(SteadyTimePoint nowTime)
 {
-    this->timePoint = nowTime;
+    this->timePoint_ = nowTime;
 }
 
 void ScanProgress::SetTaskCode(ScanErrorCode taskCode)
 {
-    this->taskCode = taskCode;
+    this->taskCode_ = taskCode;
 }
 
-void ScanProgress::SetImageRealPath(const std::string& imageRealPath)
+void ScanProgress::SetImageRealPath(const std::string &imageRealPath)
 {
-    this->imageRealPath = imageRealPath;
+    this->imageRealPath_ = imageRealPath;
 }
 
 
 int32_t ScanProgress::GetScanProgress() const
 {
-    return progress;
+    return progress_;
 }
 
 int32_t ScanProgress::GetScanPictureFd() const
 {
-    return fd;
+    return fd_;
 }
 
 bool ScanProgress::GetIsFinal() const
 {
-    return isFinal;
+    return isFinal_;
 }
 
 int32_t ScanProgress::GetPictureId() const
 {
-    return pictureId;
+    return pictureId_;
 }
 
 SteadyTimePoint ScanProgress::GetScanTime() const
 {
-    return timePoint;
+    return timePoint_;
 }
 
 ScanErrorCode ScanProgress::GetTaskCode() const
 {
-    return taskCode;
+    return taskCode_;
 }
 
 std::string ScanProgress::GetImageRealPath() const
 {
-    return imageRealPath;
+    return imageRealPath_;
 }
 
 void ScanProgress::ReadFromParcel(Parcel &parcel)
@@ -133,9 +133,9 @@ void ScanProgress::ReadFromParcel(Parcel &parcel)
 bool ScanProgress::Marshalling(Parcel &parcel) const
 {
     auto mesgParcel = static_cast<MessageParcel*>(&parcel);
-    parcel.WriteInt32(progress);
-    mesgParcel->WriteFileDescriptor(fd);
-    parcel.WriteBool(isFinal);
+    parcel.WriteInt32(progress_);
+    mesgParcel->WriteFileDescriptor(fd_);
+    parcel.WriteBool(isFinal_);
     return true;
 }
 
@@ -149,11 +149,11 @@ std::shared_ptr<ScanProgress> ScanProgress::Unmarshalling(Parcel &parcel)
 void ScanProgress::Dump() const
 {
     SCAN_HILOGD("ScanProgress Dump");
-    SCAN_HILOGD("ScanProgress: progress = %{public}d", progress);
-    SCAN_HILOGD("ScanProgress: fd = %{public}d", fd);
-    SCAN_HILOGD("ScanProgress: isFinal = %{public}d", isFinal);
-    SCAN_HILOGD("ScanProgress: pictureId = %{public}d", pictureId);
-    SCAN_HILOGD("ScanProgress: taskCode = %{public}d", taskCode);
+    SCAN_HILOGD("ScanProgress: progress = %{public}d", progress_);
+    SCAN_HILOGD("ScanProgress: fd = %{public}d", fd_);
+    SCAN_HILOGD("ScanProgress: isFinal = %{public}d", isFinal_);
+    SCAN_HILOGD("ScanProgress: pictureId = %{public}d", pictureId_);
+    SCAN_HILOGD("ScanProgress: taskCode = %{public}d", taskCode_);
 }
 
 } // namespace OHOS::Scan

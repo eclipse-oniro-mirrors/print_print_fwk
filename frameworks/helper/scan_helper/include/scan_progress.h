@@ -37,7 +37,7 @@ public:
     void SetPictureId(const int32_t pictureId);
     void SetScanTime(SteadyTimePoint nowTime);
     void SetTaskCode(ScanErrorCode taskCode);
-    void SetImageRealPath(const std::string& imageRealPath);
+    void SetImageRealPath(const std::string &imageRealPath);
     void Dump() const;
 
     [[nodiscard]] int32_t GetScanProgress() const;
@@ -54,13 +54,13 @@ private:
     void ReadFromParcel(Parcel &parcel);
 
 private:
-    int32_t progress; // 0~100
-    int32_t fd;
-    bool isFinal;
-    int32_t pictureId;
-    SteadyTimePoint timePoint;
-    ScanErrorCode taskCode;
-    std::string imageRealPath;
+    int32_t progress_; // 0~100
+    int32_t fd_;
+    bool isFinal_;
+    int32_t pictureId_;
+    SteadyTimePoint timePoint_;
+    ScanErrorCode taskCode_;
+    std::string imageRealPath_;
 };
 }  // namespace OHOS::Scan
 #endif  // SCAN_PROGRESS_H
