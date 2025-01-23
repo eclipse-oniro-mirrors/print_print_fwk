@@ -69,6 +69,15 @@ const uint32_t IP_RIGHT_SHIFT_24 = 24;
 const uint32_t NUMBER_FOR_SPLICING_SUBSTATE = 100;
 const uint32_t SERIAL_LENGTH = 6;
 const uint32_t CUPSD_CONTROL_PARAM_SIZE = 96;
+const uint32_t FREE_ONE_PRINTER = 1;
+const uint32_t DEFAULT_BUFFER_SIZE_8K = 8192;
+const uint32_t DEFAULT_BUFFER_SIZE_4K = 4096;
+const uint32_t ISO_A4_WIDTH = 8268;
+const uint32_t ISO_A4_HEIGHT = 11692;
+const uint32_t PHOTO_5R_WIDTH = 5000;
+const uint32_t PHOTO_5R_HEIGHT = 7000;
+const uint32_t PHOTO_4R_WIDTH = 4000;
+const uint32_t PHOTO_4R_HEIGHT = 6000;
 
 static bool g_isFirstQueryState = false;
 
@@ -408,7 +417,7 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
                 fclose(srcFile);
                 continue;
             }
-            char buffer[4096];
+            char buffer[DEFAULT_BUFFER_SIZE_4K];
             size_t bytesRead;
             while ((bytesRead = fread(buffer, 1, sizeof(buffer), srcFile)) > 0) {
                 fwrite(buffer, 1, bytesRead, destFile);
@@ -786,7 +795,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printe
     cups_dinfo_t *dinfo = printAbility_->CopyDestInfo(CUPS_HTTP_DEFAULT, dest);
     if (dinfo == nullptr) {
         PRINT_HILOGE("cupsCopyDestInfo failed");
-        printAbility_->FreeDests(1, dest);
+        printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
         return E_PRINT_SERVER_FAILURE;
     }
 
@@ -794,7 +803,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printe
     printerCaps.Dump();
 
     printAbility_->FreeDestInfo(dinfo);
-    printAbility_->FreeDests(1, dest);
+    printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
     PRINT_HILOGI("QueryPrinterCapabilityFromPPD out\n");
     return E_PRINT_NONE;
 }
@@ -803,6 +812,7 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo)
 {
     JobParameters *jobParams =  BuildJobParameters(jobInfo);
     if (jobParams == nullptr) {
+        PRINT_HILOGE("AddCupsPrintJob Params is nullptr");
         return;
     }
     DumpJobParameters(jobParams);
@@ -852,6 +862,7 @@ void PrintCupsClient::JobCompleteCallback()
 {
     PRINT_HILOGI("Previous job complete, start next job");
     if (!currentJob_) {
+        PRINT_HILOGW("JobCompleteCallback CurrentJob_ still exists, delete it.");
         delete currentJob_;
     }
     currentJob_ = nullptr;
@@ -868,9 +879,9 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         PRINT_HILOGD("borderless job options");
         num_options = cupsAddOption("print-scaling", "fill", num_options, options);
         std::vector<MediaSize> mediaSizes;
-        mediaSizes.push_back({ CUPS_MEDIA_4X6, 4000, 6000 });
-        mediaSizes.push_back({ CUPS_MEDIA_5X7, 5000, 7000 });
-        mediaSizes.push_back({ CUPS_MEDIA_A4, 8268, 11692 });
+        mediaSizes.push_back({ CUPS_MEDIA_A4, ISO_A4_WIDTH, ISO_A4_HEIGHT });
+        mediaSizes.push_back({ CUPS_MEDIA_4X6, PHOTO_4R_WIDTH, PHOTO_4R_HEIGHT });
+        mediaSizes.push_back({ CUPS_MEDIA_5X7, PHOTO_5R_WIDTH, PHOTO_5R_HEIGHT });
         int sizeIndex = -1;
         float meidaWidth = 0;
         float mediaHeight = 0;
@@ -1074,7 +1085,7 @@ int32_t PrintCupsClient::QueryPrinterAttrList(const std::string &printerName, co
         PRINT_HILOGW("the printer is not found");
         return E_PRINT_SERVER_FAILURE;
     }
-    for (auto &key : keyList) {
+    for (const auto &key : keyList) {
         const char *ret = cupsGetOption(key.c_str(), dest->num_options, dest->options);
         if (ret != nullptr) {
             std::string valueStr = ret;
@@ -1082,12 +1093,12 @@ int32_t PrintCupsClient::QueryPrinterAttrList(const std::string &printerName, co
             valueList.emplace_back(value);
         }
     }
-    printAbility_->FreeDests(1, dest);
+    printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
     PRINT_HILOGI("QueryPrinterAttr end");
     return E_PRINT_NONE;
 }
 
-int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info)
+int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info)
 {
     PRINT_HILOGD("the printerInfo printerName %{public}s", info.GetPrinterName().c_str());
     if (printAbility_ == nullptr) {
@@ -1100,7 +1111,7 @@ int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string& printerI
         PRINT_HILOGW("the printer is not found");
         return E_PRINT_SERVER_FAILURE;
     }
-    printAbility_->FreeDests(1, dest);
+    printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
     if (info.HasOption()) {
         PRINT_HILOGI("the printerInfo option");
         PrinterCapability printerCaps;
@@ -1156,10 +1167,10 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams)
             PRINT_HILOGD("makeModel=%{private}s", makeModel);
             if (makeModel != nullptr && strcmp(makeModel, "Local Raw Printer") != 0) {
                 isMakeModelRight = true;
-                printAbility_->FreeDests(1, dest);
+                printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
                 break;
             }
-            printAbility_->FreeDests(1, dest);
+            printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
         } else {
             PRINT_HILOGE("The dest is null");
         }
@@ -1194,6 +1205,7 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
     }
     delete monitorParam;
     if (!isPrinterOnline) {
+        PRINT_HILOGE("VerifyPrintJob printer is offline.");
         jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
             PRINT_JOB_BLOCKED_OFFLINE);
         return false;
@@ -1223,7 +1235,7 @@ bool PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, 
     }
     cups_file_t *fp = nullptr;
     http_status_t status;
-    char buffer[8192];
+    char buffer[DEFAULT_BUFFER_SIZE_8K];
     ssize_t bytes = -1;
 
     for (uint32_t i = 0; i < num_files; i++) {
@@ -1836,7 +1848,7 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         int printerState = cupsGetIntegerOption("printer-state", dest->num_options, dest->options);
         PRINT_HILOGD("printerState=%{private}d", printerState);
         if (printerState == IPP_PRINTER_STOPPED || makeModel == nullptr || strcmp(deviceUri, printerUri) != 0) {
-            printAbility_->FreeDests(1, dest);
+            printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
             PRINT_HILOGI("Printer information needs to be modified");
             return printerExist;
         }
@@ -1857,7 +1869,7 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
             // 驱动异常，标识打印机删除
             DeleteCupsPrinter(printerName);
         }
-        printAbility_->FreeDests(1, dest);
+        printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
     }
     return printerExist;
 }
