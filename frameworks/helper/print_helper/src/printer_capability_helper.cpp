@@ -269,19 +269,19 @@ bool PrinterCapabilityHelper::BuildSimplePropertyFromJs(napi_env env, napi_value
 bool PrinterCapabilityHelper::BuildArrayPropertyFromJs(napi_env env, napi_value jsValue,
     std::shared_ptr<PrinterCapability> nativeObj)
 {
-    if (!buildSupportedPageSizes(env, jsValue, nativeObj) ||
-        !buildSupportedResolutions(env, jsValue, nativeObj) ||
-        !buildSupportedColorModes(env, jsValue, nativeObj) ||
-        !buildSupportedDuplexModes(env, jsValue, nativeObj) ||
-        !buildSupportedQualities(env, jsValue, nativeObj) ||
-        !buildSupportedMediaTypes(env, jsValue, nativeObj) ||
-        !buildSupportedOrientations(env, jsValue, nativeObj)) {
+    if (!BuildSupportedPageSizes(env, jsValue, nativeObj) ||
+        !BuildSupportedResolutions(env, jsValue, nativeObj) ||
+        !BuildSupportedColorModes(env, jsValue, nativeObj) ||
+        !BuildSupportedDuplexModes(env, jsValue, nativeObj) ||
+        !BuildSupportedQualities(env, jsValue, nativeObj) ||
+        !BuildSupportedMediaTypes(env, jsValue, nativeObj) ||
+        !BuildSupportedOrientations(env, jsValue, nativeObj)) {
         return false;
     }
     return true;
 }
 
-bool PrinterCapabilityHelper::buildSupportedPageSizes(napi_env env, napi_value jsValue,
+bool PrinterCapabilityHelper::BuildSupportedPageSizes(napi_env env, napi_value jsValue,
                                                       std::shared_ptr<PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<PrintPageSize>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_PAGESIZES,
@@ -291,7 +291,7 @@ bool PrinterCapabilityHelper::buildSupportedPageSizes(napi_env env, napi_value j
         PrintPageSizeHelper::BuildFromJs);
 }
 
-bool PrinterCapabilityHelper::buildSupportedResolutions(napi_env env, napi_value jsValue,
+bool PrinterCapabilityHelper::BuildSupportedResolutions(napi_env env, napi_value jsValue,
                                                         std::shared_ptr<PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<PrintResolution>(env, jsValue, PARAM_CAPABILITY_RESOLUTION,
@@ -301,7 +301,7 @@ bool PrinterCapabilityHelper::buildSupportedResolutions(napi_env env, napi_value
         PrintResolutionHelper::BuildFromJs);
 }
 
-bool PrinterCapabilityHelper::buildSupportedColorModes(napi_env env, napi_value jsValue,
+bool PrinterCapabilityHelper::BuildSupportedColorModes(napi_env env, napi_value jsValue,
                                                        std::shared_ptr <PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_COLORMODES,
@@ -312,7 +312,7 @@ bool PrinterCapabilityHelper::buildSupportedColorModes(napi_env env, napi_value 
         });
 }
 
-bool PrinterCapabilityHelper::buildSupportedDuplexModes(napi_env env, napi_value jsValue,
+bool PrinterCapabilityHelper::BuildSupportedDuplexModes(napi_env env, napi_value jsValue,
                                                         std::shared_ptr<PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_DUPLEXMODES,
@@ -324,7 +324,7 @@ bool PrinterCapabilityHelper::buildSupportedDuplexModes(napi_env env, napi_value
         });
 }
 
-bool PrinterCapabilityHelper::buildSupportedQualities(napi_env env, napi_value jsValue,
+bool PrinterCapabilityHelper::BuildSupportedQualities(napi_env env, napi_value jsValue,
                                                       std::shared_ptr<PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_QUALITIES,
@@ -336,7 +336,7 @@ bool PrinterCapabilityHelper::buildSupportedQualities(napi_env env, napi_value j
         });
 }
 
-bool PrinterCapabilityHelper::buildSupportedMediaTypes(napi_env env, napi_value jsValue,
+bool PrinterCapabilityHelper::BuildSupportedMediaTypes(napi_env env, napi_value jsValue,
                                                        std::shared_ptr<PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<std::string>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_MEDIA_TYPES,
@@ -348,7 +348,7 @@ bool PrinterCapabilityHelper::buildSupportedMediaTypes(napi_env env, napi_value 
         });
 }
 
-bool PrinterCapabilityHelper::buildSupportedOrientations(napi_env env, napi_value jsValue,
+bool PrinterCapabilityHelper::BuildSupportedOrientations(napi_env env, napi_value jsValue,
                                                          std::shared_ptr<PrinterCapability> nativeObj)
 {
     return ProcessJsArrayProperty<uint32_t>(env, jsValue, PARAM_CAPABILITY_SUPPORTED_ORIENTATIONS,
