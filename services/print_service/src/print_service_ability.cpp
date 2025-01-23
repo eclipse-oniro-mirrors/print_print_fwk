@@ -414,6 +414,7 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
 
     PRINT_HILOGD("StartDiscoverPrinter started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    vendorManager.ClearConnectingPrinter();
     std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
     for (auto &printerId : printerIdList) {
         vendorManager.MonitorPrinterStatus(printerId, true);
@@ -3304,6 +3305,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     }
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
+    vendorManager.ClearConnectingPrinter();
     vendorManager.MonitorPrinterStatus(globalPrinterId, true);
     return true;
 }
@@ -3355,6 +3357,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     }
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
+    vendorManager.ClearConnectingPrinter();
     vendorManager.MonitorPrinterStatus(globalPrinterId, true);
     return true;
 }
@@ -3448,7 +3451,7 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     printSystemData_.SaveCupsPrinterMap();
     SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
     SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
-    vendorManager.SetConnectingPrinter(ID_AUTO, "");
+    vendorManager.ClearConnectingPrinter();
     printSystemData_.RemoveIpPrinterFromList(globalPrinterId);
     return true;
 }

@@ -1853,10 +1853,6 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         } else {
             printerExist = true;
         }
-        if (!printerExist) {
-            // 驱动异常，标识打印机删除
-            DeleteCupsPrinter(printerName);
-        }
         printAbility_->FreeDests(1, dest);
     }
     return printerExist;
