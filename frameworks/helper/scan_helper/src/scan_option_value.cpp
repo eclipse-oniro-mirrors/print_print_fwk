@@ -136,18 +136,19 @@ void ScanOptionValue::ReadFromParcel(Parcel &parcel)
 
 bool ScanOptionValue::Marshalling(Parcel &parcel) const
 {
-    parcel.WriteUint32(valueType_);
-    parcel.WriteInt32(valueSize_);
+    bool status = true;
+    status &= parcel.WriteUint32(valueType_);
+    status &= parcel.WriteInt32(valueSize_);
     if (valueType_ == SCAN_VALUE_NUM) {
-        parcel.WriteInt32(numValue_);
+        status &= parcel.WriteInt32(numValue_);
     } else if (valueType_ == SCAN_VALUE_NUM_LIST) {
-        parcel.WriteInt32Vector(numListValue_);
+        status &= parcel.WriteInt32Vector(numListValue_);
     } else if (valueType_ == SCAN_VALUE_STR) {
-        parcel.WriteString(strValue_);
+        status &= parcel.WriteString(strValue_);
     } else if (valueType_ == SCAN_VALUE_BOOL) {
-        parcel.WriteBool(boolValue_);
+        status &= parcel.WriteBool(boolValue_);
     }
-    return true;
+    return status;
 }
 
 std::shared_ptr<ScanOptionValue> ScanOptionValue::Unmarshalling(Parcel &parcel)

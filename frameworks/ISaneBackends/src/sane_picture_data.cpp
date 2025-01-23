@@ -67,6 +67,11 @@ SanePictureData* SanePictureData::Unmarshalling(Parcel &parcel)
         delete obj;
         return nullptr;
     }
+    if (static_cast<int32_t>(*data) > MAX_BUFLEN) {
+        SCAN_HILOGE("data exceeds MAX_BUFLEN");
+        delete obj;
+        return nullptr;
+    }
     constexpr int32_t zero = 0;
     obj->valueBuffer_.resize(dataSize, zero);
     auto ret = memcpy_s(obj->valueBuffer_.data(), dataSize, data, dataSize);

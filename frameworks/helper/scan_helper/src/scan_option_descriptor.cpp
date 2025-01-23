@@ -242,5 +242,12 @@ void ScanOptionDescriptor::Dump()
     SCAN_HILOGD("optionCap = %{public}d", optionCap_);
 
     SCAN_HILOGD("optionConstraintType = %{public}d", optionConstraintType_);
+    for (const auto& str : optionConstraintString_) {
+        SCAN_HILOGD("str = %{public}s", str.c_str());
+    }
+    for (const auto& number : optionConstraintNumber_) {
+        SCAN_HILOGD("number = %{public}d", number);
+    }
+    optionConstraintRange_.Dump();
 }
 }  // namespace OHOS::Scan
