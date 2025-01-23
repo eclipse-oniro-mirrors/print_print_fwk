@@ -35,7 +35,10 @@ napi_value ScanOptionDescriptorHelper::MakeJsObject(napi_env env, const ScanOpti
 {
     napi_value jsObj = nullptr;
 
-    napi_create_object(env, &jsObj);
+    if (napi_create_object(env, &jsObj) != napi_ok) {
+        SCAN_HILOGE("Failed to create JavaScript object");
+        return nullptr;
+    }
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_OPTION_NAME, desc.GetOptionName());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_OPTION_TITLE, desc.GetOptionTitle());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_OPTION_DESC, desc.GetOptionDesc());
@@ -179,7 +182,7 @@ std::shared_ptr<ScanOptionDescriptor> ScanOptionDescriptorHelper::BuildFromJs(na
     auto nativeObj = std::make_shared<ScanOptionDescriptor>();
     
     auto names = NapiScanUtils::GetPropertyNames(env, jsValue);
-    for (auto name : names) {
+    for (const auto& name : names) {
         SCAN_HILOGD("Property: %{public}s", name.c_str());
     }
 

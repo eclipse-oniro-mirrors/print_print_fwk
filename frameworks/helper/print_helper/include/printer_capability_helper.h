@@ -41,19 +41,19 @@ private:
     static bool CreateSupportedMediaTypeList(napi_env env, napi_value &jsPrinterCap, const PrinterCapability &cap);
     static bool CreateSupportedQualityList(napi_env env, napi_value &jsPrinterCap, const PrinterCapability &cap);
     static bool CreateSupportedOrientationList(napi_env env, napi_value &jsPrinterCap, const PrinterCapability &cap);
-    static bool buildSupportedPageSizes(napi_env env, napi_value jsValue,
+    static bool BuildSupportedPageSizes(napi_env env, napi_value jsValue,
                                         std::shared_ptr<PrinterCapability> nativeObj);
-    static bool buildSupportedResolutions(napi_env env, napi_value jsValue,
+    static bool BuildSupportedResolutions(napi_env env, napi_value jsValue,
                                           std::shared_ptr<PrinterCapability> nativeObj);
-    static bool buildSupportedColorModes(napi_env env, napi_value jsValue,
+    static bool BuildSupportedColorModes(napi_env env, napi_value jsValue,
                                          std::shared_ptr<PrinterCapability> nativeObj);
-    static bool buildSupportedDuplexModes(napi_env env, napi_value jsValue,
+    static bool BuildSupportedDuplexModes(napi_env env, napi_value jsValue,
                                           std::shared_ptr<PrinterCapability> nativeObj);
-    static bool buildSupportedQualities(napi_env env, napi_value jsValue,
+    static bool BuildSupportedQualities(napi_env env, napi_value jsValue,
                                         std::shared_ptr<PrinterCapability> nativeObj);
-    static bool buildSupportedMediaTypes(napi_env env, napi_value jsValue,
+    static bool BuildSupportedMediaTypes(napi_env env, napi_value jsValue,
                                          std::shared_ptr<PrinterCapability> nativeObj);
-    static bool buildSupportedOrientations(napi_env env, napi_value jsValue,
+    static bool BuildSupportedOrientations(napi_env env, napi_value jsValue,
                                            std::shared_ptr<PrinterCapability> nativeObj);
     static bool ValidateProperty(napi_env env, napi_value object);
 

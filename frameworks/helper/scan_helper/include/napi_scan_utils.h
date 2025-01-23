@@ -34,8 +34,6 @@ public:
     static constexpr size_t ARGC_TWO = 2;
     static constexpr size_t ARGC_THREE = 3;
     static constexpr size_t ARGC_FOUR = 4;
-    static constexpr size_t ARGC_FIVE = 5;
-    static constexpr size_t ARGC_SIX = 6;
 
     static constexpr uint32_t INDEX_ZERO = 0;
     static constexpr uint32_t INDEX_ONE = 1;
@@ -43,10 +41,6 @@ public:
     static constexpr uint32_t INDEX_THREE = 3;
     static constexpr uint32_t INDEX_FOUR = 4;
     static constexpr uint32_t INDEX_FIVE = 5;
-
-    static constexpr int32_t MAX_NUMBER_BYTES = 8;
-    static constexpr int32_t MAX_LEN = 4096;
-    static constexpr int32_t MAX_JOBSTRING_LENGTH = 10;
 
     static napi_valuetype GetValueType(napi_env env, napi_value value);
     static bool HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName);
@@ -96,4 +90,4 @@ public:
     static size_t GetJsVal(napi_env env, napi_callback_info info, napi_value argv[], size_t length);
 };
 } // namespace OHOS::Scan
-#endif // NAPI_SCAN_UTILS_H
+#endif // NAPI_SCAN_UTILS_H

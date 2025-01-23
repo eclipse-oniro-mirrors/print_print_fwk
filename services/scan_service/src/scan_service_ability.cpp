@@ -148,7 +148,7 @@ ScanServiceAbility::ScanServiceAbility(int32_t systemAbilityId, bool runOnCreate
 ScanServiceAbility::~ScanServiceAbility()
 {
     FREE_AND_NULLPTR(saneReadBuf);
-    FREE_AND_NULLPTR(jpegbuf)
+    DELETE_ARRAY_AND_NULLIFY(jpegbuf)
     DELETE_AND_NULLIFY(cinfoPtr);
     DELETE_AND_NULLIFY(ofp);
     SCAN_HILOGD("~ScanServiceAbility state_  is %{public}d.", static_cast<int>(state_));
@@ -1528,14 +1528,14 @@ int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress
         if (scanStatus != E_SCAN_EOF) {
             SCAN_HILOGE("get scanframe fail");
             scanStatus = scanStatus == E_SCAN_CANCELLED ? E_SCAN_NONE : scanStatus;
-            FREE_AND_NULLPTR(jpegbuf)
+            DELETE_ARRAY_AND_NULLIFY(jpegbuf)
             return scanStatus;
         }
         first_frame = 0;
     } while (!(parm.GetLastFrame()));
     jpeg_finish_compress(cinfoPtr);
     fflush(ofp);
-    FREE_AND_NULLPTR(jpegbuf)
+    DELETE_ARRAY_AND_NULLIFY(jpegbuf)
     SCAN_HILOGI("end DoScanTask");
     return scanStatus;
 }
