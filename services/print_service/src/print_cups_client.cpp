@@ -864,7 +864,7 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         PRINT_HILOGE("FillBorderlessOptions Params is nullptr");
         return num_options;
     }
-    if (jobParams->mediaType == CUPS_MEDIA_TYPE_PHOTO_GLOSSY && jobParams->borderless == TRUE) {
+    if (jobParams->mediaType == CUPS_MEDIA_TYPE_PHOTO_GLOSSY && jobParams->borderless) {
         PRINT_HILOGD("borderless job options");
         num_options = cupsAddOption("print-scaling", "fill", num_options, options);
         std::vector<MediaSize> mediaSizes;
@@ -1027,6 +1027,7 @@ ppd_file_t* PrintCupsClient::GetPPDFile(const std::string &printerName)
         PRINT_HILOGI("The cupsd process is not started, start it now.");
         int32_t ret = StartCupsdService();
         if (ret != 0) {
+            PRINT_HILOGE("The cupsd process start fail.");
             return nullptr;
         }
     }
@@ -1293,6 +1294,8 @@ void PrintCupsClient::UpdatePrintJobStateInJobParams(JobParameters *jobParams, u
 {
     if (jobParams != nullptr && jobParams->serviceAbility != nullptr) {
         jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, state, subState);
+    } else {
+        PRINT_HILOGE("UpdatePrintJobStateInJobParams has nullptr parameter.");
     }
 }
 
@@ -1393,8 +1396,8 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
         PRINT_HILOGE("JobStatusCallback param is nullptr");
         return;
     }
-    PRINT_HILOGI("JobStatusCallback enter, job_state: %{public}d", jobStatus->job_state);
-    PRINT_HILOGI("JobStatusCallback enter, printer_state_reasons: %{public}s", jobStatus->printer_state_reasons);
+    PRINT_HILOGI("JobStatusCallback enter, job_state: %{public}d, printer_state_reasons: %{public}s",
+        jobStatus->job_state, jobStatus->printer_state_reasons);
     if (isOffline) {
         cupsCancelJob2(CUPS_HTTP_DEFAULT, param->printerName.c_str(), param->cupsJobId, 0);
         param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_BLOCKED,
@@ -1420,6 +1423,7 @@ void PrintCupsClient::JobStatusCallback(JobMonitorParam *param, JobStatus *jobSt
             param->serviceAbility->UpdatePrintJobState(param->serviceJobId, PRINT_JOB_RUNNING,
                                                        PRINT_JOB_BLOCKED_BUSY);
         }
+        PRINT_HILOGD("IPP_JOB_PROCESSING END");
         return;
     }
     if (jobStatus->job_state == IPP_JOB_CANCELED || jobStatus->job_state == IPP_JOB_ABORTED) {
@@ -1557,7 +1561,7 @@ bool PrintCupsClient::CheckPrinterOnline(JobMonitorParam *param, const uint32_t 
     char userpass[BUFFER_LEN] = {0};
     char host[BUFFER_LEN] = {0};
     char resource[BUFFER_LEN] = {0};
-    int port;
+    int port = 0;
     if (param == nullptr) {
         PRINT_HILOGE("param is null");
         return false;
@@ -1618,7 +1622,7 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(serviceJobId, PRINT_JOB_COMPLETED,
             PRINT_JOB_COMPLETED_CANCELLED);
     } else {
-        // 任务正在运行中
+        // job is processing
         if (currentJob_ && currentJob_->serviceJobId == serviceJobId) {
             PRINT_HILOGI("cancel current job");
             if (cupsCancelJob2(CUPS_HTTP_DEFAULT, currentJob_->printerName.c_str(),
@@ -1727,6 +1731,7 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
 void PrintCupsClient::DumpJobParameters(JobParameters* jobParams)
 {
     if (jobParams == nullptr) {
+        PRINT_HILOGE("DumpJobParameters fail.");
         return;
     }
     PRINT_HILOGD("jobParams->serviceJobId: %{public}s", jobParams->serviceJobId.c_str());
