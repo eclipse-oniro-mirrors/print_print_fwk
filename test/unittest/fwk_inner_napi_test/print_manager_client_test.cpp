@@ -100,7 +100,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0002, TestSize.Level1)
 
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
-    PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
+    EXPECT_EQ(PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId),
+        E_PRINT_NO_PERMISSION);
 }
 
 /**

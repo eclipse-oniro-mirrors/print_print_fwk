@@ -447,7 +447,7 @@ ErrCode SaneServerManager::SaneRead(const std::string& scannerId,
     }
     constexpr int32_t zero = 0;
     SANE_Int curReadSize = zero;
-    SANE_Byte *valueBuffer = new uint8_t[buflen]{};
+    SANE_Byte *valueBuffer = new(std::nothrow) uint8_t[buflen]{};
     if (valueBuffer == nullptr) {
         SCAN_HILOGE("malloc valueBuffer failed");
         status = SANE_STATUS_NO_MEM;
