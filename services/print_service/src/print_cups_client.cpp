@@ -39,6 +39,7 @@
 #include "print_utils.h"
 #include "print_service_converter.h"
 #include "print_cups_attribute.h"
+#include "print_page_size.h"
 
 namespace OHOS::Print {
 using namespace std;
@@ -873,9 +874,9 @@ int PrintCupsClient::FillBorderlessOptions(JobParameters *jobParams, int num_opt
         PRINT_HILOGD("borderless job options");
         num_options = cupsAddOption("print-scaling", "fill", num_options, options);
         std::vector<MediaSize> mediaSizes;
-        mediaSizes.push_back({ CUPS_MEDIA_A4, CUPS_MEDIA_A4_WIDTH_IN_INCHES, CUPS_MEDIA_A4_HEIGHT_IN_INCHES });
-        mediaSizes.push_back({ CUPS_MEDIA_4X6, CUPS_MEDIA_4X6_WIDTH_IN_INCHES, CUPS_MEDIA_4X6_HEIGHT_IN_INCHES });
-        mediaSizes.push_back({ CUPS_MEDIA_5X7, CUPS_MEDIA_5X7_WIDTH_IN_INCHES, CUPS_MEDIA_5X7_HEIGHT_IN_INCHES });
+        mediaSizes.push_back({ CUPS_MEDIA_A4, ISO_A4_WIDTH, ISO_A4_HEIGHT });
+        mediaSizes.push_back({ CUPS_MEDIA_4X6, PHOTO_4R_WIDTH, PHOTO_4R_HEIGHT });
+        mediaSizes.push_back({ CUPS_MEDIA_5X7, PHOTO_5R_WIDTH, PHOTO_5R_HEIGHT });
         int sizeIndex = -1;
         float meidaWidth = 0;
         float mediaHeight = 0;
