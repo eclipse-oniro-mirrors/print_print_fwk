@@ -1872,18 +1872,17 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
             // find everywhere or remote printr driver
             printerExist = (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != nullptr) ||
                            (strstr(makeModel, REMOTE_PRINTER_MAKE_MODEL.c_str()) != nullptr);
-        } else if (strcmp(ppdName, LOCAL_RAW_PRINTER_PPD_NAME.c_str()) == 0) {
-            // find ppd-name as Local Raw Printer
-            printerExist = false;
-        } else if (strstr(makeModel, LOCAL_RAW_PRINTER_PPD_NAME.c_str()) != nullptr) {
-            printerExist = false;
-            PRINT_HILOGI("Printer makeModel is Local Raw Printer");
         } else {
-            printerExist = true;
-        }
-        if (!printerExist) {
-            // drvier exception, indicting printer deletion
-            DeleteCupsPrinter(printerName);
+            if (strstr(makeModel, LOCAL_RAW_PRINTER_PPD_NAME.c_str()) != nullptr) {
+                printerExist = false;
+                PRINT_HILOGI("Printer makeModel is Local Raw Printer");
+            } else {
+                printerExist = true;
+            }
+            if (!printerExist) {
+                // drvier exception, indicting printer deletion
+                DeleteCupsPrinter(printerName);
+            }
         }
         printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
     }
