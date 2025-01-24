@@ -225,6 +225,7 @@ void ScanServiceAbility::OnStop()
 {
     SCAN_HILOGI("OnStop started.");
     if (state_ != ServiceRunningState::STATE_RUNNING) {
+        SCAN_HILOGW("service is not running");
         return;
     }
     serviceHandler_ = nullptr;
@@ -337,32 +338,31 @@ int32_t ScanServiceAbility::ReInitScan()
 
 bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId)
 {
-    std::regex pattern(R"(([a-zA-Z0-9_]+):(libusb):([0-9]{3}):([0-9]{3}))");
+    static const std::regex pattern(R"(([a-zA-Z0-9_]+):(libusb):([0-9]{3}):([0-9]{3}))");
     std::smatch match;
-    if (std::regex_match(deviceId, match, pattern)) {
-        constexpr size_t STRING_POS_THREE = 3;
-        constexpr size_t STRING_POS_FOUR = 4;
-        std::string firstIdTmp = match[STRING_POS_THREE].str();
-        std::string secondIdTmp = match[STRING_POS_FOUR].str();
-        int32_t firstNumTmp = 0;
-        int32_t secondNumTmp = 0;
-        if (!ScanUtil::ConvertToInt(firstIdTmp, firstNumTmp) ||
-            !ScanUtil::ConvertToInt(secondIdTmp, secondNumTmp)) {
-            SCAN_HILOGE("parse [%{public}s]:[%{public}s] fail", firstIdTmp.c_str(), secondIdTmp.c_str());
-            return false;
-        }
-        firstId = std::to_string(firstNumTmp);
-        secondId = std::to_string(secondNumTmp);
-        return true;
-    } else {
+    constexpr size_t STRING_POS_THREE = 3;
+    constexpr size_t STRING_POS_FOUR = 4;
+    if (!std::regex_match(deviceId, match, pattern) || match.size() <= STRING_POS_FOUR) {
         SCAN_HILOGE("In USB mode, the deviceId string format does not match");
         return false;
     }
+    const std::string firstIdTmp = match[STRING_POS_THREE].str();
+    const std::string secondIdTmp = match[STRING_POS_FOUR].str();
+    int32_t firstNumTmp = 0;
+    int32_t secondNumTmp = 0;
+    if (!ScanUtil::ConvertToInt(firstIdTmp, firstNumTmp) ||
+        !ScanUtil::ConvertToInt(secondIdTmp, secondNumTmp)) {
+        SCAN_HILOGE("parse [%{public}s]:[%{public}s] fail", firstIdTmp.c_str(), secondIdTmp.c_str());
+        return false;
+    }
+    firstId = std::to_string(firstNumTmp);
+    secondId = std::to_string(secondNumTmp);
+    return true;
 }
 
 bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string &ip)
 {
-    std::regex pattern(R"(([^ ]+) (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) ([^ ]+))");
+    static const std::regex pattern(R"(([^ ]+) (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) ([^ ]+))");
     std::smatch match;
     if (std::regex_match(deviceId, match, pattern)) {
         constexpr size_t STRING_POS_TWO = 2;
