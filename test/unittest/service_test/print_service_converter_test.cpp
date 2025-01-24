@@ -174,5 +174,47 @@ HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0016, TestSize.Lev
     EXPECT_EQ(ConvertPrintPageSize(src, dst), true);
 }
 
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0017, TestSize.Level1)
+{
+    const char* src = "na_number-10_4.125x9.5in";
+    PrintPageSize dst;
+    EXPECT_EQ(ConvertPrintPageSize(src, dst), true);
+}
+
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0018, TestSize.Level1)
+{
+    const char* src = "custom_390.03x540.03mm_390.03x540.03mm";
+    PrintPageSize dst;
+    EXPECT_EQ(ConvertPrintPageSize(src, dst), true);
+}
+
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0019, TestSize.Level1)
+{
+    const char* src = "nanumber";
+    PrintPageSize dst;
+    EXPECT_EQ(ConvertPrintPageSize(src, dst), false);
+}
+
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0020, TestSize.Level1)
+{
+    const char* src = "custom_min_50.8x85.94mm";
+    PrintPageSize dst;
+    EXPECT_EQ(ConvertPrintPageSize(src, dst), false);
+}
+
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0021, TestSize.Level1)
+{
+    const char* src = "custom_390.03x540.03mm_390.03540.03mm";
+    PrintPageSize dst;
+    EXPECT_EQ(ConvertPrintPageSize(src, dst), false);
+}
+
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0022, TestSize.Level1)
+{
+    const char* src = "custom_390.03x540.03mm_390.03x540.03cm";
+    PrintPageSize dst;
+    EXPECT_EQ(ConvertPrintPageSize(src, dst), false);
+}
+
 }
 }

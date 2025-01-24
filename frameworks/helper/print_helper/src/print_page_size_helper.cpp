@@ -17,6 +17,7 @@
 #include "napi_print_utils.h"
 #include "print_constant.h"
 #include "print_log.h"
+#include <sstream>
 
 namespace OHOS::Print {
 static constexpr const char *PARAM_PAGESIZE_ID = "id";
@@ -35,6 +36,23 @@ napi_value PrintPageSizeHelper::MakeJsObject(napi_env env, const PrintPageSize &
     return jsObj;
 }
 
+std::string PrintPageSizeHelper::GetCustomPageNameFromMilSize(const std::string &name,
+    const uint32_t width, const uint32_t height)
+{
+    if (name.find(CUSTOM_PREFIX) != std::string::npos) {
+        PRINT_HILOGI("Alraedy custom page size.");
+        return name;
+    }
+    std::stringstream sizeName;
+    if (width % ONE_THOUSAND_INCH == 0 && height % ONE_THOUSAND_INCH == 0) {
+        sizeName << CUSTOM_PREFIX << width / ONE_THOUSAND_INCH << "x" << height / ONE_THOUSAND_INCH << "in";
+    } else {
+        sizeName << CUSTOM_PREFIX << round(width / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x"
+            << round(height / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
+    }
+    return sizeName.str();
+}
+
 std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJs(napi_env env, napi_value jsValue)
 {
     auto nativeObj = std::make_shared<PrintPageSize>();
@@ -49,16 +67,23 @@ std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJs(napi_env env, na
     uint32_t width = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PAGESIZE_WIDTH);
     uint32_t height = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PAGESIZE_HEIGHT);
 
-    if (id == "") {
+    if (id.empty() || name.empty()) {
         PRINT_HILOGE("Invalid resolution id");
         return nullptr;
+    }
+
+    PAGE_SIZE_ID ret = PrintPageSize::MatchPageSize(name);
+    if (ret.empty()) {
+        std::string customName = GetCustomPageNameFromMilSize(name, width, height);
+        id = customName;
+        name = customName;
     }
 
     nativeObj->SetId(id);
     nativeObj->SetName(name);
     nativeObj->SetWidth(width);
     nativeObj->SetHeight(height);
-    PRINT_HILOGI("Build Page Size succeed");
+    PRINT_HILOGI("Build Page Size success, id: %{public}s, name: %{public}s", id.c_str(), name.c_str());
     return nativeObj;
 }
 
