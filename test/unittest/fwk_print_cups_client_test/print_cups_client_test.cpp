@@ -331,7 +331,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
     printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    delete jobParams;
 }
 
 /**
@@ -348,7 +347,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0018, TestSize.Level1)
     printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    delete jobParams;
 }
 
 /**
@@ -1308,7 +1306,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0061, TestSize.Level1)
     printCupsClient.jobQueue_.push_back(jobParams);
     printCupsClient.currentJob_ = jobParams;
     printCupsClient.CancelCupsJob(serviceJobId);
-    delete jobParams;
 }
 
 /**
@@ -1342,7 +1339,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0062, TestSize.Level1)
     printCupsClient.currentJob_ = jobParams2;
     printCupsClient.CancelCupsJob(serviceJobId);
     delete jobParams;
-    delete jobParams2;
 }
 
 /**
