@@ -545,8 +545,6 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0087, TestSize.Level1)
     printCupsClient.jobQueue_.push_back(jobParams2);
     EXPECT_EQ(printCupsClient.GetNextJob(), jobParams1);
     EXPECT_EQ(printCupsClient.GetNextJob(), nullptr);
-    delete jobParams1;
-    delete jobParams2;
 }
 
 /**
