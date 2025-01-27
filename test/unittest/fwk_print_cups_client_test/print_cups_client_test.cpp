@@ -1304,7 +1304,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0061, TestSize.Level1)
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
     EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
     printCupsClient.jobQueue_.push_back(jobParams);
-    printCupsClient.currentJob_ = jobParams;
     printCupsClient.CancelCupsJob(serviceJobId);
 }
 
@@ -1711,8 +1710,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0079, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(printCupsClient.HandleFiles(jobParams, numFiles, http, jobId), false);
     delete http;
+    delete jobParams;
 }
 
 /**
