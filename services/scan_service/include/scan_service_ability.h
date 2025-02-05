@@ -89,6 +89,8 @@ private:
     void SetScannerSerialNumber(ScanDeviceInfo &info);
     void SaneGetScanner();
     void SyncScannerInfo(ScanDeviceInfo &info);
+    void SetScannerSerialNumberByTCP(ScanDeviceInfo &info);
+    void SetScannerSerialNumberByUSB(ScanDeviceInfo &info);
 public:
     static std::map<std::string, ScanDeviceInfo> saneGetUsbDeviceInfoMap;
     static std::map<std::string, ScanDeviceInfo> saneGetTcpDeviceInfoMap;
