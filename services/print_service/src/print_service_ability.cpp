@@ -1576,11 +1576,15 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
     cupsPrinterInfo.maker = info.GetPrinterMake();
     cupsPrinterInfo.printerStatus = PRINTER_STATUS_IDLE;
     info.GetCapability(cupsPrinterInfo.printerCapability);
-    printSystemData_.InsertCupsPrinter(printerId, cupsPrinterInfo, true);
     output.SetPrinterStatus(PRINTER_STATUS_IDLE);
     output.SetPrinterId(printerId);
-    SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, output, true);
-    SendPrinterChangeEvent(PRINTER_EVENT_ADDED, output);
+    if (!printSystemData_.IsPrinterAdded(printerId)) {
+        SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, output, true);
+        SendPrinterChangeEvent(PRINTER_EVENT_ADDED, output);
+    } else {
+        PRINT_HILOGW("Printer added.");
+    }
+    printSystemData_.InsertCupsPrinter(printerId, cupsPrinterInfo, true);
     SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, output);
     SetLastUsedPrinter(printerId);
     return true;
