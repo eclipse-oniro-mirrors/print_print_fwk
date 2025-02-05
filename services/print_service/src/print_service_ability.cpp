@@ -3117,14 +3117,13 @@ int32_t PrintServiceAbility::DiscoverUsbPrinters(std::vector<PrinterInfo> &print
 
 int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId)
 {
-    if (printSystemData_.QueryDiscoveredPrinterInfoById(info.GetPrinterId()) != nullptr) {
-        PRINT_HILOGE("duplicate printer id, ignore it");
-        return E_PRINT_INVALID_PRINTER;
-    }
-
     auto infoPtr = std::make_shared<PrinterInfo>(info);
     infoPtr->SetPrinterId(PrintUtils::GetGlobalId(extensionId, infoPtr->GetPrinterId()));
     PRINT_HILOGD("Printer ID = %{public}s", infoPtr->GetPrinterId().c_str());
+    if (printSystemData_.QueryDiscoveredPrinterInfoById(infoPtr->GetPrinterId()) != nullptr) {
+        PRINT_HILOGE("duplicate printer id, ignore it");
+        return E_PRINT_INVALID_PRINTER;
+    }
     infoPtr->SetPrinterState(PRINTER_ADDED);
     printSystemData_.AddPrinterToDiscovery(infoPtr);
 
