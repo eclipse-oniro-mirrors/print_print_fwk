@@ -2236,4 +2236,26 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0139, TestSize.Level1)
     service->RemoveVendorPrinterFromCups(vendorName, printerId);
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
 }
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0140, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "testPrinterId";
+    auto cupsPrinter = std::make_shared<CupsPrinterInfo>();
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, cupsPrinter);
+    PrinterInfo info;
+    EXPECT_EQ(service->UpdatePrinterCapability(printerId, info), true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0141, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.ohos.spooler:testPrinterId";
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    auto infoPtr = std::make_shared<PrinterInfo>(info);
+    service->printSystemData_.AddPrinterToDiscovery(infoPtr);
+    std::string extensionId = "com.ohos.spooler";
+    EXPECT_EQ(service->AddSinglePrinterInfo(info, extensionId), E_PRINT_NONE);
+}
 } // namespace OHOS::Print

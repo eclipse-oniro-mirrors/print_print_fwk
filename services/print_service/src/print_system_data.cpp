@@ -153,7 +153,6 @@ void PrintSystemData::InsertCupsPrinter(
         info->uri = printerInfo.uri;
         info->maker = printerInfo.maker;
         info->printerStatus = printerInfo.printerStatus;
-        info->alias = printerInfo.alias;
         if (needUpdateCaps) {
             info->printerCapability = printerInfo.printerCapability;
         }

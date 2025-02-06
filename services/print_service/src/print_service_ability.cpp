@@ -1576,11 +1576,15 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
     cupsPrinterInfo.maker = info.GetPrinterMake();
     cupsPrinterInfo.printerStatus = PRINTER_STATUS_IDLE;
     info.GetCapability(cupsPrinterInfo.printerCapability);
-    printSystemData_.InsertCupsPrinter(printerId, cupsPrinterInfo, true);
     output.SetPrinterStatus(PRINTER_STATUS_IDLE);
     output.SetPrinterId(printerId);
-    SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, output, true);
-    SendPrinterChangeEvent(PRINTER_EVENT_ADDED, output);
+    if (!printSystemData_.IsPrinterAdded(printerId)) {
+        SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, output, true);
+        SendPrinterChangeEvent(PRINTER_EVENT_ADDED, output);
+    } else {
+        PRINT_HILOGW("Printer added.");
+    }
+    printSystemData_.InsertCupsPrinter(printerId, cupsPrinterInfo, true);
     SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, output);
     SetLastUsedPrinter(printerId);
     return true;
@@ -3113,16 +3117,14 @@ int32_t PrintServiceAbility::DiscoverUsbPrinters(std::vector<PrinterInfo> &print
 
 int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId)
 {
-    if (printSystemData_.QueryDiscoveredPrinterInfoById(info.GetPrinterId()) != nullptr) {
-        PRINT_HILOGE("duplicate printer id, ignore it");
-        return E_PRINT_INVALID_PRINTER;
-    }
-
     auto infoPtr = std::make_shared<PrinterInfo>(info);
     infoPtr->SetPrinterId(PrintUtils::GetGlobalId(extensionId, infoPtr->GetPrinterId()));
     PRINT_HILOGD("Printer ID = %{public}s", infoPtr->GetPrinterId().c_str());
+    if (printSystemData_.QueryDiscoveredPrinterInfoById(infoPtr->GetPrinterId()) == nullptr) {
+        PRINT_HILOGI("new printer, add it");
+        printSystemData_.AddPrinterToDiscovery(infoPtr);
+    }
     infoPtr->SetPrinterState(PRINTER_ADDED);
-    printSystemData_.AddPrinterToDiscovery(infoPtr);
 
     SendPrinterDiscoverEvent(PRINTER_ADDED, *infoPtr);
     SendPrinterEvent(*infoPtr);
