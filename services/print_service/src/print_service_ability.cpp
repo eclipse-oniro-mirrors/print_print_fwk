@@ -3120,12 +3120,11 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
     auto infoPtr = std::make_shared<PrinterInfo>(info);
     infoPtr->SetPrinterId(PrintUtils::GetGlobalId(extensionId, infoPtr->GetPrinterId()));
     PRINT_HILOGD("Printer ID = %{public}s", infoPtr->GetPrinterId().c_str());
-    if (printSystemData_.QueryDiscoveredPrinterInfoById(infoPtr->GetPrinterId()) != nullptr) {
-        PRINT_HILOGE("duplicate printer id, ignore it");
-        return E_PRINT_INVALID_PRINTER;
+    if (printSystemData_.QueryDiscoveredPrinterInfoById(infoPtr->GetPrinterId()) == nullptr) {
+        PRINT_HILOGI("new printer, add it");
+        printSystemData_.AddPrinterToDiscovery(infoPtr);
     }
     infoPtr->SetPrinterState(PRINTER_ADDED);
-    printSystemData_.AddPrinterToDiscovery(infoPtr);
 
     SendPrinterDiscoverEvent(PRINTER_ADDED, *infoPtr);
     SendPrinterEvent(*infoPtr);
