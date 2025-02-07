@@ -46,6 +46,8 @@ public:
 
     void SetPrinterMake(const std::string &printerMake);
 
+    void SetPrinterUuid(const std::string &printerUuid);
+
     void SetOption(const std::string &option);
 
     void SetIsDefaultPrinter(bool isDefaultPrinter);
@@ -79,6 +81,10 @@ public:
     [[nodiscard]] bool HasPrinterMake() const;
 
     [[nodiscard]] std::string GetPrinterMake() const;
+
+    [[nodiscard]] bool HasPrinterUuid() const;
+
+    [[nodiscard]] std::string GetPrinterUuid() const;
 
     [[nodiscard]] bool HasOption() const;
 
@@ -143,6 +149,10 @@ private:
     bool hasOption_;
 
     std::string option_;
+
+    bool hasPrinterUuid_;
+
+    std::string printerUuid_;
 
     bool hasIsDefaultPrinter_; // Deprecated, to be removed in a future version.
 

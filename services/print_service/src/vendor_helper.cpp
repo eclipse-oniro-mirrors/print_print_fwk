@@ -415,6 +415,9 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
     if (discoveryItem->makeAndModel != nullptr) {
         info.SetPrinterMake(std::string(discoveryItem->makeAndModel));
     }
+    if (discoveryItem->printerUuid != nullptr) {
+        info.SetPrinterUuid(std::string(discoveryItem->printerUuid));
+    }
     if (discoveryItem->printerUri != nullptr && discoveryItem->makeAndModel != nullptr) {
         PRINT_HILOGD("printerUri: %{public}s", discoveryItem->printerUri);
         nlohmann::json option;
