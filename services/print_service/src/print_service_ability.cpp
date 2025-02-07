@@ -2877,6 +2877,7 @@ int32_t PrintServiceAbility::DeletePrinterFromCups(const std::string &printerNam
     DeletePrinterFromUserData(printerId);
     NotifyAppDeletePrinter(printerId);
     printSystemData_.DeleteCupsPrinter(printerId);
+    RemoveSinglePrinterInfo(printerId);
     return E_PRINT_NONE;
 }
 
