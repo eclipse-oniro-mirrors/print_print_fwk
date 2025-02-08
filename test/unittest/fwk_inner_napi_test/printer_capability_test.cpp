@@ -266,5 +266,22 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0015, TestSize.Level1)
     EXPECT_STREQ(capability.GetPrinterAttrValue("key"), "");
     capability.ClearCurPrinterAttrGroup();
 }
+
+/**
+ * @tc.name: PrinterCapabilityTest_00016
+ * @tc.desc: Verify set duplicate pageSize function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0016, TestSize.Level1)
+{
+    PrinterCapability capability;
+    std::vector<PrintPageSize> pagesize, getPagesize;
+    pagesize.emplace_back("page1", "page1", 1, 1);
+    pagesize.emplace_back("page2", "page2", 1, 1);
+    capability.SetSupportedPageSize(pagesize);
+    capability.GetSupportedPageSize(getPagesize);
+    EXPECT_EQ(getPagesize.size(), 1);
+}
 } // namespace Print
 } // namespace OHOS

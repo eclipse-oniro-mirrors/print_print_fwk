@@ -40,16 +40,12 @@ std::string PrintPageSizeHelper::GetCustomPageNameFromMilSize(const std::string 
     const uint32_t width, const uint32_t height)
 {
     if (name.find(CUSTOM_PREFIX) != std::string::npos) {
-        PRINT_HILOGI("Alraedy custom page size.");
+        PRINT_HILOGI("Already custom page size.");
         return name;
     }
     std::stringstream sizeName;
-    if (width % ONE_THOUSAND_INCH == 0 && height % ONE_THOUSAND_INCH == 0) {
-        sizeName << CUSTOM_PREFIX << width / ONE_THOUSAND_INCH << "x" << height / ONE_THOUSAND_INCH << "in";
-    } else {
-        sizeName << CUSTOM_PREFIX << round(width / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x"
-            << round(height / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
-    }
+    sizeName << CUSTOM_PREFIX << round(width / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x"
+        << round(height / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
     return sizeName.str();
 }
 
@@ -68,7 +64,7 @@ std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJs(napi_env env, na
     uint32_t height = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PAGESIZE_HEIGHT);
 
     if (id.empty() || name.empty()) {
-        PRINT_HILOGE("Invalid resolution id");
+        PRINT_HILOGE("Invalid resolution id or name");
         return nullptr;
     }
 

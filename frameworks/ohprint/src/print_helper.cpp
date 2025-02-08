@@ -607,8 +607,9 @@ bool SetPrintPageSizeInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &
     std::string pageSizeId(nativePrintJob.pageSizeId);
     PrintPageSize pageSize;
     if (!PrintPageSize::FindPageSizeById(pageSizeId, pageSize)) {
-        PRINT_HILOGW("cannot find page size: %{public}s.", pageSizeId.c_str());
-        return false;
+        PRINT_HILOGW("use custom native page size: %{public}s.", pageSizeId.c_str());
+        pageSize.SetId(pageSizeId);
+        pageSize.SetName(pageSizeId);
     }
     printJob.SetPageSize(pageSize);
     PRINT_HILOGI("SetPrintPageSizeInPrintJob out.");

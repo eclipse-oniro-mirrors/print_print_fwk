@@ -116,6 +116,7 @@ public:
 
 private:
     bool ReadFromParcel(Parcel &parcel);
+    std::vector<PrintPageSize> RemoveDuplicatePageSize(const std::vector<PrintPageSize> &supportedPageSizeList);
 
 private:
     uint32_t colorMode_; // Property in API 10, deprecated in API 12
