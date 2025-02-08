@@ -27,11 +27,14 @@
 
 namespace OHOS {
 namespace Print {
+
+static inline uint64_t GetNowTime();
+
 struct PrinterVendorStatus {
     Print_PrinterState state;
     uint64_t lastUpdateTime;
     uint64_t lastCheckTime;
-    PrinterVendorStatus() : state(PRINTER_UNAVAILABLE), lastUpdateTime(0), lastCheckTime(0) {}
+    PrinterVendorStatus() : state(PRINTER_UNAVAILABLE), lastUpdateTime(GetNowTime()), lastCheckTime(0) {}
 };
 
 static inline uint64_t GetNowTime()

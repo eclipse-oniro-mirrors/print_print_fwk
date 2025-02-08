@@ -89,7 +89,6 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
     }
     int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_START_PRINT, data, reply, option);
     ret = GetResult(ret, reply);
-    taskId = reply.ReadString();
     PRINT_HILOGD("PrintServiceProxy StartPrint ret = [%{public}d] TaskId = %{public}s", ret, taskId.c_str());
     return ret;
 }
