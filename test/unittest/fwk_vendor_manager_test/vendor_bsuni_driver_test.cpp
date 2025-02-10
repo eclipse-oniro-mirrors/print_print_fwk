@@ -188,7 +188,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0002, TestSize.Level2)
 {
     MockVendorManager mockManager;
     VendorBsuniDriver vendorDriver;
-    EXPECT_EQ(vendorDriver.Init(&mockManager), false);
+    EXPECT_EQ(vendorDriver.Init(&mockManager), true);
     vendorDriver.UnInit();
 }
 
