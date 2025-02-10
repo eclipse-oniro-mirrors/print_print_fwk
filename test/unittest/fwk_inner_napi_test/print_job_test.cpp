@@ -411,7 +411,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0025, TestSize.Level1)
 
     job.SetIsSequential(true);
     job.Marshalling(parcel);
-    EXPECT_EQ(job.GetIsSequential(), false);
+    EXPECT_EQ(job.GetIsSequential(), true);
 }
 
 /**

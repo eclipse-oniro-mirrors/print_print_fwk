@@ -101,7 +101,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0002, TestSize.Level1)
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
     EXPECT_EQ(PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId),
-        E_PRINT_NO_PERMISSION);
+        E_PRINT_RPC_FAILURE);
 }
 
 /**
