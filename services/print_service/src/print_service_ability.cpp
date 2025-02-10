@@ -2185,23 +2185,26 @@ int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId)
 
     PRINT_HILOGD("PrintServiceAbility::LoadExtSuccess started. extensionId=%{public}s:", extensionId.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (extensionStateList_.find(extensionId) == extensionStateList_.end()) {
+    auto it = extensionStateList_.find(extensionId);
+    if (it == extensionStateList_.end()) {
         PRINT_HILOGE("Invalid extension id");
         return E_PRINT_INVALID_EXTENSION;
     }
 
-    if (extensionStateList_[extensionId] != PRINT_EXTENSION_LOADING) {
+    if (it->second != PRINT_EXTENSION_LOADING) {
         PRINT_HILOGE("Invalid Extension State");
         return E_PRINT_INVALID_EXTENSION;
     }
-    extensionStateList_[extensionId] = PRINT_EXTENSION_LOADED;
+    it->second = PRINT_EXTENSION_LOADED;
 
     PRINT_HILOGD("Auto Stat Printer Discovery");
     auto callback = [=]() { DelayStartDiscovery(extensionId); };
-    if (helper_->IsSyncMode()) {
+    if (helper_ != nullptr && helper_->IsSyncMode()) {
         callback();
-    } else {
+    } else if (serviceHandler_ != nullptr) {
         serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
+    } else {
+        PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
     }
     PRINT_HILOGD("PrintServiceAbility::LoadExtSuccess end.");
     return E_PRINT_NONE;
