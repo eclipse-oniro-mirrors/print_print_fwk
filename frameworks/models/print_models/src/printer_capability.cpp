@@ -17,6 +17,7 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "print_utils.h"
+#include <sstream>
 
 using json = nlohmann::json;
 namespace OHOS::Print {
@@ -227,7 +228,8 @@ void PrinterCapability::GetSupportedOrientation(std::vector<uint32_t> &supported
 
 void PrinterCapability::SetSupportedPageSize(const std::vector<PrintPageSize> &supportedPageSizeList)
 {
-    supportedPageSizeList_.assign(supportedPageSizeList.begin(), supportedPageSizeList.end());
+    std::vector<PrintPageSize> uniquePageSizeList = RemoveDuplicatePageSize(supportedPageSizeList);
+    supportedPageSizeList_.assign(uniquePageSizeList.begin(), uniquePageSizeList.end());
 }
 
 void PrinterCapability::SetSupportedColorMode(const std::vector<uint32_t> &supportedColorModeList)
@@ -462,5 +464,32 @@ void PrinterCapability::ClearCurPrinterAttrGroup()
 {
     PRINT_HILOGI("printerAttr_group reset");
     printerAttr_group.clear();
+}
+
+std::vector<PrintPageSize> PrinterCapability::RemoveDuplicatePageSize
+    (const std::vector<PrintPageSize> &supportedPageSizeList)
+{
+    std::vector<PrintPageSize> uniquePageSizeList = supportedPageSizeList;
+    // Move custom to the end to show standard sizes preferentially
+    std::stable_partition(uniquePageSizeList.begin(), uniquePageSizeList.end(),
+        [](const PrintPageSize& p) { return p.GetName().find(CUSTOM_PREFIX) == std::string::npos; });
+    std::unordered_set<std::string> uniquePageSizeSet;
+    auto it = uniquePageSizeList.begin();
+    while (it != uniquePageSizeList.end()) {
+        std::stringstream widthAndHeight;
+        widthAndHeight << round(it->GetWidth() / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x" <<
+            round(it->GetHeight() / HUNDRED_OF_MILLIMETRE_TO_INCH);
+        PRINT_HILOGI("SetSupportedPageSize: %{public}s, uniqueFlag: %{public}s",
+            it->GetName().c_str(), widthAndHeight.str().c_str());
+        if (uniquePageSizeSet.insert(widthAndHeight.str()).second) {
+            ++it;
+        } else {
+            // if already has the same withAndHeight, replace it with the last element, and shorten the list
+            PRINT_HILOGI("SetSupportedPageSize find duplicate!");
+            *it = std::move(uniquePageSizeList.back());
+            uniquePageSizeList.pop_back();
+        }
+    }
+    return uniquePageSizeList;
 }
 } // namespace OHOS::Print

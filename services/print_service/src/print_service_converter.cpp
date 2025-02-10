@@ -15,6 +15,7 @@
 
 #include "print_service_converter.h"
 #include "print_log.h"
+#include <sstream>
 
 namespace OHOS {
 namespace Print {
@@ -93,17 +94,21 @@ bool ConvertCustomPageSizeFromPwgName(const char *src, PrintPageSize &dst)
     std::string unit = sizeName.substr(sizeName.size() - PAGE_SIZE_UNIT_LENGTH);
     uint32_t width = 0;
     uint32_t length = 0;
+    std::stringstream postfixName;
     if (unit == "mm") {
         width = round(std::stof(widthStr) * HUNDRED_OF_MILLIMETRE_TO_INCH);
         length = round(std::stof(lengthStr) * HUNDRED_OF_MILLIMETRE_TO_INCH);
+        postfixName << round(std::stof(widthStr)) << "x" << round(std::stof(lengthStr)) << "mm";
     } else if (unit == "in") {
         width = round(std::stof(widthStr) * ONE_THOUSAND_INCH);
         length = round(std::stof(lengthStr) * ONE_THOUSAND_INCH);
+        postfixName << round(std::stof(widthStr) * ONE_THOUSAND_INCH / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x" <<
+            round(std::stof(lengthStr) * ONE_THOUSAND_INCH / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
     } else {
         PRINT_HILOGE("IPP media-supported do not found unitstr");
         return false;
     }
-    std::string pwgName = CUSTOM_PREFIX + sizeName;
+    std::string pwgName = CUSTOM_PREFIX + postfixName.str();
     dst = PrintPageSize(pwgName, pwgName, width, length);
     return true;
 }
