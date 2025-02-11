@@ -868,6 +868,7 @@ void PrintSystemData::ClearDiscoveredPrinterList()
 
 std::map<std::string, std::shared_ptr<PrinterInfo>> PrintSystemData::GetDiscoveredPrinterInfo()
 {
+    std::lock_guard<std::mutex> lock(discoveredListMutex);
     return discoveredPrinterInfoList_;
 }
 

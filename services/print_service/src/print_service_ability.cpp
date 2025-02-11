@@ -472,6 +472,7 @@ int32_t PrintServiceAbility::StopDiscoverPrinter()
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     vendorManager.StopDiscovery();
     vendorManager.StopStatusMonitor();
+    printSystemData_.ClearDiscoveredPrinterList();
     for (auto extension : extensionStateList_) {
         if (extension.second < PRINT_EXTENSION_LOADING) {
             continue;
