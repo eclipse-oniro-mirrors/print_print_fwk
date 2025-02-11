@@ -35,6 +35,8 @@ PrinterInfo::PrinterInfo()
       printerMake_(""),
       hasOption_(false),
       option_(""),
+      hasPrinterUuid_(false),
+      printerUuid_(""),
       hasIsDefaultPrinter_(false),
       isDefaultPrinter_(false),
       hasIsLastUsedPrinter_(false),
@@ -61,6 +63,8 @@ PrinterInfo::PrinterInfo(const PrinterInfo &right)
       printerMake_(right.printerMake_),
       hasOption_(right.hasOption_),
       option_(right.option_),
+      hasPrinterUuid_(right.hasPrinterUuid_),
+      printerUuid_(right.printerUuid_),
       hasIsDefaultPrinter_(right.hasIsDefaultPrinter_),
       isDefaultPrinter_(right.isDefaultPrinter_),
       hasIsLastUsedPrinter_(right.hasIsLastUsedPrinter_),
@@ -84,6 +88,8 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         uri_ = right.uri_;
         hasPrinterMake_ = right.hasPrinterMake_;
         printerMake_ = right.printerMake_;
+        hasPrinterUuid_ = right.hasPrinterUuid_,
+        printerUuid_ = right.printerUuid_,
         option_ = right.option_;
         hasIsDefaultPrinter_ = right.hasIsDefaultPrinter_;
         isDefaultPrinter_ = right.isDefaultPrinter_;
@@ -138,6 +144,12 @@ void PrinterInfo::SetPrinterMake(const std::string &printerMake)
 {
     hasPrinterMake_ = true;
     printerMake_ = printerMake;
+}
+
+void PrinterInfo::SetPrinterUuid(const std::string &printerUuid)
+{
+    hasPrinterUuid_ = true;
+    printerUuid_ = printerUuid;
 }
 
 void PrinterInfo::SetOption(const std::string &option)
@@ -219,6 +231,16 @@ std::string PrinterInfo::GetPrinterMake() const
     return printerMake_;
 }
 
+bool PrinterInfo::HasPrinterUuid() const
+{
+    return hasPrinterUuid_;
+}
+
+std::string PrinterInfo::GetPrinterUuid() const
+{
+    return printerUuid_;
+}
+
 bool PrinterInfo::HasOption() const
 {
     return hasOption_;
@@ -278,14 +300,10 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
     right.SetPrinterIcon(iconId);
 
     right.hasDescription_ = parcel.ReadBool();
-    if (right.hasDescription_) {
-        right.SetDescription(parcel.ReadString());
-    }
+    if (right.hasDescription_) { right.SetDescription(parcel.ReadString()); }
 
     right.hasPrinterStatus_ = parcel.ReadBool();
-    if (right.hasPrinterStatus_) {
-        right.SetPrinterStatus(parcel.ReadUint32());
-    }
+    if (right.hasPrinterStatus_) { right.SetPrinterStatus(parcel.ReadUint32()); }
 
     right.hasCapability_ = parcel.ReadBool();
     if (right.hasCapability_) {
@@ -298,19 +316,16 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
     }
 
     right.hasUri_ = parcel.ReadBool();
-    if (right.hasUri_) {
-        right.SetUri(parcel.ReadString());
-    }
+    if (right.hasUri_) { right.SetUri(parcel.ReadString()); }
 
     right.hasPrinterMake_ = parcel.ReadBool();
-    if (right.hasPrinterMake_) {
-        right.SetPrinterMake(parcel.ReadString());
-    }
+    if (right.hasPrinterMake_) { right.SetPrinterMake(parcel.ReadString()); }
+
+    right.hasPrinterUuid_ = parcel.ReadBool();
+    if (right.hasPrinterUuid_) { right.SetPrinterUuid(parcel.ReadString()); }
 
     right.hasOption_ = parcel.ReadBool();
-    if (right.hasOption_) {
-        right.SetOption(parcel.ReadString());
-    }
+    if (right.hasOption_) { right.SetOption(parcel.ReadString()); }
     ReadInnerPropertyFromParcel(right, parcel);
 
     right.Dump();
@@ -367,6 +382,11 @@ bool PrinterInfo::Marshalling(Parcel &parcel) const
         parcel.WriteString(GetPrinterMake());
     }
 
+    parcel.WriteBool(hasPrinterUuid_);
+    if (hasPrinterUuid_) {
+        parcel.WriteString(GetPrinterUuid());
+    }
+
     parcel.WriteBool(hasOption_);
     if (hasOption_) {
         parcel.WriteString(GetOption());
@@ -416,6 +436,9 @@ void PrinterInfo::Dump() const
     }
     if (hasPrinterMake_) {
         PRINT_HILOGD("printerMake: %{private}s", printerMake_.c_str());
+    }
+    if (hasPrinterUuid_) {
+        PRINT_HILOGD("printerUuid: %{private}s", printerUuid_.c_str());
     }
     if (hasOption_) {
         PRINT_HILOGD("option: %{private}s", option_.c_str());

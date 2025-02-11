@@ -288,7 +288,18 @@ bool VendorWlanGroup::CheckPrinterAddedByIp(const std::string &printerId)
 void VendorWlanGroup::UpdateGroupPrinter(const std::string &printerId, const std::string &groupPrinterId)
 {
     std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex);
-    groupPrinterIdMap_[printerId] = groupPrinterId;
+    auto retPair = groupPrinterIdMap_.try_emplace(printerId, groupPrinterId);
+    if (retPair.second) {
+        PRINT_HILOGI("add new groupPrinterId");
+        return;
+    }
+    if (retPair.first->second == groupPrinterId) {
+        PRINT_HILOGD("not need update groupPrinterId");
+        return;
+    }
+    PRINT_HILOGI("update groupPrinterId");
+    parentVendorManager->RemovePrinterFromDiscovery(GetVendorName(), retPair.first->second);
+    retPair.first->second = groupPrinterId;
 }
 
 bool VendorWlanGroup::HasGroupPrinter(const std::string &printerId)
@@ -310,20 +321,11 @@ void VendorWlanGroup::RemovedGroupPrinter(const std::string &printerId)
 PrinterInfo VendorWlanGroup::ConvertPrinterInfoId(const PrinterInfo &printerInfo)
 {
     PrinterInfo info(printerInfo);
-    if (HasGroupPrinter(printerInfo.GetPrinterId())) {
-        PRINT_HILOGD("has converted printerId: %{public}s", groupPrinterIdMap_[printerInfo.GetPrinterId()].c_str());
-        std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex);
-        info.SetPrinterId(groupPrinterIdMap_[printerInfo.GetPrinterId()]);
+    if (info.HasPrinterUuid()) {
+        PRINT_HILOGD("convert printerId by uuid: %{private}s", info.GetPrinterUuid().c_str());
+        UpdateGroupPrinter(info.GetPrinterId(), info.GetPrinterUuid());
+        info.SetPrinterId(info.GetPrinterUuid());
         return info;
-    }
-    if (printerInfo.HasOption() && nlohmann::json::accept(std::string(printerInfo.GetOption()))) {
-        nlohmann::json option = nlohmann::json::parse(std::string(printerInfo.GetOption()));
-        if (option != nullptr && option.contains("printer-uuid") && option["printer-uuid"].is_string()) {
-            info.SetPrinterId(std::string(option["printer-uuid"]));
-            UpdateGroupPrinter(printerInfo.GetPrinterId(), std::string(option["printer-uuid"]));
-            PRINT_HILOGD("uuid is exited, convert printerId with uuid");
-            return info;
-        }
     }
     PRINT_HILOGW("uuid is not exited, not convert printerId");
     UpdateGroupPrinter(printerInfo.GetPrinterId(), printerInfo.GetPrinterId());
@@ -333,7 +335,7 @@ PrinterInfo VendorWlanGroup::ConvertPrinterInfoId(const PrinterInfo &printerInfo
 PrinterInfo VendorWlanGroup::ConvertIpPrinterName(const PrinterInfo &printerInfo)
 {
     PrinterInfo info(printerInfo);
-    PRINT_HILOGI("ConvertIpPrinterName printerId : %{public}s, printerName : %{public}s",
+    PRINT_HILOGI("ConvertIpPrinterName printerId : %{private}s, printerName : %{private}s",
         info.GetPrinterId().c_str(), info.GetPrinterName().c_str());
     info.SetPrinterName(info.GetPrinterId());
     return info;
@@ -353,9 +355,6 @@ std::string VendorWlanGroup::ExtractPrinterIdByPrinterInfo(const PrinterInfo &pr
     }
     std::string printerId = uri.substr(pos_start + VENDOR_BSUNI_URI_START.length(),
         pos_end - pos_start - VENDOR_BSUNI_URI_START.length());
-    if (!HasGroupPrinter(printerId)) {
-        UpdateGroupPrinter(printerId, VendorManager::ExtractPrinterId(printerInfo.GetPrinterId()));
-    }
     return printerId;
 }
 
