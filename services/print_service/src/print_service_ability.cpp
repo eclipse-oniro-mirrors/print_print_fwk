@@ -1015,14 +1015,7 @@ bool PrintServiceAbility::WritePreferenceToFile()
 
     nlohmann::json jsonObject;
     jsonObject["printer_list"] = printerMapJson;
-    std::string jsonString;
-    try {
-        jsonString = jsonObject.dump();
-    }
-    catch (const std::exception& e) {
-        PRINT_HILOGE("jsonObject dump fail");
-        return false;
-    }
+    std::string jsonString = jsonObject.dump();
     size_t jsonLength = jsonString.length();
     int32_t fd = open(printerPreferenceFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
     PRINT_HILOGD("SavePrinterPreferenceMap fd: %{public}d", fd);
