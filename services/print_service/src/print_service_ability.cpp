@@ -1381,12 +1381,14 @@ void PrintServiceAbility::NotifyCurrentUserChanged(const int32_t userId)
 
     switch (status) {
         case PRINT_JOB_BLOCKED:
+            CallStatusBar();
             NotifyAppJobQueueChanged(QUEUE_JOB_LIST_BLOCKED);
             break;
         case PRINT_JOB_COMPLETED:
             NotifyAppJobQueueChanged(QUEUE_JOB_LIST_HIDE);
             break;
         case PRINT_JOB_RUNNING:
+            CallStatusBar();
             NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
             break;
         default:
