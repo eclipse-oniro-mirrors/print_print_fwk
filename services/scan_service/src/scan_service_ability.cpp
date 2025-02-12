@@ -54,6 +54,7 @@
 #include "sane_device.h"
 #include "sane_control_param.h"
 #include "sane_picture_data.h"
+#include "print_log.h"
 
 namespace OHOS::Scan {
 namespace {
@@ -302,6 +303,7 @@ int32_t ScanServiceAbility::ExitScan()
         constexpr int32_t INVALID_FILE_DESCRIPTOR = -1;
         if (fd != INVALID_FILE_DESCRIPTOR) {
             close(fd);
+            fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
         }
         if (FileExists(imagePath)) {
             unlink(imagePath.c_str());
@@ -1198,6 +1200,7 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
         SCAN_HILOGI("get scan picture successfully!");
         prog = frontProg;
         int32_t fd = open(prog.GetImageRealPath().c_str(), O_RDONLY);
+        fdsan_exchange_owner_tag(fd, PRINT_LOG_DOMAIN);
         prog.SetScanPictureFd(fd);
         imageFdMap_[prog.GetImageRealPath()] = fd;
         prog.Dump();

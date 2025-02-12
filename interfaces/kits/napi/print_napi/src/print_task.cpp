@@ -109,6 +109,7 @@ uint32_t PrintTask::Start(napi_env env, napi_callback_info info)
             PRINT_HILOGE("file[%{private}s] is invalid", file.c_str());
             for (auto fd : fdList_) {
                 close(fd);
+                fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
             }
             fdList_.clear();
             fileList_.clear();
@@ -127,6 +128,7 @@ uint32_t PrintTask::Start(napi_env env, napi_callback_info info)
         PRINT_HILOGE("CallSpooler failed.");
         for (auto fd : fdList_) {
             close(fd);
+            fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
         }
         fdList_.clear();
         fileList_.clear();

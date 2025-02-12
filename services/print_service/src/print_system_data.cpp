@@ -195,9 +195,8 @@ bool PrintSystemData::SaveCupsPrinterMap()
         PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
         return false;
     }
-    int32_t fd = open(printerListFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
-    PRINT_HILOGD("SaveCupsPrinterMap fd: %{public}d", fd);
-    if (fd < 0) {
+    File *file = fopen(printerListFilePath.c_str(), "ar");
+    if (file == nullptr) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
         return false;
     }
@@ -226,13 +225,13 @@ bool PrintSystemData::SaveCupsPrinterMap()
     jsonObject["printer_list"] = printerMapJson;
     std::string jsonString = jsonObject.dump();
     size_t jsonLength = jsonString.length();
-    auto writeLength = write(fd, jsonString.c_str(), jsonLength);
-    close(fd);
+    size_t writeLength = fwrite(jsonString.c_str(), strlen(jsonString.c_str()), 1, file);
+    fclose(file);
     PRINT_HILOGI("SaveCupsPrinterMap finished");
     if (writeLength < 0) {
         return false;
     }
-    return (size_t)writeLength == jsonLength;
+    return writeLength == jsonLength;
 }
 
 std::string PrintSystemData::QueryPrinterIdByStandardizeName(const std::string &printerName)

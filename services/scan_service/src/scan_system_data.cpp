@@ -331,9 +331,8 @@ void ScanSystemData::GetAddedScannerInfoList(std::vector<ScanDeviceInfo> &infoLi
 
 bool ScanSystemData::SaveScannerMap()
 {
-    int32_t fd = open(SCANNER_LIST_FILE.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
-    SCAN_HILOGD("SaveScannerMap fd: %{public}d", fd);
-    if (fd < 0) {
+    File *file = fopen(SCANNER_LIST_FILE.c_str(), "ar");
+    if (file != nullptr) {
         SCAN_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
         return false;
     }
@@ -363,14 +362,14 @@ bool ScanSystemData::SaveScannerMap()
     jsonObject["scaner_list"] = scannerMapJson;
     std::string jsonString = jsonObject.dump();
     size_t jsonLength = jsonString.length();
-    auto writeLength = write(fd, jsonString.c_str(), jsonLength);
-    close(fd);
+    size_t writeLength = fwrite(jsonString.c_str(), strlen(jsonString.c_str()), 1, file);
+    fclose(file);
     fd = -1;
     SCAN_HILOGI("SaveScannerMap finished");
     if (writeLength < 0) {
         return false;
     }
-    return (size_t)writeLength == jsonLength;
+    return writeLength == jsonLength;
 }
 
 bool ScanSystemData::IsContainScanner(const std::string &uniqueId)

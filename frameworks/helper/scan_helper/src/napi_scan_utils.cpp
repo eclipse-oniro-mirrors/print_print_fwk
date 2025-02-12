@@ -392,20 +392,6 @@ std::string NapiScanUtils::GetTaskEventId(const std::string &taskId, const std::
     return type + TASK_EVENT_DELIMITER + taskId;
 }
 
-int32_t NapiScanUtils::OpenFile(const std::string &filePath)
-{
-    if (!IsPathValid(filePath)) {
-        return SCAN_INVALID_ID;
-    }
-    int32_t fd = open(filePath.c_str(), O_RDONLY);
-    SCAN_HILOGD("fd: %{public}d", fd);
-    if (fd < 0) {
-        SCAN_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-        return SCAN_INVALID_ID;
-    }
-    return fd;
-}
-
 bool NapiScanUtils::IsPathValid(const std::string &filePath)
 {
     auto path = filePath.substr(0, filePath.rfind('/'));

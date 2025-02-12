@@ -144,10 +144,12 @@ int32_t PrintUtils::OpenFile(const std::string &filePath)
         return PRINT_INVALID_ID;
     }
     int32_t fd = open(filePath.c_str(), O_RDONLY);
+    fdsan_exchange_owner_tag(fd, 0, PRINT_LOG_DOMAIN);
     PRINT_HILOGD("fd: %{public}d", fd);
     if (fd < 0) {
         PRINT_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
         close(fd);
+        fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
         return PRINT_INVALID_ID;
     }
     return fd;
@@ -173,6 +175,7 @@ uint32_t PrintUtils::GetIdFromFdPath(const std::string &fdPath)
     if (!(getStrStream >> fd)) {
         PRINT_HILOGD("failed to convert to uint32");
     }
+    fdsan_exchange_owner_tag(fd, 0, PRINT_LOG_DOMAIN);
     return fd;
 }
 
