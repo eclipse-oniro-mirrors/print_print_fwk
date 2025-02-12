@@ -195,7 +195,7 @@ bool PrintSystemData::SaveCupsPrinterMap()
         PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
         return false;
     }
-    File *file = fopen(printerListFilePath.c_str(), "ar");
+    FILE *file = fopen(printerListFilePath.c_str(), "w+");
     if (file == nullptr) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
         return false;
@@ -226,7 +226,11 @@ bool PrintSystemData::SaveCupsPrinterMap()
     std::string jsonString = jsonObject.dump();
     size_t jsonLength = jsonString.length();
     size_t writeLength = fwrite(jsonString.c_str(), strlen(jsonString.c_str()), 1, file);
-    fclose(file);
+    int fcloseResult = fclose(file);
+    if (fcloseResult != 0) {
+        PRINT_HILOGE("Close File Failure.");
+        return false;
+    }
     PRINT_HILOGI("SaveCupsPrinterMap finished");
     if (writeLength < 0) {
         return false;

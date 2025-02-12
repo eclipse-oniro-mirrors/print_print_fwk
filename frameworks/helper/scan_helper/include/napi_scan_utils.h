@@ -84,6 +84,7 @@ public:
     static std::string EncodeExtensionCid(const std::string &extensionId, uint32_t callbackId);
     static bool DecodeExtensionCid(const std::string &cid, std::string &extensionId, uint32_t &callbackId);
     static std::string GetTaskEventId(const std::string &taskId, const std::string &type);
+    static int32_t OpenFile(const std::string &filePath);
     static bool IsPathValid(const std::string &filePath);
     static uint32_t GetIdFromFdPath(const std::string &fdPath);
     static size_t GetJsVal(napi_env env, napi_callback_info info, napi_value argv[], size_t length);

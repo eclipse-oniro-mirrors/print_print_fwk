@@ -133,6 +133,7 @@ private:
     void QueryJobStateAgain(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
     static uint32_t GetBlockedSubstate(JobStatus *jobStatus);
 
+    int32_t StartCupsdServiceNotAlive();
     int32_t StartCupsdService();
     JobParameters *GetNextJob();
     void StartNextJob();

@@ -757,6 +757,12 @@ void TestGetTaskEventId(const uint8_t* data, size_t size, FuzzedDataProvider* da
     NapiScanUtils::GetTaskEventId(taskId, type);
 }
 
+void TestOpenFile(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+{
+    std::string filePath = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    NapiScanUtils::OpenFile(filePath);
+}
+
 void TestIsPathValid(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     std::string filePath = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
