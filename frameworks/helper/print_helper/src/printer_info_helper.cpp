@@ -140,12 +140,20 @@ std::shared_ptr<PrinterInfo> PrinterInfoHelper::BuildFromJs(napi_env env, napi_v
         nativeObj->SetUri(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_URI));
     }
 
+    if (!BuildOtherInfoFromJs(env, jsValue, nativeObj)) {
+        return nullptr;
+    }
+    return nativeObj;
+}
+
+bool PrinterInfoHelper::BuildOtherInfoFromJs(napi_env env, napi_value jsValue, std::shared_ptr<PrinterInfo> nativeObj)
+{
     auto jsPreferences = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_PRINTER_PREFERENCES);
     if (jsPreferences != nullptr) {
         auto preferencesPtr = PrinterPreferencesHelper::BuildFromJs(env, jsPreferences);
         if (preferencesPtr == nullptr) {
             PRINT_HILOGE("Failed to build printer preferences object from js");
-            return nullptr;
+            return false;
         }
         nativeObj->SetPreferences(*preferencesPtr);
     }
@@ -154,7 +162,7 @@ std::shared_ptr<PrinterInfo> PrinterInfoHelper::BuildFromJs(napi_env env, napi_v
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION));
     }
-    return nativeObj;
+    return true;
 }
 
 bool PrinterInfoHelper::ValidateProperty(napi_env env, napi_value object)

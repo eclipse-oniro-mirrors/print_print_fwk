@@ -106,6 +106,7 @@ private:
     bool ParseUserListJsonV1(
         nlohmann::json &jsonObject, std::vector<int32_t> &allPrintUserList);
     bool ConvertJsonToCupsPrinterInfo(nlohmann::json &object);
+    void ConvertInnerJsonToCupsPrinterInfo(nlohmann::json &object, CupsPrinterInfo &info);
 
     bool ParsePreviousPreferencesSetting(nlohmann::json &settingJson, PrinterPreferences &preferences);
     bool ParsePrinterPreferencesJson(nlohmann::json &jsonObject);

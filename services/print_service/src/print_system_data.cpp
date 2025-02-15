@@ -81,6 +81,13 @@ bool PrintSystemData::ConvertJsonToCupsPrinterInfo(nlohmann::json &object)
     info.uri = uri;
     info.maker = maker;
     info.printerCapability = printerCapability;
+    ConvertInnerJsonToCupsPrinterInfo(object, info);
+    InsertCupsPrinter(id, info);
+    return true;
+}
+
+void PrintSystemData::ConvertInnerJsonToCupsPrinterInfo(nlohmann::json &object, CupsPrinterInfo &info)
+{
     if (object.contains("alias") && object["alias"].is_string()) {
         info.alias = object["alias"];
     }
@@ -92,8 +99,6 @@ bool PrintSystemData::ConvertJsonToCupsPrinterInfo(nlohmann::json &object)
         ConvertJsonToPrinterPreferences(object["preferences"], info.printPreferences)) {
         PRINT_HILOGI("convert json to printer preferences success");
     }
-    InsertCupsPrinter(id, info);
-    return true;
 }
 
 bool PrintSystemData::Init()
