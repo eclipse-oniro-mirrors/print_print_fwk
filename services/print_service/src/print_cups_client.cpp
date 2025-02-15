@@ -174,6 +174,27 @@ static std::string GetUsbPrinterSerial(const std::string &deviceUri)
 }
 
 static std::vector<PrinterInfo> usbPrinters;
+
+static void ParseDeviceInfo(const std::string &location, nlohmann::json &infoOps)
+{
+    auto pos = location.find("-");
+    if (pos == std::string::npos && pos + 1 >= location.length()) {
+        PRINT_HILOGE("can not find vid and pid");
+        return;
+    }
+    std::string vidStr = location.substr(0, pos);
+    std::string pidStr = location.substr(pos + 1);
+    std::stringstream ssVid(vidStr);
+    int vid = 0;
+    ssVid >> std::hex >> vid;
+    std::stringstream ssPid(pidStr);
+    int pid = 0;
+    ssPid >> std::hex >> pid;
+    PRINT_HILOGD("vid = %{public}d, pid = %{public}d", vid, pid);
+    infoOps["vendorId"] = vid;
+    infoOps["productId"] = pid;
+}
+
 static void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
     const char *deviceMakeAndModel, const char *deviceUri, const char *deviceLocation, void *userData)
 {
@@ -185,9 +206,6 @@ static void DeviceCb(const char *deviceClass, const char *deviceId, const char *
     PRINT_HILOGD("Device: uri = %{private}s\n", deviceUri);
     PRINT_HILOGD("class = %{private}s\n", deviceClass);
     PRINT_HILOGD("make-and-model = %{private}s\n", deviceMakeAndModel);
-    if (deviceLocation != nullptr) {
-        PRINT_HILOGD("location = %{private}s\n", deviceLocation);
-    }
     std::string printerUri(deviceUri);
     std::string printerMake(deviceMakeAndModel);
     if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER &&
@@ -211,6 +229,12 @@ static void DeviceCb(const char *deviceClass, const char *deviceId, const char *
         nlohmann::json infoOps;
         infoOps["printerUri"] = printerUri;
         infoOps["printerMake"] = printerMake;
+
+        if (deviceLocation != nullptr) {
+            PRINT_HILOGD("location = %{private}s\n", deviceLocation);
+            std::string location(deviceLocation);
+            ParseDeviceInfo(location, infoOps);
+        }
         info.SetOption(infoOps.dump());
         std::lock_guard<std::mutex> lock(usbPrintersLock_);
         usbPrinters.emplace_back(info);
