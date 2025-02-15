@@ -322,10 +322,14 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
     right.SetPrinterIcon(iconId);
 
     right.hasDescription_ = parcel.ReadBool();
-    if (right.hasDescription_) { right.SetDescription(parcel.ReadString()); }
+    if (right.hasDescription_) {
+        right.SetDescription(parcel.ReadString());
+    }
 
     right.hasPrinterStatus_ = parcel.ReadBool();
-    if (right.hasPrinterStatus_) { right.SetPrinterStatus(parcel.ReadUint32()); }
+    if (right.hasPrinterStatus_) {
+        right.SetPrinterStatus(parcel.ReadUint32());
+    }
 
     right.hasCapability_ = parcel.ReadBool();
     if (right.hasCapability_) {
@@ -338,13 +342,14 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
     }
 
     right.hasUri_ = parcel.ReadBool();
-    if (right.hasUri_) { right.SetUri(parcel.ReadString()); }
+    if (right.hasUri_) {
+        right.SetUri(parcel.ReadString());
+    }
 
     right.hasPrinterMake_ = parcel.ReadBool();
-    if (right.hasPrinterMake_) { right.SetPrinterMake(parcel.ReadString()); }
-
-    right.hasPrinterUuid_ = parcel.ReadBool();
-    if (right.hasPrinterUuid_) { right.SetPrinterUuid(parcel.ReadString()); }
+    if (right.hasPrinterMake_) {
+        right.SetPrinterMake(parcel.ReadString());
+    }
 
     ReadInnerPropertyFromParcel(right, parcel);
 
@@ -355,6 +360,11 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
 
 bool PrinterInfo::ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel)
 {
+    right.hasPrinterUuid_ = parcel.ReadBool();
+    if (right.hasPrinterUuid_) {
+        right.SetPrinterUuid(parcel.ReadString());
+    }
+
     right.hasPreferences_ = parcel.ReadBool();
     if (right.hasPreferences_) {
         auto preferencesPtr = PrinterPreferences::Unmarshalling(parcel);
@@ -366,7 +376,9 @@ bool PrinterInfo::ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel
     }
 
     right.hasOption_ = parcel.ReadBool();
-    if (right.hasOption_) { right.SetOption(parcel.ReadString()); }
+    if (right.hasOption_) {
+        right.SetOption(parcel.ReadString());
+    }
 
     right.hasIsDefaultPrinter_ = parcel.ReadBool();
     if (right.hasIsDefaultPrinter_) {

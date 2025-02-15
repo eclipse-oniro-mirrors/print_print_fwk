@@ -1082,7 +1082,7 @@ int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, Pr
     return E_PRINT_NONE;
 }
 
-std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap, nlohmann::json& capOpt)
+std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap, nlohmann::json &capOpt)
 {
     if (capOpt.contains("defaultPageSizeId") && capOpt["defaultPageSizeId"].is_string()) {
         return capOpt["defaultPageSizeId"].get<std::string>();
@@ -1100,7 +1100,7 @@ std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap
     return supportedPageSize[0].GetId();
 }
 
-int32_t PrintSystemData::ParseDefaultOrientation(const PrinterCapability &cap, nlohmann::json& capOpt)
+int32_t PrintSystemData::ParseDefaultOrientation(const PrinterCapability &cap, nlohmann::json &capOpt)
 {
     if (capOpt.contains("orientation-requested-default") && capOpt["orientation-requested-default"].is_string()) {
         int32_t defaultOrientation = DEFAULT_ORIENTATION;
@@ -1120,7 +1120,7 @@ int32_t PrintSystemData::ParseDefaultOrientation(const PrinterCapability &cap, n
     return supportedOrientationList[0];
 }
 
-int32_t PrintSystemData::ParseDefaultDuplexMode(const PrinterCapability &cap, nlohmann::json& capOpt)
+int32_t PrintSystemData::ParseDefaultDuplexMode(const PrinterCapability &cap, nlohmann::json &capOpt)
 {
     if (capOpt.contains("sides-default") && capOpt["sides-default"].is_string()) {
         int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
@@ -1140,7 +1140,7 @@ int32_t PrintSystemData::ParseDefaultDuplexMode(const PrinterCapability &cap, nl
     return supportedDuplexModeList[0];
 }
 
-int32_t PrintSystemData::ParseDefaultPrintQuality(const PrinterCapability &cap, nlohmann::json& capOpt)
+int32_t PrintSystemData::ParseDefaultPrintQuality(const PrinterCapability &cap, nlohmann::json &capOpt)
 {
     if (capOpt.contains("print-quality-default") && capOpt["print-quality-default"].is_string()) {
         int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
@@ -1160,7 +1160,7 @@ int32_t PrintSystemData::ParseDefaultPrintQuality(const PrinterCapability &cap, 
     return supportedQualityList[0];
 }
 
-std::string PrintSystemData::ParseDefaultMediaType(const PrinterCapability &cap, nlohmann::json& capOpt)
+std::string PrintSystemData::ParseDefaultMediaType(const PrinterCapability &cap, nlohmann::json &capOpt)
 {
     if (capOpt.contains("media-type-default") && capOpt["media-type-default"].is_string()) {
         return capOpt["media-type-default"].get<std::string>();

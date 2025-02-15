@@ -110,11 +110,11 @@ private:
     bool ParsePreviousPreferencesSetting(nlohmann::json &settingJson, PrinterPreferences &preferences);
     bool ParsePrinterPreferencesJson(nlohmann::json &jsonObject);
     bool ReadJsonFile(const std::filesystem::path &path);
-    std::string ParseDefaultPageSizeId(const PrinterCapability &cap, nlohmann::json& capOpt);
-    int32_t ParseDefaultOrientation(const PrinterCapability &cap, nlohmann::json& capOpt);
-    int32_t ParseDefaultDuplexMode(const PrinterCapability &cap, nlohmann::json& capOpt);
-    int32_t ParseDefaultPrintQuality(const PrinterCapability &cap, nlohmann::json& capOpt);
-    std::string ParseDefaultMediaType(const PrinterCapability &cap, nlohmann::json& capOpt);
+    std::string ParseDefaultPageSizeId(const PrinterCapability &cap, nlohmann::json &capOpt);
+    int32_t ParseDefaultOrientation(const PrinterCapability &cap, nlohmann::json &capOpt);
+    int32_t ParseDefaultDuplexMode(const PrinterCapability &cap, nlohmann::json &capOpt);
+    int32_t ParseDefaultPrintQuality(const PrinterCapability &cap, nlohmann::json &capOpt);
+    std::string ParseDefaultMediaType(const PrinterCapability &cap, nlohmann::json &capOpt);
 
     template<typename T>
     bool ProcessJsonToCapabilityList(nlohmann::json &capsJson,
