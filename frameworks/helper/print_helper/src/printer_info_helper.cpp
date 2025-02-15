@@ -33,7 +33,7 @@ static constexpr const char *PARAM_INFO_IS_LAST_USED_PRINTER = "isLastUsedPrinte
 static constexpr const char *PARAM_INFO_PRINTER_STATUS = "printerStatus";
 static constexpr const char *PARAM_INFO_PRINTER_MAKE = "printerMake";
 static constexpr const char *PARAM_INFO_URI = "uri";
-static constexpr const char *PARAM_INFO_PRINTER_PREFERENCES = "printerPreferences";
+static constexpr const char *PARAM_INFO_PRINTER_PREFERENCES = "preferences";
 
 napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info)
 {
