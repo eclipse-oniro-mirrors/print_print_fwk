@@ -198,7 +198,7 @@ enum PrintQualityCode {
 
 enum PrintOrientationMode {
     PRINT_ORIENTATION_MODE_PORTRAIT = 0,
-    PRINT_ORIENTATION_MODE_LANDSCAPE= 1,
+    PRINT_ORIENTATION_MODE_LANDSCAPE = 1,
     PRINT_ORIENTATION_MODE_REVERSE_LANDSCAPE = 2,
     PRINT_ORIENTATION_MODE_REVERSE_PORTRAIT = 3,
     PRINT_ORIENTATION_MODE_NONE = 4
@@ -250,10 +250,15 @@ const std::string PRINTER_CHANGE_EVENT_TYPE = "printerChange";
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
 const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
+const std::string PRINTER_SERVICE_PRINTERS_PATH = "/data/service/el2/public/print_service/printers";
 const std::string PRINTER_LIST_FILE = "printer_list.json";
 const std::string PRINTER_LIST_VERSION = "v1";
 const std::string PRINT_USER_DATA_FILE = "print_user_data.json";
 const std::string PRINT_USER_DATA_VERSION = "v1";
+const std::string PRINTER_PREFERENCE_FILE = "printer_preference.json";
+const std::string DEFAULT_PAGESIZE_ID = "ISO_A4";
+const uint32_t DEFAULT_ORIENTATION = 7;
+const std::string DEFAULT_MEDIA_TYPE = "stationery";
 
 const std::string E_PRINT_MSG_NONE = "none";
 const std::string E_PRINT_MSG_NO_PERMISSION = "the application does not hace permission";

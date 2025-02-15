@@ -50,7 +50,6 @@ public:
     static napi_value QueryAddedPrinter(napi_env env, napi_callback_info info);
     static napi_value QueryPrinterInfoByPrinterId(napi_env env, napi_callback_info info);
     static napi_value NotifyPrintServiceEvent(napi_env env, napi_callback_info info);
-    static napi_value GetPrinterPreference(napi_env env, napi_callback_info info);
     static napi_value SetPrinterPreference(napi_env env, napi_callback_info info);
     static napi_value SetDefaultPrinter(napi_env env, napi_callback_info info);
     static napi_value GetAddedPrinterInfoById(napi_env env, napi_callback_info info);

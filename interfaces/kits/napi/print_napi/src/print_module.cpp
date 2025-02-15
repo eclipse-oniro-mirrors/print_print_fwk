@@ -52,7 +52,6 @@ static constexpr const char *FUNCTION_NOTIFY_PRINT_SERVICE = "notifyPrintService
 static constexpr const char *FUNCTION_QUERY_ADDED_PRINTER = "getAddedPrinters";
 static constexpr const char *FUNCTION_QUERY_PRINTER_INFO_BY_PRINTER_ID = "getPrinterInfoById";
 static constexpr const char *FUNCTION_NOTIFY_PRINT_SERVICE_EVENT = "notifyPrintServiceEvent";
-static constexpr const char *FUNCTION_GET_PRINTER_PREFERENCE = "getPrinterPreference";
 static constexpr const char *FUNCTION_SET_PRINTER_PREFERENCE = "setPrinterPreference";
 static constexpr const char *FUNCTION_SET_DEFAULT_PRINTER = "setDefaultPrinter";
 static constexpr const char *FUNCTION_DELETE_PRINTER_FROM_CUPS = "deletePrinterFromCups";
@@ -436,7 +435,6 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_QUERY_ADDED_PRINTER, NapiInnerPrint::QueryAddedPrinter),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_PRINTER_INFO_BY_PRINTER_ID, NapiInnerPrint::QueryPrinterInfoByPrinterId),
         PRINT_NAPI_METHOD(FUNCTION_NOTIFY_PRINT_SERVICE_EVENT, NapiInnerPrint::NotifyPrintServiceEvent),
-        PRINT_NAPI_METHOD(FUNCTION_GET_PRINTER_PREFERENCE, NapiInnerPrint::GetPrinterPreference),
         PRINT_NAPI_METHOD(FUNCTION_SET_PRINTER_PREFERENCE, NapiInnerPrint::SetPrinterPreference),
         PRINT_NAPI_METHOD(FUNCTION_SET_DEFAULT_PRINTER, NapiInnerPrint::SetDefaultPrinter),
         PRINT_NAPI_METHOD(FUNCTION_DELETE_PRINTER_FROM_CUPS, NapiPrintExt::DeletePrinterFromCups),

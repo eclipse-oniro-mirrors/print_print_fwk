@@ -2607,24 +2607,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0150, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0151, TestSize.Level1)
-{
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    std::string printerId = "printId-123";
-    std::string printPreference = "";
-    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(printerId, printPreference);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0152, TestSize.Level1)
-{
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    std::string printerId = "printId-123";
-    std::string printPreference = "";
-    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(printerId, printPreference);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0153, TestSize.Level1)
 {
     PrintManagerClient::GetInstance()->LoadServerSuccess();

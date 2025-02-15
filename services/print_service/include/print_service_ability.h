@@ -34,7 +34,6 @@
 #include "print_service_helper.h"
 #include "print_user_data.h"
 #include "print_system_data.h"
-#include "print_attribute_preference.h"
 #include "vendor_manager.h"
 
 namespace OHOS::Print {
@@ -102,7 +101,6 @@ public:
     void CancelUserPrintJobs(const int32_t userId);
     void NotifyCurrentUserChanged(const int32_t userId);
     int32_t NotifyPrintServiceEvent(std::string &jobId, uint32_t event) override;
-    int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference) override;
     int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference) override;
     int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) override;
     int32_t DeletePrinterFromCups(const std::string &printerName) override;
@@ -162,17 +160,6 @@ private:
     void SetPrintJobCanceled(PrintJob &jobinfo);
     void UnloadSystemAbility();
     void ReduceAppCount();
-    void InitPreferenceMap();
-    bool WritePreferenceToFile();
-    bool WritePrinterPreference(const std::string &printerId, PrinterCapability &printerCaps);
-    bool WriteEprinterPreference(const std::string &printerId, PrinterCapability &printerCaps);
-    bool ReadPreferenceFromFile(const std::string &printerId, std::string& printPreference);
-    int32_t BuildPrinterPreference(PrinterCapability &cap, PrinterPreference &printPreference);
-    void BuildPrinterPreferenceByDefault(nlohmann::json& capOpt, PreferenceSetting &printerDefaultAttr);
-    void BuildPrinterPreferenceByOption(std::string& key, std::string& supportedOpts,
-        std::vector<std::string>& optAttrs);
-    void BuildPrinterAttrComponentByJson(std::string& key, nlohmann::json& jsonArrObject,
-        std::vector<std::string> &printerAttrs);
     bool CheckIsDefaultPrinter(const std::string &printerId);
     bool CheckIsLastUsedPrinter(const std::string &printerId);
     void SetLastUsedPrinter(const std::string &printerId);
@@ -261,8 +248,6 @@ private:
 
     uint32_t printAppCount_;
     uint32_t unloadCount_;
-    std::map<std::string, std::string> printerIdAndPreferenceMap_;
-    std::recursive_mutex printerPreferenceMapMutex_;
     VendorManager vendorManager;
 };
 }  // namespace OHOS::Print

@@ -56,6 +56,7 @@ ohos_shared_library("print_models") {
     "src/print_utils.cpp",
     "src/printer_capability.cpp",
     "src/printer_info.cpp",
+    "src/printer_preferences.cpp",
   ]
 
   external_deps = [

@@ -18,6 +18,7 @@
 
 #include "parcel.h"
 #include "printer_capability.h"
+#include "printer_preferences.h"
 
 namespace OHOS::Print {
 class PrinterInfo final : public Parcelable {
@@ -55,6 +56,8 @@ public:
     void SetIsLastUsedPrinter(bool isLastUsedPrinter);
 
     void SetPrinterStatus(uint32_t printerStatus);
+
+    void SetPreferences(const PrinterPreferences &preferences);
 
     [[nodiscard]] const std::string &GetPrinterId() const;
 
@@ -102,6 +105,10 @@ public:
 
     [[nodiscard]] uint32_t GetPrinterStatus() const;
 
+    [[nodiscard]] bool HasPreferences() const;
+
+    void GetPreferences(PrinterPreferences &preferences) const;
+
     virtual bool Marshalling(Parcel &parcel) const override;
 
     static std::shared_ptr<PrinterInfo> Unmarshalling(Parcel &parcel);
@@ -111,7 +118,9 @@ public:
 private:
     bool ReadFromParcel(Parcel &parcel);
 
-    void ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel);
+    bool ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel);
+
+    void MarshallingInnerProperty(Parcel &parcel) const;
 
     bool ValidateAll();
 
@@ -145,6 +154,10 @@ private:
     bool hasPrinterMake_;
 
     std::string printerMake_;
+
+    bool hasPreferences_;
+
+    PrinterPreferences preferences_;
 
     bool hasOption_;
 

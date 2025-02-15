@@ -525,27 +525,6 @@ int32_t PrintServiceProxy::StartNativePrintJob(PrintJob &printJob)
     return ret;
 }
 
-int32_t PrintServiceProxy::GetPrinterPreference(const std::string &printerId, std::string &printerPreference)
-{
-    MessageParcel data, reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(printerId);
-    PRINT_HILOGD("PrintServiceProxy GetPrinterPreference started.");
-    sptr<IRemoteObject> remote = Remote();
-    if (remote == nullptr) {
-        PRINT_HILOGE("PrintServiceProxy GetPrinterPreference remote is null");
-        return E_PRINT_RPC_FAILURE;
-    }
-    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_PREFERENCE,
-        data, reply, option);
-    ret = GetResult(ret, reply);
-    printerPreference = reply.ReadString();
-    PRINT_HILOGI("PrintServiceProxy GetPrinterPreference ret = [%{public}d] GetPrinterPreference = %{public}s",
-        ret, printerPreference.c_str());
-    return ret;
-}
-
 int32_t PrintServiceProxy::SetPrinterPreference(const std::string &printerId, const std::string &printerPreference)
 {
     MessageParcel data, reply;

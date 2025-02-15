@@ -33,6 +33,7 @@ PrinterInfo::PrinterInfo()
       uri_(""),
       hasPrinterMake_(false),
       printerMake_(""),
+      hasPreferences_(false),
       hasOption_(false),
       option_(""),
       hasPrinterUuid_(false),
@@ -43,6 +44,7 @@ PrinterInfo::PrinterInfo()
       isLastUsedPrinter_(false)
 {
     capability_.Reset();
+    preferences_.Reset();
 }
 
 PrinterInfo::PrinterInfo(const PrinterInfo &right)
@@ -61,6 +63,8 @@ PrinterInfo::PrinterInfo(const PrinterInfo &right)
       uri_(right.uri_),
       hasPrinterMake_(right.hasPrinterMake_),
       printerMake_(right.printerMake_),
+      hasPreferences_(right.hasPreferences_),
+      preferences_(right.preferences_),
       hasOption_(right.hasOption_),
       option_(right.option_),
       hasPrinterUuid_(right.hasPrinterUuid_),
@@ -88,6 +92,8 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         uri_ = right.uri_;
         hasPrinterMake_ = right.hasPrinterMake_;
         printerMake_ = right.printerMake_;
+        hasPreferences_ = right.hasPreferences_;
+        preferences_ = right.preferences_;
         hasPrinterUuid_ = right.hasPrinterUuid_,
         printerUuid_ = right.printerUuid_,
         option_ = right.option_;
@@ -144,6 +150,12 @@ void PrinterInfo::SetPrinterMake(const std::string &printerMake)
 {
     hasPrinterMake_ = true;
     printerMake_ = printerMake;
+}
+
+void PrinterInfo::SetPreferences(const PrinterPreferences &preferences)
+{
+    hasPreferences_ = true;
+    preferences_ = preferences;
 }
 
 void PrinterInfo::SetPrinterUuid(const std::string &printerUuid)
@@ -229,6 +241,16 @@ bool PrinterInfo::HasPrinterMake() const
 std::string PrinterInfo::GetPrinterMake() const
 {
     return printerMake_;
+}
+
+bool PrinterInfo::HasPreferences() const
+{
+    return hasPreferences_;
+}
+
+void PrinterInfo::GetPreferences(PrinterPreferences &preferences) const
+{
+    preferences = preferences_;
 }
 
 bool PrinterInfo::HasPrinterUuid() const
@@ -324,8 +346,6 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
     right.hasPrinterUuid_ = parcel.ReadBool();
     if (right.hasPrinterUuid_) { right.SetPrinterUuid(parcel.ReadString()); }
 
-    right.hasOption_ = parcel.ReadBool();
-    if (right.hasOption_) { right.SetOption(parcel.ReadString()); }
     ReadInnerPropertyFromParcel(right, parcel);
 
     right.Dump();
@@ -333,8 +353,21 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
     return true;
 }
 
-void PrinterInfo::ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel)
+bool PrinterInfo::ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel)
 {
+    right.hasPreferences_ = parcel.ReadBool();
+    if (right.hasPreferences_) {
+        auto preferencesPtr = PrinterPreferences::Unmarshalling(parcel);
+        if (preferencesPtr == nullptr) {
+            PRINT_HILOGE("failed to build preferences from printer info");
+            return false;
+        }
+        right.SetPreferences(*preferencesPtr);
+    }
+
+    right.hasOption_ = parcel.ReadBool();
+    if (right.hasOption_) { right.SetOption(parcel.ReadString()); }
+
     right.hasIsDefaultPrinter_ = parcel.ReadBool();
     if (right.hasIsDefaultPrinter_) {
         right.isDefaultPrinter_ = parcel.ReadBool();
@@ -344,6 +377,8 @@ void PrinterInfo::ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel
     if (right.hasIsLastUsedPrinter_) {
         right.isLastUsedPrinter_ = parcel.ReadBool();
     }
+
+    return true;
 }
 
 bool PrinterInfo::Marshalling(Parcel &parcel) const
@@ -387,6 +422,18 @@ bool PrinterInfo::Marshalling(Parcel &parcel) const
         parcel.WriteString(GetPrinterUuid());
     }
 
+    MarshallingInnerProperty(parcel);
+
+    return true;
+}
+
+void PrinterInfo::MarshallingInnerProperty(Parcel &parcel) const
+{
+    parcel.WriteBool(hasPreferences_);
+    if (hasPreferences_) {
+        preferences_.Marshalling(parcel);
+    }
+
     parcel.WriteBool(hasOption_);
     if (hasOption_) {
         parcel.WriteString(GetOption());
@@ -401,8 +448,6 @@ bool PrinterInfo::Marshalling(Parcel &parcel) const
     if (hasIsLastUsedPrinter_) {
         parcel.WriteBool(isLastUsedPrinter_);
     }
-
-    return true;
 }
 
 std::shared_ptr<PrinterInfo> PrinterInfo::Unmarshalling(Parcel &parcel)
@@ -436,6 +481,9 @@ void PrinterInfo::Dump() const
     }
     if (hasPrinterMake_) {
         PRINT_HILOGD("printerMake: %{private}s", printerMake_.c_str());
+    }
+    if (hasPreferences_) {
+        preferences_.Dump();
     }
     if (hasPrinterUuid_) {
         PRINT_HILOGD("printerUuid: %{private}s", printerUuid_.c_str());

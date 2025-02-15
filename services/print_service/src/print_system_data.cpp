@@ -18,6 +18,7 @@
 #include <iostream>
 #include <fstream>
 #include <streambuf>
+#include <filesystem>
 #include "print_system_data.h"
 #include "print_log.h"
 #include "print_util.h"
@@ -86,20 +87,66 @@ bool PrintSystemData::ConvertJsonToCupsPrinterInfo(nlohmann::json &object)
     if (object.contains("printerStatus") && object["printerStatus"].is_number()) {
         info.printerStatus = object["printerStatus"];
     }
-    InsertCupsPrinter(id, info, true);
+    PrinterPreferences preferences;
+    if (object.contains("preferences") && object["preferences"].is_object() &&
+        ConvertJsonToPrinterPreferences(object["preferences"], info.printPreferences)) {
+        PRINT_HILOGI("convert json to printer preferences success");
+    }
+    InsertCupsPrinter(id, info);
     return true;
 }
 
 bool PrintSystemData::Init()
 {
     addedPrinterMap_.Clear();
-    nlohmann::json jsonObject;
+    nlohmann::json printerListJson;
     std::string printerListFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
-    if (!GetJsonObjectFromFile(jsonObject, printerListFilePath)) {
-        PRINT_HILOGW("get json from file fail");
+    if (GetJsonObjectFromFile(printerListJson, printerListFilePath) && ParsePrinterListJsonV1(printerListJson)) {
+        PRINT_HILOGW("previous printer list file exist");
+        nlohmann::json preferencesJson;
+        std::string preferencesFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_PREFERENCE_FILE;
+        if (GetJsonObjectFromFile(preferencesJson, preferencesFilePath) &&
+            ParsePrinterPreferencesJson(preferencesJson)) {
+            PRINT_HILOGI("parse previous preferences file success");
+        }
+        SaveCupsPrinterMap();
+        // todo：delete previous files.
+    }
+    PRINT_HILOGI("load new printer list file");
+    std::filesystem::path printersDir(PRINTER_SERVICE_PRINTERS_PATH);
+    for (const auto& entry : std::filesystem::directory_iterator(printersDir)) {
+        if (!entry.is_directory()) {
+            PRINT_HILOGI("loading: %{public}s", entry.path().string().c_str());
+            ReadJsonFile(entry.path());
+        }
+    }
+    return true;
+}
+
+bool PrintSystemData::ReadJsonFile(const std::filesystem::path &path)
+{
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        PRINT_HILOGW("open printer list file fail");
         return false;
     }
-    return ParsePrinterListJsonV1(jsonObject);
+    std::string line;
+    std::string content;
+    while (std::getline(file, line)) {
+        content += line + "\n";
+    }
+    file.close();
+
+    if (!nlohmann::json::accept(content)) {
+        PRINT_HILOGW("json accept fail");
+        return false;
+    }
+    nlohmann::json fileJson = nlohmann::json::parse(content);
+    if (!ConvertJsonToCupsPrinterInfo(fileJson)) {
+        PRINT_HILOGW("can not find necessary param");
+        return false;
+    }
+    return true;
 }
 
 bool PrintSystemData::GetJsonObjectFromFile(nlohmann::json &jsonObject, const std::string &fileName)
@@ -116,6 +163,9 @@ bool PrintSystemData::GetJsonObjectFromFile(nlohmann::json &jsonObject, const st
         return false;
     }
     jsonObject = nlohmann::json::parse(fileData);
+    if (fileName.find(PRINTER_PREFERENCE_FILE) != std::string::npos) {
+        return true;
+    }
     if (!jsonObject.contains("version") || !jsonObject["version"].is_string()) {
         PRINT_HILOGW("can not find version");
         return false;
@@ -136,13 +186,73 @@ bool PrintSystemData::GetJsonObjectFromFile(nlohmann::json &jsonObject, const st
     return true;
 }
 
-void PrintSystemData::InsertCupsPrinter(
-    const std::string &printerId, const CupsPrinterInfo &printerInfo, bool needUpdateCaps)
+bool PrintSystemData::ParsePrinterPreferencesJson(nlohmann::json &jsonObject)
 {
-    auto orderId = 0;
-    if (!addedPrinterOrderList_.empty()) {
-        orderId = addedPrinterOrderList_.rbegin()->first;
+    if (!jsonObject.contains("printer_list") || !jsonObject["printer_list"].is_array()) {
+        PRINT_HILOGW("can not find printer_list");
+        return false;
     }
+    for (auto &element : jsonObject["printer_list"].items()) {
+        nlohmann::json object = element.value();
+        for (auto it = object.begin(); it != object.end(); it++) {
+            std::string printerId = it.key();
+            nlohmann::json printPreferenceJson = object[printerId];
+            if (!printPreferenceJson.contains("setting") || !printPreferenceJson["setting"].is_object()) {
+                PRINT_HILOGW("can not find setting");
+                continue;
+            }
+            nlohmann::json settingJson = printPreferenceJson["setting"];
+            PRINT_HILOGI("ParsePrinterPreferencesJson settingJson: %{public}s", settingJson.dump().c_str());
+            PrinterPreferences preferences;
+            if (ParsePreviousPreferencesSetting(settingJson, preferences)) {
+                PRINT_HILOGI("need update preferences by previous settings");
+                preferences.Dump();
+                UpdatePrinterPreferences(printerId, preferences);
+            }
+        }
+    }
+    return true;
+}
+
+bool PrintSystemData::ParsePreviousPreferencesSetting(nlohmann::json &settingJson, PrinterPreferences &preferences)
+{
+    bool updatePreferences = false;
+    if (settingJson.contains("pagesizeId") && settingJson["pagesizeId"].is_string() &&
+        !settingJson.at("pagesizeId").get<std::string>().empty()) {
+        updatePreferences = true;
+        preferences.SetDefaultPageSizeId(settingJson.at("pagesizeId").get<std::string>());
+    }
+    if (settingJson.contains("orientation") && settingJson["orientation"].is_string() &&
+        !settingJson.at("orientation").get<std::string>().empty()) {
+        updatePreferences = true;
+        int32_t defaultOrientation = PRINT_ORIENTATION_MODE_NONE;
+        PrintUtil::ConvertToInt(settingJson.at("orientation").get<std::string>(), defaultOrientation);
+        preferences.SetDefaultOrientation(defaultOrientation);
+    }
+    if (settingJson.contains("duplex") && settingJson["duplex"].is_string() &&
+        !settingJson.at("duplex").get<std::string>().empty()) {
+        updatePreferences = true;
+        int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
+        PrintUtil::ConvertToInt(settingJson.at("duplex").get<std::string>(), defaultDuplexMode);
+        preferences.SetDefaultDuplexMode(defaultDuplexMode);
+    }
+    if (settingJson.contains("quality") && settingJson["quality"].is_string() &&
+        !settingJson.at("quality").get<std::string>().empty()) {
+        updatePreferences = true;
+        int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
+        PrintUtil::ConvertToInt(settingJson.at("quality").get<std::string>(), defaultPrintQuality);
+        preferences.SetDefaultPrintQuality(defaultPrintQuality);
+    }
+    if (settingJson.contains("mediaType") && settingJson["mediaType"].is_string() &&
+        !settingJson.at("mediaType").get<std::string>().empty()) {
+        updatePreferences = true;
+        preferences.SetDefaultMediaType(settingJson.at("mediaType").get<std::string>());
+    }
+    return updatePreferences;
+}
+
+void PrintSystemData::InsertCupsPrinter(const std::string &printerId, const CupsPrinterInfo &printerInfo)
+{
     auto info = addedPrinterMap_.Find(printerId);
     if (info == nullptr) {
         PRINT_HILOGI("insert new printer");
@@ -153,86 +263,69 @@ void PrintSystemData::InsertCupsPrinter(
         info->uri = printerInfo.uri;
         info->maker = printerInfo.maker;
         info->printerStatus = printerInfo.printerStatus;
-        if (needUpdateCaps) {
-            info->printerCapability = printerInfo.printerCapability;
-        }
-    }
-    if (needUpdateCaps) {
-        auto addedPrinterOrderListIter = std::find_if(addedPrinterOrderList_.begin(),
-            addedPrinterOrderList_.end(),
-            [&printerId](
-                const std::pair<uint32_t, std::string> &addedPrinter) { return addedPrinter.second == printerId; });
-        if (addedPrinterOrderListIter != addedPrinterOrderList_.end()) {
-            PRINT_HILOGW("value found");
-        } else {
-            addedPrinterOrderList_.insert(std::make_pair(orderId + 1, printerId));
-            PRINT_HILOGI("printerId: %{public}s, orderId: %{public}d", printerId.c_str(), orderId + 1);
-        }
+        info->printerCapability = printerInfo.printerCapability;
+        info->printPreferences = printerInfo.printPreferences;
     }
 }
 
-void PrintSystemData::DeleteCupsPrinter(const std::string &printerId)
+void PrintSystemData::DeleteCupsPrinter(const std::string &printerId, const std::string &printerName)
 {
     if (!printerId.empty()) {
-        PRINT_HILOGI("DeleteCupsPrinter printerId: %{public}s", printerId.c_str());
+        PRINT_HILOGI("DeleteCupsPrinter printerName: %{public}s", printerName.c_str());
         addedPrinterMap_.Remove(printerId);
-        for (auto printer: addedPrinterOrderList_) {
-            if (!strcmp(printerId.c_str(), printer.second.c_str())) {
-                addedPrinterOrderList_.erase(printer.first);
-                PRINT_HILOGI("erase printer order success");
-                break;
-            }
+        std::filesystem::path filePath =
+            PRINTER_SERVICE_PRINTERS_PATH + "/" + PrintUtil::StandardizePrinterName(printerName) + ".json";
+        if (std::filesystem::remove(filePath)) {
+            PRINT_HILOGI("file deleted successfully");
+        } else {
+            PRINT_HILOGE("failed to delete file");
         }
-        SaveCupsPrinterMap();
     }
 }
 
-bool PrintSystemData::SaveCupsPrinterMap()
+void PrintSystemData::SaveCupsPrinterMap()
 {
-    std::string printerListFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
-    char realPidFile[PATH_MAX] = {};
-    if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
-        PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
-        return false;
-    }
-    int32_t fd = open(printerListFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
-    PRINT_HILOGD("SaveCupsPrinterMap fd: %{public}d", fd);
-    if (fd < 0) {
-        PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-        return false;
-    }
-    nlohmann::json printerMapJson = nlohmann::json::array();
-    for (auto printer : addedPrinterOrderList_) {
-        auto info = addedPrinterMap_.Find(printer.second);
+    std::vector<std::string> addedPrinterList = QueryAddedPrinterIdList();
+    for (auto printerId : addedPrinterList) {
+        auto info = addedPrinterMap_.Find(printerId);
         if (info == nullptr) {
             continue;
         }
+        std::string printerListFilePath =
+            PRINTER_SERVICE_PRINTERS_PATH + "/" + PrintUtil::StandardizePrinterName(info->name) + ".json";
+        char realPidFile[PATH_MAX] = {};
+        if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
+            PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
+            continue;
+        }
+        int32_t fd = open(printerListFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
+        PRINT_HILOGD("SaveCupsPrinterMap fd: %{public}d", fd);
+        if (fd < 0) {
+            PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
+            continue;
+        }
         nlohmann::json printerJson = nlohmann::json::object();
-        printerJson["id"] = printer.second;
+        printerJson["id"] = printerId;
         printerJson["name"] = info->name;
         printerJson["uri"] = info->uri;
         printerJson["maker"] = info->maker;
         printerJson["alias"] = info->alias;
-        if (QueryIpPrinterInfoById(printer.second) != nullptr) {
+        if (QueryIpPrinterInfoById(printerId) != nullptr) {
             printerJson["printerStatus"] = info->printerStatus;
         }
         nlohmann::json capsJson;
         ConvertPrinterCapabilityToJson(info->printerCapability, capsJson);
         printerJson["capability"] = capsJson;
-        printerMapJson.push_back(printerJson);
+        printerJson["preferences"] = info->printPreferences.ConvertToJson();
+        std::string jsonString = printerJson.dump();
+        size_t jsonLength = jsonString.length();
+        auto writeLength = write(fd, jsonString.c_str(), jsonLength);
+        close(fd);
+        PRINT_HILOGI("SaveCupsPrinterMap finished");
+        if (writeLength < 0 || (size_t)writeLength != jsonLength) {
+            PRINT_HILOGE("SaveCupsPrinterMap error");
+        }
     }
-    nlohmann::json jsonObject;
-    jsonObject["version"] = PRINTER_LIST_VERSION;
-    jsonObject["printer_list"] = printerMapJson;
-    std::string jsonString = jsonObject.dump();
-    size_t jsonLength = jsonString.length();
-    auto writeLength = write(fd, jsonString.c_str(), jsonLength);
-    close(fd);
-    PRINT_HILOGI("SaveCupsPrinterMap finished");
-    if (writeLength < 0) {
-        return false;
-    }
-    return (size_t)writeLength == jsonLength;
 }
 
 std::string PrintSystemData::QueryPrinterIdByStandardizeName(const std::string &printerName)
@@ -255,6 +348,7 @@ bool PrintSystemData::QueryCupsPrinterInfoByPrinterId(const std::string &printer
     cupsPrinter.printerCapability = info->printerCapability;
     cupsPrinter.printerStatus = info->printerStatus;
     cupsPrinter.alias = info->alias;
+    cupsPrinter.printPreferences = info->printPreferences;
     return true;
 }
 
@@ -312,6 +406,16 @@ void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &print
     }
 }
 
+void PrintSystemData::UpdatePrinterPreferences(const std::string &printerId, PrinterPreferences &preferences)
+{
+    auto info = addedPrinterMap_.Find(printerId);
+    if (info != nullptr) {
+        info->printPreferences = preferences;
+        PRINT_HILOGI("UpdatePrinterPreferences success");
+        preferences.Dump();
+    }
+}
+
 void PrintSystemData::InsertPrinterInfo(const std::string &printerId, const PrinterInfo &printerInfo)
 {
     auto iter = addedPrinterInfoList_.find(printerId);
@@ -332,8 +436,9 @@ std::shared_ptr<PrinterInfo> PrintSystemData::QueryPrinterInfoByPrinterId(const 
 
 void PrintSystemData::GetAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList)
 {
-    for (auto it = addedPrinterOrderList_.rbegin(); it != addedPrinterOrderList_.rend(); ++it) {
-        auto info = addedPrinterMap_.Find(it->second);
+    std::vector<std::string> addedPrinterList = QueryAddedPrinterIdList();
+    for (auto printerId : addedPrinterList) {
+        auto info = addedPrinterMap_.Find(printerId);
         if (info == nullptr) {
             continue;
         }
@@ -643,8 +748,8 @@ bool PrintSystemData::ConvertJsonToPrintMargin(nlohmann::json &capsJson, Printer
     nlohmann::json marginJson = capsJson["minMargin"];
     PrintMargin minMargin;
     if (!marginJson.is_object() ||
-        !marginJson.contains("top") || !PrintUtils::CheckJsonType<std::string>(marginJson["top"]) ||
-        !marginJson.contains("bottom") || !PrintUtils::CheckJsonType<std::string>(marginJson["bottom"]) ||
+        !marginJson.contains("top") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["top"]) ||
+        !marginJson.contains("bottom") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["bottom"]) ||
         !marginJson.contains("left") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["left"]) ||
         !marginJson.contains("right") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["right"])) {
         PRINT_HILOGE("Invalid format,key is minMargin");
@@ -656,6 +761,46 @@ bool PrintSystemData::ConvertJsonToPrintMargin(nlohmann::json &capsJson, Printer
     minMargin.SetRight(marginJson["right"].get<uint32_t>());
     printerCapability.SetMinMargin(minMargin);
     PRINT_HILOGD("ProcessJsonToCapabilityList success, key is minMargin");
+    return true;
+}
+
+bool PrintSystemData::ConvertJsonToPrinterPreferences(nlohmann::json &preferencesJson, PrinterPreferences &preferences)
+{
+    if (!preferencesJson.contains("defaultDuplexMode") || !preferencesJson["defaultDuplexMode"].is_number()) {
+        PRINT_HILOGW("can not find defaultDuplexMode");
+        return false;
+    }
+    preferences.SetDefaultDuplexMode(preferencesJson["defaultDuplexMode"].get<uint32_t>());
+
+    if (!preferencesJson.contains("defaultPrintQuality") || !preferencesJson["defaultPrintQuality"].is_number()) {
+        PRINT_HILOGW("can not find defaultPrintQuality");
+        return false;
+    }
+    preferences.SetDefaultPrintQuality(preferencesJson["defaultPrintQuality"].get<uint32_t>());
+
+    if (!preferencesJson.contains("defaultMediaType") || !preferencesJson["defaultMediaType"].is_string()) {
+        PRINT_HILOGW("can not find defaultMediaType");
+        return false;
+    }
+    preferences.SetDefaultMediaType(preferencesJson["defaultMediaType"].get<std::string>());
+
+    if (!preferencesJson.contains("defaultPageSizeId") || !preferencesJson["defaultPageSizeId"].is_string()) {
+        PRINT_HILOGW("can not find defaultPageSizeId");
+        return false;
+    }
+    preferences.SetDefaultPageSizeId(preferencesJson["defaultPageSizeId"].get<std::string>());
+
+    if (!preferencesJson.contains("defaultOrientation") || !preferencesJson["defaultOrientation"].is_number()) {
+        PRINT_HILOGW("can not find defaultOrientation");
+        return false;
+    }
+    preferences.SetDefaultOrientation(preferencesJson["defaultOrientation"].get<uint32_t>());
+
+    if (preferencesJson.contains("options") && preferencesJson["options"].is_object()) {
+        PRINT_HILOGD("find options");
+        preferences.SetOption(preferencesJson["options"].dump());
+    }
+    preferences.Dump();
     return true;
 }
 
@@ -894,6 +1039,143 @@ std::shared_ptr<PrinterInfo> PrintSystemData::QueryIpPrinterInfoById(const std::
         return printerIt ->second;
     }
     return nullptr;
+}
+
+void PrintSystemData::BuildEprintPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences)
+{
+    nlohmann::json capOpt;
+    printPreferences.SetDefaultPageSizeId(ParseDefaultPageSizeId(cap, capOpt));
+    printPreferences.SetDefaultOrientation(ParseDefaultOrientation(cap, capOpt));
+    printPreferences.SetDefaultDuplexMode(ParseDefaultDuplexMode(cap, capOpt));
+    printPreferences.SetDefaultPrintQuality(ParseDefaultPrintQuality(cap, capOpt));
+    printPreferences.SetDefaultMediaType(ParseDefaultMediaType(cap, capOpt));
+    printPreferences.Dump();
+    return;
+}
+
+int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences)
+{
+    PRINT_HILOGI("BuildPrinterPreference enter");
+    if (!cap.HasOption()) {
+        PRINT_HILOGE("capability does not have a cupsOptions attribute");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    std::string capOption = cap.GetOption();
+    PRINT_HILOGI("printer capOption %{public}s", capOption.c_str());
+    if (!nlohmann::json::accept(capOption)) {
+        PRINT_HILOGW("capOption can not parse to json object");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    nlohmann::json capJson = nlohmann::json::parse(capOption);
+    if (!capJson.contains("cupsOptions")) {
+        PRINT_HILOGW("The capJson does not have a cupsOptions attribute.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    nlohmann::json capOpt = capJson["cupsOptions"];
+
+    printPreferences.SetDefaultPageSizeId(ParseDefaultPageSizeId(cap, capOpt));
+    printPreferences.SetDefaultOrientation(ParseDefaultOrientation(cap, capOpt));
+    printPreferences.SetDefaultDuplexMode(ParseDefaultDuplexMode(cap, capOpt));
+    printPreferences.SetDefaultPrintQuality(ParseDefaultPrintQuality(cap, capOpt));
+    printPreferences.SetDefaultMediaType(ParseDefaultMediaType(cap, capOpt));
+    printPreferences.Dump();
+    return E_PRINT_NONE;
+}
+
+std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap, nlohmann::json& capOpt)
+{
+    if (capOpt.contains("defaultPageSizeId") && capOpt["defaultPageSizeId"].is_string()) {
+        return capOpt["defaultPageSizeId"].get<std::string>();
+    }
+    std::vector<PrintPageSize> supportedPageSize;
+    cap.GetSupportedPageSize(supportedPageSize);
+    if (supportedPageSize.size() == 0) {
+        return "";
+    }
+    for (auto pageSize : supportedPageSize) {
+        if (pageSize.GetId() == DEFAULT_PAGESIZE_ID) {
+            return DEFAULT_PAGESIZE_ID;
+        }
+    }
+    return supportedPageSize[0].GetId();
+}
+
+int32_t PrintSystemData::ParseDefaultOrientation(const PrinterCapability &cap, nlohmann::json& capOpt)
+{
+    if (capOpt.contains("orientation-requested-default") && capOpt["orientation-requested-default"].is_string()) {
+        int32_t defaultOrientation = DEFAULT_ORIENTATION;
+        PrintUtil::ConvertToInt(capOpt["orientation-requested-default"].get<std::string>(), defaultOrientation);
+        return defaultOrientation;
+    }
+    std::vector<uint32_t> supportedOrientationList;
+    cap.GetSupportedOrientation(supportedOrientationList);
+    if (supportedOrientationList.size() == 0) {
+        return 0;
+    }
+    for (auto orientation : supportedOrientationList) {
+        if (orientation == DEFAULT_ORIENTATION) {
+            return DEFAULT_ORIENTATION;
+        }
+    }
+    return supportedOrientationList[0];
+}
+
+int32_t PrintSystemData::ParseDefaultDuplexMode(const PrinterCapability &cap, nlohmann::json& capOpt)
+{
+    if (capOpt.contains("sides-default") && capOpt["sides-default"].is_string()) {
+        int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
+        PrintUtil::ConvertToInt(capOpt["sides-default"].get<std::string>(), defaultDuplexMode);
+        return defaultDuplexMode;
+    }
+    std::vector<uint32_t> supportedDuplexModeList;
+    cap.GetSupportedDuplexMode(supportedDuplexModeList);
+    if (supportedDuplexModeList.size() == 0) {
+        return 0;
+    }
+    for (auto duplexMode : supportedDuplexModeList) {
+        if (duplexMode == DUPLEX_MODE_NONE) {
+            return DUPLEX_MODE_NONE;
+        }
+    }
+    return supportedDuplexModeList[0];
+}
+
+int32_t PrintSystemData::ParseDefaultPrintQuality(const PrinterCapability &cap, nlohmann::json& capOpt)
+{
+    if (capOpt.contains("print-quality-default") && capOpt["print-quality-default"].is_string()) {
+        int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
+        PrintUtil::ConvertToInt(capOpt["print-quality-default"].get<std::string>(), defaultPrintQuality);
+        return defaultPrintQuality;
+    }
+    std::vector<uint32_t> supportedQualityList;
+    cap.GetSupportedQuality(supportedQualityList);
+    if (supportedQualityList.size() == 0) {
+        return 0;
+    }
+    for (auto quality : supportedQualityList) {
+        if (quality == PRINT_QUALITY_NORMAL) {
+            return PRINT_QUALITY_NORMAL;
+        }
+    }
+    return supportedQualityList[0];
+}
+
+std::string PrintSystemData::ParseDefaultMediaType(const PrinterCapability &cap, nlohmann::json& capOpt)
+{
+    if (capOpt.contains("media-type-default") && capOpt["media-type-default"].is_string()) {
+        return capOpt["media-type-default"].get<std::string>();
+    }
+    std::vector<std::string> supportedMediaTypeList;
+    cap.GetSupportedMediaType(supportedMediaTypeList);
+    if (supportedMediaTypeList.size() == 0) {
+        return "";
+    }
+    for (auto mediaType : supportedMediaTypeList) {
+        if (mediaType == DEFAULT_MEDIA_TYPE) {
+            return DEFAULT_MEDIA_TYPE;
+        }
+    }
+    return supportedMediaTypeList[0];
 }
 }  // namespace Print
 }  // namespace OHOS

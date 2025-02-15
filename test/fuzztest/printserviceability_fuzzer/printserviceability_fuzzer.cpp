@@ -371,13 +371,6 @@ void TestUpdatePrintJobState(const uint8_t *data, size_t size, FuzzedDataProvide
     PrintServiceAbility::GetInstance()->UpdatePrintJobState(jobId, state, subState);
 }
 
-void TestGetPrinterPreference(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string printerPreference = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->GetPrinterPreference(printerId, printerPreference);
-}
-
 void TestSetPrinterPreference(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -524,65 +517,6 @@ void TestisEprint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProv
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->isEprint(printerId);
     PrintServiceAbility::GetInstance()->GetPrintJobOrderId();
-    PrintServiceAbility::GetInstance()->WritePreferenceToFile();
-}
-
-void TestBuildPrinterPreference(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string option = "{\
-        \"cupsOptions\" : {\
-            \"orientation-requested-supported\" : \"String\",\
-            \"print-quality-supported\" : \"String\"\
-        }\
-    }";
-    PrinterCapability cap;
-    cap.SetOption(option);
-    PrinterPreference printPreference;
-    PrintServiceAbility::GetInstance()->BuildPrinterPreference(cap, printPreference);
-    std::string optionRandom = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    cap.SetOption(optionRandom);
-    PrintServiceAbility::GetInstance()->BuildPrinterPreference(cap, printPreference);
-}
-
-void TestBuildPrinterPreferenceByDefault(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string optJson = "{\
-        \"defaultPageSizeId\" : \"String\",\
-        \"orientation-requested-default\" : \"String\",\
-        \"sides-default\" : \"String\",\
-        \"print-quality-default\" : \"String\"\
-    }";
-    nlohmann::json capOpt = nlohmann::json::parse(optJson);
-    PreferenceSetting printerDefaultAttr;
-    PrintServiceAbility::GetInstance()->BuildPrinterPreferenceByDefault(capOpt, printerDefaultAttr);
-    printerDefaultAttr.pagesizeId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->BuildPrinterPreferenceByDefault(capOpt, printerDefaultAttr);
-}
-
-void TestBuildPrinterPreferenceByOption(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string key = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string supportedOpts = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string optAttr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::vector<std::string> optAttrs;
-    optAttrs.push_back(optAttr);
-    PrintServiceAbility::GetInstance()->BuildPrinterPreferenceByOption(key, supportedOpts, optAttrs);
-}
-
-void TestBuildPrinterAttrComponentByJson(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string key = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string arrObject = "{\
-        \"cupsOptions\" : [\
-            \"orientation-requested-supported\", \
-            \"print-quality-supported\"\
-        ]\
-    }";
-    nlohmann::json jsonArrObject = nlohmann::json::parse(arrObject);
-    std::string printerAttr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::vector<std::string> printerAttrs;
-    printerAttrs.push_back(printerAttr);
-    PrintServiceAbility::GetInstance()->BuildPrinterAttrComponentByJson(key, jsonArrObject, printerAttrs);
 }
 
 void TestCheckIsDefaultPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -726,38 +660,6 @@ void TestNotifyCurrentUserChanged(const uint8_t *data, size_t size, FuzzedDataPr
 {
     int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
     PrintServiceAbility::GetInstance()->NotifyCurrentUserChanged(userId);
-}
-
-void TestWriteEprinterPreference(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrinterCapability printerCaps;
-    PrintPageSize pageSize;
-    pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    std::vector<PrintPageSize> pageSizeList;
-    pageSizeList.push_back(pageSize);
-    printerCaps.SetSupportedPageSize(pageSizeList);
-    PrintServiceAbility::GetInstance()->WriteEprinterPreference(printerId, printerCaps);
-}
-
-void TestWritePrinterPreference(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrinterCapability printerCaps;
-    PrintPageSize pageSize;
-    pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    std::vector<PrintPageSize> pageSizeList;
-    pageSizeList.push_back(pageSize);
-    printerCaps.SetSupportedPageSize(pageSizeList);
-    printerCaps.SetOption(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    PrintServiceAbility::GetInstance()->WritePrinterPreference(printerId, printerCaps);
-}
-
-void TestReadPreferenceFromFile(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string printPreference = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->ReadPreferenceFromFile(printerId, printPreference);
 }
 
 void TestHandleExtensionConnectPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -953,9 +855,6 @@ void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *data
     TestGetUserDataByUserId(data, size, dataProvider);
     TestDetermineUserJobStatus(data, size, dataProvider);
     TestNotifyCurrentUserChanged(data, size, dataProvider);
-    TestWriteEprinterPreference(data, size, dataProvider);
-    TestWritePrinterPreference(data, size, dataProvider);
-    TestReadPreferenceFromFile(data, size, dataProvider);
     TestHandleExtensionConnectPrinter(data, size, dataProvider);
     TestSendQueuePrintJob(data, size, dataProvider);
     TestUpdatePrinterSystemData(data, size, dataProvider);
@@ -999,11 +898,6 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
     TestNotifyAdapterJobChanged(data, size, dataProvider);
     TestRegisterAdapterListener(data, size, dataProvider);
     TestisEprint(data, size, dataProvider);
-    TestBuildPrinterPreferenceByOption(data, size, dataProvider);
-    TestBuildPrinterPreference(data, size, dataProvider);
-    TestBuildPrinterPreferenceByDefault(data, size, dataProvider);
-    TestBuildPrinterPreferenceByOption(data, size, dataProvider);
-    TestBuildPrinterAttrComponentByJson(data, size, dataProvider);
     TestCheckIsDefaultPrinter(data, size, dataProvider);
     TestCheckIsLastUsedPrinter(data, size, dataProvider);
     TestSetLastUsedPrinter(data, size, dataProvider);
@@ -1066,7 +960,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::Print::TestQueryAddedPrinter(data, size, &dataProvider);
     OHOS::Print::TestQueryPrinterProperties(data, size, &dataProvider);
     OHOS::Print::TestUpdatePrintJobState(data, size, &dataProvider);
-    OHOS::Print::TestGetPrinterPreference(data, size, &dataProvider);
     OHOS::Print::TestSetPrinterPreference(data, size, &dataProvider);
     OHOS::Print::TestSetDefaultPrinter(data, size, &dataProvider);
     OHOS::Print::TestDeletePrinterFromCups(data, size, &dataProvider);

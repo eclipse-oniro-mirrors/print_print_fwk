@@ -182,10 +182,6 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference) override
-    {
-        return E_PRINT_NONE;
-    }
     int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference) override
     {
         return E_PRINT_NONE;

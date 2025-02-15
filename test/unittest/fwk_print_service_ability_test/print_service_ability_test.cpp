@@ -326,7 +326,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004, TestSize.Level1)
     EXPECT_EQ(service->NotifyPrintServiceEvent(jobId, event), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->DestroyExtension(), E_PRINT_NO_PERMISSION);
     std::string printerPreference = "";
-    EXPECT_EQ(service->GetPrinterPreference(printerId, printerPreference), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->SetPrinterPreference(printerId, printerPreference), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_NO_PERMISSION);
@@ -1237,7 +1236,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0066, TestSize.Level1)
     info->SetPrinterId(printerId);
     service->printSystemData_.addedPrinterInfoList_[printerId] = info;
     std::string savePrinterPreference = "test";
-    service->printerIdAndPreferenceMap_[printerId] = savePrinterPreference;
     std::vector<std::string> keyList;
     keyList.emplace_back("pagesizeId");
     keyList.emplace_back("orientation");
@@ -1253,7 +1251,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0067, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
     std::string printerExtId = PrintUtils::GetGlobalId("", printerId);
-    service->printerIdAndPreferenceMap_[printerExtId] = "test";
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
@@ -1265,7 +1262,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
     std::string printerExtId = PrintUtils::GetGlobalId("", printerId);
-    service->printerIdAndPreferenceMap_["123"] = "test";
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
@@ -1285,122 +1281,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0071, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PreferenceSetting printerDefaultAttr;
-    nlohmann::json capOpt;
-    service->BuildPrinterPreferenceByDefault(capOpt, printerDefaultAttr);
-    capOpt["defaultPageSizeId"] = 123;
-    capOpt["orientation-requested-default"] = 123;
-    capOpt["sides-default"] = 123;
-    capOpt["print-quality-default"] = 123;
-    service->BuildPrinterPreferenceByDefault(capOpt, printerDefaultAttr);
-    capOpt["defaultPageSizeId"] = "123";
-    capOpt["orientation-requested-default"] = "123";
-    capOpt["sides-default"] = "123";
-    capOpt["print-quality-default"] = "123";
-    service->BuildPrinterPreferenceByDefault(capOpt, printerDefaultAttr);
-    EXPECT_EQ(printerDefaultAttr.pagesizeId, capOpt["defaultPageSizeId"].get<std::string>());
-    EXPECT_EQ(printerDefaultAttr.orientation, capOpt["orientation-requested-default"].get<std::string>());
-    EXPECT_EQ(printerDefaultAttr.duplex, capOpt["sides-default"].get<std::string>());
-    EXPECT_EQ(printerDefaultAttr.quality, capOpt["print-quality-default"].get<std::string>());
-}
-
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0072, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string key;
-    std::string supportedOpts;
-    std::vector<std::string> optAttrs;
-    service->BuildPrinterPreferenceByOption(key, supportedOpts, optAttrs);
-    EXPECT_STREQ(supportedOpts.c_str(), "");
-    std::string supportedOpts2 = "test";
-    service->BuildPrinterPreferenceByOption(key, supportedOpts2, optAttrs);
-    EXPECT_STREQ(supportedOpts.c_str(), "");
-    nlohmann::json optJson;
-    nlohmann::json itemJson;
-    itemJson["key"] = "value";
-    optJson["testList"] = itemJson;
-    std::string supportedOpts3 = optJson.dump();
-    service->BuildPrinterPreferenceByOption(key, supportedOpts3, optAttrs);
-    EXPECT_STREQ(supportedOpts.c_str(), "");
-}
-
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0073, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrinterCapability cap;
-    PrinterPreference printPreference;
-    cap.SetOption("test");
-    EXPECT_EQ(service->BuildPrinterPreference(cap, printPreference), E_PRINT_INVALID_PARAMETER);
-    nlohmann::json capJson;
-    capJson["key"] = "value";
-    cap.SetOption(capJson.dump());
-    EXPECT_EQ(service->BuildPrinterPreference(cap, printPreference), E_PRINT_INVALID_PARAMETER);
-    nlohmann::json capJson2;
-    capJson2["cupsOptions"] = "value";
-    cap.SetOption(capJson2.dump());
-    EXPECT_EQ(service->BuildPrinterPreference(cap, printPreference), E_PRINT_NONE);
-    nlohmann::json capJson3;
-    nlohmann::json capOpt3;
-    capOpt3["orientation-requested-supported"] = 123;
-    capOpt3["sides-supported"] = 123;
-    capOpt3["print-quality-supported"] = 123;
-    capJson3["cupsOptions"] = capOpt3;
-    cap.SetOption(capJson3.dump());
-    EXPECT_EQ(service->BuildPrinterPreference(cap, printPreference), E_PRINT_NONE);
-    nlohmann::json capJson4;
-    nlohmann::json capOpt4;
-    capOpt4["orientation-requested-supported"] = "123";
-    capOpt4["sides-supported"] = "123";
-    capOpt4["print-quality-supported"] = "123";
-    capJson4["cupsOptions"] = capOpt4;
-    cap.SetOption(capJson4.dump());
-    EXPECT_EQ(service->BuildPrinterPreference(cap, printPreference), E_PRINT_NONE);
-}
-
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0074, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string key = "key";
-    nlohmann::json jsonArrObject = nlohmann::json::object();
-    jsonArrObject["key"] = "value";
-    std::vector<std::string> printerAttrs;
-    service->BuildPrinterAttrComponentByJson(key, jsonArrObject, printerAttrs);
-
-    nlohmann::json jsonArrObject2 = nlohmann::json::array();
-    nlohmann::json attrItem = nlohmann::json::object();
-    attrItem["123"] = "123";
-    nlohmann::json attrItem2 = nlohmann::json::object();;
-    attrItem2["key"] = "123";
-    nlohmann::json attrItem3 = nlohmann::json::object();;
-    attrItem3["key"] = 123;
-    jsonArrObject2.push_back(attrItem);
-    jsonArrObject2.push_back(attrItem2);
-    jsonArrObject2.push_back(attrItem3);
-    service->BuildPrinterAttrComponentByJson(key, jsonArrObject2, printerAttrs);
-    std::vector<std::string> testPrinterAttrs;
-    for (int i = 0; i < 2; i++) {
-        testPrinterAttrs.push_back("123");
-    }
-    EXPECT_EQ(printerAttrs, testPrinterAttrs);
-}
-
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0075, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
-    service->helper_ = helper;
-    std::string printerId = "123";
-    std::string printerPreference = "";
-    EXPECT_EQ(service->GetPrinterPreference(printerId, printerPreference), E_PRINT_INVALID_PRINTER);
-    service->printerIdAndPreferenceMap_["111"] = "123";
-    EXPECT_EQ(service->GetPrinterPreference(printerId, printerPreference), E_PRINT_INVALID_PRINTER);
-    service->printerIdAndPreferenceMap_["123"] = "123";
-    EXPECT_EQ(service->GetPrinterPreference(printerId, printerPreference), E_PRINT_NONE);
-}
-
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0076, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -1409,29 +1289,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0076, TestSize.Level1)
     std::string printerId = "123";
     std::string printerSetting = "test";
     EXPECT_EQ(service->SetPrinterPreference(printerId, printerSetting), E_PRINT_INVALID_PRINTER);
-}
-
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0077, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "123";
-    std::string printerPreference = "test";
-    service->printerIdAndPreferenceMap_["111"] = "123";
-    EXPECT_EQ(service->ReadPreferenceFromFile(printerId, printerPreference), false);
-    service->printerIdAndPreferenceMap_["123"] = "123";
-    EXPECT_EQ(service->ReadPreferenceFromFile(printerId, printerPreference), true);
-}
-
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0078, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    service->InitPreferenceMap();
-    service->printerIdAndPreferenceMap_["printerId"] = "123";
-    nlohmann::json printPreferenceJson;
-    printPreferenceJson["key"] = "value";
-    service->printerIdAndPreferenceMap_["printerId2"] = printPreferenceJson.dump();
-    EXPECT_EQ(service->WritePreferenceToFile(), true);
-    service->InitPreferenceMap();
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0079, TestSize.Level1)
@@ -2029,14 +1886,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0126, TestSize.Level1)
     EXPECT_EQ(service->printSystemData_.QueryPrinterIdByStandardizeName(printerName), "");
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0127, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "Pixlab_0759";
-    PrinterCapability printerCaps;
-    EXPECT_EQ(service->WriteEprinterPreference(printerId, printerCaps), true);
-}
-
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2077,7 +1926,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
     std::string printerExtId = PrintUtils::GetGlobalId("", printerId);
-    service->printerIdAndPreferenceMap_[printerExtId] = "test";
     PrinterCapability printerCaps;
     printerCaps.SetOption("test");
     std::string printerUri = "usb:ipp://192.168.186.1:631/ipp/print";
