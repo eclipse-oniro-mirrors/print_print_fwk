@@ -69,13 +69,15 @@ bool ScanSystemData::ParseScannerListJsonV1(nlohmann::json& jsonObject)
         std::string uniqueId = scanDeviceInfo.discoverMode + scanDeviceInfo.uniqueId;
         InsertScannerInfo(uniqueId, scanDeviceInfo);
     }
-    RefreshUsbDeviceId();
     return true;
 }
 
 bool ScanSystemData::Init()
 {
-    addedScannerMap_.clear();
+    {
+        std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
+        addedScannerMap_.clear();
+    }
     std::ifstream ifs(SCANNER_LIST_FILE.c_str(), std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
         SCAN_HILOGW("open scanner list file fail");
@@ -94,8 +96,9 @@ bool ScanSystemData::Init()
     }
     std::string version = jsonObject["version"].get<std::string>();
     SCAN_HILOGI("json version: %{public}s", version.c_str());
-    if (version == SCANNER_LIST_VERSION) {
-        return ParseScannerListJsonV1(jsonObject);
+    if (version == SCANNER_LIST_VERSION && ParseScannerListJsonV1(jsonObject)) {
+        RefreshUsbDeviceId();
+        return true;
     }
     return false;
 }
@@ -375,6 +378,7 @@ bool ScanSystemData::SaveScannerMap()
 
 bool ScanSystemData::IsContainScanner(const std::string &uniqueId)
 {
+    std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
     if (addedScannerMap_.find(uniqueId) != addedScannerMap_.end()) {
         SCAN_HILOGI("The map contains the scanner.");
         return true;
