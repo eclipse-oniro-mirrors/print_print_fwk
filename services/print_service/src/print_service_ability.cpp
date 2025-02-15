@@ -794,10 +794,7 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
     }
     nlohmann::json preferencesJson = nlohmann::json::parse(printerSetting);
     PrinterPreferences preferences;
-    if (!printSystemData_.ConvertJsonToPrinterPreferences(preferencesJson, preferences)) {
-        PRINT_HILOGE("failed to convert json to printer preferences");
-        return E_PRINT_INVALID_PARAMETER;
-    }
+    printSystemData_.ConvertJsonToPrinterPreferences(preferencesJson, preferences);
     printSystemData_.UpdatePrinterPreferences(printerId, preferences);
     printSystemData_.SaveCupsPrinterMap();
     return E_PRINT_NONE;

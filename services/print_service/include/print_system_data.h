@@ -77,7 +77,7 @@ public:
     std::shared_ptr<PrinterInfo> QueryIpPrinterInfoById(const std::string &printerId);
     int32_t BuildPrinterPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences);
     void BuildEprintPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences);
-    bool ConvertJsonToPrinterPreferences(nlohmann::json &preferencesJson, PrinterPreferences &preferences);
+    void ConvertJsonToPrinterPreferences(nlohmann::json &preferencesJson, PrinterPreferences &preferences);
 
 private:
     bool ParsePrinterListJsonV1(nlohmann::json& jsonObject);

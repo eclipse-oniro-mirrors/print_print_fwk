@@ -95,8 +95,8 @@ void PrintSystemData::ConvertInnerJsonToCupsPrinterInfo(nlohmann::json &object, 
         info.printerStatus = object["printerStatus"];
     }
     PrinterPreferences preferences;
-    if (object.contains("preferences") && object["preferences"].is_object() &&
-        ConvertJsonToPrinterPreferences(object["preferences"], info.printPreferences)) {
+    if (object.contains("preferences") && object["preferences"].is_object()) {
+        ConvertJsonToPrinterPreferences(object["preferences"], info.printPreferences);
         PRINT_HILOGI("convert json to printer preferences success");
     }
 }
@@ -769,44 +769,43 @@ bool PrintSystemData::ConvertJsonToPrintMargin(nlohmann::json &capsJson, Printer
     return true;
 }
 
-bool PrintSystemData::ConvertJsonToPrinterPreferences(nlohmann::json &preferencesJson, PrinterPreferences &preferences)
+void PrintSystemData::ConvertJsonToPrinterPreferences(nlohmann::json &preferencesJson, PrinterPreferences &preferences)
 {
     if (!preferencesJson.contains("defaultDuplexMode") || !preferencesJson["defaultDuplexMode"].is_number()) {
         PRINT_HILOGW("can not find defaultDuplexMode");
-        return false;
+    } else {
+        preferences.SetDefaultDuplexMode(preferencesJson["defaultDuplexMode"].get<uint32_t>());
     }
-    preferences.SetDefaultDuplexMode(preferencesJson["defaultDuplexMode"].get<uint32_t>());
 
     if (!preferencesJson.contains("defaultPrintQuality") || !preferencesJson["defaultPrintQuality"].is_number()) {
         PRINT_HILOGW("can not find defaultPrintQuality");
-        return false;
+    } else {
+        preferences.SetDefaultPrintQuality(preferencesJson["defaultPrintQuality"].get<uint32_t>());
     }
-    preferences.SetDefaultPrintQuality(preferencesJson["defaultPrintQuality"].get<uint32_t>());
 
     if (!preferencesJson.contains("defaultMediaType") || !preferencesJson["defaultMediaType"].is_string()) {
         PRINT_HILOGW("can not find defaultMediaType");
-        return false;
+    } else {
+        preferences.SetDefaultMediaType(preferencesJson["defaultMediaType"].get<std::string>());
     }
-    preferences.SetDefaultMediaType(preferencesJson["defaultMediaType"].get<std::string>());
 
     if (!preferencesJson.contains("defaultPageSizeId") || !preferencesJson["defaultPageSizeId"].is_string()) {
         PRINT_HILOGW("can not find defaultPageSizeId");
-        return false;
+    } else {
+        preferences.SetDefaultPageSizeId(preferencesJson["defaultPageSizeId"].get<std::string>());
     }
-    preferences.SetDefaultPageSizeId(preferencesJson["defaultPageSizeId"].get<std::string>());
 
     if (!preferencesJson.contains("defaultOrientation") || !preferencesJson["defaultOrientation"].is_number()) {
         PRINT_HILOGW("can not find defaultOrientation");
-        return false;
+    } else {
+        preferences.SetDefaultOrientation(preferencesJson["defaultOrientation"].get<uint32_t>());
     }
-    preferences.SetDefaultOrientation(preferencesJson["defaultOrientation"].get<uint32_t>());
 
     if (preferencesJson.contains("options") && preferencesJson["options"].is_object()) {
         PRINT_HILOGD("find options");
         preferences.SetOption(preferencesJson["options"].dump());
     }
     preferences.Dump();
-    return true;
 }
 
 bool PrintSystemData::GetPrinterCapabilityFromSystemData(CupsPrinterInfo &cupsPrinter,
