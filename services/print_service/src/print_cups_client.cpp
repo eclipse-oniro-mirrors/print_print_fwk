@@ -190,7 +190,7 @@ static void ParseDeviceInfo(const std::string &location, nlohmann::json &infoOps
     std::stringstream ssPid(pidStr);
     int pid = 0;
     ssPid >> std::hex >> pid;
-    PRINT_HILOGD("vid = %{public}d, pid = %{public}d", vid, pid);
+    PRINT_HILOGI("vid = %{private}d, pid = %{private}d", vid, pid);
     infoOps["vendorId"] = vid;
     infoOps["productId"] = pid;
 }
@@ -231,9 +231,11 @@ static void DeviceCb(const char *deviceClass, const char *deviceId, const char *
         infoOps["printerMake"] = printerMake;
 
         if (deviceLocation != nullptr) {
-            PRINT_HILOGD("location = %{private}s\n", deviceLocation);
+            PRINT_HILOGI("location = %{private}s\n", deviceLocation);
             std::string location(deviceLocation);
             ParseDeviceInfo(location, infoOps);
+        } else {
+            PRINT_HILOGW("deviceLocation is nullptr");
         }
         info.SetOption(infoOps.dump());
         std::lock_guard<std::mutex> lock(usbPrintersLock_);
