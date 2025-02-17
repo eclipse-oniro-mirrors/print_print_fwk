@@ -88,7 +88,6 @@ private:
     void SendDeviceSearchEnd(std::string &info, std::string event);
     void SetScannerSerialNumber(ScanDeviceInfo &info);
     void SaneGetScanner();
-    void SyncScannerInfo(ScanDeviceInfo &info);
     void SetScannerSerialNumberByTCP(ScanDeviceInfo &info);
     void SetScannerSerialNumberByUSB(ScanDeviceInfo &info);
 public:
@@ -118,8 +117,6 @@ private:
         std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr);
     void GeneratePictureSingle(const std::string &scannerId, std::string &fileName,
         std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr);
-    void AddFoundUsbScanner(ScanDeviceInfo &info);
-    void AddFoundTcpScanner(ScanDeviceInfo &info);
     bool GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId);
     bool GetTcpDeviceIp(const std::string &deviceId, std::string &ip);
     void CleanScanTask(const std::string &scannerId);
@@ -129,6 +126,7 @@ private:
     void SetScanProgr(int64_t &totalBytes, const int64_t& hundredPercent,
         ScanProgress* scanProPtr, const int32_t& curReadSize);
     bool CreateAndOpenScanFile(std::string &outputFile, const int32_t &nowScanId);
+    void AddFoundScanner(ScanDeviceInfo& info);
     std::set<std::string> openedScannerList_;
     ServiceRunningState state_;
     std::mutex lock_;

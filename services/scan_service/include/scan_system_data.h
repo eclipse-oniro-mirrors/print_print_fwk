@@ -45,14 +45,11 @@ public:
     bool IsContainScanner(const std::string &uniqueId);
     std::pair<std::string, std::string> UpdateNetScannerByUuid(const std::string &uuid, const std::string& ip);
     static std::string ReplaceDeviceIdUsbPort(const std::string& deviceId, const std::string& usbPort);
-    static std::map<std::string, std::string> usbSnToPortMap_;
-
 private:
     bool ParseScannerListJsonV1(nlohmann::json& jsonObject);
     bool CheckJsonObjectValue(const nlohmann::json& object);
-    void FormatUsbPort(std::string &port);
-    std::string GetNewDeviceId(std::string oldDeviceId, std::string usbDevicePort);
     std::map<std::string, std::shared_ptr<ScanDeviceInfo>> addedScannerMap_;
+    std::map<std::string, std::string> usbSnToPortMap_;
     std::mutex addedScannerMapLock_;
 };
 

@@ -385,6 +385,18 @@ std::shared_ptr<ScanDeviceInfo> ScanDeviceInfo::Unmarshalling(Parcel &parcel)
     return nativeObj;
 }
 
+void ScanDeviceInfo::Dump() const
+{
+    SCAN_HILOGD("deviceId = %{private}s", deviceId.c_str());
+    SCAN_HILOGD("manufacturer = %{private}s", manufacturer.c_str());
+    SCAN_HILOGD("model = %{private}s", model.c_str());
+    SCAN_HILOGD("deviceType = %{private}s", deviceType.c_str());
+    SCAN_HILOGD("discoverMode = %{private}s", discoverMode.c_str());
+    SCAN_HILOGD("serialNumber = %{private}s", serialNumber.c_str());
+    SCAN_HILOGD("deviceName = %{private}s", deviceName.c_str());
+    SCAN_HILOGD("uniqueId = %{private}s", uniqueId.c_str());
+}
+
 // ScanDeviceInfoSync
 
 ScanDeviceInfoSync::ScanDeviceInfoSync()
@@ -515,6 +527,17 @@ std::shared_ptr<ScanDeviceInfoSync> ScanDeviceInfoSync::Unmarshalling(Parcel &pa
     auto nativeObj = std::make_shared<ScanDeviceInfoSync>();
     nativeObj->ReadFromParcel(parcel);
     return nativeObj;
+}
+
+void ScanDeviceInfoSync::Dump() const
+{
+    SCAN_HILOGD("deviceId = %{private}s", deviceId.c_str());
+    SCAN_HILOGD("discoverMode = %{private}s", discoverMode.c_str());
+    SCAN_HILOGD("serialNumber = %{private}s", serialNumber.c_str());
+    SCAN_HILOGD("syncMode = %{private}s", syncMode.c_str());
+    SCAN_HILOGD("deviceState = %{private}u", deviceState);
+    SCAN_HILOGD("oldDeviceId = %{private}s", oldDeviceId.c_str());
+    SCAN_HILOGD("uniqueId = %{private}s", uniqueId.c_str());
 }
 
 } // namespace OHOS::Scan
