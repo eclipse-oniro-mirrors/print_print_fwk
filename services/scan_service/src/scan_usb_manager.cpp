@@ -85,10 +85,10 @@ void ScanUsbManager::RefreshUsbDevice()
     }
 }
 
-void ScanUsbManager::RefreshUsbDevicePort()
+void ScanUsbManager::RefreshUsbDevicePort(std::map<std::string, std::string> &usbSnToPortMap)
 {
     SCAN_HILOGI("RefreshUsbDevicePort start");
-    ScanSystemData::usbSnToPortMap_.clear();
+    usbSnToPortMap.clear();
     std::vector<UsbDevice> devlist;
     auto &UsbSrvClient = UsbSrvClient::GetInstance();
     auto ret = UsbSrvClient.GetDevices(devlist);
@@ -110,7 +110,7 @@ void ScanUsbManager::RefreshUsbDevicePort()
         std::string devicePort = dev.GetName();
         std::regex pattern("\\d+-\\d+");
         if (std::regex_match(devicePort, pattern)) {
-            ScanSystemData::usbSnToPortMap_[serialNumber] = devicePort;
+            usbSnToPortMap[serialNumber] = devicePort;
         } else {
             SCAN_HILOGW("Incorrect port number format.");
         }

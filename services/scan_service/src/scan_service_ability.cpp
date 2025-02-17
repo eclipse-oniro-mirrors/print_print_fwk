@@ -436,69 +436,29 @@ void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
     }
 }
 
-void ScanServiceAbility::SyncScannerInfo(ScanDeviceInfo &info)
+void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo& info)
 {
-    std::string uniqueId = info.discoverMode + info.serialNumber;
-    std::string deviceName = "";
-    if (ScanSystemData::GetInstance().QueryScannerNameByUniqueId(uniqueId, deviceName)) {
-        info.deviceName = deviceName;
-    } else {
-        SCAN_HILOGW("ScanServiceAbility SyncScannerInfo deviceName not need upadate");
-    }
-    if (ScanSystemData::GetInstance().UpdateScannerInfoByUniqueId(uniqueId, info)) {
-        ScanSystemData::GetInstance().SaveScannerMap();
-    }
-}
-
-void ScanServiceAbility::AddFoundUsbScanner(ScanDeviceInfo &info)
-{
-    SCAN_HILOGI("AddFoundUsbScanner start model:[%{public}s]", info.model.c_str());
-    SyncScannerInfo(info);
     std::lock_guard<std::mutex> autoLock(clearMapLock_);
-#ifdef DEBUG_ENABLE
-    auto it = saneGetUsbDeviceInfoMap.find(info.serialNumber);
-    if (it != saneGetUsbDeviceInfoMap.end()) {
-        SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{private}s] of serialNumber:[%{private}s] has change",
-                    saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
+    if (info.discoverMode != "USB" && info.discoverMode != "TCP") {
+        SCAN_HILOGE("discoverMode is invalid:[%{public}s]", info.discoverMode.c_str());
+        return;
     }
-#endif
-    auto itSN = saneGetUsbDeviceInfoMap.find(info.serialNumber);
-    if (info.serialNumber != "" && itSN != saneGetUsbDeviceInfoMap.end()) {
-        itSN->second = info;
+    if (info.uniqueId.empty() && info.serialNumber.empty()) {
+        SCAN_HILOGE("uniqueId and serialNumber are null");
+        return;
     }
-    auto itUI = saneGetUsbDeviceInfoMap.find(info.uniqueId);
-    if (info.uniqueId != "" && itUI != saneGetUsbDeviceInfoMap.end()) {
-        itUI->second = info;
+    std::string uniqueId = info.discoverMode + info.uniqueId;
+    ScanSystemData& scanData = ScanSystemData::GetInstance();
+    if (info.discoverMode == "USB") {
+        scanData.UpdateScannerInfoByUniqueId(uniqueId, info);
+    } else {
+        scanData.UpdateNetScannerByUuid(info.uuid, info.uniqueId);
     }
-#ifdef DEBUG_ENABLE
-    SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{private}s] of serialNumber:[%{private}s]",
-                saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
-#endif
-    SCAN_HILOGI("AddFoundUsbScanner end model:[%{public}s]", info.model.c_str());
-}
-
-void ScanServiceAbility::AddFoundTcpScanner(ScanDeviceInfo &info)
-{
-    SCAN_HILOGI("AddFoundTcpScanner start: model:[%{public}s]", info.model.c_str());
-    SyncScannerInfo(info);
-#ifdef DEBUG_ENABLE
-    auto it = saneGetTcpDeviceInfoMap.find(info.serialNumber);
-    if (it != saneGetTcpDeviceInfoMap.end()) {
-        SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{private}s] of serialNumber:[%{private}s] has change",
-                    saneGetTcpDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
-    }
-#endif
-    if (info.serialNumber != "") {
-        saneGetTcpDeviceInfoMap[info.serialNumber] = info;
-    }
-    if (info.uniqueId != "") {
-        saneGetTcpDeviceInfoMap[info.uniqueId] = info;
-    }
-#ifdef DEBUG_ENABLE
-    SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{private}s] of serialNumber:[%{private}s]",
-                saneGetTcpDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
-#endif
-    SCAN_HILOGI("AddFoundTcpScanner end: model:[%{public}s]", info.model.c_str());
+    scanData.SaveScannerMap();
+    std::map<std::string, ScanDeviceInfo>& deviceMap = info.discoverMode == "USB" ?
+        saneGetUsbDeviceInfoMap : saneGetTcpDeviceInfoMap;
+    deviceMap[info.serialNumber] = info;
+    deviceMap[info.uniqueId] = info;
 }
 
 void ScanServiceAbility::SaneGetScanner()
@@ -523,15 +483,7 @@ void ScanServiceAbility::SaneGetScanner()
         info.model = device.model_;
         info.deviceType = device.type_;
         SetScannerSerialNumber(info);
-        if (info.discoverMode == "USB") {
-            SCAN_HILOGI("SaneGetScanner AddFoundUsbScanner model:[%{public}s]", info.model.c_str());
-            AddFoundUsbScanner(info);
-        } else if (info.discoverMode == "TCP") {
-            SCAN_HILOGI("SaneGetScanner AddFoundTcpScanner model:[%{public}s]", info.model.c_str());
-            AddFoundTcpScanner(info);
-        } else {
-            SCAN_HILOGE("SaneGetScanner SetScannerSerialNumber failed, model:[%{public}s]", info.model.c_str());
-        }
+        AddFoundScanner(info);
     }
     clearMapLock_.lock();
     for (auto &t : saneGetUsbDeviceInfoMap) {
