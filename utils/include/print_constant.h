@@ -257,7 +257,6 @@ const std::string PRINT_USER_DATA_FILE = "print_user_data.json";
 const std::string PRINT_USER_DATA_VERSION = "v1";
 const std::string PRINTER_PREFERENCE_FILE = "printer_preference.json";
 const std::string DEFAULT_PAGESIZE_ID = "ISO_A4";
-const uint32_t DEFAULT_ORIENTATION = 7;
 const std::string DEFAULT_MEDIA_TYPE = "stationery";
 
 const std::string E_PRINT_MSG_NONE = "none";

@@ -230,7 +230,7 @@ bool PrintSystemData::ParsePreviousPreferencesSetting(nlohmann::json &settingJso
     if (settingJson.contains("orientation") && settingJson["orientation"].is_string() &&
         !settingJson.at("orientation").get<std::string>().empty()) {
         updatePreferences = true;
-        int32_t defaultOrientation = PRINT_ORIENTATION_MODE_NONE;
+        int32_t defaultOrientation = 0;
         PrintUtil::ConvertToInt(settingJson.at("orientation").get<std::string>(), defaultOrientation);
         preferences.SetDefaultOrientation(defaultOrientation);
     }
@@ -252,6 +252,11 @@ bool PrintSystemData::ParsePreviousPreferencesSetting(nlohmann::json &settingJso
         !settingJson.at("mediaType").get<std::string>().empty()) {
         updatePreferences = true;
         preferences.SetDefaultMediaType(settingJson.at("mediaType").get<std::string>());
+    }
+    if (settingJson.contains("hasMargin") && settingJson["hasMargin"].is_boolean() &&
+        settingJson.at("hasMargin").get<bool>() == false) {
+        updatePreferences = true;
+        preferences.SetBorderless(true);
     }
     return updatePreferences;
 }
@@ -801,6 +806,12 @@ void PrintSystemData::ConvertJsonToPrinterPreferences(nlohmann::json &preference
         preferences.SetDefaultOrientation(preferencesJson["defaultOrientation"].get<uint32_t>());
     }
 
+    if (!preferencesJson.contains("borderless") || !preferencesJson["borderless"].is_boolean()) {
+        PRINT_HILOGW("can not find borderless");
+    } else {
+        preferences.SetBorderless(preferencesJson["borderless"].get<bool>());
+    }
+
     if (preferencesJson.contains("options") && preferencesJson["options"].is_object()) {
         PRINT_HILOGD("find options");
         preferences.SetOption(preferencesJson["options"].dump());
@@ -1053,6 +1064,7 @@ void PrintSystemData::BuildEprintPreference(const PrinterCapability &cap, Printe
     printPreferences.SetDefaultDuplexMode(ParseDefaultDuplexMode(cap, capOpt));
     printPreferences.SetDefaultPrintQuality(ParseDefaultPrintQuality(cap, capOpt));
     printPreferences.SetDefaultMediaType(ParseDefaultMediaType(cap, capOpt));
+    printPreferences.SetBorderless(false);
     printPreferences.Dump();
     return;
 }
@@ -1082,6 +1094,7 @@ int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, Pr
     printPreferences.SetDefaultDuplexMode(ParseDefaultDuplexMode(cap, capOpt));
     printPreferences.SetDefaultPrintQuality(ParseDefaultPrintQuality(cap, capOpt));
     printPreferences.SetDefaultMediaType(ParseDefaultMediaType(cap, capOpt));
+    printPreferences.SetBorderless(false);
     printPreferences.Dump();
     return E_PRINT_NONE;
 }
@@ -1106,22 +1119,11 @@ std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap
 
 int32_t PrintSystemData::ParseDefaultOrientation(const PrinterCapability &cap, nlohmann::json &capOpt)
 {
+    int32_t defaultOrientation = 0;
     if (capOpt.contains("orientation-requested-default") && capOpt["orientation-requested-default"].is_string()) {
-        int32_t defaultOrientation = DEFAULT_ORIENTATION;
         PrintUtil::ConvertToInt(capOpt["orientation-requested-default"].get<std::string>(), defaultOrientation);
-        return defaultOrientation;
     }
-    std::vector<uint32_t> supportedOrientationList;
-    cap.GetSupportedOrientation(supportedOrientationList);
-    if (supportedOrientationList.size() == 0) {
-        return 0;
-    }
-    for (auto orientation : supportedOrientationList) {
-        if (orientation == DEFAULT_ORIENTATION) {
-            return DEFAULT_ORIENTATION;
-        }
-    }
-    return supportedOrientationList[0];
+    return defaultOrientation;
 }
 
 int32_t PrintSystemData::ParseDefaultDuplexMode(const PrinterCapability &cap, nlohmann::json &capOpt)

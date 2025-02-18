@@ -23,7 +23,8 @@ static constexpr const char *PARAM_PREFERENCES_DEFAULT_DEPLEX_MODE = "defaultDup
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_PRINT_QUALITY = "defaultPrintQuality";
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE = "defaultMediaType";
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID = "defaultPageSizeId";
-static constexpr const char *PARAM_PREFERENCES_DEFAULT_ORIENTATION = "hasDefaultOrientation";
+static constexpr const char *PARAM_PREFERENCES_DEFAULT_ORIENTATION = "defaultOrientation";
+static constexpr const char *PARAM_PREFERENCES_BORDERLESS = "borderless";
 static constexpr const char *PARAM_PREFERENCES_OPTION = "options";
 
 napi_value PrinterPreferencesHelper::MakeJsObject(napi_env env, const PrinterPreferences &preferences)
@@ -53,6 +54,10 @@ napi_value PrinterPreferencesHelper::MakeJsObject(napi_env env, const PrinterPre
     if (preferences.HasDefaultOrientation()) {
         NapiPrintUtils::SetUint32Property(
             env, jsObj, PARAM_PREFERENCES_DEFAULT_ORIENTATION, preferences.GetDefaultOrientation());
+    }
+
+    if (preferences.HasBorderless()) {
+        NapiPrintUtils::SetBooleanProperty(env, jsObj, PARAM_PREFERENCES_BORDERLESS, preferences.GetBorderless());
     }
 
     if (preferences.HasOption()) {
@@ -102,6 +107,11 @@ std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_e
             NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_ORIENTATION));
     }
 
+    auto jsBorderless = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_BORDERLESS);
+    if (jsBorderless != nullptr) {
+        nativeObj->SetBorderless(NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_PREFERENCES_BORDERLESS));
+    }
+
     auto jsOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_OPTION);
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PREFERENCES_OPTION));
@@ -117,6 +127,7 @@ bool PrinterPreferencesHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_DEFAULT_ORIENTATION, PRINT_PARAM_OPT},
+        {PARAM_PREFERENCES_BORDERLESS, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_OPTION, PRINT_PARAM_OPT},
     };
 

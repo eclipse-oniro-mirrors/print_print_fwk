@@ -28,7 +28,9 @@ PrinterPreferences::PrinterPreferences()
       hasDefaultPageSizeId_(false),
       defaultPageSizeId_(""),
       hasDefaultOrientation_(false),
-      defaultOrientation_(PRINT_ORIENTATION_MODE_NONE),
+      defaultOrientation_(0),
+      hasBorderless_(false),
+      borderless_(false),
       hasOption_(false),
       option_("")
 {
@@ -45,6 +47,8 @@ PrinterPreferences::PrinterPreferences(const PrinterPreferences &right)
       defaultPageSizeId_(right.defaultPageSizeId_),
       hasDefaultOrientation_(right.hasDefaultOrientation_),
       defaultOrientation_(right.defaultOrientation_),
+      hasBorderless_(right.hasBorderless_),
+      borderless_(right.borderless_),
       hasOption_(right.hasOption_),
       option_(right.option_)
 {
@@ -63,6 +67,8 @@ PrinterPreferences &PrinterPreferences::operator=(const PrinterPreferences &righ
         defaultPageSizeId_ = right.defaultPageSizeId_;
         hasDefaultOrientation_ = right.hasDefaultOrientation_;
         defaultOrientation_ = right.defaultOrientation_;
+        hasBorderless_ = right.hasBorderless_;
+        borderless_ = right.borderless_;
         hasOption_ = right.hasOption_;
         option_ = right.option_;
     }
@@ -83,6 +89,8 @@ void PrinterPreferences::Reset()
     defaultPageSizeId_ = "";
     hasDefaultOrientation_ = false;
     defaultOrientation_ = PRINT_ORIENTATION_MODE_NONE;
+    hasBorderless_ = false;
+    borderless_ = false;
     hasOption_ = false;
     option_ = "";
 }
@@ -115,6 +123,12 @@ void PrinterPreferences::SetDefaultOrientation(uint32_t defaultOrientation)
 {
     hasDefaultOrientation_ = true;
     defaultOrientation_ = defaultOrientation;
+}
+
+void PrinterPreferences::SetBorderless(bool borderless)
+{
+    hasBorderless_ = true;
+    borderless_ = borderless;
 }
 
 void PrinterPreferences::SetOption(const std::string &option)
@@ -173,6 +187,16 @@ uint32_t PrinterPreferences::GetDefaultOrientation() const
     return defaultOrientation_;
 }
 
+bool PrinterPreferences::HasBorderless() const
+{
+    return hasBorderless_;
+}
+
+bool PrinterPreferences::GetBorderless() const
+{
+    return borderless_;
+}
+
 bool PrinterPreferences::HasOption() const
 {
     return hasOption_;
@@ -215,6 +239,11 @@ bool PrinterPreferences::ReadFromParcel(Parcel &parcel)
         right.SetDefaultOrientation(parcel.ReadUint32());
     }
 
+    right.hasBorderless_ = parcel.ReadBool();
+    if (right.hasBorderless_) {
+        right.SetBorderless(parcel.ReadBool());
+    }
+
     right.hasOption_ = parcel.ReadBool();
     if (right.hasOption_) {
         right.SetOption(parcel.ReadString());
@@ -252,6 +281,11 @@ bool PrinterPreferences::Marshalling(Parcel &parcel) const
         parcel.WriteUint32(GetDefaultOrientation());
     }
 
+    parcel.WriteBool(hasBorderless_);
+    if (hasBorderless_) {
+        parcel.WriteBool(GetBorderless());
+    }
+
     parcel.WriteBool(hasOption_);
     if (hasOption_) {
         parcel.WriteString(GetOption());
@@ -284,6 +318,9 @@ void PrinterPreferences::Dump() const
     if (hasDefaultOrientation_) {
         PRINT_HILOGI("defaultOrientation: %{public}d", defaultOrientation_);
     }
+    if (hasBorderless_) {
+        PRINT_HILOGI("borderless: %{public}d", borderless_);
+    }
     if (hasOption_) {
         PRINT_HILOGD("option: %{private}s", option_.c_str());
     }
@@ -297,6 +334,7 @@ nlohmann::json PrinterPreferences::ConvertToJson()
     preferencesJson["defaultMediaType"] = defaultMediaType_;
     preferencesJson["defaultPageSizeId"] = defaultPageSizeId_;
     preferencesJson["defaultOrientation"] = defaultOrientation_;
+    preferencesJson["borderless"] = borderless_;
 
     if (hasOption_) {
         if (nlohmann::json::accept(option_)) {

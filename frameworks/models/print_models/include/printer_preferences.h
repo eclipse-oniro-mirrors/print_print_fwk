@@ -42,6 +42,8 @@ public:
 
     void SetDefaultOrientation(uint32_t defaultOrientation);
 
+    void SetBorderless(bool borderless);
+
     void SetOption(const std::string &option);
 
     [[nodiscard]] bool HasDefaultDuplexMode() const;
@@ -63,6 +65,10 @@ public:
     [[nodiscard]] bool HasDefaultOrientation() const;
 
     [[nodiscard]] uint32_t GetDefaultOrientation() const;
+
+    [[nodiscard]] bool HasBorderless() const;
+
+    [[nodiscard]] bool GetBorderless() const;
 
     [[nodiscard]] bool HasOption() const;
 
@@ -99,6 +105,10 @@ private:
     bool hasDefaultOrientation_;
 
     uint32_t defaultOrientation_;
+
+    bool hasBorderless_;
+
+    bool borderless_;
 
     bool hasOption_;
 
