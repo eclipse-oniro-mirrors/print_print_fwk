@@ -200,6 +200,10 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0006, TestSize.Level2)
     EXPECT_FALSE(vendorManager.QueryPrinterStatusByUri(PRINTER_TEST_IP, status));
     PrinterVendorStatus vendorStatus;
     EXPECT_TRUE(vendorManager.OnPrinterStatusChanged("vendor", PRINTER_TEST_IP, vendorStatus));
+    EXPECT_FALSE(vendorManager.QueryPrinterInfoByPrinterId("vendor", PRINTER_TEST_IP, printerInfo));
+    char mekeModel[] = "test_makeModel";
+    std::vector<std::string> ppds(1, "test_ppds");
+    EXPECT_FALSE(vendorManager.QueryPPDInformation(mekeModel, ppds));
     vendorManager.UnInit();
 }
 
@@ -214,12 +218,15 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0007, TestSize.Level2)
     std::string vendorName = vendorIppEverywhere->GetVendorName();
     std::string globalVendorName = VendorManager::GetGlobalVendorName(vendorName);
     std::string printerId = PRINTER_TEST_IP;
+    PrinterInfo printerInfo;
     std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
     EXPECT_CALL(mock, QueryPrinterStatusByUri(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(mock, QueryPrinterCapabilityByUri(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(mock, AddVendorPrinterToCupsWithPpd(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(mock, OnVendorStatusUpdate(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(mock, RemoveVendorPrinterFromCups(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    EXPECT_CALL(mock, QueryPrinterInfoByPrinterId(_, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(mock, QueryPPDInformation(_, _)).WillRepeatedly(Return(true));
     PrinterStatus status = PRINTER_STATUS_UNAVAILABLE;
     EXPECT_FALSE(vendorManager.QueryPrinterStatusByUri(PRINTER_TEST_IP, status));
     EXPECT_TRUE(vendorManager.QueryPrinterStatusByUri(PRINTER_TEST_IP, status));
@@ -236,6 +243,10 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0007, TestSize.Level2)
     EXPECT_TRUE(vendorManager.OnPrinterStatusChanged(vendorName, PRINTER_TEST_IP, vendorStatus));
     EXPECT_EQ(vendorManager.RemovePrinterFromCups(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromCups(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_NONE);
+    EXPECT_TRUE(vendorManager.QueryPrinterInfoByPrinterId("vendor", PRINTER_TEST_IP, printerInfo));
+    char mekeModel[] = "test_makeModel";
+    std::vector<std::string> ppds(1, "test_ppds");
+    EXPECT_TRUE(vendorManager.QueryPPDInformation(mekeModel, ppds));
     vendorManager.UnInit();
 }
 
@@ -334,6 +345,29 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0012, TestSize.Level1)
     vendorName = "driver.bsuni";
     EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName));
     EXPECT_TRUE(vendorManager.IsPrivatePpdDriver(VENDOR_PPD_DRIVER));
+}
+
+HWTEST_F(VendorManagerTest, VendorManagerTest_0013, TestSize.Level2)
+{
+    MockPrintServiceAbility mock;
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    PrinterInfo info;
+    std::string printerId = PRINTER_TEST_IP;
+    PrinterVendorStatus status;
+    vendorManager.AddPrinterToDiscovery(VENDOR_BSUNI_DRIVER, info);
+    vendorManager.UpdatePrinterToDiscovery(VENDOR_BSUNI_DRIVER, info);
+    vendorManager.RemovePrinterFromDiscovery(VENDOR_BSUNI_DRIVER, printerId);
+    vendorManager.OnPrinterPpdQueried(VENDOR_BSUNI_DRIVER, printerId, "test_ppd_data");
+    vendorManager.OnPrinterStatusChanged(VENDOR_BSUNI_DRIVER, printerId, status);
+
+    vendorManager.wlanGroupDriver = nullptr;
+    vendorManager.AddPrinterToDiscovery(VENDOR_BSUNI_DRIVER, info);
+    vendorManager.UpdatePrinterToDiscovery(VENDOR_BSUNI_DRIVER, info);
+    vendorManager.RemovePrinterFromDiscovery(VENDOR_BSUNI_DRIVER, printerId);
+    vendorManager.OnPrinterPpdQueried(VENDOR_BSUNI_DRIVER, printerId, "test_ppd_data");
+    vendorManager.OnPrinterStatusChanged(VENDOR_BSUNI_DRIVER, printerId, status);
+    vendorManager.UnInit();
 }
 }  // namespace Print
 }  // namespace OHOS
