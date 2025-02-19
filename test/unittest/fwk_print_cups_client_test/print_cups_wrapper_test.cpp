@@ -39,6 +39,7 @@ static const std::string PRINTER_STATE_MARKER_LOW = "marker-supply-low";
 static const std::string PRINTER_STATE_MARKER_EMPTY = "marker-supply-empty";
 static const std::string PRINTER_STATE_INK_EMPTY = "marker-ink-almost-empty";
 static const std::string PRINTER_STATE_COVER_OPEN = "cover-open";
+static const std::string PRINTER_STATE_OTHER = "other";
 static const std::string PRINTER_STATE_OFFLINE = "offline";
 
 using MockTestFunc = std::function<void(PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock)>;
@@ -112,6 +113,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0001, TestSize.Level1)
     EXPECT_EQ(printCupsClient.QueryPrinterCapabilityByUri(printUri, printerId, printerCap), E_PRINT_SERVER_FAILURE);
     EXPECT_EQ(printCupsClient.SetDefaultPrinter(printerName.c_str()), E_PRINT_SERVER_FAILURE);
     printCupsClient.QueryJobState(nullptr, nullptr, nullptr);
+    EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCap), E_PRINT_SERVER_FAILURE);
 }
 
 /**
@@ -148,6 +150,29 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0003, TestSize.Level1)
         std::vector<std::string> keyList = {"key1", "key2"};
         std::vector<std::string> valueList;
         EXPECT_EQ(printCupsClient.QueryPrinterAttrList(printerName, keyList, valueList), E_PRINT_NONE);
+    };
+    DoMockTest(testFunc);
+}
+
+/**
+ * @tc.name: PrintCupsWrapperTest_0005
+ * @tc.desc: QueryJobState
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0005, TestSize.Level1)
+{
+    MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
+        JobMonitorParam param;
+        param.serviceAbility = nullptr;
+        param.cupsJobId = 0;
+        JobStatus jobStatus = {0};
+        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, nullptr, nullptr);
+        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, &param, nullptr);
+        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, &param, &jobStatus);
+        EXPECT_EQ(jobStatus.job_state, 0);
+        EXPECT_EQ(printCupsClient.CheckPrinterOnline(nullptr, 1), false);
+        EXPECT_EQ(printCupsClient.CheckPrinterOnline(&param, 1), false);
     };
     DoMockTest(testFunc);
 }
@@ -464,6 +489,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0083, TestSize.Level1)
 HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0084, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
+    EXPECT_EQ(printCupsClient.GetBlockedSubstate(nullptr), PRINT_JOB_COMPLETED_FAILED);
     JobStatus jobStatus = {0};
     constexpr size_t len = sizeof(jobStatus.printer_state_reasons);
     strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_MEDIA_EMPTY.c_str());
@@ -485,6 +511,9 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0084, TestSize.Level1)
     printCupsClient.GetBlockedSubstate(&jobStatus);
     strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_COVER_OPEN.c_str());
     printCupsClient.GetBlockedSubstate(&jobStatus);
+    strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_OTHER.c_str());
+    EXPECT_EQ(printCupsClient.GetBlockedSubstate(&jobStatus),
+        PRINT_JOB_COMPLETED_SUCCESS * 100 + PRINT_JOB_BLOCKED_UNKNOWN);
 }
 
 /**
@@ -583,6 +612,29 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0089, TestSize.Level1)
         EXPECT_CALL(mock, CopyDestInfo(_, _)).WillRepeatedly(Return(&cupsDinfo));
         std::string printerName = "testName";
         PrinterCapability printerCaps;
+        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_NONE);
+    };
+    DoMockTest(testFunc);
+}
+
+/**
+ * @tc.name: PrintCupsWrapperTest_0090
+ * @tc.desc: QueryPrinterCapabilityFromPpd
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0090, TestSize.Level1)
+{
+    cups_dest_t cupsDests = {0};
+    cups_dinfo_t cupsDinfo = {0};
+    MockTestFunc testFunc =
+        [this, &cupsDests, &cupsDinfo](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
+        EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillOnce(Return(nullptr)).WillRepeatedly(Return(&cupsDests));
+        EXPECT_CALL(mock, CopyDestInfo(_, _)).WillOnce(Return(nullptr)).WillRepeatedly(Return(&cupsDinfo));
+        std::string printerName = "testName";
+        PrinterCapability printerCaps;
+        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_SERVER_FAILURE);
+        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_SERVER_FAILURE);
         EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_NONE);
     };
     DoMockTest(testFunc);

@@ -72,6 +72,12 @@ struct MediaSize {
     const float HeightInInches;
 };
 
+std::string GetUsbPrinterSerial(const std::string &deviceUri);
+std::vector<PrinterInfo> GetUsbPrinters();
+void ClearUsbPrinters();
+void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
+    const char *deviceMakeAndModel, const char *deviceUri, const char *deviceLocation, void *userData);
+
 class PrintCupsClient final : public DelayedSingleton<PrintCupsClient>,
     public std::enable_shared_from_this<PrintCupsClient> {
 public:
