@@ -1171,5 +1171,50 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0055, TestSize.Level1)
     EXPECT_EQ(systemData->GetDiscoveredPrinterCount(), 0);
     systemData->ClearDiscoveredPrinterList();
 }
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0056, TestSize.Level1) {
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterCapability printerCapability;
+    std::vector<uint32_t> supportedColorModeList;
+    supportedColorModeList.push_back(1);
+    printerCapability.SetSupportedColorMode(supportedColorModeList);
+    nlohmann::json capsJson;
+    systemData->ConvertSupportedColorModeToJson(printerCapability, capsJson);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0057, TestSize.Level1) {
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterCapability printerCapability;
+    std::vector<uint32_t> supportedDuplexModeList;
+    supportedDuplexModeList.push_back(1);
+    printerCapability.SetSupportedDuplexMode(supportedDuplexModeList);
+    nlohmann::json capsJson;
+    systemData->ConvertSupportedDuplexModeToJson(printerCapability, capsJson);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0058, TestSize.Level1) {
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterCapability printerCapability;
+    std::vector<std::string> supportedMediaTypeList;
+    supportedMediaTypeList.push_back("type1");
+    printerCapability.SetSupportedMediaType(supportedMediaTypeList);
+    nlohmann::json capsJson;
+    systemData->ConvertSupportedMediaTypeToJson(printerCapability, capsJson);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0059, TestSize.Level1) {
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterCapability printerCapability;
+    std::vector<uint32_t> supportedQualityList;
+    supportedQualityList.push_back(1);
+    printerCapability.SetSupportedQuality(supportedQualityList);
+    nlohmann::json capsJson;
+    systemData->ConvertSupportedQualityToJson(printerCapability, capsJson);
+}
+
 }  // namespace Print
 }  // namespace OHOS

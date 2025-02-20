@@ -1018,15 +1018,21 @@ bool PrintServiceAbility::WritePreferenceToFile()
     jsonObject["printer_list"] = printerMapJson;
     std::string jsonString = jsonObject.dump();
     size_t jsonLength = jsonString.length();
-    int32_t fd = open(printerPreferenceFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
-    PRINT_HILOGD("SavePrinterPreferenceMap fd: %{public}d", fd);
-    if (fd < 0) {
+    FILE *file = fopen(printerPreferenceFilePath.c_str(), "w+");
+    if (file == nullptr) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
         return false;
     }
-    auto writeLength = write(fd, jsonString.c_str(), jsonLength);
-    close(fd);
-    return (size_t)writeLength == jsonLength;
+    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
+    int fcloseResult = fclose(file);
+    if (fcloseResult != 0) {
+        PRINT_HILOGE("Close File Failure.");
+        return false;
+    }
+    if (writeLength < 0) {
+        return false;
+    }
+    return writeLength == jsonLength;
 }
 
 bool PrintServiceAbility::WritePrinterPreference(const std::string &printerId, PrinterCapability &printerCaps)

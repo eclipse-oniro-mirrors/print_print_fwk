@@ -268,20 +268,26 @@ PrintCupsClient::~PrintCupsClient()
     }
 }
 
+
+int32_t PrintCupsClient::StartCupsdServiceNotAlive()
+{
+    PRINT_HILOGI("The cupsd process is not started, start it now.");
+    int result = SetParameter(CUPSD_CONTROL_PARAM.c_str(), "true");
+    if (result) {
+        PRINT_HILOGD("SetParameter failed: %{public}d.", result);
+        return E_PRINT_SERVER_FAILURE;
+    }
+    char value[CUPSD_CONTROL_PARAM_SIZE] = {0};
+    GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, CUPSD_CONTROL_PARAM_SIZE - 1);
+    PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
+    return E_PRINT_NONE;
+}
+
 int32_t PrintCupsClient::StartCupsdService()
 {
     PRINT_HILOGD("StartCupsdService enter");
     if (!IsCupsServerAlive()) {
-        PRINT_HILOGI("The cupsd process is not started, start it now.");
-        int result = SetParameter(CUPSD_CONTROL_PARAM.c_str(), "true");
-        if (result) {
-            PRINT_HILOGD("SetParameter failed: %{public}d.", result);
-            return E_PRINT_SERVER_FAILURE;
-        }
-        char value[CUPSD_CONTROL_PARAM_SIZE] = {0};
-        GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, CUPSD_CONTROL_PARAM_SIZE - 1);
-        PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
-        return E_PRINT_NONE;
+        StartCupsdServiceNotAlive();
     }
     std::string pidFile = CUPS_RUN_DIR + "/cupsd.pid";
     struct stat sb;
@@ -298,19 +304,33 @@ int32_t PrintCupsClient::StartCupsdService()
         PRINT_HILOGE("realPidFile is not exist");
         return E_PRINT_SERVER_FAILURE;
     }
-    int fd;
-    if ((fd = open(realPidFile, O_RDONLY)) < 0) {
+    FILE *file = fopen(realPidFile, "r");
+    if (file == nullptr) {
         PRINT_HILOGE("Open pidFile error!");
         return E_PRINT_SERVER_FAILURE;
     }
-    lseek(fd, 0, SEEK_SET);
-    char buf[BUFFER_LEN] = {0};
-    if ((read(fd, buf, sb.st_size)) < 0) {
-        PRINT_HILOGE("Read pidFile error!");
-        close(fd);
+    if (fseek(file, 0, SEEK_SET) != 0) {
+        PRINT_HILOGE("Seek pidFile!");
+        int fcloseResult = fclose(file);
+        if (fcloseResult != 0) {
+            PRINT_HILOGE("Close File Failure.");
+        }
         return E_PRINT_SERVER_FAILURE;
     }
-    close(fd);
+    char buf[BUFFER_LEN] = {0};
+    if ((fread(buf, 1, BUFFER_LEN, file)) < 0) {
+        PRINT_HILOGE("Read pidFile error!");
+        int fcloseResult = fclose(file);
+        if (fcloseResult != 0) {
+            PRINT_HILOGE("Close File Failure.");
+        }
+        return E_PRINT_SERVER_FAILURE;
+    }
+    int fcloseResult = fclose(file);
+    if (fcloseResult != 0) {
+        PRINT_HILOGE("Close File Failure.");
+        return E_PRINT_SERVER_FAILURE;
+    }
     PRINT_HILOGD("The Process of CUPSD has existed, pid: %{public}s.", buf);
     return E_PRINT_NONE;
 }
@@ -1092,9 +1112,10 @@ ppd_file_t* PrintCupsClient::GetPPDFile(const std::string &printerName)
         PRINT_HILOGE("Open ppdFile error!");
         return nullptr;
     }
+    fdsan_exchange_owner_tag(fd, 0, PRINT_LOG_DOMAIN);
     PRINT_HILOGI("GetPPDFile %{public}d", fd);
     ppd = ppdOpenFd(fd);
-    close(fd);
+    fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
     if (ppd == nullptr) {
         PRINT_HILOGE("ppdfile open is nullptr");
     } else {
