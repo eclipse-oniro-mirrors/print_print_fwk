@@ -674,12 +674,9 @@ int32_t PrintServiceAbility::QueryPrinterProperties(const std::string &printerId
     for (auto &key : keyList) {
         PRINT_HILOGD("QueryPrinterProperties key %{public}s", key.c_str());
         if (key == "printerPreference") {
-            CupsPrinterInfo cupsPrinter;
-            if (!printSystemData_.QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter)) {
-                PRINT_HILOGW("cannot find printer info by printerId");
-                break;
-            }
-            valueList.emplace_back(cupsPrinter.printPreferences.ConvertToJson().dump());
+            PrinterPreferences preferences;
+            printerInfo.GetPreferences(preferences);
+            valueList.emplace_back(preferences.ConvertToJson().dump());
             PRINT_HILOGD("getPrinterPreference success");
         }
     }
