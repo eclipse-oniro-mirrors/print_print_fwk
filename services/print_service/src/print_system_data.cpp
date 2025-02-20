@@ -776,39 +776,27 @@ bool PrintSystemData::ConvertJsonToPrintMargin(nlohmann::json &capsJson, Printer
 
 void PrintSystemData::ConvertJsonToPrinterPreferences(nlohmann::json &preferencesJson, PrinterPreferences &preferences)
 {
-    if (!preferencesJson.contains("defaultDuplexMode") || !preferencesJson["defaultDuplexMode"].is_number()) {
-        PRINT_HILOGW("can not find defaultDuplexMode");
-    } else {
+    if (preferencesJson.contains("defaultDuplexMode") && preferencesJson["defaultDuplexMode"].is_number()) {
         preferences.SetDefaultDuplexMode(preferencesJson["defaultDuplexMode"].get<uint32_t>());
     }
 
-    if (!preferencesJson.contains("defaultPrintQuality") || !preferencesJson["defaultPrintQuality"].is_number()) {
-        PRINT_HILOGW("can not find defaultPrintQuality");
-    } else {
+    if (preferencesJson.contains("defaultPrintQuality") && preferencesJson["defaultPrintQuality"].is_number()) {
         preferences.SetDefaultPrintQuality(preferencesJson["defaultPrintQuality"].get<uint32_t>());
     }
 
-    if (!preferencesJson.contains("defaultMediaType") || !preferencesJson["defaultMediaType"].is_string()) {
-        PRINT_HILOGW("can not find defaultMediaType");
-    } else {
+    if (preferencesJson.contains("defaultMediaType") && preferencesJson["defaultMediaType"].is_string()) {
         preferences.SetDefaultMediaType(preferencesJson["defaultMediaType"].get<std::string>());
     }
 
-    if (!preferencesJson.contains("defaultPageSizeId") || !preferencesJson["defaultPageSizeId"].is_string()) {
-        PRINT_HILOGW("can not find defaultPageSizeId");
-    } else {
+    if (preferencesJson.contains("defaultPageSizeId") && preferencesJson["defaultPageSizeId"].is_string()) {
         preferences.SetDefaultPageSizeId(preferencesJson["defaultPageSizeId"].get<std::string>());
     }
 
-    if (!preferencesJson.contains("defaultOrientation") || !preferencesJson["defaultOrientation"].is_number()) {
-        PRINT_HILOGW("can not find defaultOrientation");
-    } else {
+    if (preferencesJson.contains("defaultOrientation") && preferencesJson["defaultOrientation"].is_number()) {
         preferences.SetDefaultOrientation(preferencesJson["defaultOrientation"].get<uint32_t>());
     }
 
-    if (!preferencesJson.contains("borderless") || !preferencesJson["borderless"].is_boolean()) {
-        PRINT_HILOGW("can not find borderless");
-    } else {
+    if (preferencesJson.contains("borderless") && preferencesJson["borderless"].is_boolean()) {
         preferences.SetBorderless(preferencesJson["borderless"].get<bool>());
     }
 
