@@ -457,16 +457,23 @@ void ParsePrinterPreference(const PrinterInfo &info, Print_PrinterInfo &nativePr
 {
     if (!info.HasPreferences()) {
         PRINT_HILOGW("The printerInfo does not have preferences");
+        return;
     }
     PrinterPreferences preferences;
     info.GetPreferences(preferences);
 
-    ConvertDuplexMode(preferences.GetDefaultDuplexMode(), nativePrinterInfo.defaultValue.defaultDuplexMode);
-    ConvertOrientationMode(preferences.GetDefaultOrientation(), nativePrinterInfo.defaultValue.defaultOrientation);
+    if (preferences.HasDefaultDuplexMode()) {
+        ConvertDuplexMode(preferences.GetDefaultDuplexMode(), nativePrinterInfo.defaultValue.defaultDuplexMode);
+    }
+    if (preferences.HasDefaultOrientation()) {
+        ConvertOrientationMode(preferences.GetDefaultOrientation(), nativePrinterInfo.defaultValue.defaultOrientation);
+    }
     if (!preferences.GetDefaultPageSizeId().empty()) {
         nativePrinterInfo.defaultValue.defaultPageSizeId = CopyString(preferences.GetDefaultPageSizeId());
     }
-    ConvertQuality(preferences.GetDefaultPrintQuality(), nativePrinterInfo.defaultValue.defaultPrintQuality);
+    if (preferences.HasDefaultPrintQuality()) {
+        ConvertQuality(preferences.GetDefaultPrintQuality(), nativePrinterInfo.defaultValue.defaultPrintQuality);
+    }
     if (!preferences.GetDefaultMediaType().empty()) {
         nativePrinterInfo.defaultValue.defaultMediaType = CopyString(preferences.GetDefaultMediaType());
     }

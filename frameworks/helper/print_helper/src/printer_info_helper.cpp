@@ -120,16 +120,6 @@ std::shared_ptr<PrinterInfo> PrinterInfoHelper::BuildFromJs(napi_env env, napi_v
         nativeObj->SetDescription(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_DESCRIPTION));
     }
 
-    auto jsCapability = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_CAPABILITY);
-    if (jsCapability != nullptr) {
-        auto capabilityPtr = PrinterCapabilityHelper::BuildFromJs(env, jsCapability);
-        if (capabilityPtr == nullptr) {
-            PRINT_HILOGE("Failed to build printer info object from js");
-            return nullptr;
-        }
-        nativeObj->SetCapability(*capabilityPtr);
-    }
-
     auto jsPrinterMake = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_PRINTER_MAKE);
     if (jsPrinterMake != nullptr) {
         nativeObj->SetPrinterMake(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_PRINTER_MAKE));
@@ -140,14 +130,30 @@ std::shared_ptr<PrinterInfo> PrinterInfoHelper::BuildFromJs(napi_env env, napi_v
         nativeObj->SetUri(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_URI));
     }
 
-    if (!BuildOtherInfoFromJs(env, jsValue, nativeObj)) {
+    auto jsOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_OPTION);
+    if (jsOption != nullptr) {
+        nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION));
+    }
+
+    if (!BuildLocalClassInfoFromJs(env, jsValue, nativeObj)) {
         return nullptr;
     }
     return nativeObj;
 }
 
-bool PrinterInfoHelper::BuildOtherInfoFromJs(napi_env env, napi_value jsValue, std::shared_ptr<PrinterInfo> nativeObj)
+bool PrinterInfoHelper::BuildLocalClassInfoFromJs(
+    napi_env env, napi_value jsValue, std::shared_ptr<PrinterInfo> nativeObj)
 {
+    auto jsCapability = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_CAPABILITY);
+    if (jsCapability != nullptr) {
+        auto capabilityPtr = PrinterCapabilityHelper::BuildFromJs(env, jsCapability);
+        if (capabilityPtr == nullptr) {
+            PRINT_HILOGE("Failed to build printer info object from js");
+            return false;
+        }
+        nativeObj->SetCapability(*capabilityPtr);
+    }
+
     auto jsPreferences = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_PRINTER_PREFERENCES);
     if (jsPreferences != nullptr) {
         auto preferencesPtr = PrinterPreferencesHelper::BuildFromJs(env, jsPreferences);
@@ -156,11 +162,6 @@ bool PrinterInfoHelper::BuildOtherInfoFromJs(napi_env env, napi_value jsValue, s
             return false;
         }
         nativeObj->SetPreferences(*preferencesPtr);
-    }
-
-    auto jsOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_OPTION);
-    if (jsOption != nullptr) {
-        nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION));
     }
     return true;
 }

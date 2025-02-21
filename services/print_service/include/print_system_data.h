@@ -45,7 +45,7 @@ class PrintSystemData {
 public:
     bool Init();
     void InsertCupsPrinter(const std::string &printerId, const CupsPrinterInfo &printerInfo);
-    void SaveCupsPrinterMap();
+    void SavePrinterFile(const std::string &printerId);
     std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
     bool QueryCupsPrinterInfoByPrinterId(const std::string &printerId, CupsPrinterInfo &cupsPrinter);
     void InsertPrinterInfo(const std::string &printerId, const PrinterInfo &printerInfo);
@@ -116,6 +116,7 @@ private:
     int32_t ParseDefaultDuplexMode(const PrinterCapability &cap, nlohmann::json &capOpt);
     int32_t ParseDefaultPrintQuality(const PrinterCapability &cap, nlohmann::json &capOpt);
     std::string ParseDefaultMediaType(const PrinterCapability &cap, nlohmann::json &capOpt);
+    void DeleteFile(const std::filesystem::path &path);
 
     template<typename T>
     bool ProcessJsonToCapabilityList(nlohmann::json &capsJson,

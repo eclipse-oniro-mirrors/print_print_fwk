@@ -1288,7 +1288,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0076, TestSize.Level1)
     service->helper_ = helper;
     std::string printerId = "123";
     std::string printerSetting = "test";
-    EXPECT_EQ(service->SetPrinterPreference(printerId, printerSetting), E_PRINT_INVALID_PRINTER);
+    EXPECT_EQ(service->SetPrinterPreference(printerId, printerSetting), E_PRINT_INVALID_PARAMETER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0079, TestSize.Level1)
@@ -2105,5 +2105,181 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0141, TestSize.Level1)
     service->printSystemData_.AddPrinterToDiscovery(infoPtr);
     std::string extensionId = "com.ohos.spooler";
     EXPECT_EQ(service->AddSinglePrinterInfo(info, extensionId), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0143, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::string printerId = "123";
+    nlohmann::json preferencesJson;
+    preferencesJson["borderless"] = true;
+    std::string printerSetting = preferencesJson.dump();
+    EXPECT_EQ(service->SetPrinterPreference(printerId, printerSetting), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0144, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.ohos.spooler:testPrinterId";
+    auto cupsPrinter = std::make_shared<CupsPrinterInfo>();
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, cupsPrinter);
+    PrinterInfo info;
+    EXPECT_EQ(service->UpdatePrinterCapability(printerId, info), true);
+}
+
+
+
+
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0145, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->StartPrintJobInternal(nullptr), E_PRINT_SERVER_FAILURE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0146, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::string printerId = "USB-PixLab_V1-1620";
+    std::string standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
+    PrinterCapability printerCaps;
+    printerCaps.SetOption("test");
+    std::string printerUri = "usb:ipp://192.168.186.1:631/ipp/print";
+    std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
+    info->SetOption("test");
+    service->printSystemData_.discoveredPrinterInfoList_[standardizeId] = info;
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0147, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::string printerId = "USB-PixLab_V1-1620";
+    std::string standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
+    PrinterCapability printerCaps;
+    printerCaps.SetOption("test");
+    std::string printerUri = "usb:ipp://192.168.186.1:631/ipp/print";
+    std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
+    nlohmann::json opsJson;
+    opsJson["key"] = "value";
+    info->SetOption(opsJson.dump());
+    service->printSystemData_.discoveredPrinterInfoList_[standardizeId] = info;
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0148, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::string printerId = "USB-PixLab_V1-1620";
+    std::string standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
+    PrinterCapability printerCaps;
+    printerCaps.SetOption("test");
+    std::string printerUri = "usb:ipp://192.168.186.1:631/ipp/print";
+    std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
+    nlohmann::json opsJson;
+    opsJson["printerMake"] = 123;
+    info->SetOption(opsJson.dump());
+    service->printSystemData_.discoveredPrinterInfoList_[standardizeId] = info;
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0149, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::vector<std::string> printerList;
+    auto cupsPrinter = std::make_shared<CupsPrinterInfo>();
+    cupsPrinter->name = "testPrinterName";
+    std::string printerId = "testPrinterId";
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, cupsPrinter);
+    EXPECT_EQ(service->QueryAddedPrinter(printerList), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0150, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::vector<std::string> printerList;
+    auto cupsPrinter = std::make_shared<CupsPrinterInfo>();
+    cupsPrinter->name = "testPrinterName";
+    std::string printerId = "";
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, cupsPrinter);
+    EXPECT_EQ(service->QueryAddedPrinter(printerList), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0153, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::string printerId = "USB-PixLab_V1-1620";
+    std::string standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
+    PrinterCapability printerCaps;
+    printerCaps.SetOption("test");
+    std::string printerUri = "usb:ipp://192.168.186.1:631/ipp/print";
+    std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
+    service->printSystemData_.discoveredPrinterInfoList_[standardizeId] = info;
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0155, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    PrintJob printJob;
+    std::string jobId = "123";
+    printJob.SetJobId(jobId);
+    std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
+    printJob.SetPrinterId(printerId);
+    auto printerInfo = std::make_shared<CupsPrinterInfo>();
+    printerInfo->name = "testName";
+    printerInfo->uri = "testUri";
+    printerInfo->maker = "testMaker";
+    nlohmann::json infoJson;
+    infoJson["printerName"] = "testPrinterName";
+    printJob.SetOption(infoJson.dump());
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
+    std::string extensionId = PrintUtils::GetExtensionId(printerId);
+    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
+    sptr<IPrintExtensionCallback> extCb = nullptr;
+    service->extCallbackMap_[cid] = extCb;
+    EXPECT_EQ(service->CheckPrintJob(printJob), false);
+    auto printJobPtr = std::make_shared<PrintJob>(printJob);
+    service->printJobList_[jobId] = printJobPtr;
+    EXPECT_EQ(service->CheckPrintJob(printJob), true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0156, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::string printerId = "USB-PixLab_V1-1620";
+    std::string standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
+    PrinterCapability printerCaps;
+    printerCaps.SetOption("test");
+    std::string printerUri = "usb:ipp://192.168.186.1:631/ipp/print";
+    std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
+    nlohmann::json opsJson;
+    opsJson["printerMake"] = "123";
+    info->SetOption(opsJson.dump());
+    service->printSystemData_.discoveredPrinterInfoList_[standardizeId] = info;
+    EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_SERVER_FAILURE);
 }
 } // namespace OHOS::Print

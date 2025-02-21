@@ -68,7 +68,6 @@ const uint32_t SERIAL_LENGTH = 6;
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
 static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.ohos.hwprintext";
-static const std::string EPRINTER_ID = "com.ohos.hwprintext:ePrintID";
 static const std::string SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
@@ -673,7 +672,7 @@ int32_t PrintServiceAbility::QueryPrinterProperties(const std::string &printerId
     PRINT_HILOGD("printerInfo %{public}s", printerInfo.GetPrinterName().c_str());
     for (auto &key : keyList) {
         PRINT_HILOGD("QueryPrinterProperties key %{public}s", key.c_str());
-        if (key == "printerPreference") {
+        if (key == "printerPreference" && printerInfo.HasPreferences()) {
             PrinterPreferences preferences;
             printerInfo.GetPreferences(preferences);
             valueList.emplace_back(preferences.ConvertToJson().dump());
@@ -793,7 +792,7 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
     PrinterPreferences preferences;
     printSystemData_.ConvertJsonToPrinterPreferences(preferencesJson, preferences);
     printSystemData_.UpdatePrinterPreferences(printerId, preferences);
-    printSystemData_.SaveCupsPrinterMap();
+    printSystemData_.SavePrinterFile(printerId);
     return E_PRINT_NONE;
 }
 
@@ -1225,13 +1224,8 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
 
-    bool isAnyPrinterChanged = false;
     for (const auto &info : printerInfos) {
-        bool isPrinterChanged = UpdateSinglePrinterInfo(info, extensionId);
-        isAnyPrinterChanged |= isPrinterChanged;
-    }
-    if (isAnyPrinterChanged) {
-        printSystemData_.SaveCupsPrinterMap();
+        UpdateSinglePrinterInfo(info, extensionId);
     }
     PRINT_HILOGD("UpdatePrinters end. Total size is %{private}zd", printSystemData_.GetDiscoveredPrinterCount());
     return E_PRINT_NONE;
@@ -1270,7 +1264,7 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
     } else {
         PRINT_HILOGW("Printer added.");
     }
-    if (!PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME)) {
+    if (printerId.find(EPRINTER) != std::string::npos) {
         PRINT_HILOGI("ePrinter Enter");
         printSystemData_.BuildEprintPreference(cupsPrinterInfo.printerCapability, cupsPrinterInfo.printPreferences);
     } else {
@@ -2679,7 +2673,7 @@ int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInf
         return E_PRINT_INVALID_PARAMETER;
     }
 
-    printSystemData_.SaveCupsPrinterMap();
+    printSystemData_.SavePrinterFile(printerInfo.GetPrinterId());
     return E_PRINT_NONE;
 }
 
@@ -2830,7 +2824,7 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
         if (CheckPrinterUriDifferent(infoPtr)) {
             if (UpdateAddedPrinterInCups(infoPtr->GetPrinterId(), infoPtr->GetUri())) {
                 printSystemData_.UpdatePrinterUri(infoPtr);
-                printSystemData_.SaveCupsPrinterMap();
+                printSystemData_.SavePrinterFile(infoPtr->GetPrinterId());
             }
         }
         infoPtr->SetPrinterStatus(PRINTER_STATUS_IDLE);
@@ -2865,7 +2859,7 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
     if (isCapabilityUpdated) {
         SendPrinterEvent(*printerInfo);
         SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
-        printSystemData_.SaveCupsPrinterMap();
+        printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
     }
 
     return isCapabilityUpdated;
@@ -2919,7 +2913,7 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
         if (CheckPrinterUriDifferent(printerInfo) &&
             UpdateAddedPrinterInCups(printerInfo->GetPrinterId(), printerInfo->GetUri())) {
             printSystemData_.UpdatePrinterUri(printerInfo);
-            printSystemData_.SaveCupsPrinterMap();
+            printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
         }
         printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
         printSystemData_.UpdatePrinterStatus(printerInfo->GetPrinterId(), PRINTER_STATUS_IDLE);
@@ -3008,7 +3002,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
     } else {
         printSystemData_.BuildPrinterPreference(info.printerCapability, info.printPreferences);
         printSystemData_.InsertCupsPrinter(globalPrinterId, info);
-        printSystemData_.SaveCupsPrinterMap();
+        printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     }
@@ -3060,7 +3054,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
     } else {
         printSystemData_.BuildPrinterPreference(info.printerCapability, info.printPreferences);
         printSystemData_.InsertCupsPrinter(globalPrinterId, info);
-        printSystemData_.SaveCupsPrinterMap();
+        printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     }
@@ -3156,7 +3150,7 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printSystemData_.BuildPrinterPreference(info.printerCapability, info.printPreferences);
     printSystemData_.InsertCupsPrinter(globalPrinterId, info);
-    printSystemData_.SaveCupsPrinterMap();
+    printSystemData_.SavePrinterFile(globalPrinterId);
     SetLastUsedPrinter(globalPrinterId);
     SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
     SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);

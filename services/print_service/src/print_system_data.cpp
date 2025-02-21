@@ -104,6 +104,14 @@ void PrintSystemData::ConvertInnerJsonToCupsPrinterInfo(nlohmann::json &object, 
 bool PrintSystemData::Init()
 {
     addedPrinterMap_.Clear();
+    PRINT_HILOGI("load new printer list file");
+    std::filesystem::path printersDir(PRINTER_SERVICE_PRINTERS_PATH);
+    for (const auto& entry : std::filesystem::directory_iterator(printersDir)) {
+        if (!entry.is_directory()) {
+            ReadJsonFile(entry.path());
+        }
+    }
+
     nlohmann::json printerListJson;
     std::string printerListFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
     if (GetJsonObjectFromFile(printerListJson, printerListFilePath) && ParsePrinterListJsonV1(printerListJson)) {
@@ -114,16 +122,12 @@ bool PrintSystemData::Init()
             ParsePrinterPreferencesJson(preferencesJson)) {
             PRINT_HILOGI("parse previous preferences file success");
         }
-        SaveCupsPrinterMap();
-        // todo：delete previous files.
-    }
-    PRINT_HILOGI("load new printer list file");
-    std::filesystem::path printersDir(PRINTER_SERVICE_PRINTERS_PATH);
-    for (const auto& entry : std::filesystem::directory_iterator(printersDir)) {
-        if (!entry.is_directory()) {
-            PRINT_HILOGI("loading: %{public}s", entry.path().string().c_str());
-            ReadJsonFile(entry.path());
+        std::vector<std::string> addedPrinterList = QueryAddedPrinterIdList();
+        for (auto printerId : addedPrinterList) {
+            SavePrinterFile(printerId);
         }
+        DeleteFile(preferencesFilePath);
+        DeleteFile(printerListFilePath);
     }
     return true;
 }
@@ -201,6 +205,17 @@ bool PrintSystemData::ParsePrinterPreferencesJson(nlohmann::json &jsonObject)
         nlohmann::json object = element.value();
         for (auto it = object.begin(); it != object.end(); it++) {
             std::string printerId = it.key();
+            auto info = addedPrinterMap_.Find(printerId);
+            if (info == nullptr) {
+                continue;
+            }
+            if (printerId.find(EPRINTER) != std::string::npos) {
+                PRINT_HILOGI("ePrinter Enter");
+                BuildEprintPreference(info->printerCapability, info->printPreferences);
+            } else {
+                BuildPrinterPreference(info->printerCapability, info->printPreferences);
+            }
+            UpdatePrinterPreferences(printerId, info->printPreferences);
             nlohmann::json printPreferenceJson = object[printerId];
             if (!printPreferenceJson.contains("setting") || !printPreferenceJson["setting"].is_object()) {
                 PRINT_HILOGW("can not find setting");
@@ -285,56 +300,58 @@ void PrintSystemData::DeleteCupsPrinter(const std::string &printerId, const std:
         addedPrinterMap_.Remove(printerId);
         std::filesystem::path filePath =
             PRINTER_SERVICE_PRINTERS_PATH + "/" + PrintUtil::StandardizePrinterName(printerName) + ".json";
-        if (std::filesystem::remove(filePath)) {
-            PRINT_HILOGI("file deleted successfully");
-        } else {
-            PRINT_HILOGE("failed to delete file");
-        }
+        DeleteFile(filePath);
     }
 }
 
-void PrintSystemData::SaveCupsPrinterMap()
+void PrintSystemData::DeleteFile(const std::filesystem::path &path)
 {
-    std::vector<std::string> addedPrinterList = QueryAddedPrinterIdList();
-    for (auto printerId : addedPrinterList) {
-        auto info = addedPrinterMap_.Find(printerId);
-        if (info == nullptr) {
-            continue;
-        }
-        std::string printerListFilePath =
-            PRINTER_SERVICE_PRINTERS_PATH + "/" + PrintUtil::StandardizePrinterName(info->name) + ".json";
-        char realPidFile[PATH_MAX] = {};
-        if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
-            PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
-            continue;
-        }
-        int32_t fd = open(printerListFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
-        PRINT_HILOGD("SaveCupsPrinterMap fd: %{public}d", fd);
-        if (fd < 0) {
-            PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-            continue;
-        }
-        nlohmann::json printerJson = nlohmann::json::object();
-        printerJson["id"] = printerId;
-        printerJson["name"] = info->name;
-        printerJson["uri"] = info->uri;
-        printerJson["maker"] = info->maker;
-        printerJson["alias"] = info->alias;
-        if (QueryIpPrinterInfoById(printerId) != nullptr) {
-            printerJson["printerStatus"] = info->printerStatus;
-        }
-        nlohmann::json capsJson;
-        ConvertPrinterCapabilityToJson(info->printerCapability, capsJson);
-        printerJson["capability"] = capsJson;
-        printerJson["preferences"] = info->printPreferences.ConvertToJson();
-        std::string jsonString = printerJson.dump();
-        size_t jsonLength = jsonString.length();
-        auto writeLength = write(fd, jsonString.c_str(), jsonLength);
-        close(fd);
-        PRINT_HILOGI("SaveCupsPrinterMap finished");
-        if (writeLength < 0 || (size_t)writeLength != jsonLength) {
-            PRINT_HILOGE("SaveCupsPrinterMap error");
-        }
+    if (std::filesystem::remove(path)) {
+        PRINT_HILOGI("file deleted successfully");
+    } else {
+        PRINT_HILOGE("failed to delete file");
+    }
+}
+
+void PrintSystemData::SavePrinterFile(const std::string &printerId)
+{
+    auto info = addedPrinterMap_.Find(printerId);
+    if (info == nullptr) {
+        return;
+    }
+    std::string printerListFilePath =
+        PRINTER_SERVICE_PRINTERS_PATH + "/" + PrintUtil::StandardizePrinterName(info->name) + ".json";
+    char realPidFile[PATH_MAX] = {};
+    if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
+        PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
+        return;
+    }
+    int32_t fd = open(printerListFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
+    PRINT_HILOGD("SavePrinterFile fd: %{public}d", fd);
+    if (fd < 0) {
+        PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
+        return;
+    }
+    nlohmann::json printerJson = nlohmann::json::object();
+    printerJson["id"] = printerId;
+    printerJson["name"] = info->name;
+    printerJson["uri"] = info->uri;
+    printerJson["maker"] = info->maker;
+    printerJson["alias"] = info->alias;
+    if (QueryIpPrinterInfoById(printerId) != nullptr) {
+        printerJson["printerStatus"] = info->printerStatus;
+    }
+    nlohmann::json capsJson;
+    ConvertPrinterCapabilityToJson(info->printerCapability, capsJson);
+    printerJson["capability"] = capsJson;
+    printerJson["preferences"] = info->printPreferences.ConvertToJson();
+    std::string jsonString = printerJson.dump();
+    size_t jsonLength = jsonString.length();
+    auto writeLength = write(fd, jsonString.c_str(), jsonLength);
+    close(fd);
+    PRINT_HILOGI("SavePrinterFile finished");
+    if (writeLength < 0 || (size_t)writeLength != jsonLength) {
+        PRINT_HILOGE("SavePrinterFile error");
     }
 }
 

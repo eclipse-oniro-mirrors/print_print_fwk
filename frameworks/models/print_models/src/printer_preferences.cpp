@@ -249,7 +249,6 @@ bool PrinterPreferences::ReadFromParcel(Parcel &parcel)
         right.SetOption(parcel.ReadString());
     }
 
-    right.Dump();
     *this = right;
     return true;
 }
