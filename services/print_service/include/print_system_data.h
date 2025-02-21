@@ -26,6 +26,7 @@
 #include "print_utils.h"
 #include "print_log.h"
 #include "print_map_safe.h"
+#include "printer_preferences.h"
 
 namespace OHOS {
 namespace Print {
@@ -37,13 +38,14 @@ struct CupsPrinterInfo {
     PrinterCapability printerCapability;
     PrinterStatus printerStatus = PRINTER_STATUS_UNAVAILABLE;
     std::string alias;
+    PrinterPreferences printPreferences;
 };
 
 class PrintSystemData {
 public:
     bool Init();
-    void InsertCupsPrinter(const std::string &printerId, const CupsPrinterInfo &printerInfo, bool needUpdateCaps);
-    bool SaveCupsPrinterMap();
+    void InsertCupsPrinter(const std::string &printerId, const CupsPrinterInfo &printerInfo);
+    void SavePrinterFile(const std::string &printerId);
     std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
     bool QueryCupsPrinterInfoByPrinterId(const std::string &printerId, CupsPrinterInfo &cupsPrinter);
     void InsertPrinterInfo(const std::string &printerId, const PrinterInfo &printerInfo);
@@ -51,11 +53,12 @@ public:
     bool IsPrinterAdded(const std::string &printerId);
     bool GetPrinterCapabilityFromSystemData(
         CupsPrinterInfo &cupsPrinter, std::string printerId, PrinterCapability &printerCapability);
-    void DeleteCupsPrinter(const std::string &printerId);
+    void DeleteCupsPrinter(const std::string &printerId, const std::string &printerName);
     void GetAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList);
     void UpdatePrinterStatus(const std::string &printerId, PrinterStatus printerStatus);
     bool UpdatePrinterAlias(const std::string& printerId, const std::string& printerAlias);
     void UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo);
+    void UpdatePrinterPreferences(const std::string &printerId, PrinterPreferences &preferences);
     void QueryPrinterInfoById(const std::string &printerId, PrinterInfo &printerInfo);
     bool CheckPrinterBusy(const std::string &printerId);
     bool GetAllPrintUser(std::vector<int32_t> &allPrintUserList);
@@ -72,6 +75,9 @@ public:
     void AddIpPrinterToList(std::shared_ptr<PrinterInfo> printerInfo);
     void RemoveIpPrinterFromList(const std::string &printerId);
     std::shared_ptr<PrinterInfo> QueryIpPrinterInfoById(const std::string &printerId);
+    int32_t BuildPrinterPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences);
+    void BuildEprintPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences);
+    void ConvertJsonToPrinterPreferences(nlohmann::json &preferencesJson, PrinterPreferences &preferences);
 
 private:
     bool ParsePrinterListJsonV1(nlohmann::json& jsonObject);
@@ -100,6 +106,17 @@ private:
     bool ParseUserListJsonV1(
         nlohmann::json &jsonObject, std::vector<int32_t> &allPrintUserList);
     bool ConvertJsonToCupsPrinterInfo(nlohmann::json &object);
+    void ConvertInnerJsonToCupsPrinterInfo(nlohmann::json &object, CupsPrinterInfo &info);
+
+    bool ParsePreviousPreferencesSetting(nlohmann::json &settingJson, PrinterPreferences &preferences);
+    bool ParsePrinterPreferencesJson(nlohmann::json &jsonObject);
+    bool ReadJsonFile(const std::filesystem::path &path);
+    std::string ParseDefaultPageSizeId(const PrinterCapability &cap, nlohmann::json &capOpt);
+    int32_t ParseDefaultOrientation(const PrinterCapability &cap, nlohmann::json &capOpt);
+    int32_t ParseDefaultDuplexMode(const PrinterCapability &cap, nlohmann::json &capOpt);
+    int32_t ParseDefaultPrintQuality(const PrinterCapability &cap, nlohmann::json &capOpt);
+    std::string ParseDefaultMediaType(const PrinterCapability &cap, nlohmann::json &capOpt);
+    void DeleteFile(const std::filesystem::path &path);
 
     template<typename T>
     bool ProcessJsonToCapabilityList(nlohmann::json &capsJson,
@@ -136,7 +153,6 @@ private:
 
 private:
     PrintMapSafe<CupsPrinterInfo> addedPrinterMap_;
-    std::map<uint32_t, std::string> addedPrinterOrderList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> addedPrinterInfoList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> discoveredPrinterInfoList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> connectingIpPrinterInfoList_;

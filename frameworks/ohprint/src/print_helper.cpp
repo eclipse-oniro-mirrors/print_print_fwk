@@ -453,61 +453,30 @@ int32_t ParseInfoOption(const std::string &infoOption, Print_PrinterInfo &native
     return E_PRINT_NONE;
 }
 
-std::string GetSettingItemString(const std::string key, json defaultSetting, json setting)
+void ParsePrinterPreference(const PrinterInfo &info, Print_PrinterInfo &nativePrinterInfo)
 {
-    if (setting.contains(key) && setting[key].is_string() && !setting[key].get<std::string>().empty()) {
-        return setting[key].get<std::string>();
-    } else if (defaultSetting.contains(key) && defaultSetting[key].is_string() &&
-                !defaultSetting[key].get<std::string>().empty()) {
-        return defaultSetting[key].get<std::string>();
-    }
-    if (key == QUALITY_STRING) {
-        return DEFAULT_QUALITY_PREFERENCE;
-    }
-    return "";
-}
-
-void ParsePrinterPreference(const std::string &printerPreference, Print_PrinterInfo &nativePrinterInfo)
-{
-    if (!json::accept(printerPreference)) {
-        PRINT_HILOGW("printerPreference can not parse to json object");
+    if (!info.HasPreferences()) {
+        PRINT_HILOGW("The printerInfo does not have preferences");
         return;
     }
-    nlohmann::json preferenceJson = json::parse(printerPreference);
-    if (!preferenceJson.contains("defaultSetting") || !preferenceJson["defaultSetting"].is_object() ||
-        !preferenceJson.contains("setting") || !preferenceJson["setting"].is_object()) {
-        PRINT_HILOGW("The infoJson does not have a necessary attribute.");
-        return;
-    }
-    json defaultSetting = preferenceJson["defaultSetting"];
-    json setting = preferenceJson["setting"];
+    PrinterPreferences preferences;
+    info.GetPreferences(preferences);
 
-    std::string defaultDuplex = GetSettingItemString(DUPLEX_STRING, defaultSetting, setting);
-    int32_t defaultDuplexNum = 0;
-    if (!PrintUtil::ConvertToInt(defaultDuplex, defaultDuplexNum)) {
-        PRINT_HILOGE("defaultDuplex %{public}s can not parse to number", defaultDuplex.c_str());
-        return;
+    if (preferences.HasDefaultDuplexMode()) {
+        ConvertDuplexMode(preferences.GetDefaultDuplexMode(), nativePrinterInfo.defaultValue.defaultDuplexMode);
     }
-    ConvertDuplexMode(defaultDuplexNum, nativePrinterInfo.defaultValue.defaultDuplexMode);
-
-    std::string defaultOrientation = GetSettingItemString(ORIENTATION_STRING, defaultSetting, setting);
-    int32_t defaultOrientationNum = 0;
-    if (!PrintUtil::ConvertToInt(defaultOrientation, defaultOrientationNum)) {
-        PRINT_HILOGE("%{public}s is incorrectly formatted.", defaultOrientation.c_str());
-        return;
+    if (preferences.HasDefaultOrientation()) {
+        ConvertOrientationMode(preferences.GetDefaultOrientation(), nativePrinterInfo.defaultValue.defaultOrientation);
     }
-    ConvertOrientationMode(defaultOrientationNum, nativePrinterInfo.defaultValue.defaultOrientation);
-
-    nativePrinterInfo.defaultValue.defaultPageSizeId =
-        CopyString(GetSettingItemString(PAGESIZEID_STRING, defaultSetting, setting));
-
-    std::string defaultQuality = GetSettingItemString(QUALITY_STRING, defaultSetting, setting);
-    int32_t defaultQualityNum = 0;
-    if (!PrintUtil::ConvertToInt(defaultQuality, defaultQualityNum)) {
-        PRINT_HILOGE("defaultQuality %{public}s can not parse to number", defaultQuality.c_str());
-        return;
+    if (!preferences.GetDefaultPageSizeId().empty()) {
+        nativePrinterInfo.defaultValue.defaultPageSizeId = CopyString(preferences.GetDefaultPageSizeId());
     }
-    ConvertQuality(defaultQualityNum, nativePrinterInfo.defaultValue.defaultPrintQuality);
+    if (preferences.HasDefaultPrintQuality()) {
+        ConvertQuality(preferences.GetDefaultPrintQuality(), nativePrinterInfo.defaultValue.defaultPrintQuality);
+    }
+    if (!preferences.GetDefaultMediaType().empty()) {
+        nativePrinterInfo.defaultValue.defaultMediaType = CopyString(preferences.GetDefaultMediaType());
+    }
 }
 
 Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
@@ -544,13 +513,7 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
         }
     }
 
-    std::string printerPreference = "";
-    int32_t ret = PrintManagerClient::GetInstance()->GetPrinterPreference(info.GetPrinterId(), printerPreference);
-    if (ret != E_PRINT_NONE) {
-        PRINT_HILOGW("Print_PrinterInfo GetPrinterPreference fail.");
-    } else {
-        ParsePrinterPreference(printerPreference, *nativePrinterInfo);
-    }
+    ParsePrinterPreference(info, *nativePrinterInfo);
     if (info.HasOption()) {
         std::string infoOpt = info.GetOption();
         PRINT_HILOGW("infoOpt json object: %{public}s", infoOpt.c_str());

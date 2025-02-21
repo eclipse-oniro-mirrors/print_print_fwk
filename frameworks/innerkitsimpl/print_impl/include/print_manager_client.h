@@ -78,7 +78,6 @@ public:
     int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList);
     int32_t StartNativePrintJob(PrintJob &printJob);
-    int32_t GetPrinterPreference(const std::string &printerId, std::string &printerPreference);
     int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference);
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
     int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo);

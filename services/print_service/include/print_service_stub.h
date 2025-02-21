@@ -69,7 +69,6 @@ private:
     bool OnQueryPrinterProperties(MessageParcel &data, MessageParcel &reply);
     bool OnStartNativePrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnNotifyPrintServiceEvent(MessageParcel &data, MessageParcel &reply);
-    bool OnGetPrinterPreference(MessageParcel &data, MessageParcel &reply);
     bool OnSetPrinterPreference(MessageParcel &data, MessageParcel &reply);
     bool OnSetDefaultPrinter(MessageParcel &data, MessageParcel &reply);
     bool OnDeletePrinterFromCups(MessageParcel &data, MessageParcel &reply);

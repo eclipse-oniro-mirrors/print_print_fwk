@@ -72,8 +72,6 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_STARTNATIVEPRINTJOB] = &PrintServiceStub::OnStartNativePrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_NOTIFY_PRINT_SERVICE_EVENT] =
         &PrintServiceStub::OnNotifyPrintServiceEvent;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_PRINTER_PREFERENCE] =
-        &PrintServiceStub::OnGetPrinterPreference;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_SET_PRINTER_PREFERENCE] =
         &PrintServiceStub::OnSetPrinterPreference;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_SET_DEFAULT_PRINTERID] = &PrintServiceStub::OnSetDefaultPrinter;
@@ -291,17 +289,6 @@ bool PrintServiceStub::OnQueryPrinterInfoByPrinterId(MessageParcel &data, Messag
     PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoByPrinterId out %{public}s", info.GetPrinterName().c_str());
     info.Marshalling(reply);
     PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoByPrinterId out");
-    return ret == E_PRINT_NONE;
-}
-
-bool PrintServiceStub::OnGetPrinterPreference(MessageParcel &data, MessageParcel &reply)
-{
-    PRINT_HILOGI("PrintServiceStub::OnGetPrinterPreference in");
-    std::string printerId = data.ReadString();
-    std::string printPreference;
-    int32_t ret = GetPrinterPreference(printerId, printPreference);
-    reply.WriteInt32(ret);
-    reply.WriteString(printPreference);
     return ret == E_PRINT_NONE;
 }
 

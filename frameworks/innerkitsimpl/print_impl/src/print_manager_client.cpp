@@ -370,18 +370,6 @@ int32_t PrintManagerClient::StartNativePrintJob(PrintJob &printJob)
     return ret;
 }
 
-int32_t PrintManagerClient::GetPrinterPreference(const std::string &printerId, std::string &printerPreference)
-{
-    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
-    PRINT_HILOGI("PrintManagerClient GetPrinterPreference start.");
-    int32_t ret = E_PRINT_RPC_FAILURE;
-    if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->GetPrinterPreference(printerId, printerPreference);
-        PRINT_HILOGI("PrintManagerClient GetPrinterPreference out ret = [%{public}d].", ret);
-    }
-    return ret;
-}
-
 int32_t PrintManagerClient::SetPrinterPreference(const std::string &printerId, const std::string &printerPreference)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
