@@ -322,5 +322,13 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0019, TestSize.Level1)
     EXPECT_TRUE(info.HasPrinterStatus());
     info.Dump();
 }
+
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0020, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterUuid("001");
+    OHOS::Print::PrinterInfo copyInfo(info);
+    EXPECT_EQ(copyInfo.GetPrinterUuid(), info.GetPrinterUuid());
+}
 } // namespace Print
 } // namespace OHOS

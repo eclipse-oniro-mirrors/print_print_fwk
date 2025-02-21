@@ -54,6 +54,7 @@
 #include "sane_device.h"
 #include "sane_control_param.h"
 #include "sane_picture_data.h"
+#include "scan_log.h"
 
 namespace OHOS::Scan {
 namespace {
@@ -301,7 +302,7 @@ int32_t ScanServiceAbility::ExitScan()
     for (const auto& [imagePath, fd] : imageFdMap_) {
         constexpr int32_t INVALID_FILE_DESCRIPTOR = -1;
         if (fd != INVALID_FILE_DESCRIPTOR) {
-            close(fd);
+            fdsan_close_with_tag(fd, SCAN_LOG_DOMAIN);
         }
         if (FileExists(imagePath)) {
             unlink(imagePath.c_str());
@@ -436,69 +437,29 @@ void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
     }
 }
 
-void ScanServiceAbility::SyncScannerInfo(ScanDeviceInfo &info)
+void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo& info)
 {
-    std::string uniqueId = info.discoverMode + info.serialNumber;
-    std::string deviceName = "";
-    if (ScanSystemData::GetInstance().QueryScannerNameByUniqueId(uniqueId, deviceName)) {
-        info.deviceName = deviceName;
-    } else {
-        SCAN_HILOGW("ScanServiceAbility SyncScannerInfo deviceName not need upadate");
-    }
-    if (ScanSystemData::GetInstance().UpdateScannerInfoByUniqueId(uniqueId, info)) {
-        ScanSystemData::GetInstance().SaveScannerMap();
-    }
-}
-
-void ScanServiceAbility::AddFoundUsbScanner(ScanDeviceInfo &info)
-{
-    SCAN_HILOGI("AddFoundUsbScanner start model:[%{public}s]", info.model.c_str());
-    SyncScannerInfo(info);
     std::lock_guard<std::mutex> autoLock(clearMapLock_);
-#ifdef DEBUG_ENABLE
-    auto it = saneGetUsbDeviceInfoMap.find(info.serialNumber);
-    if (it != saneGetUsbDeviceInfoMap.end()) {
-        SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{private}s] of serialNumber:[%{private}s] has change",
-                    saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
+    if (info.discoverMode != "USB" && info.discoverMode != "TCP") {
+        SCAN_HILOGE("discoverMode is invalid:[%{public}s]", info.discoverMode.c_str());
+        return;
     }
-#endif
-    auto itSN = saneGetUsbDeviceInfoMap.find(info.serialNumber);
-    if (info.serialNumber != "" && itSN != saneGetUsbDeviceInfoMap.end()) {
-        itSN->second = info;
+    if (info.uniqueId.empty() && info.serialNumber.empty()) {
+        SCAN_HILOGE("uniqueId and serialNumber are null");
+        return;
     }
-    auto itUI = saneGetUsbDeviceInfoMap.find(info.uniqueId);
-    if (info.uniqueId != "" && itUI != saneGetUsbDeviceInfoMap.end()) {
-        itUI->second = info;
+    std::string uniqueId = info.discoverMode + info.uniqueId;
+    ScanSystemData& scanData = ScanSystemData::GetInstance();
+    if (info.discoverMode == "USB") {
+        scanData.UpdateScannerInfoByUniqueId(uniqueId, info);
+    } else {
+        scanData.UpdateNetScannerByUuid(info.uuid, info.uniqueId);
     }
-#ifdef DEBUG_ENABLE
-    SCAN_HILOGD("AddFoundUsbScanner usbScanner deviceId:[%{private}s] of serialNumber:[%{private}s]",
-                saneGetUsbDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
-#endif
-    SCAN_HILOGI("AddFoundUsbScanner end model:[%{public}s]", info.model.c_str());
-}
-
-void ScanServiceAbility::AddFoundTcpScanner(ScanDeviceInfo &info)
-{
-    SCAN_HILOGI("AddFoundTcpScanner start: model:[%{public}s]", info.model.c_str());
-    SyncScannerInfo(info);
-#ifdef DEBUG_ENABLE
-    auto it = saneGetTcpDeviceInfoMap.find(info.serialNumber);
-    if (it != saneGetTcpDeviceInfoMap.end()) {
-        SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{private}s] of serialNumber:[%{private}s] has change",
-                    saneGetTcpDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
-    }
-#endif
-    if (info.serialNumber != "") {
-        saneGetTcpDeviceInfoMap[info.serialNumber] = info;
-    }
-    if (info.uniqueId != "") {
-        saneGetTcpDeviceInfoMap[info.uniqueId] = info;
-    }
-#ifdef DEBUG_ENABLE
-    SCAN_HILOGD("AddFoundTcpScanner tcpScanner deviceId:[%{private}s] of serialNumber:[%{private}s]",
-                saneGetTcpDeviceInfoMap[info.serialNumber].deviceId.c_str(), info.serialNumber.c_str());
-#endif
-    SCAN_HILOGI("AddFoundTcpScanner end: model:[%{public}s]", info.model.c_str());
+    scanData.SaveScannerMap();
+    std::map<std::string, ScanDeviceInfo>& deviceMap = info.discoverMode == "USB" ?
+        saneGetUsbDeviceInfoMap : saneGetTcpDeviceInfoMap;
+    deviceMap[info.serialNumber] = info;
+    deviceMap[info.uniqueId] = info;
 }
 
 void ScanServiceAbility::SaneGetScanner()
@@ -523,15 +484,7 @@ void ScanServiceAbility::SaneGetScanner()
         info.model = device.model_;
         info.deviceType = device.type_;
         SetScannerSerialNumber(info);
-        if (info.discoverMode == "USB") {
-            SCAN_HILOGI("SaneGetScanner AddFoundUsbScanner model:[%{public}s]", info.model.c_str());
-            AddFoundUsbScanner(info);
-        } else if (info.discoverMode == "TCP") {
-            SCAN_HILOGI("SaneGetScanner AddFoundTcpScanner model:[%{public}s]", info.model.c_str());
-            AddFoundTcpScanner(info);
-        } else {
-            SCAN_HILOGE("SaneGetScanner SetScannerSerialNumber failed, model:[%{public}s]", info.model.c_str());
-        }
+        AddFoundScanner(info);
     }
     clearMapLock_.lock();
     for (auto &t : saneGetUsbDeviceInfoMap) {
@@ -1198,6 +1151,7 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
         SCAN_HILOGI("get scan picture successfully!");
         prog = frontProg;
         int32_t fd = open(prog.GetImageRealPath().c_str(), O_RDONLY);
+        fdsan_exchange_owner_tag(fd, 0, SCAN_LOG_DOMAIN);
         prog.SetScanPictureFd(fd);
         imageFdMap_[prog.GetImageRealPath()] = fd;
         prog.Dump();
@@ -1395,15 +1349,20 @@ void ScanServiceAbility::StartScanTask(const std::string scannerId)
 {
     SCAN_HILOGI("ScanServiceAbility StartScanTask start, batchMode_ = [%{public}d]", batchMode_);
     int32_t status = E_SCAN_NONE;
-    std::string file_name;
-    std::string output_file;
+    std::string fileName;
+    std::string outputFile;
     ScanProgress* scanProPtr = nullptr;
     if (batchMode_) {
         SCAN_HILOGI("start batch mode scan");
-        GeneratePictureBatch(scannerId, file_name, output_file, status, scanProPtr);
+        GeneratePictureBatch(scannerId, fileName, outputFile, status, scanProPtr);
     } else {
         SCAN_HILOGI("start single mode scan");
-        GeneratePictureSingle(scannerId, file_name, output_file, status, scanProPtr);
+        GeneratePictureSingle(scannerId, fileName, outputFile, status, scanProPtr);
+    }
+    {
+        std::lock_guard<std::mutex> autoLock(lock_);
+        SCAN_HILOGI("StartScanTask finished, doning sane_cancel");
+        SaneManagerClient::GetInstance()->SaneCancel(scannerId);
     }
     if (status != E_SCAN_NONE) {
         SCAN_HILOGE("ScanServiceAbility StartScanTask error, errorcode = [%{public}d]", status);
@@ -1412,83 +1371,93 @@ void ScanServiceAbility::StartScanTask(const std::string scannerId)
     SCAN_HILOGI("ScanServiceAbility StartScanTask end");
 }
 
-void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std::string &file_name,
-    std::string &output_file, int32_t &status, ScanProgress* &scanProPtr)
+bool ScanServiceAbility::CreateAndOpenScanFile(std::string &outputFile, const int32_t &nowScanId)
+{
+    std::string outputDir = ObtainUserCacheDirectory(currentUseScannerUserId_);
+    char canonicalPath[PATH_MAX] = { 0 };
+    if (realpath(outputDir.c_str(), canonicalPath) == nullptr) {
+        SCAN_HILOGE("The real output dir is null, errno:%{public}s", std::to_string(errno).c_str());
+        return false;
+    }
+    outputDir = canonicalPath;
+    outputFile = outputDir.append("/scan_tmp").append(std::to_string(nowScanId)).append(".jpg");
+    if ((ofp = fopen(outputFile.c_str(), "w")) == nullptr) {
+        SCAN_HILOGE("file [%{private}s] open fail", outputFile.c_str());
+        return false;
+    }
+    return true;
+}
+
+void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std::string &fileName,
+    std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr)
 {
     bool firstScan = true;
     do {
         if (!firstScan) {
             SCAN_HILOGI("not first scan");
-            status = StartScan(scannerId, batchMode_);
-            if (status != E_SCAN_NONE) {
+            if ((status = StartScan(scannerId, batchMode_)) != E_SCAN_NONE) {
                 SCAN_HILOGW("ScanTask restart fail");
                 break;
             }
-            auto it = scanTaskMap.find(nextPicId - 2); // nextPicId - 2 is to find a PicId before nowScanId.
-            (it->second).SetIsFinal(false);
-            it->second.SetScanProgress(SCAN_PROGRESS_100);
-            SCAN_HILOGI("ScanTask restart success, status:[%{public}d]", status);
+            auto it = scanTaskMap.find(nextPicId - 2);  // nextPicId - 2 is to find a PicId before nowScanId.
+            if (it != scanTaskMap.end()) {
+                it->second.SetIsFinal(false);
+                it->second.SetScanProgress(SCAN_PROGRESS_100);
+            }
+            SCAN_HILOGI("ScanTask restart success");
         }
-        auto it = scanTaskMap.find(nextPicId - 1);
+        auto it = scanTaskMap.find(nextPicId - 1); // nextPicId - 2 is nowScanId
+        if (it == scanTaskMap.end()) {
+            SCAN_HILOGE("Scan task not found for PicId: %{public}d", nextPicId - 1);
+            status = E_SCAN_GENERIC_FAILURE;
+            break;
+        }
         int32_t nowScanId = it->first;
         scanProPtr = &(it->second);
-        file_name = "scan_tmp" + std::to_string(nowScanId) + ".jpg";
-        std::string outputDir = ObtainUserCacheDirectory(currentUseScannerUserId_);
-        char canonicalPath[PATH_MAX] = { 0 };
-        if (realpath(outputDir.c_str(), canonicalPath) == nullptr) {
-            SCAN_HILOGE("The real output dir is null, errno:%{public}s", std::to_string(errno).c_str());
-            scanProPtr->SetTaskCode(E_SCAN_GENERIC_FAILURE);
-            return;
-        }
-        outputDir = canonicalPath;
-        output_file = outputDir.append("/").append(file_name);
-        ofp = fopen(output_file.c_str(), "w");
-        if (ofp == nullptr) {
-            SCAN_HILOGE("file [%{public}s] open fail", output_file.c_str());
-            scanProPtr->SetTaskCode(E_SCAN_GENERIC_FAILURE);
-            return;
+        if (!CreateAndOpenScanFile(outputFile, nowScanId)) {
+            status = E_SCAN_GENERIC_FAILURE;
+            break;
         }
         status = DoScanTask(scannerId, scanProPtr);
         if (ofp != nullptr) {
             fclose(ofp);
             ofp = nullptr;
         }
-        scanProPtr->SetImageRealPath(output_file);
+        scanProPtr->SetImageRealPath(outputFile);
         firstScan = false;
     } while (status == E_SCAN_EOF);
     if (status == E_SCAN_NO_DOCS) {
         auto it = scanTaskMap.find(nextPicId - 1);
-        it->second.SetScanProgress(SCAN_PROGRESS_100);
+        if (it != scanTaskMap.end()) {
+            it->second.SetScanProgress(SCAN_PROGRESS_100);
+        }
         status = E_SCAN_NONE;
         SCAN_HILOGI("ScanTask batch mode exit successfully.");
+    } else {
+        scanProPtr->SetTaskCode(static_cast<ScanErrorCode>(status));
     }
 }
 
-void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std::string &file_name,
-    std::string &output_file, int32_t &status, ScanProgress* &scanProPtr)
+void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std::string &fileName,
+    std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr)
 {
     auto it = scanTaskMap.find(nextPicId - 1);
+    if (it == scanTaskMap.end()) {
+        SCAN_HILOGE("Scan task not found for PicId: %{public}d", nextPicId - 1);
+        status = E_SCAN_GENERIC_FAILURE;
+        return;
+    }
     int32_t nowScanId = it->first;
-    file_name = "scan_tmp" + std::to_string(nowScanId) + ".jpg";
-    scanProPtr = &(scanTaskMap[nowScanId]);
-    std::string outputDir = ObtainUserCacheDirectory(currentUseScannerUserId_);
-    char canonicalPath[PATH_MAX] = { 0 };
-    if (realpath(outputDir.c_str(), canonicalPath) == nullptr) {
-        SCAN_HILOGE("The real output dir is null, errno:%{public}s", std::to_string(errno).c_str());
-        scanProPtr->SetTaskCode(E_SCAN_GENERIC_FAILURE);
+    scanProPtr = &(it->second);
+
+    if (!CreateAndOpenScanFile(outputFile, nowScanId)) {
+        status = E_SCAN_GENERIC_FAILURE;
         return;
     }
-    outputDir = canonicalPath;
-    output_file = outputDir.append("/").append(file_name);
-    ofp = fopen(output_file.c_str(), "w");
-    if (ofp == nullptr) {
-        SCAN_HILOGE("file [%{public}s] open fail", output_file.c_str());
-        scanProPtr->SetTaskCode(E_SCAN_GENERIC_FAILURE);
-        return;
-    }
+
     status = DoScanTask(scannerId, scanProPtr);
     if (status == E_SCAN_EOF) {
-        scanProPtr->SetImageRealPath(output_file);
+        scanProPtr->SetImageRealPath(outputFile);
         scanProPtr->SetScanProgress(SCAN_PROGRESS_100);
         status = E_SCAN_NONE;
     }
@@ -1496,61 +1465,53 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
         fclose(ofp);
         ofp = nullptr;
     }
-    {
-        std::lock_guard<std::mutex> autoLock(lock_);
-        SCAN_HILOGI("GeneratePictureSingle finished, doning sane_cancel");
-        SaneManagerClient::GetInstance()->SaneCancel(scannerId);
-    }
 }
+
 
 int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress* scanProPtr)
 {
-    int32_t first_frame = 1;
+    bool isFirstFrame = true;
     int32_t scanStatus = E_SCAN_NONE;
     ScanParameters parm;
     struct jpeg_error_mgr jerr;
     do {
         SCAN_HILOGI("start DoScanTask");
-        if (!first_frame) {
-            scanStatus = StartScan(scannerId, batchMode_);
-            if (scanStatus != E_SCAN_NONE) {
-                SCAN_HILOGE("StartScanTask error exit after StartScan");
-                return scanStatus;
-            }
+        if (!isFirstFrame && (scanStatus = StartScan(scannerId, batchMode_)) != E_SCAN_NONE) {
+            SCAN_HILOGW("restart scanner fail");
+            break;
         }
-        scanStatus = GetScanParameters(scannerId, parm);
-        if (scanStatus != E_SCAN_NONE) {
-            SCAN_HILOGE("cyclicCallExe error exit after GetScanParameters");
-            scanProPtr->SetTaskCode(E_SCAN_GENERIC_FAILURE);
-            return scanStatus;
+        if ((scanStatus = GetScanParameters(scannerId, parm)) != E_SCAN_NONE) {
+            SCAN_HILOGE("DoScanTask error, after GetScanParameters");
+            break;
         }
-        if (first_frame) {
+        if (isFirstFrame) {
             scanStatus = WriteJpegHeader(parm, &jerr);
             if (scanStatus != E_SCAN_NONE) {
                 SCAN_HILOGE("StartScanTask error exit after WriteJpegHeader");
-                scanProPtr->SetTaskCode(E_SCAN_GENERIC_FAILURE);
-                return scanStatus;
+                break;
             }
             jpegbuf = new (std::nothrow) JSAMPLE[parm.GetBytesPerLine() / sizeof(JSAMPLE)]{};
             if (jpegbuf == nullptr) {
                 SCAN_HILOGE("jpegbuf malloc fail");
-                scanProPtr->SetTaskCode(E_SCAN_GENERIC_FAILURE);
-                return E_SCAN_GENERIC_FAILURE;
+                break;
             }
         }
         GetPicFrame(scannerId, scanProPtr, scanStatus, parm);
         if (scanStatus != E_SCAN_EOF) {
             SCAN_HILOGE("get scanframe fail");
             scanStatus = scanStatus == E_SCAN_CANCELLED ? E_SCAN_NONE : scanStatus;
-            DELETE_ARRAY_AND_NULLIFY(jpegbuf)
-            return scanStatus;
+            break;
         }
-        first_frame = 0;
+        isFirstFrame = false;
     } while (!(parm.GetLastFrame()));
-    jpeg_finish_compress(cinfoPtr);
-    fflush(ofp);
+    if (scanStatus != E_SCAN_EOF && scanStatus != E_SCAN_NO_DOCS) {
+        jpeg_destroy_compress(cinfoPtr);
+        scanProPtr->SetTaskCode(static_cast<ScanErrorCode>(scanStatus));
+    } else {
+        jpeg_finish_compress(cinfoPtr);
+        fflush(ofp);
+    }
     DELETE_ARRAY_AND_NULLIFY(jpegbuf)
-    SCAN_HILOGI("end DoScanTask");
     return scanStatus;
 }
 

@@ -604,7 +604,7 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     if (nativePrintJob.advancedOptions != nullptr) {
         jsonOptions["cupsOptions"] = std::string(nativePrintJob.advancedOptions);
     }
-    std::string option = jsonOptions.dump();
+    std::string option = jsonOptions.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
     PRINT_HILOGD("SetOptionInPrintJob %{public}s", option.c_str());
     printJob.SetOption(option);
     PRINT_HILOGI("SetOptionInPrintJob out.");

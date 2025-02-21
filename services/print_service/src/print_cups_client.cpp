@@ -154,9 +154,8 @@ static const std::vector<std::string> IGNORE_STATE_LIST = {PRINTER_STATE_WAITING
     PRINTER_STATE_IGNORE_BUSY_WAITING_COMPLETE_OTHER_REPORT,
     PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT};
 std::mutex jobMutex;
-std::mutex usbPrintersLock_;
 
-static std::string GetUsbPrinterSerial(const std::string &deviceUri)
+std::string GetUsbPrinterSerial(const std::string &deviceUri)
 {
     auto pos = deviceUri.find(SERIAL);
     if (pos == std::string::npos || pos + SERIAL.length() > deviceUri.length()) {
@@ -173,8 +172,51 @@ static std::string GetUsbPrinterSerial(const std::string &deviceUri)
     return serial;
 }
 
-static std::vector<PrinterInfo> usbPrinters;
-static void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
+static std::mutex g_usbPrintersLock;
+static std::vector<PrinterInfo> g_usbPrinters;
+std::vector<PrinterInfo> GetUsbPrinters()
+{
+    std::lock_guard<std::mutex> lock(g_usbPrintersLock);
+    return g_usbPrinters;
+}
+void AddUsbPrinter(PrinterInfo &info)
+{
+    std::lock_guard<std::mutex> lock(g_usbPrintersLock);
+    g_usbPrinters.emplace_back(info);
+}
+void ClearUsbPrinters()
+{
+    std::lock_guard<std::mutex> lock(g_usbPrintersLock);
+    g_usbPrinters.clear();
+}
+
+static void ParseDeviceInfo(const char *deviceLocation, nlohmann::json &infoOps)
+{
+    if (deviceLocation == nullptr) {
+        PRINT_HILOGW("deviceLocation is nullptr");
+        return;
+    }
+    PRINT_HILOGI("location = %{private}s\n", deviceLocation);
+    std::string location(deviceLocation);
+    auto pos = location.find("-");
+    if (pos == std::string::npos || pos + 1 >= location.length()) {
+        PRINT_HILOGE("can not find vid and pid");
+        return;
+    }
+    std::string vidStr = location.substr(0, pos);
+    std::string pidStr = location.substr(pos + 1);
+    std::stringstream ssVid(vidStr);
+    int vid = 0;
+    ssVid >> std::hex >> vid;
+    std::stringstream ssPid(pidStr);
+    int pid = 0;
+    ssPid >> std::hex >> pid;
+    PRINT_HILOGI("vid = %{private}d, pid = %{private}d", vid, pid);
+    infoOps["vendorId"] = vid;
+    infoOps["productId"] = pid;
+}
+
+void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
     const char *deviceMakeAndModel, const char *deviceUri, const char *deviceLocation, void *userData)
 {
     if  (deviceClass == nullptr || deviceId == nullptr || deviceInfo == nullptr || deviceMakeAndModel == nullptr ||
@@ -185,9 +227,6 @@ static void DeviceCb(const char *deviceClass, const char *deviceId, const char *
     PRINT_HILOGD("Device: uri = %{private}s\n", deviceUri);
     PRINT_HILOGD("class = %{private}s\n", deviceClass);
     PRINT_HILOGD("make-and-model = %{private}s\n", deviceMakeAndModel);
-    if (deviceLocation != nullptr) {
-        PRINT_HILOGD("location = %{private}s\n", deviceLocation);
-    }
     std::string printerUri(deviceUri);
     std::string printerMake(deviceMakeAndModel);
     if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER &&
@@ -211,9 +250,9 @@ static void DeviceCb(const char *deviceClass, const char *deviceId, const char *
         nlohmann::json infoOps;
         infoOps["printerUri"] = printerUri;
         infoOps["printerMake"] = printerMake;
+        ParseDeviceInfo(deviceLocation, infoOps);
         info.SetOption(infoOps.dump());
-        std::lock_guard<std::mutex> lock(usbPrintersLock_);
-        usbPrinters.emplace_back(info);
+        AddUsbPrinter(info);
     } else {
         PRINT_HILOGW("verify uri or make failed");
     }
@@ -242,20 +281,26 @@ PrintCupsClient::~PrintCupsClient()
     }
 }
 
+
+int32_t PrintCupsClient::StartCupsdServiceNotAlive()
+{
+    PRINT_HILOGI("The cupsd process is not started, start it now.");
+    int result = SetParameter(CUPSD_CONTROL_PARAM.c_str(), "true");
+    if (result) {
+        PRINT_HILOGD("SetParameter failed: %{public}d.", result);
+        return E_PRINT_SERVER_FAILURE;
+    }
+    char value[CUPSD_CONTROL_PARAM_SIZE] = {0};
+    GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, CUPSD_CONTROL_PARAM_SIZE - 1);
+    PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
+    return E_PRINT_NONE;
+}
+
 int32_t PrintCupsClient::StartCupsdService()
 {
     PRINT_HILOGD("StartCupsdService enter");
     if (!IsCupsServerAlive()) {
-        PRINT_HILOGI("The cupsd process is not started, start it now.");
-        int result = SetParameter(CUPSD_CONTROL_PARAM.c_str(), "true");
-        if (result) {
-            PRINT_HILOGD("SetParameter failed: %{public}d.", result);
-            return E_PRINT_SERVER_FAILURE;
-        }
-        char value[CUPSD_CONTROL_PARAM_SIZE] = {0};
-        GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, CUPSD_CONTROL_PARAM_SIZE - 1);
-        PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
-        return E_PRINT_NONE;
+        StartCupsdServiceNotAlive();
     }
     std::string pidFile = CUPS_RUN_DIR + "/cupsd.pid";
     struct stat sb;
@@ -272,19 +317,33 @@ int32_t PrintCupsClient::StartCupsdService()
         PRINT_HILOGE("realPidFile is not exist");
         return E_PRINT_SERVER_FAILURE;
     }
-    int fd;
-    if ((fd = open(realPidFile, O_RDONLY)) < 0) {
+    FILE *file = fopen(realPidFile, "r");
+    if (file == nullptr) {
         PRINT_HILOGE("Open pidFile error!");
         return E_PRINT_SERVER_FAILURE;
     }
-    lseek(fd, 0, SEEK_SET);
-    char buf[BUFFER_LEN] = {0};
-    if ((read(fd, buf, sb.st_size)) < 0) {
-        PRINT_HILOGE("Read pidFile error!");
-        close(fd);
+    if (fseek(file, 0, SEEK_SET) != 0) {
+        PRINT_HILOGE("Seek pidFile!");
+        int fcloseResult = fclose(file);
+        if (fcloseResult != 0) {
+            PRINT_HILOGE("Close File Failure.");
+        }
         return E_PRINT_SERVER_FAILURE;
     }
-    close(fd);
+    char buf[BUFFER_LEN] = {0};
+    if ((fread(buf, 1, BUFFER_LEN, file)) < 0) {
+        PRINT_HILOGE("Read pidFile error!");
+        int fcloseResult = fclose(file);
+        if (fcloseResult != 0) {
+            PRINT_HILOGE("Close File Failure.");
+        }
+        return E_PRINT_SERVER_FAILURE;
+    }
+    int fcloseResult = fclose(file);
+    if (fcloseResult != 0) {
+        PRINT_HILOGE("Close File Failure.");
+        return E_PRINT_SERVER_FAILURE;
+    }
     PRINT_HILOGD("The Process of CUPSD has existed, pid: %{public}s.", buf);
     return E_PRINT_NONE;
 }
@@ -1066,9 +1125,10 @@ ppd_file_t* PrintCupsClient::GetPPDFile(const std::string &printerName)
         PRINT_HILOGE("Open ppdFile error!");
         return nullptr;
     }
+    fdsan_exchange_owner_tag(fd, 0, PRINT_LOG_DOMAIN);
     PRINT_HILOGI("GetPPDFile %{public}d", fd);
     ppd = ppdOpenFd(fd);
-    close(fd);
+    fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
     if (ppd == nullptr) {
         PRINT_HILOGE("ppdfile open is nullptr");
     } else {
@@ -1948,19 +2008,13 @@ int32_t PrintCupsClient::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
     const char* exclude_schemes = CUPS_EXCLUDE_NONE;
     int timeout = CUPS_TIMEOUT_DEFAULT;
     PRINT_HILOGD("DiscoverUsbPrinters cupsGetDevices");
-    {
-        std::lock_guard<std::mutex> lock(usbPrintersLock_);
-        usbPrinters.clear();
-    }
+    ClearUsbPrinters();
     if (cupsGetDevices(CUPS_HTTP_DEFAULT, timeout, include_schemes, exclude_schemes,
         DeviceCb, &longStatus) != IPP_OK) {
         PRINT_HILOGE("lpinfo error : %{public}s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
     }
-    {
-        std::lock_guard<std::mutex> lock(usbPrintersLock_);
-        printers = usbPrinters;
-    }
+    printers = GetUsbPrinters();
     return E_PRINT_NONE;
 }
 

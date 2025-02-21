@@ -88,7 +88,6 @@ private:
     void SendDeviceSearchEnd(std::string &info, std::string event);
     void SetScannerSerialNumber(ScanDeviceInfo &info);
     void SaneGetScanner();
-    void SyncScannerInfo(ScanDeviceInfo &info);
     void SetScannerSerialNumberByTCP(ScanDeviceInfo &info);
     void SetScannerSerialNumberByUSB(ScanDeviceInfo &info);
 public:
@@ -109,17 +108,15 @@ private:
     bool CheckPermission(const std::string &permissionName);
     void SendGetFrameResEvent(const bool isGetSucc, const int32_t sizeRead);
     int32_t WriteJpegHeader(ScanParameters &parm, struct jpeg_error_mgr* jerr);
-    void GeneratePicture(const std::string &scannerId, std::string &file_name,
-        std::string &output_file, int32_t &status, ScanProgress* &scanProPtr);
+    void GeneratePicture(const std::string &scannerId, std::string &fileName,
+        std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr);
     void GetPicFrame(const std::string scannerId, ScanProgress *scanProPtr,
         int32_t &scanStatus, ScanParameters &parm);
     bool WritePicData(int &jpegrow, int32_t curReadSize, ScanParameters &parm, ScanProgress *scanProPtr);
-    void GeneratePictureBatch(const std::string &scannerId, std::string &file_name,
-        std::string &output_file, int32_t &status, ScanProgress* &scanProPtr);
-    void GeneratePictureSingle(const std::string &scannerId, std::string &file_name,
-        std::string &output_file, int32_t &status, ScanProgress* &scanProPtr);
-    void AddFoundUsbScanner(ScanDeviceInfo &info);
-    void AddFoundTcpScanner(ScanDeviceInfo &info);
+    void GeneratePictureBatch(const std::string &scannerId, std::string &fileName,
+        std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr);
+    void GeneratePictureSingle(const std::string &scannerId, std::string &fileName,
+        std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr);
     bool GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId);
     bool GetTcpDeviceIp(const std::string &deviceId, std::string &ip);
     void CleanScanTask(const std::string &scannerId);
@@ -128,6 +125,8 @@ private:
     std::string ObtainUserCacheDirectory(const int32_t& userId);
     void SetScanProgr(int64_t &totalBytes, const int64_t& hundredPercent,
         ScanProgress* scanProPtr, const int32_t& curReadSize);
+    bool CreateAndOpenScanFile(std::string &outputFile, const int32_t &nowScanId);
+    void AddFoundScanner(ScanDeviceInfo& info);
     std::set<std::string> openedScannerList_;
     ServiceRunningState state_;
     std::mutex lock_;

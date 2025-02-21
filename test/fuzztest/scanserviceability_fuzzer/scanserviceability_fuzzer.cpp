@@ -284,18 +284,11 @@ namespace Scan {
         ScanServiceAbility::GetInstance()->GeneratePictureSingle(scannerId, file_name, output_file, status, scanProPtr);
     }
 
-    void TestAddFoundUsbScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    void TestAddFoundScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         ScanDeviceInfo info;
         info.serialNumber = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanServiceAbility::GetInstance()->AddFoundUsbScanner(info);
-    }
-
-    void TestAddFoundTcpScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        ScanDeviceInfo info;
-        info.serialNumber = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanServiceAbility::GetInstance()->AddFoundTcpScanner(info);
+        ScanServiceAbility::GetInstance()->AddFoundScanner(info);
     }
 
     void TestSendDeviceList(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -347,8 +340,7 @@ namespace Scan {
         OHOS::Scan::TestCheckPermission(data, size, dataProvider);
         OHOS::Scan::TestSendGetFrameResEvent(data, size, dataProvider);
         OHOS::Scan::TestGeneratePictureBatch(data, size, dataProvider);
-        OHOS::Scan::TestAddFoundUsbScanner(data, size, dataProvider);
-        OHOS::Scan::TestAddFoundTcpScanner(data, size, dataProvider);
+        OHOS::Scan::TestAddFoundScanner(data, size, dataProvider);
         OHOS::Scan::TestSendDeviceList(data, size, dataProvider);
         OHOS::Scan::TestAddScanner(data, size, dataProvider);
         OHOS::Scan::TestUpdateScannerName(data, size, dataProvider);

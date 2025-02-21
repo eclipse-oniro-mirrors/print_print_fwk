@@ -163,7 +163,7 @@ PAGE_SIZE_ID PrintPageSize::MatchPageSize(const std::string& pageString)
         if (pageSizeItem == nullptr) {
             continue;
         }
-        if (strcasestr(pageSizeItem->GetName().c_str(), pageString.c_str()) != nullptr) {
+        if (strcmp(pageSizeItem->GetName().c_str(), pageString.c_str()) == 0) {
             return item.first;
         }
     }

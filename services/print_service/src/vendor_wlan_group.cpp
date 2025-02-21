@@ -214,6 +214,10 @@ bool VendorWlanGroup::ConvertGroupDriver(std::string &printerId, std::string &ve
 bool VendorWlanGroup::IsBsunidriverSupport(const std::string &groupPrinterId)
 {
     PRINT_HILOGD("IsBsunidriverSupport enter");
+    if (parentVendorManager == nullptr) {
+        PRINT_HILOGE("VendorManager is null.");
+        return false;
+    }
     auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), groupPrinterId);
     if (printerInfo == nullptr) {
         return false;
@@ -350,7 +354,7 @@ std::string VendorWlanGroup::ExtractPrinterIdByPrinterInfo(const PrinterInfo &pr
     auto pos_start = uri.find_first_of(VENDOR_BSUNI_URI_START);
     auto pos_end = uri.find_last_of(VENDOR_BSUNI_URI_END);
     if (pos_start == std::string::npos || uri.length() <= pos_start + VENDOR_BSUNI_URI_START.length() ||
-        pos_end == std::string::npos || pos_end - pos_start <= VENDOR_BSUNI_URI_START.length()) {
+        pos_end - pos_start <= VENDOR_BSUNI_URI_START.length()) {
         return "";
     }
     std::string printerId = uri.substr(pos_start + VENDOR_BSUNI_URI_START.length(),
@@ -375,7 +379,7 @@ bool VendorWlanGroup::MonitorPrinterStatus(const std::string &groupPrinterId, bo
         auto ret = parentVendorManager->QueryPrinterInfoByPrinterId(GetVendorName(), groupPrinterId, printerInfo);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("get printerInfo failed.");
-            return ret;
+            return false;
         }
         auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
         if (bsuniDriver != nullptr) {

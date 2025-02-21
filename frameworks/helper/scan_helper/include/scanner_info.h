@@ -100,7 +100,7 @@ public:
     void SetModel(const std::string &newModel);
     void SetDeviceType(const std::string &newDeviceType);
     void SetDeviceState(const uint32_t &newDeviceState);
-    void Dump();
+    void Dump() const;
     void SetDiscoverMode(const std::string &newDiscoverMode);
     void SetSerialNumber(const std::string &newSerialNumber);
     void SetDeviceName(const std::string &newDeviceName);
@@ -172,6 +172,7 @@ public:
 
     static std::shared_ptr<ScanDeviceInfoSync> Unmarshalling(Parcel &parcel);
 
+    void Dump() const;
 #ifndef TDD_ENABLE
 private:
 #endif

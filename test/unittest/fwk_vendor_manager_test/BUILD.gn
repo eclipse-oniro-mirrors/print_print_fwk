@@ -39,6 +39,7 @@ ohos_unittest("fwk_vendor_manager_test") {
     "vendor_ipp_everywhere_test.cpp",
     "vendor_manager_test.cpp",
     "vendor_ppd_driver_test.cpp",
+    "vendor_wlan_group_test.cpp",
   ]
   cflags_cc = []
 

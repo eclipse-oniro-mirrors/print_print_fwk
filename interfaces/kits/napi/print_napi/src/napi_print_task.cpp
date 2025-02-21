@@ -294,7 +294,11 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
     }
     auto file = fopen(fileName.c_str(), "rb");
     if (file != nullptr) {
-        fclose(file);
+        int fcloseResult = fclose(file);
+        if (fcloseResult != 0) {
+            PRINT_HILOGE("Close File Failure.");
+            return false;
+        }
         return true;
     }
     PRINT_HILOGD("fileName: %{public}s", fileName.c_str());

@@ -147,7 +147,7 @@ int32_t PrintUtils::OpenFile(const std::string &filePath)
     PRINT_HILOGD("fd: %{public}d", fd);
     if (fd < 0) {
         PRINT_HILOGE("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-        close(fd);
+        fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
         return PRINT_INVALID_ID;
     }
     return fd;

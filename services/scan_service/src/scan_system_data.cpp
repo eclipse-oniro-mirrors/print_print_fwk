@@ -31,7 +31,6 @@ const std::string SCANNER_LIST_VERSION = "v1";
 
 namespace OHOS {
 namespace Scan {
-std::map<std::string, std::string> ScanSystemData::usbSnToPortMap_;
 bool ScanSystemData::CheckJsonObjectValue(const nlohmann::json& object)
 {
     const std::vector<std::string> keyList = {"deviceId", "manufacturer", "model", "deviceType",
@@ -69,13 +68,15 @@ bool ScanSystemData::ParseScannerListJsonV1(nlohmann::json& jsonObject)
         std::string uniqueId = scanDeviceInfo.discoverMode + scanDeviceInfo.uniqueId;
         InsertScannerInfo(uniqueId, scanDeviceInfo);
     }
-    RefreshUsbDeviceId();
     return true;
 }
 
 bool ScanSystemData::Init()
 {
-    addedScannerMap_.clear();
+    {
+        std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
+        addedScannerMap_.clear();
+    }
     std::ifstream ifs(SCANNER_LIST_FILE.c_str(), std::ios::in | std::ios::binary);
     if (!ifs.is_open()) {
         SCAN_HILOGW("open scanner list file fail");
@@ -94,22 +95,30 @@ bool ScanSystemData::Init()
     }
     std::string version = jsonObject["version"].get<std::string>();
     SCAN_HILOGI("json version: %{public}s", version.c_str());
-    if (version == SCANNER_LIST_VERSION) {
-        return ParseScannerListJsonV1(jsonObject);
+    if (version == SCANNER_LIST_VERSION && ParseScannerListJsonV1(jsonObject)) {
+        RefreshUsbDeviceId();
+        SaveScannerMap();
+        return true;
     }
     return false;
 }
 
 void ScanSystemData::RefreshUsbDeviceId()
 {
-    ScanUsbManager::GetInstance()->RefreshUsbDevicePort();
+    std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
+    auto usbIt = ScanUsbManager::GetInstance();
+    if (usbIt == nullptr) {
+        SCAN_HILOGE("usbIt is a nullptr.");
+        return;
+    }
+    usbIt->RefreshUsbDevicePort(usbSnToPortMap_);
     if (usbSnToPortMap_.empty()) {
-        SCAN_HILOGW("Failed to refresh the USB device.");
+        SCAN_HILOGW("usbSnToPortMap_ is empty");
         return;
     }
     for (auto &scanDevIt : addedScannerMap_) {
         std::string discoverMode = scanDevIt.second->discoverMode;
-        if (discoverMode == "TCP") {
+        if (discoverMode != "USB") {
             continue;
         }
         std::string serialNumber = scanDevIt.second->serialNumber;
@@ -136,9 +145,6 @@ void ScanSystemData::RefreshUsbDeviceId()
             return;
         }
         saPtr->UpdateScannerId(syncInfo);
-    }
-    if (!SaveScannerMap()) {
-        SCAN_HILOGW("Failed to save the JSON file.");
     }
 }
 
@@ -176,29 +182,6 @@ std::string ScanSystemData::ReplaceDeviceIdUsbPort(const std::string& deviceId, 
     return newDeviceId;
 }
 
-std::string ScanSystemData::GetNewDeviceId(std::string oldDeviceId, std::string usbDevicePort)
-{
-    if (oldDeviceId.find_last_of(":") == std::string::npos ||
-        oldDeviceId.find_last_of(":") < USB_DEVICEID_FIRSTID_LEN_3 ||
-        oldDeviceId.find_last_of("-") == std::string::npos ||
-        oldDeviceId.find_last_of("-") < 1) {
-        return nullptr;
-    }
-    std::string deviceIdHead = oldDeviceId.substr(0, oldDeviceId.find_last_of(":") - USB_DEVICEID_FIRSTID_LEN_3);
-    std::string firstPort = usbDevicePort.substr(0, usbDevicePort.find("-"));
-    std::string secondPort = usbDevicePort.substr(usbDevicePort.find("-") + 1, usbDevicePort.size() - 1);
-    SCAN_HILOGI("firstPort = %{public}s, secondPort = %{public}s.",
-                firstPort.c_str(), secondPort.c_str());
-    FormatUsbPort(firstPort);
-    FormatUsbPort(secondPort);
-    return deviceIdHead + firstPort + ":" + secondPort;
-}
-
-void ScanSystemData::FormatUsbPort(std::string &port)
-{
-    port.insert(0, USB_DEVICEID_FIRSTID_LEN_3 - port.size(), '0');
-}
-
 bool ScanSystemData::UpdateScannerIdByUsbDevicePort(const std::string &uniqueId, const std::string &usbDevicePort)
 {
     std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
@@ -228,14 +211,7 @@ void ScanSystemData::InsertScannerInfo(const std::string &uniqueId, const ScanDe
         addedScannerMap_[uniqueId] = std::make_shared<ScanDeviceInfo>(scannerInfo);
     } else {
         SCAN_HILOGI("update exist scanner");
-        iter->second->deviceId = scannerInfo.deviceId;
-        iter->second->manufacturer = scannerInfo.manufacturer;
-        iter->second->model = scannerInfo.model;
-        iter->second->deviceType = scannerInfo.deviceType;
-        iter->second->serialNumber = scannerInfo.serialNumber;
-        iter->second->deviceName = scannerInfo.deviceName;
-        iter->second->uniqueId = scannerInfo.uniqueId;
-        iter->second->uuid = scannerInfo.uuid;
+        *iter->second = scannerInfo;
     }
 }
 
@@ -270,12 +246,7 @@ bool ScanSystemData::UpdateScannerInfoByUniqueId(const std::string &uniqueId, co
     std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
     auto iter = addedScannerMap_.find(uniqueId);
     if (iter != addedScannerMap_.end()) {
-        iter->second->deviceId = scannerInfo.deviceId;
-        iter->second->model = scannerInfo.model;
-        iter->second->deviceType = scannerInfo.deviceType;
-        iter->second->serialNumber = scannerInfo.serialNumber;
-        iter->second->deviceName = scannerInfo.deviceName;
-        iter->second->uniqueId = scannerInfo.uniqueId;
+        *iter->second = scannerInfo;
         return true;
     }
     SCAN_HILOGE("ScanSystemData UpdateScannerInfoByUniqueId not found scannerInfo");
@@ -305,14 +276,7 @@ bool ScanSystemData::QueryScannerInfoByUniqueId(const std::string &uniqueId, Sca
         std::string iterSn = info->discoverMode + info->serialNumber;
         std::string iterUniqueId = info->discoverMode + info->uniqueId;
         if (uniqueId == iterSn || uniqueId == iterUniqueId) {
-            scannerInfo.deviceId = info->deviceId;
-            scannerInfo.manufacturer = info->manufacturer;
-            scannerInfo.model = info->model;
-            scannerInfo.deviceType = info->deviceType;
-            scannerInfo.discoverMode = info->discoverMode;
-            scannerInfo.serialNumber = info->serialNumber;
-            scannerInfo.deviceName = info->deviceName;
-            scannerInfo.uniqueId = info->uniqueId;
+            *iter->second = scannerInfo;
             return true;
         }
     }
@@ -331,9 +295,8 @@ void ScanSystemData::GetAddedScannerInfoList(std::vector<ScanDeviceInfo> &infoLi
 
 bool ScanSystemData::SaveScannerMap()
 {
-    int32_t fd = open(SCANNER_LIST_FILE.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
-    SCAN_HILOGD("SaveScannerMap fd: %{public}d", fd);
-    if (fd < 0) {
+    FILE *file = fopen(SCANNER_LIST_FILE.c_str(), "w+");
+    if (file != nullptr) {
         SCAN_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
         return false;
     }
@@ -363,18 +326,24 @@ bool ScanSystemData::SaveScannerMap()
     jsonObject["scaner_list"] = scannerMapJson;
     std::string jsonString = jsonObject.dump();
     size_t jsonLength = jsonString.length();
-    auto writeLength = write(fd, jsonString.c_str(), jsonLength);
-    close(fd);
-    fd = -1;
-    SCAN_HILOGI("SaveScannerMap finished");
-    if (writeLength < 0) {
+    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
+    int fcloseResult = fclose(file);
+    if (fcloseResult != 0) {
+        SCAN_HILOGE("File Operation Failure.");
         return false;
     }
-    return (size_t)writeLength == jsonLength;
+    SCAN_HILOGI("SaveScannerMap finished");
+    if (writeLength < 0) {
+        SCAN_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
+        return false;
+    }
+
+    return writeLength == jsonLength;
 }
 
 bool ScanSystemData::IsContainScanner(const std::string &uniqueId)
 {
+    std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
     if (addedScannerMap_.find(uniqueId) != addedScannerMap_.end()) {
         SCAN_HILOGI("The map contains the scanner.");
         return true;

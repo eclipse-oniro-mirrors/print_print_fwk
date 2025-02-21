@@ -316,9 +316,8 @@ bool PrintUserData::GetFileData(std::string &fileData)
             PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
             return false;
         }
-        int32_t fd = open(userDataFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
-        PRINT_HILOGI("create file fd: %{public}d", fd);
-        if (fd < 0) {
+        FILE *file = fopen(userDataFilePath.c_str(), "w+");
+        if (file == nullptr) {
             PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
             return false;
         }
@@ -328,9 +327,10 @@ bool PrintUserData::GetFileData(std::string &fileData)
         jsonObject["print_user_data"] = userDataJson;
         fileData = jsonObject.dump();
         size_t jsonLength = fileData.length();
-        auto writeLength = write(fd, fileData.c_str(), jsonLength);
-        close(fd);
-        if (writeLength < 0 && (size_t)writeLength != jsonLength) {
+        size_t writeLength = fwrite(fileData.c_str(), 1, strlen(fileData.c_str()), file);
+        int fcloseResult = fclose(file);
+        if (fcloseResult != 0 || writeLength < 0 || writeLength != jsonLength) {
+            PRINT_HILOGE("File Operation Failure.");
             return false;
         }
     } else {
@@ -367,21 +367,21 @@ bool PrintUserData::SetUserDataToFile()
             PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
             return false;
         }
-        int32_t fd = open(userDataFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
-        PRINT_HILOGI("SetUserDataToFile fd: %{public}d", fd);
-        if (fd < 0) {
+        FILE *file = fopen(userDataFilePath.c_str(), "w+");
+        if (file == nullptr) {
             PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
             return false;
         }
         std::string jsonString = jsonObject.dump();
         size_t jsonLength = jsonString.length();
-        auto writeLength = write(fd, jsonString.c_str(), jsonLength);
-        close(fd);
-        PRINT_HILOGI("SetUserDataToFile finished");
-        if (writeLength < 0) {
+        size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
+        int fcloseResult = fclose(file);
+        if (fcloseResult != 0 || writeLength < 0) {
+            PRINT_HILOGE("File Operation Failure.");
             return false;
         }
-        return (size_t)writeLength == jsonLength;
+        PRINT_HILOGI("SetUserDataToFile finished");
+        return writeLength == jsonLength;
     }
     return true;
 }
