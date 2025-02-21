@@ -2129,10 +2129,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0144, TestSize.Level1)
     EXPECT_EQ(service->UpdatePrinterCapability(printerId, info), true);
 }
 
-
-
-
-
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0145, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
