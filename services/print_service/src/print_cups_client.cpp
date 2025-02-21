@@ -154,9 +154,8 @@ static const std::vector<std::string> IGNORE_STATE_LIST = {PRINTER_STATE_WAITING
     PRINTER_STATE_IGNORE_BUSY_WAITING_COMPLETE_OTHER_REPORT,
     PRINTER_STATE_IGNORE_BUSY_OTHER_REPORT};
 std::mutex jobMutex;
-std::mutex usbPrintersLock_;
 
-static std::string GetUsbPrinterSerial(const std::string &deviceUri)
+std::string GetUsbPrinterSerial(const std::string &deviceUri)
 {
     auto pos = deviceUri.find(SERIAL);
     if (pos == std::string::npos || pos + SERIAL.length() > deviceUri.length()) {
@@ -173,12 +172,34 @@ static std::string GetUsbPrinterSerial(const std::string &deviceUri)
     return serial;
 }
 
-static std::vector<PrinterInfo> usbPrinters;
-
-static void ParseDeviceInfo(const std::string &location, nlohmann::json &infoOps)
+static std::mutex g_usbPrintersLock;
+static std::vector<PrinterInfo> g_usbPrinters;
+std::vector<PrinterInfo> GetUsbPrinters()
 {
+    std::lock_guard<std::mutex> lock(g_usbPrintersLock);
+    return g_usbPrinters;
+}
+void AddUsbPrinter(PrinterInfo &info)
+{
+    std::lock_guard<std::mutex> lock(g_usbPrintersLock);
+    g_usbPrinters.emplace_back(info);
+}
+void ClearUsbPrinters()
+{
+    std::lock_guard<std::mutex> lock(g_usbPrintersLock);
+    g_usbPrinters.clear();
+}
+
+static void ParseDeviceInfo(const char *deviceLocation, nlohmann::json &infoOps)
+{
+    if (deviceLocation == nullptr) {
+        PRINT_HILOGW("deviceLocation is nullptr");
+        return;
+    }
+    PRINT_HILOGI("location = %{private}s\n", deviceLocation);
+    std::string location(deviceLocation);
     auto pos = location.find("-");
-    if (pos == std::string::npos && pos + 1 >= location.length()) {
+    if (pos == std::string::npos || pos + 1 >= location.length()) {
         PRINT_HILOGE("can not find vid and pid");
         return;
     }
@@ -195,7 +216,7 @@ static void ParseDeviceInfo(const std::string &location, nlohmann::json &infoOps
     infoOps["productId"] = pid;
 }
 
-static void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
+void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
     const char *deviceMakeAndModel, const char *deviceUri, const char *deviceLocation, void *userData)
 {
     if  (deviceClass == nullptr || deviceId == nullptr || deviceInfo == nullptr || deviceMakeAndModel == nullptr ||
@@ -229,17 +250,9 @@ static void DeviceCb(const char *deviceClass, const char *deviceId, const char *
         nlohmann::json infoOps;
         infoOps["printerUri"] = printerUri;
         infoOps["printerMake"] = printerMake;
-
-        if (deviceLocation != nullptr) {
-            PRINT_HILOGI("location = %{private}s\n", deviceLocation);
-            std::string location(deviceLocation);
-            ParseDeviceInfo(location, infoOps);
-        } else {
-            PRINT_HILOGW("deviceLocation is nullptr");
-        }
+        ParseDeviceInfo(deviceLocation, infoOps);
         info.SetOption(infoOps.dump());
-        std::lock_guard<std::mutex> lock(usbPrintersLock_);
-        usbPrinters.emplace_back(info);
+        AddUsbPrinter(info);
     } else {
         PRINT_HILOGW("verify uri or make failed");
     }
@@ -1995,19 +2008,13 @@ int32_t PrintCupsClient::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
     const char* exclude_schemes = CUPS_EXCLUDE_NONE;
     int timeout = CUPS_TIMEOUT_DEFAULT;
     PRINT_HILOGD("DiscoverUsbPrinters cupsGetDevices");
-    {
-        std::lock_guard<std::mutex> lock(usbPrintersLock_);
-        usbPrinters.clear();
-    }
+    ClearUsbPrinters();
     if (cupsGetDevices(CUPS_HTTP_DEFAULT, timeout, include_schemes, exclude_schemes,
         DeviceCb, &longStatus) != IPP_OK) {
         PRINT_HILOGE("lpinfo error : %{public}s", cupsLastErrorString());
         return E_PRINT_SERVER_FAILURE;
     }
-    {
-        std::lock_guard<std::mutex> lock(usbPrintersLock_);
-        printers = usbPrinters;
-    }
+    printers = GetUsbPrinters();
     return E_PRINT_NONE;
 }
 
