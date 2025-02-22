@@ -300,7 +300,7 @@ int32_t PrintCupsClient::StartCupsdService()
 {
     PRINT_HILOGD("StartCupsdService enter");
     if (!IsCupsServerAlive()) {
-        StartCupsdServiceNotAlive();
+        return StartCupsdServiceNotAlive();
     }
     std::string pidFile = CUPS_RUN_DIR + "/cupsd.pid";
     struct stat sb;

@@ -326,9 +326,8 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
         PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
         return;
     }
-    int32_t fd = open(printerListFilePath.c_str(), O_CREAT | O_TRUNC | O_RDWR, 0640);
-    PRINT_HILOGD("SavePrinterFile fd: %{public}d", fd);
-    if (fd < 0) {
+    FILE *file = fopen(printerListFilePath.c_str(), "w+");
+    if (file == nullptr) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
         return;
     }
@@ -347,8 +346,12 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     printerJson["preferences"] = info->printPreferences.ConvertToJson();
     std::string jsonString = printerJson.dump();
     size_t jsonLength = jsonString.length();
-    auto writeLength = write(fd, jsonString.c_str(), jsonLength);
-    close(fd);
+    size_t writeLength = fwrite(jsonString.c_str(), strlen(jsonString.c_str()), 1, file);
+    int fcloseResult = fclose(file);
+    if (fcloseResult != 0) {
+        PRINT_HILOGE("Close File Failure.");
+        return;
+    }
     PRINT_HILOGI("SavePrinterFile finished");
     if (writeLength < 0 || (size_t)writeLength != jsonLength) {
         PRINT_HILOGE("SavePrinterFile error");

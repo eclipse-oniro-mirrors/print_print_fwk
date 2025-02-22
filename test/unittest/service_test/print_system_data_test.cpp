@@ -1156,7 +1156,51 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0055, TestSize.Level1)
     systemData->ClearDiscoveredPrinterList();
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0056, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0056, TestSize.Level1) {
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterCapability printerCapability;
+    std::vector<uint32_t> supportedColorModeList;
+    supportedColorModeList.push_back(1);
+    printerCapability.SetSupportedColorMode(supportedColorModeList);
+    nlohmann::json capsJson;
+    systemData->ConvertSupportedColorModeToJson(printerCapability, capsJson);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0057, TestSize.Level1) {
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterCapability printerCapability;
+    std::vector<uint32_t> supportedDuplexModeList;
+    supportedDuplexModeList.push_back(1);
+    printerCapability.SetSupportedDuplexMode(supportedDuplexModeList);
+    nlohmann::json capsJson;
+    systemData->ConvertSupportedDuplexModeToJson(printerCapability, capsJson);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0058, TestSize.Level1) {
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterCapability printerCapability;
+    std::vector<std::string> supportedMediaTypeList;
+    supportedMediaTypeList.push_back("type1");
+    printerCapability.SetSupportedMediaType(supportedMediaTypeList);
+    nlohmann::json capsJson;
+    systemData->ConvertSupportedMediaTypeToJson(printerCapability, capsJson);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0059, TestSize.Level1) {
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterCapability printerCapability;
+    std::vector<uint32_t> supportedQualityList;
+    supportedQualityList.push_back(1);
+    printerCapability.SetSupportedQuality(supportedQualityList);
+    nlohmann::json capsJson;
+    systemData->ConvertSupportedQualityToJson(printerCapability, capsJson);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0060, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1176,7 +1220,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0056, TestSize.Level1)
     EXPECT_EQ(info.printerStatus, printerJson["printerStatus"]);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0057, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0061, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1184,7 +1228,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0057, TestSize.Level1)
     EXPECT_EQ(systemData->ParsePrinterPreferencesJson(jsonObject), false);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0058, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0062, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1193,7 +1237,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0058, TestSize.Level1)
     EXPECT_EQ(systemData->ParsePreviousPreferencesSetting(settingJson, preferences), false);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0059, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0063, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1208,7 +1252,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0059, TestSize.Level1)
     EXPECT_EQ(systemData->ParsePreviousPreferencesSetting(settingJson, preferences), false);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0060, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0064, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1223,7 +1267,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0060, TestSize.Level1)
     EXPECT_EQ(systemData->ParsePreviousPreferencesSetting(settingJson, preferences), false);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0061, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0065, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1238,7 +1282,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0061, TestSize.Level1)
     EXPECT_EQ(systemData->ParsePreviousPreferencesSetting(settingJson, preferences), true);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0062, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0066, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1256,7 +1300,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0062, TestSize.Level1)
     EXPECT_EQ(cupsPrinter.printPreferences.GetBorderless(), preferences.GetBorderless());
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0063, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0067, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1266,7 +1310,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0063, TestSize.Level1)
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0064, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0068, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1283,7 +1327,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0064, TestSize.Level1)
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0065, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0069, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1301,7 +1345,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0065, TestSize.Level1)
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0066, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0070, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1310,7 +1354,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0066, TestSize.Level1)
     EXPECT_EQ(systemData->BuildPrinterPreference(cap, preferences), E_PRINT_INVALID_PRINTER);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0067, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0071, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1320,7 +1364,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0067, TestSize.Level1)
     EXPECT_EQ(systemData->BuildPrinterPreference(cap, preferences), E_PRINT_INVALID_PARAMETER);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0068, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0072, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1332,7 +1376,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0068, TestSize.Level1)
     EXPECT_EQ(systemData->BuildPrinterPreference(cap, preferences), E_PRINT_INVALID_PARAMETER);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0069, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0073, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1344,7 +1388,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0069, TestSize.Level1)
     EXPECT_EQ(systemData->BuildPrinterPreference(cap, preferences), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0070, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0074, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1353,7 +1397,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0070, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultPageSizeId(cap, capOpt), "");
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0071, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0075, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1371,7 +1415,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0071, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultPageSizeId(cap, capOpt), "ISO_A3");
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0072, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0076, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1381,7 +1425,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0072, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultPageSizeId(cap, capOpt), "123");
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0073, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0077, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1390,7 +1434,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0073, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultOrientation(cap, capOpt), 0);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0074, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0078, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1400,7 +1444,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0074, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultOrientation(cap, capOpt), 0);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0075, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0079, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1410,7 +1454,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0075, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultOrientation(cap, capOpt), 0);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0076, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0080, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1419,7 +1463,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0076, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultDuplexMode(cap, capOpt), 0);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0077, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0081, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1432,7 +1476,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0077, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultDuplexMode(cap, capOpt), 2);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0078, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0082, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1445,7 +1489,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0078, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultDuplexMode(cap, capOpt), 0);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0079, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0083, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1455,7 +1499,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0079, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultDuplexMode(cap, capOpt), 0);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0080, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0084, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1464,7 +1508,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0080, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultPrintQuality(cap, capOpt), 0);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0081, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0085, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1478,7 +1522,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0081, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultPrintQuality(cap, capOpt), 4);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0082, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0086, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1488,7 +1532,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0082, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultPrintQuality(cap, capOpt), 4);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0083, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0087, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1497,7 +1541,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0083, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultMediaType(cap, capOpt), "");
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0084, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0088, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1511,7 +1555,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0084, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultMediaType(cap, capOpt), "stationery");
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0085, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0089, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1521,7 +1565,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0085, TestSize.Level1)
     EXPECT_EQ(systemData->ParseDefaultMediaType(cap, capOpt), "stationery");
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0086, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0090, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1531,7 +1575,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0086, TestSize.Level1)
     EXPECT_EQ(systemData->ParsePrinterPreferencesJson(jsonObject), false);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0087, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0091, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1546,7 +1590,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0087, TestSize.Level1)
     EXPECT_EQ(systemData->ParsePrinterPreferencesJson(jsonObject), true);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0088, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0092, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1563,7 +1607,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0088, TestSize.Level1)
     EXPECT_EQ(systemData->ParsePrinterPreferencesJson(jsonObject), true);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0089, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0093, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1580,7 +1624,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0089, TestSize.Level1)
     EXPECT_EQ(systemData->ParsePrinterPreferencesJson(jsonObject), true);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0090, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0094, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
