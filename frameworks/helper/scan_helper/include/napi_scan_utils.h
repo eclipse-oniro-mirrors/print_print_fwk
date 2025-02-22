@@ -83,7 +83,9 @@ public:
     static std::string GetLocalId(const std::string& globalId, const std::string& extensionId);
     static std::string EncodeExtensionCid(const std::string &extensionId, uint32_t callbackId);
     static bool DecodeExtensionCid(const std::string &cid, std::string &extensionId, uint32_t &callbackId);
-    static std::string GetTaskEventId(const std::string &taskId, const std::string &type);
+    static std::string GetTaskEventId(const std::string &taskId, const std::string &type,
+        int32_t userId, int32_t callerPid);
+    static bool EncodeTaskEventId(const std::string &eventType, std::string &type);
     static int32_t OpenFile(const std::string &filePath);
     static bool IsPathValid(const std::string &filePath);
     static uint32_t GetIdFromFdPath(const std::string &fdPath);

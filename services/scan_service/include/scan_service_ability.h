@@ -106,7 +106,6 @@ private:
     void ManualStart();
     int32_t ReInitScan();
     bool CheckPermission(const std::string &permissionName);
-    void SendGetFrameResEvent(const bool isGetSucc, const int32_t sizeRead);
     int32_t WriteJpegHeader(ScanParameters &parm, struct jpeg_error_mgr* jerr);
     void GeneratePicture(const std::string &scannerId, std::string &fileName,
         std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr);

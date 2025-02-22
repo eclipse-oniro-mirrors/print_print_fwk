@@ -267,13 +267,6 @@ namespace Scan {
         ScanServiceAbility::GetInstance()->CheckPermission(permissionName);
     }
 
-    void TestSendGetFrameResEvent(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        bool isGetSucc = dataProvider->ConsumeBool();
-        int32_t sizeRead = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        ScanServiceAbility::GetInstance()->SendGetFrameResEvent(isGetSucc, sizeRead);
-    }
-
     void TestGeneratePictureBatch(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         int32_t status = E_SCAN_NONE;
@@ -338,7 +331,6 @@ namespace Scan {
         }
         OHOS::Scan::TestReInitScan(data, size, dataProvider);
         OHOS::Scan::TestCheckPermission(data, size, dataProvider);
-        OHOS::Scan::TestSendGetFrameResEvent(data, size, dataProvider);
         OHOS::Scan::TestGeneratePictureBatch(data, size, dataProvider);
         OHOS::Scan::TestAddFoundScanner(data, size, dataProvider);
         OHOS::Scan::TestSendDeviceList(data, size, dataProvider);

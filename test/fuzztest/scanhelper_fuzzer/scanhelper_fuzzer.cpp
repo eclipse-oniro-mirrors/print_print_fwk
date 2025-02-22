@@ -754,7 +754,16 @@ void TestGetTaskEventId(const uint8_t* data, size_t size, FuzzedDataProvider* da
 {
     std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    NapiScanUtils::GetTaskEventId(taskId, type);
+    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    int32_t callerPid = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    NapiScanUtils::GetTaskEventId(taskId, type, userId, callerPid);
+}
+
+void TestEncodeTaskEventId(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+{
+    std::string eventType = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string type;
+    NapiScanUtils::EncodeTaskEventId(eventType, type);
 }
 
 void TestOpenFile(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -911,6 +920,7 @@ void NapiScanUtilsFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider*
     TestEncodeExtensionCidInterface(data, size, dataProvider);
     TestDecodeExtensionCid(data, size, dataProvider);
     TestGetTaskEventId(data, size, dataProvider);
+    TestEncodeTaskEventId(data, size, dataProvider);
     TestOpenFile(data, size, dataProvider);
     TestIsPathValid(data, size, dataProvider);
     TestGetJsVal(data, size, dataProvider);
