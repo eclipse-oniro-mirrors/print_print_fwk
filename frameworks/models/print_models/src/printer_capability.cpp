@@ -17,9 +17,9 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "print_utils.h"
+#include "print_json_util.h"
 #include <sstream>
 
-using json = nlohmann::json;
 namespace OHOS::Print {
 PrinterCapability::PrinterCapability()
     : colorMode_(0),
@@ -447,13 +447,13 @@ void PrinterCapability::SetPrinterAttrNameAndValue(const char *name, const char 
     printerAttr_group[name] = value;
 }
 
-nlohmann::json PrinterCapability::GetPrinterAttrGroupJson()
+Json::Value PrinterCapability::GetPrinterAttrGroupJson()
 {
     if (printerAttr_group.size() < 1) {
         PRINT_HILOGI("no printerAttr_group");
         return "";
     }
-    nlohmann::json printerAttrGroupJson;
+    Json::Value printerAttrGroupJson;
     for (auto iter = printerAttr_group.begin(); iter != printerAttr_group.end(); iter++) {
         printerAttrGroupJson[iter->first] = iter->second;
     }

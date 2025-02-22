@@ -21,7 +21,7 @@
 #include "print_margin.h"
 #include "print_page_size.h"
 #include "print_resolution.h"
-#include <nlohmann/json.hpp>
+#include <json/json.h>
 
 namespace OHOS::Print {
 class PrinterCapability final : public Parcelable {
@@ -110,7 +110,7 @@ public:
 
     void SetPrinterAttrNameAndValue(const char* name, const char* value);
 
-    nlohmann::json GetPrinterAttrGroupJson();
+    Json::Value GetPrinterAttrGroupJson();
 
     void ClearCurPrinterAttrGroup();
 

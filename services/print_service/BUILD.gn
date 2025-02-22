@@ -16,113 +16,119 @@ import("//build/ohos.gni")
 
 cflags_cc = []
 
+_sources = [
+  "src/hisys_event_util.cpp",
+  "src/operation_queue.cpp",
+  "src/print_bms_death_recipient.cpp",
+  "src/print_bms_helper.cpp",
+  "src/print_callback_proxy.cpp",
+  "src/print_event_subscriber.cpp",
+  "src/print_extension_callback_proxy.cpp",
+  "src/print_security_guard_info.cpp",
+  "src/print_security_guard_manager.cpp",
+  "src/print_service_ability.cpp",
+  "src/print_service_converter.cpp",
+  "src/print_service_helper.cpp",
+  "src/print_service_stub.cpp",
+  "src/print_system_data.cpp",
+  "src/print_user_data.cpp",
+  "src/thread_sync_wait.cpp",
+  "src/vendor_bsuni_driver.cpp",
+  "src/vendor_driver_base.cpp",
+  "src/vendor_driver_group.cpp",
+  "src/vendor_helper.cpp",
+  "src/vendor_ipp_everywhere.cpp",
+  "src/vendor_manager.cpp",
+  "src/vendor_ppd_driver.cpp",
+  "src/vendor_wlan_group.cpp",
+]
+
+_deps = ["${print_path}/frameworks/models/print_models:print_models"]
+
+_external_deps = [
+  "ability_base:base",
+  "ability_base:want",
+  "ability_base:zuri",
+  "ability_runtime:ability_manager",
+  "ability_runtime:abilitykit_native",
+  "access_token:libaccesstoken_sdk",
+  "bundle_framework:appexecfwk_base",
+  "bundle_framework:appexecfwk_core",
+  "c_utils:utils",
+  "common_event_service:cesfwk_innerkits",
+  "drivers_interface_usb:libusb_proxy_1.0",
+  "eventhandler:libeventhandler",
+  "hilog:libhilog",
+  "hisysevent:libhisysevent",
+  "init:libbegetutil",
+  "ipc:ipc_core",
+  "napi:ace_napi",
+  "os_account:os_account_innerkits",
+  "safwk:system_ability_fwk",
+  "samgr:samgr_proxy",
+  "usb_manager:usbsrv_client",
+  "wifi:wifi_sdk",
+]
+
+_public_configs = [
+  ":print_service_config"
+]
+
+_include_dirs = [
+  "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+  "${print_path}/frameworks/ohprint/include",
+  "${print_utils_path}/include",
+]
+
+_branch_protector_ret = "pac_ret"
+_sanitize = {
+  cfi = true
+  cfi_cross_dso = true
+  boundary_sanitize = true
+  debug = false
+  integer_overflow = true
+  ubsan = true
+}
+
 config("print_service_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "include",
     "${print_path}/frameworks/models/print_models/include",
   ]
-
-  cflags_cc += [
+  cflags_cc += [ 
     "-fno-exceptions",
     "-fdata-sections",
     "-ffunction-sections",
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",
     "-flto",
-    "--save-temps",
-    "-Os",
+    "-Os"
   ]
 }
 
 ohos_shared_library("print_service") {
-  sources = [
-    "src/hisys_event_util.cpp",
-    "src/operation_queue.cpp",
-    "src/print_bms_death_recipient.cpp",
-    "src/print_bms_helper.cpp",
-    "src/print_callback_proxy.cpp",
-    "src/print_event_subscriber.cpp",
-    "src/print_extension_callback_proxy.cpp",
-    "src/print_security_guard_info.cpp",
-    "src/print_security_guard_manager.cpp",
-    "src/print_service_ability.cpp",
-    "src/print_service_converter.cpp",
-    "src/print_service_helper.cpp",
-    "src/print_service_stub.cpp",
-    "src/print_system_data.cpp",
-    "src/print_user_data.cpp",
-    "src/thread_sync_wait.cpp",
-    "src/vendor_bsuni_driver.cpp",
-    "src/vendor_driver_base.cpp",
-    "src/vendor_driver_group.cpp",
-    "src/vendor_helper.cpp",
-    "src/vendor_ipp_everywhere.cpp",
-    "src/vendor_manager.cpp",
-    "src/vendor_ppd_driver.cpp",
-    "src/vendor_wlan_group.cpp",
-  ]
+  sources = _sources
+  branch_protector_ret = _branch_protector_ret
+  sanitize = _sanitize
+  public_configs = _public_configs
+  include_dirs = _include_dirs
+  deps = _deps
+  external_deps = _external_deps
 
-  branch_protector_ret = "pac_ret"
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    boundary_sanitize = true
-    debug = false
-    integer_overflow = true
-    ubsan = true
-  }
-
-  public_configs = [
-    "${c_utils_path}/base:utils_config",
-    ":print_service_config",
-  ]
-  include_dirs = [
-    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
-    "${print_path}/frameworks/ohprint/include",
-    "${print_utils_path}/include",
-  ]
-
-  deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
-
-  external_deps = [
-    "ability_base:base",
-    "ability_base:want",
-    "ability_base:zuri",
-    "ability_runtime:ability_manager",
-    "ability_runtime:abilitykit_native",
-    "access_token:libaccesstoken_sdk",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
-    "c_utils:utils",
-    "common_event_service:cesfwk_innerkits",
-    "drivers_interface_usb:libusb_proxy_1.0",
-    "eventhandler:libeventhandler",
-    "hilog:libhilog",
-    "hisysevent:libhisysevent",
-    "init:libbegetutil",
-    "ipc:ipc_core",
-    "napi:ace_napi",
-    "os_account:os_account_innerkits",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-    "usb_manager:usbsrv_client",
-    "wifi:wifi_sdk",
-  ]
-
+  cflags_cc += ["-fvisibility=hidden"]
   if (cups_enable) {
-    include_dirs += [ "//third_party/cups/cups-2.4.0" ]
     sources += [
       "src/print_cups_attribute.cpp",
       "src/print_cups_client.cpp",
       "src/print_cups_wrapper.cpp",
     ]
-    cflags_cc += [ "-DCUPS_ENABLE" ]
-    deps += [
-      "//third_party/cups:third_party_cups",
-      "//third_party/cups-filters:third_party_cupsfilters",
+    cflags_cc += ["-DCUPS_ENABLE"]
+    external_deps += [
+      "cJSON:cjson",
+      "cups:cups",
+      "cups-filters:cupsfilters",
     ]
-    external_deps += [ "cJSON:cjson" ]
   }
 
   if (security_guard_enabled) {
@@ -130,10 +136,48 @@ ohos_shared_library("print_service") {
       "security_guard:libsg_collect_sdk",
       "time_service:time_client",
     ]
-
-    cflags_cc += [ "-DSECURITY_GUARDE_ENABLE" ]
+    cflags_cc += ["-DSECURITY_GUARDE_ENABLE"]
   }
 
+  if (build_variant == "user") {
+    cflags_cc += ["-DIS_RELEASE_VERSION"]
+  }
+
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
+
+ohos_shared_library("print_service_test") {
+  sources = _sources
+  branch_protector_ret = _branch_protector_ret
+  sanitize = _sanitize
+  public_configs = _public_configs
+  include_dirs = _include_dirs
+  deps = _deps
+  external_deps = _external_deps
+
+if (cups_enable) {
+    sources += [
+      "src/print_cups_attribute.cpp",
+      "src/print_cups_client.cpp",
+      "src/print_cups_wrapper.cpp",
+    ]
+    cflags_cc += [ "-DCUPS_ENABLE" ]
+    external_deps += [
+      "cJSON:cjson",
+      "cups:cups",
+      "cups-filters:cupsfilters",
+    ]
+  }
+
+  if (security_guard_enabled) {
+    external_deps += [
+      "security_guard:libsg_collect_sdk",
+      "time_service:time_client",
+    ]
+    cflags_cc += [ "-DSECURITY_GUARDE_ENABLE" ]
+  }
+  
   if (build_variant == "user") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
   }

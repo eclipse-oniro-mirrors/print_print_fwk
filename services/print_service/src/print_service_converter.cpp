@@ -41,13 +41,13 @@ bool ConvertColorModeCode(const char *src, ColorModeCode &dst)
     return true;
 }
 
-bool ConvertColorModeToJson(const ColorModeCode &code, nlohmann::json &jsonObject)
+bool ConvertColorModeToJson(const ColorModeCode &code, Json::Value &jsonObject)
 {
     jsonObject["color"] = std::to_string(static_cast<int>(code));
     return true;
 }
 
-bool ConvertDuplexModeToJson(const DuplexModeCode &code, nlohmann::json &jsonObject)
+bool ConvertDuplexModeToJson(const DuplexModeCode &code, Json::Value &jsonObject)
 {
     jsonObject["duplex"] = std::to_string(static_cast<int>(code));
     return true;
@@ -128,7 +128,7 @@ bool ConvertPrintPageSize(const char *src, PrintPageSize &dst)
     return ConvertCustomPageSizeFromPwgName(src, dst);
 }
 
-bool ConvertPageSizeToJson(const PrintPageSize &pageSize, nlohmann::json &jsonObject)
+bool ConvertPageSizeToJson(const PrintPageSize &pageSize, Json::Value &jsonObject)
 {
     jsonObject["id"] = pageSize.GetId();
     jsonObject["name"] = pageSize.GetName();

@@ -19,7 +19,7 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <nlohmann/json.hpp>
+#include <json/json.h>
 #include "printer_info.h"
 #include "printer_capability.h"
 #include "print_constant.h"
@@ -77,55 +77,55 @@ public:
     std::shared_ptr<PrinterInfo> QueryIpPrinterInfoById(const std::string &printerId);
     int32_t BuildPrinterPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences);
     void BuildEprintPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences);
-    void ConvertJsonToPrinterPreferences(nlohmann::json &preferencesJson, PrinterPreferences &preferences);
+    void ConvertJsonToPrinterPreferences(Json::Value &preferencesJson, PrinterPreferences &preferences);
 
 private:
-    bool ParsePrinterListJsonV1(nlohmann::json& jsonObject);
-    bool GetJsonObjectFromFile(nlohmann::json &jsonObject, const std::string &fileName);
-    void ConvertPrinterCapabilityToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
-    void ConvertPrintMarginToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
-    void ConvertPageSizeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
-    void ConvertPrintResolutionToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
-    void ConvertSupportedColorModeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
-    void ConvertSupportedDuplexModeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
-    void ConvertSupportedMediaTypeToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
-    void ConvertSupportedQualityToJson(PrinterCapability &printerCapability, nlohmann::json &capsJson);
-    bool ConvertJsonToPrinterCapability(nlohmann::json &capsJson, PrinterCapability &printerCapability);
-    bool ConvertJsonToPrintMargin(nlohmann::json &capsJson, PrinterCapability &printerCapability);
-    bool ConvertJsonToPageSize(nlohmann::json &capsJson, PrinterCapability &printerCapability);
-    bool ConvertJsonToPrintResolution(nlohmann::json &capsJson, PrinterCapability &printerCapability);
-    bool ConvertJsonToSupportedColorMode(nlohmann::json &capsJson, PrinterCapability &printerCapability);
-    bool ConvertJsonToSupportedDuplexMode(nlohmann::json &capsJson, PrinterCapability &printerCapability);
-    bool ConvertJsonToSupportedMediaType(nlohmann::json &capsJson, PrinterCapability &printerCapability);
-    bool ConvertJsonToSupportedQuality(nlohmann::json &capsJson, PrinterCapability &printerCapability);
-    bool ConvertJsonToSupportedOrientation(nlohmann::json &capsJson, PrinterCapability &printerCapability);
+    bool ParsePrinterListJsonV1(Json::Value& jsonObject);
+    bool GetJsonObjectFromFile(Json::Value &jsonObject, const std::string &fileName);
+    void ConvertPrinterCapabilityToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    void ConvertPrintMarginToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    void ConvertPageSizeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    void ConvertPrintResolutionToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    void ConvertSupportedColorModeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    void ConvertSupportedDuplexModeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    void ConvertSupportedMediaTypeToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    void ConvertSupportedQualityToJson(PrinterCapability &printerCapability, Json::Value &capsJson);
+    bool ConvertJsonToPrinterCapability(Json::Value &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToPageSize(Json::Value &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToPrintResolution(Json::Value &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToSupportedColorMode(Json::Value &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToSupportedDuplexMode(Json::Value &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToSupportedMediaType(Json::Value &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToSupportedQuality(Json::Value &capsJson, PrinterCapability &printerCapability);
+    bool ConvertJsonToSupportedOrientation(Json::Value &capsJson, PrinterCapability &printerCapability);
     bool GetPrinterCapabilityFromFile(std::string printerId, PrinterCapability &printerCapability);
-    bool CheckPrinterInfoJson(nlohmann::json &object, std::string &printerId);
+    bool CheckPrinterInfoJson(Json::Value &object, std::string &printerId);
     bool GetPrinterCapabilityFromJson(
-        std::string printerId, nlohmann::json &jsonObject, PrinterCapability &printerCapability);
+        std::string printerId, Json::Value &jsonObject, PrinterCapability &printerCapability);
     bool ParseUserListJsonV1(
-        nlohmann::json &jsonObject, std::vector<int32_t> &allPrintUserList);
-    bool ConvertJsonToCupsPrinterInfo(nlohmann::json &object);
-    void ConvertInnerJsonToCupsPrinterInfo(nlohmann::json &object, CupsPrinterInfo &info);
+        Json::Value &jsonObject, std::vector<int32_t> &allPrintUserList);
+    bool ConvertJsonToCupsPrinterInfo(Json::Value &object);
+    void ConvertInnerJsonToCupsPrinterInfo(Json::Value &object, CupsPrinterInfo &info);
 
-    bool ParsePreviousPreferencesSetting(nlohmann::json &settingJson, PrinterPreferences &preferences);
-    bool ParsePrinterPreferencesJson(nlohmann::json &jsonObject);
+    bool ParsePreviousPreferencesSetting(Json::Value &settingJson, PrinterPreferences &preferences);
+    bool ParsePrinterPreferencesJson(Json::Value &jsonObject);
     bool ReadJsonFile(const std::filesystem::path &path);
-    std::string ParseDefaultPageSizeId(const PrinterCapability &cap, nlohmann::json &capOpt);
-    int32_t ParseDefaultOrientation(const PrinterCapability &cap, nlohmann::json &capOpt);
-    int32_t ParseDefaultDuplexMode(const PrinterCapability &cap, nlohmann::json &capOpt);
-    int32_t ParseDefaultPrintQuality(const PrinterCapability &cap, nlohmann::json &capOpt);
-    std::string ParseDefaultMediaType(const PrinterCapability &cap, nlohmann::json &capOpt);
+    std::string ParseDefaultPageSizeId(const PrinterCapability &cap, Json::Value &capOpt);
+    int32_t ParseDefaultOrientation(const PrinterCapability &cap, Json::Value &capOpt);
+    int32_t ParseDefaultDuplexMode(const PrinterCapability &cap, Json::Value &capOpt);
+    int32_t ParseDefaultPrintQuality(const PrinterCapability &cap, Json::Value &capOpt);
+    std::string ParseDefaultMediaType(const PrinterCapability &cap, Json::Value &capOpt);
     void DeleteFile(const std::filesystem::path &path);
 
     template<typename T>
-    bool ProcessJsonToCapabilityList(nlohmann::json &capsJson,
+    bool ProcessJsonToCapabilityList(Json::Value &capsJson,
                                      const std::string &key,
                                      PrinterCapability &printerCapability,
                                      void (PrinterCapability::*setter)(const std::vector <T> &),
-                                     std::function<bool(const nlohmann::json &, T &)> converter)
+                                     std::function<bool(const Json::Value &, T &)> converter)
     {
-        if (!capsJson.contains(key) || !capsJson[key].is_array()) {
+        if (!capsJson.isMember(key) || !capsJson[key].isArray()) {
             PRINT_HILOGW("Cannot find %{public}s or it's not an array", key.c_str());
             return true;
         }

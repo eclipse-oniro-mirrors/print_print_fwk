@@ -17,7 +17,7 @@
 #define PRINTER_PREFERENCES_H
 
 #include "parcel.h"
-#include <nlohmann/json.hpp>
+#include <json/json.h>
 
 namespace OHOS::Print {
 class PrinterPreferences final : public Parcelable {
@@ -80,7 +80,7 @@ public:
 
     void Dump() const;
 
-    nlohmann::json ConvertToJson();
+    Json::Value ConvertToJson();
 
 private:
     bool ReadFromParcel(Parcel &parcel);

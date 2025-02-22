@@ -15,10 +15,10 @@
 
 #include "vendor_ipp_everywhere.h"
 #include "print_log.h"
-#include <nlohmann/json.hpp>
+#include <json/json.h>
+#include "print_json_util.h"
 
 using namespace OHOS::Print;
-using json = nlohmann::json;
 namespace {
 const std::string VENDOR_IPP_START = "ipp://";
 const std::string VENDOR_IPP_END = ":631/ipp/print";
@@ -211,25 +211,21 @@ std::shared_ptr<PrinterInfo> VendorIppEveryWhere::ConvertCapabilityToInfo(const 
         return nullptr;
     }
     std::string capOption = printerCap.GetOption();
-    if (!json::accept(capOption)) {
+    Json::Value capJson;
+    if (!PrintJsonUtil::Parse(capOption, capJson)) {
         PRINT_HILOGW("invalid option");
         return nullptr;
     }
-    nlohmann::json capJson = json::parse(capOption, nullptr, false);
-    if (capJson.is_discarded()) {
-        PRINT_HILOGW("json discarded");
-        return nullptr;
-    }
-    if (!capJson.contains("printerName") || !capJson["printerName"].is_string()) {
+    if (!capJson.isMember("printerName") || !capJson["printerName"].isString()) {
         PRINT_HILOGW("printerName invalid");
         return nullptr;
     }
-    std::string printerName = capJson["printerName"].get<std::string>();
-    if (!capJson.contains("make") || !capJson["make"].is_string()) {
+    std::string printerName = capJson["printerName"].asString();
+    if (!capJson.isMember("make") || !capJson["make"].isString()) {
         PRINT_HILOGW("make invalid");
         return nullptr;
     }
-    std::string printerMaker = capJson["make"].get<std::string>();
+    std::string printerMaker = capJson["make"].asString();
     std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
     printerInfo->SetPrinterName(printerName);
     printerInfo->SetUri(printerUri);
@@ -237,11 +233,11 @@ std::shared_ptr<PrinterInfo> VendorIppEveryWhere::ConvertCapabilityToInfo(const 
     printerInfo->SetPrinterId(printerUri);
     printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
     printerInfo->SetCapability(printerCap);
-    nlohmann::json option;
+    Json::Value option;
     option["printerName"] = printerName;
     option["printerUri"] = printerUri;
     option["make"] = printerMaker;
-    printerInfo->SetOption(option.dump());
+    printerInfo->SetOption(PrintJsonUtil::WriteString(option));
     return printerInfo;
 }
 

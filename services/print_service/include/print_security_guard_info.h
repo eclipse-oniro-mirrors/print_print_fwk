@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-#include <nlohmann/json.hpp>
+#include <json/json.h>
 
 #ifdef SECURITY_GUARDE_ENABLE
 #include "sg_collect_client.h"
@@ -31,6 +31,7 @@
 #include "printer_info.h"
 #include "print_job.h"
 #include "print_constant.h"
+#include "print_json_util.h"
 
 namespace OHOS::Print {
 class PrintSecurityGuardInfo {
@@ -62,7 +63,7 @@ private:
     std::string jobName_{};
     PrintTypeInfo printTypeInfo_;
 
-    nlohmann::json ToJson();
+    Json::Value ToJson();
 };
 } // namespace OHOS::Print
 

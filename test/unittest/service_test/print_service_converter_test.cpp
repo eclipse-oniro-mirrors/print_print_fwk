@@ -16,7 +16,6 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
-#include <nlohmann/json.hpp>
 #include "print_service_converter.h"
 #include "print_page_size.h"
 #include "print_log.h"
@@ -94,7 +93,7 @@ HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0005, TestSize.Lev
 HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_006, TestSize.Level1)
 {
     PrintPageSize pageSize;
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     EXPECT_EQ(ConvertPageSizeToJson(pageSize, jsonObject), true);
 }
 
@@ -135,14 +134,14 @@ HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0010, TestSize.Lev
 HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0011, TestSize.Level1)
 {
     ColorModeCode code = ColorModeCode::COLOR_MODE_COLOR;
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     EXPECT_EQ(ConvertColorModeToJson(code, jsonObject), true);
 }
 
 HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0012, TestSize.Level1)
 {
     DuplexModeCode code = DuplexModeCode::DUPLEX_MODE_ONE_SIDED;
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     EXPECT_EQ(ConvertDuplexModeToJson(code, jsonObject), true);
 }
 

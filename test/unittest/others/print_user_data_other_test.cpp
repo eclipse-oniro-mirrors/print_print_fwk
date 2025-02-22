@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 #include "print_user_data.h"
+#include "print_json_util.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -447,7 +448,7 @@ TEST_F(PrintUserDataTest, ParseUserData_ShouldReturn_WhenFileDataAvailableButInv
         return true;
     };
 // Mock the CheckFileData method to return false indicating file data is invalid
-printUserData.CheckFileData = [](const std::string &, nlohmann::json &) {
+printUserData.CheckFileData = [](const std::string &, Json::Value &) {
     return false;
 };
 printUserData.ParseUserData();
@@ -463,11 +464,11 @@ TEST_F(PrintUserDataTest, ParseUserData_ShouldParse_WhenFileDataAvailableAndVali
         return true;
     };
 // Mock the CheckFileData method to return true indicating file data is valid
-    printUserData.CheckFileData = [](const std::string &, nlohmann::json &) {
+    printUserData.CheckFileData = [](const std::string &, Json::Value &) {
         return true;
     };
     // Mock the ParseUserDataFromJson method to do nothing
-    printUserData.ParseUserDataFromJson = [](const nlohmann::json &) {};
+    printUserData.ParseUserDataFromJson = [](const Json::Value &) {};
     printUserData.ParseUserData();
     // Assert that the method does not crash or throw exceptions
     EXPECT_NO_THROW(printUserData.ParseUserData());
@@ -475,7 +476,7 @@ TEST_F(PrintUserDataTest, ParseUserData_ShouldParse_WhenFileDataAvailableAndVali
 
 TEST_F(PrintUserDataTest, ParseUserDataFromJson_Test)
 {
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     PrintUserData printUserData;
     printUserData.ParseUserDataFromJson(jsonObject);
     EXPECT_EQ(printUserData.defaultPrinterId_, "");
@@ -484,7 +485,7 @@ TEST_F(PrintUserDataTest, ParseUserDataFromJson_Test)
 }
 TEST_F(PrintUserDataTest, ParseUserDataFromJson_Test_WithUserData)
 {
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     jsonObject["print_user_data"] = {
         {
             "1",
@@ -493,7 +494,7 @@ TEST_F(PrintUserDataTest, ParseUserDataFromJson_Test_WithUserData)
                 {"lastUsedPrinter", "printer2"},
                 {"useLastUsedPrinterForDefault", true},
                 {"usedPrinterList", undefined{
-                    nlohmann::json jsonArray;jsonArray.push_back("printer3");return jsonArray;}()}
+                    Json::Value jsonArray;jsonArray.append("printer3");return jsonArray;}()}
             }
         }
     };
@@ -505,7 +506,7 @@ EXPECT_EQ(printUserData.useLastUsedPrinterForDefault_, true);
 }
 TEST_F(PrintUserDataTest, ParseUserDataFromJson_Test_WithUserData_MissingDefaultPrinter)
 {
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     jsonObject["print_user_data"] = {
         {
             "1",
@@ -514,7 +515,7 @@ TEST_F(PrintUserDataTest, ParseUserDataFromJson_Test_WithUserData_MissingDefault
                 {"lastUsedPrinter", "printer2"},
                 {"useLastUsedPrinterForDefault", true},
                 {"usedPrinterList", undefined{
-                    nlohmann::json jsonArray;jsonArray.push_back("printer3");return jsonArray;}()}
+                    Json::Value jsonArray;jsonArray.append("printer3");return jsonArray;}()}
             }
         }
     };
@@ -528,27 +529,25 @@ EXPECT_EQ(printUserData.useLastUsedPrinterForDefault_, true);
 TEST_F(PrintUserDataTest, ConvertJsonToUsedPrinterList_Test)
 {
     PrintUserData printUserData;
-    nlohmann::json userData;
-    userData["usedPrinterList"] = nlohmann::json::array();
-    userData["usedPrinterList"].push_back("printer1");
-    userData["usedPrinterList"].push_back("printer2");
-    userData["usedPrinterList"].push_back("printer3");
+    Json::Value userData;
+    userData["usedPrinterList"].append("printer1");
+    userData["usedPrinterList"].append("printer2");
+    userData["usedPrinterList"].append("printer3");
     EXPECT_TRUE(printUserData.ConvertJsonToUsedPrinterList(userData));
 }
 TEST_F(PrintUserDataTest, ConvertJsonToUsedPrinterList_Test_Invalid)
 {
     PrintUserData printUserData;
-    nlohmann::json userData;
-    userData["usedPrinterList"] = nlohmann::json::array();
+    Json::Value userData;
     int printerId = 123;
-    userData["usedPrinterList"].push_back(printerId); // Invalid value
-    userData["usedPrinterList"].push_back("printer2");
+    userData["usedPrinterList"].append(printerId); // Invalid value
+    userData["usedPrinterList"].append("printer2");
     EXPECT_FALSE(printUserData.ConvertJsonToUsedPrinterList(userData));
 }
 TEST_F(PrintUserDataTest, ConvertJsonToUsedPrinterList_Test_Empty)
 {
     PrintUserData printUserData;
-    nlohmann::json userData;
+    Json::Value userData;
     EXPECT_TRUE(printUserData.ConvertJsonToUsedPrinterList(userData));
 }
 
@@ -602,35 +601,35 @@ TEST_F(PrintUserDataTest, GetFileData_ShouldReturnFalse_WhenFileDataCannotBeRead
 TEST_F(PrintUserDataTest, CheckFileData_ShouldReturnFalse_WhenFileDataIsNotAcceptable)
 {
     std::string fileData = "invalid json";
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     bool result = PrintUserData::CheckFileData(fileData, jsonObject);
     EXPECT_FALSE(result);
 }
 TEST_F(PrintUserDataTest, CheckFileData_ShouldReturnFalse_WhenVersionIsNotPresent)
 {
     std::string fileData = "{" key ":" value "}";
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     bool result = PrintUserData::CheckFileData(fileData, jsonObject);
     EXPECT_FALSE(result);
 }
 TEST_F(PrintUserDataTest, CheckFileData_ShouldReturnFalse_WhenVersionIsNotString)
 {
     std::string fileData = "{" version ":123}";
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     bool result = PrintUserData::CheckFileData(fileData, jsonObject);
     EXPECT_FALSE(result);
 }
 TEST_F(PrintUserDataTest, CheckFileData_ShouldReturnFalse_WhenPrintUserDataIsNotPresent)
 {
     std::string fileData = "{" version ":" 1.0 "}";
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     bool result = PrintUserData::CheckFileData(fileData, jsonObject);
     EXPECT_FALSE(result);
 }
 TEST_F(PrintUserDataTest, CheckFileData_ShouldReturnTrue_WhenAllConditionsAreMet)
 {
     std::string fileData = "{" version ":" 1.0 "," print_user_data ":" data "}";
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     bool result = PrintUserData::CheckFileData(fileData, jsonObject);
     EXPECT_TRUE(result);
 }
