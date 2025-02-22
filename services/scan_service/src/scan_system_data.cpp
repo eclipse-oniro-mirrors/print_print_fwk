@@ -235,7 +235,7 @@ bool ScanSystemData::UpdateScannerNameByUniqueId(const std::string &uniqueId, co
     if (iter != addedScannerMap_.end() && iter->second != nullptr) {
         iter->second->deviceName = deviceName;
     } else {
-        SCAN_HILOGE("ScanSystemData UpdateScannerNameByUniqueId fail");
+        SCAN_HILOGW("ScanSystemData UpdateScannerNameByUniqueId fail");
         return false;
     }
     return true;

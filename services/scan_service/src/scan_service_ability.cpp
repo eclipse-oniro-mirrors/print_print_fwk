@@ -116,7 +116,6 @@ static const std::string SCAN_DEVICE_DEL = "scanDeviceDel";
 static const std::string SCAN_INIT_EVENT = "scanInitEvent";
 
 static const std::string DEVICE_EVENT_TYPE = "deviceStateChange";
-static const std::string GET_FRAME_RES_EVENT_TYPE = "getFrameResult";
 static const std::string GET_SCANNER_DEVICE_LIST = "GET_SCANNER_DEVICE_LIST";
 
 std::map<std::string, sptr<IScanCallback>> OHOS::Scan::ScanServiceAbility::registeredListeners_;
@@ -869,14 +868,13 @@ int32_t ScanServiceAbility::GetScanSelectFd(const std::string scannerId, int32_t
 
 int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type, const sptr<IScanCallback> &listener)
 {
-    std::string eventType = type;
-    if (taskId != "") {
-        eventType = NapiScanUtils::GetTaskEventId(taskId, type);
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    int32_t userId = GetCurrentUserId();
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    std::string eventType = NapiScanUtils::GetTaskEventId(taskId, type, userId, callerPid);
 
     SCAN_HILOGD("ScanServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -885,7 +883,8 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
         SCAN_HILOGE("Exceeded the maximum number of registration.");
         return E_SCAN_GENERIC_FAILURE;
     }
-    if (registeredListeners_.find(eventType) == registeredListeners_.end()) {
+    auto it = registeredListeners_.find(eventType);
+    if (it == registeredListeners_.end()) {
         const auto temp = registeredListeners_.insert(std::make_pair(eventType, listener));
         if (!temp.second) {
             SCAN_HILOGE("ScanServiceAbility::On insert type=%{public}s object fail.", eventType.c_str());
@@ -893,7 +892,7 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
         }
     } else {
         SCAN_HILOGD("ScanServiceAbility::On Replace listener.");
-        registeredListeners_[eventType] = listener;
+        it->second = listener;
     }
     SCAN_HILOGD("ScanServiceAbility::On end.");
     return E_SCAN_NONE;
@@ -901,16 +900,14 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
 
 int32_t ScanServiceAbility::Off(const std::string taskId, const std::string &type)
 {
-    std::string eventType = type;
-    if (taskId != "") {
-        eventType = NapiScanUtils::GetTaskEventId(taskId, type);
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-
-    SCAN_HILOGD("ScanServiceAbility::Off started.");
+    int32_t userId = GetCurrentUserId();
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    std::string eventType = NapiScanUtils::GetTaskEventId(taskId, type, userId, callerPid);
+    SCAN_HILOGD("ScanServiceAbility::Off started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto iter = registeredListeners_.find(eventType);
     if (iter != registeredListeners_.end()) {
@@ -919,18 +916,6 @@ int32_t ScanServiceAbility::Off(const std::string taskId, const std::string &typ
         return E_SCAN_NONE;
     }
     return E_SCAN_INVALID_PARAMETER;
-}
-
-void ScanServiceAbility::SendGetFrameResEvent(const bool isGetSucc, const int32_t sizeRead)
-{
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    SCAN_HILOGE("ScanServiceAbility::SendGetFrameSuccEvent SizeRead %{public}d", sizeRead);
-    auto eventIt = registeredListeners_.find(GET_FRAME_RES_EVENT_TYPE);
-    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
-        SCAN_HILOGE("%{public}s event not register", GET_FRAME_RES_EVENT_TYPE.c_str());
-        return;
-    }
-    eventIt->second->OnGetFrameResCallback(isGetSucc, sizeRead);
 }
 
 void ScanServiceAbility::SendDeviceInfoTCP(const ScanDeviceInfoTCP &info, std::string event)
@@ -942,12 +927,13 @@ void ScanServiceAbility::SendDeviceInfoTCP(const ScanDeviceInfoTCP &info, std::s
         return;
     }
 
-    auto eventIt = registeredListeners_.find(event);
-    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
-        SCAN_HILOGE("GetScannerList SendDeviceInfoTCP event not register");
-        return;
+    for (auto [eventType, listener] : registeredListeners_) {
+        std::string type;
+        NapiScanUtils::EncodeTaskEventId(eventType, type);
+        if (type == event && listener != nullptr) {
+            listener->OnCallback(info.GetDeviceState(), info);
+        }
     }
-    eventIt->second->OnCallback(info.GetDeviceState(), info);
 }
 
 void ScanServiceAbility::SendDeviceInfo(const ScanDeviceInfo &info, std::string event)
@@ -959,12 +945,13 @@ void ScanServiceAbility::SendDeviceInfo(const ScanDeviceInfo &info, std::string 
         return;
     }
 
-    auto eventIt = registeredListeners_.find(event);
-    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
-        SCAN_HILOGE("GetScannerList SendDeviceInfo event not register");
-        return;
+    for (auto [eventType, listener] : registeredListeners_) {
+        std::string type;
+        NapiScanUtils::EncodeTaskEventId(eventType, type);
+        if (type == event && listener != nullptr) {
+            listener->OnCallback(info.GetDeviceState(), info);
+        }
     }
-    eventIt->second->OnCallback(info.GetDeviceState(), info);
 }
 
 void ScanServiceAbility::SendDeviceList(std::vector<ScanDeviceInfo> &infos, std::string event)
@@ -976,12 +963,13 @@ void ScanServiceAbility::SendDeviceList(std::vector<ScanDeviceInfo> &infos, std:
         return;
     }
 
-    auto eventIt = registeredListeners_.find(event);
-    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
-        SCAN_HILOGE("GetScannerList SendDeviceList event not register");
-        return;
+    for (auto [eventType, listener] : registeredListeners_) {
+        std::string type;
+        NapiScanUtils::EncodeTaskEventId(eventType, type);
+        if (type == event && listener != nullptr) {
+            listener->OnGetDevicesList(infos);
+        }
     }
-    eventIt->second->OnGetDevicesList(infos);
 }
 
 void ScanServiceAbility::SendDeviceInfoSync(const ScanDeviceInfoSync &info, std::string event)
@@ -993,12 +981,13 @@ void ScanServiceAbility::SendDeviceInfoSync(const ScanDeviceInfoSync &info, std:
         return;
     }
 
-    auto eventIt = registeredListeners_.find(event);
-    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
-        SCAN_HILOGE("DealUsbDevStatusChange SendDeviceInfoSync event not register");
-        return;
+    for (auto [eventType, listener] : registeredListeners_) {
+        std::string type;
+        NapiScanUtils::EncodeTaskEventId(eventType, type);
+        if (type == event && listener != nullptr) {
+            listener->OnCallbackSync(info.GetDeviceState(), info);
+        }
     }
-    eventIt->second->OnCallbackSync(info.GetDeviceState(), info);
 }
 
 void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::string deviceId)
@@ -1269,7 +1258,7 @@ int32_t ScanServiceAbility::UpdateScannerName(const std::string& serialNumber,
 
     std::string uniqueId = discoverMode + serialNumber;
     if (!ScanSystemData::GetInstance().UpdateScannerNameByUniqueId(uniqueId, deviceName)) {
-        SCAN_HILOGE("ScanServiceAbility UpdateScannerNameByUniqueId fail");
+        SCAN_HILOGW("ScanServiceAbility UpdateScannerNameByUniqueId fail");
         return E_SCAN_INVALID_PARAMETER;
     }
     if (!ScanSystemData::GetInstance().SaveScannerMap()) {

@@ -20,6 +20,7 @@
 #include <condition_variable>
 #include <map>
 #include <mutex>
+#include <shared_mutex>
 
 #include "iscan_callback.h"
 #include "iscan_service.h"
@@ -65,13 +66,13 @@ public:
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IScanCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);
 
-    void LoadServerSuccess();
+    void LoadServerSuccess(const sptr<IRemoteObject> &remoteObject);
     void LoadServerFail();
 
 #ifndef TDD_ENABLE
 private:
 #endif
-    bool LoadServer();
+    bool LoadScanService();
     sptr<IScanService> GetScanServiceProxy();
 
 #ifndef TDD_ENABLE
@@ -81,12 +82,11 @@ private:
     static sptr<ScanManagerClient> instance_;
     sptr<IScanService> scanServiceProxy_;
     sptr<ScanSaDeathRecipient> deathRecipient_;
-
     std::mutex loadMutex_;
     std::mutex conditionMutex_;
-    std::mutex proxyLock_;
-    std::condition_variable syncCon_;
+    std::condition_variable_any syncCon_;
     bool ready_ = false;
+    std::shared_mutex proxyLock_;
     static constexpr int LOAD_SA_TIMEOUT_MS = 15000;
 };
 } // namespace OHOS::Scan
