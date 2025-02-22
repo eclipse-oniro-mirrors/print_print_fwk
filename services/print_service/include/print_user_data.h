@@ -68,10 +68,10 @@ public:
 private:
     bool SetUserDataToFile();
     bool GetFileData(std::string &fileData);
-    void ParseUserDataFromJson(nlohmann::json &jsonObject);
-    bool CheckFileData(std::string &fileData, nlohmann::json &jsonObject);
-    bool ConvertJsonToUsedPrinterList(nlohmann::json &userData);
-    void ConvertUsedPrinterListToJson(nlohmann::json &usedPrinterListJson);
+    void ParseUserDataFromJson(Json::Value &jsonObject);
+    bool CheckFileData(std::string &fileData, Json::Value &jsonObject);
+    bool ConvertJsonToUsedPrinterList(Json::Value &userData);
+    void ConvertUsedPrinterListToJson(Json::Value &usedPrinterListJson);
     void DeletePrinterFromUsedPrinterList(const std::string &printerId);
 
 public:

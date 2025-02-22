@@ -26,6 +26,7 @@ config("sane_service_config") {
     "-ffunction-sections",
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",
+    "-flto",
     "-Os",
   ]
 }

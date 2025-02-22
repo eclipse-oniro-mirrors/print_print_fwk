@@ -32,7 +32,7 @@
 
 #include "system_ability_definition.h"
 #include "parameter.h"
-#include "nlohmann/json.hpp"
+#include "json/json.h"
 #include "print_service_ability.h"
 #include "print_log.h"
 #include "print_constant.h"
@@ -42,7 +42,6 @@
 
 namespace OHOS::Print {
 using namespace std;
-using json = nlohmann::json;
 
 const uint32_t THOUSAND_INCH = 1000;
 const uint32_t CUPS_SEVER_PORT = 1631;
@@ -190,7 +189,7 @@ void ClearUsbPrinters()
     g_usbPrinters.clear();
 }
 
-static void ParseDeviceInfo(const char *deviceLocation, nlohmann::json &infoOps)
+static void ParseDeviceInfo(const char *deviceLocation, Json::Value &infoOps)
 {
     if (deviceLocation == nullptr) {
         PRINT_HILOGW("deviceLocation is nullptr");
@@ -247,11 +246,11 @@ void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceI
         PrinterCapability printerCapability;
         info.SetCapability(printerCapability);
         info.SetDescription("usb");
-        nlohmann::json infoOps;
+        Json::Value infoOps;
         infoOps["printerUri"] = printerUri;
         infoOps["printerMake"] = printerMake;
         ParseDeviceInfo(deviceLocation, infoOps);
-        info.SetOption(infoOps.dump());
+        info.SetOption(PrintJsonUtil::WriteString(infoOps));
         AddUsbPrinter(info);
     } else {
         PRINT_HILOGW("verify uri or make failed");
@@ -1182,19 +1181,19 @@ int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerI
         PrinterCapability printerCaps;
         std::string infoOpt = info.GetOption();
         PRINT_HILOGD("the printerInfo option %{public}s", infoOpt.c_str());
-        if (!json::accept(infoOpt)) {
+        Json::Value infoJson;
+        if (!PrintJsonUtil::Parse(infoOpt, infoJson)) {
             PRINT_HILOGE("infoOpt can not parse to json object");
             return E_PRINT_INVALID_PARAMETER;
         }
-        nlohmann::json infoJson = nlohmann::json::parse(infoOpt);
-        if (!infoJson.contains("printerUri") || !infoJson["printerUri"].is_string()) {
+        if (!infoJson.isMember("printerUri") || !infoJson["printerUri"].isString()) {
             PRINT_HILOGE("The infoJson does not have a necessary printerUri attribute.");
             return E_PRINT_INVALID_PARAMETER;
         }
-        std::string printerUri = infoJson["printerUri"].get<std::string>();
+        std::string printerUri = infoJson["printerUri"].asString();
         PRINT_HILOGD("QueryPrinterInfoByPrinterId in %{public}s", printerUri.c_str());
-        if (infoJson.contains("printerName") && infoJson["printerName"].is_string()) {
-            info.SetPrinterName(infoJson["printerName"].get<std::string>());
+        if (infoJson.isMember("printerName") && infoJson["printerName"].isString()) {
+            info.SetPrinterName(infoJson["printerName"].asString());
         }
         int32_t ret = QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
         PRINT_HILOGI("QueryPrinterInfoByPrinterId out");
@@ -1202,9 +1201,9 @@ int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerI
             PRINT_HILOGE("QueryPrinterInfoByPrinterId QueryPrinterCapabilityByUri fail");
             return E_PRINT_SERVER_FAILURE;
         }
-        nlohmann::json cupsOptionsJson = printerCaps.GetPrinterAttrGroupJson();
+        Json::Value cupsOptionsJson = printerCaps.GetPrinterAttrGroupJson();
         infoJson["cupsOptions"] = cupsOptionsJson;
-        info.SetOption(infoJson.dump());
+        info.SetOption(PrintJsonUtil::WriteString(infoJson));
         info.Dump();
     }
     return E_PRINT_NONE;
@@ -1728,40 +1727,40 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
     }
 }
 
-void PrintCupsClient::UpdateBorderlessJobParameter(json& optionJson, JobParameters *params)
+void PrintCupsClient::UpdateBorderlessJobParameter(Json::Value& optionJson, JobParameters *params)
 {
     if (params == nullptr) {
         PRINT_HILOGE("update borderlerss job parameter failed, params is nullptr");
         return;
     }
-    if (optionJson.contains("isBorderless") && optionJson["isBorderless"].is_boolean()) {
-        bool isBorderless = optionJson["isBorderless"].get<bool>();
+    if (optionJson.isMember("isBorderless") && optionJson["isBorderless"].isBool()) {
+        bool isBorderless = optionJson["isBorderless"].asBool();
         params->borderless = isBorderless ? TRUE : FALSE;
     } else {
         params->borderless = TRUE;
     }
 }
 
-void PrintCupsClient::UpdateJobParameterByOption(json& optionJson, JobParameters *params)
+void PrintCupsClient::UpdateJobParameterByOption(Json::Value& optionJson, JobParameters *params)
 {
-    if (optionJson.contains("cupsOptions") && optionJson["cupsOptions"].is_string()) {
-        params->printerAttrsOption_cupsOption = optionJson["cupsOptions"];
+    if (optionJson.isMember("cupsOptions") && optionJson["cupsOptions"].isString()) {
+        params->printerAttrsOption_cupsOption = optionJson["cupsOptions"].asString();
     }
 
-    if (optionJson.contains("printQuality") && optionJson["printQuality"].is_string()) {
-        params->printQuality = optionJson["printQuality"].get<std::string>();
+    if (optionJson.isMember("printQuality") && optionJson["printQuality"].isString()) {
+        params->printQuality = optionJson["printQuality"].asString();
     } else {
         params->printQuality = CUPS_PRINT_QUALITY_NORMAL;
     }
 
-    if (optionJson.contains("jobName") && optionJson["jobName"].is_string()) {
-        params->jobName = optionJson["jobName"].get<std::string>();
+    if (optionJson.isMember("jobName") && optionJson["jobName"].isString()) {
+        params->jobName = optionJson["jobName"].asString();
     } else {
         params->jobName = DEFAULT_JOB_NAME;
     }
 
-    if (optionJson.contains("mediaType") && optionJson["mediaType"].is_string()) {
-        params->mediaType = optionJson["mediaType"].get<std::string>();
+    if (optionJson.isMember("mediaType") && optionJson["mediaType"].isString()) {
+        params->mediaType = optionJson["mediaType"].asString();
     } else {
         params->mediaType = CUPS_MEDIA_TYPE_PLAIN;
     }
@@ -1775,15 +1774,16 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
         return params;
     }
     std::string option = jobInfo.GetOption();
-    if (!json::accept(option)) {
+    Json::Value optionJson;
+    std::istringstream iss(option);
+    if (!PrintJsonUtil::ParseFromStream(iss, optionJson)) {
         PRINT_HILOGE("option can not parse to json object");
         return params;
     }
-    json optionJson = json::parse(option);
-    PRINT_HILOGD("test optionJson: %{private}s", optionJson.dump().c_str());
-    if (!optionJson.contains("printerUri") || !optionJson["printerUri"].is_string() ||
-        !optionJson.contains("printerName") || !optionJson["printerName"].is_string() ||
-        !optionJson.contains("documentFormat") || !optionJson["documentFormat"].is_string()) {
+    PRINT_HILOGD("test optionJson: %{private}s", (PrintJsonUtil::WriteString(optionJson)).c_str());
+    if (!optionJson.isMember("printerUri") || !optionJson["printerUri"].isString() ||
+        !optionJson.isMember("printerName") || !optionJson["printerName"].isString() ||
+        !optionJson.isMember("documentFormat") || !optionJson["documentFormat"].isString()) {
         PRINT_HILOGE("The option does not have a necessary attribute.");
         return params;
     }
@@ -1792,11 +1792,11 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
         PRINT_HILOGE("new JobParameters returns nullptr");
         return params;
     }
-    if (!optionJson.contains("isAutoRotate") || !optionJson["isAutoRotate"].is_boolean()) {
+    if (!optionJson.isMember("isAutoRotate") || !optionJson["isAutoRotate"].isBool()) {
         // default autoRotate if option dont't contains it
         params->isAutoRotate = true;
     } else {
-        params->isAutoRotate = optionJson["isAutoRotate"];
+        params->isAutoRotate = optionJson["isAutoRotate"].asBool();
     }
     jobInfo.GetFdList(params->fdList);
     params->serviceJobId = jobInfo.GetJobId();
@@ -1806,9 +1806,9 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     params->mediaSize = GetMedieSize(jobInfo);
     params->color = GetColorString(jobInfo.GetColorMode());
     params->printerId = jobInfo.GetPrinterId();
-    params->printerName = PrintUtil::StandardizePrinterName(optionJson["printerName"]);
-    params->printerUri = optionJson["printerUri"];
-    params->documentFormat = optionJson["documentFormat"];
+    params->printerName = PrintUtil::StandardizePrinterName(optionJson["printerName"].asString());
+    params->printerUri = optionJson["printerUri"].asString();
+    params->documentFormat = optionJson["documentFormat"].asString();
     params->isLandscape = jobInfo.GetIsLandscape();
     UpdateJobParameterByOption(optionJson, params);
     UpdateBorderlessJobParameter(optionJson, params);

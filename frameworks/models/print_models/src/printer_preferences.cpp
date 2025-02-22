@@ -16,6 +16,7 @@
 #include "printer_preferences.h"
 #include "print_constant.h"
 #include "print_log.h"
+#include "print_json_util.h"
 
 namespace OHOS::Print {
 PrinterPreferences::PrinterPreferences()
@@ -325,9 +326,9 @@ void PrinterPreferences::Dump() const
     }
 }
 
-nlohmann::json PrinterPreferences::ConvertToJson()
+Json::Value PrinterPreferences::ConvertToJson()
 {
-    nlohmann::json preferencesJson;
+    Json::Value preferencesJson;
     preferencesJson["defaultDuplexMode"] = defaultDuplexMode_;
     preferencesJson["defaultPrintQuality"] = defaultPrintQuality_;
     preferencesJson["defaultMediaType"] = defaultMediaType_;
@@ -336,9 +337,8 @@ nlohmann::json PrinterPreferences::ConvertToJson()
     preferencesJson["borderless"] = borderless_;
 
     if (hasOption_) {
-        if (nlohmann::json::accept(option_)) {
-            preferencesJson["options"] = nlohmann::json::parse(option_);
-        } else {
+        std::istringstream iss(option_);
+        if (!PrintJsonUtil::ParseFromStream(iss, preferencesJson["options"])) {
             PRINT_HILOGE("json accept preferences options fail");
         }
     }

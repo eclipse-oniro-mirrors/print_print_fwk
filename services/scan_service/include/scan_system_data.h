@@ -18,8 +18,9 @@
 
 #include <string>
 #include <map>
-#include <nlohmann/json.hpp>
+#include <json/json.h>
 #include "scanner_info.h"
+#include "print_json_util.h"
 
 namespace OHOS {
 namespace Scan {
@@ -46,8 +47,8 @@ public:
     std::pair<std::string, std::string> UpdateNetScannerByUuid(const std::string &uuid, const std::string& ip);
     static std::string ReplaceDeviceIdUsbPort(const std::string& deviceId, const std::string& usbPort);
 private:
-    bool ParseScannerListJsonV1(nlohmann::json& jsonObject);
-    bool CheckJsonObjectValue(const nlohmann::json& object);
+    bool ParseScannerListJsonV1(Json::Value& jsonObject);
+    bool CheckJsonObjectValue(const Json::Value& object);
     std::map<std::string, std::shared_ptr<ScanDeviceInfo>> addedScannerMap_;
     std::map<std::string, std::string> usbSnToPortMap_;
     std::mutex addedScannerMapLock_;

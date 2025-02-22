@@ -57,7 +57,7 @@ ohos_unittest("print_service_test") {
     "${print_path}/interfaces/kits/jsnapi/print_extensionctx:printextensioncontext_napi",
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
-    "${print_path}/services/print_service:print_service",
+    "${print_path}/services/print_service:print_service_test",
     "//third_party/googletest:gmock_main",
     "//third_party/jsoncpp:jsoncpp",
   ]
