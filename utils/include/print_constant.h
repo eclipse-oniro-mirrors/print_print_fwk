@@ -102,7 +102,7 @@ enum PrintJobState {
     PRINT_JOB_QUEUED = 1,       // deliver print job to the printer
     PRINT_JOB_RUNNING = 2,      // executing print job
     PRINT_JOB_BLOCKED = 3,      // print job has been blocked
-    PRINT_JOB_COMPLETED = 4,    // print job ocmpleted
+    PRINT_JOB_COMPLETED = 4,    // print job completed
     PRINT_JOB_UNKNOWN = 100,      // unknown state of print job
     PRINT_JOB_CREATE_FILE_COMPLETED = 101,    // For internal use only: create print file completed
     PRINT_JOB_SPOOLER_CLOSED = 102,    // For internal use only: spooler closed

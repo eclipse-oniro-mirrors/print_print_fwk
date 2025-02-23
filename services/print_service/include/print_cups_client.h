@@ -53,6 +53,12 @@ struct JobParameters {
     std::string printerAttrsOption_cupsOption;
 };
 
+enum StatePolicy {
+    STATE_POLICY_STANDARD = 0,
+    STATE_POLICY_BLOCK = 1,
+    STATE_POLICY_HINT = 2,
+    STATE_POLICY_DELAY = 3,
+};
 struct JobStatus {
     char printer_state_reasons[1024];
     ipp_jstate_t job_state;
@@ -65,6 +71,22 @@ struct JobMonitorParam {
     std::string printerUri;
     std::string printerName;
     std::string printerId;
+    http_t *http;
+
+    StatePolicy policyArray[16] = {};
+    ipp_jstate_t job_state = IPP_JOB_PENDING;
+    char job_state_reasons[1024];
+    char job_printer_state_reasons[1024];
+    bool isFirstQueryState = true;
+    int32_t timesOfSameState = -1;
+    bool isBlock = false;
+    uint32_t substate = 0;
+    bool isPrinterStopped = false;
+
+    ~JobMonitorParam()
+    {
+        httpClose(http);
+    }
 };
 struct MediaSize {
     std::string name;
@@ -115,29 +137,32 @@ public:
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
     void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
-    void MonitorJobState(JobMonitorParam *param, CallbackFunc callback);
-    void HandleJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus,
-        JobStatus *prevousJobStatus);
-    void QueryJobState(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
-    void JobStatusCallback(JobMonitorParam *param, JobStatus *jobStatus, bool isOffline);
-    static void ReportBlockedReason(JobMonitorParam *param, JobStatus *jobStatus);
     static void SymlinkFile(std::string &srcFilePath, std::string &destFilePath);
     static void SymlinkDirectory(const char *srcDir, const char *destDir);
     static void CopyDirectory(const char *srcDir, const char *destDir);
     static bool ChangeFilterPermission(const std::string &path, mode_t mode);
     bool CheckPrinterMakeModel(JobParameters *jobParams);
+    bool CheckPrinterDriverExist(const char *makeModel);
     bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
         cups_option_t *options, http_t *http);
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillLandscapeOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static int FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     static float ConvertInchTo100MM(float num);
-    static void UpdateJobStatus(JobStatus *prevousJobStatus, JobStatus *jobStatus);
     static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState);
     static std::string GetIpAddress(unsigned int number);
     static bool IsIpConflict(const std::string &printerId, std::string &nic);
-    void QueryJobStateAgain(http_t *http, JobMonitorParam *param, JobStatus *jobStatus);
-    static uint32_t GetBlockedSubstate(JobStatus *jobStatus);
+    void StartMonitor(JobMonitorParam *jobParams);
+    bool JobStatusCallback(JobMonitorParam *param);
+    bool IsPrinterStopped(JobMonitorParam *param);
+    bool GetBlockedAndUpdateSubstate(JobMonitorParam *param, StatePolicy policy,
+        std::string substateString, PrintJobSubState jobSubstate);
+    uint32_t GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate);
+    bool QueryJobState(http_t *http, JobMonitorParam *param);
+    bool UpdateJobState(JobMonitorParam *param, ipp_t *response);
+    bool IfContinueToHandleJobState(JobMonitorParam *param);
+    void BuildMonitorPolicy(JobMonitorParam *param);
+    void ParseStateReasons(JobMonitorParam *param);
 
     int32_t StartCupsdServiceNotAlive();
     int32_t StartCupsdService();
@@ -166,6 +191,8 @@ private:
     IPrintAbilityBase* printAbility_ = nullptr;
     std::vector<JobParameters*> jobQueue_;
     JobParameters *currentJob_ = nullptr;
+    std::vector<JobMonitorParam*> jobMonitorList_;
+    std::mutex jobMonitorMutex_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_CUPS_CLIENT_H

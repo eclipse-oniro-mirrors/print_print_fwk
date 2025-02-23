@@ -176,7 +176,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0009, TestSize.Level1)
     PrintJob job;
     job.SetJobState(PRINT_JOB_COMPLETED);
     job.SetSubState(PRINT_JOB_BLOCKED_OFFLINE);
-    EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_UNKNOWN);
+    EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_OFFLINE);
 }
 
 /**
@@ -204,7 +204,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0011, TestSize.Level1)
     PrintJob job;
     job.SetJobState(PRINT_JOB_BLOCKED);
     job.SetSubState(PRINT_JOB_COMPLETED_FILE_CORRUPT);
-    EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_UNKNOWN);
+    EXPECT_EQ(job.GetSubState(), PRINT_JOB_COMPLETED_FILE_CORRUPT);
 }
 
 /**
@@ -218,7 +218,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0012, TestSize.Level1)
     PrintJob job;
     job.SetJobState(PRINT_JOB_RUNNING);
     job.SetSubState(PRINT_JOB_COMPLETED_FILE_CORRUPT);
-    EXPECT_EQ(job.GetSubState(), PRINT_JOB_BLOCKED_UNKNOWN);
+    EXPECT_EQ(job.GetSubState(), PRINT_JOB_COMPLETED_FILE_CORRUPT);
 }
 
 /**
