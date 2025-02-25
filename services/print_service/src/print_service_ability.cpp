@@ -1924,7 +1924,7 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
         PRINT_HILOGE("Invalid event type");
         return E_PRINT_INVALID_PARAMETER;
     }
-    PRINT_HILOGD("PrintServiceAbility::On started. type=%{public}s", eventType.c_str());
+    PRINT_HILOGI("PrintServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     constexpr int32_t MAX_LISTENERS_COUNT = 1000;
     if (registeredListeners_.size() > MAX_LISTENERS_COUNT) {
@@ -1967,18 +1967,19 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
         return E_PRINT_INVALID_PARAMETER;
     }
 
-    PRINT_HILOGD("PrintServiceAbility::Off started.");
+    PRINT_HILOGI("PrintServiceAbility::Off started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto iter = registeredListeners_.find(eventType);
     if (iter != registeredListeners_.end()) {
-        PRINT_HILOGD("PrintServiceAbility::Off delete type=%{public}s object message.", eventType.c_str());
+        PRINT_HILOGI("PrintServiceAbility::Off delete type=%{public}s object message.", eventType.c_str());
         registeredListeners_.erase(iter);
         if (PrintUtils::GetEventType(eventType) == PRINTER_CHANGE_EVENT_TYPE) {
             ReduceAppCount();
         }
         return E_PRINT_NONE;
     }
-    return E_PRINT_INVALID_PARAMETER;
+    PRINT_HILOGI("PrintServiceAbility::Off has already delete type=%{public}s delete.", eventType.c_str());
+    return E_PRINT_NONE;
 }
 
 bool PrintServiceAbility::StartAbility(const AAFwk::Want &want)
