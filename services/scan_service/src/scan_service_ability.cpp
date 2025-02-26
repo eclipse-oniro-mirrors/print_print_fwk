@@ -1423,7 +1423,9 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std:
         status = E_SCAN_NONE;
         SCAN_HILOGI("ScanTask batch mode exit successfully.");
     } else {
-        scanProPtr->SetTaskCode(static_cast<ScanErrorCode>(status));
+        if (scanProPtr != nullptr) {
+            scanProPtr->SetTaskCode(static_cast<ScanErrorCode>(status));
+        }
     }
 }
 
@@ -1465,9 +1467,12 @@ int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress
     struct jpeg_error_mgr jerr;
     do {
         SCAN_HILOGI("start DoScanTask");
-        if (!isFirstFrame && (scanStatus = StartScan(scannerId, batchMode_)) != E_SCAN_NONE) {
-            SCAN_HILOGW("restart scanner fail");
-            break;
+        if (!isFirstFrame) {
+            scanStatus = StartScan(scannerId, batchMode_);
+            if (scanStatus != E_SCAN_NONE) {
+                SCAN_HILOGW("restart scanner fail");
+                break;
+            }
         }
         if ((scanStatus = GetScanParameters(scannerId, parm)) != E_SCAN_NONE) {
             SCAN_HILOGE("DoScanTask error, after GetScanParameters");
