@@ -224,6 +224,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0013, TestSize.Level2)
     printerInfo->SetOption("{\"bsunidriverSupport\": \"false\"}");
     EXPECT_EQ(vendorWlanGroup->IsBsunidriverSupport(PRINTER_TEST_GLOBAL_ID), false);
     printerInfo->SetOption("{\"bsunidriverSupport\": \"need_gs\"}");
+    vendorWlanGroup->hasGs = false;
+    EXPECT_EQ(vendorWlanGroup->IsBsunidriverSupport(PRINTER_TEST_GLOBAL_ID), false);
+    vendorWlanGroup->hasGs = true;
     EXPECT_EQ(vendorWlanGroup->IsBsunidriverSupport(PRINTER_TEST_GLOBAL_ID), true);
     vendorWlanGroup->parentVendorManager = nullptr;
     EXPECT_EQ(vendorWlanGroup->IsBsunidriverSupport(PRINTER_TEST_GLOBAL_ID), false);

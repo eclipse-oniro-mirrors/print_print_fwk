@@ -162,12 +162,12 @@ std::mutex jobMutex;
 std::string GetUsbPrinterSerial(const std::string &deviceUri)
 {
     auto pos = deviceUri.find(SERIAL);
-    if (pos == std::string::npos || pos + SERIAL.length() > deviceUri.length()) {
+    if (pos == std::string::npos || pos + SERIAL.length() >= deviceUri.length()) {
         return "";
     }
     std::string serial = deviceUri.substr(pos + SERIAL.length());
     pos = serial.find("&");
-    if (pos != std::string::npos && pos < serial.length()) {
+    if (pos != std::string::npos) {
         serial = serial.substr(0, pos);
     }
     if (serial.length() > SERIAL_LENGTH) {
