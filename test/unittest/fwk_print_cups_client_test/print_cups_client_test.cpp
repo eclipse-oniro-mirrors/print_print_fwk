@@ -1497,6 +1497,20 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0079, TestSize.Level1)
 }
 
 /**
+ * @tc.name: PrintCupsClientTest_0081
+ * @tc.desc: UpdateJobState
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0081, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    EXPECT_FALSE(printCupsClient.UpdateJobState(nullptr, nullptr));
+    JobMonitorParam param;
+    EXPECT_FALSE(printCupsClient.UpdateJobState(&param, nullptr));
+}
+
+/**
  * @tc.name: PrintCupsClientTest_0082
  * @tc.desc: ResumePrinter
  * @tc.type: FUNC
@@ -1639,10 +1653,28 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0086, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0087, TestSize.Level1)
 {
-    OHOS::Print::PrintCupsClient printCupsClient;
-    EXPECT_FALSE(printCupsClient.UpdateJobState(nullptr, nullptr));
-    JobMonitorParam param;
-    EXPECT_FALSE(printCupsClient.UpdateJobState(&param, nullptr));
+    // Arrange
+    std::string deviceUri = "usb://printer";
+    std::string deviceClass = "printer";
+    std::string deviceId = "model123";
+    std::string deviceInfo = "model123";
+    std::string deviceMakeAndModel = "model123";
+    std::string deviceLocation = "location123";
+    void *userData = nullptr;
+    // Act
+    ClearUsbPrinters();
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), nullptr, userData);
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             "usb://printer_serial=123&111", deviceLocation.c_str(), userData);
+    // Assert
+    auto usbPrinters = GetUsbPrinters();
+    EXPECT_EQ(usbPrinters.size(), 3);
+    EXPECT_STREQ(usbPrinters[0].GetUri().c_str(), deviceUri.c_str());
+    EXPECT_STREQ(usbPrinters[0].GetPrinterMake().c_str(), deviceMakeAndModel.c_str());
+    ClearUsbPrinters();
 }
 
 /**
@@ -1667,6 +1699,118 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0088, TestSize.Level1)
     // Assert
     auto usbPrinters = GetUsbPrinters();
     EXPECT_EQ(usbPrinters.size(), 0);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0089
+ * @tc.desc: DeviceCb_ShouldNotAddPrinterInfo_WhenPrinterMakeIsUnknown
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0089, TestSize.Level1)
+{
+    // Arrange
+    std::string deviceUri = "usb://printer";
+    std::string deviceClass = "printer";
+    std::string deviceId = "model123";
+    std::string deviceInfo = "model123";
+    std::string deviceMakeAndModel = "Unknown";
+    std::string deviceLocation = "location123";
+    void *userData = nullptr;
+    // Act
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    // Assert
+    auto usbPrinters = GetUsbPrinters();
+    EXPECT_EQ(usbPrinters.size(), 0);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0090
+ * @tc.desc: DeviceCb_ShouldNotAddPrinterInfo_WhenParamNull
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0090, TestSize.Level1)
+{
+    // Arrange
+    std::string deviceUri = "usb://printer";
+    std::string deviceClass = "printer";
+    std::string deviceId = "model123";
+    std::string deviceInfo = "model123";
+    std::string deviceMakeAndModel = "Unknown";
+    std::string deviceLocation = "location123";
+    void *userData = nullptr;
+    // Act
+    DeviceCb(nullptr, deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(), nullptr, deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), nullptr, deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), nullptr,
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             nullptr, deviceLocation.c_str(), userData);
+    // Assert
+    auto usbPrinters = GetUsbPrinters();
+    EXPECT_EQ(usbPrinters.size(), 0);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0091
+ * @tc.desc: DeviceCb_Serial
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0091, TestSize.Level1)
+{
+    // Arrange
+    std::string deviceUri = "usb://printer_serial=123&111";
+    std::string deviceClass = "printer";
+    std::string deviceId = "model123";
+    std::string deviceInfo = "model123";
+    std::string deviceMakeAndModel = "model123";
+    std::string deviceLocation = "1234-";
+    void *userData = nullptr;
+    // Act
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    deviceLocation = "1234-5678";
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), nullptr, userData);
+    // Assert
+    auto usbPrinters = GetUsbPrinters();
+    EXPECT_EQ(usbPrinters.size(), 3);
+    EXPECT_STREQ(usbPrinters[0].GetUri().c_str(), deviceUri.c_str());
+    EXPECT_STREQ(usbPrinters[0].GetPrinterMake().c_str(), deviceMakeAndModel.c_str());
+    EXPECT_STREQ(usbPrinters[0].GetPrinterId().c_str(), "USB-model123-123");
+    ClearUsbPrinters();
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0092
+ * @tc.desc: GetUsbPrinterSerial
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0092, TestSize.Level1)
+{
+    std::string usb = "usb://";
+    std::string serial = "serial=";
+    std::string num = "11";
+    std::string deviceUri = usb;
+    EXPECT_STREQ(GetUsbPrinterSerial(deviceUri).c_str(), "");
+    deviceUri = usb + serial;
+    EXPECT_STREQ(GetUsbPrinterSerial(deviceUri).c_str(), "");
+    deviceUri = usb + serial + num;
+    EXPECT_STREQ(GetUsbPrinterSerial(deviceUri).c_str(), num.c_str());
+    deviceUri = usb + serial + num + "&postfix";
+    EXPECT_STREQ(GetUsbPrinterSerial(deviceUri).c_str(), num.c_str());
+    deviceUri = usb + serial + "1234567890" + "&postfix";
+    EXPECT_STREQ(GetUsbPrinterSerial(deviceUri).c_str(), "567890");
 }
 }  // namespace Print
 }  // namespace OHOS

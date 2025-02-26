@@ -453,7 +453,7 @@ bool VendorBsuniDriver::ConvertBsUri(std::string &uri)
         return false;
     }
     auto pos = uri.find(VENDOR_BACKEND_DELIMITER);
-    if (pos == std::string::npos || uri.length() <= pos + 1) {
+    if (pos == std::string::npos) {
         return false;
     }
     uri = VENDOR_BSUNI_BACKEND + uri.substr(pos);

@@ -121,6 +121,7 @@ void PrinterInfo::SetPrinterName(std::string printerName)
 
 void PrinterInfo::SetPrinterIcon(uint32_t printIcon)
 {
+    hasPrinterIcon_ = true;
     printerIcon_ = printIcon;
 }
 
@@ -131,6 +132,7 @@ void PrinterInfo::SetPrinterState(uint32_t printerState)
 
 void PrinterInfo::SetDescription(std::string description)
 {
+    hasDescription_ = true;
     description_ = description;
 }
 
