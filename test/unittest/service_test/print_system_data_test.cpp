@@ -1316,12 +1316,12 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0068, TestSize.Level1)
     EXPECT_NE(systemData, nullptr);
     PrinterPreferences preferences;
     nlohmann::json preferencesJson = nlohmann::json::object();
-    preferencesJson["pagesizeId"] = 123;
-    preferencesJson["orientation"] = "123";
-    preferencesJson["duplex"] = "123";
-    preferencesJson["quality"] = "123";
-    preferencesJson["mediaType"] = 123;
-    preferencesJson["hasMargin"] = "123";
+    preferencesJson["defaultPageSizeId"] = 123;
+    preferencesJson["defaultOrientation"] = "123";
+    preferencesJson["defaultDuplexMode"] = "123";
+    preferencesJson["defaultPrintQuality"] = "123";
+    preferencesJson["defaultMediaType"] = 123;
+    preferencesJson["borderless"] = "123";
     preferencesJson["options"] = "123";
     systemData->ConvertJsonToPrinterPreferences(preferencesJson, preferences);
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
@@ -1333,16 +1333,16 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0069, TestSize.Level1)
     EXPECT_NE(systemData, nullptr);
     PrinterPreferences preferences;
     nlohmann::json preferencesJson = nlohmann::json::object();
-    preferencesJson["pagesizeId"] = "123";
-    preferencesJson["orientation"] = 123;
-    preferencesJson["duplex"] = 123;
-    preferencesJson["quality"] = 123;
-    preferencesJson["mediaType"] = "123";
-    preferencesJson["hasMargin"] = true;
+    preferencesJson["defaultPageSizeId"] = "123";
+    preferencesJson["defaultOrientation"] = 123;
+    preferencesJson["defaultDuplexMode"] = 123;
+    preferencesJson["defaultPrintQuality"] = 123;
+    preferencesJson["defaultMediaType"] = "123";
+    preferencesJson["borderless"] = true;
     nlohmann::json optionJson = nlohmann::json::object();
     preferencesJson["options"] = optionJson;
     systemData->ConvertJsonToPrinterPreferences(preferencesJson, preferences);
-    EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
+    EXPECT_EQ(preferences.HasDefaultDuplexMode(), true);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0070, TestSize.Level1)
@@ -1640,6 +1640,149 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0094, TestSize.Level1)
     printerListJson.push_back(printer);
     jsonObject["printer_list"] = printerListJson;
     EXPECT_EQ(systemData->ParsePrinterPreferencesJson(jsonObject), true);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0095, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::string printerId = "testPrinterId";
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId(printerId);
+    systemData->connectingIpPrinterInfoList_[printerId] = printerInfo;
+    EXPECT_EQ(systemData->QueryIpPrinterInfoById(printerId)->GetPrinterId(), printerId);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0096, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    systemData->AddIpPrinterToList(nullptr);
+    EXPECT_EQ(systemData->connectingIpPrinterInfoList_.size(), 0);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0097, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    systemData->AddIpPrinterToList(printerInfo);
+    EXPECT_EQ(systemData->connectingIpPrinterInfoList_.size(), 1);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0098, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::vector<int32_t> allPrintUserList;
+    nlohmann::json jsonObject;
+    EXPECT_EQ(systemData->ParseUserListJsonV1(jsonObject, allPrintUserList), false);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0099, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::vector<int32_t> allPrintUserList;
+    nlohmann::json jsonObject;
+    nlohmann::json userDataJson = nlohmann::json::array();
+    jsonObject["print_user_data"] = userDataJson;
+    EXPECT_EQ(systemData->ParseUserListJsonV1(jsonObject, allPrintUserList), false);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0100, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::vector<int32_t> allPrintUserList;
+    nlohmann::json jsonObject;
+    nlohmann::json userDataJson = nlohmann::json::object();
+    jsonObject["print_user_data"] = userDataJson;
+    EXPECT_EQ(systemData->ParseUserListJsonV1(jsonObject, allPrintUserList), false);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0101, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::vector<int32_t> allPrintUserList;
+    nlohmann::json jsonObject;
+    nlohmann::json userDataJson = nlohmann::json::object();
+    userDataJson[""] = "user1";
+    userDataJson["100"] = "user2";
+    jsonObject["print_user_data"] = userDataJson;
+    EXPECT_EQ(systemData->ParseUserListJsonV1(jsonObject, allPrintUserList), true);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0102, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::string printerId = "123";
+    PrinterCapability printerCapability;
+    std::vector<PrintPageSize> pageSizeList;
+    PrintPageSize pageSize;
+    pageSizeList.push_back(pageSize);
+    printerCapability.SetSupportedPageSize(pageSizeList);
+    nlohmann::json opsJson;
+    opsJson["printerName"] = "123";
+    printerCapability.SetOption(opsJson.dump());
+    nlohmann::json jsonObject;
+    nlohmann::json printerMapJson = nlohmann::json::array();
+    nlohmann::json item = nlohmann::json::object();
+    item["id"] = "123";
+    item["name"] = "123";
+    item["uri"] = "123";
+    item["maker"] = "123";
+    printerMapJson.push_back(item);
+    jsonObject["printer_list"] = printerMapJson;
+    systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0103, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::string printerId = "123";
+    PrinterCapability printerCapability;
+    std::vector<PrintPageSize> pageSizeList;
+    PrintPageSize pageSize;
+    pageSizeList.push_back(pageSize);
+    printerCapability.SetSupportedPageSize(pageSizeList);
+    nlohmann::json opsJson;
+    opsJson["printerName"] = "123";
+    printerCapability.SetOption(opsJson.dump());
+    nlohmann::json jsonObject;
+    nlohmann::json printerMapJson = nlohmann::json::array();
+    nlohmann::json item = nlohmann::json::object();
+    item["id"] = "123";
+    item["name"] = "123";
+    item["uri"] = "123";
+    item["maker"] = "123";
+    nlohmann::json capsJson = nlohmann::json::object();
+    item["capability"] = capsJson;
+    printerMapJson.push_back(item);
+    jsonObject["printer_list"] = printerMapJson;
+    systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0104, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    std::string printerId = "1234";
+    std::string uri = "testUri";
+    printerInfo->SetPrinterId(printerId);
+    printerInfo->SetUri(uri);
+    systemData->UpdatePrinterUri(printerInfo);
+
+    CupsPrinterInfo cupsPrinterInfo;
+    systemData->addedPrinterMap_.Insert(printerId, std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
+    systemData->UpdatePrinterUri(printerInfo);
+    CupsPrinterInfo cupsPrinter;
+    systemData->QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter);
+    EXPECT_EQ(cupsPrinter.uri, uri);
 }
 }  // namespace Print
 }  // namespace OHOS
