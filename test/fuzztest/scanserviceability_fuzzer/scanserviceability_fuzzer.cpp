@@ -340,6 +340,21 @@ namespace Scan {
         OHOS::Scan::TestGetAddedScanner(data, size, dataProvider);
     }
 
+    void TestCleanUpAfterScan(FuzzedDataProvider* dataProvider)
+    {
+        if (dataProvider == nullptr) {
+            return;
+        }
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        ScanServiceAbility::GetInstance()->RestartScan(scannerId);
+        int32_t nowScanId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanProgress* scanProPtr = new ScanProgress();
+        ScanServiceAbility::GetInstance()->FindScanTask(scanProPtr, nowScanId);
+        int32_t scanStatus = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanServiceAbility::GetInstance()->CleanUpAfterScan(scanStatus, scanProPtr);
+        delete scanProPtr;
+    }
+
 }
 }
 
@@ -379,5 +394,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::TestSendDeviceSearchEnd(data, size, &dataProvider);
     OHOS::Scan::TestSetScannerSerialNumber(data, size, &dataProvider);
     OHOS::Scan::TestNotPublicFunction(data, size, &dataProvider);
+    OHOS::Scan::TestCleanUpAfterScan(&dataProvider);
     return 0;
 }

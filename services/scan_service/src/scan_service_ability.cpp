@@ -1369,7 +1369,9 @@ bool ScanServiceAbility::CreateAndOpenScanFile(std::string &outputFile, const in
         return false;
     }
     outputDir = canonicalPath;
-    outputFile = outputDir.append("/scan_tmp").append(std::to_string(nowScanId)).append(".jpg");
+    std::ostringstream outputFileStream;
+    outputFileStream << outputDir << "/" << "scan_tmp" << std::to_string(nowScanId) << ".jpg";
+    outputFile = outputFileStream.str();
     if ((ofp = fopen(outputFile.c_str(), "w")) == nullptr) {
         SCAN_HILOGE("file [%{private}s] open fail", outputFile.c_str());
         return false;
@@ -1384,65 +1386,52 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std:
     do {
         if (!firstScan) {
             SCAN_HILOGI("not first scan");
-            if ((status = StartScan(scannerId, batchMode_)) != E_SCAN_NONE) {
-                SCAN_HILOGW("ScanTask restart fail");
+            status = RestartScan(scannerId);
+            if (status != E_SCAN_NONE) {
+                SCAN_HILOGW("RestartScan fail");
                 break;
             }
-            auto it = scanTaskMap.find(nextPicId - 2);  // nextPicId - 2 is to find a PicId before nowScanId.
-            if (it != scanTaskMap.end()) {
-                it->second.SetIsFinal(false);
-                it->second.SetScanProgress(SCAN_PROGRESS_100);
-            }
-            SCAN_HILOGI("ScanTask restart success");
         }
-        auto it = scanTaskMap.find(nextPicId - 1); // nextPicId - 2 is nowScanId
-        if (it == scanTaskMap.end()) {
-            SCAN_HILOGE("Scan task not found for PicId: %{public}d", nextPicId - 1);
-            status = E_SCAN_GENERIC_FAILURE;
+        int32_t nowScanId = 0;
+        status = FindScanTask(scanProPtr, nowScanId);
+        if (status == E_SCAN_SERVER_FAILURE) {
+            SCAN_HILOGE("FindScanTask fail");
             break;
         }
-        int32_t nowScanId = it->first;
-        scanProPtr = &(it->second);
         if (!CreateAndOpenScanFile(outputFile, nowScanId)) {
             status = E_SCAN_GENERIC_FAILURE;
+            SCAN_HILOGE("CreateAndOpenScanFile fail");
             break;
         }
         status = DoScanTask(scannerId, scanProPtr);
-        if (ofp != nullptr) {
-            fclose(ofp);
-            ofp = nullptr;
-        }
         scanProPtr->SetImageRealPath(outputFile);
         firstScan = false;
     } while (status == E_SCAN_EOF);
     if (status == E_SCAN_NO_DOCS) {
-        auto it = scanTaskMap.find(nextPicId - 1);
-        if (it != scanTaskMap.end()) {
-            it->second.SetScanProgress(SCAN_PROGRESS_100);
-        }
+        scanProPtr->SetScanProgress(SCAN_PROGRESS_100);
         status = E_SCAN_NONE;
         SCAN_HILOGI("ScanTask batch mode exit successfully.");
+    } else if (status == E_SCAN_SERVER_FAILURE) {
+        SCAN_HILOGE("GeneratePictureBatch fail"); // scanProPtr is a nullptr
     } else {
-        if (scanProPtr != nullptr) {
-            scanProPtr->SetTaskCode(static_cast<ScanErrorCode>(status));
-        }
+        scanProPtr->SetTaskCode(static_cast<ScanErrorCode>(status));
+        SCAN_HILOGE("GeneratePictureBatch fail");
     }
 }
 
 void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std::string &fileName,
     std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr)
 {
-    auto it = scanTaskMap.find(nextPicId - 1);
-    if (it == scanTaskMap.end()) {
-        SCAN_HILOGE("Scan task not found for PicId: %{public}d", nextPicId - 1);
-        status = E_SCAN_GENERIC_FAILURE;
+    int32_t nowScanId = 0;
+    status = FindScanTask(scanProPtr, nowScanId);
+    if (status != E_SCAN_NONE) {
+        SCAN_HILOGE("FindScanTask fail");
         return;
     }
-    int32_t nowScanId = it->first;
-    scanProPtr = &(it->second);
 
     if (!CreateAndOpenScanFile(outputFile, nowScanId)) {
         status = E_SCAN_GENERIC_FAILURE;
+        SCAN_HILOGE("CreateAndOpenScanFile fail");
         return;
     }
 
@@ -1450,16 +1439,13 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
     if (status == E_SCAN_EOF) {
         scanProPtr->SetImageRealPath(outputFile);
         scanProPtr->SetScanProgress(SCAN_PROGRESS_100);
+        SCAN_HILOGI("ScanTask single mode exit successfully.");
         status = E_SCAN_NONE;
-    }
-    if (ofp != nullptr) {
-        fclose(ofp);
-        ofp = nullptr;
     }
 }
 
 
-int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress* scanProPtr)
+int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress* &scanProPtr)
 {
     bool isFirstFrame = true;
     int32_t scanStatus = E_SCAN_NONE;
@@ -1474,7 +1460,8 @@ int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress
                 break;
             }
         }
-        if ((scanStatus = GetScanParameters(scannerId, parm)) != E_SCAN_NONE) {
+        scanStatus = GetScanParameters(scannerId, parm);
+        if (scanStatus != E_SCAN_NONE) {
             SCAN_HILOGE("DoScanTask error, after GetScanParameters");
             break;
         }
@@ -1498,15 +1485,59 @@ int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress
         }
         isFirstFrame = false;
     } while (!(parm.GetLastFrame()));
+    CleanUpAfterScan(scanStatus, scanProPtr);
+    return scanStatus;
+}
+
+int32_t ScanServiceAbility::RestartScan(const std::string &scannerId)
+{
+    SCAN_HILOGI("not first scan");
+    int32_t status = StartScan(scannerId, batchMode_);
+    if (status != E_SCAN_NONE) {
+        SCAN_HILOGW("ScanTask restart fail");
+        return status;
+    }
+    auto it = scanTaskMap.find(nextPicId - 2);
+    if (it != scanTaskMap.end()) {
+        it->second.SetIsFinal(false);
+        it->second.SetScanProgress(SCAN_PROGRESS_100);
+    }
+    SCAN_HILOGI("ScanTask restart success");
+    return status;
+}
+
+int32_t ScanServiceAbility::FindScanTask(ScanProgress* &scanProPtr, int32_t &nowScanId)
+{
+    auto it = scanTaskMap.find(nextPicId - 1);
+    if (it == scanTaskMap.end()) {
+        SCAN_HILOGE("Scan task not found for PicId: %{public}d", nextPicId - 1);
+        return E_SCAN_SERVER_FAILURE;
+    }
+    scanProPtr = &(it->second);
+    if (scanProPtr == nullptr) {
+        SCAN_HILOGE("scanProPtr is a nullptr");
+        return E_SCAN_SERVER_FAILURE;
+    }
+    nowScanId = it->first;
+    return E_SCAN_NONE;
+}
+
+void ScanServiceAbility::CleanUpAfterScan(int32_t scanStatus, ScanProgress* &scanProPtr)
+{
     if (scanStatus != E_SCAN_EOF && scanStatus != E_SCAN_NO_DOCS) {
         jpeg_destroy_compress(cinfoPtr);
         scanProPtr->SetTaskCode(static_cast<ScanErrorCode>(scanStatus));
+        SCAN_HILOGE("DoScanTask fail, SetTaskCode : %{public}d", scanStatus);
     } else {
         jpeg_finish_compress(cinfoPtr);
         fflush(ofp);
+        SCAN_HILOGD("End of normal scan");
     }
     DELETE_ARRAY_AND_NULLIFY(jpegbuf)
-    return scanStatus;
+    if (ofp != nullptr) {
+        fclose(ofp);
+        ofp = nullptr;
+    }
 }
 
 int32_t ScanServiceAbility::WriteJpegHeader(ScanParameters &parm, struct jpeg_error_mgr* jerr)
@@ -1556,7 +1587,7 @@ void ScanServiceAbility::CleanScanTask(const std::string &scannerId)
 }
 
 void ScanServiceAbility::SetScanProgr(int64_t &totalBytes, const int64_t& hundredPercent,
-    ScanProgress* scanProPtr, const int32_t& curReadSize)
+    ScanProgress* &scanProPtr, const int32_t& curReadSize)
 {
     if (hundredPercent == 0) {
         SCAN_HILOGE("hundredPercent equals zero.");
@@ -1576,7 +1607,7 @@ void ScanServiceAbility::SetScanProgr(int64_t &totalBytes, const int64_t& hundre
     }
 }
 
-void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *scanProPtr,
+void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress* &scanProPtr,
     int32_t &scanStatus, ScanParameters &parm)
 {
     int64_t totalBytes = 0;
@@ -1625,7 +1656,8 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
     }
 }
 
-bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanParameters &parm, ScanProgress *scanProPtr)
+bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize,
+    ScanParameters &parm, ScanProgress* &scanProPtr)
 {
     constexpr int bit = 1;
     int i = 0;

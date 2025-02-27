@@ -61,7 +61,7 @@ std::shared_ptr<ScanParameters> ScanParametersHelper::BuildFromJs(napi_env env, 
     int32_t depth = NapiScanUtils::GetInt32Property(env, jsValue, PARAM_SCAN_PARA_DEPTH);
     nativeObj->SetDepth(depth);
 
-    SCAN_HILOGE("Build Scan Parameters succeed");
+    SCAN_HILOGD("Build Scan Parameters succeed");
     return nativeObj;
 }
 
