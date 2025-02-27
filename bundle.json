@@ -50,7 +50,8 @@
         "wifi",
         "cJSON",
         "ace_engine",
-        "libjpeg-turbo"
+        "libjpeg-turbo",
+        "input"
       ],
       "third_party": [
         "zlib",
@@ -136,6 +137,14 @@
           "header_files": [
           ],
           "header_base":"//base/print/print_fwk/frameworks/models/print_models/include"
+        }
+      },
+      {
+        "name": "//base/print/print_fwk/frameworks/kits/extension:print_extension_framework",
+        "header": {
+          "header_files": [
+          ],
+          "header_base":"//base/print/print_fwk/frameworks/kits/extension/include"
         }
       }
     ],
