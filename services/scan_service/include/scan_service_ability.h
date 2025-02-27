@@ -79,7 +79,7 @@ private:
     int32_t ActionGetValue(const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex);
     int32_t ActionSetValue(const std::string &scannerId, ScanOptionValue &value,
                            const int32_t &optionIndex, int32_t &info);
-    int32_t DoScanTask(const std::string scannerId, ScanProgress* scanProPtr);
+    int32_t DoScanTask(const std::string scannerId, ScanProgress* &scanProPtr);
     void StartScanTask(const std::string scannerId);
     void SendDeviceInfoTCP(const ScanDeviceInfoTCP &info, std::string event);
     void SendDeviceInfo(const ScanDeviceInfo &info, std::string event);
@@ -109,9 +109,9 @@ private:
     int32_t WriteJpegHeader(ScanParameters &parm, struct jpeg_error_mgr* jerr);
     void GeneratePicture(const std::string &scannerId, std::string &fileName,
         std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr);
-    void GetPicFrame(const std::string scannerId, ScanProgress *scanProPtr,
+    void GetPicFrame(const std::string scannerId, ScanProgress* &scanProPtr,
         int32_t &scanStatus, ScanParameters &parm);
-    bool WritePicData(int &jpegrow, int32_t curReadSize, ScanParameters &parm, ScanProgress *scanProPtr);
+    bool WritePicData(int &jpegrow, int32_t curReadSize, ScanParameters &parm, ScanProgress* &scanProPtr);
     void GeneratePictureBatch(const std::string &scannerId, std::string &fileName,
         std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr);
     void GeneratePictureSingle(const std::string &scannerId, std::string &fileName,
@@ -123,9 +123,12 @@ private:
     int32_t GetCurrentUserId();
     std::string ObtainUserCacheDirectory(const int32_t& userId);
     void SetScanProgr(int64_t &totalBytes, const int64_t& hundredPercent,
-        ScanProgress* scanProPtr, const int32_t& curReadSize);
+        ScanProgress* &scanProPtr, const int32_t& curReadSize);
     bool CreateAndOpenScanFile(std::string &outputFile, const int32_t &nowScanId);
     void AddFoundScanner(ScanDeviceInfo& info);
+    void CleanUpAfterScan(int32_t scanStatus, ScanProgress* &scanProPtr);
+    int32_t FindScanTask(ScanProgress* &scanProPtr, int32_t &nowScanId);
+    int32_t RestartScan(const std::string &scannerId);
     std::set<std::string> openedScannerList_;
     ServiceRunningState state_;
     std::mutex lock_;

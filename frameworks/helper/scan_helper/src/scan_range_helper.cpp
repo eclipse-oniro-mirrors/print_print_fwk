@@ -59,7 +59,7 @@ std::shared_ptr<ScanRange> ScanRangeHelper::BuildFromJs(napi_env env, napi_value
         nativeObj->SetQuantValue(NapiScanUtils::GetInt32FromValue(env, jsQuantValue));
     }
 
-    SCAN_HILOGE("Build Scan Range succeed");
+    SCAN_HILOGD("Build Scan Range succeed");
     return nativeObj;
 }
 
