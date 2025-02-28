@@ -112,7 +112,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0001, TestSize.Level1)
     PrinterCapability printerCap;
     EXPECT_EQ(printCupsClient.QueryPrinterCapabilityByUri(printUri, printerId, printerCap), E_PRINT_SERVER_FAILURE);
     EXPECT_EQ(printCupsClient.SetDefaultPrinter(printerName.c_str()), E_PRINT_SERVER_FAILURE);
-    printCupsClient.QueryJobState(nullptr, nullptr, nullptr);
+    printCupsClient.QueryJobState(nullptr, nullptr);
     EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCap), E_PRINT_SERVER_FAILURE);
 }
 
@@ -167,9 +167,9 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0005, TestSize.Level1)
         param.serviceAbility = nullptr;
         param.cupsJobId = 0;
         JobStatus jobStatus = {0};
-        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, nullptr, nullptr);
-        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, &param, nullptr);
-        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, &param, &jobStatus);
+        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, nullptr);
+        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, &param);
+        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, &param);
         EXPECT_EQ(jobStatus.job_state, 0);
         EXPECT_EQ(printCupsClient.CheckPrinterOnline(nullptr, 1), false);
         EXPECT_EQ(printCupsClient.CheckPrinterOnline(&param, 1), false);
@@ -478,42 +478,6 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0083, TestSize.Level1)
     printCupsClient.AddPrinterToCups(uri, name, makeModel);
     printCupsClient.DeleteCupsPrinter(name.c_str());
     printCupsClient.StopCupsdService();
-}
-
-/**
- * @tc.name: PrintCupsWrapperTest_0084
- * @tc.desc: GetBlockedSubstate
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0084, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    EXPECT_EQ(printCupsClient.GetBlockedSubstate(nullptr), PRINT_JOB_COMPLETED_FAILED);
-    JobStatus jobStatus = {0};
-    constexpr size_t len = sizeof(jobStatus.printer_state_reasons);
-    strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_MEDIA_EMPTY.c_str());
-    EXPECT_EQ(printCupsClient.GetBlockedSubstate(&jobStatus),
-        PRINT_JOB_COMPLETED_SUCCESS * 100 + PRINT_JOB_BLOCKED_OUT_OF_PAPER);
-    strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_MEDIA_JAM.c_str());
-    printCupsClient.GetBlockedSubstate(&jobStatus);
-    strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_TONER_EMPTY.c_str());
-    printCupsClient.GetBlockedSubstate(&jobStatus);
-    strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_TONER_LOW.c_str());
-    printCupsClient.GetBlockedSubstate(&jobStatus);
-    strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_MARKER_EMPTY.c_str());
-    printCupsClient.GetBlockedSubstate(&jobStatus);
-    strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_INK_EMPTY.c_str());
-    printCupsClient.GetBlockedSubstate(&jobStatus);
-    strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_MARKER_LOW.c_str());
-    printCupsClient.GetBlockedSubstate(&jobStatus);
-    strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_DOOR_EMPTY.c_str());
-    printCupsClient.GetBlockedSubstate(&jobStatus);
-    strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_COVER_OPEN.c_str());
-    printCupsClient.GetBlockedSubstate(&jobStatus);
-    strcpy_s(jobStatus.printer_state_reasons, len, PRINTER_STATE_OTHER.c_str());
-    EXPECT_EQ(printCupsClient.GetBlockedSubstate(&jobStatus),
-        PRINT_JOB_COMPLETED_SUCCESS * 100 + PRINT_JOB_BLOCKED_UNKNOWN);
 }
 
 /**

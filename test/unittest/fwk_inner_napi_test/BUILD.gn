@@ -46,6 +46,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "print_utils_test.cpp",
     "printer_capability_test.cpp",
     "printer_info_test.cpp",
+    "printer_preferences_test.cpp",
   ]
 
   deps = [

@@ -28,7 +28,7 @@ void ScanSyncLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId, c
         SCAN_HILOGE("start systemAbilityId is not scan server");
         return;
     }
-    ScanManagerClient::GetInstance()->LoadServerSuccess();
+    ScanManagerClient::GetInstance()->LoadServerSuccess(remoteObject);
 }
 
 void ScanSyncLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
@@ -39,4 +39,4 @@ void ScanSyncLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
     }
     ScanManagerClient::GetInstance()->LoadServerFail();
 }
-} // namespace OHOS::Scan
+} // namespace OHOS::Scan

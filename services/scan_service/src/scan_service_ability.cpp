@@ -116,7 +116,6 @@ static const std::string SCAN_DEVICE_DEL = "scanDeviceDel";
 static const std::string SCAN_INIT_EVENT = "scanInitEvent";
 
 static const std::string DEVICE_EVENT_TYPE = "deviceStateChange";
-static const std::string GET_FRAME_RES_EVENT_TYPE = "getFrameResult";
 static const std::string GET_SCANNER_DEVICE_LIST = "GET_SCANNER_DEVICE_LIST";
 
 std::map<std::string, sptr<IScanCallback>> OHOS::Scan::ScanServiceAbility::registeredListeners_;
@@ -869,14 +868,13 @@ int32_t ScanServiceAbility::GetScanSelectFd(const std::string scannerId, int32_t
 
 int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type, const sptr<IScanCallback> &listener)
 {
-    std::string eventType = type;
-    if (taskId != "") {
-        eventType = NapiScanUtils::GetTaskEventId(taskId, type);
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    int32_t userId = GetCurrentUserId();
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    std::string eventType = NapiScanUtils::GetTaskEventId(taskId, type, userId, callerPid);
 
     SCAN_HILOGD("ScanServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -885,7 +883,8 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
         SCAN_HILOGE("Exceeded the maximum number of registration.");
         return E_SCAN_GENERIC_FAILURE;
     }
-    if (registeredListeners_.find(eventType) == registeredListeners_.end()) {
+    auto it = registeredListeners_.find(eventType);
+    if (it == registeredListeners_.end()) {
         const auto temp = registeredListeners_.insert(std::make_pair(eventType, listener));
         if (!temp.second) {
             SCAN_HILOGE("ScanServiceAbility::On insert type=%{public}s object fail.", eventType.c_str());
@@ -893,7 +892,7 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
         }
     } else {
         SCAN_HILOGD("ScanServiceAbility::On Replace listener.");
-        registeredListeners_[eventType] = listener;
+        it->second = listener;
     }
     SCAN_HILOGD("ScanServiceAbility::On end.");
     return E_SCAN_NONE;
@@ -901,16 +900,14 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
 
 int32_t ScanServiceAbility::Off(const std::string taskId, const std::string &type)
 {
-    std::string eventType = type;
-    if (taskId != "") {
-        eventType = NapiScanUtils::GetTaskEventId(taskId, type);
-    }
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-
-    SCAN_HILOGD("ScanServiceAbility::Off started.");
+    int32_t userId = GetCurrentUserId();
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    std::string eventType = NapiScanUtils::GetTaskEventId(taskId, type, userId, callerPid);
+    SCAN_HILOGD("ScanServiceAbility::Off started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto iter = registeredListeners_.find(eventType);
     if (iter != registeredListeners_.end()) {
@@ -919,18 +916,6 @@ int32_t ScanServiceAbility::Off(const std::string taskId, const std::string &typ
         return E_SCAN_NONE;
     }
     return E_SCAN_INVALID_PARAMETER;
-}
-
-void ScanServiceAbility::SendGetFrameResEvent(const bool isGetSucc, const int32_t sizeRead)
-{
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    SCAN_HILOGE("ScanServiceAbility::SendGetFrameSuccEvent SizeRead %{public}d", sizeRead);
-    auto eventIt = registeredListeners_.find(GET_FRAME_RES_EVENT_TYPE);
-    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
-        SCAN_HILOGE("%{public}s event not register", GET_FRAME_RES_EVENT_TYPE.c_str());
-        return;
-    }
-    eventIt->second->OnGetFrameResCallback(isGetSucc, sizeRead);
 }
 
 void ScanServiceAbility::SendDeviceInfoTCP(const ScanDeviceInfoTCP &info, std::string event)
@@ -942,12 +927,13 @@ void ScanServiceAbility::SendDeviceInfoTCP(const ScanDeviceInfoTCP &info, std::s
         return;
     }
 
-    auto eventIt = registeredListeners_.find(event);
-    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
-        SCAN_HILOGE("GetScannerList SendDeviceInfoTCP event not register");
-        return;
+    for (auto [eventType, listener] : registeredListeners_) {
+        std::string type;
+        NapiScanUtils::EncodeTaskEventId(eventType, type);
+        if (type == event && listener != nullptr) {
+            listener->OnCallback(info.GetDeviceState(), info);
+        }
     }
-    eventIt->second->OnCallback(info.GetDeviceState(), info);
 }
 
 void ScanServiceAbility::SendDeviceInfo(const ScanDeviceInfo &info, std::string event)
@@ -959,12 +945,13 @@ void ScanServiceAbility::SendDeviceInfo(const ScanDeviceInfo &info, std::string 
         return;
     }
 
-    auto eventIt = registeredListeners_.find(event);
-    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
-        SCAN_HILOGE("GetScannerList SendDeviceInfo event not register");
-        return;
+    for (auto [eventType, listener] : registeredListeners_) {
+        std::string type;
+        NapiScanUtils::EncodeTaskEventId(eventType, type);
+        if (type == event && listener != nullptr) {
+            listener->OnCallback(info.GetDeviceState(), info);
+        }
     }
-    eventIt->second->OnCallback(info.GetDeviceState(), info);
 }
 
 void ScanServiceAbility::SendDeviceList(std::vector<ScanDeviceInfo> &infos, std::string event)
@@ -976,12 +963,13 @@ void ScanServiceAbility::SendDeviceList(std::vector<ScanDeviceInfo> &infos, std:
         return;
     }
 
-    auto eventIt = registeredListeners_.find(event);
-    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
-        SCAN_HILOGE("GetScannerList SendDeviceList event not register");
-        return;
+    for (auto [eventType, listener] : registeredListeners_) {
+        std::string type;
+        NapiScanUtils::EncodeTaskEventId(eventType, type);
+        if (type == event && listener != nullptr) {
+            listener->OnGetDevicesList(infos);
+        }
     }
-    eventIt->second->OnGetDevicesList(infos);
 }
 
 void ScanServiceAbility::SendDeviceInfoSync(const ScanDeviceInfoSync &info, std::string event)
@@ -993,12 +981,13 @@ void ScanServiceAbility::SendDeviceInfoSync(const ScanDeviceInfoSync &info, std:
         return;
     }
 
-    auto eventIt = registeredListeners_.find(event);
-    if (eventIt == registeredListeners_.end() || eventIt->second == nullptr) {
-        SCAN_HILOGE("DealUsbDevStatusChange SendDeviceInfoSync event not register");
-        return;
+    for (auto [eventType, listener] : registeredListeners_) {
+        std::string type;
+        NapiScanUtils::EncodeTaskEventId(eventType, type);
+        if (type == event && listener != nullptr) {
+            listener->OnCallbackSync(info.GetDeviceState(), info);
+        }
     }
-    eventIt->second->OnCallbackSync(info.GetDeviceState(), info);
 }
 
 void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::string deviceId)
@@ -1269,7 +1258,7 @@ int32_t ScanServiceAbility::UpdateScannerName(const std::string& serialNumber,
 
     std::string uniqueId = discoverMode + serialNumber;
     if (!ScanSystemData::GetInstance().UpdateScannerNameByUniqueId(uniqueId, deviceName)) {
-        SCAN_HILOGE("ScanServiceAbility UpdateScannerNameByUniqueId fail");
+        SCAN_HILOGW("ScanServiceAbility UpdateScannerNameByUniqueId fail");
         return E_SCAN_INVALID_PARAMETER;
     }
     if (!ScanSystemData::GetInstance().SaveScannerMap()) {
@@ -1380,7 +1369,9 @@ bool ScanServiceAbility::CreateAndOpenScanFile(std::string &outputFile, const in
         return false;
     }
     outputDir = canonicalPath;
-    outputFile = outputDir.append("/scan_tmp").append(std::to_string(nowScanId)).append(".jpg");
+    std::ostringstream outputFileStream;
+    outputFileStream << outputDir << "/" << "scan_tmp" << std::to_string(nowScanId) << ".jpg";
+    outputFile = outputFileStream.str();
     if ((ofp = fopen(outputFile.c_str(), "w")) == nullptr) {
         SCAN_HILOGE("file [%{private}s] open fail", outputFile.c_str());
         return false;
@@ -1395,63 +1386,52 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId, std:
     do {
         if (!firstScan) {
             SCAN_HILOGI("not first scan");
-            if ((status = StartScan(scannerId, batchMode_)) != E_SCAN_NONE) {
-                SCAN_HILOGW("ScanTask restart fail");
+            status = RestartScan(scannerId);
+            if (status != E_SCAN_NONE) {
+                SCAN_HILOGW("RestartScan fail");
                 break;
             }
-            auto it = scanTaskMap.find(nextPicId - 2);  // nextPicId - 2 is to find a PicId before nowScanId.
-            if (it != scanTaskMap.end()) {
-                it->second.SetIsFinal(false);
-                it->second.SetScanProgress(SCAN_PROGRESS_100);
-            }
-            SCAN_HILOGI("ScanTask restart success");
         }
-        auto it = scanTaskMap.find(nextPicId - 1); // nextPicId - 2 is nowScanId
-        if (it == scanTaskMap.end()) {
-            SCAN_HILOGE("Scan task not found for PicId: %{public}d", nextPicId - 1);
-            status = E_SCAN_GENERIC_FAILURE;
+        int32_t nowScanId = 0;
+        status = FindScanTask(scanProPtr, nowScanId);
+        if (status == E_SCAN_SERVER_FAILURE) {
+            SCAN_HILOGE("FindScanTask fail");
             break;
         }
-        int32_t nowScanId = it->first;
-        scanProPtr = &(it->second);
         if (!CreateAndOpenScanFile(outputFile, nowScanId)) {
             status = E_SCAN_GENERIC_FAILURE;
+            SCAN_HILOGE("CreateAndOpenScanFile fail");
             break;
         }
         status = DoScanTask(scannerId, scanProPtr);
-        if (ofp != nullptr) {
-            fclose(ofp);
-            ofp = nullptr;
-        }
         scanProPtr->SetImageRealPath(outputFile);
         firstScan = false;
     } while (status == E_SCAN_EOF);
     if (status == E_SCAN_NO_DOCS) {
-        auto it = scanTaskMap.find(nextPicId - 1);
-        if (it != scanTaskMap.end()) {
-            it->second.SetScanProgress(SCAN_PROGRESS_100);
-        }
+        scanProPtr->SetScanProgress(SCAN_PROGRESS_100);
         status = E_SCAN_NONE;
         SCAN_HILOGI("ScanTask batch mode exit successfully.");
+    } else if (status == E_SCAN_SERVER_FAILURE) {
+        SCAN_HILOGE("GeneratePictureBatch fail"); // scanProPtr is a nullptr
     } else {
         scanProPtr->SetTaskCode(static_cast<ScanErrorCode>(status));
+        SCAN_HILOGE("GeneratePictureBatch fail");
     }
 }
 
 void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std::string &fileName,
     std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr)
 {
-    auto it = scanTaskMap.find(nextPicId - 1);
-    if (it == scanTaskMap.end()) {
-        SCAN_HILOGE("Scan task not found for PicId: %{public}d", nextPicId - 1);
-        status = E_SCAN_GENERIC_FAILURE;
+    int32_t nowScanId = 0;
+    status = FindScanTask(scanProPtr, nowScanId);
+    if (status != E_SCAN_NONE) {
+        SCAN_HILOGE("FindScanTask fail");
         return;
     }
-    int32_t nowScanId = it->first;
-    scanProPtr = &(it->second);
 
     if (!CreateAndOpenScanFile(outputFile, nowScanId)) {
         status = E_SCAN_GENERIC_FAILURE;
+        SCAN_HILOGE("CreateAndOpenScanFile fail");
         return;
     }
 
@@ -1459,16 +1439,13 @@ void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId, std
     if (status == E_SCAN_EOF) {
         scanProPtr->SetImageRealPath(outputFile);
         scanProPtr->SetScanProgress(SCAN_PROGRESS_100);
+        SCAN_HILOGI("ScanTask single mode exit successfully.");
         status = E_SCAN_NONE;
-    }
-    if (ofp != nullptr) {
-        fclose(ofp);
-        ofp = nullptr;
     }
 }
 
 
-int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress* scanProPtr)
+int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress* &scanProPtr)
 {
     bool isFirstFrame = true;
     int32_t scanStatus = E_SCAN_NONE;
@@ -1476,11 +1453,15 @@ int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress
     struct jpeg_error_mgr jerr;
     do {
         SCAN_HILOGI("start DoScanTask");
-        if (!isFirstFrame && (scanStatus = StartScan(scannerId, batchMode_)) != E_SCAN_NONE) {
-            SCAN_HILOGW("restart scanner fail");
-            break;
+        if (!isFirstFrame) {
+            scanStatus = StartScan(scannerId, batchMode_);
+            if (scanStatus != E_SCAN_NONE) {
+                SCAN_HILOGW("restart scanner fail");
+                break;
+            }
         }
-        if ((scanStatus = GetScanParameters(scannerId, parm)) != E_SCAN_NONE) {
+        scanStatus = GetScanParameters(scannerId, parm);
+        if (scanStatus != E_SCAN_NONE) {
             SCAN_HILOGE("DoScanTask error, after GetScanParameters");
             break;
         }
@@ -1504,15 +1485,59 @@ int32_t ScanServiceAbility::DoScanTask(const std::string scannerId, ScanProgress
         }
         isFirstFrame = false;
     } while (!(parm.GetLastFrame()));
+    CleanUpAfterScan(scanStatus, scanProPtr);
+    return scanStatus;
+}
+
+int32_t ScanServiceAbility::RestartScan(const std::string &scannerId)
+{
+    SCAN_HILOGI("not first scan");
+    int32_t status = StartScan(scannerId, batchMode_);
+    if (status != E_SCAN_NONE) {
+        SCAN_HILOGW("ScanTask restart fail");
+        return status;
+    }
+    auto it = scanTaskMap.find(nextPicId - 2);
+    if (it != scanTaskMap.end()) {
+        it->second.SetIsFinal(false);
+        it->second.SetScanProgress(SCAN_PROGRESS_100);
+    }
+    SCAN_HILOGI("ScanTask restart success");
+    return status;
+}
+
+int32_t ScanServiceAbility::FindScanTask(ScanProgress* &scanProPtr, int32_t &nowScanId)
+{
+    auto it = scanTaskMap.find(nextPicId - 1);
+    if (it == scanTaskMap.end()) {
+        SCAN_HILOGE("Scan task not found for PicId: %{public}d", nextPicId - 1);
+        return E_SCAN_SERVER_FAILURE;
+    }
+    scanProPtr = &(it->second);
+    if (scanProPtr == nullptr) {
+        SCAN_HILOGE("scanProPtr is a nullptr");
+        return E_SCAN_SERVER_FAILURE;
+    }
+    nowScanId = it->first;
+    return E_SCAN_NONE;
+}
+
+void ScanServiceAbility::CleanUpAfterScan(int32_t scanStatus, ScanProgress* &scanProPtr)
+{
     if (scanStatus != E_SCAN_EOF && scanStatus != E_SCAN_NO_DOCS) {
         jpeg_destroy_compress(cinfoPtr);
         scanProPtr->SetTaskCode(static_cast<ScanErrorCode>(scanStatus));
+        SCAN_HILOGE("DoScanTask fail, SetTaskCode : %{public}d", scanStatus);
     } else {
         jpeg_finish_compress(cinfoPtr);
         fflush(ofp);
+        SCAN_HILOGD("End of normal scan");
     }
     DELETE_ARRAY_AND_NULLIFY(jpegbuf)
-    return scanStatus;
+    if (ofp != nullptr) {
+        fclose(ofp);
+        ofp = nullptr;
+    }
 }
 
 int32_t ScanServiceAbility::WriteJpegHeader(ScanParameters &parm, struct jpeg_error_mgr* jerr)
@@ -1562,7 +1587,7 @@ void ScanServiceAbility::CleanScanTask(const std::string &scannerId)
 }
 
 void ScanServiceAbility::SetScanProgr(int64_t &totalBytes, const int64_t& hundredPercent,
-    ScanProgress* scanProPtr, const int32_t& curReadSize)
+    ScanProgress* &scanProPtr, const int32_t& curReadSize)
 {
     if (hundredPercent == 0) {
         SCAN_HILOGE("hundredPercent equals zero.");
@@ -1582,7 +1607,7 @@ void ScanServiceAbility::SetScanProgr(int64_t &totalBytes, const int64_t& hundre
     }
 }
 
-void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *scanProPtr,
+void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress* &scanProPtr,
     int32_t &scanStatus, ScanParameters &parm)
 {
     int64_t totalBytes = 0;
@@ -1631,7 +1656,8 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, ScanProgress *
     }
 }
 
-bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanParameters &parm, ScanProgress *scanProPtr)
+bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize,
+    ScanParameters &parm, ScanProgress* &scanProPtr)
 {
     constexpr int bit = 1;
     int i = 0;

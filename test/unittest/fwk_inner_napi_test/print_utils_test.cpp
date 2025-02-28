@@ -461,5 +461,24 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0027, TestSize.Level1)
     EXPECT_EQ("", result);
 }
 
+/**
+ * @tc.name: PrintUtilsTest_0027
+ * @tc.desc: Verify the CheckUserIdInEventType function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0028, TestSize.Level1)
+{
+    std::string type = "test";
+    int32_t callerUserId = 100; // defaute test user id
+    EXPECT_FALSE(PrintUtils::CheckUserIdInEventType(type, callerUserId));
+    type = "test:";
+    EXPECT_FALSE(PrintUtils::CheckUserIdInEventType(type, callerUserId));
+    type = "999:test";
+    EXPECT_FALSE(PrintUtils::CheckUserIdInEventType(type, callerUserId));
+    type = "100:test";
+    EXPECT_TRUE(PrintUtils::CheckUserIdInEventType(type, callerUserId));
+}
+
 }  // namespace Print
 }  // namespace OHOS
