@@ -286,17 +286,15 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0012, TestSize.Level1)
     EXPECT_FALSE(UpdatePrinterInfoWithDiscovery(printerInfo, nullptr));
     Print_DiscoveryItem discoveryItem;
     EXPECT_FALSE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
-    discoveryItem.printerId = new char[20];
+    discoveryItem.printerId = "printerId";
     EXPECT_FALSE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
-    discoveryItem.printerName = new char[20];
+    discoveryItem.printerName = "printerName";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
-    discoveryItem.description = new char[50];
+    discoveryItem.description = "description";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
-    discoveryItem.printerUri = new char[50];
+    discoveryItem.printerUri = "printerUri";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
-    discoveryItem.makeAndModel = new char[50];
-    EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
-    discoveryItem.detailInfo = new char[100];
+    discoveryItem.makeAndModel = "makeAndModel";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
     discoveryItem.detailInfo = "detailInfo";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
@@ -304,12 +302,6 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0012, TestSize.Level1)
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
     discoveryItem.detailInfo = "{\"bsunidriver_support\": \"false\"}";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
-    delete[] discoveryItem.printerId;
-    delete[] discoveryItem.printerName;
-    delete[] discoveryItem.description;
-    delete[] discoveryItem.makeAndModel;
-    delete[] discoveryItem.printerUri;
-    delete[] discoveryItem.printerUuid;
 }
 } // namespace Print
 } // namespace OHOS

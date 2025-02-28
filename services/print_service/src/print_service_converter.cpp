@@ -16,6 +16,8 @@
 #include "print_service_converter.h"
 #include "print_log.h"
 #include <sstream>
+#include <cstdlib>  // for std::strtod
+#include <cerrno>   // for errno
 
 namespace OHOS {
 namespace Print {
@@ -63,6 +65,52 @@ bool ConvertPageSizeId(const char *src, std::string &id)
     return !id.empty();
 }
 
+bool ConvertStrToDouble(const std::string& str, double& value)
+{
+    char* endPtr = nullptr;
+    const char* cstr = str.c_str();
+    
+    errno = 0;
+    value = std::strtod(cstr, &endPtr);
+    
+    if (cstr == endPtr) {
+        return false;
+    }
+    if (errno == ERANGE) {
+        errno = 0;
+        return false;
+    }
+    if (*endPtr != '\0') {
+        return false;
+    }
+    return true;
+}
+
+bool ConvertCustomPageSizeFromWidthAndLength(const double& widthValue, const double& lengthValue,
+    const std::string& unit, PrintPageSize &dst)
+{
+    uint32_t width = 0;
+    uint32_t length = 0;
+
+    std::stringstream postfixName;
+    if (unit == "mm") {
+        width = round(widthValue * HUNDRED_OF_MILLIMETRE_TO_INCH);
+        length = round(lengthValue * HUNDRED_OF_MILLIMETRE_TO_INCH);
+        postfixName << round(widthValue) << "x" << round(lengthValue) << "mm";
+    } else if (unit == "in") {
+        width = round(widthValue * ONE_THOUSAND_INCH);
+        length = round(lengthValue * ONE_THOUSAND_INCH);
+        postfixName << round(widthValue * ONE_THOUSAND_INCH / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x" <<
+            round(lengthValue * ONE_THOUSAND_INCH / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
+    } else {
+        PRINT_HILOGE("IPP media-supported do not found unitstr");
+        return false;
+    }
+    std::string pwgName = CUSTOM_PREFIX + postfixName.str();
+    dst = PrintPageSize(pwgName, pwgName, width, length);
+    return true;
+}
+
 bool ConvertCustomPageSizeFromPwgName(const char *src, PrintPageSize &dst)
 {
     if (src == nullptr) {
@@ -92,25 +140,15 @@ bool ConvertCustomPageSizeFromPwgName(const char *src, PrintPageSize &dst)
     std::string widthStr = sizeName.substr(0, xPos);
     std::string lengthStr = sizeName.substr(xPos + 1, sizeName.size() - xPos - PAGE_SIZE_UNIT_LENGTH - 1);
     std::string unit = sizeName.substr(sizeName.size() - PAGE_SIZE_UNIT_LENGTH);
-    uint32_t width = 0;
-    uint32_t length = 0;
-    std::stringstream postfixName;
-    if (unit == "mm") {
-        width = round(std::stof(widthStr) * HUNDRED_OF_MILLIMETRE_TO_INCH);
-        length = round(std::stof(lengthStr) * HUNDRED_OF_MILLIMETRE_TO_INCH);
-        postfixName << round(std::stof(widthStr)) << "x" << round(std::stof(lengthStr)) << "mm";
-    } else if (unit == "in") {
-        width = round(std::stof(widthStr) * ONE_THOUSAND_INCH);
-        length = round(std::stof(lengthStr) * ONE_THOUSAND_INCH);
-        postfixName << round(std::stof(widthStr) * ONE_THOUSAND_INCH / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x" <<
-            round(std::stof(lengthStr) * ONE_THOUSAND_INCH / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
-    } else {
-        PRINT_HILOGE("IPP media-supported do not found unitstr");
+    double widthValue = 0;
+    double lengthValue = 0;
+
+    if (!ConvertStrToDouble(widthStr, widthValue) || !ConvertStrToDouble(lengthStr, lengthValue)) {
+        PRINT_HILOGE("Bad SafeStof Convert!");
         return false;
     }
-    std::string pwgName = CUSTOM_PREFIX + postfixName.str();
-    dst = PrintPageSize(pwgName, pwgName, width, length);
-    return true;
+
+    return ConvertCustomPageSizeFromWidthAndLength(widthValue, lengthValue, unit, dst);
 }
 
 bool ConvertPrintPageSize(const char *src, PrintPageSize &dst)

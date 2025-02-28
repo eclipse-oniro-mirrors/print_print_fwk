@@ -234,7 +234,7 @@ bool ScanSystemData::UpdateScannerNameByUniqueId(const std::string &uniqueId, co
     if (iter != addedScannerMap_.end() && iter->second != nullptr) {
         iter->second->deviceName = deviceName;
     } else {
-        SCAN_HILOGE("ScanSystemData UpdateScannerNameByUniqueId fail");
+        SCAN_HILOGW("ScanSystemData UpdateScannerNameByUniqueId fail");
         return false;
     }
     return true;
@@ -295,8 +295,8 @@ void ScanSystemData::GetAddedScannerInfoList(std::vector<ScanDeviceInfo> &infoLi
 bool ScanSystemData::SaveScannerMap()
 {
     FILE *file = fopen(SCANNER_LIST_FILE.c_str(), "w+");
-    if (file != nullptr) {
-        SCAN_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
+    if (file == nullptr) {
+        SCAN_HILOGW("Failed to open file errno: %{public}u", errno);
         return false;
     }
     Json::Value scannerMapJson;
@@ -325,7 +325,7 @@ bool ScanSystemData::SaveScannerMap()
     jsonObject["scaner_list"] = scannerMapJson;
     std::string jsonString = Print::PrintJsonUtil::WriteString(jsonObject);
     size_t jsonLength = jsonString.length();
-    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
+    size_t writeLength = fwrite(jsonString.c_str(), 1, jsonLength, file);
     int fcloseResult = fclose(file);
     if (fcloseResult != 0) {
         SCAN_HILOGE("File Operation Failure.");

@@ -109,17 +109,7 @@ void PrintJob::SetSubState(uint32_t subState)
 {
     if (jobState_ == PRINT_JOB_COMPLETED && subState <= PRINT_JOB_COMPLETED_FILE_CORRUPT) {
         subState_ = subState;
-    }
-    if (jobState_ == PRINT_JOB_BLOCKED && subState > PRINT_JOB_COMPLETED_FILE_CORRUPT) {
-        subState_ = subState;
-    }
-    if (jobState_ == PRINT_JOB_RUNNING &&
-    (subState < PRINT_JOB_BLOCKED_UNKNOWN && subState > PRINT_JOB_COMPLETED_FILE_CORRUPT)) {
-        subState_ = subState;
-    }
-
-    if (jobState_ == PRINT_JOB_CREATE_FILE_COMPLETED &&
-    (subState == PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS || subState == PRINT_JOB_CREATE_FILE_COMPLETED_FAILED)) {
+    } else {
         subState_ = subState;
     }
 }
