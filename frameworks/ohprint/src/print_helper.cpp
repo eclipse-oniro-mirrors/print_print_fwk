@@ -24,7 +24,7 @@
 #include "print_manager_client.h"
 #include "print_util.h"
 #include "print_json_util.h"
-#include "json/json.h"
+#include <json/json.h>
 
 namespace OHOS::Print {
 
@@ -120,7 +120,7 @@ bool ParseJsonFieldAsInt(const Json::Value &cupsOpt, const std::string &key, int
 
 void ConvertJsonArrayToIntList(const Json::Value &jsonArray, const std::string &key, std::vector<uint32_t> &list)
 {
-    PRINT_HILOGD("ConvertJsonArrayToIntList %{public}s, %{public}zu", key.c_str(), jsonArray.size());
+    PRINT_HILOGD("ConvertJsonArrayToIntList %{public}s, %{public}u", key.c_str(), jsonArray.size());
     for (auto &item : jsonArray) {
         int value = 0;
         if (!ParseJsonFieldAsInt(item, key, value)) {

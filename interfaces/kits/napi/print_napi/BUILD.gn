@@ -19,15 +19,15 @@ config("print_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc += [ 
+  cflags_cc += [
     "-fno-exceptions",
     "-fdata-sections",
     "-ffunction-sections",
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",
     "-flto",
-    "-Os"
-   ]
+    "-Os",
+  ]
 }
 ohos_shared_library("print_napi") {
   include_dirs = [

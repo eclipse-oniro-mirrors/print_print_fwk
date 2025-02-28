@@ -23,7 +23,7 @@ config("scan_service_config") {
     "${print_path}/frameworks/helper/scan_helper/include",
   ]
 
-  cflags_cc += [ 
+  cflags_cc += [
     "-fexceptions",
     "-fdata-sections",
     "-ffunction-sections",
@@ -31,7 +31,7 @@ config("scan_service_config") {
     "-fno-unwind-tables",
     "-flto",
     "-Os",
-   ]
+  ]
 }
 
 ohos_shared_library("scan_service") {

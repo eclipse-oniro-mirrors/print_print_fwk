@@ -39,7 +39,7 @@
 #include "want_params_wrapper.h"
 #include "print_security_guard_manager.h"
 #include "hisys_event_util.h"
-#include "json/json.h"
+#include <json/json.h>
 #include "mock_print_callback_proxy.h"
 #include "mock_print_extension_callback_proxy.h"
 
@@ -2114,7 +2114,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0143, TestSize.Level1)
     std::string printerId = "123";
     Json::Value preferencesJson;
     preferencesJson["borderless"] = true;
-    std::string printerSetting = preferencesJson.dump();
+    std::string printerSetting = PrintJsonUtil::WriteString(preferencesJson);
     EXPECT_EQ(service->SetPrinterPreference(printerId, printerSetting), E_PRINT_NONE);
 }
 
@@ -2165,7 +2165,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0147, TestSize.Level1)
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     Json::Value opsJson;
     opsJson["key"] = "value";
-    info->SetOption(opsJson.dump());
+    info->SetOption(PrintJsonUtil::WriteString(opsJson));
     service->printSystemData_.discoveredPrinterInfoList_[standardizeId] = info;
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_INVALID_PRINTER);
 }
@@ -2184,7 +2184,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0148, TestSize.Level1)
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     Json::Value opsJson;
     opsJson["printerMake"] = 123;
-    info->SetOption(opsJson.dump());
+    info->SetOption(PrintJsonUtil::WriteString(opsJson));
     service->printSystemData_.discoveredPrinterInfoList_[standardizeId] = info;
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_INVALID_PRINTER);
 }
@@ -2247,7 +2247,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0155, TestSize.Level1)
     printerInfo->maker = "testMaker";
     Json::Value infoJson;
     infoJson["printerName"] = "testPrinterName";
-    printJob.SetOption(infoJson.dump());
+    printJob.SetOption(PrintJsonUtil::WriteString(infoJson));
     service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
@@ -2273,7 +2273,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0156, TestSize.Level1)
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     Json::Value opsJson;
     opsJson["printerMake"] = "123";
-    info->SetOption(opsJson.dump());
+    info->SetOption(PrintJsonUtil::WriteString(opsJson));
     service->printSystemData_.discoveredPrinterInfoList_[standardizeId] = info;
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_SERVER_FAILURE);
 }

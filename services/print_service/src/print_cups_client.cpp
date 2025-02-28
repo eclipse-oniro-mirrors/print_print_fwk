@@ -33,7 +33,7 @@
 
 #include "system_ability_definition.h"
 #include "parameter.h"
-#include "json/json.h"
+#include <json/json.h>
 #include "print_service_ability.h"
 #include "print_log.h"
 #include "print_constant.h"

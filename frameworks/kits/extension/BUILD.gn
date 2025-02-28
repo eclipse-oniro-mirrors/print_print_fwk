@@ -14,8 +14,6 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
-
-
 config("ability_config") {
   visibility = [ ":*" ]
   include_dirs = [

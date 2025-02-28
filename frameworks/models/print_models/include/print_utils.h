@@ -21,7 +21,7 @@
 #include "bundle_mgr_client.h"
 #include "print_constant.h"
 #include "print_log.h"
-#include <json/json.h>
+#include "json/json.h"
 #include <mutex>
 #include "print_json_util.h"
 

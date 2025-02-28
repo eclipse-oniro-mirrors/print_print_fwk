@@ -269,7 +269,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0014, TestSize.Level1)
         Json::Value option;
         option["printerName"] = "name";
         option["printerUri"] = "uri";
-        info.SetOption(option.dump());
+        info.SetOption(PrintJsonUtil::WriteString(option));
         printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
     };
     DoMockTest(testFunc);

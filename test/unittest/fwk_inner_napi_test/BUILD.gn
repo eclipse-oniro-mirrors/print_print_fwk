@@ -77,6 +77,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "hilog:libhilog",
     "i18n:intl_util",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "preferences:native_preferences",
     "relational_store:native_appdatafwk",

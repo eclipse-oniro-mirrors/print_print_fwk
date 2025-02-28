@@ -43,7 +43,7 @@ _sources = [
   "src/vendor_wlan_group.cpp",
 ]
 
-_deps = ["${print_path}/frameworks/models/print_models:print_models"]
+_deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
 
 _external_deps = [
   "ability_base:base",
@@ -62,6 +62,7 @@ _external_deps = [
   "hisysevent:libhisysevent",
   "init:libbegetutil",
   "ipc:ipc_core",
+  "jsoncpp:jsoncpp",
   "napi:ace_napi",
   "os_account:os_account_innerkits",
   "safwk:system_ability_fwk",
@@ -70,9 +71,7 @@ _external_deps = [
   "wifi:wifi_sdk",
 ]
 
-_public_configs = [
-  ":print_service_config"
-]
+_public_configs = [ ":print_service_config" ]
 
 _include_dirs = [
   "${print_path}/frameworks/innerkitsimpl/print_impl/include",
@@ -96,14 +95,14 @@ config("print_service_config") {
     "include",
     "${print_path}/frameworks/models/print_models/include",
   ]
-  cflags_cc += [ 
+  cflags_cc += [
     "-fno-exceptions",
     "-fdata-sections",
     "-ffunction-sections",
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",
     "-flto",
-    "-Os"
+    "-Os",
   ]
 }
 
@@ -116,47 +115,8 @@ ohos_shared_library("print_service") {
   deps = _deps
   external_deps = _external_deps
 
-  cflags_cc += ["-fvisibility=hidden"]
+  cflags_cc += [ "-fvisibility=hidden" ]
   if (cups_enable) {
-    sources += [
-      "src/print_cups_attribute.cpp",
-      "src/print_cups_client.cpp",
-      "src/print_cups_wrapper.cpp",
-    ]
-    cflags_cc += ["-DCUPS_ENABLE"]
-    external_deps += [
-      "cJSON:cjson",
-      "cups:cups",
-      "cups-filters:cupsfilters",
-    ]
-  }
-
-  if (security_guard_enabled) {
-    external_deps += [
-      "security_guard:libsg_collect_sdk",
-      "time_service:time_client",
-    ]
-    cflags_cc += ["-DSECURITY_GUARDE_ENABLE"]
-  }
-
-  if (build_variant == "user") {
-    cflags_cc += ["-DIS_RELEASE_VERSION"]
-  }
-
-  subsystem_name = "print"
-  part_name = "print_fwk"
-}
-
-ohos_shared_library("print_service_test") {
-  sources = _sources
-  branch_protector_ret = _branch_protector_ret
-  sanitize = _sanitize
-  public_configs = _public_configs
-  include_dirs = _include_dirs
-  deps = _deps
-  external_deps = _external_deps
-
-if (cups_enable) {
     sources += [
       "src/print_cups_attribute.cpp",
       "src/print_cups_client.cpp",
@@ -177,7 +137,46 @@ if (cups_enable) {
     ]
     cflags_cc += [ "-DSECURITY_GUARDE_ENABLE" ]
   }
-  
+
+  if (build_variant == "user") {
+    cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+  }
+
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
+
+ohos_shared_library("print_service_test") {
+  sources = _sources
+  branch_protector_ret = _branch_protector_ret
+  sanitize = _sanitize
+  public_configs = _public_configs
+  include_dirs = _include_dirs
+  deps = _deps
+  external_deps = _external_deps
+
+  if (cups_enable) {
+    sources += [
+      "src/print_cups_attribute.cpp",
+      "src/print_cups_client.cpp",
+      "src/print_cups_wrapper.cpp",
+    ]
+    cflags_cc += [ "-DCUPS_ENABLE" ]
+    external_deps += [
+      "cJSON:cjson",
+      "cups:cups",
+      "cups-filters:cupsfilters",
+    ]
+  }
+
+  if (security_guard_enabled) {
+    external_deps += [
+      "security_guard:libsg_collect_sdk",
+      "time_service:time_client",
+    ]
+    cflags_cc += [ "-DSECURITY_GUARDE_ENABLE" ]
+  }
+
   if (build_variant == "user") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
   }

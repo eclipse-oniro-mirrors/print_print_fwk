@@ -36,14 +36,14 @@ gen_js_obj("print_extension_abc") {
 
 ohos_shared_library("printextensionability_napi") {
   sources = [ "print_extension_module.cpp" ]
-  cflags_cc = [ 
+  cflags_cc = [
     "-fno-exceptions",
     "-fdata-sections",
     "-ffunction-sections",
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",
     "-flto",
-    "-Os"
+    "-Os",
   ]
   branch_protector_ret = "pac_ret"
   sanitize = {

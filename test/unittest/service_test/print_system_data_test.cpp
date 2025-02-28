@@ -1214,8 +1214,8 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0060, TestSize.Level1)
     Json::Value preferencesJson;
     printerJson["preferences"] = preferencesJson;
     systemData->ConvertInnerJsonToCupsPrinterInfo(printerJson, info);
-    EXPECT_EQ(info.alias, printerJson["alias"]);
-    EXPECT_EQ(info.printerStatus, printerJson["printerStatus"]);
+    EXPECT_EQ(info.alias, printerJson["alias"].asString());
+    EXPECT_EQ(info.printerStatus, static_cast<PrinterStatus>(printerJson["printerStatus"].asInt()));
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0061, TestSize.Level1)

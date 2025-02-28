@@ -1477,7 +1477,7 @@ void PrintServiceAbility::ReportCompletedPrint(const std::string &printerId)
     Json::Value msg;
     auto endPrintTime = std::chrono::high_resolution_clock::now();
     auto printTime = std::chrono::duration_cast<std::chrono::milliseconds>(endPrintTime - startPrintTime_);
-    msg["PRINT_TIME"] = printTime.count();
+    msg["PRINT_TIME"] = std::to_string(printTime.count());
     msg["INGRESS_PACKAGE"] = ingressPackage;
     msg["STATUS"] = 0;
     HisysEventUtil::reportPrintSuccess(PrintJsonUtil::WriteString(msg));
@@ -1489,7 +1489,7 @@ int32_t PrintServiceAbility::ReportHisysEvent(
     Json::Value msg;
     auto endPrintTime = std::chrono::high_resolution_clock::now();
     auto printTime = std::chrono::duration_cast<std::chrono::milliseconds>(endPrintTime - startPrintTime_);
-    msg["PRINT_TIME"] = printTime.count();
+    msg["PRINT_TIME"] = std::to_string(printTime.count());
     msg["INGRESS_PACKAGE"] = ingressPackage;
     if (isEprint(printerId)) {
         msg["PRINT_TYPE"] = 1;
