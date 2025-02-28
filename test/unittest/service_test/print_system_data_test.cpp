@@ -1161,7 +1161,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0056, TestSize.Level1) {
     std::vector<uint32_t> supportedColorModeList;
     supportedColorModeList.push_back(1);
     printerCapability.SetSupportedColorMode(supportedColorModeList);
-    nlohmann::json capsJson;
+    Json::Value capsJson;
     systemData->ConvertSupportedColorModeToJson(printerCapability, capsJson);
 }
 
@@ -1172,7 +1172,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0057, TestSize.Level1) {
     std::vector<uint32_t> supportedDuplexModeList;
     supportedDuplexModeList.push_back(1);
     printerCapability.SetSupportedDuplexMode(supportedDuplexModeList);
-    nlohmann::json capsJson;
+    Json::Value capsJson;
     systemData->ConvertSupportedDuplexModeToJson(printerCapability, capsJson);
 }
 
@@ -1183,7 +1183,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0058, TestSize.Level1) {
     std::vector<std::string> supportedMediaTypeList;
     supportedMediaTypeList.push_back("type1");
     printerCapability.SetSupportedMediaType(supportedMediaTypeList);
-    nlohmann::json capsJson;
+    Json::Value capsJson;
     systemData->ConvertSupportedMediaTypeToJson(printerCapability, capsJson);
 }
 
@@ -1194,7 +1194,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0059, TestSize.Level1) {
     std::vector<uint32_t> supportedQualityList;
     supportedQualityList.push_back(1);
     printerCapability.SetSupportedQuality(supportedQualityList);
-    nlohmann::json capsJson;
+    Json::Value capsJson;
     systemData->ConvertSupportedQualityToJson(printerCapability, capsJson);
 }
 
@@ -1313,7 +1313,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0068, TestSize.Level1)
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
     PrinterPreferences preferences;
-    nlohmann::json preferencesJson = nlohmann::json::object();
+    Json::Value preferencesJson;
     preferencesJson["defaultPageSizeId"] = 123;
     preferencesJson["defaultOrientation"] = "123";
     preferencesJson["defaultDuplexMode"] = "123";
@@ -1330,14 +1330,14 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0069, TestSize.Level1)
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
     PrinterPreferences preferences;
-    nlohmann::json preferencesJson = nlohmann::json::object();
+    Json::Value preferencesJson;
     preferencesJson["defaultPageSizeId"] = "123";
     preferencesJson["defaultOrientation"] = 123;
     preferencesJson["defaultDuplexMode"] = 123;
     preferencesJson["defaultPrintQuality"] = 123;
     preferencesJson["defaultMediaType"] = "123";
     preferencesJson["borderless"] = true;
-    nlohmann::json optionJson = nlohmann::json::object();
+    Json::Value optionJson;
     preferencesJson["options"] = optionJson;
     systemData->ConvertJsonToPrinterPreferences(preferencesJson, preferences);
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), true);
@@ -1673,7 +1673,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0098, TestSize.Level1)
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
     std::vector<int32_t> allPrintUserList;
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     EXPECT_EQ(systemData->ParseUserListJsonV1(jsonObject, allPrintUserList), false);
 }
 
@@ -1682,8 +1682,8 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0099, TestSize.Level1)
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
     std::vector<int32_t> allPrintUserList;
-    nlohmann::json jsonObject;
-    nlohmann::json userDataJson = nlohmann::json::array();
+    Json::Value jsonObject;
+    Json::Value userDataJson;
     jsonObject["print_user_data"] = userDataJson;
     EXPECT_EQ(systemData->ParseUserListJsonV1(jsonObject, allPrintUserList), false);
 }
@@ -1693,8 +1693,8 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0100, TestSize.Level1)
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
     std::vector<int32_t> allPrintUserList;
-    nlohmann::json jsonObject;
-    nlohmann::json userDataJson = nlohmann::json::object();
+    Json::Value jsonObject;
+    Json::Value userDataJson;
     jsonObject["print_user_data"] = userDataJson;
     EXPECT_EQ(systemData->ParseUserListJsonV1(jsonObject, allPrintUserList), false);
 }
@@ -1704,8 +1704,8 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0101, TestSize.Level1)
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
     std::vector<int32_t> allPrintUserList;
-    nlohmann::json jsonObject;
-    nlohmann::json userDataJson = nlohmann::json::object();
+    Json::Value jsonObject;
+    Json::Value userDataJson;
     userDataJson[""] = "user1";
     userDataJson["100"] = "user2";
     jsonObject["print_user_data"] = userDataJson;
@@ -1722,17 +1722,17 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0102, TestSize.Level1)
     PrintPageSize pageSize;
     pageSizeList.push_back(pageSize);
     printerCapability.SetSupportedPageSize(pageSizeList);
-    nlohmann::json opsJson;
+    Json::Value opsJson;
     opsJson["printerName"] = "123";
-    printerCapability.SetOption(opsJson.dump());
-    nlohmann::json jsonObject;
-    nlohmann::json printerMapJson = nlohmann::json::array();
-    nlohmann::json item = nlohmann::json::object();
+    printerCapability.SetOption(PrintJsonUtil::WriteString(opsJson));
+    Json::Value jsonObject;
+    Json::Value printerMapJson;
+    Json::Value item;
     item["id"] = "123";
     item["name"] = "123";
     item["uri"] = "123";
     item["maker"] = "123";
-    printerMapJson.push_back(item);
+    printerMapJson.append(item);
     jsonObject["printer_list"] = printerMapJson;
     systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability);
 }
@@ -1747,19 +1747,19 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0103, TestSize.Level1)
     PrintPageSize pageSize;
     pageSizeList.push_back(pageSize);
     printerCapability.SetSupportedPageSize(pageSizeList);
-    nlohmann::json opsJson;
+    Json::Value opsJson;
     opsJson["printerName"] = "123";
-    printerCapability.SetOption(opsJson.dump());
-    nlohmann::json jsonObject;
-    nlohmann::json printerMapJson = nlohmann::json::array();
-    nlohmann::json item = nlohmann::json::object();
+    printerCapability.SetOption(PrintJsonUtil::WriteString(opsJson));
+    Json::Value jsonObject;
+    Json::Value printerMapJson;
+    Json::Value item;
     item["id"] = "123";
     item["name"] = "123";
     item["uri"] = "123";
     item["maker"] = "123";
-    nlohmann::json capsJson = nlohmann::json::object();
+    Json::Value capsJson;
     item["capability"] = capsJson;
-    printerMapJson.push_back(item);
+    printerMapJson.append(item);
     jsonObject["printer_list"] = printerMapJson;
     systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability);
 }
