@@ -222,7 +222,7 @@ bool PrintSystemData::ParsePrinterPreferencesJson(nlohmann::json &jsonObject)
                 continue;
             }
             nlohmann::json settingJson = printPreferenceJson["setting"];
-            PRINT_HILOGI("ParsePrinterPreferencesJson settingJson: %{public}s", settingJson.dump().c_str());
+            PRINT_HILOGD("ParsePrinterPreferencesJson settingJson: %{public}s", settingJson.dump().c_str());
             PrinterPreferences preferences;
             if (ParsePreviousPreferencesSetting(settingJson, preferences)) {
                 PRINT_HILOGI("need update preferences by previous settings");
@@ -296,7 +296,7 @@ void PrintSystemData::InsertCupsPrinter(const std::string &printerId, const Cups
 void PrintSystemData::DeleteCupsPrinter(const std::string &printerId, const std::string &printerName)
 {
     if (!printerId.empty()) {
-        PRINT_HILOGI("DeleteCupsPrinter printerName: %{public}s", printerName.c_str());
+        PRINT_HILOGI("DeleteCupsPrinter printerName: %{private}s", printerName.c_str());
         addedPrinterMap_.Remove(printerId);
         std::filesystem::path filePath =
             PRINTER_SERVICE_PRINTERS_PATH + "/" + PrintUtil::StandardizePrinterName(printerName) + ".json";
@@ -845,7 +845,7 @@ bool PrintSystemData::GetPrinterCapabilityFromSystemData(CupsPrinterInfo &cupsPr
 
 bool PrintSystemData::GetPrinterCapabilityFromFile(std::string printerId, PrinterCapability &printerCapability)
 {
-    PRINT_HILOGI("GetPrinterCapabilityFromFile printerId: %{public}s", printerId.c_str());
+    PRINT_HILOGI("GetPrinterCapabilityFromFile printerId: %{private}s", printerId.c_str());
     nlohmann::json jsonObject;
     std::string printerListFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
     if (!GetJsonObjectFromFile(jsonObject, printerListFilePath)) {
@@ -964,10 +964,10 @@ bool PrintSystemData::ParseUserListJsonV1(nlohmann::json &jsonObject, std::vecto
         }
         int32_t userId = 0;
         if (!PrintUtil::ConvertToInt(userIdStr, userId)) {
-            PRINT_HILOGE("userIdStr [%{public}s] can not parse to number.", userIdStr.c_str());
+            PRINT_HILOGE("userIdStr [%{private}s] can not parse to number.", userIdStr.c_str());
             return false;
         }
-        PRINT_HILOGI("ParseUserListJsonV1 userId: %{public}d", userId);
+        PRINT_HILOGI("ParseUserListJsonV1 userId: %{private}d", userId);
         allPrintUserList.push_back(userId);
     }
     if (!allPrintUserList.size()) {
@@ -1085,7 +1085,7 @@ int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, Pr
         return E_PRINT_INVALID_PRINTER;
     }
     std::string capOption = cap.GetOption();
-    PRINT_HILOGI("printer capOption %{public}s", capOption.c_str());
+    PRINT_HILOGD("printer capOption %{public}s", capOption.c_str());
     if (!nlohmann::json::accept(capOption)) {
         PRINT_HILOGW("capOption can not parse to json object");
         return E_PRINT_INVALID_PARAMETER;

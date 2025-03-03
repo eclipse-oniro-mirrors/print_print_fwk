@@ -286,7 +286,7 @@ bool PrintServiceStub::OnQueryPrinterInfoByPrinterId(MessageParcel &data, Messag
     PrinterInfo info;
     int32_t ret = QueryPrinterInfoByPrinterId(printerId, info);
     reply.WriteInt32(ret);
-    PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoByPrinterId out %{public}s", info.GetPrinterName().c_str());
+    PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoByPrinterId out %{private}s", info.GetPrinterName().c_str());
     info.Marshalling(reply);
     PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoByPrinterId out");
     return ret == E_PRINT_NONE;

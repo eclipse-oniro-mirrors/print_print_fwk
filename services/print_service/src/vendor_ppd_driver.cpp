@@ -25,10 +25,10 @@ VendorPpdDriver::~VendorPpdDriver() {}
 bool VendorPpdDriver::OnQueryCapability(const std::string &printerId, int timeout)
 {
     PRINT_HILOGI("OnQueryCapability enter.");
-    PRINT_HILOGD("OnQueryCapability printerId=%{public}s", printerId.c_str());
+    PRINT_HILOGD("OnQueryCapability printerId=%{private}s", printerId.c_str());
     std::vector<std::string> ppds;
     if (!QueryPpdByPrinterId(printerId, ppds)) {
-        PRINT_HILOGW("OnQueryCapability query ppd fail. printerId = %{public}s", printerId.c_str());
+        PRINT_HILOGW("OnQueryCapability query ppd fail. printerId = %{private}s", printerId.c_str());
         return false;
     }
     if (!AddPrinterToCups(printerId, ppds[0])) {
