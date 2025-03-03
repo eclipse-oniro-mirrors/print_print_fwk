@@ -122,7 +122,7 @@ void PrintUserData::SetUserId(int32_t userId)
 
 int32_t PrintUserData::SetLastUsedPrinter(const std::string &printerId)
 {
-    PRINT_HILOGI("begin SetLastUsedPrinter, printerId: %{public}s", printerId.c_str());
+    PRINT_HILOGI("begin SetLastUsedPrinter, printerId: %{private}s", printerId.c_str());
     if (printerId.empty()) {
         PRINT_HILOGE("printerId is empty");
         return E_PRINT_INVALID_PARAMETER;
@@ -132,7 +132,7 @@ int32_t PrintUserData::SetLastUsedPrinter(const std::string &printerId)
     
     DeletePrinterFromUsedPrinterList(printerId);
     usedPrinterList_.push_front(printerId);
-    PRINT_HILOGI("put printer at the head of the queue, printerId: %{public}s", usedPrinterList_.front().c_str());
+    PRINT_HILOGI("put printer at the head of the queue, printerId: %{private}s", usedPrinterList_.front().c_str());
     if (useLastUsedPrinterForDefault_) {
         defaultPrinterId_ = printerId;
         PRINT_HILOGI("set the last used printer as the default printer");
@@ -155,7 +155,7 @@ int32_t PrintUserData::SetDefaultPrinter(const std::string &printerId, uint32_t 
 {
     std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     PRINT_HILOGI("begin SetDefaultPrinter");
-    PRINT_HILOGI("printerId: %{public}s", printerId.c_str());
+    PRINT_HILOGD("printerId: %{private}s", printerId.c_str());
     PRINT_HILOGI("type: %{public}d", type);
     if (type == DEFAULT_PRINTER_TYPE_SETTED_BY_USER) {
         defaultPrinterId_ = printerId;
@@ -166,7 +166,7 @@ int32_t PrintUserData::SetDefaultPrinter(const std::string &printerId, uint32_t 
     } else if (type == DELETE_LAST_USED_PRINTER) {
         defaultPrinterId_ = lastUsedPrinterId_;
     }
-    PRINT_HILOGI("defaultPrinterId_: %{public}s", defaultPrinterId_.c_str());
+    PRINT_HILOGD("defaultPrinterId_: %{private}s", defaultPrinterId_.c_str());
     if (!SetUserDataToFile()) {
         PRINT_HILOGE("SetUserDataToFile failed.");
         return E_PRINT_SERVER_FAILURE;
@@ -195,7 +195,7 @@ void PrintUserData::DeletePrinter(const std::string &printerId)
             auto it = usedPrinterList_.begin();
             lastUsedPrinterId_ = *it;
             PRINT_HILOGI(
-                "change last used printer for delete printer, printerId: %{public}s", lastUsedPrinterId_.c_str());
+                "change last used printer for delete printer, printerId: %{private}s", lastUsedPrinterId_.c_str());
         } else {
             lastUsedPrinterId_ = "";
             PRINT_HILOGW("last used printer is null");
@@ -212,7 +212,7 @@ void PrintUserData::DeletePrinterFromUsedPrinterList(const std::string &printerI
     std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     for (auto it = usedPrinterList_.begin(); it != usedPrinterList_.end(); ++it) {
         std::string id = *it;
-        PRINT_HILOGI("printerId in usedPrinterList_: %{public}s", id.c_str());
+        PRINT_HILOGI("printerId in usedPrinterList_: %{private}s", id.c_str());
         if (!strcmp(id.c_str(), printerId.c_str())) {
             PRINT_HILOGI("find printerId in used printer list.");
             usedPrinterList_.erase(it);
@@ -272,7 +272,7 @@ void PrintUserData::ParseUserDataFromJson(nlohmann::json &jsonObject)
         return;
     }
     PRINT_HILOGI(
-        "defaultPrinterId_: %{public}s, lastUsedPrinterId_: %{public}s, useLastUsedPrinterForDefault_: %{public}d",
+        "defaultPrinterId_: %{private}s, lastUsedPrinterId_: %{private}s, useLastUsedPrinterForDefault_: %{public}d",
         defaultPrinterId_.c_str(),
         lastUsedPrinterId_.c_str(),
         useLastUsedPrinterForDefault_);
@@ -292,7 +292,7 @@ bool PrintUserData::ConvertJsonToUsedPrinterList(nlohmann::json &userData)
     uint32_t size = usedPrinterList_.size();
     PRINT_HILOGI("usedPrinterList_ size: %{public}d", size);
     for (auto it = usedPrinterList_.begin(); it != usedPrinterList_.end(); ++it) {
-        PRINT_HILOGI("printerId in usedPrinterList_: %{public}s", it->c_str());
+        PRINT_HILOGD("printerId in usedPrinterList_: %{private}s", it->c_str());
     }
     return true;
 }
@@ -350,7 +350,7 @@ bool PrintUserData::SetUserDataToFile()
     }
     nlohmann::json jsonObject;
     if (CheckFileData(fileData, jsonObject)) {
-        PRINT_HILOGI("userId_: %{public}d", userId_);
+        PRINT_HILOGI("userId_: %{private}d", userId_);
         nlohmann::json userData = nlohmann::json::object();
         userData["defaultPrinter"] = defaultPrinterId_;
         userData["lastUsedPrinter"] = lastUsedPrinterId_;
@@ -360,7 +360,7 @@ bool PrintUserData::SetUserDataToFile()
         userData["usedPrinterList"] = usedPrinterListJson;
         jsonObject["print_user_data"][std::to_string(userId_)] = userData;
         std::string temp = jsonObject.dump();
-        PRINT_HILOGI("json temp: %{public}s", temp.c_str());
+        PRINT_HILOGD("json temp: %{public}s", temp.c_str());
         char realPidFile[PATH_MAX] = {};
         std::string userDataFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINT_USER_DATA_FILE;
         if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
