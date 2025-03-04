@@ -129,6 +129,8 @@ std::string ScanUsbManager::GetSerialNumber(UsbDevice &usbDevice)
     }
     SCAN_HILOGI("openDevice ret = %{public}d", openDeviceRet);
     std::string serialNumber = GetDeviceSerialNumber(usbDevicePipe);
+    bool closeDeviceRet = UsbSrvClient.Close(usbDevicePipe);
+    SCAN_HILOGI("openDevice ret = %{public}d", closeDeviceRet);
     return serialNumber;
 }
 
