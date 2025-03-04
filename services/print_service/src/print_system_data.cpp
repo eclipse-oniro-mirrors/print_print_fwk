@@ -322,11 +322,11 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     std::string printerListFilePath =
         PRINTER_SERVICE_PRINTERS_PATH + "/" + PrintUtil::StandardizePrinterName(info->name) + ".json";
     char realPidFile[PATH_MAX] = {};
-    if (realpath(printerListFilePath.c_str(), realPidFile) == nullptr) {
+    if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
         PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
         return;
     }
-    FILE *file = fopen(realPidFile, "w+");
+    FILE *file = fopen(printerListFilePath.c_str(), "w+");
     if (file == nullptr) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
         return;
