@@ -24,7 +24,6 @@ config("scan_service_config") {
   ]
 
   cflags_cc += [
-    "-fexceptions",
     "-fdata-sections",
     "-ffunction-sections",
     "-fno-asynchronous-unwind-tables",

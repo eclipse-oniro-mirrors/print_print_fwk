@@ -369,7 +369,7 @@ Print_ErrorCode OH_Print_UpdatePrinterProperties(const char *printerId, const Pr
     for (uint32_t i = 0; i < propertyList->count; i++) {
         settingJson[propertyList->list[i].key] = propertyList->list[i].value;
     }
-    PRINT_HILOGW("OH_Print_UpdatePrinterProperties setting : %{public}s.",
+    PRINT_HILOGD("OH_Print_UpdatePrinterProperties setting : %{public}s.",
         (PrintJsonUtil::WriteString(settingJson)).c_str());
     int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(printerId,
         PrintJsonUtil::WriteString(settingJson));

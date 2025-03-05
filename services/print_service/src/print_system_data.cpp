@@ -216,7 +216,7 @@ bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
                 continue;
             }
             Json::Value settingJson = printPreferenceJson["setting"];
-            PRINT_HILOGI("ParsePrinterPreferencesJson settingJson: %{public}s",
+            PRINT_HILOGD("ParsePrinterPreferencesJson settingJson: %{public}s",
                 (PrintJsonUtil::WriteString(settingJson)).c_str());
             PrinterPreferences preferences;
             if (ParsePreviousPreferencesSetting(settingJson, preferences)) {
@@ -291,7 +291,7 @@ void PrintSystemData::InsertCupsPrinter(const std::string &printerId, const Cups
 void PrintSystemData::DeleteCupsPrinter(const std::string &printerId, const std::string &printerName)
 {
     if (!printerId.empty()) {
-        PRINT_HILOGI("DeleteCupsPrinter printerName: %{public}s", printerName.c_str());
+        PRINT_HILOGI("DeleteCupsPrinter printerName: %{private}s", printerName.c_str());
         addedPrinterMap_.Remove(printerId);
         std::filesystem::path filePath =
             PRINTER_SERVICE_PRINTERS_PATH + "/" + PrintUtil::StandardizePrinterName(printerName) + ".json";
@@ -317,11 +317,11 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     std::string printerListFilePath =
         PRINTER_SERVICE_PRINTERS_PATH + "/" + PrintUtil::StandardizePrinterName(info->name) + ".json";
     char realPidFile[PATH_MAX] = {};
-    if (realpath(printerListFilePath.c_str(), realPidFile) == nullptr) {
+    if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
         PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
         return;
     }
-    FILE *file = fopen(realPidFile, "w+");
+    FILE *file = fopen(printerListFilePath.c_str(), "w+");
     if (file == nullptr) {
         PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
         return;
@@ -840,7 +840,7 @@ bool PrintSystemData::GetPrinterCapabilityFromSystemData(CupsPrinterInfo &cupsPr
 
 bool PrintSystemData::GetPrinterCapabilityFromFile(std::string printerId, PrinterCapability &printerCapability)
 {
-    PRINT_HILOGI("GetPrinterCapabilityFromFile printerId: %{public}s", printerId.c_str());
+    PRINT_HILOGI("GetPrinterCapabilityFromFile printerId: %{private}s", printerId.c_str());
     Json::Value jsonObject;
     std::string printerListFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
     if (!GetJsonObjectFromFile(jsonObject, printerListFilePath)) {
@@ -960,10 +960,10 @@ bool PrintSystemData::ParseUserListJsonV1(Json::Value &jsonObject, std::vector<i
         }
         int32_t userId = 0;
         if (!PrintUtil::ConvertToInt(userIdStr, userId)) {
-            PRINT_HILOGE("userIdStr [%{public}s] can not parse to number.", userIdStr.c_str());
+            PRINT_HILOGE("userIdStr [%{private}s] can not parse to number.", userIdStr.c_str());
             return false;
         }
-        PRINT_HILOGI("ParseUserListJsonV1 userId: %{public}d", userId);
+        PRINT_HILOGI("ParseUserListJsonV1 userId: %{private}d", userId);
         allPrintUserList.push_back(userId);
     }
     if (!allPrintUserList.size()) {

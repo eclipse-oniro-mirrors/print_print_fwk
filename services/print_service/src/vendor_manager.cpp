@@ -513,7 +513,7 @@ bool VendorManager::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, 
     if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER) != std::string::npos && wlanGroupDriver != nullptr) {
         return wlanGroupDriver->IsConnectingPrinter(globalPrinterIdOrIp, uri);
     }
-    PRINT_HILOGI("IsConnectingPrinter globalPrinterIdOrIp: %{public}s, connectingPrinter: %{public}s",
+    PRINT_HILOGI("IsConnectingPrinter globalPrinterIdOrIp: %{private}s, connectingPrinter: %{private}s",
         globalPrinterIdOrIp.c_str(), connectingPrinter.c_str());
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     if (isConnecting && !connectingPrinter.empty()) {

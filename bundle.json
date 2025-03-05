@@ -95,8 +95,7 @@
          "//base/print/print_fwk/etc/param:print.para",
          "//base/print/print_fwk/etc/param:print.para.dac",
          "//base/print/print_fwk/etc/init:scanservice.cfg",
-         "//base/print/print_fwk/etc/init:saneservice.cfg",
-         "//base/print/print_fwk/services/print_service/bsuni:bsuni_driver_group"
+         "//base/print/print_fwk/etc/init:saneservice.cfg"
       ]
     },
     "inner_kits": [

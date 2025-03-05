@@ -742,7 +742,7 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
     if (standardizeId.find(extensionId) == std::string::npos && vendorManager.ExtractVendorName(printerId).empty()) {
         standardizeId = PrintUtils::GetGlobalId(extensionId, printerId);
     }
-    PRINT_HILOGI("extensionId = %{public}s, printerId : %{public}s", extensionId.c_str(), standardizeId.c_str());
+    PRINT_HILOGI("extensionId = %{public}s, printerId : %{private}s", extensionId.c_str(), standardizeId.c_str());
 #ifdef CUPS_ENABLE
     if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER) {
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(standardizeId);
@@ -1509,12 +1509,12 @@ int32_t PrintServiceAbility::ReportHisysEvent(
     }
     msg["COPIES_SETTING"] = jobInfo->GetCopyNumber();
     std::string option = jobInfo->GetOption();
-    PRINT_HILOGI("option:%{public}s", option.c_str());
+    PRINT_HILOGD("option:%{public}s", option.c_str());
     std::string jobDescription = "";
     if (option != "") {
         Json::Value optionJson;
         if (PrintJsonUtil::Parse(option, optionJson)) {
-            PRINT_HILOGI("optionJson: %{public}s", (PrintJsonUtil::WriteString(optionJson)).c_str());
+            PRINT_HILOGD("optionJson: %{public}s", (PrintJsonUtil::WriteString(optionJson)).c_str());
             if (optionJson.isMember("jobDescription") && optionJson["jobDescription"].isString()) {
                 jobDescription = optionJson["jobDescription"].asString();
                 PRINT_HILOGI("jobDescription: %{public}s", jobDescription.c_str());
@@ -2436,7 +2436,7 @@ int32_t PrintServiceAbility::GetUserIdByJobId(const std::string jobId)
 {
     for (std::map<std::string, int32_t>::iterator it = userJobMap_.begin(); it != userJobMap_.end();
          ++it) {
-        PRINT_HILOGI("jobId: %{public}s, userId: %{public}d.", it->first.c_str(), it->second);
+        PRINT_HILOGD("jobId: %{public}s, userId: %{private}d.", it->first.c_str(), it->second);
     }
     auto iter = userJobMap_.find(jobId);
     if (iter == userJobMap_.end()) {
@@ -2710,7 +2710,7 @@ void PrintServiceAbility::ChangeDefaultPrinterForDelete(
     userData->DeletePrinter(printerId);
     std::string defaultPrinterId = userData->GetDefaultPrinter();
     bool ret = userData->CheckIfUseLastUsedPrinterForDefault();
-    PRINT_HILOGI("DeletePrinterFromUserData defaultPrinterId %{public}s.", defaultPrinterId.c_str());
+    PRINT_HILOGI("DeletePrinterFromUserData defaultPrinterId %{private}s.", defaultPrinterId.c_str());
     if (!strcmp(printerId.c_str(), defaultPrinterId.c_str())) {
         if (!ret) {
             userData->SetDefaultPrinter("", DELETE_DEFAULT_PRINTER);
@@ -2780,7 +2780,7 @@ void PrintServiceAbility::NotifyAppDeletePrinter(const std::string &printerId)
     if (!lastUsedPrinterId.empty()) {
         PrinterInfo lastUsedPrinterInfo;
         printSystemData_.QueryPrinterInfoById(lastUsedPrinterId, lastUsedPrinterInfo);
-        PRINT_HILOGI("NotifyAppDeletePrinter lastUsedPrinterId = %{public}s", lastUsedPrinterId.c_str());
+        PRINT_HILOGI("NotifyAppDeletePrinter lastUsedPrinterId = %{private}s", lastUsedPrinterId.c_str());
         SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, lastUsedPrinterInfo);
     }
 }

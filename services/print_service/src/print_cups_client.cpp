@@ -847,7 +847,7 @@ int32_t PrintCupsClient::QueryPrinterStatusByUri(const std::string &printerUri, 
 int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printerName, PrinterCapability &printerCaps)
 {
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
-    PRINT_HILOGI("QueryPrinterCapabilityFromPPD printerName: %{public}s", standardName.c_str());
+    PRINT_HILOGI("QueryPrinterCapabilityFromPPD printerName: %{private}s", standardName.c_str());
 
     cups_dest_t *dest = nullptr;
     if (printAbility_ == nullptr) {

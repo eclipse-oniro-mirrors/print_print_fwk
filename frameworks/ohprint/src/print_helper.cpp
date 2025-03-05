@@ -610,10 +610,6 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     if (nativePrintJob.advancedOptions != nullptr) {
         jsonOptions["cupsOptions"] = std::string(nativePrintJob.advancedOptions);
     }
-    // 此处 -1，表示缩进级别为无限，即完整地缩进输出
-    // ' ' 表示使用空格作为缩进字符
-    // false 表示不转义非ASCII字符
-    // nlohmann::json::error_handler_t::replace 表示错误时，替换无效字符
     std::string option = PrintJsonUtil::WriteString(jsonOptions);
     PRINT_HILOGD("SetOptionInPrintJob %{public}s", option.c_str());
     printJob.SetOption(option);
