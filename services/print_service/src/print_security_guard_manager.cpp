@@ -58,7 +58,7 @@ void PrintSecurityGuardManager::ReportSecurityInfo(const int32_t eventId, const 
     const std::string content)
 {
 #ifdef SECURITY_GUARDE_ENABLE
-    PRINT_HILOGI("start to push data to security_guard service, eventId:%{public}d, content:%{public}s",
+    PRINT_HILOGI("start to push data to security_guard service, eventId:%{public}d, content:%{private}s",
         eventId, content.c_str());
     auto eventInfo = std::make_shared<Security::SecurityGuard::EventInfo>(eventId, version, content);
     int res = OHOS::Security::SecurityGuard::NativeDataCollectKit::ReportSecurityInfo(eventInfo);
