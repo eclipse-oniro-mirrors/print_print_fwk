@@ -17,6 +17,8 @@
 #include "vendor_helper.h"
 #include "print_service_converter.h"
 #include "print_log.h"
+#include <json/json.h>
+#include "print_json_util.h"
 
 namespace {
 const std::string VENDOR_MANAGER_PREFIX = "fwk.";
@@ -71,7 +73,7 @@ bool ConvertArrayToList(const T1 *array, uint32_t count, std::vector<T2> &list, 
 }
 
 template <typename T>
-std::string ConvertArrayToJson(const T *array, uint32_t count, bool (*convertToJson)(const T &, nlohmann::json &))
+std::string ConvertArrayToJson(const T *array, uint32_t count, bool (*convertToJson)(const T &, Json::Value &))
 {
     if (array == nullptr || convertToJson == nullptr) {
         PRINT_HILOGW("invalid params");
@@ -86,35 +88,31 @@ std::string ConvertArrayToJson(const T *array, uint32_t count, bool (*convertToJ
 
 bool ConvertJsonToStringList(const std::string &jsonString, std::vector<std::string> &list)
 {
-    if (!nlohmann::json::accept(jsonString)) {
+    Json::Value jsonObject;
+    std::istringstream iss(jsonString);
+    if (!PrintJsonUtil::ParseFromStream(iss, jsonObject)) {
         PRINT_HILOGW("invalid jsonString");
         return false;
     }
-    nlohmann::json jsonObject = nlohmann::json::parse(jsonString, nullptr, false);
-    if (jsonObject.is_discarded()) {
-        PRINT_HILOGW("jsonString discarded");
-        return false;
-    }
-    if (!jsonObject.is_array()) {
+    if (!jsonObject.isArray()) {
         PRINT_HILOGW("jsonObject is not array");
         return false;
     }
-    for (auto &element : jsonObject.items()) {
-        nlohmann::json object = element.value();
-        if (object.is_string()) {
-            list.push_back(object.get<std::string>());
+    for (int i = 0; i < jsonObject.size(); i++) {
+        if (jsonObject[i].isString()) {
+            list.push_back(jsonObject[i].asString());
         }
     }
     return true;
 }
 
-std::string GetStringValueFromJson(const nlohmann::json &jsonObject, const std::string &key)
+std::string GetStringValueFromJson(const Json::Value &jsonObject, const std::string &key)
 {
-    if (!jsonObject.contains(key) || !jsonObject[key].is_string()) {
+    if (!jsonObject.isMember(key) || !jsonObject[key].isString()) {
         PRINT_HILOGW("can not find %{public}s", key.c_str());
         return "";
     }
-    return jsonObject[key].get<std::string>();
+    return jsonObject[key].asString();
 }
 
 bool ConvertStringToLong(const char *src, long &dst)
@@ -140,7 +138,7 @@ bool ConvertColorMode(const Print_ColorMode &code, uint32_t &dst)
     }
     return true;
 }
-bool ConvertColorModeToJson(const Print_ColorMode &code, nlohmann::json &jsonObject)
+bool ConvertColorModeToJson(const Print_ColorMode &code, Json::Value &jsonObject)
 {
     jsonObject["color"] = std::to_string(static_cast<int>(code));
     return true;
@@ -154,7 +152,7 @@ bool ConvertDuplexMode(const Print_DuplexMode &code, uint32_t &dst)
     }
     return true;
 }
-bool ConvertDuplexModeToJson(const Print_DuplexMode &code, nlohmann::json &jsonObject)
+bool ConvertDuplexModeToJson(const Print_DuplexMode &code, Json::Value &jsonObject)
 {
     jsonObject["duplex"] = std::to_string(static_cast<int>(code));
     return true;
@@ -168,7 +166,7 @@ bool ConvertQuality(const Print_Quality &code, uint32_t &dst)
     }
     return true;
 }
-bool ConvertQualityToJson(const Print_Quality &code, nlohmann::json &jsonObject)
+bool ConvertQualityToJson(const Print_Quality &code, Json::Value &jsonObject)
 {
     jsonObject["quality"] = std::to_string(static_cast<int>(code));
     return true;
@@ -177,15 +175,12 @@ bool ConvertQualityToJson(const Print_Quality &code, nlohmann::json &jsonObject)
 bool ConvertStringToPrinterState(const std::string &stateData, Print_PrinterState &state)
 {
     long result = 0;
-    if (!nlohmann::json::accept(stateData)) {
+    Json::Value jsonObject;
+    if (!PrintJsonUtil::Parse(stateData, jsonObject)) {
         PRINT_HILOGW("invalid stateData");
         return false;
     }
-    nlohmann::json jsonObject = nlohmann::json::parse(stateData, nullptr, false);
-    if (jsonObject.is_discarded()) {
-        PRINT_HILOGW("stateData discarded");
-        return false;
-    }
+    // 参数处理
     std::string stateValue = GetStringValueFromJson(jsonObject, "state");
     if (!ConvertStringToLong(stateValue.c_str(), result)) {
         return false;
@@ -420,21 +415,22 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
     }
     if (discoveryItem->printerUri != nullptr && discoveryItem->makeAndModel != nullptr) {
         PRINT_HILOGD("printerUri: %{public}s", discoveryItem->printerUri);
-        nlohmann::json option;
+        Json::Value option;
         option["printerName"] = name;
         option["printerUri"] = std::string(discoveryItem->printerUri);
         option["make"] = std::string(discoveryItem->makeAndModel);
         if (discoveryItem->printerUuid != nullptr) {
             option["printer-uuid"] = std::string(discoveryItem->printerUuid);
         }
-        if (discoveryItem->detailInfo != nullptr && nlohmann::json::accept(std::string(discoveryItem->detailInfo))) {
-            nlohmann::json detailInfo = nlohmann::json::parse(std::string(discoveryItem->detailInfo));
-            if (!detailInfo.is_null() && detailInfo.contains("bsunidriver_support") &&
-                detailInfo["bsunidriver_support"].is_string()) {
-                option["bsunidriverSupport"] = detailInfo["bsunidriver_support"].get<std::string>();
+        Json::Value detailInfo;
+        std::istringstream iss(std::string(discoveryItem->detailInfo));
+        if (discoveryItem->detailInfo != nullptr && PrintJsonUtil::ParseFromStream(iss, detailInfo)) {
+            if (!detailInfo.isNull() && detailInfo.isMember("bsunidriver_support") &&
+                detailInfo["bsunidriver_support"].isString()) {
+                option["bsunidriverSupport"] = detailInfo["bsunidriver_support"].asString();
             }
         }
-        info.SetOption(option.dump());
+        info.SetOption(PrintJsonUtil::WriteString(option));
     }
     return true;
 }
@@ -572,7 +568,7 @@ bool UpdateResolutionCapability(PrinterCapability &printerCap, const Print_Print
         return false;
     }
     std::vector<PrintResolution> resolutionList;
-    nlohmann::json resolutionArray = nlohmann::json::array();
+    Json::Value resolutionArray;
     for (uint32_t i = 0; i < capability->supportedResolutionsCount; ++i) {
         PrintResolution printResolution;
         uint32_t xRes = capability->supportedResolutions[i].horizontalDpi;
@@ -581,13 +577,14 @@ bool UpdateResolutionCapability(PrinterCapability &printerCap, const Print_Print
         printResolution.SetVerticalDpi(yRes);
         PRINT_HILOGD("resolution = %{public}u x %{public}u", xRes, yRes);
         resolutionList.push_back(printResolution);
-        nlohmann::json object;
+        Json::Value object;
         object["horizontalDpi"] = xRes;
         object["verticalDpi"] = yRes;
-        resolutionArray.push_back(object);
+        resolutionArray.append(object);
     }
     printerCap.SetResolution(resolutionList);
-    printerCap.SetPrinterAttrNameAndValue("printer-resolution-supported", resolutionArray.dump().c_str());
+    printerCap.SetPrinterAttrNameAndValue("printer-resolution-supported",
+        (PrintJsonUtil::WriteString(resolutionArray)).c_str());
     return true;
 }
 
@@ -597,10 +594,10 @@ bool UpdateResolutionDefaultValue(PrinterCapability &printerCap, const Print_Def
         PRINT_HILOGW("defaultValue is null");
         return false;
     }
-    nlohmann::json object;
+    Json::Value object;
     object["horizontalDpi"] = defaultValue->defaultResolution.horizontalDpi;
     object["verticalDpi"] = defaultValue->defaultResolution.verticalDpi;
-    printerCap.SetPrinterAttrNameAndValue("printer-resolution-default", object.dump().c_str());
+    printerCap.SetPrinterAttrNameAndValue("printer-resolution-default", (PrintJsonUtil::WriteString(object)).c_str());
     return true;
 }
 
@@ -626,16 +623,16 @@ bool UpdateOrientationCapability(PrinterCapability &printerCap, const Print_Prin
     printerCap.SetPrinterAttrNameAndValue("orientation-requested-default",
                                           std::to_string(defaultValue->defaultOrientation).c_str());
     if (capability->supportedOrientations != nullptr) {
-        nlohmann::json supportedOrientationArray = nlohmann::json::array();
+        Json::Value supportedOrientationArray;
         std::vector<uint32_t> supportedOrientations;
         for (uint32_t i = 0; i < capability->supportedOrientationsCount; ++i) {
             int orientationEnum = static_cast<int>(capability->supportedOrientations[i]) + ORIENTATION_OFFSET;
-            supportedOrientationArray.push_back(orientationEnum);
+            supportedOrientationArray.append(orientationEnum);
             supportedOrientations.push_back(static_cast<uint32_t>(orientationEnum));
         }
         printerCap.SetSupportedOrientation(supportedOrientations);
         printerCap.SetPrinterAttrNameAndValue("orientation-requested-supported",
-                                              supportedOrientationArray.dump().c_str());
+                                              (PrintJsonUtil::WriteString(supportedOrientationArray)).c_str());
     }
     return true;
 }
@@ -719,7 +716,7 @@ bool UpdatePrinterInfoWithCapability(PrinterInfo &info, const Print_DiscoveryIte
         PRINT_HILOGW("update capability fail");
         return false;
     }
-    nlohmann::json options;
+    Json::Value options;
     if (discoveryItem != nullptr) {
         if (discoveryItem->makeAndModel != nullptr) {
             options["make"] = std::string(discoveryItem->makeAndModel);
@@ -731,9 +728,9 @@ bool UpdatePrinterInfoWithCapability(PrinterInfo &info, const Print_DiscoveryIte
             options["printer-uuid"] = std::string(discoveryItem->printerUuid);
         }
     }
-    nlohmann::json cupsOptionsJson = printerCap.GetPrinterAttrGroupJson();
+    Json::Value cupsOptionsJson = printerCap.GetPrinterAttrGroupJson();
     options["cupsOptions"] = cupsOptionsJson;
-    std::string optionStr = options.dump();
+    std::string optionStr = PrintJsonUtil::WriteString(options);
     PRINT_HILOGD("SetOption: %{public}s", optionStr.c_str());
     printerCap.SetOption(optionStr);
     info.SetCapability(printerCap);

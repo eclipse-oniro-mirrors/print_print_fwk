@@ -15,10 +15,9 @@
 
 #include <gtest/gtest.h>
 #include "printer_preferences.h"
-#include <nlohmann/json.hpp>
+#include "print_json_util.h"
 
 using namespace testing::ext;
-using json = nlohmann::json;
 
 namespace OHOS {
 namespace Print {
@@ -143,26 +142,26 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0011, TestSize.Level1)
 HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0012, TestSize.Level1)
 {
     OHOS::Print::PrinterPreferences preferences;
-    nlohmann::json preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(false, preferencesJson.contains("options"));
+    Json::Value preferencesJson = preferences.ConvertToJson();
+    EXPECT_EQ(false, preferencesJson.isMember("options"));
 }
 
 HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0013, TestSize.Level1)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetOption("test");
-    nlohmann::json preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(false, preferencesJson.contains("options"));
+    Json::Value preferencesJson = preferences.ConvertToJson();
+    EXPECT_EQ(false, preferencesJson.isMember("options"));
 }
 
 HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0014, TestSize.Level1)
 {
     OHOS::Print::PrinterPreferences preferences;
-    nlohmann::json opsJson;
+    Json::Value opsJson;
     opsJson["testKey"] = "testValue";
-    preferences.SetOption(opsJson.dump());
-    nlohmann::json preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(true, preferencesJson.contains("options"));
+    preferences.SetOption(PrintJsonUtil::WriteString(opsJson));
+    Json::Value preferencesJson = preferences.ConvertToJson();
+    EXPECT_EQ(true, preferencesJson.isMember("options"));
 }
 } // namespace Print
 } // namespace OHOS

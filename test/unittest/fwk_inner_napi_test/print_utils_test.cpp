@@ -23,6 +23,7 @@
 #include "print_log.h"
 #include "print_sync_load_callback.h"
 #include "system_ability_definition.h"
+#include "print_json_util.h"
 
 using namespace testing::ext;
 
@@ -363,9 +364,9 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0022, TestSize.Level1)
 {
     PrintUtils printUtils;
     PrintAttributes attrParam;
-    nlohmann::json attrJson;
+    Json::Value attrJson;
     printUtils.ParseAttributesObjectParamForJson(attrParam, attrJson);
-    EXPECT_EQ(attrJson.dump(), "null");
+    EXPECT_EQ(PrintJsonUtil::WriteString(attrJson), "null");
 
     PrintRange range;
     range.SetStartPage(1);
@@ -375,12 +376,12 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0022, TestSize.Level1)
     range.SetPages(pages);
     attrParam.SetPageRange(range);
     printUtils.ParseAttributesObjectParamForJson(attrParam, attrJson);
-    EXPECT_EQ(attrJson.dump(), "{\"pageRange\":{\"endPage\":1,\"pages\":[1],\"startPage\":1}}");
+    EXPECT_EQ(PrintJsonUtil::WriteString(attrJson), "{\"pageRange\":{\"endPage\":1,\"pages\":[1],\"startPage\":1}}");
 
     PrintPageSize pageSize("11", "123", 400, 600);
     attrParam.SetPageSize(pageSize);
     printUtils.ParseAttributesObjectParamForJson(attrParam, attrJson);
-    EXPECT_EQ(attrJson.dump(), "{\"pageRange\":{\"endPage\":1,\"pages\":[1],\"startPage\":1},"
+    EXPECT_EQ(PrintJsonUtil::WriteString(attrJson), "{\"pageRange\":{\"endPage\":1,\"pages\":[1],\"startPage\":1},"
                     "\"pageSize\":{\"height\":600,\"id\":\"11\",\"name\":\"123\","
                     "\"width\":400}}");
 
@@ -391,7 +392,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0022, TestSize.Level1)
     margin.SetRight(100);
     attrParam.SetMargin(margin);
     printUtils.ParseAttributesObjectParamForJson(attrParam, attrJson);
-    EXPECT_EQ(attrJson.dump(), "{\"margin\":{\"bottom\":100,\"left\":100,\"right\":100,"
+    EXPECT_EQ(PrintJsonUtil::WriteString(attrJson), "{\"margin\":{\"bottom\":100,\"left\":100,\"right\":100,"
                 "\"top\":100},\"pageRange\":{\"endPage\":1,\"pages\":[1],\"startPage\":1},"
                 "\"pageSize\":{\"height\":600,\"id\":\"11\",\"name\":\"123\",\"width\":400}}");
 }

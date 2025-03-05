@@ -18,8 +18,9 @@
 
 #include <string>
 #include <vector>
-#include <nlohmann/json.hpp>
+#include <json/json.h>
 #include "print_page_size.h"
+#include "print_json_util.h"
 
 namespace OHOS {
 namespace Print {
@@ -55,24 +56,24 @@ void AddToUniqueList(std::vector<T> &list, T value)
 }
 
 template <typename T>
-std::string ConvertListToJson(const std::vector<T> &list, bool (*ConvertToJson)(const T &, nlohmann::json &))
+std::string ConvertListToJson(const std::vector<T> &list, bool (*ConvertToJson)(const T &, Json::Value &))
 {
-    nlohmann::json array = nlohmann::json::array();
+    Json::Value array;
     for (auto &item : list) {
-        nlohmann::json object;
+        Json::Value object;
         if (ConvertToJson(item, object)) {
-            array.push_back(object);
+            array.append(object);
         }
     }
-    return array.dump();
+    return PrintJsonUtil::WriteString(array);
 }
 
 bool ConvertColorModeCode(const char *src, ColorModeCode &dst);
-bool ConvertColorModeToJson(const ColorModeCode &code, nlohmann::json &jsonObject);
-bool ConvertDuplexModeToJson(const DuplexModeCode &code, nlohmann::json &jsonObject);
+bool ConvertColorModeToJson(const ColorModeCode &code, Json::Value &jsonObject);
+bool ConvertDuplexModeToJson(const DuplexModeCode &code, Json::Value &jsonObject);
 bool ConvertPageSizeId(const char *src, std::string &id);
 bool ConvertPrintPageSize(const char *src, PrintPageSize &dst);
-bool ConvertPageSizeToJson(const PrintPageSize &code, nlohmann::json &jsonObject);
+bool ConvertPageSizeToJson(const PrintPageSize &code, Json::Value &jsonObject);
 std::string GetQulityString(int code);
 }  // namespace Print
 }  // namespace OHOS

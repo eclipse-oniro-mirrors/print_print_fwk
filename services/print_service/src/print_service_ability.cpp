@@ -43,15 +43,14 @@
 #include "common_event_support.h"
 #include "print_security_guard_manager.h"
 #include "hisys_event_util.h"
-#include "nlohmann/json.hpp"
 #include "uri.h"
 #include <fstream>
 #include <streambuf>
+#include "print_json_util.h"
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
-using json = nlohmann::json;
 
 const uint32_t MAX_JOBQUEUE_NUM = 512;
 const uint32_t ASYNC_CMD_DELAY = 10;
@@ -617,7 +616,7 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
     OHOS::Print::CupsPrinterInfo cupsPrinter;
     if (printSystemData_.QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter)) {
         info.SetPrinterName(PrintUtil::RemoveUnderlineFromPrinterName(cupsPrinter.name));
-        nlohmann::json option;
+        Json::Value option;
         option["printerName"] = cupsPrinter.name;
         option["printerUri"] = cupsPrinter.uri; // Deprecated, to be removed in a future version.
         option["make"] = cupsPrinter.maker;     // Deprecated, to be removed in a future version.
@@ -628,7 +627,7 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
         if (!cupsPrinter.maker.empty()) {
             info.SetPrinterMake(cupsPrinter.maker);
         }
-        info.SetOption(option.dump());
+        info.SetOption(PrintJsonUtil::WriteString(option));
         info.SetCapability(cupsPrinter.printerCapability);
         info.SetPreferences(cupsPrinter.printPreferences);
         info.SetPrinterStatus(cupsPrinter.printerStatus);
@@ -675,7 +674,8 @@ int32_t PrintServiceAbility::QueryPrinterProperties(const std::string &printerId
         if (key == "printerPreference" && printerInfo.HasPreferences()) {
             PrinterPreferences preferences;
             printerInfo.GetPreferences(preferences);
-            valueList.emplace_back(preferences.ConvertToJson().dump());
+            Json::Value preferencesJson = preferences.ConvertToJson();
+            valueList.emplace_back(PrintJsonUtil::WriteString(preferencesJson));
             PRINT_HILOGD("getPrinterPreference success");
         }
     }
@@ -750,14 +750,14 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
             PRINT_HILOGE("can not find the printer");
             return E_PRINT_INVALID_PRINTER;
         }
-        if (printerInfo->HasOption() && json::accept(printerInfo->GetOption())) {
+        Json::Value opsJson;
+        if (printerInfo->HasOption() && PrintJsonUtil::Parse(printerInfo->GetOption(), opsJson)) {
             PRINT_HILOGD("QueryPrinterCapabilityByUri ops : %{public}s.", printerInfo->GetOption().c_str());
-            nlohmann::json opsJson = json::parse(printerInfo->GetOption());
-            if (!opsJson.contains("printerMake") || !opsJson["printerMake"].is_string()) {
+            if (!opsJson.isMember("printerMake") || !opsJson["printerMake"].isString()) {
                 PRINT_HILOGW("can not find printerMake");
                 return E_PRINT_INVALID_PRINTER;
             }
-            std::string make = opsJson["printerMake"];
+            std::string make = opsJson["printerMake"].asString();
             auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
                 AddPrinterToCups(printerUri, printerInfo->GetPrinterName(), make);
             if (ret != E_PRINT_NONE) {
@@ -784,11 +784,11 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGD("printer preferences: %{public}s", printerSetting.c_str());
-    if (!nlohmann::json::accept(printerSetting)) {
+    Json::Value preferencesJson;
+    if (!PrintJsonUtil::Parse(printerSetting, preferencesJson)) {
         PRINT_HILOGE("preferences json accept fail");
         return E_PRINT_INVALID_PARAMETER;
     }
-    nlohmann::json preferencesJson = nlohmann::json::parse(printerSetting);
     PrinterPreferences preferences;
     printSystemData_.ConvertJsonToPrinterPreferences(preferencesJson, preferences);
     printSystemData_.UpdatePrinterPreferences(printerId, preferences);
@@ -805,15 +805,15 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     }
     std::string oldOption = printJob.GetOption();
     PRINT_HILOGD("Print job option: %{public}s", oldOption.c_str());
-    if (!json::accept(oldOption)) {
+    Json::Value infoJson;
+    if (!PrintJsonUtil::Parse(oldOption, infoJson)) {
         PRINT_HILOGW("old option not accepted");
         return false;
     }
-    nlohmann::json infoJson = json::parse(oldOption);
     infoJson["printerName"] = printerInfo.name;
     infoJson["printerUri"] = printerInfo.uri;
     infoJson["alias"] = printerInfo.alias;
-    std::string updatedOption = infoJson.dump();
+    std::string updatedOption = PrintJsonUtil::WriteString(infoJson);
     PRINT_HILOGD("Updated print job option: %{public}s", updatedOption.c_str());
     printJob.SetOption(updatedOption);
     return true;
@@ -1232,10 +1232,10 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
 bool PrintServiceAbility::UpdatePrinterSystemData(const PrinterInfo &info)
 {
     std::string option = info.GetOption();
-    if (json::accept(option)) {
-        json optionJson = json::parse(option);
-        if (optionJson.contains("alias") && optionJson["alias"].is_string()) {
-            if (printSystemData_.UpdatePrinterAlias(info.GetPrinterId(), optionJson["alias"])) {
+    Json::Value optionJson;
+    if (PrintJsonUtil::Parse(option, optionJson)) {
+        if (optionJson.isMember("alias") && optionJson["alias"].isString()) {
+            if (printSystemData_.UpdatePrinterAlias(info.GetPrinterId(), optionJson["alias"].asString())) {
                 SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, info);
                 return true;
             }
@@ -1474,22 +1474,22 @@ void PrintServiceAbility::ReportCompletedPrint(const std::string &printerId)
     if (queuedJobList_.size() == 0 && printAppCount_ == 0) {
         UnloadSystemAbility();
     }
-    json msg;
+    Json::Value msg;
     auto endPrintTime = std::chrono::high_resolution_clock::now();
     auto printTime = std::chrono::duration_cast<std::chrono::milliseconds>(endPrintTime - startPrintTime_);
-    msg["PRINT_TIME"] = printTime.count();
+    msg["PRINT_TIME"] = std::to_string(printTime.count());
     msg["INGRESS_PACKAGE"] = ingressPackage;
     msg["STATUS"] = 0;
-    HisysEventUtil::reportPrintSuccess(msg.dump());
+    HisysEventUtil::reportPrintSuccess(PrintJsonUtil::WriteString(msg));
 }
 
 int32_t PrintServiceAbility::ReportHisysEvent(
     const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState)
 {
-    json msg;
+    Json::Value msg;
     auto endPrintTime = std::chrono::high_resolution_clock::now();
     auto printTime = std::chrono::duration_cast<std::chrono::milliseconds>(endPrintTime - startPrintTime_);
-    msg["PRINT_TIME"] = printTime.count();
+    msg["PRINT_TIME"] = std::to_string(printTime.count());
     msg["INGRESS_PACKAGE"] = ingressPackage;
     if (isEprint(printerId)) {
         msg["PRINT_TYPE"] = 1;
@@ -1512,11 +1512,11 @@ int32_t PrintServiceAbility::ReportHisysEvent(
     PRINT_HILOGD("option:%{public}s", option.c_str());
     std::string jobDescription = "";
     if (option != "") {
-        if (json::accept(option)) {
-            json optionJson = json::parse(option);
-            PRINT_HILOGD("optionJson: %{public}s", optionJson.dump().c_str());
-            if (optionJson.contains("jobDescription") && optionJson["jobDescription"].is_string()) {
-                jobDescription = optionJson["jobDescription"].get<std::string>();
+        Json::Value optionJson;
+        if (PrintJsonUtil::Parse(option, optionJson)) {
+            PRINT_HILOGD("optionJson: %{public}s", (PrintJsonUtil::WriteString(optionJson)).c_str());
+            if (optionJson.isMember("jobDescription") && optionJson["jobDescription"].isString()) {
+                jobDescription = optionJson["jobDescription"].asString();
                 PRINT_HILOGI("jobDescription: %{public}s", jobDescription.c_str());
             }
         }
@@ -1524,7 +1524,7 @@ int32_t PrintServiceAbility::ReportHisysEvent(
     msg["JOB_DESCRIPTION"] = jobDescription;
     msg["PRINT_STYLE_SETTING"] = jobInfo->GetDuplexMode();
     msg["FAIL_REASON_CODE"] = subState;
-    HisysEventUtil::faultPrint("PRINT_JOB_BLOCKED", msg.dump());
+    HisysEventUtil::faultPrint("PRINT_JOB_BLOCKED", PrintJsonUtil::WriteString(msg));
     return msg.size();
 }
 
@@ -2766,13 +2766,13 @@ void PrintServiceAbility::NotifyAppDeletePrinter(const std::string &printerId)
     PrinterInfo printerInfo;
     printSystemData_.QueryPrinterInfoById(printerId, printerInfo);
     std::string ops = printerInfo.GetOption();
-    if (!json::accept(ops)) {
+    Json::Value opsJson;
+    if (!PrintJsonUtil::Parse(ops, opsJson)) {
         PRINT_HILOGW("ops can not parse to json object");
         return;
     }
-    nlohmann::json opsJson = json::parse(ops);
     opsJson["nextDefaultPrinter"] = dafaultPrinterId;
-    printerInfo.SetOption(opsJson.dump());
+    printerInfo.SetOption(PrintJsonUtil::WriteString(opsJson));
     SendPrinterEventChangeEvent(PRINTER_EVENT_DELETED, printerInfo);
     SendPrinterChangeEvent(PRINTER_EVENT_DELETED, printerInfo);
 
@@ -3289,23 +3289,20 @@ int32_t PrintServiceAbility::QueryVendorPrinterInfo(const std::string &globalPri
 
 int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
 {
-    if (!json::accept(params)) {
+    Json::Value connectParamJson;
+    std::istringstream iss(params);
+    if (!PrintJsonUtil::ParseFromStream(iss, connectParamJson)) {
         PRINT_HILOGW("invalid params");
         return E_PRINT_INVALID_PRINTER;
     }
-    nlohmann::json connectParamJson = json::parse(params, nullptr, false);
-    if (connectParamJson.is_discarded()) {
-        PRINT_HILOGW("json discarded");
-        return E_PRINT_INVALID_PRINTER;
-    }
-    if (!connectParamJson.contains("ip") || !connectParamJson["ip"].is_string()) {
+    if (!connectParamJson.isMember("ip") || !connectParamJson["ip"].isString()) {
         PRINT_HILOGW("ip missing");
         return E_PRINT_INVALID_PRINTER;
     }
-    std::string ip = connectParamJson["ip"].get<std::string>();
+    std::string ip = connectParamJson["ip"].asString();
     std::string protocol = "auto";
-    if (connectParamJson.contains("protocol") && connectParamJson["protocol"].is_string()) {
-        protocol = connectParamJson["protocol"].get<std::string>();
+    if (connectParamJson.isMember("protocol") && connectParamJson["protocol"].isString()) {
+        protocol = connectParamJson["protocol"].asString();
     }
     vendorManager.SetConnectingPrinter(IP_AUTO, ip);
     if (!vendorManager.ConnectPrinterByIp(ip, protocol)) {

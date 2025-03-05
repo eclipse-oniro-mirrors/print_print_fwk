@@ -102,15 +102,15 @@ std::string ConvertIppAttributesToJsonString(ipp_t *response, const std::string 
     if (attrPtr == nullptr) {
         return "";
     }
-    nlohmann::json jsonArray = nlohmann::json::array();
+    Json::Value jsonArray;
     for (int i = 0; i < ippGetCount(attrPtr); i++) {
         const char *attrString = ippGetString(attrPtr, i, nullptr);
         if (attrString == nullptr) {
             continue;
         }
-        jsonArray.push_back(attrString);
+        jsonArray.append(attrString);
     }
-    return jsonArray.dump();
+    return PrintJsonUtil::WriteString(jsonArray);
 }
 
 void SetCapabilityGroupAttribute(ipp_t *response, PrinterCapability &printerCaps)
@@ -196,10 +196,10 @@ void ParseQualityAttributes(ipp_t *response, PrinterCapability &printerCaps)
         PRINT_HILOGW("%{public}s missing", keyword.c_str());
         return;
     }
-    nlohmann::json supportedQualities = nlohmann::json::array();
+    Json::Value supportedQualities;
     std::vector<uint32_t> list;
     for (int i = 0; i < ippGetCount(attrPtr); i++) {
-        nlohmann::json jsonObject;
+        Json::Value jsonObject;
         int quality = ippGetInteger(attrPtr, i);
         if (quality < 0) {
             PRINT_HILOGE("%{public}s meet error quality", keyword.c_str());
@@ -207,10 +207,10 @@ void ParseQualityAttributes(ipp_t *response, PrinterCapability &printerCaps)
         }
         uint32_t value = static_cast<uint32_t>(quality);
         jsonObject["quality"] = value;
-        supportedQualities.push_back(jsonObject);
+        supportedQualities.append(jsonObject);
         list.emplace_back(value);
     }
-    std::string attrString = supportedQualities.dump();
+    std::string attrString = PrintJsonUtil::WriteString(supportedQualities);
     PRINT_HILOGD("%{public}s: %{public}s", keyword.c_str(), attrString.c_str());
     printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), attrString.c_str());
     printerCaps.SetSupportedQuality(list);
@@ -242,7 +242,7 @@ void ParseSupportedResolutionAttribute(ipp_t *response, PrinterCapability &print
     }
     int num = ippGetCount(attrPtr);
     PRINT_HILOGD("number of values %{public}d", num);
-    nlohmann::json resolutionArray = nlohmann::json::array();
+    Json::Value resolutionArray;
     std::vector<PrintResolution> list;
     for (int i = 0; i < num; i++) {
         ipp_res_t units = IPP_RES_PER_INCH;
@@ -259,17 +259,17 @@ void ParseSupportedResolutionAttribute(ipp_t *response, PrinterCapability &print
             PRINT_HILOGW("unknown dpi unit: %{public}d", static_cast<int>(units));
             continue;
         }
-        nlohmann::json object;
+        Json::Value object;
         object["horizontalDpi"] = xres;
         object["verticalDpi"] = yres;
         PrintResolution printResolution;
         printResolution.SetHorizontalDpi(xres);
         printResolution.SetVerticalDpi(yres);
         list.emplace_back(printResolution);
-        resolutionArray.push_back(object);
+        resolutionArray.append(object);
     }
     printerCaps.SetResolution(list);
-    printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), resolutionArray.dump().c_str());
+    printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), (PrintJsonUtil::WriteString(resolutionArray)).c_str());
 }
 
 void ParseDefaultResolutionAttribute(ipp_t *response, PrinterCapability &printerCaps)
@@ -297,10 +297,10 @@ void ParseDefaultResolutionAttribute(ipp_t *response, PrinterCapability &printer
             PRINT_HILOGW("unknown dpi unit: %{public}d", static_cast<int>(units));
             continue;
         }
-        nlohmann::json object;
+        Json::Value object;
         object["horizontalDpi"] = xres;
         object["verticalDpi"] = yres;
-        printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), object.dump().c_str());
+        printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), (PrintJsonUtil::WriteString(object)).c_str());
         break;
     }
 }
@@ -382,16 +382,17 @@ void ParseOrientationAttributes(ipp_t *response, PrinterCapability &printerCaps)
     if (attrPtr != nullptr) {
         int num = ippGetCount(attrPtr);
         if (num > 0) {
-            nlohmann::json supportedOrientationArray = nlohmann::json::array();
+            Json::Value supportedOrientationArray;
             std::vector<uint32_t> supportedOrientations;
             supportedOrientations.reserve(num);
             for (int i = 0; i < ippGetCount(attrPtr); i++) {
                 int orientationEnum = ippGetInteger(attrPtr, i);
-                supportedOrientationArray.push_back(orientationEnum);
+                supportedOrientationArray.append(orientationEnum);
                 supportedOrientations.emplace_back(orientationEnum);
                 PRINT_HILOGD("orientation-supported found: %{public}d", orientationEnum);
             }
-            printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), supportedOrientationArray.dump().c_str());
+            printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(),
+                (PrintJsonUtil::WriteString(supportedOrientationArray)).c_str());
             printerCaps.SetSupportedOrientation(supportedOrientations);
         }
     }
@@ -417,7 +418,7 @@ void ParseOtherAttributes(ipp_t *response, PrinterCapability &printerCaps)
 void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
 {
     ipp_attribute_t *attrPtr;
-    nlohmann::json options;
+    Json::Value options;
     if ((attrPtr = ippFindAttribute(response, "printer-make-and-model", IPP_TAG_TEXT)) != nullptr) {
         options["make"] = ippGetString(attrPtr, 0, nullptr);
     }
@@ -434,16 +435,16 @@ void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
     if (attrPtr == nullptr) {
         supportTypes = "";
     } else {
-        nlohmann::json jsonArray = nlohmann::json::array();
+        Json::Value jsonArray;
         for (int i = 0; i < ippGetCount(attrPtr); i++) {
             const char *attrString = ippGetString(attrPtr, i, nullptr);
             if (attrString == nullptr) {
                 continue;
             }
-            jsonArray.push_back(attrString);
+            jsonArray.append(attrString);
             list.emplace_back(attrString);
         }
-        supportTypes = jsonArray.dump();
+        supportTypes = PrintJsonUtil::WriteString(jsonArray);
     }
     PRINT_HILOGD("%{public}s: %{public}s", keyword.c_str(), supportTypes.c_str());
     if (!supportTypes.empty()) {
@@ -451,10 +452,10 @@ void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
         printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(), supportTypes.c_str());
     }
 
-    nlohmann::json cupsOptionsJson = printerCaps.GetPrinterAttrGroupJson();
+    Json::Value cupsOptionsJson = printerCaps.GetPrinterAttrGroupJson();
     options["cupsOptions"] = cupsOptionsJson;
 
-    std::string optionStr = options.dump();
+    std::string optionStr = PrintJsonUtil::WriteString(options);
     PRINT_HILOGD("SetOption: %{public}s", optionStr.c_str());
     printerCaps.SetOption(optionStr);
 }

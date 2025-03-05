@@ -21,12 +21,12 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "fstream"
+#include "print_json_util.h"
 #define private public
 #include "print_service_ability.h"
 #undef private
 
 using namespace testing::ext;
-using json = nlohmann::json;
 
 namespace OHOS {
 namespace Print {
@@ -1222,37 +1222,38 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067, TestSize.Level1)
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
     EXPECT_EQ(jobParams, nullptr);
 
-    json optionJson = json::parse(testJob.GetOption());
+    Json::Value optionJson;
+    PrintJsonUtil::Parse(testJob.GetOption(), optionJson);
     optionJson["printerUri"] = "ipp://192.168.0.1:111/ipp/print";
     optionJson["printerName"] = "printer1";
     optionJson["documentFormat"] = "application/pdf";
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"]);
-    EXPECT_EQ(jobParams->printerName, PrintUtil::StandardizePrinterName(optionJson["printerName"]));
-    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"]);
+    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"].asString());
+    EXPECT_EQ(jobParams->printerName, PrintUtil::StandardizePrinterName(optionJson["printerName"].asString()));
+    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"].asString());
 
     optionJson["cupsOptions"] = "testCupsOptions";
     optionJson["printQuality"] = "printQuality";
     optionJson["jobName"] = "jobName";
     optionJson["mediaType"] = "mediaType";
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->printerAttrsOption_cupsOption, optionJson["cupsOptions"]);
-    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"]);
-    EXPECT_EQ(jobParams->jobName, optionJson["jobName"]);
-    EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"]);
+    EXPECT_EQ(jobParams->printerAttrsOption_cupsOption, optionJson["cupsOptions"].asString());
+    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"].asString());
+    EXPECT_EQ(jobParams->jobName, optionJson["jobName"].asString());
+    EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"].asString());
 
     optionJson["printQuality"] = 1;
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
     EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
 
     EXPECT_EQ(jobParams->isAutoRotate, true);   // default true
     optionJson["isAutoRotate"] = false;
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->isAutoRotate, optionJson["isAutoRotate"]);
+    EXPECT_EQ(jobParams->isAutoRotate, optionJson["isAutoRotate"].asBool());
 }
 
 /**
@@ -1278,14 +1279,15 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0068, TestSize.Level1)
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
     std::string option = testJob.GetOption();
-    json optionJson = json::parse(option);
-    EXPECT_EQ(jobParams->jobName, optionJson["jobName"]);
-    EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"]);
-    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"]);
-    EXPECT_EQ(jobParams->printerName, optionJson["printerName"]);
-    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"]);
-    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"]);
-    EXPECT_EQ(jobParams->isAutoRotate, optionJson["isAutoRotate"]);
+    Json::Value optionJson;
+    PrintJsonUtil::Parse(option, optionJson);
+    EXPECT_EQ(jobParams->jobName, optionJson["jobName"].asString());
+    EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"].asString());
+    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"].asString());
+    EXPECT_EQ(jobParams->printerName, optionJson["printerName"].asString());
+    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"].asString());
+    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"].asString());
+    EXPECT_EQ(jobParams->isAutoRotate, optionJson["isAutoRotate"].asBool());
     printCupsClient.DumpJobParameters(jobParams);
     delete jobParams;
 }
@@ -1444,23 +1446,25 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0078, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(R"({"key": "value"})");
 
-    json optionJson = json::parse(testJob.GetOption());
+    Json::Value optionJson;
+    PrintJsonUtil::Parse(testJob.GetOption(), optionJson);
     optionJson["printerUri"] = 1;
     optionJson["printerName"] = "printer1";
     optionJson["documentFormat"] = "application/pdf";
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams, nullptr);
+    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"].asString());
 
     optionJson["printerUri"] = "ipp://192.168.0.1:111/ipp/print";
     optionJson["printerName"] = 1;
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
+    EXPECT_EQ(jobParams->printerName, PrintUtil::StandardizePrinterName(optionJson["printerName"].asString()));
     EXPECT_EQ(jobParams, nullptr);
 
     optionJson["printerName"] = "printer1";
     optionJson["documentFormat"] = 1;
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
     EXPECT_EQ(jobParams, nullptr);
 }

@@ -21,8 +21,9 @@
 #include "bundle_mgr_client.h"
 #include "print_constant.h"
 #include "print_log.h"
-#include <nlohmann/json.hpp>
+#include "json/json.h"
 #include <mutex>
+#include "print_json_util.h"
 
 #include <print_attributes.h>
 
@@ -50,7 +51,7 @@ public:
 
     static void BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);
     static void BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);
-    static void ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, nlohmann::json &attrJson);
+    static void ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, Json::Value &attrJson);
     static std::string GetBundleNameForUid(const int uid);
     static std::string GetPrintJobId();
     static std::string GetEventTypeWithToken(int32_t userId, int64_t pid, const std::string &type);
@@ -109,18 +110,23 @@ public:
     }
 
     template<typename T>
-    static bool CheckJsonType(const nlohmann::json &j)
+    static bool CheckJsonType(const Json::Value &j)
     {
         if constexpr (std::is_same_v<T, int> || std::is_same_v<T, unsigned int> || std::is_same_v<T, uint32_t>) {
-            return j.is_number_integer();
+            return j.isInt();
         } else if constexpr (std::is_same_v<T, std::string>) {
-            return j.is_string();
+            return j.isString();
         } else if constexpr (std::is_same_v<T, bool>) {
-            return j.is_boolean();
+            return j.isBool();
         } else {
             return true; // For complex types, we'll do the check in the conversion function
         }
     }
+
+private:
+    static Json::Value GetPageRangeForJson(const PrintAttributes &attrParam);
+    static Json::Value GetPageSizeForJson(const PrintAttributes &attrParam);
+    static Json::Value GetMarginForJson(const PrintAttributes &attrParam);
 
 private:
     static std::mutex instanceLock_;

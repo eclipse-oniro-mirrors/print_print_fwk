@@ -60,7 +60,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "${print_path}/interfaces/kits/jsnapi/print_extensionctx:printextensioncontext_napi",
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
-    "${print_path}/services/print_service:print_service",
+    "${print_path}/services/print_service:print_service_test",
     "//third_party/googletest:gmock_main",
   ]
 
@@ -77,6 +77,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "hilog:libhilog",
     "i18n:intl_util",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "preferences:native_preferences",
     "relational_store:native_appdatafwk",

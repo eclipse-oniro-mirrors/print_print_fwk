@@ -49,7 +49,7 @@ ohos_unittest("fwk_print_cups_client_test") {
     "${print_path}/interfaces/kits/jsnapi/print_extensionctx:printextensioncontext_napi",
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
-    "${print_path}/services/print_service:print_service",
+    "${print_path}/services/print_service:print_service_test",
     "//third_party/googletest:gmock_main",
   ]
 
@@ -68,6 +68,7 @@ ohos_unittest("fwk_print_cups_client_test") {
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

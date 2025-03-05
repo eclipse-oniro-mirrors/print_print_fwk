@@ -20,10 +20,10 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "mock/mock_print_cups_wrapper.h"
+#include "print_json_util.h"
 
 using namespace testing;
 using namespace testing::ext;
-using json = nlohmann::json;
 
 namespace OHOS {
 namespace Print {
@@ -266,10 +266,10 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0014, TestSize.Level1)
         EXPECT_CALL(mock, FreeDests(_, _)).WillRepeatedly(Return());
         std::string printerId = "testPrinterId";
         PrinterInfo info;
-        nlohmann::json option;
+        Json::Value option;
         option["printerName"] = "name";
         option["printerUri"] = "uri";
-        info.SetOption(option.dump());
+        info.SetOption(PrintJsonUtil::WriteString(option));
         printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
     };
     DoMockTest(testFunc);
@@ -289,9 +289,9 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0015, TestSize.Level1)
         EXPECT_CALL(mock, FreeDests(_, _)).WillRepeatedly(Return());
         std::string printerId = "testPrinterId";
         PrinterInfo info;
-        nlohmann::json option;
+        Json::Value option;
         option["printerName"] = "name";
-        info.SetOption(option.dump());
+        info.SetOption(PrintJsonUtil::WriteString(option));
         printCupsClient.QueryPrinterInfoByPrinterId(printerId, info);
     };
     DoMockTest(testFunc);
@@ -503,7 +503,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0085, TestSize.Level1)
 HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0086, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    nlohmann::json optionJson;
+    Json::Value optionJson;
     JobParameters *jobParams = nullptr;
     printCupsClient.UpdateBorderlessJobParameter(optionJson, jobParams);
     jobParams = new JobParameters();
@@ -518,7 +518,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0086, TestSize.Level1)
 
     optionJson["documentCategory"] = 1;
     printCupsClient.UpdateBorderlessJobParameter(optionJson, jobParams);
-    EXPECT_EQ(jobParams->borderless, optionJson["documentCategory"]);
+    EXPECT_EQ(jobParams->borderless, optionJson["documentCategory"].asInt());
     delete jobParams;
 }
 

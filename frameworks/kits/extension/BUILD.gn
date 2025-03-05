@@ -14,8 +14,6 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
-cflags_cc = []
-
 config("ability_config") {
   visibility = [ ":*" ]
   include_dirs = [
@@ -23,6 +21,16 @@ config("ability_config") {
     "${print_path}/frameworks/kits/extension/include",
     "${print_utils_path}/include",
     "//third_party/node/src",
+  ]
+
+  cflags_cc = [
+    "-fno-exceptions",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-flto",
+    "-Os",
   ]
 
   cflags = []
@@ -43,8 +51,6 @@ config("ability_public_config") {
     "//third_party/libuv/include",
     "//third_party/json/include",
   ]
-
-  cflags_cc += [ "-fno-exceptions" ]
 }
 
 ohos_shared_library("print_extension_framework") {

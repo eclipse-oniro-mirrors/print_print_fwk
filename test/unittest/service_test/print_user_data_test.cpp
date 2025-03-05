@@ -25,6 +25,7 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "mock_print_callback_stub.h"
+#include "print_json_util.h"
 
 using namespace testing::ext;
 
@@ -268,23 +269,23 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0020, TestSize.Level1)
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0021, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     userData->ParseUserDataFromJson(jsonObject);
-    nlohmann::json userDataList;
+    Json::Value userDataList;
     jsonObject["print_user_data"] = userDataList;
     userData->ParseUserDataFromJson(jsonObject);
 
-    nlohmann::json jsonObject2;
-    nlohmann::json userDataList2;
+    Json::Value jsonObject2;
+    Json::Value userDataList2;
     userData->userId_ = 100;
-    nlohmann::json userData2 = nlohmann::json::array();
+    Json::Value userData2;
     userDataList2["100"] = userData2;
     jsonObject2["print_user_data"] = userDataList2;
     userData->ParseUserDataFromJson(jsonObject2);
 
-    nlohmann::json jsonObject3;
-    nlohmann::json userDataList3;
-    nlohmann::json userData3 = nlohmann::json::object();
+    Json::Value jsonObject3;
+    Json::Value userDataList3;
+    Json::Value userData3;
     userDataList3["100"] = userData3;
     jsonObject3["print_user_data"] = userDataList3;
     userData->ParseUserDataFromJson(jsonObject3);
@@ -294,35 +295,35 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0021, TestSize.Level1)
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0022, TestSize.Level1)
 {
     auto printUserData = std::make_shared<OHOS::Print::PrintUserData>();
-    nlohmann::json jsonObject;
-    nlohmann::json userDataList;
+    Json::Value jsonObject;
+    Json::Value userDataList;
     printUserData->userId_ = 100;
-    nlohmann::json userData = nlohmann::json::object();
+    Json::Value userData;
     userData["defaultPrinter"] = 123;
     userDataList["100"] = userData;
     jsonObject["print_user_data"] = userDataList;
     printUserData->ParseUserDataFromJson(jsonObject);
 
-    nlohmann::json jsonObject2;
-    nlohmann::json userDataList2;
-    nlohmann::json userData2 = nlohmann::json::object();
+    Json::Value jsonObject2;
+    Json::Value userDataList2;
+    Json::Value userData2;
     userData2["defaultPrinter"] = "123";
     userDataList2["100"] = userData2;
     jsonObject2["print_user_data"] = userDataList2;
     printUserData->ParseUserDataFromJson(jsonObject2);
 
-    nlohmann::json jsonObject3;
-    nlohmann::json userDataList3;
-    nlohmann::json userData3 = nlohmann::json::object();
+    Json::Value jsonObject3;
+    Json::Value userDataList3;
+    Json::Value userData3;
     userData3["defaultPrinter"] = "123";
     userData3["lastUsedPrinter"] = 123;
     userDataList3["100"] = userData3;
     jsonObject3["print_user_data"] = userDataList3;
     printUserData->ParseUserDataFromJson(jsonObject3);
 
-    nlohmann::json jsonObject4;
-    nlohmann::json userDataList4;
-    nlohmann::json userData4 = nlohmann::json::object();
+    Json::Value jsonObject4;
+    Json::Value userDataList4;
+    Json::Value userData4;
     userData4["defaultPrinter"] = "123";
     userData4["lastUsedPrinter"] = "123";
     userDataList4["100"] = userData4;
@@ -334,34 +335,34 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0022, TestSize.Level1)
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0023, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     std::string fileData0 = "test";
     EXPECT_EQ(userData->CheckFileData(fileData0, jsonObject), false);
 
-    nlohmann::json fileJson;
+    Json::Value fileJson;
     fileJson["key"] = "value";
-    std::string fileData = fileJson.dump();
+    std::string fileData = PrintJsonUtil::WriteString(fileJson);
     EXPECT_EQ(userData->CheckFileData(fileData, jsonObject), false);
 
-    nlohmann::json fileJson2;
+    Json::Value fileJson2;
     fileJson2["version"] = 123;
-    std::string fileData2 = fileJson2.dump();
+    std::string fileData2 = PrintJsonUtil::WriteString(fileJson2);
     EXPECT_EQ(userData->CheckFileData(fileData2, jsonObject), false);
 
-    nlohmann::json fileJson3;
+    Json::Value fileJson3;
     fileJson3["version"] = "123";
-    std::string fileData3 = fileJson3.dump();
+    std::string fileData3 = PrintJsonUtil::WriteString(fileJson3);
     EXPECT_EQ(userData->CheckFileData(fileData3, jsonObject), false);
 
-    nlohmann::json fileJson4;
+    Json::Value fileJson4;
     fileJson4["version"] = "v1";
-    std::string fileData4 = fileJson4.dump();
+    std::string fileData4 = PrintJsonUtil::WriteString(fileJson4);
     EXPECT_EQ(userData->CheckFileData(fileData4, jsonObject), false);
 
-    nlohmann::json fileJson5;
+    Json::Value fileJson5;
     fileJson5["version"] = "v1";
     fileJson5["print_user_data"] = "100";
-    std::string fileData5 = fileJson5.dump();
+    std::string fileData5 = PrintJsonUtil::WriteString(fileJson5);
     EXPECT_EQ(userData->CheckFileData(fileData5, jsonObject), true);
 }
 

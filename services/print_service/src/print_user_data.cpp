@@ -19,10 +19,11 @@
 #include <iostream>
 #include <fstream>
 #include <streambuf>
-#include "nlohmann/json.hpp"
+#include <json/json.h>
 
 #include "print_log.h"
 #include "print_constant.h"
+#include "print_json_util.h"
 
 namespace OHOS {
 namespace Print {
@@ -228,42 +229,42 @@ bool PrintUserData::ParseUserData()
         PRINT_HILOGW("get file data failed");
         return false;
     }
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     if (CheckFileData(fileData, jsonObject)) {
         ParseUserDataFromJson(jsonObject);
     }
     return true;
 }
 
-void PrintUserData::ParseUserDataFromJson(nlohmann::json &jsonObject)
+void PrintUserData::ParseUserDataFromJson(Json::Value &jsonObject)
 {
-    if (!jsonObject.contains("print_user_data")) {
+    if (!jsonObject.isMember("print_user_data")) {
         PRINT_HILOGW("can not find print_user_data");
         return;
     }
     PRINT_HILOGI("userId_: %{public}d", userId_);
-    nlohmann::json userDataList = jsonObject["print_user_data"];
-    if (!userDataList.contains(std::to_string(userId_)) || !userDataList[std::to_string(userId_)].is_object()) {
+    Json::Value userDataList = jsonObject["print_user_data"];
+    if (!userDataList.isMember(std::to_string(userId_)) || !userDataList[std::to_string(userId_)].isObject()) {
         PRINT_HILOGW("can not find current userId");
         SetUserDataToFile();
     }
-    nlohmann::json userData = userDataList[std::to_string(userId_)];
-    if (!userData.contains("defaultPrinter") || !userData["defaultPrinter"].is_string()) {
+    Json::Value userData = userDataList[std::to_string(userId_)];
+    if (!userData.isMember("defaultPrinter") || !userData["defaultPrinter"].isString()) {
         PRINT_HILOGW("can not find defaultPrinter");
         return;
     }
-    defaultPrinterId_ = userData["defaultPrinter"];
-    if (!userData.contains("lastUsedPrinter") || !userData["lastUsedPrinter"].is_string()) {
+    defaultPrinterId_ = userData["defaultPrinter"].asString();
+    if (!userData.isMember("lastUsedPrinter") || !userData["lastUsedPrinter"].isString()) {
         PRINT_HILOGW("can not find lastUsedPrinter");
         return;
     }
-    lastUsedPrinterId_ = userData["lastUsedPrinter"];
-    if (!userData.contains("useLastUsedPrinterForDefault") || !userData["useLastUsedPrinterForDefault"].is_boolean()) {
+    lastUsedPrinterId_ = userData["lastUsedPrinter"].asString();
+    if (!userData.isMember("useLastUsedPrinterForDefault") || !userData["useLastUsedPrinterForDefault"].isBool()) {
         PRINT_HILOGW("can not find useLastUsedPrinterForDefault");
         return;
     }
-    useLastUsedPrinterForDefault_ = userData["useLastUsedPrinterForDefault"].get<bool>();
-    if (!userData.contains("usedPrinterList") || !userData["usedPrinterList"].is_array()) {
+    useLastUsedPrinterForDefault_ = userData["useLastUsedPrinterForDefault"].asBool();
+    if (!userData.isMember("usedPrinterList") || !userData["usedPrinterList"].isArray()) {
         PRINT_HILOGW("can not find usedPrinterList");
         return;
     }
@@ -278,16 +279,15 @@ void PrintUserData::ParseUserDataFromJson(nlohmann::json &jsonObject)
         useLastUsedPrinterForDefault_);
 }
 
-bool PrintUserData::ConvertJsonToUsedPrinterList(nlohmann::json &userData)
+bool PrintUserData::ConvertJsonToUsedPrinterList(Json::Value &userData)
 {
-    nlohmann::json usedPrinterListJson = userData["usedPrinterList"];
-    for (auto &item : usedPrinterListJson.items()) {
-        if (!item.value().is_string()) {
+    Json::Value usedPrinterListJson = userData["usedPrinterList"];
+    for (int i = 0; i < usedPrinterListJson.size(); i++) {
+        if (!usedPrinterListJson[i].isString()) {
             PRINT_HILOGW("usedPrinterListJson item is not string");
             return false;
         }
-        nlohmann::json printerIdJson = item.value();
-        usedPrinterList_.push_back(printerIdJson.get<std::string>());
+        usedPrinterList_.push_back(usedPrinterListJson[i].asString());
     }
     uint32_t size = usedPrinterList_.size();
     PRINT_HILOGI("usedPrinterList_ size: %{public}d", size);
@@ -297,10 +297,10 @@ bool PrintUserData::ConvertJsonToUsedPrinterList(nlohmann::json &userData)
     return true;
 }
 
-void PrintUserData::ConvertUsedPrinterListToJson(nlohmann::json &usedPrinterListJson)
+void PrintUserData::ConvertUsedPrinterListToJson(Json::Value &usedPrinterListJson)
 {
     for (auto iter = usedPrinterList_.begin(); iter != usedPrinterList_.end(); ++iter) {
-        usedPrinterListJson.push_back(*iter);
+        usedPrinterListJson.append(*iter);
     }
 }
 
@@ -321,11 +321,11 @@ bool PrintUserData::GetFileData(std::string &fileData)
             PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
             return false;
         }
-        nlohmann::json userDataJson = nlohmann::json::object();
-        nlohmann::json jsonObject;
+        Json::Value userDataJson;
+        Json::Value jsonObject;
         jsonObject["version"] = PRINT_USER_DATA_VERSION;
         jsonObject["print_user_data"] = userDataJson;
-        fileData = jsonObject.dump();
+        fileData = PrintJsonUtil::WriteString(jsonObject);
         size_t jsonLength = fileData.length();
         size_t writeLength = fwrite(fileData.c_str(), 1, strlen(fileData.c_str()), file);
         int fcloseResult = fclose(file);
@@ -348,18 +348,18 @@ bool PrintUserData::SetUserDataToFile()
         PRINT_HILOGW("get file data failed");
         return false;
     }
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     if (CheckFileData(fileData, jsonObject)) {
         PRINT_HILOGI("userId_: %{private}d", userId_);
-        nlohmann::json userData = nlohmann::json::object();
+        Json::Value userData;
         userData["defaultPrinter"] = defaultPrinterId_;
         userData["lastUsedPrinter"] = lastUsedPrinterId_;
         userData["useLastUsedPrinterForDefault"] = useLastUsedPrinterForDefault_;
-        nlohmann::json usedPrinterListJson = nlohmann::json::array();
+        Json::Value usedPrinterListJson;
         ConvertUsedPrinterListToJson(usedPrinterListJson);
         userData["usedPrinterList"] = usedPrinterListJson;
         jsonObject["print_user_data"][std::to_string(userId_)] = userData;
-        std::string temp = jsonObject.dump();
+        std::string temp = PrintJsonUtil::WriteString(jsonObject);
         PRINT_HILOGD("json temp: %{public}s", temp.c_str());
         char realPidFile[PATH_MAX] = {};
         std::string userDataFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINT_USER_DATA_FILE;
@@ -372,7 +372,7 @@ bool PrintUserData::SetUserDataToFile()
             PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
             return false;
         }
-        std::string jsonString = jsonObject.dump();
+        std::string jsonString = PrintJsonUtil::WriteString(jsonObject);
         size_t jsonLength = jsonString.length();
         size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
         int fcloseResult = fclose(file);
@@ -386,20 +386,20 @@ bool PrintUserData::SetUserDataToFile()
     return true;
 }
 
-bool PrintUserData::CheckFileData(std::string &fileData, nlohmann::json &jsonObject)
+bool PrintUserData::CheckFileData(std::string &fileData, Json::Value &jsonObject)
 {
-    if (!nlohmann::json::accept(fileData)) {
+    std::istringstream iss(fileData);
+    if (!PrintJsonUtil::ParseFromStream(iss, jsonObject)) {
         PRINT_HILOGW("json accept fail");
         return false;
     }
-    jsonObject = nlohmann::json::parse(fileData);
-    if (!jsonObject.contains("version") || !jsonObject["version"].is_string()) {
+    if (!jsonObject.isMember("version") || !jsonObject["version"].isString()) {
         PRINT_HILOGW("can not find version");
         return false;
     }
-    std::string version = jsonObject["version"].get<std::string>();
+    std::string version = jsonObject["version"].asString();
     PRINT_HILOGI("json version: %{public}s", version.c_str());
-    if (version != PRINT_USER_DATA_VERSION || !jsonObject.contains("print_user_data")) {
+    if (version != PRINT_USER_DATA_VERSION || !jsonObject.isMember("print_user_data")) {
         PRINT_HILOGW("can not find print_user_data");
         return false;
     }
