@@ -35,6 +35,7 @@ const std::string PAGESIZEID_STRING = "pagesizeId";
 const std::string QUALITY_STRING = "quality";
 const std::string DEFAULT_QUALITY_PREFERENCE = "4";
 const int NUMBER_BASE = 10;
+const uint32_t COPIES_NUMBER_DEFAULT = 99;
 
 char *CopyString(const std::string &source)
 {
@@ -528,6 +529,7 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     nativePrinterInfo->description = CopyString(info.GetDescription());
     nativePrinterInfo->detailInfo = nullptr;
     nativePrinterInfo->printerState = static_cast<Print_PrinterState>(info.GetPrinterStatus());
+    nativePrinterInfo->capability.supportedCopies = COPIES_NUMBER_DEFAULT;
     if (info.HasIsDefaultPrinter() && info.GetIsDefaultPrinter() == true) {
         nativePrinterInfo->isDefaultPrinter = true;
     }
