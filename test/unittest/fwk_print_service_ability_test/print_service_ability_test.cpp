@@ -2278,4 +2278,23 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0156, TestSize.Level1)
     service->printSystemData_.discoveredPrinterInfoList_[standardizeId] = info;
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_SERVER_FAILURE);
 }
+
+/**
+* @tc.name: PrintServiceAbilityTest_0157
+* @tc.desc: PrintServiceAbility ctor/dtor
+* @tc.type: FUNC ConnectPrinter
+* @tc.require: use old version printerId
+*/
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0157, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
+    info->SetPrinterId("1234");
+    EXPECT_EQ(service->ConnectPrinter(info->GetPrinterId()), E_PRINT_INVALID_PRINTER);
+    info->SetPrinterId("com.ohos.spooler:mdns://testId");
+    EXPECT_EQ(service->ConnectPrinter(info->GetPrinterId()), E_PRINT_INVALID_PRINTER);
+    CupsPrinterInfo cupsInfo;
+    service->printSystemData_.InsertCupsPrinter(info->GetPrinterId(), cupsInfo);
+    EXPECT_EQ(service->ConnectPrinter(info->GetPrinterId()), E_PRINT_NONE);
+}
 } // namespace OHOS::Print
