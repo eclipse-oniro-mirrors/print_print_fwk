@@ -83,6 +83,7 @@ static const std::string EVENT_SUCCESS = "succeed";
 static const std::string EVENT_FAIL = "fail";
 static const std::string EVENT_CANCEL = "cancel";
 static const std::string CALLER_PKG_NAME = "caller.pkgName";
+static const std::string MDNS_PRINTER = "mdns";
 
 static const std::string FD = "FD";
 static const std::string TYPE_PROPERTY = "type";
@@ -357,6 +358,11 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
     PRINT_HILOGD("ConnectPrinter started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     vendorManager.ClearConnectingPrinter();
+    std::string oldPrinterId = SPOOLER_BUNDLE_NAME + PRINTER_ID_DELIMITER + MDNS_PRINTER;
+    if (printerId.find(oldPrinterId) != std::string::npos && printSystemData_.IsPrinterAdded(printerId)) {
+        PRINT_HILOGI("old version printerId, check connected successfully");
+        return E_PRINT_NONE;
+    }
     if (printSystemData_.QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
         PRINT_HILOGI("Invalid printer id, try connect printer by ip");
         return TryConnectPrinterByIp(printerId);
