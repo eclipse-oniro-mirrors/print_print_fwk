@@ -34,6 +34,7 @@ static constexpr const char *PARAM_INFO_PRINTER_STATUS = "printerStatus";
 static constexpr const char *PARAM_INFO_PRINTER_MAKE = "printerMake";
 static constexpr const char *PARAM_INFO_URI = "uri";
 static constexpr const char *PARAM_INFO_PRINTER_PREFERENCES = "preferences";
+static constexpr const char *PARAM_INFO_ALIAS = "alias";
 
 napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info)
 {
@@ -71,6 +72,10 @@ napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info
         info.GetPreferences(preferences);
         napi_value jsPreferences = PrinterPreferencesHelper::MakeJsObject(env, preferences);
         PRINT_CALL(env, napi_set_named_property(env, jsObj, PARAM_INFO_PRINTER_PREFERENCES, jsPreferences));
+    }
+
+    if (info.HasAlias()) {
+        NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_ALIAS, info.GetAlias());
     }
 
     if (info.HasOption()) {
@@ -130,6 +135,11 @@ std::shared_ptr<PrinterInfo> PrinterInfoHelper::BuildFromJs(napi_env env, napi_v
         nativeObj->SetUri(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_URI));
     }
 
+    auto jsAlias = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_ALIAS);
+    if (jsAlias != nullptr) {
+        nativeObj->SetAlias(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_ALIAS));
+    }
+
     auto jsOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_OPTION);
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION));
@@ -180,6 +190,9 @@ bool PrinterInfoHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_INFO_URI, PRINT_PARAM_OPT},
         {PARAM_INFO_PRINTER_STATUS, PRINT_PARAM_OPT},
         {PARAM_INFO_PRINTER_PREFERENCES, PRINT_PARAM_OPT},
+        {PARAM_INFO_ALIAS, PRINT_PARAM_OPT},
+        {PARAM_INFO_IS_DAFAULT_PRINTER, PRINT_PARAM_OPT},
+        {PARAM_INFO_IS_LAST_USED_PRINTER, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);

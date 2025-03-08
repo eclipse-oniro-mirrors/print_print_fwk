@@ -82,6 +82,8 @@ public:
 
     Json::Value ConvertToJson();
 
+    void ConvertJsonToPrinterPreferences(Json::Value &preferencesJson);
+
 private:
     bool ReadFromParcel(Parcel &parcel);
 

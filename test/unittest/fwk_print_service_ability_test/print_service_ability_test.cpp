@@ -324,7 +324,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004, TestSize.Level1)
     std::string jobId = GetDefaultJobId();
     EXPECT_EQ(service->NotifyPrintServiceEvent(jobId, event), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->DestroyExtension(), E_PRINT_NO_PERMISSION);
-    std::string printerPreference = "";
+    PrinterPreferences printerPreference;
     EXPECT_EQ(service->SetPrinterPreference(printerId, printerPreference), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_NO_PERMISSION);
@@ -332,6 +332,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004, TestSize.Level1)
     EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NO_PERMISSION);
     std::vector<PrinterInfo> printers;
     EXPECT_EQ(service->DiscoverUsbPrinters(printers), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_NO_PERMISSION);
 
     PrintServiceMockPermission::MockPermission();
     EXPECT_EQ(service->StartService(), E_PRINT_NONE);
@@ -711,6 +712,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0033, TestSize.Level1)
     printerInfo->name = "testName";
     printerInfo->uri = "testUri";
     printerInfo->maker = "testMaker";
+    printerInfo->alias = "testAlias";
     service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
     EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_NONE);
 }
@@ -1278,16 +1280,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069, TestSize.Level1)
     service->printSystemData_.discoveredPrinterInfoList_["456"] = printerInfo;
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
-}
-
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0076, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
-    service->helper_ = helper;
-    std::string printerId = "123";
-    std::string printerSetting = "test";
-    EXPECT_EQ(service->SetPrinterPreference(printerId, printerSetting), E_PRINT_INVALID_PARAMETER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0079, TestSize.Level1)
@@ -2037,12 +2029,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0137, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterInfo info;
     info.SetPrinterId(DEFAULT_EXT_PRINTER_ID);
-    EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_INVALID_PARAMETER);
-
-    Json::Value infoJson;
-    infoJson["alias"] = "testPrinterName";
-    info.SetOption(PrintJsonUtil::WriteString(infoJson));
-    EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_INVALID_PRINTER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0138, TestSize.Level1)
@@ -2112,10 +2099,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0143, TestSize.Level1)
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
     std::string printerId = "123";
-    Json::Value preferencesJson;
-    preferencesJson["borderless"] = true;
-    std::string printerSetting = PrintJsonUtil::WriteString(preferencesJson);
-    EXPECT_EQ(service->SetPrinterPreference(printerId, printerSetting), E_PRINT_NONE);
+    PrinterPreferences preferences;
+    preferences.SetBorderless(true);
+    EXPECT_EQ(service->SetPrinterPreference(printerId, preferences), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0144, TestSize.Level1)

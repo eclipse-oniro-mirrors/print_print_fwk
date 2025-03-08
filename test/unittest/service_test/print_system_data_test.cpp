@@ -397,6 +397,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0022, TestSize.Level1)
     EXPECT_NE(systemData, nullptr);
     std::string printerId = "1234";
     CupsPrinterInfo cupsPrinterInfo;
+    cupsPrinterInfo.alias = "test";
     systemData->addedPrinterMap_.Insert("1234", std::make_shared<CupsPrinterInfo>(cupsPrinterInfo));
     systemData->InsertCupsPrinter(printerId, cupsPrinterInfo);
 }
@@ -1282,51 +1283,6 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0066, TestSize.Level1)
     CupsPrinterInfo cupsPrinter;
     systemData->QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter);
     EXPECT_EQ(cupsPrinter.printPreferences.GetBorderless(), preferences.GetBorderless());
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0067, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterPreferences preferences;
-    Json::Value preferencesJson;
-    systemData->ConvertJsonToPrinterPreferences(preferencesJson, preferences);
-    EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0068, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterPreferences preferences;
-    Json::Value preferencesJson;
-    preferencesJson["defaultPageSizeId"] = 123;
-    preferencesJson["defaultOrientation"] = "123";
-    preferencesJson["defaultDuplexMode"] = "123";
-    preferencesJson["defaultPrintQuality"] = "123";
-    preferencesJson["defaultMediaType"] = 123;
-    preferencesJson["borderless"] = "123";
-    preferencesJson["options"] = "123";
-    systemData->ConvertJsonToPrinterPreferences(preferencesJson, preferences);
-    EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0069, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterPreferences preferences;
-    Json::Value preferencesJson;
-    preferencesJson["defaultPageSizeId"] = "123";
-    preferencesJson["defaultOrientation"] = 123;
-    preferencesJson["defaultDuplexMode"] = 123;
-    preferencesJson["defaultPrintQuality"] = 123;
-    preferencesJson["defaultMediaType"] = "123";
-    preferencesJson["borderless"] = true;
-    Json::Value optionJson;
-    preferencesJson["options"] = optionJson;
-    systemData->ConvertJsonToPrinterPreferences(preferencesJson, preferences);
-    EXPECT_EQ(preferences.HasDefaultDuplexMode(), true);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0070, TestSize.Level1)

@@ -58,7 +58,7 @@ public:
     void UpdatePrinterStatus(const std::string &printerId, PrinterStatus printerStatus);
     bool UpdatePrinterAlias(const std::string& printerId, const std::string& printerAlias);
     void UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo);
-    void UpdatePrinterPreferences(const std::string &printerId, PrinterPreferences &preferences);
+    void UpdatePrinterPreferences(const std::string &printerId, const PrinterPreferences &preferences);
     void QueryPrinterInfoById(const std::string &printerId, PrinterInfo &printerInfo);
     bool CheckPrinterBusy(const std::string &printerId);
     bool GetAllPrintUser(std::vector<int32_t> &allPrintUserList);
@@ -77,7 +77,6 @@ public:
     std::shared_ptr<PrinterInfo> QueryIpPrinterInfoById(const std::string &printerId);
     int32_t BuildPrinterPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences);
     void BuildEprintPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences);
-    void ConvertJsonToPrinterPreferences(Json::Value &preferencesJson, PrinterPreferences &preferences);
 
 private:
     bool ParsePrinterListJsonV1(Json::Value& jsonObject);

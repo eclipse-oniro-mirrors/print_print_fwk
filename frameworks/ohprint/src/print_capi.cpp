@@ -32,6 +32,7 @@
 #include "print_callback.h"
 #include "print_converter.h"
 #include "print_helper.h"
+#include "printer_preferences.h"
 #include "refbase.h"
 #include "ui_extension_context.h"
 #include "print_json_util.h"
@@ -371,8 +372,9 @@ Print_ErrorCode OH_Print_UpdatePrinterProperties(const char *printerId, const Pr
     }
     PRINT_HILOGD("OH_Print_UpdatePrinterProperties setting : %{public}s.",
         (PrintJsonUtil::WriteString(settingJson)).c_str());
-    int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(printerId,
-        PrintJsonUtil::WriteString(settingJson));
+    PrinterPreferences preferences;
+    preferences.ConvertJsonToPrinterPreferences(settingJson);
+    int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(printerId, preferences);
     if (ret != 0) {
         PRINT_HILOGW("SetPrinterPreference fail");
         return PRINT_ERROR_INVALID_PRINTER;

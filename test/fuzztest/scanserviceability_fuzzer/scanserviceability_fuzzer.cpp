@@ -269,12 +269,8 @@ namespace Scan {
 
     void TestGeneratePictureBatch(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
-        int32_t status = E_SCAN_NONE;
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        std::string file_name = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        std::string output_file = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanProgress* scanProPtr = nullptr;
-        ScanServiceAbility::GetInstance()->GeneratePictureSingle(scannerId, file_name, output_file, status, scanProPtr);
+        ScanServiceAbility::GetInstance()->GeneratePictureSingle(scannerId);
     }
 
     void TestAddFoundScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -347,12 +343,8 @@ namespace Scan {
         }
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         ScanServiceAbility::GetInstance()->RestartScan(scannerId);
-        int32_t nowScanId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        ScanProgress* scanProPtr = new ScanProgress();
-        ScanServiceAbility::GetInstance()->FindScanTask(scanProPtr, nowScanId);
         int32_t scanStatus = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        ScanServiceAbility::GetInstance()->CleanUpAfterScan(scanStatus, scanProPtr);
-        delete scanProPtr;
+        ScanServiceAbility::GetInstance()->CleanUpAfterScan(scanStatus);
     }
 
 }
