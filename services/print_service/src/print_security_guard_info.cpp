@@ -46,7 +46,7 @@ void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, co
     if (subType_ == FROM_EPRINT) {
         Json::Value optionJson;
         if (PrintJsonUtil::Parse(printerInfo.GetOption(), optionJson)) {
-            if (optionJson.isMember("ePrintUrl") && optionJson["ePrintUrl"].isString()) {
+            if (PrintJsonUtil::IsMember(optionJson, "ePrintUrl") && optionJson["ePrintUrl"].isString()) {
                 printTypeInfo_.domain = optionJson["ePrintUrl"].asString();
             }
         }
@@ -54,7 +54,7 @@ void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, co
     printTypeInfo_.copyNumber = static_cast<int32_t>(printJob.GetCopyNumber());
     Json::Value jobOptionJson;
     if (PrintJsonUtil::Parse(printJob.GetOption(), jobOptionJson)) {
-        if (jobOptionJson.isMember("printPages") && jobOptionJson["printPages"].isInt()) {
+        if (PrintJsonUtil::IsMember(jobOptionJson, "printPages") && jobOptionJson["printPages"].isInt()) {
             printTypeInfo_.printPages = jobOptionJson["printPages"].asInt();
         } else {
             std::vector<uint32_t> fdList;
@@ -62,7 +62,7 @@ void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, co
             printTypeInfo_.printPages = (int32_t)fdList.size();
         }
 
-        if (jobOptionJson.isMember("jobName") && jobOptionJson["jobName"].isString()) {
+        if (PrintJsonUtil::IsMember(jobOptionJson, "jobName") && jobOptionJson["jobName"].isString()) {
             jobName_ = jobOptionJson["jobName"].asString();
         }
     }

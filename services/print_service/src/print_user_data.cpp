@@ -238,33 +238,35 @@ bool PrintUserData::ParseUserData()
 
 void PrintUserData::ParseUserDataFromJson(Json::Value &jsonObject)
 {
-    if (!jsonObject.isMember("print_user_data")) {
+    if (!PrintJsonUtil::IsMember(jsonObject, "print_user_data")) {
         PRINT_HILOGW("can not find print_user_data");
         return;
     }
     PRINT_HILOGI("userId_: %{public}d", userId_);
     Json::Value userDataList = jsonObject["print_user_data"];
-    if (!userDataList.isMember(std::to_string(userId_)) || !userDataList[std::to_string(userId_)].isObject()) {
+    if (!PrintJsonUtil::IsMember(userDataList, std::to_string(userId_)) ||
+        !userDataList[std::to_string(userId_)].isObject()) {
         PRINT_HILOGW("can not find current userId");
         SetUserDataToFile();
     }
     Json::Value userData = userDataList[std::to_string(userId_)];
-    if (!userData.isMember("defaultPrinter") || !userData["defaultPrinter"].isString()) {
+    if (!PrintJsonUtil::IsMember(userData, "defaultPrinter") || !userData["defaultPrinter"].isString()) {
         PRINT_HILOGW("can not find defaultPrinter");
         return;
     }
     defaultPrinterId_ = userData["defaultPrinter"].asString();
-    if (!userData.isMember("lastUsedPrinter") || !userData["lastUsedPrinter"].isString()) {
+    if (!PrintJsonUtil::IsMember(userData, "lastUsedPrinter") || !userData["lastUsedPrinter"].isString()) {
         PRINT_HILOGW("can not find lastUsedPrinter");
         return;
     }
     lastUsedPrinterId_ = userData["lastUsedPrinter"].asString();
-    if (!userData.isMember("useLastUsedPrinterForDefault") || !userData["useLastUsedPrinterForDefault"].isBool()) {
+    if (!PrintJsonUtil::IsMember(userData, "useLastUsedPrinterForDefault") ||
+        !userData["useLastUsedPrinterForDefault"].isBool()) {
         PRINT_HILOGW("can not find useLastUsedPrinterForDefault");
         return;
     }
     useLastUsedPrinterForDefault_ = userData["useLastUsedPrinterForDefault"].asBool();
-    if (!userData.isMember("usedPrinterList") || !userData["usedPrinterList"].isArray()) {
+    if (!PrintJsonUtil::IsMember(userData, "usedPrinterList") || !userData["usedPrinterList"].isArray()) {
         PRINT_HILOGW("can not find usedPrinterList");
         return;
     }
@@ -393,13 +395,13 @@ bool PrintUserData::CheckFileData(std::string &fileData, Json::Value &jsonObject
         PRINT_HILOGW("json accept fail");
         return false;
     }
-    if (!jsonObject.isMember("version") || !jsonObject["version"].isString()) {
+    if (!PrintJsonUtil::IsMember(jsonObject, "version") || !jsonObject["version"].isString()) {
         PRINT_HILOGW("can not find version");
         return false;
     }
     std::string version = jsonObject["version"].asString();
     PRINT_HILOGI("json version: %{public}s", version.c_str());
-    if (version != PRINT_USER_DATA_VERSION || !jsonObject.isMember("print_user_data")) {
+    if (version != PRINT_USER_DATA_VERSION || !PrintJsonUtil::IsMember(jsonObject, "print_user_data")) {
         PRINT_HILOGW("can not find print_user_data");
         return false;
     }

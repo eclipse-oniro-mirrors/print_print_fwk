@@ -29,7 +29,7 @@ namespace Print {
 
 bool PrintSystemData::ParsePrinterListJsonV1(Json::Value &jsonObject)
 {
-    if (!jsonObject.isMember("printer_list") || !jsonObject["printer_list"].isArray()) {
+    if (!PrintJsonUtil::IsMember(jsonObject, "printer_list") || !jsonObject["printer_list"].isArray()) {
         PRINT_HILOGW("can not find printer_list");
         return false;
     }
@@ -45,32 +45,32 @@ bool PrintSystemData::ParsePrinterListJsonV1(Json::Value &jsonObject)
 
 bool PrintSystemData::ConvertJsonToCupsPrinterInfo(Json::Value &object)
 {
-    if (!object.isMember("id") || !object["id"].isString()) {
+    if (!PrintJsonUtil::IsMember(object, "id") || !object["id"].isString()) {
         PRINT_HILOGW("can not find id");
         return false;
     }
     std::string id = object["id"].asString();
-    if (!object.isMember("name") || !object["name"].isString()) {
+    if (!PrintJsonUtil::IsMember(object, "name") || !object["name"].isString()) {
         PRINT_HILOGW("can not find name");
         return false;
     }
     std::string name = object["name"].asString();
-    if (!object.isMember("uri") || !object["uri"].isString()) {
+    if (!PrintJsonUtil::IsMember(object, "uri") || !object["uri"].isString()) {
         PRINT_HILOGW("can not find uri");
         return false;
     }
     std::string uri = object["uri"].asString();
-    if (!object.isMember("maker") || !object["maker"].isString()) {
+    if (!PrintJsonUtil::IsMember(object, "maker") || !object["maker"].isString()) {
         PRINT_HILOGW("can not find maker");
         return false;
     }
     std::string maker = object["maker"].asString();
-    if (!object.isMember("capability") || !object["capability"].isObject()) {
+    if (!PrintJsonUtil::IsMember(object, "capability") || !object["capability"].isObject()) {
         PRINT_HILOGW("can not find capability");
         return false;
     }
     PrinterCapability printerCapability;
-    Json::Value capsJson;
+    Json::Value capsJson = object["capability"];
     if (!ConvertJsonToPrinterCapability(capsJson, printerCapability)) {
         PRINT_HILOGW("convert json to printer capability failed");
         return false;
@@ -88,13 +88,13 @@ bool PrintSystemData::ConvertJsonToCupsPrinterInfo(Json::Value &object)
 
 void PrintSystemData::ConvertInnerJsonToCupsPrinterInfo(Json::Value &object, CupsPrinterInfo &info)
 {
-    if (object.isMember("alias") && object["alias"].isString()) {
+    if (PrintJsonUtil::IsMember(object, "alias") && object["alias"].isString()) {
         info.alias = object["alias"].asString();
     }
-    if (object.isMember("printerStatus") && object["printerStatus"].isInt()) {
+    if (PrintJsonUtil::IsMember(object, "printerStatus") && object["printerStatus"].isInt()) {
         info.printerStatus = static_cast<PrinterStatus>(object["printerStatus"].asInt());
     }
-    if (object.isMember("preferences") && object["preferences"].isObject()) {
+    if (PrintJsonUtil::IsMember(object, "preferences") && object["preferences"].isObject()) {
         info.printPreferences.ConvertJsonToPrinterPreferences(object["preferences"]);
         PRINT_HILOGI("convert json to printer preferences success");
     }
@@ -167,7 +167,7 @@ bool PrintSystemData::GetJsonObjectFromFile(Json::Value &jsonObject, const std::
     if (fileName.find(PRINTER_PREFERENCE_FILE) != std::string::npos) {
         return true;
     }
-    if (!jsonObject.isMember("version") || !jsonObject["version"].isString()) {
+    if (!PrintJsonUtil::IsMember(jsonObject, "version") || !jsonObject["version"].isString()) {
         PRINT_HILOGW("can not find version");
         return false;
     }
@@ -189,7 +189,7 @@ bool PrintSystemData::GetJsonObjectFromFile(Json::Value &jsonObject, const std::
 
 bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
 {
-    if (!jsonObject.isMember("printer_list") || !jsonObject["printer_list"].isArray()) {
+    if (!PrintJsonUtil::IsMember(jsonObject, "printer_list") || !jsonObject["printer_list"].isArray()) {
         PRINT_HILOGW("can not find printer_list");
         return false;
     }
@@ -210,7 +210,7 @@ bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
             }
             UpdatePrinterPreferences(printerId, info->printPreferences);
             Json::Value printPreferenceJson = object[printerId];
-            if (!printPreferenceJson.isMember("setting") || !printPreferenceJson["setting"].isObject()) {
+            if (!PrintJsonUtil::IsMember(jsonObject, "setting") || !printPreferenceJson["setting"].isObject()) {
                 PRINT_HILOGW("can not find setting");
                 continue;
             }
@@ -231,38 +231,38 @@ bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
 bool PrintSystemData::ParsePreviousPreferencesSetting(Json::Value &settingJson, PrinterPreferences &preferences)
 {
     bool updatePreferences = false;
-    if (settingJson.isMember("pagesizeId") && settingJson["pagesizeId"].isString() &&
+    if (PrintJsonUtil::IsMember(settingJson, "pagesizeId") && settingJson["pagesizeId"].isString() &&
         !settingJson["pagesizeId"].asString().empty()) {
         updatePreferences = true;
         preferences.SetDefaultPageSizeId(settingJson["pagesizeId"].asString());
     }
-    if (settingJson.isMember("orientation") && settingJson["orientation"].isString() &&
+    if (PrintJsonUtil::IsMember(settingJson, "orientation") && settingJson["orientation"].isString() &&
         !settingJson["orientation"].asString().empty()) {
         updatePreferences = true;
         int32_t defaultOrientation = 0;
         PrintUtil::ConvertToInt(settingJson["orientation"].asString(), defaultOrientation);
         preferences.SetDefaultOrientation(defaultOrientation);
     }
-    if (settingJson.isMember("duplex") && settingJson["duplex"].isString() &&
+    if (PrintJsonUtil::IsMember(settingJson, "duplex") && settingJson["duplex"].isString() &&
         !settingJson["duplex"].asString().empty()) {
         updatePreferences = true;
         int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
         PrintUtil::ConvertToInt(settingJson["duplex"].asString(), defaultDuplexMode);
         preferences.SetDefaultDuplexMode(defaultDuplexMode);
     }
-    if (settingJson.isMember("quality") && settingJson["quality"].isString() &&
+    if (PrintJsonUtil::IsMember(settingJson, "quality") && settingJson["quality"].isString() &&
         !settingJson["quality"].asString().empty()) {
         updatePreferences = true;
         int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
         PrintUtil::ConvertToInt(settingJson["quality"].asString(), defaultPrintQuality);
         preferences.SetDefaultPrintQuality(defaultPrintQuality);
     }
-    if (settingJson.isMember("mediaType") && settingJson["mediaType"].isString() &&
+    if (PrintJsonUtil::IsMember(settingJson, "mediaType") && settingJson["mediaType"].isString() &&
         !settingJson["mediaType"].asString().empty()) {
         updatePreferences = true;
         preferences.SetDefaultMediaType(settingJson["mediaType"].asString());
     }
-    if (settingJson.isMember("hasMargin") && settingJson["hasMargin"].isBool() &&
+    if (PrintJsonUtil::IsMember(settingJson, "hasMargin") && settingJson["hasMargin"].isBool() &&
         settingJson["hasMargin"].asBool() == false) {
         updatePreferences = true;
         preferences.SetBorderless(true);
@@ -620,11 +620,11 @@ void PrintSystemData::ConvertPrintMarginToJson(PrinterCapability &printerCapabil
 
 bool PrintSystemData::ConvertJsonToPrinterCapability(Json::Value &capsJson, PrinterCapability &printerCapability)
 {
-    if (!capsJson.isMember("colorMode") || !capsJson["colorMode"].isInt()) {
+    if (!PrintJsonUtil::IsMember(capsJson, "colorMode") || !capsJson["colorMode"].isInt()) {
         PRINT_HILOGW("can not find colorMode");
         return false;
     }
-    if (!capsJson.isMember("duplexMode") || !capsJson["duplexMode"].isInt()) {
+    if (!PrintJsonUtil::IsMember(capsJson, "duplexMode") || !capsJson["duplexMode"].isInt()) {
         PRINT_HILOGW("can not find duplexMode");
         return false;
     }
@@ -633,7 +633,7 @@ bool PrintSystemData::ConvertJsonToPrinterCapability(Json::Value &capsJson, Prin
 
     printerCapability.SetDuplexMode(capsJson["duplexMode"].asInt());
 
-    if (capsJson.isMember("minMargin") && capsJson["minMargin"].isObject()) {
+    if (PrintJsonUtil::IsMember(capsJson, "minMargin") && capsJson["minMargin"].isObject()) {
         PRINT_HILOGD("find minMargin");
         ConvertJsonToPrintMargin(capsJson, printerCapability);
     }
@@ -673,7 +673,7 @@ bool PrintSystemData::ConvertJsonToPrinterCapability(Json::Value &capsJson, Prin
         return false;
     }
 
-    if (capsJson.isMember("options") && capsJson["options"].isObject()) {
+    if (PrintJsonUtil::IsMember(capsJson, "options") && capsJson["options"].isObject()) {
         PRINT_HILOGD("find options");
         printerCapability.SetOption(PrintJsonUtil::WriteString(capsJson["options"]));
     }
@@ -686,10 +686,10 @@ bool PrintSystemData::ConvertJsonToPageSize(Json::Value &capsJson, PrinterCapabi
         capsJson, "pageSize", printerCapability, &PrinterCapability::SetSupportedPageSize,
         [](const Json::Value &item, PrintPageSize &pageSize) -> bool {
             if (!item.isObject() ||
-                !item.isMember("id") ||!PrintUtils::CheckJsonType<std::string>(item["id"]) ||
-                !item.isMember("name") ||!PrintUtils::CheckJsonType<std::string>(item["name"]) ||
-                !item.isMember("width") ||!PrintUtils::CheckJsonType<uint32_t>(item["width"]) ||
-                !item.isMember("height") ||!PrintUtils::CheckJsonType<uint32_t>(item["height"])) {
+                !PrintJsonUtil::IsMember(item, "id") ||!PrintUtils::CheckJsonType<std::string>(item["id"]) ||
+                !PrintJsonUtil::IsMember(item, "name") ||!PrintUtils::CheckJsonType<std::string>(item["name"]) ||
+                !PrintJsonUtil::IsMember(item, "width") ||!PrintUtils::CheckJsonType<uint32_t>(item["width"]) ||
+                !PrintJsonUtil::IsMember(item, "height") ||!PrintUtils::CheckJsonType<uint32_t>(item["height"])) {
                 return false;
             }
             pageSize.SetId(item["id"].asString());
@@ -707,9 +707,11 @@ bool PrintSystemData::ConvertJsonToPrintResolution(Json::Value &capsJson, Printe
         &PrinterCapability::SetResolution,
         [](const Json::Value &item, PrintResolution &resolution) -> bool {
             if (!item.isObject() ||
-                !item.isMember("id") || !PrintUtils::CheckJsonType<std::string>(item["id"]) ||
-                !item.isMember("horizontalDpi") || !PrintUtils::CheckJsonType<uint32_t>(item["horizontalDpi"]) ||
-                !item.isMember("verticalDpi") || !PrintUtils::CheckJsonType<uint32_t>(item["verticalDpi"])) {
+                !PrintJsonUtil::IsMember(item, "id") || !PrintUtils::CheckJsonType<std::string>(item["id"]) ||
+                !PrintJsonUtil::IsMember(item, "horizontalDpi") ||
+                !PrintUtils::CheckJsonType<uint32_t>(item["horizontalDpi"]) ||
+                !PrintJsonUtil::IsMember(item, "verticalDpi") ||
+                !PrintUtils::CheckJsonType<uint32_t>(item["verticalDpi"])) {
                 return false;
             }
             resolution.SetId(item["id"].asString());
@@ -775,10 +777,10 @@ bool PrintSystemData::ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCap
     Json::Value marginJson = capsJson["minMargin"];
     PrintMargin minMargin;
     if (!marginJson.isObject() ||
-        !marginJson.isMember("top") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["top"]) ||
-        !marginJson.isMember("bottom") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["bottom"]) ||
-        !marginJson.isMember("left") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["left"]) ||
-        !marginJson.isMember("right") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["right"])) {
+        !PrintJsonUtil::IsMember(marginJson, "top") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["top"]) ||
+        !PrintJsonUtil::IsMember(marginJson, "bottom") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["bottom"]) ||
+        !PrintJsonUtil::IsMember(marginJson, "left") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["left"]) ||
+        !PrintJsonUtil::IsMember(marginJson, "right") || !PrintUtils::CheckJsonType<uint32_t>(marginJson["right"])) {
         PRINT_HILOGE("Invalid format,key is minMargin");
         return false;
     }
@@ -827,7 +829,7 @@ bool PrintSystemData::GetPrinterCapabilityFromFile(std::string printerId, Printe
 bool PrintSystemData::GetPrinterCapabilityFromJson(
     std::string printerId, Json::Value &jsonObject, PrinterCapability &printerCapability)
 {
-    if (!jsonObject.isMember("printer_list") || !jsonObject["printer_list"].isArray()) {
+    if (!PrintJsonUtil::IsMember(jsonObject, "printer_list") || !jsonObject["printer_list"].isArray()) {
         PRINT_HILOGW("can not find printer_list");
         return false;
     }
@@ -842,7 +844,7 @@ bool PrintSystemData::GetPrinterCapabilityFromJson(
         if (!CheckPrinterInfoJson(object, printerId)) {
             continue;
         }
-        if (!object.isMember("capability")) {
+        if (!PrintJsonUtil::IsMember(object, "capability")) {
             PRINT_HILOGE("json does not contain the key as capability");
             continue;
         }
@@ -866,7 +868,7 @@ bool PrintSystemData::GetPrinterCapabilityFromJson(
 
 bool PrintSystemData::CheckPrinterInfoJson(Json::Value &object, std::string &printerId)
 {
-    if (!object.isMember("id") || !object["id"].isString()) {
+    if (!PrintJsonUtil::IsMember(object, "id") || !object["id"].isString()) {
         PRINT_HILOGW("can not find id");
         return false;
     }
@@ -874,19 +876,19 @@ bool PrintSystemData::CheckPrinterInfoJson(Json::Value &object, std::string &pri
     if (id != printerId) {
         return false;
     }
-    if (!object.isMember("name") || !object["name"].isString()) {
+    if (!PrintJsonUtil::IsMember(object, "name") || !object["name"].isString()) {
         PRINT_HILOGW("can not find name");
         return false;
     }
-    if (!object.isMember("uri") || !object["uri"].isString()) {
+    if (!PrintJsonUtil::IsMember(object, "uri") || !object["uri"].isString()) {
         PRINT_HILOGW("can not find uri");
         return false;
     }
-    if (!object.isMember("maker") || !object["maker"].isString()) {
+    if (!PrintJsonUtil::IsMember(object, "maker") || !object["maker"].isString()) {
         PRINT_HILOGW("can not find maker");
         return false;
     }
-    if (!object.isMember("capability") || !object["capability"].isObject()) {
+    if (!PrintJsonUtil::IsMember(object, "capability") || !object["capability"].isObject()) {
         PRINT_HILOGW("can not find capability");
         return false;
     }
@@ -917,7 +919,7 @@ bool PrintSystemData::GetAllPrintUser(std::vector<int32_t> &allPrintUserList)
 
 bool PrintSystemData::ParseUserListJsonV1(Json::Value &jsonObject, std::vector<int32_t> &allPrintUserList)
 {
-    if (!jsonObject.isMember("print_user_data") || !jsonObject["print_user_data"].isObject()) {
+    if (!PrintJsonUtil::IsMember(jsonObject, "print_user_data") || !jsonObject["print_user_data"].isObject()) {
         PRINT_HILOGE("can not find print_user_data");
         return false;
     }
@@ -1057,7 +1059,7 @@ int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, Pr
         PRINT_HILOGW("capOption can not parse to json object");
         return E_PRINT_INVALID_PARAMETER;
     }
-    if (!capJson.isMember("cupsOptions")) {
+    if (!PrintJsonUtil::IsMember(capJson, "cupsOptions")) {
         PRINT_HILOGW("The capJson does not have a cupsOptions attribute.");
         return E_PRINT_INVALID_PARAMETER;
     }
@@ -1075,7 +1077,7 @@ int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, Pr
 
 std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap, Json::Value &capOpt)
 {
-    if (capOpt.isMember("defaultPageSizeId") && capOpt["defaultPageSizeId"].isString()) {
+    if (PrintJsonUtil::IsMember(capOpt, "defaultPageSizeId") && capOpt["defaultPageSizeId"].isString()) {
         return capOpt["defaultPageSizeId"].asString();
     }
     std::vector<PrintPageSize> supportedPageSize;
@@ -1094,7 +1096,8 @@ std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap
 int32_t PrintSystemData::ParseDefaultOrientation(const PrinterCapability &cap, Json::Value &capOpt)
 {
     int32_t defaultOrientation = 0;
-    if (capOpt.isMember("orientation-requested-default") && capOpt["orientation-requested-default"].isString()) {
+    if (PrintJsonUtil::IsMember(capOpt, "orientation-requested-default") &&
+        capOpt["orientation-requested-default"].isString()) {
         PrintUtil::ConvertToInt(capOpt["orientation-requested-default"].asString(), defaultOrientation);
     }
     return defaultOrientation;
@@ -1102,7 +1105,7 @@ int32_t PrintSystemData::ParseDefaultOrientation(const PrinterCapability &cap, J
 
 int32_t PrintSystemData::ParseDefaultDuplexMode(const PrinterCapability &cap, Json::Value &capOpt)
 {
-    if (capOpt.isMember("sides-default") && capOpt["sides-default"].isString()) {
+    if (PrintJsonUtil::IsMember(capOpt, "sides-default") && capOpt["sides-default"].isString()) {
         int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
         PrintUtil::ConvertToInt(capOpt["sides-default"].asString(), defaultDuplexMode);
         return defaultDuplexMode;
@@ -1122,7 +1125,7 @@ int32_t PrintSystemData::ParseDefaultDuplexMode(const PrinterCapability &cap, Js
 
 int32_t PrintSystemData::ParseDefaultPrintQuality(const PrinterCapability &cap, Json::Value &capOpt)
 {
-    if (capOpt.isMember("print-quality-default") && capOpt["print-quality-default"].isString()) {
+    if (PrintJsonUtil::IsMember(capOpt, "print-quality-default") && capOpt["print-quality-default"].isString()) {
         int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
         PrintUtil::ConvertToInt(capOpt["print-quality-default"].asString(), defaultPrintQuality);
         return defaultPrintQuality;
@@ -1142,7 +1145,7 @@ int32_t PrintSystemData::ParseDefaultPrintQuality(const PrinterCapability &cap, 
 
 std::string PrintSystemData::ParseDefaultMediaType(const PrinterCapability &cap, Json::Value &capOpt)
 {
-    if (capOpt.isMember("media-type-default") && capOpt["media-type-default"].isString()) {
+    if (PrintJsonUtil::IsMember(capOpt, "media-type-default") && capOpt["media-type-default"].isString()) {
         return capOpt["media-type-default"].asString();
     }
     std::vector<std::string> supportedMediaTypeList;

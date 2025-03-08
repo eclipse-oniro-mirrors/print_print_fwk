@@ -25,10 +25,23 @@ namespace OHOS::Print {
 
 class PrintJsonUtil {
 public:
+    static bool IsMember(const Json::Value &jsonObject, const std::string &key);
     static bool Parse(const std::string &root, Json::Value &jsonObject);
     static bool ParseFromStream(Json::IStream &ifs, Json::Value &jsonObject);
-    static std::string WriteString(Json::Value &jsonObject);
+    static std::string WriteString(const Json::Value &jsonObject);
+    static std::string WriteStringUTF8(const Json::Value &jsonObject);
 };
+
+/*
+ Json::Value 非object对象直接调用isMember会程序崩溃
+ */
+inline bool PrintJsonUtil::IsMember(const Json::Value &jsonObject, const std::string &key)
+{
+    if (jsonObject.isObject() || jsonObject.isNull()) {
+        return jsonObject.isMember(key);
+    }
+    return false;
+}
 
 /*
 简单string对象，不包含数组，或者对象格式，使用此方法转换
@@ -63,10 +76,18 @@ inline bool PrintJsonUtil::ParseFromStream(Json::IStream &ifs, Json::Value &json
     return true;
 }
 
-inline std::string PrintJsonUtil::WriteString(Json::Value &jsonObject)
+inline std::string PrintJsonUtil::WriteString(const Json::Value &jsonObject)
 {
     static Json::StreamWriterBuilder wBuilder;
     wBuilder["indentation"] = "";
+    return Json::writeString(wBuilder, jsonObject);
+}
+
+inline std::string PrintJsonUtil::WriteStringUTF8(const Json::Value &jsonObject)
+{
+    static Json::StreamWriterBuilder wBuilder;
+    wBuilder["indentation"] = "";
+    wBuilder["emitUTF8"] = true;
     return Json::writeString(wBuilder, jsonObject);
 }
 }

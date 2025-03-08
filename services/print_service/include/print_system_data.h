@@ -124,7 +124,7 @@ private:
                                      void (PrinterCapability::*setter)(const std::vector <T> &),
                                      std::function<bool(const Json::Value &, T &)> converter)
     {
-        if (!capsJson.isMember(key) || !capsJson[key].isArray()) {
+        if (!PrintJsonUtil::IsMember(capsJson, key) || !capsJson[key].isArray()) {
             PRINT_HILOGW("Cannot find %{public}s or it's not an array", key.c_str());
             return true;
         }

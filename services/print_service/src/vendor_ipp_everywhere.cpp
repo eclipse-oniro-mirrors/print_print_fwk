@@ -216,12 +216,12 @@ std::shared_ptr<PrinterInfo> VendorIppEveryWhere::ConvertCapabilityToInfo(const 
         PRINT_HILOGW("invalid option");
         return nullptr;
     }
-    if (!capJson.isMember("printerName") || !capJson["printerName"].isString()) {
+    if (!PrintJsonUtil::IsMember(capJson, "printerName") || !capJson["printerName"].isString()) {
         PRINT_HILOGW("printerName invalid");
         return nullptr;
     }
     std::string printerName = capJson["printerName"].asString();
-    if (!capJson.isMember("make") || !capJson["make"].isString()) {
+    if (!PrintJsonUtil::IsMember(capJson, "make") || !capJson["make"].isString()) {
         PRINT_HILOGW("make invalid");
         return nullptr;
     }

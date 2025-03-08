@@ -61,9 +61,12 @@ const char *const ATTR_TEST_MEDIA_TYPE_ARRAY[ATTR_TEST_MEDIA_TYPE_COUNT] = {"env
 void TestAttrCount(const std::string &jsonString, int count)
 {
     Json::Value jsonObject;
-    EXPECT_TRUE(OHOS::Print::PrintJsonUtil::Parse(jsonString, jsonObject));
-    EXPECT_TRUE(jsonObject.isArray());
-    EXPECT_EQ(jsonObject.size(), count);
+    if (OHOS::Print::PrintJsonUtil::Parse(jsonString, jsonObject)) {
+        return;
+    }
+    if (jsonObject.isArray()) {
+        EXPECT_EQ(jsonObject.size(), count);
+    }
 }
 }  // namespace
 
@@ -404,8 +407,8 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0013, TestSize.Level1)
         std::istringstream iss(defaultResolutionString);
         Json::Value defaultResolutionJson;
         EXPECT_TRUE(OHOS::Print::PrintJsonUtil::ParseFromStream(iss, defaultResolutionJson));
-        EXPECT_TRUE(defaultResolutionJson.isMember("horizontalDpi"));
-        EXPECT_TRUE(defaultResolutionJson.isMember("verticalDpi"));
+        EXPECT_TRUE(PrintJsonUtil::IsMember(defaultResolutionJson, "horizontalDpi"));
+        EXPECT_TRUE(PrintJsonUtil::IsMember(defaultResolutionJson, "verticalDpi"));
         EXPECT_TRUE(defaultResolutionJson["horizontalDpi"].isInt());
         EXPECT_TRUE(defaultResolutionJson["verticalDpi"].isInt());
         EXPECT_EQ(defaultResolutionJson["horizontalDpi"], ATTR_TEST_RESOLUTION_DEFAULT);

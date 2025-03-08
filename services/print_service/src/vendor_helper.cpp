@@ -422,10 +422,11 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
         if (discoveryItem->printerUuid != nullptr) {
             option["printer-uuid"] = std::string(discoveryItem->printerUuid);
         }
-        Json::Value detailInfo;
-        std::istringstream iss(std::string(discoveryItem->detailInfo));
-        if (discoveryItem->detailInfo != nullptr && PrintJsonUtil::ParseFromStream(iss, detailInfo)) {
-            if (!detailInfo.isNull() && detailInfo.isMember("bsunidriver_support") &&
+        if (discoveryItem->detailInfo != nullptr) {
+            Json::Value detailInfo;
+            std::istringstream iss(std::string(discoveryItem->detailInfo));
+            if (PrintJsonUtil::ParseFromStream(iss, detailInfo) && !detailInfo.isNull()
+                && detailInfo.isMember("bsunidriver_support") &&
                 detailInfo["bsunidriver_support"].isString()) {
                 option["bsunidriverSupport"] = detailInfo["bsunidriver_support"].asString();
             }
