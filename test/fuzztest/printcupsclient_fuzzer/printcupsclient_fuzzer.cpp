@@ -47,7 +47,7 @@ void TestAddPrinterToCups(const uint8_t *data, size_t size, FuzzedDataProvider *
     std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string printerMake = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintCupsClient::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
-    PrintCupsClient::GetInstance()->JobCompleteCallback();
+    PrintCupsClient::GetInstance()->JobSentCallback();
 }
 
 void TestQueryPrinterAttributesByUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -242,7 +242,6 @@ void TestStartMonitor(const uint8_t *data, size_t size, FuzzedDataProvider *data
     JobMonitorParam param;
     param.serviceAbility = PrintServiceAbility::GetInstance();
     param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
     param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     param.printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -254,7 +253,6 @@ void TestJobStatusCallback(const uint8_t *data, size_t size, FuzzedDataProvider 
 {
     JobMonitorParam param;
     param.serviceAbility = PrintServiceAbility::GetInstance();
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
     param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -272,7 +270,6 @@ void TestIfContinueToHandleJobState(const uint8_t *data, size_t size, FuzzedData
     JobMonitorParam param;
     param.serviceAbility = PrintServiceAbility::GetInstance();
     param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
     param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     param.printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -288,7 +285,6 @@ void TestQueryJobState(const uint8_t *data, size_t size, FuzzedDataProvider *dat
 {
     JobMonitorParam param;
     param.serviceAbility = PrintServiceAbility::GetInstance();
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
     param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -306,7 +302,6 @@ void TestIsPrinterStopped(const uint8_t *data, size_t size, FuzzedDataProvider *
     JobMonitorParam param;
     param.serviceAbility = PrintServiceAbility::GetInstance();
     param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
     param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     param.printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -322,7 +317,6 @@ void TestBuildMonitorPolicy(const uint8_t *data, size_t size, FuzzedDataProvider
 {
     JobMonitorParam param;
     param.serviceAbility = PrintServiceAbility::GetInstance();
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
     param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -340,7 +334,6 @@ void TestParseStateReasons(const uint8_t *data, size_t size, FuzzedDataProvider 
     JobMonitorParam param;
     param.serviceAbility = PrintServiceAbility::GetInstance();
     param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
     param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     param.printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -356,7 +349,6 @@ void TestGetBlockedAndUpdateSubstate(const uint8_t *data, size_t size, FuzzedDat
 {
     JobMonitorParam param;
     param.serviceAbility = PrintServiceAbility::GetInstance();
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
     param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);

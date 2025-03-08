@@ -368,8 +368,21 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0018, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019, TestSize.Level1)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
-    printCupsClient->JobCompleteCallback();
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    PrintJob testJob;
+    testJob.SetJobId(GetDefaultJobId());
+    std::vector<uint32_t> files = {1};
+    testJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId("pgid-1234");
+    testJob.SetPageSize(pageSize);
+    testJob.SetPrinterId("printid-1234");
+    testJob.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient->BuildJobParameters(testJob);
+    printCupsClient->JobSentCallback(); // currentJob_ is null, do nothing
+    printCupsClient->currentJob_ = jobParams;
+    printCupsClient->JobSentCallback(); // clear currentJob_
+    EXPECT_EQ(printCupsClient->currentJob_, nullptr);
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 }
 
 /**
@@ -785,6 +798,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0048, TestSize.Level1)
     JobMonitorParam *param = new (std::nothrow) JobMonitorParam {PrintServiceAbility::GetInstance(),
         TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr};
     EXPECT_TRUE(printCupsClient.IfContinueToHandleJobState(param));
+    param->isCanceled = true;
+    EXPECT_FALSE(printCupsClient.IfContinueToHandleJobState(param));
     delete param;
 }
 
@@ -1118,28 +1133,15 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0061, TestSize.Level1)
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0062, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    std::string serviceJobId = "1";
-    PrintJob testJob;
-    testJob.SetJobId(GetDefaultJobId());
-    std::vector<uint32_t> files = {1};
-    testJob.SetFdList(files);
-    OHOS::Print::PrintPageSize pageSize;
-    pageSize.SetId("pgid-1234");
-    testJob.SetPageSize(pageSize);
-    testJob.SetPrinterId("printid-1234");
-    testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
-    PrintJob testJob2;
-    testJob2.SetJobId(serviceJobId);
-    testJob2.SetFdList(files);
-    testJob2.SetPageSize(pageSize);
-    testJob2.SetPrinterId("printid-1234");
-    testJob2.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams2 = printCupsClient.BuildJobParameters(testJob2);
-    printCupsClient.currentJob_ = jobParams2;
-    printCupsClient.CancelCupsJob(serviceJobId);
-    delete jobParams;
+    std::string serviceJobId = TEST_SERVICE_JOB_ID;
+    JobMonitorParam *param = new (std::nothrow) JobMonitorParam {PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr};
+    printCupsClient.jobMonitorList_ = std::vector<JobMonitorParam*> (1, param);
+    printCupsClient.CancelCupsJob("invalidId");
+    EXPECT_FALSE(param->isCanceled);
+    printCupsClient.CancelCupsJob(TEST_SERVICE_JOB_ID);
+    EXPECT_TRUE(param->isCanceled);
+    delete param;
 }
 
 /**

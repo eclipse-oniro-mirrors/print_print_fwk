@@ -65,13 +65,13 @@ struct JobStatus {
     char job_state_reasons[1024];
 };
 struct JobMonitorParam {
-    PrintServiceAbility *serviceAbility;
+    PrintServiceAbility *serviceAbility = nullptr;
     std::string serviceJobId;
-    int cupsJobId;
+    int cupsJobId = 0;
     std::string printerUri;
     std::string printerName;
     std::string printerId;
-    http_t *http;
+    http_t *http = nullptr;
 
     StatePolicy policyArray[16] = {};
     ipp_jstate_t job_state = IPP_JOB_PENDING;
@@ -82,10 +82,11 @@ struct JobMonitorParam {
     bool isBlock = false;
     uint32_t substate = 0;
     bool isPrinterStopped = false;
+    bool isCanceled = false;
 
     ~JobMonitorParam()
     {
-        httpClose(http);
+        if (http != nullptr) { httpClose(http); }
     }
 };
 struct MediaSize {
@@ -168,7 +169,7 @@ private:
     int32_t StartCupsdService();
     JobParameters *GetNextJob();
     void StartNextJob();
-    void JobCompleteCallback();
+    void JobSentCallback();
 
     void UpdateBorderlessJobParameter(json& optionJson, JobParameters *params);
     void UpdateJobParameterByOption(json& optionJson, JobParameters *params);
