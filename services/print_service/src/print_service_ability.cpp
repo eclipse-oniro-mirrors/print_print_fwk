@@ -2643,11 +2643,11 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
     }
     bool mdnsPrinter = printerId.find("mdns") != string::npos;
     const uint32_t waitTime = 1000;
-    JobMonitorParam monitorParam{ nullptr, "", 0, printerUri, "", printerId };
+    auto monitorParam = std::make_shared<JobMonitorParam>(nullptr, "", 0, printerUri, "", printerId, nullptr);
     PRINT_HILOGD("printerid is %{public}s, printer type is %{public}d", printerId.c_str(), mdnsPrinter);
     // 连接类型为mdns且为spooler显示的已经连接的打印机才判断是否离线
     if (!printerUri.empty() && mdnsPrinter &&
-        DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterOnline(&monitorParam, waitTime)) {
+        DelayedSingleton<PrintCupsClient>::GetInstance()->CheckPrinterOnline(monitorParam, waitTime)) {
         PRINT_HILOGD("printer is online, do not remove.");
         return E_PRINT_INVALID_PRINTER;
     }

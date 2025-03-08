@@ -170,10 +170,10 @@ void TestDeletePrinterFromCups(const uint8_t *data, size_t size, FuzzedDataProvi
 
 void TestCheckPrinterOnline(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    JobMonitorParam monitorParam;
-    monitorParam.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    monitorParam.printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintCupsClient::GetInstance()->CheckPrinterOnline(&monitorParam);
+    auto monitorParams = std::make_shared<JobMonitorParam>();
+    monitorParams->printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintCupsClient::GetInstance()->CheckPrinterOnline(monitorParams);
 }
 
 void TestGetIpAddress(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -239,130 +239,130 @@ void TestCheckPrinterDriverExist(const uint8_t *data, size_t size, FuzzedDataPro
 
 void TestStartMonitor(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    JobMonitorParam param;
-    param.serviceAbility = PrintServiceAbility::GetInstance();
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
-    param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintCupsClient::GetInstance()->StartMonitor(&param);
+    auto monitorParams = std::make_shared<JobMonitorParam>();
+    monitorParams->serviceAbility = PrintServiceAbility::GetInstance();
+    monitorParams->serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
+    monitorParams->printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintCupsClient::GetInstance()->StartMonitor();
 }
 
 void TestJobStatusCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    JobMonitorParam param;
-    param.serviceAbility = PrintServiceAbility::GetInstance();
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
-    param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto monitorParams = std::make_shared<JobMonitorParam>();
+    monitorParams->serviceAbility = PrintServiceAbility::GetInstance();
+    monitorParams->serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
+    monitorParams->printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string job_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_state_reasons.copy(param.job_state_reasons, job_state_reasons.length() + 1);
+    job_state_reasons.copy(monitorParams->job_state_reasons, job_state_reasons.length() + 1);
     std::string job_printer_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_printer_state_reasons.copy(param.job_printer_state_reasons, job_printer_state_reasons.length() + 1);
-    PrintCupsClient::GetInstance()->JobStatusCallback(&param);
+    job_printer_state_reasons.copy(monitorParams->job_printer_state_reasons, job_printer_state_reasons.length() + 1);
+    PrintCupsClient::GetInstance()->JobStatusCallback(monitorParams);
 }
 
 void TestIfContinueToHandleJobState(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    JobMonitorParam param;
-    param.serviceAbility = PrintServiceAbility::GetInstance();
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
-    param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto monitorParams = std::make_shared<JobMonitorParam>();
+    monitorParams->serviceAbility = PrintServiceAbility::GetInstance();
+    monitorParams->serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
+    monitorParams->printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string job_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_state_reasons.copy(param.job_state_reasons, job_state_reasons.length() + 1);
+    job_state_reasons.copy(monitorParams->job_state_reasons, job_state_reasons.length() + 1);
     std::string job_printer_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_printer_state_reasons.copy(param.job_printer_state_reasons, job_printer_state_reasons.length() + 1);
-    PrintCupsClient::GetInstance()->IfContinueToHandleJobState(&param);
+    job_printer_state_reasons.copy(monitorParams->job_printer_state_reasons, job_printer_state_reasons.length() + 1);
+    PrintCupsClient::GetInstance()->IfContinueToHandleJobState(monitorParams);
 }
 
 void TestQueryJobState(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    JobMonitorParam param;
-    param.serviceAbility = PrintServiceAbility::GetInstance();
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
-    param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto monitorParams = std::make_shared<JobMonitorParam>();
+    monitorParams->serviceAbility = PrintServiceAbility::GetInstance();
+    monitorParams->serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
+    monitorParams->printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string job_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_state_reasons.copy(param.job_state_reasons, job_state_reasons.length() + 1);
+    job_state_reasons.copy(monitorParams->job_state_reasons, job_state_reasons.length() + 1);
     std::string job_printer_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_printer_state_reasons.copy(param.job_printer_state_reasons, job_printer_state_reasons.length() + 1);
-    PrintCupsClient::GetInstance()->QueryJobState(param.http, &param);
+    job_printer_state_reasons.copy(monitorParams->job_printer_state_reasons, job_printer_state_reasons.length() + 1);
+    PrintCupsClient::GetInstance()->QueryJobState(monitorParams->http, monitorParams);
 }
 
 void TestIsPrinterStopped(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    JobMonitorParam param;
-    param.serviceAbility = PrintServiceAbility::GetInstance();
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
-    param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto monitorParams = std::make_shared<JobMonitorParam>();
+    monitorParams->serviceAbility = PrintServiceAbility::GetInstance();
+    monitorParams->serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
+    monitorParams->printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string job_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_state_reasons.copy(param.job_state_reasons, job_state_reasons.length() + 1);
+    job_state_reasons.copy(monitorParams->job_state_reasons, job_state_reasons.length() + 1);
     std::string job_printer_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_printer_state_reasons.copy(param.job_printer_state_reasons, job_printer_state_reasons.length() + 1);
-    PrintCupsClient::GetInstance()->IsPrinterStopped(&param);
+    job_printer_state_reasons.copy(monitorParams->job_printer_state_reasons, job_printer_state_reasons.length() + 1);
+    PrintCupsClient::GetInstance()->IsPrinterStopped(monitorParams);
 }
 
 void TestBuildMonitorPolicy(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    JobMonitorParam param;
-    param.serviceAbility = PrintServiceAbility::GetInstance();
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
-    param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto monitorParams = std::make_shared<JobMonitorParam>();
+    monitorParams->serviceAbility = PrintServiceAbility::GetInstance();
+    monitorParams->serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
+    monitorParams->printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string job_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_state_reasons.copy(param.job_state_reasons, job_state_reasons.length() + 1);
+    job_state_reasons.copy(monitorParams->job_state_reasons, job_state_reasons.length() + 1);
     std::string job_printer_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_printer_state_reasons.copy(param.job_printer_state_reasons, job_printer_state_reasons.length() + 1);
-    PrintCupsClient::GetInstance()->BuildMonitorPolicy(&param);
+    job_printer_state_reasons.copy(monitorParams->job_printer_state_reasons, job_printer_state_reasons.length() + 1);
+    PrintCupsClient::GetInstance()->BuildMonitorPolicy(monitorParams);
 }
 
 void TestParseStateReasons(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    JobMonitorParam param;
-    param.serviceAbility = PrintServiceAbility::GetInstance();
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
-    param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto monitorParams = std::make_shared<JobMonitorParam>();
+    monitorParams->serviceAbility = PrintServiceAbility::GetInstance();
+    monitorParams->serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
+    monitorParams->printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string job_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_state_reasons.copy(param.job_state_reasons, job_state_reasons.length() + 1);
+    job_state_reasons.copy(monitorParams->job_state_reasons, job_state_reasons.length() + 1);
     std::string job_printer_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_printer_state_reasons.copy(param.job_printer_state_reasons, job_printer_state_reasons.length() + 1);
-    PrintCupsClient::GetInstance()->ParseStateReasons(&param);
+    job_printer_state_reasons.copy(monitorParams->job_printer_state_reasons, job_printer_state_reasons.length() + 1);
+    PrintCupsClient::GetInstance()->ParseStateReasons(monitorParams);
 }
 
 void TestGetBlockedAndUpdateSubstate(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    JobMonitorParam param;
-    param.serviceAbility = PrintServiceAbility::GetInstance();
-    param.serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
-    param.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    param.printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto monitorParams = std::make_shared<JobMonitorParam>();
+    monitorParams->serviceAbility = PrintServiceAbility::GetInstance();
+    monitorParams->serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
+    monitorParams->printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    monitorParams->printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string job_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_state_reasons.copy(param.job_state_reasons, job_state_reasons.length() + 1);
+    job_state_reasons.copy(monitorParams->job_state_reasons, job_state_reasons.length() + 1);
     std::string job_printer_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_printer_state_reasons.copy(param.job_printer_state_reasons, job_printer_state_reasons.length() + 1);
+    job_printer_state_reasons.copy(monitorParams->job_printer_state_reasons, job_printer_state_reasons.length() + 1);
     StatePolicy policy = (StatePolicy)dataProvider->ConsumeIntegralInRange<unsigned int>(0, POLICY_ENUM_MAX);
     std::string substateString = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintJobSubState jobSubstate = (PrintJobSubState)dataProvider->
         ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
-    PrintCupsClient::GetInstance()->GetBlockedAndUpdateSubstate(&param, policy, substateString, jobSubstate);
+    PrintCupsClient::GetInstance()->GetBlockedAndUpdateSubstate(monitorParams, policy, substateString, jobSubstate);
 }
 
 void TestGetNewSubstate(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
