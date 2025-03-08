@@ -548,14 +548,15 @@ int32_t PrintServiceProxy::StartNativePrintJob(PrintJob &printJob)
     return ret;
 }
 
-int32_t PrintServiceProxy::SetPrinterPreference(const std::string &printerId, const std::string &printerPreference)
+int32_t PrintServiceProxy::SetPrinterPreference(
+    const std::string &printerId, const PrinterPreferences &printerPreference)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
-    data.WriteString(printerPreference);
+    printerPreference.Marshalling(data);
     PRINT_HILOGI("PrintServiceProxy SetPrinterPreference started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {

@@ -163,5 +163,44 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0014, TestSize.Level1)
     Json::Value preferencesJson = preferences.ConvertToJson();
     EXPECT_EQ(true, preferencesJson.isMember("options"));
 }
+
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0015, TestSize.Level1)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    Json::Value preferencesJson;
+    preferences.ConvertJsonToPrinterPreferences(preferencesJson);
+    EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
+}
+
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0016, TestSize.Level1)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    Json::Value preferencesJson;
+    preferencesJson["defaultPageSizeId"] = 123;
+    preferencesJson["defaultOrientation"] = "123";
+    preferencesJson["defaultDuplexMode"] = "123";
+    preferencesJson["defaultPrintQuality"] = "123";
+    preferencesJson["defaultMediaType"] = 123;
+    preferencesJson["borderless"] = "123";
+    preferencesJson["options"] = "123";
+    preferences.ConvertJsonToPrinterPreferences(preferencesJson);
+    EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
+}
+
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0017, TestSize.Level1)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    Json::Value preferencesJson;
+    preferencesJson["defaultPageSizeId"] = "123";
+    preferencesJson["defaultOrientation"] = 123;
+    preferencesJson["defaultDuplexMode"] = 123;
+    preferencesJson["defaultPrintQuality"] = 123;
+    preferencesJson["defaultMediaType"] = "123";
+    preferencesJson["borderless"] = true;
+    Json::Value optionJson;
+    preferencesJson["options"] = optionJson;
+    preferences.ConvertJsonToPrinterPreferences(preferencesJson);
+    EXPECT_EQ(preferences.HasDefaultDuplexMode(), true);
+}
 } // namespace Print
 } // namespace OHOS

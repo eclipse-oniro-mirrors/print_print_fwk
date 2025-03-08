@@ -94,9 +94,8 @@ void PrintSystemData::ConvertInnerJsonToCupsPrinterInfo(Json::Value &object, Cup
     if (object.isMember("printerStatus") && object["printerStatus"].isInt()) {
         info.printerStatus = static_cast<PrinterStatus>(object["printerStatus"].asInt());
     }
-    PrinterPreferences preferences;
     if (object.isMember("preferences") && object["preferences"].isObject()) {
-        ConvertJsonToPrinterPreferences(object["preferences"], info.printPreferences);
+        info.printPreferences.ConvertJsonToPrinterPreferences(object["preferences"]);
         PRINT_HILOGI("convert json to printer preferences success");
     }
 }
@@ -284,6 +283,9 @@ void PrintSystemData::InsertCupsPrinter(const std::string &printerId, const Cups
         info->maker = printerInfo.maker;
         info->printerStatus = printerInfo.printerStatus;
         info->printerCapability = printerInfo.printerCapability;
+        if (!printerInfo.alias.empty()) {
+            info->alias = printerInfo.alias;
+        }
         info->printPreferences = printerInfo.printPreferences;
     }
 }
@@ -431,7 +433,7 @@ void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &print
     }
 }
 
-void PrintSystemData::UpdatePrinterPreferences(const std::string &printerId, PrinterPreferences &preferences)
+void PrintSystemData::UpdatePrinterPreferences(const std::string &printerId, const PrinterPreferences &preferences)
 {
     auto info = addedPrinterMap_.Find(printerId);
     if (info != nullptr) {
@@ -787,39 +789,6 @@ bool PrintSystemData::ConvertJsonToPrintMargin(Json::Value &capsJson, PrinterCap
     printerCapability.SetMinMargin(minMargin);
     PRINT_HILOGD("ProcessJsonToCapabilityList success, key is minMargin");
     return true;
-}
-
-void PrintSystemData::ConvertJsonToPrinterPreferences(Json::Value &preferencesJson, PrinterPreferences &preferences)
-{
-    if (preferencesJson.isMember("defaultDuplexMode") && preferencesJson["defaultDuplexMode"].isInt()) {
-        preferences.SetDefaultDuplexMode(preferencesJson["defaultDuplexMode"].asInt());
-    }
-
-    if (preferencesJson.isMember("defaultPrintQuality") && preferencesJson["defaultPrintQuality"].isInt()) {
-        preferences.SetDefaultPrintQuality(preferencesJson["defaultPrintQuality"].asInt());
-    }
-
-    if (preferencesJson.isMember("defaultMediaType") && preferencesJson["defaultMediaType"].isString()) {
-        preferences.SetDefaultMediaType(preferencesJson["defaultMediaType"].asString());
-    }
-
-    if (preferencesJson.isMember("defaultPageSizeId") && preferencesJson["defaultPageSizeId"].isString()) {
-        preferences.SetDefaultPageSizeId(preferencesJson["defaultPageSizeId"].asString());
-    }
-
-    if (preferencesJson.isMember("defaultOrientation") && preferencesJson["defaultOrientation"].isInt()) {
-        preferences.SetDefaultOrientation(preferencesJson["defaultOrientation"].asInt());
-    }
-
-    if (preferencesJson.isMember("borderless") && preferencesJson["borderless"].isBool()) {
-        preferences.SetBorderless(preferencesJson["borderless"].asBool());
-    }
-
-    if (preferencesJson.isMember("options") && preferencesJson["options"].isObject()) {
-        PRINT_HILOGD("find options");
-        preferences.SetOption(PrintJsonUtil::WriteString(preferencesJson["options"]));
-    }
-    preferences.Dump();
 }
 
 bool PrintSystemData::GetPrinterCapabilityFromSystemData(CupsPrinterInfo &cupsPrinter,

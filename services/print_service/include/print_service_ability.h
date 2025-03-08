@@ -101,7 +101,7 @@ public:
     void CancelUserPrintJobs(const int32_t userId);
     void NotifyCurrentUserChanged(const int32_t userId);
     int32_t NotifyPrintServiceEvent(std::string &jobId, uint32_t event) override;
-    int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference) override;
+    int32_t SetPrinterPreference(const std::string &printerId, const PrinterPreferences &preferences) override;
     int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) override;
     int32_t DeletePrinterFromCups(const std::string &printerName) override;
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers) override;
@@ -170,7 +170,6 @@ private:
     void NotifyAppDeletePrinter(const std::string &printerId);
     void ChangeDefaultPrinterForDelete(std::shared_ptr<PrintUserData> &userData, const std::string &printerId);
     bool UpdatePrinterCapability(const std::string &printerId, const PrinterInfo &info);
-    bool UpdatePrinterSystemData(const PrinterInfo &info);
     uint32_t GetListeningState(const uint32_t subState);
     uint32_t GetListeningState(uint32_t state, uint32_t subState);
     bool CheckPrintJob(PrintJob &jobInfo);

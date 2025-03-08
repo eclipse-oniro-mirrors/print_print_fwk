@@ -25,6 +25,7 @@
 #include "print_task.h"
 #include "iprint_adapter_inner.h"
 #include "printer_info_helper.h"
+#include "printer_preferences_helper.h"
 
 namespace OHOS::Print {
 const std::string PRINTER_EVENT_TYPE = "printerStateChange";
@@ -506,19 +507,19 @@ napi_value NapiInnerPrint::SetPrinterPreference(napi_env env, napi_callback_info
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[0], &valuetype), napi_invalid_arg);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[1], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerPreference is not a string", napi_string_expected);
-        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
-        std::string printerPreference = NapiPrintUtils::GetStringFromValueUtf8(env, argv[1]);
-        if (printerPreference == "") {
-            PRINT_HILOGE("Parse error!");
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_object, "printerPreference is not an object", napi_string_expected);
+        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        auto preferencesPtr = PrinterPreferencesHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ONE]);
+        if (preferencesPtr == nullptr) {
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            PRINT_HILOGE("printerPreference format error!");
             return napi_invalid_arg;
         }
         context->printerId = printerId;
-        context->printerPreference = printerPreference;
+        context->printerPreference = *preferencesPtr;
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
@@ -738,11 +739,6 @@ napi_value NapiInnerPrint::NotifyPrintService(napi_env env, napi_callback_info i
 napi_value NapiInnerPrint::QueryAddedPrinter(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter QueryAddedPrinter---->");
-    if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
-        PRINT_HILOGE("Non-system applications use system APIS!");
-        NapiThrowError(env, E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
-        return nullptr;
-    }
     auto context = std::make_shared<InnerPrintContext>();
     auto input =
         [context](

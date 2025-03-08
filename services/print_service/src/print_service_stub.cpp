@@ -296,8 +296,14 @@ bool PrintServiceStub::OnSetPrinterPreference(MessageParcel &data, MessageParcel
 {
     PRINT_HILOGI("PrintServiceStub::OnSetPrinterPreference in");
     std::string printerId = data.ReadString();
-    std::string printPreference = data.ReadString();
-    int32_t ret = SetPrinterPreference(printerId, printPreference);
+    auto preferencesPtr = PrinterPreferences::Unmarshalling(data);
+    if (preferencesPtr == nullptr) {
+        PRINT_HILOGE("Failed to unmarshall printer preferences");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+
+    int32_t ret = SetPrinterPreference(printerId, *preferencesPtr);
     reply.WriteInt32(ret);
     return ret == E_PRINT_NONE;
 }
