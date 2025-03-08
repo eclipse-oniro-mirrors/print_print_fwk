@@ -2611,7 +2611,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0153, TestSize.Level1)
 {
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     std::string printerId = "printId-123";
-    std::string printPreference = "";
+    PrinterPreferences printPreference;
     int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(printerId, printPreference);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }

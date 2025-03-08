@@ -168,7 +168,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0015, TestSize.Level1)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson;
-    preferences.ConvertJsonToPrinterPreferences(preferencesJson, preferences);
+    preferences.ConvertJsonToPrinterPreferences(preferencesJson);
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
 }
 
@@ -183,7 +183,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0016, TestSize.Level1)
     preferencesJson["defaultMediaType"] = 123;
     preferencesJson["borderless"] = "123";
     preferencesJson["options"] = "123";
-    preferences.ConvertJsonToPrinterPreferences(preferencesJson, preferences);
+    preferences.ConvertJsonToPrinterPreferences(preferencesJson);
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
 }
 
@@ -199,7 +199,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0017, TestSize.Level1)
     preferencesJson["borderless"] = true;
     Json::Value optionJson;
     preferencesJson["options"] = optionJson;
-    preferences.ConvertJsonToPrinterPreferences(preferencesJson, preferences);
+    preferences.ConvertJsonToPrinterPreferences(preferencesJson);
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), true);
 }
 } // namespace Print
