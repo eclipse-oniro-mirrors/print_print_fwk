@@ -59,6 +59,8 @@ public:
 
     void SetPreferences(const PrinterPreferences &preferences);
 
+    void SetAlias(const std::string &alias);
+
     [[nodiscard]] const std::string &GetPrinterId() const;
 
     [[nodiscard]] const std::string &GetPrinterName() const;
@@ -109,6 +111,10 @@ public:
 
     void GetPreferences(PrinterPreferences &preferences) const;
 
+    [[nodiscard]] bool HasAlias() const;
+
+    [[nodiscard]] std::string GetAlias() const;
+
     virtual bool Marshalling(Parcel &parcel) const override;
 
     static std::shared_ptr<PrinterInfo> Unmarshalling(Parcel &parcel);
@@ -158,6 +164,10 @@ private:
     bool hasPreferences_;
 
     PrinterPreferences preferences_;
+
+    bool hasAlias_;
+
+    std::string alias_;
 
     bool hasOption_;
 

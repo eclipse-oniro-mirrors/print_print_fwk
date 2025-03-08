@@ -28,6 +28,7 @@
 #include "printer_info.h"
 #include "print_utils.h"
 #include "print_constant.h"
+#include "printer_preferences.h"
 
 namespace OHOS::Print {
 class NapiInnerPrint {
@@ -82,7 +83,7 @@ private:
         std::string printerId = "";
         std::vector<std::string> extensionList;
         uint32_t applicationEvent = -1;
-        std::string printerPreference;
+        PrinterPreferences printerPreference;
         uint32_t defaultPrinterType = -1;
 
         InnerPrintContext() : Context(nullptr, nullptr) {};

@@ -34,6 +34,8 @@ PrinterInfo::PrinterInfo()
       hasPrinterMake_(false),
       printerMake_(""),
       hasPreferences_(false),
+      hasAlias_(false),
+      alias_(""),
       hasOption_(false),
       option_(""),
       hasPrinterUuid_(false),
@@ -65,6 +67,8 @@ PrinterInfo::PrinterInfo(const PrinterInfo &right)
       printerMake_(right.printerMake_),
       hasPreferences_(right.hasPreferences_),
       preferences_(right.preferences_),
+      hasAlias_(right.hasAlias_),
+      alias_(right.alias_),
       hasOption_(right.hasOption_),
       option_(right.option_),
       hasPrinterUuid_(right.hasPrinterUuid_),
@@ -94,6 +98,8 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         printerMake_ = right.printerMake_;
         hasPreferences_ = right.hasPreferences_;
         preferences_ = right.preferences_;
+        hasAlias_ = right.hasAlias_;
+        alias_ = right.alias_;
         hasPrinterUuid_ = right.hasPrinterUuid_,
         printerUuid_ = right.printerUuid_,
         option_ = right.option_;
@@ -158,6 +164,12 @@ void PrinterInfo::SetPreferences(const PrinterPreferences &preferences)
 {
     hasPreferences_ = true;
     preferences_ = preferences;
+}
+
+void PrinterInfo::SetAlias(const std::string &alias)
+{
+    hasAlias_ = true;
+    alias_ = alias;
 }
 
 void PrinterInfo::SetPrinterUuid(const std::string &printerUuid)
@@ -253,6 +265,16 @@ bool PrinterInfo::HasPreferences() const
 void PrinterInfo::GetPreferences(PrinterPreferences &preferences) const
 {
     preferences = preferences_;
+}
+
+bool PrinterInfo::HasAlias() const
+{
+    return hasAlias_;
+}
+
+std::string PrinterInfo::GetAlias() const
+{
+    return alias_;
 }
 
 bool PrinterInfo::HasPrinterUuid() const
@@ -377,6 +399,11 @@ bool PrinterInfo::ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel
         right.SetPreferences(*preferencesPtr);
     }
 
+    right.hasAlias_ = parcel.ReadBool();
+    if (right.hasAlias_) {
+        right.SetAlias(parcel.ReadString());
+    }
+
     right.hasOption_ = parcel.ReadBool();
     if (right.hasOption_) {
         right.SetOption(parcel.ReadString());
@@ -448,6 +475,11 @@ void PrinterInfo::MarshallingInnerProperty(Parcel &parcel) const
         preferences_.Marshalling(parcel);
     }
 
+    parcel.WriteBool(hasAlias_);
+    if (hasAlias_) {
+        parcel.WriteString(GetAlias());
+    }
+
     parcel.WriteBool(hasOption_);
     if (hasOption_) {
         parcel.WriteString(GetOption());
@@ -498,6 +530,9 @@ void PrinterInfo::Dump() const
     }
     if (hasPreferences_) {
         preferences_.Dump();
+    }
+    if (hasAlias_) {
+        PRINT_HILOGD("alias: %{private}s", alias_.c_str());
     }
     if (hasPrinterUuid_) {
         PRINT_HILOGD("printerUuid: %{private}s", printerUuid_.c_str());

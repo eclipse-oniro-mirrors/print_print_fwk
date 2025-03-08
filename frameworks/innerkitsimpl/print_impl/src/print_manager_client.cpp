@@ -370,7 +370,8 @@ int32_t PrintManagerClient::StartNativePrintJob(PrintJob &printJob)
     return ret;
 }
 
-int32_t PrintManagerClient::SetPrinterPreference(const std::string &printerId, const std::string &printerPreference)
+int32_t PrintManagerClient::SetPrinterPreference(
+    const std::string &printerId, const PrinterPreferences &printerPreference)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     PRINT_HILOGI("PrintManagerClient SetPrinterPreference start.");

@@ -626,7 +626,9 @@ int32_t PrintServiceAbility::QueryPrinterInfoByPrinterId(const std::string &prin
         option["printerName"] = cupsPrinter.name;
         option["printerUri"] = cupsPrinter.uri; // Deprecated, to be removed in a future version.
         option["make"] = cupsPrinter.maker;     // Deprecated, to be removed in a future version.
-        option["alias"] = cupsPrinter.alias;
+        if (!cupsPrinter.alias.empty()) {
+            info.SetAlias(cupsPrinter.alias);
+        }
         if (!cupsPrinter.uri.empty()) {
             info.SetUri(cupsPrinter.uri);
         }
@@ -782,21 +784,16 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, const std::string &printerSetting)
+int32_t PrintServiceAbility::SetPrinterPreference(
+    const std::string &printerId, const PrinterPreferences &preferences)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    PRINT_HILOGD("printer preferences: %{public}s", printerSetting.c_str());
-    Json::Value preferencesJson;
-    if (!PrintJsonUtil::Parse(printerSetting, preferencesJson)) {
-        PRINT_HILOGE("preferences json accept fail");
-        return E_PRINT_INVALID_PARAMETER;
-    }
-    PrinterPreferences preferences;
-    printSystemData_.ConvertJsonToPrinterPreferences(preferencesJson, preferences);
+    PRINT_HILOGD("SetPrinterPreference begin");
+    preferences.Dump();
     printSystemData_.UpdatePrinterPreferences(printerId, preferences);
     printSystemData_.SavePrinterFile(printerId);
     return E_PRINT_NONE;
@@ -1233,21 +1230,6 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
     }
     PRINT_HILOGD("UpdatePrinters end. Total size is %{private}zd", printSystemData_.GetDiscoveredPrinterCount());
     return E_PRINT_NONE;
-}
-
-bool PrintServiceAbility::UpdatePrinterSystemData(const PrinterInfo &info)
-{
-    std::string option = info.GetOption();
-    Json::Value optionJson;
-    if (PrintJsonUtil::Parse(option, optionJson)) {
-        if (optionJson.isMember("alias") && optionJson["alias"].isString()) {
-            if (printSystemData_.UpdatePrinterAlias(info.GetPrinterId(), optionJson["alias"].asString())) {
-                SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, info);
-                return true;
-            }
-        }
-    }
-    return false;
 }
 
 bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, const PrinterInfo &info)
@@ -2673,12 +2655,40 @@ int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInf
     }
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (!UpdatePrinterSystemData(printerInfo)) {
-        PRINT_HILOGE("UpdatePrinterSystemData failed");
-        return E_PRINT_INVALID_PARAMETER;
+    PRINT_HILOGI("UpdatePrinterInSystem begin");
+    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
+    std::string printerId = printerInfo.GetPrinterId();
+    if (printerId.find(PRINTER_ID_DELIMITER) == std::string::npos) {
+        printerId = PrintUtils::GetGlobalId(extensionId, printerId);
     }
 
-    printSystemData_.SavePrinterFile(printerInfo.GetPrinterId());
+    CupsPrinterInfo cupsPrinter;
+    if (!printSystemData_.QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter)) {
+        PRINT_HILOGE("can not find printer in system");
+        return E_PRINT_INVALID_PRINTER;
+    }
+
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterName(cupsPrinter.name);
+    info.SetUri(cupsPrinter.uri);
+    info.SetPrinterMake(cupsPrinter.maker);
+    info.SetCapability(cupsPrinter.printerCapability);
+    info.SetPreferences(cupsPrinter.printPreferences);
+
+    if (printerInfo.HasAlias()) {
+        info.SetAlias(printerInfo.GetAlias());
+        printSystemData_.UpdatePrinterAlias(printerInfo.GetAlias());
+        printSystemData_.SavePrinterFile(printerId);
+    }
+
+    if (printerInfo.HasOption()) {
+        info.SetOption(printerInfo.GetOption());
+    }
+
+    SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, info);
+    PRINT_HILOGI("UpdatePrinterInSystem end");
     return E_PRINT_NONE;
 }
 
