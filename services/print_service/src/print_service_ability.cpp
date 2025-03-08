@@ -759,7 +759,7 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
         Json::Value opsJson;
         if (printerInfo->HasOption() && PrintJsonUtil::Parse(printerInfo->GetOption(), opsJson)) {
             PRINT_HILOGD("QueryPrinterCapabilityByUri ops : %{public}s.", printerInfo->GetOption().c_str());
-            if (!opsJson.isMember("printerMake") || !opsJson["printerMake"].isString()) {
+            if (!PrintJsonUtil::IsMember(opsJson, "printerMake") || !opsJson["printerMake"].isString()) {
                 PRINT_HILOGW("can not find printerMake");
                 return E_PRINT_INVALID_PRINTER;
             }
@@ -1240,7 +1240,7 @@ bool PrintServiceAbility::UpdatePrinterSystemData(const PrinterInfo &info)
     std::string option = info.GetOption();
     Json::Value optionJson;
     if (PrintJsonUtil::Parse(option, optionJson)) {
-        if (optionJson.isMember("alias") && optionJson["alias"].isString()) {
+        if (PrintJsonUtil::IsMember(optionJson, "alias") && optionJson["alias"].isString()) {
             if (printSystemData_.UpdatePrinterAlias(info.GetPrinterId(), optionJson["alias"].asString())) {
                 SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, info);
                 return true;
@@ -1521,7 +1521,7 @@ int32_t PrintServiceAbility::ReportHisysEvent(
         Json::Value optionJson;
         if (PrintJsonUtil::Parse(option, optionJson)) {
             PRINT_HILOGD("optionJson: %{public}s", (PrintJsonUtil::WriteString(optionJson)).c_str());
-            if (optionJson.isMember("jobDescription") && optionJson["jobDescription"].isString()) {
+            if (PrintJsonUtil::IsMember(optionJson, "jobDescription") && optionJson["jobDescription"].isString()) {
                 jobDescription = optionJson["jobDescription"].asString();
                 PRINT_HILOGI("jobDescription: %{public}s", jobDescription.c_str());
             }
@@ -3301,13 +3301,14 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
         PRINT_HILOGW("invalid params");
         return E_PRINT_INVALID_PRINTER;
     }
-    if (!connectParamJson.isMember("ip") || !connectParamJson["ip"].isString()) {
+    
+    if (!PrintJsonUtil::IsMember(connectParamJson, "ip") || !connectParamJson["ip"].isString()) {
         PRINT_HILOGW("ip missing");
         return E_PRINT_INVALID_PRINTER;
     }
     std::string ip = connectParamJson["ip"].asString();
     std::string protocol = "auto";
-    if (connectParamJson.isMember("protocol") && connectParamJson["protocol"].isString()) {
+    if (PrintJsonUtil::IsMember(connectParamJson, "protocol") && connectParamJson["protocol"].isString()) {
         protocol = connectParamJson["protocol"].asString();
     }
     vendorManager.SetConnectingPrinter(IP_AUTO, ip);

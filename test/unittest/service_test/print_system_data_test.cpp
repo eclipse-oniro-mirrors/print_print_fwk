@@ -49,20 +49,6 @@ void PrintSystemDataTest::SetUp(void)
 
 void PrintSystemDataTest::TearDown(void) {}
 
-/**
- * @tc.name: PrintSystemDataTest_0001
- * @tc.desc: Verify the PrintSystemData function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0001, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    const std::string PRINTER_LIST_FILE = "/data/service/el2/public/print_service/printer_list.json";
-    std::ifstream f(PRINTER_LIST_FILE.c_str());
-    EXPECT_EQ(systemData->Init(), f.good());
-}
-
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0002, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();

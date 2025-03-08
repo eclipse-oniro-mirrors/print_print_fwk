@@ -225,7 +225,7 @@ bool VendorWlanGroup::IsBsunidriverSupport(const std::string &groupPrinterId)
     std::string supportValue;
     Json::Value option;
     if (printerInfo->HasOption() && PrintJsonUtil::Parse(printerInfo->GetOption(), option)) {
-        if (option.isMember("bsunidriverSupport") && option["bsunidriverSupport"].isString()) {
+        if (PrintJsonUtil::IsMember(option, "bsunidriverSupport") && option["bsunidriverSupport"].isString()) {
             supportValue = option["bsunidriverSupport"].asString();
         }
     }

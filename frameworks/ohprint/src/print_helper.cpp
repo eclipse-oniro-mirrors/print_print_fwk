@@ -55,7 +55,7 @@ void AddJsonFieldStringToJsonObject(const Json::Value &cupsOpt, const std::strin
     Json::Value &advancedCapJson)
 {
     PRINT_HILOGD("AddJsonFieldStringToJsonObject %{public}s", keyword.c_str());
-    if (!cupsOpt.isMember(keyword)) {
+    if (!PrintJsonUtil::IsMember(cupsOpt, keyword)) {
         PRINT_HILOGW("missing keyword");
         return;
     }
@@ -76,7 +76,7 @@ void ParseJsonFieldAsArrayOpt(const Json::Value &cupsOpt, const std::string &key
         PRINT_HILOGW("arrayOpteration is null");
         return;
     }
-    if (!cupsOpt.isMember(key)) {
+    if (!PrintJsonUtil::IsMember(cupsOpt, key)) {
         PRINT_HILOGW("key missing");
         return;
     }
@@ -100,7 +100,7 @@ void ParseJsonFieldAsArrayOpt(const Json::Value &cupsOpt, const std::string &key
 
 bool ParseJsonFieldAsInt(const Json::Value &cupsOpt, const std::string &key, int &value)
 {
-    if (!cupsOpt.isMember(key)) {
+    if (!PrintJsonUtil::IsMember(cupsOpt, key)) {
         PRINT_HILOGW("key missing");
         return false;
     }
@@ -303,27 +303,27 @@ void SetNativePrinterInfoFromCap(const OHOS::Print::PrinterCapability &cap, Prin
 
 void ParseMediaOpt(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrinterInfo)
 {
-    if (cupsOpt.isMember("defaultPageSizeId") && cupsOpt["defaultPageSizeId"].isString()) {
+    if (PrintJsonUtil::IsMember(cupsOpt, "defaultPageSizeId") && cupsOpt["defaultPageSizeId"].isString()) {
         std::string defaultPageSizeId = cupsOpt["defaultPageSizeId"].asString();
         PRINT_HILOGD("defaultPageSizeId %{public}s", defaultPageSizeId.c_str());
         nativePrinterInfo.defaultValue.defaultPageSizeId = CopyString(defaultPageSizeId);
     }
-    if (cupsOpt.isMember("media-type-supported") && cupsOpt["media-type-supported"].isString()) {
+    if (PrintJsonUtil::IsMember(cupsOpt, "media-type-supported") && cupsOpt["media-type-supported"].isString()) {
         std::string mediaTypeSupported = cupsOpt["media-type-supported"].asString();
         PRINT_HILOGD("cupsOptionsStr media-type-supported %{public}s", mediaTypeSupported.c_str());
         nativePrinterInfo.capability.supportedMediaTypes = CopyString(mediaTypeSupported);
     }
-    if (cupsOpt.isMember("media-type-default") && cupsOpt["media-type-default"].isString()) {
+    if (PrintJsonUtil::IsMember(cupsOpt, "media-type-default") && cupsOpt["media-type-default"].isString()) {
         std::string mediaTypeDefault = cupsOpt["media-type-default"].asString();
         PRINT_HILOGD("cupsOptionsStr media-type-default %{public}s", mediaTypeDefault.c_str());
         nativePrinterInfo.defaultValue.defaultMediaType = CopyString(mediaTypeDefault);
     }
-    if (cupsOpt.isMember("media-source-default") && cupsOpt["media-source-default"].isString()) {
+    if (PrintJsonUtil::IsMember(cupsOpt, "media-source-default") && cupsOpt["media-source-default"].isString()) {
         std::string mediaSourceDefault = cupsOpt["media-source-default"].asString();
         PRINT_HILOGD("cupsOptionsStr media-source-default %{public}s", mediaSourceDefault.c_str());
         nativePrinterInfo.defaultValue.defaultPaperSource = CopyString(mediaSourceDefault);
     }
-    if (cupsOpt.isMember("media-source-supported") && cupsOpt["media-source-supported"].isString()) {
+    if (PrintJsonUtil::IsMember(cupsOpt, "media-source-supported") && cupsOpt["media-source-supported"].isString()) {
         std::string mediaSourceSupported = cupsOpt["media-source-supported"].asString();
         PRINT_HILOGD("cupsOptionsStr media-source-supported %{public}s", mediaSourceSupported.c_str());
         nativePrinterInfo.capability.supportedPaperSources = CopyString(mediaSourceSupported);
@@ -332,7 +332,7 @@ void ParseMediaOpt(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrinterI
 
 bool ParseResolutionObject(const Json::Value &jsonObject, Print_Resolution &resolution)
 {
-    if (!jsonObject.isMember("horizontalDpi")) {
+    if (!PrintJsonUtil::IsMember(jsonObject, "horizontalDpi")) {
         PRINT_HILOGW("horizontalDpi missing");
         return false;
     }
@@ -341,7 +341,7 @@ bool ParseResolutionObject(const Json::Value &jsonObject, Print_Resolution &reso
         return false;
     }
     int xDpi = jsonObject["horizontalDpi"].asInt();
-    if (!jsonObject.isMember("verticalDpi")) {
+    if (!PrintJsonUtil::IsMember(jsonObject, "verticalDpi")) {
         PRINT_HILOGW("verticalDpi missing");
         return false;
     }
@@ -357,13 +357,13 @@ bool ParseResolutionObject(const Json::Value &jsonObject, Print_Resolution &reso
 
 void ParsePrinterOpt(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrinterInfo)
 {
-    if (cupsOpt.isMember("printer-location") && cupsOpt["printer-location"].isString()) {
+    if (PrintJsonUtil::IsMember(cupsOpt, "printer-location") && cupsOpt["printer-location"].isString()) {
         std::string pLocation = cupsOpt["printer-location"].asString();
         PRINT_HILOGD("printer-location: %{public}s", pLocation.c_str());
         nativePrinterInfo.location = CopyString(pLocation);
     }
     std::string keyword = "orientation-requested-default";
-    if (cupsOpt.isMember(keyword) && cupsOpt[keyword].isString()) {
+    if (PrintJsonUtil::IsMember(cupsOpt, keyword) && cupsOpt[keyword].isString()) {
         std::string orientationString = cupsOpt[keyword].asString();
         PRINT_HILOGD("default orientation: %{public}s", orientationString.c_str());
         int orientationValue = 0;
@@ -373,7 +373,7 @@ void ParsePrinterOpt(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrinte
         }
     }
     keyword = "printer-resolution-default";
-    if (cupsOpt.isMember(keyword) && cupsOpt[keyword].isString()) {
+    if (PrintJsonUtil::IsMember(cupsOpt, keyword) && cupsOpt[keyword].isString()) {
         std::string resolutionString = cupsOpt[keyword].asString();
         Json::Value resolutionJson;
         if (!PrintJsonUtil::Parse(resolutionString, resolutionJson)) {
@@ -401,7 +401,7 @@ bool ConvertStringToUint32(const char *src, uint32_t &dst)
 
 void ParseCupsCopyOpt(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrinterInfo)
 {
-    if (cupsOpt.isMember("copies-default") && cupsOpt["copies-default"].isString()) {
+    if (PrintJsonUtil::IsMember(cupsOpt, "copies-default") && cupsOpt["copies-default"].isString()) {
         std::string defaultCopies = cupsOpt["copies-default"].asString();
         uint32_t defaultCopiesNum = 0;
         if (!ConvertStringToUint32(defaultCopies.c_str(), defaultCopiesNum)) {
@@ -411,7 +411,7 @@ void ParseCupsCopyOpt(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrint
         nativePrinterInfo.defaultValue.defaultCopies = defaultCopiesNum;
         PRINT_HILOGD("copies-default: %{public}d", defaultCopiesNum);
     }
-    if (cupsOpt.isMember("copies-supported") && cupsOpt["copies-supported"].isString()) {
+    if (PrintJsonUtil::IsMember(cupsOpt, "copies-supported") && cupsOpt["copies-supported"].isString()) {
         std::string copySupport = cupsOpt["copies-supported"].asString();
         uint32_t copySupportNum = 0;
         if (!ConvertStringToUint32(copySupport.c_str(), copySupportNum)) {
@@ -441,14 +441,14 @@ int32_t ParseInfoOption(const std::string &infoOption, Print_PrinterInfo &native
         PRINT_HILOGW("infoOption can not parse to json object");
         return E_PRINT_INVALID_PARAMETER;
     }
-    if (!infoJson.isMember("printerUri") || !infoJson["printerUri"].isString() ||
-        !infoJson.isMember("make") || !infoJson["make"].isString()) {
+    if (!PrintJsonUtil::IsMember(infoJson, "printerUri") || !infoJson["printerUri"].isString() ||
+        !PrintJsonUtil::IsMember(infoJson, "make") || !infoJson["make"].isString()) {
         PRINT_HILOGW("The infoJson does not have a necessary attribute.");
         return E_PRINT_INVALID_PARAMETER;
     }
     nativePrinterInfo.makeAndModel = CopyString(infoJson["make"].asString());
     nativePrinterInfo.printerUri = CopyString(infoJson["printerUri"].asString());
-    if (!infoJson.isMember("cupsOptions")) {
+    if (!PrintJsonUtil::IsMember(infoJson, "cupsOptions")) {
         PRINT_HILOGW("The infoJson does not have a cupsOptions attribute.");
         return E_PRINT_NONE;
     }
@@ -511,7 +511,7 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     SetNativePrinterInfoFromCap(cap, *nativePrinterInfo);
     Json::Value capJson;
     if (cap.HasOption() && PrintJsonUtil::Parse(cap.GetOption(), capJson)) {
-        if (capJson.isMember("cupsOptions") && capJson["cupsOptions"].isObject()) {
+        if (PrintJsonUtil::IsMember(capJson, "cupsOptions") && capJson["cupsOptions"].isObject()) {
             Json::Value cupsJson = capJson["cupsOptions"];
             ParseCupsOptions(cupsJson, *nativePrinterInfo);
         }
@@ -612,7 +612,7 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     if (nativePrintJob.advancedOptions != nullptr) {
         jsonOptions["cupsOptions"] = std::string(nativePrintJob.advancedOptions);
     }
-    std::string option = PrintJsonUtil::WriteString(jsonOptions);
+    std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
     PRINT_HILOGD("SetOptionInPrintJob %{public}s", option.c_str());
     printJob.SetOption(option);
     PRINT_HILOGI("SetOptionInPrintJob out.");

@@ -1453,13 +1453,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0078, TestSize.Level1)
     optionJson["documentFormat"] = "application/pdf";
     testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"].asString());
+    EXPECT_EQ(jobParams, nullptr);
 
     optionJson["printerUri"] = "ipp://192.168.0.1:111/ipp/print";
     optionJson["printerName"] = 1;
     testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->printerName, PrintUtil::StandardizePrinterName(optionJson["printerName"].asString()));
     EXPECT_EQ(jobParams, nullptr);
 
     optionJson["printerName"] = "printer1";

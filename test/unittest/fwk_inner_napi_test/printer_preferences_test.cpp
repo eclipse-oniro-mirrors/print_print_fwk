@@ -143,7 +143,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0012, TestSize.Level1)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(false, preferencesJson.isMember("options"));
+    EXPECT_EQ(false, Print::PrintJsonUtil::IsMember(preferencesJson, "options"));
 }
 
 HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0013, TestSize.Level1)
@@ -151,7 +151,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0013, TestSize.Level1)
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetOption("test");
     Json::Value preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(false, preferencesJson.isMember("options"));
+    EXPECT_EQ(false, Print::PrintJsonUtil::IsMember(preferencesJson, "options"));
 }
 
 HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0014, TestSize.Level1)
@@ -161,7 +161,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0014, TestSize.Level1)
     opsJson["testKey"] = "testValue";
     preferences.SetOption(PrintJsonUtil::WriteString(opsJson));
     Json::Value preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(true, preferencesJson.isMember("options"));
+    EXPECT_EQ(true, Print::PrintJsonUtil::IsMember(preferencesJson, "options"));
 }
 } // namespace Print
 } // namespace OHOS

@@ -36,7 +36,7 @@ bool ScanSystemData::CheckJsonObjectValue(const Json::Value& object)
     const std::vector<std::string> keyList = {"deviceId", "manufacturer", "model", "deviceType",
         "discoverMode", "serialNumber", "deviceName", "uniqueId"};
     for (auto key : keyList) {
-        if (!object.isMember(key) || !object[key].isString()) {
+        if (!Print::PrintJsonUtil::IsMember(object, key) || !object[key].isString()) {
             SCAN_HILOGW("can not find %{public}s", key.c_str());
             return false;
         }
@@ -46,7 +46,7 @@ bool ScanSystemData::CheckJsonObjectValue(const Json::Value& object)
 
 bool ScanSystemData::ParseScannerListJsonV1(Json::Value& jsonObject)
 {
-    if (!jsonObject.isMember("scaner_list") || !jsonObject["scaner_list"].isArray()) {
+    if (!Print::PrintJsonUtil::IsMember(jsonObject, "scaner_list") || !jsonObject["scaner_list"].isArray()) {
         SCAN_HILOGW("can not find scaner_list");
         return false;
     }
@@ -88,7 +88,7 @@ bool ScanSystemData::Init()
         return false;
     }
     ifs.close();
-    if (!jsonObject.isMember("version") || !jsonObject["version"].isString()) {
+    if (!Print::PrintJsonUtil::IsMember(jsonObject, "version") || !jsonObject["version"].isString()) {
         SCAN_HILOGW("can not find version");
         return false;
     }

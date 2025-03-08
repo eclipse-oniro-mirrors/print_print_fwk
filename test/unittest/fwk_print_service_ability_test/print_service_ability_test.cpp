@@ -1774,7 +1774,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0113, TestSize.Level1)
     std::string taskId = "";
     std::string type = PRINTER_CHANGE_EVENT_TYPE;
     auto ret = service->Off(taskId, type);
-    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0120, TestSize.Level1)

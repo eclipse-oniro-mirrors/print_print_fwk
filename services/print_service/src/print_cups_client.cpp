@@ -1190,13 +1190,13 @@ int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerI
             PRINT_HILOGE("infoOpt can not parse to json object");
             return E_PRINT_INVALID_PARAMETER;
         }
-        if (!infoJson.isMember("printerUri") || !infoJson["printerUri"].isString()) {
+        if (!PrintJsonUtil::IsMember(infoJson, "printerUri") || !infoJson["printerUri"].isString()) {
             PRINT_HILOGE("The infoJson does not have a necessary printerUri attribute.");
             return E_PRINT_INVALID_PARAMETER;
         }
         std::string printerUri = infoJson["printerUri"].asString();
         PRINT_HILOGD("QueryPrinterInfoByPrinterId in %{public}s", printerUri.c_str());
-        if (infoJson.isMember("printerName") && infoJson["printerName"].isString()) {
+        if (PrintJsonUtil::IsMember(infoJson, "printerName") && infoJson["printerName"].isString()) {
             info.SetPrinterName(infoJson["printerName"].asString());
         }
         int32_t ret = QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
@@ -1875,9 +1875,9 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
         return params;
     }
     PRINT_HILOGD("test optionJson: %{private}s", (PrintJsonUtil::WriteString(optionJson)).c_str());
-    if (!optionJson.isMember("printerUri") || !optionJson["printerUri"].isString() ||
-        !optionJson.isMember("printerName") || !optionJson["printerName"].isString() ||
-        !optionJson.isMember("documentFormat") || !optionJson["documentFormat"].isString()) {
+    if (!PrintJsonUtil::IsMember(optionJson, "printerUri") || !optionJson["printerUri"].isString() ||
+        !PrintJsonUtil::IsMember(optionJson, "printerName") || !optionJson["printerName"].isString() ||
+        !PrintJsonUtil::IsMember(optionJson, "documentFormat") || !optionJson["documentFormat"].isString()) {
         PRINT_HILOGE("The option does not have a necessary attribute.");
         return params;
     }
@@ -1886,7 +1886,7 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
         PRINT_HILOGE("new JobParameters returns nullptr");
         return params;
     }
-    if (!optionJson.isMember("isAutoRotate") || !optionJson["isAutoRotate"].isBool()) {
+    if (!PrintJsonUtil::IsMember(optionJson, "isAutoRotate") || !optionJson["isAutoRotate"].isBool()) {
         // default autoRotate if option dont't contains it
         params->isAutoRotate = true;
     } else {
