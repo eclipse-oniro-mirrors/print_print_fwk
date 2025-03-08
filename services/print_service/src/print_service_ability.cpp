@@ -2679,7 +2679,7 @@ int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInf
 
     if (printerInfo.HasAlias()) {
         info.SetAlias(printerInfo.GetAlias());
-        printSystemData_.UpdatePrinterAlias(printerInfo.GetAlias());
+        printSystemData_.UpdatePrinterAlias(printerId, printerInfo.GetAlias());
         printSystemData_.SavePrinterFile(printerId);
     }
 
