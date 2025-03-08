@@ -23,6 +23,7 @@
 #include "print_callback.h"
 
 using namespace OHOS::Print;
+static const char* CLASS_NAME_PRINTANI = "L@ohos/print/printAni;";
 std::string ANIUtils_ANIStringToStdString(ani_env *env, ani_string aniStr)
 {
     ani_size  strSize;
@@ -130,12 +131,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_ERROR;
     }
 
-    static const char *className = "Lani_print/printNative;";
-    
     ani_class cls;
-    status = env->FindClass(className, &cls);
+    status = env->FindClass(CLASS_NAME_PRINTANI, &cls);
     if (status != ANI_OK) {
-        PRINT_HILOGE("Not found className = %{public}s, status = %{public}u", className, status);
+        PRINT_HILOGE("Not found className = %{public}s, status = %{public}u", CLASS_NAME_PRINTANI, status);
         return status;
     }
 
@@ -144,14 +143,14 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         ani_native_function {"on", nullptr, reinterpret_cast<void *>(On)},
         ani_native_function {"off", nullptr, reinterpret_cast<void *>(Off)},
     };
-    PRINT_HILOGD("Start bind native methods to = %{public}s", className);
+    PRINT_HILOGD("Start bind native methods to = %{public}s", CLASS_NAME_PRINTANI);
     
     status = env->Class_BindNativeMethods(cls, methods.data(), methods.size());
     if (status != ANI_OK) {
-        std::cerr << "Cannot bind native methods to '" << className << status << std::endl;
+        PRINT_HILOGE("Cannot bind native methods to %{public}s, status = %{public}u", CLASS_NAME_PRINTANI, status);
         return ANI_INVALID_ARGS;
     };
-    PRINT_HILOGD("Finish bind native methods to = %{public}s", className);
+    PRINT_HILOGD("Finish bind native methods to = %{public}s", CLASS_NAME_PRINTANI);
 
     *result = ANI_VERSION_1;
     return ANI_OK;

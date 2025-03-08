@@ -35,39 +35,33 @@ class BusinessError<T = void> {
     }
 }
 
-class printNative {
-    static { loadLibrary("aniprintmodule.z") }
-    // 声明 native 方法
-    native printAsyncCallback(files: Array<string>): int;
-    native on(type: string) : int;
-    native off(type: string) : int;
+class printAni {
+    native static printAsyncCallback(files: Array<string>): int;
+    native static on(type: string) : int;
+    native static off(type: string) : int;
 }
 
 function syncFunction(files: Array<string>):number{
     console.println("syncFunction");
-    let obj : printNative = new printNative();
-    let ret : number = obj.printAsyncCallback(files)
-    // let ret : number = 1;
+    let ret : number = printAni.printAsyncCallback(files)
     return ret;
 }
 
 function syncOn(type: string):number{
     console.println("syncOn");
-    let obj : printNative = new printNative();
-    let ret : number = obj.on(type)
-    // let ret : number = 1;
+    let ret : number = printAni.on(type)
     return ret;
 }
 
 function syncOff(type: string):number{
     console.println("syncOff");
-    let obj : printNative = new printNative();
-    let ret : number = obj.off(type)
-    // let ret : number = 1;
+    let ret : number = printAni.off(type)
     return ret;
 }
 
-export namespace print {
+export default namespace print {
+    loadLibrary("printanimodule");
+
     export interface PrintTask {
         on(type: 'block' | 'succeed' | 'fail' | 'cancel', callback: Callback): void;
         off(type: 'block' | 'succeed' | 'fail' | 'cancel', callback?: Callback): void;
@@ -94,7 +88,6 @@ export namespace print {
         }
     }
 
-    // print 接口的实现
     export function print(files: Array<string>, callback: AsyncCallback<PrintTask>): void {
         let taskAsyn = taskpool.execute(syncFunction, files);
         taskAsyn.then((e : NullishType) => {
@@ -105,21 +98,79 @@ export namespace print {
             callback(err, data);
         });
     }
+
+    export interface PrintPageRange {
+        startPage?: number;
+        endPage?: number;
+        pages?: Array<number>;
+    }
+
+    export interface PrintAttributes {
+        copyNumber?: number;
+        pageRange?: PrintPageRange;
+        pageSize?: PrintPageSize | PrintPageType;
+        directionMode?: PrintDirectionMode;
+        colorMode?: PrintColorMode;
+        duplexMode?: PrintDuplexMode;
+    }
+
+    export interface PrintDocumentAdapter {
+        onStartLayoutWrite(jobId: string, oldAttrs: PrintAttributes, newAttrs: PrintAttributes, fd: number,
+        writeResultCallback: (jobId: string, writeResult: PrintFileCreationState) => void): void;
+        onJobStateChanged(jobId: string, state: PrintDocumentAdapterState): void;
+    }
+
+    export enum PrintDuplexMode {
+        DUPLEX_MODE_NONE = 0,
+        DUPLEX_MODE_LONG_EDGE = 1,
+        DUPLEX_MODE_SHORT_EDGE = 2,
+    }
+
+    export enum PrintColorMode {
+        COLOR_MODE_MONOCHROME = 0,
+        COLOR_MODE_COLOR = 1,
+    }
+
+    export enum PrintDirectionMode {
+        DIRECTION_MODE_AUTO = 0,
+        DIRECTION_MODE_PORTRAIT = 1,
+        DIRECTION_MODE_LANDSCAPE = 2,
+    }
+
+    export interface PrintPageSize {
+        id: string;
+        name: string;
+        width: number;
+        height: number;
+    }
+
+    export enum PrintPageType {
+        PAGE_ISO_A3 = 0,
+        PAGE_ISO_A4 = 1,
+        PAGE_ISO_A5 = 2,
+        PAGE_JIS_B5 = 3,
+        PAGE_ISO_C5 = 4,
+        PAGE_ISO_DL = 5,
+        PAGE_LETTER = 6,
+        PAGE_LEGAL = 7,
+        PAGE_PHOTO_4X6 = 8,
+        PAGE_PHOTO_5X7 = 9,
+        PAGE_INT_DL_ENVELOPE = 10,
+        PAGE_B_TABLOID = 11,
+    }
+
+    export enum PrintDocumentAdapterState {
+        PREVIEW_DESTROY = 0,
+        PRINT_TASK_SUCCEED = 1,
+        PRINT_TASK_FAIL = 2,
+        PRINT_TASK_CANCEL = 3,
+        PRINT_TASK_BLOCK = 4,
+    }
+
+    export enum PrintFileCreationState {
+        PRINT_FILE_CREATED = 0,
+        PRINT_FILE_CREATION_FAILED = 1,
+        PRINT_FILE_CREATED_UNRENDERED = 2,
+    }
 }
 
-function main() {
-    let files:Array<string> = new Array<string>(2);
-    files[0] = "file://data/print/a.png"
-    files[1] = "file://data/print/b.png"
-
-    print.print(files, (err, printTask) => {
-        console.println("enter print callback");
-        console.println("err.code = " + err.code);
-        printTask.on('succeed', () => {
-            console.println('succeed');
-        })
-    })
-    let n = new printNative();
-    let num = n.off("123");
-    console.println('off = ' + num);
-}

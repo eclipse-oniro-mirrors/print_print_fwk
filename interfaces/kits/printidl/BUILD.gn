@@ -16,6 +16,7 @@ import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 
 config("print_ani_config") {
+  visibility = [ "*:*" ]
   include_dirs = [
     "include",
     "${print_utils_path}/include",
@@ -34,7 +35,7 @@ config("print_ani_config") {
   ]
 }
 
-ohos_shared_library("aniprintmodule") {
+ohos_shared_library("printanimodule") {
   configs = [ ":print_ani_config" ]
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -47,7 +48,7 @@ ohos_shared_library("aniprintmodule") {
   }
   include_dirs = [ "${print_path}/frameworks/innerkitsimpl/print_impl/include" ]
   sources = [
-    "src/ani_print.cpp",
+    "src/print_ani.cpp",
     "src/print_entry.cpp",
   ]
   deps = [
@@ -72,27 +73,36 @@ ohos_shared_library("aniprintmodule") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "napi:ace_napi",
     "runtime_core:ani",
     "samgr:samgr_proxy",
   ]
   relative_install_dir = "module"
   subsystem_name = "print"
   part_name = "print_fwk"
+  output_extension = "so"
 }
 
-generate_static_abc("ani_print") {
+generate_static_abc("print_abc") {
   arktsconfig =
       "${print_path}/interfaces/kits/printidl/configuration_config.json"
-  dst_file = "$target_out_dir/ani_print.abc"
-  out_puts = [ "$target_out_dir/ani_print.abc" ]
+  dst_file = "$target_out_dir/print.abc"
+  out_puts = [ "$target_out_dir/print.abc" ]
   is_boot_abc = "True"
-  device_dst_file = "/system/framework/ani_print.abc"
-  cache_path = "$target_out_dir/cache"
+  device_dst_file = "system/framework/print.abc"
+}
+
+ohos_prebuilt_etc("print_abc_etc") {
+  source = "$target_out_dir/print.abc"
+  module_install_dir = "framework"
+  subsystem_name = "print"
+  part_name = "print_fwk"
+  deps = [ ":print_abc" ]
 }
 
 group("aniprint") {
   deps = [
-    ":ani_print",
-    ":aniprintmodule",
+    ":print_abc_etc",
+    ":printanimodule",
   ]
 }
