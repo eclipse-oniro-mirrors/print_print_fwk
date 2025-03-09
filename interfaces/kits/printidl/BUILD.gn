@@ -89,7 +89,7 @@ generate_static_abc("print_abc") {
   dst_file = "$target_out_dir/print.abc"
   out_puts = [ "$target_out_dir/print.abc" ]
   is_boot_abc = "True"
-  device_dst_file = "system/framework/print.abc"
+  device_dst_file = "/system/framework/print.abc"
 }
 
 ohos_prebuilt_etc("print_abc_etc") {
