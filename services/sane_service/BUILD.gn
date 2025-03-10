@@ -21,7 +21,7 @@ config("sane_service_config") {
   ]
 
   cflags_cc = [
-    "-fexceptions",
+    "-fno-exceptions",
     "-fdata-sections",
     "-ffunction-sections",
     "-fno-asynchronous-unwind-tables",

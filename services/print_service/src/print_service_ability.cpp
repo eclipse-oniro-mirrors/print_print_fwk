@@ -3306,8 +3306,7 @@ int32_t PrintServiceAbility::QueryVendorPrinterInfo(const std::string &globalPri
 int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
 {
     Json::Value connectParamJson;
-    std::istringstream iss(params);
-    if (!PrintJsonUtil::ParseFromStream(iss, connectParamJson)) {
+    if (!PrintJsonUtil::Parse(params, connectParamJson)) {
         PRINT_HILOGW("invalid params");
         return E_PRINT_INVALID_PRINTER;
     }

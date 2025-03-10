@@ -124,9 +124,9 @@ public:
     }
 
 private:
-    static Json::Value GetPageRangeForJson(const PrintAttributes &attrParam);
-    static Json::Value GetPageSizeForJson(const PrintAttributes &attrParam);
-    static Json::Value GetMarginForJson(const PrintAttributes &attrParam);
+    static Json::Value CreatePageRangeJson(const PrintAttributes &attrParam);
+    static Json::Value CreatePageSizeJson(const PrintAttributes &attrParam);
+    static Json::Value CreateMarginJson(const PrintAttributes &attrParam);
 
 private:
     static std::mutex instanceLock_;

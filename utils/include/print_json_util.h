@@ -44,7 +44,7 @@ inline bool PrintJsonUtil::IsMember(const Json::Value &jsonObject, const std::st
 }
 
 /*
-简单string对象，不包含数组，或者对象格式，使用此方法转换
+string对象，不包含数组，或者对象格式，使用此方法转换
 */
 inline bool PrintJsonUtil::Parse(const std::string &root, Json::Value &jsonObject)
 {
@@ -52,25 +52,21 @@ inline bool PrintJsonUtil::Parse(const std::string &root, Json::Value &jsonObjec
     static const std::unique_ptr<Json::CharReader> reader(rBuilder.newCharReader());
     JSONCPP_STRING err;
     if (!reader->parse(root.c_str(), root.c_str() + root.length(), &jsonObject, &err)) {
-        PRINT_HILOGE("PrintJsonUtil string parse error!");
+        PRINT_HILOGE("PrintJsonUtil string parse error! ErrorInfo: %{public}s", err.c_str());
         return false;
     }
     return true;
 }
 
 /*
-复杂string对象，包含[]或{}，使用此方法转换
+文件流转化json，使用此方法转换
 */
 inline bool PrintJsonUtil::ParseFromStream(Json::IStream &ifs, Json::Value &jsonObject)
 {
-    Json::OStringStream ssin;
-    ssin << ifs.rdbuf();
-    Json::String doc = ssin.str();
     static const Json::CharReaderBuilder rBuilder;
-    static const std::unique_ptr<Json::CharReader> reader(rBuilder.newCharReader());
     JSONCPP_STRING err;
-    if (!reader->parse(doc.data(), doc.data() + doc.size(), &jsonObject, &err)) {
-        PRINT_HILOGE("PrintJsonUtil stream parse error!");
+    if (!parseFromStream(rBuilder, ifs, &jsonObject, &err)) {
+        PRINT_HILOGE("PrintJsonUtil stream parse error! ErrorInfo: %{public}s", err.c_str());
         return false;
     }
     return true;

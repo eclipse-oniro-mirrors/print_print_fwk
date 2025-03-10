@@ -390,8 +390,7 @@ bool PrintUserData::SetUserDataToFile()
 
 bool PrintUserData::CheckFileData(std::string &fileData, Json::Value &jsonObject)
 {
-    std::istringstream iss(fileData);
-    if (!PrintJsonUtil::ParseFromStream(iss, jsonObject)) {
+    if (!PrintJsonUtil::Parse(fileData, jsonObject)) {
         PRINT_HILOGW("json accept fail");
         return false;
     }
