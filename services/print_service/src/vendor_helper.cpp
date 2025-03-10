@@ -489,6 +489,13 @@ bool UpdatePageSizeCapability(PrinterCapability &printerCap, const Print_Printer
                 continue;
             }
         }
+        if (capability->supportedPageSizes[i].name != nullptr) {
+            if (ConvertCustomPageSizeFromPwgName(capability->supportedPageSizes[i].name, printPageSize)) {
+                AddUniquePageSize(pageSizeList, printPageSize);
+                PRINT_HILOGD("custom page size matched = %{public}s", printPageSize.GetId().c_str());
+                continue;
+            }
+        }
         PRINT_HILOGD("page size = %{public}u x %{public}u", capability->supportedPageSizes[i].width,
                      capability->supportedPageSizes[i].height);
     }

@@ -74,6 +74,7 @@ bool ConvertDuplexModeToJson(const DuplexModeCode &code, Json::Value &jsonObject
 bool ConvertPageSizeId(const char *src, std::string &id);
 bool ConvertPrintPageSize(const char *src, PrintPageSize &dst);
 bool ConvertPageSizeToJson(const PrintPageSize &code, Json::Value &jsonObject);
+bool ConvertCustomPageSizeFromPwgName(const char *src, PrintPageSize &dst);
 std::string GetQulityString(int code);
 }  // namespace Print
 }  // namespace OHOS
