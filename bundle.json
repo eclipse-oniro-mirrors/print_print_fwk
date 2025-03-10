@@ -33,12 +33,15 @@
         "bundle_framework",
         "c_utils",
         "common_event_service",
+        "cups",
+        "cups-filters",
         "drivers_interface_usb",
         "eventhandler",
         "hisysevent",
         "hilog",
         "init",
         "ipc",
+        "jsoncpp",
         "napi",
         "netmanager_ext",
         "os_account",
@@ -50,12 +53,11 @@
         "wifi",
         "cJSON",
         "ace_engine",
-        "libjpeg-turbo"
+        "libjpeg-turbo",
+        "input"
       ],
       "third_party": [
-        "zlib",
-        "cups",
-        "cups-filters"
+        "zlib"
       ]
     },
     "build": {
@@ -93,8 +95,7 @@
          "//base/print/print_fwk/etc/param:print.para",
          "//base/print/print_fwk/etc/param:print.para.dac",
          "//base/print/print_fwk/etc/init:scanservice.cfg",
-         "//base/print/print_fwk/etc/init:saneservice.cfg",
-         "//base/print/print_fwk/services/print_service/bsuni:bsuni_driver_group"
+         "//base/print/print_fwk/etc/init:saneservice.cfg"
       ]
     },
     "inner_kits": [
@@ -136,6 +137,14 @@
           "header_files": [
           ],
           "header_base":"//base/print/print_fwk/frameworks/models/print_models/include"
+        }
+      },
+      {
+        "name": "//base/print/print_fwk/frameworks/kits/extension:print_extension_framework",
+        "header": {
+          "header_files": [
+          ],
+          "header_base":"//base/print/print_fwk/frameworks/kits/extension/include"
         }
       }
     ],

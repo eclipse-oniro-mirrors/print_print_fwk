@@ -23,7 +23,14 @@ config("scan_service_config") {
     "${print_path}/frameworks/helper/scan_helper/include",
   ]
 
-  cflags_cc += [ "-fexceptions" ]
+  cflags_cc += [
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-flto",
+    "-Os",
+  ]
 }
 
 ohos_shared_library("scan_service") {
@@ -86,6 +93,7 @@ ohos_shared_library("scan_service") {
     "hisysevent:libhisysevent",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "libjpeg-turbo:turbojpeg",
     "napi:ace_napi",
     "netmanager_ext:mdns_manager_if",

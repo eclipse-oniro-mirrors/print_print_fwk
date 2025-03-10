@@ -31,12 +31,12 @@ const std::string SCANNER_LIST_VERSION = "v1";
 
 namespace OHOS {
 namespace Scan {
-bool ScanSystemData::CheckJsonObjectValue(const nlohmann::json& object)
+bool ScanSystemData::CheckJsonObjectValue(const Json::Value& object)
 {
     const std::vector<std::string> keyList = {"deviceId", "manufacturer", "model", "deviceType",
         "discoverMode", "serialNumber", "deviceName", "uniqueId"};
     for (auto key : keyList) {
-        if (!object.contains(key) || !object[key].is_string()) {
+        if (!Print::PrintJsonUtil::IsMember(object, key) || !object[key].isString()) {
             SCAN_HILOGW("can not find %{public}s", key.c_str());
             return false;
         }
@@ -44,27 +44,27 @@ bool ScanSystemData::CheckJsonObjectValue(const nlohmann::json& object)
     return true;
 }
 
-bool ScanSystemData::ParseScannerListJsonV1(nlohmann::json& jsonObject)
+bool ScanSystemData::ParseScannerListJsonV1(Json::Value& jsonObject)
 {
-    if (!jsonObject.contains("scaner_list") || !jsonObject["scaner_list"].is_array()) {
+    if (!Print::PrintJsonUtil::IsMember(jsonObject, "scaner_list") || !jsonObject["scaner_list"].isArray()) {
         SCAN_HILOGW("can not find scaner_list");
         return false;
     }
-    for (auto &element : jsonObject["scaner_list"].items()) {
-        nlohmann::json object = element.value();
+    for (int i = 0; i < jsonObject["scaner_list"].size(); i++) {
+        Json::Value object = jsonObject["scaner_list"][i];
         if (!CheckJsonObjectValue(object)) {
             continue;
         }
         ScanDeviceInfo scanDeviceInfo;
-        scanDeviceInfo.deviceId = object["deviceId"];
-        scanDeviceInfo.manufacturer = object["manufacturer"];
-        scanDeviceInfo.model = object["model"];
-        scanDeviceInfo.deviceType = object["deviceType"];
-        scanDeviceInfo.discoverMode = object["discoverMode"];
-        scanDeviceInfo.serialNumber = object["serialNumber"];
-        scanDeviceInfo.deviceName = object["deviceName"];
-        scanDeviceInfo.uniqueId = object["uniqueId"];
-        scanDeviceInfo.uuid = object["uuid"];
+        scanDeviceInfo.deviceId = object["deviceId"].asString();
+        scanDeviceInfo.manufacturer = object["manufacturer"].asString();
+        scanDeviceInfo.model = object["model"].asString();
+        scanDeviceInfo.deviceType = object["deviceType"].asString();
+        scanDeviceInfo.discoverMode = object["discoverMode"].asString();
+        scanDeviceInfo.serialNumber = object["serialNumber"].asString();
+        scanDeviceInfo.deviceName = object["deviceName"].asString();
+        scanDeviceInfo.uniqueId = object["uniqueId"].asString();
+        scanDeviceInfo.uuid = object["uuid"].asString();
         std::string uniqueId = scanDeviceInfo.discoverMode + scanDeviceInfo.uniqueId;
         InsertScannerInfo(uniqueId, scanDeviceInfo);
     }
@@ -82,18 +82,17 @@ bool ScanSystemData::Init()
         SCAN_HILOGW("open scanner list file fail");
         return false;
     }
-    std::string fileData((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-    ifs.close();
-    if (!nlohmann::json::accept(fileData)) {
+    Json::Value jsonObject;
+    if (!Print::PrintJsonUtil::ParseFromStream(ifs, jsonObject)) {
         SCAN_HILOGW("json accept fail");
         return false;
     }
-    nlohmann::json jsonObject = nlohmann::json::parse(fileData);
-    if (!jsonObject.contains("version") || !jsonObject["version"].is_string()) {
+    ifs.close();
+    if (!Print::PrintJsonUtil::IsMember(jsonObject, "version") || !jsonObject["version"].isString()) {
         SCAN_HILOGW("can not find version");
         return false;
     }
-    std::string version = jsonObject["version"].get<std::string>();
+    std::string version = jsonObject["version"].asString();
     SCAN_HILOGI("json version: %{public}s", version.c_str());
     if (version == SCANNER_LIST_VERSION && ParseScannerListJsonV1(jsonObject)) {
         RefreshUsbDeviceId();
@@ -235,7 +234,7 @@ bool ScanSystemData::UpdateScannerNameByUniqueId(const std::string &uniqueId, co
     if (iter != addedScannerMap_.end() && iter->second != nullptr) {
         iter->second->deviceName = deviceName;
     } else {
-        SCAN_HILOGE("ScanSystemData UpdateScannerNameByUniqueId fail");
+        SCAN_HILOGW("ScanSystemData UpdateScannerNameByUniqueId fail");
         return false;
     }
     return true;
@@ -296,11 +295,11 @@ void ScanSystemData::GetAddedScannerInfoList(std::vector<ScanDeviceInfo> &infoLi
 bool ScanSystemData::SaveScannerMap()
 {
     FILE *file = fopen(SCANNER_LIST_FILE.c_str(), "w+");
-    if (file != nullptr) {
-        SCAN_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
+    if (file == nullptr) {
+        SCAN_HILOGW("Failed to open file errno: %{public}u", errno);
         return false;
     }
-    nlohmann::json scannerMapJson = nlohmann::json::array();
+    Json::Value scannerMapJson;
     {
         std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
         for (auto iter = addedScannerMap_.begin(); iter != addedScannerMap_.end(); ++iter) {
@@ -308,7 +307,7 @@ bool ScanSystemData::SaveScannerMap()
             if (info == nullptr) {
                 continue;
             }
-            nlohmann::json scannerJson = nlohmann::json::object();
+            Json::Value scannerJson;
             scannerJson["deviceId"] = info->deviceId;
             scannerJson["manufacturer"] = info->manufacturer;
             scannerJson["model"] = info->model;
@@ -318,15 +317,15 @@ bool ScanSystemData::SaveScannerMap()
             scannerJson["deviceName"] = info->deviceName;
             scannerJson["uniqueId"] = info->uniqueId;
             scannerJson["uuid"] = info->uuid;
-            scannerMapJson.push_back(scannerJson);
+            scannerMapJson.append(scannerJson);
         }
     }
-    nlohmann::json jsonObject;
+    Json::Value jsonObject;
     jsonObject["version"] = SCANNER_LIST_VERSION;
     jsonObject["scaner_list"] = scannerMapJson;
-    std::string jsonString = jsonObject.dump();
+    std::string jsonString = Print::PrintJsonUtil::WriteString(jsonObject);
     size_t jsonLength = jsonString.length();
-    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
+    size_t writeLength = fwrite(jsonString.c_str(), 1, jsonLength, file);
     int fcloseResult = fclose(file);
     if (fcloseResult != 0) {
         SCAN_HILOGE("File Operation Failure.");

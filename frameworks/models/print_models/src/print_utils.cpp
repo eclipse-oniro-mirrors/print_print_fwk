@@ -27,8 +27,6 @@
 
 namespace OHOS::Print {
 
-using json = nlohmann::json;
-
 std::mutex PrintUtils::instanceLock_;
 
 static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
@@ -207,7 +205,7 @@ void PrintUtils::BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterP
 
 void PrintUtils::BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want)
 {
-    json attrJson;
+    Json::Value attrJson;
     PrintAttributes attrParam = adapterParam->printAttributes;
     if (attrParam.HasCopyNumber()) {
         attrJson["copyNumber"] = attrParam.GetCopyNumber();
@@ -231,56 +229,75 @@ void PrintUtils::BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &
     if (attrParam.HasOption()) {
         attrJson["options"] = attrParam.GetOption();
     }
-    want.SetParam(LAUNCH_PARAMETER_PRINT_ATTRIBUTE, attrJson.dump());
-    PRINT_HILOGD("CallSpooler set printAttributes: %{public}s", attrJson.dump().c_str());
+    want.SetParam(LAUNCH_PARAMETER_PRINT_ATTRIBUTE, (PrintJsonUtil::WriteString(attrJson)).c_str());
+    PRINT_HILOGD("CallSpooler set printAttributes: %{public}s", (PrintJsonUtil::WriteString(attrJson)).c_str());
 }
 
-void PrintUtils::ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, nlohmann::json &attrJson)
+Json::Value PrintUtils::GetPageRangeForJson(const PrintAttributes &attrParam)
+{
+    Json::Value pageRangeJson;
+    PrintRange printRangeAttr;
+    attrParam.GetPageRange(printRangeAttr);
+    if (printRangeAttr.HasStartPage()) {
+        pageRangeJson["startPage"] = printRangeAttr.GetStartPage();
+    }
+    if (printRangeAttr.HasEndPage()) {
+        pageRangeJson["endPage"] = printRangeAttr.GetEndPage();
+    }
+    if (printRangeAttr.HasPages()) {
+        std::vector<uint32_t> pages;
+        printRangeAttr.GetPages(pages);
+        Json::Value pagesJson;
+        for (const auto &item : pages) {
+            pagesJson.append(item);
+        }
+        pageRangeJson["pages"] = pagesJson;
+    }
+    return pageRangeJson;
+}
+
+Json::Value PrintUtils::GetPageSizeForJson(const PrintAttributes &attrParam)
+{
+    Json::Value pageSizeJson;
+    PrintPageSize pageSizeAttr;
+    attrParam.GetPageSize(pageSizeAttr);
+    pageSizeJson["id"] = pageSizeAttr.GetId();
+    pageSizeJson["name"] = pageSizeAttr.GetName();
+    pageSizeJson["width"] = pageSizeAttr.GetWidth();
+    pageSizeJson["height"] = pageSizeAttr.GetHeight();
+    return pageSizeJson;
+}
+
+Json::Value PrintUtils::GetMarginForJson(const PrintAttributes &attrParam)
+{
+    Json::Value marginJson;
+    PrintMargin marginAttr;
+    attrParam.GetMargin(marginAttr);
+    if (marginAttr.HasTop()) {
+        marginJson["top"] = marginAttr.GetTop();
+    }
+    if (marginAttr.HasBottom()) {
+        marginJson["bottom"] = marginAttr.GetBottom();
+    }
+    if (marginAttr.HasLeft()) {
+        marginJson["left"] = marginAttr.GetLeft();
+    }
+    if (marginAttr.HasRight()) {
+        marginJson["right"] = marginAttr.GetRight();
+    }
+    return marginJson;
+}
+
+void PrintUtils::ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, Json::Value &attrJson)
 {
     if (attrParam.HasPageRange()) {
-        json pageRangeJson;
-        PrintRange printRangeAttr;
-        attrParam.GetPageRange(printRangeAttr);
-        if (printRangeAttr.HasStartPage()) {
-            pageRangeJson["startPage"] = printRangeAttr.GetStartPage();
-        }
-        if (printRangeAttr.HasEndPage()) {
-            pageRangeJson["endPage"] = printRangeAttr.GetEndPage();
-        }
-        if (printRangeAttr.HasPages()) {
-            std::vector<uint32_t> pages;
-            printRangeAttr.GetPages(pages);
-            pageRangeJson["pages"] = pages;
-        }
-        attrJson["pageRange"] = pageRangeJson;
+        attrJson["pageRange"] = GetPageRangeForJson(attrParam);
     }
     if (attrParam.HasPageSize()) {
-        json pageSizeJson;
-        PrintPageSize pageSizeAttr;
-        attrParam.GetPageSize(pageSizeAttr);
-        pageSizeJson["id"] = pageSizeAttr.GetId();
-        pageSizeJson["name"] = pageSizeAttr.GetName();
-        pageSizeJson["width"] = pageSizeAttr.GetWidth();
-        pageSizeJson["height"] = pageSizeAttr.GetHeight();
-        attrJson["pageSize"] = pageSizeJson;
+        attrJson["pageSize"] = GetPageSizeForJson(attrParam);
     }
     if (attrParam.HasMargin()) {
-        json marginJson;
-        PrintMargin marginAttr;
-        attrParam.GetMargin(marginAttr);
-        if (marginAttr.HasTop()) {
-            marginJson["top"] = marginAttr.GetTop();
-        }
-        if (marginAttr.HasBottom()) {
-            marginJson["bottom"] = marginAttr.GetBottom();
-        }
-        if (marginAttr.HasLeft()) {
-            marginJson["left"] = marginAttr.GetLeft();
-        }
-        if (marginAttr.HasRight()) {
-            marginJson["right"] = marginAttr.GetRight();
-        }
-        attrJson["margin"] = marginJson;
+        attrJson["margin"] = GetMarginForJson(attrParam);
     }
 }
 

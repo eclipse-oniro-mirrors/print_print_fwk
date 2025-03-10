@@ -32,8 +32,10 @@
 #include "print_callback.h"
 #include "print_converter.h"
 #include "print_helper.h"
+#include "printer_preferences.h"
 #include "refbase.h"
 #include "ui_extension_context.h"
+#include "print_json_util.h"
 
 using namespace OHOS::Print;
 
@@ -364,12 +366,15 @@ Print_ErrorCode OH_Print_UpdatePrinterProperties(const char *printerId, const Pr
         PRINT_HILOGW("OH_Print_UpdatePrinterProperties invalid parameter.");
         return PRINT_ERROR_INVALID_PRINTER;
     }
-    nlohmann::json settingJson;
+    Json::Value settingJson;
     for (uint32_t i = 0; i < propertyList->count; i++) {
         settingJson[propertyList->list[i].key] = propertyList->list[i].value;
     }
-    PRINT_HILOGW("OH_Print_UpdatePrinterProperties setting : %{public}s.", settingJson.dump().c_str());
-    int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(printerId, settingJson.dump());
+    PRINT_HILOGD("OH_Print_UpdatePrinterProperties setting : %{public}s.",
+        (PrintJsonUtil::WriteString(settingJson)).c_str());
+    PrinterPreferences preferences;
+    preferences.ConvertJsonToPrinterPreferences(settingJson);
+    int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(printerId, preferences);
     if (ret != 0) {
         PRINT_HILOGW("SetPrinterPreference fail");
         return PRINT_ERROR_INVALID_PRINTER;

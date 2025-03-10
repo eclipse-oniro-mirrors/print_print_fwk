@@ -29,6 +29,7 @@
 #include "print_job.h"
 #include "print_sa_death_recipient.h"
 #include "printer_info.h"
+#include "printer_preferences.h"
 #include "refbase.h"
 #ifdef PDFIUM_ENABLE
 #include "fpdfview.h"
@@ -78,7 +79,7 @@ public:
     int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList);
     int32_t StartNativePrintJob(PrintJob &printJob);
-    int32_t SetPrinterPreference(const std::string &printerId, const std::string &printerPreference);
+    int32_t SetPrinterPreference(const std::string &printerId, const PrinterPreferences &printerPreference);
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
     int32_t AddPrinterToDiscovery(const PrinterInfo &printerInfo);
     int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo);

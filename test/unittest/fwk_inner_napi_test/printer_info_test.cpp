@@ -330,5 +330,126 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0020, TestSize.Level1)
     OHOS::Print::PrinterInfo copyInfo(info);
     EXPECT_EQ(copyInfo.GetPrinterUuid(), info.GetPrinterUuid());
 }
+
+/**
+ * @tc.name: PrinterInfoTest_0021
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0021, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetPrinterStatus(0);
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0022
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0022, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetUri("test://test");
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0023
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0023, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetPrinterMake("test_maker");
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0024
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0024, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetPrinterUuid("test_uuid");
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0025
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0025, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetIsLastUsedPrinter(true);
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0026
+ * @tc.desc: Verify settings and obtain marshalling function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0026, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetIsDefaultPrinter(true);
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
+/**
+ * @tc.name: PrinterInfoTest_0027
+ * @tc.desc: Verify the constructor function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_0027, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetPrinterIcon(0);
+    info.SetDescription("test");
+    info.Dump();
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
 } // namespace Print
 } // namespace OHOS

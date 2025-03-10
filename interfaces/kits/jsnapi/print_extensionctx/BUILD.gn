@@ -36,7 +36,15 @@ gen_js_obj("print_extension_context_abc") {
 
 ohos_shared_library("printextensioncontext_napi") {
   sources = [ "print_extension_context_module.cpp" ]
-
+  cflags_cc = [
+    "-fno-exceptions",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-flto",
+    "-Os",
+  ]
   branch_protector_ret = "pac_ret"
   sanitize = {
     cfi = true

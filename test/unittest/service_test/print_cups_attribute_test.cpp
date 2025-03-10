@@ -15,10 +15,10 @@
 
 #include <gtest/gtest.h>
 #include "print_cups_attribute.h"
+#include "print_json_util.h"
 
 using namespace testing;
 using namespace testing::ext;
-using json = nlohmann::json;
 
 namespace {
 const char *const ATTR_TEST_ALL[] = {"all"};
@@ -60,11 +60,11 @@ const char *const ATTR_TEST_MEDIA_TYPE_ARRAY[ATTR_TEST_MEDIA_TYPE_COUNT] = {"env
 
 void TestAttrCount(const std::string &jsonString, int count)
 {
-    if (!json::accept(jsonString)) {
+    Json::Value jsonObject;
+    if (OHOS::Print::PrintJsonUtil::Parse(jsonString, jsonObject)) {
         return;
     }
-    auto jsonObject = json::parse(jsonString);
-    if (jsonObject.is_array()) {
+    if (jsonObject.isArray()) {
         EXPECT_EQ(jsonObject.size(), count);
     }
 }
@@ -404,12 +404,13 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0013, TestSize.Level1)
         std::string supportedResolutionString = printerCaps.GetPrinterAttrValue("printer-resolution-supported");
         TestAttrCount(supportedResolutionString, 1);
         std::string defaultResolutionString = printerCaps.GetPrinterAttrValue("printer-resolution-default");
-        EXPECT_TRUE(json::accept(defaultResolutionString));
-        auto defaultResolutionJson = json::parse(defaultResolutionString);
-        EXPECT_TRUE(defaultResolutionJson.contains("horizontalDpi"));
-        EXPECT_TRUE(defaultResolutionJson.contains("verticalDpi"));
-        EXPECT_TRUE(defaultResolutionJson["horizontalDpi"].is_number());
-        EXPECT_TRUE(defaultResolutionJson["verticalDpi"].is_number());
+        std::istringstream iss(defaultResolutionString);
+        Json::Value defaultResolutionJson;
+        EXPECT_TRUE(OHOS::Print::PrintJsonUtil::ParseFromStream(iss, defaultResolutionJson));
+        EXPECT_TRUE(PrintJsonUtil::IsMember(defaultResolutionJson, "horizontalDpi"));
+        EXPECT_TRUE(PrintJsonUtil::IsMember(defaultResolutionJson, "verticalDpi"));
+        EXPECT_TRUE(defaultResolutionJson["horizontalDpi"].isInt());
+        EXPECT_TRUE(defaultResolutionJson["verticalDpi"].isInt());
         EXPECT_EQ(defaultResolutionJson["horizontalDpi"], ATTR_TEST_RESOLUTION_DEFAULT);
         EXPECT_EQ(defaultResolutionJson["verticalDpi"], ATTR_TEST_RESOLUTION_DEFAULT);
     };
@@ -434,12 +435,13 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0014, TestSize.Level1)
         std::string supportedResolutionString = printerCaps.GetPrinterAttrValue("printer-resolution-supported");
         EXPECT_TRUE(supportedResolutionString.empty());
         std::string defaultResolutionString = printerCaps.GetPrinterAttrValue("printer-resolution-default");
-        EXPECT_TRUE(json::accept(defaultResolutionString));
-        auto defaultResolutionJson = json::parse(defaultResolutionString);
-        EXPECT_TRUE(defaultResolutionJson.contains("horizontalDpi"));
-        EXPECT_TRUE(defaultResolutionJson.contains("verticalDpi"));
-        EXPECT_TRUE(defaultResolutionJson["horizontalDpi"].is_number());
-        EXPECT_TRUE(defaultResolutionJson["verticalDpi"].is_number());
+        std::istringstream iss(defaultResolutionString);
+        Json::Value defaultResolutionJson;
+        EXPECT_TRUE(OHOS::Print::PrintJsonUtil::ParseFromStream(iss, defaultResolutionJson));
+        EXPECT_TRUE(defaultResolutionJson.isMember("horizontalDpi"));
+        EXPECT_TRUE(defaultResolutionJson.isMember("verticalDpi"));
+        EXPECT_TRUE(defaultResolutionJson["horizontalDpi"].isInt());
+        EXPECT_TRUE(defaultResolutionJson["verticalDpi"].isInt());
         EXPECT_EQ(defaultResolutionJson["horizontalDpi"], ATTR_TEST_RESOLUTION_SMALL);
         EXPECT_EQ(defaultResolutionJson["verticalDpi"], ATTR_TEST_RESOLUTION_SMALL);
     };

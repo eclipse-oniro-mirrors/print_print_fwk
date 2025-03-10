@@ -21,12 +21,12 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "fstream"
+#include "print_json_util.h"
 #define private public
 #include "print_service_ability.h"
 #undef private
 
 using namespace testing::ext;
-using json = nlohmann::json;
 
 namespace OHOS {
 namespace Print {
@@ -1210,37 +1210,38 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067, TestSize.Level1)
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
     EXPECT_EQ(jobParams, nullptr);
 
-    json optionJson = json::parse(testJob.GetOption());
+    Json::Value optionJson;
+    PrintJsonUtil::Parse(testJob.GetOption(), optionJson);
     optionJson["printerUri"] = "ipp://192.168.0.1:111/ipp/print";
     optionJson["printerName"] = "printer1";
     optionJson["documentFormat"] = "application/pdf";
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"]);
-    EXPECT_EQ(jobParams->printerName, PrintUtil::StandardizePrinterName(optionJson["printerName"]));
-    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"]);
+    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"].asString());
+    EXPECT_EQ(jobParams->printerName, PrintUtil::StandardizePrinterName(optionJson["printerName"].asString()));
+    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"].asString());
 
     optionJson["cupsOptions"] = "testCupsOptions";
     optionJson["printQuality"] = "printQuality";
     optionJson["jobName"] = "jobName";
     optionJson["mediaType"] = "mediaType";
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->printerAttrsOption_cupsOption, optionJson["cupsOptions"]);
-    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"]);
-    EXPECT_EQ(jobParams->jobName, optionJson["jobName"]);
-    EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"]);
+    EXPECT_EQ(jobParams->printerAttrsOption_cupsOption, optionJson["cupsOptions"].asString());
+    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"].asString());
+    EXPECT_EQ(jobParams->jobName, optionJson["jobName"].asString());
+    EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"].asString());
 
     optionJson["printQuality"] = 1;
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
     EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
 
     EXPECT_EQ(jobParams->isAutoRotate, true);   // default true
     optionJson["isAutoRotate"] = false;
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->isAutoRotate, optionJson["isAutoRotate"]);
+    EXPECT_EQ(jobParams->isAutoRotate, optionJson["isAutoRotate"].asBool());
 }
 
 /**
@@ -1266,14 +1267,15 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0068, TestSize.Level1)
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
     std::string option = testJob.GetOption();
-    json optionJson = json::parse(option);
-    EXPECT_EQ(jobParams->jobName, optionJson["jobName"]);
-    EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"]);
-    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"]);
-    EXPECT_EQ(jobParams->printerName, optionJson["printerName"]);
-    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"]);
-    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"]);
-    EXPECT_EQ(jobParams->isAutoRotate, optionJson["isAutoRotate"]);
+    Json::Value optionJson;
+    PrintJsonUtil::Parse(option, optionJson);
+    EXPECT_EQ(jobParams->jobName, optionJson["jobName"].asString());
+    EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"].asString());
+    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"].asString());
+    EXPECT_EQ(jobParams->printerName, optionJson["printerName"].asString());
+    EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"].asString());
+    EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"].asString());
+    EXPECT_EQ(jobParams->isAutoRotate, optionJson["isAutoRotate"].asBool());
     printCupsClient.DumpJobParameters(jobParams);
     delete jobParams;
 }
@@ -1432,23 +1434,24 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0078, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(R"({"key": "value"})");
 
-    json optionJson = json::parse(testJob.GetOption());
+    Json::Value optionJson;
+    PrintJsonUtil::Parse(testJob.GetOption(), optionJson);
     optionJson["printerUri"] = 1;
     optionJson["printerName"] = "printer1";
     optionJson["documentFormat"] = "application/pdf";
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
     EXPECT_EQ(jobParams, nullptr);
 
     optionJson["printerUri"] = "ipp://192.168.0.1:111/ipp/print";
     optionJson["printerName"] = 1;
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
     EXPECT_EQ(jobParams, nullptr);
 
     optionJson["printerName"] = "printer1";
     optionJson["documentFormat"] = 1;
-    testJob.SetOption(optionJson.dump());
+    testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob);
     EXPECT_EQ(jobParams, nullptr);
 }
@@ -1482,6 +1485,21 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0079, TestSize.Level1)
     jobParams = printCupsClient.BuildJobParameters(testJob);
     delete http;
     delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0081
+ * @tc.desc: UpdateJobState
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0081, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    EXPECT_FALSE(printCupsClient.UpdateJobState(nullptr, nullptr));
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+    EXPECT_FALSE(printCupsClient.UpdateJobState(param, nullptr));
 }
 
 /**
@@ -1627,11 +1645,28 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0086, TestSize.Level1)
  */
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0087, TestSize.Level1)
 {
-    OHOS::Print::PrintCupsClient printCupsClient;
-    EXPECT_FALSE(printCupsClient.UpdateJobState(nullptr, nullptr));
-    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
-    EXPECT_FALSE(printCupsClient.UpdateJobState(param, nullptr));
+    // Arrange
+    std::string deviceUri = "usb://printer";
+    std::string deviceClass = "printer";
+    std::string deviceId = "model123";
+    std::string deviceInfo = "model123";
+    std::string deviceMakeAndModel = "model123";
+    std::string deviceLocation = "location123";
+    void *userData = nullptr;
+    // Act
+    ClearUsbPrinters();
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), nullptr, userData);
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             "usb://printer_serial=123&111", deviceLocation.c_str(), userData);
+    // Assert
+    auto usbPrinters = GetUsbPrinters();
+    EXPECT_EQ(usbPrinters.size(), 3);
+    EXPECT_STREQ(usbPrinters[0].GetUri().c_str(), deviceUri.c_str());
+    EXPECT_STREQ(usbPrinters[0].GetPrinterMake().c_str(), deviceMakeAndModel.c_str());
+    ClearUsbPrinters();
 }
 
 /**
@@ -1656,6 +1691,118 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0088, TestSize.Level1)
     // Assert
     auto usbPrinters = GetUsbPrinters();
     EXPECT_EQ(usbPrinters.size(), 0);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0089
+ * @tc.desc: DeviceCb_ShouldNotAddPrinterInfo_WhenPrinterMakeIsUnknown
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0089, TestSize.Level1)
+{
+    // Arrange
+    std::string deviceUri = "usb://printer";
+    std::string deviceClass = "printer";
+    std::string deviceId = "model123";
+    std::string deviceInfo = "model123";
+    std::string deviceMakeAndModel = "Unknown";
+    std::string deviceLocation = "location123";
+    void *userData = nullptr;
+    // Act
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    // Assert
+    auto usbPrinters = GetUsbPrinters();
+    EXPECT_EQ(usbPrinters.size(), 0);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0090
+ * @tc.desc: DeviceCb_ShouldNotAddPrinterInfo_WhenParamNull
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0090, TestSize.Level1)
+{
+    // Arrange
+    std::string deviceUri = "usb://printer";
+    std::string deviceClass = "printer";
+    std::string deviceId = "model123";
+    std::string deviceInfo = "model123";
+    std::string deviceMakeAndModel = "Unknown";
+    std::string deviceLocation = "location123";
+    void *userData = nullptr;
+    // Act
+    DeviceCb(nullptr, deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(), nullptr, deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), nullptr, deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), nullptr,
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             nullptr, deviceLocation.c_str(), userData);
+    // Assert
+    auto usbPrinters = GetUsbPrinters();
+    EXPECT_EQ(usbPrinters.size(), 0);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0091
+ * @tc.desc: DeviceCb_Serial
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0091, TestSize.Level1)
+{
+    // Arrange
+    std::string deviceUri = "usb://printer_serial=123&111";
+    std::string deviceClass = "printer";
+    std::string deviceId = "model123";
+    std::string deviceInfo = "model123";
+    std::string deviceMakeAndModel = "model123";
+    std::string deviceLocation = "1234-";
+    void *userData = nullptr;
+    // Act
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    deviceLocation = "1234-5678";
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
+             deviceUri.c_str(), nullptr, userData);
+    // Assert
+    auto usbPrinters = GetUsbPrinters();
+    EXPECT_EQ(usbPrinters.size(), 3);
+    EXPECT_STREQ(usbPrinters[0].GetUri().c_str(), deviceUri.c_str());
+    EXPECT_STREQ(usbPrinters[0].GetPrinterMake().c_str(), deviceMakeAndModel.c_str());
+    EXPECT_STREQ(usbPrinters[0].GetPrinterId().c_str(), "USB-model123-123");
+    ClearUsbPrinters();
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0092
+ * @tc.desc: GetUsbPrinterSerial
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0092, TestSize.Level1)
+{
+    std::string usb = "usb://";
+    std::string serial = "serial=";
+    std::string num = "11";
+    std::string deviceUri = usb;
+    EXPECT_STREQ(GetUsbPrinterSerial(deviceUri).c_str(), "");
+    deviceUri = usb + serial;
+    EXPECT_STREQ(GetUsbPrinterSerial(deviceUri).c_str(), "");
+    deviceUri = usb + serial + num;
+    EXPECT_STREQ(GetUsbPrinterSerial(deviceUri).c_str(), num.c_str());
+    deviceUri = usb + serial + num + "&postfix";
+    EXPECT_STREQ(GetUsbPrinterSerial(deviceUri).c_str(), num.c_str());
+    deviceUri = usb + serial + "1234567890" + "&postfix";
+    EXPECT_STREQ(GetUsbPrinterSerial(deviceUri).c_str(), "567890");
 }
 }  // namespace Print
 }  // namespace OHOS

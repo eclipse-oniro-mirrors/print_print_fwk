@@ -102,7 +102,7 @@ std::shared_ptr<ScanOptionValue> ScanOptionValueHelper::BuildFromJs(napi_env env
         bool boolValue = NapiScanUtils::GetBooleanProperty(env, jsValue, PARAM_SCAN_OPTION_BOOL_VALUE);
         nativeObj->SetBoolValue(boolValue);
     }
-    SCAN_HILOGE("Build scan option value succeed");
+    SCAN_HILOGD("Build scan option value succeed");
     return nativeObj;
 }
 

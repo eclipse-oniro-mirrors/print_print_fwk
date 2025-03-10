@@ -19,7 +19,7 @@
 #include <vector>
 #include <string>
 #include <functional>
-#include <nlohmann/json.hpp>
+#include <json/json.h>
 
 #include "singleton.h"
 #include "print_cups_wrapper.h"
@@ -27,7 +27,6 @@
 #include "print_job.h"
 
 namespace OHOS::Print {
-using json = nlohmann::json;
 typedef std::function<void()> CallbackFunc;
 
 struct JobParameters {
@@ -177,8 +176,8 @@ private:
     void StartNextJob();
     void JobSentCallback();
 
-    void UpdateBorderlessJobParameter(json& optionJson, JobParameters *params);
-    void UpdateJobParameterByOption(json& optionJson, JobParameters *params);
+    void UpdateBorderlessJobParameter(Json::Value& optionJson, JobParameters *params);
+    void UpdateJobParameterByOption(Json::Value& optionJson, JobParameters *params);
     JobParameters* BuildJobParameters(const PrintJob &jobInfo);
     std::string GetColorString(uint32_t colorCode);
     std::string GetMedieSize(const PrintJob &jobInfo);

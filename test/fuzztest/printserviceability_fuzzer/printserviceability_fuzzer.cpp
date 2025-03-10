@@ -374,7 +374,7 @@ void TestUpdatePrintJobState(const uint8_t *data, size_t size, FuzzedDataProvide
 void TestSetPrinterPreference(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string printerPreference = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterPreferences printerPreference;
     PrintServiceAbility::GetInstance()->SetPrinterPreference(printerId, printerPreference);
 }
 
@@ -674,16 +674,6 @@ void TestSendQueuePrintJob(const uint8_t *data, size_t size, FuzzedDataProvider 
     PrintServiceAbility::GetInstance()->SendQueuePrintJob(printerId);
 }
 
-void TestUpdatePrinterSystemData(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrinterInfo printerInfo;
-    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
-    PrintServiceAbility::GetInstance()->UpdatePrinterSystemData(printerInfo);
-}
-
 void TestUnloadSystemAbility(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintServiceAbility::GetInstance()->UnloadSystemAbility();
@@ -857,7 +847,6 @@ void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *data
     TestNotifyCurrentUserChanged(data, size, dataProvider);
     TestHandleExtensionConnectPrinter(data, size, dataProvider);
     TestSendQueuePrintJob(data, size, dataProvider);
-    TestUpdatePrinterSystemData(data, size, dataProvider);
     TestUnloadSystemAbility(data, size, dataProvider);
     TestAddPrinterToDiscovery(data, size, dataProvider);
     TestUpdatePrinterInDiscovery(data, size, dataProvider);

@@ -267,21 +267,10 @@ namespace Scan {
         ScanServiceAbility::GetInstance()->CheckPermission(permissionName);
     }
 
-    void TestSendGetFrameResEvent(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        bool isGetSucc = dataProvider->ConsumeBool();
-        int32_t sizeRead = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        ScanServiceAbility::GetInstance()->SendGetFrameResEvent(isGetSucc, sizeRead);
-    }
-
     void TestGeneratePictureBatch(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
-        int32_t status = E_SCAN_NONE;
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        std::string file_name = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        std::string output_file = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanProgress* scanProPtr = nullptr;
-        ScanServiceAbility::GetInstance()->GeneratePictureSingle(scannerId, file_name, output_file, status, scanProPtr);
+        ScanServiceAbility::GetInstance()->GeneratePictureSingle(scannerId);
     }
 
     void TestAddFoundScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -338,7 +327,6 @@ namespace Scan {
         }
         OHOS::Scan::TestReInitScan(data, size, dataProvider);
         OHOS::Scan::TestCheckPermission(data, size, dataProvider);
-        OHOS::Scan::TestSendGetFrameResEvent(data, size, dataProvider);
         OHOS::Scan::TestGeneratePictureBatch(data, size, dataProvider);
         OHOS::Scan::TestAddFoundScanner(data, size, dataProvider);
         OHOS::Scan::TestSendDeviceList(data, size, dataProvider);
@@ -346,6 +334,17 @@ namespace Scan {
         OHOS::Scan::TestUpdateScannerName(data, size, dataProvider);
         OHOS::Scan::TestCleanScanTask(data, size, dataProvider);
         OHOS::Scan::TestGetAddedScanner(data, size, dataProvider);
+    }
+
+    void TestCleanUpAfterScan(FuzzedDataProvider* dataProvider)
+    {
+        if (dataProvider == nullptr) {
+            return;
+        }
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        ScanServiceAbility::GetInstance()->RestartScan(scannerId);
+        int32_t scanStatus = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanServiceAbility::GetInstance()->CleanUpAfterScan(scanStatus);
     }
 
 }
@@ -387,5 +386,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::TestSendDeviceSearchEnd(data, size, &dataProvider);
     OHOS::Scan::TestSetScannerSerialNumber(data, size, &dataProvider);
     OHOS::Scan::TestNotPublicFunction(data, size, &dataProvider);
+    OHOS::Scan::TestCleanUpAfterScan(&dataProvider);
     return 0;
 }

@@ -32,10 +32,6 @@ config("sane_config") {
     "${target_gen_dir}",
     "${print_utils_path}/include",
   ]
-  cflags = []
-  if (target_cpu == "arm") {
-    cflags += [ "-DBINDER_IPC_32BIT" ]
-  }
   cflags_cc = [
     "-fexceptions",
     "-fdata-sections",
@@ -44,6 +40,9 @@ config("sane_config") {
     "-fno-unwind-tables",
     "-Os",
   ]
+  if (target_cpu == "arm") {
+    cflags = [ "-DBINDER_IPC_32BIT" ]
+  }
 }
 
 ohos_shared_library("sane_backends") {
@@ -67,6 +66,7 @@ ohos_shared_library("sane_backends") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

@@ -39,10 +39,6 @@ std::shared_ptr<PrintResolution> PrintResolutionHelper::BuildFromJs(napi_env env
         std::string id = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_RESOLUTION_ID);
         uint32_t horizontalDpi = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_RESOLUTION_HORIZONTALDPI);
         uint32_t verticalDpi = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_RESOLUTION_VERTICALDPI);
-        if (id == "") {
-            PRINT_HILOGE("Invalid resolution id");
-            return nullptr;
-        }
         if (nativeObj == nullptr) {
             PRINT_HILOGE("nativeObj is nullptr");
             return nullptr;

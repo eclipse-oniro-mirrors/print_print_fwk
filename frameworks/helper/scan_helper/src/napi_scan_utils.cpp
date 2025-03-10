@@ -387,9 +387,26 @@ bool NapiScanUtils::DecodeExtensionCid(const std::string &cid, std::string &exte
     return true;
 }
 
-std::string NapiScanUtils::GetTaskEventId(const std::string &taskId, const std::string &type)
+std::string NapiScanUtils::GetTaskEventId(const std::string &taskId, const std::string &type,
+    int32_t userId, int32_t callerPid)
 {
-    return type + TASK_EVENT_DELIMITER + taskId;
+    std::ostringstream eventTypeStream;
+    eventTypeStream << userId << TASK_EVENT_DELIMITER << callerPid << TASK_EVENT_DELIMITER;
+    if (!taskId.empty()) {
+        eventTypeStream << taskId << TASK_EVENT_DELIMITER;
+    }
+    eventTypeStream << type;
+    return eventTypeStream.str();
+}
+
+bool NapiScanUtils::EncodeTaskEventId(const std::string &eventType, std::string &type)
+{
+    size_t pos = eventType.find_last_of(TASK_EVENT_DELIMITER);
+    if (pos != std::string::npos) {
+        type = eventType.substr(pos + 1);
+        return true;
+    }
+    return false;
 }
 
 int32_t NapiScanUtils::OpenFile(const std::string &filePath)

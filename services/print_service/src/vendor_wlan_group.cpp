@@ -223,10 +223,10 @@ bool VendorWlanGroup::IsBsunidriverSupport(const std::string &groupPrinterId)
         return false;
     }
     std::string supportValue;
-    if (printerInfo->HasOption() && nlohmann::json::accept(printerInfo->GetOption())) {
-        nlohmann::json option = nlohmann::json::parse(printerInfo->GetOption());
-        if (option.contains("bsunidriverSupport") && option["bsunidriverSupport"].is_string()) {
-            supportValue = option["bsunidriverSupport"].get<std::string>();
+    Json::Value option;
+    if (printerInfo->HasOption() && PrintJsonUtil::Parse(printerInfo->GetOption(), option)) {
+        if (PrintJsonUtil::IsMember(option, "bsunidriverSupport") && option["bsunidriverSupport"].isString()) {
+            supportValue = option["bsunidriverSupport"].asString();
         }
     }
     PRINT_HILOGD("IsBsunidriverSupport bsunidriverSupport=%{public}s", supportValue.c_str());

@@ -1039,7 +1039,7 @@ EXPECT_EQ(list.size(), 0);
 }
 HWTEST_F(nullTest, ConvertArrayToJson_ShouldReturnEmptyString_WhenArrayIsNullptr, TestSize.Level0)
 {
-auto result = ConvertArrayToJson<int>(nullptr, 5, [](const int &value, nlohmann::json &json)
+auto result = ConvertArrayToJson<int>(nullptr, 5, [](const int &value, Json::Value &json)
 {
 json = value;
 return true;
@@ -1055,7 +1055,7 @@ EXPECT_EQ(result, "");
 HWTEST_F(nullTest, ConvertArrayToJson_ShouldReturnJsonString_WhenArrayIsValid, TestSize.Level0)
 {
 int array[] = {1, 2, 3, 4, 5};
-auto result = ConvertArrayToJson<int>(array, 5, [](const int &value, nlohmann::json &json)
+auto result = ConvertArrayToJson<int>(array, 5, [](const int &value, Json::Value &json)
 {
 json = value;
 return true;
@@ -1065,7 +1065,7 @@ EXPECT_EQ(result, "[1,2,3,4,5]");
 HWTEST_F(nullTest, ConvertArrayToJson_ShouldReturnJsonString_WhenArrayHasDuplicateValues, TestSize.Level0)
 {
 int array[] = {1, 2, 2, 3, 4, 4, 5};
-auto result = ConvertArrayToJson<int>(array, 7, [](const int &value, nlohmann::json &json)
+auto result = ConvertArrayToJson<int>(array, 7, [](const int &value, Json::Value &json)
 {
 json = value;
 return true;
@@ -1079,9 +1079,10 @@ int value;
 std::string name;
 };
 TestStruct array[] = {{1, "one"}, {2, "two"}, {3, "three"}};
-auto result = ConvertArrayToJson<TestStruct>(array, 3, [](const TestStruct &value, nlohmann::json &json)
+auto result = ConvertArrayToJson<TestStruct>(array, 3, [](const TestStruct &value, Json::Value &json)
 {
-json = {{"value", value.value}, {"name", value.name}};
+json["value"] = value.value;
+json["name"] = value.name;
 return true;
 });
 EXPECT_EQ(result, R"([{"value":1,"name":"one"},{"value":2,"name":"two"},{"value":3,"name":"three"}])");

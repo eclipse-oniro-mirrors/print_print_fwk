@@ -33,7 +33,7 @@ const std::string SCAN_INIT_EVENT = "scanInitEvent";
 
 napi_value NapiInnerScan::InitScan(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGE("Enter InitScan---->");
+    SCAN_HILOGD("Enter InitScan---->");
     auto context = std::make_shared<NapiScanContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
@@ -118,7 +118,7 @@ napi_value NapiInnerScan::GetScannerList(napi_env env, napi_callback_info info)
 
 napi_value NapiInnerScan::StopDiscover(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGE("Enter StopDiscover---->");
+    SCAN_HILOGD("Enter StopDiscover---->");
     auto context = std::make_shared<NapiScanContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
@@ -630,7 +630,29 @@ napi_value NapiInnerScan::On(napi_env env, napi_callback_info info)
 
 napi_value NapiInnerScan::Off(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGD("Enter OFF---->");
+    SCAN_HILOGD("Enter off---->");
+    size_t argc = NapiScanUtils::MAX_ARGC;
+    napi_value argv[NapiScanUtils::MAX_ARGC] = { nullptr };
+    napi_value thisVal = nullptr;
+    void *data = nullptr;
+    SCAN_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
+    SCAN_ASSERT(env, argc == NapiScanUtils::ARGC_ONE, "need 1 parameter!");
+
+    napi_valuetype valuetype = napi_undefined;
+    SCAN_CALL(env, napi_typeof(env, argv[0], &valuetype));
+    SCAN_ASSERT(env, valuetype == napi_string, "type is not a string");
+    std::string type = NapiScanUtils::GetStringFromValueUtf8(env, argv[0]);
+    SCAN_HILOGD("type : %{public}s", type.c_str());
+    if (!NapiInnerScan::IsSupportType(type)) {
+        SCAN_HILOGE("Event On type : %{public}s not support", type.c_str());
+        return nullptr;
+    }
+
+    int32_t ret = ScanManagerClient::GetInstance()->Off("", type);
+    if (ret != E_SCAN_NONE) {
+        SCAN_HILOGE("Failed to register event");
+        return nullptr;
+    }
     return nullptr;
 }
 
@@ -779,7 +801,7 @@ napi_value NapiInnerScan::DeleteScanner(napi_env env, napi_callback_info info)
 
 napi_value NapiInnerScan::GetAddedScanner(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGE("Enter GetAddedScanner---->");
+    SCAN_HILOGD("Enter GetAddedScanner---->");
     auto context = std::make_shared<NapiScanContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);

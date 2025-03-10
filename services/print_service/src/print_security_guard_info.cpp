@@ -15,9 +15,9 @@
 
 #include "print_security_guard_manager.h"
 #include "print_log.h"
+#include "print_json_util.h"
 
 namespace OHOS::Print {
-using json = nlohmann::json;
 static const int32_t SPLIT_INDEX = 2;
 
 PrintSecurityGuardInfo::PrintSecurityGuardInfo(const std::string callPkg, const std::vector<std::string> &fileList)
@@ -44,26 +44,26 @@ void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, co
     subType_ = PrintSecurityGuardUtil::GetPrinterType(printerId);
     printTypeInfo_.domain = "";
     if (subType_ == FROM_EPRINT) {
-        if (json::accept(printerInfo.GetOption())) {
-            json optionJson = json::parse(printerInfo.GetOption());
-            if (optionJson.contains("ePrintUrl") && optionJson["ePrintUrl"].is_string()) {
-                printTypeInfo_.domain = optionJson["ePrintUrl"].get<std::string>();
+        Json::Value optionJson;
+        if (PrintJsonUtil::Parse(printerInfo.GetOption(), optionJson)) {
+            if (PrintJsonUtil::IsMember(optionJson, "ePrintUrl") && optionJson["ePrintUrl"].isString()) {
+                printTypeInfo_.domain = optionJson["ePrintUrl"].asString();
             }
         }
     }
     printTypeInfo_.copyNumber = static_cast<int32_t>(printJob.GetCopyNumber());
-    if (json::accept(printJob.GetOption())) {
-        json jobOptionJson = json::parse(printJob.GetOption());
-        if (jobOptionJson.contains("printPages") && jobOptionJson["printPages"].is_number()) {
-            printTypeInfo_.printPages = jobOptionJson["printPages"];
+    Json::Value jobOptionJson;
+    if (PrintJsonUtil::Parse(printJob.GetOption(), jobOptionJson)) {
+        if (PrintJsonUtil::IsMember(jobOptionJson, "printPages") && jobOptionJson["printPages"].isInt()) {
+            printTypeInfo_.printPages = jobOptionJson["printPages"].asInt();
         } else {
             std::vector<uint32_t> fdList;
             printJob.GetFdList(fdList);
             printTypeInfo_.printPages = (int32_t)fdList.size();
         }
 
-        if (jobOptionJson.contains("jobName") && jobOptionJson["jobName"].is_string()) {
-            jobName_ = jobOptionJson["jobName"];
+        if (PrintJsonUtil::IsMember(jobOptionJson, "jobName") && jobOptionJson["jobName"].isString()) {
+            jobName_ = jobOptionJson["jobName"].asString();
         }
     }
     uint32_t subState = printJob.GetSubState();
@@ -83,9 +83,9 @@ void PrintSecurityGuardInfo::SetPrintTypeInfo(const PrinterInfo &printerInfo, co
     }
 }
 
-nlohmann::json PrintSecurityGuardInfo::ToJson()
+Json::Value PrintSecurityGuardInfo::ToJson()
 {
-    nlohmann::json printTypeInfoJson;
+    Json::Value printTypeInfoJson;
     printTypeInfoJson["ip"] = printTypeInfo_.ip;
     printTypeInfoJson["port"] = printTypeInfo_.port;
     printTypeInfoJson["mac"] = printTypeInfo_.mac;
@@ -93,9 +93,9 @@ nlohmann::json PrintSecurityGuardInfo::ToJson()
     printTypeInfoJson["name"] = printTypeInfo_.name;
     printTypeInfoJson["copyNumber"] = printTypeInfo_.copyNumber;
     printTypeInfoJson["printPages"] = printTypeInfo_.printPages;
-    targetInfo_ = printTypeInfoJson.dump();
+    targetInfo_ = PrintJsonUtil::WriteString(printTypeInfoJson);
 
-    nlohmann::json securityGuardInfoJson;
+    Json::Value securityGuardInfoJson;
     securityGuardInfoJson["type"] = 0;
     securityGuardInfoJson["subType"] = subType_;
     securityGuardInfoJson["caller"] = caller_;
@@ -112,7 +112,8 @@ nlohmann::json PrintSecurityGuardInfo::ToJson()
 
 std::string PrintSecurityGuardInfo::ToJsonStr()
 {
-    return ToJson().dump();
+    Json::Value jsonObject = ToJson();
+    return PrintJsonUtil::WriteString(jsonObject);
 }
 } // namespace OHOS::Print
 
