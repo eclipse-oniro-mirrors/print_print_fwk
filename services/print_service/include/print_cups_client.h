@@ -85,9 +85,9 @@ struct JobMonitorParam {
 
     JobMonitorParam() {}
     JobMonitorParam(PrintServiceAbility *serviceAbility, std::string serviceJobId, int cupsJobId,
-        std::string printerUri, std::string printerName, std::string printerId, http_t *http) :
-        serviceAbility(serviceAbility), serviceJobId(serviceJobId), cupsJobId(cupsJobId), printerUri(printerUri),
-        printerName(printerName), printerId(printerId), http(http) {}
+        std::string printerUri, std::string printerName, std::string printerId, http_t *http)
+        : serviceAbility(serviceAbility), serviceJobId(serviceJobId), cupsJobId(cupsJobId),
+        printerUri(printerUri), printerName(printerName), printerId(printerId), http(http) {}
 
     ~JobMonitorParam()
     {
@@ -160,6 +160,7 @@ private:
     static bool IsIpConflict(const std::string &printerId, std::string &nic);
     void StartMonitor();
     bool JobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
     bool IsPrinterStopped(std::shared_ptr<JobMonitorParam> monitorParams);
     bool GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorParam> monitorParams, StatePolicy policy,
         std::string substateString, PrintJobSubState jobSubstate);

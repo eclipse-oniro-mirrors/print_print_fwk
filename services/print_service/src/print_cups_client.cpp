@@ -1532,6 +1532,45 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
         ippEnumString("job-state", (int)monitorParams->job_state), monitorParams->job_state_reasons,
         monitorParams->job_printer_state_reasons);
 
+    if (monitorParams->job_state == IPP_JOB_PROCESSING) {
+        if (!monitorParams->isBlock) {
+            PRINT_HILOGI("job is running");
+            monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId,
+                PRINT_JOB_RUNNING, monitorParams->substate);
+            return true;
+        }
+        PRINT_HILOGI("job is blocked");
+        monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId,
+            PRINT_JOB_BLOCKED, monitorParams->substate);
+        return true;
+    }
+
+    if (monitorParams->job_state == IPP_JOB_PENDING || monitorParams->job_state == IPP_JOB_HELD) {
+        PRINT_HILOGI("job is queued");
+        monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_QUEUED,
+            PRINT_JOB_COMPLETED_SUCCESS);
+        return true;
+    }
+
+    if (monitorParams->job_state == IPP_JOB_STOPPED) {
+        if (CancelPrinterJob(monitorParams->cupsJobId)) {
+            PRINT_HILOGI("cancel PrinterJob because stopped");
+            return true;
+        }
+        monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_COMPLETED,
+            GetNewSubstate(monitorParams->substate, PRINT_JOB_COMPLETED_CANCELLED));
+        return false;
+    }
+    return SpecialJobStatusCallback(monitorParams);
+}
+
+bool PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams)
+{
+    if (monitorParams == nullptr) {
+        PRINT_HILOGE("monitor job state failed, monitorParams is nullptr");
+        return false;
+    }
+
     if (monitorParams->job_state == IPP_JOB_COMPLETED) {
         if (!monitorParams->isBlock) {
             PRINT_HILOGI("job complete success");
@@ -1550,52 +1589,22 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
         return false;
     }
 
-    if (monitorParams->job_state == IPP_JOB_PROCESSING) {
-        if (!monitorParams->isBlock) {
-            PRINT_HILOGI("job is running");
-            monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId,
-                PRINT_JOB_RUNNING, monitorParams->substate);
-            return true;
-        }
-        PRINT_HILOGI("job is blocked");
+    // IPP_JOB_CANCELED or IPP_JOB_ABORTED
+    if (!monitorParams->isBlock) {
+        PRINT_HILOGI("job is canceled");
+        monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_COMPLETED,
+            PRINT_JOB_COMPLETED_CANCELLED);
+        return false;
+    }
+    PRINT_HILOGI("job cancel with error");
+    if (monitorParams->timesOfSameState < STATE_UPDATE_STEP) {
         monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId,
             PRINT_JOB_BLOCKED, monitorParams->substate);
         return true;
     }
-
-    if (monitorParams->job_state == IPP_JOB_CANCELED || monitorParams->job_state == IPP_JOB_ABORTED) {
-        if (!monitorParams->isBlock) {
-            PRINT_HILOGI("job is canceled");
-            monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_COMPLETED,
-                PRINT_JOB_COMPLETED_CANCELLED);
-            return false;
-        }
-        PRINT_HILOGI("job cancel with error");
-        if (monitorParams->timesOfSameState < STATE_UPDATE_STEP) {
-            monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId,
-                PRINT_JOB_BLOCKED, monitorParams->substate);
-            return true;
-        }
-        monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_COMPLETED,
-            GetNewSubstate(monitorParams->substate, PRINT_JOB_COMPLETED_CANCELLED));
-        return false;
-    }
-
-    if (monitorParams->job_state == IPP_JOB_STOPPED) {
-        if (CancelPrinterJob(monitorParams->cupsJobId)) {
-            PRINT_HILOGI("cancel PrinterJob because stopped");
-            return true;
-        }
-        monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_COMPLETED,
-            GetNewSubstate(monitorParams->substate, PRINT_JOB_COMPLETED_CANCELLED));
-        return false;
-    }
-
-    // IPP_JOB_PENDING or IPP_JOB_HELD
-    PRINT_HILOGI("job is queued");
-    monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_QUEUED,
-        PRINT_JOB_COMPLETED_SUCCESS);
-    return true;
+    monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_COMPLETED,
+        GetNewSubstate(monitorParams->substate, PRINT_JOB_COMPLETED_CANCELLED));
+    return false;
 }
 
 void PrintCupsClient::ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams)
@@ -1718,7 +1727,7 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
         ippAttributeString(attr, job_printer_state_reasons, sizeof(job_printer_state_reasons));
     }
     if (monitorParams->job_state == job_state &&
-        strcmp(monitorParams->job_printer_state_reasons,job_printer_state_reasons) == 0) {
+        strcmp(monitorParams->job_printer_state_reasons, job_printer_state_reasons) == 0) {
         monitorParams->timesOfSameState++;
         if (monitorParams->timesOfSameState % STATE_UPDATE_STEP != 0) {
             PRINT_HILOGD("the prevous jobState is the same as current, ignore");
