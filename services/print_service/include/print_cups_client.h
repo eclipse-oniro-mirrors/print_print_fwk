@@ -64,13 +64,13 @@ struct JobStatus {
     char job_state_reasons[1024];
 };
 struct JobMonitorParam {
-    PrintServiceAbility *serviceAbility;
+    PrintServiceAbility *serviceAbility = nullptr;
     std::string serviceJobId;
-    int cupsJobId;
+    int cupsJobId = 0;
     std::string printerUri;
     std::string printerName;
     std::string printerId;
-    http_t *http;
+    http_t *http = nullptr;
 
     StatePolicy policyArray[16] = {};
     ipp_jstate_t job_state = IPP_JOB_PENDING;
@@ -81,10 +81,17 @@ struct JobMonitorParam {
     bool isBlock = false;
     uint32_t substate = 0;
     bool isPrinterStopped = false;
+    bool isCanceled = false;
+
+    JobMonitorParam() {}
+    JobMonitorParam(PrintServiceAbility *serviceAbility, std::string serviceJobId, int cupsJobId,
+        std::string printerUri, std::string printerName, std::string printerId, http_t *http)
+        : serviceAbility(serviceAbility), serviceJobId(serviceJobId), cupsJobId(cupsJobId),
+        printerUri(printerUri), printerName(printerName), printerId(printerId), http(http) {}
 
     ~JobMonitorParam()
     {
-        httpClose(http);
+        if (http != nullptr) { httpClose(http); }
     }
 };
 struct MediaSize {
@@ -131,7 +138,7 @@ public:
     int32_t QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info);
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps);
-    bool CheckPrinterOnline(JobMonitorParam *param, const uint32_t timeout = 3000);
+    bool CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monitorParams, const uint32_t timeout = 3000);
 
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
@@ -151,23 +158,24 @@ private:
     static void UpdatePrintJobStateInJobParams(JobParameters *jobParams, uint32_t state, uint32_t subState);
     static std::string GetIpAddress(unsigned int number);
     static bool IsIpConflict(const std::string &printerId, std::string &nic);
-    void StartMonitor(JobMonitorParam *jobParams);
-    bool JobStatusCallback(JobMonitorParam *param);
-    bool IsPrinterStopped(JobMonitorParam *param);
-    bool GetBlockedAndUpdateSubstate(JobMonitorParam *param, StatePolicy policy,
+    void StartMonitor();
+    bool JobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool IsPrinterStopped(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorParam> monitorParams, StatePolicy policy,
         std::string substateString, PrintJobSubState jobSubstate);
     uint32_t GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate);
-    bool QueryJobState(http_t *http, JobMonitorParam *param);
-    bool UpdateJobState(JobMonitorParam *param, ipp_t *response);
-    bool IfContinueToHandleJobState(JobMonitorParam *param);
-    void BuildMonitorPolicy(JobMonitorParam *param);
-    void ParseStateReasons(JobMonitorParam *param);
+    bool QueryJobState(http_t *http, std::shared_ptr<JobMonitorParam> monitorParams);
+    bool UpdateJobState(std::shared_ptr<JobMonitorParam> monitorParams, ipp_t *response);
+    bool IfContinueToHandleJobState(std::shared_ptr<JobMonitorParam> monitorParams);
+    void BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monitorParams);
+    void ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams);
 
     int32_t StartCupsdServiceNotAlive();
     int32_t StartCupsdService();
     JobParameters *GetNextJob();
     void StartNextJob();
-    void JobCompleteCallback();
+    void JobSentCallback();
 
     void UpdateBorderlessJobParameter(Json::Value& optionJson, JobParameters *params);
     void UpdateJobParameterByOption(Json::Value& optionJson, JobParameters *params);
@@ -190,7 +198,7 @@ private:
     IPrintAbilityBase* printAbility_ = nullptr;
     std::vector<JobParameters*> jobQueue_;
     JobParameters *currentJob_ = nullptr;
-    std::vector<JobMonitorParam*> jobMonitorList_;
+    std::vector<std::shared_ptr<JobMonitorParam>> jobMonitorList_;
     std::mutex jobMonitorMutex_;
 };
 } // namespace OHOS::Print

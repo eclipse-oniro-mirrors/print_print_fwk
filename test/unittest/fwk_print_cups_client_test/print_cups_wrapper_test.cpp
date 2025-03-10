@@ -163,16 +163,14 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0003, TestSize.Level1)
 HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0005, TestSize.Level1)
 {
     MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
-        JobMonitorParam param;
-        param.serviceAbility = nullptr;
-        param.cupsJobId = 0;
+        auto param = std::make_shared<JobMonitorParam>(nullptr, "", 0, "", "", "", nullptr);
         JobStatus jobStatus = {0};
         printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, nullptr);
-        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, &param);
-        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, &param);
+        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, param);
+        printCupsClient.QueryJobState(CUPS_HTTP_DEFAULT, param);
         EXPECT_EQ(jobStatus.job_state, 0);
         EXPECT_EQ(printCupsClient.CheckPrinterOnline(nullptr, 1), false);
-        EXPECT_EQ(printCupsClient.CheckPrinterOnline(&param, 1), false);
+        EXPECT_EQ(printCupsClient.CheckPrinterOnline(param, 1), false);
     };
     DoMockTest(testFunc);
 }
