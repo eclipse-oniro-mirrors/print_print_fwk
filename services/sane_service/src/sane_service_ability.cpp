@@ -447,26 +447,22 @@ ErrCode SaneServerManager::SaneRead(const std::string& scannerId,
     }
     constexpr int32_t zero = 0;
     SANE_Int curReadSize = zero;
-    SANE_Byte *valueBuffer = new(std::nothrow) uint8_t[buflen]{};
-    if (valueBuffer == nullptr) {
-        SCAN_HILOGE("malloc valueBuffer failed");
-        status = SANE_STATUS_NO_MEM;
-        return ERR_OK;
-    }
+    std::vector<SANE_Byte> valueBuffer(buflen);
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
     do {
-        saneStatus = sane_read(handle, valueBuffer, buflen, &curReadSize);
+        saneStatus = sane_read(handle, valueBuffer.data(), buflen, &curReadSize);
     } while (saneStatus == ::SANE_STATUS_GOOD && curReadSize == zero);
     status = static_cast<int32_t>(saneStatus);
     if (saneStatus != ::SANE_STATUS_GOOD && saneStatus != ::SANE_STATUS_EOF) {
         SCAN_HILOGE("sane_read error, ret = [%{public}d]", status);
-        delete[] valueBuffer;
-        valueBuffer = nullptr;
-        pictureData.size_ = INVALID_DATA;
+        pictureData.ret_ = SANE_READ_FAIL;
         return ERR_OK;
     }
-    pictureData.size_ = curReadSize > 0 ? curReadSize : buflen;
-    pictureData.data_ = valueBuffer;
+    if (curReadSize > 0) {
+        valueBuffer.resize(curReadSize);
+    }
+    pictureData.dataBuffer_ = std::move(valueBuffer);
+    pictureData.ret_ = SANE_READ_OK;
     SCAN_HILOGI("SaneRead end");
     return ERR_OK;
 }

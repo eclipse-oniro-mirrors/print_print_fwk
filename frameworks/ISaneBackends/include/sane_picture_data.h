@@ -32,9 +32,8 @@ public:
     static SanePictureData* Unmarshalling(Parcel &parcel);
 
 public:
-    uint8_t *data_;
-    int32_t size_;
-    std::vector<uint8_t> valueBuffer_;
+    uint32_t ret_;
+    std::vector<uint8_t> dataBuffer_;
 };
 
 } // namespace OHOS::Scan
