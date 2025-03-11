@@ -26,20 +26,20 @@
 namespace OHOS::Print {
 static constexpr const int MAX_STRING_LENGTH = 65536;
 const std::map<int32_t, std::string> ERROR_CODE_CONVERT_MESSAGE_MAP = {
-    { E_PRINT_NO_PERMISSION, "the application does not have permission to call this function." },
-    { E_PRINT_ILLEGAL_USE_OF_SYSTEM_API, "not system application." },
-    { E_PRINT_INVALID_PARAMETER,
-        "Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types." },
-    { E_PRINT_GENERIC_FAILURE, "Generic failure of print." },
-    { E_PRINT_RPC_FAILURE, "RPC failure." },
-    { E_PRINT_SERVER_FAILURE, "Failure of print service." },
-    { E_PRINT_INVALID_EXTENSION, "Invalid print extension." },
-    { E_PRINT_INVALID_PRINTER, "Invalid printer." },
-    { E_PRINT_INVALID_PRINTJOB, "Invalid print job." },
-    { E_PRINT_FILE_IO, "File i/o error." },
-    { E_PRINT_INVALID_TOKEN, "Invalid token." },
-    { E_PRINT_INVALID_USERID, "Invalid user id." },
-    { E_PRINT_TOO_MANY_FILES, "Number of files exceeding the upper limit." },
+    {E_PRINT_NO_PERMISSION, "the application does not have permission to call this function."},
+    {E_PRINT_ILLEGAL_USE_OF_SYSTEM_API, "not system application."},
+    {E_PRINT_INVALID_PARAMETER,
+        "Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types."},
+    {E_PRINT_GENERIC_FAILURE, "Generic failure of print."},
+    {E_PRINT_RPC_FAILURE, "RPC failure."},
+    {E_PRINT_SERVER_FAILURE, "Failure of print service."},
+    {E_PRINT_INVALID_EXTENSION, "Invalid print extension."},
+    {E_PRINT_INVALID_PRINTER, "Invalid printer."},
+    {E_PRINT_INVALID_PRINTJOB, "Invalid print job."},
+    {E_PRINT_FILE_IO, "File i/o error."},
+    {E_PRINT_INVALID_TOKEN, "Invalid token."},
+    {E_PRINT_INVALID_USERID, "Invalid user id."},
+    {E_PRINT_TOO_MANY_FILES, "Number of files exceeding the upper limit."},
 };
 static const std::string ERROR_MESSAGE_OUT_OF_DEFINITION = "error is out of definition.";
 

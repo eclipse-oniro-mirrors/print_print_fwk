@@ -252,6 +252,15 @@ static napi_value NapiCreatePrintJobStateEnum(napi_env env)
     return object;
 }
 
+static void SetCompletedStateEnum(napi_env env, napi_value &object)
+{
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_SUCCESS", static_cast<int32_t>(PRINT_JOB_COMPLETED_SUCCESS));
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_FAILED", static_cast<int32_t>(PRINT_JOB_COMPLETED_FAILED));
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_CANCELLED", static_cast<int32_t>(PRINT_JOB_COMPLETED_CANCELLED));
+    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_FILE_CORRUPTED",
+        static_cast<int32_t>(PRINT_JOB_COMPLETED_FILE_CORRUPT));
+}
+
 static napi_value NapiCreatePrintJobSubStateEnum(napi_env env)
 {
     napi_value object = nullptr;
@@ -259,11 +268,7 @@ static napi_value NapiCreatePrintJobSubStateEnum(napi_env env)
         PRINT_HILOGE("Failed to create object");
         return nullptr;
     }
-    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_SUCCESS", static_cast<int32_t>(PRINT_JOB_COMPLETED_SUCCESS));
-    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_FAILED", static_cast<int32_t>(PRINT_JOB_COMPLETED_FAILED));
-    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_CANCELLED", static_cast<int32_t>(PRINT_JOB_COMPLETED_CANCELLED));
-    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_FILE_CORRUPTED",
-        static_cast<int32_t>(PRINT_JOB_COMPLETED_FILE_CORRUPT));
+    SetCompletedStateEnum(env, object);
     SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OFFLINE", static_cast<int32_t>(PRINT_JOB_BLOCKED_OFFLINE));
     SetEnumProperty(env, object, "PRINT_JOB_BLOCK_BUSY", static_cast<int32_t>(PRINT_JOB_BLOCKED_BUSY));
     SetEnumProperty(env, object, "PRINT_JOB_BLOCK_CANCELLED", static_cast<int32_t>(PRINT_JOB_BLOCKED_CANCELLED));
