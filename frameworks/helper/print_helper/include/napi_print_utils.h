@@ -80,6 +80,8 @@ public:
     static bool VerifyProperty(std::vector<std::string> &names, std::map<std::string, PrintParamStatus> &propertyList);
     static std::string GetPrintErrorMsg(int32_t errorCode);
     static bool CheckCallerIsSystemApp();
+    static const std::string GetErrorMsgByErrorCode(int32_t code);
+    static napi_value CreateJsError(napi_env env, int32_t errCode);
 };
 } // namespace OHOS::Print
 #endif // NAPI_PRINT_UTILS_H

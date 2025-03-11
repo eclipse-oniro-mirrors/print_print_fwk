@@ -300,6 +300,8 @@ static napi_value NapiCreatePrintJobSubStateEnum(napi_env env)
         static_cast<int32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES));
     SetEnumProperty(env, object, "PRINT_JOB_RUNNING_CONVERTING_FILES",
         static_cast<int32_t>(PRINT_JOB_RUNNING_CONVERTING_FILES));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR",
+        static_cast<int32_t>(PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR));
     SetEnumProperty(env, object, "PRINT_JOB_BLOCK_UNKNOWN", static_cast<int32_t>(PRINT_JOB_BLOCKED_UNKNOWN));
     return object;
 }
@@ -322,6 +324,7 @@ static napi_value NapiCreatePrintErrorCodeEnum(napi_env env)
     SetEnumProperty(env, object, "E_PRINT_INVALID_PRINTER", static_cast<int32_t>(E_PRINT_INVALID_PRINTER));
     SetEnumProperty(env, object, "E_PRINT_INVALID_PRINT_JOB", static_cast<int32_t>(E_PRINT_INVALID_PRINTJOB));
     SetEnumProperty(env, object, "E_PRINT_FILE_IO", static_cast<int32_t>(E_PRINT_FILE_IO));
+    SetEnumProperty(env, object, "E_PRINT_TOO_MANY_FILES", static_cast<int32_t>(E_PRINT_TOO_MANY_FILES));
     return object;
 }
 

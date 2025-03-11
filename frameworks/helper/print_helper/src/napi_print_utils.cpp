@@ -25,6 +25,24 @@
 
 namespace OHOS::Print {
 static constexpr const int MAX_STRING_LENGTH = 65536;
+const std::map<int32_t, std::string> ERROR_CODE_CONVERT_MESSAGE_MAP = {
+    { E_PRINT_NO_PERMISSION, "the application does not have permission to call this function." },
+    { E_PRINT_ILLEGAL_USE_OF_SYSTEM_API, "not system application." },
+    { E_PRINT_INVALID_PARAMETER,
+        "Parameter error. Possible causes: 1.Mandatory parameters are left unspecified; 2.Incorrect parameter types." },
+    { E_PRINT_GENERIC_FAILURE, "Generic failure of print." },
+    { E_PRINT_RPC_FAILURE, "RPC failure." },
+    { E_PRINT_SERVER_FAILURE, "Failure of print service." },
+    { E_PRINT_INVALID_EXTENSION, "Invalid print extension." },
+    { E_PRINT_INVALID_PRINTER, "Invalid printer." },
+    { E_PRINT_INVALID_PRINTJOB, "Invalid print job." },
+    { E_PRINT_FILE_IO, "File i/o error." },
+    { E_PRINT_INVALID_TOKEN, "Invalid token." },
+    { E_PRINT_INVALID_USERID, "Invalid user id." },
+    { E_PRINT_TOO_MANY_FILES, "Number of files exceeding the upper limit." },
+};
+static const std::string ERROR_MESSAGE_OUT_OF_DEFINITION = "error is out of definition.";
+
 napi_valuetype NapiPrintUtils::GetValueType(napi_env env, napi_value value)
 {
     if (value == nullptr) {
@@ -368,5 +386,46 @@ bool NapiPrintUtils::CheckCallerIsSystemApp()
     }
     auto accessTokenId = IPCSkeleton::GetCallingFullTokenID();
     return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenId);
+}
+
+const std::string NapiPrintUtils::GetErrorMsgByErrorCode(int32_t code)
+{
+    PRINT_HILOGD("GetErrorMsgByErrorCode start");
+    auto iter = ERROR_CODE_CONVERT_MESSAGE_MAP.find(code);
+    if (iter == ERROR_CODE_CONVERT_MESSAGE_MAP.end()) {
+        PRINT_HILOGE("error is out of definition.");
+        return ERROR_MESSAGE_OUT_OF_DEFINITION;
+    }
+    PRINT_HILOGD("ErrorMessage: %{public}s", (iter->second).c_str());
+    return iter->second;
+}
+
+napi_value NapiPrintUtils::CreateJsError(napi_env env, int32_t errCode)
+{
+    std::string errMsg = GetErrorMsgByErrorCode(errCode);
+    PRINT_HILOGD("CreateJsError errCode: %{public}d, errMsg: %{public}s", errCode, errMsg.c_str());
+
+    napi_value code = nullptr;
+    napi_status status = napi_create_int32(env, errCode, &code);
+    if (status != napi_ok) {
+        PRINT_HILOGE("napi create error code failed");
+        return nullptr;
+    }
+
+    napi_value message = nullptr;
+    status = napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &message);
+    if (status != napi_ok) {
+        PRINT_HILOGE("napi create error message failed");
+        return nullptr;
+    }
+
+    napi_value errorObj = nullptr;
+    status = napi_create_error(env, code, message, &errorObj);
+    if (status != napi_ok) {
+        PRINT_HILOGE("napi create js error failed");
+        return nullptr;
+    }
+
+    return errorObj;
 }
 }  // namespace OHOS::Print
