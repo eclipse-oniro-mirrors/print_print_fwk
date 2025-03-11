@@ -89,8 +89,7 @@ std::string ConvertArrayToJson(const T *array, uint32_t count, bool (*convertToJ
 bool ConvertJsonToStringList(const std::string &jsonString, std::vector<std::string> &list)
 {
     Json::Value jsonObject;
-    std::istringstream iss(jsonString);
-    if (!PrintJsonUtil::ParseFromStream(iss, jsonObject)) {
+    if (!PrintJsonUtil::Parse(jsonString, jsonObject)) {
         PRINT_HILOGW("invalid jsonString");
         return false;
     }
@@ -430,6 +429,8 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
                 detailInfo["bsunidriver_support"].isString()) {
                 option["bsunidriverSupport"] = detailInfo["bsunidriver_support"].asString();
             }
+        } else {
+            PRINT_HILOGW("DetailInfo is null");
         }
         info.SetOption(PrintJsonUtil::WriteString(option));
     }

@@ -337,8 +337,7 @@ Json::Value PrinterPreferences::ConvertToJson()
     preferencesJson["borderless"] = borderless_;
 
     if (hasOption_) {
-        std::istringstream iss(option_);
-        if (!PrintJsonUtil::ParseFromStream(iss, preferencesJson["options"])) {
+        if (!PrintJsonUtil::Parse(option_, preferencesJson["options"])) {
             PRINT_HILOGE("json accept preferences options fail");
         }
     }

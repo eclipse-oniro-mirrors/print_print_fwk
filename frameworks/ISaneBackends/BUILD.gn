@@ -33,11 +33,12 @@ config("sane_config") {
     "${print_utils_path}/include",
   ]
   cflags_cc = [
-    "-fexceptions",
+    "-fno-exceptions",
     "-fdata-sections",
     "-ffunction-sections",
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",
+    "-flto",
     "-Os",
   ]
   if (target_cpu == "arm") {

@@ -233,7 +233,7 @@ void PrintUtils::BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &
     PRINT_HILOGD("CallSpooler set printAttributes: %{public}s", (PrintJsonUtil::WriteString(attrJson)).c_str());
 }
 
-Json::Value PrintUtils::GetPageRangeForJson(const PrintAttributes &attrParam)
+Json::Value PrintUtils::CreatePageRangeJson(const PrintAttributes &attrParam)
 {
     Json::Value pageRangeJson;
     PrintRange printRangeAttr;
@@ -256,7 +256,7 @@ Json::Value PrintUtils::GetPageRangeForJson(const PrintAttributes &attrParam)
     return pageRangeJson;
 }
 
-Json::Value PrintUtils::GetPageSizeForJson(const PrintAttributes &attrParam)
+Json::Value PrintUtils::CreatePageSizeJson(const PrintAttributes &attrParam)
 {
     Json::Value pageSizeJson;
     PrintPageSize pageSizeAttr;
@@ -268,7 +268,7 @@ Json::Value PrintUtils::GetPageSizeForJson(const PrintAttributes &attrParam)
     return pageSizeJson;
 }
 
-Json::Value PrintUtils::GetMarginForJson(const PrintAttributes &attrParam)
+Json::Value PrintUtils::CreateMarginJson(const PrintAttributes &attrParam)
 {
     Json::Value marginJson;
     PrintMargin marginAttr;
@@ -291,13 +291,13 @@ Json::Value PrintUtils::GetMarginForJson(const PrintAttributes &attrParam)
 void PrintUtils::ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, Json::Value &attrJson)
 {
     if (attrParam.HasPageRange()) {
-        attrJson["pageRange"] = GetPageRangeForJson(attrParam);
+        attrJson["pageRange"] = CreatePageRangeJson(attrParam);
     }
     if (attrParam.HasPageSize()) {
-        attrJson["pageSize"] = GetPageSizeForJson(attrParam);
+        attrJson["pageSize"] = CreatePageSizeJson(attrParam);
     }
     if (attrParam.HasMargin()) {
-        attrJson["margin"] = GetMarginForJson(attrParam);
+        attrJson["margin"] = CreateMarginJson(attrParam);
     }
 }
 

@@ -1881,8 +1881,7 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     }
     std::string option = jobInfo.GetOption();
     Json::Value optionJson;
-    std::istringstream iss(option);
-    if (!PrintJsonUtil::ParseFromStream(iss, optionJson)) {
+    if (!PrintJsonUtil::Parse(option, optionJson)) {
         PRINT_HILOGE("option can not parse to json object");
         return params;
     }
