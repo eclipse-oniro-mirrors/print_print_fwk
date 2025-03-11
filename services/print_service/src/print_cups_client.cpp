@@ -507,10 +507,6 @@ int32_t PrintCupsClient::InitCupsResources()
         if (!i) {
             SymlinkDirectory(array[i][INDEX_ZERO].c_str(), array[i][INDEX_ONE].c_str());
         } else {
-            if (access(array[i][INDEX_TWO].c_str(), F_OK) != -1) {
-                PRINT_HILOGD("The resource has been copied.");
-                continue;
-            }
             CopyDirectory(array[i][INDEX_ZERO].c_str(), array[i][INDEX_ONE].c_str());
         }
     }
