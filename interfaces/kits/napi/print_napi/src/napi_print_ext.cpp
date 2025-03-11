@@ -626,6 +626,11 @@ napi_value NapiPrintExt::RemovePrinterFromDiscovery(napi_env env, napi_callback_
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
 
         std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        if (printerId.empty()) {
+            PRINT_HILOGE("printerId is empty!");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
         PRINT_HILOGD("printerId : %{private}s", printerId.c_str());
         context->printerId = printerId;
 
