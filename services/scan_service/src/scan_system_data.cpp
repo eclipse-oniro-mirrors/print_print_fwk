@@ -359,7 +359,7 @@ std::pair<std::string, std::string> ScanSystemData::UpdateNetScannerByUuid(const
     std::shared_ptr<ScanDeviceInfo> scannerInfo;
     std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
     for (const auto& [key, info] : addedScannerMap_) {
-        if (info != nullptr && info->uuid == uuid) {
+        if (info != nullptr && !info->uuid.empty() && info->uuid == uuid) {
             oldKey = key;
             scannerInfo = info;
             break;
