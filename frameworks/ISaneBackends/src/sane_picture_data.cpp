@@ -21,65 +21,46 @@
 #include "parcel.h"
 
 namespace OHOS::Scan {
-SanePictureData::SanePictureData() : data_(nullptr), size_(0) {}
-SanePictureData::~SanePictureData()
-{
-    DELETE_ARRAY_AND_NULLIFY(data_);
-}
+SanePictureData::SanePictureData() : ret_(SANE_READ_OK) {}
+SanePictureData::~SanePictureData() {}
 
 bool SanePictureData::Marshalling(Parcel &parcel) const
 {
     bool status = true;
-    if (size_ == INVALID_DATA) {
-        status &= parcel.WriteInt32(size_);
-        return status;
+    status &= parcel.WriteUint32(ret_);
+    if (ret_ == SANE_READ_OK) {
+        status &= parcel.WriteUint32(dataBuffer_.size());
+        status &= parcel.WriteBuffer((void*) dataBuffer_.data(), dataBuffer_.size());
     }
-    if (data_ == nullptr) {
-        SCAN_HILOGE("data_ is a nullptr");
-        return false;
-    }
-    status &= parcel.WriteInt32(size_);
-    status &= parcel.WriteBuffer((void*) data_, size_);
     return status;
 }
 
 SanePictureData* SanePictureData::Unmarshalling(Parcel &parcel)
 {
-    SanePictureData* obj = new (std::nothrow) SanePictureData();
+    std::unique_ptr<SanePictureData> obj = std::make_unique<SanePictureData>();
     if (obj == nullptr) {
-        SCAN_HILOGE("obj is a nullptr.");
+        SCAN_HILOGE("obj is a nullptr");
         return nullptr;
     }
-    int32_t dataSize = parcel.ReadInt32();
-    obj->size_ = dataSize;
-    if (dataSize == INVALID_DATA) {
-        SCAN_HILOGW("No data was read because of the failure");
-        return obj;
+    obj->ret_ = parcel.ReadUint32();
+    if (obj->ret_ == SANE_READ_OK) {
+        uint32_t bufferSize = parcel.ReadUint32();
+        const uint8_t* data = parcel.ReadUnpadBuffer(bufferSize);
+        if (data == nullptr) {
+            SCAN_HILOGE("data is a nullptr");
+            return nullptr;
+        }
+        if (bufferSize > MAX_BUFLEN) {
+            SCAN_HILOGE("data exceeds MAX_BUFLEN");
+            return nullptr;
+        }
+        obj->dataBuffer_.resize(bufferSize, 0);
+        auto ret = memcpy_s(obj->dataBuffer_.data(), bufferSize, data, bufferSize);
+        if (ret != SANE_STATUS_GOOD) {
+            SCAN_HILOGE("memcpy_s failed, errorCode: %{public}d", ret);
+            return nullptr;
+        }
     }
-    if (dataSize > MAX_BUFLEN) {
-        SCAN_HILOGE("dataSize [%{public}d] exceeded the maximum value.", dataSize);
-        delete obj;
-        return nullptr;
-    }
-    const uint8_t* data = parcel.ReadBuffer(static_cast<size_t>(obj->size_));
-    if (data == nullptr) {
-        SCAN_HILOGE("data is a nullptr");
-        delete obj;
-        return nullptr;
-    }
-    if (static_cast<int32_t>(*data) > MAX_BUFLEN) {
-        SCAN_HILOGE("data exceeds MAX_BUFLEN");
-        delete obj;
-        return nullptr;
-    }
-    constexpr int32_t zero = 0;
-    obj->valueBuffer_.resize(dataSize, zero);
-    auto ret = memcpy_s(obj->valueBuffer_.data(), dataSize, data, dataSize);
-    if (ret != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("memcpy_s failed, errorCode: %{public}d", ret);
-        delete obj;
-        return nullptr;
-    }
-    return obj;
+    return obj.release();
 }
 }   // namespace OHOS::Scan

@@ -1600,18 +1600,18 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId,
         SaneStatus saneStatus = SaneManagerClient::GetInstance()->
             SaneRead(scannerId, buffer_size, pictureData);
         scanStatus = ScanUtil::ConvertErro(saneStatus);
-        if (pictureData.size_ == INVALID_DATA) {
+        if (pictureData.ret_ == SANE_READ_FAIL) {
             SCAN_HILOGE("sane_read failed, scanStatus: [%{public}d]", scanStatus);
             break;
         }
-        auto ret = memcpy_s(saneReadBuf, buffer_size, pictureData.valueBuffer_.data(), pictureData.valueBuffer_.size());
+        auto ret = memcpy_s(saneReadBuf, buffer_size, pictureData.dataBuffer_.data(), pictureData.dataBuffer_.size());
         if (ret != ERR_OK) {
             scanStatus = E_SCAN_GENERIC_FAILURE;
             SCAN_HILOGE("memcpy_s failed, errorCode:[%{public}d]", ret);
             break;
         }
-        SetScanProgr(totalBytes, hundredPercent, pictureData.size_);
-        if (!WritePicData(jpegrow, pictureData.size_, parm, scanStatus)) {
+        SetScanProgr(totalBytes, hundredPercent, pictureData.dataBuffer_.size());
+        if (!WritePicData(jpegrow, pictureData.dataBuffer_.size(), parm, scanStatus)) {
             SCAN_HILOGE("WritePicData fail");
             break;
         }
