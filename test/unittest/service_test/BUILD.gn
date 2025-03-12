@@ -117,7 +117,7 @@ ohos_unittest("scan_service_test") {
     "${print_path}/frameworks/innerkitsimpl/scan_impl:scan_client",
     "${print_path}/interfaces/kits/napi/scan_napi:scan_napi",
     "${print_path}/profile:scan_sa_profiles",
-    "${print_path}/services/scan_service:scan_service",
+    "${print_path}/services/scan_service:scan_service_test",
     "//third_party/googletest:gmock_main",
     "//third_party/jsoncpp:jsoncpp",
   ]

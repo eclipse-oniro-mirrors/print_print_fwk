@@ -107,7 +107,7 @@ bool ConvertJsonToStringList(const std::string &jsonString, std::vector<std::str
 
 std::string GetStringValueFromJson(const Json::Value &jsonObject, const std::string &key)
 {
-    if (!jsonObject.isMember(key) || !jsonObject[key].isString()) {
+    if (!PrintJsonUtil::IsMember(jsonObject, key) || !jsonObject[key].isString()) {
         PRINT_HILOGW("can not find %{public}s", key.c_str());
         return "";
     }
@@ -425,7 +425,7 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
             Json::Value detailInfo;
             std::istringstream iss(std::string(discoveryItem->detailInfo));
             if (PrintJsonUtil::ParseFromStream(iss, detailInfo) && !detailInfo.isNull()
-                && detailInfo.isMember("bsunidriver_support") &&
+                && PrintJsonUtil::IsMember(detailInfo, "bsunidriver_support") &&
                 detailInfo["bsunidriver_support"].isString()) {
                 option["bsunidriverSupport"] = detailInfo["bsunidriver_support"].asString();
             }

@@ -26,7 +26,6 @@ config("print_models_config") {
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",
     "-flto",
-    "--save-temps",
     "-Os",
   ]
 }

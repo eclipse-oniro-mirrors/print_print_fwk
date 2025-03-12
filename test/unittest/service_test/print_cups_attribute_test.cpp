@@ -60,12 +60,12 @@ const char *const ATTR_TEST_MEDIA_TYPE_ARRAY[ATTR_TEST_MEDIA_TYPE_COUNT] = {"env
 
 void TestAttrCount(const std::string &jsonString, int count)
 {
-    Json::Value jsonObject;
-    if (OHOS::Print::PrintJsonUtil::Parse(jsonString, jsonObject)) {
+    Json::Value jsonArrayObject;
+    if (OHOS::Print::PrintJsonUtil::Parse(jsonString, jsonArrayObject)) {
         return;
     }
-    if (jsonObject.isArray()) {
-        EXPECT_EQ(jsonObject.size(), count);
+    if (jsonArrayObject.isArray()) {
+        EXPECT_EQ(jsonArrayObject.size(), count);
     }
 }
 }  // namespace

@@ -121,7 +121,7 @@ bool ParseJsonFieldAsInt(const Json::Value &cupsOpt, const std::string &key, int
 
 void ConvertJsonArrayToIntList(const Json::Value &jsonArray, const std::string &key, std::vector<uint32_t> &list)
 {
-    PRINT_HILOGD("ConvertJsonArrayToIntList %{public}s, %{public}zu", key.c_str(), jsonArray.size());
+    PRINT_HILOGD("ConvertJsonArrayToIntList %{public}s, %{public}u", key.c_str(), jsonArray.size());
     for (auto &item : jsonArray) {
         int value = 0;
         if (!ParseJsonFieldAsInt(item, key, value)) {

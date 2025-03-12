@@ -146,7 +146,7 @@ ohos_shared_library("print_service") {
   part_name = "print_fwk"
 }
 
-ohos_shared_library("print_service_test") {
+ohos_static_library("print_service_test") {
   sources = _sources
   branch_protector_ret = _branch_protector_ret
   sanitize = _sanitize
