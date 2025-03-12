@@ -14,13 +14,15 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
+cflags_cc = []
+
 config("sane_service_config") {
   include_dirs = [
     "include",
     "${target_gen_dir}",
   ]
 
-  cflags_cc = [
+  cflags_cc += [
     "-fno-exceptions",
     "-fdata-sections",
     "-ffunction-sections",
@@ -31,27 +33,44 @@ config("sane_service_config") {
   ]
 }
 
+_include_dirs = [ "${print_utils_path}/include" ]
+
+_sources = [ "src/sane_service_ability.cpp" ]
+
+_deps = [ "${print_path}/frameworks/ISaneBackends:sane_backends" ]
+
+_public_configs = [ ":sane_service_config" ]
+
+_external_deps = [
+  "access_token:libaccesstoken_sdk",
+  "backends:sane",
+  "c_utils:utils",
+  "hilog:libhilog",
+  "ipc:ipc_core",
+  "ipc:ipc_napi",
+  "ipc:ipc_single",
+  "napi:ace_napi",
+  "safwk:system_ability_fwk",
+  "samgr:samgr_proxy",
+]
+
 ohos_shared_library("sane_service") {
-  include_dirs = [ "${print_utils_path}/include" ]
+  include_dirs = _include_dirs
+  sources = _sources
+  deps = _deps
+  public_configs = _public_configs
+  external_deps = _external_deps
 
-  sources = [ "src/sane_service_ability.cpp" ]
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
 
-  deps = [ "${print_path}/frameworks/ISaneBackends:sane_backends" ]
-
-  public_configs = [ ":sane_service_config" ]
-
-  external_deps = [
-    "access_token:libaccesstoken_sdk",
-    "backends:sane",
-    "c_utils:utils",
-    "hilog:libhilog",
-    "ipc:ipc_core",
-    "ipc:ipc_napi",
-    "ipc:ipc_single",
-    "napi:ace_napi",
-    "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
-  ]
+ohos_static_library("sane_service_test") {
+  include_dirs = _include_dirs
+  sources = _sources
+  deps = _deps
+  public_configs = _public_configs
+  external_deps = _external_deps
 
   subsystem_name = "print"
   part_name = "print_fwk"

@@ -14,6 +14,8 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/ohos.gni")
 
+cflags_cc = []
+
 config("ability_config") {
   visibility = [ ":*" ]
   include_dirs = [
@@ -23,7 +25,7 @@ config("ability_config") {
     "//third_party/node/src",
   ]
 
-  cflags_cc = [
+  cflags_cc += [
     "-fno-exceptions",
     "-fdata-sections",
     "-ffunction-sections",

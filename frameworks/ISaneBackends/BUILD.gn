@@ -14,6 +14,8 @@ import("//base/print/print_fwk/print.gni")
 import("//build/config/components/idl_tool/idl.gni")
 import("//build/ohos.gni")
 
+cflags_cc = []
+
 idl_interface_sources = [
   "${target_gen_dir}/sane_backends_proxy.cpp",
   "${target_gen_dir}/sane_backends_stub.cpp",
@@ -32,7 +34,7 @@ config("sane_config") {
     "${target_gen_dir}",
     "${print_utils_path}/include",
   ]
-  cflags_cc = [
+  cflags_cc += [
     "-fno-exceptions",
     "-fdata-sections",
     "-ffunction-sections",

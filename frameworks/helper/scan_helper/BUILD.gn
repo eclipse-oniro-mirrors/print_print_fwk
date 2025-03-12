@@ -19,7 +19,16 @@ config("scan_interfaces_kits_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "include" ]
 
-  cflags_cc += [ "-fno-exceptions" ]
+  cflags_cc += [
+    "-fno-exceptions",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-flto",
+    "--save-temps",
+    "-Os",
+  ]
 }
 ohos_shared_library("scan_helper") {
   include_dirs = [

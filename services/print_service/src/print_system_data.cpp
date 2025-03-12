@@ -515,8 +515,7 @@ void PrintSystemData::ConvertPrinterCapabilityToJson(PrinterCapability &printerC
 
     if (printerCapability.HasOption()) {
         std::string options = printerCapability.GetOption();
-        std::istringstream iss(options);
-        if (!PrintJsonUtil::ParseFromStream(iss, capsJson["options"])) {
+        if (!PrintJsonUtil::Parse(options, capsJson["options"])) {
             PRINT_HILOGE("json accept capability options fail");
             return;
         }
@@ -1054,8 +1053,7 @@ int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, Pr
     std::string capOption = cap.GetOption();
     PRINT_HILOGI("printer capOption %{public}s", capOption.c_str());
     Json::Value capJson;
-    std::istringstream iss(capOption);
-    if (!PrintJsonUtil::ParseFromStream(iss, capJson)) {
+    if (!PrintJsonUtil::Parse(capOption, capJson)) {
         PRINT_HILOGW("capOption can not parse to json object");
         return E_PRINT_INVALID_PARAMETER;
     }
