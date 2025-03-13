@@ -50,7 +50,7 @@ bool ScanSystemData::ParseScannerListJsonV1(Json::Value& jsonObject)
         SCAN_HILOGW("can not find scaner_list");
         return false;
     }
-    for (int i = 0; i < jsonObject["scaner_list"].size(); i++) {
+    for (unsigned int i = 0; i < jsonObject["scaner_list"].size(); i++) {
         Json::Value object = jsonObject["scaner_list"][i];
         if (!CheckJsonObjectValue(object)) {
             continue;
