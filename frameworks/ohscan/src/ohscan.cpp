@@ -178,20 +178,27 @@ void FreeScannerOptionsMemory(Scan_ScannerOptions* scannerOptions)
         return;
     }
 
-    for (int i = 0; i < scannerOptions->optionCount; i++) {
-        DELETE_AND_NULLIFY(scannerOptions->titles[i])
+    if (scannerOptions->titles != nullptr) {
+        for (int i = 0; i < scannerOptions->optionCount; i++) {
+            DELETE_AND_NULLIFY(scannerOptions->titles[i])
+        }
+        DELETE_ARRAY_AND_NULLIFY(scannerOptions->titles)
     }
-    DELETE_ARRAY_AND_NULLIFY(scannerOptions->titles)
 
-    for (int i = 0; i < scannerOptions->optionCount; i++) {
-        DELETE_AND_NULLIFY(scannerOptions->descriptions[i])
+    if (scannerOptions->descriptions != nullptr) {
+        for (int i = 0; i < scannerOptions->optionCount; i++) {
+            DELETE_AND_NULLIFY(scannerOptions->descriptions[i])
+        }
+        DELETE_ARRAY_AND_NULLIFY(scannerOptions->descriptions)
     }
-    DELETE_ARRAY_AND_NULLIFY(scannerOptions->descriptions)
 
-    for (int i = 0; i < scannerOptions->optionCount; i++) {
-        DELETE_AND_NULLIFY(scannerOptions->ranges[i])
+    if (scannerOptions->ranges != nullptr) {
+        for (int i = 0; i < scannerOptions->optionCount; i++) {
+            DELETE_AND_NULLIFY(scannerOptions->ranges[i])
+        }
+        DELETE_ARRAY_AND_NULLIFY(scannerOptions->ranges)
     }
-    DELETE_ARRAY_AND_NULLIFY(scannerOptions->ranges)
+
     DELETE_AND_NULLIFY(scannerOptions)
 }
 
