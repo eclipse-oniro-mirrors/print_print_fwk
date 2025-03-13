@@ -60,6 +60,7 @@ static const std::string TEST_SERVICE_JOB_ID = "test_id";
 static const std::string PRINTER_URI = "test_printer_uri";
 static const std::string PRINTER_PRINTER_NAME = "test_printer_name";
 static const std::string PRINTER_PRINTER_ID = "test_printer_id";
+static const std::string JOB_USER_NAME = "test_user";
 
 class PrintCupsClientTest : public testing::Test {
 public:
@@ -275,7 +276,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0013, TestSize.Level1)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
-    printCupsClient->AddCupsPrintJob(testJob);
+    printCupsClient->AddCupsPrintJob(testJob, JOB_USER_NAME);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
@@ -300,7 +301,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0014, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    printCupsClient->AddCupsPrintJob(testJob);
+    printCupsClient->AddCupsPrintJob(testJob, JOB_USER_NAME);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
@@ -336,7 +337,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient->BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient->BuildJobParameters(testJob, JOB_USER_NAME);
     printCupsClient->jobQueue_.push_back(jobParams);
     printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
@@ -377,7 +378,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient->BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient->BuildJobParameters(testJob, JOB_USER_NAME);
     printCupsClient->JobSentCallback(); // currentJob_ is null, do nothing
     printCupsClient->currentJob_ = jobParams;
     printCupsClient->JobSentCallback(); // clear currentJob_
@@ -417,7 +418,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0021, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->borderless = 1;
     jobParams->mediaSize = "";
     jobParams->mediaType = "";
@@ -447,7 +448,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0022, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->mediaSize = "testMediaSize";
     jobParams->mediaType = "testMediaType";
     int numOptions = 0;
@@ -476,7 +477,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0023, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->borderless = 0;
     jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
     int numOptions = 0;
@@ -505,7 +506,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0024, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->borderless = 1;
     jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
     jobParams->mediaSize = CUPS_MEDIA_4X6;
@@ -533,7 +534,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025, TestSize.Level1)
     jobInfo.SetDuplexMode(1);
     jobInfo.SetColorMode(0);
     jobInfo.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(jobInfo);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(jobInfo, JOB_USER_NAME);
     jobParams->printerId = "1";
     jobParams->numCopies = 2;
     jobParams->duplex = "";
@@ -562,7 +563,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0026, TestSize.Level1)
     jobInfo.SetDuplexMode(1);
     jobInfo.SetColorMode(0);
     jobInfo.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(jobInfo);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(jobInfo, JOB_USER_NAME);
     jobParams->printerId = "1";
     jobParams->numCopies = 0;
     jobParams->duplex = "test_duplex";
@@ -719,7 +720,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0039, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     EXPECT_NE(jobParams, nullptr);
     EXPECT_NE(jobParams->serviceAbility, nullptr);
 
@@ -1080,8 +1081,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0060, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, JOB_USER_NAME);
     printCupsClient.jobQueue_.push_back(jobParams);
     PRINT_HILOGI("CancelCupsJob(): printCupsClient.jobQueue_.size(): %{public}u", printCupsClient.jobQueue_.size());
     printCupsClient.CancelCupsJob(serviceJobId);
@@ -1106,8 +1107,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0061, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
-    EXPECT_EQ(jobParams->jobOriginatingUserName, "default");
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
+    EXPECT_EQ(jobParams->jobOriginatingUserName, JOB_USER_NAME);
     printCupsClient.jobQueue_.push_back(jobParams);
     printCupsClient.CancelCupsJob(serviceJobId);
 }
@@ -1179,11 +1180,11 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0066, TestSize.Level1)
     pageSize.SetId("pgid-1234");
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     EXPECT_EQ(jobParams, nullptr);
 
     testJob.SetOption("test");
-    printCupsClient.BuildJobParameters(testJob);
+    printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     EXPECT_EQ(jobParams, nullptr);
     delete jobParams;
 }
@@ -1207,7 +1208,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetIsLandscape(true);
     testJob.SetOption(R"({"key": "value"})");
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     EXPECT_EQ(jobParams, nullptr);
 
     Json::Value optionJson;
@@ -1216,7 +1217,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067, TestSize.Level1)
     optionJson["printerName"] = "printer1";
     optionJson["documentFormat"] = "application/pdf";
     testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
-    jobParams = printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     EXPECT_EQ(jobParams->printerUri, optionJson["printerUri"].asString());
     EXPECT_EQ(jobParams->printerName, PrintUtil::StandardizePrinterName(optionJson["printerName"].asString()));
     EXPECT_EQ(jobParams->documentFormat, optionJson["documentFormat"].asString());
@@ -1226,7 +1227,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067, TestSize.Level1)
     optionJson["jobName"] = "jobName";
     optionJson["mediaType"] = "mediaType";
     testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
-    jobParams = printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     EXPECT_EQ(jobParams->printerAttrsOption_cupsOption, optionJson["cupsOptions"].asString());
     EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"].asString());
     EXPECT_EQ(jobParams->jobName, optionJson["jobName"].asString());
@@ -1234,13 +1235,13 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067, TestSize.Level1)
 
     optionJson["printQuality"] = 1;
     testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
-    jobParams = printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
 
     EXPECT_EQ(jobParams->isAutoRotate, true);   // default true
     optionJson["isAutoRotate"] = false;
     testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
-    jobParams = printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     EXPECT_EQ(jobParams->isAutoRotate, optionJson["isAutoRotate"].asBool());
 }
 
@@ -1265,7 +1266,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0068, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     std::string option = testJob.GetOption();
     Json::Value optionJson;
     PrintJsonUtil::Parse(option, optionJson);
@@ -1440,19 +1441,19 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0078, TestSize.Level1)
     optionJson["printerName"] = "printer1";
     optionJson["documentFormat"] = "application/pdf";
     testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     EXPECT_EQ(jobParams, nullptr);
 
     optionJson["printerUri"] = "ipp://192.168.0.1:111/ipp/print";
     optionJson["printerName"] = 1;
     testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
-    jobParams = printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     EXPECT_EQ(jobParams, nullptr);
 
     optionJson["printerName"] = "printer1";
     optionJson["documentFormat"] = 1;
     testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
-    jobParams = printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     EXPECT_EQ(jobParams, nullptr);
 }
 
@@ -1482,7 +1483,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0079, TestSize.Level1)
     testJob.SetPageSize(pageSize);
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
-    jobParams = printCupsClient.BuildJobParameters(testJob);
+    jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     delete http;
     delete jobParams;
 }
@@ -1536,7 +1537,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0083, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetIsLandscape(true);
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->isAutoRotate = true;
     jobParams->isLandscape = true;
     int numOptions = 0;
@@ -1566,7 +1567,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0084, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetIsLandscape(true);
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->isAutoRotate = true;
     jobParams->isLandscape = false;
     int numOptions = 0;
@@ -1596,7 +1597,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0085, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetIsLandscape(true);
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->isAutoRotate = false;
     jobParams->isLandscape = false;
     int numOptions = 0;
@@ -1626,7 +1627,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0086, TestSize.Level1)
     testJob.SetPrinterId("printid-1234");
     testJob.SetIsLandscape(true);
     testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     jobParams->isAutoRotate = false;
     jobParams->isLandscape = true;
     int numOptions = 0;

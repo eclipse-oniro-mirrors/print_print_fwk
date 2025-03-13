@@ -151,6 +151,7 @@ private:
     bool StartPluginPrintIconExtAbility(const AAFwk::Want &want);
     bool IsPrinterJobMapEmpty();
     int32_t GetCurrentUserId();
+    std::string GetCallerUserName();
     void UpdatePrintUserMap();
     void AddToPrintJobList(std::string jobId, const std::shared_ptr<PrintJob> &printjob);
     std::shared_ptr<PrintUserData> GetCurrentUserData();

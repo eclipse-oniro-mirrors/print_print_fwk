@@ -2117,6 +2117,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0144, TestSize.Level1)
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0145, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string userName = service->GetCallerUserName();
+    EXPECT_FALSE(userName.empty());
     EXPECT_EQ(service->StartPrintJobInternal(nullptr), E_PRINT_SERVER_FAILURE);
 }
 

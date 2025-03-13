@@ -81,6 +81,7 @@ struct JobMonitorParam {
     bool isBlock = false;
     uint32_t substate = 0;
     bool isPrinterStopped = false;
+    std::string jobOriginatingUserName;
     bool isCanceled = false;
 
     JobMonitorParam() {}
@@ -126,7 +127,7 @@ public:
         PrinterCapability &printerCaps);
     int32_t QueryPrinterStatusByUri(const std::string &printerUri, PrinterStatus &status);
     int32_t DeleteCupsPrinter(const char *printerName);
-    void AddCupsPrintJob(const PrintJob &jobInfo);
+    void AddCupsPrintJob(const PrintJob &jobInfo, const std::string &userName);
     void CancelCupsJob(std::string serviceJobId);
 
     int32_t QueryAddedPrinterList(std::vector<std::string> &printerName);
@@ -179,7 +180,7 @@ private:
 
     void UpdateBorderlessJobParameter(Json::Value& optionJson, JobParameters *params);
     void UpdateJobParameterByOption(Json::Value& optionJson, JobParameters *params);
-    JobParameters* BuildJobParameters(const PrintJob &jobInfo);
+    JobParameters* BuildJobParameters(const PrintJob &jobInfo, const std::string &userName);
     std::string GetColorString(uint32_t colorCode);
     std::string GetMedieSize(const PrintJob &jobInfo);
     std::string GetDulpexString(uint32_t duplexCode);
@@ -192,6 +193,7 @@ private:
         const char * const *pattrs);
     bool ResumePrinter(const std::string &printerName);
     bool CancelPrinterJob(int cupsJobId);
+    bool CancelPrinterJob(int cupsJobId, const std::string &name, const std::string &user);
 
 private:
     bool toCups_ = true;
