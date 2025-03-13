@@ -14,7 +14,7 @@
 import("//base/print/print_fwk/print.gni")
 import("//build/test.gni")
 
-module_output_path = "print_fwk/service_test"
+module_output_path = unit_test_output_path
 
 ohos_unittest("print_service_test") {
   module_out_path = module_output_path
