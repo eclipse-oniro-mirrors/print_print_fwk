@@ -28,6 +28,13 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "//third_party/node/src",
   ]
 
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "${print_path}/cfi_blocklist.txt"
+  }
+
   sources = [
     "print_attributes_test.cpp",
     "print_callback_stub_test.cpp",
