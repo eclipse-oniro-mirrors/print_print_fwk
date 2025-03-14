@@ -366,7 +366,7 @@ std::pair<std::string, std::string> ScanSystemData::UpdateNetScannerByUuid(const
         }
     }
     if (oldKey == "" || scannerInfo == nullptr) {
-        SCAN_HILOGE("Cannot find scanner by uuid");
+        SCAN_HILOGW("Cannot find scanner by uuid");
         return std::make_pair("", "");
     }
     std::string oldDeviceId = scannerInfo->deviceId;

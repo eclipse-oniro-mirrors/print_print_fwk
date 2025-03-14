@@ -457,7 +457,6 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo& info)
     scanData.SaveScannerMap();
     std::map<std::string, ScanDeviceInfo>& deviceMap = info.discoverMode == "USB" ?
         saneGetUsbDeviceInfoMap : saneGetTcpDeviceInfoMap;
-    deviceMap[info.serialNumber] = info;
     deviceMap[info.uniqueId] = info;
 }
 
@@ -930,7 +929,8 @@ void ScanServiceAbility::SendDeviceInfoTCP(const ScanDeviceInfoTCP &info, std::s
 void ScanServiceAbility::SendDeviceInfo(const ScanDeviceInfo &info, std::string event)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-
+    SCAN_HILOGI("SendDeviceInfo [%{private}s], event = %{public}s",
+        info.deviceId.c_str(), event.c_str());
     if (event.empty()) {
         SCAN_HILOGE("SendDeviceInfo parm has nullptr");
         return;

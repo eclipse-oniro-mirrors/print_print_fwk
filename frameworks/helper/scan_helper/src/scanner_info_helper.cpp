@@ -73,8 +73,6 @@ napi_value ScannerInfoHelper::MakeJsObject(napi_env env, const ScanDeviceInfo &i
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_SERIALNUMBER, info.GetSerialNumber());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_DEVICENAME, info.GetDeviceName());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_UNIQUE_ID, info.GetUniqueId());
-    SCAN_HILOGD("ScanDeviceInfo start dump");
-    info.Dump();
     return jsObj;
 }
 
@@ -87,8 +85,6 @@ napi_value ScannerInfoSyncHelper::MakeJsObject(napi_env env, const ScanDeviceInf
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_SERIALNUMBER, info.GetSerialNumber());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_SYNCMODE, info.GetSyncMode());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_OLD_SCANNERID, info.GetOldDeviceId());
-    SCAN_HILOGD("ScanDeviceInfoSync start dump");
-    info.Dump();
     return jsObj;
 }
 
