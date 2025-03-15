@@ -76,7 +76,6 @@ public:
     void RemoveIpPrinterFromList(const std::string &printerId);
     std::shared_ptr<PrinterInfo> QueryIpPrinterInfoById(const std::string &printerId);
     int32_t BuildPrinterPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences);
-    void BuildEprintPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences);
 
 private:
     bool ParsePrinterListJsonV1(Json::Value& jsonObject);
@@ -110,12 +109,11 @@ private:
     bool ParsePreviousPreferencesSetting(Json::Value &settingJson, PrinterPreferences &preferences);
     bool ParsePrinterPreferencesJson(Json::Value &jsonObject);
     bool ReadJsonFile(const std::filesystem::path &path);
-    std::string ParseDefaultPageSizeId(const PrinterCapability &cap, Json::Value &capOpt);
-    int32_t ParseDefaultOrientation(const PrinterCapability &cap, Json::Value &capOpt);
-    int32_t ParseDefaultDuplexMode(const PrinterCapability &cap, Json::Value &capOpt);
-    int32_t ParseDefaultPrintQuality(const PrinterCapability &cap, Json::Value &capOpt);
-    std::string ParseDefaultMediaType(const PrinterCapability &cap, Json::Value &capOpt);
+    std::string ParseDefaultPageSizeId(const PrinterCapability &cap);
     void DeleteFile(const std::filesystem::path &path);
+    void BuildPrinterPreferenceByDefault(Json::Value &capOpt, PrinterPreferences &printPreferences);
+    void BuildPrinterPreferenceBySupport(const PrinterCapability &cap, PrinterPreferences &printPreferences);
+    Json::Value GetCupsOptionsJson(const PrinterCapability &cap);
 
     template<typename T>
     bool ProcessJsonToCapabilityList(Json::Value &capsJson,
@@ -148,6 +146,21 @@ private:
         }
         PRINT_HILOGD("processCapabilityList success, %{public}s", key.c_str());
         return true;
+    }
+
+    template <typename T>
+    std::optional<T> GetPreferencesFromSupport(const std::vector<T>& vec, const T& defaultValue)
+    {
+        if (vec.size() == 0) {
+            return std::nullopt;
+        }
+    
+        for (const auto& elem : vec) {
+            if (elem == defaultValue) {
+                return elem;
+            }
+        }
+        return vec[0];
     }
 
 private:

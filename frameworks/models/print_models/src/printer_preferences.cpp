@@ -329,12 +329,24 @@ void PrinterPreferences::Dump() const
 Json::Value PrinterPreferences::ConvertToJson()
 {
     Json::Value preferencesJson;
-    preferencesJson["defaultDuplexMode"] = defaultDuplexMode_;
-    preferencesJson["defaultPrintQuality"] = defaultPrintQuality_;
-    preferencesJson["defaultMediaType"] = defaultMediaType_;
-    preferencesJson["defaultPageSizeId"] = defaultPageSizeId_;
-    preferencesJson["defaultOrientation"] = defaultOrientation_;
-    preferencesJson["borderless"] = borderless_;
+    if (hasDefaultDuplexMode_) {
+        preferencesJson["defaultDuplexMode"] = defaultDuplexMode_;
+    }
+    if (hasDefaultPrintQuality_) {
+        preferencesJson["defaultPrintQuality"] = defaultPrintQuality_;
+    }
+    if (hasDefaultMediaType_) {
+        preferencesJson["defaultMediaType"] = defaultMediaType_;
+    }
+    if (hasDefaultPageSizeId_) {
+        preferencesJson["defaultPageSizeId"] = defaultPageSizeId_;
+    }
+    if (hasDefaultOrientation_) {
+        preferencesJson["defaultOrientation"] = defaultOrientation_;
+    }
+    if (hasBorderless_) {
+        preferencesJson["borderless"] = borderless_;
+    }
 
     if (hasOption_) {
         if (!PrintJsonUtil::Parse(option_, preferencesJson["options"])) {

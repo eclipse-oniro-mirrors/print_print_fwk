@@ -149,9 +149,15 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0012, TestSize.Level1)
 HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0013, TestSize.Level1)
 {
     OHOS::Print::PrinterPreferences preferences;
+    preferences.SetDefaultDuplexMode(0);
+    preferences.SetDefaultPrintQuality(0);
+    preferences.SetDefaultMediaType("plain");
+    preferences.SetDefaultPageSizeId("ISO_A4");
+    preferences.SetDefaultOrientation(0);
+    preferences.SetBorderless(false);
     preferences.SetOption("test");
     Json::Value preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(false, Print::PrintJsonUtil::IsMember(preferencesJson, "options"));
+    EXPECT_EQ(true, Print::PrintJsonUtil::IsMember(preferencesJson, "defaultPageSizeId"));
 }
 
 HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0014, TestSize.Level1)

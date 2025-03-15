@@ -1080,12 +1080,14 @@ void PrintServiceAbility::NotifyCurrentUserChanged(const int32_t userId)
 
     switch (status) {
         case PRINT_JOB_BLOCKED:
+            CallStatusBar();
             NotifyAppJobQueueChanged(QUEUE_JOB_LIST_BLOCKED);
             break;
         case PRINT_JOB_COMPLETED:
             NotifyAppJobQueueChanged(QUEUE_JOB_LIST_HIDE);
             break;
         case PRINT_JOB_RUNNING:
+            CallStatusBar();
             NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
             break;
         default:
@@ -1250,12 +1252,7 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
     } else {
         PRINT_HILOGW("Printer added.");
     }
-    if (printerId.find(EPRINTER) != std::string::npos) {
-        PRINT_HILOGI("ePrinter Enter");
-        printSystemData_.BuildEprintPreference(cupsPrinterInfo.printerCapability, cupsPrinterInfo.printPreferences);
-    } else {
-        printSystemData_.BuildPrinterPreference(cupsPrinterInfo.printerCapability, cupsPrinterInfo.printPreferences);
-    }
+    printSystemData_.BuildPrinterPreference(cupsPrinterInfo.printerCapability, cupsPrinterInfo.printPreferences);
     printSystemData_.InsertCupsPrinter(printerId, cupsPrinterInfo);
     SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, output);
     SetLastUsedPrinter(printerId);

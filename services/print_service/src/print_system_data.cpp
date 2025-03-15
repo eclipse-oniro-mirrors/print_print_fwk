@@ -202,12 +202,7 @@ bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
             if (info == nullptr) {
                 continue;
             }
-            if (printerId.find(EPRINTER) != std::string::npos) {
-                PRINT_HILOGI("ePrinter Enter");
-                BuildEprintPreference(info->printerCapability, info->printPreferences);
-            } else {
-                BuildPrinterPreference(info->printerCapability, info->printPreferences);
-            }
+            BuildPrinterPreference(info->printerCapability, info->printPreferences);
             UpdatePrinterPreferences(printerId, info->printPreferences);
             Json::Value printPreferenceJson = object[printerId];
             if (!PrintJsonUtil::IsMember(jsonObject, "setting") || !printPreferenceJson["setting"].isObject()) {
@@ -1030,54 +1025,114 @@ std::shared_ptr<PrinterInfo> PrintSystemData::QueryIpPrinterInfoById(const std::
     return nullptr;
 }
 
-void PrintSystemData::BuildEprintPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences)
+Json::Value PrintSystemData::GetCupsOptionsJson(const PrinterCapability &cap)
 {
-    Json::Value capOpt;
-    printPreferences.SetDefaultPageSizeId(ParseDefaultPageSizeId(cap, capOpt));
-    printPreferences.SetDefaultOrientation(ParseDefaultOrientation(cap, capOpt));
-    printPreferences.SetDefaultDuplexMode(ParseDefaultDuplexMode(cap, capOpt));
-    printPreferences.SetDefaultPrintQuality(ParseDefaultPrintQuality(cap, capOpt));
-    printPreferences.SetDefaultMediaType(ParseDefaultMediaType(cap, capOpt));
-    printPreferences.SetBorderless(false);
-    printPreferences.Dump();
-    return;
+    if (!cap.HasOption()) {
+        PRINT_HILOGE("capability does not have a cupsOptions attribute");
+        return Json::nullValue;
+    }
+    std::string capOption = cap.GetOption();
+    PRINT_HILOGD("printer capOption %{private}s", capOption.c_str());
+    Json::Value capJson;
+    std::istringstream iss(capOption);
+    if (!PrintJsonUtil::ParseFromStream(iss, capJson)) {
+        PRINT_HILOGW("capOption can not parse to json object");
+        return Json::nullValue;
+    }
+    if (!capJson.isMember("cupsOptions")) {
+        PRINT_HILOGW("The capJson does not have a cupsOptions attribute.");
+        return Json::nullValue;
+    }
+    Json::Value capOpt = capJson["cupsOptions"];
+    return capOpt;
 }
 
 int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences)
 {
     PRINT_HILOGI("BuildPrinterPreference enter");
-    if (!cap.HasOption()) {
-        PRINT_HILOGE("capability does not have a cupsOptions attribute");
-        return E_PRINT_INVALID_PRINTER;
+    Json::Value capOpt = GetCupsOptionsJson(cap);
+    if (!capOpt.isNull()) {
+        BuildPrinterPreferenceByDefault(capOpt, printPreferences);
     }
-    std::string capOption = cap.GetOption();
-    PRINT_HILOGI("printer capOption %{public}s", capOption.c_str());
-    Json::Value capJson;
-    if (!PrintJsonUtil::Parse(capOption, capJson)) {
-        PRINT_HILOGW("capOption can not parse to json object");
-        return E_PRINT_INVALID_PARAMETER;
-    }
-    if (!PrintJsonUtil::IsMember(capJson, "cupsOptions")) {
-        PRINT_HILOGW("The capJson does not have a cupsOptions attribute.");
-        return E_PRINT_INVALID_PARAMETER;
-    }
-    Json::Value capOpt = capJson["cupsOptions"];
 
-    printPreferences.SetDefaultPageSizeId(ParseDefaultPageSizeId(cap, capOpt));
-    printPreferences.SetDefaultOrientation(ParseDefaultOrientation(cap, capOpt));
-    printPreferences.SetDefaultDuplexMode(ParseDefaultDuplexMode(cap, capOpt));
-    printPreferences.SetDefaultPrintQuality(ParseDefaultPrintQuality(cap, capOpt));
-    printPreferences.SetDefaultMediaType(ParseDefaultMediaType(cap, capOpt));
-    printPreferences.SetBorderless(false);
+    BuildPrinterPreferenceBySupport(cap, printPreferences);
     printPreferences.Dump();
     return E_PRINT_NONE;
 }
 
-std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap, Json::Value &capOpt)
+void PrintSystemData::BuildPrinterPreferenceByDefault(Json::Value &capOpt, PrinterPreferences &printPreferences)
 {
+    PRINT_HILOGI("BuildPrinterPreferenceByDefault enter");
     if (PrintJsonUtil::IsMember(capOpt, "defaultPageSizeId") && capOpt["defaultPageSizeId"].isString()) {
-        return capOpt["defaultPageSizeId"].asString();
+        printPreferences.SetDefaultPageSizeId(capOpt["defaultPageSizeId"].asString());
     }
+
+    int32_t defaultOrientation = 0;
+    if (PrintJsonUtil::IsMember(capOpt, "orientation-requested-default") &&
+        capOpt["orientation-requested-default"].isString()) {
+        PrintUtil::ConvertToInt(capOpt["orientation-requested-default"].asString(), defaultOrientation);
+    }
+    printPreferences.SetDefaultOrientation(defaultOrientation);
+
+    if (PrintJsonUtil::IsMember(capOpt, "sides-default") && capOpt["sides-default"].isString()) {
+        int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
+        PrintUtil::ConvertToInt(capOpt["sides-default"].asString(), defaultDuplexMode);
+        printPreferences.SetDefaultDuplexMode(defaultDuplexMode);
+    }
+
+    if (PrintJsonUtil::IsMember(capOpt, "print-quality-default") && capOpt["print-quality-default"].isString()) {
+        int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
+        PrintUtil::ConvertToInt(capOpt["print-quality-default"].asString(), defaultPrintQuality);
+        printPreferences.SetDefaultPrintQuality(defaultPrintQuality);
+    }
+
+    if (PrintJsonUtil::IsMember(capOpt, "media-type-default") && capOpt["media-type-default"].isString()) {
+        printPreferences.SetDefaultMediaType(capOpt["media-type-default"].asString());
+    }
+}
+
+void PrintSystemData::BuildPrinterPreferenceBySupport(
+    const PrinterCapability &cap, PrinterPreferences &printPreferences)
+{
+    if (!printPreferences.HasDefaultPageSizeId()) {
+        printPreferences.SetDefaultPageSizeId(ParseDefaultPageSizeId(cap));
+    }
+
+    if (!printPreferences.HasDefaultDuplexMode()) {
+        std::vector<uint32_t> supportedDuplexModeList;
+        cap.GetSupportedDuplexMode(supportedDuplexModeList);
+        std::optional<uint32_t> defaultDuplexMode =
+            GetPreferencesFromSupport<uint32_t>(supportedDuplexModeList, DUPLEX_MODE_NONE);
+        if (defaultDuplexMode != std::nullopt) {
+            printPreferences.SetDefaultDuplexMode(*defaultDuplexMode);
+        }
+    }
+
+    if (!printPreferences.HasDefaultPrintQuality()) {
+        std::vector<uint32_t> supportedQualityList;
+        cap.GetSupportedQuality(supportedQualityList);
+        std::optional<uint32_t> defaultPrintQuality =
+            GetPreferencesFromSupport<uint32_t>(supportedQualityList, PRINT_QUALITY_NORMAL);
+        if (defaultPrintQuality != std::nullopt) {
+            printPreferences.SetDefaultPrintQuality(*defaultPrintQuality);
+        }
+    }
+
+    if (!printPreferences.HasDefaultMediaType()) {
+        std::vector<std::string> supportedMediaTypeList;
+        cap.GetSupportedMediaType(supportedMediaTypeList);
+        std::optional<std::string> defaultMediaType =
+            GetPreferencesFromSupport<std::string>(supportedMediaTypeList, DEFAULT_MEDIA_TYPE);
+        if (defaultMediaType != std::nullopt) {
+            printPreferences.SetDefaultMediaType(*defaultMediaType);
+        }
+    }
+
+    printPreferences.SetBorderless(false);
+}
+
+std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap)
+{
     std::vector<PrintPageSize> supportedPageSize;
     cap.GetSupportedPageSize(supportedPageSize);
     if (supportedPageSize.size() == 0) {
@@ -1089,74 +1144,6 @@ std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap
         }
     }
     return supportedPageSize[0].GetId();
-}
-
-int32_t PrintSystemData::ParseDefaultOrientation(const PrinterCapability &cap, Json::Value &capOpt)
-{
-    int32_t defaultOrientation = 0;
-    if (PrintJsonUtil::IsMember(capOpt, "orientation-requested-default") &&
-        capOpt["orientation-requested-default"].isString()) {
-        PrintUtil::ConvertToInt(capOpt["orientation-requested-default"].asString(), defaultOrientation);
-    }
-    return defaultOrientation;
-}
-
-int32_t PrintSystemData::ParseDefaultDuplexMode(const PrinterCapability &cap, Json::Value &capOpt)
-{
-    if (PrintJsonUtil::IsMember(capOpt, "sides-default") && capOpt["sides-default"].isString()) {
-        int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
-        PrintUtil::ConvertToInt(capOpt["sides-default"].asString(), defaultDuplexMode);
-        return defaultDuplexMode;
-    }
-    std::vector<uint32_t> supportedDuplexModeList;
-    cap.GetSupportedDuplexMode(supportedDuplexModeList);
-    if (supportedDuplexModeList.size() == 0) {
-        return 0;
-    }
-    for (auto duplexMode : supportedDuplexModeList) {
-        if (duplexMode == DUPLEX_MODE_NONE) {
-            return DUPLEX_MODE_NONE;
-        }
-    }
-    return supportedDuplexModeList[0];
-}
-
-int32_t PrintSystemData::ParseDefaultPrintQuality(const PrinterCapability &cap, Json::Value &capOpt)
-{
-    if (PrintJsonUtil::IsMember(capOpt, "print-quality-default") && capOpt["print-quality-default"].isString()) {
-        int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
-        PrintUtil::ConvertToInt(capOpt["print-quality-default"].asString(), defaultPrintQuality);
-        return defaultPrintQuality;
-    }
-    std::vector<uint32_t> supportedQualityList;
-    cap.GetSupportedQuality(supportedQualityList);
-    if (supportedQualityList.size() == 0) {
-        return 0;
-    }
-    for (auto quality : supportedQualityList) {
-        if (quality == PRINT_QUALITY_NORMAL) {
-            return PRINT_QUALITY_NORMAL;
-        }
-    }
-    return supportedQualityList[0];
-}
-
-std::string PrintSystemData::ParseDefaultMediaType(const PrinterCapability &cap, Json::Value &capOpt)
-{
-    if (PrintJsonUtil::IsMember(capOpt, "media-type-default") && capOpt["media-type-default"].isString()) {
-        return capOpt["media-type-default"].asString();
-    }
-    std::vector<std::string> supportedMediaTypeList;
-    cap.GetSupportedMediaType(supportedMediaTypeList);
-    if (supportedMediaTypeList.size() == 0) {
-        return "";
-    }
-    for (auto mediaType : supportedMediaTypeList) {
-        if (mediaType == DEFAULT_MEDIA_TYPE) {
-            return DEFAULT_MEDIA_TYPE;
-        }
-    }
-    return supportedMediaTypeList[0];
 }
 }  // namespace Print
 }  // namespace OHOS
