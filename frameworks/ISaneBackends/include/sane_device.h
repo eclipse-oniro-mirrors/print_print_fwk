@@ -30,7 +30,7 @@ public:
 
     virtual bool Marshalling(Parcel &parcel) const override;
     static SaneDevice* Unmarshalling(Parcel &parcel);
-
+    void Dump();
 public:
     std::string name_;
     std::string vendor_;

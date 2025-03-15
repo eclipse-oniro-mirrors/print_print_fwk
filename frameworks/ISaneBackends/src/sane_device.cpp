@@ -41,4 +41,10 @@ SaneDevice* SaneDevice::Unmarshalling(Parcel &parcel)
     obj->type_ = parcel.ReadString();
     return obj;
 }
+
+void SaneDevice::Dump()
+{
+    SCAN_HILOGD("SaneDevice:[%{private}s] [%{private}s] [%{private}s] [%{private}s]",
+        name_.c_str(), vendor_.c_str(), model_.c_str(), type_.c_str());
+}
 }   // namespace OHOS::Scan

@@ -314,6 +314,7 @@ ErrCode SaneServerManager::SaneGetDevices(std::vector<SaneDevice>& deviceInfos, 
         if (deviceList[i]->type != nullptr) {
             device.type_ = std::string(deviceList[i]->type);
         }
+        device.Dump();
         deviceInfos.push_back(device);
     }
     status = SANE_STATUS_GOOD;
