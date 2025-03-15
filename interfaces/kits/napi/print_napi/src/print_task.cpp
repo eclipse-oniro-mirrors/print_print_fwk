@@ -139,25 +139,28 @@ uint32_t PrintTask::StartPrintAdapter(napi_env env, napi_callback_info info)
 {
     if (printAdapterCallback_ != nullptr && printAttributes_ != nullptr) {
         PRINT_HILOGI("call client's StartPrintAdapter interface.");
-        if (callerToken_ != nullptr) {
-            std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
-            if (adapterParam == nullptr) {
-                PRINT_HILOGE("create adapterParam failed.");
-                return E_PRINT_SERVER_FAILURE;
-            }
-            adapterParam->documentName = printJobName_;
-            adapterParam->isCheckFdList = false;
-            adapterParam->printAttributes = *printAttributes_;
-            std::string jobId = PrintUtils::GetPrintJobId();
-            adapterParam->jobId = jobId;
-            taskId_ = jobId;
-            uint32_t ret = CallSpooler(env, info, adapterParam, true);
-            if (ret != E_PRINT_NONE) {
-                PRINT_HILOGE("CallSpooler failed.");
-            }
-            return PrintManagerClient::GetInstance()->Print(
-                printJobName_, printAdapterCallback_, *printAttributes_, taskId_, callerToken_);
+        if (callerToken_ == nullptr) {
+            PRINT_HILOGE("callerToken is null.");
+            return E_PRINT_INVALID_PARAMETER;
         }
+        std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
+        if (adapterParam == nullptr) {
+            PRINT_HILOGE("create adapterParam failed.");
+            return E_PRINT_SERVER_FAILURE;
+        }
+        adapterParam->documentName = printJobName_;
+        adapterParam->isCheckFdList = false;
+        adapterParam->printAttributes = *printAttributes_;
+        std::string jobId = PrintUtils::GetPrintJobId();
+        adapterParam->jobId = jobId;
+        taskId_ = jobId;
+        uint32_t ret = CallSpooler(env, info, adapterParam, true);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("CallSpooler failed.");
+            return ret;
+        }
+        return PrintManagerClient::GetInstance()->Print(
+            printJobName_, printAdapterCallback_, *printAttributes_, taskId_, callerToken_);
     }
     return E_PRINT_INVALID_PARAMETER;
 }

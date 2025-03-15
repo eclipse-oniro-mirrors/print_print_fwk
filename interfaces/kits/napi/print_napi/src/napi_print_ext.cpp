@@ -604,6 +604,7 @@ napi_value NapiPrintExt::UpdatePrinterInDiscovery(napi_env env, napi_callback_in
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to update printer");
+            context->SetErrorIndex(ret);
         }
     };
 

@@ -70,7 +70,7 @@ napi_value NapiPrintTask::CreatePrintTask(napi_env env, napi_callback_info info)
         if (task != nullptr) {
             ret = task->Start(env, info);
         }
-        if (argc == NapiPrintUtils::ARGC_TWO && ret != E_PRINT_NONE) {
+        if ((argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO) && ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to start print task");
             context->SetErrorIndex(ret);
         }
@@ -121,7 +121,6 @@ napi_value NapiPrintTask::PrintByAdapter(napi_env env, napi_callback_info info)
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to start print task");
             context->SetErrorIndex(ret);
-            return napi_generic_failure;
         }
         napi_create_reference(env, proxy, 1, &(context->ref));
         return napi_ok;

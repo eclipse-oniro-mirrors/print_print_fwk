@@ -1291,7 +1291,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0070, TestSize.Level1)
     EXPECT_NE(systemData, nullptr);
     PrinterPreferences preferences;
     PrinterCapability cap;
-    EXPECT_EQ(systemData->BuildPrinterPreference(cap, preferences), E_PRINT_INVALID_PRINTER);
+    EXPECT_EQ(systemData->BuildPrinterPreference(cap, preferences), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0071, TestSize.Level1)
@@ -1301,7 +1301,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0071, TestSize.Level1)
     PrinterPreferences preferences;
     PrinterCapability cap;
     cap.SetOption("test");
-    EXPECT_EQ(systemData->BuildPrinterPreference(cap, preferences), E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(systemData->BuildPrinterPreference(cap, preferences), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0072, TestSize.Level1)
@@ -1313,7 +1313,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0072, TestSize.Level1)
     Json::Value optionJson;
     optionJson["key"] = "value";
     cap.SetOption(PrintJsonUtil::WriteString(optionJson));
-    EXPECT_EQ(systemData->BuildPrinterPreference(cap, preferences), E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(systemData->BuildPrinterPreference(cap, preferences), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0073, TestSize.Level1)
@@ -1333,8 +1333,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0074, TestSize.Level1)
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
     PrinterCapability cap;
-    Json::Value capOpt;
-    EXPECT_EQ(systemData->ParseDefaultPageSizeId(cap, capOpt), "");
+    EXPECT_EQ(systemData->ParseDefaultPageSizeId(cap), "");
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0075, TestSize.Level1)
@@ -1342,8 +1341,6 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0075, TestSize.Level1)
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
     PrinterCapability cap;
-    Json::Value capOpt;
-    capOpt["defaultPageSizeId"] = 123;
     std::vector<PrintPageSize> supportedPageSize;
     PrintPageSize pageSize1;
     pageSize1.SetId("ISO_A3");
@@ -1352,157 +1349,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0075, TestSize.Level1)
     supportedPageSize.emplace_back(pageSize1);
     supportedPageSize.emplace_back(pageSize2);
     cap.SetSupportedPageSize(supportedPageSize);
-    EXPECT_EQ(systemData->ParseDefaultPageSizeId(cap, capOpt), "ISO_A3");
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0076, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    capOpt["defaultPageSizeId"] = "123";
-    EXPECT_EQ(systemData->ParseDefaultPageSizeId(cap, capOpt), "123");
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0077, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    EXPECT_EQ(systemData->ParseDefaultOrientation(cap, capOpt), 0);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0078, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    capOpt["orientation-requested-default"] = 123;
-    EXPECT_EQ(systemData->ParseDefaultOrientation(cap, capOpt), 0);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0079, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    capOpt["orientation-requested-default"] = "0";
-    EXPECT_EQ(systemData->ParseDefaultOrientation(cap, capOpt), 0);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0080, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    EXPECT_EQ(systemData->ParseDefaultDuplexMode(cap, capOpt), 0);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0081, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt ;
-    capOpt["sides-default"] = 123;
-    std::vector<uint32_t> supportedDuplexModeList;
-    supportedDuplexModeList.emplace_back(2);
-    cap.SetSupportedDuplexMode(supportedDuplexModeList);
-    EXPECT_EQ(systemData->ParseDefaultDuplexMode(cap, capOpt), 2);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0082, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    capOpt["sides-default"] = 123;
-    std::vector<uint32_t> supportedDuplexModeList;
-    supportedDuplexModeList.emplace_back(0);
-    cap.SetSupportedDuplexMode(supportedDuplexModeList);
-    EXPECT_EQ(systemData->ParseDefaultDuplexMode(cap, capOpt), 0);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0083, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    capOpt["sides-default"] = "0";
-    EXPECT_EQ(systemData->ParseDefaultDuplexMode(cap, capOpt), 0);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0084, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    EXPECT_EQ(systemData->ParseDefaultPrintQuality(cap, capOpt), 0);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0085, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    capOpt["print-quality-default"] = 123;
-    std::vector<uint32_t> supportedQualityList;
-    supportedQualityList.emplace_back(2);
-    supportedQualityList.emplace_back(4);
-    cap.SetSupportedQuality(supportedQualityList);
-    EXPECT_EQ(systemData->ParseDefaultPrintQuality(cap, capOpt), 4);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0086, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    capOpt["print-quality-default"] = "4";
-    EXPECT_EQ(systemData->ParseDefaultPrintQuality(cap, capOpt), 4);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0087, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    EXPECT_EQ(systemData->ParseDefaultMediaType(cap, capOpt), "");
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0088, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    capOpt["media-type-default"] = 123;
-    std::vector<std::string> supportedMediaTypeList;
-    supportedMediaTypeList.emplace_back("photo");
-    supportedMediaTypeList.emplace_back("stationery");
-    cap.SetSupportedMediaType(supportedMediaTypeList);
-    EXPECT_EQ(systemData->ParseDefaultMediaType(cap, capOpt), "stationery");
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0089, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    PrinterCapability cap;
-    Json::Value capOpt;
-    capOpt["media-type-default"] = "stationery";
-    EXPECT_EQ(systemData->ParseDefaultMediaType(cap, capOpt), "stationery");
+    EXPECT_EQ(systemData->ParseDefaultPageSizeId(cap), "ISO_A3");
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0090, TestSize.Level1)
@@ -1723,6 +1570,69 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0104, TestSize.Level1)
     CupsPrinterInfo cupsPrinter;
     systemData->QueryCupsPrinterInfoByPrinterId(printerId, cupsPrinter);
     EXPECT_EQ(cupsPrinter.uri, uri);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0105, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capOpt;
+    PrinterPreferences printPreferences;
+    capOpt["defaultPageSizeId"] = 1;
+    capOpt["orientation-requested-default"] = 1;
+    capOpt["sides-default"] = 1;
+    capOpt["print-quality-default"] = 1;
+    capOpt["media-type-default"] = 1;
+    systemData->BuildPrinterPreferenceByDefault(capOpt, printPreferences);
+    EXPECT_EQ(printPreferences.HasDefaultPageSizeId(), false);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0106, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capOpt;
+    PrinterPreferences printPreferences;
+    capOpt["defaultPageSizeId"] = "ISO_A4";
+    capOpt["orientation-requested-default"] = "1";
+    capOpt["sides-default"] = "1";
+    capOpt["print-quality-default"] = "1";
+    capOpt["media-type-default"] = "plain";
+    systemData->BuildPrinterPreferenceByDefault(capOpt, printPreferences);
+    EXPECT_EQ(printPreferences.GetDefaultPageSizeId(), "ISO_A4");
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0107, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterCapability cap;
+    PrinterPreferences printPreferences;
+    printPreferences.SetDefaultPageSizeId("ISO_A4");
+    printPreferences.SetDefaultDuplexMode(0);
+    printPreferences.SetDefaultPrintQuality(0);
+    printPreferences.SetDefaultMediaType("plain");
+    systemData->BuildPrinterPreferenceBySupport(cap, printPreferences);
+    EXPECT_EQ(printPreferences.HasBorderless(), true);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0108, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterCapability cap;
+    PrinterPreferences printPreferences;
+    std::vector<uint32_t> supportedDuplexModeList;
+    supportedDuplexModeList.emplace_back(0);
+    cap.SetSupportedDuplexMode(supportedDuplexModeList);
+    std::vector<uint32_t> supportedQualityList;
+    supportedQualityList.emplace_back(0);
+    cap.SetSupportedQuality(supportedQualityList);
+    std::vector<std::string> supportedMediaTypeList;
+    supportedMediaTypeList.emplace_back("plain");
+    cap.SetSupportedMediaType(supportedMediaTypeList);
+    systemData->BuildPrinterPreferenceBySupport(cap, printPreferences);
+    EXPECT_EQ(printPreferences.HasBorderless(), true);
 }
 }  // namespace Print
 }  // namespace OHOS
