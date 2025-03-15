@@ -64,6 +64,7 @@ static bool NativePrinterDiscoverFunction(uint32_t event, const PrinterInfo &inf
         }
     }
     OH_Print_ReleasePrinterInfo(nativePrinterInfo);
+    nativePrinterInfo = nullptr;
     return true;
 }
 
@@ -194,9 +195,7 @@ Print_ErrorCode OH_Print_StopPrinterDiscovery()
         std::lock_guard<std::recursive_mutex> lock(g_printerDiscoverMutex);
         g_printerDiscoverCallback = nullptr;
     }
-    int32_t ret = PrintManagerClient::GetInstance()->StopDiscoverPrinter();
-    PRINT_HILOGI("StopDiscoverPrinter ret = [%{public}d]", ret);
-    return ConvertToNativeErrorCode(ret);
+    return PRINT_ERROR_NONE;
 }
 
 Print_ErrorCode OH_Print_ConnectPrinter(const char *printerId)
