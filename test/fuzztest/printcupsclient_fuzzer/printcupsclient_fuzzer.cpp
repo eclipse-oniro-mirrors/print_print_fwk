@@ -99,7 +99,8 @@ void TestAddCupsPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *d
     PrintJob jobInfo;
     std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     jobInfo.SetOption(option);
-    PrintCupsClient::GetInstance()->AddCupsPrintJob(jobInfo);
+    std::string userName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintCupsClient::GetInstance()->AddCupsPrintJob(jobInfo, userName);
 }
 
 void TestCancelCupsJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -228,7 +229,8 @@ void TestBuildJobParameters(const uint8_t *data, size_t size, FuzzedDataProvider
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     printJob.SetOption(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    PrintCupsClient::GetInstance()->BuildJobParameters(printJob);
+    std::string userName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintCupsClient::GetInstance()->BuildJobParameters(printJob, userName);
 }
 
 void TestCheckPrinterDriverExist(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

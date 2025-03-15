@@ -85,7 +85,6 @@ static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
 static const std::string REMOTE_PRINTER_MAKE_MODEL = "Remote Printer";
 static const std::string BSUNI_PPD_NAME = "Brocadesoft Universal Driver";
 static const std::string LOCAL_RAW_PRINTER_PPD_NAME = "Local Raw Printer";
-static const std::string DEFAULT_USER = "default";
 static const std::string PRINTER_STATE_WAITING_COMPLETE = "cups-waiting-for-job-completed";
 static const std::string PRINTER_STATE_WIFI_NOT_CONFIGURED = "wifi-not-configured-report";
 static const std::string PRINTER_STATE_MEDIA_LOW_WARNING = "media-low-warning";
@@ -872,9 +871,9 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printe
     return E_PRINT_NONE;
 }
 
-void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo)
+void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo, const std::string &userName)
 {
-    JobParameters *jobParams =  BuildJobParameters(jobInfo);
+    JobParameters *jobParams =  BuildJobParameters(jobInfo, userName);
     if (jobParams == nullptr) {
         PRINT_HILOGE("AddCupsPrintJob Params is nullptr");
         return;
@@ -1297,6 +1296,7 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
         return false;
     }
     num_options = FillJobOptions(jobParams, num_options, &options);
+    cupsSetUser(jobParams->jobOriginatingUserName.c_str());
     if ((jobId = static_cast<uint32_t>(cupsCreateJob(http, jobParams->printerName.c_str(), jobParams->jobName.c_str(),
         num_options, options))) == 0) {
         PRINT_HILOGE("Unable to cupsCreateJob: %s", cupsLastErrorString());
@@ -1380,6 +1380,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
         jobId, jobParams->printerUri, jobParams->printerName, jobParams->printerId, monitorHttp);
     BuildMonitorPolicy(monitorParams);
     PRINT_HILOGD("MonitorJobState enter, cupsJobId: %{public}d", monitorParams->cupsJobId);
+    monitorParams->jobOriginatingUserName = jobParams->jobOriginatingUserName;
     {
         std::lock_guard<std::mutex> lock(jobMonitorMutex_);
         if (jobMonitorList_.empty()) {
@@ -1684,7 +1685,8 @@ bool PrintCupsClient::QueryJobState(http_t *http, std::shared_ptr<JobMonitorPara
         ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr,
             monitorParams->printerUri.c_str());
         ippAddInteger(request, IPP_TAG_OPERATION, IPP_TAG_INTEGER, "job-id", monitorParams->cupsJobId);
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, DEFAULT_USER.c_str());
+        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr,
+            monitorParams->jobOriginatingUserName.c_str());
         ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", jattrsLen, nullptr, jattrs);
         PRINT_HILOGD("get job state from cups service: start");
         response = printAbility_->DoRequest(http, request, "/");
@@ -1822,9 +1824,9 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
         }
         auto canceledMonitor = *monitorItem;
         canceledMonitor->isCanceled = true;
-        if (cupsCancelJob2(CUPS_HTTP_DEFAULT, canceledMonitor->printerName.c_str(),
-            canceledMonitor->cupsJobId, 0) != IPP_OK) {
-            PRINT_HILOGE("cancel Job Error %{public}s", cupsLastErrorString());
+        if (!CancelPrinterJob(canceledMonitor->cupsJobId, canceledMonitor->printerName,
+            canceledMonitor->jobOriginatingUserName)) {
+            PRINT_HILOGE("cancel Job Error");
         }
     }
 }
@@ -1868,7 +1870,7 @@ void PrintCupsClient::UpdateJobParameterByOption(Json::Value& optionJson, JobPar
     }
 }
 
-JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
+JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, const std::string &userName)
 {
     JobParameters *params = nullptr;
     if (!jobInfo.HasOption()) {
@@ -1903,7 +1905,7 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo)
     params->serviceJobId = jobInfo.GetJobId();
     params->numCopies = jobInfo.GetCopyNumber();
     params->duplex = GetDulpexString(jobInfo.GetDuplexMode());
-    params->jobOriginatingUserName = DEFAULT_USER;
+    params->jobOriginatingUserName = userName;
     params->mediaSize = GetMedieSize(jobInfo);
     params->color = GetColorString(jobInfo.GetColorMode());
     params->printerId = jobInfo.GetPrinterId();
@@ -2157,5 +2159,24 @@ bool PrintCupsClient::CancelPrinterJob(int cupsJobId)
     }
     PRINT_HILOGI("cancel printJob success");
     return true;
+}
+
+bool PrintCupsClient::CancelPrinterJob(int cupsJobId, const std::string &name, const std::string &user)
+{
+    ipp_t *request = ippNewRequest(IPP_OP_CANCEL_JOB);
+    char uri[HTTP_MAX_URI] = {0};
+    httpAssembleURIf(HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", NULL, "localhost", 0, "/printers/%s",
+                     name.c_str());
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, uri);
+    ippAddInteger(request, IPP_TAG_OPERATION, IPP_TAG_INTEGER, "job-id", cupsJobId);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, user.c_str());
+    ippDelete(cupsDoRequest(CUPS_HTTP_DEFAULT, request, "/jobs/"));
+    if (cupsLastError() > IPP_STATUS_OK_CONFLICTING) {
+        PRINT_HILOGW("Cancel of job %{public}d failed: %{public}s", cupsJobId, cupsLastErrorString());
+        return false;
+    } else {
+        PRINT_HILOGI("Job %{public}d canceled", cupsJobId);
+        return true;
+    }
 }
 }

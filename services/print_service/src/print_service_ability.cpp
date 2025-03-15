@@ -28,6 +28,7 @@
 #include "array_wrapper.h"
 #include "int_wrapper.h"
 #include "ipc_skeleton.h"
+#include "os_account_manager.h"
 #include "iservice_registry.h"
 #include "print_bms_helper.h"
 #include "print_constant.h"
@@ -2396,6 +2397,26 @@ int32_t PrintServiceAbility::GetCurrentUserId()
     return userId;
 }
 
+std::string PrintServiceAbility::GetCallerUserName()
+{
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    int32_t localId = -1;
+    auto errCode = AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(uid, localId);
+    PRINT_HILOGI("GetOsAccountLocalIdFromUid errCode = %{public}d", errCode);
+    PRINT_HILOGD("uid: %{private}d, localId: %{private}d", uid, localId);
+    AccountSA::OsAccountInfo osAccountInfo;
+    errCode = AccountSA::OsAccountManager::QueryOsAccountById(localId, osAccountInfo);
+    PRINT_HILOGI("QueryOsAccountById errCode = %{public}d", errCode);
+    PRINT_HILOGD("localName: %{private}s", osAccountInfo.GetLocalName().c_str());
+    AccountSA::DomainAccountInfo domainInfo;
+    osAccountInfo.GetDomainInfo(domainInfo);
+    PRINT_HILOGD("domainName: %{private}s", domainInfo.accountName_.c_str());
+    if (domainInfo.accountName_.empty()) {
+        return DEFAULT_USER_NAME;
+    }
+    return domainInfo.accountName_;
+}
+
 std::shared_ptr<PrintUserData> PrintServiceAbility::GetUserDataByJobId(const std::string jobId)
 {
     int32_t userId = GetUserIdByJobId(jobId);
@@ -3275,7 +3296,7 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     } else {
 #ifdef CUPS_ENABLE
         NotifyAppJobQueueChanged(QUEUE_JOB_LIST_PRINTING);
-        DelayedSingleton<PrintCupsClient>::GetInstance()->AddCupsPrintJob(*printJob);
+        DelayedSingleton<PrintCupsClient>::GetInstance()->AddCupsPrintJob(*printJob, GetCallerUserName());
         CallStatusBar();
 #endif  // CUPS_ENABLE
     }
