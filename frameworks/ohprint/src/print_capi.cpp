@@ -46,7 +46,7 @@ static Print_PrinterChangeCallback g_printerChangeCallback = nullptr;
 
 static bool NativePrinterDiscoverFunction(uint32_t event, const PrinterInfo &info)
 {
-    PRINT_HILOGD("NativePrinterDiscoverFunction event: %{public}d, printerId: [%{public}s]",
+    PRINT_HILOGD("NativePrinterDiscoverFunction event: %{public}d, printerId: %{private}s",
         event, info.GetPrinterId().c_str());
     if (g_printerDiscoverCallback == nullptr) {
         PRINT_HILOGW("g_printerDiscoverCallback is null");
@@ -61,6 +61,8 @@ static bool NativePrinterDiscoverFunction(uint32_t event, const PrinterInfo &inf
         std::lock_guard<std::recursive_mutex> lock(g_printerDiscoverMutex);
         if (g_printerDiscoverCallback != nullptr) {
             g_printerDiscoverCallback(static_cast<Print_DiscoveryEvent>(event), nativePrinterInfo);
+        } else {
+            PRINT_HILOGW("g_printerDiscoverCallback is null");
         }
     }
     OH_Print_ReleasePrinterInfo(nativePrinterInfo);
@@ -70,7 +72,7 @@ static bool NativePrinterDiscoverFunction(uint32_t event, const PrinterInfo &inf
 
 static bool NativePrinterInfoFunction(uint32_t event, const PrinterInfo &info)
 {
-    PRINT_HILOGD("NativePrinterInfoFunction event: [%{public}d, printerId: [%{public}s]",
+    PRINT_HILOGD("NativePrinterInfoFunction event: %{public}d, printerId: %{private}s",
         event, info.GetPrinterId().c_str());
     if (g_printerChangeCallback == nullptr) {
         PRINT_HILOGW("g_printerChangeCallback is null");
@@ -85,6 +87,8 @@ static bool NativePrinterInfoFunction(uint32_t event, const PrinterInfo &info)
         std::lock_guard<std::recursive_mutex> lock(g_printerChangeMutex);
         if (g_printerChangeCallback != nullptr) {
             g_printerChangeCallback(static_cast<Print_PrinterEvent>(event), nativePrinterInfo);
+        } else {
+            PRINT_HILOGW("g_printerChangeCallback is null");
         }
     }
     OH_Print_ReleasePrinterInfo(nativePrinterInfo);
@@ -167,6 +171,7 @@ Print_ErrorCode OH_Print_Release()
 
 Print_ErrorCode OH_Print_StartPrinterDiscovery(Print_PrinterDiscoveryCallback callback)
 {
+    PRINT_HILOGI("OH_Print_StartPrinterDiscovery");
     {
         std::lock_guard<std::recursive_mutex> lock(g_printerDiscoverMutex);
         g_printerDiscoverCallback = callback;
@@ -190,6 +195,7 @@ Print_ErrorCode OH_Print_StartPrinterDiscovery(Print_PrinterDiscoveryCallback ca
 
 Print_ErrorCode OH_Print_StopPrinterDiscovery()
 {
+    PRINT_HILOGI("OH_Print_StopPrinterDiscovery");
     PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(PRINTER_DISCOVER_EVENT_TYPE, nullptr);
     {
         std::lock_guard<std::recursive_mutex> lock(g_printerDiscoverMutex);
@@ -229,6 +235,7 @@ Print_ErrorCode OH_Print_StartPrintJob(const Print_PrintJob *printJob)
 
 Print_ErrorCode OH_Print_RegisterPrinterChangeListener(Print_PrinterChangeCallback callback)
 {
+    PRINT_HILOGI("OH_Print_RegisterPrinterChangeListener");
     {
         std::lock_guard<std::recursive_mutex> lock(g_printerChangeMutex);
         g_printerChangeCallback = callback;
@@ -240,6 +247,7 @@ Print_ErrorCode OH_Print_RegisterPrinterChangeListener(Print_PrinterChangeCallba
 
 void OH_Print_UnregisterPrinterChangeListener()
 {
+    PRINT_HILOGI("OH_Print_UnregisterPrinterChangeListener");
     PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(PRINTER_CHANGE_EVENT_TYPE, nullptr);
     {
         std::lock_guard<std::recursive_mutex> lock(g_printerChangeMutex);
