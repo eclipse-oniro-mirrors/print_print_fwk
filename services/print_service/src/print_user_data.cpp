@@ -284,7 +284,11 @@ void PrintUserData::ParseUserDataFromJson(Json::Value &jsonObject)
 bool PrintUserData::ConvertJsonToUsedPrinterList(Json::Value &userData)
 {
     Json::Value usedPrinterListJson = userData["usedPrinterList"];
-    for (int i = 0; i < usedPrinterListJson.size(); i++) {
+    uint32_t jsonSize = usedPrinterListJson.size();
+    if (jsonSize > MAX_PRINTER_SIZE) {
+        PRINT_HILOGE("usedPrinterList size is illegal");
+    }
+    for (uint32_t i = 0; i < jsonSize; i++) {
         if (!usedPrinterListJson[i].isString()) {
             PRINT_HILOGW("usedPrinterListJson item is not string");
             return false;
