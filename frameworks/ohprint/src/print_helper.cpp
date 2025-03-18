@@ -483,6 +483,17 @@ void ParsePrinterPreference(const PrinterInfo &info, Print_PrinterInfo &nativePr
     }
 }
 
+char *ParseDetailInfo(const PrinterInfo &info)
+{
+    if (!info.HasAlias()) {
+        return nullptr;
+    }
+    Json::Value detailInfoJson;
+    detailInfoJson["alias"] = info.GetAlias();
+
+    return CopyString(PrintJsonUtil::WriteString(detailInfoJson));
+}
+
 Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
 {
     Print_PrinterInfo *nativePrinterInfo = new (std::nothrow) Print_PrinterInfo;
@@ -499,7 +510,7 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     nativePrinterInfo->printerId = CopyString(info.GetPrinterId());
     nativePrinterInfo->printerName = CopyString(info.GetPrinterName());
     nativePrinterInfo->description = CopyString(info.GetDescription());
-    nativePrinterInfo->detailInfo = nullptr;
+    nativePrinterInfo->detailInfo = ParseDetailInfo(info);
     nativePrinterInfo->printerState = static_cast<Print_PrinterState>(info.GetPrinterStatus());
     nativePrinterInfo->capability.supportedCopies = COPIES_NUMBER_DEFAULT;
     if (info.HasIsDefaultPrinter() && info.GetIsDefaultPrinter() == true) {
