@@ -31,32 +31,20 @@
 namespace OHOS {
 namespace Print {
 
-struct CupsPrinterInfo {
-    std::string name;
-    std::string uri;
-    std::string maker;
-    PrinterCapability printerCapability;
-    PrinterStatus printerStatus = PRINTER_STATUS_UNAVAILABLE;
-    std::string alias;
-    PrinterPreferences printPreferences;
-};
-
 class PrintSystemData {
 public:
     bool Init();
-    void InsertCupsPrinter(const std::string &printerId, const CupsPrinterInfo &printerInfo);
+    void InsertAddedPrinter(const std::string &printerId, const PrinterInfo &printerInfo);
     void SavePrinterFile(const std::string &printerId);
     std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
-    bool QueryCupsPrinterInfoByPrinterId(const std::string &printerId, CupsPrinterInfo &cupsPrinter);
-    void InsertPrinterInfo(const std::string &printerId, const PrinterInfo &printerInfo);
-    std::shared_ptr<PrinterInfo> QueryPrinterInfoByPrinterId(const std::string &printerId);
+    bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
     bool IsPrinterAdded(const std::string &printerId);
     bool GetPrinterCapabilityFromSystemData(
-        CupsPrinterInfo &cupsPrinter, std::string printerId, PrinterCapability &printerCapability);
-    void DeleteCupsPrinter(const std::string &printerId, const std::string &printerName);
+        PrinterInfo &printer, std::string printerId, PrinterCapability &printerCapability);
+    void DeleteAddedPrinter(const std::string &printerId, const std::string &printerName);
     void GetAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList);
     void UpdatePrinterStatus(const std::string &printerId, PrinterStatus printerStatus);
-    bool UpdatePrinterAlias(const std::string& printerId, const std::string& printerAlias);
+    bool UpdatePrinterAlias(const std::string &printerId, const std::string &printerAlias);
     void UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo);
     void UpdatePrinterPreferences(const std::string &printerId, const PrinterPreferences &preferences);
     void QueryPrinterInfoById(const std::string &printerId, PrinterInfo &printerInfo);
@@ -71,7 +59,6 @@ public:
     std::map<std::string, std::shared_ptr<PrinterInfo>> GetDiscoveredPrinterInfo();
     size_t GetDiscoveredPrinterCount();
     void ClearDiscoveredPrinterList();
-
     void AddIpPrinterToList(std::shared_ptr<PrinterInfo> printerInfo);
     void RemoveIpPrinterFromList(const std::string &printerId);
     std::shared_ptr<PrinterInfo> QueryIpPrinterInfoById(const std::string &printerId);
@@ -103,8 +90,8 @@ private:
         std::string printerId, Json::Value &jsonObject, PrinterCapability &printerCapability);
     bool ParseUserListJsonV1(
         Json::Value &jsonObject, std::vector<int32_t> &allPrintUserList);
-    bool ConvertJsonToCupsPrinterInfo(Json::Value &object);
-    void ConvertInnerJsonToCupsPrinterInfo(Json::Value &object, CupsPrinterInfo &info);
+    bool ConvertJsonToPrinterInfo(Json::Value &object);
+    void ConvertInnerJsonToPrinterInfo(Json::Value &object, PrinterInfo &info);
 
     bool ParsePreviousPreferencesSetting(Json::Value &settingJson, PrinterPreferences &preferences);
     bool ParsePrinterPreferencesJson(Json::Value &jsonObject);
@@ -164,7 +151,7 @@ private:
     }
 
 private:
-    PrintMapSafe<CupsPrinterInfo> addedPrinterMap_;
+    PrintMapSafe<PrinterInfo> addedPrinterMap_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> addedPrinterInfoList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> discoveredPrinterInfoList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> connectingIpPrinterInfoList_;
