@@ -485,11 +485,25 @@ void ParsePrinterPreference(const PrinterInfo &info, Print_PrinterInfo &nativePr
 
 char *ParseDetailInfo(const PrinterInfo &info)
 {
-    if (!info.HasAlias()) {
+    Json::Value detailInfoJson;
+    if (info.HasAlias()) {
+        detailInfoJson["alias"] = info.GetAlias();
+    }
+
+    Json::Value opsJson;
+    if (info.HasOption() && PrintJsonUtil::Parse(info.GetOption(), opsJson)) {
+        if (PrintJsonUtil::IsMember(opsJson, "vendorId") && opsJson["vendorId"].isInt()) {
+            detailInfoJson["vendorId"] = opsJson["vendorId"].asInt();
+        }
+
+        if (PrintJsonUtil::IsMember(opsJson, "productId") && opsJson["productId"].isInt()) {
+            detailInfoJson["productId"] = opsJson["productId"].asInt();
+        }
+    }
+
+    if (detailInfoJson.isNull() || detailInfoJson.empty()) {
         return nullptr;
     }
-    Json::Value detailInfoJson;
-    detailInfoJson["alias"] = info.GetAlias();
 
     return CopyString(PrintJsonUtil::WriteString(detailInfoJson));
 }
