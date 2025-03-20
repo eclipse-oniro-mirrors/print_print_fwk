@@ -40,8 +40,8 @@ void TestStartPrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataPr
     PrintServiceAbilityMockPermission::MockPermission();
     PrintServiceAbility::GetInstance()->OnStart();
     PrintServiceAbility::GetInstance()->ManualStart();
-    auto cupsPrinter = std::make_shared<CupsPrinterInfo>();
-    PrintServiceAbility::GetInstance()->printSystemData_.addedPrinterMap_.Insert(DEFAULT_PRINTERID, cupsPrinter);
+    auto printer = std::make_shared<PrinterInfo>();
+    PrintServiceAbility::GetInstance()->printSystemData_.addedPrinterMap_.Insert(DEFAULT_PRINTERID, printer);
     PrintServiceAbility::GetInstance()->StartService();
     std::string fileUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::vector<std::string> fileList;
