@@ -443,20 +443,20 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo& info)
         SCAN_HILOGE("discoverMode is invalid:[%{public}s]", info.discoverMode.c_str());
         return;
     }
-    if (info.uniqueId.empty() && info.serialNumber.empty()) {
-        SCAN_HILOGE("uniqueId and serialNumber are null");
-        return;
-    }
-    std::string uniqueId = info.discoverMode + info.uniqueId;
-    ScanSystemData& scanData = ScanSystemData::GetInstance();
-    if (info.discoverMode == "USB") {
-        scanData.UpdateScannerInfoByUniqueId(uniqueId, info);
-    } else {
-        scanData.UpdateNetScannerByUuid(info.uuid, info.uniqueId);
-    }
-    scanData.SaveScannerMap();
     std::map<std::string, ScanDeviceInfo>& deviceMap = info.discoverMode == "USB" ?
         saneGetUsbDeviceInfoMap : saneGetTcpDeviceInfoMap;
+    if (info.uniqueId.empty()) {
+        info.uniqueId = info.deviceId;
+    } else {
+        std::string uniqueId = info.discoverMode + info.uniqueId;
+        ScanSystemData& scanData = ScanSystemData::GetInstance();
+        if (info.discoverMode == "USB") {
+            scanData.UpdateScannerInfoByUniqueId(uniqueId, info);
+        } else {
+            scanData.UpdateNetScannerByUuid(info.uuid, info.uniqueId);
+        }
+        scanData.SaveScannerMap();
+    }
     deviceMap[info.uniqueId] = info;
 }
 
