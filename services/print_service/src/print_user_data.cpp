@@ -287,6 +287,7 @@ bool PrintUserData::ConvertJsonToUsedPrinterList(Json::Value &userData)
     uint32_t jsonSize = usedPrinterListJson.size();
     if (jsonSize > MAX_PRINTER_SIZE) {
         PRINT_HILOGE("usedPrinterList size is illegal");
+        return false;
     }
     for (uint32_t i = 0; i < jsonSize; i++) {
         if (!usedPrinterListJson[i].isString()) {
