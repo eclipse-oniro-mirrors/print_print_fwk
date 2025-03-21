@@ -240,7 +240,7 @@ void SaneServerManager::ConvertSaneDescriptor(const SANE_Option_Descriptor* sane
         && saneDesc->constraint.word_list != nullptr) {
         saneOptDes.optionConstraintNumber_.clear();
         int32_t sizeNumber = saneDesc->constraint.word_list[0];
-        for (int32_t i = 0; i < sizeNumber; i++) {
+        for (int32_t i = 1; i <= sizeNumber; i++) {
             SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST: %{public}d", saneDesc->constraint.word_list[i]);
             saneOptDes.optionConstraintNumber_.push_back(saneDesc->constraint.word_list[i]);
         }
