@@ -36,6 +36,7 @@ bool PrintSystemData::ParsePrinterListJsonV1(Json::Value &jsonObject)
     uint32_t jsonSize = jsonObject["printer_list"].size();
     if (jsonSize > MAX_PRINTER_SIZE) {
         PRINT_HILOGE("printerlist size is illegal");
+        return false;
     }
     for (uint32_t i = 0; i < jsonSize; i++) {
         Json::Value object = jsonObject["printer_list"][i];
@@ -203,6 +204,7 @@ bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
     uint32_t jsonSize = jsonObject["printer_list"].size();
     if (jsonSize > MAX_PRINTER_SIZE) {
         PRINT_HILOGE("printerlist size is illegal");
+        return false;
     }
     for (uint32_t i = 0; i < jsonSize; i++) {
         Json::Value object = jsonObject["printer_list"][i];
@@ -817,6 +819,7 @@ bool PrintSystemData::GetPrinterCapabilityFromJson(
     uint32_t jsonSize = jsonObject["printer_list"].size();
     if (jsonSize > MAX_PRINTER_SIZE) {
         PRINT_HILOGE("printerlist size is illegal");
+        return false;
     }
     for (uint32_t i = 0; i < jsonSize; i++) {
         Json::Value object = jsonObject["printer_list"][i];
