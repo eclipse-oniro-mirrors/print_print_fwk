@@ -3032,6 +3032,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
         PRINT_HILOGW("QueryPrinterCapabilityFromPPD error = %{public}d.", ret);
     }
     printerInfo->SetCapability(printerCaps);
+    info.SetCapability(printerCaps);
 #endif // CUPS_ENABLE
     info.SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
