@@ -682,9 +682,6 @@ int32_t ScanServiceAbility::ActionGetValue(const std::string &scannerId, ScanOpt
     }
     if (valueType == SCAN_VALUE_NUM) {
         value.SetNumValue(outParam.valueNumber_);
-    } else if (valueType == SCAN_VALUE_NUM_LIST) {
-        std::vector<int32_t> numListValue = outParam.valueNumList_;
-        value.SetNumListValue(numListValue);
     } else if (valueType == SCAN_VALUE_STR) {
         value.SetStrValue(outParam.valueStr_);
     } else if (valueType == SCAN_VALUE_BOOL) {
@@ -1394,9 +1391,9 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId)
         firstScan = false;
     } while (status == E_SCAN_EOF);
     if (status == E_SCAN_NO_DOCS) {
-        SCAN_HILOGI("GeneratePictureSingle exit successfully");
+        SCAN_HILOGI("GeneratePictureBatch exit successfully");
     } else {
-        SCAN_HILOGE("GeneratePictureSingle fail, status = %{public}d", status);
+        SCAN_HILOGE("GeneratePictureBatch fail, status = %{public}d", status);
     }
 }
 

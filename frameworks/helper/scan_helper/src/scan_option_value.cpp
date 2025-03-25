@@ -17,7 +17,7 @@
 #include "scan_log.h"
 
 namespace OHOS::Scan {
-ScanOptionValue::ScanOptionValue() : valueType_(SCAN_VALUE_NONE
+ScanOptionValue::ScanOptionValue() : valueType_(SCAN_VALUE_BOOL
     ), valueSize_(0), numValue_(0), strValue_(""), boolValue_(false)
 {
     numListValue_.clear();
@@ -51,7 +51,7 @@ ScanOptionValue::~ScanOptionValue()
 
 void ScanOptionValue::Reset()
 {
-    valueType_ = SCAN_VALUE_NONE;
+    valueType_ = SCAN_VALUE_BOOL;
     valueSize_ = 0;
     numValue_ = 0;
     strValue_ = "";
@@ -123,14 +123,10 @@ void ScanOptionValue::ReadFromParcel(Parcel &parcel)
 {
     SetScanOptionValueType((ScanOptionValueType)parcel.ReadUint32());
     SetValueSize(parcel.ReadInt32());
-    if (valueType_ == SCAN_VALUE_NUM) {
-        SetNumValue(parcel.ReadInt32());
-    } else if (valueType_ == SCAN_VALUE_NUM_LIST) {
-        parcel.ReadInt32Vector(&numListValue_);
-    } else if (valueType_ == SCAN_VALUE_STR) {
+    if (valueType_ == SCAN_VALUE_STR) {
         SetStrValue(parcel.ReadString());
-    } else if (valueType_ == SCAN_VALUE_BOOL) {
-        SetBoolValue(parcel.ReadBool());
+    } else {
+        SetNumValue(parcel.ReadInt32());
     }
 }
 
@@ -139,21 +135,25 @@ bool ScanOptionValue::Marshalling(Parcel &parcel) const
     bool status = true;
     status &= parcel.WriteUint32(valueType_);
     status &= parcel.WriteInt32(valueSize_);
-    if (valueType_ == SCAN_VALUE_NUM) {
-        status &= parcel.WriteInt32(numValue_);
-    } else if (valueType_ == SCAN_VALUE_NUM_LIST) {
-        status &= parcel.WriteInt32Vector(numListValue_);
-    } else if (valueType_ == SCAN_VALUE_STR) {
+    if (valueType_ == SCAN_VALUE_STR) {
         status &= parcel.WriteString(strValue_);
-    } else if (valueType_ == SCAN_VALUE_BOOL) {
-        status &= parcel.WriteBool(boolValue_);
+    } else {
+        status &= parcel.WriteInt32(numValue_);
     }
     return status;
 }
 
 std::shared_ptr<ScanOptionValue> ScanOptionValue::Unmarshalling(Parcel &parcel)
 {
+    if (parcel.GetReadableBytes() == 0) {
+        SCAN_HILOGE("There are no bytes to read");
+        return nullptr;
+    }
     auto nativeObj = std::make_shared<ScanOptionValue>();
+    if (nativeObj == nullptr) {
+        SCAN_HILOGE("nativeObj is a nullptr");
+        return nullptr;
+    }
     nativeObj->ReadFromParcel(parcel);
     return nativeObj;
 }
@@ -162,16 +162,10 @@ void ScanOptionValue::Dump()
 {
     SCAN_HILOGD("ValueType = %{public}d", valueType_);
     SCAN_HILOGD("ValueSize = %{public}d", valueSize_);
-    if (valueType_ == SCAN_VALUE_NUM) {
-        SCAN_HILOGD("NumValue = %{public}d", numValue_);
-    } else if (valueType_ == SCAN_VALUE_NUM_LIST) {
-        for (auto &num : numListValue_) {
-            SCAN_HILOGD("NumValue = %{public}d", num);
-        }
-    } else if (valueType_ == SCAN_VALUE_STR) {
+    if (valueType_ == SCAN_VALUE_STR) {
         SCAN_HILOGD("StrValue = %{public}s", strValue_.c_str());
-    } else if (valueType_ == SCAN_VALUE_BOOL) {
-        SCAN_HILOGD("BoolValue = %{public}d", boolValue_);
+    } else {
+        SCAN_HILOGD("NumValue = %{public}d", numValue_);
     }
 }
 } // namespace OHOS::Scan
