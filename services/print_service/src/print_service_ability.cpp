@@ -2850,7 +2850,7 @@ bool PrintServiceAbility::UpdateSinglePrinterInfo(const PrinterInfo &info, const
 
     bool isCapabilityUpdated = false;
     if (printerInfo->HasCapability()) {
-        isCapabilityUpdated = UpdatePrinterCapability(printExtId, info);
+        isCapabilityUpdated = UpdatePrinterCapability(printExtId, *printerInfo);
     }
 
     if (isCapabilityUpdated) {
