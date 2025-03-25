@@ -82,7 +82,7 @@ bool ScanSystemData::ParseScannerListJsonV1(Json::Value& jsonObject)
         return false;
     }
     uint32_t jsonSize = jsonObject["scaner_list"].size();
-    if (jsonObject > MAX_SCANNER_SIZE) {
+    if (jsonSize > MAX_SCANNER_SIZE) {
         PRINT_HILOGE("scanner list size is illegal.");
         return false;
     }
