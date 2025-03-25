@@ -27,6 +27,7 @@
 #include "print_preview_attribute.h"
 #include "print_range.h"
 #include "print_attributes.h"
+#include <json/json.h>
 
 namespace OHOS::Print {
 class PrintJob final : public Parcelable {
@@ -115,6 +116,7 @@ public:
 
     void Dump();
 
+    std::string ConvertToJsonString() const;
 private:
     void ReadFromParcel(Parcel &parcel);
     void ReadParcelFD(Parcel &parcel);

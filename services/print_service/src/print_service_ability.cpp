@@ -106,6 +106,7 @@ static const std::string NOTIFY_INFO_SPOOLER_CLOSED_FOR_STARTED = "spooler_close
 
 static const std::string PRINTER_ID_DELIMITER = ":";
 static const std::string USB_PRINTER = "usb";
+static const std::string DEVICE_TYPE = "PRINTER";
 
 static const std::vector<std::string> PRINT_TASK_EVENT_LIST = {EVENT_BLOCK, EVENT_SUCCESS, EVENT_FAIL, EVENT_CANCEL};
 
@@ -843,6 +844,11 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     UpdateQueuedJobList(jobId, nativePrintJob);
     auto printerId = nativePrintJob->GetPrinterId();
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
+    std::string callerPkg = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    ingressPackage = callerPkg;
+    PRINT_HILOGE("ingressPackage is %{public}s", ingressPackage.c_str());
+    std::string param = nativePrintJob->ConvertToJsonString();
+    HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
     return StartPrintJobInternal(nativePrintJob);
 }
 
@@ -1372,7 +1378,6 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
 
     auto printerId = jobIt->second->GetPrinterId();
     if (state == PRINT_JOB_BLOCKED) {
-        ReportHisysEvent(jobIt->second, printerId, subState);
         if (subState == PRINT_JOB_BLOCKED_OFFLINE) {
             auto iter = printerJobMap_.find(printerId);
             if (iter != printerJobMap_.end()) {
@@ -1437,58 +1442,6 @@ void PrintServiceAbility::ReportCompletedPrint(const std::string &printerId)
     if (queuedJobList_.size() == 0 && printAppCount_ == 0) {
         UnloadSystemAbility();
     }
-    Json::Value msg;
-    auto endPrintTime = std::chrono::high_resolution_clock::now();
-    auto printTime = std::chrono::duration_cast<std::chrono::milliseconds>(endPrintTime - startPrintTime_);
-    msg["PRINT_TIME"] = std::to_string(printTime.count());
-    msg["INGRESS_PACKAGE"] = ingressPackage;
-    msg["STATUS"] = 0;
-    HisysEventUtil::reportPrintSuccess(PrintJsonUtil::WriteString(msg));
-}
-
-int32_t PrintServiceAbility::ReportHisysEvent(
-    const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState)
-{
-    Json::Value msg;
-    auto endPrintTime = std::chrono::high_resolution_clock::now();
-    auto printTime = std::chrono::duration_cast<std::chrono::milliseconds>(endPrintTime - startPrintTime_);
-    msg["PRINT_TIME"] = std::to_string(printTime.count());
-    msg["INGRESS_PACKAGE"] = ingressPackage;
-    if (isEprint(printerId)) {
-        msg["PRINT_TYPE"] = 1;
-    } else {
-        msg["PRINT_TYPE"] = 0;
-    }
-
-    std::vector<uint32_t> fdList;
-    jobInfo->GetFdList(fdList);
-    msg["FILE_NUM"] = fdList.size();
-    msg["PAGE_NUM"] = fdList.size();
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
-    if (printerInfo == nullptr) {
-        msg["MODEL"] = "";
-    } else {
-        msg["MODEL"] = printerInfo->GetPrinterName();
-    }
-    msg["COPIES_SETTING"] = jobInfo->GetCopyNumber();
-    std::string option = jobInfo->GetOption();
-    PRINT_HILOGD("option:%{public}s", option.c_str());
-    std::string jobDescription = "";
-    if (option != "") {
-        Json::Value optionJson;
-        if (PrintJsonUtil::Parse(option, optionJson)) {
-            PRINT_HILOGD("optionJson: %{public}s", (PrintJsonUtil::WriteString(optionJson)).c_str());
-            if (PrintJsonUtil::IsMember(optionJson, "jobDescription") && optionJson["jobDescription"].isString()) {
-                jobDescription = optionJson["jobDescription"].asString();
-                PRINT_HILOGI("jobDescription: %{public}s", jobDescription.c_str());
-            }
-        }
-    }
-    msg["JOB_DESCRIPTION"] = jobDescription;
-    msg["PRINT_STYLE_SETTING"] = jobInfo->GetDuplexMode();
-    msg["FAIL_REASON_CODE"] = subState;
-    HisysEventUtil::faultPrint("PRINT_JOB_BLOCKED", PrintJsonUtil::WriteString(msg));
-    return msg.size();
 }
 
 void PrintServiceAbility::NotifyAppJobQueueChanged(const std::string &applyResult)

@@ -16,42 +16,25 @@
 #include "hisysevent.h"
 #include "print_log.h"
 #include "hisys_event_util.h"
+#include "print_job.h"
 
 namespace OHOS::Print {
     using namespace OHOS::HiviewDFX;
 
-    void HisysEventUtil::reportBehaviorEvent(std::string name, int behaviorCode, const std::string &msg)
+    void HisysEventUtil::reportBehaviorEvent(std::string packageName, int behaviorCode, const std::string &msg)
     {
         HiSysEventWrite(
             HW_PRINT_SPOOLER,
-            name,
+            BEHAVIOR_DESCRIPTION,
             HiSysEvent::EventType::BEHAVIOR,
-            "PACKAGE_NAME", "com.ohos.spooler",
-            "PROCESS_NAME", "hwPrintSpooler",
+            "PACKAGE_NAME", packageName,
+            "PROCESS_NAME", packageName,
             "BEHAVIOR_CODE", behaviorCode,
+            "DEVICE_TYPE", DEVICE_TYPE,
+            "ACTION", behaviorCode,
+            "START_TIME", INACTIVE,
+            "END_TIME", INACTIVE,
+            "START_TIME", INACTIVE,
             "MSG", msg);
-    }
-
-    void HisysEventUtil::reportFaultEvent(std::string name, int faultCode, std::string scene, std::string msg)
-    {
-        HiSysEventWrite(
-            HW_PRINT_SPOOLER,
-            name,
-            HiSysEvent::EventType::FAULT,
-            "PACKAGE_NAME", "com.ohos.spooler",
-            "PROCESS_NAME", "hwPrintSpooler",
-            "FAULT_CODE", faultCode,
-            "SCENE", scene,
-            "MSG", msg);
-    }
-
-    void HisysEventUtil::reportPrintSuccess(const std::string &msg)
-    {
-        reportBehaviorEvent("PRINT_SUCCESS", PRINT_SUCCESS, msg);
-    }
-
-    void HisysEventUtil::faultPrint(std::string scene, std::string msg)
-    {
-        reportFaultEvent("PRINT_EXCEPTION", FAULT_PRINT, scene, msg);
     }
 }

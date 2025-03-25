@@ -422,4 +422,21 @@ void PrintJob::Dump()
         PRINT_HILOGD("option: %{private}s", option_.c_str());
     }
 }
+
+std::string PrintJob::ConvertToJsonString() const
+{
+    Json::Value json;
+    json["printerId"] = printerId_;
+    json["jobId"] = jobId_;
+    json["copyNumber"] = copyNumber_;
+    json["colorMode"] = colorMode_;
+    json["duplexMode"] = duplexMode_;
+    json["pageSize"] = pageSize_.GetName();
+    if (hasOption_) {
+        json["option"] = option_;
+    }
+    Json::StreamWriterBuilder wBuilder;
+    std::string jsonString = Json::writeString(wBuilder, json);
+    return jsonString;
+}
 } // namespace OHOS::Print

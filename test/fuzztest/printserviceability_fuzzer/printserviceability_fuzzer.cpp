@@ -586,17 +586,6 @@ void TestReportCompletedPrint(const uint8_t *data, size_t size, FuzzedDataProvid
     PrintServiceAbility::GetInstance()->ReportCompletedPrint(printerId);
 }
 
-void TestReportHisysEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    auto printJob = std::make_shared<PrintJob>();
-    printJob->SetJobId(jobId);
-    printJob->SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    uint32_t subState = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
-    PrintServiceAbility::GetInstance()->ReportHisysEvent(printJob, printerId, subState);
-}
-
 void TestNotifyAppJobQueueChanged(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string applyResult = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -895,7 +884,6 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
     TestCheckPrinterUriDifferent(data, size, dataProvider);
     TestUpdatePrinterCapability(data, size, dataProvider);
     TestReportCompletedPrint(data, size, dataProvider);
-    TestReportHisysEvent(data, size, dataProvider);
     TestNotifyAppJobQueueChanged(data, size, dataProvider);
     TestSendPrinterChangeEvent(data, size, dataProvider);
     TestCheckJobQueueBlocked(data, size, dataProvider);

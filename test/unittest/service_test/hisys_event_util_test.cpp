@@ -16,7 +16,6 @@
 #include <gtest/gtest.h>
 #include "hisys_event_util.h"
 #include "print_constant.h"
-#include "print_log.h"
 
 #include "mock_hisys_event_util.h"
 
@@ -49,21 +48,9 @@ void HisysEventUtilTest::TearDown(void) {}
 HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0001, TestSize.Level1)
 {
     OHOS::Print::HisysEventUtil util;
-    util->reportPrintSuccess("printSuccess");
+    std::string param = "";
+    util->reportBehaviorEvent("test", HisysEventUtil::SEND_TASK, param);
     EXPECT_CALL(util, reportBehaviorEvent(_, _, _)).Times(1);
-}
-
-/**
-* @tc.name: HisysEventUtilTest_0001
-* @tc.desc: faultPrint
-* @tc.type: FUNC
-* @tc.require:
-*/
-HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0002, TestSize.Level1)
-{
-    OHOS::Print::HisysEventUtil util;
-    util->faultPrint("printfault", "errCode");
-    EXPECT_CALL(util, reportFaultEvent(_, _, _, _)).Times(1);
 }
 } // namespace Print
 } // namespace OHOS
