@@ -25,7 +25,7 @@ bool PrintCallbackProxy::OnCallback()
     PRINT_HILOGD("PrintCallbackProxy::OnCallback Start");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     data.WriteInterfaceToken(GetDescriptor());
     sptr<IRemoteObject> remote = Remote();
@@ -47,7 +47,7 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrinterInfo &info)
     PRINT_HILOGD("PrintCallbackProxy::OnCallback Start");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     PRINT_HILOGD("Printer Event argument:[%{public}d], printerId [%{private}s]", state, info.GetPrinterId().c_str());
     data.WriteInterfaceToken(GetDescriptor());
@@ -73,7 +73,7 @@ bool PrintCallbackProxy::OnCallback(uint32_t state, const PrintJob &info)
     PRINT_HILOGD("PrintCallbackProxy::OnCallback Start");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     PRINT_HILOGD("PrintJob Event state:[%{public}d], subState [%{public}d]", state, info.GetSubState());
     data.WriteInterfaceToken(GetDescriptor());
@@ -99,7 +99,7 @@ bool PrintCallbackProxy::OnCallback(const std::string &extensionId, const std::s
     PRINT_HILOGD("PrintCallbackProxy::OnCallback Start");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(extensionId);
@@ -125,7 +125,7 @@ bool PrintCallbackProxy::OnCallbackAdapterLayout(const std::string &jobId, const
     PRINT_HILOGI("PrintCallbackProxy::OnCallbackAdapterLayout Start");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         PRINT_HILOGE("write descriptor failed");
@@ -157,7 +157,7 @@ bool PrintCallbackProxy::onCallbackAdapterJobStateChanged(const std::string jobI
     PRINT_HILOGI("PrintCallbackProxy::onCallbackAdapterJobStateChanged Start");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         PRINT_HILOGE("write descriptor failed");
@@ -187,7 +187,7 @@ bool PrintCallbackProxy::OnCallbackAdapterGetFile(uint32_t state)
     PRINT_HILOGI("PrintCallbackProxy::OnCallbackAdapterGetFile Start");
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         PRINT_HILOGE("write descriptor failed");
