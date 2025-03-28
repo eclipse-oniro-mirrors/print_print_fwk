@@ -162,11 +162,12 @@ enum ScanOptionOpType {
 };
 
 enum ScanOptionValueType {
-    SCAN_VALUE_NONE,
+    SCAN_VALUE_BOOL = 0,
     SCAN_VALUE_NUM,
-    SCAN_VALUE_NUM_LIST,
+    SCAN_VALUE_FIXED,
     SCAN_VALUE_STR,
-    SCAN_VALUE_BOOL,
+    SCAN_VALUE_BUTTON,
+    SCAN_VALUE_GROUP
 };
 
 enum ScanConstraintType {
@@ -181,6 +182,16 @@ enum ScannerState {
     SCANNER_SCANING = 1,
     SCANNER_SEARCHING = 2,
     SCANNER_CANCELING = 3,
+};
+
+enum PhysicalUnit {
+    SCANNER_UNIT_NONE = 0, // the value is unit-less (e.g., # of scans)
+    SCANNER_UNIT_PIXEL, // value is number of pixels
+    SCANNER_UNIT_BIT, // value is number of bits
+    SCANNER_UNIT_MM, // value is millimeters
+    SCANNER_UNIT_DPI, // value is resolution in dots/inch
+    SCANNER_UNIT_PERCENT, // value is a percentage
+    SCANNER_UNIT_MICROSECOND // value is micro seconds
 };
 } // namespace OHOS::Scan
 #endif // SCAN_CONSTANT_H

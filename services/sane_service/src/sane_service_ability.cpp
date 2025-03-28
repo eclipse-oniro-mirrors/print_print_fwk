@@ -250,7 +250,6 @@ void SaneServerManager::ConvertSaneDescriptor(const SANE_Option_Descriptor* sane
             SCAN_HILOGD("SANE_CONSTRAINT_STRING_LIST: %{public}s", saneDesc->constraint.string_list[i]);
             saneOptDes.optionConstraintString_.push_back(std::string(saneDesc->constraint.string_list[i]));
         }
-        saneOptDes.optionConstraintString_.push_back("null");
     }
     SCAN_HILOGI("ConvertSaneDescriptor end");
 }
@@ -411,14 +410,17 @@ SaneStatus SaneServerManager::SetControlOption(SANE_Handle& handle,
     SANE_Action action = static_cast<SANE_Action>(controlParam.action_);
     SANE_Int& info = outParam.info_;
     int32_t valueType = controlParam.valueType_;
-    SCAN_HILOGD("SetControlOption, valueType = [%{public}d]", valueType);
+    SCAN_HILOGD("valueType = [%{public}d], option = [%{public}d], action = [%{public}u]",
+        valueType, option, action);
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
-    if (valueType == SCAN_VALUE_NUM) {
-        int32_t value = controlParam.valueNumber_;
-        saneStatus = sane_control_option(handle, option, action, &value, &info);
-    } else if (valueType == SCAN_VALUE_STR) {
+    if (valueType == SCAN_VALUE_STR) {
         std::string value = controlParam.valueStr_;
         saneStatus = sane_control_option(handle, option, action, const_cast<char*>(&value.front()), &info);
+        SCAN_HILOGD("SetControlOption, value = [%{public}s]", value.c_str());
+    } else {
+        int32_t value = controlParam.valueNumber_;
+        saneStatus = sane_control_option(handle, option, action, &value, &info);
+        SCAN_HILOGD("SetControlOption, value = [%{public}d]", value);
     }
     if (saneStatus != ::SANE_STATUS_GOOD) {
         SCAN_HILOGE("Set sane_control_option error, ret = [%{public}u]", saneStatus);

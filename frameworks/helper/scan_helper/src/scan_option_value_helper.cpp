@@ -39,18 +39,6 @@ napi_value ScanOptionValueHelper::MakeJsObject(napi_env env, const ScanOptionVal
 
     if (valueType == SCAN_VALUE_NUM) {
         NapiScanUtils::SetInt32Property(env, jsObj, PARAM_SCAN_OPTION_NUM_VALUE, optionValue.GetNumValue());
-    } else if (valueType == SCAN_VALUE_NUM_LIST) {
-        std::vector<int32_t> numListValue;
-        optionValue.GetNumListValue(numListValue);
-        napi_value arrNumListValue = nullptr;
-        SCAN_CALL(env, napi_create_array(env, &arrNumListValue));
-        uint32_t arrNumListValueLength = numListValue.size();
-        for (uint32_t i = 0; i < arrNumListValueLength; i++) {
-            napi_value value;
-            SCAN_CALL(env, napi_create_int32(env, numListValue[i], &value));
-            SCAN_CALL(env, napi_set_element(env, arrNumListValue, i, value));
-        }
-        SCAN_CALL(env, napi_set_named_property(env, jsObj, PARAM_SCAN_OPTION_NUM_LIST_VALUE, arrNumListValue));
     } else if (valueType == SCAN_VALUE_STR) {
         NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_SCAN_OPTION_STR_VALUE, optionValue.GetStrValue());
     } else if (valueType == SCAN_VALUE_BOOL) {
@@ -74,27 +62,6 @@ std::shared_ptr<ScanOptionValue> ScanOptionValueHelper::BuildFromJs(napi_env env
     if (valueType == SCAN_VALUE_NUM) {
         int32_t numValue = NapiScanUtils::GetInt32Property(env, jsValue, PARAM_SCAN_OPTION_NUM_VALUE);
         nativeObj->SetNumValue(numValue);
-    } else if (valueType == SCAN_VALUE_NUM_LIST) {
-        napi_value jsNumListValue = NapiScanUtils::GetNamedProperty(env, jsValue, PARAM_SCAN_OPTION_NUM_LIST_VALUE);
-        if (jsNumListValue != nullptr) {
-            std::vector<int32_t> numListValue;
-            bool isArray = false;
-            SCAN_CALL(env, napi_is_array(env, jsNumListValue, &isArray));
-            if (!isArray) {
-                SCAN_HILOGE("Invalid list of scan option number value");
-                return nullptr;
-            }
-            uint32_t arrayLength = 0;
-            SCAN_CALL(env, napi_get_array_length(env, jsNumListValue, &arrayLength));
-            for (uint32_t index = 0; index < arrayLength; index++) {
-                napi_value jsNumInList;
-                int32_t numInList;
-                SCAN_CALL(env, napi_get_element(env, jsNumListValue, index, &jsNumInList));
-                SCAN_CALL(env, napi_get_value_int32(env, jsNumInList, &numInList));
-                numListValue.emplace_back(numInList);
-            }
-            nativeObj->SetNumListValue(numListValue);
-        }
     } else if (valueType == SCAN_VALUE_STR) {
         std::string strValue = NapiScanUtils::GetStringPropertyUtf8(env, jsValue, PARAM_SCAN_OPTION_STR_VALUE);
         nativeObj->SetStrValue(strValue);

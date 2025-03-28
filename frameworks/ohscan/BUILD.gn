@@ -49,7 +49,10 @@ ohos_shared_library("ohscan") {
     ubsan = true
   }
 
-  sources = [ "src/ohscan.cpp" ]
+  sources = [
+    "src/ohscan.cpp",
+    "src/scan_context.cpp",
+  ]
 
   deps = [
     "${print_path}/frameworks/helper/scan_helper:scan_helper",
