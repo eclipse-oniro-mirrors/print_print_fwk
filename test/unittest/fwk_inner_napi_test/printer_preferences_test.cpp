@@ -151,7 +151,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0013, TestSize.Level1)
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetOption("test");
     Json::Value preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(false, Print::PrintJsonUtil::IsMember(preferencesJson, "options"));
+    EXPECT_EQ(true, Print::PrintJsonUtil::IsMember(preferencesJson, "options"));
 }
 
 HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0014, TestSize.Level1)

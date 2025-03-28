@@ -33,7 +33,12 @@ bool PrintSystemData::ParsePrinterListJsonV1(Json::Value &jsonObject)
         PRINT_HILOGW("can not find printer_list");
         return false;
     }
-    for (int i = 0; i < jsonObject["printer_list"].size(); i++) {
+    uint32_t jsonSize = jsonObject["printer_list"].size();
+    if (jsonSize > MAX_PRINTER_SIZE) {
+        PRINT_HILOGE("printerlist size is illegal");
+        return false;
+    }
+    for (uint32_t i = 0; i < jsonSize; i++) {
         Json::Value object = jsonObject["printer_list"][i];
         if (!ConvertJsonToCupsPrinterInfo(object)) {
             PRINT_HILOGW("can not find necessary param");
@@ -193,7 +198,12 @@ bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
         PRINT_HILOGW("can not find printer_list");
         return false;
     }
-    for (int i = 0; i < jsonObject["printer_list"].size(); i++) {
+    uint32_t jsonSize = jsonObject["printer_list"].size();
+    if (jsonSize > MAX_PRINTER_SIZE) {
+        PRINT_HILOGE("printerlist size is illegal");
+        return false;
+    }
+    for (uint32_t i = 0; i < jsonSize; i++) {
         Json::Value object = jsonObject["printer_list"][i];
         Json::Value::Members keys = object.getMemberNames();
         for (auto it = keys.begin(); it != keys.end(); it++) {
@@ -837,8 +847,12 @@ bool PrintSystemData::GetPrinterCapabilityFromJson(
         PRINT_HILOGW("printer map is empty");
         return false;
     }
-
-    for (int i = 0; i < jsonObject["printer_list"].size(); i++) {
+    uint32_t jsonSize = jsonObject["printer_list"].size();
+    if (jsonSize > MAX_PRINTER_SIZE) {
+        PRINT_HILOGE("printerlist size is illegal");
+        return false;
+    }
+    for (uint32_t i = 0; i < jsonSize; i++) {
         Json::Value object = jsonObject["printer_list"][i];
         if (!CheckPrinterInfoJson(object, printerId)) {
             continue;
