@@ -122,8 +122,6 @@ std::string PrintServiceAbility::ingressPackage;
 PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate),
       state_(ServiceRunningState::STATE_NOT_START),
-      spoolerBundleName_(SPOOLER_BUNDLE_NAME),
-      spoolerAbilityName_(SPOOLER_ABILITY_NAME),
       currentJobOrderId_(0),
       helper_(nullptr),
       isJobQueueBlocked_(false),

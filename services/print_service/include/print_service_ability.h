@@ -232,10 +232,6 @@ private:
 
     std::map<std::string, std::unordered_map<std::string, bool>> printerJobMap_;
 
-    std::string spoolerBundleName_;
-    std::string spoolerAbilityName_;
-
-    std::mutex lock_;
     uint64_t currentJobOrderId_;
     std::shared_ptr<PrintServiceHelper> helper_;
 
