@@ -24,7 +24,6 @@ ohos_unittest("fwk_print_cups_client_test") {
     "${print_path}/frameworks/ohprint/include",
     "${print_path}/interfaces/kits/napi/print_napi/include",
     "${print_path}/services/print_service/include",
-    "//vendor/open_source/cpp-httplib",
     "${print_utils_path}/include",
     "//third_party/node/src",
   ]
@@ -88,8 +87,6 @@ ohos_unittest("fwk_print_cups_client_test") {
       "cups-filters:cupsfilters",
     ]
   }
-
-  cflags_cc += [ "-DCPPHTTPLIB_NO_EXCEPTIONS" ]
 }
 
 group("unittest") {
