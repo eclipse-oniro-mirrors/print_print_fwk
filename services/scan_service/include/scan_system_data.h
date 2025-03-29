@@ -49,9 +49,11 @@ public:
 private:
     bool ParseScannerListJsonV1(Json::Value& jsonObject);
     bool CheckJsonObjectValue(const Json::Value& object);
+    void ParseScannerJsonV1(ScanDeviceInfo &scanDeviceInfo, Json::Value &object);
     std::map<std::string, std::shared_ptr<ScanDeviceInfo>> addedScannerMap_;
     std::map<std::string, std::string> usbSnToPortMap_;
     std::mutex addedScannerMapLock_;
+    const uint32_t MAX_SCANNER_SIZE = 1000;
 };
 
 }  // namespace Scan

@@ -157,6 +157,7 @@ private:
     std::map<std::string, std::shared_ptr<PrinterInfo>> connectingIpPrinterInfoList_;
     std::mutex discoveredListMutex;
     std::mutex connectingIpPrinterListMutex;
+    const uint32_t MAX_PRINTER_SIZE = 1000;
 };
 
 }  // namespace Print

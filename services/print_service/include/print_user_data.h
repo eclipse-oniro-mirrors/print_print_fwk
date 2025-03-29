@@ -87,6 +87,7 @@ private:
     bool useLastUsedPrinterForDefault_ = true;
     deque<std::string> usedPrinterList_;
     std::recursive_mutex userDataMutex_;
+    const uint32_t MAX_PRINTER_SIZE = 1000;
 };
 
 }  // namespace Print

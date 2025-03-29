@@ -44,27 +44,55 @@ bool ScanSystemData::CheckJsonObjectValue(const Json::Value& object)
     return true;
 }
 
+void ScanSystemData::ParseScannerJsonV1(ScanDeviceInfo &scanDeviceInfo, Json::Value &object)
+{
+    if (OHOS::Print::PrintJsonUtil::IsMember(object, "deviceId") && object["deviceId"].isString()) {
+        scanDeviceInfo.deviceId = object["deviceId"].asString();
+    }
+    if (OHOS::Print::PrintJsonUtil::IsMember(object, "manufacturer") && object["manufacturer"].isString()) {
+        scanDeviceInfo.manufacturer = object["manufacturer"].asString();
+    }
+    if (OHOS::Print::PrintJsonUtil::IsMember(object, "model") && object["model"].isString()) {
+        scanDeviceInfo.model = object["model"].asString();
+    }
+    if (OHOS::Print::PrintJsonUtil::IsMember(object, "deviceType") && object["deviceType"].isString()) {
+        scanDeviceInfo.deviceType = object["deviceType"].asString();
+    }
+    if (OHOS::Print::PrintJsonUtil::IsMember(object, "discoverMode") && object["discoverMode"].isString()) {
+        scanDeviceInfo.discoverMode = object["discoverMode"].asString();
+    }
+    if (OHOS::Print::PrintJsonUtil::IsMember(object, "serialNumber") && object["serialNumber"].isString()) {
+        scanDeviceInfo.serialNumber = object["serialNumber"].asString();
+    }
+    if (OHOS::Print::PrintJsonUtil::IsMember(object, "deviceName") && object["deviceName"].isString()) {
+        scanDeviceInfo.deviceName = object["deviceName"].asString();
+    }
+    if (OHOS::Print::PrintJsonUtil::IsMember(object, "uniqueId") && object["uniqueId"].isString()) {
+        scanDeviceInfo.uniqueId = object["uniqueId"].asString();
+    }
+    if (OHOS::Print::PrintJsonUtil::IsMember(object, "uuid") && object["uuid"].isString()) {
+        scanDeviceInfo.uuid = object["uuid"].asString();
+    }
+}
+
 bool ScanSystemData::ParseScannerListJsonV1(Json::Value& jsonObject)
 {
     if (!Print::PrintJsonUtil::IsMember(jsonObject, "scaner_list") || !jsonObject["scaner_list"].isArray()) {
         SCAN_HILOGW("can not find scaner_list");
         return false;
     }
-    for (unsigned int i = 0; i < jsonObject["scaner_list"].size(); i++) {
+    uint32_t jsonSize = jsonObject["scaner_list"].size();
+    if (jsonObject > MAX_SCANNER_SIZE) {
+        PRINT_HILOGE("scanner list size is illegal.");
+        return false;
+    }
+    for (uint32_t i = 0; i < jsonSize; i++) {
         Json::Value object = jsonObject["scaner_list"][i];
         if (!CheckJsonObjectValue(object)) {
             continue;
         }
         ScanDeviceInfo scanDeviceInfo;
-        scanDeviceInfo.deviceId = object["deviceId"].asString();
-        scanDeviceInfo.manufacturer = object["manufacturer"].asString();
-        scanDeviceInfo.model = object["model"].asString();
-        scanDeviceInfo.deviceType = object["deviceType"].asString();
-        scanDeviceInfo.discoverMode = object["discoverMode"].asString();
-        scanDeviceInfo.serialNumber = object["serialNumber"].asString();
-        scanDeviceInfo.deviceName = object["deviceName"].asString();
-        scanDeviceInfo.uniqueId = object["uniqueId"].asString();
-        scanDeviceInfo.uuid = object["uuid"].asString();
+        ParseScannerJsonV1(scanDeviceInfo, object);
         std::string uniqueId = scanDeviceInfo.discoverMode + scanDeviceInfo.uniqueId;
         InsertScannerInfo(uniqueId, scanDeviceInfo);
     }

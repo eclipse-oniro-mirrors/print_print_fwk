@@ -350,8 +350,8 @@ bool ParseResolutionObject(const Json::Value &jsonObject, Print_Resolution &reso
         return false;
     }
     int yDpi = jsonObject["verticalDpi"].asInt();
-    resolution.horizontalDpi = xDpi;
-    resolution.verticalDpi = yDpi;
+    resolution.horizontalDpi = static_cast<uint32_t>(xDpi);
+    resolution.verticalDpi = static_cast<uint32_t>(yDpi);
     return true;
 }
 

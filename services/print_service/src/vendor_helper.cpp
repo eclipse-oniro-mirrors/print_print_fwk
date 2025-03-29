@@ -26,6 +26,7 @@ const std::string GLOBAL_ID_DELIMITER = ":";
 const uint32_t ORIENTATION_OFFSET = 3;
 const int NUMBER_BASE = 10;
 const size_t MAX_STRING_COUNT = 1000;
+const uint32_t MAX_MEDIA_TYPE_SIZE = 200;
 }
 
 namespace OHOS::Print {
@@ -97,7 +98,12 @@ bool ConvertJsonToStringList(const std::string &jsonString, std::vector<std::str
         PRINT_HILOGW("jsonObject is not array");
         return false;
     }
-    for (int i = 0; i < jsonObject.size(); i++) {
+    uint32_t jsonSize = jsonObject.size();
+    if (jsonSize > MAX_MEDIA_TYPE_SIZE) {
+        PRINT_HILOGE("jsonObject size is illegal.");
+        return false;
+    }
+    for (uint32_t i = 0; i < jsonSize; i++) {
         if (jsonObject[i].isString()) {
             list.push_back(jsonObject[i].asString());
         }
@@ -655,9 +661,9 @@ bool UpdateMediaCapability(PrinterCapability &printerCap, const Print_PrinterCap
     }
     if (capability->supportedMediaTypes != nullptr) {
         printerCap.SetPrinterAttrNameAndValue("media-type-supported", capability->supportedMediaTypes);
-        std::string mdiaTypeJson(capability->supportedMediaTypes);
+        std::string mediaTypeJson(capability->supportedMediaTypes);
         std::vector<std::string> mediaTypeList;
-        if (ConvertJsonToStringList(mdiaTypeJson, mediaTypeList)) {
+        if (ConvertJsonToStringList(mediaTypeJson, mediaTypeList)) {
             printerCap.SetSupportedMediaType(mediaTypeList);
         } else {
             PRINT_HILOGW("invalid media types");

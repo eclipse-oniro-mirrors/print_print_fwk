@@ -74,8 +74,8 @@ struct JobMonitorParam {
 
     StatePolicy policyArray[16] = {};
     ipp_jstate_t job_state = IPP_JOB_PENDING;
-    char job_state_reasons[1024];
-    char job_printer_state_reasons[1024];
+    char job_state_reasons[1024] = {};
+    char job_printer_state_reasons[1024] = {};
     bool isFirstQueryState = true;
     int32_t timesOfSameState = -1;
     bool isBlock = false;
