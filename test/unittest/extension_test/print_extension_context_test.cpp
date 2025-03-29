@@ -45,14 +45,14 @@ void PrintExtensionContextTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0001, TestSize.Level1)
+HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0001, TestSize.Level0)
 {
     AAFwk::Want want;
     PrintExtensionContext printExtensionContext;
     EXPECT_NE(printExtensionContext.StartAbility(want), ERR_OK);
 }
 
-HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0002, TestSize.Level1)
+HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0002, TestSize.Level0)
 {
     AAFwk::Want want;
     AAFwk::StartOptions startOptions;
@@ -60,7 +60,7 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0002, TestSize.Lev
     EXPECT_NE(printExtensionContext.StartAbility(want, startOptions), ERR_OK);
 }
 
-HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0003, TestSize.Level1)
+HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0003, TestSize.Level0)
 {
     AAFwk::Want want;
     int accountId = 0;
@@ -68,7 +68,7 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0003, TestSize.Lev
     EXPECT_NE(printExtensionContext.StartAbilityWithAccount(want, accountId), ERR_OK);
 }
 
-HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0004, TestSize.Level1)
+HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0004, TestSize.Level0)
 {
     AAFwk::Want want;
     int accountId = 0;
@@ -77,7 +77,7 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0004, TestSize.Lev
     EXPECT_NE(printExtensionContext.StartAbilityWithAccount(want, accountId, startOptions), ERR_OK);
 }
 
-HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0005, TestSize.Level1)
+HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0005, TestSize.Level0)
 {
     AAFwk::Want want;
     sptr<AbilityConnectCallback> connectCallback;
@@ -85,13 +85,13 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0005, TestSize.Lev
     EXPECT_NE(printExtensionContext.DisconnectAbility(want, connectCallback), ERR_OK);
 }
 
-HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0006, TestSize.Level1)
+HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0006, TestSize.Level0)
 {
     PrintExtensionContext printExtensionContext;
     EXPECT_NE(printExtensionContext.TerminateAbility(), ERR_OK);
 }
 
-HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0007, TestSize.Level1)
+HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0007, TestSize.Level0)
 {
     PrintExtensionContext printExtensionContext;
     EXPECT_EQ(printExtensionContext.GetAbilityInfoType(), AppExecFwk::AbilityType::UNKNOWN);

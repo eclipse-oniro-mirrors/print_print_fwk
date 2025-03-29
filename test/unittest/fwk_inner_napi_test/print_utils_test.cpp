@@ -51,7 +51,7 @@ void PrintUtilsTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0001, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0001, TestSize.Level2)
 {
     std::string testResult = "test";
     std::string result = PrintUtils::ToLower("TEST");
@@ -64,7 +64,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0002, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0002, TestSize.Level2)
 {
     std::string gid = "com.sample.ext";
     std::string testResult = "";
@@ -78,7 +78,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0003, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0003, TestSize.Level2)
 {
     std::string gid = "com.sample.ext:1234";
     std::string testResult = "com.sample.ext";
@@ -92,7 +92,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0003, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0004, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0004, TestSize.Level2)
 {
     std::string id = "com.sample.ext";
     std::string localId = "1234";
@@ -107,7 +107,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0004, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0005, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0005, TestSize.Level2)
 {
     std::string gid = "com.sample.ext";
     std::string id = "com.sample.ext";
@@ -122,7 +122,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0005, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0006, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0006, TestSize.Level2)
 {
     std::string gid = "com.sample.ext:1234";
     std::string id = "com.sample.extt";
@@ -137,7 +137,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0006, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0007, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0007, TestSize.Level2)
 {
     std::string gid = "com.sample.ext:1234";
     std::string id = "com.sample.ext4";
@@ -152,7 +152,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0007, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0008, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0008, TestSize.Level2)
 {
     std::string gid = "com.sample.ext";
     uint32_t cid = 1;
@@ -167,7 +167,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0008, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0009, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0009, TestSize.Level2)
 {
     std::string gid = "com.sample.ext";
     std::string extensionId = "com.sample.ext";
@@ -181,7 +181,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0009, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0010, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0010, TestSize.Level2)
 {
     std::string gid = "com.sample.ext:1";
     std::string extensionId = "com.sample.ext";
@@ -197,7 +197,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0010, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0011, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0011, TestSize.Level2)
 {
     std::string taskId = "1234";
     std::string type = "block";
@@ -212,7 +212,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0011, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0012, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0012, TestSize.Level2)
 {
     int32_t result = PrintUtils::OpenFile("/error");
     EXPECT_EQ(PRINT_INVALID_ID, result);
@@ -224,7 +224,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0012, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0013, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0013, TestSize.Level2)
 {
     int32_t result = PrintUtils::OpenFile("/data/e11");
     EXPECT_EQ(PRINT_INVALID_ID, result);
@@ -236,7 +236,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0013, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0014, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0014, TestSize.Level2)
 {
     int32_t result = PrintUtils::IsPathValid("/data/service/e11/data/service/ \
     e11/data/service/e11/data/service/e11/data/service/e11/data/service/e11/data/service/ \
@@ -250,7 +250,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0014, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0015, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0015, TestSize.Level2)
 {
     int32_t result = PrintUtils::IsPathValid("/data/service/e11//data/service/e11");
     EXPECT_EQ(E_PRINT_NONE, result);
@@ -262,7 +262,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0015, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0016, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0016, TestSize.Level2)
 {
     int32_t result = PrintUtils::IsPathValid("/data/service/e11");
     EXPECT_NE(PRINT_INVALID_ID, result);
@@ -274,7 +274,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0016, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0017, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0017, TestSize.Level2)
 {
     int32_t result = PrintUtils::GetIdFromFdPath("/data/service");
     EXPECT_EQ(E_PRINT_NONE, result);
@@ -286,7 +286,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0017, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0018, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0018, TestSize.Level2)
 {
     int32_t result = PrintUtils::GetIdFromFdPath("/data/service/e11");
     EXPECT_NE(PRINT_INVALID_ID, result);
@@ -298,7 +298,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0018, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0019, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0019, TestSize.Level2)
 {
     std::string testResult = "PRINT_JOB_PREPARED";
     std::string result = PrintUtils::GetJobStateChar(PRINT_JOB_PREPARED);
@@ -311,14 +311,14 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0019, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0020, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0020, TestSize.Level2)
 {
     std::string testResult = "PRINT_JOB_UNKNOWN";
     std::string result = PrintUtils::GetJobStateChar(PRINT_JOB_PREPARED + 100);
     EXPECT_EQ(testResult, result);
 }
 
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0021, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0021, TestSize.Level2)
 {
     PrintUtils printUtils;
     std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
@@ -360,7 +360,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0021, TestSize.Level1)
     EXPECT_EQ(adapterParam->printAttributes.option_, "123");
 }
 
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0022, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0022, TestSize.Level2)
 {
     PrintUtils printUtils;
     PrintAttributes attrParam;
@@ -397,7 +397,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0022, TestSize.Level1)
                 "\"pageSize\":{\"height\":600,\"id\":\"11\",\"name\":\"123\",\"width\":400}}");
 }
 
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0023, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0023, TestSize.Level2)
 {
     PrintUtils printUtils;
     std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
@@ -415,7 +415,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0023, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0024, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0024, TestSize.Level2)
 {
     std::string gid = "com.sample.ext:1234";
     std::string id = "com.sample.ext";
@@ -430,7 +430,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0024, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0025, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0025, TestSize.Level2)
 {
     int32_t result = PrintUtils::OpenFile("content://test/test1");
     EXPECT_EQ(99, result);
@@ -442,7 +442,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0025, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0026, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0026, TestSize.Level2)
 {
     string testString(2048, '1');
     int32_t result = PrintUtils::IsPathValid("testString");
@@ -455,7 +455,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0026, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0027, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0027, TestSize.Level2)
 {
     std::string result = PrintUtils::GetBundleNameForUid(123);
     EXPECT_EQ("", result);
@@ -467,7 +467,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0027, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0028, TestSize.Level1)
+HWTEST_F(PrintUtilsTest, PrintUtilsTest_0028, TestSize.Level2)
 {
     std::string type = "test";
     int32_t callerUserId = 100; // defaute test user id

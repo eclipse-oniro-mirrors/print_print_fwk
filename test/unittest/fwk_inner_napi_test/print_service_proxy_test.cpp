@@ -53,7 +53,7 @@ void PrintServiceProxyTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0001, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0001, TestSize.Level0)
 {
     std::vector<std::string> testFileList = {"file://data/print/a.png",
         "file://data/print/b.png", "file://data/print/c.png"};
@@ -94,7 +94,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0002, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0002, TestSize.Level0)
 {
     std::vector<std::string> testFileList = {};
     std::vector<uint32_t> testFdList = {};
@@ -134,7 +134,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0003, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0003, TestSize.Level0)
 {
     std::string testTaskId = "2";
     sptr<MockRemoteObject> obj = new MockRemoteObject();
@@ -163,7 +163,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0003, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0004, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0004, TestSize.Level0)
 {
     std::string testPrintId = "2";
     sptr<MockRemoteObject> obj = new MockRemoteObject();
@@ -192,7 +192,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0004, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0005, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0005, TestSize.Level0)
 {
     std::string testPrintId = "2";
     sptr<MockRemoteObject> obj = new MockRemoteObject();
@@ -221,7 +221,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0005, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0006, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0006, TestSize.Level0)
 {
     PrintExtensionInfo info1, info2;
     info1.SetExtensionId("extensionId-1");
@@ -255,7 +255,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0006, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0007, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0007, TestSize.Level0)
 {
     std::vector<std::string> testExtList = {};
     sptr<MockRemoteObject> obj = new MockRemoteObject();
@@ -284,7 +284,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0007, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0008, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0008, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj = new MockRemoteObject();
     EXPECT_NE(obj, nullptr);
@@ -311,7 +311,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0008, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0009, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0009, TestSize.Level0)
 {
     OHOS::Print::PrintJob testJob;
     testJob.SetJobId("jobId-123");
@@ -341,7 +341,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0009, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0010, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0010, TestSize.Level0)
 {
     std::string testJobId = "jobId-123";
     sptr<MockRemoteObject> obj = new MockRemoteObject();
@@ -370,7 +370,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0010, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0011, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0011, TestSize.Level0)
 {
     OHOS::Print::PrinterInfo info1, info2;
     info1.SetOption("option-1");
@@ -405,7 +405,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0011, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0012, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0012, TestSize.Level0)
 {
     std::vector<std::string> testPrinterIds = {"printerId-1", "printerId-2"};
     sptr<MockRemoteObject> obj = new MockRemoteObject();
@@ -437,7 +437,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0012, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0013, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0013, TestSize.Level0)
 {
     OHOS::Print::PrinterInfo info1, info2;
     info1.SetOption("option-1");
@@ -472,7 +472,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0013, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0014, TestSize.Level1)
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0014, TestSize.Level0)
 {
     std::string testPrinterId = "printId-123";
     uint32_t testState = 1;
