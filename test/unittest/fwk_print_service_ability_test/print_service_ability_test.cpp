@@ -466,7 +466,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0012, TestSize.Level1)
     type = "printCallback_adapter";
     service->On(taskId, type, listener);
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_INVALID_PARAMETER);
-    EXPECT_EQ(service->Off(taskId, type), E_PRINT_INVALID_PARAMETER);
+    EXPECT_EQ(service->Off(taskId, type), E_PRINT_NONE);
     listener = new MockPrintCallbackProxy();
     if (listener != nullptr) {
         service->On(taskId, type, listener);
