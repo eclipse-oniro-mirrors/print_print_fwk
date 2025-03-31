@@ -250,7 +250,7 @@ int32_t ScanContext::GetOptionValueFromTable(const std::string& deviceId, int32_
         SCAN_HILOGE("cannot find option [%{private}d] in parameter tables.", option);
         return SCAN_ERROR_INVALID_PARAMETER;
     }
-    int32_t optionType = paraTable->optionTypeBuff[option];
+    uint32_t optionType = paraTable->optionTypeBuff[option];
     optionValue.SetScanOptionValueType(static_cast<ScanOptionValueType>(optionType));
     if (optionType == SCAN_VALUE_STR) {
         optionValue.SetStrValue(std::string(value));
