@@ -757,12 +757,6 @@ napi_value NapiInnerPrint::QueryAddedPrinter(napi_env env, napi_callback_info in
         return napi_ok;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
-            PRINT_HILOGE("Non-system applications use system APIS!");
-            context->result = false;
-            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
-            return;
-        }
         int32_t ret = PrintManagerClient::GetInstance()->QueryAddedPrinter(context->allPrinters);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
