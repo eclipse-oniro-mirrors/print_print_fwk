@@ -45,25 +45,25 @@ void PrintExtensionTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintExtensionTest, PrintExtensionTest_0001, TestSize.Level1)
+HWTEST_F(PrintExtensionTest, PrintExtensionTest_0001, TestSize.Level0)
 {
     std::unique_ptr<Runtime> runtime = nullptr;
     EXPECT_NE(PrintExtension::Create(runtime), nullptr);
 }
 
-HWTEST_F(PrintExtensionTest, PrintExtensionTest_0002, TestSize.Level1)
+HWTEST_F(PrintExtensionTest, PrintExtensionTest_0002, TestSize.Level0)
 {
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntime>();
     EXPECT_NE(PrintExtension::Create(runtime), nullptr);
 }
 
-HWTEST_F(PrintExtensionTest, PrintExtensionTest_0003, TestSize.Level1)
+HWTEST_F(PrintExtensionTest, PrintExtensionTest_0003, TestSize.Level0)
 {
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeJS>();
     EXPECT_NE(PrintExtension::Create(runtime), nullptr);
 }
 
-HWTEST_F(PrintExtensionTest, PrintExtensionTest_0004, TestSize.Level1)
+HWTEST_F(PrintExtensionTest, PrintExtensionTest_0004, TestSize.Level0)
 {
     std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntime>();
     std::shared_ptr<AbilityLocalRecord> record = nullptr;

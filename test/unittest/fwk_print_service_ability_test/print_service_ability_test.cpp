@@ -198,7 +198,7 @@ void PrintServiceAbilityTest::InitExtensionList(std::vector<AppExecFwk::Extensio
 * @tc.type: FUNC ~PrintServiceAbility()
 * @tc.require:
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001, TestSize.Level0)
 {
     PrintServiceAbility* print_service = new PrintServiceAbility(PRINT_SERVICE_ID, true);
     if (print_service != nullptr) {
@@ -222,7 +222,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001, TestSize.Level1)
 * @tc.type: FUNC ManualStart()
 * @tc.require:
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002, TestSize.Level0)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     int state = static_cast<int>(service->state_);
@@ -235,7 +235,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002, TestSize.Level1)
 * @tc.type: FUNC GetPrintJobOrderId()
 * @tc.require:
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0003, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0003, TestSize.Level0)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->GetPrintJobOrderId();
@@ -347,7 +347,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004, TestSize.Level1)
 * @tc.type: FUNC CallSpooler
 * @tc.require: has token
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0006, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0006, TestSize.Level0)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::vector<std::string> fileList = {};

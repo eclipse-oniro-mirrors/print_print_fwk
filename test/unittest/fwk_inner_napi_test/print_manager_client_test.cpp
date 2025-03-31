@@ -79,7 +79,7 @@ void PrintManagerClientTest::CallRemoteObject(const std::shared_ptr<MockPrintSer
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0001, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0001, TestSize.Level0)
 {
     PrintManagerClient::GetInstance()->LoadServerFail();
     EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, false);
@@ -91,7 +91,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0001, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0002, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0002, TestSize.Level0)
 {
     std::vector<std::string> testFileList = {"file://data/print/a.png",
         "file://data/print/b.png", "file://data/print/c.png"};
@@ -110,7 +110,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0002, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0003, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0003, TestSize.Level0)
 {
     PrintManagerClient::GetInstance()->LoadServerFail();
     EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, false);
@@ -126,7 +126,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0003, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0004, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0004, TestSize.Level0)
 {
     std::vector<std::string> testFileList = {"file://data/print/a.png",
         "file://data/print/b.png", "file://data/print/c.png"};
@@ -162,7 +162,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0004, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0005, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0005, TestSize.Level0)
 {
     std::string testTaskId = "2";
 
@@ -177,7 +177,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0005, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0006, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0006, TestSize.Level0)
 {
     std::string testTaskId = "2";
 
@@ -193,7 +193,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0006, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0007, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0007, TestSize.Level0)
 {
     std::string testTaskId = "2";
 
@@ -209,7 +209,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0007, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0008, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0008, TestSize.Level0)
 {
     std::string testTaskId = "2";
     auto service = std::make_shared<MockPrintService>();
@@ -236,7 +236,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0008, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0009, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0009, TestSize.Level0)
 {
     std::vector<PrintExtensionInfo> extensionInfos;
     PrintManagerClient::GetInstance()->LoadServerFail();
@@ -250,7 +250,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0009, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_00010, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_00010, TestSize.Level0)
 {
     std::vector<PrintExtensionInfo> extensionInfos;
     PrintManagerClient::GetInstance()->LoadServerSuccess();
@@ -265,7 +265,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_00010, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0011, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0011, TestSize.Level0)
 {
     std::vector<PrintExtensionInfo> extensionInfos;
     PrintManagerClient::GetInstance()->LoadServerFail();
@@ -281,7 +281,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0011, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0012, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0012, TestSize.Level0)
 {
     PrintExtensionInfo info1, info2;
     info1.SetExtensionId("ext-123");
@@ -317,7 +317,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0012, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0013, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0013, TestSize.Level0)
 {
     std::vector<std::string> testExtensionList = {"extensionId-1", "extensionId-2"};
 
@@ -332,7 +332,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0013, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0014, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0014, TestSize.Level0)
 {
     std::vector<std::string> testExtensionList = {"extensionId-1", "extensionId-2"};
 
@@ -348,7 +348,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0014, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0015, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0015, TestSize.Level0)
 {
     std::vector<std::string> testExtensionList = {"extensionId-1", "extensionId-2"};
     std::vector<PrintExtensionInfo> extensionInfos;
@@ -364,7 +364,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0015, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0016, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0016, TestSize.Level0)
 {
     std::vector<std::string> testExtensionList = {"extensionId-1", "extensionId-2"};
 
@@ -391,7 +391,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0016, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0017, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0017, TestSize.Level0)
 {
     PrintManagerClient::GetInstance()->LoadServerFail();
     int32_t ret = PrintManagerClient::GetInstance()->StopDiscoverPrinter();
@@ -404,7 +404,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0017, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0018, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0018, TestSize.Level0)
 {
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
@@ -418,7 +418,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0018, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0019, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0019, TestSize.Level0)
 {
     std::vector<std::string> testExtensionList = {"extensionId-1", "extensionId-2"};
     std::vector<PrintExtensionInfo> extensionInfos;
@@ -434,7 +434,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0019, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0020, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0020, TestSize.Level0)
 {
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
@@ -459,7 +459,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0020, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0021, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0021, TestSize.Level0)
 {
     std::vector<PrinterInfo> printerInfos;
     PrintManagerClient::GetInstance()->LoadServerFail();
@@ -473,7 +473,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0021, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0022, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0022, TestSize.Level0)
 {
     std::vector<PrinterInfo> printerInfos;
     PrintManagerClient::GetInstance()->LoadServerSuccess();
@@ -488,7 +488,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0022, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0023, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0023, TestSize.Level0)
 {
     std::vector<PrinterInfo> printerInfos;
     PrintManagerClient::GetInstance()->LoadServerFail();
@@ -503,7 +503,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0023, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0024, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0024, TestSize.Level0)
 {
     OHOS::Print::PrinterInfo printerInfo;
     std::string printerId = "printId-123";
@@ -546,7 +546,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0024, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0025, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0025, TestSize.Level0)
 {
     std::vector<std::string> testPrinterIds = {"printerId-1", "printerId-2"};
 
@@ -561,7 +561,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0025, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0026, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0026, TestSize.Level0)
 {
     std::vector<std::string> testPrinterIds = {"printerId-1", "printerId-2"};
     PrintManagerClient::GetInstance()->LoadServerSuccess();
@@ -576,7 +576,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0026, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0027, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0027, TestSize.Level0)
 {
     std::vector<std::string> testPrinterIds = {"printerId-1", "printerId-2"};
     std::vector<PrinterInfo> printerInfos;
@@ -592,7 +592,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0027, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0028, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0028, TestSize.Level0)
 {
     std::vector<std::string> testPrinterIds = {"printerId-1", "printerId-2"};
     auto service = std::make_shared<MockPrintService>();
@@ -622,7 +622,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0028, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0029, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0029, TestSize.Level0)
 {
     std::vector<PrinterInfo> printerInfos;
     PrintManagerClient::GetInstance()->LoadServerFail();
@@ -636,7 +636,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0029, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0030, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0030, TestSize.Level0)
 {
     std::vector<PrinterInfo> printerInfos;
     PrintManagerClient::GetInstance()->LoadServerSuccess();
@@ -651,7 +651,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0030, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0031, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0031, TestSize.Level0)
 {
     std::vector<PrinterInfo> printerInfos;
     PrintManagerClient::GetInstance()->LoadServerFail();
@@ -666,7 +666,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0031, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0032, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0032, TestSize.Level0)
 {
     PrinterInfo printerInfo;
     std::string printerId = "printId-123";
@@ -709,7 +709,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0032, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0033, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0033, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
     PrintManagerClient::GetInstance()->LoadServerFail();
@@ -723,7 +723,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0033, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0034, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0034, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
     PrintManagerClient::GetInstance()->LoadServerSuccess();
@@ -738,7 +738,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0034, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0035, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0035, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
     PrintManagerClient::GetInstance()->LoadServerFail();
@@ -753,7 +753,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0035, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0036, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0036, TestSize.Level0)
 {
     std::string testPrinterId = "printerId-1";
 
@@ -781,7 +781,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0036, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0037, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0037, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
 
@@ -796,7 +796,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0037, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0038, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0038, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
 
@@ -812,7 +812,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0038, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0039, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0039, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
     PrintManagerClient::GetInstance()->LoadServerFail();
@@ -828,7 +828,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0039, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0040, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0040, TestSize.Level0)
 {
     std::string testPrinterId = "printerId-1";
 
@@ -856,7 +856,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0040, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0041, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0041, TestSize.Level0)
 {
     PrintJob jobinfo;
     PrintManagerClient::GetInstance()->LoadServerFail();
@@ -870,7 +870,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0041, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0042, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0042, TestSize.Level0)
 {
     PrintJob jobinfo;
 
@@ -886,7 +886,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0042, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0043, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0043, TestSize.Level0)
 {
     PrintJob jobinfo;
     PrintManagerClient::GetInstance()->LoadServerFail();
@@ -901,7 +901,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0043, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0044, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0044, TestSize.Level0)
 {
     OHOS::Print::PrintJob testJob;
     testJob.SetJobId("jobId-123");
@@ -929,7 +929,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0044, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0045, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0045, TestSize.Level0)
 {
     std::string jobId = "jobId-1";
 
@@ -944,7 +944,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0045, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0046, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0046, TestSize.Level0)
 {
     std::string jobId = "jobId-1";
 
@@ -960,7 +960,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0046, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0047, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0047, TestSize.Level0)
 {
     std::string jobId = "jobId-1";
     PrintManagerClient::GetInstance()->LoadServerFail();
@@ -975,7 +975,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0047, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0048, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0048, TestSize.Level0)
 {
     std::string testJobId = "jobId-1";
 
@@ -1003,7 +1003,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0048, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0049, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0049, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
     uint32_t state = 6;
@@ -1019,7 +1019,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0049, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0050, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0050, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
     uint32_t state = 6;
@@ -1036,7 +1036,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0050, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0051, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0051, TestSize.Level0)
 {
     std::string printerId = "printerId-1";
     uint32_t state = 6;
@@ -1052,7 +1052,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0051, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0052, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0052, TestSize.Level0)
 {
     std::string testPrinterId = "printerId-1";
     uint32_t testState = 6;
