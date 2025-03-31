@@ -60,11 +60,11 @@ int32_t OH_Scan_StartScannerDiscovery(Scan_ScannerDiscoveryCallback callback)
         return SCAN_ERROR_GENERIC_FAILURE;
     }
     int32_t ret = SCAN_ERROR_NONE;
-    auto callbackFunction = [](std::vector<ScanDeviceInfo> &infos) {
+    auto scannerDiscoveryCallback = [](std::vector<ScanDeviceInfo> &infos) {
         ScanContext::GetInstance().ExecuteCallback(infos);
     };
     if (!context.IsListening()) {
-        OHOS::sptr<IScanCallback> call = new (std::nothrow) ScanCallback(callbackFunction);
+        OHOS::sptr<IScanCallback> call = new (std::nothrow) ScanCallback(scannerDiscoveryCallback);
         if (call == nullptr) {
             SCAN_HILOGE("call is null");
             return SCAN_ERROR_GENERIC_FAILURE;
