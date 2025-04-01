@@ -229,7 +229,7 @@ void PrintUtils::BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &
     if (attrParam.HasOption()) {
         attrJson["options"] = attrParam.GetOption();
     }
-    want.SetParam(LAUNCH_PARAMETER_PRINT_ATTRIBUTE, (PrintJsonUtil::WriteString(attrJson)).c_str());
+    want.SetParam(LAUNCH_PARAMETER_PRINT_ATTRIBUTE, (PrintJsonUtil::WriteString(attrJson)));
     PRINT_HILOGD("CallSpooler set printAttributes: %{public}s", (PrintJsonUtil::WriteString(attrJson)).c_str());
 }
 
