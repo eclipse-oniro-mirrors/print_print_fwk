@@ -2977,7 +2977,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
             info.GetPrinterName(), info.GetPrinterMake());
     } else {
         ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithPpd(info.GetUri(),
-            info.GetPrinterName(), "Brocadesoft Universal Driver", ppdData);
+            info.GetPrinterName(), BSUNI_PPD_NAME, ppdData);
     }
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
@@ -3121,7 +3121,7 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
             info.GetPrinterName(), info.GetPrinterMake());
     } else {
         ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithPpd(info.GetUri(),
-            info.GetPrinterName(), "Brocadesoft Universal Driver", ppdData);
+            info.GetPrinterName(), BSUNI_PPD_NAME, ppdData);
     }
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
