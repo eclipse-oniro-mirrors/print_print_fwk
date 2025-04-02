@@ -83,7 +83,6 @@ static const std::string CUPS_RUN_DIR = "/data/service/el1/public/print_service/
 static const std::string DEFAULT_PPD_NAME = "everywhere";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
 static const std::string REMOTE_PRINTER_MAKE_MODEL = "Remote Printer";
-static const std::string BSUNI_PPD_NAME = "Brocadesoft Universal Driver";
 static const std::string LOCAL_RAW_PRINTER_PPD_NAME = "Local Raw Printer";
 static const std::string PRINTER_STATE_WAITING_COMPLETE = "cups-waiting-for-job-completed";
 static const std::string PRINTER_STATE_WIFI_NOT_CONFIGURED = "wifi-not-configured-report";
@@ -258,6 +257,18 @@ void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceI
     } else {
         PRINT_HILOGW("verify uri or make failed");
     }
+}
+
+std::string StandardizePrinterUri(const std::string &printerUri, const std::string &ppdName)
+{
+    if (ppdName != BSUNI_PPDName) {
+        return printerUri;
+    }
+    auto pos = printerUri.find("://");
+    if (pos == std::string::npos) {
+        return printerUri;
+    }
+    return "bsUniBackend" + printerUri.substr(pos);
 }
 
 PrintCupsClient::PrintCupsClient()
@@ -677,7 +688,8 @@ int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, 
     char uri[HTTP_MAX_URI] = {0};
     std::vector<string> ppds;
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
-    if (IsPrinterExist(printerUri.c_str(), standardName.c_str(), ppdName.c_str())) {
+    std::string standardUri = StandardizePrinterUri(printerUri, ppdName);
+    if (IsPrinterExist(standardUri.c_str(), standardName.c_str(), ppdName.c_str())) {
         PRINT_HILOGI("add success, printer has added");
         return E_PRINT_NONE;
     }
@@ -693,7 +705,7 @@ int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, 
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);
     ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, cupsUser());
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-info", nullptr, standardName.c_str());
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "device-uri", nullptr, printerUri.c_str());
+    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "device-uri", nullptr, standardUri.c_str());
     ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_IDLE);
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-accepting-jobs", 1);
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-shared", 1);
@@ -2035,17 +2047,11 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
             // find everywhere or remote printr driver
             printerExist = (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != nullptr) ||
                            (strstr(makeModel, REMOTE_PRINTER_MAKE_MODEL.c_str()) != nullptr);
+        } else if (strcmp(ppdName, BSUNI_PPD_NAME.c_str()) == 0) {
+            printerExist = (strstr(makeModel, BSUNI_PPD_NAME.c_str()) != nullptr);
         } else {
-            if (strstr(makeModel, LOCAL_RAW_PRINTER_PPD_NAME.c_str()) != nullptr) {
-                printerExist = false;
-                PRINT_HILOGI("Printer makeModel is Local Raw Printer");
-            } else {
-                printerExist = true;
-            }
-            if (!printerExist) {
-                // drvier exception, indicting printer deletion
-                DeleteCupsPrinter(printerName);
-            }
+            // vendor ppd always need to be reloaded
+            printerExist = false;
         }
         printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
     }

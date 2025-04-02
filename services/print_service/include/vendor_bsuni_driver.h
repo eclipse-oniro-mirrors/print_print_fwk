@@ -50,7 +50,6 @@ private:
     int32_t OnPrinterPropertiesQueried(const std::string &printerId, const Print_PropertyList *propertyList);
     int32_t OnPrinterCapabilityQueried(const Print_DiscoveryItem *printer, const Print_PrinterCapability *capability,
                                        const Print_DefaultValue *defaultValue);
-    bool ConvertBsUri(std::string &uri);
 
 private:
     void *bsUniDriverHandler = nullptr;
