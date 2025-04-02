@@ -214,9 +214,10 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t* work, int statusIn)
     PRINT_HILOGD("uv_queue_work callback success");
     napi_close_handle_scope(context->env, scope);
 
+    // context.callback will be deleted on other share_ptr, not need delete it!
+    context->callback = nullptr;
     delete context;
     context = nullptr;
-
     delete work;
     work = nullptr;
 }
