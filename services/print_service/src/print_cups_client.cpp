@@ -709,7 +709,6 @@ int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, 
     ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_IDLE);
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-accepting-jobs", 1);
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-shared", 1);
-    PRINT_HILOGD("IPP_OP_CUPS_ADD_MODIFY_PRINTER cupsDoRequest");
     http_status_t status = cupsSendRequest(CUPS_HTTP_DEFAULT, request, "/admin/",
         ippLength(request) + ppdData.length());
     if (status == HTTP_STATUS_CONTINUE && request->state == IPP_STATE_DATA) {
