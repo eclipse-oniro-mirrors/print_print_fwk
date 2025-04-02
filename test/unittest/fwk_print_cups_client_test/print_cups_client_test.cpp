@@ -54,7 +54,6 @@ static const std::string PRINTER_STATE_COVER_OPEN = "cover-open";
 static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
 static const std::string REMOTE_PRINTER_MAKE_MODEL = "Remote Printer";
-static const std::string BSUNI_PPD_NAME = "Brocadesoft Universal Driver";
 
 static const std::string TEST_SERVICE_JOB_ID = "test_id";
 static const std::string PRINTER_URI = "test_printer_uri";
@@ -1804,6 +1803,20 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0092, TestSize.Level1)
     EXPECT_STREQ(GetUsbPrinterSerial(deviceUri).c_str(), num.c_str());
     deviceUri = usb + serial + "1234567890" + "&postfix";
     EXPECT_STREQ(GetUsbPrinterSerial(deviceUri).c_str(), "567890");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0093
+ * @tc.desc: StandardizePrinterUri
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0093, TestSize.Level1)
+{
+    std::string printerUri = "test";
+    EXPECT_STREQ(StandardizePrinterUri(printerUri, "").c_str(), printerUri.c_str());
+    EXPECT_STREQ(StandardizePrinterUri(printerUri, BSUNI_PPD_NAME).c_str(), printerUri.c_str());
+    EXPECT_STREQ(StandardizePrinterUri("ipp://test", BSUNI_PPD_NAME).c_str(), "bsUniBackend://test");
 }
 }  // namespace Print
 }  // namespace OHOS

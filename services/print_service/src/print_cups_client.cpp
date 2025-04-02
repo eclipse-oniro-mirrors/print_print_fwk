@@ -261,7 +261,7 @@ void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceI
 
 std::string StandardizePrinterUri(const std::string &printerUri, const std::string &ppdName)
 {
-    if (ppdName != BSUNI_PPDName) {
+    if (ppdName != BSUNI_PPD_NAME) {
         return printerUri;
     }
     auto pos = printerUri.find("://");
