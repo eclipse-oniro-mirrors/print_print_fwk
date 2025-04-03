@@ -777,8 +777,8 @@ ipp_t *PrintCupsClient::QueryPrinterAttributesByUri(const std::string &printerUr
     }
     httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username), host,
         sizeof(host), &port, resource, sizeof(resource));
-    if (port != IPP_PORT && strcasestr(scheme, "ipp") == nullptr) {
-        PRINT_HILOGW("not ipp protocol");
+    if (host[0] == '\0' || (port != IPP_PORT && strcasestr(scheme, "ipp") == nullptr)) {
+        PRINT_HILOGW("host is empty or not ipp protocol");
         return nullptr;
     }
     if (nic.empty()) {
@@ -1783,6 +1783,10 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     } else {
         httpSeparateURI(HTTP_URI_CODING_ALL, printerUri, scheme, sizeof(scheme),
             userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource));
+    }
+    if (host[0] == '\0') {
+        PRINT_HILOGE("host is empty");
+        return false;
     }
     std::string nic;
     if (IsIpConflict(printerId, nic)) {
