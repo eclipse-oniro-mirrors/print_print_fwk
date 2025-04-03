@@ -88,17 +88,22 @@ int32_t VendorBsuniDriver::AddPrinterToDiscovery(const Print_DiscoveryItem *disc
 {
     PRINT_HILOGI("BsUni callback AddPrinterToDiscovery");
     LogDiscoveryItem(discoveryItem);
-    PrinterInfo info;
-    if (!UpdatePrinterInfoWithDiscovery(info, discoveryItem)) {
+    auto info = std::make_shared<PrinterInfo>();
+    if (!UpdatePrinterInfoWithDiscovery(*info, discoveryItem)) {
         PRINT_HILOGW("fail to convert discoveryItem to printer info");
         return EXTENSION_INVALID_PARAMETER;
     }
     std::lock_guard<std::mutex> lock(g_driverMutex);
-    if (g_driverWrapper == nullptr || g_driverWrapper->vendorManager == nullptr) {
+    if (g_driverWrapper == nullptr) {
         PRINT_HILOGW("driver released");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    return g_driverWrapper->vendorManager->AddPrinterToDiscovery(g_driverWrapper->GetVendorName(), info);
+    auto op = std::bind(&VendorBsuniDriver::OnDiscoveredPrinterAdd, g_driverWrapper, info);
+    if (!g_driverWrapper->opQueue.Push(op)) {
+        PRINT_HILOGW("fail to add discovered printer");
+        return EXTENSION_ERROR_CALLBACK_FAIL;
+    }
+    return EXTENSION_ERROR_NONE;
 }
 
 int32_t VendorBsuniDriver::RemovePrinterFromDiscovery(const char *printerId)
@@ -108,14 +113,18 @@ int32_t VendorBsuniDriver::RemovePrinterFromDiscovery(const char *printerId)
         PRINT_HILOGW("printerId is null");
         return EXTENSION_INVALID_PARAMETER;
     }
-    std::string vendorPrinterId(printerId);
+    auto vendorPrinterId = std::make_shared<std::string>(printerId);
     std::lock_guard<std::mutex> lock(g_driverMutex);
-    if (g_driverWrapper == nullptr || g_driverWrapper->vendorManager == nullptr) {
+    if (g_driverWrapper == nullptr) {
         PRINT_HILOGW("driver released");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    return g_driverWrapper->vendorManager->RemovePrinterFromDiscovery(g_driverWrapper->GetVendorName(),
-                                                                      vendorPrinterId);
+    auto op = std::bind(&VendorBsuniDriver::OnDiscoveredPrinterRemove, g_driverWrapper, vendorPrinterId);
+    if (!g_driverWrapper->opQueue.Push(op)) {
+        PRINT_HILOGW("fail to remove discovered printer");
+        return EXTENSION_ERROR_CALLBACK_FAIL;
+    }
+    return EXTENSION_ERROR_NONE;
 }
 
 int32_t VendorBsuniDriver::AddPrinterToCups(const Print_DiscoveryItem *printer,
@@ -123,30 +132,30 @@ int32_t VendorBsuniDriver::AddPrinterToCups(const Print_DiscoveryItem *printer,
                                             const Print_DefaultValue *defaultValue, const char *ppdData)
 {
     PRINT_HILOGI("BsUni callback AddPrinterToCups");
-    PrinterInfo info;
-    if (!UpdatePrinterInfoWithDiscovery(info, printer)) {
+    auto info = std::make_shared<PrinterInfo>();
+    if (!UpdatePrinterInfoWithDiscovery(*info, printer)) {
         PRINT_HILOGW("update printer info fail");
         return EXTENSION_INVALID_PARAMETER;
     }
-    if (!UpdatePrinterInfoWithCapability(info, printer, capability, defaultValue)) {
+    if (!UpdatePrinterInfoWithCapability(*info, printer, capability, defaultValue)) {
         PRINT_HILOGW("update printer capability fail");
         return EXTENSION_INVALID_PARAMETER;
     }
-    std::string ppdContent;
+    std::shared_ptr<std::string> ppdContent;
     if (ppdData != nullptr) {
-        ppdContent = std::string(ppdData);
+        ppdContent = std::make_shared<std::string>(ppdData);
     }
     std::lock_guard<std::mutex> lock(g_driverMutex);
-    if (g_driverWrapper == nullptr || g_driverWrapper->vendorManager == nullptr) {
+    if (g_driverWrapper == nullptr) {
         PRINT_HILOGW("driver released");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    std::string vendorName = g_driverWrapper->GetVendorName();
-    if (g_driverWrapper->vendorManager->UpdatePrinterToDiscovery(vendorName, info) != EXTENSION_ERROR_NONE) {
-        PRINT_HILOGW("update printer to discovery fail");
+    auto op = std::bind(&VendorBsuniDriver::OnCupsPrinterAdd, g_driverWrapper, info, ppdContent);
+    if (!g_driverWrapper->opQueue.Push(op)) {
+        PRINT_HILOGW("fail to add cups printer");
         return EXTENSION_ERROR_CALLBACK_FAIL;
     }
-    return g_driverWrapper->vendorManager->AddPrinterToCupsWithPpd(vendorName, info.GetPrinterId(), ppdContent);
+    return EXTENSION_ERROR_NONE;
 }
 
 int32_t VendorBsuniDriver::RemovePrinterFromCups(const char *printerId)
@@ -156,13 +165,18 @@ int32_t VendorBsuniDriver::RemovePrinterFromCups(const char *printerId)
         PRINT_HILOGW("printer id to remove is null");
         return EXTENSION_INVALID_PARAMETER;
     }
-    std::string vendorPrinterId(printerId);
+    auto vendorPrinterId = std::make_shared<std::string>(printerId);
     std::lock_guard<std::mutex> lock(g_driverMutex);
-    if (g_driverWrapper == nullptr || g_driverWrapper->vendorManager == nullptr) {
+    if (g_driverWrapper == nullptr) {
         PRINT_HILOGW("driver released");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    return g_driverWrapper->vendorManager->RemovePrinterFromCups(g_driverWrapper->GetVendorName(), vendorPrinterId);
+    auto op = std::bind(&VendorBsuniDriver::OnCupsPrinterRemove, g_driverWrapper, vendorPrinterId);
+    if (!g_driverWrapper->opQueue.Push(op)) {
+        PRINT_HILOGW("fail to remove cups printer");
+        return EXTENSION_ERROR_CALLBACK_FAIL;
+    }
+    return EXTENSION_ERROR_NONE;
 }
 
 int32_t VendorBsuniDriver::OnCapabilityQueried(const Print_DiscoveryItem *printer,
@@ -174,29 +188,57 @@ int32_t VendorBsuniDriver::OnCapabilityQueried(const Print_DiscoveryItem *printe
     LogPageCapability(capability);
     LogOtherCapability(capability);
     LogDefaultValue(defaultValue);
+    auto printerInfo = ConvertVendorCapabilityToPrinterInfo(printer, capability, defaultValue);
+    if (printerInfo == nullptr) {
+        PRINT_HILOGW("printerInfo is null");
+        return EXTENSION_INVALID_PARAMETER;
+    }
     std::lock_guard<std::mutex> lock(g_driverMutex);
     if (g_driverWrapper == nullptr) {
         PRINT_HILOGW("driver released");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    return g_driverWrapper->OnPrinterCapabilityQueried(printer, capability, defaultValue);
+    auto op = std::bind(&VendorBsuniDriver::OnPrinterCapabilityQueried, g_driverWrapper, printerInfo);
+    if (!g_driverWrapper->opQueue.Push(op)) {
+        PRINT_HILOGW("fail to queue capability");
+        return EXTENSION_ERROR_CALLBACK_FAIL;
+    }
+    return EXTENSION_ERROR_NONE;
 }
 
 int32_t VendorBsuniDriver::OnPropertiesQueried(const char *printerId, const Print_PropertyList *propertyList)
 {
     PRINT_HILOGI("BsUni callback OnPropertiesQueried");
-    if (printerId == nullptr) {
+    if (printerId == nullptr || propertyList == nullptr) {
         PRINT_HILOGW("printerId is null");
         return EXTENSION_INVALID_PARAMETER;
     }
     LogProperties(propertyList);
-    std::string vendorPrinterId(printerId);
+    auto vendorPrinterId = std::make_shared<std::string>(printerId);
     std::lock_guard<std::mutex> lock(g_driverMutex);
     if (g_driverWrapper == nullptr) {
         PRINT_HILOGW("driver released");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    return g_driverWrapper->OnPrinterPropertiesQueried(vendorPrinterId, propertyList);
+    std::string key = PRINTER_PROPERTY_KEY_CUPS_PPD_FILE;
+    auto ppdData = FindPropertyFromPropertyList(propertyList, key);
+    if (ppdData != nullptr) {
+        auto op = std::bind(&VendorBsuniDriver::OnPpdQueried, g_driverWrapper, vendorPrinterId, ppdData);
+        if (!g_driverWrapper->opQueue.Push(op)) {
+            PRINT_HILOGW("fail to queue ppd");
+            return EXTENSION_ERROR_CALLBACK_FAIL;
+        }
+    }
+    key = PRINTER_PROPERTY_KEY_DEVICE_STATE;
+    auto stateData = FindPropertyFromPropertyList(propertyList, key);
+    if (stateData != nullptr) {
+        auto op = std::bind(&VendorBsuniDriver::OnStateQueried, g_driverWrapper, vendorPrinterId, stateData);
+        if (!g_driverWrapper->opQueue.Push(op)) {
+            PRINT_HILOGW("fail to queue state");
+            return EXTENSION_ERROR_CALLBACK_FAIL;
+        }
+    }
+    return EXTENSION_ERROR_NONE;
 }
 
 VendorBsuniDriver::VendorBsuniDriver() {}
@@ -240,6 +282,7 @@ void VendorBsuniDriver::OnCreate()
         PRINT_HILOGW("onCreate is null");
         return;
     }
+    opQueue.Run();
     SetDriverWrapper(this);
     printServiceAbility.addPrinterToDiscovery = AddPrinterToDiscovery;
     printServiceAbility.removePrinterFromDiscovery = RemovePrinterFromDiscovery;
@@ -265,6 +308,7 @@ void VendorBsuniDriver::OnDestroy()
     }
     int32_t result = vendorExtension->onDestroy();
     SetDriverWrapper(nullptr);
+    opQueue.Stop();
     PRINT_HILOGI("OnDestroy quit: %{public}d", result);
 }
 
@@ -367,58 +411,113 @@ bool VendorBsuniDriver::OnQueryProperties(const std::string &printerId, const st
     return ret;
 }
 
-int32_t VendorBsuniDriver::OnPrinterPropertiesQueried(const std::string &printerId,
-                                                      const Print_PropertyList *propertyList)
+void VendorBsuniDriver::OnDiscoveredPrinterAdd(std::shared_ptr<PrinterInfo> printerInfo)
 {
-    PRINT_HILOGD("OnPrinterPropertiesQueried enter");
-    if (vendorManager == nullptr) {
-        PRINT_HILOGW("vendorManager is null");
-        return EXTENSION_ERROR_CALLBACK_NULL;
-    }
-    std::string key = PRINTER_PROPERTY_KEY_CUPS_PPD_FILE;
-    std::string ppdData = FindPropertyFromPropertyList(propertyList, key);
-    if (!ppdData.empty()) {
-        PRINT_HILOGI("ppdData queried");
-        if (vendorManager->OnPrinterPpdQueried(GetVendorName(), printerId, ppdData)) {
-            if (vendorExtension != nullptr && vendorExtension->onConnectPrinter != nullptr) {
-                vendorExtension->onConnectPrinter(printerId.c_str());
-            }
-        }
-    }
-
-    key = PRINTER_PROPERTY_KEY_DEVICE_SUPPLIES;
-    std::string suppliesData = FindPropertyFromPropertyList(propertyList, key);
-    if (!suppliesData.empty()) {
-        PRINT_HILOGI("suppliesData queried");
-        PRINT_HILOGD("supplies: %{public}s", suppliesData.c_str());
-    }
-
-    key = PRINTER_PROPERTY_KEY_DEVICE_STATE;
-    std::string stateData = FindPropertyFromPropertyList(propertyList, key);
-    if (!stateData.empty()) {
-        PRINT_HILOGI("stateData queried");
-        Print_PrinterState state = PRINTER_UNAVAILABLE;
-        if (ConvertStringToPrinterState(stateData, state)) {
-            OnPrinterStateQueried(printerId, state);
-        }
-    }
-    PRINT_HILOGD("OnPrinterPropertiesQueried quit");
-    return EXTENSION_ERROR_NONE;
-}
-
-int32_t VendorBsuniDriver::OnPrinterCapabilityQueried(const Print_DiscoveryItem *printer,
-                                                      const Print_PrinterCapability *capability,
-                                                      const Print_DefaultValue *defaultValue)
-{
-    PRINT_HILOGD("OnPrinterCapabilityQueried enter");
-    if (vendorManager == nullptr) {
-        PRINT_HILOGW("vendorManager is null");
-        return EXTENSION_ERROR_CALLBACK_NULL;
-    }
-    auto printerInfo = ConvertVendorCapabilityToPrinterInfo(printer, capability, defaultValue);
     if (printerInfo == nullptr) {
         PRINT_HILOGW("printerInfo is null");
-        return EXTENSION_INVALID_PARAMETER;
+        return;
+    }
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return;
+    }
+    vendorManager->AddPrinterToDiscovery(GetVendorName(), *printerInfo);
+}
+
+void VendorBsuniDriver::OnDiscoveredPrinterRemove(std::shared_ptr<std::string> printerId)
+{
+    if (printerId == nullptr) {
+        PRINT_HILOGW("printerId is null");
+        return;
+    }
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return;
+    }
+    vendorManager->RemovePrinterFromDiscovery(GetVendorName(), *printerId);
+}
+
+void VendorBsuniDriver::OnCupsPrinterAdd(std::shared_ptr<PrinterInfo> printerInfo,
+    std::shared_ptr<std::string> ppdData)
+{
+    if (printerInfo == nullptr) {
+        PRINT_HILOGW("printerInfo is null");
+        return;
+    }
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return;
+    }
+    std::string vendorName = GetVendorName();
+    if (vendorManager->UpdatePrinterToDiscovery(vendorName, *printerInfo) != EXTENSION_ERROR_NONE) {
+        PRINT_HILOGW("update printer to discovery fail");
+        return;
+    }
+    if (ppdData == nullptr || ppdData->empty()) {
+        PRINT_HILOGW("ppdData is null");
+        return;
+    }
+    vendorManager->AddPrinterToCupsWithPpd(vendorName, printerInfo->GetPrinterId(), *ppdData);
+}
+
+void VendorBsuniDriver::OnCupsPrinterRemove(std::shared_ptr<std::string> printerId)
+{
+    if (printerId == nullptr) {
+        PRINT_HILOGW("printerId is null");
+        return;
+    }
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return;
+    }
+    vendorManager->RemovePrinterFromCups(GetVendorName(), *printerId);
+}
+
+void VendorBsuniDriver::OnPpdQueried(std::shared_ptr<std::string> printerId, std::shared_ptr<std::string> ppdData)
+{
+    if (printerId == nullptr || ppdData == nullptr || ppdData->empty()) {
+        PRINT_HILOGW("invalid parameters");
+        return;
+    }
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return;
+    }
+    PRINT_HILOGI("ppdData queried");
+    if (vendorManager->OnPrinterPpdQueried(GetVendorName(), *printerId, *ppdData)) {
+        if (vendorExtension != nullptr && vendorExtension->onConnectPrinter != nullptr) {
+            vendorExtension->onConnectPrinter(printerId->c_str());
+        }
+    }
+}
+
+void VendorBsuniDriver::OnStateQueried(std::shared_ptr<std::string> printerId, std::shared_ptr<std::string> stateData)
+{
+    if (printerId == nullptr || stateData == nullptr || stateData->empty()) {
+        PRINT_HILOGW("invalid parameters");
+        return;
+    }
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return;
+    }
+    PRINT_HILOGI("stateData queried");
+    Print_PrinterState state = PRINTER_UNAVAILABLE;
+    if (ConvertStringToPrinterState(*stateData, state)) {
+        OnPrinterStateQueried(*printerId, state);
+    }
+}
+
+void VendorBsuniDriver::OnPrinterCapabilityQueried(std::shared_ptr<PrinterInfo> printerInfo)
+{
+    PRINT_HILOGD("OnPrinterCapabilityQueried enter");
+    if (printerInfo == nullptr) {
+        PRINT_HILOGW("printerInfo is null");
+        return;
+    }
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return;
     }
     vendorManager->UpdatePrinterToDiscovery(GetVendorName(), *printerInfo);
     std::string printerId = printerInfo->GetPrinterId();
@@ -434,5 +533,4 @@ int32_t VendorBsuniDriver::OnPrinterCapabilityQueried(const Print_DiscoveryItem 
     }
     syncWait.Notify();
     PRINT_HILOGD("OnPrinterCapabilityQueried quit");
-    return EXTENSION_ERROR_NONE;
 }

@@ -29,6 +29,68 @@ using namespace testing::ext;
 
 namespace {
 const std::string PRINTER_TEST_IP = "192.168.2.222";
+const uint32_t ISO_A3_WIDTH = 11690;
+const uint32_t ISO_A3_HEIGHT = 16540;
+const uint32_t ISO_A4_WIDTH = 8268;
+const uint32_t ISO_A4_HEIGHT = 11692;
+const uint32_t DPI_A = 300;
+const uint32_t DPI_B = 600;
+const uint32_t DEFAULT_COUNT = 2;
+const uint32_t TEST_MAX_COPIES = 99;
+const int WAIT_TIME_MS = 100;
+static void BuildDiscoveryItem(Print_DiscoveryItem &discoveryItem)
+{
+    discoveryItem.printerId = "printerId";
+    discoveryItem.printerName = "printerName";
+    discoveryItem.description = "description";
+    discoveryItem.location = "location";
+    discoveryItem.makeAndModel = "makeAndModel";
+    discoveryItem.printerUri = "printerUri";
+    discoveryItem.printerUuid = "printerUuid";
+}
+
+static void BuildCapability(Print_PrinterCapability &capability)
+{
+    static Print_ColorMode colorModes[] = {COLOR_MODE_MONOCHROME, COLOR_MODE_COLOR};
+    static Print_DuplexMode duplexModes[] = {DUPLEX_MODE_ONE_SIDED, DUPLEX_MODE_TWO_SIDED_SHORT_EDGE};
+    static Print_PageSize pageSizes[] = {{"ISO_A4", "iso_a4_210x297mm", ISO_A4_WIDTH, ISO_A4_HEIGHT},
+        {"ISO_A3", "iso_a3", ISO_A3_WIDTH, ISO_A3_HEIGHT},
+        {"ISO_A4", "iso_a4", ISO_A4_WIDTH, ISO_A4_HEIGHT}};
+    static Print_Quality qualities[] = {Print_Quality::PRINT_QUALITY_DRAFT, Print_Quality::PRINT_QUALITY_HIGH};
+    static Print_Resolution resolutions[] = {{DPI_A, DPI_A}, {DPI_B, DPI_B}};
+    static Print_OrientationMode orientations[] = {ORIENTATION_MODE_PORTRAIT, ORIENTATION_MODE_NONE};
+    capability.supportedColorModesCount = DEFAULT_COUNT;
+    capability.supportedColorModes = colorModes;
+    capability.supportedDuplexModesCount = DEFAULT_COUNT;
+    capability.supportedDuplexModes = duplexModes;
+    capability.supportedPageSizesCount = DEFAULT_COUNT + 1;
+    capability.supportedPageSizes = pageSizes;
+    capability.supportedMediaTypes = "{\"a\",\"b\",\"c\"}";
+    capability.supportedQualitiesCount = DEFAULT_COUNT;
+    capability.supportedQualities = qualities;
+    capability.supportedPaperSources = "{\"a\",\"b\",\"c\"}";
+    capability.supportedCopies = TEST_MAX_COPIES;
+    capability.supportedResolutionsCount = DEFAULT_COUNT;
+    capability.supportedResolutions = resolutions;
+    capability.supportedOrientationsCount = DEFAULT_COUNT;
+    capability.supportedOrientations = orientations;
+    capability.advancedCapability = "advance info";
+}
+
+static void BuildDefaultValue(Print_DefaultValue &defaultValue)
+{
+    defaultValue.defaultColorMode = COLOR_MODE_MONOCHROME;
+    defaultValue.defaultDuplexMode = DUPLEX_MODE_ONE_SIDED;
+    defaultValue.defaultMediaType = "a";
+    defaultValue.defaultPageSizeId = "ISO_A4";
+    defaultValue.defaultMargin = {1, 1, 1, 1};
+    defaultValue.defaultPaperSource = "a";
+    defaultValue.defaultPrintQuality = Print_Quality::PRINT_QUALITY_HIGH;
+    defaultValue.defaultCopies = 1;
+    defaultValue.defaultResolution = {DPI_A, DPI_A};
+    defaultValue.defaultOrientation = ORIENTATION_MODE_PORTRAIT;
+    defaultValue.otherDefaultValues = "default";
+}
 }
 
 namespace OHOS {
@@ -145,6 +207,8 @@ void VendorBsuniDriverTest::DoMockTest(MockTestFunc func)
     EXPECT_CALL(mockDriver, OnDestroy()).Times(1).WillOnce(Return(0));
     vendorDriver.OnCreate();
     func(vendorDriver, mockDriver, mockManager);
+    ThreadSyncWait syncWait;
+    syncWait.Wait(WAIT_TIME_MS);
     vendorDriver.OnDestroy();
     vendorDriver.vendorExtension = nullptr;
     g_mockDriver = nullptr;
@@ -216,61 +280,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0003, TestSize.Level2)
     EXPECT_EQ(vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys), false);
 }
 
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0004, TestSize.Level1)
-{
-    std::vector<std::string> propertyKeys;
-    propertyKeys.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);
-    propertyKeys.push_back(PRINTER_PROPERTY_KEY_DEVICE_SUPPLIES);
-    propertyKeys.push_back(PRINTER_PROPERTY_KEY_CUPS_PPD_FILE);
-    std::string printerId = PRINTER_TEST_IP;
-    VendorBsuniDriver vendorDriver;
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, nullptr), EXTENSION_ERROR_CALLBACK_NULL);
-    EXPECT_EQ(vendorDriver.OnPrinterCapabilityQueried(nullptr, nullptr, nullptr), EXTENSION_ERROR_CALLBACK_NULL);
-    MockVendorManager mockManager;
-    vendorDriver.vendorManager = &mockManager;
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, nullptr), EXTENSION_ERROR_NONE);
-    EXPECT_EQ(vendorDriver.OnPrinterCapabilityQueried(nullptr, nullptr, nullptr), EXTENSION_INVALID_PARAMETER);
-    Print_PropertyList propertyList = { 0 };
-    propertyList.count = static_cast<uint32_t>(propertyKeys.size());
-    propertyList.list = new (std::nothrow) Print_Property[propertyList.count];
-    ASSERT_NE(propertyList.list, nullptr);
-    for (uint32_t i = 0; i < propertyList.count; ++i) {
-        propertyList.list[i].key = const_cast<char *>(propertyKeys[i].c_str());
-        propertyList.list[i].value = "test data";
-    }
-    EXPECT_CALL(mockManager, OnPrinterPpdQueried(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mockManager, OnPrinterStatusChanged(_, _, _)).WillOnce(Return(true)).WillRepeatedly(Return(false));
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    propertyList.list[0].value = "{\"state\":\"0\"}";
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    vendorDriver.MonitorPrinterStatus(printerId, true);
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    propertyList.list[0].value = "{\"state\":\"1\"}";
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    Print_VendorExtension vendorExtension = { 0 };
-    vendorDriver.vendorExtension = &vendorExtension;
-    EXPECT_EQ(vendorDriver.OnPrinterPropertiesQueried(printerId, &propertyList), EXTENSION_ERROR_NONE);
-    vendorDriver.MonitorPrinterStatus(printerId, false);
-    delete[] propertyList.list;
-    propertyList.list = nullptr;
-}
-
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0005, TestSize.Level2)
-{
-    VendorBsuniDriver::SetDriverWrapper(nullptr);
-    EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(nullptr), EXTENSION_INVALID_PARAMETER);
-    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(nullptr), EXTENSION_INVALID_PARAMETER);
-    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(nullptr, nullptr, nullptr, nullptr), EXTENSION_INVALID_PARAMETER);
-    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromCups(nullptr), EXTENSION_INVALID_PARAMETER);
-    EXPECT_EQ(VendorBsuniDriver::OnCapabilityQueried(nullptr, nullptr, nullptr), EXTENSION_ERROR_CALLBACK_NULL);
-    EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(nullptr, nullptr), EXTENSION_INVALID_PARAMETER);
-    EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(PRINTER_TEST_IP.c_str(), nullptr), EXTENSION_ERROR_CALLBACK_NULL);
-    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_CALLBACK_NULL);
-    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromCups(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_CALLBACK_NULL);
-}
-
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0006, TestSize.Level2)
+HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0004, TestSize.Level2)
 {
     VendorBsuniDriver vendorDriver;
     vendorDriver.OnCreate();
@@ -282,7 +292,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0006, TestSize.Level2)
     vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys);
 }
 
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0007, TestSize.Level2)
+HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0005, TestSize.Level2)
 {
     VendorBsuniDriver vendorDriver;
     g_mockDriver = nullptr;
@@ -305,7 +315,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0007, TestSize.Level2)
     vendorDriver.OnQueryProperties(PRINTER_TEST_IP, propertyKeys);
 }
 
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0008, TestSize.Level2)
+HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0006, TestSize.Level2)
 {
     MockTestFunc testFunc = [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver,
                                    MockVendorManager &mockManager) {
@@ -317,7 +327,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0008, TestSize.Level2)
     DoMockTest(testFunc);
 }
 
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0009, TestSize.Level2)
+HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0007, TestSize.Level2)
 {
     MockTestFunc testFunc = [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver,
                                    MockVendorManager &mockManager) {
@@ -329,7 +339,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0009, TestSize.Level2)
     DoMockTest(testFunc);
 }
 
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0010, TestSize.Level2)
+HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0008, TestSize.Level2)
 {
     MockTestFunc testFunc = [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver,
                                    MockVendorManager &mockManager) {
@@ -341,7 +351,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0010, TestSize.Level2)
     DoMockTest(testFunc);
 }
 
-HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0011, TestSize.Level2)
+HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0009, TestSize.Level2)
 {
     MockTestFunc testFunc = [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver,
                                    MockVendorManager &mockManager) {
@@ -351,7 +361,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0011, TestSize.Level2)
         EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(nullptr, nullptr), EXTENSION_INVALID_PARAMETER);
         EXPECT_EQ(VendorBsuniDriver::OnCapabilityQueried(nullptr, nullptr, nullptr), EXTENSION_INVALID_PARAMETER);
         EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromCups(nullptr), EXTENSION_INVALID_PARAMETER);
-        EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(printerIp.c_str(), nullptr), EXTENSION_ERROR_NONE);
+        EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(printerIp.c_str(), nullptr), EXTENSION_INVALID_PARAMETER);
         EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromCups(printerIp.c_str()), EXTENSION_ERROR_NONE);
         EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(nullptr), EXTENSION_INVALID_PARAMETER);
         EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(printerIp.c_str()), EXTENSION_ERROR_NONE);
@@ -359,69 +369,169 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0011, TestSize.Level2)
     DoMockTest(testFunc);
 }
 
-static void BuildDefaultValue(Print_DefaultValue &defaultValue)
+HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_00010, TestSize.Level2)
 {
-    defaultValue.defaultColorMode = COLOR_MODE_MONOCHROME;
-    defaultValue.defaultDuplexMode = DUPLEX_MODE_ONE_SIDED;
-    defaultValue.defaultMediaType = "a";
-    defaultValue.defaultPageSizeId = "ISO_A4";
-    defaultValue.defaultMargin = {1, 1, 1, 1};
-    defaultValue.defaultPaperSource = "a";
-    defaultValue.defaultPrintQuality = Print_Quality::PRINT_QUALITY_HIGH;
-    defaultValue.defaultCopies = 1;
-    defaultValue.defaultResolution = {1, 1};
-    defaultValue.defaultOrientation = ORIENTATION_MODE_PORTRAIT;
-    defaultValue.otherDefaultValues = "default";
+    VendorBsuniDriver::SetDriverWrapper(nullptr);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(nullptr), EXTENSION_INVALID_PARAMETER);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(nullptr), EXTENSION_INVALID_PARAMETER);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(nullptr, nullptr, nullptr, nullptr), EXTENSION_INVALID_PARAMETER);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromCups(nullptr), EXTENSION_INVALID_PARAMETER);
+    EXPECT_EQ(VendorBsuniDriver::OnCapabilityQueried(nullptr, nullptr, nullptr), EXTENSION_INVALID_PARAMETER);
+    EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(nullptr, nullptr), EXTENSION_INVALID_PARAMETER);
+}
+
+HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0011, TestSize.Level2)
+{
+    VendorBsuniDriver::SetDriverWrapper(nullptr);
+    Print_DiscoveryItem discoveryItem = {0};
+    Print_PrinterCapability capability = {0};
+    Print_DefaultValue defaultValue;
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&discoveryItem), EXTENSION_INVALID_PARAMETER);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, nullptr, nullptr, nullptr),
+              EXTENSION_INVALID_PARAMETER);
+    EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(PRINTER_TEST_IP.c_str(), nullptr), EXTENSION_INVALID_PARAMETER);
 }
 
 HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0012, TestSize.Level2)
 {
-    MockTestFunc testFunc = [this](VendorBsuniDriver &vendorDriver, MockBsuniDriver &mockDriver,
-                                   MockVendorManager &mockManager) {
-        Print_DiscoveryItem printer = {0};
-        Print_PrinterCapability capability = {0};
-        Print_DefaultValue defaultValue;
-        BuildDefaultValue(defaultValue);
-        Print_PageSize pages[2];
-        std::string ppdData;
-        EXPECT_CALL(mockManager, AddPrinterToDiscovery(_, _)).WillRepeatedly(Return(0));
-        EXPECT_CALL(mockManager, UpdatePrinterToDiscovery(_, _)).WillOnce(Return(1)).WillRepeatedly(Return(0));
-        EXPECT_CALL(mockManager, AddPrinterToCupsWithPpd(_, _, _)).WillOnce(Return(1)).WillRepeatedly(Return(0));
-        EXPECT_CALL(mockManager, IsConnectingPrinter(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-        EXPECT_CALL(mockManager, SetConnectingPrinter(_, _)).Times(1);
-        EXPECT_CALL(mockDriver, OnQueryProperties(_, _)).Times(1).WillRepeatedly(Return(0));
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(nullptr), EXTENSION_INVALID_PARAMETER);
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&printer), EXTENSION_INVALID_PARAMETER);
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(nullptr, nullptr, nullptr, nullptr),
-            EXTENSION_INVALID_PARAMETER);
-        EXPECT_NE(vendorDriver.OnPrinterCapabilityQueried(&printer, &capability, &defaultValue),
-            EXTENSION_ERROR_NONE);
-        printer.printerId = "printer";
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&printer), EXTENSION_INVALID_PARAMETER);
-        printer.printerName = "name";
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&printer), EXTENSION_ERROR_NONE);
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&printer, nullptr, nullptr, nullptr),
-            EXTENSION_INVALID_PARAMETER);
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&printer, &capability, &defaultValue, nullptr),
-            EXTENSION_INVALID_PARAMETER);
-        capability.supportedPageSizes = pages;
-        EXPECT_NE(VendorBsuniDriver::AddPrinterToCups(&printer, &capability, &defaultValue, nullptr),
-            EXTENSION_ERROR_NONE);
-        ppdData = "ppd";
-        EXPECT_NE(VendorBsuniDriver::AddPrinterToCups(&printer, &capability, &defaultValue, ppdData.c_str()),
-            EXTENSION_ERROR_NONE);
-        EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&printer, &capability, &defaultValue, ppdData.c_str()),
-            EXTENSION_ERROR_NONE);
-        printer.printerUri = "test";
-        EXPECT_EQ(vendorDriver.OnPrinterCapabilityQueried(&printer, &capability, &defaultValue),
-            EXTENSION_ERROR_INVALID_PRINTER);
-        printer.printerUri = "test://test";
-        EXPECT_EQ(vendorDriver.OnPrinterCapabilityQueried(&printer, &capability, &defaultValue),
-            EXTENSION_ERROR_NONE);
-        EXPECT_EQ(vendorDriver.OnPrinterCapabilityQueried(&printer, &capability, &defaultValue),
-            EXTENSION_ERROR_NONE);
-    };
-    DoMockTest(testFunc);
+    VendorBsuniDriver::SetDriverWrapper(nullptr);
+    Print_DiscoveryItem discoveryItem = {0};
+    BuildDiscoveryItem(discoveryItem);
+    Print_PrinterCapability capability = {0};
+    BuildCapability(capability);
+    Print_DefaultValue defaultValue;
+    BuildDefaultValue(defaultValue);
+    Print_PropertyList propertyList = {0};
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&discoveryItem), EXTENSION_ERROR_CALLBACK_NULL);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_CALLBACK_NULL);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, nullptr, nullptr, nullptr),
+              EXTENSION_INVALID_PARAMETER);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, nullptr, nullptr),
+              EXTENSION_INVALID_PARAMETER);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, nullptr),
+              EXTENSION_ERROR_CALLBACK_NULL);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromCups(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_CALLBACK_NULL);
+    EXPECT_EQ(VendorBsuniDriver::OnCapabilityQueried(&discoveryItem, &capability, &defaultValue),
+              EXTENSION_ERROR_CALLBACK_NULL);
+    EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(PRINTER_TEST_IP.c_str(), &propertyList),
+              EXTENSION_ERROR_CALLBACK_NULL);
+}
+
+HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0013, TestSize.Level2)
+{
+    VendorBsuniDriver vendorDriver;
+    VendorBsuniDriver::SetDriverWrapper(&vendorDriver);
+    Print_DiscoveryItem discoveryItem = {0};
+    BuildDiscoveryItem(discoveryItem);
+    Print_PrinterCapability capability = {0};
+    BuildCapability(capability);
+    Print_DefaultValue defaultValue;
+    BuildDefaultValue(defaultValue);
+    Print_PropertyList propertyList = {0};
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&discoveryItem), EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, nullptr),
+              EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, nullptr),
+              EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromCups(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(VendorBsuniDriver::OnCapabilityQueried(&discoveryItem, &capability, &defaultValue),
+              EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(PRINTER_TEST_IP.c_str(), &propertyList),
+              EXTENSION_ERROR_NONE);
+    propertyList.count = 1;
+    propertyList.list = new Print_Property[1];
+    propertyList.list[0].key = PRINTER_PROPERTY_KEY_CUPS_PPD_FILE;
+    propertyList.list[0].value = "ppd";
+    EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(PRINTER_TEST_IP.c_str(), &propertyList),
+              EXTENSION_ERROR_CALLBACK_FAIL);
+    delete[] propertyList.list;
+    propertyList.list = nullptr;
+}
+
+HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0014, TestSize.Level2)
+{
+    VendorBsuniDriver vendorDriver;
+    vendorDriver.opQueue.Run();
+    VendorBsuniDriver::SetDriverWrapper(&vendorDriver);
+    Print_DiscoveryItem discoveryItem = {0};
+    BuildDiscoveryItem(discoveryItem);
+    Print_PrinterCapability capability = {0};
+    BuildCapability(capability);
+    Print_DefaultValue defaultValue;
+    BuildDefaultValue(defaultValue);
+    Print_PropertyList propertyList = {0};
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&discoveryItem), EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, nullptr),
+              EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, "test_ppd_data"),
+              EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromCups(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::OnCapabilityQueried(&discoveryItem, &capability, &defaultValue),
+              EXTENSION_ERROR_NONE);
+    propertyList.count = DEFAULT_COUNT;
+    propertyList.list = new Print_Property[DEFAULT_COUNT];
+    propertyList.list[0].key = PRINTER_PROPERTY_KEY_CUPS_PPD_FILE;
+    propertyList.list[0].value = "ppd";
+    propertyList.list[1].key = PRINTER_PROPERTY_KEY_DEVICE_STATE;
+    propertyList.list[1].value = "{\"state\":\"1\",\"reason\":\"none\"}";
+    EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(PRINTER_TEST_IP.c_str(), &propertyList),
+              EXTENSION_ERROR_NONE);
+    delete[] propertyList.list;
+    propertyList.list = nullptr;
+    vendorDriver.opQueue.Stop();
+}
+
+HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0015, TestSize.Level2)
+{
+    VendorBsuniDriver vendorDriver;
+    MockVendorManager mockManager;
+    vendorDriver.vendorManager = &mockManager;
+    vendorDriver.opQueue.Run();
+    VendorBsuniDriver::SetDriverWrapper(&vendorDriver);
+    Print_DiscoveryItem discoveryItem = {0};
+    BuildDiscoveryItem(discoveryItem);
+    Print_PrinterCapability capability = {0};
+    BuildCapability(capability);
+    Print_DefaultValue defaultValue;
+    BuildDefaultValue(defaultValue);
+    Print_PropertyList propertyList = {0};
+    EXPECT_CALL(mockManager, AddPrinterToDiscovery(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(mockManager, RemovePrinterFromDiscovery(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(mockManager, UpdatePrinterToDiscovery(_, _)).WillOnce(Return(1)).WillRepeatedly(Return(0));
+    EXPECT_CALL(mockManager, AddPrinterToCupsWithPpd(_, _, _)).WillOnce(Return(1)).WillRepeatedly(Return(0));
+    EXPECT_CALL(mockManager, RemovePrinterFromCups(_, _)).WillRepeatedly(Return(0));
+    EXPECT_CALL(mockManager, IsConnectingPrinter(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    EXPECT_CALL(mockManager, OnPrinterPpdQueried(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&discoveryItem), EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, nullptr),
+              EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, nullptr),
+              EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, "test_ppd_data"),
+              EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromCups(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::OnCapabilityQueried(&discoveryItem, &capability, &defaultValue),
+              EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::OnCapabilityQueried(&discoveryItem, &capability, &defaultValue),
+              EXTENSION_ERROR_NONE);
+    propertyList.count = DEFAULT_COUNT;
+    propertyList.list = new Print_Property[DEFAULT_COUNT];
+    propertyList.list[0].key = PRINTER_PROPERTY_KEY_CUPS_PPD_FILE;
+    propertyList.list[0].value = "ppd";
+    propertyList.list[1].key = PRINTER_PROPERTY_KEY_DEVICE_STATE;
+    propertyList.list[1].value = "{\"state\":\"1\",\"reason\":\"none\"}";
+    EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(PRINTER_TEST_IP.c_str(), &propertyList),
+              EXTENSION_ERROR_NONE);
+    EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(PRINTER_TEST_IP.c_str(), &propertyList),
+              EXTENSION_ERROR_NONE);
+    delete[] propertyList.list;
+    propertyList.list = nullptr;
+    ThreadSyncWait syncWait;
+    syncWait.Wait(WAIT_TIME_MS);
+    vendorDriver.opQueue.Stop();
 }
 }  // namespace Print
 }  // namespace OHOS

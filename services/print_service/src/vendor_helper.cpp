@@ -365,15 +365,16 @@ void LogProperties(const Print_PropertyList *propertyList)
     }
 }
 
-std::string FindPropertyFromPropertyList(const Print_PropertyList *propertyList, const std::string &keyName)
+std::shared_ptr<std::string> FindPropertyFromPropertyList(const Print_PropertyList *propertyList,
+    const std::string &keyName)
 {
     if (propertyList == nullptr) {
         PRINT_HILOGW("propertyList is null");
-        return "";
+        return nullptr;
     }
     if (propertyList->count == 0 || propertyList->list == nullptr) {
         PRINT_HILOGW("propertyList empty");
-        return "";
+        return nullptr;
     }
     for (uint32_t i = 0; i < propertyList->count; ++i) {
         if (propertyList->list[i].key == nullptr) {
@@ -389,9 +390,9 @@ std::string FindPropertyFromPropertyList(const Print_PropertyList *propertyList,
             break;
         }
         PRINT_HILOGD("FindPropertyFromPropertyList value: %{public}s", propertyList->list[i].value);
-        return std::string(propertyList->list[i].value);
+        return std::make_shared<std::string>(propertyList->list[i].value);
     }
-    return "";
+    return nullptr;
 }
 bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem)
 {

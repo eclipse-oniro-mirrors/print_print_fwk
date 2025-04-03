@@ -17,6 +17,7 @@
 #define VENDOR_BSUNI_DRIVER_H
 
 #include "vendor_driver_base.h"
+#include "operation_queue.h"
 
 namespace OHOS {
 namespace Print {
@@ -47,14 +48,18 @@ public:
 
 private:
     bool LoadDriverExtension();
-    int32_t OnPrinterPropertiesQueried(const std::string &printerId, const Print_PropertyList *propertyList);
-    int32_t OnPrinterCapabilityQueried(const Print_DiscoveryItem *printer, const Print_PrinterCapability *capability,
-                                       const Print_DefaultValue *defaultValue);
-
+    void OnDiscoveredPrinterAdd(std::shared_ptr<PrinterInfo> printerInfo);
+    void OnDiscoveredPrinterRemove(std::shared_ptr<std::string> printerId);
+    void OnCupsPrinterAdd(std::shared_ptr<PrinterInfo> printerInfo, std::shared_ptr<std::string> ppdData);
+    void OnCupsPrinterRemove(std::shared_ptr<std::string> printerId);
+    void OnPpdQueried(std::shared_ptr<std::string> printerId, std::shared_ptr<std::string> ppdData);
+    void OnStateQueried(std::shared_ptr<std::string> printerId, std::shared_ptr<std::string> stateData);
+    void OnPrinterCapabilityQueried(std::shared_ptr<PrinterInfo> printerInfo);
 private:
     void *bsUniDriverHandler = nullptr;
     Print_VendorExtension *vendorExtension = nullptr;
     Print_ServiceAbility printServiceAbility = { 0 };
+    OperationQueue opQueue;
 };
 }  // namespace Print
 }  // namespace OHOS

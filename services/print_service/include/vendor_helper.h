@@ -41,7 +41,8 @@ bool UpdateOrientationCapability(PrinterCapability &printerCap, const Print_Prin
 bool UpdateMediaCapability(PrinterCapability &printerCap, const Print_PrinterCapability *capability,
                            const Print_DefaultValue *defaultValue);
 bool UpdateMarginCapability(PrinterCapability &printerCap, const Print_DefaultValue *defaultValue);
-std::string FindPropertyFromPropertyList(const Print_PropertyList *propertyList, const std::string &keyName);
+std::shared_ptr<std::string> FindPropertyFromPropertyList(const Print_PropertyList *propertyList,
+                                                          const std::string &keyName);
 bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem);
 bool UpdatePrinterInfoWithCapability(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem,
                                      const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue);
