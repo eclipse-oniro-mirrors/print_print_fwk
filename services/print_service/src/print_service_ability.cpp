@@ -2941,9 +2941,6 @@ bool PrintServiceAbility::UpdateVendorPrinterToDiscovery(const std::string &glob
     if (printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printer)) {
         printerInfo->SetPrinterName(printer.GetPrinterName());
     }
-    printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
-    SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
-    SendPrinterEvent(*printerInfo);
     return true;
 }
 
@@ -2997,6 +2994,9 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     }
+    printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
+    SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
+    SendPrinterEvent(*printerInfo);
     SetLastUsedPrinter(globalPrinterId);
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
@@ -3045,6 +3045,9 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     }
+    printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
+    SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
+    SendPrinterEvent(*printerInfo);
     SetLastUsedPrinter(globalPrinterId);
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
