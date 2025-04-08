@@ -201,6 +201,10 @@ int32_t ScanServiceProxy::OpScanOptionValue(const std::string scannerId,
         return ret;
     }
     auto scanOptionValue = ScanOptionValue::Unmarshalling(reply);
+    if (scanOptionValue == nullptr) {
+        SCAN_HILOGE("ScanServiceProxy scanOptionValue is a nullptr");
+        return E_SCAN_GENERIC_FAILURE;
+    }
     value = *scanOptionValue;
     if (op == SCAN_ACTION_GET_VALUE) {
         info = reply.ReadInt32();
