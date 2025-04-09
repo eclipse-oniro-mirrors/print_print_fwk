@@ -41,7 +41,7 @@
 #endif
 
 #define PRINT_LOG_TAG "printkit"
-#define PRINT_LOG_DOMAIN 0xD001C00
+#define PRINT_LOG_DOMAIN 0xD0050B0
 
 #ifdef IS_RELEASE_VERSION
 #define MAKE_FILE_NAME ""

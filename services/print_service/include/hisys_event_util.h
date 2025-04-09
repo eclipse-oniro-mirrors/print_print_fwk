@@ -17,22 +17,18 @@
 #define HISYS_EVENT_UTIL_H
 
 #include <string>
+#include "print_job.h"
 
 namespace OHOS::Print {
     class HisysEventUtil {
     public:
-        static void reportPrintSuccess(const std::string &msg);
-
-        static void faultPrint(std::string scene, std::string msg);
-
-    private:
-        static constexpr char HW_PRINT_SPOOLER[] = "PRINT";
-        static const int PRINT_SUCCESS = 1003;
-        static const int FAULT_PRINT = 3002;
-
         static void reportBehaviorEvent(std::string name, int behaviorCode, const std::string &msg);
 
-        static void reportFaultEvent(std::string name, int faultCode, std::string scene, std::string msg);
+        static constexpr char HW_PRINT_SPOOLER[] = "PRINT_UE";
+        static constexpr char BEHAVIOR_DESCRIPTION[] = "ACTION_TIME";
+        static constexpr char DEVICE_TYPE[] = "PRINTER";
+        static constexpr char INACTIVE[] = "0";
+        static const int SEND_TASK = 1007;
     };
 }   // namespace OHOS::Print
 #endif // HISYS_EVENT_UTIL_H

@@ -1073,28 +1073,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0057, TestSize.Level1)
     EXPECT_EQ(service->SendPrinterChangeEvent(event, info), 0);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0058, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::shared_ptr<PrintJob> jobInfo = std::make_shared<PrintJob>();
-    std::string printerId = "1234";
-    uint32_t subState = 0;
-    EXPECT_NE(service->ReportHisysEvent(jobInfo, printerId, subState), 0);
-    printerId = "ePrintID";
-    EXPECT_NE(service->ReportHisysEvent(jobInfo, printerId, subState), 0);
-    std::shared_ptr<PrinterInfo> printInfo = std::make_shared<PrinterInfo>();
-    printInfo->SetPrinterName("Direct0759");
-    service->printSystemData_.discoveredPrinterInfoList_[printerId] = printInfo;
-    EXPECT_NE(service->ReportHisysEvent(jobInfo, printerId, subState), 0);
-    Json::Value infoJson;
-    infoJson["printerUri"] = "ipp123";
-    jobInfo->SetOption(PrintJsonUtil::WriteString(infoJson));
-    EXPECT_NE(service->ReportHisysEvent(jobInfo, printerId, subState), 0);
-    infoJson["jobDescription"] = "testPrinter";
-    jobInfo->SetOption(PrintJsonUtil::WriteString(infoJson));
-    EXPECT_NE(service->ReportHisysEvent(jobInfo, printerId, subState), 0);
-}
-
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0059, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
