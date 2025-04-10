@@ -1226,17 +1226,16 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
 {
     PRINT_HILOGI("UpdatePrinterCapability Enter");
     PrinterInfo printerInfo(info);
-    auto output = info;
-    output.SetPrinterStatus(PRINTER_STATUS_IDLE);
-    output.SetPrinterId(printerId);
+    printerInfo.SetPrinterStatus(PRINTER_STATUS_IDLE);
+    printerInfo.SetPrinterId(printerId);
     if (!printSystemData_.IsPrinterAdded(printerId)) {
-        SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, output, true);
-        SendPrinterChangeEvent(PRINTER_EVENT_ADDED, output);
+        SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, printerInfo, true);
+        SendPrinterChangeEvent(PRINTER_EVENT_ADDED, printerInfo);
     } else {
         PRINT_HILOGW("Printer added.");
     }
     printSystemData_.InsertAddedPrinter(printerId, printerInfo);
-    SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, output);
+    SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, printerInfo);
     SetLastUsedPrinter(printerId);
     return true;
 }
