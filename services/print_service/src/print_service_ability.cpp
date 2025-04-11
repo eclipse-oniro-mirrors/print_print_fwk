@@ -1234,6 +1234,11 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
     } else {
         PRINT_HILOGW("Printer added.");
     }
+    PrinterCapability cap;
+    printerInfo.GetCapability(cap);
+    PrinterPreferences preferences;
+    printSystemData_.BuildPrinterPreference(cap, preferences);
+    printerInfo.SetPreferences(preferences);
     printSystemData_.InsertAddedPrinter(printerId, printerInfo);
     SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, printerInfo);
     SetLastUsedPrinter(printerId);
@@ -2918,22 +2923,21 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
         return false;
     }
     printerInfo->SetPrinterName(RenamePrinterWhenAdded(*printerInfo));
-    PrinterInfo info(*printerInfo);
 #ifdef CUPS_ENABLE
     int32_t ret = E_PRINT_NONE;
     if (ppdData.empty()) {
-        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(info.GetUri(),
-            info.GetPrinterName(), info.GetPrinterMake());
+        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerInfo->GetUri(),
+            printerInfo->GetPrinterName(), printerInfo->GetPrinterMake());
     } else {
-        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithPpd(info.GetUri(),
-            info.GetPrinterName(), BSUNI_PPD_NAME, ppdData);
+        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithPpd(printerInfo->GetUri(),
+            printerInfo->GetPrinterName(), BSUNI_PPD_NAME, ppdData);
     }
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
         return false;
     }
 #endif // CUPS_ENABLE
-    info.SetPrinterStatus(PRINTER_STATUS_IDLE);
+    printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetIsLastUsedPrinter(true);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
@@ -2941,7 +2945,12 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
     } else {
-        printSystemData_.InsertAddedPrinter(globalPrinterId, info);
+        PrinterCapability cap;
+        printerInfo->GetCapability(cap);
+        PrinterPreferences preferences;
+        printSystemData_.BuildPrinterPreference(cap, preferences);
+        printerInfo->SetPreferences(preferences);
+        printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
         printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
@@ -2966,11 +2975,10 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
         return false;
     }
     printerInfo->SetPrinterName(RenamePrinterWhenAdded(*printerInfo));
-    PrinterInfo info(*printerInfo);
 #ifdef CUPS_ENABLE
     int32_t ret = E_PRINT_NONE;
-    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithSpecificPpd(info.GetUri(),
-        info.GetPrinterName(), ppdData);
+    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithSpecificPpd(printerInfo->GetUri(),
+        printerInfo->GetPrinterName(), ppdData);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
         return false;
@@ -2982,9 +2990,8 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
         PRINT_HILOGW("QueryPrinterCapabilityFromPPD error = %{public}d.", ret);
     }
     printerInfo->SetCapability(printerCaps);
-    info.SetCapability(printerCaps);
 #endif // CUPS_ENABLE
-    info.SetPrinterStatus(PRINTER_STATUS_IDLE);
+    printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetIsLastUsedPrinter(true);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
@@ -2992,7 +2999,10 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
     } else {
-        printSystemData_.InsertAddedPrinter(globalPrinterId, info);
+        PrinterPreferences preferences;
+        printSystemData_.BuildPrinterPreference(printerCaps, preferences);
+        printerInfo->SetPreferences(preferences);
+        printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
         printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
@@ -3068,26 +3078,30 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
         return false;
     }
     printerInfo->SetPrinterName(RenamePrinterWhenAdded(*printerInfo));
-    PrinterInfo info(*printerInfo);
 #ifdef CUPS_ENABLE
     int32_t ret = E_PRINT_NONE;
     if (ppdData.empty()) {
-        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(info.GetUri(),
-            info.GetPrinterName(), info.GetPrinterMake());
+        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerInfo->GetUri(),
+            printerInfo->GetPrinterName(), printerInfo->GetPrinterMake());
     } else {
-        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithPpd(info.GetUri(),
-            info.GetPrinterName(), BSUNI_PPD_NAME, ppdData);
+        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithPpd(printerInfo->GetUri(),
+            printerInfo->GetPrinterName(), BSUNI_PPD_NAME, ppdData);
     }
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
         return false;
     }
 #endif // CUPS_ENABLE
-    info.SetPrinterStatus(PRINTER_STATUS_IDLE);
+    printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetIsLastUsedPrinter(true);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-    printSystemData_.InsertAddedPrinter(globalPrinterId, info);
+    PrinterCapability cap;
+    printerInfo->GetCapability(cap);
+    PrinterPreferences preferences;
+    printSystemData_.BuildPrinterPreference(cap, preferences);
+    printerInfo->SetPreferences(preferences);
+    printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
     printSystemData_.SavePrinterFile(globalPrinterId);
     SetLastUsedPrinter(globalPrinterId);
     SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
