@@ -1234,11 +1234,7 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
     } else {
         PRINT_HILOGW("Printer added.");
     }
-    PrinterCapability cap;
-    printerInfo.GetCapability(cap);
-    PrinterPreferences preferences;
-    printSystemData_.BuildPrinterPreference(cap, preferences);
-    printerInfo.SetPreferences(preferences);
+    BuildPrinterPreference(printerInfo);
     printSystemData_.InsertAddedPrinter(printerId, printerInfo);
     SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, printerInfo);
     SetLastUsedPrinter(printerId);
@@ -2945,11 +2941,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
     } else {
-        PrinterCapability cap;
-        printerInfo->GetCapability(cap);
-        PrinterPreferences preferences;
-        printSystemData_.BuildPrinterPreference(cap, preferences);
-        printerInfo->SetPreferences(preferences);
+        BuildPrinterPreference(*printerInfo);
         printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
         printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
@@ -2999,9 +2991,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
     } else {
-        PrinterPreferences preferences;
-        printSystemData_.BuildPrinterPreference(printerCaps, preferences);
-        printerInfo->SetPreferences(preferences);
+        BuildPrinterPreference(*printerInfo);
         printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
         printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
@@ -3096,11 +3086,7 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetIsLastUsedPrinter(true);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-    PrinterCapability cap;
-    printerInfo->GetCapability(cap);
-    PrinterPreferences preferences;
-    printSystemData_.BuildPrinterPreference(cap, preferences);
-    printerInfo->SetPreferences(preferences);
+    BuildPrinterPreference(*printerInfo);
     printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
     printSystemData_.SavePrinterFile(globalPrinterId);
     SetLastUsedPrinter(globalPrinterId);
@@ -3367,5 +3353,14 @@ void PrintServiceAbility::UnregisterPrintTaskCallback(const std::string &jobId, 
             }
         }
     }
+}
+
+void PrintServiceAbility::BuildPrinterPreference(PrinterInfo &printerInfo)
+{
+    PrinterCapability cap;
+    printerInfo.GetCapability(cap);
+    PrinterPreferences preferences;
+    printSystemData_.BuildPrinterPreference(cap, preferences);
+    printerInfo.SetPreferences(preferences);
 }
 } // namespace OHOS::Print
