@@ -17,8 +17,8 @@
 #define SCAN_MDNS_SERVICE_H
 
 #include <unordered_set>
-#include "i_mdns_event.h"
-#include "mdns_event_stub.h"
+#include "discovery_callback_stub.h"
+#include "resolve_callback_stub.h"
 #include "mdns_client.h"
 #include "mdns_common.h"
 #include "scanner_info.h"
@@ -32,10 +32,13 @@ class ScanMDnsDiscoveryObserver : public DiscoveryCallbackStub {
 public:
     explicit ScanMDnsDiscoveryObserver(const MDnsServiceInfo &info) : expected_(info) {}
     virtual ~ScanMDnsDiscoveryObserver() = default;
-    void HandleStartDiscover(const MDnsServiceInfo &serviceInfo, int32_t retCode) override{}
-    void HandleStopDiscover(const MDnsServiceInfo &serviceInfo, int32_t retCode) override;
-    void HandleServiceLost(const MDnsServiceInfo &serviceInfo, int32_t retCode) override;
-    void HandleServiceFound(const MDnsServiceInfo &info, int32_t retCode) override;
+    int32_t HandleStartDiscover(const MDnsServiceInfo &serviceInfo, int32_t retCode) override
+    {
+        return NETMANAGER_EXT_SUCCESS;
+    }
+    int32_t HandleStopDiscover(const MDnsServiceInfo &serviceInfo, int32_t retCode) override;
+    int32_t HandleServiceLost(const MDnsServiceInfo &serviceInfo, int32_t retCode) override;
+    int32_t HandleServiceFound(const MDnsServiceInfo &info, int32_t retCode) override;
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
     {
         SCAN_HILOGD("GetScannerList HandleSerieFound OnRemoteRequest");
@@ -54,7 +57,7 @@ public:
         SCAN_HILOGD("GetScannerList ScanMDnsResolveObserver OnRemoteRequest");
         return ResolveCallbackStub::OnRemoteRequest(code, data, reply, option);
     }
-    void HandleResolveResult(const MDnsServiceInfo& info, int32_t retCode) override;
+    int32_t HandleResolveResult(const MDnsServiceInfo& info, int32_t retCode) override;
 public:
     MDnsServiceInfo _serviceInfo;
 };
@@ -68,7 +71,7 @@ public:
         SCAN_HILOGD("GetScannerList ScanMDnsLossResolveObserver OnRemoteRequest");
         return ResolveCallbackStub::OnRemoteRequest(code, data, reply, option);
     }
-    void HandleResolveResult(const MDnsServiceInfo& info, int32_t retCode) override;
+    int32_t HandleResolveResult(const MDnsServiceInfo& info, int32_t retCode) override;
 public:
     MDnsServiceInfo _serviceInfo;
 };
