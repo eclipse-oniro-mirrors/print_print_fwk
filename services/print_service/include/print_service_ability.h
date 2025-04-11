@@ -183,6 +183,8 @@ private:
     bool UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri);
     int32_t HandleExtensionConnectPrinter(const std::string &printerId);
     bool CheckUserIdInEventType(const std::string &type);
+    void BuildPrinterPreference(PrinterInfo &printerInfo);
+
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
