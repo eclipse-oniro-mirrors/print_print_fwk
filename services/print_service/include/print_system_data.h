@@ -152,7 +152,6 @@ private:
 
 private:
     PrintMapSafe<PrinterInfo> addedPrinterMap_;
-    std::map<std::string, std::shared_ptr<PrinterInfo>> addedPrinterInfoList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> discoveredPrinterInfoList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> connectingIpPrinterInfoList_;
     std::mutex discoveredListMutex;

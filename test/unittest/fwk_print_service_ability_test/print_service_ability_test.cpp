@@ -694,7 +694,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0032, TestSize.Level1)
     std::vector<std::string> valueList;
     EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_INVALID_PRINTER);
     auto printerInfo = std::make_shared<PrinterInfo>();
-    service->printSystemData_.addedPrinterInfoList_[printerId] = printerInfo;
     keyList.push_back("printerId");
     keyList.push_back("printerName");
     EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_INVALID_PRINTER);
@@ -1003,7 +1002,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0052, TestSize.Level1)
     printJob->SetPrinterId(printerId);
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
-    service->printSystemData_.addedPrinterInfoList_[printerId] = printerInfo;
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
     userData->queuedJobList_[jobId] = printJob;
@@ -1196,7 +1194,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0065, TestSize.Level1)
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
     auto info = std::make_shared<PrinterInfo>();
     info->SetPrinterId(printerId);
-    service->printSystemData_.addedPrinterInfoList_[printerId] = info;
     std::vector<std::string> keyList;
     keyList.emplace_back("pagesizeId");
     keyList.emplace_back("orientation");
@@ -1213,7 +1210,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0066, TestSize.Level1)
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
     auto info = std::make_shared<PrinterInfo>();
     info->SetPrinterId(printerId);
-    service->printSystemData_.addedPrinterInfoList_[printerId] = info;
     std::string savePrinterPreference = "test";
     std::vector<std::string> keyList;
     keyList.emplace_back("pagesizeId");
@@ -1359,7 +1355,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084, TestSize.Level1)
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
-    service->printSystemData_.addedPrinterInfoList_[printerId] = printerInfo;
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
 
@@ -1731,7 +1726,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112, TestSize.Level1)
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
-    service->printSystemData_.addedPrinterInfoList_[printerId] = printerInfo;
     service->currentUserId_ = 0;
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }

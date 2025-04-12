@@ -188,10 +188,10 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0012, TestSize.Level1)
     printerInfo.SetUri("123");
     printerInfo.SetPrinterMake("print");
     systemData->addedPrinterMap_.Insert("2", std::make_shared<PrinterInfo>(printerInfo));
-    systemData->QueryPrinterIdByStandardizeName(printerName);
+    EXPECT_EQ(systemData->QueryPrinterIdByStandardizeName(printerName), "2");
     printerInfo.SetPrinterName("223");
     systemData->addedPrinterMap_.Insert("4", std::make_shared<PrinterInfo>(printerInfo));
-    systemData->QueryPrinterIdByStandardizeName(printerName);
+    EXPECT_EQ(systemData->QueryPrinterIdByStandardizeName(printerName), "2");
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0013, TestSize.Level1)
@@ -210,8 +210,9 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0013, TestSize.Level1)
     systemData->addedPrinterMap_.Insert("123", std::make_shared<PrinterInfo>(printerInfo));
     PrinterInfo printerInfo3;
     systemData->addedPrinterMap_.Insert("11", std::make_shared<PrinterInfo>(printerInfo3));
-    systemData->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo2);
+    EXPECT_EQ(systemData->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo2), false);
     systemData->addedPrinterMap_.Insert("1234", std::make_shared<PrinterInfo>(printerInfo));
+    EXPECT_EQ(systemData->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo2), true);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0014, TestSize.Level1)
@@ -221,18 +222,10 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0014, TestSize.Level1)
     std::string printerId = "1234";
     PrinterInfo printerInfo;
     systemData->InsertAddedPrinter(printerId, printerInfo);
+    EXPECT_EQ(systemData->addedPrinterMap_.GetKeyList().size(), 1);
     systemData->addedPrinterMap_.Insert("1", nullptr);
     systemData->InsertAddedPrinter(printerId, printerInfo);
-}
-
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0015, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    EXPECT_NE(systemData, nullptr);
-    std::string printerId = "1234";
-    PrinterInfo printerInfo;
-    systemData->addedPrinterInfoList_["1"] = nullptr;
-    systemData->addedPrinterInfoList_["1234"] = std::make_shared<PrinterInfo>(printerInfo);
+    EXPECT_EQ(systemData->addedPrinterMap_.GetKeyList().size(), 1);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0016, TestSize.Level1)
@@ -246,6 +239,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0016, TestSize.Level1)
     systemData->InsertAddedPrinter(printerId, printerInfo);
     systemData->addedPrinterMap_.Insert("1234", std::make_shared<PrinterInfo>(printerInfo));
     systemData->InsertAddedPrinter(printerId, printerInfo);
+    EXPECT_EQ(systemData->addedPrinterMap_.GetKeyList().size(), 1);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0017, TestSize.Level1)
@@ -262,7 +256,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0017, TestSize.Level1)
     Json::Value jsonObject;
     jsonObject["version"] = "v1";
     jsonObject["printer_list"] = printerMapJson;
-    systemData->ParsePrinterListJsonV1(jsonObject);
+    EXPECT_EQ(systemData->ParsePrinterListJsonV1(jsonObject), true);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0018, TestSize.Level1)
@@ -275,7 +269,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0018, TestSize.Level1)
     Json::Value jsonObject;
     jsonObject["version"] = "v1";
     jsonObject["printer_list"] = printerMapJson;
-    systemData->ParsePrinterListJsonV1(jsonObject);
+    EXPECT_EQ(systemData->ParsePrinterListJsonV1(jsonObject), true);
 
     Json::Value printerJson2;
     printerJson2["id"] = "123";
@@ -283,7 +277,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0018, TestSize.Level1)
     Json::Value jsonObject2;
     jsonObject2["version"] = "v1";
     jsonObject2["printer_list"] = printerMapJson;
-    systemData->ParsePrinterListJsonV1(jsonObject2);
+    EXPECT_EQ(systemData->ParsePrinterListJsonV1(jsonObject2), true);
 
     Json::Value printerJson3;
     printerJson3["id"] = "123";
@@ -292,7 +286,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0018, TestSize.Level1)
     Json::Value jsonObject3;
     jsonObject3["version"] = "v1";
     jsonObject3["printer_list"] = printerMapJson;
-    systemData->ParsePrinterListJsonV1(jsonObject3);
+    EXPECT_EQ(systemData->ParsePrinterListJsonV1(jsonObject3), true);
 
     Json::Value printerJson4;
     printerJson4["id"] = "123";
@@ -301,7 +295,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0018, TestSize.Level1)
     Json::Value jsonObject4;
     jsonObject4["version"] = "v1";
     jsonObject4["printer_list"] = printerMapJson;
-    systemData->ParsePrinterListJsonV1(jsonObject4);
+    EXPECT_EQ(systemData->ParsePrinterListJsonV1(jsonObject4), true);
 
     Json::Value printerJson5;
     printerJson5["id"] = "123";
@@ -311,7 +305,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0018, TestSize.Level1)
     Json::Value jsonObject5;
     jsonObject5["version"] = "v1";
     jsonObject5["printer_list"] = printerMapJson;
-    systemData->ParsePrinterListJsonV1(jsonObject5);
+    EXPECT_EQ(systemData->ParsePrinterListJsonV1(jsonObject5), true);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0019, TestSize.Level1)
@@ -324,7 +318,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0019, TestSize.Level1)
     Json::Value jsonObject;
     jsonObject["version"] = "v1";
     jsonObject["printer_list"] = printerMapJson;
-    systemData->ParsePrinterListJsonV1(jsonObject);
+    EXPECT_EQ(systemData->ParsePrinterListJsonV1(jsonObject), true);
 
     Json::Value printerJson6;
     printerJson6["id"] = "123";
@@ -334,7 +328,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0019, TestSize.Level1)
     Json::Value jsonObject6;
     jsonObject6["version"] = "v1";
     jsonObject6["printer_list"] = printerMapJson;
-    systemData->ParsePrinterListJsonV1(jsonObject6);
+    EXPECT_EQ(systemData->ParsePrinterListJsonV1(jsonObject6), true);
 
     Json::Value printerJson7;
     printerJson7["id"] = "123";
@@ -345,7 +339,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0019, TestSize.Level1)
     Json::Value jsonObject7;
     jsonObject7["version"] = "v1";
     jsonObject7["printer_list"] = printerMapJson;
-    systemData->ParsePrinterListJsonV1(jsonObject7);
+    EXPECT_EQ(systemData->ParsePrinterListJsonV1(jsonObject7), true);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0020, TestSize.Level1)
@@ -364,7 +358,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0020, TestSize.Level1)
     Json::Value jsonObject;
     jsonObject["version"] = "v1";
     jsonObject["printer_list"] = printerMapJson;
-    systemData->ParsePrinterListJsonV1(jsonObject);
+    EXPECT_EQ(systemData->ParsePrinterListJsonV1(jsonObject), true);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0021, TestSize.Level1)
@@ -383,7 +377,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0021, TestSize.Level1)
     Json::Value jsonObject;
     jsonObject["version"] = "v1";
     jsonObject["printer_list"] = printerMapJson;
-    systemData->ParsePrinterListJsonV1(jsonObject);
+    EXPECT_EQ(systemData->ParsePrinterListJsonV1(jsonObject), true);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0022, TestSize.Level1)
@@ -395,6 +389,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0022, TestSize.Level1)
     printerInfo.SetAlias("test");
     systemData->addedPrinterMap_.Insert("1234", std::make_shared<PrinterInfo>(printerInfo));
     systemData->InsertAddedPrinter(printerId, printerInfo);
+    EXPECT_EQ(systemData->addedPrinterMap_.GetKeyList().size(), 1);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0023, TestSize.Level1)
@@ -406,6 +401,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0023, TestSize.Level1)
     PrinterInfo printerInfo;
     systemData->addedPrinterMap_.Insert("1234", std::make_shared<PrinterInfo>(printerInfo));
     systemData->DeleteAddedPrinter(printerId, printerName);
+    EXPECT_EQ(systemData->addedPrinterMap_.GetKeyList().size(), 0);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0024, TestSize.Level1)
@@ -425,6 +421,9 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0024, TestSize.Level1)
     printerInfo2.SetPrinterMake("print");
     systemData->addedPrinterMap_.Insert("1234", std::make_shared<PrinterInfo>(printerInfo2));
     systemData->UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
+    PrinterInfo printerInfo3;
+    systemData->QueryAddedPrinterInfoByPrinterId(printerId, printerInfo3);
+    EXPECT_EQ(printerInfo3.GetPrinterStatus(), PRINTER_STATUS_IDLE);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0025, TestSize.Level1)
@@ -440,6 +439,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0025, TestSize.Level1)
     systemData->addedPrinterMap_.Insert("2", std::make_shared<PrinterInfo>(printerInfo));
     std::vector<std::string> printerNameList;
     systemData->GetAddedPrinterListFromSystemData(printerNameList);
+    EXPECT_EQ(printerNameList.size(), 1);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0026, TestSize.Level1)
@@ -456,6 +456,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0026, TestSize.Level1)
     printerInfo.SetPrinterMake("print");
     systemData->addedPrinterMap_.Insert("1", std::make_shared<PrinterInfo>(printerInfo));
     systemData->GetAddedPrinterListFromSystemData(printerNameList);
+    EXPECT_EQ(printerNameList.size(), 0);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0027, TestSize.Level1)
@@ -465,6 +466,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0027, TestSize.Level1)
     PrinterCapability printerCapability;
     Json::Value capsJson;
     systemData->ConvertPrinterCapabilityToJson(printerCapability, capsJson);
+    EXPECT_EQ(capsJson["colorMode"].asInt(), 0);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0028, TestSize.Level1)
@@ -480,6 +482,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0028, TestSize.Level1)
     printerCapability.SetOption(ops);
     Json::Value capsJson;
     systemData->ConvertPrinterCapabilityToJson(printerCapability, capsJson);
+    EXPECT_EQ(capsJson["colorMode"].asInt(), 0);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0029, TestSize.Level1)
@@ -496,6 +499,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0029, TestSize.Level1)
     printerCapability.SetOption(PrintJsonUtil::WriteString(ops));
     Json::Value capsJson;
     systemData->ConvertPrinterCapabilityToJson(printerCapability, capsJson);
+    EXPECT_EQ(capsJson["colorMode"].asInt(), 0);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0030, TestSize.Level1)
@@ -507,6 +511,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0030, TestSize.Level1)
     printerCapability.SetMinMargin(minMargin);
     Json::Value capsJson;
     systemData->ConvertPrintMarginToJson(printerCapability, capsJson);
+    EXPECT_EQ(capsJson["minMargin"].isNull(), true);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0031, TestSize.Level1)
@@ -522,6 +527,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0031, TestSize.Level1)
     printerCapability.SetMinMargin(minMargin);
     Json::Value capsJson;
     systemData->ConvertPrintMarginToJson(printerCapability, capsJson);
+    EXPECT_EQ(capsJson["minMargin"]["top"].asInt(), 100);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0032, TestSize.Level1)
@@ -573,6 +579,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0032, TestSize.Level1)
     Json::Value opsJson2;
     capsJson["options"] = opsJson2;
     systemData->ConvertJsonToPrinterCapability(capsJson, printerCapability);
+    EXPECT_EQ(printerCapability.GetColorMode(), 123);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0033, TestSize.Level1)
@@ -603,6 +610,9 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0033, TestSize.Level1)
     resolutionListJson4.append(resolutionItem4);
     capsJson["resolution"] = resolutionListJson4;
     systemData->ConvertJsonToPrintResolution(capsJson, printerCapability);
+    std::vector<PrintResolution> resolutionList;
+    printerCapability.GetResolution(resolutionList);
+    EXPECT_EQ(resolutionList.size(), 0);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0034, TestSize.Level1)
@@ -641,6 +651,9 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0034, TestSize.Level1)
     resolutionListJson4.append(resolutionItem4);
     capsJson["resolution"] = resolutionListJson4;
     systemData->ConvertJsonToPrintResolution(capsJson, printerCapability);
+    std::vector<PrintResolution> resolutionList;
+    printerCapability.GetResolution(resolutionList);
+    EXPECT_EQ(resolutionList.size(), 1);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0035, TestSize.Level1)
@@ -652,6 +665,9 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0035, TestSize.Level1)
     Json::Value resolutionListJson;
     capsJson["resolution"] = resolutionListJson;
     systemData->ConvertJsonToPrintResolution(capsJson, printerCapability);
+    std::vector<PrintResolution> resolutionList;
+    printerCapability.GetResolution(resolutionList);
+    EXPECT_EQ(resolutionList.size(), 0);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0036, TestSize.Level1)
@@ -683,6 +699,9 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0036, TestSize.Level1)
     pageSizeListJson4.append(pageSizeItem4);
     capsJson["pageSize"] = pageSizeListJson4;
     systemData->ConvertJsonToPageSize(capsJson, printerCapability);
+    std::vector<PrintPageSize> supportedPageSizeList;
+    printerCapability.GetSupportedPageSize(supportedPageSizeList);
+    EXPECT_EQ(supportedPageSizeList.size(), 0);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0037, TestSize.Level1)
@@ -724,6 +743,9 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0037, TestSize.Level1)
     pageSizeListJson4.append(pageSizeItem4);
     capsJson["pageSize"] = pageSizeListJson4;
     systemData->ConvertJsonToPageSize(capsJson, printerCapability);
+    std::vector<PrintPageSize> supportedPageSizeList;
+    printerCapability.GetSupportedPageSize(supportedPageSizeList);
+    EXPECT_EQ(supportedPageSizeList.size(), 0);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0038, TestSize.Level1)
@@ -751,6 +773,9 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0038, TestSize.Level1)
     pageSizeListJson2.append(pageSizeItem2);
     capsJson["pageSize"] = pageSizeListJson2;
     systemData->ConvertJsonToPageSize(capsJson, printerCapability);
+    std::vector<PrintPageSize> supportedPageSizeList;
+    printerCapability.GetSupportedPageSize(supportedPageSizeList);
+    EXPECT_EQ(supportedPageSizeList.size(), 1);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0039, TestSize.Level1)
@@ -798,6 +823,9 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0039, TestSize.Level1)
     marginJson7["left"] = 123;
     capsJson["minMargin"] = marginJson7;
     systemData->ConvertJsonToPrintMargin(capsJson, printerCapability);
+    PrintMargin margin;
+    printerCapability.GetMinMargin(margin);
+    EXPECT_EQ(margin.GetTop(), 0);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0040, TestSize.Level1)
@@ -821,6 +849,9 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0040, TestSize.Level1)
     marginJson2["right"] = 123;
     capsJson["minMargin"] = marginJson2;
     systemData->ConvertJsonToPrintMargin(capsJson, printerCapability);
+    PrintMargin margin;
+    printerCapability.GetMinMargin(margin);
+    EXPECT_EQ(margin.GetTop(), 123);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0041, TestSize.Level1)
@@ -830,7 +861,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0041, TestSize.Level1)
     PrinterInfo printer;
     std::string printerId = "123";
     PrinterCapability printerCapability;
-    systemData->GetPrinterCapabilityFromSystemData(printer, printerId, printerCapability);
+    EXPECT_EQ(systemData->GetPrinterCapabilityFromSystemData(printer, printerId, printerCapability), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0042, TestSize.Level1)
@@ -850,6 +881,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0042, TestSize.Level1)
     printerCapability2.SetSupportedPageSize(pageSizeList);
     printer.SetCapability(printerCapability2);
     systemData->GetPrinterCapabilityFromSystemData(printer, printerId, printerCapability);
+    EXPECT_EQ(systemData->GetPrinterCapabilityFromSystemData(printer, printerId, printerCapability), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0043, TestSize.Level1)
@@ -858,7 +890,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0043, TestSize.Level1)
     EXPECT_NE(systemData, nullptr);
     Json::Value object;
     std::string printerId = "123";
-    systemData->CheckPrinterInfoJson(object, printerId);
+    EXPECT_EQ(systemData->CheckPrinterInfoJson(object, printerId), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0044, TestSize.Level1)
@@ -898,7 +930,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0044, TestSize.Level1)
     object7["id"] = "123";
     object7["name"] = "123";
     object7["uri"] = "123";
-    systemData->CheckPrinterInfoJson(object7, printerId);
+    EXPECT_EQ(systemData->CheckPrinterInfoJson(object7, printerId), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0045, TestSize.Level1)
@@ -935,7 +967,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0045, TestSize.Level1)
     object4["maker"] = "123";
     Json::Value capsJson;
     object4["capability"] = capsJson;
-    systemData->CheckPrinterInfoJson(object4, printerId);
+    EXPECT_EQ(systemData->CheckPrinterInfoJson(object4, printerId), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0046, TestSize.Level1)
@@ -951,7 +983,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0046, TestSize.Level1)
     printerInfo.SetUri("123");
     printerInfo.SetPrinterMake("print");
     systemData->addedPrinterMap_.Insert("123", std::make_shared<PrinterInfo>(printerInfo));
-    systemData->IsPrinterAdded(printerId);
+    EXPECT_EQ(systemData->IsPrinterAdded(printerId), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0047, TestSize.Level1)
@@ -967,6 +999,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0047, TestSize.Level1)
     printerInfo1.SetPrinterMake("print");
     systemData->addedPrinterMap_.Insert("1234", std::make_shared<PrinterInfo>(printerInfo1));
     systemData->QueryPrinterInfoById(printerId, printerInfo);
+    EXPECT_EQ(printerInfo.GetUri(), "123");
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0048, TestSize.Level1)
@@ -993,7 +1026,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0048, TestSize.Level1)
     item["key"] = "value";
     printerMapJson3.append(item);
     jsonObject3["printer_list"] = printerMapJson3;
-    systemData->GetPrinterCapabilityFromJson(printerId, jsonObject3, printerCapability);
+    EXPECT_EQ(systemData->GetPrinterCapabilityFromJson(printerId, jsonObject3, printerCapability), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0049, TestSize.Level1)
@@ -1014,7 +1047,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0049, TestSize.Level1)
     item["capability"] = capsJson;
     printerMapJson.append(item);
     jsonObject["printer_list"] = printerMapJson;
-    systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability);
+    EXPECT_EQ(systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0050, TestSize.Level1)
@@ -1035,7 +1068,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0050, TestSize.Level1)
     item["capability"] = capsJson;
     printerMapJson.append(item);
     jsonObject["printer_list"] = printerMapJson;
-    systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability);
+    EXPECT_EQ(systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0051, TestSize.Level1)
@@ -1064,6 +1097,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0051, TestSize.Level1)
     printerMapJson.append(item);
     jsonObject["printer_list"] = printerMapJson;
     systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability);
+    EXPECT_EQ(systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0052, TestSize.Level1)
@@ -1073,6 +1107,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0052, TestSize.Level1)
     std::string printerId = "";
     std::string printerName = "";
     systemData->DeleteAddedPrinter(printerId, printerName);
+    EXPECT_EQ(systemData->addedPrinterMap_.GetKeyList().size(), 0);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0053, TestSize.Level1)
@@ -1145,6 +1180,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0056, TestSize.Level1) {
     printerCapability.SetSupportedColorMode(supportedColorModeList);
     Json::Value capsJson;
     systemData->ConvertSupportedColorModeToJson(printerCapability, capsJson);
+    EXPECT_EQ(capsJson["supportedColorMode"].isNull(), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0057, TestSize.Level1) {
@@ -1156,6 +1192,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0057, TestSize.Level1) {
     printerCapability.SetSupportedDuplexMode(supportedDuplexModeList);
     Json::Value capsJson;
     systemData->ConvertSupportedDuplexModeToJson(printerCapability, capsJson);
+    EXPECT_EQ(capsJson["supportedDuplexMode"].isNull(), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0058, TestSize.Level1) {
@@ -1167,6 +1204,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0058, TestSize.Level1) {
     printerCapability.SetSupportedMediaType(supportedMediaTypeList);
     Json::Value capsJson;
     systemData->ConvertSupportedMediaTypeToJson(printerCapability, capsJson);
+    EXPECT_EQ(capsJson["supportedMediaType"].isNull(), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0059, TestSize.Level1) {
@@ -1178,6 +1216,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0059, TestSize.Level1) {
     printerCapability.SetSupportedQuality(supportedQualityList);
     Json::Value capsJson;
     systemData->ConvertSupportedQualityToJson(printerCapability, capsJson);
+    EXPECT_EQ(capsJson["supportedQuality"].isNull(), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0060, TestSize.Level1)
@@ -1520,7 +1559,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0102, TestSize.Level1)
     item["maker"] = "123";
     printerMapJson.append(item);
     jsonObject["printer_list"] = printerMapJson;
-    systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability);
+    EXPECT_EQ(systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0103, TestSize.Level1)
@@ -1547,7 +1586,7 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0103, TestSize.Level1)
     item["capability"] = capsJson;
     printerMapJson.append(item);
     jsonObject["printer_list"] = printerMapJson;
-    systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability);
+    EXPECT_EQ(systemData->GetPrinterCapabilityFromJson(printerId, jsonObject, printerCapability), false);
 }
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0104, TestSize.Level1)
