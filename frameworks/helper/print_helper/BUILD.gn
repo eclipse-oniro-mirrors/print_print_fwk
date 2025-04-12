@@ -26,7 +26,6 @@ config("print_interfaces_kits_napi_config") {
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",
     "-flto",
-    "--save-temps",
     "-Os",
   ]
 }
