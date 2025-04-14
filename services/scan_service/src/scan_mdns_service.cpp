@@ -155,21 +155,22 @@ bool ScanMdnsService::FindNetScannerInfoByIp(const std::string& ip, ScanDeviceIn
     return true;
 }
 
-void ScanMDnsDiscoveryObserver::HandleServiceFound(const MDnsServiceInfo &info, int32_t retCode)
+int32_t ScanMDnsDiscoveryObserver::HandleServiceFound(const MDnsServiceInfo &info, int32_t retCode)
 {
     SCAN_HILOGD("Found mdns service info, name = [%{private}s]", info.name.c_str());
     sptr<ScanMDnsResolveObserver> scanMDnsResolveCallBack_ = new (std::nothrow) ScanMDnsResolveObserver(info);
     if (scanMDnsResolveCallBack_ == nullptr) {
         SCAN_HILOGE("scanMDnsResolveCallBack_ is a nullptr.");
-        return;
+        return NETMANAGER_EXT_ERR_INTERNAL;
     }
     int32_t ret = DelayedSingleton<MDnsClient>::GetInstance()->ResolveService(info, scanMDnsResolveCallBack_);
     if (ret != NETMANAGER_EXT_SUCCESS) {
         SCAN_HILOGE("mdns ResolveService failed, ret = [%{public}d].", ret);
     }
+    return NETMANAGER_EXT_SUCCESS;
 }
 
-void ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
+int32_t ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
 {
     MDnsServiceInfo tempInfo = info;
     SCAN_HILOGD("MDnsInfo name = [%{private}s], type = [%{private}s]", info.name.c_str(), info.type.c_str());
@@ -193,7 +194,7 @@ void ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, i
     auto pair = scanData.UpdateNetScannerByUuid(uuidValue, scannerInfo->addr);
     if (pair.second == "") {
         SCAN_HILOGE("UpdateNetScannerByUuid fail.");
-        return;
+        return NETMANAGER_EXT_ERR_INTERNAL;
     }
     if (!scanData.SaveScannerMap()) {
         SCAN_HILOGW("SaveScannerMap fail");
@@ -217,23 +218,25 @@ void ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, i
             it->second = *scannerInfo;
         }
     }
+    return NETMANAGER_EXT_SUCCESS;
 }
 
-void ScanMDnsDiscoveryObserver::HandleServiceLost(const MDnsServiceInfo &info, int32_t retCode)
+int32_t ScanMDnsDiscoveryObserver::HandleServiceLost(const MDnsServiceInfo &info, int32_t retCode)
 {
     SCAN_HILOGD("Loss mdns service info, name = [%{private}s]", info.name.c_str());
     sptr<ScanMDnsLossResolveObserver> callBack = new (std::nothrow) ScanMDnsLossResolveObserver(info);
     if (callBack == nullptr) {
         SCAN_HILOGE("callBack is a nullptr");
-        return;
+        return NETMANAGER_EXT_ERR_INTERNAL;
     }
     int32_t ret = DelayedSingleton<MDnsClient>::GetInstance()->ResolveService(info, callBack);
     if (ret != NETMANAGER_EXT_SUCCESS) {
         SCAN_HILOGE("mdns ResolveService failed, ret = %{public}d", ret);
     }
+    return NETMANAGER_EXT_SUCCESS;
 }
 
-void ScanMDnsLossResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
+int32_t ScanMDnsLossResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
 {
     MDnsServiceInfo tempInfo = info;
     SCAN_HILOGD("mdnsloss name = [%{private}s], type = [%{private}s]", info.name.c_str(), info.type.c_str());
@@ -245,11 +248,13 @@ void ScanMDnsLossResolveObserver::HandleResolveResult(const MDnsServiceInfo &inf
             g_ipToScannerInfo.erase(it);
         }
     }
+    return NETMANAGER_EXT_SUCCESS;
 }
 
-void ScanMDnsDiscoveryObserver::HandleStopDiscover(const MDnsServiceInfo &serviceInfo, int32_t retCode)
+int32_t ScanMDnsDiscoveryObserver::HandleStopDiscover(const MDnsServiceInfo &serviceInfo, int32_t retCode)
 {
     SCAN_HILOGD("Stop mdns service info, name = [%{private}s]", serviceInfo.name.c_str());
+    return NETMANAGER_EXT_SUCCESS;
 }
 
 }  // namespace OHOS::Scan
