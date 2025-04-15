@@ -2961,9 +2961,6 @@ bool PrintServiceAbility::UpdateVendorPrinterToDiscovery(const std::string &glob
     if (printSystemData_.QueryCupsPrinterInfoByPrinterId(globalPrinterId, cupsPrinter)) {
         printerInfo->SetPrinterName(cupsPrinter.name);
     }
-    printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
-    SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
-    SendPrinterEvent(*printerInfo);
     return true;
 }
 
@@ -2990,9 +2987,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
     }
     printerInfo->SetPrinterName(RenamePrinterWhenAdded(*printerInfo));
     CupsPrinterInfo info;
-    info.name = printerInfo->GetPrinterName();
-    info.uri = printerInfo->GetUri();
-    info.maker = printerInfo->GetPrinterMake();
+    BuildCupsPrinterInfo(printerInfo, info);
 #ifdef CUPS_ENABLE
     int32_t ret = E_PRINT_NONE;
     if (ppdData.empty()) {
@@ -3006,7 +3001,6 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
         return false;
     }
 #endif // CUPS_ENABLE
-    info.printerStatus = PRINTER_STATUS_IDLE;
     printerInfo->GetCapability(info.printerCapability);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetIsLastUsedPrinter(true);
@@ -3021,6 +3015,9 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     }
+    printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
+    SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
+    SendPrinterEvent(*printerInfo);
     SetLastUsedPrinter(globalPrinterId);
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
@@ -3039,9 +3036,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
     }
     printerInfo->SetPrinterName(RenamePrinterWhenAdded(*printerInfo));
     CupsPrinterInfo info;
-    info.name = printerInfo->GetPrinterName();
-    info.uri = printerInfo->GetUri();
-    info.maker = printerInfo->GetPrinterMake();
+    BuildCupsPrinterInfo(printerInfo, info);
 #ifdef CUPS_ENABLE
     int32_t ret = E_PRINT_NONE;
     ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithSpecificPpd(info.uri, info.name,
@@ -3058,7 +3053,6 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
     }
     printerInfo->SetCapability(printerCaps);
 #endif // CUPS_ENABLE
-    info.printerStatus = PRINTER_STATUS_IDLE;
     printerInfo->GetCapability(info.printerCapability);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetIsLastUsedPrinter(true);
@@ -3073,6 +3067,9 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     }
+    printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
+    SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
+    SendPrinterEvent(*printerInfo);
     SetLastUsedPrinter(globalPrinterId);
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
@@ -3430,5 +3427,13 @@ void PrintServiceAbility::UnregisterPrintTaskCallback(const std::string &jobId, 
             }
         }
     }
+}
+
+void PrintServiceAbility::BuildCupsPrinterInfo(const std::shared_ptr<PrinterInfo> &printerInfo, CupsPrinterInfo &info)
+{
+    info.name = printerInfo->GetPrinterName();
+    info.uri = printerInfo->GetUri();
+    info.maker = printerInfo->GetPrinterMake();
+    info.printerStatus = PRINTER_STATUS_IDLE;
 }
 } // namespace OHOS::Print
