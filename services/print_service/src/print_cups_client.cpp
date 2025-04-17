@@ -125,6 +125,7 @@ static const std::string PRINTER_STATE_INK_EMPTY = "marker-ink-almost-empty";
 static const std::string PRINTER_STATE_COVER_OPEN = "cover-open";
 static const std::string PRINTER_STATE_OTHER = "other";
 static const std::string PRINTER_STATE_OFFLINE = "offline";
+static const std::string PRINTER_STATE_TIMED_OUT = "timed-out";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string P2P_PRINTER = "p2p";
@@ -147,6 +148,7 @@ static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST {
     { PRINTER_STATE_DOOR_EMPTY,     PRINT_JOB_BLOCKED_DOOR_OPEN },
     { PRINTER_STATE_COVER_OPEN,     PRINT_JOB_BLOCKED_DOOR_OPEN },
     { PRINTER_STATE_OTHER,          PRINT_JOB_BLOCKED_UNKNOWN },
+    { PRINTER_STATE_TIMED_OUT,      PRINT_JOB_BLOCKED_UNKNOWN },
 };
 
 static const std::map<std::string, map<std::string, StatePolicy>> SPECIAL_PRINTER_POLICY {
@@ -936,6 +938,7 @@ void PrintCupsClient::JobSentCallback()
 {
     PRINT_HILOGI("Previous job send success, start next job");
     if (currentJob_ != nullptr) {
+        delete currentJob_;
         currentJob_ = nullptr;
     }
     StartNextJob();
@@ -1374,7 +1377,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     }
     uint32_t num_files = jobParams->fdList.size();
     PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
-    if (!HandleFiles(jobParams, num_files, http, jobId)) {
+    if (jobParams->isCanceled || !HandleFiles(jobParams, num_files, http, jobId)) {
         callback();
         return;
     }
@@ -1478,9 +1481,13 @@ bool PrintCupsClient::IfContinueToHandleJobState(std::shared_ptr<JobMonitorParam
     }
     if (monitorParams->isCanceled) {
         PRINT_HILOGI("cancel job and stop monitor it");
-        monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_COMPLETED,
-            PRINT_JOB_COMPLETED_CANCELLED);
-        return false;
+        if (!CancelPrinterJob(monitorParams->cupsJobId, monitorParams->printerName,
+            monitorParams->jobOriginatingUserName)) {
+            PRINT_HILOGE("cancel Job Error");
+            monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_COMPLETED,
+                PRINT_JOB_COMPLETED_CANCELLED);
+            return false;
+        }
     }
     if (httpGetFd(monitorParams->http) < 0) {
         PRINT_HILOGE("http is nullptr");
@@ -1826,6 +1833,7 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
             PRINT_JOB_COMPLETED_CANCELLED);
     } else {
         // job is processing
+        if (currentJob_ != nullptr && currentJob_->serviceJobId == serviceJobId) { currentJob_->isCanceled = true; }
         std::lock_guard<std::mutex> lock(jobMonitorMutex_);
         auto cmp = [serviceJobId](std::shared_ptr<JobMonitorParam> monitorParams) {
             return (monitorParams != nullptr && monitorParams->serviceJobId == serviceJobId);
@@ -1839,10 +1847,6 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
         }
         auto canceledMonitor = *monitorItem;
         canceledMonitor->isCanceled = true;
-        if (!CancelPrinterJob(canceledMonitor->cupsJobId, canceledMonitor->printerName,
-            canceledMonitor->jobOriginatingUserName)) {
-            PRINT_HILOGE("cancel Job Error");
-        }
     }
 }
 

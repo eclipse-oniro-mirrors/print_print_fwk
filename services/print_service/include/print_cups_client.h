@@ -50,6 +50,7 @@ struct JobParameters {
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
     std::string printerAttrsOption_cupsOption;
+    bool isCanceled = false;
 };
 
 enum StatePolicy {
