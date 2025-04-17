@@ -78,34 +78,22 @@ export default namespace print {
 
     class PrintTaskImpl implements PrintTask {
         on(type: 'block' | 'succeed' | 'fail' | 'cancel', callback: Callback): void {
-            let printCallback = launch syncOn(type);
-            printCallback.then((e : NullishType) => {
-                callback();
-            }, (err: Object) : void => {
-                console.log("print taskAsyn syncOn err end");
-            });
+            printAni.on(type);
+            callback();
         }
         off(type: 'block' | 'succeed' | 'fail' | 'cancel', callback?: Callback): void {
-            let printCallback = launch syncOff(type);
-            printCallback.then((e : NullishType) => {
-                if (callback != undefined) {
-                    callback();
-                }
-            }, (err: Object) : void => {
-                console.log("print taskAsyn syncOff err end");
-            });
+            printAni.off(type);
+            if (callback != undefined) {
+                callback();
+            }
         }
     }
 
     export function print(files: Array<string>, callback: AsyncCallback<PrintTask>): void {
-        let printCallback = launch syncFunction(files);
-        printCallback.then((e : NullishType) => {
-            let err = new BusinessError<PrintTask>;
-            let data  = new PrintTaskImpl;
-            callback(err, data);
-        }, (err: Object) : void => {
-            console.log("print AsyncCallback err end");
-        });
+        printAni.printAsyncCallback(files);
+        let err = new BusinessError<PrintTask>;
+        let data = new PrintTaskImpl;
+        callback(err, data);
     }
 
     export function print(files: Array<string>, context: Context): Promise<PrintTask> {
