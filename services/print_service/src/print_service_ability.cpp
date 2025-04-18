@@ -1679,6 +1679,7 @@ int32_t PrintServiceAbility::RegisterPrinterCallback(const std::string &type, co
         return E_PRINT_INVALID_TOKEN;
     }
     iter->second->RegisterPrinterCallback(type, listener);
+    HandlePrinterChangeRegister(type);
     PRINT_HILOGD("PrintServiceAbility::RegisterPrinterCallback end.");
     return E_PRINT_NONE;
 }
