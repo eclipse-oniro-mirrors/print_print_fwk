@@ -32,7 +32,7 @@ bool VendorPpdDriver::OnQueryCapability(const std::string &printerId, int timeou
         return false;
     }
     if (!AddPrinterToCups(printerId, ppds[0])) {
-        PRINT_HILOGW("OnQueryCapability add printer fail.");
+        PRINT_HILOGE("OnQueryCapability add printer fail.");
         return false;
     }
     std::shared_ptr<PrinterInfo> printerInfo = QueryPrinterCapabilityFromPpd(printerId, ppds[0]);
@@ -42,7 +42,7 @@ bool VendorPpdDriver::OnQueryCapability(const std::string &printerId, int timeou
     }
     printerInfo->SetPrinterId(printerId);
     if (!UpdateCapability(printerInfo)) {
-        PRINT_HILOGW("OnQueryCapability update capability fail.");
+        PRINT_HILOGE("OnQueryCapability update capability fail.");
         return false;
     }
     PRINT_HILOGI("OnQueryCapability success.");
@@ -53,14 +53,16 @@ bool VendorPpdDriver::OnQueryProperties(const std::string &printerId, const std:
 {
     std::vector<std::string> ppds;
     if (propertyKeys.empty()) {
+        PRINT_HILOGW("OnQueryProperties propertyKeys is empty.");
         return false;
     }
     if (vendorManager == nullptr) {
-        PRINT_HILOGW("OnQueryProperties vendorManager is null.");
+        PRINT_HILOGE("OnQueryProperties vendorManager is null.");
         return false;
     }
+    // ppds always contains only one ppd from function QueryPPDInformation
     if (!vendorManager->QueryPPDInformation(propertyKeys[0].c_str(), ppds)) {
-        PRINT_HILOGD("OnQueryProperties query ppd fail. printerId = %{public}s, printerMake = %{public}s",
+        PRINT_HILOGE("OnQueryProperties query ppd fail. printerId = %{public}s, printerMake = %{public}s",
             printerId.c_str(), propertyKeys[0].c_str());
         return false;
     }
@@ -80,11 +82,11 @@ std::string VendorPpdDriver::GetVendorName()
 
 bool VendorPpdDriver::QueryPpdByPrinterId(const std::string &printerId, std::vector<std::string> &ppds)
 {
-    PRINT_HILOGD("QueryPpdByPrinterId enter.");
+    PRINT_HILOGI("QueryPpdByPrinterId enter.");
     auto iter = privatePrinterPpdMap.find(printerId);
     if (iter != privatePrinterPpdMap.end()) {
         ppds = std::vector(iter->second);
-        PRINT_HILOGD("QueryPpdByPrinterId success.");
+        PRINT_HILOGI("QueryPpdByPrinterId success.");
         return true;
     }
     PRINT_HILOGW("QueryPpdByPrinterId fail.");
@@ -119,7 +121,7 @@ bool VendorPpdDriver::AddPrinterToCups(const std::string &printerId, const std::
 std::shared_ptr<PrinterInfo> VendorPpdDriver::QueryPrinterCapabilityFromPpd(const std::string &printerId,
     const std::string &ppdData)
 {
-    PRINT_HILOGD("QueryPrinterCapabilityFromPpd enter.");
+    PRINT_HILOGI("QueryPrinterCapabilityFromPpd enter.");
     if (vendorManager == nullptr) {
         PRINT_HILOGW("QueryPrinterCapabilityFromPpd vendorManager is null.");
         return nullptr;
@@ -127,9 +129,11 @@ std::shared_ptr<PrinterInfo> VendorPpdDriver::QueryPrinterCapabilityFromPpd(cons
     std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
     PrinterInfo info;
     if (vendorManager->QueryPrinterInfoByPrinterId(GetVendorName(), printerId, info) != E_PRINT_NONE) {
+        PRINT_HILOGE("QueryPrinterCapabilityFromPpd query printer info fail.");
         return nullptr;
     }
     *printerInfo = info;
+    PRINT_HILOGI("QueryPrinterCapabilityFromPpd success.");
     return printerInfo;
 }
 
