@@ -178,6 +178,13 @@ int32_t PrintServiceAbility::Init()
         g_publishState = true;
     }
     state_ = ServiceRunningState::STATE_RUNNING;
+    std::vector <PrintExtensionInfo> extensionInfos;
+    QueryAllExtension(extensionInfos);
+    std::vector <std::string> extensionIds;
+    for (const auto &extensionInfo : extensionInfos) {
+        extensionIds.emplace_back(extensionInfo.GetExtensionId());
+    }
+    StartDiscoverPrinter(extensionIds);
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
     return ERR_OK;
 }
@@ -1679,7 +1686,6 @@ int32_t PrintServiceAbility::RegisterPrinterCallback(const std::string &type, co
         return E_PRINT_INVALID_TOKEN;
     }
     iter->second->RegisterPrinterCallback(type, listener);
-    HandlePrinterChangeRegister(type);
     PRINT_HILOGD("PrintServiceAbility::RegisterPrinterCallback end.");
     return E_PRINT_NONE;
 }
