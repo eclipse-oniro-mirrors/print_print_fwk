@@ -98,7 +98,7 @@ export default namespace print {
 
     export function print(files: Array<string>, context: Context): Promise<PrintTask> {
         printAni.printAsyncCallback(files);
-        let printPromise = new Promise<PrintTask>((resolve: (v: PrintTask) => void, reject: (error: Object) => void) => {
+        let printPromise = new Promise<PrintTask>((resolve: (v: PrintTask) => void) => {
         });
         return printPromise;
     }
