@@ -126,6 +126,7 @@ static const std::string PRINTER_STATE_COVER_OPEN = "cover-open";
 static const std::string PRINTER_STATE_OTHER = "other";
 static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string PRINTER_STATE_TIMED_OUT = "timed-out";
+static const std::string JOB_STATE_REASON_PRINTER_STOP = "printer-stopped";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string P2P_PRINTER = "p2p";
@@ -1562,6 +1563,11 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
 
     if (monitorParams->job_state == IPP_JOB_PENDING || monitorParams->job_state == IPP_JOB_HELD) {
         PRINT_HILOGI("job is queued");
+        if (monitorParams->job_state_reasons == JOB_STATE_REASON_PRINTER_STOP) {
+            monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_BLOCKED,
+                PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE);
+            return true;
+        }
         monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_QUEUED,
             PRINT_JOB_COMPLETED_SUCCESS);
         return true;
