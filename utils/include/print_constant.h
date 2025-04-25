@@ -142,6 +142,7 @@ enum PrintJobSubState {
     PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS = 28, // print job create file succeed
     PRINT_JOB_CREATE_FILE_COMPLETED_FAILED = 29, // print job create file fail
     PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR = 30, // File uploading exception.
+    PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE = 98, // Printer is stopped.
     PRINT_JOB_BLOCKED_UNKNOWN = 99,             // unknown issue
     PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 101, // For internal use only: Click Cancel
     PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED = 102, // For internal use only: Click Start
