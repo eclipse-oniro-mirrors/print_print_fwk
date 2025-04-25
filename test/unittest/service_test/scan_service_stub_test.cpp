@@ -80,7 +80,7 @@ HWTEST_F(ScanServiceStubTest, ScanMdnsServiceTest_0001, TestSize.Level1) {
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
         if (requestFunc != nullptr) {
-            return (this->*requestFunc)(data, reply);
+            (this->*requestFunc)(data, reply);
         }
     }
     EXPECT_EQ(scanSa->appCount_, 1);
@@ -97,7 +97,7 @@ HWTEST_F(ScanServiceStubTest, ScanMdnsServiceTest_0002, TestSize.Level1) {
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
         if (requestFunc != nullptr) {
-            return (this->*requestFunc)(data, reply);
+            (this->*requestFunc)(data, reply);
         }
     }
     EXPECT_EQ(scanSa->appCount_, 0);
@@ -114,14 +114,14 @@ HWTEST_F(ScanServiceStubTest, ScanMdnsServiceTest_0003, TestSize.Level1) {
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
         if (requestFunc != nullptr) {
-            return (this->*requestFunc)(data, reply);
+            (this->*requestFunc)(data, reply);
         }
     }
     itFunc = cmdMap_.find(CMD_EXIT_SCAN);
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
         if (requestFunc != nullptr) {
-            return (this->*requestFunc)(data, reply);
+            (this->*requestFunc)(data, reply);
         }
     }
     EXPECT_GE(scanSa->appCount_, 0);
@@ -140,7 +140,7 @@ HWTEST_F(ScanServiceStubTest, ScanMdnsServiceTest_0004, TestSize.Level1) {
         if (itFunc != cmdMap_.end()) {
             auto requestFunc = itFunc->second;
             if (requestFunc != nullptr) {
-                return (this->*requestFunc)(data, reply);
+                (this->*requestFunc)(data, reply);
             }
         }
     }

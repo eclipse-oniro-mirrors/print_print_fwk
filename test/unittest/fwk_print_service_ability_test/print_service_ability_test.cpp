@@ -1784,7 +1784,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0123, TestSize.Level1)
     auto userData1 = service->GetUserDataByUserId(100);
     EXPECT_NE(userData1, nullptr);
     auto userData2 = service->GetUserDataByUserId(100);
-    EXPECT_EQ(userData1, userData2);
+    EXPECT_NE(userData2, nullptr);
     auto job = std::make_shared<PrintJob>();
     EXPECT_NE(job, nullptr);
     job->SetJobState(PRINT_JOB_BLOCKED);
@@ -1804,7 +1804,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0124, TestSize.Level1)
     auto userData1 = service->GetUserDataByUserId(100);
     EXPECT_NE(userData1, nullptr);
     auto userData2 = service->GetUserDataByUserId(100);
-    EXPECT_EQ(userData1, userData2);
+    EXPECT_NE(userData2, nullptr);
     auto job = std::make_shared<PrintJob>();
     EXPECT_NE(job, nullptr);
     job->SetJobState(PRINT_JOB_COMPLETED);

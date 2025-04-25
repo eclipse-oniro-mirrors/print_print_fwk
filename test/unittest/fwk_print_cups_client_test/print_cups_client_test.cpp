@@ -271,12 +271,13 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0012, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0013, TestSize.Level0)
+HWTEST_F(PrintCupsClientTest, AddCupsPrintJob_Failed_When_InvalidPrintJob, TestSize.Level0)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
     printCupsClient->AddCupsPrintJob(testJob, JOB_USER_NAME);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    EXPECT_EQ(printCupsClient->jobQueue_.size(), 0);
 }
 
 /**
@@ -285,7 +286,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0013, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0014, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, AddCupsPrintJob_Succeed_When_CorrectPrintJob, TestSize.Level1)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
@@ -302,6 +303,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0014, TestSize.Level1)
     testJob.SetOption(JOB_OPTIONS);
     printCupsClient->AddCupsPrintJob(testJob, JOB_USER_NAME);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    EXPECT_EQ(printCupsClient->jobQueue_.size(), 1);
 }
 
 /**
@@ -310,12 +312,13 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0014, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0015, TestSize.Level0)
+HWTEST_F(PrintCupsClientTest, StartNextJob_DoNothing_When_NullInQueue, TestSize.Level0)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    EXPECT_EQ(printCupsClient->jobQueue_.size(), 0);
 }
 
 /**
@@ -324,7 +327,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0015, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, StartNextJob_Succeed_When_OnePrintJobInQueue, TestSize.Level1)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
@@ -338,9 +341,11 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient->BuildJobParameters(testJob, JOB_USER_NAME);
     printCupsClient->jobQueue_.push_back(jobParams);
+    EXPECT_EQ(printCupsClient->jobQueue_.size(), 1);
     printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    EXPECT_EQ(printCupsClient->jobQueue_.size(), 0);
 }
 
 /**
@@ -349,14 +354,16 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0016, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0018, TestSize.Level0)
+HWTEST_F(PrintCupsClientTest, StartNextJob_ClearQueue_When_NullptrPrintJobInQueue, TestSize.Level0)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     JobParameters *jobParams = nullptr;
     printCupsClient->jobQueue_.push_back(jobParams);
+    EXPECT_EQ(printCupsClient->jobQueue_.size(), 1);
     printCupsClient->toCups_ = false;
     printCupsClient->StartNextJob();
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    EXPECT_EQ(printCupsClient->jobQueue_.size(), 0);
 }
 
 /**
@@ -423,8 +430,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0021, TestSize.Level1)
     jobParams->mediaType = "";
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(numOptions, 0);
+    EXPECT_EQ(printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options), 0);
     delete jobParams;
     delete options;
 }
@@ -452,8 +458,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0022, TestSize.Level1)
     jobParams->mediaType = "testMediaType";
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(numOptions, 0);
+    EXPECT_EQ(printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options), 0);
     delete jobParams;
     delete options;
 }
@@ -936,6 +941,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0054, TestSize.Level1)
     param->isBlock = true;
     EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
     param->timesOfSameState = STATE_UPDATE_STEP;
+    EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
+    char jobState[] = "printer-stopped";
+    strlcpy(param->job_state_reasons, jobState, sizeof(param->job_state_reasons));
     EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
 }
 
@@ -1541,8 +1549,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0083, TestSize.Level1)
     jobParams->isLandscape = true;
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(numOptions, 0);
+    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 0);
     delete jobParams;
     delete options;
 }
@@ -1571,8 +1578,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0084, TestSize.Level1)
     jobParams->isLandscape = false;
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(numOptions, 0);
+    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 0);
     delete jobParams;
     delete options;
 }
@@ -1601,8 +1607,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0085, TestSize.Level1)
     jobParams->isLandscape = false;
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(numOptions, 0);
+    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 0);
     delete jobParams;
     delete options;
 }
@@ -1631,8 +1636,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0086, TestSize.Level1)
     jobParams->isLandscape = true;
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options);
-    EXPECT_EQ(numOptions, 0);
+    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 0);
     delete jobParams;
     delete options;
 }
