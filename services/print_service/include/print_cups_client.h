@@ -196,6 +196,7 @@ private:
     bool ResumePrinter(const std::string &printerName);
     bool CancelPrinterJob(int cupsJobId);
     bool CancelPrinterJob(int cupsJobId, const std::string &name, const std::string &user);
+    bool IsIpAddress(const char* host);
 
 private:
     bool toCups_ = true;
