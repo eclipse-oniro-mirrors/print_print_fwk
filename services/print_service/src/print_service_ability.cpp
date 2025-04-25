@@ -3291,13 +3291,8 @@ bool PrintServiceAbility::UpdateAddedPrinterInCups(const std::string &printerId,
 {
     PrinterInfo printer;
     if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
-        int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
-            AddPrinterToCups(printerUri, printer.GetPrinterName(), printer.GetPrinterMake());
-        if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("UpdateAddedPrinterInCups error = %{public}d.", ret);
-            return false;
-        }
-        return true;
+        std::string standardName = PrintUtil::StandardizePrinterName(printer.GetPrinterName());
+        return DelayedSingleton<PrintCupsClient>::GetInstance()->ModifyCupsPrinterUri(standardName, printerUri);
     }
     return false;
 }
