@@ -30,6 +30,7 @@
 #include <wifi_device.h>
 #include <wifi_p2p.h>
 #include <wifi_p2p_msg.h>
+#include <arpa/inet.h>
 
 #include "system_ability_definition.h"
 #include "parameter.h"
@@ -779,7 +780,7 @@ ipp_t *PrintCupsClient::QueryPrinterAttributesByUri(const std::string &printerUr
     }
     httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username), host,
         sizeof(host), &port, resource, sizeof(resource));
-    if (host[0] == '\0' || (port != IPP_PORT && strcasestr(scheme, "ipp") == nullptr)) {
+    if (host[0] == '\0' || (port != IPP_PORT && strcasestr(scheme, "ipp") == nullptr) || !IsIpAddress(host)) {
         PRINT_HILOGW("host is empty or not ipp protocol");
         return nullptr;
     }
@@ -2192,4 +2193,22 @@ bool PrintCupsClient::CancelPrinterJob(int cupsJobId, const std::string &name, c
         return true;
     }
 }
+
+bool PrintCupsClient::IsIpAddress(const char* host)
+{
+    if (host == NULL) {
+        PRINT_HILOGW("host is null");
+        return false;
+    }
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    if ((inet_pton(AF_INET, host, &addr4) == 1) ||
+        (inet_pton(AF_INET6, host, &addr6) == 1)) {
+        return true;
+    } else {
+        PRINT_HILOGW("not ipv4 or ipv6");
+        return false;
+    }
+}
+
 }
