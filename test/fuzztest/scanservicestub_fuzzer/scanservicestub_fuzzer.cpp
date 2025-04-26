@@ -12,7 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define private public
+#define protected public
 #include "fuzzer/FuzzedDataProvider.h"
 #include "scanservicestub_fuzzer.h"
 #include "scan_service_ability.h"
@@ -207,14 +208,14 @@ namespace Scan {
     {
         MessageParcel datas;
         MessageParcel reply;
-        MessageOption option;
         if (!WriteInterfaceToken(datas)) {
             return false;
         }
-        std::string taskId = "";
+        std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         datas.WriteString(taskId);
         std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         datas.WriteString(type);
+        ScanServiceAbility::GetInstance()->OnEventOn(datas, reply);
         return true;
     }
 
@@ -226,11 +227,113 @@ namespace Scan {
         if (!WriteInterfaceToken(datas)) {
             return false;
         }
-        std::string taskId = "";
+        std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         datas.WriteString(taskId);
         std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         datas.WriteString(type);
         ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_OFF, datas, reply, option);
+        return true;
+    }
+    
+    bool TestOnInitScan(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        MessageParcel datas;
+        MessageParcel reply;
+        if (!WriteInterfaceToken(datas)) {
+            return false;
+        }
+        ScanServiceAbility::GetInstance()->OnInitScan(datas, reply);
+        return true;
+    }
+
+    bool TestOnExitScan(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        MessageParcel datas;
+        MessageParcel reply;
+        if (!WriteInterfaceToken(datas)) {
+            return false;
+        }
+        ScanServiceAbility::GetInstance()->OnExitScan(datas, reply);
+        return true;
+    }
+
+    bool TestOnStopDiscover(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        MessageParcel datas;
+        MessageParcel reply;
+        if (!WriteInterfaceToken(datas)) {
+            return false;
+        }
+        ScanServiceAbility::GetInstance()->OnStopDiscover(datas, reply);
+        return true;
+    }
+
+    bool TestOnGetScannerState(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        MessageParcel datas;
+        MessageParcel reply;
+        if (!WriteInterfaceToken(datas)) {
+            return false;
+        }
+        ScanServiceAbility::GetInstance()->OnGetScannerState(datas, reply);
+        return true;
+    }
+
+    bool TestOnConnectScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        MessageParcel datas;
+        MessageParcel reply;
+        if (!WriteInterfaceToken(datas)) {
+            return false;
+        }
+        std::string serialNumber = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        datas.WriteString(serialNumber);
+        std::string discoverMode = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        datas.WriteString(discoverMode);
+        ScanServiceAbility::GetInstance()->OnConnectScanner(datas, reply);
+        return true;
+    }
+
+    bool TestOnDisConnectScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        MessageParcel datas;
+        MessageParcel reply;
+        if (!WriteInterfaceToken(datas)) {
+            return false;
+        }
+        std::string serialNumber = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        datas.WriteString(serialNumber);
+        std::string discoverMode = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        datas.WriteString(discoverMode);
+        ScanServiceAbility::GetInstance()->OnDisConnectScanner(datas, reply);
+        return true;
+    }
+
+    bool TestOnGetConnectedScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        MessageParcel datas;
+        MessageParcel reply;
+        if (!WriteInterfaceToken(datas)) {
+            return false;
+        }
+        ScanServiceAbility::GetInstance()->OnGetConnectedScanner(datas, reply);
+        return true;
+    }
+
+    bool TestOnUpdateScannerName(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        MessageParcel datas;
+        MessageParcel reply;
+        if (!WriteInterfaceToken(datas)) {
+            return false;
+        }
+        std::string serialNumber = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        datas.WriteString(serialNumber);
+        std::string discoverMode = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        datas.WriteString(discoverMode);
+        std::string deviceName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        datas.WriteString(deviceName);
+        ScanServiceAbility::GetInstance()->OnUpdateScannerName(datas, reply);
         return true;
     }
 }
@@ -260,5 +363,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::TestOnGetScanProgress(data, size, &dataProvider);
     OHOS::Scan::TestOnEventOn(data, size, &dataProvider);
     OHOS::Scan::TestOnEventOff(data, size, &dataProvider);
+    OHOS::Scan::TestOnInitScan(data, size, &dataProvider);
+    OHOS::Scan::TestOnExitScan(data, size, &dataProvider);
+    OHOS::Scan::TestOnStopDiscover(data, size, &dataProvider);
+    OHOS::Scan::TestOnGetScannerState(data, size, &dataProvider);
+    OHOS::Scan::TestOnConnectScanner(data, size, &dataProvider);
+    OHOS::Scan::TestOnDisConnectScanner(data, size, &dataProvider);
+    OHOS::Scan::TestOnGetConnectedScanner(data, size, &dataProvider);
+    OHOS::Scan::TestOnUpdateScannerName(data, size, &dataProvider);
     return 0;
 }
