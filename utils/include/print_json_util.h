@@ -48,8 +48,8 @@ string对象，不包含数组，或者对象格式，使用此方法转换
 */
 inline bool PrintJsonUtil::Parse(const std::string &root, Json::Value &jsonObject)
 {
-    static const Json::CharReaderBuilder rBuilder;
-    static const std::unique_ptr<Json::CharReader> reader(rBuilder.newCharReader());
+    Json::CharReaderBuilder rBuilder;
+    std::unique_ptr<Json::CharReader> reader(rBuilder.newCharReader());
     JSONCPP_STRING err;
     if (!reader->parse(root.c_str(), root.c_str() + root.length(), &jsonObject, &err)) {
         PRINT_HILOGE("PrintJsonUtil string parse error! ErrorInfo: %{public}s", err.c_str());
@@ -63,7 +63,7 @@ inline bool PrintJsonUtil::Parse(const std::string &root, Json::Value &jsonObjec
 */
 inline bool PrintJsonUtil::ParseFromStream(Json::IStream &ifs, Json::Value &jsonObject)
 {
-    static const Json::CharReaderBuilder rBuilder;
+    Json::CharReaderBuilder rBuilder;
     JSONCPP_STRING err;
     if (!parseFromStream(rBuilder, ifs, &jsonObject, &err)) {
         PRINT_HILOGE("PrintJsonUtil stream parse error! ErrorInfo: %{public}s", err.c_str());
@@ -74,14 +74,14 @@ inline bool PrintJsonUtil::ParseFromStream(Json::IStream &ifs, Json::Value &json
 
 inline std::string PrintJsonUtil::WriteString(const Json::Value &jsonObject)
 {
-    static Json::StreamWriterBuilder wBuilder;
+    Json::StreamWriterBuilder wBuilder;
     wBuilder["indentation"] = "";
     return Json::writeString(wBuilder, jsonObject);
 }
 
 inline std::string PrintJsonUtil::WriteStringUTF8(const Json::Value &jsonObject)
 {
-    static Json::StreamWriterBuilder wBuilder;
+    Json::StreamWriterBuilder wBuilder;
     wBuilder["indentation"] = "";
     wBuilder["emitUTF8"] = true;
     return Json::writeString(wBuilder, jsonObject);
