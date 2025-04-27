@@ -126,6 +126,7 @@ static const std::string PRINTER_STATE_MARKER_EMPTY = "marker-supply-empty";
 static const std::string PRINTER_STATE_INK_EMPTY = "marker-ink-almost-empty";
 static const std::string PRINTER_STATE_COVER_OPEN = "cover-open";
 static const std::string PRINTER_STATE_OTHER = "other";
+static const std::string JOB_STATE_REASON_PRINTER_STOP = "printer-stopped";
 static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
@@ -767,8 +768,8 @@ ipp_t *PrintCupsClient::QueryPrinterAttributesByUri(const std::string &printerUr
     }
     httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username), host,
         sizeof(host), &port, resource, sizeof(resource));
-    if (port != IPP_PORT && strcasestr(scheme, "ipp") == nullptr) {
-        PRINT_HILOGW("not ipp protocol");
+    if (host[0] == '\0' || (port != IPP_PORT && strcasestr(scheme, "ipp") == nullptr)) {
+        PRINT_HILOGW("host is empty or not ipp protocol");
         return nullptr;
     }
     if (nic.empty()) {
@@ -1543,6 +1544,11 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
 
     if (monitorParams->job_state == IPP_JOB_PENDING || monitorParams->job_state == IPP_JOB_HELD) {
         PRINT_HILOGI("job is queued");
+        if (monitorParams->job_state_reasons == JOB_STATE_REASON_PRINTER_STOP) {
+            monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_BLOCKED,
+                PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE);
+            return true;
+        }
         monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_QUEUED,
             PRINT_JOB_COMPLETED_SUCCESS);
         return true;
@@ -1770,6 +1776,10 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     } else {
         httpSeparateURI(HTTP_URI_CODING_ALL, printerUri, scheme, sizeof(scheme),
             userpass, sizeof(userpass), host, sizeof(host), &port, resource, sizeof(resource));
+    }
+    if (host[0] == '\0') {
+        PRINT_HILOGE("host is empty");
+        return false;
     }
     std::string nic;
     if (IsIpConflict(printerId, nic)) {
