@@ -173,6 +173,8 @@ namespace Scan {
     void TestSendDeviceInfoTCP(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         ScanDeviceInfoTCP info;
+        int32_t deviceState = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        info.SetDeviceState(deviceState);
         std::string event = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         ScanServiceAbility::GetInstance()->SendDeviceInfoTCP(info, event);
     }
@@ -271,6 +273,7 @@ namespace Scan {
     {
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         ScanServiceAbility::GetInstance()->GeneratePictureSingle(scannerId);
+        ScanServiceAbility::GetInstance()->GeneratePictureBatch(scannerId);
     }
 
     void TestAddFoundScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -347,6 +350,117 @@ namespace Scan {
         ScanServiceAbility::GetInstance()->CleanUpAfterScan(scanStatus);
     }
 
+    void TestActionSetAuto(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        int32_t optionIndex = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanServiceAbility::GetInstance()->ActionSetAuto(scannerId, optionIndex);
+    }
+
+    void TestActionGetValue(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        int32_t optionIndex = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanOptionValue scanOptionValue;
+        scanOptionValue.SetScanOptionValueType(ScanOptionValueType::SCAN_VALUE_BOOL);
+        int32_t valueSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        scanOptionValue.SetValueSize(valueSize);
+        scanOptionValue.SetBoolValue(true);
+        ScanServiceAbility::GetInstance()->ActionGetValue(scannerId, scanOptionValue, optionIndex);
+
+        ScanOptionValue scanOptionValue1;
+        scanOptionValue1.SetScanOptionValueType(ScanOptionValueType::SCAN_VALUE_NUM);
+        valueSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        scanOptionValue1.SetValueSize(valueSize);
+        int32_t numValue = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        scanOptionValue1.SetNumValue(numValue);
+        ScanServiceAbility::GetInstance()->ActionGetValue(scannerId, scanOptionValue1, optionIndex);
+
+        ScanOptionValue scanOptionValue2;
+        scanOptionValue2.SetScanOptionValueType(ScanOptionValueType::SCAN_VALUE_STR);
+        valueSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        scanOptionValue2.SetValueSize(valueSize);
+        std::string strValue = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        scanOptionValue2.SetStrValue(strValue);
+        ScanServiceAbility::GetInstance()->ActionGetValue(scannerId, scanOptionValue2, optionIndex);
+    }
+
+    void TestActionSetValue(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        int32_t optionIndex = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        int32_t info = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanOptionValue scanOptionValue;
+        ScanServiceAbility::GetInstance()->ActionSetValue(scannerId, scanOptionValue, optionIndex, info);
+    }
+
+    void TestOpScanOptionValue(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        int32_t optionIndex = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        int32_t info = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanOptionValue scanOptionValue;
+        ScanServiceAbility::GetInstance()->OpScanOptionValue(scannerId, optionIndex,
+            ScanOptionOpType::SCAN_ACTION_GET_VALUE, scanOptionValue, info);
+    }
+
+    void TestGetScanParameters(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        ScanParameters scanParameters;
+        ScanServiceAbility::GetInstance()->GetScanParameters(scannerId, scanParameters);
+    }
+
+    void TestGetScanProgress(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        ScanProgress scanProg;
+        ScanServiceAbility::GetInstance()->GetScanProgress(scannerId, scanProg);
+    }
+
+    void TestDeleteScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        std::string serialNumber = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        std::string discoverMode = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        ScanServiceAbility::GetInstance()->DeleteScanner(serialNumber, discoverMode);
+    }
+
+    void TestStartScanTask(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        ScanServiceAbility::GetInstance()->StartScanTask(scannerId);
+    }
+
+    void TestDoScanTask(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        ScanServiceAbility::GetInstance()->DoScanTask(scannerId);
+    }
+
+    void TestSetScanProgr(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        int64_t totalBytes = dataProvider->ConsumeIntegralInRange<int64_t>(0, MAX_SET_NUMBER);
+        int64_t hundredPercent = dataProvider->ConsumeIntegralInRange<int64_t>(0, MAX_SET_NUMBER);
+        int32_t curReadSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanServiceAbility::GetInstance()->SetScanProgr(totalBytes, hundredPercent, curReadSize);
+    }
+
+    void TestGetPicFrame(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        int32_t scanStatus = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanParameters scanParameters;
+        ScanServiceAbility::GetInstance()->GetPicFrame(scannerId, scanStatus, scanParameters);
+    }
+
+    void TestWritePicData(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        int32_t jpegrow = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        int32_t curReadSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        int32_t scanStatus = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanParameters scanParameters;
+        ScanServiceAbility::GetInstance()->WritePicData(jpegrow, curReadSize, scanParameters, scanStatus);
+    }
 }
 }
 
@@ -387,5 +501,16 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::TestSetScannerSerialNumber(data, size, &dataProvider);
     OHOS::Scan::TestNotPublicFunction(data, size, &dataProvider);
     OHOS::Scan::TestCleanUpAfterScan(&dataProvider);
+    OHOS::Scan::TestActionSetAuto(data, size, &dataProvider);
+    OHOS::Scan::TestActionGetValue(data, size, &dataProvider);
+    OHOS::Scan::TestOpScanOptionValue(data, size, &dataProvider);
+    OHOS::Scan::TestGetScanParameters(data, size, &dataProvider);
+    OHOS::Scan::TestGetScanProgress(data, size, &dataProvider);
+    OHOS::Scan::TestDeleteScanner(data, size, &dataProvider);
+    OHOS::Scan::TestStartScanTask(data, size, &dataProvider);
+    OHOS::Scan::TestDoScanTask(data, size, &dataProvider);
+    OHOS::Scan::TestSetScanProgr(data, size, &dataProvider);
+    OHOS::Scan::TestGetPicFrame(data, size, &dataProvider);
+    OHOS::Scan::TestWritePicData(data, size, &dataProvider);
     return 0;
 }
