@@ -102,7 +102,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0001, TestSize.Level1)
         printCupsClient.printAbility_ = nullptr;
     }
     std::string printerName = "testPrinterName";
-    std::string printUri;
+    std::string printerUri;
     std::string printerId;
     std::vector<std::string> keyList;
     std::vector<std::string> valueList;
@@ -110,10 +110,11 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0001, TestSize.Level1)
     printCupsClient.QueryPPDInformation(printerId.c_str(), valueList);
     EXPECT_EQ(printCupsClient.DeleteCupsPrinter(printerName.c_str()), E_PRINT_SERVER_FAILURE);
     PrinterCapability printerCap;
-    EXPECT_EQ(printCupsClient.QueryPrinterCapabilityByUri(printUri, printerId, printerCap), E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(printCupsClient.QueryPrinterCapabilityByUri(printerUri, printerId, printerCap), E_PRINT_SERVER_FAILURE);
     EXPECT_EQ(printCupsClient.SetDefaultPrinter(printerName.c_str()), E_PRINT_SERVER_FAILURE);
     printCupsClient.QueryJobState(nullptr, nullptr);
     EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCap), E_PRINT_SERVER_FAILURE);
+    EXPECT_FALSE(printCupsClient.ModifyCupsPrinterUri(printerName, printerUri));
 }
 
 /**
@@ -598,6 +599,117 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0090, TestSize.Level1)
         EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_SERVER_FAILURE);
         EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_SERVER_FAILURE);
         EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_NONE);
+    };
+    DoMockTest(testFunc);
+}
+
+/**
+ * @tc.name: Modify_ShouldReturnFail_WhenPrinterNotExist
+ * @tc.desc: ModifyCupsPrinterUri
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsWrapperTest, Modify_ShouldReturnFail_WhenPrinterNotExist, TestSize.Level1)
+{
+    MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
+        EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillOnce(Return(nullptr));
+        std::string printerName = "testName";
+        std::string printerUri = "testUri";
+        EXPECT_FALSE(printCupsClient.ModifyCupsPrinterUri(printerName, printerUri));
+    };
+    DoMockTest(testFunc);
+}
+
+/**
+ * @tc.name: Modify_ShouldReturnSuccess_WhenPrinterExist
+ * @tc.desc: ModifyCupsPrinterUri
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsWrapperTest, Modify_ShouldReturnSuccess_WhenPrinterExist, TestSize.Level1)
+{
+    MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
+        cups_dest_t cupsDest = {0};
+        ipp_t cupsRequest = {};
+        EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillOnce(Return(&cupsDest));
+        EXPECT_CALL(mock, DoRequest(_, _, _)).WillOnce(Return(&cupsRequest));
+        EXPECT_CALL(mock, FreeRequest(_)).Times(1);
+        std::string printerName = "testName";
+        std::string printerUri = "testUri";
+        _cupsSetError(IPP_STATUS_OK, nullptr, 0);
+        EXPECT_TRUE(printCupsClient.ModifyCupsPrinterUri(printerName, printerUri));
+    };
+    DoMockTest(testFunc);
+}
+
+/**
+ * @tc.name: Modify_ShouldReturnSuccess_WhenBsuniPrinterExist
+ * @tc.desc: ModifyCupsPrinterUri
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsWrapperTest, Modify_ShouldReturnSuccess_WhenBsuniPrinterExist, TestSize.Level1)
+{
+    MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
+        cups_dest_t cupsDest = {0};
+        ipp_t cupsRequest = {};
+        cupsDest.num_options = cupsAddOption("printer-make-and-model", BSUNI_PPD_NAME.c_str(), cupsDest.num_options,
+            &cupsDest.options);
+        EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillOnce(Return(&cupsDest));
+        EXPECT_CALL(mock, DoRequest(_, _, _)).WillOnce(Return(&cupsRequest));
+        EXPECT_CALL(mock, FreeRequest(_)).Times(1);
+        std::string printerName = "testName";
+        std::string printerUri = "testUri";
+        _cupsSetError(IPP_STATUS_OK, nullptr, 0);
+        EXPECT_TRUE(printCupsClient.ModifyCupsPrinterUri(printerName, printerUri));
+        cupsFreeOptions(cupsDest.num_options, cupsDest.options);
+    };
+    DoMockTest(testFunc);
+}
+
+/**
+ * @tc.name: Modify_ShouldReturnSuccess_WhenOtherPrinterExist
+ * @tc.desc: ModifyCupsPrinterUri
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsWrapperTest, Modify_ShouldReturnSuccess_WhenOtherPrinterExist, TestSize.Level1)
+{
+    MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
+        cups_dest_t cupsDest = {0};
+        ipp_t cupsRequest = {};
+        cupsDest.num_options = cupsAddOption("printer-make-and-model", "test", cupsDest.num_options,
+            &cupsDest.options);
+        EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillOnce(Return(&cupsDest));
+        EXPECT_CALL(mock, DoRequest(_, _, _)).WillOnce(Return(&cupsRequest));
+        EXPECT_CALL(mock, FreeRequest(_)).Times(1);
+        std::string printerName = "testName";
+        std::string printerUri = "testUri";
+        _cupsSetError(IPP_STATUS_OK, nullptr, 0);
+        EXPECT_TRUE(printCupsClient.ModifyCupsPrinterUri(printerName, printerUri));
+        cupsFreeOptions(cupsDest.num_options, cupsDest.options);
+    };
+    DoMockTest(testFunc);
+}
+
+/**
+ * @tc.name: Modify_ShouldReturnFail_WhenResponseError
+ * @tc.desc: ModifyCupsPrinterUri
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsWrapperTest, Modify_ShouldReturnFail_WhenResponseError, TestSize.Level1)
+{
+    MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
+        cups_dest_t cupsDest = {0};
+        ipp_t cupsRequest = {};
+        EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillOnce(Return(&cupsDest));
+        EXPECT_CALL(mock, DoRequest(_, _, _)).WillOnce(Return(&cupsRequest));
+        EXPECT_CALL(mock, FreeRequest(_)).Times(1);
+        std::string printerName = "testName";
+        std::string printerUri = "testUri";
+        _cupsSetError(IPP_STATUS_ERROR_BAD_REQUEST, "test error", 0);
+        EXPECT_FALSE(printCupsClient.ModifyCupsPrinterUri(printerName, printerUri));
     };
     DoMockTest(testFunc);
 }
