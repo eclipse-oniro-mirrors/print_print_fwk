@@ -1998,14 +1998,14 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
 {
     PRINT_HILOGD("PrintServiceAbility::SendPrintJobEvent jobId: %{public}s, state: %{public}d, subState: %{public}d",
         jobInfo.GetJobId().c_str(), jobInfo.GetJobState(), jobInfo.GetSubState());
-        for (auto eventIt: registeredListeners_) {
-            if (PrintUtils::GetEventType(eventIt.first) != PRINTJOB_EVENT_TYPE || eventIt.second == nullptr) {
-                continue;
-            }
-            if (CheckUserIdInEventType(eventIt.first)) {
-                eventIt.second->OnCallback(jobInfo.GetJobState(), jobInfo);
-            }
+    for (auto eventIt: registeredListeners_) {
+        if (PrintUtils::GetEventType(eventIt.first) != PRINTJOB_EVENT_TYPE || eventIt.second == nullptr) {
+            continue;
         }
+        if (CheckUserIdInEventType(eventIt.first)) {
+            eventIt.second->OnCallback(jobInfo.GetJobState(), jobInfo);
+        }
+    }
 
     // notify securityGuard
     if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
