@@ -1833,7 +1833,7 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
     }
     if (type == PRINT_CALLBACK_ADAPTER) {
         eventType = type;
-    } else if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE) {
+    } else if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE) {
         int32_t userId = GetCurrentUserId();
         int32_t callerPid = IPCSkeleton::GetCallingPid();
         eventType = PrintUtils::GetEventTypeWithToken(userId, callerPid, type);
@@ -1998,10 +1998,14 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
 {
     PRINT_HILOGD("PrintServiceAbility::SendPrintJobEvent jobId: %{public}s, state: %{public}d, subState: %{public}d",
         jobInfo.GetJobId().c_str(), jobInfo.GetJobState(), jobInfo.GetSubState());
-    auto eventIt = registeredListeners_.find(PRINTJOB_EVENT_TYPE);
-    if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {
-        eventIt->second->OnCallback(jobInfo.GetJobState(), jobInfo);
-    }
+        for (auto eventIt: registeredListeners_) {
+            if (PrintUtils::GetEventType(eventIt.first) != PRINTJOB_EVENT_TYPE || eventIt.second == nullptr) {
+                continue;
+            }
+            if (CheckUserIdInEventType(eventIt.first)) {
+                eventIt.second->OnCallback(jobInfo.GetJobState(), jobInfo);
+            }
+        }
 
     // notify securityGuard
     if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
