@@ -20,6 +20,8 @@
 #include "scan_service_ability.h"
 #include "scan_callback_proxy.h"
 #include "scan_service_ability_mock.h"
+#include "scan_mdns_service.h"
+#include "mdns_common.h"
 
 namespace OHOS {
 namespace Scan {
@@ -461,6 +463,75 @@ namespace Scan {
         ScanParameters scanParameters;
         ScanServiceAbility::GetInstance()->WritePicData(jpegrow, curReadSize, scanParameters, scanStatus);
     }
+
+    void TestMdnsDiscoveryHandleServiceFound(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+    {
+        MDnsServiceInfo info;
+        info.name = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.addr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.txtRecord = dataProvider->ConsumeBytes<uint8_t>(MAX_STRING_LENGTH);
+        int32_t retCode = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanMDnsDiscoveryObserver observer(info);
+        observer.HandleServiceFound(info, retCode);
+    }
+
+    void TestMdnsResolveHandleResolveResult(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+    {
+        MDnsServiceInfo info;
+        info.name = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.addr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.txtRecord = dataProvider->ConsumeBytes<uint8_t>(MAX_STRING_LENGTH);
+        int32_t retCode = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanMDnsResolveObserver observer(info);
+        observer.HandleResolveResult(info, retCode);
+    }
+
+    void TestMdnsDiscoveryHandleServiceLost(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+    {
+        MDnsServiceInfo info;
+        info.name = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.addr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.txtRecord = dataProvider->ConsumeBytes<uint8_t>(MAX_STRING_LENGTH);
+        int32_t retCode = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanMDnsDiscoveryObserver observer(info);
+        observer.HandleServiceLost(info, retCode);
+    }
+
+    void TestMdnsLossResolveHandleResolveResult(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+    {
+        MDnsServiceInfo info;
+        info.name = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.addr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.txtRecord = dataProvider->ConsumeBytes<uint8_t>(MAX_STRING_LENGTH);
+        int32_t retCode = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanMDnsLossResolveObserver observer(info);
+        observer.HandleResolveResult(info, retCode);
+    }
+
+    void TestHandDiscoveryleStopDiscover(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+    {
+        MDnsServiceInfo info;
+        info.name = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.addr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        info.txtRecord = dataProvider->ConsumeBytes<uint8_t>(MAX_STRING_LENGTH);
+        int32_t retCode = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        ScanMDnsDiscoveryObserver observer(info);
+        observer.HandleStopDiscover(info, retCode);
+    }
+
+    void TestAllMdnsService(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        TestMdnsDiscoveryHandleServiceFound(data, size, dataProvider);
+        TestMdnsResolveHandleResolveResult(data, size, dataProvider);
+        TestMdnsDiscoveryHandleServiceLost(data, size, dataProvider);
+        TestMdnsLossResolveHandleResolveResult(data, size, dataProvider);
+        TestHandDiscoveryleStopDiscover(data, size, dataProvider);
+    }
 }
 }
 
@@ -512,5 +583,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::TestSetScanProgr(data, size, &dataProvider);
     OHOS::Scan::TestGetPicFrame(data, size, &dataProvider);
     OHOS::Scan::TestWritePicData(data, size, &dataProvider);
+    OHOS::Scan::TestAllMdnsService(data, size, &dataProvider);
     return 0;
 }
