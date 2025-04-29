@@ -148,19 +148,19 @@ HWTEST_F(ScanServiceStubTest, ScanMdnsServiceTest_0004, TestSize.Level1) {
 }
 
 /**
- * @tc.name: ScanMdnsServiceTest_0004
+ * @tc.name: ScanMdnsServiceTest_0005
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScanServiceStubTest, ScanMdnsServiceTest_0004, TestSize.Level1) {
+HWTEST_F(ScanServiceStubTest, ScanMdnsServiceTest_0005, TestSize.Level1) {
 
     for (int i = 0; i < 5; i++) {
         auto itFunc = cmdMap_.find(CMD_EXIT_SCAN);
         if (itFunc != cmdMap_.end()) {
             auto requestFunc = itFunc->second;
             if (requestFunc != nullptr) {
-                return (this->*requestFunc)(data, reply);
+                (this->*requestFunc)(data, reply);
             }
         }
     }
