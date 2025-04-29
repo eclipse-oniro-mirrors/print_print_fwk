@@ -1873,7 +1873,7 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
     if (taskId != "") {
         eventType = PrintUtils::GetTaskEventId(taskId, type);
     }
-    if (type == PRINTER_CHANGE_EVENT_TYPE||type == PRINTER_EVENT_TYPE) {
+    if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE) {
         int32_t userId = GetCurrentUserId();
         int32_t callerPid = IPCSkeleton::GetCallingPid();
         eventType = PrintUtils::GetEventTypeWithToken(userId, callerPid, type);
