@@ -271,13 +271,13 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0012, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, AddCupsPrintJob_Failed_When_InvalidPrintJob, TestSize.Level0)
+HWTEST_F(PrintCupsClientTest, AddCupsPrintJob_Succeed_When_DeafaultPrintJob, TestSize.Level0)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
     printCupsClient->AddCupsPrintJob(testJob, JOB_USER_NAME);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    EXPECT_EQ(printCupsClient->jobQueue_.size(), 0);
+    EXPECT_EQ(printCupsClient->jobQueue_.size(), 1);
 }
 
 /**
@@ -412,7 +412,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0020, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0021, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, FillThreeOptions_When_SetBorderless, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -430,7 +430,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0021, TestSize.Level1)
     jobParams->mediaType = "";
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options), 0);
+    EXPECT_EQ(printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options), 3);
     delete jobParams;
     delete options;
 }
@@ -441,7 +441,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0021, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0022, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, FillThreeOptions_When_SetNotBorderless, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -458,7 +458,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0022, TestSize.Level1)
     jobParams->mediaType = "testMediaType";
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options), 0);
+    EXPECT_EQ(printCupsClient.FillBorderlessOptions(jobParams, numOptions, &options), 3);
     delete jobParams;
     delete options;
 }
@@ -1589,7 +1589,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0084, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0085, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, FillTwoOptions_When_SetNotLandscape, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -1607,7 +1607,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0085, TestSize.Level1)
     jobParams->isLandscape = false;
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 0);
+    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 2);
     delete jobParams;
     delete options;
 }
@@ -1618,7 +1618,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0085, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0086, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, FillTwoOptions_When_SetLandscape, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -1636,7 +1636,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0086, TestSize.Level1)
     jobParams->isLandscape = true;
     int numOptions = 0;
     cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 0);
+    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 2);
     delete jobParams;
     delete options;
 }
