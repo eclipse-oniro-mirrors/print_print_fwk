@@ -55,6 +55,7 @@
 #include "sane_control_param.h"
 #include "sane_picture_data.h"
 #include "scan_log.h"
+#include "os_account_manager.h"
 
 namespace OHOS::Scan {
 namespace {
@@ -99,8 +100,6 @@ const int64_t INIT_INTERVAL = 5000L;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t UNLOAD_SYSTEMABILITY_DELAY = 1000 * 30;
 constexpr int32_t INVALID_USER_ID = -1;
-constexpr int32_t START_USER_ID = 100;
-constexpr int32_t MAX_USER_ID = 1099;
 
 static int32_t g_scannerState = SCANNER_READY;
 static bool g_hasIoFaild = false;
@@ -1675,9 +1674,16 @@ int32_t ScanServiceAbility::GetCurrentUserId()
 {
     constexpr int32_t UID_TRANSFORM_DIVISOR = 200000;
     int32_t userId = IPCSkeleton::GetCallingUid() / UID_TRANSFORM_DIVISOR;
-    if (userId < START_USER_ID || userId > MAX_USER_ID) {
-        SCAN_HILOGE("userId %{public}d is out of range.", userId);
-        return INVALID_USER_ID;
+    if (userId <= 0) {
+        SCAN_HILOGD("scan sa calling, use current active userId");
+        std::vector<int32_t> userIds;
+        AccountSA::OsAccountManager::QueryActiveOsAccountIds(userIds);
+        if (userIds.empty()) {
+            SCAN_HILOGE("get use current active userId failed");
+            userId = INVALID_USER_ID;
+        } else {
+            userId = userIds[0];
+        }
     }
     SCAN_HILOGD("Current userId = %{public}d.", userId);
     return userId;
@@ -1685,10 +1691,6 @@ int32_t ScanServiceAbility::GetCurrentUserId()
 
 std::string ScanServiceAbility::ObtainUserCacheDirectory(const int32_t& userId)
 {
-    if (userId < START_USER_ID || userId > MAX_USER_ID) {
-        SCAN_HILOGE("Invalid userId %{public}d.", userId);
-        return "";
-    }
     std::ostringstream oss;
     oss << "/data/service/el2/" << userId << "/print_service";
     return oss.str();
