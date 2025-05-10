@@ -57,8 +57,6 @@ const uint32_t MAX_JOBQUEUE_NUM = 512;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t INIT_INTERVAL = 5000L;
 const int32_t UID_TRANSFORM_DIVISOR = 200000;
-const std::int32_t START_USER_ID = 100;
-const std::int32_t MAX_USER_ID = 1099;
 const uint32_t UNLOAD_SA_INTERVAL = 90000;
 
 const uint32_t INDEX_ZERO = 0;
@@ -915,7 +913,7 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
     }
 
     int32_t userId = GetCurrentUserId();
-    if (userId == E_PRINT_INVALID_USERID) {
+    if (userId == INVALID_USER_ID) {
         PRINT_HILOGE("Invalid user id.");
         return;
     }
@@ -2293,7 +2291,7 @@ bool PrintServiceAbility::StartPluginPrintIconExtAbility(const AAFwk::Want &want
 std::shared_ptr<PrintUserData> PrintServiceAbility::GetCurrentUserData()
 {
     int32_t userId = GetCurrentUserId();
-    if (userId == E_PRINT_INVALID_USERID) {
+    if (userId == INVALID_USER_ID) {
         PRINT_HILOGE("Invalid user id.");
         return nullptr;
     }
@@ -2325,14 +2323,6 @@ int32_t PrintServiceAbility::GetCurrentUserId()
         }
     }
     PRINT_HILOGI("Current userId = %{public}d", userId);
-    if (userId < START_USER_ID) {
-        PRINT_HILOGE("id %{public}d is system reserved", userId);
-        return E_PRINT_INVALID_USERID;
-    }
-    if (userId > MAX_USER_ID) {
-        PRINT_HILOGE("id %{public}d is out of range", userId);
-        return E_PRINT_INVALID_USERID;
-    }
     return userId;
 }
 
@@ -2395,7 +2385,7 @@ void PrintServiceAbility::UpdatePrintUserMap()
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     int32_t userId = GetCurrentUserId();
-    if (userId == E_PRINT_INVALID_USERID) {
+    if (userId == INVALID_USER_ID) {
         PRINT_HILOGE("Invalid user id.");
         return;
     }
