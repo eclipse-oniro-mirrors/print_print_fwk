@@ -17,11 +17,11 @@
 #define MOCK_PRINT_SERVICE_ABILITY_H
 
 #include <gmock/gmock.h>
-#include "vendor_manager.h"
+#include "print_service_ability.h"
 
 namespace OHOS {
 namespace Print {
-class MockPrintServiceAbility final : public IPrintServiceAbility {
+class MockPrintServiceAbility final : public PrintServiceAbility {
 public:
     MOCK_METHOD2(AddVendorPrinterToDiscovery, bool (const std::string &, const PrinterInfo &));
     MOCK_METHOD2(UpdateVendorPrinterToDiscovery, bool (const std::string &, const PrinterInfo &));

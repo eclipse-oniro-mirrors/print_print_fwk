@@ -49,6 +49,8 @@ public:
                                            const std::string &ppdData) = 0;
 };
 
+class PrintServiceAbility;
+
 class VendorManager : public IPrinterVendorManager {
 public:
     static std::string GetGlobalVendorName(const std::string &vendorName);
@@ -58,7 +60,7 @@ public:
     static std::string ExtractPrinterId(const std::string &globalPrinterId);
     VendorManager();
     ~VendorManager();
-    bool Init(IPrintServiceAbility *sa, bool loadDefault = true);
+    bool Init(sptr<PrintServiceAbility> sa, bool loadDefault = true);
     void UnInit();
     void StartDiscovery();
     void StopDiscovery();
@@ -103,7 +105,7 @@ private:
 
 private:
     std::atomic<bool> defaultLoaded{false};
-    IPrintServiceAbility *printServiceAbility = nullptr;
+    sptr<PrintServiceAbility> printServiceAbility;
     std::map<std::string, std::shared_ptr<VendorDriverBase>> vendorMap;
     std::mutex vendorMapMutex;
     std::shared_ptr<VendorDriverGroup> wlanGroupDriver = nullptr;

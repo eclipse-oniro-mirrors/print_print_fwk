@@ -22,6 +22,7 @@
 #include "vendor_wlan_group.h"
 #include "print_log.h"
 #include "print_utils.h"
+#include "print_service_ability.h"
 
 using namespace OHOS::Print;
 namespace {
@@ -76,7 +77,7 @@ std::string VendorManager::ExtractPrinterId(const std::string &globalPrinterId)
     return globalPrinterId.substr(pos + 1);
 }
 
-bool VendorManager::Init(IPrintServiceAbility *sa, bool loadDefault)
+bool VendorManager::Init(sptr<PrintServiceAbility> sa, bool loadDefault)
 {
     PRINT_HILOGI("Init enter");
     printServiceAbility = sa;
