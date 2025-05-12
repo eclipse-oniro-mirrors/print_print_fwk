@@ -56,9 +56,9 @@ void VendorWlanGroupTest::TearDown(void) {}
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0001, TestSize.Level1)
 {
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     EXPECT_EQ(vendorWlanGroup->parentVendorManager, &vendorManager);
 }
@@ -66,9 +66,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0001, TestSize.Level1)
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0002, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     EXPECT_EQ(vendorWlanGroup->OnQueryCapability(printerId, 0), false);
     vendorWlanGroup->parentVendorManager = nullptr;
@@ -78,9 +78,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0002, TestSize.Level2)
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0003, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     EXPECT_EQ(vendorWlanGroup->OnQueryCapabilityByIp(printerId, "ipp"), false);
     vendorWlanGroup->parentVendorManager = nullptr;
@@ -91,11 +91,11 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0004, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
     PrinterInfo info;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
-    EXPECT_CALL(mock, AddVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock, AddVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(true));
     EXPECT_EQ(vendorWlanGroup->OnPrinterDiscovered(VENDOR_WLAN_GROUP, info), EXTENSION_ERROR_NONE);
     vendorWlanGroup->parentVendorManager = nullptr;
     EXPECT_EQ(vendorWlanGroup->OnPrinterDiscovered(VENDOR_WLAN_GROUP, info), EXTENSION_ERROR_CALLBACK_NULL);
@@ -105,12 +105,12 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0005, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
     PrinterInfo info;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
-    EXPECT_CALL(mock, AddIpPrinterToSystemData(_, _)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mock, UpdateVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock, AddIpPrinterToSystemData(_, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock, UpdateVendorPrinterToDiscovery(_, _)).WillRepeatedly(Return(true));
     vendorManager.SetConnectingPrinter(IP_AUTO, PRINTER_TEST_GLOBAL_ID);
     EXPECT_EQ(vendorWlanGroup->OnUpdatePrinterToDiscovery(VENDOR_WLAN_GROUP, info), EXTENSION_ERROR_NONE);
     vendorManager.SetConnectingPrinter(ID_AUTO, PRINTER_TEST_GLOBAL_ID);
@@ -122,9 +122,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0005, TestSize.Level2)
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0006, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     EXPECT_EQ(vendorWlanGroup->OnPrinterRemoved(VENDOR_WLAN_GROUP, printerId), EXTENSION_ERROR_CALLBACK_FAIL);
     vendorWlanGroup->parentVendorManager = nullptr;
@@ -134,9 +134,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0006, TestSize.Level2)
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0007, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     EXPECT_EQ(vendorWlanGroup->IsConnectingPrinter(printerId, PRINTER_TEST_URI), false);
     vendorWlanGroup->parentVendorManager = nullptr;
@@ -146,9 +146,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0007, TestSize.Level2)
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0008, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     EXPECT_EQ(vendorWlanGroup->IsConnectingPrinter(printerId, PRINTER_TEST_URI), false);
     vendorWlanGroup->parentVendorManager = nullptr;
@@ -158,9 +158,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0008, TestSize.Level2)
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0009, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     vendorWlanGroup->SetConnectingPrinter(ID_AUTO, printerId);
     EXPECT_EQ(vendorWlanGroup->parentVendorManager->isConnecting, true);
@@ -171,9 +171,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0009, TestSize.Level2)
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0010, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     EXPECT_EQ(vendorWlanGroup->OnPrinterPpdQueried(VENDOR_WLAN_GROUP, printerId, PRINTER_TEST_PPDDTAT), false);
     vendorWlanGroup->parentVendorManager = nullptr;
@@ -183,9 +183,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0010, TestSize.Level2)
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0011, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     EXPECT_EQ(vendorWlanGroup->IsGroupDriver(printerId), false);
     vendorWlanGroup->parentVendorManager = nullptr;
@@ -194,9 +194,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0011, TestSize.Level2)
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0012, TestSize.Level2)
 {
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     std::string printerId = PRINTER_TEST_IP;
     std::string vendorName = VENDOR_BSUNI_DRIVER;
@@ -213,11 +213,11 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0013, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_GLOBAL_ID;
     auto printerInfo = std::make_shared<PrinterInfo>();
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
-    EXPECT_CALL(mock, QueryDiscoveredPrinterInfoById(_)).WillOnce(Return(nullptr)).WillRepeatedly(Return(printerInfo));
+    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_)).WillOnce(Return(nullptr)).WillRepeatedly(Return(printerInfo));
     EXPECT_EQ(vendorWlanGroup->IsBsunidriverSupport(PRINTER_TEST_GLOBAL_ID), false);
     printerInfo->SetOption("{\"bsunidriverSupport\": \"true\"}");
     EXPECT_EQ(vendorWlanGroup->IsBsunidriverSupport(PRINTER_TEST_GLOBAL_ID), true);
@@ -234,9 +234,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0013, TestSize.Level2)
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0014, TestSize.Level2)
 {
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     std::string printerId = PRINTER_TEST_GLOBAL_ID;
     vendorWlanGroup->RemoveGroupPrinterFromVendorGroupList(printerId);
@@ -247,9 +247,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0014, TestSize.Level2)
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0015, TestSize.Level2)
 {
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     std::string printerId = PRINTER_TEST_GLOBAL_ID;
     EXPECT_EQ(vendorWlanGroup->QueryVendorDriverByGroupPrinterId(printerId), "");
@@ -259,9 +259,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0015, TestSize.Level2)
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0016, TestSize.Level2)
 {
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     std::string printerId = PRINTER_TEST_IP;
     EXPECT_EQ(vendorWlanGroup->GetGroupPrinterId(printerId), PRINTER_TEST_IP);
@@ -272,9 +272,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0016, TestSize.Level2)
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0017, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_GLOBAL_ID;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     vendorManager.SetConnectingPrinter(IP_AUTO, PRINTER_TEST_GLOBAL_ID);
     EXPECT_EQ(vendorWlanGroup->CheckPrinterAddedByIp(printerId), true);
@@ -286,12 +286,12 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0017, TestSize.Level2)
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0018, TestSize.Level2)
 {
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     std::string printerId = PRINTER_TEST_IP;
-    EXPECT_CALL(mock, RemoveVendorPrinterFromDiscovery(_, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock, RemoveVendorPrinterFromDiscovery(_, _)).WillRepeatedly(Return(true));
     vendorWlanGroup->UpdateGroupPrinter(printerId, PRINTER_TEST_IP);
     EXPECT_EQ(vendorWlanGroup->groupPrinterIdMap_[printerId], PRINTER_TEST_IP);
     vendorWlanGroup->UpdateGroupPrinter(printerId, PRINTER_TEST_IP);
@@ -302,9 +302,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0018, TestSize.Level2)
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0019, TestSize.Level2)
 {
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     std::string printerId = PRINTER_TEST_IP;
     EXPECT_EQ(vendorWlanGroup->HasGroupPrinter(printerId), false);
@@ -314,14 +314,14 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0019, TestSize.Level2)
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0020, TestSize.Level2)
 {
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     std::string printerId = PRINTER_TEST_IP;
     PrinterInfo info;
     info.SetPrinterId(printerId);
-    EXPECT_CALL(mock, RemoveVendorPrinterFromDiscovery(_, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock, RemoveVendorPrinterFromDiscovery(_, _)).WillRepeatedly(Return(true));
     EXPECT_EQ(vendorWlanGroup->ConvertPrinterInfoId(info).GetPrinterId(), PRINTER_TEST_IP);
     info.SetPrinterUuid(PRINTER_TEST_UUID);
     EXPECT_EQ(vendorWlanGroup->ConvertPrinterInfoId(info).GetPrinterId(), PRINTER_TEST_UUID);
@@ -329,9 +329,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0020, TestSize.Level2)
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0021, TestSize.Level2)
 {
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     PrinterInfo info;
     EXPECT_EQ(vendorWlanGroup->ExtractPrinterIdByPrinterInfo(info), "");
@@ -348,11 +348,11 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0021, TestSize.Level2)
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0022, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_GLOBAL_ID;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
-    EXPECT_CALL(mock, QueryPrinterInfoByPrinterId(_, _))
+    EXPECT_CALL(*mock, QueryPrinterInfoByPrinterId(_, _))
         .WillOnce(Return(E_PRINT_SERVER_FAILURE)).WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_EQ(vendorWlanGroup->MonitorPrinterStatus(printerId, true), false);
     EXPECT_EQ(vendorWlanGroup->MonitorPrinterStatus(printerId, true), false);
@@ -364,11 +364,11 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0023, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_GLOBAL_ID;
     PrinterVendorStatus state;
-    MockPrintServiceAbility mock;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(&mock, false));
+    EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
-    EXPECT_CALL(mock, OnVendorStatusUpdate(_, _, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock, OnVendorStatusUpdate(_, _, _)).WillRepeatedly(Return(true));
     EXPECT_EQ(vendorWlanGroup->OnPrinterStatusChanged(VENDOR_WLAN_GROUP, printerId, state), true);
     vendorWlanGroup->parentVendorManager = nullptr;
     EXPECT_EQ(vendorWlanGroup->OnPrinterStatusChanged(VENDOR_WLAN_GROUP, printerId, state), false);

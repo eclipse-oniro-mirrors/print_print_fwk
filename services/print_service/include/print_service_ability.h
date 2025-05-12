@@ -46,7 +46,7 @@ class PrintServiceAbility : public SystemAbility, public PrintServiceStub, publi
 public:
     DISALLOW_COPY_AND_MOVE(PrintServiceAbility);
     PrintServiceAbility(int32_t systemAbilityId, bool runOnCreate);
-    PrintServiceAbility();
+    PrintServiceAbility() = default;
     ~PrintServiceAbility();
     static sptr<PrintServiceAbility> GetInstance();
     int32_t StartService() override;
