@@ -100,9 +100,6 @@ void ScanUsbManager::RefreshUsbDevicePort(std::map<std::string, std::string> &us
     for (auto dev : devlist) {
         SCAN_HILOGI("RefreshUsbDevicePort dev.GetName() %{private}s ", dev.GetName().c_str());
         std::string serialNumber = GetSerialNumber(dev);
-        size_t pos = serialNumber.find_last_not_of('\0');
-        size_t newSize = (pos == std::string::npos) ? 0 : pos + 1;
-        serialNumber.resize(newSize);
         if (serialNumber == "") {
             SCAN_HILOGW("Seria number is empty.");
             continue;
@@ -132,6 +129,9 @@ std::string ScanUsbManager::GetSerialNumber(UsbDevice &usbDevice)
     std::string serialNumber = GetDeviceSerialNumber(usbDevicePipe);
     bool closeDeviceRet = UsbSrvClient.Close(usbDevicePipe);
     SCAN_HILOGI("openDevice ret = %{public}d", closeDeviceRet);
+    size_t pos = serialNumber.find_last_not_of('\0');
+    size_t newSize = (pos == std::string::npos) ? 0 : pos + 1;
+    serialNumber.resize(newSize);
     return serialNumber;
 }
 
@@ -263,9 +263,6 @@ void ScanUsbManager::DealUsbDevStatusChange(const std::string &devStr, bool isAt
         DisConnectUsbScanner(usbDevicePort);
     } else {
         std::string serialNumber = GetSerialNumber(*dev);
-        size_t pos = serialNumber.find_last_not_of('\0');
-        size_t newSize = (pos == std::string::npos) ? 0 : pos + 1;
-        serialNumber.resize(newSize);
         if (!serialNumber.empty()) {
             UpdateUsbScannerId(serialNumber, usbDevicePort);
         }
