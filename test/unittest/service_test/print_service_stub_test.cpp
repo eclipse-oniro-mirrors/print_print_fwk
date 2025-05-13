@@ -48,7 +48,7 @@ void PrintServiceStubTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0001, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0001, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -66,7 +66,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0002, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0002, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -85,7 +85,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0003, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0003, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -108,7 +108,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0003, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0004, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0004, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -135,7 +135,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0004, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0005, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0005, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -166,7 +166,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0005, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0006, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0006, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -200,7 +200,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0006, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0007, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0007, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -224,7 +224,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0007, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0008, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0008, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -248,7 +248,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0008, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0009, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0009, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -272,7 +272,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0009, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0010, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0010, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -298,7 +298,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0010, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0011, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0011, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -319,7 +319,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0011, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0012, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0012, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -340,7 +340,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0012, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0013, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0013, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -361,7 +361,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0013, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0014, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0014, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -387,7 +387,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0014, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0015, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0015, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -411,7 +411,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0015, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0016, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0016, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -435,7 +435,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0016, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0017, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0017, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -458,7 +458,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0017, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0018, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0018, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -489,7 +489,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0018, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0019, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0019, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -514,7 +514,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0019, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0020, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0020, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -540,7 +540,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0020, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0021, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0021, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -564,7 +564,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0021, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0022, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0022, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -587,7 +587,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0022, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0023, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0023, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -618,7 +618,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0023, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0025, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0025, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -644,7 +644,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0025, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0026, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0026, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -672,7 +672,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0026, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0027, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0027, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -696,7 +696,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0027, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0028, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0028, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -722,7 +722,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0028, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0029, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0029, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -746,7 +746,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0029, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0030, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0030, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -767,7 +767,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0030, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0031, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0031, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -790,7 +790,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0031, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0032, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0032, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -815,7 +815,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0032, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0033, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0033, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -840,7 +840,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0033, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0034, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0034, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -868,7 +868,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0034, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0035, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0035, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -896,7 +896,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0035, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0036, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0036, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -921,7 +921,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0036, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0037, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0037, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -944,7 +944,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0037, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0038, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0038, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -970,7 +970,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0038, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0039, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0039, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -993,7 +993,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0039, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0040, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0040, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1010,7 +1010,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0040, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0041, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0041, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1027,7 +1027,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0041, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0042, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0042, TestSize.Level0)
 {
     MessageParcel addData;
     MessageParcel addReply;
@@ -1058,7 +1058,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0042, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(delCode, delData, delReply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0043, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0043, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1078,7 +1078,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0043, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0044, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0044, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1097,7 +1097,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0044, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0045, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0045, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1117,7 +1117,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0045, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0046, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0046, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1136,7 +1136,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0046, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0047, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0047, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1151,7 +1151,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0047, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0048, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0048, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1166,7 +1166,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0048, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0049, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0049, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1183,7 +1183,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0049, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0050, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0050, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1200,7 +1200,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0050, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0051, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0051, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1217,7 +1217,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0051, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0052, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0052, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1232,7 +1232,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0052, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0053, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0053, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1252,7 +1252,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0053, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0054, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0054, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1275,7 +1275,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0054, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0055, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0055, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1287,7 +1287,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0055, TestSize.Level1)
     EXPECT_EQ(stub->OnRemoteRequest(code, data, reply, option), E_PRINT_RPC_FAILURE);
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0056, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0056, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1304,7 +1304,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0056, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0057, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0057, TestSize.Level0)
 {
     MessageParcel setData;
     MessageParcel setReply;
@@ -1333,7 +1333,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0057, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(getCode, getData, getReply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0058, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0058, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1352,7 +1352,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0058, TestSize.Level1)
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0059, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0059, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1374,7 +1374,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0059, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0060, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0060, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1400,7 +1400,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0060, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0061, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0061, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1427,7 +1427,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0061, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0062, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0062, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1451,7 +1451,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0062, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0063, TestSize.Level1)
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0063, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;

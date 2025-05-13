@@ -67,7 +67,7 @@ void PrintBMSHelperTest::CallRemoteObject(const sptr<MockBundleMgr> &obj,
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0002, TestSize.Level1)
+HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0002, TestSize.Level0)
 {
     PrintBMSHelper printBMSHelper;
     auto helper = std::make_shared<MockPrintServiceHelper>();
@@ -83,7 +83,7 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0002, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0003, TestSize.Level1)
+HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0003, TestSize.Level0)
 {
     std::vector<AppExecFwk::ExtensionAbilityInfo> resultInfo;
     std::shared_ptr<PrintServiceHelper> temp = nullptr;
@@ -101,7 +101,7 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0003, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0008, TestSize.Level1)
+HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0008, TestSize.Level0)
 {
     std::string testName = "";
     std::shared_ptr<PrintServiceHelper> temp = nullptr;
@@ -115,7 +115,7 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0008, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0009, TestSize.Level1)
+HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0009, TestSize.Level0)
 {
     PrintBMSHelper printBMSHelper;
     std::shared_ptr<PrintServiceHelper> temp = nullptr;
@@ -133,7 +133,7 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0009, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0010, TestSize.Level1)
+HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0010, TestSize.Level0)
 {
     PrintBMSHelper printBMSHelper;
     const wptr<IRemoteObject> testObj = nullptr;

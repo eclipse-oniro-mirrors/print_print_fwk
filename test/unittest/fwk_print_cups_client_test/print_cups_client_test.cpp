@@ -271,13 +271,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0012, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, AddCupsPrintJob_Succeed_When_DeafaultPrintJob, TestSize.Level0)
+HWTEST_F(PrintCupsClientTest, AddCupsPrintJob_ShouldAddFailed_WhenCorrectPrintJob, TestSize.Level1)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
     printCupsClient->AddCupsPrintJob(testJob, JOB_USER_NAME);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    EXPECT_EQ(printCupsClient->jobQueue_.size(), 1);
+    EXPECT_EQ(printCupsClient->currentJob_, nullptr);
 }
 
 /**
@@ -286,7 +285,7 @@ HWTEST_F(PrintCupsClientTest, AddCupsPrintJob_Succeed_When_DeafaultPrintJob, Tes
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, AddCupsPrintJob_Succeed_When_CorrectPrintJob, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, AddCupsPrintJob_ShouldAddSucceed_WhenNormalPrintJob, TestSize.Level0)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
@@ -302,8 +301,7 @@ HWTEST_F(PrintCupsClientTest, AddCupsPrintJob_Succeed_When_CorrectPrintJob, Test
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     printCupsClient->AddCupsPrintJob(testJob, JOB_USER_NAME);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    EXPECT_EQ(printCupsClient->jobQueue_.size(), 1);
+    EXPECT_EQ(printCupsClient->currentJob_->printerId, "printid-1234");
 }
 
 /**
