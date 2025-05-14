@@ -254,7 +254,7 @@ void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceI
         info.SetDescription("usb");
         Json::Value infoOps;
         infoOps["printerUri"] = printerUri;
-        infoOps["printerMake"] = printerMake;
+        infoOps["make"] = printerMake;
         ParseDeviceInfo(deviceLocation, infoOps);
         info.SetOption(PrintJsonUtil::WriteString(infoOps));
         AddUsbPrinter(info);

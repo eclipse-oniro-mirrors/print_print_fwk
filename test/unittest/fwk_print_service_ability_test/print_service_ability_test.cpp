@@ -2143,7 +2143,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0148, TestSize.Level1)
     std::string printerUri = "usb:ipp://192.168.186.1:631/ipp/print";
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     Json::Value opsJson;
-    opsJson["printerMake"] = 123;
+    opsJson["make"] = 123;
     info->SetOption(PrintJsonUtil::WriteString(opsJson));
     service->printSystemData_.discoveredPrinterInfoList_[standardizeId] = info;
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_INVALID_PRINTER);
@@ -2232,7 +2232,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0156, TestSize.Level1)
     std::string printerUri = "usb:ipp://192.168.186.1:631/ipp/print";
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     Json::Value opsJson;
-    opsJson["printerMake"] = "123";
+    opsJson["make"] = "123";
     info->SetOption(PrintJsonUtil::WriteString(opsJson));
     service->printSystemData_.discoveredPrinterInfoList_[standardizeId] = info;
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_SERVER_FAILURE);
