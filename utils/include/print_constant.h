@@ -277,5 +277,7 @@ const std::string VENDOR_WLAN_GROUP = "driver.wlan.group";
 const std::string VENDOR_BSUNI_DRIVER = "driver.bsuni";
 const std::string VENDOR_PPD_DRIVER = "driver.ppd";
 const std::string VENDOR_IPP_EVERYWHERE = "driver.ipp.everywhere";
+
+const int32_t INVALID_USER_ID = -1;
 } // namespace OHOS::Print
 #endif // PRINT_CONSTANT_H
