@@ -746,23 +746,19 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
             PRINT_HILOGE("can not find the printer");
             return E_PRINT_INVALID_PRINTER;
         }
-        Json::Value opsJson;
-        if (printerInfo->HasOption() && PrintJsonUtil::Parse(printerInfo->GetOption(), opsJson)) {
-            PRINT_HILOGD("QueryPrinterCapabilityByUri ops : %{public}s.", printerInfo->GetOption().c_str());
-            if (!PrintJsonUtil::IsMember(opsJson, "printerMake") || !opsJson["printerMake"].isString()) {
-                PRINT_HILOGW("can not find printerMake");
-                return E_PRINT_INVALID_PRINTER;
-            }
-            std::string make = opsJson["printerMake"].asString();
-            auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
-                AddPrinterToCups(printerUri, printerInfo->GetPrinterName(), make);
-            if (ret != E_PRINT_NONE) {
-                PRINT_HILOGE("AddPrinterToCups error = %{public}d.", ret);
-                return ret;
-            }
-            DelayedSingleton<PrintCupsClient>::GetInstance()->
-                QueryPrinterCapabilityFromPPD(printerInfo->GetPrinterName(), printerCaps);
+        if (!printerInfo->HasPrinterMake()) {
+            PRINT_HILOGW("can not find printerMake");
+            return E_PRINT_INVALID_PRINTER;
         }
+        std::string make = printerInfo->GetPrinterMake();
+        auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
+            AddPrinterToCups(printerUri, printerInfo->GetPrinterName(), make);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("AddPrinterToCups error = %{public}d.", ret);
+            return ret;
+        }
+        DelayedSingleton<PrintCupsClient>::GetInstance()->
+        QueryPrinterCapabilityFromPPD(printerInfo->GetPrinterName(), printerCaps);
     } else {
         DelayedSingleton<PrintCupsClient>::GetInstance()->
             QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
