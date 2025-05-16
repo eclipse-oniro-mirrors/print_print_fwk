@@ -54,7 +54,7 @@ void VendorManagerTest::SetUp(void)
 
 void VendorManagerTest::TearDown(void) {}
 
-HWTEST_F(VendorManagerTest, VendorManagerTest_0001, TestSize.Level1)
+HWTEST_F(VendorManagerTest, VendorManagerTest_0001, TestSize.Level0)
 {
     std::string vendorName = "test.vendor";
     std::string printerId = "test.printer.id";
@@ -71,7 +71,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0001, TestSize.Level1)
     EXPECT_TRUE(VendorManager::ExtractVendorName("fwk.").empty());
 }
 
-HWTEST_F(VendorManagerTest, VendorManagerTest_0002, TestSize.Level1)
+HWTEST_F(VendorManagerTest, VendorManagerTest_0002, TestSize.Level0)
 {
     VendorManager vendorManager;
     EXPECT_TRUE(vendorManager.Init(nullptr, false));
@@ -90,7 +90,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0002, TestSize.Level1)
     vendorManager.UnInit();
 }
 
-HWTEST_F(VendorManagerTest, VendorManagerTest_0003, TestSize.Level1)
+HWTEST_F(VendorManagerTest, VendorManagerTest_0003, TestSize.Level0)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
@@ -150,7 +150,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0004, TestSize.Level2)
     vendorManager.UnInit();
 }
 
-HWTEST_F(VendorManagerTest, VendorManagerTest_0005, TestSize.Level2)
+HWTEST_F(VendorManagerTest, VendorManagerTest_0005, TestSize.Level0)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
@@ -175,7 +175,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0005, TestSize.Level2)
     vendorManager.UnInit();
 }
 
-HWTEST_F(VendorManagerTest, VendorManagerTest_0006, TestSize.Level2)
+HWTEST_F(VendorManagerTest, VendorManagerTest_0006, TestSize.Level1)
 {
     VendorManager vendorManager;
     EXPECT_TRUE(vendorManager.Init(nullptr, false));
@@ -314,7 +314,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0010, TestSize.Level1)
     vendorManager.UnInit();
 }
 
-HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level1)
+HWTEST_F(VendorManagerTest, VendorManagerTest_0011, TestSize.Level0)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     MockVendorPpdDriver mockVendorPpdDriver;

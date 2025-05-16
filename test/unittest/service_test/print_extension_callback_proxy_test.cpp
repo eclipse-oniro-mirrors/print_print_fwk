@@ -46,7 +46,7 @@ void PrintExtensionCallbackProxyTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0001, TestSize.Level1)
+HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0001, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     EXPECT_NE(obj, nullptr);
@@ -69,7 +69,7 @@ HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0001, 
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0002, TestSize.Level1)
+HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0002, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     EXPECT_NE(obj, nullptr);
@@ -92,7 +92,7 @@ HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0002, 
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0003, TestSize.Level1)
+HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0003, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     EXPECT_NE(obj, nullptr);
@@ -118,7 +118,7 @@ HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0003, 
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0004, TestSize.Level1)
+HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0004, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     EXPECT_NE(obj, nullptr);
@@ -144,7 +144,7 @@ HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0004, 
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0005, TestSize.Level1)
+HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0005, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     EXPECT_NE(obj, nullptr);
@@ -172,7 +172,7 @@ HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0005, 
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0006, TestSize.Level1)
+HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0006, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     EXPECT_NE(obj, nullptr);
@@ -200,7 +200,7 @@ HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0006, 
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0007, TestSize.Level1)
+HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0007, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     EXPECT_NE(obj, nullptr);
@@ -227,7 +227,7 @@ HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0007, 
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0008, TestSize.Level1)
+HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0008, TestSize.Level0)
 {
     sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
     EXPECT_NE(obj, nullptr);
