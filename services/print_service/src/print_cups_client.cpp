@@ -127,6 +127,7 @@ static const std::string PRINTER_STATE_COVER_OPEN = "cover-open";
 static const std::string PRINTER_STATE_OTHER = "other";
 static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string PRINTER_STATE_TIMED_OUT = "timed-out";
+static const std::string PRINTER_SPOOL_AREA_FULL = "spool-area-full";
 static const std::string JOB_STATE_REASON_PRINTER_STOP = "printer-stopped";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
@@ -151,6 +152,7 @@ static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST {
     { PRINTER_STATE_COVER_OPEN,     PRINT_JOB_BLOCKED_DOOR_OPEN },
     { PRINTER_STATE_OTHER,          PRINT_JOB_BLOCKED_UNKNOWN },
     { PRINTER_STATE_TIMED_OUT,      PRINT_JOB_BLOCKED_UNKNOWN },
+    { PRINTER_SPOOL_AREA_FULL,      PRINT_JOB_BLOCKED_UNKNOWN },
 };
 
 static const std::map<std::string, map<std::string, StatePolicy>> SPECIAL_PRINTER_POLICY {
