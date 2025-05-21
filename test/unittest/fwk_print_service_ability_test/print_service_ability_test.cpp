@@ -198,7 +198,7 @@ void PrintServiceAbilityTest::InitExtensionList(std::vector<AppExecFwk::Extensio
 * @tc.type: FUNC ~PrintServiceAbility()
 * @tc.require:
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001, TestSize.Level0)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001_NeedRename, TestSize.Level0)
 {
     PrintServiceAbility* print_service = new PrintServiceAbility(PRINT_SERVICE_ID, true);
     if (print_service != nullptr) {
@@ -222,7 +222,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001, TestSize.Level0)
 * @tc.type: FUNC ManualStart()
 * @tc.require:
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002, TestSize.Level0)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002_NeedRename, TestSize.Level0)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     int state = static_cast<int>(service->state_);
@@ -235,7 +235,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002, TestSize.Level0)
 * @tc.type: FUNC GetPrintJobOrderId()
 * @tc.require:
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0003, TestSize.Level0)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0003_NeedRename, TestSize.Level0)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->GetPrintJobOrderId();
@@ -247,7 +247,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0003, TestSize.Level0)
 * @tc.type: FUNC
 * @tc.require: return E_PRINT_NO_PERMISSION
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_EQ(service->StartService(), E_PRINT_NO_PERMISSION);
@@ -347,7 +347,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004, TestSize.Level1)
 * @tc.type: FUNC CallSpooler
 * @tc.require: has token
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0006, TestSize.Level0)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0006_NeedRename, TestSize.Level0)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::vector<std::string> fileList = {};
@@ -364,7 +364,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0006, TestSize.Level0)
 * @tc.type: FUNC SetHelper
 * @tc.require: has token
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0007, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0007_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = nullptr;
@@ -383,7 +383,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0007, TestSize.Level1)
 * @tc.type: FUNC ConnectPrinter
 * @tc.require:
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0008, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0008_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId ="1234";
@@ -405,7 +405,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0008, TestSize.Level1)
     service->ConnectPrinter(printerId);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0009, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0009_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId ="1234";
@@ -427,14 +427,14 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0009, TestSize.Level1)
     service->DisconnectPrinter(printerId);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0010, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0010_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::vector<std::string> extensionIds;
     EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0011, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0011_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -452,7 +452,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0011, TestSize.Level1)
     EXPECT_EQ(service->LoadExtSuccess(GetExtensionId(TYPE_UNLOAD)), E_PRINT_INVALID_EXTENSION);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0012, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0012_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -477,7 +477,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0012, TestSize.Level1)
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0013, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0013_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::vector<PrinterInfo> printerInfos;
@@ -500,7 +500,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0013, TestSize.Level1)
     EXPECT_EQ(service->UpdatePrinters(printerInfos), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0014, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0014_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrintJob testJob;
@@ -519,7 +519,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0014, TestSize.Level1)
     service->StartPrintJob(testJob);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0018, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0018_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -542,7 +542,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0018, TestSize.Level1)
     EXPECT_NE(attrIt, service->printAttributesList_.end());
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0019, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0019_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -557,7 +557,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0019, TestSize.Level1)
     EXPECT_EQ(attrIt, service->printAttributesList_.end());
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0020, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0020_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -568,7 +568,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0020, TestSize.Level1)
     EXPECT_EQ(service->PrintByAdapter(jobName, printAttributes, taskId), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0021, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0021_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -588,7 +588,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0021, TestSize.Level1)
     EXPECT_EQ(service->StartGetPrintFile(newJobId, printAttributes, fd), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0022, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0022_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -599,7 +599,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0022, TestSize.Level1)
     EXPECT_EQ(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), info);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0024, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0024_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrintJob jobInfo;
@@ -607,7 +607,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0024, TestSize.Level1)
     EXPECT_EQ(service->isJobQueueBlocked_, false);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0025, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0025_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string extensionId = "com.ohos.spooler:0";
@@ -624,7 +624,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0025, TestSize.Level1)
     EXPECT_EQ(service->DelayStartDiscovery(extensionId), false);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0026, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0026_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->state_ = ServiceRunningState::STATE_NOT_START;
@@ -635,7 +635,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0026, TestSize.Level1)
     EXPECT_EQ(service->state_, ServiceRunningState::STATE_NOT_START);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0028, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0028_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string extensionId = "com.ohos.spooler:0";
@@ -649,7 +649,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0028, TestSize.Level1)
     EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0029, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0029_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -661,7 +661,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0029, TestSize.Level1)
     EXPECT_EQ(service->QueryAllPrintJob(printJobs), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0030, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0030_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -675,7 +675,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0030, TestSize.Level1)
     EXPECT_EQ(service->QueryAllPrintJob(printJobs), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0031, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0031_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -684,7 +684,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0031, TestSize.Level1)
     EXPECT_EQ(service->QueryAddedPrinter(printerList), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0032, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0032_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -699,7 +699,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0032, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_INVALID_PRINTER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0033, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0033_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -716,7 +716,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0033, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0034, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0034_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -729,7 +729,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0034, TestSize.Level1)
     EXPECT_EQ(service->QueryPrintJobById(printJobId, printJob), E_PRINT_INVALID_PRINTJOB);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0035, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0035_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -740,7 +740,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0035, TestSize.Level1)
     EXPECT_EQ(service->AddPrinterToCups(printerUri, printerName, printerMake), E_PRINT_SERVER_FAILURE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0036, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0036_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -771,7 +771,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0036, TestSize.Level1)
     service->StartNativePrintJob(printJob2);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0037, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0037_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -785,7 +785,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0037, TestSize.Level1)
     EXPECT_NE(service->AddNativePrintJob(jobId, printJob), nativePrintJob);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0038, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0038_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -802,7 +802,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0038, TestSize.Level1)
     EXPECT_EQ(service->StartNativePrintJob(printJob), E_PRINT_INVALID_PRINTER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0040, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0040_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -829,7 +829,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0040, TestSize.Level1)
     EXPECT_EQ(service->NotifyPrintService(jobId, type), E_PRINT_INVALID_PARAMETER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0041, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0041_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -841,7 +841,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0041, TestSize.Level1)
     EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_INVALID_USERID);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0042, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0042_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -866,7 +866,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0042, TestSize.Level1)
     EXPECT_EQ(attrIt, service->printAttributesList_.end());
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0043, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0043_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -888,7 +888,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0043, TestSize.Level1)
     EXPECT_EQ(userIt, service->printUserMap_.end());
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0044, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0044_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -906,7 +906,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0044, TestSize.Level1)
     EXPECT_EQ(service->SendQueuePrintJob(printerId), false);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0045, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0045_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerUri = "111.222.333";
@@ -915,7 +915,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0045, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0046, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0046_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "1";
@@ -924,7 +924,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0046, TestSize.Level1)
     EXPECT_EQ(printJob->jobState_, PRINT_JOB_QUEUED);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0048, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0048_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     uint32_t state = PRINTER_UNKNOWN + 1;
@@ -937,7 +937,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0048, TestSize.Level1)
     EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_INVALID_PRINTER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0049, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0049_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "1";
@@ -958,7 +958,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0049, TestSize.Level1)
     EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_PARAMETER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0050, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0050_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "1";
@@ -967,7 +967,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0050, TestSize.Level1)
     EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), false);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0051, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0051_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "1";
@@ -984,7 +984,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0051, TestSize.Level1)
     service->AdapterGetFileCallBack(jobId, state, subState);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0052, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0052_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "1";
@@ -1009,7 +1009,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0052, TestSize.Level1)
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0053, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0053_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "1";
@@ -1028,7 +1028,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0053, TestSize.Level1)
     EXPECT_EQ(service->IsQueuedJobListEmpty(jobId), true);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0055, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0055_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     uint32_t event = -1;
@@ -1049,7 +1049,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0055, TestSize.Level1)
     service->NotifyPrintServiceEvent(jobId, event);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0056, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0056_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -1063,7 +1063,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0056, TestSize.Level1)
     service->UnregisterPrinterCallback(type);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0057, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0057_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     int event = 0;
@@ -1071,7 +1071,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0057, TestSize.Level1)
     EXPECT_EQ(service->SendPrinterChangeEvent(event, info), 0);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0059, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0059_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrintJob jobInfo;
@@ -1084,7 +1084,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0059, TestSize.Level1)
     EXPECT_EQ(service->UnregisterAllExtCallback(extensionId), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0060, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0060_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     AppExecFwk::ExtensionAbilityInfo extInfo;
@@ -1105,7 +1105,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0060, TestSize.Level1)
     EXPECT_EQ(newExtInfo.version_, judgeExtInfo.version_);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0061, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0061_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -1134,7 +1134,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0061, TestSize.Level1)
     EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0062, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0062_NeedRename, TestSize.Level1)
 {
     DelayedSingleton<PrintBMSHelper>::GetInstance()->hasBms = false;
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -1147,7 +1147,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0062, TestSize.Level1)
     service->StartDiscoverPrinter(extensionIds);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0063, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0063_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -1163,7 +1163,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0063, TestSize.Level1)
     EXPECT_EQ(service->DestroyExtension(), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0064, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0064_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -1188,7 +1188,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0064, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0065, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0065_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
@@ -1204,7 +1204,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0065, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_INVALID_PRINTER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0066, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0066_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
@@ -1221,7 +1221,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0066, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterProperties(printerId, keyList, valueList), E_PRINT_INVALID_PRINTER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0067, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0067_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
@@ -1232,7 +1232,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0067, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
@@ -1243,7 +1243,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0068, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
@@ -1256,7 +1256,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0069, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0079, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0079_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -1279,7 +1279,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0079, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_INVALID_PRINTER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0080, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0080_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "123";
@@ -1290,7 +1290,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0080, TestSize.Level1)
     EXPECT_EQ(ret, 1);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0081, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0081_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     uint32_t state = PRINT_JOB_UNKNOWN + 1;
@@ -1301,7 +1301,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0081, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     uint32_t state = PRINT_JOB_CREATE_FILE_COMPLETED;
@@ -1320,7 +1320,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0083, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0083_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "1";
@@ -1338,7 +1338,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0083, TestSize.Level1)
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "1";
@@ -1358,7 +1358,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084, TestSize.Level1)
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0085, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0085_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "1234";
@@ -1372,14 +1372,14 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0085, TestSize.Level1)
     EXPECT_EQ(service->unloadCount_, 0);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0086, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0086_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "";
     EXPECT_EQ(service->isEprint(printerId), false);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0087, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0087_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "1234";
@@ -1397,7 +1397,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0087, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0088, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0088_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -1421,7 +1421,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0088, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0089, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0089_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     uint32_t callbackId = 0;
@@ -1433,7 +1433,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0089, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0090, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0090_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string extensionId = "123";
@@ -1445,7 +1445,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0090, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0091, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0091_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "123";
@@ -1457,7 +1457,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0091, TestSize.Level1)
     service->On(jobId, type, listener);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0092, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0092_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->helper_ = nullptr;
@@ -1466,7 +1466,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0092, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0093, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0093_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->printUserDataMap_[100] = nullptr;
@@ -1477,7 +1477,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0093, TestSize.Level1)
     EXPECT_NE(service->SendPrinterDiscoverEvent(event, info), 0);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0094, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0094_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->printUserDataMap_[100] = nullptr;
@@ -1488,7 +1488,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0094, TestSize.Level1)
     EXPECT_NE(service->SendPrinterChangeEvent(event, info), 0);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0095, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0095_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterInfo info;
@@ -1499,7 +1499,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0095, TestSize.Level1)
     EXPECT_EQ(info.GetPrinterState(), PRINTER_UNKNOWN);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0096, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0096_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterInfo info;
@@ -1516,7 +1516,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0096, TestSize.Level1)
     EXPECT_EQ(service->SendPrinterEventChangeEvent(printerEvent, info), 0);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0097, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0097_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrintJob jobInfo;
@@ -1540,7 +1540,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0097, TestSize.Level1)
     service->SendPrintJobEvent(jobInfo);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0098, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0098_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string extensionId = "123";
@@ -1551,7 +1551,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0098, TestSize.Level1)
     EXPECT_NE(service->SendExtensionEvent(extensionId, extInfo), 0);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0099, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0099_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrintJob jobInfo;
@@ -1595,7 +1595,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0099, TestSize.Level1)
     EXPECT_EQ(service->isJobQueueBlocked_, false);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0100, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0100_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobName = "";
@@ -1605,7 +1605,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0100, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0102, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0102_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "123";
@@ -1626,7 +1626,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0102, TestSize.Level1)
     EXPECT_EQ(attrIt, service->printAttributesList_.end());
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0103, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0103_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->helper_ = nullptr;
@@ -1636,7 +1636,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0103, TestSize.Level1)
     service->StartPluginPrintIconExtAbility(want);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0104, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0104_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "123";
@@ -1649,7 +1649,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0104, TestSize.Level1)
     EXPECT_NE(service->GetUserDataByJobId(jobId), nullptr);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0105, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0105_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "123";
@@ -1663,7 +1663,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0105, TestSize.Level1)
     EXPECT_NE(lisIt, service->adapterListenersByJobId_.end());
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0106, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0106_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "1234";
@@ -1671,28 +1671,28 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0106, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0107, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0107_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "1234";
     EXPECT_EQ(service->CheckIsDefaultPrinter(printerId), false);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0108, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0108_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "1234";
     EXPECT_EQ(service->CheckIsLastUsedPrinter(printerId), false);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0109, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0109_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerName = "pixlab_0759";
     EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0111, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0111_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "printerId";
@@ -1709,7 +1709,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0111, TestSize.Level1)
     service->DeletePrinterFromUserData(printerId);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "1";
@@ -1730,7 +1730,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112, TestSize.Level1)
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0113, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0113_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -1741,7 +1741,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0113, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0120, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0120_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
@@ -1753,7 +1753,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0120, TestSize.Level1)
     EXPECT_EQ(service->DetermineUserJobStatus(jobList), PRINT_JOB_BLOCKED);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0121, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0121_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
@@ -1765,7 +1765,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0121, TestSize.Level1)
     EXPECT_EQ(service->DetermineUserJobStatus(jobList), PRINT_JOB_COMPLETED);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0122, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0122_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
@@ -1777,7 +1777,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0122, TestSize.Level1)
     EXPECT_EQ(service->DetermineUserJobStatus(jobList), PRINT_JOB_RUNNING);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0123, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0123_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     int32_t userId = 100;
@@ -1797,7 +1797,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0123, TestSize.Level1)
     service->NotifyCurrentUserChanged(userId);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0124, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0124_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     int32_t userId = 100;
@@ -1817,7 +1817,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0124, TestSize.Level1)
     service->NotifyCurrentUserChanged(userId);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0125, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0125_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_NE(service, nullptr);
@@ -1842,14 +1842,14 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0125, TestSize.Level1)
     EXPECT_EQ(state1, PRINT_TASK_FAIL);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0126, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0126_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerName = "testPrinterName";
     EXPECT_EQ(service->printSystemData_.QueryPrinterIdByStandardizeName(printerName), "");
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "Pixlab_0759";
@@ -1857,7 +1857,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128, TestSize.Level1)
     EXPECT_EQ(service->UpdatePrinterCapability(printerId, info), true);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0129, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0129_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -1867,7 +1867,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0129, TestSize.Level1)
     EXPECT_EQ(printers.size(), 0);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterInfo info;
@@ -1884,7 +1884,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0130, TestSize.Level1)
     EXPECT_EQ(service->RemovePrinterFromDiscovery(DEFAULT_EXT_PRINTER_ID), E_PRINT_INVALID_PRINTER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-1620";
@@ -1895,7 +1895,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0131, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps), E_PRINT_INVALID_PRINTER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0132, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0132_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string vendorName = "fwk.driver";
@@ -1908,7 +1908,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0132, TestSize.Level1)
     EXPECT_TRUE(service->RemoveVendorPrinterFromDiscovery(vendorName, printerId));
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string vendorName = "fwk.driver";
@@ -1928,7 +1928,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0133, TestSize.Level1)
     EXPECT_EQ(service->QueryVendorPrinterInfo(globalId, info2), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0134, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0134_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string vendorName = "fwk.driver";
@@ -1956,7 +1956,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0134, TestSize.Level1)
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0135, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0135_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_EQ(service->TryConnectPrinterByIp(""), E_PRINT_INVALID_PRINTER);
@@ -1966,7 +1966,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0135, TestSize.Level1)
     EXPECT_EQ(service->TryConnectPrinterByIp(param), E_PRINT_SERVER_FAILURE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0136, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0136_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string vendorName = "fwk.driver";
@@ -1996,7 +1996,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0136, TestSize.Level1)
     service->RemoveVendorPrinterFromCups(vendorName, printerId);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0137, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0137_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterInfo info;
@@ -2004,7 +2004,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0137, TestSize.Level1)
     EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_INVALID_PRINTER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0138, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0138_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrinterInfo info;
@@ -2015,7 +2015,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0138, TestSize.Level1)
     EXPECT_EQ(service->CheckUserIdInEventType(type), false);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0139, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0139_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string vendorName = "fwk.driver";
@@ -2043,7 +2043,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0139, TestSize.Level1)
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0140, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0140_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "testPrinterId";
@@ -2053,7 +2053,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0140, TestSize.Level1)
     EXPECT_EQ(service->UpdatePrinterCapability(printerId, info), true);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0141, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0141_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "com.ohos.spooler:testPrinterId";
@@ -2065,7 +2065,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0141, TestSize.Level1)
     EXPECT_EQ(service->AddSinglePrinterInfo(info, extensionId), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0143, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0143_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -2076,7 +2076,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0143, TestSize.Level1)
     EXPECT_EQ(service->SetPrinterPreference(printerId, preferences), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0144, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0144_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "com.ohos.spooler:testPrinterId";
@@ -2086,7 +2086,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0144, TestSize.Level1)
     EXPECT_EQ(service->UpdatePrinterCapability(printerId, info), true);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0145, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0145_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string userName = service->GetCallerUserName();
@@ -2094,7 +2094,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0145, TestSize.Level1)
     EXPECT_EQ(service->StartPrintJobInternal(nullptr), E_PRINT_SERVER_FAILURE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0146, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0146_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -2111,7 +2111,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0146, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0147, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0147_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -2130,7 +2130,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0147, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_INVALID_PRINTER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0148, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0148_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -2149,7 +2149,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0148, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_INVALID_PRINTER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0149, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0149_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -2162,7 +2162,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0149, TestSize.Level1)
     EXPECT_EQ(service->QueryAddedPrinter(printerList), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0150, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0150_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -2175,7 +2175,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0150, TestSize.Level1)
     EXPECT_EQ(service->QueryAddedPrinter(printerList), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0153, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0153_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -2191,7 +2191,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0153, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterCapabilityByUri(printerUri, standardizeId, printerCaps), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0155, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0155_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -2219,7 +2219,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0155, TestSize.Level1)
     EXPECT_EQ(service->CheckPrintJob(printJob), true);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0156, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0156_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -2244,7 +2244,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0156, TestSize.Level1)
 * @tc.type: FUNC ConnectPrinter
 * @tc.require: use old version printerId
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0157, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0157_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
