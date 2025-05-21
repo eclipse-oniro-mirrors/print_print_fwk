@@ -48,12 +48,12 @@ void PrintJobTest::SetUp(void) {}
 void PrintJobTest::TearDown(void) {}
 
 /**
- * @tc.name: PrintJobTest_0002
+ * @tc.name: PrintJobTest_0002_NeedRename
  * @tc.desc: Verify the PrintExtensionInfo function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0002_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     OHOS::Print::PrintPreviewAttribute attr;
@@ -81,12 +81,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0002, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0003
+ * @tc.name: PrintJobTest_0003_NeedRename
  * @tc.desc: Verify the SetExtensionId function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0003, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0003_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     std::vector<uint32_t> files = {1, 2, 3};
@@ -100,12 +100,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0003, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0004
+ * @tc.name: PrintJobTest_0004_NeedRename
  * @tc.desc: Verify the SetVendorId function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0004, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0004_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetJobId("jobid-1234");
@@ -113,12 +113,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0004, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0005
+ * @tc.name: PrintJobTest_0005_NeedRename
  * @tc.desc: Verify the SetVendorIcon function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0005, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0005_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetPrinterId("printid-1234");
@@ -126,12 +126,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0005, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0006
+ * @tc.name: PrintJobTest_0006_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0006, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0006_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetJobState(PRINT_JOB_BLOCKED);
@@ -139,12 +139,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0006, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0007
+ * @tc.name: PrintJobTest_0007_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0007, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0007_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetJobState(PRINT_JOB_UNKNOWN + 1);
@@ -152,12 +152,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0007, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0008
+ * @tc.name: PrintJobTest_0008_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0008, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0008_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetJobState(PRINT_JOB_COMPLETED);
@@ -166,12 +166,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0008, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0009
+ * @tc.name: PrintJobTest_0009_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0009, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0009_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetJobState(PRINT_JOB_COMPLETED);
@@ -180,12 +180,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0009, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0010
+ * @tc.name: PrintJobTest_0010_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0010, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0010_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetJobState(PRINT_JOB_BLOCKED);
@@ -194,12 +194,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0010, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0011
+ * @tc.name: PrintJobTest_0011_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0011, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0011_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetJobState(PRINT_JOB_BLOCKED);
@@ -208,12 +208,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0011, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0012
+ * @tc.name: PrintJobTest_0012_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0012, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0012_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetJobState(PRINT_JOB_RUNNING);
@@ -222,12 +222,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0012, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0013
+ * @tc.name: PrintJobTest_0013_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0013, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0013_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetJobState(PRINT_JOB_RUNNING);
@@ -236,12 +236,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0013, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0014
+ * @tc.name: PrintJobTest_0014_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0014, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0014_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetCopyNumber(2);
@@ -249,12 +249,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0014, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0015
+ * @tc.name: PrintJobTest_0015_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0015, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0015_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     OHOS::Print::PrintRange range, getRange;
@@ -265,12 +265,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0015, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0016
+ * @tc.name: PrintJobTest_0016_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0016, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0016_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetIsSequential(true);
@@ -278,12 +278,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0016, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0017
+ * @tc.name: PrintJobTest_0017_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0017, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0017_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     OHOS::Print::PrintPageSize pageSize, getPageSize;
@@ -294,12 +294,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0017, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0018
+ * @tc.name: PrintJobTest_0018_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0018, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0018_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetIsLandscape(true);
@@ -307,12 +307,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0018, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0019
+ * @tc.name: PrintJobTest_0019_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0019, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0019_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetColorMode(1);
@@ -320,12 +320,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0019, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0020
+ * @tc.name: PrintJobTest_0020_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0020, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0020_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetDuplexMode(1);
@@ -333,12 +333,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0020, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0021
+ * @tc.name: PrintJobTest_0021_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0021, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0021_NeedRename, TestSize.Level1)
 {
     PrintJob job, getJob;
     OHOS::Print::PrintMargin margin, getMargin;
@@ -350,12 +350,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0021, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0022
+ * @tc.name: PrintJobTest_0022_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0022, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0022_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     job.SetOption("option-123");
@@ -364,12 +364,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0022, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0023
+ * @tc.name: PrintJobTest_0023_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0023, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0023_NeedRename, TestSize.Level1)
 {
     PrintJob job, getJob;
     OHOS::Print::PrintPreviewAttribute attr, getAttr;
@@ -381,12 +381,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0023, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0024
+ * @tc.name: PrintJobTest_0024_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0024, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0024_NeedRename, TestSize.Level1)
 {
     PrintJob job, updateJob;
     job.SetColorMode(1);
@@ -399,12 +399,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0024, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0025
+ * @tc.name: PrintJobTest_0025_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0025, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0025_NeedRename, TestSize.Level1)
 {
     PrintJob job, jobInfo;
     Parcel parcel;
@@ -415,12 +415,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0025, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0026
+ * @tc.name: PrintJobTest_0026_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0026, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0026_NeedRename, TestSize.Level1)
 {
     PrintJob job, jobInfo;
     Parcel parcel;
@@ -438,12 +438,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0026, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0027
+ * @tc.name: PrintJobTest_0027_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0027, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0027_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     std::vector<uint32_t> files = {1, 2, 3};
@@ -456,12 +456,12 @@ HWTEST_F(PrintJobTest, PrintJobTest_0027, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintJobTest_0028
+ * @tc.name: PrintJobTest_0028_NeedRename
  * @tc.desc: Verify the SetVendorName function.
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintJobTest, PrintJobTest_0028, TestSize.Level1)
+HWTEST_F(PrintJobTest, PrintJobTest_0028_NeedRename, TestSize.Level1)
 {
     PrintJob job;
     std::vector<uint32_t> files = {1, 2, 3};
