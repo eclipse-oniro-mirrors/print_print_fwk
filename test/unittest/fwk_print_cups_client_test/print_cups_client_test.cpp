@@ -96,7 +96,7 @@ std::string PrintCupsClientTest::GetDefaultJobId()
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0001, TestSize.Level0)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0001_NeedRename, TestSize.Level0)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     int32_t ret = printCupsClient.StartCupsdService();
@@ -109,7 +109,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0001, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0002, TestSize.Level0)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0002_NeedRename, TestSize.Level0)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string path = "";
@@ -123,7 +123,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0002, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0003, TestSize.Level0)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0003_NeedRename, TestSize.Level0)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     const char *srcDir = "./PrintCupsClientTest_0003_srcDir";
@@ -158,7 +158,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0003, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0004, TestSize.Level0)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0004_NeedRename, TestSize.Level0)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     const char *srcDir = "./PrintCupsClientTest_0004_srcDir";
@@ -197,7 +197,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0004, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0005, TestSize.Level0)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0005_NeedRename, TestSize.Level0)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     int32_t ret = printCupsClient.InitCupsResources();
@@ -210,7 +210,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0005, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0006, TestSize.Level0)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0006_NeedRename, TestSize.Level0)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     int32_t ret = printCupsClient.StartCupsdService();
@@ -224,7 +224,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0006, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0008, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0008_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "DIRECT-PixLab_V1-0105";
@@ -239,7 +239,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0008, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0009, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0009_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "DIRECT-PixLab_V1-0105";
@@ -255,7 +255,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0009, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0012, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0012_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerUri = "ipp://192.168.186.1:631/ipp/print";
@@ -370,7 +370,7 @@ HWTEST_F(PrintCupsClientTest, StartNextJob_ClearQueue_When_NullptrPrintJobInQueu
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019_NeedRename, TestSize.Level1)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     PrintJob testJob;
@@ -396,7 +396,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0020, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0020_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     int numOptions = 0;
@@ -467,7 +467,7 @@ HWTEST_F(PrintCupsClientTest, FillThreeOptions_When_SetNotBorderless, TestSize.L
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0023, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0023_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -496,7 +496,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0023, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0024, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0024_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -526,7 +526,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0024, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025_NeedRename, TestSize.Level1)
 {
     int num = 0;
     cups_option_t *options = nullptr;
@@ -555,7 +555,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0026, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0026_NeedRename, TestSize.Level1)
 {
     int num = 0;
     cups_option_t *options = nullptr;
@@ -586,7 +586,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0026, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0027, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0027_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::vector<std::string> printerNameList;
@@ -601,7 +601,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0027, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0028, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0028_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::vector<std::string> printerNameList;
@@ -616,7 +616,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0028, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0030, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0030_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "testPrinterName";
@@ -631,7 +631,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0030, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0031, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0031_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "testPrinterName";
@@ -645,7 +645,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0031, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0032, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0032_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "testPrinterName";
@@ -660,7 +660,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0032, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0033, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0033_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerId = "testPrinterId";
@@ -675,7 +675,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0033, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0034, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0034_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     JobParameters *jobParams = nullptr;
@@ -689,7 +689,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0034, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0036, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0036_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     JobParameters *jobParams = nullptr;
@@ -710,7 +710,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0036, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0039, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0039_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -742,7 +742,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0039, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0042, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0042_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     EXPECT_FALSE(printCupsClient.CheckPrinterDriverExist(nullptr));
@@ -762,7 +762,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0042, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0043, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0043_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.StartMonitor();
@@ -778,7 +778,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0043, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0047, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0047_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.IsPrinterStopped(nullptr);
@@ -793,7 +793,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0047, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0048, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0048_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.IfContinueToHandleJobState(nullptr);
@@ -810,7 +810,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0048, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0049, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0049_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
@@ -833,7 +833,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0049, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0050, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0050_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
@@ -856,7 +856,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0050, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0051, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0051_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
@@ -879,7 +879,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0051, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0052, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0052_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
@@ -902,7 +902,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0052, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0053, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0053_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
@@ -925,7 +925,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0053, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0054, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0054_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
@@ -951,7 +951,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0054, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0055, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0055_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
@@ -974,7 +974,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0055, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0056, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0056_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.ParseStateReasons(nullptr);
@@ -994,7 +994,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0056, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0057, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0057_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.GetBlockedAndUpdateSubstate(nullptr, STATE_POLICY_STANDARD,
@@ -1025,7 +1025,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0057, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0058, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0058_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.GetBlockedAndUpdateSubstate(nullptr, STATE_POLICY_STANDARD,
@@ -1056,7 +1056,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0058, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0059, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0059_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     int num = printCupsClient.jobQueue_.size();
@@ -1073,7 +1073,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0059, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0060, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0060_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string serviceJobId = "0";
@@ -1099,7 +1099,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0060, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0061, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0061_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string serviceJobId = "1";
@@ -1124,7 +1124,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0061, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0062, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0062_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string serviceJobId = TEST_SERVICE_JOB_ID;
@@ -1143,7 +1143,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0062, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0063, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0063_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.GetBlockedAndUpdateSubstate(nullptr, STATE_POLICY_STANDARD,
@@ -1174,7 +1174,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0063, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0066, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0066_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -1200,7 +1200,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0066, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -1256,7 +1256,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0068, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0068_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -1292,7 +1292,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0068, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0069, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0069_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -1317,7 +1317,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0069, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0070, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0070_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     uint32_t duplexCode = 0;
@@ -1343,7 +1343,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0070, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0071, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0071_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     uint32_t colorCode = 0;
@@ -1365,7 +1365,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0071, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0073, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0073_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     const char *printerUri = "ipp://192.168.186.1:631/ipp/print";
@@ -1380,7 +1380,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0073, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0074, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0074_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     float num = 1000;
@@ -1394,7 +1394,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0074, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0075, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0075_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerId = "com.ohos.spooler:usb://DIRECT-PixLab_V1-1620";
@@ -1413,7 +1413,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0075, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0077, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0077_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::vector<PrinterInfo> printers;
@@ -1427,7 +1427,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0077, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0078, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0078_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -1468,7 +1468,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0078, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0079, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0079_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     http_t *http = nullptr;
@@ -1499,7 +1499,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0079, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0081, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0081_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     EXPECT_FALSE(printCupsClient.UpdateJobState(nullptr, nullptr));
@@ -1514,7 +1514,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0081, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0082, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0082_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string printerName = "testPrinterName";
@@ -1529,7 +1529,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0082, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0083, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0083_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -1558,7 +1558,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0083, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0084, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0084_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     PrintJob testJob;
@@ -1645,7 +1645,7 @@ HWTEST_F(PrintCupsClientTest, FillTwoOptions_When_SetLandscape, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0087, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0087_NeedRename, TestSize.Level1)
 {
     // Arrange
     std::string deviceUri = "usb://printer";
@@ -1677,7 +1677,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0087, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0088, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0088_NeedRename, TestSize.Level1)
 {
     // Arrange
     std::string deviceUri = "network://printer";
@@ -1701,7 +1701,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0088, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0089, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0089_NeedRename, TestSize.Level1)
 {
     // Arrange
     std::string deviceUri = "usb://printer";
@@ -1725,7 +1725,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0089, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0090, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0090_NeedRename, TestSize.Level1)
 {
     // Arrange
     std::string deviceUri = "usb://printer";
@@ -1757,7 +1757,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0090, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0091, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0091_NeedRename, TestSize.Level1)
 {
     // Arrange
     std::string deviceUri = "usb://printer_serial=123&111";
@@ -1790,7 +1790,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0091, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0092, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0092_NeedRename, TestSize.Level1)
 {
     std::string usb = "usb://";
     std::string serial = "serial=";
@@ -1813,7 +1813,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0092, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0093, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0093_NeedRename, TestSize.Level1)
 {
     std::string printerUri = "test";
     EXPECT_STREQ(StandardizePrinterUri(printerUri, "").c_str(), printerUri.c_str());
