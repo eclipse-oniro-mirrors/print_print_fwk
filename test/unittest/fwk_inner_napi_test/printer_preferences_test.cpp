@@ -37,7 +37,7 @@ void PrinterPreferencesTest::SetUp(void) {}
 
 void PrinterPreferencesTest::TearDown(void) {}
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0001, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0001_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultDuplexMode(0);
@@ -45,7 +45,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0001, TestSize.Level2)
     EXPECT_EQ(0, preferences.GetDefaultDuplexMode());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0002, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0002_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultPrintQuality(4);
@@ -53,7 +53,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0002, TestSize.Level2)
     EXPECT_EQ(4, preferences.GetDefaultPrintQuality());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0003, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0003_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultMediaType("stationery");
@@ -61,7 +61,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0003, TestSize.Level2)
     EXPECT_EQ("stationery", preferences.GetDefaultMediaType());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0004, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0004_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultPageSizeId("ISO_A4");
@@ -69,7 +69,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0004, TestSize.Level2)
     EXPECT_EQ("ISO_A4", preferences.GetDefaultPageSizeId());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0005, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0005_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultOrientation(0);
@@ -77,7 +77,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0005, TestSize.Level2)
     EXPECT_EQ(0, preferences.GetDefaultOrientation());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0006, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0006_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetBorderless(true);
@@ -85,7 +85,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0006, TestSize.Level2)
     EXPECT_EQ(true, preferences.GetBorderless());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0007, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0007_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetOption("test");
@@ -93,7 +93,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0007, TestSize.Level2)
     EXPECT_EQ("test", preferences.GetOption());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0008, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0008_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.Dump();
@@ -101,7 +101,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0008, TestSize.Level2)
     EXPECT_EQ(true, preferences.Marshalling(parcel));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0009, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0009_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultDuplexMode(0);
@@ -116,7 +116,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0009, TestSize.Level2)
     EXPECT_EQ(true, preferences.Marshalling(parcel));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0010, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0010_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultDuplexMode(0);
@@ -131,7 +131,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0010, TestSize.Level2)
     EXPECT_NE(nullptr, OHOS::Print::PrinterPreferences::Unmarshalling(parcel));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0011, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0011_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Parcel parcel;
@@ -139,14 +139,14 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0011, TestSize.Level2)
     EXPECT_NE(nullptr, OHOS::Print::PrinterPreferences::Unmarshalling(parcel));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0012, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0012_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson = preferences.ConvertToJson();
     EXPECT_EQ(false, Print::PrintJsonUtil::IsMember(preferencesJson, "options"));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0013, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0013_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultDuplexMode(0);
@@ -160,7 +160,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0013, TestSize.Level2)
     EXPECT_EQ(true, Print::PrintJsonUtil::IsMember(preferencesJson, "defaultPageSizeId"));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0014, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0014_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value opsJson;
@@ -170,7 +170,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0014, TestSize.Level2)
     EXPECT_EQ(true, Print::PrintJsonUtil::IsMember(preferencesJson, "options"));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0015, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0015_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson;
@@ -178,7 +178,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0015, TestSize.Level2)
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0016, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0016_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson;
@@ -193,7 +193,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0016, TestSize.Level2)
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0017, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0017_NeedRename, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson;

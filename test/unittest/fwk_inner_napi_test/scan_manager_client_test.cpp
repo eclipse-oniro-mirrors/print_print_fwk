@@ -44,7 +44,7 @@ void ScanManagerClientTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScanManagerClientTest, ScanManagerClientTest_0001, TestSize.Level1)
+HWTEST_F(ScanManagerClientTest, ScanManagerClientTest_0001_NeedRename, TestSize.Level1)
 {
     int32_t scanVersion = 0;
     auto status = smgPtr->InitScan(scanVersion);
@@ -58,7 +58,7 @@ HWTEST_F(ScanManagerClientTest, ScanManagerClientTest_0001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScanManagerClientTest, ScanManagerClientTest_0002, TestSize.Level1)
+HWTEST_F(ScanManagerClientTest, ScanManagerClientTest_0002_NeedRename, TestSize.Level1)
 {
     int32_t scanVersion = 0;
     auto status = smgPtr->ExitScan(scanVersion);

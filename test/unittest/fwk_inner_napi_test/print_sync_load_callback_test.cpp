@@ -49,7 +49,7 @@ void PrintSyncLoadCallbackTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintSyncLoadCallbackTest, PrintSyncLoadCallbackTest_0001, TestSize.Level1)
+HWTEST_F(PrintSyncLoadCallbackTest, PrintSyncLoadCallbackTest_0001_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintSyncLoadCallback printSyncLoadCallback;
     int32_t systemAbilityId = 0;

@@ -44,7 +44,7 @@ void PrintResolutionTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintResolutionTest, PrintResolutionTest_001, TestSize.Level1)
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_001_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
     OHOS::Print::PrintResolution res;
@@ -61,7 +61,7 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintResolutionTest, PrintResolutionTest_002, TestSize.Level1)
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_002_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
     resolution.Reset();
@@ -74,7 +74,7 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintResolutionTest, PrintResolutionTest_003, TestSize.Level1)
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_003_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
     resolution.SetId("test");
@@ -87,7 +87,7 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_003, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintResolutionTest, PrintResolutionTest_004, TestSize.Level1)
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_004_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
     resolution.SetHorizontalDpi(32);
@@ -100,7 +100,7 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_004, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintResolutionTest, PrintResolutionTest_005, TestSize.Level1)
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_005_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
     resolution.SetVerticalDpi(32);
@@ -113,7 +113,7 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_005, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintResolutionTest, PrintResolutionTest_006, TestSize.Level1)
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_006_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
     resolution.SetId("test");
@@ -129,7 +129,7 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_006, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintResolutionTest, PrintResolutionTest_007, TestSize.Level1)
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_007_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
     resolution.SetId("test");
@@ -147,7 +147,7 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_007, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintResolutionTest, PrintResolutionTest_008, TestSize.Level1)
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_008_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
     resolution.SetId("test");
@@ -161,7 +161,7 @@ HWTEST_F(PrintResolutionTest, PrintResolutionTest_008, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintResolutionTest, PrintResolutionTest_009, TestSize.Level1)
+HWTEST_F(PrintResolutionTest, PrintResolutionTest_009_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintResolution resolution;
     resolution.SetId("test");
