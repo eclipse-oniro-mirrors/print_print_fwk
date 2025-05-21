@@ -31,14 +31,14 @@ public:
     std::string GetVendorName() override;
 
 private:
-    bool QueryPpdByPrinterId(const std::string &printerId, std::vector<std::string> &ppds);
+    bool QueryPpdByPrinterId(const std::string &printerId, std::string &ppdName);
     bool AddPrinterToCups(const std::string &printerId, const std::string &ppdData);
     std::shared_ptr<PrinterInfo> QueryPrinterCapabilityFromPpd(const std::string &printerId,
         const std::string &ppdData);
     bool UpdateCapability(std::shared_ptr<PrinterInfo> printerInfo);
 
 private:
-    std::map<std::string, std::vector<std::string>> privatePrinterPpdMap;
+    std::map<std::string, std::string> privatePrinterPpdMap;
 };
 }  // namespace Print
 }  // namespace OHOS

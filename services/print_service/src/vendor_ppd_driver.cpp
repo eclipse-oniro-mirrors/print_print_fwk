@@ -26,16 +26,16 @@ bool VendorPpdDriver::OnQueryCapability(const std::string &printerId, int timeou
 {
     PRINT_HILOGI("OnQueryCapability enter.");
     PRINT_HILOGD("OnQueryCapability printerId=%{private}s", printerId.c_str());
-    std::vector<std::string> ppds;
-    if (!QueryPpdByPrinterId(printerId, ppds)) {
+    std::string ppdName;
+    if (!QueryPpdByPrinterId(printerId, ppdName)) {
         PRINT_HILOGW("OnQueryCapability query ppd fail. printerId = %{private}s", printerId.c_str());
         return false;
     }
-    if (!AddPrinterToCups(printerId, ppds[0])) {
+    if (!AddPrinterToCups(printerId, ppdName)) {
         PRINT_HILOGE("OnQueryCapability add printer fail.");
         return false;
     }
-    std::shared_ptr<PrinterInfo> printerInfo = QueryPrinterCapabilityFromPpd(printerId, ppds[0]);
+    std::shared_ptr<PrinterInfo> printerInfo = QueryPrinterCapabilityFromPpd(printerId, ppdName);
     if (printerInfo == nullptr) {
         PRINT_HILOGW("get printerInfo failed.");
         return false;
@@ -71,7 +71,7 @@ bool VendorPpdDriver::OnQueryProperties(const std::string &printerId, const std:
     if (iter != privatePrinterPpdMap.end()) {
         privatePrinterPpdMap.erase(iter);
     }
-    privatePrinterPpdMap.insert(std::make_pair(printerId, std::vector(ppds)));
+    privatePrinterPpdMap.insert(std::make_pair(printerId, ppds[0]));
     return true;
 }
 
@@ -80,12 +80,12 @@ std::string VendorPpdDriver::GetVendorName()
     return VENDOR_PPD_DRIVER;
 }
 
-bool VendorPpdDriver::QueryPpdByPrinterId(const std::string &printerId, std::vector<std::string> &ppds)
+bool VendorPpdDriver::QueryPpdByPrinterId(const std::string &printerId, std::string &ppdName)
 {
     PRINT_HILOGI("QueryPpdByPrinterId enter.");
     auto iter = privatePrinterPpdMap.find(printerId);
     if (iter != privatePrinterPpdMap.end()) {
-        ppds = std::vector(iter->second);
+        ppdName = iter->second;
         PRINT_HILOGI("QueryPpdByPrinterId success.");
         return true;
     }
