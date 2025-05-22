@@ -51,13 +51,13 @@ void PrintServiceConverterTest::TearDown(void) {}
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0001, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0001_NeedRename, TestSize.Level1)
 {
     int dpc = 120;
     EXPECT_EQ(DpcToDpi(dpc), 300);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0002, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0002_NeedRename, TestSize.Level1)
 {
     std::vector<std::string> list;
     list.push_back("1111");
@@ -67,7 +67,7 @@ HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0002, TestSize.Lev
     EXPECT_EQ(list.size(), 2);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0003, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0003_NeedRename, TestSize.Level1)
 {
     std::vector<std::string> list;
     list.push_back("1111");
@@ -77,27 +77,27 @@ HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0003, TestSize.Lev
     EXPECT_EQ(list.size(), 3);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0004, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0004_NeedRename, TestSize.Level1)
 {
     int code = 3;
     EXPECT_EQ(GetQulityString(code), "3");
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0005, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0005_NeedRename, TestSize.Level1)
 {
     const char* src = nullptr;
     ColorModeCode dst;
     EXPECT_EQ(ConvertColorModeCode(src, dst), false);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_006, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0006_NeedRename, TestSize.Level1)
 {
     PrintPageSize pageSize;
     Json::Value jsonObject;
     EXPECT_EQ(ConvertPageSizeToJson(pageSize, jsonObject), true);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0007, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0007_NeedRename, TestSize.Level1)
 {
     const char* src = "color";
     ColorModeCode dst;
@@ -106,7 +106,7 @@ HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0007, TestSize.Lev
     EXPECT_EQ(re, true);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0008, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0008_NeedRename, TestSize.Level1)
 {
     const char* src = "monochrome";
     ColorModeCode dst;
@@ -115,7 +115,7 @@ HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0008, TestSize.Lev
     EXPECT_EQ(re, true);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0009, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0009_NeedRename, TestSize.Level1)
 {
     const char* src = "auto";
     ColorModeCode dst;
@@ -124,91 +124,91 @@ HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0009, TestSize.Lev
     EXPECT_EQ(re, true);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0010, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0010_NeedRename, TestSize.Level1)
 {
     const char* src = "sss";
     ColorModeCode dst;
     EXPECT_EQ(ConvertColorModeCode(src, dst), false);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0011, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0011_NeedRename, TestSize.Level1)
 {
     ColorModeCode code = ColorModeCode::COLOR_MODE_COLOR;
     Json::Value jsonObject;
     EXPECT_EQ(ConvertColorModeToJson(code, jsonObject), true);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0012, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0012_NeedRename, TestSize.Level1)
 {
     DuplexModeCode code = DuplexModeCode::DUPLEX_MODE_ONE_SIDED;
     Json::Value jsonObject;
     EXPECT_EQ(ConvertDuplexModeToJson(code, jsonObject), true);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0013, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0013_NeedRename, TestSize.Level1)
 {
     const char* src = nullptr;
     std::string id = "";
     EXPECT_EQ(ConvertPageSizeId(src, id), false);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0014, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0014_NeedRename, TestSize.Level1)
 {
     const char* src = "iso_a4_210x297mm";
     std::string id = "";
     EXPECT_EQ(ConvertPageSizeId(src, id), true);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0015, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0015_NeedRename, TestSize.Level1)
 {
     const char* src = nullptr;
     PrintPageSize dst;
     EXPECT_EQ(ConvertPrintPageSize(src, dst), false);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0016, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0016_NeedRename, TestSize.Level1)
 {
     const char* src = "iso_a4_210x297mm";
     PrintPageSize dst;
     EXPECT_EQ(ConvertPrintPageSize(src, dst), true);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0017, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0017_NeedRename, TestSize.Level1)
 {
     const char* src = "na_number-10_4.125x9.5in";
     PrintPageSize dst;
     EXPECT_EQ(ConvertPrintPageSize(src, dst), true);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0018, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0018_NeedRename, TestSize.Level1)
 {
     const char* src = "custom_390.03x540.03mm_390.03x540.03mm";
     PrintPageSize dst;
     EXPECT_EQ(ConvertPrintPageSize(src, dst), true);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0019, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0019_NeedRename, TestSize.Level1)
 {
     const char* src = "nanumber";
     PrintPageSize dst;
     EXPECT_EQ(ConvertPrintPageSize(src, dst), false);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0020, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0020_NeedRename, TestSize.Level1)
 {
     const char* src = "custom_min_50.8x85.94mm";
     PrintPageSize dst;
     EXPECT_EQ(ConvertPrintPageSize(src, dst), false);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0021, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0021_NeedRename, TestSize.Level1)
 {
     const char* src = "custom_390.03x540.03mm_390.03540.03mm";
     PrintPageSize dst;
     EXPECT_EQ(ConvertPrintPageSize(src, dst), false);
 }
 
-HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0022, TestSize.Level1)
+HWTEST_F(PrintServiceConverterTest, PrintServiceConverterTest_0022_NeedRename, TestSize.Level1)
 {
     const char* src = "custom_390.03x540.03mm_390.03x540.03cm";
     PrintPageSize dst;

@@ -38,7 +38,7 @@ void PrintSecurityGuardInfoTest::SetUp(void) {}
 
 void PrintSecurityGuardInfoTest::TearDown(void) {}
 
-HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0001, TestSize.Level1)
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0001_NeedRename, TestSize.Level1)
 {
     std::vector<std::string> fileList;
     PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
@@ -48,7 +48,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0001, TestSize.L
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
 
-HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0002, TestSize.Level1)
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0002_NeedRename, TestSize.Level1)
 {
     std::vector<std::string> fileList;
     PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
@@ -59,7 +59,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0002, TestSize.L
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
 
-HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0003, TestSize.Level1)
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0003_NeedRename, TestSize.Level1)
 {
     std::vector<std::string> fileList;
     PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
@@ -73,7 +73,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0003, TestSize.L
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
 
-HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0004, TestSize.Level1)
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0004_NeedRename, TestSize.Level1)
 {
     std::vector<std::string> fileList;
     PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
@@ -87,7 +87,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0004, TestSize.L
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
 
-HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0005, TestSize.Level1)
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0005_NeedRename, TestSize.Level1)
 {
     std::vector<std::string> fileList;
     PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
@@ -101,7 +101,7 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0005, TestSize.L
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
 
-HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0006, TestSize.Level1)
+HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0006_NeedRename, TestSize.Level1)
 {
     std::vector<std::string> fileList;
     PrintSecurityGuardInfo printSecurityGuardInfo("callPkg", fileList);
