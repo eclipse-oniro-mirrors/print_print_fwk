@@ -46,7 +46,7 @@ void PrintRangeTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0002, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0002_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     range.Reset();
@@ -59,7 +59,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0002, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0003, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0003_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     range.SetStartPage(6);
@@ -72,7 +72,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0003, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0004, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0004_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     range.SetEndPage(6);
@@ -85,7 +85,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0004, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0005, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0005_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     range.SetEndPage(6);
@@ -98,7 +98,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0005, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0006, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0006_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     std::vector<uint32_t> pages = {1, 2, 3};
@@ -112,7 +112,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0006, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0007, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0007_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     std::vector<uint32_t> pages = {1, 2, 3};
@@ -128,7 +128,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0007, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0008, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0008_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     std::vector<uint32_t> pages = {1, 2, 3};
@@ -145,7 +145,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0008, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0009, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0009_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     std::vector<uint32_t> pages = {1, 2, 3};
@@ -162,7 +162,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0009, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0010, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0010_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     std::vector<uint32_t> pages = {1, 2, 3};
@@ -178,7 +178,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0010, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0011, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0011_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     std::vector<uint32_t> pages = {1, 2, 3};
@@ -194,7 +194,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0011, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0012, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0012_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     range.SetEndPage(6);
@@ -209,7 +209,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0012, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0013, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0013_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     std::vector<uint32_t> pages = {1, 2, 3};
@@ -228,7 +228,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0013, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0014, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0014_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     range.SetEndPage(6);
@@ -242,7 +242,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0014, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0015, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0015_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     range.SetEndPage(6);
@@ -256,7 +256,7 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0015, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintRangeTest, PrintRangeTest_0016, TestSize.Level1)
+HWTEST_F(PrintRangeTest, PrintRangeTest_0016_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintRange range;
     range.SetStartPage(0);

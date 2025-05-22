@@ -47,7 +47,7 @@ void ScanAsyncCallTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScanAsyncCallTest, ScanAsyncCallTest_0001, TestSize.Level1)
+HWTEST_F(ScanAsyncCallTest, ScanAsyncCallTest_0001_NeedRename, TestSize.Level1)
 {
     napi_env env;
     napi_callback_info info;
