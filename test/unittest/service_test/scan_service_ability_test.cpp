@@ -86,7 +86,7 @@ void ScanServiceAbilityTest::SetScannerId(const std::string& scannerId)
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_001, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_001_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t scanVersion = DEFAULT_NUMBER;
     int32_t status = E_SCAN_NONE;
@@ -101,7 +101,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_001, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_002, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_002_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = ExitScan();
@@ -114,7 +114,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_002, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_004, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_004_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = GetScannerList();
@@ -127,7 +127,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_004, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_004, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_004_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = StopDiscover();
@@ -140,7 +140,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_004, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_005, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_005_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = OpenScanner(scannerId);
@@ -153,7 +153,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_005, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_006, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_006_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = CloseScanner(scannerId);
@@ -166,7 +166,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_006, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_007, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_007_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = GetScanOptionDesc(scannerId);
@@ -179,7 +179,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_007, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_008, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_008_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = GetScanOptionDesc(scannerId);
@@ -192,7 +192,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_008, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_009, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_009_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = OpScanOptionValue(scannerId);
@@ -205,7 +205,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_009, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_010, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_010_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = GetScanParameters(scannerId);
@@ -218,7 +218,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_010, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_011, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_011_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = StartScan(scannerId);
@@ -231,7 +231,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_011, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_012, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_012_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = GetSingleFrameFD(scannerId);
@@ -244,7 +244,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_012, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_013, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_013_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = CancelScan(scannerId);
@@ -257,7 +257,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_013, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_014, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_014_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = SetScanIOMode(scannerId);
@@ -270,7 +270,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_014, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_015, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_015_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = GetScanSelectFd(scannerId);
@@ -283,7 +283,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_015, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_016, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_016_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = On(scannerId);
@@ -296,7 +296,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_016, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_017, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_017_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = Off(scannerId);
@@ -310,7 +310,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_017, TestSize.Level1) {
  * @tc.require: Issue Number
  */
 
-HWTEST_F(ScanServiceAbilityTest, integer_sub_018, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_018_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = GetScannerState(scannerId);
@@ -323,7 +323,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_018, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_019, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_019_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = GetScanProgress(scannerId);
@@ -336,7 +336,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_019, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_020, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_020_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = OnStartScan(scannerId);
@@ -349,7 +349,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_020, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_021, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_021_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     StartScanTask(scannerId);
@@ -363,7 +363,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_021, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_022, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_022_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     int32_t scanVersion = 0;
@@ -377,7 +377,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_022, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_023, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_023_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status= scanSa->ExitScan();
@@ -390,7 +390,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_023, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_023, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_023_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     scanSa->UnloadSystemAbility();
@@ -403,7 +403,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_023, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_025, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_025_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = scanSa->OnStartScan(scannerId);
@@ -416,7 +416,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_025, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_026, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_026_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     scanSa->StartScanTask(scannerId);
@@ -430,7 +430,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_026, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_027, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_027_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     scanSa->StartScanTask(scannerId);
@@ -444,7 +444,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_027, TestSize.Level1) {
  * @tc.type: FUNC
  * @tc.require: Issue Number
  */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_028, TestSize.Level1) {
+HWTEST_F(ScanServiceAbilityTest, integer_sub_028_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = scanSa->OnStartScan(scannerId);
