@@ -46,11 +46,16 @@ bool VendorWlanGroup::OnQueryCapability(const std::string &printerId, int timeou
     if (ppdDriver != nullptr) {
         printerVendorGroupList_[printerId] = VENDOR_PPD_DRIVER;
         auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
-        if (printerInfo != nullptr && ppdDriver->OnQueryProperties(printerId, std::vector<std::string>(1,
-            printerInfo->GetPrinterMake()))) {
-            if (ppdDriver->OnQueryCapability(printerId, timeout)) {
-                PRINT_HILOGI("on query capability on ppd vendor seccess.");
-                return true;
+        if (printerInfo != nullptr) {
+            ppdDriver->OnPrinterDiscovered(GetVendorName(), *printerInfo);
+            std::string ppdName;
+            if (ppdDriver->QueryProperty(printerId, PRINTER_PROPERTY_KEY_CUPS_PPD_NAME, ppdName)) {
+                if (vendorManager->AddPrinterToCupsWithPpd(GetVendorName(), printerId, ppdName, "") ==
+                    EXTENSION_ERROR_NONE) {
+                    PRINT_HILOGI("AddPrinterToCupsWithPpd success.");
+                    return true;
+                }
+                PRINT_HILOGI("AddPrinterToCupsWithPpd fail.");
             }
         }
         RemoveGroupPrinterFromVendorGroupList(printerId);
@@ -174,14 +179,14 @@ void VendorWlanGroup::SetConnectingPrinter(ConnectMethod method, const std::stri
 }
 
 bool VendorWlanGroup::OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
-                                          const std::string &ppdData)
+                                          const std::string &ppdName, const std::string &ppdData)
 {
     if (parentVendorManager == nullptr) {
         PRINT_HILOGE("VendorManager is null.");
         return false;
     }
     std::string groupPrinterId = CheckPrinterAddedByIp(printerId) ? printerId : GetGroupPrinterId(printerId);
-    return parentVendorManager->OnPrinterPpdQueried(GetVendorName(), groupPrinterId, ppdData);
+    return parentVendorManager->OnPrinterPpdQueried(GetVendorName(), groupPrinterId, ppdName, ppdData);
 }
 
 

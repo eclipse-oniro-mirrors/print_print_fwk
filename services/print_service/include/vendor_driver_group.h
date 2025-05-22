@@ -33,7 +33,7 @@ public:
     virtual ConnectMethod GetConnectingMethod(const std::string &globalPrinterIdOrIp) = 0;
     virtual void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) = 0;
     virtual bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
-                                     const std::string &ppdData) = 0;
+                                     const std::string &ppdName, const std::string &ppdData) = 0;
     virtual bool MonitorPrinterStatus(const std::string &printerId, bool on) = 0;
     virtual bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                         const PrinterVendorStatus &status) = 0;

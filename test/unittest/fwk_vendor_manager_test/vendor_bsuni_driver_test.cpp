@@ -503,7 +503,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0015, TestSize.Level2)
     EXPECT_CALL(mockManager, AddPrinterToCupsWithPpd(_, _, _)).WillOnce(Return(1)).WillRepeatedly(Return(0));
     EXPECT_CALL(mockManager, RemovePrinterFromCups(_, _)).WillRepeatedly(Return(0));
     EXPECT_CALL(mockManager, IsConnectingPrinter(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(mockManager, OnPrinterPpdQueried(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    EXPECT_CALL(mockManager, OnPrinterPpdQueried(_, _, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_EQ(VendorBsuniDriver::AddPrinterToDiscovery(&discoveryItem), EXTENSION_ERROR_NONE);
     EXPECT_EQ(VendorBsuniDriver::RemovePrinterFromDiscovery(PRINTER_TEST_IP.c_str()), EXTENSION_ERROR_NONE);
     EXPECT_EQ(VendorBsuniDriver::AddPrinterToCups(&discoveryItem, &capability, &defaultValue, nullptr),

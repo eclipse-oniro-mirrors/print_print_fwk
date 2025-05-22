@@ -745,15 +745,10 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0039_NeedRename, TestSize.Leve
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0042_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    EXPECT_FALSE(printCupsClient.CheckPrinterDriverExist(nullptr));
-    char makeModel[128] {};
-    EXPECT_FALSE(printCupsClient.CheckPrinterDriverExist(makeModel));
-    DEFAULT_MAKE_MODEL.copy(makeModel, DEFAULT_MAKE_MODEL.length() + 1);
-    EXPECT_TRUE(printCupsClient.CheckPrinterDriverExist(makeModel));
-    BSUNI_PPD_NAME.copy(makeModel, BSUNI_PPD_NAME.length() + 1);
-    EXPECT_TRUE(printCupsClient.CheckPrinterDriverExist(makeModel));
-    REMOTE_PRINTER_MAKE_MODEL.copy(makeModel, REMOTE_PRINTER_MAKE_MODEL.length() + 1);
-    EXPECT_FALSE(printCupsClient.CheckPrinterDriverExist(makeModel));
+    EXPECT_FALSE(printCupsClient.CheckPrinterDriverExist(std::string()));
+    EXPECT_TRUE(printCupsClient.CheckPrinterDriverExist(DEFAULT_MAKE_MODEL));
+    EXPECT_TRUE(printCupsClient.CheckPrinterDriverExist(BSUNI_PPD_NAME));
+    EXPECT_FALSE(printCupsClient.CheckPrinterDriverExist(REMOTE_PRINTER_MAKE_MODEL));
 }
 
 /**

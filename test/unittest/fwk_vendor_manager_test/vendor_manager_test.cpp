@@ -189,7 +189,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0006, TestSize.Level1)
     EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd("", "", ""), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(ppdDriverVendorName, "", ""), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromCups("", ""), EXTENSION_ERROR_CALLBACK_FAIL);
-    EXPECT_FALSE(vendorManager.OnPrinterPpdQueried("", PRINTER_TEST_IP, ""));
+    EXPECT_FALSE(vendorManager.OnPrinterPpdQueried("", PRINTER_TEST_IP, "", ""));
     EXPECT_FALSE(vendorManager.MonitorPrinterStatus(":id", true));
     EXPECT_FALSE(vendorManager.MonitorPrinterStatus("fwk.driver:", true));
     EXPECT_FALSE(vendorManager.MonitorPrinterStatus("fwk.:printer.id", true));
@@ -201,9 +201,9 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0006, TestSize.Level1)
     PrinterVendorStatus vendorStatus;
     EXPECT_TRUE(vendorManager.OnPrinterStatusChanged("vendor", PRINTER_TEST_IP, vendorStatus));
     EXPECT_FALSE(vendorManager.QueryPrinterInfoByPrinterId("vendor", PRINTER_TEST_IP, printerInfo));
-    char mekeModel[] = "test_makeModel";
-    std::vector<std::string> ppds(1, "test_ppds");
-    EXPECT_FALSE(vendorManager.QueryPPDInformation(mekeModel, ppds));
+    std::string mekeModel = "test_makeModel";
+    std::string ppdName;
+    EXPECT_FALSE(vendorManager.QueryPPDInformation(mekeModel, ppdName));
     vendorManager.UnInit();
 }
 
@@ -222,7 +222,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0007, TestSize.Level2)
     std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
     EXPECT_CALL(*mock, QueryPrinterStatusByUri(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, QueryPrinterCapabilityByUri(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*mock, AddVendorPrinterToCupsWithPpd(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock, AddVendorPrinterToCupsWithPpd(_, _, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, OnVendorStatusUpdate(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, RemoveVendorPrinterFromCups(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, QueryPrinterInfoByPrinterId(_, _)).WillRepeatedly(Return(true));
@@ -233,20 +233,20 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0007, TestSize.Level2)
     PrinterCapability printerCap;
     EXPECT_FALSE(vendorManager.QueryPrinterCapabilityByUri(PRINTER_TEST_IP, printerCap));
     EXPECT_TRUE(vendorManager.QueryPrinterCapabilityByUri(PRINTER_TEST_IP, printerCap));
+    std::string ppdName;
     std::string ppdData;
-    EXPECT_FALSE(vendorManager.OnPrinterPpdQueried(vendorName, PRINTER_TEST_IP, ppdData));
+    EXPECT_FALSE(vendorManager.OnPrinterPpdQueried(vendorName, PRINTER_TEST_IP, ppdName, ppdData));
     vendorManager.SetConnectingPrinter(ConnectMethod::ID_AUTO, globalPrinterId);
-    EXPECT_FALSE(vendorManager.OnPrinterPpdQueried(vendorName, PRINTER_TEST_IP, ppdData));
-    EXPECT_TRUE(vendorManager.OnPrinterPpdQueried(vendorName, PRINTER_TEST_IP, ppdData));
+    EXPECT_FALSE(vendorManager.OnPrinterPpdQueried(vendorName, PRINTER_TEST_IP, ppdName, ppdData));
+    EXPECT_TRUE(vendorManager.OnPrinterPpdQueried(vendorName, PRINTER_TEST_IP, ppdName, ppdData));
     PrinterVendorStatus vendorStatus;
     EXPECT_FALSE(vendorManager.OnPrinterStatusChanged(vendorName, PRINTER_TEST_IP, vendorStatus));
     EXPECT_TRUE(vendorManager.OnPrinterStatusChanged(vendorName, PRINTER_TEST_IP, vendorStatus));
     EXPECT_EQ(vendorManager.RemovePrinterFromCups(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromCups(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_NONE);
     EXPECT_TRUE(vendorManager.QueryPrinterInfoByPrinterId("vendor", PRINTER_TEST_IP, printerInfo));
-    char mekeModel[] = "test_makeModel";
-    std::vector<std::string> ppds(1, "test_ppds");
-    EXPECT_TRUE(vendorManager.QueryPPDInformation(mekeModel, ppds));
+    std::string makeModel = "test_makeModel";
+    EXPECT_TRUE(vendorManager.QueryPPDInformation(makeModel, ppdName));
     vendorManager.UnInit();
 }
 
@@ -267,7 +267,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0008, TestSize.Level2)
     EXPECT_CALL(*mock, AddVendorPrinterToDiscovery(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, UpdateVendorPrinterToDiscovery(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, RemoveVendorPrinterFromDiscovery(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*mock, AddVendorPrinterToCupsWithPpd(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock, AddVendorPrinterToCupsWithPpd(_, _, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.AddPrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
     EXPECT_EQ(vendorManager.UpdatePrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
@@ -358,14 +358,14 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0013, TestSize.Level2)
     vendorManager.AddPrinterToDiscovery(VENDOR_BSUNI_DRIVER, info);
     vendorManager.UpdatePrinterToDiscovery(VENDOR_BSUNI_DRIVER, info);
     vendorManager.RemovePrinterFromDiscovery(VENDOR_BSUNI_DRIVER, printerId);
-    vendorManager.OnPrinterPpdQueried(VENDOR_BSUNI_DRIVER, printerId, "test_ppd_data");
+    vendorManager.OnPrinterPpdQueried(VENDOR_BSUNI_DRIVER, printerId, "test_ppd_name", "test_ppd_data");
     vendorManager.OnPrinterStatusChanged(VENDOR_BSUNI_DRIVER, printerId, status);
 
     vendorManager.wlanGroupDriver = nullptr;
     vendorManager.AddPrinterToDiscovery(VENDOR_BSUNI_DRIVER, info);
     vendorManager.UpdatePrinterToDiscovery(VENDOR_BSUNI_DRIVER, info);
     vendorManager.RemovePrinterFromDiscovery(VENDOR_BSUNI_DRIVER, printerId);
-    vendorManager.OnPrinterPpdQueried(VENDOR_BSUNI_DRIVER, printerId, "test_ppd_data");
+    vendorManager.OnPrinterPpdQueried(VENDOR_BSUNI_DRIVER, printerId, "test_ppd_name", "test_ppd_data");
     vendorManager.OnPrinterStatusChanged(VENDOR_BSUNI_DRIVER, printerId, status);
     vendorManager.UnInit();
 }

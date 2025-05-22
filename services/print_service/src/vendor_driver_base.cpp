@@ -118,6 +118,11 @@ bool VendorDriverBase::MonitorPrinterStatus(const std::string &printerId, bool o
     return false;
 }
 
+bool VendorDriverBase::QueryProperty(const std::string &printerId, const std::string &key, std::string &value)
+{
+    return false;
+}
+
 std::shared_ptr<PrinterVendorStatus> VendorDriverBase::GetMonitorVendorStatus(const std::string &printerId)
 {
     std::lock_guard<std::mutex> lock(statusMapMutex);

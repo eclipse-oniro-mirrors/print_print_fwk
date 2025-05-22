@@ -51,12 +51,12 @@ public:
     virtual int32_t UpdatePrinterToDiscovery(const std::string &vendorName, const PrinterInfo &printerInfo) = 0;
     virtual int32_t RemovePrinterFromDiscovery(const std::string &vendorName, const std::string &printerId) = 0;
     virtual int32_t AddPrinterToCupsWithPpd(const std::string &vendorName, const std::string &printerId,
-                                            const std::string &ppdData) = 0;
+                                            const std::string &ppdName, const std::string &ppdData) = 0;
     virtual int32_t RemovePrinterFromCups(const std::string &vendorName, const std::string &printerId) = 0;
     virtual bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                         const PrinterVendorStatus &status) = 0;
     virtual bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
-                                     const std::string &ppdData) = 0;
+                                     const std::string &ppdName, const std::string &ppdData) = 0;
     virtual bool IsConnectingPrinter(const std::string &id, const std::string &uri) = 0;
     virtual void SetConnectingPrinter(ConnectMethod method, const std::string &printer) = 0;
     virtual void ClearConnectingPrinter() = 0;
@@ -66,7 +66,7 @@ public:
         const std::string &printerId) = 0;
     virtual int32_t QueryPrinterInfoByPrinterId(const std::string &vendorName, const std::string &printerId,
         PrinterInfo &info) = 0;
-    virtual bool QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds) = 0;
+    virtual bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) = 0;
     virtual ConnectMethod GetConnectingMethod(const std::string &id) = 0;
 };
 
@@ -86,6 +86,7 @@ public:
     virtual std::string GetVendorName() = 0;
     virtual int32_t OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo);
     virtual bool MonitorPrinterStatus(const std::string &printerId, bool on);
+    virtual bool QueryProperty(const std::string &printerId, const std::string &key, std::string &value);
 
     void UpdateAllPrinterStatus();
     std::shared_ptr<PrinterVendorStatus> GetMonitorVendorStatus(const std::string &printerId);

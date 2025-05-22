@@ -38,7 +38,7 @@ public:
     ConnectMethod GetConnectingMethod(const std::string &globalPrinterIdOrIp) override;
     void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
     bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
-                                     const std::string &ppdData) override;
+                             const std::string &ppdName, const std::string &ppdData) override;
     bool MonitorPrinterStatus(const std::string &groupPrinterId, bool on) override;
     bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                 const PrinterVendorStatus &status) override;

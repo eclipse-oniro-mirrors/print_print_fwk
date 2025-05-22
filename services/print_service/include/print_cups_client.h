@@ -118,11 +118,11 @@ public:
     int32_t InitCupsResources();
     void StopCupsdService();
     bool IsCupsServerAlive();
-    void QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds);
+    bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName);
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);
     int32_t AddPrinterToCupsWithSpecificPpd(const std::string &printerUri, const std::string &printerName,
-        const std::string &ppd);
+        const std::string &ppdName);
     int32_t AddPrinterToCupsWithPpd(const std::string &printerUri, const std::string &printerName,
         const std::string &ppdName, const std::string &ppdData);
     int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
@@ -152,7 +152,7 @@ private:
     static void CopyDirectory(const char *srcDir, const char *destDir);
     static bool ChangeFilterPermission(const std::string &path, mode_t mode);
     bool CheckPrinterMakeModel(JobParameters *jobParams);
-    bool CheckPrinterDriverExist(const char *makeModel);
+    bool CheckPrinterDriverExist(const std::string &makeModel);
     bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
         cups_option_t *options, http_t *http);
     static int FillBorderlessOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
@@ -190,8 +190,7 @@ private:
     void DumpJobParameters(JobParameters* jobParams);
     bool IsPrinterExist(const char *printerUri, const char *printerName, const char *ppdName);
 
-    void ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
-        std::vector<std::string> &ppds);
+    void ParsePPDInfo(ipp_t *response, std::vector<std::string> &ppds);
     ipp_t *QueryPrinterAttributesByUri(const std::string &printerUri, const std::string &nic, int num,
         const char * const *pattrs);
     bool ResumePrinter(const std::string &printerName);

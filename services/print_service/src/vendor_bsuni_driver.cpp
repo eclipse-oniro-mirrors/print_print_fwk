@@ -457,7 +457,7 @@ void VendorBsuniDriver::OnCupsPrinterAdd(std::shared_ptr<PrinterInfo> printerInf
         PRINT_HILOGW("ppdData is null");
         return;
     }
-    vendorManager->AddPrinterToCupsWithPpd(vendorName, printerInfo->GetPrinterId(), *ppdData);
+    vendorManager->AddPrinterToCupsWithPpd(vendorName, printerInfo->GetPrinterId(), BSUNI_PPD_NAME, *ppdData);
 }
 
 void VendorBsuniDriver::OnCupsPrinterRemove(std::shared_ptr<std::string> printerId)
@@ -484,7 +484,7 @@ void VendorBsuniDriver::OnPpdQueried(std::shared_ptr<std::string> printerId, std
         return;
     }
     PRINT_HILOGI("ppdData queried");
-    if (vendorManager->OnPrinterPpdQueried(GetVendorName(), *printerId, *ppdData)) {
+    if (vendorManager->OnPrinterPpdQueried(GetVendorName(), *printerId, BSUNI_PPD_NAME, *ppdData)) {
         if (vendorExtension != nullptr && vendorExtension->onConnectPrinter != nullptr) {
             vendorExtension->onConnectPrinter(printerId->c_str());
         }

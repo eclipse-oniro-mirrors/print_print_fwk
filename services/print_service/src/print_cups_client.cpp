@@ -81,7 +81,6 @@ const int32_t STATE_UPDATE_STEP = 5;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 static const std::string CUPS_RUN_DIR = "/data/service/el1/public/print_service/cups/run";
-static const std::string DEFAULT_PPD_NAME = "everywhere";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
 static const std::string REMOTE_PRINTER_MAKE_MODEL = "Remote Printer";
 static const std::string LOCAL_RAW_PRINTER_PPD_NAME = "Local Raw Printer";
@@ -560,42 +559,44 @@ void PrintCupsClient::StopCupsdService()
     PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
 }
 
-void PrintCupsClient::QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds)
+bool PrintCupsClient::QueryPPDInformation(const std::string &makeModel, std::string &ppdName)
 {
     ipp_t *request = nullptr;
     ipp_t *response = nullptr;
-    const char *ppd_make_model;
-    const char *ppd_name;
 
     if (printAbility_ == nullptr) {
         PRINT_HILOGW("printAbility_ is null");
-        return;
+        return false;
     }
     request = ippNewRequest(CUPS_GET_PPDS);
     if (request == nullptr) {
-        return;
+        return false;
     }
-    if (makeModel) {
-        ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", nullptr, makeModel);
-    }
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", nullptr, makeModel.c_str());
 
     PRINT_HILOGD("CUPS_GET_PPDS start.");
     response = printAbility_->DoRequest(CUPS_HTTP_DEFAULT, request, "/");
     if (response == nullptr) {
         PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
-        return;
+        return false;
     }
     if (response->request.status.status_code > IPP_OK_CONFLICT) {
         PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
         printAbility_->FreeRequest(response);
-        return;
+        return false;
     }
-    ParsePPDInfo(response, ppd_make_model, ppd_name, ppds);
+    std::vector<std::string> ppds;
+    ParsePPDInfo(response, ppds);
     printAbility_->FreeRequest(response);
+    if (ppds.empty()) {
+        PRINT_HILOGI("cannot find any matched ppds");
+        return false;
+    }
+    ppdName = ppds[0];
+    return true;
 }
 
-void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, const char *ppd_name,
-    std::vector<std::string> &ppds)
+void PrintCupsClient::ParsePPDInfo(ipp_t *response, std::vector<std::string> &ppds)
 {
     if (response == nullptr) {
         PRINT_HILOGE("ParsePPDInfo response is nullptr");
@@ -608,8 +609,8 @@ void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, 
         if (attr == nullptr) {
             break;
         }
-        ppd_make_model = nullptr;
-        ppd_name = nullptr;
+        const char* ppd_make_model = nullptr;
+        const char* ppd_name = nullptr;
 
         while (attr != nullptr && attr->group_tag == IPP_TAG_PRINTER) {
             if (!strcmp(attr->name, "ppd-make-and-model") && attr->value_tag == IPP_TAG_TEXT) {
@@ -620,7 +621,7 @@ void PrintCupsClient::ParsePPDInfo(ipp_t *response, const char *ppd_make_model, 
             attr = attr->next;
         }
         if (ppd_make_model != nullptr && ppd_name != nullptr) {
-            ppds.push_back(ppd_name);
+            ppds.push_back(std::string(ppd_name));
             PRINT_HILOGI("ppd: name = %{private}s, make-and-model = %{private}s", ppd_name, ppd_make_model);
         }
         if (attr == nullptr) {
@@ -633,28 +634,24 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     const std::string &printerMake)
 {
     PRINT_HILOGD("PrintCupsClient AddPrinterToCups start, printerMake: %{public}s", printerMake.c_str());
-    std::string ppd = DEFAULT_PPD_NAME;
-    std::vector<string> ppds;
-    QueryPPDInformation(printerMake.c_str(), ppds);
-    if (!ppds.empty()) {
-        ppd = ppds[0];
-    }
-    PRINT_HILOGI("ppd driver: %{public}s", ppd.c_str());
-    return AddPrinterToCupsWithSpecificPpd(printerUri, printerName, ppd);
+    std::string ppdName = DEFAULT_PPD_NAME;;
+    QueryPPDInformation(printerMake, ppdName);
+    PRINT_HILOGI("ppd driver: %{public}s", ppdName.c_str());
+    return AddPrinterToCupsWithSpecificPpd(printerUri, printerName, ppdName);
 }
 
 int32_t PrintCupsClient::AddPrinterToCupsWithSpecificPpd(const std::string &printerUri, const std::string &printerName,
-    const std::string &ppd)
+    const std::string &ppdName)
 {
-    if (ppd != DEFAULT_PPD_NAME) {
+    if (ppdName != DEFAULT_PPD_NAME) {
         std::string serverBin = CUPS_ROOT_DIR + "/serverbin";
         mode_t permissions = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH;
         int ret = ChangeFilterPermission(serverBin, permissions);
         PRINT_HILOGI("ChangeFilterPermission result: %{public}d", ret);
     }
-    PRINT_HILOGI("ppd driver: %{public}s", ppd.c_str());
+    PRINT_HILOGI("ppd driver: %{public}s", ppdName.c_str());
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
-    if (IsPrinterExist(printerUri.c_str(), standardName.c_str(), ppd.c_str())) {
+    if (IsPrinterExist(printerUri.c_str(), standardName.c_str(), ppdName.c_str())) {
         PRINT_HILOGI("add success, printer has added");
         return E_PRINT_NONE;
     }
@@ -674,7 +671,7 @@ int32_t PrintCupsClient::AddPrinterToCupsWithSpecificPpd(const std::string &prin
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-info", nullptr, standardName.c_str());
     ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_URI, "device-uri", nullptr, printerUri.c_str());
     ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_IDLE);
-    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", nullptr, ppd.c_str());
+    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", nullptr, ppdName.c_str());
     ippAddBoolean(request, IPP_TAG_PRINTER, "printer-is-accepting-jobs", 1);
     PRINT_HILOGD("IPP_OP_CUPS_ADD_MODIFY_PRINTER cupsDoRequest");
     ippDelete(printAbility_->DoRequest(nullptr, request, "/admin/"));
@@ -1244,14 +1241,14 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams)
         dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, jobParams->printerName.c_str(), nullptr);
         if (dest != nullptr) {
             const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
-            PRINT_HILOGD("makeModel=%{private}s", makeModel);
             if (makeModel == nullptr || strcmp(makeModel, "Local Raw Printer") == 0) {
                 printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
                 retryCount++;
                 sleep(INDEX_TWO);
                 continue;
             }
-            if (!CheckPrinterDriverExist(makeModel)) {
+            PRINT_HILOGD("makeModel=%{private}s", makeModel);
+            if (!CheckPrinterDriverExist(std::string(makeModel))) {
                 break;
             }
             isMakeModelRight = true;
@@ -1266,20 +1263,20 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams)
     return isMakeModelRight;
 }
 
-bool PrintCupsClient::CheckPrinterDriverExist(const char *makeModel)
+bool PrintCupsClient::CheckPrinterDriverExist(const std::string &makeModel)
 {
-    if (makeModel == nullptr || makeModel[0] == '\0') {
-        PRINT_HILOGE("makeModel is null");
+    if (makeModel.empty()) {
+        PRINT_HILOGE("makeModel empty");
         return false;
     }
-    if (strstr(makeModel, DEFAULT_MAKE_MODEL.c_str()) != nullptr ||
-        strstr(makeModel, BSUNI_PPD_NAME.c_str()) != nullptr) {
+    if (strstr(makeModel.c_str(), DEFAULT_MAKE_MODEL.c_str()) != nullptr ||
+        strstr(makeModel.c_str(), BSUNI_PPD_NAME.c_str()) != nullptr) {
         PRINT_HILOGI("skip check printer driver exist");
         return true;
     }
-    std::vector<std::string> ppds;
-    QueryPPDInformation(makeModel, ppds);
-    return !ppds.empty();
+    std::string ppdName;
+    QueryPPDInformation(makeModel, ppdName);
+    return !ppdName.empty();
 }
 
 bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,

@@ -236,7 +236,7 @@ void TestBuildJobParameters(const uint8_t *data, size_t size, FuzzedDataProvider
 void TestCheckPrinterDriverExist(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string makeModel = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintCupsClient::GetInstance()->CheckPrinterDriverExist(makeModel.c_str());
+    PrintCupsClient::GetInstance()->CheckPrinterDriverExist(makeModel);
 }
 
 void TestStartMonitor(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

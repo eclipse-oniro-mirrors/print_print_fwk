@@ -2622,10 +2622,12 @@ int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInf
     return E_PRINT_NONE;
 }
 
-bool PrintServiceAbility::QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds)
+bool PrintServiceAbility::QueryPPDInformation(const std::string &makeModel, std::string &ppdName)
 {
-    DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPPDInformation(makeModel, ppds);
-    return !ppds.empty();
+#ifdef CUPS_ENABLE
+    return DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPPDInformation(makeModel, ppdName);
+#endif
+    return false;
 }
 
 void PrintServiceAbility::DeletePrinterFromUserData(const std::string &printerId)
@@ -2903,7 +2905,7 @@ bool PrintServiceAbility::RemoveVendorPrinterFromDiscovery(const std::string &gl
 }
 
 bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globalVendorName,
-    const std::string &printerId, const std::string &ppdData)
+    const std::string &printerId, const std::string &ppdName, const std::string &ppdData)
 {
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
@@ -2920,10 +2922,10 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
     int32_t ret = E_PRINT_NONE;
     if (ppdData.empty()) {
         ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerInfo->GetUri(),
-            printerInfo->GetPrinterName(), printerInfo->GetPrinterMake());
+            printerInfo->GetPrinterName(), printerInfo->GetPrinterMake()); // TODO: ppdName
     } else {
         ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithPpd(printerInfo->GetUri(),
-            printerInfo->GetPrinterName(), BSUNI_PPD_NAME, ppdData);
+            printerInfo->GetPrinterName(), ppdName, ppdData);
     }
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
@@ -2955,7 +2957,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
 }
 
 bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::string &globalVendorName,
-    const std::string &printerId, const std::string &ppdData)
+    const std::string &printerId, const std::string &ppdName)
 {
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
@@ -2967,7 +2969,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
 #ifdef CUPS_ENABLE
     int32_t ret = E_PRINT_NONE;
     ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithSpecificPpd(printerInfo->GetUri(),
-        printerInfo->GetPrinterName(), ppdData);
+        printerInfo->GetPrinterName(), ppdName);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
         return false;
@@ -3052,7 +3054,7 @@ bool PrintServiceAbility::AddIpPrinterToSystemData(const std::string &globalVend
 }
 
 bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVendorName,
-    const std::string &printerId, const std::string &ppdData)
+    const std::string &printerId, const std::string &ppdName， const std::string &ppdData)
 {
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
     auto printerInfo = printSystemData_.QueryIpPrinterInfoById(globalPrinterId);
@@ -3072,7 +3074,7 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
             printerInfo->GetPrinterName(), printerInfo->GetPrinterMake());
     } else {
         ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithPpd(printerInfo->GetUri(),
-            printerInfo->GetPrinterName(), BSUNI_PPD_NAME, ppdData);
+            printerInfo->GetPrinterName(), ppdName，, ppdData);
     }
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);

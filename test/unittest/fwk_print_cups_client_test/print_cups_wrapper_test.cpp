@@ -418,7 +418,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0080, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NONE);
     std::vector<std::string> ppds;
     printCupsClient.QueryPPDInformation(nullptr, ppds);
-    printCupsClient.ParsePPDInfo(nullptr, nullptr, nullptr, ppds);
+    printCupsClient.ParsePPDInfo(nullptr, ppds);
     printCupsClient.StopCupsdService();
 }
 
@@ -434,9 +434,10 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0081, TestSize.Level1)
     int32_t ret = printCupsClient.InitCupsResources();
     EXPECT_EQ(ret, E_PRINT_NONE);
     std::string makeModel = "testmodel";
-    std::vector<std::string> ppds;
-    printCupsClient.QueryPPDInformation(makeModel.c_str(), ppds);
+    std::string ppdName;
+    EXPECT_FALSE(printCupsClient.QueryPPDInformation(makeModel, ppdName));
     printCupsClient.StopCupsdService();
+    EXPECT_TRUE(ppdName.empty());
 }
 
 /**
@@ -454,9 +455,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0082, TestSize.Level1)
     ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-location", nullptr, "en_us");
     ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_TEXT, "ppd-make-and-model", nullptr, "testmodel");
     ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", nullptr, "testppd");
-    printCupsClient.ParsePPDInfo(response, nullptr, nullptr, ppds);
-    printCupsClient.ParsePPDInfo(response, "testmodel", nullptr, ppds);
-    printCupsClient.ParsePPDInfo(response, "testmodel", "testppd", ppds);
+    printCupsClient.ParsePPDInfo(response, ppds);
     ippDelete(response);
 }
 
