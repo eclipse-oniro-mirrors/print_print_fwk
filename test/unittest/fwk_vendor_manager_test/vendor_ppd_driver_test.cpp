@@ -52,7 +52,7 @@ void VendorPpdDriverTest::SetUp(void)
 
 void VendorPpdDriverTest::TearDown(void) {}
 
-HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0001_NeedRename, TestSize.Level1)
+HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0001, TestSize.Level1)
 {
     std::string printerId = "test.printer.id";
     std::string defaultPpd = "test.ppd.name";
@@ -69,7 +69,7 @@ HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0001_NeedRename, TestSize.Leve
     vendorDriver.UnInit();
 }
 
-HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0002_NeedRename, TestSize.Level1)
+HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0002, TestSize.Level1)
 {
     std::string printerId = "test.printer.id";
     std::string defaultPpd = "test.ppd.name";
@@ -87,7 +87,7 @@ HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0002_NeedRename, TestSize.Leve
     EXPECT_TRUE(vendorDriver.OnQueryCapability(printerId, defaultTimeout));
 }
 
-HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0003_NeedRename, TestSize.Level1)
+HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0003, TestSize.Level1)
 {
     std::string printerId = "test.printer.id";
     std::string defaultPpd = "test.ppd.name";
@@ -105,7 +105,7 @@ HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0003_NeedRename, TestSize.Leve
     EXPECT_TRUE(vendorDriver.OnQueryCapability(printerId, defaultTimeout));
 }
 
-HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0004_NeedRename, TestSize.Level1)
+HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0004, TestSize.Level1)
 {
     std::string printerId = "test.printer.id";
     std::string defaultPpd = "test.ppd.name";
@@ -123,7 +123,7 @@ HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0004_NeedRename, TestSize.Leve
     EXPECT_TRUE(vendorDriver.OnQueryCapability(printerId, defaultTimeout));
 }
 
-HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0005_NeedRename, TestSize.Level1)
+HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0005, TestSize.Level1)
 {
     std::string printerId = "test.printer.id";
     std::string defaultPpd = "test.ppd.name";
@@ -141,7 +141,7 @@ HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0005_NeedRename, TestSize.Leve
     EXPECT_TRUE(vendorDriver.OnQueryCapability(printerId, defaultTimeout));
 }
 
-HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0006_NeedRename, TestSize.Level2)
+HWTEST_F(VendorPpdDriverTest, VendorPpdDriverTest_0006, TestSize.Level2)
 {
     std::string printerId = "test.printer.id";
     std::string defaultPpd = "test.ppd.name";
