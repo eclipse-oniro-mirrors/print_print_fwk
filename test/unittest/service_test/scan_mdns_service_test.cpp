@@ -41,7 +41,7 @@ void ScanMdnsServiceTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0001, TestSize.Level1)
+HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0001_NeedRename, TestSize.Level1)
 {
     EXPECT_EQ(ScanMdnsService::OnStartDiscoverService(), true);
     EXPECT_EQ(ScanMdnsService::OnStopDiscoverService(), true);
@@ -53,7 +53,7 @@ HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0001, TestSize.Level1)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0002, TestSize.Level1)
+HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0002_NeedRename, TestSize.Level1)
 {
     EXPECT_EQ(ScanMdnsService::OnStopDiscoverService(), true);
 }

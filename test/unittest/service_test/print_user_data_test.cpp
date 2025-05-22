@@ -58,7 +58,7 @@ void PrintUserDataTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0001, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0001_NeedRename, TestSize.Level1)
 {
     std::string type = "111";
     sptr<IPrintCallback> listener = nullptr;
@@ -67,7 +67,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0001, TestSize.Level1)
     EXPECT_EQ(userData->registeredListeners_.size(), 1);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0002, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0002_NeedRename, TestSize.Level1)
 {
     std::string type = "111";
     sptr<IPrintCallback> listener = nullptr;
@@ -77,7 +77,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0002, TestSize.Level1)
     EXPECT_EQ(userData->registeredListeners_.size(), 0);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0003, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0003_NeedRename, TestSize.Level1)
 {
     std::string type = "111";
     std::string type2 = "222";
@@ -88,7 +88,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0003, TestSize.Level1)
     EXPECT_EQ(userData->registeredListeners_.size(), 1);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0004, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0004_NeedRename, TestSize.Level1)
 {
     std::string type = "111";
     sptr<IPrintCallback> listener = nullptr;
@@ -100,7 +100,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0004, TestSize.Level1)
     EXPECT_EQ(userData->registeredListeners_.size(), 1);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0005, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0005_NeedRename, TestSize.Level1)
 {
     std::string type = "111";
     std::string type2 = "222";
@@ -113,7 +113,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0005, TestSize.Level1)
     EXPECT_EQ(userData->registeredListeners_.size(), 1);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0006, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0006_NeedRename, TestSize.Level1)
 {
     std::string type = "111";
     std::string type2 = "222";
@@ -128,7 +128,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0006, TestSize.Level1)
     EXPECT_EQ(userData->registeredListeners_.size(), 2);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0007, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0007_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string jobId = "1";
@@ -141,7 +141,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0007, TestSize.Level1)
     EXPECT_EQ(userData->QueryPrintJobById(jobId, findPrintJob), E_PRINT_INVALID_PRINTJOB);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0008, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0008_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string jobOrderId = "0";
@@ -154,7 +154,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0008, TestSize.Level1)
     EXPECT_EQ(userData->jobOrderList_[jobOrderId], "");
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0009, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0009_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string jobOrderId = "0";
@@ -168,7 +168,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0009, TestSize.Level1)
     userData->UpdateQueuedJobList(jobId, printJob, jobOrderId);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0010, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0010_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string type = "111";
@@ -180,7 +180,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0010, TestSize.Level1)
     EXPECT_EQ(userData->registeredListeners_.size(), 1);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0011, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0011_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string jobOrderId = "0";
@@ -196,7 +196,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0011, TestSize.Level1)
     EXPECT_EQ(userData->jobOrderList_[jobOrderId], jobId);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0012, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0012_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string jobOrderId = "0";
@@ -207,7 +207,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0012, TestSize.Level1)
     EXPECT_EQ(userData->QueryAllPrintJob(printJobs), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0013, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0013_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     int32_t userId = 101;
@@ -215,7 +215,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0013, TestSize.Level1)
     EXPECT_EQ(userData->userId_, userId);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0014, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0014_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-0105";
@@ -225,38 +225,38 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0014, TestSize.Level1)
     EXPECT_EQ(userData->lastUsedPrinterId_, printerId);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0015, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0015_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     EXPECT_EQ(userData->GetDefaultPrinter(), "");
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0016, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0016_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     EXPECT_EQ(userData->ParseUserData(), true);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0017, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0017_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string fileData = "";
     EXPECT_EQ(userData->GetFileData(fileData), true);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0018, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0018_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     EXPECT_EQ(userData->SetUserDataToFile(), true);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0019, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0019_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     EXPECT_EQ(userData->GetLastUsedPrinter(), "");
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0020, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0020_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string printerId = "com.ohos.spooler:p2p://DIRECT-PixLab_V1-0105";
@@ -266,7 +266,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0020, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0021, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0021_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     Json::Value jsonObject;
@@ -292,7 +292,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0021, TestSize.Level1)
     EXPECT_EQ(userData->useLastUsedPrinterForDefault_, true);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0022, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0022_NeedRename, TestSize.Level1)
 {
     auto printUserData = std::make_shared<OHOS::Print::PrintUserData>();
     Json::Value jsonObject;
@@ -332,7 +332,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0022, TestSize.Level1)
     EXPECT_EQ(printUserData->lastUsedPrinterId_, "123");
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0023, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0023_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     Json::Value jsonObject;
@@ -366,7 +366,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0023, TestSize.Level1)
     EXPECT_EQ(userData->CheckFileData(fileData5, jsonObject), true);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0030, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0030_NeedRename, TestSize.Level1)
 {
     std::string printerId1 = "com.ohos.spooler:p2p://DIRECT_PixLab_V1-0105";
     std::string printerId2 = "com.ohos.spooler:p2p://DIRECT_PixLab_V1-0106";
