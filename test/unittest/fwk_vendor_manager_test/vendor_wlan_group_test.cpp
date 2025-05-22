@@ -54,7 +54,7 @@ void VendorWlanGroupTest::SetUp(void)
 
 void VendorWlanGroupTest::TearDown(void) {}
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0001, TestSize.Level1)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0001_NeedRename, TestSize.Level1)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
@@ -63,7 +63,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0001, TestSize.Level1)
     EXPECT_EQ(vendorWlanGroup->parentVendorManager, &vendorManager);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0002, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0002_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
@@ -75,7 +75,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0002, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->OnQueryCapability(printerId, 0), false);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0003, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0003_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
@@ -87,7 +87,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0003, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->OnQueryCapabilityByIp(printerId, "ipp"), false);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0004, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0004_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
     PrinterInfo info;
@@ -101,7 +101,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0004, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->OnPrinterDiscovered(VENDOR_WLAN_GROUP, info), EXTENSION_ERROR_CALLBACK_NULL);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0005, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0005_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
     PrinterInfo info;
@@ -119,7 +119,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0005, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->OnUpdatePrinterToDiscovery(VENDOR_WLAN_GROUP, info), EXTENSION_ERROR_CALLBACK_NULL);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0006, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0006_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
@@ -131,7 +131,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0006, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->OnPrinterRemoved(VENDOR_WLAN_GROUP, printerId), EXTENSION_ERROR_CALLBACK_NULL);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0007, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0007_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
@@ -143,7 +143,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0007, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->IsConnectingPrinter(printerId, PRINTER_TEST_URI), false);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0008, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0008_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
@@ -155,7 +155,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0008, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->IsConnectingPrinter(printerId, PRINTER_TEST_URI), false);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0009, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0009_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
@@ -168,7 +168,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0009, TestSize.Level2)
     vendorWlanGroup->SetConnectingPrinter(ID_AUTO, printerId);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0010, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0010_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
@@ -180,7 +180,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0010, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->OnPrinterPpdQueried(VENDOR_WLAN_GROUP, printerId, PRINTER_TEST_PPDDTAT), false);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0011, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0011_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_IP;
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
@@ -192,7 +192,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0011, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->IsGroupDriver(printerId), false);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0012, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0012_NeedRename, TestSize.Level2)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
@@ -209,7 +209,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0012, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->ConvertGroupDriver(printerId, vendorName), true);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0013, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0013_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_GLOBAL_ID;
     auto printerInfo = std::make_shared<PrinterInfo>();
@@ -232,7 +232,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0013, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->IsBsunidriverSupport(PRINTER_TEST_GLOBAL_ID), false);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0014, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0014_NeedRename, TestSize.Level2)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
@@ -245,7 +245,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0014, TestSize.Level2)
     EXPECT_TRUE(vendorWlanGroup->printerVendorGroupList_.empty());
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0015, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0015_NeedRename, TestSize.Level2)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
@@ -257,7 +257,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0015, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->QueryVendorDriverByGroupPrinterId(printerId), VENDOR_BSUNI_DRIVER);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0016, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0016_NeedRename, TestSize.Level2)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
@@ -269,7 +269,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0016, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->GetGroupPrinterId(printerId), PRINTER_TEST_GLOBAL_ID);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0017, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0017_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_GLOBAL_ID;
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
@@ -284,7 +284,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0017, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->CheckPrinterAddedByIp(printerId), false);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0018, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0018_NeedRename, TestSize.Level2)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
@@ -300,7 +300,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0018, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->groupPrinterIdMap_[printerId], PRINTER_TEST_GLOBAL_ID);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0019, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0019_NeedRename, TestSize.Level2)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
@@ -312,7 +312,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0019, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->HasGroupPrinter(printerId), true);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0020, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0020_NeedRename, TestSize.Level2)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
@@ -327,7 +327,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0020, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->ConvertPrinterInfoId(info).GetPrinterId(), PRINTER_TEST_UUID);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0021, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0021_NeedRename, TestSize.Level2)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
@@ -345,7 +345,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0021, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->ExtractPrinterIdByPrinterInfo(info), PRINTER_TEST_IP);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0022, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0022_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_GLOBAL_ID;
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
@@ -360,7 +360,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0022, TestSize.Level2)
     EXPECT_EQ(vendorWlanGroup->MonitorPrinterStatus(printerId, true), false);
 }
 
-HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0023, TestSize.Level2)
+HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0023_NeedRename, TestSize.Level2)
 {
     std::string printerId = PRINTER_TEST_GLOBAL_ID;
     PrinterVendorStatus state;

@@ -58,7 +58,7 @@ void PrintServiceHelperTest::TearDown(void) {}
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0002, TestSize.Level1)
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0002_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
     EXPECT_EQ(helper.CheckPermission(""), false);
@@ -70,7 +70,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0002, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0003, TestSize.Level1)
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0003_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
     auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -83,7 +83,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0003, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0004, TestSize.Level1)
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0004_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
     std::vector<int> accountList;
@@ -96,7 +96,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0004, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0005, TestSize.Level1)
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0005_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
     std::vector<int> accountList = {};
@@ -109,7 +109,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0005, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0006, TestSize.Level1)
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0006_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
     sptr<AppExecFwk::IBundleMgr> mgr;
@@ -124,7 +124,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0006, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0007, TestSize.Level1)
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0007_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
     sptr<AppExecFwk::IBundleMgr> mgr;
@@ -139,7 +139,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0007, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0008, TestSize.Level1)
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0008_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
     EXPECT_EQ(helper.IsSyncMode(), false);
@@ -151,7 +151,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0008, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0009, TestSize.Level1) {
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0009_NeedRename, TestSize.Level1) {
     PrintServiceHelper helper;
     AAFwk::Want want;
     EXPECT_FALSE(helper.StartAbility(want));
@@ -163,7 +163,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0009, TestSize.Level1) {
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0010, TestSize.Level1)
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0010_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
     helper.PrintSubscribeCommonEvent();
@@ -177,7 +177,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0010, TestSize.Level1)
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0011, TestSize.Level1) {
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0011_NeedRename, TestSize.Level1) {
     PrintServiceHelper helper;
     AAFwk::Want want;
     EXPECT_FALSE(helper.StartPluginPrintIconExtAbility(want));

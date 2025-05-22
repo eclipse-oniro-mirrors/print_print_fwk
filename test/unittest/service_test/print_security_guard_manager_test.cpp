@@ -46,7 +46,7 @@ void PrintSecurityGuardManagerTest::TearDown(void) {}
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0001, TestSize.Level1)
+HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0001_NeedRename, TestSize.Level1)
 {
     PrintSecurityGuardManager printSerPrintSecurityGuardManager;
     std::vector<std::string> fileList;
@@ -64,7 +64,7 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0001, Test
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0002, TestSize.Level1)
+HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0002_NeedRename, TestSize.Level1)
 {
     PrintSecurityGuardManager printSerPrintSecurityGuardManager;
     std::vector<std::string> fileList;

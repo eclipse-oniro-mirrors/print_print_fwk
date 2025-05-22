@@ -134,7 +134,7 @@ void PrintCupsAttributeTest::DoTest(PreAttrTestFunc preFunc, PostAttrTestFunc po
  * @tc.name: PrintCupsAttributeTest_0001
  * @tc.desc: printer idle state test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0001, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0001_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddInteger(response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_IDLE);
@@ -152,7 +152,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0001, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0002
  * @tc.desc: printer processing state test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0002, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0002_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddInteger(response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_PROCESSING);
@@ -171,7 +171,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0002, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0003
  * @tc.desc: printer stopped state test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0003, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0003_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddInteger(response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_STOPPED);
@@ -188,7 +188,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0003, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0004
  * @tc.desc: printer empty state test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0004, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0004_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {};
     PostAttrTestFunc postFunc = [this](PrinterCapability &printerCaps) {
@@ -203,7 +203,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0004, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0005
  * @tc.desc: printer sides test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0005, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0005_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddStrings(response,
@@ -227,7 +227,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0005, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0006
  * @tc.desc: printer sides test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0006, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0006_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_KEYWORD, "sides-default", nullptr, ATTR_TEST_SIDES_ARRAY[1]);
@@ -244,7 +244,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0006, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0007
  * @tc.desc: printer color mode test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0007, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0007_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddStrings(response,
@@ -273,7 +273,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0007, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0008
  * @tc.desc: printer color mode test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0008, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0008_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddString(response,
@@ -295,7 +295,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0008, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0009
  * @tc.desc: printer page size test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0009, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0009_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddStrings(response,
@@ -321,7 +321,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0009, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0010
  * @tc.desc: printer page size test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0010, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0010_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddString(response,
@@ -343,7 +343,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0010, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0011
  * @tc.desc: printer quality / copies test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0011, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0011_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddIntegers(response,
@@ -368,7 +368,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0011, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0012
  * @tc.desc: printer quality / copies test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0012, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0012_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {};
     PostAttrTestFunc postFunc = [this](PrinterCapability &printerCaps) {
@@ -384,7 +384,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0012, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0013
  * @tc.desc: printer resolution test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0013, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0013_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddResolution(response,
@@ -421,7 +421,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0013, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0014
  * @tc.desc: printer resolution test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0014, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0014_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddResolution(response,
@@ -452,7 +452,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0014, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0015
  * @tc.desc: printer media test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0015, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0015_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         auto mediaCol = ippNew();
@@ -488,7 +488,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0015, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0016
  * @tc.desc: printer margin test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0016, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0016_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddInteger(
@@ -515,7 +515,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0016, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0017
  * @tc.desc: printer orientation test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0017, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0017_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddInteger(response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "orientation-requested-default", IPP_ORIENT_PORTRAIT);
@@ -538,7 +538,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0017, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0018
  * @tc.desc: printer other attributes test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0018, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0018_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddStrings(response,
@@ -569,7 +569,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0018, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0019
  * @tc.desc: printer option test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0019, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0019_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-make-and-model", nullptr, "Test make and model");
@@ -595,7 +595,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0019, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0020
  * @tc.desc: ParsePrinterStatusAttributes test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0020, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0020_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddInteger(response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PSTATE_IDLE);
@@ -611,7 +611,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0020, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0021
  * @tc.desc: ParsePrinterStatusAttributes test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0021, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0021_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_NAME, "printer-name", nullptr, "Test printer name");
@@ -627,7 +627,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0021, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0022
  * @tc.desc: ParsePrinterStatusAttributes test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0022, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0022_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddInteger(response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", 0);
@@ -643,7 +643,7 @@ HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0022, TestSize.Level1)
  * @tc.name: PrintCupsAttributeTest_0023
  * @tc.desc: ParsePrinterStatusAttributes test
  */
-HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0023, TestSize.Level1)
+HWTEST_F(PrintCupsAttributeTest, PrintCupsAttributeTest_0023_NeedRename, TestSize.Level1)
 {
     PreAttrTestFunc preFunc = [this](ipp_t *response) {
         ippAddInteger(response, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PSTATE_STOPPED + 1);

@@ -45,7 +45,7 @@ void HisysEventUtilTest::TearDown(void) {}
 * @tc.type: FUNC
 * @tc.require:
 */
-HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0001, TestSize.Level1)
+HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0001_NeedRename, TestSize.Level1)
 {
     OHOS::Print::HisysEventUtil util;
     std::string param = "";
