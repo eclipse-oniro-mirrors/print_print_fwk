@@ -28,7 +28,7 @@ bool VendorPpdDriver::QueryProperty(const std::string &printerId, const std::str
         PRINT_HILOGW("connectingPrinterInfo is null");
         return false;
     }
-    if (key == PRINTER_PROPERTY_KEY_CUPS_PPD_FILE) {
+    if (key == PRINTER_PROPERTY_KEY_CUPS_PPD_NAME) {
         auto makeAndModel = connectingPrinterInfo->GetPrinterMake();
         value = QueryPpdName(makeAndModel);
         return !value.empty();
