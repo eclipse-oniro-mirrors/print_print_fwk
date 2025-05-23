@@ -143,10 +143,12 @@ void PrintAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
             napi_get_undefined(env, &result[ARG_DATA]);
         }
     } else {
+        napi_value errCode = nullptr;
         uint32_t errorIndex = GetErrorIndex(context);
         PRINT_HILOGE("ErrorMessage: [%{public}s], ErrorIndex:[%{public}d]",
             GetErrorText(errorIndex).c_str(), errorIndex);
-        result[ARG_ERROR] = NapiPrintUtils::CreateJsError(env, errorIndex);
+        napi_create_uint32(env, errorIndex, &errCode);
+        result[ARG_ERROR] = errCode;
         napi_get_undefined(env, &result[ARG_DATA]);
     }
     if (context->defer != nullptr) {
