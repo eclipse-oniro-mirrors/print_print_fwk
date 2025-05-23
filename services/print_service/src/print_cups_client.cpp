@@ -1222,7 +1222,7 @@ int32_t PrintCupsClient::QueryPrinterInfoByPrinterId(const std::string &printerI
     return E_PRINT_NONE;
 }
 
-bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams)
+bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams, bool &driverMissing)
 {
     cups_dest_t *dest = nullptr;
     bool isMakeModelRight = false;
@@ -1249,6 +1249,7 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams)
             }
             PRINT_HILOGD("makeModel=%{private}s", makeModel);
             if (!CheckPrinterDriverExist(std::string(makeModel))) {
+                driverMissing = true;
                 break;
             }
             isMakeModelRight = true;
@@ -1304,10 +1305,11 @@ bool PrintCupsClient::VerifyPrintJob(JobParameters *jobParams, int &num_options,
             PRINT_JOB_BLOCKED_OFFLINE);
         return false;
     }
-    if (!CheckPrinterMakeModel(jobParams)) {
+    bool driverMissing = false;
+    if (!CheckPrinterMakeModel(jobParams, driverMissing)) {
         PRINT_HILOGE("VerifyPrintJob printer make model is error");
         jobParams->serviceAbility->UpdatePrintJobState(jobParams->serviceJobId, PRINT_JOB_BLOCKED,
-            PRINT_JOB_BLOCKED_DRIVER_EXCEPTION);
+            driverMissing ? PRINT_JOB_BLOCKED_DRIVER_MISSING : PRINT_JOB_BLOCKED_DRIVER_EXCEPTION);
         return false;
     }
     num_options = FillJobOptions(jobParams, num_options, &options);

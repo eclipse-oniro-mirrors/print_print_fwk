@@ -679,7 +679,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0034_NeedRename, TestSize.Leve
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     JobParameters *jobParams = nullptr;
-    bool ret = printCupsClient.CheckPrinterMakeModel(jobParams);
+    bool driverMissing = false;
+    bool ret = printCupsClient.CheckPrinterMakeModel(jobParams, driverMissing);
     EXPECT_EQ(ret, false);
 }
 

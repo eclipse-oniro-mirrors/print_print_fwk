@@ -151,7 +151,7 @@ private:
     static void SymlinkDirectory(const char *srcDir, const char *destDir);
     static void CopyDirectory(const char *srcDir, const char *destDir);
     static bool ChangeFilterPermission(const std::string &path, mode_t mode);
-    bool CheckPrinterMakeModel(JobParameters *jobParams);
+    bool CheckPrinterMakeModel(JobParameters *jobParams, bool &driverMissing);
     bool CheckPrinterDriverExist(const std::string &makeModel);
     bool VerifyPrintJob(JobParameters *jobParams, int &num_options, uint32_t &jobId,
         cups_option_t *options, http_t *http);

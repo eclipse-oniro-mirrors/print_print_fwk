@@ -310,7 +310,8 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0020, TestSize.Level1)
         printCupsClient.printAbility_ = nullptr;
     }
     JobParameters jobParams;
-    EXPECT_EQ(printCupsClient.CheckPrinterMakeModel(&jobParams), false);
+    bool driverMissing = false;
+    EXPECT_EQ(printCupsClient.CheckPrinterMakeModel(&jobParams, driverMissing), false);
     printCupsClient.DumpJobParameters(nullptr);
 }
 
@@ -325,7 +326,8 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0021, TestSize.Level1)
     MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
         EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillRepeatedly(Return(nullptr));
         JobParameters jobParams;
-        EXPECT_EQ(printCupsClient.CheckPrinterMakeModel(&jobParams), false);
+        bool driverMissing = false;
+        EXPECT_EQ(printCupsClient.CheckPrinterMakeModel(&jobParams, driverMissing), false);
     };
     DoMockTest(testFunc);
 }
@@ -343,7 +345,8 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0022, TestSize.Level1)
         EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillRepeatedly(Return(&cupsDests));
         EXPECT_CALL(mock, FreeDests(_, _)).WillRepeatedly(Return());
         JobParameters jobParams;
-        EXPECT_EQ(printCupsClient.CheckPrinterMakeModel(&jobParams), false);
+        bool driverMissing = false;
+        EXPECT_EQ(printCupsClient.CheckPrinterMakeModel(&jobParams, driverMissing), false);
     };
     DoMockTest(testFunc);
 }
