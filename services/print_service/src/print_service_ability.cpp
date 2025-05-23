@@ -1137,17 +1137,10 @@ bool PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
 
 bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<PrinterInfo> &info)
 {
-    PrinterInfo printer;
-    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(info->GetPrinterId(), printer)) {
+    PrinterInfo addedPrinter;
+    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(info->GetPrinterId(), addedPrinter)) {
         std::string printerUri = info->GetUri();
-        auto exceptBackendUri = [=](std::string uri) -> std::string {
-            auto pos = uri.find("://");
-            if (pos == std::string::npos || uri.length() <= pos + 1) {
-                return "";
-            }
-            return uri.substr(pos + 1);
-        };
-        if (!printerUri.empty() && exceptBackendUri(printerUri) != exceptBackendUri(printer.GetUri())) {
+        if (!printerUri.empty() && printerUri != addedPrinter.GetUri()) {
             return true;
         }
     }
