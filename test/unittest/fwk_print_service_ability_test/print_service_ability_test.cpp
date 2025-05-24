@@ -2256,4 +2256,46 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0157_NeedRename, TestS
     service->printSystemData_.InsertAddedPrinter(info->GetPrinterId(), printer);
     EXPECT_EQ(service->ConnectPrinter(info->GetPrinterId()), E_PRINT_NONE);
 }
+
+/**
+* @tc.name: PrintServiceAbilityTest_CheckPrinterUriDifferent
+* @tc.desc: PrintServiceAbility ctor/dtor
+* @tc.type: FUNC CheckPrinterUriDifferent
+* @tc.require: use old version printerId
+*/
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_CheckPrinterUriSame, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId("com.ohos.spooler:mdns://testId");
+    printerInfo->SetUri("ipp://a");
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId("com.ohos.spooler:mdns://testId");
+    addedPrinter.SetUri("ipp://a");
+    service->printSystemData_.InsertAddedPrinter(addedPrinter.GetPrinterId(), addedPrinter);
+
+    EXPECT_FALSE(service->CheckPrinterUriDifferent(printerInfo));
+}
+
+/**
+* @tc.name: PrintServiceAbilityTest_CheckPrinterUriDifferent
+* @tc.desc: PrintServiceAbility ctor/dtor
+* @tc.type: FUNC CheckPrinterUriDifferent
+* @tc.require: use new version printerId
+*/
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_CheckPrinterUriDifferent, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId("com.ohos.spooler:mdns://testId");
+    printerInfo->SetUri("ipp://a");
+
+    PrinterInfo addedPrinter;
+    addedPrinter.SetPrinterId("com.ohos.spooler:mdns://testId");
+    addedPrinter.SetUri("ipps://a");
+    service->printSystemData_.InsertAddedPrinter(addedPrinter.GetPrinterId(), addedPrinter);
+
+    EXPECT_TRUE(service->CheckPrinterUriDifferent(printerInfo));
+}
 } // namespace OHOS::Print
