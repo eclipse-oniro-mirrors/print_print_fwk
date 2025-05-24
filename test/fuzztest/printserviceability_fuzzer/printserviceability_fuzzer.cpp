@@ -759,16 +759,17 @@ void TestAddVendorPrinterToCupsWithPpd(const uint8_t *data, size_t size, FuzzedD
 {
     std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string ppdData = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdData);
+    PrintServiceAbility::GetInstance()->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData);
 }
 
 void TestAddVendorPrinterToCupsWithSpecificPpd(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string ppdData = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->AddVendorPrinterToCupsWithSpecificPpd(globalVendorName, printerId, ppdData);
+    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->AddVendorPrinterToCupsWithSpecificPpd(globalVendorName, printerId, ppdName);
 }
 
 void TestRemoveVendorPrinterFromCups(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -855,8 +856,8 @@ void TestReportPrinterIdle(const uint8_t *data, size_t size, FuzzedDataProvider 
 void TestQueryPPDInformation(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string makeModel = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::vector<std::string> ppds = { dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH) };
-    PrintServiceAbility::GetInstance()->QueryPPDInformation(makeModel.c_str(), ppds);
+    std::string ppd = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->QueryPPDInformation(makeModel, ppd);
 }
 
 void TestAddIpPrinterToSystemData(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -874,8 +875,9 @@ void TestAddIpPrinterToCupsWithPpd(const uint8_t *data, size_t size, FuzzedDataP
 {
     std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string ppdData = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdData);
+    PrintServiceAbility::GetInstance()->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData);
 }
 
 void TestStartPrintJobInternal(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

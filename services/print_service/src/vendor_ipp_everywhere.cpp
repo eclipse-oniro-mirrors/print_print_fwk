@@ -180,7 +180,7 @@ bool VendorIppEveryWhere::ConnectPrinter(std::shared_ptr<PrinterInfo> printerInf
         return false;
     }
     PRINT_HILOGI("UpdatePrinterToDiscovery success");
-    if (vendorManager->AddPrinterToCupsWithPpd(GetVendorName(), printerInfo->GetPrinterId(), "") !=
+    if (vendorManager->AddPrinterToCupsWithPpd(GetVendorName(), printerInfo->GetPrinterId(), DEFAULT_PPD_NAME, "") !=
         EXTENSION_ERROR_NONE) {
         PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
         return false;

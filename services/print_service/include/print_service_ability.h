@@ -109,7 +109,7 @@ public:
     int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo) override;
     int32_t RemovePrinterFromDiscovery(const std::string &printerId) override;
     int32_t UpdatePrinterInSystem(const PrinterInfo &printerInfo) override;
-    bool QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds) override;
+    bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) override;
 
 protected:
     void OnStart() override;
@@ -190,18 +190,19 @@ public:
     bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool RemoveVendorPrinterFromDiscovery(const std::string &globalVendorName, const std::string &printerId) override;
     bool AddVendorPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
-        const std::string &ppdData) override;
+        const std::string &ppdName, const std::string &ppdData) override;
     bool AddVendorPrinterToCupsWithSpecificPpd(const std::string &globalVendorName,
-        const std::string &printerId, const std::string &ppdData) override;
+        const std::string &printerId, const std::string &ppdName) override;
     bool RemoveVendorPrinterFromCups(const std::string &vendorName, const std::string &printerId) override;
     bool OnVendorStatusUpdate(const std::string &globalVendorName, const std::string &printerId,
         const PrinterVendorStatus &status) override;
     bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) override;
     bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
     std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &printerId) override;
+    std::shared_ptr<PrinterInfo> QueryConnectingPrinterInfoById(const std::string &printerId) override;
     bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
-        const std::string &ppdData) override;
+        const std::string &ppdName, const std::string &ppdData) override;
 private:
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
@@ -210,6 +211,7 @@ private:
     std::string RenamePrinterWhenAdded(const PrinterInfo &info);
     void ReportPrinterIdle(const std::string &printerId);
     void UnregisterPrintTaskCallback(const std::string &jobId, const uint32_t state, const uint32_t subState);
+    void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

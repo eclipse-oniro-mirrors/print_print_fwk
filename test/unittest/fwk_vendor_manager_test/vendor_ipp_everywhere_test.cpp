@@ -172,7 +172,7 @@ HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0006, TestSize.Level2)
     EXPECT_TRUE(vendorDriver.Init(&mock));
     EXPECT_FALSE(vendorDriver.ConnectPrinter(nullptr));
     EXPECT_CALL(mock, UpdatePrinterToDiscovery(_, _)).Times(3).WillOnce(Return(1)).WillRepeatedly(Return(0));
-    EXPECT_CALL(mock, AddPrinterToCupsWithPpd(_, _, _)).Times(2).WillOnce(Return(1)).WillRepeatedly(Return(0));
+    EXPECT_CALL(mock, AddPrinterToCupsWithPpd(_, _, _, _)).Times(2).WillOnce(Return(1)).WillRepeatedly(Return(0));
     EXPECT_FALSE(vendorDriver.ConnectPrinter(printerInfo));
     EXPECT_FALSE(vendorDriver.ConnectPrinter(printerInfo));
     EXPECT_TRUE(vendorDriver.ConnectPrinter(printerInfo));

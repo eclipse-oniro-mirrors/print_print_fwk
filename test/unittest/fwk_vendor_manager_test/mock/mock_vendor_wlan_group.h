@@ -37,7 +37,8 @@ public:
     MOCK_METHOD2(IsConnectingPrinter, bool(const std::string &, const std::string &));
     MOCK_METHOD1(GetConnectingMethod, ConnectMethod(const std::string &));
     MOCK_METHOD2(SetConnectingPrinter, void(ConnectMethod, const std::string &));
-    MOCK_METHOD3(OnPrinterPpdQueried, bool(const std::string &, const std::string &, const std::string &));
+    MOCK_METHOD4(OnPrinterPpdQueried, bool(const std::string &, const std::string &, const std::string &,
+        const std::string &));
     MOCK_METHOD1(MonitorPrinterStatus, bool(const std::string &, bool));
     MOCK_METHOD3(OnPrinterStatusChanged, bool(const std::string &, const std::string &, const PrinterVendorStatus &));
 };

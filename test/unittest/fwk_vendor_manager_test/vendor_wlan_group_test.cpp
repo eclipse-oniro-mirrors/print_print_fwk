@@ -175,9 +175,9 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0010_NeedRename, TestSize.Leve
     VendorManager vendorManager;
     EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
-    EXPECT_EQ(vendorWlanGroup->OnPrinterPpdQueried(VENDOR_WLAN_GROUP, printerId, PRINTER_TEST_PPDDTAT), false);
+    EXPECT_EQ(vendorWlanGroup->OnPrinterPpdQueried(VENDOR_WLAN_GROUP, printerId, "", PRINTER_TEST_PPDDTAT), false);
     vendorWlanGroup->parentVendorManager = nullptr;
-    EXPECT_EQ(vendorWlanGroup->OnPrinterPpdQueried(VENDOR_WLAN_GROUP, printerId, PRINTER_TEST_PPDDTAT), false);
+    EXPECT_EQ(vendorWlanGroup->OnPrinterPpdQueried(VENDOR_WLAN_GROUP, printerId, "", PRINTER_TEST_PPDDTAT), false);
 }
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0011_NeedRename, TestSize.Level2)

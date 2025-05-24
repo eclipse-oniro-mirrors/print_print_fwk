@@ -26,7 +26,8 @@ public:
     MOCK_METHOD2(AddVendorPrinterToDiscovery, bool (const std::string &, const PrinterInfo &));
     MOCK_METHOD2(UpdateVendorPrinterToDiscovery, bool (const std::string &, const PrinterInfo &));
     MOCK_METHOD2(RemoveVendorPrinterFromDiscovery, bool (const std::string &, const std::string &));
-    MOCK_METHOD3(AddVendorPrinterToCupsWithPpd, bool (const std::string &, const std::string &, const std::string &));
+    MOCK_METHOD4(AddVendorPrinterToCupsWithPpd, bool (const std::string &, const std::string &, const std::string &,
+        const std::string &));
     MOCK_METHOD3(AddVendorPrinterToCupsWithSpecificPpd, bool (const std::string &, const std::string &,
         const std::string &));
     MOCK_METHOD2(RemoveVendorPrinterFromCups, bool (const std::string &, const std::string &));
@@ -35,9 +36,10 @@ public:
     MOCK_METHOD2(QueryPrinterStatusByUri, bool (const std::string &, PrinterStatus &));
     MOCK_METHOD1(QueryDiscoveredPrinterInfoById, std::shared_ptr<PrinterInfo> (const std::string &));
     MOCK_METHOD2(QueryPrinterInfoByPrinterId, int32_t (const std::string &, PrinterInfo &));
-    MOCK_METHOD2(QueryPPDInformation, bool (const char *, std::vector<std::string> &));
+    MOCK_METHOD2(QueryPPDInformation, bool (const std::string &, std::string &));
     MOCK_METHOD2(AddIpPrinterToSystemData, bool (const std::string &, const PrinterInfo &));
-    MOCK_METHOD3(AddIpPrinterToCupsWithPpd, bool (const std::string &, const std::string &, const std::string &));
+    MOCK_METHOD4(AddIpPrinterToCupsWithPpd, bool (const std::string &, const std::string &, const std::string &,
+        const std::string &));
 };
 }  // namespace Print
 }  // namespace OHOS

@@ -26,19 +26,17 @@ class VendorPpdDriver : public VendorDriverBase {
 public:
     VendorPpdDriver();
     ~VendorPpdDriver();
-    bool OnQueryCapability(const std::string &printerId, int timeout) override;
-    bool OnQueryProperties(const std::string &printerId, const std::vector<std::string> &propertyKeys) override;
     std::string GetVendorName() override;
+    int32_t OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo) override;
+    bool QueryProperty(const std::string &printerId, const std::string &key, std::string &value) override;
 
 private:
-    bool QueryPpdByPrinterId(const std::string &printerId, std::vector<std::string> &ppds);
-    bool AddPrinterToCups(const std::string &printerId, const std::string &ppdData);
-    std::shared_ptr<PrinterInfo> QueryPrinterCapabilityFromPpd(const std::string &printerId,
-        const std::string &ppdData);
-    bool UpdateCapability(std::shared_ptr<PrinterInfo> printerInfo);
+    std::string QueryPpdName(const std::string &makeAndModel);
 
 private:
-    std::map<std::string, std::vector<std::string>> privatePrinterPpdMap;
+    std::string connectingVendorGroup;
+    std::shared_ptr<PrinterInfo> connectingPrinterInfo;
+    std::string matchedPpdName_;
 };
 }  // namespace Print
 }  // namespace OHOS

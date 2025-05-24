@@ -82,6 +82,7 @@ typedef struct {
 #define PRINTER_PROPERTY_KEY_DEVICE_DEFAULT_VALUE "printer_device_default_value" // json字符串 打印机默认值
 #define PRINTER_PROPERTY_KEY_DEVICE_SUPPLIES "printer_device_supplies" // json字符串 耗材信息，支持多个墨盒
 #define PRINTER_PROPERTY_KEY_CUPS_PPD_FILE "printer_cups_ppd_file" // 跟设备相关的PPD全文
+#define PRINTER_PROPERTY_KEY_CUPS_PPD_NAME "printer_cups_ppd_name"
 
 typedef struct {
     int32_t (*addPrinterToDiscovery)(const Print_DiscoveryItem *discoveryItem);

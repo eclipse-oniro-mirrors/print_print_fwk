@@ -32,11 +32,9 @@ constexpr size_t U32_AT_SIZE = 4;
 void TestQueryPPDInformation(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintCupsClient::GetInstance()->InitCupsResources();
-    std::string makeModelStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string makeModel = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string ppd = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::vector<std::string> ppds;
-    ppds.push_back(ppd);
-    PrintCupsClient::GetInstance()->QueryPPDInformation(makeModelStr.c_str(), ppds);
+    PrintCupsClient::GetInstance()->QueryPPDInformation(makeModel, ppd);
     PrintCupsClient::GetInstance()->StopCupsdService();
 }
 
@@ -159,7 +157,8 @@ void TestCheckPrinterMakeModel(const uint8_t *data, size_t size, FuzzedDataProvi
     PrintCupsClient::GetInstance()->InitCupsResources();
     JobParameters jobParams;
     jobParams.printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintCupsClient::GetInstance()->CheckPrinterMakeModel(&jobParams);
+    bool driverMissing = false;
+    PrintCupsClient::GetInstance()->CheckPrinterMakeModel(&jobParams, driverMissing);
 }
 
 void TestDeletePrinterFromCups(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -236,7 +235,7 @@ void TestBuildJobParameters(const uint8_t *data, size_t size, FuzzedDataProvider
 void TestCheckPrinterDriverExist(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string makeModel = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintCupsClient::GetInstance()->CheckPrinterDriverExist(makeModel.c_str());
+    PrintCupsClient::GetInstance()->CheckPrinterDriverExist(makeModel);
 }
 
 void TestStartMonitor(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

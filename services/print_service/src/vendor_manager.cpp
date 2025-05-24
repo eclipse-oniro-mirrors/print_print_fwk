@@ -306,7 +306,7 @@ int32_t VendorManager::RemovePrinterFromDiscovery(const std::string &vendorName,
 }
 
 int32_t VendorManager::AddPrinterToCupsWithPpd(const std::string &vendorName, const std::string &printerId,
-                                               const std::string &ppdData)
+                                               const std::string &ppdName, const std::string &ppdData)
 {
     PRINT_HILOGI("AddPrinterToCupsWithPpd enter");
     if (printServiceAbility == nullptr) {
@@ -319,12 +319,12 @@ int32_t VendorManager::AddPrinterToCupsWithPpd(const std::string &vendorName, co
         PRINT_HILOGD("AddPrinterToCupsWithPpd vendorName=%{public}s", vendorName.c_str());
         PRINT_HILOGD("AddPrinterToCupsWithPpd printerId=%{public}s", printerId.c_str());
         if (!printServiceAbility->AddVendorPrinterToCupsWithSpecificPpd(globalVendorName,
-            VendorManager::ExtractPrinterId(printerId), ppdData)) {
+            VendorManager::ExtractPrinterId(printerId), ppdName)) {
             PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
             return EXTENSION_ERROR_CALLBACK_FAIL;
         }
     } else {
-        if (!printServiceAbility->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdData)) {
+        if (!printServiceAbility->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData)) {
             PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
             return EXTENSION_ERROR_CALLBACK_FAIL;
         }
@@ -350,12 +350,21 @@ int32_t VendorManager::RemovePrinterFromCups(const std::string &vendorName, cons
     return EXTENSION_ERROR_NONE;
 }
 
+bool VendorManager::OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo)
+{
+    PRINT_HILOGI("OnPrinterCapabilityQueried enter");
+    if (vendorName == VENDOR_BSUNI_DRIVER && wlanGroupDriver != nullptr) {
+        return wlanGroupDriver->OnPrinterCapabilityQueried(vendorName, printerInfo);
+    }
+    return false;
+}
+
 bool VendorManager::OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
-                                        const std::string &ppdData)
+                                        const std::string &ppdName, const std::string &ppdData)
 {
     PRINT_HILOGI("OnPrinterPpdQueried enter");
     if (vendorName == VENDOR_BSUNI_DRIVER && wlanGroupDriver != nullptr) {
-        return wlanGroupDriver->OnPrinterPpdQueried(vendorName, printerId, ppdData);
+        return wlanGroupDriver->OnPrinterPpdQueried(vendorName, printerId, ppdName, ppdData);
     }
     if (printServiceAbility == nullptr) {
         PRINT_HILOGW("printServiceAbility is null");
@@ -369,11 +378,11 @@ bool VendorManager::OnPrinterPpdQueried(const std::string &vendorName, const std
         return false;
     }
     if (GetConnectingMethod(globalPrinterId) == IP_AUTO &&
-        printServiceAbility->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdData)) {
+        printServiceAbility->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData)) {
         PRINT_HILOGI("AddIpPrinterToCupsWithPpd succeed");
         return true;
     }
-    if (!printServiceAbility->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdData)) {
+    if (!printServiceAbility->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData)) {
         PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
         return false;
     }
@@ -587,13 +596,13 @@ int32_t VendorManager::QueryPrinterInfoByPrinterId(const std::string &vendorName
     return printServiceAbility->QueryPrinterInfoByPrinterId(globalPrinterId, info);
 }
 
-bool VendorManager::QueryPPDInformation(const char *makeModel, std::vector<std::string> &ppds)
+bool VendorManager::QueryPPDInformation(const std::string &makeModel, std::string &ppdName)
 {
     if (printServiceAbility == nullptr) {
         PRINT_HILOGW("QueryPPDInformation printServiceAbility is null");
         return false;
     }
-    return printServiceAbility->QueryPPDInformation(makeModel, ppds);
+    return printServiceAbility->QueryPPDInformation(makeModel, ppdName);
 }
 
 bool VendorManager::IsWlanGroupDriver(const std::string &bothPrinterId)

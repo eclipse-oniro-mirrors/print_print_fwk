@@ -457,7 +457,7 @@ void VendorBsuniDriver::OnCupsPrinterAdd(std::shared_ptr<PrinterInfo> printerInf
         PRINT_HILOGW("ppdData is null");
         return;
     }
-    vendorManager->AddPrinterToCupsWithPpd(vendorName, printerInfo->GetPrinterId(), *ppdData);
+    vendorManager->AddPrinterToCupsWithPpd(vendorName, printerInfo->GetPrinterId(), BSUNI_PPD_NAME, *ppdData);
 }
 
 void VendorBsuniDriver::OnCupsPrinterRemove(std::shared_ptr<std::string> printerId)
@@ -484,7 +484,7 @@ void VendorBsuniDriver::OnPpdQueried(std::shared_ptr<std::string> printerId, std
         return;
     }
     PRINT_HILOGI("ppdData queried");
-    if (vendorManager->OnPrinterPpdQueried(GetVendorName(), *printerId, *ppdData)) {
+    if (vendorManager->OnPrinterPpdQueried(GetVendorName(), *printerId, BSUNI_PPD_NAME, *ppdData)) {
         if (vendorExtension != nullptr && vendorExtension->onConnectPrinter != nullptr) {
             vendorExtension->onConnectPrinter(printerId->c_str());
         }
@@ -520,17 +520,7 @@ void VendorBsuniDriver::OnPrinterCapabilityQueried(std::shared_ptr<PrinterInfo> 
         return;
     }
     vendorManager->UpdatePrinterToDiscovery(GetVendorName(), *printerInfo);
-    std::string printerId = printerInfo->GetPrinterId();
-    std::string globalPrinterId = GetGlobalPrinterId(printerId);
-    bool connecting = vendorManager->IsConnectingPrinter(globalPrinterId, printerInfo->GetUri());
-    if (connecting) {
-        vendorManager->SetConnectingPrinter(vendorManager->GetConnectingMethod(printerId), globalPrinterId);
-        PRINT_HILOGD("connecting %{public}s, query propertis", globalPrinterId.c_str());
-        std::vector<std::string> keyList;
-        keyList.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);
-        keyList.push_back(PRINTER_PROPERTY_KEY_CUPS_PPD_FILE);
-        OnQueryProperties(printerId, keyList);
-    }
+    vendorManager->OnPrinterCapabilityQueried(GetVendorName(), *printerInfo);
     syncWait.Notify();
     PRINT_HILOGD("OnPrinterCapabilityQueried quit");
 }
