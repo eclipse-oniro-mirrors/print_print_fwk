@@ -26,9 +26,11 @@ public:
     MOCK_METHOD2(AddPrinterToDiscovery, int32_t (const std::string &, const PrinterInfo &));
     MOCK_METHOD2(UpdatePrinterToDiscovery, int32_t (const std::string &, const PrinterInfo &));
     MOCK_METHOD2(RemovePrinterFromDiscovery, int32_t (const std::string &, const std::string &));
-    MOCK_METHOD3(AddPrinterToCupsWithPpd, int32_t (const std::string &, const std::string &, const std::string &));
+    MOCK_METHOD4(AddPrinterToCupsWithPpd, int32_t (const std::string &, const std::string &, const std::string &,
+        const std::string &));
     MOCK_METHOD2(RemovePrinterFromCups, int32_t (const std::string &, const std::string &));
     MOCK_METHOD3(OnPrinterStatusChanged, bool (const std::string &, const std::string &, const PrinterVendorStatus &));
+    MOCK_METHOD2(OnPrinterCapabilityQueried, bool (const std::string &, const PrinterInfo &));
     MOCK_METHOD4(OnPrinterPpdQueried, bool (const std::string &, const std::string &, const std::string &,
         const std::string &));
     MOCK_METHOD2(IsConnectingPrinter, bool (const std::string &, const std::string &));

@@ -104,10 +104,11 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0001, TestSize.Level1)
     std::string printerName = "testPrinterName";
     std::string printerUri;
     std::string printerId;
+    std::string ppdName;
     std::vector<std::string> keyList;
     std::vector<std::string> valueList;
     EXPECT_EQ(printCupsClient.QueryPrinterAttrList(printerName, keyList, valueList), E_PRINT_SERVER_FAILURE);
-    printCupsClient.QueryPPDInformation(printerId.c_str(), valueList);
+    printCupsClient.QueryPPDInformation(printerId.c_str(), ppdName);
     EXPECT_EQ(printCupsClient.DeleteCupsPrinter(printerName.c_str()), E_PRINT_SERVER_FAILURE);
     PrinterCapability printerCap;
     EXPECT_EQ(printCupsClient.QueryPrinterCapabilityByUri(printerUri, printerId, printerCap), E_PRINT_SERVER_FAILURE);
@@ -419,9 +420,12 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0080, TestSize.Level1)
     OHOS::Print::PrintCupsClient printCupsClient;
     int32_t ret = printCupsClient.InitCupsResources();
     EXPECT_EQ(ret, E_PRINT_NONE);
+    std::string makeModel;
+    std::string ppdName;
+    EXPECT_FALSE(printCupsClient.QueryPPDInformation(makeModel, ppdName));
     std::vector<std::string> ppds;
-    printCupsClient.QueryPPDInformation(nullptr, ppds);
     printCupsClient.ParsePPDInfo(nullptr, ppds);
+    EXPECT_EQ(ppds.size(), 0);
     printCupsClient.StopCupsdService();
 }
 

@@ -120,6 +120,7 @@ bool VendorDriverBase::MonitorPrinterStatus(const std::string &printerId, bool o
 
 bool VendorDriverBase::QueryProperty(const std::string &printerId, const std::string &key, std::string &value)
 {
+    value = std::string();
     return false;
 }
 

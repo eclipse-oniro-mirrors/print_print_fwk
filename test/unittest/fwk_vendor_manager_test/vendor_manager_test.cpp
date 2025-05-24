@@ -186,8 +186,8 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0006, TestSize.Level1)
     EXPECT_EQ(vendorManager.AddPrinterToDiscovery(ppdDriverVendorName, printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.UpdatePrinterToDiscovery("", printerInfo), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromDiscovery("", ""), EXTENSION_ERROR_CALLBACK_FAIL);
-    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd("", "", ""), EXTENSION_ERROR_CALLBACK_FAIL);
-    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(ppdDriverVendorName, "", ""), EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd("", "", "", ""), EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(ppdDriverVendorName, "", "", ""), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromCups("", ""), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_FALSE(vendorManager.OnPrinterPpdQueried("", PRINTER_TEST_IP, "", ""));
     EXPECT_FALSE(vendorManager.MonitorPrinterStatus(":id", true));
@@ -262,6 +262,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0008, TestSize.Level2)
     std::string globalVendorName = VendorManager::GetGlobalVendorName(vendorName);
     std::string printerId = PRINTER_TEST_IP;
     std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
+    std::string ppdName;
     std::string ppdData;
     PrinterInfo printerInfo;
     EXPECT_CALL(*mock, AddVendorPrinterToDiscovery(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
@@ -274,9 +275,10 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0008, TestSize.Level2)
     EXPECT_EQ(vendorManager.UpdatePrinterToDiscovery(vendorName, printerInfo), EXTENSION_ERROR_NONE);
     EXPECT_EQ(vendorManager.RemovePrinterFromDiscovery(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromDiscovery(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_NONE);
-    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(vendorName, PRINTER_TEST_IP, ppdData),
+    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(vendorName, PRINTER_TEST_IP, ppdName, ppdData),
               EXTENSION_ERROR_CALLBACK_FAIL);
-    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(vendorName, PRINTER_TEST_IP, ppdData), EXTENSION_ERROR_NONE);
+    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(vendorName, PRINTER_TEST_IP, ppdName, ppdData),
+              EXTENSION_ERROR_NONE);
     vendorManager.UnInit();
 }
 

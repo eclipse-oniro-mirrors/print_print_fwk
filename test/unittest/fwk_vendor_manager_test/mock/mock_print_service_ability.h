@@ -38,7 +38,7 @@ public:
     MOCK_METHOD2(QueryPrinterInfoByPrinterId, int32_t (const std::string &, PrinterInfo &));
     MOCK_METHOD2(QueryPPDInformation, bool (const std::string &, std::string &));
     MOCK_METHOD2(AddIpPrinterToSystemData, bool (const std::string &, const PrinterInfo &));
-    MOCK_METHOD3(AddIpPrinterToCupsWithPpd, bool (const std::string &, const std::string &, const std::string &,
+    MOCK_METHOD4(AddIpPrinterToCupsWithPpd, bool (const std::string &, const std::string &, const std::string &,
         const std::string &));
 };
 }  // namespace Print
