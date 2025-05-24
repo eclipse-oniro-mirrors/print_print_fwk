@@ -42,6 +42,7 @@ public:
     bool MonitorPrinterStatus(const std::string &groupPrinterId, bool on) override;
     bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                 const PrinterVendorStatus &status) override;
+    bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) override;
 
 private:
     bool IsBsunidriverSupport(const std::string &groupPrinterId);
@@ -55,6 +56,7 @@ private:
     bool CheckPrinterAddedByIp(const std::string &printerId);
     PrinterInfo ConvertIpPrinterName(const PrinterInfo &printerInfo);
     std::string QueryVendorDriverByGroupPrinterId(const std::string &groupPrinterId);
+    bool TryConnectByPpdDriver(const PrinterInfo &printerInfo);
 
 private:
     VendorManager* parentVendorManager = nullptr;

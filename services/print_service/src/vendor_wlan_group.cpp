@@ -42,24 +42,14 @@ bool VendorWlanGroup::OnQueryCapability(const std::string &printerId, int timeou
         PRINT_HILOGE("VendorManager is null.");
         return false;
     }
-    auto ppdDriver = parentVendorManager->FindDriverByVendorName(VENDOR_PPD_DRIVER);
-    if (ppdDriver != nullptr) {
-        printerVendorGroupList_[printerId] = VENDOR_PPD_DRIVER;
-        auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
-        if (printerInfo != nullptr) {
-            ppdDriver->OnPrinterDiscovered(GetVendorName(), *printerInfo);
-            std::string ppdName;
-            if (ppdDriver->QueryProperty(printerId, PRINTER_PROPERTY_KEY_CUPS_PPD_NAME, ppdName)) {
-                if (vendorManager->AddPrinterToCupsWithPpd(GetVendorName(), printerId, ppdName, "") ==
-                    EXTENSION_ERROR_NONE) {
-                    PRINT_HILOGI("AddPrinterToCupsWithPpd success.");
-                    return true;
-                }
-                PRINT_HILOGI("AddPrinterToCupsWithPpd fail.");
-            }
-        }
-        RemoveGroupPrinterFromVendorGroupList(printerId);
+    printerVendorGroupList_[printerId] = VENDOR_PPD_DRIVER;
+    auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
+    if (printerInfo != nullptr && TryConnectByPpdDriver(*printerInfo)) {
+        PRINT_HILOGI("Connect by ppdDriver success.");
+        return true;
     }
+    RemoveGroupPrinterFromVendorGroupList(printerId);
+
     if (IsBsunidriverSupport(printerId)) {
         printerVendorGroupList_[printerId] = VENDOR_BSUNI_DRIVER;
         auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
@@ -263,6 +253,33 @@ std::string VendorWlanGroup::QueryVendorDriverByGroupPrinterId(const std::string
     return "";
 }
 
+bool VendorWlanGroup::TryConnectByPpdDriver(const PrinterInfo &printerInfo)
+{
+    if (parentVendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return false;
+    }
+    auto ppdDriver = parentVendorManager->FindDriverByVendorName(VENDOR_PPD_DRIVER);
+    if (ppdDriver == nullptr) {
+        PRINT_HILOGW("ppdDriver is null");
+        return false;
+    }
+    ppdDriver->OnPrinterDiscovered(GetVendorName(), printerInfo);
+    std::string printerId = printerInfo.GetPrinterId();
+    std::string ppdName;
+    if (!ppdDriver->QueryProperty(printerId, PRINTER_PROPERTY_KEY_CUPS_PPD_NAME, ppdName)) {
+        PRINT_HILOGI("no matched ppd");
+        return false;
+    }
+    if (parentVendorManager->AddPrinterToCupsWithPpd(GetVendorName(), printerId, ppdName, "") !=
+        EXTENSION_ERROR_NONE) {
+        PRINT_HILOGI("AddPrinterToCupsWithPpd fail.");
+        return false;
+    }
+    PRINT_HILOGI("AddPrinterToCupsWithPpd success.");
+    return true;
+}
+
 std::string VendorWlanGroup::ConvertGroupGlobalPrinterId(const std::string &bothPrinterId)
 {
     std::string printerId(VendorManager::ExtractPrinterId(bothPrinterId));
@@ -406,3 +423,39 @@ bool VendorWlanGroup::OnPrinterStatusChanged(const std::string &vendorName, cons
     return parentVendorManager->OnPrinterStatusChanged(GetVendorName(), groupPrinterId, status);
 }
 
+bool VendorWlanGroup::OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo)
+{
+    PRINT_HILOGD("OnPrinterCapabilityQueried vendorName: %{public}s", vendorName.c_str());
+    if (parentVendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return false;
+    }
+    auto vendorDriver = parentVendorManager->FindDriverByVendorName(vendorName);
+    if (vendorDriver == nullptr) {
+        PRINT_HILOGW("vendorDriver is null");
+        return false;
+    }
+    std::string printerId = printerInfo.GetPrinterId();
+    std::string globalPrinterId = GetGlobalPrinterId(printerId);
+    bool connecting = parentVendorManager->IsConnectingPrinter(globalPrinterId, printerInfo.GetUri());
+    if (connecting) {
+        PRINT_HILOGD("connecting %{private}s", globalPrinterId.c_str());
+        auto method = parentVendorManager->GetConnectingMethod(printerId);
+        PRINT_HILOGI("connecting method %{public}d", static_cast<int>(method));
+        if (method == IP_AUTO) {
+            printerVendorGroupList_[printerId] = VENDOR_PPD_DRIVER;
+            if (TryConnectByPpdDriver(printerInfo)) {
+                PRINT_HILOGI("Connect by ppdDriver success.");
+                return true;
+            }
+            RemoveGroupPrinterFromVendorGroupList(printerId);
+        }
+        vendorManager->SetConnectingPrinter(method, globalPrinterId);
+        PRINT_HILOGI("query ppd propertis");
+        std::vector<std::string> keyList;
+        keyList.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);
+        keyList.push_back(PRINTER_PROPERTY_KEY_CUPS_PPD_FILE);
+        vendorDriver->OnQueryProperties(printerId, keyList);
+    }
+    return true;
+}

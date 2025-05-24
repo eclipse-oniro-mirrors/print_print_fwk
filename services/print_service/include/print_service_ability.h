@@ -202,7 +202,7 @@ public:
     std::shared_ptr<PrinterInfo> QueryConnectingPrinterInfoById(const std::string &printerId) override;
     bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
-        const std::string &ppdName， const std::string &ppdData) override;
+        const std::string &ppdName, const std::string &ppdData) override;
 private:
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
@@ -211,6 +211,7 @@ private:
     std::string RenamePrinterWhenAdded(const PrinterInfo &info);
     void ReportPrinterIdle(const std::string &printerId);
     void UnregisterPrintTaskCallback(const std::string &jobId, const uint32_t state, const uint32_t subState);
+    void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

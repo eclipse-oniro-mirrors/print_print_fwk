@@ -2932,27 +2932,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
         return false;
     }
 #endif // CUPS_ENABLE
-    printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-    printerInfo->SetPrinterState(PRINTER_CONNECTED);
-    printerInfo->SetIsLastUsedPrinter(true);
-    printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-    if (printSystemData_.IsPrinterAdded(globalPrinterId)) {
-        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-    } else {
-        BuildPrinterPreference(*printerInfo);
-        printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
-        printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
-        SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
-        SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
-    }
-    printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
-    SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
-    SendPrinterEvent(*printerInfo);
-    SetLastUsedPrinter(globalPrinterId);
-    SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
-    vendorManager.ClearConnectingPrinter();
-    vendorManager.MonitorPrinterStatus(globalPrinterId, true);
+    OnPrinterAddedToCups(printerInfo);
     return true;
 }
 
@@ -2982,6 +2962,17 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
     }
     printerInfo->SetCapability(printerCaps);
 #endif // CUPS_ENABLE
+    OnPrinterAddedToCups(printerInfo);
+    return true;
+}
+
+void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo)
+{
+    if (printerInfo == nullptr) {
+        PRINT_HILOGW("printerInfo is null");
+        return;
+    }
+    auto globalPrinterId = printerInfo->GetPrinterId();
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetIsLastUsedPrinter(true);
@@ -3003,7 +2994,6 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::strin
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
     vendorManager.MonitorPrinterStatus(globalPrinterId, true);
-    return true;
 }
 
 bool PrintServiceAbility::RemoveVendorPrinterFromCups(const std::string &globalVendorName,
@@ -3054,7 +3044,7 @@ bool PrintServiceAbility::AddIpPrinterToSystemData(const std::string &globalVend
 }
 
 bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVendorName,
-    const std::string &printerId, const std::string &ppdName， const std::string &ppdData)
+    const std::string &printerId, const std::string &ppdName, const std::string &ppdData)
 {
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
     auto printerInfo = printSystemData_.QueryIpPrinterInfoById(globalPrinterId);

@@ -47,7 +47,7 @@ public:
     virtual bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) = 0;
     virtual bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) = 0;
     virtual bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
-                                           const std::string &ppdName， const std::string &ppdData) = 0;
+                                           const std::string &ppdName, const std::string &ppdData) = 0;
 };
 
 class PrintServiceAbility;
@@ -78,6 +78,7 @@ public:
     int32_t RemovePrinterFromCups(const std::string &vendorName, const std::string &printerId) override;
     bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                 const PrinterVendorStatus &status) override;
+    bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) override;
     bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                              const std::string &ppdName, const std::string &ppdData) override;
     bool MonitorPrinterStatus(const std::string &globalPrinterId, bool on);

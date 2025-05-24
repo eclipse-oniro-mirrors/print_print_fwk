@@ -520,17 +520,7 @@ void VendorBsuniDriver::OnPrinterCapabilityQueried(std::shared_ptr<PrinterInfo> 
         return;
     }
     vendorManager->UpdatePrinterToDiscovery(GetVendorName(), *printerInfo);
-    std::string printerId = printerInfo->GetPrinterId();
-    std::string globalPrinterId = GetGlobalPrinterId(printerId);
-    bool connecting = vendorManager->IsConnectingPrinter(globalPrinterId, printerInfo->GetUri());
-    if (connecting) {
-        vendorManager->SetConnectingPrinter(vendorManager->GetConnectingMethod(printerId), globalPrinterId);
-        PRINT_HILOGD("connecting %{public}s, query propertis", globalPrinterId.c_str());
-        std::vector<std::string> keyList;
-        keyList.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);
-        keyList.push_back(PRINTER_PROPERTY_KEY_CUPS_PPD_FILE);
-        OnQueryProperties(printerId, keyList);
-    }
+    vendorManager->OnPrinterCapabilityQueried(GetVendorName(), *printerInfo);
     syncWait.Notify();
     PRINT_HILOGD("OnPrinterCapabilityQueried quit");
 }
