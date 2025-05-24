@@ -31,6 +31,7 @@ int32_t VendorPpdDriver::OnPrinterDiscovered(const std::string &vendorName, cons
 {
     connectingVendorGroup = vendorName;
     connectingPrinterInfo = std::make_shared<PrinterInfo>(printerInfo);
+    return 0;
 }
 
 bool VendorPpdDriver::QueryProperty(const std::string &printerId, const std::string &key, std::string &value)
