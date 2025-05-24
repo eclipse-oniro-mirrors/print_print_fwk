@@ -37,6 +37,7 @@ public:
     virtual bool MonitorPrinterStatus(const std::string &printerId, bool on) = 0;
     virtual bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                         const PrinterVendorStatus &status) = 0;
+    virtual bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) = 0;
 private:
 };
 }  // namespace Print

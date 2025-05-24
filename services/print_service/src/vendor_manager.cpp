@@ -350,6 +350,15 @@ int32_t VendorManager::RemovePrinterFromCups(const std::string &vendorName, cons
     return EXTENSION_ERROR_NONE;
 }
 
+bool VendorManager::OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo)
+{
+    PRINT_HILOGI("OnPrinterCapabilityQueried enter");
+    if (vendorName == VENDOR_BSUNI_DRIVER && wlanGroupDriver != nullptr) {
+        return wlanGroupDriver->OnPrinterCapabilityQueried(vendorName, printerInfo);
+    }
+    return false;
+}
+
 bool VendorManager::OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                                         const std::string &ppdName, const std::string &ppdData)
 {

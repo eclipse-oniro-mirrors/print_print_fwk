@@ -55,6 +55,7 @@ public:
     virtual int32_t RemovePrinterFromCups(const std::string &vendorName, const std::string &printerId) = 0;
     virtual bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                         const PrinterVendorStatus &status) = 0;
+    virtual bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) = 0;
     virtual bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                                      const std::string &ppdName, const std::string &ppdData) = 0;
     virtual bool IsConnectingPrinter(const std::string &id, const std::string &uri) = 0;

@@ -22,20 +22,6 @@ VendorPpdDriver::VendorPpdDriver() {}
 
 VendorPpdDriver::~VendorPpdDriver() {}
 
-bool VendorPpdDriver::QueryProperty(const std::string &printerId, const std::string &key, std::string &value)
-{
-    if (connectingPrinterInfo == nullptr) {
-        PRINT_HILOGW("connectingPrinterInfo is null");
-        return false;
-    }
-    if (key == PRINTER_PROPERTY_KEY_CUPS_PPD_NAME) {
-        auto makeAndModel = connectingPrinterInfo->GetPrinterMake();
-        value = QueryPpdName(makeAndModel);
-        return !value.empty();
-    }
-    return false;
-}
-
 std::string VendorPpdDriver::GetVendorName()
 {
     return VENDOR_PPD_DRIVER;
@@ -45,6 +31,24 @@ int32_t VendorPpdDriver::OnPrinterDiscovered(const std::string &vendorName, cons
 {
     connectingVendorGroup = vendorName;
     connectingPrinterInfo = std::make_shared<PrinterInfo>(printerInfo);
+}
+
+bool VendorPpdDriver::QueryProperty(const std::string &printerId, const std::string &key, std::string &value)
+{
+    if (connectingPrinterInfo == nullptr) {
+        PRINT_HILOGW("connectingPrinterInfo is null");
+        return false;
+    }
+    if (connectingPrinterInfo->GetPrinterId() != printerId) {
+        PRINT_HILOGW("not connecting printer");
+        return false;
+    }
+    if (key == PRINTER_PROPERTY_KEY_CUPS_PPD_NAME) {
+        auto makeAndModel = connectingPrinterInfo->GetPrinterMake();
+        value = QueryPpdName(makeAndModel);
+        return !value.empty();
+    }
+    return false;
 }
 
 std::string VendorPpdDriver::QueryPpdName(const std::string &makeAndModel)
