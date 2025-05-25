@@ -58,7 +58,6 @@ const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t INIT_INTERVAL = 5000L;
 const int32_t UID_TRANSFORM_DIVISOR = 200000;
 const uint32_t UNLOAD_SA_INTERVAL = 90000;
-const uint32_t DEFAULT_BUFFER_SIZE_4K = 4096;
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -888,7 +887,8 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
 
     // is restratable printJob & get jobinfo
     auto printJob = std::make_shared<PrintJob>();
-    if (PrintErrorCode ret = QueryQueuedPrintJobById(jobId, *printJob) != E_PRINT_NONE) {
+    int32_t ret = QueryQueuedPrintJobById(jobId, *printJob);
+    if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("Invalid job id.");
         return ret;
     }
@@ -909,7 +909,7 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     AddToPrintJobList(printJob->GetJobId(), printJob);
     UpdateQueuedJobList(printJob->GetJobId(), printJob);
     printerJobMap_[printJob->GetPrinterId()].insert(std::make_pair(jobId, true));
-    int32_t ret = StartPrintJobInternal(printJob);
+    ret = StartPrintJobInternal(printJob);
     if (ret == E_PRINT_NONE) {
         CancelPrintJob(jobId);
     }

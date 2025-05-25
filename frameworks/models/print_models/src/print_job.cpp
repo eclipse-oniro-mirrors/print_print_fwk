@@ -202,7 +202,8 @@ void PrintJob::DupFdList(std::vector<uint32_t> &fdList) const
         int32_t dupFd = dup(fd);
         if (dupFd < 0) {
             PRINT_HILOGW("dup fd failed");
-            fdList.push_back(fd);    
+            fdList.push_back(fd);
+            continue;
         }
         fdList.push_back(static_cast<uint32_t>(dupFd));
     }

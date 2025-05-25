@@ -36,7 +36,6 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLEXTENSION] = &PrintServiceStub::OnQueryAllExtension;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_STARTPRINTJOB] = &PrintServiceStub::OnStartPrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CANCELPRINTJOB] = &PrintServiceStub::OnCancelPrintJob;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_RESTARTPRINTJOB] = &PrintServiceStub::OnRestartPrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERS] = &PrintServiceStub::OnAddPrinters;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REMOVEPRINTERS] = &PrintServiceStub::OnRemovePrinters;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERS] = &PrintServiceStub::OnUpdatePrinters;

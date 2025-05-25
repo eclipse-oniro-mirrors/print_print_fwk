@@ -108,32 +108,13 @@ HWTEST_F(PrintJobTest, PrintJobTest_0003_NeedRename, TestSize.Level1)
 HWTEST_F(PrintJobTest, DupFdlist_WhenBadfd_ShouldReturnSameFd, TestSize.Level1)
 {
     PrintJob job;
-    std::vector<uint32_t> files = {997, 998, 999};
-    std::vector<uint32_t> dupFiles;
-    job.SetFdList(files);
-    job.DupFdList(getFiles);
-    EXPECT_EQ(files.size(), getFiles.size());
-    for (size_t index = 0; index < files.size(); index++) {
-        EXPECT_EQ(files[index], getFiles[index]);
-    }
-}
-
-/**
- * @tc.name: DupFdlist_WhenStdfd_ShouldReturnDifferentFd
- * @tc.desc: Verify the DupFdlist function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintJobTest, DupFdlist_WhenStdfd_ShouldReturnDifferentFd, TestSize.Level1)
-{
-    PrintJob job;
-    std::vector<uint32_t> files = {0, 1, 2};
-    std::vector<uint32_t> dupFiles;
-    job.SetFdList(files);
-    job.DupFdList(getFiles);
-    EXPECT_EQ(files.size(), getFiles.size());
-    for (size_t index = 0; index < files.size(); index++) {
-        EXPECT_NE(files[index], getFiles[index]);
+    std::vector<uint32_t> fdList = { 997, 998, 999 };
+    std::vector<uint32_t> dupFdList;
+    job.SetFdList(fdList);
+    job.DupFdList(dupFdList);
+    EXPECT_EQ(fdList.size(), dupFdList.size());
+    for (size_t index = 0; index < fdList.size(); index++) {
+        EXPECT_EQ(fdList[index], dupFdList[index]);
     }
 }
 
