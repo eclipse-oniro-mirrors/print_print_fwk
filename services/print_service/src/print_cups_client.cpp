@@ -938,6 +938,7 @@ void PrintCupsClient::StartNextJob()
 void PrintCupsClient::JobSentCallback()
 {
     PRINT_HILOGI("Previous job send success, start next job");
+    PrintServiceAbility::GetInstance()->FlushCacheFileToUserData(currentJob_->serviceJobId);
     if (currentJob_ != nullptr) {
         delete currentJob_;
         currentJob_ = nullptr;
@@ -1970,7 +1971,7 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
     } else {
         params->isAutoRotate = optionJson["isAutoRotate"].asBool();
     }
-    jobInfo.GetFdList(params->fdList);
+    jobInfo.DupFdList(params->fdList);
     params->serviceJobId = jobInfo.GetJobId();
     params->numCopies = jobInfo.GetCopyNumber();
     params->duplex = GetDulpexString(jobInfo.GetDuplexMode());

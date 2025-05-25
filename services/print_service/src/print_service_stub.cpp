@@ -36,6 +36,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLEXTENSION] = &PrintServiceStub::OnQueryAllExtension;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_STARTPRINTJOB] = &PrintServiceStub::OnStartPrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CANCELPRINTJOB] = &PrintServiceStub::OnCancelPrintJob;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_RESTARTPRINTJOB] = &PrintServiceStub::OnRestartPrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERS] = &PrintServiceStub::OnAddPrinters;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REMOVEPRINTERS] = &PrintServiceStub::OnRemovePrinters;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERS] = &PrintServiceStub::OnUpdatePrinters;
@@ -85,6 +86,7 @@ PrintServiceStub::PrintServiceStub()
         &PrintServiceStub::OnRemovePrinterFromDiscovery;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERINSYSTEM] =
         &PrintServiceStub::OnUpdatePrinterInSystem;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_RESTARTPRINTJOB] = &PrintServiceStub::OnRestartPrintJob;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -241,7 +243,7 @@ bool PrintServiceStub::OnCancelPrintJob(MessageParcel &data, MessageParcel &repl
     PRINT_HILOGI("PrintServiceStub::OnCancelPrintJob in");
     int32_t ret = CancelPrintJob(data.ReadString());
     reply.WriteInt32(ret);
-    PRINT_HILOGD("PrintServiceStub::OnStartPrintJob out");
+    PRINT_HILOGD("PrintServiceStub::OnCancelPrintJob out");
     return ret == E_PRINT_NONE;
 }
 
@@ -821,6 +823,15 @@ bool PrintServiceStub::OnUpdatePrinterInSystem(MessageParcel &data, MessageParce
     reply.WriteInt32(ret);
 
     PRINT_HILOGD("PrintServiceStub::OnUpdatePrinterInSystem out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnRestartPrintJob(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::RestartPrintJob in");
+    int32_t ret = RestartPrintJob(data.ReadString());
+    reply.WriteInt32(ret);
+    PRINT_HILOGD("PrintServiceStub::RestartPrintJob out");
     return ret == E_PRINT_NONE;
 }
 

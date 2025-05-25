@@ -382,5 +382,29 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0030_NeedRename, TestSize.Level1)
     userData->DeletePrinter(printerId2);
     userData->SetDefaultPrinter(printerId2, DELETE_LAST_USED_PRINTER);
 }
+
+HWTEST_F(PrintUserDataTest, QueryQueuedPrintJobById_WhenNonexistenceJob_ShouldInvalidJobError, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    EXPECT_NE(userData, nullptr);
+    PrintJob getPrintJob;
+    PrintJob printJob;
+    EXPECT_EQ(userData->QueryQueuedPrintJobById(jobId, getPrintJob), E_PRINT_INVALID_PRINTJOB);
+    userData->queuedJobList_["testId"] = printJob;
+    EXPECT_EQ(userData->QueryQueuedPrintJobById(jobId, getPrintJob), E_PRINT_INVALID_PRINTJOB);
+}
+
+HWTEST_F(PrintUserDataTest, QueryQueuedPrintJobById_WhenExistenceJob_ShouldNoneError, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    EXPECT_NE(userData, nullptr);
+    std::string jobId = "123";
+    PrintJob getPrintJob;
+    PrintJob printJob;
+    userData->queuedJobList_[jobId] = nullptr;
+    EXPECT_EQ(userData->QueryQueuedPrintJobById(jobId, getPrintJob), E_PRINT_INVALID_PRINTJOB);
+    userData->queuedJobList_[jobId] = printJob;
+    EXPECT_EQ(userData->QueryQueuedPrintJobById(jobId, getPrintJob), E_PRINT_NONE);
+}
 }
 }

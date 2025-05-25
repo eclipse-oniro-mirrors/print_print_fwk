@@ -54,7 +54,7 @@ public:
     void AddToPrintJobList(const std::string jobId, const std::shared_ptr<PrintJob> &printjob);
     void UpdateQueuedJobList(
         const std::string &jobId, const std::shared_ptr<PrintJob> &printJob, std::string jobOrderId);
-    int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printJob);
+    int32_t QueryPrintJobById(const std::string &printJobId, PrintJob &printJob);
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs);
     int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type);
     int32_t SetLastUsedPrinter(const std::string &printerId);
@@ -64,6 +64,10 @@ public:
     std::string GetDefaultPrinter();
     bool CheckIfUseLastUsedPrinterForDefault();
     void DeletePrinter(const std::string &printerId);
+    bool FlushCacheFileToUserData(const std::string &jobId);
+    bool DeleteCacheFileFromUserData(const std::string &jobId);
+    bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList);
+    int32_t QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob);
 
 private:
     bool SetUserDataToFile();
@@ -73,6 +77,8 @@ private:
     bool ConvertJsonToUsedPrinterList(Json::Value &userData);
     void ConvertUsedPrinterListToJson(Json::Value &usedPrinterListJson);
     void DeletePrinterFromUsedPrinterList(const std::string &printerId);
+    std::string ObtainUserCacheDirectory();
+    bool FlushCacheFile(uint32_t fd, const std::string jobId, const std::string cacheDir, int32_t index);
 
 public:
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;

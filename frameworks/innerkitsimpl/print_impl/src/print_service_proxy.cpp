@@ -1113,4 +1113,24 @@ int32_t PrintServiceProxy::LoadExtSuccess(const std::string &extensionId)
     PRINT_HILOGD("PrintServiceProxy LoadExtSuccess out. ret = [%{public}d]", ret);
     return ret;
 }
+
+int32_t PrintServiceProxy::RestartPrintJob(const std::string &jobId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(jobId);
+    PRINT_HILOGD("PrintServiceProxy RestartPrintJob started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy RestartPrintJob remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_RESTARTPRINTJOB, data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy RestartPrintJob out. ret = [%{public}d]", ret);
+    return ret;
+}
 } // namespace OHOS::Print

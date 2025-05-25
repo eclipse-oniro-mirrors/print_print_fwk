@@ -100,6 +100,44 @@ HWTEST_F(PrintJobTest, PrintJobTest_0003_NeedRename, TestSize.Level1)
 }
 
 /**
+ * @tc.name: DupFdlist_ShouldReturnSameFd
+ * @tc.desc: Verify the DupFdlist function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, DupFdlist_WhenBadfd_ShouldReturnSameFd, TestSize.Level1)
+{
+    PrintJob job;
+    std::vector<uint32_t> files = {997, 998, 999};
+    std::vector<uint32_t> dupFiles;
+    job.SetFdList(files);
+    job.DupFdList(getFiles);
+    EXPECT_EQ(files.size(), getFiles.size());
+    for (size_t index = 0; index < files.size(); index++) {
+        EXPECT_EQ(files[index], getFiles[index]);
+    }
+}
+
+/**
+ * @tc.name: DupFdlist_WhenStdfd_ShouldReturnDifferentFd
+ * @tc.desc: Verify the DupFdlist function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, DupFdlist_WhenStdfd_ShouldReturnDifferentFd, TestSize.Level1)
+{
+    PrintJob job;
+    std::vector<uint32_t> files = {0, 1, 2};
+    std::vector<uint32_t> dupFiles;
+    job.SetFdList(files);
+    job.DupFdList(getFiles);
+    EXPECT_EQ(files.size(), getFiles.size());
+    for (size_t index = 0; index < files.size(); index++) {
+        EXPECT_NE(files[index], getFiles[index]);
+    }
+}
+
+/**
  * @tc.name: PrintJobTest_0004_NeedRename
  * @tc.desc: Verify the SetVendorId function.
  * @tc.type: FUNC

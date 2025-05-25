@@ -59,6 +59,7 @@ public:
     int32_t DisconnectPrinter(const std::string &printerId);
     int32_t StartPrintJob(PrintJob &jobinfo);
     int32_t CancelPrintJob(const std::string &jobId);
+    int32_t RestartPrintJob(const std::string &jobId);
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state);
     int32_t UpdatePrintJobStateForNormalApp(const std::string &jobId, uint32_t state, uint32_t subState);
     int32_t UpdatePrintJobStateOnlyForSystemApp(const std::string &jobId, uint32_t state, uint32_t subState);
