@@ -60,6 +60,7 @@ public:
     int32_t QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos) override;
     int32_t StartPrintJob(PrintJob &jobinfo) override;
     int32_t CancelPrintJob(const std::string &jobId) override;
+    int32_t RestartPrintJob(const std::string &jobId) override;
     int32_t AddPrinters(const std::vector<PrinterInfo> &printerInfos) override;
     int32_t RemovePrinters(const std::vector<std::string> &printerIds) override;
     int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;
@@ -100,6 +101,8 @@ public:
     int32_t UpdatePrintJobState(const std::string &jobId, uint32_t state, uint32_t subState);
     void CancelUserPrintJobs(const int32_t userId);
     void NotifyCurrentUserChanged(const int32_t userId);
+    bool FlushCacheFileToUserData(const std::string &jobId);
+    bool DeleteCacheFileFromUserData(const std::string &jobId);
     int32_t NotifyPrintServiceEvent(std::string &jobId, uint32_t event) override;
     int32_t SetPrinterPreference(const std::string &printerId, const PrinterPreferences &preferences) override;
     int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type) override;
@@ -184,6 +187,8 @@ private:
     int32_t HandleExtensionConnectPrinter(const std::string &printerId);
     bool CheckUserIdInEventType(const std::string &type);
     void BuildPrinterPreference(PrinterInfo &printerInfo);
+    bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList);
+    int32_t QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob);
 
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;

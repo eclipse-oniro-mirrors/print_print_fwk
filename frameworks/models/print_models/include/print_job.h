@@ -74,6 +74,8 @@ public:
 
     void GetFdList(std::vector<uint32_t> &fdList) const;
 
+    void DupFdList(std::vector<uint32_t> &fdList) const;
+
     [[nodiscard]] const std::string &GetJobId() const;
 
     [[nodiscard]] const std::string &GetPrinterId() const;

@@ -60,6 +60,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t RestartPrintJob(const std::string &jobId) override
+    {
+        return E_PRINT_NONE;
+    }
     int32_t AddPrinters(const std::vector<PrinterInfo> &printerInfos) override
     {
         return E_PRINT_NONE;
@@ -227,6 +231,7 @@ public:
     MOCK_METHOD1(QueryAllExtension, int32_t(std::vector<PrintExtensionInfo>&));
     MOCK_METHOD1(StartPrintJob, int32_t(PrintJob &));
     MOCK_METHOD1(CancelPrintJob, int32_t(const std::string&));
+    MOCK_METHOD1(RestartPrintJob, int32_t(const std::string&));
     MOCK_METHOD1(AddPrinters, int32_t(const std::vector<PrinterInfo>&));
     MOCK_METHOD1(RemovePrinters, int32_t(const std::vector<std::string>&));
     MOCK_METHOD1(UpdatePrinters, int32_t(const std::vector<PrinterInfo>&));

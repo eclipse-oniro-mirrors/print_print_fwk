@@ -42,6 +42,7 @@ public:
     virtual int32_t QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos) = 0;
     virtual int32_t StartPrintJob(PrintJob &jobInfo) = 0;
     virtual int32_t CancelPrintJob(const std::string &jobId) = 0;
+    virtual int32_t RestartPrintJob(const std::string &jobId) = 0;
     virtual int32_t AddPrinters(const std::vector<PrinterInfo> &printerInfos) = 0;
     virtual int32_t RemovePrinters(const std::vector<std::string> &printerIds) = 0;
     virtual int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) = 0;

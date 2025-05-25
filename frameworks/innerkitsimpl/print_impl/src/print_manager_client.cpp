@@ -208,6 +208,18 @@ int32_t PrintManagerClient::CancelPrintJob(const std::string &jobId)
     return ret;
 }
 
+int32_t PrintManagerClient::RestartPrintJob(const std::string &jobId)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGD("PrintManagerClient RestartPrintJob start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->RestartPrintJob(jobId);
+        PRINT_HILOGD("PrintManagerClient RestartPrintJob out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::AddPrinters(const std::vector<PrinterInfo> &printerInfos)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);

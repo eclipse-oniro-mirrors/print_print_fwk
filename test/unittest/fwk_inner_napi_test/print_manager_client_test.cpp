@@ -998,6 +998,80 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0048_NeedRename, TestSiz
 }
 
 /**
+ * @tc.name: RestartPrintJob_WhenLoadSAFail_ShouldNopermission
+ * @tc.desc: RestartPrintJob failed case.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, RestartPrintJob_WhenLoadSAFail_ShouldNopermission, TestSize.Level2)
+{
+    std::string jobId = "jobId-1";
+
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance()->RestartPrintJob(jobId);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+/**
+* @tc.name: RestartPrintJob_WhenResetProxy_ShouldNopermission
+* @tc.desc: RestartPrintJob failed case.
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintManagerClientTest, RestartPrintJob_WhenResetProxy_ShouldNopermission, TestSize.Level2)
+{
+    std::string jobId = "jobId-1";
+
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    int32_t ret = PrintManagerClient::GetInstance()->RestartPrintJob(jobId);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+/**
+* @tc.name: RestartPrintJob_WhenLoadSAFailAndResetProxy_ShouldNopermission
+* @tc.desc: RestartPrintJob failed case.
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintManagerClientTest, RestartPrintJob_WhenLoadSAFailAndResetProxy_ShouldNopermission, TestSize.Level2)
+{
+    std::string jobId = "jobId-1";
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    int32_t ret = PrintManagerClient::GetInstance()->RestartPrintJob(jobId);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+/**
+* @tc.name: RestartPrintJob_WhenLoadSASecc_ShouldSecc
+* @tc.desc: RestartPrintJob succeed case.
+* @tc.type: FUNC
+* @tc.require:
+*/
+HWTEST_F(PrintManagerClientTest, RestartPrintJob_WhenLoadSASucc_ShouldSucc, TestSize.Level0)
+{
+    std::string testJobId = "jobId-1";
+
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, RestartPrintJob(_)).Times(1);
+    ON_CALL(*service, RestartPrintJob).WillByDefault(
+            [&testJobId](const std::string &jobId) {
+                EXPECT_EQ(testJobId, jobId);
+                return E_PRINT_NONE;
+            });
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    CallRemoteObject(service, obj, dr);
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance()->RestartPrintJob(testJobId);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_NE(dr, nullptr);
+    dr->OnRemoteDied(obj);
+}
+
+/**
  * @tc.name: PrintManagerClientTest_0049_NeedRename
  * @tc.desc: UpdatePrinterState
  * @tc.type: FUNC

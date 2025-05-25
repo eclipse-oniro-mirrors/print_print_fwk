@@ -331,6 +331,51 @@ napi_value NapiInnerPrint::CancelPrintJob(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiInnerPrint::RestartPrintJob(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter RestartPrintJob---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+        napi_valuetype valuetype;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "jobId is not a string", napi_string_expected);
+        std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        if (jobId == "") {
+            PRINT_HILOGE("Parse JobId error!");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        context->jobId = jobId;
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        context->printJob.Dump();
+        int32_t ret = PrintManagerClient::GetInstance()->RestartPrintJob(context->jobId);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to start print job");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 napi_value NapiInnerPrint::RequestPreview(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");

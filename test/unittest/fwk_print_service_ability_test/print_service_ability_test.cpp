@@ -287,6 +287,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004_NeedRename, TestS
     EXPECT_EQ(service->StartNativePrintJob(printJob), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->StartPrintJob(printJob), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->CancelPrintJob(printJobId), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->RestartPrintJob(printJobId), E_PRINT_NO_PERMISSION);
     std::vector<PrinterInfo> printerInfos;
     EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NO_PERMISSION);
     std::vector<std::string> printerIds;
@@ -829,7 +830,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0040_NeedRename, TestS
     EXPECT_EQ(service->NotifyPrintService(jobId, type), E_PRINT_INVALID_PARAMETER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0041_NeedRename, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, CancelPrintJob_WhenInvalidUserData_ShoudFailed, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -839,6 +840,34 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0041_NeedRename, TestS
     int32_t userId = 100;
     service->printUserMap_.insert(std::make_pair(userId, nullptr));
     EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_INVALID_USERID);
+}
+
+HWTEST_F(PrintServiceAbilityTest, RestartPrintJob_WhenInvalidUserData_ShoudFailed, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::string jobId = GetDefaultJobId();
+    EXPECT_EQ(service->RestartPrintJob(jobId), E_PRINT_INVALID_PRINTJOB);
+    int32_t userId = 100;
+    service->printUserMap_.insert(std::make_pair(userId, nullptr));
+    EXPECT_EQ(service->RestartPrintJob(jobId), E_PRINT_INVALID_PRINTJOB);
+}
+
+HWTEST_F(PrintServiceAbilityTest, RestartPrintJob_WhenBedfd_ShoudFailed, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::string jobId = "123";
+    int32_t userId = 100;
+    service->userJobMap_[jobId] = userId;
+    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
+    service->printUserMap_[userId] = userData;
+    EXPECT_EQ(service->RestartPrintJob(jobId), E_PRINT_INVALID_PRINTJOB);
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
+    userData->queuedJobList_[jobId] = printJob;
+    EXPECT_EQ(service->RestartPrintJob(jobId), E_PRINT_FILE_IO);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0042_NeedRename, TestSize.Level1)
@@ -2299,5 +2328,134 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_CheckPrinterUriDiffere
     service->printSystemData_.InsertAddedPrinter(addedPrinter.GetPrinterId(), addedPrinter);
 
     EXPECT_TRUE(service->CheckPrinterUriDifferent(printerInfo));
+}
+
+/**
+* @tc.name: FlushCacheFileToUserData_WhenEmptyFdlist_ShouldTrue
+* @tc.desc: Verify the FlushCacheFileToUserData do nothing case.
+* @tc.type: FUNC FlushCacheFileToUserData
+* @tc.require: EmptyFdlist printJob
+*/
+HWTEST_F(PrintServiceAbilityTest, FlushCacheFileToUserData_WhenEmptyFdlist_ShouldFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string jobId = "123";
+    int32_t userId = 100;
+    service->userJobMap_[jobId] = userId;
+    service->currentUserId_ = userId;
+    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
+    service->printUserMap_[userId] = userData;
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>(); // EmptyFdlist
+    userData->queuedJobList_[jobId] = printJob;
+    EXPECT_EQ(service->FlushCacheFileToUserData(jobId), false);
+}
+
+/**
+* @tc.name: FlushCacheFileToUserData_WhenEmptyFdlist_ShouldTrue
+* @tc.desc: Verify the FlushCacheFileToUserData failed case.
+* @tc.type: FUNC FlushCacheFileToUserData
+* @tc.require: BedFdlist printJob
+*/
+HWTEST_F(PrintServiceAbilityTest, FlushCacheFileToUserData_WhenBedFdlist_ShouldFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string jobId = "123";
+    int32_t userId = 100;
+    service->userJobMap_[jobId] = userId;
+    service->currentUserId_ = userId;
+    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
+    service->printUserMap_[userId] = userData;
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>(); 
+    userData->queuedJobList_[jobId] = printJob;
+    std::vector<uint32_t> fdList = { 999 }; // Bed Fdlist
+    printJob->SetFdList(fdList);
+    EXPECT_EQ(service->FlushCacheFileToUserData(jobId), false);
+}
+
+/**
+* @tc.name: DeleteCacheFileFromUserData_WhenEmptyFdlist_ShouldTrue
+* @tc.desc: Verify the DeleteCacheFileFromUserData failed case.
+* @tc.type: FUNC DeleteCacheFileFromUserData
+* @tc.require: EmptyFdlist printJob
+*/
+HWTEST_F(PrintServiceAbilityTest, DeleteCacheFileFromUserData_WhenEmptyFdlist_ShouldFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string jobId = "123";
+    int32_t userId = 100;
+    service->userJobMap_[jobId] = userId;
+    service->currentUserId_ = userId;
+    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
+    service->printUserMap_[userId] = userData;
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>(); 
+    userData->queuedJobList_[jobId] = printJob;
+    EXPECT_EQ(service->DeleteCacheFileFromUserData(jobId), false);
+}
+
+/**
+* @tc.name: OpenCacheFileFd_WhenEmptyFdlist_ShouldTrue
+* @tc.desc: Verify the OpenCacheFileFd do nothing case.
+* @tc.type: FUNC OpenCacheFileFd
+* @tc.require: EmptyFdlist printJob
+*/
+HWTEST_F(PrintServiceAbilityTest, OpenCacheFileFd_WhenEmptyFdlist_ShouldFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string jobId = "123";
+    int32_t userId = 100;
+    service->userJobMap_[jobId] = userId;
+    service->currentUserId_ = userId;
+    std::vector<uint32_t> getFdList;
+    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
+    service->printUserMap_[userId] = userData;
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>(); // EmptyFdlist
+    userData->queuedJobList_[jobId] = printJob;
+    EXPECT_EQ(service->OpenCacheFileFd(jobId, getFdList), false);
+}
+
+/**
+* @tc.name: OpenCacheFileFd_WhenEmptyFdlist_ShouldTrue
+* @tc.desc: Verify the OpenCacheFileFd failed case.
+* @tc.type: FUNC OpenCacheFileFd
+* @tc.require: BedFdlist printJob
+*/
+HWTEST_F(PrintServiceAbilityTest, OpenCacheFileFd_WhenBedFdlist_ShouldFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string jobId = "123";
+    int32_t userId = 100;
+    service->userJobMap_[jobId] = userId;
+    service->currentUserId_ = userId;
+    std::vector<uint32_t> getFdList;
+    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
+    service->printUserMap_[userId] = userData;
+    EXPECT_EQ(service->OpenCacheFileFd(jobId, getFdList), false);
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>(); 
+    userData->queuedJobList_[jobId] = printJob;
+    std::vector<uint32_t> fdList = { 999 }; // Bed Fdlist
+    printJob->SetFdList(fdList);
+    EXPECT_EQ(service->OpenCacheFileFd(jobId, getFdList), false);
+}
+
+
+/**
+* @tc.name: QueryQueuedPrintJobById_WhenInvalidJobId_ShouldF
+* @tc.desc: Verify the QueryQueuedPrintJobById failed case.
+* @tc.type: FUNC QueryQueuedPrintJobById
+* @tc.require: BedFdlist printJob
+*/
+HWTEST_F(PrintServiceAbilityTest, QueryQueuedPrintJobById_WhenBedFdlist_ShouldFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string jobId = "123";
+    int32_t userId = 100;
+    service->userJobMap_[jobId] = userId;
+    service->currentUserId_ = userId;
+    PrintJob getPrintJob;
+    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
+    service->printUserMap_[userId] = userData;
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>(); 
+    userData->queuedJobList_[jobId] = printJob;
+    EXPECT_EQ(service->QueryQueuedPrintJobById(jobId, getPrintJob), E_PRINT_INVALID_PRINTJOB);
 }
 } // namespace OHOS::Print

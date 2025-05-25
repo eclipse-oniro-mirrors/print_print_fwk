@@ -100,6 +100,25 @@ HWTEST_F(PrintJobTest, PrintJobTest_0003_NeedRename, TestSize.Level1)
 }
 
 /**
+ * @tc.name: DupFdlist_ShouldReturnSameFd
+ * @tc.desc: Verify the DupFdlist function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintJobTest, DupFdlist_WhenBadfd_ShouldReturnSameFd, TestSize.Level1)
+{
+    PrintJob job;
+    std::vector<uint32_t> fdList = { 997, 998, 999 };
+    std::vector<uint32_t> dupFdList;
+    job.SetFdList(fdList);
+    job.DupFdList(dupFdList);
+    EXPECT_EQ(fdList.size(), dupFdList.size());
+    for (size_t index = 0; index < fdList.size(); index++) {
+        EXPECT_EQ(fdList[index], dupFdList[index]);
+    }
+}
+
+/**
  * @tc.name: PrintJobTest_0004_NeedRename
  * @tc.desc: Verify the SetVendorId function.
  * @tc.type: FUNC

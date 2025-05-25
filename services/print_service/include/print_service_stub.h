@@ -77,6 +77,7 @@ private:
     bool OnUpdatePrinterInDiscovery(MessageParcel &data, MessageParcel &reply);
     bool OnRemovePrinterFromDiscovery(MessageParcel &data, MessageParcel &reply);
     bool OnUpdatePrinterInSystem(MessageParcel &data, MessageParcel &reply);
+    bool OnRestartPrintJob(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

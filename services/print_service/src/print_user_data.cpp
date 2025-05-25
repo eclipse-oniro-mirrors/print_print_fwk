@@ -19,6 +19,10 @@
 #include <iostream>
 #include <fstream>
 #include <streambuf>
+#include <algorithm>
+#include <dirent.h>
+#include <cstdlib>
+#include <iomanip>
 #include <json/json.h>
 
 #include "print_log.h"
@@ -27,6 +31,10 @@
 
 namespace OHOS {
 namespace Print {
+const uint32_t DEFAULT_BUFFER_SIZE_4K = 4096;
+const uint32_t FD_INDEX_LEN = 4;
+
+static const std::string FILE_INDEX_DELIMITER = "_";
 
 void PrintUserData::RegisterPrinterCallback(const std::string &type, const sptr<IPrintCallback> &listener)
 {
@@ -76,7 +84,7 @@ void PrintUserData::UpdateQueuedJobList(
     }
 }
 
-int32_t PrintUserData::QueryPrintJobById(std::string &printJobId, PrintJob &printJob)
+int32_t PrintUserData::QueryPrintJobById(const std::string &printJobId, PrintJob &printJob)
 {
     if (printJobList_.empty()) {
         PRINT_HILOGE("printJobList is empty!");
@@ -410,6 +418,180 @@ bool PrintUserData::CheckFileData(std::string &fileData, Json::Value &jsonObject
         return false;
     }
     return true;
+}
+
+bool PrintUserData::FlushCacheFileToUserData(const std::string &jobId)
+{
+    PRINT_HILOGI("FlushCacheFileToUserData Start.");
+    char cachePath[PATH_MAX] = { 0 };
+    std::string cacheDir = ObtainUserCacheDirectory();
+    if (realpath(cacheDir.c_str(), cachePath) == nullptr) {
+        PRINT_HILOGE("The real cache dir is null, errno:%{public}s", std::to_string(errno).c_str());
+        return false;
+    }
+    cacheDir = cachePath;
+
+    PrintJob printJob;
+    if (QueryQueuedPrintJobById(jobId, printJob) != E_PRINT_NONE) {
+        PRINT_HILOGE("The can not find print job", std::to_string(errno).c_str());
+        return false;
+    }
+    std::vector<uint32_t> fdList;
+    printJob.GetFdList(fdList);
+    int32_t index = 1;
+    bool ret = true;
+    for (uint32_t fd : fdList) {
+        if (!ret) { close(fd); } // close the remaining fd
+        ret = FlushCacheFile(fd, printJob.GetJobId(), cacheDir, index);
+        index++;
+    }
+    if (!ret) { DeleteCacheFileFromUserData(jobId); }
+    return ret;
+}
+
+bool PrintUserData::FlushCacheFile(uint32_t fd, const std::string jobId, const std::string cacheDir, int32_t index)
+{
+    if (lseek(fd, 0, SEEK_SET) == -1) {
+        PRINT_HILOGE("Unable to reset fd offset");
+        close(fd);
+        return false;
+    }
+    FILE *srcFile = fdopen(fd, "rb");
+    if (srcFile == nullptr) {
+        close(fd);
+        return false;
+    }
+    std::ostringstream destFileStream;
+    destFileStream << cacheDir << "/" << jobId << "_" << std::setw(5) << std::setfill('0') << index;
+    std::string destFilePath = destFileStream.str();
+    FILE *destFile = fopen(destFilePath.c_str(), "wb");
+    if (destFile == nullptr) {
+        fclose(srcFile);
+        return false;
+    }
+
+    char buffer[DEFAULT_BUFFER_SIZE_4K] = { 0 };
+    size_t bytesRead = 0;
+    bool ret = true;
+    while ((bytesRead = fread(buffer, 1, sizeof(buffer), srcFile)) > 0) {
+        if (fwrite(buffer, 1, bytesRead, destFile) < bytesRead) {
+            ret = false;
+            break;
+        }
+    }
+    fclose(srcFile);
+    fclose(destFile);
+    return ret;
+}
+
+bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
+{
+    PRINT_HILOGI("DeleteCacheFileFromUserData Start.");
+    if (jobId.empty()) {
+        PRINT_HILOGE("empty jobId, not find files");
+        return false;
+    }
+    char cachePath[PATH_MAX] = { 0 };
+    std::string cacheDir = ObtainUserCacheDirectory();
+    if (realpath(cacheDir.c_str(), cachePath) == nullptr) {
+        PRINT_HILOGE("The real cache dir is null, errno:%{public}s", std::to_string(errno).c_str());
+        return false;
+    }
+    cacheDir = cachePath;
+    DIR *dir = opendir(cachePath);
+    struct dirent *file;
+    std::vector<std::string> fileNames;
+    std::string cacheFile;
+    while ((file = readdir(dir)) != nullptr) {
+        if (strncmp(file->d_name, jobId.c_str(), jobId.length()) == 0) {
+            cacheFile = cacheDir + '/' + std::string(file->d_name);
+            if (realpath(cacheFile.c_str(), cachePath) == nullptr) {
+                PRINT_HILOGE("The realFile is null, errno:%{public}s", strerror(errno));
+                continue;
+            }
+            if (std::remove(cachePath) != 0) {
+                PRINT_HILOGW("error deleting file %{public}s err: %{public}s", cachePath, strerror(errno));
+            }
+        }
+    }
+    return true;
+}
+
+bool PrintUserData::OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList)
+{
+    PRINT_HILOGI("OpenCacheFileFd Start.");
+    fdList.clear();
+    char cachePath[PATH_MAX] = { 0 };
+    std::string cacheDir = ObtainUserCacheDirectory();
+    if (realpath(cacheDir.c_str(), cachePath) == nullptr) {
+        PRINT_HILOGE("The real cache dir is null, errno:%{public}s", std::to_string(errno).c_str());
+        return false;
+    }
+    cacheDir = cachePath;
+
+    DIR *dir = opendir(cacheDir.c_str());
+    // dir real path
+    if (dir == nullptr || access(cacheDir.c_str(), R_OK) != 0) {
+        PRINT_HILOGE("Failed to find history file");
+        return false;
+    }
+    struct dirent *file;
+    std::vector<std::string> fileNames;
+    while ((file = readdir(dir)) != nullptr) {
+        if (strncmp(file->d_name, jobId.c_str(), jobId.length()) == 0) {
+            fileNames.push_back(std::string(file->d_name));
+        }
+    }
+
+    std::string cacheFile;
+    bool ret = true;
+    for (auto fileName : fileNames) {
+        cacheFile = cacheDir + "/" + fileName;
+        if (realpath(cacheFile.c_str(), cachePath) == nullptr) {
+            PRINT_HILOGE("The realFile is null, errno:%{public}s", std::to_string(errno).c_str());
+            ret = false;
+            break;
+        }
+        int32_t fd = open(cachePath, O_RDONLY);
+        if (fd < 0) {
+            PRINT_HILOGE("open file failed, errno:%{public}s", std::to_string(errno).c_str());
+            ret = false;
+            break;
+        }
+        fdList.push_back(fd);
+    }
+    if (!ret) {
+        for (auto fd : fdList) { close(fd); }
+    }
+    return ret;
+}
+
+std::string PrintUserData::ObtainUserCacheDirectory()
+{
+    std::ostringstream oss;
+    oss << "/data/service/el2/" << userId_ << "/print_service";
+    return oss.str();
+}
+
+int32_t PrintUserData::QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob)
+{
+    PRINT_HILOGI("QueryQueuedPrintJobById Start.");
+    if (queuedJobList_.empty()) {
+        PRINT_HILOGE("printJobList is empty!");
+        return E_PRINT_INVALID_PRINTJOB;
+    }
+    auto jobIt = queuedJobList_.find(printJobId);
+    if (jobIt == queuedJobList_.end()) {
+        PRINT_HILOGW("no print job exists");
+        return E_PRINT_INVALID_PRINTJOB;
+    }
+    if (jobIt->second == nullptr) {
+        PRINT_HILOGW("no print job exists");
+        return E_PRINT_INVALID_PRINTJOB;
+    }
+    printJob = *jobIt->second;
+    PRINT_HILOGD("QueryQueuedPrintJobById End.");
+    return E_PRINT_NONE;
 }
 }  // namespace Print
 }  // namespace OHOS

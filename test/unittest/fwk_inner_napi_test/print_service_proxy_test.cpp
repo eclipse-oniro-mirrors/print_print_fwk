@@ -365,6 +365,35 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0010_NeedRename, TestSize.
 }
 
 /**
+ * @tc.name: PrintServiceProxyTest_0010
+ * @tc.desc: Verify the restart function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, RestartPrintJob_ShouldCallSA, TestSize.Level0)
+{
+    std::string testJobId = "jobId-123";
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, RestartPrintJob(_)).Times(Exactly(1)).WillOnce(
+        [&testJobId](const std::string &jobId) {
+            EXPECT_EQ(testJobId, jobId);
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    proxy->RestartPrintJob(testJobId);
+}
+
+/**
  * @tc.name: PrintServiceProxyTest_0011
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
