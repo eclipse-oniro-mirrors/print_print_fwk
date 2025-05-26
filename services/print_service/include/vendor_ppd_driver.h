@@ -36,7 +36,6 @@ private:
 private:
     std::string connectingVendorGroup;
     std::shared_ptr<PrinterInfo> connectingPrinterInfo;
-    std::string matchedPpdName_;
 };
 }  // namespace Print
 }  // namespace OHOS
