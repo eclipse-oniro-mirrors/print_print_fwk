@@ -196,8 +196,6 @@ public:
     bool RemoveVendorPrinterFromDiscovery(const std::string &globalVendorName, const std::string &printerId) override;
     bool AddVendorPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
         const std::string &ppdName, const std::string &ppdData) override;
-    bool AddVendorPrinterToCupsWithSpecificPpd(const std::string &globalVendorName,
-        const std::string &printerId, const std::string &ppdName) override;
     bool RemoveVendorPrinterFromCups(const std::string &vendorName, const std::string &printerId) override;
     bool OnVendorStatusUpdate(const std::string &globalVendorName, const std::string &printerId,
         const PrinterVendorStatus &status) override;
@@ -216,6 +214,8 @@ private:
     std::string RenamePrinterWhenAdded(const PrinterInfo &info);
     void ReportPrinterIdle(const std::string &printerId);
     void UnregisterPrintTaskCallback(const std::string &jobId, const uint32_t state, const uint32_t subState);
+    bool DoAddPrinterToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName,
+        const std::string &ppdData);
     void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo);
 
 private:

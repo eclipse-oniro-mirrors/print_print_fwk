@@ -28,8 +28,6 @@ public:
     MOCK_METHOD2(RemoveVendorPrinterFromDiscovery, bool (const std::string &, const std::string &));
     MOCK_METHOD4(AddVendorPrinterToCupsWithPpd, bool (const std::string &, const std::string &, const std::string &,
         const std::string &));
-    MOCK_METHOD3(AddVendorPrinterToCupsWithSpecificPpd, bool (const std::string &, const std::string &,
-        const std::string &));
     MOCK_METHOD2(RemoveVendorPrinterFromCups, bool (const std::string &, const std::string &));
     MOCK_METHOD3(OnVendorStatusUpdate, bool (const std::string &, const std::string &, const PrinterVendorStatus &));
     MOCK_METHOD2(QueryPrinterCapabilityByUri, bool (const std::string &, PrinterCapability &));

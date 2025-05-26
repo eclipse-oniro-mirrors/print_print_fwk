@@ -315,19 +315,9 @@ int32_t VendorManager::AddPrinterToCupsWithPpd(const std::string &vendorName, co
     }
     auto targetVendorName = IsWlanGroupDriver(ExtractPrinterId(printerId)) ? VENDOR_WLAN_GROUP : vendorName;
     std::string globalVendorName = GetGlobalVendorName(targetVendorName);
-    if (IsPrivatePpdDriver(vendorName)) {
-        PRINT_HILOGD("AddPrinterToCupsWithPpd vendorName=%{public}s", vendorName.c_str());
-        PRINT_HILOGD("AddPrinterToCupsWithPpd printerId=%{public}s", printerId.c_str());
-        if (!printServiceAbility->AddVendorPrinterToCupsWithSpecificPpd(globalVendorName,
-            VendorManager::ExtractPrinterId(printerId), ppdName)) {
-            PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
-            return EXTENSION_ERROR_CALLBACK_FAIL;
-        }
-    } else {
-        if (!printServiceAbility->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData)) {
-            PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
-            return EXTENSION_ERROR_CALLBACK_FAIL;
-        }
+    if (!printServiceAbility->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData)) {
+        PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
+        return EXTENSION_ERROR_CALLBACK_FAIL;
     }
     PRINT_HILOGI("AddPrinterToCupsWithPpd quit");
     return EXTENSION_ERROR_NONE;
@@ -529,11 +519,10 @@ bool VendorManager::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, 
     if (isConnecting && !connectingPrinter.empty()) {
         if (connectingMethod == ID_AUTO) {
             return globalPrinterIdOrIp == connectingPrinter;
-        } else if (connectingMethod == IP_AUTO) {
-            return (globalPrinterIdOrIp.find(connectingPrinter) != std::string::npos) ||
-                (connectingPrinter.find(globalPrinterIdOrIp) != std::string::npos);
         } else {
-            return uri.find(connectingPrinter) != std::string::npos;
+            return (globalPrinterIdOrIp.find(connectingPrinter) != std::string::npos) ||
+                (connectingPrinter.find(globalPrinterIdOrIp) != std::string::npos) ||
+                uri.find(connectingPrinter) != std::string::npos;
         }
     }
     return false;
