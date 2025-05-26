@@ -34,8 +34,6 @@ public:
                                                   const std::string &printerId) = 0;
     virtual bool AddVendorPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
                                                const std::string &ppdName, const std::string &ppdData) = 0;
-    virtual bool AddVendorPrinterToCupsWithSpecificPpd(const std::string &globalVendorName,
-                                                const std::string &printerId, const std::string &ppdName) = 0;
     virtual bool RemoveVendorPrinterFromCups(const std::string &vendorName, const std::string &printerId) = 0;
     virtual bool OnVendorStatusUpdate(const std::string &globalVendorName, const std::string &printerId,
                                       const PrinterVendorStatus &status) = 0;

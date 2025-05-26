@@ -2054,22 +2054,16 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0139_NeedRename, TestS
     std::string ppdName;
     PrinterInfo info;
     info.SetPrinterId(printerId);
-    EXPECT_FALSE(service->RemoveVendorPrinterFromCups(vendorName, printerId));
-    EXPECT_FALSE(service->AddVendorPrinterToCupsWithSpecificPpd(vendorName, printerId, ppdName));
+    EXPECT_FALSE(service->RemoveVendorPrinterFromCups(vendorName, printerId)); // TODO
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
-    EXPECT_FALSE(service->AddVendorPrinterToCupsWithSpecificPpd(vendorName, printerId, ppdName));
     PrinterCapability cap;
     info.SetCapability(cap);
     EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
-    EXPECT_FALSE(service->AddVendorPrinterToCupsWithSpecificPpd(vendorName, printerId, ppdName));
     info.SetUri("uri");
     EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
-    EXPECT_FALSE(service->AddVendorPrinterToCupsWithSpecificPpd(vendorName, printerId, ppdName));
     info.SetPrinterMake("maker");
     EXPECT_TRUE(service->UpdateVendorPrinterToDiscovery(vendorName, info));
-    service->AddVendorPrinterToCupsWithSpecificPpd(vendorName, printerId, ppdName);
     ppdName = "ppd";
-    service->AddVendorPrinterToCupsWithSpecificPpd(vendorName, printerId, ppdName);
     service->RemoveVendorPrinterFromCups(vendorName, printerId);
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
 }

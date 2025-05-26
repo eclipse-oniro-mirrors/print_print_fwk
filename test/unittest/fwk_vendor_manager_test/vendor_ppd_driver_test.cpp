@@ -96,6 +96,7 @@ HWTEST_F(VendorPpdDriverTest, QueryProperty_ShouldReturnTrue_WhenKeyIsCupsPpdNam
     printerInfo.SetPrinterId(printerId);
     vendorDriver.OnPrinterDiscovered(vendorName, printerInfo);
     EXPECT_FALSE(vendorDriver.QueryProperty(printerId, key, value));
+    value = "test";
     EXPECT_TRUE(vendorDriver.QueryProperty(printerId, key, value));
 }
 
