@@ -44,6 +44,7 @@
         "jsoncpp",
         "napi",
         "netmanager_ext",
+        "openssl",
         "os_account",
         "safwk",
         "samgr",
