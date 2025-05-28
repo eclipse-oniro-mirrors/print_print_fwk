@@ -69,6 +69,7 @@ ohos_unittest("fwk_print_cups_client_test") {
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
+    "openssl:libssl_shared",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",

@@ -87,6 +87,7 @@ ohos_unittest("print_service_test") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "openssl:libssl_shared",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",
