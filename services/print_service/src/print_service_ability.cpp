@@ -800,6 +800,7 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     infoJson["printerName"] = printerInfo.GetPrinterName();
     infoJson["printerUri"] = printerInfo.GetUri();
     infoJson["alias"] = printerInfo.GetAlias();
+    infoJson["printerMake"] = printerInfo.GetPrinterMake();
     std::string updatedOption = PrintJsonUtil::WriteString(infoJson);
     PRINT_HILOGD("Updated print job option: %{public}s", updatedOption.c_str());
     printJob.SetOption(updatedOption);
