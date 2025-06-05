@@ -1609,7 +1609,7 @@ bool PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> 
             return true;
         }
         monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId,
-            PRINT_JOB_COMPLETED, monitorParams->substate);
+            PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_SUCCESS);
         return false;
     }
 
@@ -1627,7 +1627,7 @@ bool PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> 
         return true;
     }
     monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_COMPLETED,
-        GetNewSubstate(monitorParams->substate, PRINT_JOB_COMPLETED_CANCELLED));
+        PRINT_JOB_COMPLETED_CANCELLED);
     return false;
 }
 
