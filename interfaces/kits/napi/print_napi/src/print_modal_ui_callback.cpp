@@ -59,7 +59,7 @@ void PrintModalUICallback::OnRelease(int32_t releaseCode)
 
     this->isResultForModal = true;
 
-    this->baseContext->errorMessage.code = E_PRINT_SERVER_FAILURE;
+    this->baseContext->errorMessage.code = E_PRINT_NONE;
     SendMessageBack();
     return;
 }

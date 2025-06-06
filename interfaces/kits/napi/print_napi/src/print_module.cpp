@@ -62,6 +62,8 @@ static constexpr const char *FUNCTION_REMOVE_PRINTER_FROM_DISCOVERY = "removePri
 static constexpr const char *FUNCTION_GET_ADDED_PRINTER_INFO_BY_ID = "getAddedPrinterInfoById";
 static constexpr const char *FUNCTION_GET_PRINTER_INFORMATION_BY_ID = "getPrinterInformationById";
 static constexpr const char *FUNCTION_UPDATE_PRINTER_IN_SYSTEM = "updatePrinterInSystem";
+static constexpr const char *FUNCTION_UPDATE_PRINTER_INFORMATION = "updatePrinterInformation";
+static constexpr const char *FUNCTION_SET_PRINTER_PREFERENCES = "setPrinterPreferences";
 
 #define PRINT_NAPI_METHOD(name, func)           \
     {                                           \
@@ -453,6 +455,8 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_GET_ADDED_PRINTER_INFO_BY_ID, NapiInnerPrint::GetAddedPrinterInfoById),
         PRINT_NAPI_METHOD(FUNCTION_GET_PRINTER_INFORMATION_BY_ID, NapiInnerPrint::GetAddedPrinterInfoById),
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_IN_SYSTEM, NapiPrintExt::UpdatePrinterInSystem),
+        PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_INFORMATION, NapiPrintExt::UpdatePrinterInSystem),
+        PRINT_NAPI_METHOD(FUNCTION_SET_PRINTER_PREFERENCES, NapiInnerPrint::SetPrinterPreference),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
