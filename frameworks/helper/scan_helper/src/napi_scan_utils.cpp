@@ -42,6 +42,9 @@ napi_valuetype NapiScanUtils::GetValueType(napi_env env, napi_value value)
 /* named property */
 bool NapiScanUtils::HasNamedProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
+    if (object == nullptr) {
+        return false;
+    }
     bool hasProperty = false;
     SCAN_CALL_BASE(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty), false);
     return hasProperty;
@@ -49,6 +52,9 @@ bool NapiScanUtils::HasNamedProperty(napi_env env, napi_value object, const std:
 
 napi_value NapiScanUtils::GetNamedProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
+    if (object == nullptr) {
+        return nullptr;
+    }
     napi_value value = nullptr;
     bool hasProperty = false;
     SCAN_CALL(env, napi_has_named_property(env, object, propertyName.c_str(), &hasProperty));
@@ -61,12 +67,18 @@ napi_value NapiScanUtils::GetNamedProperty(napi_env env, napi_value object, cons
 
 void NapiScanUtils::SetNamedProperty(napi_env env, napi_value object, const std::string &name, napi_value value)
 {
+    if (object == nullptr) {
+        return;
+    }
     (void)napi_set_named_property(env, object, name.c_str(), value);
 }
 
 std::vector<std::string> NapiScanUtils::GetPropertyNames(napi_env env, napi_value object)
 {
     std::vector<std::string> ret;
+    if (object == nullptr) {
+        return ret;
+    }
     napi_value names = nullptr;
     SCAN_CALL_BASE(env, napi_get_property_names(env, object, &names), ret);
     uint32_t length = 0;
@@ -96,6 +108,9 @@ napi_value NapiScanUtils::CreateUint32(napi_env env, uint32_t code)
 
 uint32_t NapiScanUtils::GetUint32FromValue(napi_env env, napi_value value)
 {
+    if (value == nullptr) {
+        return 0;
+    }
     uint32_t ret = 0;
     SCAN_CALL_BASE(env, napi_get_value_uint32(env, value, &ret), 0);
     return ret;
@@ -103,6 +118,9 @@ uint32_t NapiScanUtils::GetUint32FromValue(napi_env env, napi_value value)
 
 uint32_t NapiScanUtils::GetUint32Property(napi_env env, napi_value object, const std::string &propertyName)
 {
+    if (object == nullptr) {
+        return 0;
+    }
     if (!HasNamedProperty(env, object, propertyName)) {
         return 0;
     }
@@ -112,6 +130,9 @@ uint32_t NapiScanUtils::GetUint32Property(napi_env env, napi_value object, const
 
 void NapiScanUtils::SetUint32Property(napi_env env, napi_value object, const std::string &name, uint32_t value)
 {
+    if (object == nullptr) {
+        return;
+    }
     napi_value jsValue = CreateUint32(env, value);
     if (GetValueType(env, jsValue) != napi_number) {
         return;
@@ -132,6 +153,9 @@ napi_value NapiScanUtils::CreateInt32(napi_env env, int32_t code)
 
 int32_t NapiScanUtils::GetInt32FromValue(napi_env env, napi_value value)
 {
+    if (value == nullptr) {
+        return 0;
+    }
     int32_t ret = 0;
     SCAN_CALL_BASE(env, napi_get_value_int32(env, value, &ret), 0);
     return ret;
@@ -139,6 +163,9 @@ int32_t NapiScanUtils::GetInt32FromValue(napi_env env, napi_value value)
 
 int32_t NapiScanUtils::GetInt32Property(napi_env env, napi_value object, const std::string &propertyName)
 {
+    if (object == nullptr) {
+        return 0;
+    }
     if (!HasNamedProperty(env, object, propertyName)) {
         return 0;
     }
@@ -148,6 +175,9 @@ int32_t NapiScanUtils::GetInt32Property(napi_env env, napi_value object, const s
 
 void NapiScanUtils::SetInt32Property(napi_env env, napi_value object, const std::string &name, int32_t value)
 {
+    if (object == nullptr) {
+        return;
+    }
     napi_value jsValue = CreateInt32(env, value);
     if (GetValueType(env, jsValue) != napi_number) {
         return;
@@ -168,6 +198,9 @@ napi_value NapiScanUtils::CreateStringUtf8(napi_env env, const std::string &str)
 
 std::string NapiScanUtils::GetStringFromValueUtf8(napi_env env, napi_value value)
 {
+    if (value == nullptr) {
+        return "";
+    }
     std::string result;
     std::vector<char> str(MAX_STRING_LENGTH + 1, '\0');
     size_t length = 0;
@@ -180,6 +213,9 @@ std::string NapiScanUtils::GetStringFromValueUtf8(napi_env env, napi_value value
 
 std::string NapiScanUtils::GetStringPropertyUtf8(napi_env env, napi_value object, const std::string &propertyName)
 {
+    if (object == nullptr) {
+        return "";
+    }
     if (!HasNamedProperty(env, object, propertyName)) {
         return "";
     }
@@ -190,6 +226,9 @@ std::string NapiScanUtils::GetStringPropertyUtf8(napi_env env, napi_value object
 void NapiScanUtils::SetStringPropertyUtf8(
     napi_env env, napi_value object, const std::string &name, const std::string &value)
 {
+    if (object == nullptr) {
+        return;
+    }
     napi_value jsValue = CreateStringUtf8(env, value);
     if (GetValueType(env, jsValue) != napi_string) {
         return;
@@ -208,6 +247,9 @@ napi_value NapiScanUtils::CreateArrayBuffer(napi_env env, size_t length, void **
 
 bool NapiScanUtils::ValueIsArrayBuffer(napi_env env, napi_value value)
 {
+    if (value == nullptr) {
+        return false;
+    }
     bool isArrayBuffer = false;
     SCAN_CALL_BASE(env, napi_is_arraybuffer(env, value, &isArrayBuffer), false);
     return isArrayBuffer;
@@ -215,7 +257,7 @@ bool NapiScanUtils::ValueIsArrayBuffer(napi_env env, napi_value value)
 
 void *NapiScanUtils::GetInfoFromArrayBufferValue(napi_env env, napi_value value, size_t *length)
 {
-    if (length == nullptr) {
+    if (value == nullptr || length == nullptr) {
         return nullptr;
     }
 
@@ -244,6 +286,9 @@ napi_value NapiScanUtils::GetUndefined(napi_env env)
 napi_value NapiScanUtils::CallFunction(
     napi_env env, napi_value recv, napi_value func, size_t argc, const napi_value *argv)
 {
+    if (func == nullptr) {
+        return nullptr;
+    }
     napi_value res = nullptr;
     SCAN_CALL(env, napi_call_function(env, recv, func, argc, argv, &res));
     return res;
@@ -252,6 +297,9 @@ napi_value NapiScanUtils::CallFunction(
 /* reference */
 napi_ref NapiScanUtils::CreateReference(napi_env env, napi_value callback)
 {
+    if (callback == nullptr) {
+        return nullptr;
+    }
     napi_ref callbackRef = nullptr;
     SCAN_CALL(env, napi_create_reference(env, callback, 1, &callbackRef));
     return callbackRef;
@@ -259,6 +307,9 @@ napi_ref NapiScanUtils::CreateReference(napi_env env, napi_value callback)
 
 napi_value NapiScanUtils::GetReference(napi_env env, napi_ref callbackRef)
 {
+    if (callbackRef == nullptr || callbackRef == napi_invalid_ref) {
+        return nullptr;
+    }
     napi_value callback = nullptr;
     SCAN_CALL(env, napi_get_reference_value(env, callbackRef, &callback));
     return callback;
@@ -283,6 +334,9 @@ napi_value NapiScanUtils::CreateBoolean(napi_env env, bool value)
 
 bool NapiScanUtils::GetBooleanFromValue(napi_env env, napi_value value)
 {
+    if (value == nullptr) {
+        return false;
+    }
     bool ret = false;
     SCAN_CALL_BASE(env, napi_get_value_bool(env, value, &ret), 0);
     return ret;
@@ -290,6 +344,9 @@ bool NapiScanUtils::GetBooleanFromValue(napi_env env, napi_value value)
 
 bool NapiScanUtils::GetBooleanProperty(napi_env env, napi_value object, const std::string &propertyName)
 {
+    if (object == nullptr) {
+        return false;
+    }
     if (!HasNamedProperty(env, object, propertyName)) {
         return false;
     }
@@ -301,6 +358,9 @@ bool NapiScanUtils::GetBooleanProperty(napi_env env, napi_value object, const st
 
 void NapiScanUtils::SetBooleanProperty(napi_env env, napi_value object, const std::string &name, bool value)
 {
+    if (object == nullptr) {
+        return;
+    }
     napi_value jsValue = nullptr;
     SCAN_CALL_RETURN_VOID(env, napi_get_boolean(env, value, &jsValue));
     if (GetValueType(env, jsValue) != napi_boolean) {
@@ -329,6 +389,9 @@ std::string NapiScanUtils::ToLower(const std::string &s)
 
 std::string NapiScanUtils::GetValueString(napi_env env, napi_value value)
 {
+    if (value == nullptr) {
+        return "";
+    }
     std::string resultValue = "";
     char value_string[256] = { 0 };
     size_t value_size = 256;

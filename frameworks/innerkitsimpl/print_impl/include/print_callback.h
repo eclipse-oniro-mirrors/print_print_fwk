@@ -25,14 +25,29 @@
 #include "print_manager_client.h"
 
 namespace OHOS::Print {
-struct CallbackParam;
+struct CallbackParam {
+    napi_env env;
+    napi_ref ref;
+    std::mutex* mutexPtr;
+    uint32_t state;
+    PrinterInfo printerInfo;
+    PrintJob jobInfo;
+
+    std::string extensionId;
+    std::string info;
+
+    std::string jobId;
+    PrintAttributes oldAttrs;
+    PrintAttributes newAttrs;
+    uint32_t fd;
+};
 
 struct Param {
     napi_env env;
     napi_ref callbackRef;
 };
 
-class PrintCallback : public PrintCallbackStub, public std::enable_shared_from_this<PrintCallback> {
+class PrintCallback : public PrintCallbackStub {
 public:
     PrintCallback(napi_env env, napi_ref ref);
     explicit PrintCallback(PrintDocumentAdapter *adapter); // This interface is invoked by other domains.
@@ -62,25 +77,6 @@ private:
     std::mutex mutex_;
     PrintDocumentAdapter *adapter_ = nullptr;
     NativePrinterChangeCallback nativePrinterChange_cb = nullptr;
-};
-
-struct CallbackParam {
-    napi_env env;
-    napi_ref ref;
-    std::mutex* mutexPtr;
-    uint32_t state;
-    PrinterInfo printerInfo;
-    PrintJob jobInfo;
-
-    std::string extensionId;
-    std::string info;
-
-    std::string jobId;
-    PrintAttributes oldAttrs;
-    PrintAttributes newAttrs;
-    uint32_t fd;
-
-    std::shared_ptr<PrintCallback> callbackObj;
 };
 }  // namespace OHOS::Print
 #endif  // IPRINT_CALLBACK_H
