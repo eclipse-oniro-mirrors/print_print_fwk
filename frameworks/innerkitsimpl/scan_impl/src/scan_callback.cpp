@@ -147,14 +147,16 @@ bool ScanCallback::ExecuteUvQueueWork(CallbackContext* &context, uv_work_t* &wor
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(cbParam->env, &scope);
             if (scope != nullptr) {
-                auto uvWorkLambda = context->uvWorkLambda;
                 std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
                 napi_value callbackFunc = NapiScanUtils::GetReference(cbParam->env, cbParam->ref);
                 if (callbackFunc != nullptr) {
                     napi_value callbackResult = nullptr;
+                    auto uvWorkLambda = context->uvWorkLambda;
                     uvWorkLambda(cbParam, callbackFunc, callbackResult);
                     SCAN_HILOGD("run napi call deviceInfo callback fun success");
                     napi_close_handle_scope(cbParam->env, scope);
+                } else {
+                    SCAN_HILOGE("get reference failed");
                 }
             }
             DELETE_AND_NULLIFY(work);
