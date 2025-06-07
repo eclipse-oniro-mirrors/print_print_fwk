@@ -243,7 +243,8 @@ static void PrintAdapterAfterCallFun(uv_work_t *work, int status)
         std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
         napi_value adapterObj = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
         if (adapterObj != nullptr) {
-            napi_value layoutWriteFunc = NapiPrintUtils::GetNamedProperty(cbParam->env, adapterObj, "onStartLayoutWrite");
+            napi_value layoutWriteFunc =
+                NapiPrintUtils::GetNamedProperty(cbParam->env, adapterObj, "onStartLayoutWrite");
             auto successCallback = [](napi_env env, napi_callback_info info) -> napi_value {
                 PRINT_HILOGI("parse from js callback data start");
                 size_t argc = NapiPrintUtils::ARGC_TWO;
