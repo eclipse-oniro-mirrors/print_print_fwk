@@ -3374,7 +3374,7 @@ void PrintServiceAbility::BuildPrinterPreference(PrinterInfo &printerInfo)
 
 bool PrintServiceAbility::FlushCacheFileToUserData(const std::string &jobId)
 {
-    auto userData = GetUserDataByUserId(currentUserId_);
+    auto userData = GetUserDataByJobId(jobId);
     if (userData == nullptr) {
         PRINT_HILOGE("get userDate failed");
         return false;
@@ -3384,7 +3384,7 @@ bool PrintServiceAbility::FlushCacheFileToUserData(const std::string &jobId)
 
 bool PrintServiceAbility::DeleteCacheFileFromUserData(const std::string &jobId)
 {
-    auto userData = GetUserDataByUserId(currentUserId_);
+    auto userData = GetUserDataByJobId(jobId);
     if (userData == nullptr) {
         PRINT_HILOGE("get userDate failed");
         return false;
@@ -3394,7 +3394,7 @@ bool PrintServiceAbility::DeleteCacheFileFromUserData(const std::string &jobId)
 
 bool PrintServiceAbility::OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList)
 {
-    auto userData = GetUserDataByUserId(currentUserId_);
+    auto userData = GetUserDataByJobId(jobId);
     if (userData == nullptr) {
         PRINT_HILOGE("get userDate failed");
         return false;
