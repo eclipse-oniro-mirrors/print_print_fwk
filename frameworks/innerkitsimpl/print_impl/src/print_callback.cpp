@@ -38,7 +38,7 @@ PrintCallback::~PrintCallback()
         nativePrinterChange_cb = nullptr;
     } else {
         std::lock_guard<std::mutex> autoLock(mutex_);
-        PRINT_HILOGD("callback has been destroyed");
+        PRINT_HILOGI("callback has been destroyed");
 
         uv_loop_s *loop = nullptr;
         napi_get_uv_event_loop(env_, &loop);
@@ -55,7 +55,7 @@ PrintCallback::~PrintCallback()
         }
         work->data = reinterpret_cast<void*>(param);
         int retVal = uv_queue_work(loop, work, [](uv_work_t *work) {}, [](uv_work_t *work, int _status) {
-            PRINT_HILOGD("uv_queue_work PrintCallback DeleteReference");
+            PRINT_HILOGI("uv_queue_work PrintCallback DeleteReference");
             Param *param_ = reinterpret_cast<Param*>(work->data);
             if (param_ == nullptr) {
                 delete work;
@@ -362,6 +362,8 @@ bool PrintCallback::onBaseCallback(std::function<void(CallbackParam*)> paramFun,
         param->env = env_;
         param->ref = ref_;
         param->mutexPtr = &mutex_;
+        auto self = shared_from_this();
+        param->callbackObj = self;
 
         paramFun(param);
     }
