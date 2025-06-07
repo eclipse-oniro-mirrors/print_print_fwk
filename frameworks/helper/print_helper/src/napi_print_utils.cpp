@@ -330,7 +330,7 @@ napi_ref NapiPrintUtils::CreateReference(napi_env env, napi_value callback)
 
 napi_value NapiPrintUtils::GetReference(napi_env env, napi_ref callbackRef)
 {
-    if (callbackRef == nullptr || callbackRef == napi_invalid_ref) {
+    if (callbackRef == nullptr) {
         return nullptr;
     }
     napi_value callback = nullptr;

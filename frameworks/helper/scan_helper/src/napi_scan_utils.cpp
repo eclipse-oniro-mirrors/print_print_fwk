@@ -307,7 +307,7 @@ napi_ref NapiScanUtils::CreateReference(napi_env env, napi_value callback)
 
 napi_value NapiScanUtils::GetReference(napi_env env, napi_ref callbackRef)
 {
-    if (callbackRef == nullptr || callbackRef == napi_invalid_ref) {
+    if (callbackRef == nullptr) {
         return nullptr;
     }
     napi_value callback = nullptr;
