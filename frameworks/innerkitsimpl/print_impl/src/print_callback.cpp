@@ -119,13 +119,17 @@ static void PrintTaskAfterCallFun(uv_work_t *work, int status)
     if (cbParam != nullptr) {
         std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
         napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
-        napi_value callbackResult = nullptr;
-        napi_value callbackValues[NapiPrintUtils::ARGC_ONE] = { 0 };
-        callbackValues[0] = NapiPrintUtils::GetUndefined(cbParam->env);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_ZERO,
-            callbackValues, &callbackResult);
-        napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGI("OnCallback end run PrintTaskAfterCallFun success");
+        if (callbackFunc != nullptr) {
+            napi_value callbackResult = nullptr;
+            napi_value callbackValues[NapiPrintUtils::ARGC_ONE] = { 0 };
+            callbackValues[0] = NapiPrintUtils::GetUndefined(cbParam->env);
+            napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_ZERO,
+                callbackValues, &callbackResult);
+            napi_close_handle_scope(cbParam->env, scope);
+            PRINT_HILOGI("OnCallback end run PrintTaskAfterCallFun success");
+        } else {
+            PRINT_HILOGE("PrintTaskAfterCallFun get reference failed");
+        }
         delete cbParam;
         cbParam = nullptr;
     }
@@ -146,14 +150,18 @@ static void PrinterAfterCallFun(uv_work_t *work, int status)
     if (cbParam != nullptr) {
         std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
         napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
-        napi_value callbackResult = nullptr;
-        napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
-        callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
-        callbackValues[1] = PrinterInfoHelper::MakeJsObject(cbParam->env, cbParam->printerInfo);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
-            callbackValues, &callbackResult);
-        napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGI("OnCallback end run PrinterAfterCallFun success");
+        if (callbackFunc != nullptr) {
+            napi_value callbackResult = nullptr;
+            napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
+            callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
+            callbackValues[1] = PrinterInfoHelper::MakeJsObject(cbParam->env, cbParam->printerInfo);
+            napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
+                callbackValues, &callbackResult);
+            napi_close_handle_scope(cbParam->env, scope);
+            PRINT_HILOGI("OnCallback end run PrinterAfterCallFun success");
+        } else {
+            PRINT_HILOGE("PrinterAfterCallFun get reference failed");
+        }
         delete cbParam;
         cbParam = nullptr;
     }
@@ -174,16 +182,20 @@ static void PrintJobAfterCallFun(uv_work_t *work, int status)
     if (cbParam != nullptr) {
         std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
         napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
-        napi_value callbackResult = nullptr;
-        napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
-        callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
-        callbackValues[1] = cbParam->jobInfo.GetPrinterId().length() == 0
-            ? PrintJobHelper::MakeJsSimpleObject(cbParam->env, cbParam->jobInfo)
-            : PrintJobHelper::MakeJsObject(cbParam->env, cbParam->jobInfo);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
-            callbackValues, &callbackResult);
-        napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGI("OnCallback end run PrintJobAfterCallFun success");
+        if (callbackFunc != nullptr) {
+            napi_value callbackResult = nullptr;
+            napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
+            callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
+            callbackValues[1] = cbParam->jobInfo.GetPrinterId().length() == 0
+                ? PrintJobHelper::MakeJsSimpleObject(cbParam->env, cbParam->jobInfo)
+                : PrintJobHelper::MakeJsObject(cbParam->env, cbParam->jobInfo);
+            napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
+                callbackValues, &callbackResult);
+            napi_close_handle_scope(cbParam->env, scope);
+            PRINT_HILOGI("OnCallback end run PrintJobAfterCallFun success");
+        } else {
+            PRINT_HILOGE("PrintJobAfterCallFun get reference failed");
+        }
         delete cbParam;
         cbParam = nullptr;
     }
@@ -204,16 +216,20 @@ static void ExtensionAfterCallFun(uv_work_t *work, int status)
     if (cbParam != nullptr) {
         std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
         napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
-        napi_value callbackResult = nullptr;
-        napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
-        callbackValues[0] =
-            NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->extensionId);
-        callbackValues[1] =
-            NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->info);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
-            callbackValues, &callbackResult);
-        napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGI("OnCallback end run ExtensionAfterCallFun success");
+        if (callbackFunc != nullptr) {
+            napi_value callbackResult = nullptr;
+            napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
+            callbackValues[0] =
+                NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->extensionId);
+            callbackValues[1] =
+                NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->info);
+            napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
+                callbackValues, &callbackResult);
+            napi_close_handle_scope(cbParam->env, scope);
+            PRINT_HILOGI("OnCallback end run ExtensionAfterCallFun success");
+        } else {
+            PRINT_HILOGE("ExtensionAfterCallFun get reference failed");
+        }
         delete cbParam;
         cbParam = nullptr;
     }
@@ -234,39 +250,41 @@ static void PrintAdapterAfterCallFun(uv_work_t *work, int status)
     if (cbParam != nullptr) {
         std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
         napi_value adapterObj = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
+        if (adapterObj != nullptr) {
+            napi_value layoutWriteFunc =
+                NapiPrintUtils::GetNamedProperty(cbParam->env, adapterObj, "onStartLayoutWrite");
+            auto successCallback = [](napi_env env, napi_callback_info info) -> napi_value {
+                PRINT_HILOGI("parse from js callback data start");
+                size_t argc = NapiPrintUtils::ARGC_TWO;
+                napi_value args[NapiPrintUtils::ARGC_TWO] = {nullptr};
 
-        napi_value layoutWriteFunc = NapiPrintUtils::GetNamedProperty(cbParam->env, adapterObj, "onStartLayoutWrite");
-        auto successCallback = [](napi_env env, napi_callback_info info) -> napi_value {
-            PRINT_HILOGI("parse from js callback data start");
-            size_t argc = NapiPrintUtils::ARGC_TWO;
-            napi_value args[NapiPrintUtils::ARGC_TWO] = {nullptr};
+                napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+                std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, args[0]);
+                uint32_t replyState = NapiPrintUtils::GetUint32FromValue(env, args[1]);
 
-            napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-            std::string jobId = NapiPrintUtils::GetStringFromValueUtf8(env, args[0]);
-            uint32_t replyState = NapiPrintUtils::GetUint32FromValue(env, args[1]);
+                PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(
+                    jobId, PRINT_JOB_CREATE_FILE_COMPLETED, replyState);
+                PRINT_HILOGI("from js return jobId:%{public}s, replyState:%{public}d", jobId.c_str(), replyState);
+                return nullptr;
+            };
 
-            PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(
-                jobId, PRINT_JOB_CREATE_FILE_COMPLETED, replyState);
-            PRINT_HILOGI("from js return jobId:%{public}s, replyState:%{public}d", jobId.c_str(), replyState);
-            return nullptr;
-        };
+            napi_value callbackResult = nullptr;
+            napi_value callbackValues[NapiPrintUtils::ARGC_FIVE] = { 0 };
+            callbackValues[0] = NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->jobId);
+            callbackValues[1] = PrintAttributesHelper::MakeJsObject(cbParam->env, cbParam->oldAttrs);
+            callbackValues[NapiPrintUtils::ARGC_TWO] =
+                PrintAttributesHelper::MakeJsObject(cbParam->env, cbParam->newAttrs);
+            callbackValues[NapiPrintUtils::ARGC_THREE] =
+                NapiPrintUtils::CreateUint32(cbParam->env, cbParam->fd);
+            callbackValues[NapiPrintUtils::ARGC_FOUR] =
+                NapiPrintUtils::CreateFunction(cbParam->env, "writeResultCallback", successCallback, nullptr);
 
-        napi_value callbackResult = nullptr;
-        napi_value callbackValues[NapiPrintUtils::ARGC_FIVE] = { 0 };
-        callbackValues[0] = NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->jobId);
-        callbackValues[1] = PrintAttributesHelper::MakeJsObject(cbParam->env, cbParam->oldAttrs);
-        callbackValues[NapiPrintUtils::ARGC_TWO] =
-            PrintAttributesHelper::MakeJsObject(cbParam->env, cbParam->newAttrs);
-        callbackValues[NapiPrintUtils::ARGC_THREE] =
-            NapiPrintUtils::CreateUint32(cbParam->env, cbParam->fd);
-        callbackValues[NapiPrintUtils::ARGC_FOUR] =
-            NapiPrintUtils::CreateFunction(cbParam->env, "writeResultCallback", successCallback, nullptr);
+            napi_call_function(cbParam->env, adapterObj, layoutWriteFunc, NapiPrintUtils::ARGC_FIVE,
+                callbackValues, &callbackResult);
 
-        napi_call_function(cbParam->env, adapterObj, layoutWriteFunc, NapiPrintUtils::ARGC_FIVE,
-            callbackValues, &callbackResult);
-
-        napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGI("OnCallback end run PrintAdapterAfterCallFun success");
+            napi_close_handle_scope(cbParam->env, scope);
+            PRINT_HILOGI("OnCallback end run PrintAdapterAfterCallFun success");
+        }
         delete cbParam;
         cbParam = nullptr;
     }
@@ -287,20 +305,23 @@ static void PrintAdapterJobStateChangedAfterCallFun(uv_work_t *work, int status)
     if (cbParam != nullptr) {
         std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
         napi_value adapterObj = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
+        if (adapterObj != nullptr) {
+            napi_value jobStateChangedFunc = NapiPrintUtils::GetNamedProperty(cbParam->env, adapterObj,
+                "onJobStateChanged");
 
-        napi_value jobStateChangedFunc = NapiPrintUtils::GetNamedProperty(cbParam->env, adapterObj,
-            "onJobStateChanged");
+            napi_value callbackResult = nullptr;
+            napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
+            callbackValues[0] = NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->jobId);
+            callbackValues[1] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
 
-        napi_value callbackResult = nullptr;
-        napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
-        callbackValues[0] = NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->jobId);
-        callbackValues[1] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
+            napi_call_function(cbParam->env, adapterObj, jobStateChangedFunc, NapiPrintUtils::ARGC_TWO,
+                callbackValues, &callbackResult);
 
-        napi_call_function(cbParam->env, adapterObj, jobStateChangedFunc, NapiPrintUtils::ARGC_TWO,
-            callbackValues, &callbackResult);
-
-        napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGI("OnCallback end run PrintAdapterJobStateChangedAfterCallFun success");
+            napi_close_handle_scope(cbParam->env, scope);
+            PRINT_HILOGI("OnCallback end run PrintAdapterJobStateChangedAfterCallFun success");
+        } else {
+            PRINT_HILOGE("PrintAdapterJobStateChangedAfterCallFun get reference failed");
+        }
         delete cbParam;
         cbParam = nullptr;
     }
@@ -321,13 +342,17 @@ static void PrintAdapterGetFileAfterCallFun(uv_work_t *work, int status)
     if (cbParam != nullptr) {
         std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
         napi_value callbackFunc = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
-        napi_value callbackResult = nullptr;
-        napi_value callbackValues[1] = { 0 };
-        callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, 1,
-            callbackValues, &callbackResult);
-        napi_close_handle_scope(cbParam->env, scope);
-        PRINT_HILOGI("OnCallback end run PrintAdapterGetFileAfterCallFun success");
+        if (callbackFunc != nullptr) {
+            napi_value callbackResult = nullptr;
+            napi_value callbackValues[1] = { 0 };
+            callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
+            napi_call_function(cbParam->env, nullptr, callbackFunc, 1,
+                callbackValues, &callbackResult);
+            napi_close_handle_scope(cbParam->env, scope);
+            PRINT_HILOGI("OnCallback end run PrintAdapterGetFileAfterCallFun success");
+        } else {
+            PRINT_HILOGE("PrintAdapterGetFileAfterCallFun get reference failed");
+        }
         delete cbParam;
         cbParam = nullptr;
     }
