@@ -423,33 +423,29 @@ bool PrintUserData::CheckFileData(std::string &fileData, Json::Value &jsonObject
 bool PrintUserData::FlushCacheFileToUserData(const std::string &jobId)
 {
     PRINT_HILOGI("FlushCacheFileToUserData Start.");
-    char cachePath[PATH_MAX] = { 0 };
-    std::string cacheDir = ObtainUserCacheDirectory();
-    if (realpath(cacheDir.c_str(), cachePath) == nullptr) {
-        PRINT_HILOGE("The real cache dir is null, errno:%{public}s", std::to_string(errno).c_str());
-        return false;
-    }
-    cacheDir = cachePath;
-
     PrintJob printJob;
     if (QueryQueuedPrintJobById(jobId, printJob) != E_PRINT_NONE) {
-        PRINT_HILOGE("The can not find print job", std::to_string(errno).c_str());
+        PRINT_HILOGE("Can not find print job");
         return false;
     }
     std::vector<uint32_t> fdList;
     printJob.GetFdList(fdList);
+    if (fdList.empty()) {
+        PRINT_HILOGE("fdList is empty, nothing to do");
+        return false;
+    }
     int32_t index = 1;
     bool ret = true;
     for (uint32_t fd : fdList) {
         if (!ret) { close(fd); } // close the remaining fd
-        ret = FlushCacheFile(fd, printJob.GetJobId(), cacheDir, index);
+        ret = FlushCacheFile(fd, printJob.GetJobId(), index);
         index++;
     }
     if (!ret) { DeleteCacheFileFromUserData(jobId); }
     return ret;
 }
 
-bool PrintUserData::FlushCacheFile(uint32_t fd, const std::string jobId, const std::string cacheDir, int32_t index)
+bool PrintUserData::FlushCacheFile(uint32_t fd, const std::string jobId, int32_t index)
 {
     if (lseek(fd, 0, SEEK_SET) == -1) {
         PRINT_HILOGE("Unable to reset fd offset");
@@ -461,8 +457,15 @@ bool PrintUserData::FlushCacheFile(uint32_t fd, const std::string jobId, const s
         close(fd);
         return false;
     }
+    char cachePath[PATH_MAX] = { 0 };
+    std::string cacheDir = ObtainUserCacheDirectory();
+    if (realpath(cacheDir.c_str(), cachePath) == nullptr) {
+        PRINT_HILOGE("The real cache dir is null, errno:%{public}s", std::to_string(errno).c_str());
+        return false;
+    }
+    cacheDir = cachePath;
     std::ostringstream destFileStream;
-    destFileStream << cacheDir << "/" << jobId << "_" << std::setw(5) << std::setfill('0') << index;
+    destFileStream << cacheDir << "/" << jobId << "_" << std::setw(FD_INDEX_LEN) << std::setfill('0') << index;
     std::string destFilePath = destFileStream.str();
     FILE *destFile = fopen(destFilePath.c_str(), "wb");
     if (destFile == nullptr) {
@@ -514,6 +517,7 @@ bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
             }
         }
     }
+    closedir(dir);
     return true;
 }
 
@@ -531,8 +535,13 @@ bool PrintUserData::OpenCacheFileFd(const std::string &jobId, std::vector<uint32
 
     DIR *dir = opendir(cacheDir.c_str());
     // dir real path
-    if (dir == nullptr || access(cacheDir.c_str(), R_OK) != 0) {
+    if (dir == nullptr) {
         PRINT_HILOGE("Failed to find history file");
+        return false;
+    }
+    if (access(cacheDir.c_str(), R_OK) != 0) {
+        PRINT_HILOGE("Failed to find history file");
+        closedir(dir);
         return false;
     }
     struct dirent *file;
@@ -563,6 +572,7 @@ bool PrintUserData::OpenCacheFileFd(const std::string &jobId, std::vector<uint32
     if (!ret) {
         for (auto fd : fdList) { close(fd); }
     }
+    closedir(dir);
     return ret;
 }
 

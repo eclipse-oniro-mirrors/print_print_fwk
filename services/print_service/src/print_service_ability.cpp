@@ -2935,60 +2935,63 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
 {
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
     auto printerInfo = QueryConnectingPrinterInfoById(globalPrinterId);
-    if (printerInfo == nullptr) {
-        PRINT_HILOGW("printerInfo is null");
+    if (!DoAddPrinterToCups(printerInfo, ppdName, ppdData)) {
+        PRINT_HILOGW("AddPrinterToCups fail.");
         return false;
     }
-    if (!printerInfo->HasCapability() || !printerInfo->HasUri() || !printerInfo->HasPrinterMake()) {
-        PRINT_HILOGW("empty capability or invalid printer info");
-        return false;
-    }
-    printerInfo->SetPrinterName(RenamePrinterWhenAdded(*printerInfo));
-#ifdef CUPS_ENABLE
-    int32_t ret = E_PRINT_NONE;
-    if (ppdName.empty() || ppdData.empty()) {
-        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerInfo->GetUri(),
-            printerInfo->GetPrinterName(), printerInfo->GetPrinterMake());
-    } else {
-        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithPpd(printerInfo->GetUri(),
-            printerInfo->GetPrinterName(), ppdName, ppdData);
-    }
-    if (ret != E_PRINT_NONE) {
-        PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
-        return false;
-    }
-#endif // CUPS_ENABLE
     OnPrinterAddedToCups(printerInfo);
     return true;
 }
 
-bool PrintServiceAbility::AddVendorPrinterToCupsWithSpecificPpd(const std::string &globalVendorName,
-    const std::string &printerId, const std::string &ppdName)
+bool PrintServiceAbility::DoAddPrinterToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName,
+    const std::string &ppdData)
 {
-    auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
-    if (printerInfo == nullptr) {
-        PRINT_HILOGW("printerInfo is null");
+    if (printerInfo == nullptr || !printerInfo->HasUri()) {
+        PRINT_HILOGW("printerInfo is null or invalid.");
         return false;
     }
-    printerInfo->SetPrinterName(RenamePrinterWhenAdded(*printerInfo));
+    std::string printerUri = printerInfo->GetUri();
+    std::string printerName = RenamePrinterWhenAdded(*printerInfo);
 #ifdef CUPS_ENABLE
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    if (printCupsClient == nullptr) {
+        PRINT_HILOGW("printCupsClient is null.");
+        return false;
+    }
     int32_t ret = E_PRINT_NONE;
-    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithSpecificPpd(printerInfo->GetUri(),
-        printerInfo->GetPrinterName(), ppdName);
+    bool needUpdateCapability = false;
+    if (ppdData.empty()) {
+        if (ppdName.empty()) {
+            if (!printerInfo->HasCapability() || !printerInfo->HasPrinterMake()) {
+                PRINT_HILOGW("empty capability or invalid printer maker");
+                return false;
+            }
+            ret = printCupsClient->AddPrinterToCups(printerUri, printerName, printerInfo->GetPrinterMake());
+        } else {
+            needUpdateCapability = true;
+            ret = printCupsClient->AddPrinterToCupsWithSpecificPpd(printerUri, printerName, ppdName);
+        }
+    } else {
+        if (!printerInfo->HasCapability()) {
+            PRINT_HILOGW("empty capability");
+            return false;
+        }
+        ret = printCupsClient->AddPrinterToCupsWithPpd(printerUri, printerName, ppdName, ppdData);
+    }
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
         return false;
     }
-    PrinterCapability printerCaps;
-    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
-        QueryPrinterCapabilityFromPPD(printerInfo->GetPrinterName(), printerCaps);
-    if (ret != E_PRINT_NONE) {
-        PRINT_HILOGW("QueryPrinterCapabilityFromPPD error = %{public}d.", ret);
+    if (needUpdateCapability) {
+        PrinterCapability printerCaps;
+        ret = printCupsClient->QueryPrinterCapabilityFromPPD(printerName, printerCaps);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGW("QueryPrinterCapabilityFromPPD error = %{public}d.", ret);
+        }
+        printerInfo->SetCapability(printerCaps);
     }
-    printerInfo->SetCapability(printerCaps);
 #endif // CUPS_ENABLE
-    OnPrinterAddedToCups(printerInfo);
+    printerInfo->SetPrinterName(printerName);
     return true;
 }
 
@@ -3078,25 +3081,10 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
         PRINT_HILOGW("printerInfo is null");
         return false;
     }
-    if (!printerInfo->HasCapability() || !printerInfo->HasUri() || !printerInfo->HasPrinterMake()) {
-        PRINT_HILOGW("empty capability or invalid printer info");
+    if (!DoAddPrinterToCups(printerInfo, ppdName, ppdData)) {
+        PRINT_HILOGW("AddPrinterToCups fail.");
         return false;
     }
-    printerInfo->SetPrinterName(RenamePrinterWhenAdded(*printerInfo));
-#ifdef CUPS_ENABLE
-    int32_t ret = E_PRINT_NONE;
-    if (ppdName.empty() || ppdData.empty()) {
-        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerInfo->GetUri(),
-            printerInfo->GetPrinterName(), printerInfo->GetPrinterMake());
-    } else {
-        ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithPpd(printerInfo->GetUri(),
-            printerInfo->GetPrinterName(), ppdName, ppdData);
-    }
-    if (ret != E_PRINT_NONE) {
-        PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
-        return false;
-    }
-#endif // CUPS_ENABLE
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetIsLastUsedPrinter(true);
@@ -3386,7 +3374,7 @@ void PrintServiceAbility::BuildPrinterPreference(PrinterInfo &printerInfo)
 
 bool PrintServiceAbility::FlushCacheFileToUserData(const std::string &jobId)
 {
-    auto userData = GetUserDataByUserId(currentUserId_);
+    auto userData = GetUserDataByJobId(jobId);
     if (userData == nullptr) {
         PRINT_HILOGE("get userDate failed");
         return false;
@@ -3396,7 +3384,7 @@ bool PrintServiceAbility::FlushCacheFileToUserData(const std::string &jobId)
 
 bool PrintServiceAbility::DeleteCacheFileFromUserData(const std::string &jobId)
 {
-    auto userData = GetUserDataByUserId(currentUserId_);
+    auto userData = GetUserDataByJobId(jobId);
     if (userData == nullptr) {
         PRINT_HILOGE("get userDate failed");
         return false;
@@ -3406,7 +3394,7 @@ bool PrintServiceAbility::DeleteCacheFileFromUserData(const std::string &jobId)
 
 bool PrintServiceAbility::OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList)
 {
-    auto userData = GetUserDataByUserId(currentUserId_);
+    auto userData = GetUserDataByJobId(jobId);
     if (userData == nullptr) {
         PRINT_HILOGE("get userDate failed");
         return false;

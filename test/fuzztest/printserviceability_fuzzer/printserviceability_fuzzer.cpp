@@ -764,14 +764,6 @@ void TestAddVendorPrinterToCupsWithPpd(const uint8_t *data, size_t size, FuzzedD
     PrintServiceAbility::GetInstance()->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData);
 }
 
-void TestAddVendorPrinterToCupsWithSpecificPpd(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->AddVendorPrinterToCupsWithSpecificPpd(globalVendorName, printerId, ppdName);
-}
-
 void TestRemoveVendorPrinterFromCups(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -909,7 +901,6 @@ void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *data
     TestUpdateVendorPrinterToDiscovery(data, size, dataProvider);
     TestRemoveVendorPrinterFromDiscovery(data, size, dataProvider);
     TestAddVendorPrinterToCupsWithPpd(data, size, dataProvider);
-    TestAddVendorPrinterToCupsWithSpecificPpd(data, size, dataProvider);
     TestRemoveVendorPrinterFromCups(data, size, dataProvider);
     TestOnVendorStatusUpdate(data, size, dataProvider);
     TestQueryVendorPrinterInfo(data, size, dataProvider);

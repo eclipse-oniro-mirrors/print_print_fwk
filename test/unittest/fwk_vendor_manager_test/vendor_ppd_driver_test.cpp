@@ -96,7 +96,9 @@ HWTEST_F(VendorPpdDriverTest, QueryProperty_ShouldReturnTrue_WhenKeyIsCupsPpdNam
     printerInfo.SetPrinterId(printerId);
     vendorDriver.OnPrinterDiscovered(vendorName, printerInfo);
     EXPECT_FALSE(vendorDriver.QueryProperty(printerId, key, value));
-    EXPECT_TRUE(vendorDriver.QueryProperty(printerId, key, value));
+    value = "test";
+    // success call to cupsd but response is empty string
+    EXPECT_FALSE(vendorDriver.QueryProperty(printerId, key, value));
 }
 
 HWTEST_F(VendorPpdDriverTest, QueryPpdName_ShouldReturnFalse_WhenVendorManagerIsNull,

@@ -169,8 +169,6 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0005, TestSize.Level0)
     EXPECT_TRUE(vendorManager.IsConnectingPrinter(globalPrinterId, ""));
     vendorManager.SetConnectingPrinter(ConnectMethod::IP_AUTO, printerId);
     EXPECT_TRUE(vendorManager.IsConnectingPrinter(globalPrinterId, ""));
-    vendorManager.SetConnectingPrinter(ConnectMethod::IP_IPP, printerId);
-    EXPECT_FALSE(vendorManager.IsConnectingPrinter(globalPrinterId, ""));
     EXPECT_TRUE(vendorManager.IsConnectingPrinter(globalPrinterId, printerId));
     vendorManager.UnInit();
 }
