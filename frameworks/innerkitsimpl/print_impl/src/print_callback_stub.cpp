@@ -79,8 +79,8 @@ bool PrintCallbackStub::HandlePrintJobEvent(MessageParcel &data, MessageParcel &
     // close useless fd
     std::vector<uint32_t> fdList;
     info->GetFdList(fdList);
-    for (int32_t fd : fdList) {
-        if (fd >= 0) { close(fd); }
+    for (uint32_t fd : fdList) {
+        if (static_cast<int32_t>(fd) >= 0) { close(fd); }
     }
     fdList.clear();
     info->SetFdList(fdList);
