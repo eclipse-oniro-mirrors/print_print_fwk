@@ -67,6 +67,7 @@ public:
     int32_t RequestPreview(const PrintJob &jobinfo, std::string &previewResult);
     int32_t QueryPrinterCapability(const std::string &printerId);
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs);
+    int32_t QueryAllHistoryPrintJob(std::vector<PrintJob> &printJobs);
     int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob);
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);

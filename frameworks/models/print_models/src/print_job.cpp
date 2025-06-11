@@ -453,4 +453,33 @@ std::string PrintJob::ConvertToJsonString() const
     std::string jsonString = Json::writeString(wBuilder, json);
     return jsonString;
 }
+
+Json::Value PrintJob::CompleteConvertToJsonObject() const
+{
+    Json::Value jsonObject;
+    jsonObject["jobId"] = jobId_;
+    jsonObject["printerId"] = printerId_;
+    jsonObject["jobState"] = jobState_;
+    jsonObject["subState"] = subState_;
+    jsonObject["copyNumber"] = copyNumber_;
+    jsonObject["pageRange"] = pageRange_.ConvertToJsonObject();
+    jsonObject["isSequential"] = isSequential_;
+    jsonObject["pageSize"] = pageSize_.ConvertToJsonObject();
+    jsonObject["isLandscape"] = isLandscape_;
+    jsonObject["colorMode"] = colorMode_;
+    jsonObject["duplexMode"] = duplexMode_;
+    jsonObject["hasMargin"] = hasMargin_;
+    if (hasMargin_) {
+        jsonObject["margin"] = margin_.ConvertToJsonObject();
+    }
+    jsonObject["hasPreview"] = hasPreview_;
+    if (hasPreview_) {
+        jsonObject["preview"] = preview_.ConvertToJsonObject();
+    }
+    jsonObject["hasOption"] = hasOption_;
+    if (hasOption_) {
+        jsonObject["option"] = option_;
+    }
+    return jsonObject;
+}
 } // namespace OHOS::Print

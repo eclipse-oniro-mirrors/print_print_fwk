@@ -761,6 +761,20 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0030_NeedRename, TestSize.Le
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0065_NeedRename, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_QUERYALLHISTORYPRINTJOB);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, QueryAllHistoryPrintJob).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
 /**
  * @tc.name: PrintServiceStubTest_0031
  * @tc.desc: Verify the capability function.

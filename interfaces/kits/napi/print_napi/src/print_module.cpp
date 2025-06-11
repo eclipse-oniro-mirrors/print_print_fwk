@@ -37,6 +37,7 @@ static constexpr const char *FUNCTION_REQUEST_PREVIEW = "requestPrintPreview";
 static constexpr const char *FUNCTION_QUERY_CAPABILITY = "queryPrinterCapability";
 static constexpr const char *FUNCTION_QUERY_ALL_PRINTJOB = "queryAllPrintJobs";
 static constexpr const char *FUNCTION_QUERY_PRINTJOB_LIST = "queryPrintJobList";
+static constexpr const char *FUNCTION_QUERY_ALL_HISTORY_PRINTJOB = "queryAllHistoryPrintJobs";
 static constexpr const char *FUNCTION_QUERY_PRINTJOB_BYID = "queryPrintJobById";
 static constexpr const char *FUNCTION_REGISTER_EVENT = "on";
 static constexpr const char *FUNCTION_UNREGISTER_EVENT = "off";
@@ -431,6 +432,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_QUERY_CAPABILITY, NapiInnerPrint::QueryCapability),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_ALL_PRINTJOB, NapiInnerPrint::QueryAllPrintJob),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_PRINTJOB_LIST, NapiInnerPrint::QueryAllPrintJob),
+        PRINT_NAPI_METHOD(FUNCTION_QUERY_ALL_HISTORY_PRINTJOB, NapiInnerPrint::QueryAllHistoryPrintJob),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_PRINTJOB_BYID, NapiInnerPrint::QueryPrintJobById),
         PRINT_NAPI_METHOD(FUNCTION_REGISTER_EVENT, NapiInnerPrint::On),
         PRINT_NAPI_METHOD(FUNCTION_UNREGISTER_EVENT, NapiInnerPrint::Off),

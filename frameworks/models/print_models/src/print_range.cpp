@@ -175,4 +175,27 @@ void PrintRange::Dump()
         }
     }
 }
+
+Json::Value PrintRange::ConvertToJsonObject() const
+{
+    Json::Value pageRangeJson;
+    pageRangeJson["hasStartPage_"] = hasStartPage_;
+    if (hasStartPage_) {
+        pageRangeJson["startPage"] = startPage_;
+    }
+    pageRangeJson["hasEndPage_"] = hasEndPage_;
+    if (hasEndPage_) {
+        pageRangeJson["endPage"] = endPage_;
+    }
+    std::vector<uint32_t> pages_;
+    if (HasPages()) {
+        GetPages(pages_);
+        Json::Value jsonArray;
+        for (const auto& item : pages_) {
+            jsonArray.append(item);
+        }
+        pageRangeJson["pages"] = jsonArray;
+    }
+    return pageRangeJson;
+}
 } // namespace OHOS::Print

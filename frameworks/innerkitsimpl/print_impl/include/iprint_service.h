@@ -63,6 +63,7 @@ public:
     virtual int32_t UnregisterAllExtCallback(const std::string &extensionId) = 0;
     virtual int32_t LoadExtSuccess(const std::string &extensionId) = 0;
     virtual int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) = 0;
+    virtual int32_t QueryAllHistoryPrintJob(std::vector<PrintJob> &printJobs) = 0;
     virtual int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) = 0;
     virtual int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake) = 0;

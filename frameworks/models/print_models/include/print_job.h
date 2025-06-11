@@ -119,6 +119,8 @@ public:
     void Dump();
 
     std::string ConvertToJsonString() const;
+
+    Json::Value CompleteConvertToJsonObject() const;
 private:
     void ReadFromParcel(Parcel &parcel);
     void ReadParcelFD(Parcel &parcel);

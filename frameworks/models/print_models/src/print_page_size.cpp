@@ -511,4 +511,14 @@ void PrintPageSize::Dump()
     PRINT_HILOGD("width_ = %{public}d", width_);
     PRINT_HILOGD("height_ = %{public}d", height_);
 }
+
+Json::Value PrintPageSize::ConvertToJsonObject() const
+{
+    Json::Value pageSizeJson;
+    pageSizeJson["id_"] = id_;
+    pageSizeJson["name_"] = name_;
+    pageSizeJson["width_"] = width_;
+    pageSizeJson["height_"] = height_;
+    return pageSizeJson;
+}
 } // namespace OHOS::Print

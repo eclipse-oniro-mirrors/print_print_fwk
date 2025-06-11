@@ -54,6 +54,7 @@ public:
         const sptr<IPrintExtensionCallback> &listener) override;
     int32_t UnregisterAllExtCallback(const std::string &extensionId) override;
     int32_t LoadExtSuccess(const std::string &extensionId) override;
+    int32_t QueryAllHistoryPrintJob(std::vector<PrintJob> &printJobs) override;
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override;
     int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) override;
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,

@@ -55,7 +55,9 @@ public:
     void UpdateQueuedJobList(
         const std::string &jobId, const std::shared_ptr<PrintJob> &printJob, std::string jobOrderId);
     int32_t QueryPrintJobById(const std::string &printJobId, PrintJob &printJob);
+    int32_t QueryHistoryPrintJobById(const std::string &printJobId, PrintJob &printJob);
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs);
+    int32_t QueryAllHistoryPrintJob(std::vector<std::string> printerIds, std::vector<PrintJob> &printJobs);
     int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type);
     int32_t SetLastUsedPrinter(const std::string &printerId);
     bool ParseUserData();
@@ -68,6 +70,10 @@ public:
     bool DeleteCacheFileFromUserData(const std::string &jobId);
     bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList);
     int32_t QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob);
+    bool AddPrintJobToHistoryList(const std::string &printerId, const std::string &jobId,
+        const std::shared_ptr<PrintJob> &printjob);
+    bool DeletePrintJobFromHistoryList(const std::string &jobId);
+    bool DeletePrintJobFromHistoryListByPrinterId(const std::string &printerId);
 
 private:
     bool SetUserDataToFile();
@@ -79,6 +85,14 @@ private:
     void DeletePrinterFromUsedPrinterList(const std::string &printerId);
     std::string ObtainUserCacheDirectory();
     bool FlushCacheFile(uint32_t fd, const std::string jobId, int32_t index);
+    void FlushPrintHistoryJobFile(const std::string &printerId);
+    std::string ParsePrintHistoryJobListToJsonString(const std::string &printerId);
+    bool GetPrintHistoryJobFromFile(const std::string &printerId);
+    bool GetJsonObjectFromFile(Json::Value &jsonObject, const std::string &filePath, const std::string &printerId);
+    bool ParseJsonObjectToPrintHistory(Json::Value &jsonObject, const std::string &printerId);
+    PrintMargin  ParseJsonObjectToMargin(const Json::Value &jsonObject);
+    PrintRange ParseJsonObjectToPrintRange(const Json::Value &jsonObject);
+    void InitPrintHistoryJobList(const std::string &printerId);
 
 public:
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
@@ -94,6 +108,9 @@ private:
     deque<std::string> usedPrinterList_;
     std::recursive_mutex userDataMutex_;
     const uint32_t MAX_PRINTER_SIZE = 1000;
+    const uint32_t MAX_HISTORY_JOB_NUM = 500;
+    std::map<std::string, std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>
+        printHistoryJobList_;
 };
 
 }  // namespace Print

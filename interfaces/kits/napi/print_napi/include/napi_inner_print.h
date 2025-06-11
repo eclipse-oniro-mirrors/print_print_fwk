@@ -44,6 +44,7 @@ public:
     static napi_value RequestPreview(napi_env env, napi_callback_info info);
     static napi_value QueryCapability(napi_env env, napi_callback_info info);
     static napi_value QueryAllPrintJob(napi_env env, napi_callback_info info);
+    static napi_value QueryAllHistoryPrintJob(napi_env env, napi_callback_info info);
     static napi_value QueryPrintJobById(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value Off(napi_env env, napi_callback_info info);

@@ -457,6 +457,19 @@ int32_t PrintManagerClient::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
     return ret;
 }
 
+
+int32_t PrintManagerClient::QueryAllHistoryPrintJob(std::vector<PrintJob> &printJobs)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGD("PrintManagerClient QueryAllHistoryPrintJob start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->QueryAllHistoryPrintJob(printJobs);
+        PRINT_HILOGD("PrintManagerClient QueryAllHistoryPrintJob out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::QueryPrintJobById(std::string &printJobId, PrintJob &printjob)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);

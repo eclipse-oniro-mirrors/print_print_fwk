@@ -17,6 +17,7 @@
 
 #include "parcel.h"
 #include "print_range.h"
+ #include <json/json.h>
 
 namespace OHOS::Print {
 class PrintPreviewAttribute final : public Parcelable {
@@ -46,6 +47,8 @@ public:
     static std::shared_ptr<PrintPreviewAttribute> Unmarshalling(Parcel &parcel);
 
     void Dump();
+
+    Json::Value ConvertToJsonObject() const;
 
 private:
     void ReadFromParcel(Parcel &parcel);
