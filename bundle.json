@@ -53,6 +53,7 @@
         "usb_manager",
         "wifi",
         "cJSON",
+        "runtime_core",
         "ace_engine",
         "libjpeg-turbo",
         "input"
@@ -66,6 +67,7 @@
        "base_group": [],
        "fwk_group":[
           "//base/print/print_fwk/interfaces/kits/napi/print_napi:print_napi",
+          "//base/print/print_fwk/interfaces/kits/ani/printani:anipackage",
           "//base/print/print_fwk/interfaces/kits/napi/scan_napi:scan_napi",
           "//base/print/print_fwk/interfaces/kits/jsnapi/print_extension:printextensionability_napi",
           "//base/print/print_fwk/interfaces/kits/jsnapi/print_extensionctx:printextensioncontext_napi",
