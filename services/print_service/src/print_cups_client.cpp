@@ -638,7 +638,7 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
     const std::string &printerMake)
 {
     PRINT_HILOGD("PrintCupsClient AddPrinterToCups start, printerMake: %{public}s", printerMake.c_str());
-    std::string ppdName = DEFAULT_PPD_NAME;;
+    std::string ppdName = DEFAULT_PPD_NAME;
     QueryPPDInformation(printerMake, ppdName);
     PRINT_HILOGI("ppd driver: %{public}s", ppdName.c_str());
     return AddPrinterToCupsWithSpecificPpd(printerUri, printerName, ppdName);
