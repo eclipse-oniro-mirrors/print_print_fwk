@@ -242,12 +242,12 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0003_NeedRename, TestS
     EXPECT_NE(service->currentJobOrderId_, 0);
 }
 /**
-* @tc.name: PrintServiceAbilityTest_0004
+* @tc.name: PrintServiceAbilityTestPartOne_ErrorToken_ShouldNoPermission
 * @tc.desc: PrintServiceAbility ctor/dtor
 * @tc.type: FUNC
 * @tc.require: return E_PRINT_NO_PERMISSION
 */
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004_NeedRename, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartOne_ErrorToken_ShouldNoPermission, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_EQ(service->StartService(), E_PRINT_NO_PERMISSION);
@@ -288,6 +288,22 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004_NeedRename, TestS
     EXPECT_EQ(service->StartPrintJob(printJob), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->CancelPrintJob(printJobId), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->RestartPrintJob(printJobId), E_PRINT_NO_PERMISSION);
+}
+
+/**
+* @tc.name: PrintServiceAbilityTestPartTwo_ErrorToken_ShouldNoPermission
+* @tc.desc: PrintServiceAbility ctor/dtor
+* @tc.type: FUNC
+* @tc.require: return E_PRINT_NO_PERMISSION
+*/
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartTwo_ErrorToken_ShouldNoPermission, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->StartService(), E_PRINT_NO_PERMISSION);
+    std::string taskId = "";
+    std::string printerId = "1234";
+    std::string printJobId = "1";
+    PrintJob printJob;
     std::vector<PrinterInfo> printerInfos;
     EXPECT_EQ(service->AddPrinters(printerInfos), E_PRINT_NO_PERMISSION);
     std::vector<std::string> printerIds;
@@ -325,7 +341,29 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004_NeedRename, TestS
     std::string jobId = GetDefaultJobId();
     EXPECT_EQ(service->NotifyPrintServiceEvent(jobId, event), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->DestroyExtension(), E_PRINT_NO_PERMISSION);
+}
+
+/**
+* @tc.name: PrintServiceAbilityTestPartThree_ErrorToken_ShouldNoPermission
+* @tc.desc: PrintServiceAbility ctor/dtor
+* @tc.type: FUNC
+* @tc.require: return E_PRINT_NO_PERMISSION
+*/
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_ShouldNoPermission, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->StartService(), E_PRINT_NO_PERMISSION);
+    std::vector<std::string> fileList = {};
+    std::vector<uint32_t> fdList = {};
+    std::string taskId = "";
+    std::string printerId = "1234";
+    PrinterInfo info;
+    std::vector<std::string> valueList;
+    std::string printerName = "pixlab_0759";
+    std::string type = "";
+    sptr<IPrintCallback> listener = nullptr;
     PrinterPreferences printerPreference;
+    
     EXPECT_EQ(service->SetPrinterPreference(printerId, printerPreference), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_NO_PERMISSION);
@@ -342,6 +380,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0004_NeedRename, TestS
     EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
     EXPECT_EQ(service->StopPrint(taskId), E_PRINT_NONE);
 }
+
 /**
 * @tc.name: PrintServiceAbilityTest_0006
 * @tc.desc: PrintServiceAbility ctor/dtor
@@ -2341,7 +2380,7 @@ HWTEST_F(PrintServiceAbilityTest, FlushCacheFileToUserData_WhenBedFdlist_ShouldF
     service->currentUserId_ = userId;
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
-    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>(); 
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     userData->queuedJobList_[jobId] = printJob;
     std::vector<uint32_t> fdList = { 999 }; // Bed Fdlist
     printJob->SetFdList(fdList);
@@ -2363,7 +2402,7 @@ HWTEST_F(PrintServiceAbilityTest, DeleteCacheFileFromUserData_WhenEmptyFdlist_Sh
     service->currentUserId_ = userId;
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
-    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>(); 
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     userData->queuedJobList_[jobId] = printJob;
     EXPECT_EQ(service->DeleteCacheFileFromUserData(jobId), false);
 }
@@ -2406,7 +2445,7 @@ HWTEST_F(PrintServiceAbilityTest, OpenCacheFileFd_WhenBedFdlist_ShouldFalse, Tes
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
     EXPECT_EQ(service->OpenCacheFileFd(jobId, getFdList), false);
-    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>(); 
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     userData->queuedJobList_[jobId] = printJob;
     std::vector<uint32_t> fdList = { 999 }; // Bed Fdlist
     printJob->SetFdList(fdList);
@@ -2430,7 +2469,7 @@ HWTEST_F(PrintServiceAbilityTest, QueryQueuedPrintJobById_WhenBedFdlist_ShouldFa
     PrintJob getPrintJob;
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
-    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>(); 
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     userData->queuedJobList_[jobId] = printJob;
     EXPECT_EQ(service->QueryQueuedPrintJobById(jobId, getPrintJob), E_PRINT_INVALID_PRINTJOB);
 }
