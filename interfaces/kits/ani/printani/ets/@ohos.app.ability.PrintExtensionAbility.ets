@@ -1,0 +1,56 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import Want from '@ohos.app.ability.Want';
+import print from './@ohos.print';
+
+class ExtensionAbility {}
+
+class PrinterCapabilityImp implements print.PrinterCapability {
+    colorMode: number = 0;
+    duplexMode: number = 0;
+    pageSize: Array<print.PrintPageSize> = {};
+    resolution?: Array<print.PrintResolution> = {};
+    minMargin?: print.PrintMargin = undefined;
+    options?: Object = undefined;
+    constructor() {}
+}
+
+export default class PrintExtensionAbility {
+
+    onCreate(want: Want): void {}
+
+    onStartDiscoverPrinter(): void {}
+
+    onStopDiscoverPrinter(): void {}
+
+    onConnectPrinter(printerId: number): void {}
+
+    onDisconnectPrinter(printerId: number): void {}
+
+    onStartPrintJob(jobInfo: print.PrintJob): void {}
+
+    onCancelPrintJob(jobInfo: print.PrintJob): void {}
+
+    onRequestPrinterCapability(printerId: number): print.PrinterCapability {
+        return new PrinterCapabilityImp();
+    }
+
+    onRequestPreview(jobInfo: print.PrintJob): string {
+        return "";
+    }
+
+    onDestroy(): void {}
+}
