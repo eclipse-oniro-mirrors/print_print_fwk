@@ -21,6 +21,7 @@
 #include "print_extension_context.h"
 #include "print_log.h"
 #include "runtime.h"
+#include "sts_print_extension.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
@@ -35,7 +36,8 @@ PrintExtension *PrintExtension::Create(const std::unique_ptr<Runtime> &runtime)
     switch (runtime->GetLanguage()) {
         case Runtime::Language::JS:
             return JsPrintExtension::Create(runtime);
-
+        case Runtime::Language::STS:
+            return StsPrintExtension::Create(runtime);
         default:
             return new PrintExtension();
     }
