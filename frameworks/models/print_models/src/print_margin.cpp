@@ -198,4 +198,26 @@ void PrintMargin::Dump() const
         PRINT_HILOGD("right_ = %{public}d", right_);
     }
 }
+
+Json::Value PrintMargin::ConvertToJsonObject() const
+{
+    Json::Value marginJson;
+    marginJson["hasTop_"] = hasTop_;
+    if (hasTop_) {
+        marginJson["top_"] = top_;
+    }
+    marginJson["hasBottom_"] = hasBottom_;
+    if (hasBottom_) {
+        marginJson["bottom_"] = bottom_;
+    }
+    marginJson["hasLeft_"] = hasLeft_;
+    if (hasLeft_) {
+        marginJson["left_"] = left_;
+    }
+    marginJson["hasRight_"] = hasRight_;
+    if (hasRight_) {
+        marginJson["right_"] = right_;
+    }
+    return marginJson;
+}
 } // namespace OHOS::Print

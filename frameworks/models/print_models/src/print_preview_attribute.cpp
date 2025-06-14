@@ -117,4 +117,15 @@ void PrintPreviewAttribute::Dump()
     }
     previewRange_.Dump();
 }
+
+Json::Value PrintPreviewAttribute::ConvertToJsonObject() const
+{
+    Json::Value previewJson;
+    previewJson["hasResult_"] = hasResult_;
+    if (hasResult_) {
+        previewJson["result_"] = result_;
+    }
+    previewJson["previewRange_"] = previewRange_.ConvertToJsonObject();
+    return previewJson;
+}
 } // namespace OHOS::Print

@@ -19,6 +19,7 @@
 #include <map>
 #include <mutex>
 #include "parcel.h"
+ #include <json/json.h>
 
 namespace OHOS::Print {
 const double HUNDRED_OF_MILLIMETRE_TO_INCH = 39.37;
@@ -70,6 +71,8 @@ public:
     static std::shared_ptr<PrintPageSize> Unmarshalling(Parcel &parcel);
 
     void Dump();
+
+    Json::Value ConvertToJsonObject() const;
 
 private:
     void ReadFromParcel(Parcel &parcel);

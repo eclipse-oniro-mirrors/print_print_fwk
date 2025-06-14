@@ -79,6 +79,7 @@ public:
     int32_t UnregisterAllExtCallback(const std::string &extensionId) override;
     int32_t LoadExtSuccess(const std::string &extensionId) override;
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override;
+    int32_t QueryAllHistoryPrintJob(std::vector<PrintJob> &printJobs) override;
     int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) override;
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake) override;
@@ -189,6 +190,9 @@ private:
     void BuildPrinterPreference(PrinterInfo &printerInfo);
     bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList);
     int32_t QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob);
+    int32_t QueryHistoryPrintJobById(const std::string &printJobId, PrintJob &printJob);
+    bool AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob);
+    void CancelPrintJobHandleCallback(const std::string cid, const std::string &jobId);
 
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
@@ -217,6 +221,7 @@ private:
     bool DoAddPrinterToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName,
         const std::string &ppdData);
     void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo);
+    bool DeletePrintJobFromHistoryList(const std::string jobId);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

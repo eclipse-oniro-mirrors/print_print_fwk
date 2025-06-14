@@ -499,6 +499,46 @@ napi_value NapiInnerPrint::QueryAllPrintJob(napi_env env, napi_callback_info inf
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiInnerPrint::QueryAllHistoryPrintJob(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGI("Enter QueryAllHistoryPrintJob---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        PRINT_HILOGD("ouput enter---->");
+        napi_status status = napi_create_array(env, result);
+        uint32_t index = 0;
+        for (auto printJob : context->allPrintJobs) {
+            PRINT_HILOGD("PrinterId = %{public}s", printJob.GetPrinterId().c_str());
+            PRINT_HILOGD("JobId = %{public}s", printJob.GetJobId().c_str());
+            status = napi_set_element(env, *result, index++, PrintJobHelper::MakeJsObject(env, printJob));
+        }
+        return napi_ok;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        int32_t ret = PrintManagerClient::GetInstance()->QueryAllHistoryPrintJob(context->allPrintJobs);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to query printJobList");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 napi_value NapiInnerPrint::QueryPrintJobById(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter QueryPrintJobById---->");

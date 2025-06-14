@@ -589,6 +589,29 @@ int32_t PrintServiceAbility::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
     return E_PRINT_NONE;
 }
 
+
+int32_t PrintServiceAbility::QueryAllHistoryPrintJob(std::vector<PrintJob> &printJobs)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGD("QueryAllHistoryPrintJob started.");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    auto userData = GetCurrentUserData();
+    if (userData == nullptr) {
+        PRINT_HILOGE("Get user data failed.");
+        return E_PRINT_INVALID_USERID;
+    }
+    int32_t ret = userData->QueryAllHistoryPrintJob(printSystemData_.QueryAddedPrinterIdList(), printJobs);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("QueryAllHistoryPrintJob failed.");
+        return ret;
+    }
+    return E_PRINT_NONE;
+}
+
 int32_t PrintServiceAbility::QueryAddedPrinter(std::vector<std::string> &printerList)
 {
     ManualStart();
@@ -890,8 +913,11 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     auto printJob = std::make_shared<PrintJob>();
     int32_t ret = QueryQueuedPrintJobById(jobId, *printJob);
     if (ret != E_PRINT_NONE) {
-        PRINT_HILOGE("Invalid job id.");
-        return ret;
+        ret = QueryHistoryPrintJobById(jobId, *printJob);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Invalid job id.");
+            return ret;
+        }
     }
 
     // reopen fd from cache
@@ -901,6 +927,7 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
         PRINT_HILOGE("not find cache file");
         return E_PRINT_FILE_IO;
     }
+    uint32_t state = printJob->GetJobState();
     printJob->SetJobId(PrintUtils::GetPrintJobId());
     printJob->SetFdList(fdList);
 
@@ -1012,23 +1039,27 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
-    auto userData = GetUserDataByJobId(jobId);
+    auto userData = GetCurrentUserData();
     if (userData == nullptr) {
         PRINT_HILOGE("Get user data failed.");
         return E_PRINT_INVALID_USERID;
     }
+    auto printJob = std::make_shared<PrintJob>();
     auto jobIt = userData->queuedJobList_.find(jobId);
     if (jobIt == userData->queuedJobList_.end()) {
-        PRINT_HILOGE("invalid job id");
-        return E_PRINT_INVALID_PRINTJOB;
+        if (QueryHistoryPrintJobById(jobId, *printJob) != E_PRINT_NONE) {
+            PRINT_HILOGE("invalid job id");
+            return E_PRINT_INVALID_PRINTJOB;
+        }
+    } else {
+        printJob = jobIt->second;
     }
-
-    if (jobIt->second->GetJobState() >= PRINT_JOB_QUEUED) {
-        std::string extensionId = PrintUtils::GetExtensionId(jobIt->second->GetPrinterId());
+    if (printJob->GetJobState() >= PRINT_JOB_QUEUED) {
+        std::string extensionId = PrintUtils::GetExtensionId(printJob->GetPrinterId());
         std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CANCEL_PRINT);
         if (cid.find(PRINT_EXTENSION_BUNDLE_NAME) == string::npos) {
 #ifdef CUPS_ENABLE
-            DelayedSingleton<PrintCupsClient>::GetInstance()->CancelCupsJob(jobIt->second->GetJobId());
+            DelayedSingleton<PrintCupsClient>::GetInstance()->CancelCupsJob(printJob->GetJobId());
 #endif // CUPS_ENABLE
             return E_PRINT_NONE;
         }
@@ -1037,22 +1068,28 @@ int32_t PrintServiceAbility::CancelPrintJob(const std::string &jobId)
             UpdatePrintJobState(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
             return E_PRINT_SERVER_FAILURE;
         }
-        auto cbFunc = extCallbackMap_[cid];
-        auto tmpPrintJob = userData->queuedJobList_[jobId];
-        auto callback = [=]() {
-            if (cbFunc != nullptr && cbFunc->OnCallback(*tmpPrintJob) == false) {
-                UpdatePrintJobState(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
-            }
-        };
-        if (helper_->IsSyncMode()) {
-            callback();
-        } else {
-            serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
-        }
+        CancelPrintJobHandleCallback(cid, jobId);
     } else {
-        SetPrintJobCanceled(*jobIt->second);
+        SetPrintJobCanceled(*printJob);
     }
     return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::CancelPrintJobHandleCallback(const std::string cid, const std::string &jobId)
+{
+    auto userData = GetUserDataByJobId(jobId);
+    auto cbFunc = extCallbackMap_[cid];
+    auto tmpPrintJob = userData->queuedJobList_[jobId];
+    auto callback = [=]() {
+        if (cbFunc != nullptr && cbFunc->OnCallback(*tmpPrintJob) == false) {
+            UpdatePrintJobState(jobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
+        }
+    };
+    if (helper_->IsSyncMode()) {
+        callback();
+    } else {
+        serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
+    }
 }
 
 void PrintServiceAbility::SetPrintJobCanceled(PrintJob &jobinfo)
@@ -1389,28 +1426,33 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
 
 int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState)
 {
-    auto userData = GetUserDataByJobId(jobId);
+    auto userData = GetCurrentUserData();
     if (userData == nullptr) {
         PRINT_HILOGE("Get user data failed.");
         return E_PRINT_INVALID_USERID;
     }
+    auto printJob = std::make_shared<PrintJob>();
     auto jobIt = userData->queuedJobList_.find(jobId);
     bool jobInQueue = true;
     if (jobIt == userData->queuedJobList_.end()) {
         jobInQueue = false;
-        jobIt = userData->printJobList_.find(jobId);
-        if (jobIt == userData->printJobList_.end()) {
+        if (QueryHistoryPrintJobById(jobId, *printJob) != E_PRINT_NONE) {
             PRINT_HILOGD("Invalid print job id");
             return E_PRINT_INVALID_PRINTJOB;
         }
+    } else {
+        printJob = jobIt->second;
     }
-    jobIt->second->SetJobState(state);
-    jobIt->second->SetSubState(subState);
-    SendPrintJobEvent(*jobIt->second);
+    printJob->SetJobState(state);
+    printJob->SetSubState(subState);
+    if (state == PRINT_JOB_BLOCKED) {
+        AddPrintJobToHistoryList(printJob);
+    }
+    SendPrintJobEvent(*printJob);
     notifyAdapterJobChanged(jobId, state, subState);
-    CheckJobQueueBlocked(*jobIt->second);
+    CheckJobQueueBlocked(*printJob);
 
-    auto printerId = jobIt->second->GetPrinterId();
+    auto printerId = printJob->GetPrinterId();
     if (state == PRINT_JOB_COMPLETED) {
         if (jobInQueue) {
             DeleteCacheFileFromUserData(jobId);
@@ -1418,6 +1460,7 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
             userData->queuedJobList_.erase(jobId);
             queuedJobList_.erase(jobId);
         }
+        DeletePrintJobFromHistoryList(jobId);
         ReportPrinterIdle(printerId);
         if (IsQueuedJobListEmpty(jobId)) {
             ReportCompletedPrint(printerId);
@@ -1444,7 +1487,7 @@ void PrintServiceAbility::ReportPrinterIdle(const std::string &printerId)
 
 bool PrintServiceAbility::IsQueuedJobListEmpty(const std::string &jobId)
 {
-    auto userData = GetUserDataByJobId(jobId);
+    auto userData = GetCurrentUserData();
     if (userData == nullptr) {
         PRINT_HILOGE("Get user data failed.");
         return false;
@@ -2683,6 +2726,7 @@ void PrintServiceAbility::ChangeDefaultPrinterForDelete(
         return;
     }
     userData->DeletePrinter(printerId);
+    userData->DeletePrintJobFromHistoryListByPrinterId(printerId);
     std::string defaultPrinterId = userData->GetDefaultPrinter();
     bool ret = userData->CheckIfUseLastUsedPrinterForDefault();
     PRINT_HILOGI("DeletePrinterFromUserData defaultPrinterId %{private}s.", defaultPrinterId.c_str());
@@ -3395,7 +3439,7 @@ bool PrintServiceAbility::DeleteCacheFileFromUserData(const std::string &jobId)
 
 bool PrintServiceAbility::OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList)
 {
-    auto userData = GetUserDataByJobId(jobId);
+    auto userData = GetCurrentUserData();
     if (userData == nullptr) {
         PRINT_HILOGE("get userDate failed");
         return false;
@@ -3411,5 +3455,41 @@ int32_t PrintServiceAbility::QueryQueuedPrintJobById(const std::string &printJob
         return E_PRINT_INVALID_USERID;
     }
     return userData->QueryQueuedPrintJobById(printJobId, printJob);
+}
+
+int32_t PrintServiceAbility::QueryHistoryPrintJobById(const std::string &printJobId, PrintJob &printJob)
+{
+    PRINT_HILOGI("QueryHistoryPrintJobById start.");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    auto userData = GetCurrentUserData();
+    if (userData == nullptr) {
+        PRINT_HILOGE("Get user data failed.");
+        return E_PRINT_INVALID_USERID;
+    }
+    return userData->QueryHistoryPrintJobById(printJobId, printJob);
+}
+
+bool PrintServiceAbility::AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob)
+{
+    PRINT_HILOGI("AddPrintJobToHistoryList start.");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    auto currentUser = GetUserDataByUserId(currentUserId_);
+    if (currentUser == nullptr) {
+        PRINT_HILOGE("Current user is not added.");
+        UpdatePrintUserMap();
+    }
+    return currentUser->AddPrintJobToHistoryList(printjob->GetPrinterId(), printjob->GetJobId(), printjob);
+}
+
+bool PrintServiceAbility::DeletePrintJobFromHistoryList(const std::string jobId)
+{
+    PRINT_HILOGI("DeletePrintJobFromHistoryList start.");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    auto currentUser = GetUserDataByUserId(currentUserId_);
+    if (currentUser == nullptr) {
+        PRINT_HILOGE("Current user is not added.");
+        UpdatePrintUserMap();
+    }
+    return currentUser->DeletePrintJobFromHistoryList(jobId);
 }
 } // namespace OHOS::Print

@@ -18,6 +18,7 @@
 
 #include <vector>
 #include "parcel.h"
+ #include <json/json.h>
 
 namespace OHOS::Print {
 class PrintRange final : public Parcelable {
@@ -53,6 +54,8 @@ public:
     virtual bool Marshalling(Parcel &parcel) const override;
 
     static std::shared_ptr<PrintRange> Unmarshalling(Parcel &parcel);
+
+    Json::Value ConvertToJsonObject() const;
 
     void Dump();
 

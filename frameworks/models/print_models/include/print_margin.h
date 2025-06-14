@@ -17,6 +17,7 @@
 #define PRINT_MARGIN_H
 
 #include "parcel.h"
+ #include <json/json.h>
 
 namespace OHOS::Print {
 class PrintMargin final : public Parcelable {
@@ -62,6 +63,8 @@ public:
     static std::shared_ptr<PrintMargin> Unmarshalling(Parcel &parcel);
 
     void Dump() const;
+
+    Json::Value ConvertToJsonObject() const;
 
 private:
     void ReadFromParcel(Parcel &parcel);

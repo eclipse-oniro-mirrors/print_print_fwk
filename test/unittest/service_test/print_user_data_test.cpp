@@ -407,5 +407,86 @@ HWTEST_F(PrintUserDataTest, QueryQueuedPrintJobById_WhenExistenceJob_ShouldNoneE
     userData->queuedJobList_[jobId] = printJob;
     EXPECT_EQ(userData->QueryQueuedPrintJobById(jobId, getPrintJob), E_PRINT_NONE);
 }
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0031_NeedRename, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::vector<std::string> printerIds;
+    std::vector<PrintJob> printJobs;
+    EXPECT_EQ(userData->QueryAllHistoryPrintJob(printerIds, printJobs), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0032_NeedRename, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string jobId = "0";
+    PrintJob printJob;
+    EXPECT_EQ(userData->QueryHistoryPrintJobById(jobId, printJob), E_PRINT_INVALID_PRINTJOB);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0033_NeedRename, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string printerId = "1";
+    std::string jobId = "1";
+    std::shared_ptr<PrintJob> printjob;
+    EXPECT_EQ(userData->AddPrintJobToHistoryList(printerId, jobId, printjob), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0034_NeedRename, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string printerId = "1";
+    bool complete = true;
+    userData->FlushPrintHistoryJobFile(printerId);
+    EXPECT_EQ(complete, true);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0035_NeedRename, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string printerId = "1";
+    EXPECT_EQ(userData->ParsePrintHistoryJobListToJsonString(printerId), "");
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0036_NeedRename, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    std::string filePath = "";
+    std::string printerId = "1";
+    EXPECT_EQ(userData->GetJsonObjectFromFile(jsonObject, filePath, printerId), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0037_NeedRename, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    std::string printerId = "1";
+    EXPECT_EQ(userData->ParseJsonObjectToPrintHistory(jsonObject, printerId), false);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0038_NeedRename, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string jobId = "1";
+    EXPECT_EQ(userData->DeletePrintJobFromHistoryList(jobId), false);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0039_NeedRename, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string printerId = "1";
+    EXPECT_EQ(userData->DeletePrintJobFromHistoryListByPrinterId(printerId), false);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0040_NeedRename, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string printerId = "1";
+    bool complete = true;
+    userData->InitPrintHistoryJobList(printerId);
+    EXPECT_EQ(complete, true);
+}
 }
 }

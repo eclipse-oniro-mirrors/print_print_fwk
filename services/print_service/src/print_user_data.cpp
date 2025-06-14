@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <json/json.h>
+#include <filesystem>
 
 #include "print_log.h"
 #include "print_constant.h"
@@ -103,6 +104,25 @@ int32_t PrintUserData::QueryPrintJobById(const std::string &printJobId, PrintJob
     return E_PRINT_NONE;
 }
 
+int32_t PrintUserData::QueryHistoryPrintJobById(const std::string &printJobId, PrintJob &printJob)
+{
+    PRINT_HILOGI("QueryHistoryPrintJobById Start.");
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
+    for (const auto& [printerId, printerHistoryJobMap] : printHistoryJobList_) {
+        if (!printerHistoryJobMap) {
+            return E_PRINT_INVALID_PRINTJOB;
+        }
+        for (const auto& [jobId, historyPrintJob] : *printerHistoryJobMap) {
+            if (jobId == printJobId && historyPrintJob) {
+                printJob = *historyPrintJob;
+                return E_PRINT_NONE;
+            }
+        }
+    }
+    
+    return E_PRINT_INVALID_PRINTJOB;
+}
+
 int32_t PrintUserData::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
 {
     printJobs.clear();
@@ -121,6 +141,39 @@ int32_t PrintUserData::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
         }
     }
     PRINT_HILOGI("QueryAllPrintJob End.");
+    return E_PRINT_NONE;
+}
+
+int32_t PrintUserData::QueryAllHistoryPrintJob(std::vector<std::string> printerIds, std::vector<PrintJob> &printJobs)
+{
+    PRINT_HILOGI("QueryAllHistoryPrintJob Start.");
+    printJobs.clear();
+    for (auto iter : jobOrderList_) {
+        auto jobIt = queuedJobList_.find(iter.second);
+        if (jobIt == queuedJobList_.end()) {
+            PRINT_HILOGW("This job dose not exist.");
+            continue;
+        } else {
+            if (jobIt->second != nullptr) {
+                printJobs.emplace_back(*jobIt->second);
+            }
+        }
+    }
+    for (std::string printerId : printerIds) {
+        InitPrintHistoryJobList(printerId);
+    }
+    for (const auto& [printerId, printerHistoryJobMap] : printHistoryJobList_) {
+        if (!printerHistoryJobMap) {
+            return E_PRINT_INVALID_PRINTJOB;
+        }
+        for (const auto& [jobId, printJob] : *printerHistoryJobMap) {
+            if (!printJob) {
+                return E_PRINT_INVALID_PRINTJOB;
+            }
+            printJobs.emplace_back(*printJob);
+        }
+    }
+    PRINT_HILOGI("QueryAllHistoryPrintJob End.");
     return E_PRINT_NONE;
 }
 
@@ -605,5 +658,298 @@ int32_t PrintUserData::QueryQueuedPrintJobById(const std::string &printJobId, Pr
     PRINT_HILOGD("QueryQueuedPrintJobById End.");
     return E_PRINT_NONE;
 }
+
+bool PrintUserData::AddPrintJobToHistoryList(const std::string &printerId,
+    const std::string &jobId, const std::shared_ptr<PrintJob> &printjob)
+{
+    PRINT_HILOGI("AddPrintJobToHistoryList Start.");
+    InitPrintHistoryJobList(printerId);
+    auto& printerHistroyJobList_ = printHistoryJobList_[printerId];
+    if (!printerHistroyJobList_) {
+        PRINT_HILOGE("printerHistroyJobList_ is null.");
+        return false;
+    }
+    if (!printjob) {
+        PRINT_HILOGE("printJob is null.");
+        return false;
+    }
+    std::string oldOption = printjob->GetOption();
+    PRINT_HILOGD("Print job option: %{public}s", oldOption.c_str());
+    Json::Value infoJson;
+    if (!PrintJsonUtil::Parse(oldOption, infoJson)) {
+        PRINT_HILOGW("old option not accepted");
+        return false;
+    }
+    infoJson["isHistory"] = true;
+    std::string updatedOption = PrintJsonUtil::WriteString(infoJson);
+    PRINT_HILOGD("Updated print job option: %{public}s", updatedOption.c_str());
+    printjob->SetOption(updatedOption);
+    auto it = printerHistroyJobList_->begin();
+    // erase the history print jobs more than 500
+    while (printerHistroyJobList_->size() > MAX_HISTORY_JOB_NUM) {
+        it = printerHistroyJobList_->erase(it);
+    }
+    if ((printerHistroyJobList_->insert(std::make_pair(jobId, printjob))).second) {
+        FlushPrintHistoryJobFile(printerId);
+        return true;
+    }
+    return false;
+}
+
+void PrintUserData::FlushPrintHistoryJobFile(const std::string &printerId)
+{
+    PRINT_HILOGI("FlushPrintHistoryJobFile Start.");
+    std::string filePath = ObtainUserCacheDirectory();
+    char cachePath[PATH_MAX] = { 0 };
+    if (realpath(filePath.c_str(), cachePath) == nullptr) {
+        PRINT_HILOGE("The real cache dir is null, errno:%{public}s", std::to_string(errno).c_str());
+        return;
+    }
+    filePath.assign(cachePath);
+    std::string printHistoryJobFilePath = filePath + "/" + printerId + ".json";
+    if (!printHistoryJobList_[printerId]) {
+        std::filesystem::remove(printHistoryJobFilePath);
+        return;
+    } else {
+        PRINT_HILOGE("printHistoryJobList_[printerId] is null.");
+    }
+    
+    FILE *printHistoryJobFile = fopen(printHistoryJobFilePath.c_str(), "w+");
+    if (printHistoryJobFile == nullptr) {
+        PRINT_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
+        return;
+    }
+    std::string jsonString = ParsePrintHistoryJobListToJsonString(printerId);
+    PRINT_HILOGI("ParsePrintHistoryJobListToJsonString: %{public}s", jsonString.c_str());
+    size_t jsonLength = jsonString.length();
+    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), printHistoryJobFile);
+    int fcloseResult = fclose(printHistoryJobFile);
+    if (fcloseResult != 0) {
+        PRINT_HILOGE("Close File Failure.");
+        return;
+    }
+    PRINT_HILOGI("FlushPrintHistoryJobFile End.");
+    if (writeLength < 0 || writeLength != jsonLength) {
+        PRINT_HILOGE("SavePrintHistoryJobFile error");
+    }
+}
+
+std::string PrintUserData::ParsePrintHistoryJobListToJsonString(const std::string &printerId)
+{
+    PRINT_HILOGI("ParsePrintHistoryJobListToJsonString Start.");
+    Json::Value allPrintJobJson;
+    for (const auto &[curPrinterId, printJobList_]: printHistoryJobList_) {
+        if (curPrinterId == printerId) {
+            if (!printJobList_) {
+                return "";
+            }
+            
+            Json::Value printJobJson;
+            for (const auto &[jobId, printJob]: *printJobList_) {
+                printJobJson[jobId] = printJob->CompleteConvertToJsonObject();
+            }
+            allPrintJobJson[printerId] = printJobJson;
+            return PrintJsonUtil::WriteString(allPrintJobJson);
+        }
+    }
+}
+
+bool PrintUserData::GetPrintHistoryJobFromFile(const std::string &printerId)
+{
+    PRINT_HILOGI("GetPrintHistoryJobFromFile Start.");
+    char cachePath[PATH_MAX] = { 0 };
+    std::string filePath = ObtainUserCacheDirectory();
+    if (realpath(filePath.c_str(), cachePath) == nullptr) {
+        PRINT_HILOGE("The real cache dir is null, errno:%{public}s", std::to_string(errno).c_str());
+        return false;
+    }
+    filePath.assign(cachePath);
+    std::string printHistoryJobFilePath = filePath + "/" + printerId + ".json";
+    Json::Value printHistoryJobJson;
+    if (GetJsonObjectFromFile(printHistoryJobJson, printHistoryJobFilePath, printerId) &&
+        ParseJsonObjectToPrintHistory(printHistoryJobJson, printerId)) {
+        PRINT_HILOGI("parse print history job file success");
+        return true;
+    }
+    return false;
+}
+
+bool PrintUserData::GetJsonObjectFromFile(Json::Value &jsonObject,
+    const std::string &filePath, const std::string &printerId)
+{
+    PRINT_HILOGI("GetJsonObjectFromFile Start.");
+    if (!std::filesystem::exists(filePath)) {
+        std::ofstream outFile(filePath);
+        if (!outFile) {
+            PRINT_HILOGW("create printjob history file failed.");
+            return false;
+        }
+        outFile.close();
+    } else {
+        PRINT_HILOGW("filePath not exists.");
+    }
+    std::ifstream ifs(filePath.c_str(), std::ios::in | std::ios::binary);
+    if (!ifs.is_open()) {
+        PRINT_HILOGW("open printer list file fail");
+        return false;
+    }
+    if (ifs.peek() == std::ifstream::traits_type::eof()) {
+        PRINT_HILOGW("file is empty.");
+        ifs.close();
+        return false;
+    }
+    if (!PrintJsonUtil::ParseFromStream(ifs, jsonObject)) {
+        PRINT_HILOGW("json accept fail");
+        return false;
+    }
+    ifs.close();
+    if (!PrintJsonUtil::IsMember(jsonObject, printerId)) {
+        PRINT_HILOGW("can not find printer history job");
+        return false;
+    }
+    return true;
+}
+
+bool PrintUserData::ParseJsonObjectToPrintHistory(Json::Value &jsonObject, const std::string &printerId)
+{
+    PRINT_HILOGI("ParseJsonObjectToPrintHistory Start.");
+    if (!printHistoryJobList_[printerId]) {
+        PRINT_HILOGE("printerHistoryJobList_ is not exist.");
+        return false;
+    }
+    for (const auto& jobId : jsonObject[printerId].getMemberNames()) {
+        const Json::Value& printJobInfoJson = jsonObject[printerId][jobId];
+        auto& printHistoryJob = (*(printHistoryJobList_[printerId]))[jobId];
+        if (!printHistoryJob) {
+            PRINT_HILOGE("printHistoryJob is not exist.");
+            printHistoryJob = std::make_shared<PrintJob>();
+        }
+        PRINT_HILOGI("printHistoryJob is created.");
+        printHistoryJob->SetJobId(printJobInfoJson["jobId"].asString());
+        printHistoryJob->SetPrinterId(printJobInfoJson["printerId"].asString());
+        printHistoryJob->SetJobState(printJobInfoJson["jobState"].asInt());
+        printHistoryJob->SetSubState(printJobInfoJson["subState"].asInt());
+        printHistoryJob->SetCopyNumber(printJobInfoJson["copyNumber"].asInt());
+        printHistoryJob->SetPageRange(ParseJsonObjectToPrintRange(printJobInfoJson["pageRange"]));
+        printHistoryJob->SetIsSequential(printJobInfoJson["isSequential"].asBool());
+        PrintPageSize pageSize;
+        pageSize.SetId(printJobInfoJson["pageSize"]["id_"].asString());
+        pageSize.SetName(printJobInfoJson["pageSize"]["name_"].asString());
+        pageSize.SetWidth(printJobInfoJson["pageSize"]["width_"].asInt());
+        pageSize.SetHeight(printJobInfoJson["pageSize"]["height_"].asInt());
+        printHistoryJob->SetPageSize(pageSize);
+        printHistoryJob->SetIsLandscape(printJobInfoJson["isLandscape"].asBool());
+        printHistoryJob->SetColorMode(printJobInfoJson["colorMode"].asInt());
+        printHistoryJob->SetDuplexMode(printJobInfoJson["duplexMode"].asInt());
+        if (printJobInfoJson["hasmargin"].asBool()) {
+            printHistoryJob->SetMargin(ParseJsonObjectToMargin(printJobInfoJson["margin"]));
+        }
+        if (printJobInfoJson["hasPreview"].asBool()) {
+            PrintPreviewAttribute printPreviewAttribute;
+            if (printJobInfoJson["preview"]["hasResult_"]) {
+                printPreviewAttribute.SetResult(printJobInfoJson["preview"]["result_"].asInt());
+            }
+            printPreviewAttribute.SetPreviewRange(
+                ParseJsonObjectToPrintRange(printJobInfoJson["preview"]["previewRange_"]));
+            
+            printHistoryJob->SetPreview(printPreviewAttribute);
+        }
+        if (printJobInfoJson["hasOption"].asBool()) {
+            printHistoryJob->SetOption(printJobInfoJson["option"].asString());
+        }
+    }
+    return true;
+}
+
+PrintRange PrintUserData::ParseJsonObjectToPrintRange(const Json::Value &jsonObject)
+{
+    PrintRange printRange;
+    if (jsonObject["hasStartPage_"].asBool()) {
+        printRange.SetStartPage(jsonObject["startPage"].asInt());
+    }
+    if (jsonObject["hasEndPage_"].asBool()) {
+        printRange.SetStartPage(jsonObject["endPage"].asInt());
+    }
+    if (jsonObject["hasPages_"].asBool()) {
+        std::vector<uint32_t> pages;
+        Json::Value pagesJsonObject;
+        for (const auto& item : pagesJsonObject) {
+            pages.push_back(item.asInt());
+        }
+        printRange.SetPages(pages);
+    }
+    return printRange;
+}
+
+PrintMargin PrintUserData::ParseJsonObjectToMargin(const Json::Value &jsonObject)
+{
+    PrintMargin margin;
+    if (jsonObject["hasTop_"].asBool()) {
+        margin.SetTop(jsonObject["top_"].asInt());
+    }
+    if (jsonObject["hasLeft_"].asBool()) {
+        margin.SetTop(jsonObject["left_"].asInt());
+    }
+    if (jsonObject["hasRight_"].asBool()) {
+        margin.SetTop(jsonObject["right_"].asInt());
+    }
+    if (jsonObject["hasBottom_"].asBool()) {
+        margin.SetTop(jsonObject["bottom_"].asInt());
+    }
+    return margin;
+}
+
+bool PrintUserData::DeletePrintJobFromHistoryList(const std::string &jobId)
+{
+    PRINT_HILOGI("DeletePrintJobFromHistoryList Start.");
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
+    for (const auto& [printerId, printerHistoryJobMap] : printHistoryJobList_) {
+        if (!printerHistoryJobMap) {
+            PRINT_HILOGE("printerHistoryJobMap is not exist.");
+            continue;
+        }
+        auto printJob = printerHistoryJobMap->find(jobId);
+        if (printJob != printerHistoryJobMap->end()) {
+            std::string curPrinterId = printerId;
+            printerHistoryJobMap->erase(jobId);
+            DeleteCacheFileFromUserData(jobId);
+            if (printerHistoryJobMap->empty()) {
+                printHistoryJobList_.erase(curPrinterId);
+            }
+            FlushPrintHistoryJobFile(curPrinterId);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool PrintUserData::DeletePrintJobFromHistoryListByPrinterId(const std::string &printerId)
+{
+    PRINT_HILOGI("DeletePrintJobFromHistoryListByPrinterId Start.");
+    InitPrintHistoryJobList(printerId);
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
+    for (const auto& [curPrinterId, printerHistoryJobMap] : printHistoryJobList_) {
+        if (curPrinterId == printerId && printerHistoryJobMap) {
+            for (const auto& [jobId, printHistoryJob] : *printerHistoryJobMap) {
+                DeleteCacheFileFromUserData(jobId);
+            }
+            printHistoryJobList_.erase(printerId);
+            FlushPrintHistoryJobFile(printerId);
+            return true;
+        }
+    }
+    return false;
+}
+
+void PrintUserData::InitPrintHistoryJobList(const std::string &printerId)
+{
+    PRINT_HILOGI("InitPrintHistoryJobList Start.");
+    auto& printerHistroyJobList_ = printHistoryJobList_[printerId];
+    if (!printerHistroyJobList_) {
+        printerHistroyJobList_ = std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
+        GetPrintHistoryJobFromFile(printerId);
+    }
+}
+
 }  // namespace Print
 }  // namespace OHOS
