@@ -18,8 +18,11 @@
 #include "print_log.h"
 #include "print_base_ani_util.h"
 #include "print_object_ani_util.h"
+#include <ani_signature_builder.h>
 
 namespace OHOS::Print {
+using namespace arkts::ani_signature;
+
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_DEPLEX_MODE = "defaultDuplexMode";
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_PRINT_QUALITY = "defaultPrintQuality";
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE = "defaultMediaType";
@@ -37,16 +40,18 @@ ani_object PrinterPreferencesAniHelper::CreatePrinterPreferences(ani_env *env, c
 
     ani_enum_item printDuplexModeEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintDuplexMode",
                                                           static_cast<int32_t>(preferences.GetDefaultDuplexMode()));
-    SetEnumProperty(env, obj, "<set>defaultDuplexMode", "C{@ohos.print.print.PrintDuplexMode}:", printDuplexModeEnum);
+    SetEnumProperty(env, obj, Builder::BuildSetterName("defaultDuplexMode"),
+        "c{@ohos.print.print.PrintDuplexMode}:", printDuplexModeEnum);
 
     ani_enum_item printQualityEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintQualit",
                                                        static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
-    SetEnumProperty(env, obj, "<set>defaultPrintQuality", "C{@ohos.print.print.PrintQuality}:", printQualityEnum);
+    SetEnumProperty(env, obj, Builder::BuildSetterName("defaultPrintQuality"),
+        "C{@ohos.print.print.PrintQuality}:", printQualityEnum);
 
     ani_enum_item orientationModeEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintOrientationMode",
                                                           static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
-    SetEnumProperty(env, obj, "<set>defaultOrientation", "C{@ohos.print.print.PrintOrientationMode}:",
-        orientationModeEnum);
+    SetEnumProperty(env, obj, Builder::BuildSetterName("defaultOrientation"),
+        "C{@ohos.print.print.PrintOrientationMode}:", orientationModeEnum);
 
     SetStringProperty(env, obj, PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE, preferences.GetDefaultMediaType());
     SetStringProperty(env, obj, PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID, preferences.GetDefaultPageSizeId());
