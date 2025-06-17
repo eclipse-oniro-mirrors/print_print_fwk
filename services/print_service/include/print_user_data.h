@@ -74,6 +74,7 @@ public:
         const std::shared_ptr<PrintJob> &printjob);
     bool DeletePrintJobFromHistoryList(const std::string &jobId);
     bool DeletePrintJobFromHistoryListByPrinterId(const std::string &printerId);
+    bool ContainsHistoryPrintJob(std::vector<std::string> printerIds, const std::string jobId);
 
 private:
     bool SetUserDataToFile();
