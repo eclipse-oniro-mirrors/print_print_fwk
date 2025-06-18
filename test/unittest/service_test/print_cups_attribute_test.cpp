@@ -122,7 +122,7 @@ void PrintCupsAttributeTest::DoTest(PreAttrTestFunc preFunc, PostAttrTestFunc po
 {
     PostResponseTestFunc postResponseFunc = [this, postFunc](ipp_t *response) {
         PrinterCapability printerCaps;
-        ParsePrinterAttributes(response, printerCaps);
+        ParsePrinterAttributesFromIPP(response, printerCaps);
         if (postFunc != nullptr) {
             postFunc(printerCaps);
         }

@@ -24,7 +24,10 @@ static constexpr const char *PARAM_PREFERENCES_DEFAULT_PRINT_QUALITY = "defaultP
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE = "defaultMediaType";
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID = "defaultPageSizeId";
 static constexpr const char *PARAM_PREFERENCES_DEFAULT_ORIENTATION = "defaultOrientation";
+static constexpr const char *PARAM_PREFERENCES_DEFAULT_COLORMODE = "defaultColorMode";
 static constexpr const char *PARAM_PREFERENCES_BORDERLESS = "borderless";
+static constexpr const char *PARAM_PREFERENCES_COLLATE = "defaultCollate";
+static constexpr const char *PARAM_PREFERENCES_REVERSE = "defaultReverse";
 static constexpr const char *PARAM_PREFERENCES_OPTION = "options";
 
 napi_value PrinterPreferencesHelper::MakeJsObject(napi_env env, const PrinterPreferences &preferences)
@@ -56,8 +59,21 @@ napi_value PrinterPreferencesHelper::MakeJsObject(napi_env env, const PrinterPre
             env, jsObj, PARAM_PREFERENCES_DEFAULT_ORIENTATION, preferences.GetDefaultOrientation());
     }
 
+    if (preferences.HasDefaultColorMode()) {
+        NapiPrintUtils::SetUint32Property(
+            env, jsObj, PARAM_PREFERENCES_DEFAULT_COLORMODE, preferences.GetDefaultColorMode());
+    }
+
     if (preferences.HasBorderless()) {
         NapiPrintUtils::SetBooleanProperty(env, jsObj, PARAM_PREFERENCES_BORDERLESS, preferences.GetBorderless());
+    }
+
+    if (preferences.HasDefaultCollate()) {
+        NapiPrintUtils::SetBooleanProperty(env, jsObj, PARAM_PREFERENCES_COLLATE, preferences.GetDefaultCollate());
+    }
+
+    if (preferences.HasDefaultReverse()) {
+        NapiPrintUtils::SetBooleanProperty(env, jsObj, PARAM_PREFERENCES_REVERSE, preferences.GetDefaultReverse());
     }
 
     if (preferences.HasOption()) {
@@ -65,6 +81,25 @@ napi_value PrinterPreferencesHelper::MakeJsObject(napi_env env, const PrinterPre
     }
 
     return jsObj;
+}
+
+void PrinterPreferencesHelper::BuildFromBoolOptionJs(napi_env env, napi_value jsValue,
+    std::shared_ptr<PrinterPreferences> nativeObj)
+{
+    auto jsBorderless = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_BORDERLESS);
+    if (jsBorderless != nullptr) {
+        nativeObj->SetBorderless(NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_PREFERENCES_BORDERLESS));
+    }
+
+    auto jsCollate = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_COLLATE);
+    if (jsCollate != nullptr) {
+        nativeObj->SetDefaultCollate(NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_PREFERENCES_COLLATE));
+    }
+
+    auto jsReverse = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_REVERSE);
+    if (jsReverse != nullptr) {
+        nativeObj->SetDefaultReverse(NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_PREFERENCES_REVERSE));
+    }
 }
 
 std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_env env, napi_value jsValue)
@@ -107,15 +142,17 @@ std::shared_ptr<PrinterPreferences> PrinterPreferencesHelper::BuildFromJs(napi_e
             NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_ORIENTATION));
     }
 
-    auto jsBorderless = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_BORDERLESS);
-    if (jsBorderless != nullptr) {
-        nativeObj->SetBorderless(NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_PREFERENCES_BORDERLESS));
+    auto jsDefaultColorMode = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_DEFAULT_COLORMODE);
+    if (jsDefaultColorMode != nullptr) {
+        nativeObj->SetDefaultColorMode(
+            NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_PREFERENCES_DEFAULT_COLORMODE));
     }
-
     auto jsOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_PREFERENCES_OPTION);
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_PREFERENCES_OPTION));
     }
+
+    BuildFromBoolOptionJs(env, jsValue, nativeObj);
     return nativeObj;
 }
 
@@ -127,7 +164,10 @@ bool PrinterPreferencesHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_DEFAULT_ORIENTATION, PRINT_PARAM_OPT},
+        {PARAM_PREFERENCES_DEFAULT_COLORMODE, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_BORDERLESS, PRINT_PARAM_OPT},
+        {PARAM_PREFERENCES_COLLATE, PRINT_PARAM_OPT},
+        {PARAM_PREFERENCES_REVERSE, PRINT_PARAM_OPT},
         {PARAM_PREFERENCES_OPTION, PRINT_PARAM_OPT},
     };
 

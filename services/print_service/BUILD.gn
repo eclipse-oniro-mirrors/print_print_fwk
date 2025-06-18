@@ -120,6 +120,7 @@ ohos_shared_library("print_service") {
   if (cups_enable) {
     sources += [
       "src/print_cups_attribute.cpp",
+      "src/print_cups_ppd.cpp",
       "src/print_cups_client.cpp",
       "src/print_cups_wrapper.cpp",
     ]
@@ -159,6 +160,7 @@ ohos_static_library("print_service_test") {
   if (cups_enable) {
     sources += [
       "src/print_cups_attribute.cpp",
+      "src/print_cups_ppd.cpp",
       "src/print_cups_client.cpp",
       "src/print_cups_wrapper.cpp",
     ]

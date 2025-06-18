@@ -28,6 +28,8 @@ public:
 
 private:
     static bool ValidateProperty(napi_env env, napi_value object);
+    static void BuildFromBoolOptionJs(napi_env env, napi_value jsValue,
+        std::shared_ptr<PrinterPreferences> nativeObj);
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_PREFERENCES_HELPER_H

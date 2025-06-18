@@ -24,6 +24,7 @@
 namespace OHOS::Print {
 const double HUNDRED_OF_MILLIMETRE_TO_INCH = 39.37;
 const uint32_t ONE_THOUSAND_INCH = 1000;
+const uint32_t ONE_HUNDRED = 100;
 const uint32_t PAGE_SIZE_UNIT_LENGTH = 2;
 const std::string CUSTOM_PREFIX = "Custom.";
 using DiscreteId = std::string;

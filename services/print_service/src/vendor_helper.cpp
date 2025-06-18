@@ -499,6 +499,7 @@ bool UpdatePageSizeCapability(PrinterCapability &printerCap, const Print_Printer
         }
         if (capability->supportedPageSizes[i].name != nullptr) {
             if (ConvertCustomPageSizeFromPwgName(capability->supportedPageSizes[i].name, printPageSize)) {
+                printPageSize.SetId(std::string(capability->supportedPageSizes[i].id));
                 AddUniquePageSize(pageSizeList, printPageSize);
                 PRINT_HILOGD("custom page size matched = %{public}s", printPageSize.GetId().c_str());
                 continue;

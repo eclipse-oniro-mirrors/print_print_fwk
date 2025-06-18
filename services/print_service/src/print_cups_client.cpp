@@ -41,6 +41,7 @@
 #include "print_utils.h"
 #include "print_service_converter.h"
 #include "print_cups_attribute.h"
+#include "print_cups_ppd.h"
 
 namespace OHOS::Print {
 using namespace std;
@@ -81,6 +82,7 @@ const int32_t STATE_UPDATE_STEP = 5;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 static const std::string CUPS_RUN_DIR = "/data/service/el1/public/print_service/cups/run";
+static const std::string CUPS_PPD_DIR = "/data/service/el1/public/print_service/cups/datadir/model";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
 static const std::string REMOTE_PRINTER_MAKE_MODEL = "Remote Printer";
 static const std::string LOCAL_RAW_PRINTER_PPD_NAME = "Local Raw Printer";
@@ -832,7 +834,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityByUri(const std::string &printerU
         return E_PRINT_SERVER_FAILURE;
     }
     PRINT_HILOGD("get attributes success");
-    ParsePrinterAttributes(response, printerCaps);
+    ParsePrinterAttributesFromIPP(response, printerCaps);
     ippDelete(response);
     response = nullptr;
     return E_PRINT_NONE;
@@ -858,8 +860,12 @@ int32_t PrintCupsClient::QueryPrinterStatusByUri(const std::string &printerUri, 
     return E_PRINT_NONE;
 }
 
-int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printerName, PrinterCapability &printerCaps)
+int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printerName, PrinterCapability &printerCaps,
+    const std::string &ppdName)
 {
+    if (!ppdName.empty()) {
+        return QueryPrinterCapabilityFromPPDFile(printerCaps, CUPS_PPD_DIR + "/" + ppdName);
+    }
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     PRINT_HILOGI("QueryPrinterCapabilityFromPPD printerName: %{private}s", standardName.c_str());
 
@@ -880,7 +886,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printe
         return E_PRINT_SERVER_FAILURE;
     }
 
-    ParsePrinterAttributes(dinfo->attrs, printerCaps);
+    ParsePrinterAttributesFromIPP(dinfo->attrs, printerCaps);
     printerCaps.Dump();
 
     printAbility_->FreeDestInfo(dinfo);
@@ -1060,13 +1066,38 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     num_options = FillLandscapeOptions(jobParams, num_options, options);
     num_options = FillIgnoreCupsBackSideOpitons(jobParams, num_options, options);
 
-    num_options = cupsAddOption("Collate", "true", num_options, options);    // pdftopdf: Force collate print
-
+    if (jobParams->isCollate) {
+        num_options = cupsAddOption("Collate", "true", num_options, options);
+    } else {
+        num_options = cupsAddOption("Collate", "false", num_options, options);
+    }
+    if (jobParams->isReverse) {
+        num_options = cupsAddOption("OutputOrder", "Reverse", num_options, options);
+    } else {
+        num_options = cupsAddOption("OutputOrder", "Normal", num_options, options);
+    }
     std::string nic;
     if (IsIpConflict(jobParams->printerId, nic)) {
         num_options = cupsAddOption("nic", nic.c_str(), num_options, options);
     }
     num_options = FillBorderlessOptions(jobParams, num_options, options);
+    num_options = FillAdvancedOptions(jobParams, num_options, options);
+    return num_options;
+}
+
+int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
+{
+    if (jobParams->advancedOpsJson.isNull()) {
+        PRINT_HILOGE("advanced options are null.");
+        return num_options;
+    }
+
+    Json::Value::Members keys = jobParams->advancedOpsJson.getMemberNames();
+    for (auto key = keys.begin(); key != keys.end(); key++) {
+        std::string keyStr = *key;
+        std::string valueStr = jobParams->advancedOpsJson[keyStr].asString();
+        num_options = cupsAddOption(keyStr.c_str(), valueStr.c_str(), num_options, options);
+    }
     return num_options;
 }
 
@@ -1918,24 +1949,39 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
     }
 }
 
-void PrintCupsClient::UpdateBorderlessJobParameter(Json::Value& optionJson, JobParameters *params)
+void PrintCupsClient::UpdateJobParameterByBoolOption(Json::Value& optionJson, JobParameters *params)
 {
-    if (params == nullptr) {
-        PRINT_HILOGE("update borderlerss job parameter failed, params is nullptr");
-        return;
-    }
     if (optionJson.isMember("isBorderless") && optionJson["isBorderless"].isBool()) {
         bool isBorderless = optionJson["isBorderless"].asBool();
         params->borderless = isBorderless ? TRUE : FALSE;
     } else {
         params->borderless = TRUE;
     }
+
+    if (optionJson.isMember("isAutoRotate") && optionJson["isAutoRotate"].isBool()) {
+        params->isAutoRotate = optionJson["isAutoRotate"].asBool();
+    } else {
+        // default autoRotate if option dont't contains it
+        params->isAutoRotate = true;
+    }
+
+    if (optionJson.isMember("isReverse") && optionJson["isReverse"].isBool()) {
+        params->isReverse = optionJson["isReverse"].asBool();
+    } else {
+        params->isReverse = false;
+    }
+
+    if (optionJson.isMember("isCollate") && optionJson["isCollate"].isBool()) {
+        params->isCollate = optionJson["isCollate"].asBool();
+    } else {
+        params->isCollate = true;
+    }
 }
 
 void PrintCupsClient::UpdateJobParameterByOption(Json::Value& optionJson, JobParameters *params)
 {
     if (optionJson.isMember("cupsOptions") && optionJson["cupsOptions"].isString()) {
-        params->printerAttrsOption_cupsOption = optionJson["cupsOptions"].asString();
+        params->printerAttrsOptionCupsOption = optionJson["cupsOptions"].asString();
     }
 
     if (optionJson.isMember("printQuality") && optionJson["printQuality"].isString()) {
@@ -1954,6 +2000,12 @@ void PrintCupsClient::UpdateJobParameterByOption(Json::Value& optionJson, JobPar
         params->mediaType = optionJson["mediaType"].asString();
     } else {
         params->mediaType = CUPS_MEDIA_TYPE_PLAIN;
+    }
+
+    UpdateJobParameterByBoolOption(optionJson, params);
+
+    if (PrintJsonUtil::IsMember(optionJson, "advancedOptions") && optionJson["advancedOptions"].isObject()) {
+        params->advancedOpsJson = optionJson["advancedOptions"];
     }
 }
 
@@ -1982,12 +2034,6 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
         PRINT_HILOGE("new JobParameters returns nullptr");
         return params;
     }
-    if (!PrintJsonUtil::IsMember(optionJson, "isAutoRotate") || !optionJson["isAutoRotate"].isBool()) {
-        // default autoRotate if option dont't contains it
-        params->isAutoRotate = true;
-    } else {
-        params->isAutoRotate = optionJson["isAutoRotate"].asBool();
-    }
     jobInfo.DupFdList(params->fdList);
     params->serviceJobId = jobInfo.GetJobId();
     params->numCopies = jobInfo.GetCopyNumber();
@@ -2001,7 +2047,6 @@ JobParameters* PrintCupsClient::BuildJobParameters(const PrintJob &jobInfo, cons
     params->documentFormat = optionJson["documentFormat"].asString();
     params->isLandscape = jobInfo.GetIsLandscape();
     UpdateJobParameterByOption(optionJson, params);
-    UpdateBorderlessJobParameter(optionJson, params);
     params->serviceAbility = PrintServiceAbility::GetInstance();
     return params;
 }
@@ -2028,8 +2073,10 @@ void PrintCupsClient::DumpJobParameters(JobParameters* jobParams)
     PRINT_HILOGD("jobParams->color: %{public}s", jobParams->color.c_str());
     PRINT_HILOGD("jobParams->isLandscape: %{public}d", jobParams->isLandscape);
     PRINT_HILOGD("jobParams->isAutoRotate: %{public}d", jobParams->isAutoRotate);
-    PRINT_HILOGD("jobParams->printerAttrsOption_cupsOption: %{public}s",
-        jobParams->printerAttrsOption_cupsOption.c_str());
+    PRINT_HILOGD("jobParams->isReverse: %{public}d", jobParams->isReverse);
+    PRINT_HILOGD("jobParams->isCollate: %{public}d", jobParams->isCollate);
+    PRINT_HILOGD("jobParams->printerAttrsOptionCupsOption: %{public}s",
+        jobParams->printerAttrsOptionCupsOption.c_str());
 }
 
 

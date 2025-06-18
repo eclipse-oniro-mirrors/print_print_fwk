@@ -41,8 +41,14 @@ public:
     void SetDefaultPageSizeId(const std::string &defaultPageSizeId);
 
     void SetDefaultOrientation(uint32_t defaultOrientation);
+    
+    void SetDefaultColorMode(uint32_t defaultColorMode);
 
     void SetBorderless(bool borderless);
+
+    void SetDefaultCollate(bool defaultCollate);
+
+    void SetDefaultReverse(bool defaultReverse);
 
     void SetOption(const std::string &option);
 
@@ -65,12 +71,24 @@ public:
     [[nodiscard]] bool HasDefaultOrientation() const;
 
     [[nodiscard]] uint32_t GetDefaultOrientation() const;
+    
+    [[nodiscard]] bool HasDefaultColorMode() const;
+
+    [[nodiscard]] uint32_t GetDefaultColorMode() const;
 
     [[nodiscard]] bool HasBorderless() const;
 
     [[nodiscard]] bool GetBorderless() const;
 
     [[nodiscard]] bool HasOption() const;
+
+    [[nodiscard]] bool GetDefaultCollate() const;
+
+    [[nodiscard]] bool HasDefaultCollate() const;
+
+    [[nodiscard]] bool GetDefaultReverse() const;
+
+    [[nodiscard]] bool HasDefaultReverse() const;
 
     [[nodiscard]] std::string GetOption() const;
 
@@ -86,6 +104,7 @@ public:
 
 private:
     bool ReadFromParcel(Parcel &parcel);
+    void ConvertBoolDefaultJsonToPrinterPreferences(Json::Value &preferencesJson);
 
 private:
     bool hasDefaultDuplexMode_;
@@ -108,9 +127,21 @@ private:
 
     uint32_t defaultOrientation_;
 
+    bool hasDefaultColorMode_;
+
+    uint32_t defaultColorMode_;
+
     bool hasBorderless_;
 
     bool borderless_;
+
+    bool hasDefaultCollate_;
+
+    bool defaultCollate_;
+
+    bool hasDefaultReverse_;
+
+    bool defaultReverse_;
 
     bool hasOption_;
 

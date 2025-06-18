@@ -57,6 +57,7 @@ public:
     static std::string GetEventTypeWithToken(int32_t userId, int64_t pid, const std::string &type);
     static std::string GetEventType(const std::string &type);
     static bool CheckUserIdInEventType(const std::string &type, int32_t callerUserId);
+    static bool IsUsbPrinter(const std::string &printerId);
     template <typename T, typename ReadFunc>
     static bool readListFromParcel(Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc)
     {

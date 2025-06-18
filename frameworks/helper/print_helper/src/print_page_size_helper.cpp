@@ -71,7 +71,6 @@ std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJs(napi_env env, na
     PAGE_SIZE_ID ret = PrintPageSize::MatchPageSize(name);
     if (ret.empty()) {
         std::string customName = GetCustomPageNameFromMilSize(name, width, height);
-        id = customName;
         name = customName;
     }
 

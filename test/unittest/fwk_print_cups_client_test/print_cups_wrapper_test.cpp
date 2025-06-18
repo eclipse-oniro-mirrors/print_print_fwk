@@ -114,7 +114,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0001, TestSize.Level1)
     EXPECT_EQ(printCupsClient.QueryPrinterCapabilityByUri(printerUri, printerId, printerCap), E_PRINT_SERVER_FAILURE);
     EXPECT_EQ(printCupsClient.SetDefaultPrinter(printerName.c_str()), E_PRINT_SERVER_FAILURE);
     printCupsClient.QueryJobState(nullptr, nullptr);
-    EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCap), E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCap, ""), E_PRINT_SERVER_FAILURE);
     EXPECT_FALSE(printCupsClient.ModifyCupsPrinterUri(printerName, printerUri));
 }
 
@@ -500,34 +500,6 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0085, TestSize.Level1)
 }
 
 /**
- * @tc.name: PrintCupsWrapperTest_0086
- * @tc.desc: UpdateBorderlessJobParameter
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0086, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    Json::Value optionJson;
-    JobParameters *jobParams = nullptr;
-    printCupsClient.UpdateBorderlessJobParameter(optionJson, jobParams);
-    jobParams = new JobParameters();
-    printCupsClient.UpdateBorderlessJobParameter(optionJson, jobParams);
-    optionJson["isBorderless"] = false;
-    printCupsClient.UpdateBorderlessJobParameter(optionJson, jobParams);
-    EXPECT_EQ(jobParams->borderless, 0);
-
-    optionJson["isBorderless"] = true;
-    printCupsClient.UpdateBorderlessJobParameter(optionJson, jobParams);
-    EXPECT_EQ(jobParams->borderless, 1);
-
-    optionJson["documentCategory"] = 1;
-    printCupsClient.UpdateBorderlessJobParameter(optionJson, jobParams);
-    EXPECT_EQ(jobParams->borderless, optionJson["documentCategory"].asInt());
-    delete jobParams;
-}
-
-/**
  * @tc.name: PrintCupsWrapperTest_0087
  * @tc.desc: GetNextJob
  * @tc.type: FUNC
@@ -581,7 +553,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0089, TestSize.Level1)
         EXPECT_CALL(mock, CopyDestInfo(_, _)).WillRepeatedly(Return(&cupsDinfo));
         std::string printerName = "testName";
         PrinterCapability printerCaps;
-        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_NONE);
+        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps, ""), E_PRINT_NONE);
     };
     DoMockTest(testFunc);
 }
@@ -602,9 +574,9 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0090, TestSize.Level1)
         EXPECT_CALL(mock, CopyDestInfo(_, _)).WillOnce(Return(nullptr)).WillRepeatedly(Return(&cupsDinfo));
         std::string printerName = "testName";
         PrinterCapability printerCaps;
-        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_SERVER_FAILURE);
-        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_SERVER_FAILURE);
-        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps), E_PRINT_NONE);
+        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps, ""), E_PRINT_SERVER_FAILURE);
+        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps, ""), E_PRINT_SERVER_FAILURE);
+        EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCaps, ""), E_PRINT_NONE);
     };
     DoMockTest(testFunc);
 }

@@ -460,7 +460,7 @@ void SetOptionAttribute(ipp_t *response, PrinterCapability &printerCaps)
     printerCaps.SetOption(optionStr);
 }
 
-void ParsePrinterAttributes(ipp_t *response, PrinterCapability &printerCaps)
+void ParsePrinterAttributesFromIPP(ipp_t *response, PrinterCapability &printerCaps)
 {
     SetCapabilityGroupAttribute(response, printerCaps);
     ParseColorModeAttributes(response, printerCaps);
