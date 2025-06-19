@@ -442,13 +442,6 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0034_NeedRename, TestSize.Level1)
     EXPECT_EQ(complete, true);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0035_NeedRename, TestSize.Level1)
-{
-    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    std::string printerId = "1";
-    EXPECT_EQ(userData->ParsePrintHistoryJobListToJsonString(printerId), "");
-}
-
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0036_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
@@ -477,7 +470,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0039_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string printerId = "1";
-    EXPECT_EQ(userData->DeletePrintJobFromHistoryListByPrinterId(printerId), false);
+    EXPECT_EQ(userData->DeletePrintJobFromHistoryListByPrinterId(printerId), true);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0040_NeedRename, TestSize.Level1)

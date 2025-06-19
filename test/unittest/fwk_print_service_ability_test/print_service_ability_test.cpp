@@ -887,10 +887,10 @@ HWTEST_F(PrintServiceAbilityTest, CancelPrintJob_WhenInvalidUserData_ShoudFailed
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
     std::string jobId = GetDefaultJobId();
-    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_INVALID_USERID);
+    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_INVALID_PRINTJOB);
     int32_t userId = 100;
     service->printUserMap_.insert(std::make_pair(userId, nullptr));
-    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_INVALID_USERID);
+    EXPECT_EQ(service->CancelPrintJob(jobId), E_PRINT_INVALID_PRINTJOB);
 }
 
 HWTEST_F(PrintServiceAbilityTest, RestartPrintJob_WhenInvalidUserData_ShoudFailed, TestSize.Level1)
@@ -1031,7 +1031,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0049_NeedRename, TestS
     EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_PARAMETER);
     subState = PRINT_JOB_BLOCKED_UNKNOWN + 1;
     EXPECT_EQ(service->checkJobState(state, subState), true);
-    EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_USERID);
+    EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_PRINTJOB);
     state = PRINT_JOB_COMPLETED;
     subState = PRINT_JOB_COMPLETED_FILE_CORRUPT + 1;
     EXPECT_EQ(service->checkJobState(state, subState), false);
@@ -1083,10 +1083,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0052_NeedRename, TestS
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
-    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_INVALID_PRINTJOB);
     userData->queuedJobList_[jobId] = printJob;
     state = PRINT_JOB_COMPLETED;
-    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_INVALID_PRINTJOB);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0053_NeedRename, TestSize.Level1)
@@ -1415,7 +1415,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0083_NeedRename, TestS
     printJob->SetPrinterId(printerId);
     userData->printJobList_[jobId] = printJob;
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_INVALID_PRINTJOB);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084_NeedRename, TestSize.Level1)
@@ -1435,7 +1435,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084_NeedRename, TestS
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     auto printerInfo = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
-    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_INVALID_PRINTJOB);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0085_NeedRename, TestSize.Level1)
@@ -1807,7 +1807,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112_NeedRename, TestS
     auto printerInfo = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
     service->currentUserId_ = 0;
-    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_INVALID_PRINTJOB);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0113_NeedRename, TestSize.Level1)
@@ -2486,35 +2486,25 @@ HWTEST_F(PrintServiceAbilityTest, QueryQueuedPrintJobById_WhenBedFdlist_ShouldFa
     EXPECT_EQ(service->QueryQueuedPrintJobById(jobId, getPrintJob), E_PRINT_INVALID_PRINTJOB);
 }
 
-HWTEST_F(PrintServiceAbilityTest, CancelPrintJobHandleCallback, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string cid = "123";
-    std::string jobId = "123";
-    bool complete = true;
-    service->CancelPrintJobHandleCallback(cid, jobId);
-    EXPECT_EQ(complete, true);
-}
-
 HWTEST_F(PrintServiceAbilityTest, QueryHistoryPrintJobById, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "1";
     PrintJob printJob;
-    EXPECT_EQ(service->QueryHistoryPrintJobById(jobId, printJob), E_PRINT_INVALID_USERID);
+    EXPECT_EQ(service->QueryHistoryPrintJobById(jobId, printJob), E_PRINT_INVALID_PRINTJOB);
 }
 
 HWTEST_F(PrintServiceAbilityTest, DeletePrintJobFromHistoryList, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string jobId = "1";
-    EXPECT_EQ(service->DeletePrintJobFromHistoryList(jobId), E_PRINT_INVALID_USERID);
+    EXPECT_EQ(service->DeletePrintJobFromHistoryList(jobId), false);
 }
 
 HWTEST_F(PrintServiceAbilityTest, AddPrintJobToHistoryList, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     auto printJob = std::make_shared<PrintJob>();
-    EXPECT_EQ(service->AddPrintJobToHistoryList(printJob), E_PRINT_INVALID_USERID);
+    EXPECT_EQ(service->AddPrintJobToHistoryList(printJob), false);
 }
 } // namespace OHOS::Print

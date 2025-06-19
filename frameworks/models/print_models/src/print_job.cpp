@@ -454,7 +454,7 @@ std::string PrintJob::ConvertToJsonString() const
     return jsonString;
 }
 
-Json::Value PrintJob::CompleteConvertToJsonObject() const
+Json::Value PrintJob::ConvertToJsonObject() const
 {
     Json::Value jsonObject;
     jsonObject["jobId"] = jobId_;

@@ -120,7 +120,7 @@ public:
 
     std::string ConvertToJsonString() const;
 
-    Json::Value CompleteConvertToJsonObject() const;
+    Json::Value ConvertToJsonObject() const;
 private:
     void ReadFromParcel(Parcel &parcel);
     void ReadParcelFD(Parcel &parcel);
