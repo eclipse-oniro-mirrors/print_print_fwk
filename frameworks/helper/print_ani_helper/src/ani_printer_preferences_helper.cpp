@@ -32,42 +32,26 @@ ani_object PrinterPreferencesAniHelper::CreatePrinterPreferences(ani_env *env, c
 {
     PRINT_HILOGI("enter PrinterPreferences");
 
-    ani_object obj = {};
     static const char *className = "L@ohos/print/print/PrinterPreferencesImpl;";
-    ani_class cls;
-    if (ANI_OK != env->FindClass(className, &cls)) {
-        PRINT_HILOGE("[ANI] find class fail");
-        return obj;
-    }
-
-    ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor)) {
-        PRINT_HILOGE("[ANI] find method fail");
-        return obj;
-    }
-
-    if (ANI_OK != env->Object_New(cls, ctor, &obj)) {
-        PRINT_HILOGE("Create Object Failed");
-        return obj;
-    }
+    ani_object obj = CreateObject(env, nullptr, className);
 
     ani_enum_item printDuplexModeEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrintDuplexMode;",
                                                           static_cast<int32_t>(preferences.GetDefaultDuplexMode()));
-    SetFieldEnum(env, obj, "<set>defaultDuplexMode", "L@ohos/print/print/PrintDuplexMode;:V", printDuplexModeEnum);
+    SetEnumProperty(env, obj, "<set>defaultDuplexMode", "L@ohos/print/print/PrintDuplexMode;:V", printDuplexModeEnum);
 
     ani_enum_item printQualityEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrintQuality;",
                                                        static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
-    SetFieldEnum(env, obj, "<set>defaultPrintQuality", "L@ohos/print/print/PrintQuality;:V", printQualityEnum);
+    SetEnumProperty(env, obj, "<set>defaultPrintQuality", "L@ohos/print/print/PrintQuality;:V", printQualityEnum);
 
     ani_enum_item orientationModeEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrintOrientationMode;",
                                                           static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
-    SetFieldEnum(env, obj, "<set>defaultOrientation", "L@ohos/print/print/PrintOrientationMode;:V",
-                 orientationModeEnum);
+    SetEnumProperty(env, obj, "<set>defaultOrientation", "L@ohos/print/print/PrintOrientationMode;:V",
+        orientationModeEnum);
 
-    SetFieldString(env, cls, obj, PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE, preferences.GetDefaultMediaType());
-    SetFieldString(env, cls, obj, PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID, preferences.GetDefaultPageSizeId());
-    SetFieldBoolean(env, cls, obj, PARAM_PREFERENCES_BORDERLESS, preferences.GetBorderless());
-    SetFieldString(env, cls, obj, PARAM_PREFERENCES_OPTION, preferences.GetOption());
+    SetStringProperty(env, obj, PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE, preferences.GetDefaultMediaType());
+    SetStringProperty(env, obj, PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID, preferences.GetDefaultPageSizeId());
+    SetBoolProperty(env, obj, PARAM_PREFERENCES_BORDERLESS, preferences.GetBorderless());
+    SetStringProperty(env, obj, PARAM_PREFERENCES_OPTION, preferences.GetOption());
 
     return obj;
 }
@@ -76,44 +60,60 @@ PrinterPreferences PrinterPreferencesAniHelper::ParsePreferences(ani_env *env, a
 {
     PRINT_HILOGI("enter ParsePrinterInfo");
     PrinterPreferences preferences;
+    ParseStringPreferences(env, preferences, preferencesRef);
+    ParseRefPreferences(env, preferences, preferencesRef);
+    return preferences;
+}
 
-    ani_int duplexIndex;
-    if (GetIntByName(env, preferencesRef, PARAM_PREFERENCES_DEFAULT_DEPLEX_MODE, duplexIndex)) {
-        uint32_t duplexModeValue = GetEnumValueInt(env, "PrintDuplexMode", duplexIndex);
-        preferences.SetDefaultDuplexMode(duplexModeValue);
-    }
-
-    ani_int printQualityIndex;
-    if (GetIntByName(env, preferencesRef, PARAM_PREFERENCES_DEFAULT_PRINT_QUALITY, printQualityIndex)) {
-        uint32_t printQualityValue = GetEnumValueInt(env, "PrintQuality", printQualityIndex);
-        preferences.SetDefaultDuplexMode(printQualityValue);
-    }
-
-    ani_int orientationIndex;
-    if (GetIntByName(env, preferencesRef, PARAM_PREFERENCES_DEFAULT_ORIENTATION, orientationIndex)) {
-        uint32_t orientationValue = GetEnumValueInt(env, "PrintOrientationMode", orientationIndex);
-        preferences.SetDefaultOrientation(orientationValue);
-    }
-
+void PrinterPreferencesAniHelper::ParseStringPreferences(ani_env *env, PrinterPreferences& preferences,
+    ani_ref preferencesRef)
+{
     std::string defaultMediaType;
-    if (GetStringOrUndefined(env, preferencesRef, PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE, defaultMediaType)) {
+    if (GetStringProperty(env, static_cast<ani_object>(preferencesRef),
+        PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE, defaultMediaType)) {
         preferences.SetDefaultMediaType(defaultMediaType);
     }
-
     std::string defaultPageSizeId;
-    if (GetStringOrUndefined(env, preferencesRef, PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID, defaultPageSizeId)) {
+    if (GetStringProperty(env, static_cast<ani_object>(preferencesRef),
+        PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID, defaultPageSizeId)) {
         preferences.SetDefaultPageSizeId(defaultPageSizeId);
     }
-
-    bool borderless = GetBoolOrUndefined(env, static_cast<ani_object>(preferencesRef), PARAM_PREFERENCES_BORDERLESS);
-    preferences.SetBorderless(borderless);
-
+    bool borderless = false;
+    if (GetBoolProperty(env, static_cast<ani_object>(preferencesRef),
+        PARAM_PREFERENCES_BORDERLESS, borderless)) {
+        preferences.SetBorderless(borderless);
+    }
     std::string options;
-    if (GetStringOrUndefined(env, preferencesRef, PARAM_PREFERENCES_OPTION, options)) {
+    if (GetStringProperty(env, static_cast<ani_object>(preferencesRef),
+        PARAM_PREFERENCES_OPTION, options)) {
         preferences.SetOption(options);
     }
+}
 
-    return preferences;
+void PrinterPreferencesAniHelper::ParseRefPreferences(ani_env *env, PrinterPreferences& preferences,
+    ani_ref preferencesRef)
+{
+    ani_ref duplexEnum;
+    uint32_t duplexModeValue = 0;
+    if (GetRefProperty(env, static_cast<ani_object>(preferencesRef),
+        PARAM_PREFERENCES_DEFAULT_DEPLEX_MODE, duplexEnum) &&
+        GetEnumValueInt(env, static_cast<ani_enum_item>(duplexEnum), duplexModeValue)) {
+        preferences.SetDefaultDuplexMode(duplexModeValue);
+    }
+    ani_ref printQualityEnum;
+    uint32_t printQualityValue = 0;
+    if (GetRefProperty(env, static_cast<ani_object>(preferencesRef),
+        PARAM_PREFERENCES_DEFAULT_PRINT_QUALITY, printQualityEnum) &&
+        GetEnumValueInt(env, static_cast<ani_enum_item>(printQualityEnum), printQualityValue)) {
+        preferences.SetDefaultDuplexMode(printQualityValue);
+    }
+    ani_ref orientationEnum;
+    uint32_t orientationValue = 0;
+    if (GetRefProperty(env, static_cast<ani_object>(preferencesRef),
+        PARAM_PREFERENCES_DEFAULT_ORIENTATION, orientationEnum) &&
+        GetEnumValueInt(env, static_cast<ani_enum_item>(orientationEnum), orientationValue)) {
+        preferences.SetDefaultOrientation(orientationValue);
+    }
 }
 
 bool PrinterPreferencesAniHelper::ValidateProperty(ani_env *env, ani_ref preferencesRef)

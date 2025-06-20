@@ -53,10 +53,10 @@ ohos_shared_library("print_ani") {
   ]
   sources = [
     "src/print_ani.cpp",
-    "src/print_entry.cpp",
     "src/fd_list_wrapper.cpp",
     "src/print_ets_ui_callback.cpp",
     "src/print_ani_callback.cpp",
+    "src/ani_print_task.cpp",
     "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_attributes_helper.cpp",
     "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_extension_info_helper.cpp",
     "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_job_helper.cpp",
@@ -68,6 +68,7 @@ ohos_shared_library("print_ani") {
     "${print_path}/frameworks/helper/print_ani_helper/src/ani_printer_capability_helper.cpp",
     "${print_path}/frameworks/helper/print_ani_helper/src/ani_printer_info_helper.cpp",
     "${print_path}/frameworks/helper/print_ani_helper/src/ani_printer_preferences_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_task_helper.cpp",
     "${print_path}/frameworks/ani_util/src/print_base_ani_util.cpp",
     "${print_path}/frameworks/ani_util/src/print_callback_ani_util.cpp",
     "${print_path}/frameworks/ani_util/src/print_object_ani_util.cpp",

@@ -23,6 +23,7 @@ namespace {
 const char* START_PAGE_STR = "startPage";
 const char* END_PAGE_STR = "endPage";
 const char* PAGES_STR = "pages";
+const char* CLASS_NAME = "L@ohos/print/print/PrinterRangeImp;";
 }
 
 namespace OHOS::Print {
@@ -31,18 +32,18 @@ PrintRange AniPrintRangeHelper::ParsePrinterRange(ani_env *env, ani_object range
     PRINT_HILOGI("enter ParsePrinterRange");
     PrintRange range;
     ani_double startPageAni;
-    if (GetDoubleOrUndefined(env, rangeAni, START_PAGE_STR, startPageAni)) {
+    if (GetDoubleProperty(env, rangeAni, START_PAGE_STR, startPageAni)) {
         PRINT_HILOGD("The parsed colorMode part %{public}d", static_cast<uint32_t>(startPageAni));
         range.SetStartPage(static_cast<uint32_t>(startPageAni));
     }
     ani_double endPageAni;
-    if (GetDoubleOrUndefined(env, rangeAni, END_PAGE_STR, endPageAni)) {
+    if (GetDoubleProperty(env, rangeAni, END_PAGE_STR, endPageAni)) {
         PRINT_HILOGD("The parsed colorMode part %{public}d", static_cast<uint32_t>(endPageAni));
         range.SetEndPage(static_cast<uint32_t>(endPageAni));
     }
 
     std::vector<ani_double> pagesAni;
-    if (GetDoubleArrayOrUndefined(env, rangeAni, PAGES_STR, pagesAni)) {
+    if (GetDoubleArrayProperty(env, rangeAni, PAGES_STR, pagesAni)) {
         std::vector<uint32_t> pages;
         for (auto page : pagesAni) {
             pages.push_back(static_cast<uint32_t>(page));
@@ -55,15 +56,13 @@ PrintRange AniPrintRangeHelper::ParsePrinterRange(ani_env *env, ani_object range
 ani_object AniPrintRangeHelper::CreatePrinterRange(ani_env *env, const PrintRange& printRange)
 {
     PRINT_HILOGI("enter CreatePrinterRange");
-    static const char *CLASS_NAME = "L@ohos/print/PrinterRange;";
-    ani_class cls;
-    ani_object obj = CreateObject(env, CLASS_NAME, cls);
+    ani_object obj = CreateObject(env, nullptr, CLASS_NAME);
 
-    SetFieldDouble(env, cls, obj, START_PAGE_STR, static_cast<double>(printRange.GetStartPage()));
-    SetFieldDouble(env, cls, obj, END_PAGE_STR, static_cast<double>(printRange.GetEndPage()));
+    SetDoubleProperty(env, obj, START_PAGE_STR, static_cast<double>(printRange.GetStartPage()));
+    SetDoubleProperty(env, obj, END_PAGE_STR, static_cast<double>(printRange.GetEndPage()));
     std::vector<uint32_t> pages;
     printRange.GetPages(pages);
-    SetFieldDoubleArray(env, cls, obj, PAGES_STR, std::vector<double>(pages.begin(), pages.end()));
+    SetDoubleArrayProperty(env, obj, PAGES_STR, std::vector<double>(pages.begin(), pages.end()));
     return obj;
 }
 }  // namespace OHOS::Print

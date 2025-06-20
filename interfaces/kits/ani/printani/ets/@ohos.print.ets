@@ -117,6 +117,13 @@ export default namespace print {
         height: number;
     }
 
+    export class PrintPageSizeImp implements PrintPageSize {
+        id: string = "";
+        name: string = "";
+        width: number = 0;
+        height: number = 0;
+    }
+
     export enum PrintPageType {
         PAGE_ISO_A3 = 0,
         PAGE_ISO_A4 = 1,
@@ -226,6 +233,19 @@ export default namespace print {
         options?: Object;
     }
 
+    export class PrinterInformationImp implements PrinterInformation {
+        printerId: string = "";
+        printerName: string = "";
+        printerStatus: PrinterStatus = PrinterStatus.PRINTER_BUSY;
+        description?: string = undefined;
+        capability?: PrinterCapability = undefined;
+        uri?: string = undefined;
+        printerMake?: string = "";
+        preferences?: PrinterPreferences = undefined;
+        alias?: string = undefined;
+        options?: Object = undefined;
+    }
+
     export interface PrinterCapability {
         colorMode: number;
         duplexMode: number;
@@ -257,6 +277,13 @@ export default namespace print {
         right?: number;
     }
 
+    export class PrintMarginImp implements PrintMargin {
+        top?: number = undefined;
+        bottom?: number = undefined;
+        left?: number = undefined;
+        right?: number = undefined;
+    }
+
     export interface PrintResolution {
         id: string;
         horizontalDpi: number;
@@ -269,9 +296,20 @@ export default namespace print {
         pages?: Array<number>;
     }
 
+    export class PrinterRangeImp implements PrinterRange {
+        startPage?: number = undefined;
+        endPage?: number = undefined;
+        pages?: Array<number> = undefined;
+    }
+
     export interface PreviewAttribute {
         previewRange: PrinterRange;
         result?: number;
+    }
+
+    export class PreviewAttributeImp implements PreviewAttribute {
+        previewRange: PrinterRange;
+        result?: number = undefined;
     }
 
     export interface PrintJob {
@@ -292,6 +330,33 @@ export default namespace print {
         options?: Object;
     }
 
+    export class PrintJobImp implements PrintJob {
+        fdList: Array<number> = [];
+        jobId: string = "";
+        printerId: string = "";
+        jobState: PrintJobState = PrintJobState.PRINT_JOB_BLOCKED;
+        jobSubstate: PrintJobSubState = PrintJobSubState.PRINT_JOB_COMPLETED_SUCCESS;
+        copyNumber: number = 0;
+        pageRange: PrinterRange = {
+            startPage: undefined,
+            endPage: undefined,
+            pages: undefined
+        };
+        isSequential: boolean = false;
+        pageSize: PrintPageSize = {
+            id: "",
+            name: "",
+            width: 0,
+            height: 0
+        };
+        isLandscape: boolean = false;
+        colorMode: number = 0;
+        duplexMode: number = 0;
+        margin?: PrintMargin;
+        preview?: PreviewAttribute;
+        options?: Object;
+    }
+
     export interface PrinterInfo {
         printerId: string;
         printerName: string;
@@ -303,18 +368,13 @@ export default namespace print {
     }
 
     class PrinterInfoImpl implements PrinterInfo {
-        printerId: string;
-        printerName: string;
-        printerState: PrinterState;
-        printerStatus: PrinterStatus;
-        printerIcon?: number;
-        description?: string;
-        capability?: PrinterCapability;
-        uri?: string;
-        printerMake?: string;
-        preferences?: PrinterPreferences;
-        alias?: string;
-        options?: Object;
+        printerId: string = "";
+        printerName: string = "";
+        printerState: PrinterState = PrinterState.PRINTER_ADDED;
+        printerIcon?: number = undefined;
+        description?: string = undefined;
+        capability?: PrinterCapability = undefined;
+        options?: Object = undefined;
     }
 
     interface PrinterPreferences {
@@ -394,6 +454,10 @@ export default namespace print {
     native function onJobStateChangeNative(type: 'jobStateChange', callback: JobStateChangeWrapper) : int;
 
     native function onExtInfoChangeNative(type: 'extInfoChange', callback: ExtInfoChangeWrapper) : int;
+    
+    native function onPrintTask(type: string, callback: CallbackWrapper<void>, task : PrintTaskImpl) : void;
+
+    native function offPrintTask(type: string, callback: CallbackWrapper<void>, task : PrintTaskImpl) : void;
 
     native function offNative(type: string, callback: CallbackWrapper<void>) : int;
     
@@ -415,6 +479,10 @@ export default namespace print {
 
     native function requestPrintPreviewNative(jobInfo: PrintJob, callback: CallbackWrapper<number>): void;
 
+    native function requestPrintPreviewCallbackNative(jobInfo: PrintJob, callback: CallbackWrapper<number>): void;
+
+    native function requestPrintPreviewAsyncCallbackNative(jobInfo: PrintJob, callback: AsyncCallbackWrapper<number>): void;
+
     native function addPrintersNative(printers: Array<PrinterInfo>, callback: AsyncCallbackWrapper<void>): void;
 
     native function removePrintersNative(printerIds: Array<string>, callback: AsyncCallbackWrapper<void>): void;
@@ -433,7 +501,7 @@ export default namespace print {
 
     native function queryPrintJobByIdNative(jobId: string, callback: AsyncCallbackWrapper<PrintJob>): void;
 
-    native function startGettingPrintFileNative(jobId: string, printAttributes: PrintAttributes, fd: number, callback: AsyncCallbackWrapper<void>): void;
+    native function startGettingPrintFileNative(jobId: string, printAttributes: PrintAttributes, fd: number, callback: CallbackWrapper<PrintFileCreationState>): void;
 
     native function notifyPrintServiceNative(jobId: string, type:string, callback: AsyncCallbackWrapper<void>): void;
 
@@ -458,10 +526,24 @@ export default namespace print {
         off(type: 'block' | 'succeed' | 'fail' | 'cancel', callback?: Callback<void>): void;
     }
 
-    class PrintTaskImpl implements PrintTask {
+    export class PrintTaskImpl implements PrintTask {
+        private  nativeTask: long = 0;
+        constructor(task: long) {
+            if(this.nativeTask == 0){
+                this.nativeTask = task;
+            }
+        }
         on(type: 'block' | 'succeed' | 'fail' | 'cancel', callback: Callback<void>): void {
+            let myCall = new CallbackWrapper<void>(callback);
+            onPrintTask(type, myCall, this);
         }
         off(type: 'block' | 'succeed' | 'fail' | 'cancel', callback?: Callback<void>): void {
+            let myCall = new CallbackWrapper<void>(() => {});
+            
+            if (callback !== undefined) {
+                myCall = new CallbackWrapper<void>(callback);
+            }
+            offPrintTask(type, myCall, this);
         }
     }
 
@@ -537,7 +619,7 @@ export default namespace print {
         return p;
     }
 
-    export function queryAllPrinterExtensionInfos(callback: AsyncCallback<Array<PrinterExtensionInfo>, void>): void {
+    export function queryAllPrinterExtensionInfos(callback: AsyncCallback<Array<PrinterExtensionInfo>>): void {
         let myCall = new AsyncCallbackArrayWrapper<PrinterExtensionInfo>(callback);
         taskpool.execute((): void => {
             queryAllPrinterExtensionInfosNative(myCall);
@@ -577,6 +659,7 @@ export default namespace print {
                     reject(err);
                 }
             });
+
             taskpool.execute((): void => {
                 startDiscoverPrinterNative(extensionList, myCall);
             });
@@ -718,22 +801,27 @@ export default namespace print {
     export function requestPrintPreview(jobInfo: PrintJob, callback: Callback<number>): void {
         let myCall = new CallbackWrapper<number>(callback);
         taskpool.execute((): void => {
-            requestPrintPreviewNative(jobInfo, myCall);
+            requestPrintPreviewCallbackNative(jobInfo, myCall);
         });
     }
 
     export function requestPrintPreview(jobInfo: PrintJob): Promise<number> {
-        return new Promise<number>((resolve) => {
-            let myCall = new CallbackWrapper<number>((data) => {
-                resolve(data);
+        return new Promise<number>((resolve: (data:number | undefined)=>void, reject:(err: BusinessError<void> | null)=>void):void => {
+            let myCall = new AsyncCallbackWrapper<number>((err, data) => {
+                if (err === null || err.code == 0) {
+                    resolve(data);
+                } else {
+                    reject(err);
+                }
             });
             taskpool.execute((): void => {
-                requestPrintPreviewNative(jobInfo, myCall);
+                requestPrintPreviewAsyncCallbackNative(jobInfo, myCall);
             });
         });
     }
 
     
+
     export class PrinterStateChangeWrapper {
         private myFun_: (state: PrinterState, info: PrinterInfo) => void;
 
@@ -1012,27 +1100,13 @@ export default namespace print {
         });
     }
 
-    export function startGettingPrintFile(jobId: string, printAttributes: PrintAttributes, fd: number, callback: AsyncCallback<void>): void {
-        let myCall = new AsyncCallbackWrapper<void>(callback);
+    export function startGettingPrintFile(jobId: string, printAttributes: PrintAttributes, fd: number, callback: Callback<PrintFileCreationState>): void {
+        let myCall = new CallbackWrapper<PrintFileCreationState>(callback);
         taskpool.execute((): void => {
             startGettingPrintFileNative(jobId, printAttributes, fd, myCall);
         });
     }
 
-    export function startGettingPrintFile(jobId: string, printAttributes: PrintAttributes, fd: number): Promise<void> {
-        return new Promise<void>((resolve: (data:undefined)=>void, reject:(err: BusinessError<void> | null)=>void):void => {
-            let myCall = new AsyncCallbackWrapper<void>((err : BusinessError<void> | null) => {
-                if (err === null || err.code == 0) {
-                    resolve(undefined);
-                } else {
-                    reject(err);
-                }
-            });
-            taskpool.execute((): void => {
-                startGettingPrintFileNative(jobId, printAttributes, fd, myCall);
-            });
-        });
-    }
 
     export function notifyPrintService(jobId: string, type: string, callback: AsyncCallback<void>): void {
         let myCall = new AsyncCallbackWrapper<void>(callback);

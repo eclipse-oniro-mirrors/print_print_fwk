@@ -25,8 +25,11 @@ class PrinterPreferencesAniHelper {
 public:
     static PrinterPreferences ParsePreferences(ani_env *env, ani_ref preferences);
     static ani_object CreatePrinterPreferences(ani_env *env, const PrinterPreferences &preferences);
-
 private:
+    static void ParseStringPreferences(ani_env *env, PrinterPreferences& preferences,
+        ani_ref preferencesRef);
+    static void ParseRefPreferences(ani_env *env, PrinterPreferences& preferences,
+        ani_ref preferencesRef);
     static bool ValidateProperty(ani_env *env, ani_ref preferences);
 };
 }  // namespace OHOS::Print

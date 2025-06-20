@@ -25,9 +25,7 @@ const char* COPY_NUMBER_STR = "copyNumber";
 const char* PAGE_RANGE_STR = "pageRange";
 const char* PAGE_SIZE_STR = "pageSize";
 const char* DIRECTION_MODE_STR = "directionMode";
-const char* PRINT_DIRECTION_MODE_STR = "PrintDirectionMode";
 const char* COLOR_MODE_STR = "colorMode";
-const char* PRINT_COLOR_MODE_STR = "PrintColorMode";
 const char* DUPLEX_MODE_STR = "duplexMode";
 }
 namespace OHOS::Print {
@@ -36,34 +34,36 @@ PrintAttributes AniPrintAttributesHelper::ParsePrintAttributes(ani_env *env, ani
     PRINT_HILOGI("enter ParsePrintAttributes");
     PrintAttributes attrs;
     ani_double copyNumber;
-    if (GetDoubleOrUndefined(env, attributes, COPY_NUMBER_STR, copyNumber)) {
+    if (GetDoubleProperty(env, attributes, COPY_NUMBER_STR, copyNumber)) {
         attrs.SetCopyNumber(static_cast<uint32_t>(copyNumber));
     }
     ani_ref pageRangeRef;
-    if (GetRefFieldByName(env, attributes, PAGE_RANGE_STR, pageRangeRef)) {
+    if (GetRefProperty(env, attributes, PAGE_RANGE_STR, pageRangeRef)) {
         PrintRange pageRange = AniPrintRangeHelper::ParsePrinterRange(env, static_cast<ani_object>(pageRangeRef));
         attrs.SetPageRange(pageRange);
     }
     ani_ref pageSizeRef;
-    if (GetRefFieldByName(env, attributes, PAGE_SIZE_STR, pageSizeRef)) {
+    if (GetRefProperty(env, attributes, PAGE_SIZE_STR, pageSizeRef)) {
         PrintPageSize pageSize = AniPrintPageSizeHelper::ParsePrintPageSize(env, static_cast<ani_object>(pageSizeRef));
         attrs.SetPageSize(pageSize);
     }
-    ani_double directionMode;
-    if (GetDoubleOrUndefined(env, attributes, DIRECTION_MODE_STR, directionMode)) {
-        uint32_t directionModeValue = GetEnumValueInt(env, PRINT_DIRECTION_MODE_STR,
-            static_cast<ani_int>(directionMode));
+    ani_ref directionModeEnum = nullptr;
+    uint32_t directionModeValue = 0;
+    if (GetRefProperty(env, attributes, DIRECTION_MODE_STR, directionModeEnum) &&
+        GetEnumValueInt(env, static_cast<ani_enum_item>(directionModeEnum), directionModeValue)) {
         attrs.SetDirectionMode(directionModeValue);
     }
-    ani_double colorMode;
-    if (GetDoubleOrUndefined(env, attributes, COLOR_MODE_STR, colorMode)) {
-        uint32_t colorModeValue = GetEnumValueInt(env, PRINT_COLOR_MODE_STR, static_cast<ani_int>(colorMode));
+    ani_ref colorModeEnum = nullptr;
+    uint32_t colorModeValue = 0;
+    if (GetRefProperty(env, attributes, COLOR_MODE_STR, colorModeEnum) &&
+        GetEnumValueInt(env, static_cast<ani_enum_item>(colorModeEnum), colorModeValue)) {
         attrs.SetColorMode(colorModeValue);
     }
-    ani_double duplexMode;
-    if (GetDoubleOrUndefined(env, attributes, DUPLEX_MODE_STR, duplexMode)) {
-        uint32_t colorModeValue = GetEnumValueInt(env, DUPLEX_MODE_STR, static_cast<ani_int>(duplexMode));
-        attrs.SetColorMode(colorModeValue);
+    ani_ref duplexModeEnum = nullptr;
+    uint32_t duplexModeValue = 0;
+    if (GetRefProperty(env, attributes, DUPLEX_MODE_STR, duplexModeEnum) &&
+        GetEnumValueInt(env, static_cast<ani_enum_item>(duplexModeEnum), duplexModeValue)) {
+        attrs.SetColorMode(duplexModeValue);
     }
     return attrs;
 }

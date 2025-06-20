@@ -28,15 +28,15 @@ PrintResolution AniPrintResolutionHelper::ParsePrintResolution(ani_env *env, ani
     PRINT_HILOGI("enter ParsePrintResolution");
     PrintResolution resolution;
     std::string id;
-    if (GetStringOrUndefined(env, resolutionAni, ID, id)) {
+    if (GetStringProperty(env, resolutionAni, ID, id)) {
         resolution.SetId(id);
     }
-    int32_t horizontalDpi = 0;
-    if (GetIntByName(env, resolutionAni, HORIZONTAL_DPI, horizontalDpi)) {
+    double horizontalDpi = 0;
+    if (GetDoubleProperty(env, resolutionAni, HORIZONTAL_DPI, horizontalDpi)) {
         resolution.SetHorizontalDpi(static_cast<uint32_t>(horizontalDpi));
     }
-    int32_t verticalDpi = 0;
-    if (GetIntByName(env, resolutionAni, VERTICAL_DPI, verticalDpi)) {
+    double verticalDpi = 0;
+    if (GetDoubleProperty(env, resolutionAni, VERTICAL_DPI, verticalDpi)) {
         resolution.SetVerticalDpi(static_cast<uint32_t>(verticalDpi));
     }
     return resolution;

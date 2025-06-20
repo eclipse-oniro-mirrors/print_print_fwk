@@ -22,11 +22,15 @@
 #include "print_callback_ani_util.h"
 
 namespace OHOS::Print {
-PrintAniCallback::PrintAniCallback(ani_vm *vm, ani_object aniCallback)
+PrintAniCallback::PrintAniCallback(ani_env *env, ani_object aniCallback)
 {
+    if (env == nullptr || aniCallback == nullptr) {
+        PRINT_HILOGE("nullptr error");
+        return;
+    }
+    ani_vm *vm = nullptr;
+    env->GetVM(&vm);
     aniVm_ = vm;
-    ani_env *env;
-    aniVm_->GetEnv(ANI_VERSION_1, &env);
     env->GlobalReference_Create(reinterpret_cast<ani_ref>(aniCallback), &aniCallback_);
 }
 

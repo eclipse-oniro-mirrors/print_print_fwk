@@ -23,23 +23,22 @@
 namespace {
 const char* PREVIEW_RANGE_STR = "previewRange";
 const char* RESULT_STR = "result";
-const char *CLASS_NAME = "L@ohos/print/PrintPreviewAttribute;";
+const char *CLASS_NAME = "L@ohos/print/print/PreviewAttributeImp;";
 }
 
 namespace OHOS::Print {
 ani_object AniPrintPreviewAttributeHelper::CreatePreviewAttribute(ani_env *env, const PrintPreviewAttribute& preview)
 {
     PRINT_HILOGI("enter CreatePreviewAttribute");
-    ani_class cls;
-    ani_object obj = CreateObject(env, CLASS_NAME, cls);
+    ani_object obj = CreateObject(env, nullptr, CLASS_NAME);
 
     PrintRange previewRange;
     preview.GetPreviewRange(previewRange);
     ani_ref previewRangeRef = AniPrintRangeHelper::CreatePrinterRange(env, previewRange);
-    SetFieldRef(env, cls, obj, PREVIEW_RANGE_STR, previewRangeRef);
+    SetRefProperty(env, obj, PREVIEW_RANGE_STR, previewRangeRef);
 
     if (preview.HasResult()) {
-        SetFieldInt(env, cls, obj, RESULT_STR, static_cast<int32_t>(preview.GetResult()));
+        SetDoubleProperty(env, obj, RESULT_STR, static_cast<double>(preview.GetResult()));
     }
 
     return obj;
@@ -50,12 +49,12 @@ PrintPreviewAttribute AniPrintPreviewAttributeHelper::ParsePreviewAttribute(ani_
     PrintPreviewAttribute preview;
 
     ani_ref previewRangeRef;
-    if (GetRefFieldByName(env, previewAttribute, PREVIEW_RANGE_STR, previewRangeRef)) {
+    if (GetRefProperty(env, previewAttribute, PREVIEW_RANGE_STR, previewRangeRef)) {
         preview.SetPreviewRange(AniPrintRangeHelper::ParsePrinterRange(env, static_cast<ani_object>(previewRangeRef)));
     }
 
     ani_double result;
-    if (GetDoubleOrUndefined(env, previewAttribute, RESULT_STR, result)) {
+    if (GetDoubleProperty(env, previewAttribute, RESULT_STR, result)) {
         preview.SetResult(static_cast<uint32_t>(result));
     }
 

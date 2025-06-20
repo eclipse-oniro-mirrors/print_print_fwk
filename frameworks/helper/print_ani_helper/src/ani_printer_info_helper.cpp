@@ -41,22 +41,24 @@ PrinterInfo PrinterInfoAniHelper::ParsePrinterInfo(ani_env *env, ani_ref printer
     PRINT_HILOGI("enter ParsePrinterInfo");
     PrinterInfo info;
     ParsePrinterInfoStringField(env, printerInfo, info);
-    ani_int stateIndex;
-    if (GetIntByName(env, printerInfo, PARAM_INFO_PRINTERSTATE, stateIndex)) {
-        uint32_t stateValue = GetEnumValueInt(env, "PrinterState", stateIndex);
+    ani_ref stateEnum = nullptr;
+    uint32_t stateValue = 0;
+    if (GetRefProperty(env, static_cast<ani_object>(printerInfo), PARAM_INFO_PRINTERSTATE, stateEnum) &&
+        GetEnumValueInt(env, static_cast<ani_enum_item>(stateEnum), stateValue)) {
         info.SetPrinterState(stateValue);
     }
-    ani_int statusIndex;
-    if (GetIntByName(env, printerInfo, PARAM_INFO_PRINTER_STATUS, statusIndex)) {
-        uint32_t statusValue = GetEnumValueInt(env, "PrinterStatus", statusIndex);
+    ani_ref statusEnum;
+    uint32_t statusValue = 0;
+    if (GetRefProperty(env, static_cast<ani_object>(printerInfo), PARAM_INFO_PRINTER_STATUS, statusEnum) &&
+        GetEnumValueInt(env, static_cast<ani_enum_item>(statusEnum), statusValue)) {
         info.SetPrinterState(statusValue);
     }
     double printerIcon;
-    if (GetDoubleOrUndefined(env, static_cast<ani_object>(printerInfo), PARAM_INFO_PRINTERICON, printerIcon)) {
+    if (GetDoubleProperty(env, static_cast<ani_object>(printerInfo), PARAM_INFO_PRINTERICON, printerIcon)) {
         info.SetPrinterIcon(static_cast<uint32_t>(printerIcon));
     }
     ani_ref capabilityRef;
-    if (GetRefFieldByName(env, printerInfo, PARAM_INFO_CAPABILITY, capabilityRef)) {
+    if (GetRefProperty(env,  static_cast<ani_object>(printerInfo), PARAM_INFO_CAPABILITY, capabilityRef)) {
         PrinterCapability capability = PrinterCapabilityAniHelper::ParsePrinterCapability(env, capabilityRef);
         info.SetCapability(capability);
     }
@@ -66,31 +68,31 @@ PrinterInfo PrinterInfoAniHelper::ParsePrinterInfo(ani_env *env, ani_ref printer
 void PrinterInfoAniHelper::ParsePrinterInfoStringField(ani_env *env, ani_ref printerInfoAni, PrinterInfo& printerInfo)
 {
     std::string printerId;
-    if (GetStringOrUndefined(env, printerInfoAni, PARAM_INFO_PRINTERID, printerId)) {
+    if (GetStringProperty(env, static_cast<ani_object>(printerInfoAni), PARAM_INFO_PRINTERID, printerId)) {
         printerInfo.SetPrinterId(printerId);
     }
     std::string printerName;
-    if (GetStringOrUndefined(env, printerInfoAni, PARAM_INFO_PRINTERNAME, printerName)) {
+    if (GetStringProperty(env, static_cast<ani_object>(printerInfoAni), PARAM_INFO_PRINTERNAME, printerName)) {
         printerInfo.SetPrinterName(printerName);
     }
     std::string description;
-    if (GetStringOrUndefined(env, printerInfoAni, PARAM_INFO_DESCRIPTION, description)) {
+    if (GetStringProperty(env, static_cast<ani_object>(printerInfoAni), PARAM_INFO_DESCRIPTION, description)) {
         printerInfo.SetDescription(description);
     }
     std::string uri;
-    if (GetStringOrUndefined(env, printerInfoAni, PARAM_INFO_URI, uri)) {
+    if (GetStringProperty(env, static_cast<ani_object>(printerInfoAni), PARAM_INFO_URI, uri)) {
         printerInfo.SetUri(uri);
     }
     std::string printerMake;
-    if (GetStringOrUndefined(env, printerInfoAni, PARAM_INFO_PRINTER_MAKE, printerMake)) {
+    if (GetStringProperty(env, static_cast<ani_object>(printerInfoAni), PARAM_INFO_PRINTER_MAKE, printerMake)) {
         printerInfo.SetPrinterMake(printerMake);
     }
     std::string alias;
-    if (GetStringOrUndefined(env, printerInfoAni, PARAM_INFO_ALIAS, uri)) {
+    if (GetStringProperty(env, static_cast<ani_object>(printerInfoAni), PARAM_INFO_ALIAS, uri)) {
         printerInfo.SetUri(uri);
     }
     std::string options;
-    if (GetStringOrUndefined(env, printerInfoAni, PARAM_JOB_OPTION, options)) {
+    if (GetStringProperty(env, static_cast<ani_object>(printerInfoAni), PARAM_JOB_OPTION, options)) {
         printerInfo.SetOption(options);
     }
 }
@@ -99,46 +101,39 @@ PrinterInfo PrinterInfoAniHelper::ParsePrinterInformation(ani_env *env, ani_obje
 {
     PRINT_HILOGI("enter AniPrinterInConvert");
     PrinterInfo info;
-    const char* printerIdStr = "printerId";
     std::string printerId;
-    if (GetStringOrUndefined(env, printerInformation, printerIdStr, printerId)) {
+    if (GetStringProperty(env, printerInformation, PARAM_INFO_PRINTERID, printerId)) {
         info.SetPrinterId(printerId);
     }
-    const char* printerNameStr = "printerName";
     std::string printerName;
-    if (GetStringOrUndefined(env, printerInformation, printerNameStr, printerName)) {
+    if (GetStringProperty(env, printerInformation, PARAM_INFO_PRINTERNAME, printerName)) {
         info.SetPrinterName(printerName);
     }
-    const char* printerStatusStr = "printerStatus";
-    ani_int statusIndex;
-    if (GetIntByName(env, printerInformation, printerStatusStr, statusIndex)) {
-        uint32_t statusValue = GetEnumValueInt(env, "PrinterStatus", statusIndex);
+    ani_ref statusEnum;
+    uint32_t statusValue = 0;
+    if (GetRefProperty(env,  static_cast<ani_object>(printerInformation), PARAM_INFO_PRINTER_STATUS, statusEnum) &&
+        GetEnumValueInt(env, static_cast<ani_enum_item>(statusEnum), statusValue)) {
         info.SetPrinterState(statusValue);
     }
-    const char* descriptionStr = "description";
     std::string description;
-    if (GetStringOrUndefined(env, printerInformation, descriptionStr, description)) {
+    if (GetStringProperty(env, printerInformation, PARAM_INFO_DESCRIPTION, description)) {
         info.SetDescription(description);
     }
-    const char* capabilityStr = "capability";
     ani_ref capabilityRef;
-    if (GetRefFieldByName(env, printerInformation, capabilityStr, capabilityRef)) {
+    if (GetRefProperty(env,  static_cast<ani_object>(printerInformation), PARAM_INFO_CAPABILITY, capabilityRef)) {
         PrinterCapability capability = PrinterCapabilityAniHelper::ParsePrinterCapability(env, capabilityRef);
         info.SetCapability(capability);
     }
-    const char* uriStr = "uri";
     std::string uri;
-    if (GetStringOrUndefined(env, printerInformation, uriStr, uri)) {
+    if (GetStringProperty(env, printerInformation, PARAM_INFO_URI, uri)) {
         info.SetUri(uri);
     }
-    const char* printerMakeStr = "printerMake";
     std::string printerMake;
-    if (GetStringOrUndefined(env, printerInformation, printerMakeStr, printerMake)) {
+    if (GetStringProperty(env, printerInformation, PARAM_INFO_PRINTER_MAKE, printerMake)) {
         info.SetPrinterMake(printerMake);
     }
-    const char* optionsStr = "options";
     std::string options;
-    if (GetStringOrUndefined(env, printerInformation, optionsStr, options)) {
+    if (GetStringProperty(env, printerInformation, PARAM_JOB_OPTION, options)) {
         info.SetOption(options);
     }
 
@@ -149,52 +144,32 @@ ani_object PrinterInfoAniHelper::CreatePrinterInfo(ani_env *env, const PrinterIn
 {
     PRINT_HILOGI("enter CreatePrinterInfo");
 
-    ani_object obj = {};
     static const char *className = "L@ohos/print/print/PrinterInfoImpl;";
-    ani_class cls;
-    if (ANI_OK != env->FindClass(className, &cls)) {
-        PRINT_HILOGE("[ANI] find class fail");
-        return obj;
-    }
-
-    ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor)) {
-        PRINT_HILOGE("[ANI] find method fail");
-        return obj;
-    }
-
-    if (ANI_OK != env->Object_New(cls, ctor, &obj)) {
-        PRINT_HILOGE("Create Object Failed");
-        return obj;
-    }
-
-    SetFieldString(env, cls, obj, PARAM_INFO_PRINTERID, info.GetPrinterId());
-    SetFieldString(env, cls, obj, PARAM_INFO_PRINTERNAME, info.GetPrinterName());
-    SetFieldDouble(env, cls, obj, PARAM_INFO_PRINTERICON, info.GetPrinterIcon());
-    SetFieldString(env, cls, obj, PARAM_INFO_DESCRIPTION, info.GetDescription());
-    SetFieldString(env, cls, obj, PARAM_INFO_URI, info.GetUri());
-    SetFieldString(env, cls, obj, PARAM_INFO_PRINTER_MAKE, info.GetPrinterMake());
-    SetFieldString(env, cls, obj, PARAM_INFO_ALIAS, info.GetAlias());
-    SetFieldString(env, cls, obj, PARAM_JOB_OPTION, info.GetOption());
-    SetFieldBoolean(env, cls, obj, PARAM_INFO_IS_DAFAULT_PRINTER, info.GetIsDefaultPrinter());
-    SetFieldBoolean(env, cls, obj, PARAM_INFO_IS_LAST_USED_PRINTER, info.GetIsLastUsedPrinter());
-
+    ani_object obj = CreateObject(env, nullptr, className);
+    SetStringProperty(env, obj, PARAM_INFO_PRINTERID, info.GetPrinterId());
+    SetStringProperty(env, obj, PARAM_INFO_PRINTERNAME, info.GetPrinterName());
+    SetDoubleProperty(env, obj, PARAM_INFO_PRINTERICON, info.GetPrinterIcon());
+    SetStringProperty(env, obj, PARAM_INFO_DESCRIPTION, info.GetDescription());
+    SetStringProperty(env, obj, PARAM_INFO_URI, info.GetUri());
+    SetStringProperty(env, obj, PARAM_INFO_PRINTER_MAKE, info.GetPrinterMake());
+    SetStringProperty(env, obj, PARAM_INFO_ALIAS, info.GetAlias());
+    SetStringProperty(env, obj, PARAM_JOB_OPTION, info.GetOption());
+    SetBoolProperty(env, obj, PARAM_INFO_IS_DAFAULT_PRINTER, info.GetIsDefaultPrinter());
+    SetBoolProperty(env, obj, PARAM_INFO_IS_LAST_USED_PRINTER, info.GetIsLastUsedPrinter());
     ani_enum_item printerStateEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrinterState;",
-                                                       static_cast<int32_t>(info.GetPrinterState()));
-    SetFieldEnum(env, obj, "<set>printerState", "L@ohos/print/print/PrinterState;:V", printerStateEnum);
+        static_cast<int32_t>(info.GetPrinterState()));
+    SetRefProperty(env, obj, PARAM_INFO_PRINTERSTATE, static_cast<ani_ref>(printerStateEnum));
     ani_enum_item printerStatusEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrinterStatus;",
-                                                        static_cast<int32_t>(info.GetPrinterStatus()));
-    SetFieldEnum(env, obj, "<set>printerStatus", "L@ohos/print/print/PrinterStatus;:V", printerStatusEnum);
-
+        static_cast<int32_t>(info.GetPrinterStatus()));
+    SetRefProperty(env, obj, PARAM_INFO_PRINTER_STATUS, static_cast<ani_ref>(printerStatusEnum));
     PrinterCapability cap;
     info.GetCapability(cap);
     ani_ref capabilityRef = PrinterCapabilityAniHelper::CreatePrinterCapability(env, cap);
-    SetFieldRef(env, cls, obj, PARAM_INFO_CAPABILITY, capabilityRef);
-
+    SetRefProperty(env, obj, PARAM_INFO_CAPABILITY, capabilityRef);
     PrinterPreferences preferences;
     info.GetPreferences(preferences);
     ani_ref preferencesRef = PrinterPreferencesAniHelper::CreatePrinterPreferences(env, preferences);
-    SetFieldRef(env, cls, obj, PARAM_INFO_PRINTER_PREFERENCES, preferencesRef);
+    SetRefProperty(env, obj, PARAM_INFO_PRINTER_PREFERENCES, preferencesRef);
     return obj;
 }
 
@@ -202,51 +177,27 @@ ani_object PrinterInfoAniHelper::CreatePrinterInformation(ani_env *env, const Pr
 {
     PRINT_HILOGI("enter CreatePrinterInformation");
 
-    ani_object obj = {};
-    static const char *className = "L@ohos/print/PrinterInformation;";
-    ani_class cls;
-    if (ANI_OK != env->FindClass(className, &cls)) {
-        PRINT_HILOGE("[ANI] find class fail");
-        return obj;
-    }
+    static const char *className = "L@ohos/print/print/PrinterInformationImp;";
+    ani_object obj = CreateObject(env, nullptr, className);
 
-    ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor)) {
-        PRINT_HILOGE("[ANI] find method fail");
-        return obj;
-    }
+    SetStringProperty(env, obj, PARAM_INFO_PRINTERID, info.GetPrinterId());
 
-    if (ANI_OK != env->Object_New(cls, ctor, &obj)) {
-        PRINT_HILOGE("Create Object Failed");
-        return obj;
-    }
+    SetStringProperty(env, obj, PARAM_INFO_PRINTERNAME, info.GetPrinterName());
 
-    const std::string printerIdStr = "printerId";
-    SetFieldString(env, cls, obj, printerIdStr, info.GetPrinterId());
+    SetDoubleProperty(env, obj, PARAM_INFO_PRINTER_STATUS, static_cast<int32_t>(info.GetPrinterState()));
 
-    const std::string printerNameStr = "printerName";
-    SetFieldString(env, cls, obj, printerNameStr, info.GetPrinterName());
+    SetStringProperty(env, obj, PARAM_INFO_DESCRIPTION, info.GetDescription());
 
-    const std::string printerStatusStr = "printerStatus";
-    SetFieldInt(env, cls, obj, printerStatusStr, static_cast<int32_t>(info.GetPrinterState()));
-
-    const std::string descriptionStr = "description";
-    SetFieldString(env, cls, obj, descriptionStr, info.GetDescription());
-
-    const std::string capabilityStr = "capability";
     PrinterCapability cap;
     info.GetCapability(cap);
     ani_ref capabilityRef = PrinterCapabilityAniHelper::CreatePrinterCapability(env, cap);
-    SetFieldRef(env, cls, obj, capabilityStr, capabilityRef);
+    SetRefProperty(env, obj, PARAM_INFO_CAPABILITY, capabilityRef);
 
-    const std::string uriStr = "uri";
-    SetFieldString(env, cls, obj, uriStr, info.GetUri());
+    SetStringProperty(env, obj, PARAM_INFO_URI, info.GetUri());
 
-    const std::string printerMakeStr = "printerMake";
-    SetFieldString(env, cls, obj, printerMakeStr, info.GetPrinterMake());
+    SetStringProperty(env, obj, PARAM_INFO_PRINTER_MAKE, info.GetPrinterMake());
 
-    const std::string optionsStr = "options";
-    SetFieldString(env, cls, obj, optionsStr, info.GetOption());
+    SetStringProperty(env, obj, PARAM_JOB_OPTION, info.GetOption());
 
     return obj;
 }
@@ -260,10 +211,11 @@ bool PrinterInfoAniHelper::GetPrinterInfoArray(ani_env *env, ani_object param, s
         PRINT_HILOGE("Object_GetPropertyByName_Double fail, status = %{public}u", status);
         return false;
     }
+    PRINT_HILOGD("printerInfo array size = %{public}d", static_cast<int32_t>(length));
     for (int32_t i = 0; i < static_cast<int32_t>(length); i++) {
         ani_ref aniPrinterInfo;
         status = env->Object_CallMethodByName_Ref(param, "$_get",
-            "L@ohos/print/PrinterInfo;", &aniPrinterInfo, static_cast<ani_int>(i));
+            "L@ohos/print/PrinterInfoImpl;", &aniPrinterInfo, static_cast<ani_int>(i));
         if (status != ANI_OK) {
             PRINT_HILOGE("Object_CallMethodByName_Ref fail, status = %{public}u", status);
             return false;
