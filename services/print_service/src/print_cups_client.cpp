@@ -161,10 +161,6 @@ static const std::map<std::string, map<std::string, StatePolicy>> SPECIAL_PRINTE
                   {PRINTER_STATE_MEDIA_JAM,     STATE_POLICY_BLOCK}} },
 };
 
-static const std::vector<std::string> ignoreCupsBackSidePrinterList = {
-    "_PixLab_X1", "_CV81", "_PixLab_B5"
-};
-
 std::mutex jobMutex;
 
 std::string GetUsbPrinterSerial(const std::string &deviceUri)
@@ -1023,18 +1019,6 @@ int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_opti
     return num_options;
 }
 
-int PrintCupsClient::FillIgnoreCupsBackSideOpitons(JobParameters *jobParams, int num_options, cups_option_t **options)
-{
-    for (const auto& printerName : ignoreCupsBackSidePrinterList) {
-        if (jobParams->printerName.find(printerName) != std::string::npos) {
-            PRINT_HILOGW("ignore cupsBackSide printer found: %{public}s", jobParams->printerName.c_str());
-            num_options = cupsAddOption("ignoreCupsBackSide", "true", num_options, options);
-            return num_options;
-        }
-    }
-    return num_options;
-}
-
 int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, cups_option_t **options)
 {
     if (jobParams == nullptr) {
@@ -1064,7 +1048,6 @@ int PrintCupsClient::FillJobOptions(JobParameters *jobParams, int num_options, c
     }
 
     num_options = FillLandscapeOptions(jobParams, num_options, options);
-    num_options = FillIgnoreCupsBackSideOpitons(jobParams, num_options, options);
 
     if (jobParams->isCollate) {
         num_options = cupsAddOption("Collate", "true", num_options, options);

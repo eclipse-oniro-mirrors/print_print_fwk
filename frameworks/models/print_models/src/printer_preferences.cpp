@@ -527,5 +527,7 @@ void PrinterPreferences::ConvertJsonToPrinterPreferences(Json::Value &preference
         PRINT_HILOGD("find options");
         SetOption(PrintJsonUtil::WriteString(preferencesJson["options"]));
     }
+
+    ConvertBoolDefaultJsonToPrinterPreferences(preferencesJson);
 }
 }  // namespace OHOS::Print
