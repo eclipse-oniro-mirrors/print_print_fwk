@@ -49,8 +49,11 @@ struct JobParameters {
     std::string serviceJobId;
     std::vector<uint32_t> fdList;
     PrintServiceAbility *serviceAbility;
-    std::string printerAttrsOption_cupsOption;
+    std::string printerAttrsOptionCupsOption;
     bool isCanceled = false;
+    Json::Value advancedOpsJson;
+    bool isReverse = false;
+    bool isCollate = true;
 };
 
 enum StatePolicy {
@@ -140,7 +143,8 @@ public:
         std::vector<std::string> &valueList);
     int32_t QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info);
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
-    int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps);
+    int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,
+        const std::string &ppdName);
     bool CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monitorParams, const uint32_t timeout = 3000);
     bool ModifyCupsPrinterUri(const std::string &printerName, const std::string &printerUri);
 
@@ -182,8 +186,8 @@ private:
     void StartNextJob();
     void JobSentCallback();
 
-    void UpdateBorderlessJobParameter(Json::Value& optionJson, JobParameters *params);
     void UpdateJobParameterByOption(Json::Value& optionJson, JobParameters *params);
+    void UpdateJobParameterByBoolOption(Json::Value& optionJson, JobParameters *params);
     JobParameters* BuildJobParameters(const PrintJob &jobInfo, const std::string &userName);
     std::string GetColorString(uint32_t colorCode);
     std::string GetMedieSize(const PrintJob &jobInfo);
@@ -198,6 +202,7 @@ private:
     bool CancelPrinterJob(int cupsJobId);
     bool CancelPrinterJob(int cupsJobId, const std::string &name, const std::string &user);
     bool IsIpAddress(const char* host);
+    static int FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
 
 private:
     bool toCups_ = true;

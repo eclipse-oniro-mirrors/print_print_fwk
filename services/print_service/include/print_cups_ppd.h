@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,15 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef PRINT_CUPS_ATTRIBUTE_H
-#define PRINT_CUPS_ATTRIBUTE_H
+#ifndef PRINT_CUPS_PPD_H
+#define PRINT_CUPS_PPD_H
 
-#include <cups/cups-private.h>
+#include <cups/ppd.h>
+#include <cups/ppd-private.h>
 #include "printer_capability.h"
 #include "print_constant.h"
 
 namespace OHOS::Print {
-void ParsePrinterAttributesFromIPP(ipp_t *response, PrinterCapability &printerCaps);
-bool ParsePrinterStatusAttributes(ipp_t *response, PrinterStatus &status);
-} // namespace OHOS::Print
-#endif // PRINT_CUPS_ATTRIBUTE_H
+void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
+int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdFilePath);
+
+const int ADVANCE_OPTION_MAXLENGTH = 100;
+}
+#endif // PRINT_CUPS_PPD_H

@@ -31,6 +31,7 @@ std::mutex PrintUtils::instanceLock_;
 
 static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
 static const std::string LAUNCH_PARAMETER_PRINT_ATTRIBUTE = "printAttributes";
+static const std::string PRINTER_ID_USB_PREFIX = "USB";
 
 static std::map<uint32_t, std::string> jobStateMap_;
 const std::string GLOBAL_ID_DELIMITER = ":";
@@ -59,6 +60,9 @@ std::string PrintUtils::GetExtensionId(const std::string &globalId)
 
 std::string PrintUtils::GetGlobalId(const std::string& extensionId, const std::string& localId)
 {
+    if (localId.find(extensionId) != std::string::npos) {
+        return localId;
+    }
     return extensionId + GLOBAL_ID_DELIMITER + localId;
 }
 
@@ -329,4 +333,14 @@ std::string PrintUtils::GetPrintJobId()
     PRINT_HILOGI("jobId: %{public}s", jobId.c_str());
     return jobId;
 }
+
+bool PrintUtils::IsUsbPrinter(const std::string &printerId)
+{
+    auto pos = printerId.find(PRINTER_ID_USB_PREFIX);
+    if (pos == std::string::npos) {
+        return false;
+    }
+    return true;
+}
+
 }  // namespace OHOS::Print

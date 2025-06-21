@@ -63,6 +63,7 @@ public:
     void RemoveIpPrinterFromList(const std::string &printerId);
     std::shared_ptr<PrinterInfo> QueryIpPrinterInfoById(const std::string &printerId);
     int32_t BuildPrinterPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences);
+    bool CheckPrinterVersionFile();
 
 private:
     bool ParsePrinterListJsonV1(Json::Value& jsonObject);
@@ -101,7 +102,8 @@ private:
     void BuildPrinterPreferenceByDefault(Json::Value &capOpt, PrinterPreferences &printPreferences);
     void BuildPrinterPreferenceBySupport(const PrinterCapability &cap, PrinterPreferences &printPreferences);
     Json::Value GetCupsOptionsJson(const PrinterCapability &cap);
-
+    void SaveJsonFile(const std::string &fileName, const std::string &jsonString);
+    
     template<typename T>
     bool ProcessJsonToCapabilityList(Json::Value &capsJson,
                                      const std::string &key,

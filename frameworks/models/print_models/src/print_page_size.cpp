@@ -89,10 +89,10 @@ const uint32_t LEGAL_WIDTH = 8500;
 const uint32_t LEGAL_HEIGHT = 14000;
 const uint32_t LETTER_WIDTH = 8500;
 const uint32_t LETTER_HEIGHT = 11000;
-const uint32_t ROC_16K_WIDTH = 7677;
-const uint32_t ROC_16K_HEIGHT = 10629;
-const uint32_t ROC_8K_WIDTH = 10629;
-const uint32_t ROC_8K_HEIGHT = 15354;
+const uint32_t ROC_16K_WIDTH = 7750;
+const uint32_t ROC_16K_HEIGHT = 10750;
+const uint32_t ROC_8K_WIDTH = 10750;
+const uint32_t ROC_8K_HEIGHT = 15500;
 const uint32_t JIS_B0_WIDTH = 40551;
 const uint32_t JIS_B0_HEIGHT = 57323;
 const uint32_t JIS_B1_WIDTH = 28661;
@@ -171,6 +171,8 @@ const uint32_t PRC8_WIDTH = 4724;
 const uint32_t PRC8_HEIGHT = 12165;
 const uint32_t PRC16_WIDTH = 5749;
 const uint32_t PRC16_HEIGHT = 8465;
+const uint32_t NA_EXECUTIVE_WIDTH = 7250;
+const uint32_t NA_EXECUTIVE_HEIGHT = 10500;
 }
 
 namespace OHOS::Print {
@@ -215,6 +217,8 @@ void UpdatePageSizeMapOther(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize
         "OE_PHOTO_L", "oe_photo-l_3.5x5in", OE_PHOTO_L_WIDTH, OE_PHOTO_L_HEIGHT);
     pageSize_["NA_TABLOID"] = std::make_shared<PrintPageSize>(
         "NA_TABLOID", "B_TABLOID", B_TABLOID_L_WIDTH, B_TABLOID_L_HEIGHT);
+    pageSize_["NA_EXECUTIVE"] = std::make_shared<PrintPageSize>(
+        "NA_EXECUTIVE", "na_executive_7.25x10.5in", NA_EXECUTIVE_WIDTH, NA_EXECUTIVE_HEIGHT);
 }
 
 void UpdatePageSizeMapPRC(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>>& pageSize_)

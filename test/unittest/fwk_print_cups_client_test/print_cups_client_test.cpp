@@ -1229,7 +1229,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067_NeedRename, TestSize.Leve
     optionJson["mediaType"] = "mediaType";
     testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
-    EXPECT_EQ(jobParams->printerAttrsOption_cupsOption, optionJson["cupsOptions"].asString());
+    EXPECT_EQ(jobParams->printerAttrsOptionCupsOption, optionJson["cupsOptions"].asString());
     EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"].asString());
     EXPECT_EQ(jobParams->jobName, optionJson["jobName"].asString());
     EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"].asString());

@@ -194,7 +194,13 @@ private:
     bool AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob);
     void CancelPrintJobHandleCallback(const std::shared_ptr<PrintUserData> userData,
         const sptr<IPrintExtensionCallback> cbFunc, const std::string &jobId);
-
+    void UpdatePrintJobOptionWithPrinterPreferences(Json::Value &options, PrinterInfo &printerInfo);
+    void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
+    Json::Value ConvertModifiedPreferencesToJson(PrinterPreferences &preferences);
+    int32_t ConnectUsbPrinter(const std::string &printerId);
+    void RefreshPrinterInfoByPpd();
+    void CheckCupsServerAlive();
+    
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;

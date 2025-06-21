@@ -184,11 +184,11 @@ bool PrintSystemData::GetJsonObjectFromFile(Json::Value &jsonObject, const std::
     std::string fileVersion = "";
     std::string printerListFilePath = PRINTER_SERVICE_FILE_PATH + "/" + PRINTER_LIST_FILE;
     if (strcmp(fileName.c_str(), printerListFilePath.c_str())) {
-        fileVersion = PRINTER_LIST_VERSION;
+        fileVersion = PRINTER_LIST_VERSION_V1;
     } else {
         fileVersion = PRINT_USER_DATA_VERSION;
     }
-    if (strcmp(version.c_str(), PRINTER_LIST_VERSION.c_str())) {
+    if (strcmp(version.c_str(), PRINTER_LIST_VERSION_V1.c_str())) {
         PRINT_HILOGW("printer list version is error.");
         return false;
     }
@@ -1051,31 +1051,46 @@ int32_t PrintSystemData::BuildPrinterPreference(const PrinterCapability &cap, Pr
 void PrintSystemData::BuildPrinterPreferenceByDefault(Json::Value &capOpt, PrinterPreferences &printPreferences)
 {
     PRINT_HILOGI("BuildPrinterPreferenceByDefault enter");
-    if (PrintJsonUtil::IsMember(capOpt, "defaultPageSizeId") && capOpt["defaultPageSizeId"].isString()) {
+    if (printPreferences.GetDefaultPageSizeId().empty() &&
+        PrintJsonUtil::IsMember(capOpt, "defaultPageSizeId") && capOpt["defaultPageSizeId"].isString()) {
         printPreferences.SetDefaultPageSizeId(capOpt["defaultPageSizeId"].asString());
     }
 
-    int32_t defaultOrientation = 0;
-    if (PrintJsonUtil::IsMember(capOpt, "orientation-requested-default") &&
+    int32_t defaultOrientation = PRINT_ORIENTATION_MODE_NONE;
+    if (printPreferences.GetDefaultOrientation() != PRINT_ORIENTATION_MODE_NONE &&
+        PrintJsonUtil::IsMember(capOpt, "orientation-requested-default") &&
         capOpt["orientation-requested-default"].isString()) {
         PrintUtil::ConvertToInt(capOpt["orientation-requested-default"].asString(), defaultOrientation);
     }
     printPreferences.SetDefaultOrientation(defaultOrientation);
 
-    if (PrintJsonUtil::IsMember(capOpt, "sides-default") && capOpt["sides-default"].isString()) {
+    if (printPreferences.GetDefaultDuplexMode() != DUPLEX_MODE_NONE &&
+        PrintJsonUtil::IsMember(capOpt, "sides-default") && capOpt["sides-default"].isString()) {
         int32_t defaultDuplexMode = DUPLEX_MODE_NONE;
         PrintUtil::ConvertToInt(capOpt["sides-default"].asString(), defaultDuplexMode);
         printPreferences.SetDefaultDuplexMode(defaultDuplexMode);
     }
 
-    if (PrintJsonUtil::IsMember(capOpt, "print-quality-default") && capOpt["print-quality-default"].isString()) {
+    if (printPreferences.GetDefaultPrintQuality() != PRINT_QUALITY_NORMAL &&
+        PrintJsonUtil::IsMember(capOpt, "print-quality-default") && capOpt["print-quality-default"].isString()) {
         int32_t defaultPrintQuality = PRINT_QUALITY_NORMAL;
         PrintUtil::ConvertToInt(capOpt["print-quality-default"].asString(), defaultPrintQuality);
         printPreferences.SetDefaultPrintQuality(defaultPrintQuality);
     }
 
-    if (PrintJsonUtil::IsMember(capOpt, "media-type-default") && capOpt["media-type-default"].isString()) {
+    if (printPreferences.GetDefaultMediaType().empty() &&
+        PrintJsonUtil::IsMember(capOpt, "media-type-default") && capOpt["media-type-default"].isString()) {
         printPreferences.SetDefaultMediaType(capOpt["media-type-default"].asString());
+    }
+
+    if (PrintJsonUtil::IsMember(capOpt, "defaultColorMode") && capOpt["defaultColorMode"].isString()) {
+        int32_t defaultColorMode = PRINT_COLOR_MODE_MONOCHROME;
+        PrintUtil::ConvertToInt(capOpt["defaultColorMode"].asString(), defaultColorMode);
+        printPreferences.SetDefaultColorMode(defaultColorMode);
+    }
+
+    if (PrintJsonUtil::IsMember(capOpt, "advanceDefault") && capOpt["advanceDefault"].isString()) {
+        printPreferences.SetOption(capOpt["advanceDefault"].asString());
     }
 }
 
@@ -1106,6 +1121,16 @@ void PrintSystemData::BuildPrinterPreferenceBySupport(
         }
     }
 
+    if (!printPreferences.HasDefaultColorMode()) {
+        std::vector<uint32_t> supportedColorModeList;
+        cap.GetSupportedColorMode(supportedColorModeList);
+        std::optional<uint32_t> defaultColorMode =
+            GetPreferencesFromSupport<uint32_t>(supportedColorModeList, PRINT_COLOR_MODE_COLOR);
+        if (defaultColorMode != std::nullopt) {
+            printPreferences.SetDefaultColorMode(*defaultColorMode);
+        }
+    }
+
     if (!printPreferences.HasDefaultMediaType()) {
         std::vector<std::string> supportedMediaTypeList;
         cap.GetSupportedMediaType(supportedMediaTypeList);
@@ -1116,7 +1141,13 @@ void PrintSystemData::BuildPrinterPreferenceBySupport(
         }
     }
 
+    printPreferences.SetDefaultOrientation(PRINT_ORIENTATION_MODE_NONE);
+
     printPreferences.SetBorderless(false);
+
+    printPreferences.SetDefaultCollate(true);
+
+    printPreferences.SetDefaultReverse(false);
 }
 
 std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap)
@@ -1132,6 +1163,49 @@ std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap
         }
     }
     return supportedPageSize[0].GetId();
+}
+
+bool PrintSystemData::CheckPrinterVersionFile()
+{
+    std::string fileName = PRINTER_SERVICE_PRINTERS_PATH + "/" + PRINTER_LIST_VERSION_FILE;
+    std::filesystem::path filePath(fileName);
+    if (std::filesystem::exists(filePath)) {
+        PRINT_HILOGI("version file exists.");
+        return true;
+    }
+    std::ofstream file(filePath);
+    if (!file) {
+        PRINT_HILOGE("File creation failed.");
+        return false;
+    }
+
+    PRINT_HILOGI("File created successfully.");
+    Json::Value versionJson;
+    versionJson["version"] = PRINTER_LIST_VERSION_V3;
+    std::string jsonString = PrintJsonUtil::WriteString(versionJson);
+    SaveJsonFile(fileName, jsonString);
+    return false;
+}
+
+void PrintSystemData::SaveJsonFile(const std::string &fileName, const std::string &jsonString)
+{
+    FILE *file = fopen(fileName.c_str(), "w+");
+    if (file == nullptr) {
+        PRINT_HILOGW("Failed to open file, errno: %{public}s", std::to_string(errno).c_str());
+        return;
+    }
+    size_t jsonLength = jsonString.length();
+    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
+    int fcloseResult = fclose(file);
+    if (fcloseResult != 0) {
+        PRINT_HILOGE("Close file failure.");
+        return;
+    }
+    if (writeLength < 0 || (size_t)writeLength != jsonLength) {
+        PRINT_HILOGE("SaveJsonFile error.");
+        return;
+    }
+    PRINT_HILOGI("SaveJsonFile end.");
 }
 }  // namespace Print
 }  // namespace OHOS

@@ -47,7 +47,7 @@ void TestParsePrinterAttributes(const uint8_t *data, size_t size, FuzzedDataProv
     ippAddInteger(response, IPP_TAG_JOB, IPP_TAG_INTEGER, "copies",
         dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER));
     PrinterCapability printerCaps;
-    OHOS::Print::ParsePrinterAttributes(response, printerCaps);
+    OHOS::Print::ParsePrinterAttributesFromIPP(response, printerCaps);
     ippDelete(response);
 }
 

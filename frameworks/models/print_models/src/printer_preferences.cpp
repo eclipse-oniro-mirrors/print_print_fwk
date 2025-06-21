@@ -29,9 +29,15 @@ PrinterPreferences::PrinterPreferences()
       hasDefaultPageSizeId_(false),
       defaultPageSizeId_(""),
       hasDefaultOrientation_(false),
-      defaultOrientation_(0),
+      defaultOrientation_(PRINT_ORIENTATION_MODE_NONE),
+      hasDefaultColorMode_(false),
+      defaultColorMode_(PRINT_COLOR_MODE_MONOCHROME),
       hasBorderless_(false),
       borderless_(false),
+      hasDefaultCollate_(false),
+      defaultCollate_(true),
+      hasDefaultReverse_(false),
+      defaultReverse_(false),
       hasOption_(false),
       option_("")
 {
@@ -48,8 +54,14 @@ PrinterPreferences::PrinterPreferences(const PrinterPreferences &right)
       defaultPageSizeId_(right.defaultPageSizeId_),
       hasDefaultOrientation_(right.hasDefaultOrientation_),
       defaultOrientation_(right.defaultOrientation_),
+      hasDefaultColorMode_(right.hasDefaultColorMode_),
+      defaultColorMode_(right.defaultColorMode_),
       hasBorderless_(right.hasBorderless_),
       borderless_(right.borderless_),
+      hasDefaultCollate_(right.hasDefaultCollate_),
+      defaultCollate_(right.defaultCollate_),
+      hasDefaultReverse_(right.hasDefaultReverse_),
+      defaultReverse_(right.defaultReverse_),
       hasOption_(right.hasOption_),
       option_(right.option_)
 {
@@ -68,8 +80,14 @@ PrinterPreferences &PrinterPreferences::operator=(const PrinterPreferences &righ
         defaultPageSizeId_ = right.defaultPageSizeId_;
         hasDefaultOrientation_ = right.hasDefaultOrientation_;
         defaultOrientation_ = right.defaultOrientation_;
+        hasDefaultColorMode_ = right.hasDefaultColorMode_;
+        defaultColorMode_ = right.defaultColorMode_;
         hasBorderless_ = right.hasBorderless_;
         borderless_ = right.borderless_;
+        hasDefaultCollate_ = right.hasDefaultCollate_;
+        defaultCollate_ = right.defaultCollate_;
+        hasDefaultReverse_ = right.hasDefaultReverse_;
+        defaultReverse_ = right.defaultReverse_;
         hasOption_ = right.hasOption_;
         option_ = right.option_;
     }
@@ -90,8 +108,14 @@ void PrinterPreferences::Reset()
     defaultPageSizeId_ = "";
     hasDefaultOrientation_ = false;
     defaultOrientation_ = PRINT_ORIENTATION_MODE_NONE;
+    hasDefaultColorMode_ = false;
+    defaultColorMode_ = PRINT_COLOR_MODE_MONOCHROME;
     hasBorderless_ = false;
     borderless_ = false;
+    hasDefaultCollate_ = false;
+    defaultCollate_ = true;
+    hasDefaultReverse_ = false;
+    defaultReverse_ = false;
     hasOption_ = false;
     option_ = "";
 }
@@ -126,10 +150,28 @@ void PrinterPreferences::SetDefaultOrientation(uint32_t defaultOrientation)
     defaultOrientation_ = defaultOrientation;
 }
 
+void PrinterPreferences::SetDefaultColorMode(uint32_t defaultColorMode)
+{
+    hasDefaultColorMode_ = true;
+    defaultColorMode_ = defaultColorMode;
+}
+
 void PrinterPreferences::SetBorderless(bool borderless)
 {
     hasBorderless_ = true;
     borderless_ = borderless;
+}
+
+void PrinterPreferences::SetDefaultCollate(bool collate)
+{
+    hasDefaultCollate_ = true;
+    defaultCollate_ = collate;
+}
+
+void PrinterPreferences::SetDefaultReverse(bool reverse)
+{
+    hasDefaultReverse_ = true;
+    defaultReverse_ = reverse;
 }
 
 void PrinterPreferences::SetOption(const std::string &option)
@@ -188,6 +230,16 @@ uint32_t PrinterPreferences::GetDefaultOrientation() const
     return defaultOrientation_;
 }
 
+bool PrinterPreferences::HasDefaultColorMode() const
+{
+    return hasDefaultColorMode_;
+}
+
+uint32_t PrinterPreferences::GetDefaultColorMode() const
+{
+    return defaultColorMode_;
+}
+
 bool PrinterPreferences::HasBorderless() const
 {
     return hasBorderless_;
@@ -196,6 +248,26 @@ bool PrinterPreferences::HasBorderless() const
 bool PrinterPreferences::GetBorderless() const
 {
     return borderless_;
+}
+
+bool PrinterPreferences::HasDefaultCollate() const
+{
+    return hasDefaultCollate_;
+}
+
+bool PrinterPreferences::GetDefaultCollate() const
+{
+    return defaultCollate_;
+}
+
+bool PrinterPreferences::HasDefaultReverse() const
+{
+    return hasDefaultReverse_;
+}
+
+bool PrinterPreferences::GetDefaultReverse() const
+{
+    return defaultReverse_;
 }
 
 bool PrinterPreferences::HasOption() const
@@ -240,9 +312,24 @@ bool PrinterPreferences::ReadFromParcel(Parcel &parcel)
         right.SetDefaultOrientation(parcel.ReadUint32());
     }
 
+    right.hasDefaultColorMode_ = parcel.ReadBool();
+    if (right.hasDefaultColorMode_) {
+        right.SetDefaultColorMode(parcel.ReadUint32());
+    }
+
     right.hasBorderless_ = parcel.ReadBool();
     if (right.hasBorderless_) {
         right.SetBorderless(parcel.ReadBool());
+    }
+
+    right.hasDefaultCollate_ = parcel.ReadBool();
+    if (right.hasDefaultCollate_) {
+        right.SetDefaultCollate(parcel.ReadBool());
+    }
+
+    right.hasDefaultReverse_ = parcel.ReadBool();
+    if (right.hasDefaultReverse_) {
+        right.SetDefaultReverse(parcel.ReadBool());
     }
 
     right.hasOption_ = parcel.ReadBool();
@@ -281,9 +368,24 @@ bool PrinterPreferences::Marshalling(Parcel &parcel) const
         parcel.WriteUint32(GetDefaultOrientation());
     }
 
+    parcel.WriteBool(hasDefaultColorMode_);
+    if (hasDefaultColorMode_) {
+        parcel.WriteUint32(GetDefaultColorMode());
+    }
+
     parcel.WriteBool(hasBorderless_);
     if (hasBorderless_) {
         parcel.WriteBool(GetBorderless());
+    }
+
+    parcel.WriteBool(hasDefaultCollate_);
+    if (hasDefaultCollate_) {
+        parcel.WriteBool(GetDefaultCollate());
+    }
+
+    parcel.WriteBool(hasDefaultReverse_);
+    if (hasDefaultReverse_) {
+        parcel.WriteBool(GetDefaultReverse());
     }
 
     parcel.WriteBool(hasOption_);
@@ -318,8 +420,17 @@ void PrinterPreferences::Dump() const
     if (hasDefaultOrientation_) {
         PRINT_HILOGI("defaultOrientation: %{public}d", defaultOrientation_);
     }
+    if (hasDefaultColorMode_) {
+        PRINT_HILOGI("defaultColorMode: %{public}d", defaultColorMode_);
+    }
     if (hasBorderless_) {
         PRINT_HILOGI("borderless: %{public}d", borderless_);
+    }
+    if (hasDefaultCollate_) {
+        PRINT_HILOGI("defaultCollate: %{public}d", defaultCollate_);
+    }
+    if (hasDefaultReverse_) {
+        PRINT_HILOGI("defaultReverse: %{public}d", defaultReverse_);
     }
     if (hasOption_) {
         PRINT_HILOGD("option: %{private}s", option_.c_str());
@@ -344,8 +455,17 @@ Json::Value PrinterPreferences::ConvertToJson()
     if (hasDefaultOrientation_) {
         preferencesJson["defaultOrientation"] = defaultOrientation_;
     }
+    if (hasDefaultColorMode_) {
+        preferencesJson["defaultColorMode"] = defaultColorMode_;
+    }
     if (hasBorderless_) {
         preferencesJson["borderless"] = borderless_;
+    }
+    if (hasDefaultCollate_) {
+        preferencesJson["defaultCollate"] = defaultCollate_;
+    }
+    if (hasDefaultReverse_) {
+        preferencesJson["defaultReverse"] = defaultReverse_;
     }
 
     if (hasOption_) {
@@ -356,33 +476,54 @@ Json::Value PrinterPreferences::ConvertToJson()
     return preferencesJson;
 }
 
-void PrinterPreferences::ConvertJsonToPrinterPreferences(Json::Value &preferencesJson)
+void PrinterPreferences::ConvertBoolDefaultJsonToPrinterPreferences(Json::Value &preferencesJson)
 {
-    if (preferencesJson.isMember("defaultDuplexMode") && preferencesJson["defaultDuplexMode"].isInt()) {
-        SetDefaultDuplexMode(preferencesJson["defaultDuplexMode"].asInt());
-    }
-
-    if (preferencesJson.isMember("defaultPrintQuality") && preferencesJson["defaultPrintQuality"].isInt()) {
-        SetDefaultPrintQuality(preferencesJson["defaultPrintQuality"].asInt());
-    }
-
-    if (preferencesJson.isMember("defaultMediaType") && preferencesJson["defaultMediaType"].isString()) {
-        SetDefaultMediaType(preferencesJson["defaultMediaType"].asString());
-    }
-
-    if (preferencesJson.isMember("defaultPageSizeId") && preferencesJson["defaultPageSizeId"].isString()) {
-        SetDefaultPageSizeId(preferencesJson["defaultPageSizeId"].asString());
-    }
-
-    if (preferencesJson.isMember("defaultOrientation") && preferencesJson["defaultOrientation"].isInt()) {
-        SetDefaultOrientation(preferencesJson["defaultOrientation"].asInt());
-    }
-
-    if (preferencesJson.isMember("borderless") && preferencesJson["borderless"].isBool()) {
+    if (PrintJsonUtil::IsMember(preferencesJson, "borderless") && preferencesJson["borderless"].isBool()) {
         SetBorderless(preferencesJson["borderless"].asBool());
     }
 
-    if (preferencesJson.isMember("options") && preferencesJson["options"].isObject()) {
+    if (PrintJsonUtil::IsMember(preferencesJson, "defaultCollate") && preferencesJson["defaultCollate"].isBool()) {
+        SetBorderless(preferencesJson["defaultCollate"].asBool());
+    }
+
+    if (PrintJsonUtil::IsMember(preferencesJson, "defaultReverse") && preferencesJson["defaultReverse"].isBool()) {
+        SetBorderless(preferencesJson["defaultReverse"].asBool());
+    }
+}
+
+void PrinterPreferences::ConvertJsonToPrinterPreferences(Json::Value &preferencesJson)
+{
+    if (PrintJsonUtil::IsMember(preferencesJson, "defaultDuplexMode") &&
+        preferencesJson["defaultDuplexMode"].isInt()) {
+        SetDefaultDuplexMode(preferencesJson["defaultDuplexMode"].asInt());
+    }
+
+    if (PrintJsonUtil::IsMember(preferencesJson, "defaultPrintQuality") &&
+        preferencesJson["defaultPrintQuality"].isInt()) {
+        SetDefaultPrintQuality(preferencesJson["defaultPrintQuality"].asInt());
+    }
+
+    if (PrintJsonUtil::IsMember(preferencesJson, "defaultMediaType") &&
+        preferencesJson["defaultMediaType"].isString()) {
+        SetDefaultMediaType(preferencesJson["defaultMediaType"].asString());
+    }
+
+    if (PrintJsonUtil::IsMember(preferencesJson, "defaultPageSizeId") &&
+        preferencesJson["defaultPageSizeId"].isString()) {
+        SetDefaultPageSizeId(preferencesJson["defaultPageSizeId"].asString());
+    }
+
+    if (PrintJsonUtil::IsMember(preferencesJson, "defaultOrientation") &&
+        preferencesJson["defaultOrientation"].isInt()) {
+        SetDefaultOrientation(preferencesJson["defaultOrientation"].asInt());
+    }
+
+    if (PrintJsonUtil::IsMember(preferencesJson, "defaultColorMode") &&
+        preferencesJson["defaultColorMode"].isInt()) {
+        SetDefaultOrientation(preferencesJson["defaultColorMode"].asInt());
+    }
+
+    if (PrintJsonUtil::IsMember(preferencesJson, "options") && preferencesJson["options"].isObject()) {
         PRINT_HILOGD("find options");
         SetOption(PrintJsonUtil::WriteString(preferencesJson["options"]));
     }

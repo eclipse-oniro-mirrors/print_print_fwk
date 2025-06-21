@@ -58,6 +58,8 @@ const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t INIT_INTERVAL = 5000L;
 const int32_t UID_TRANSFORM_DIVISOR = 200000;
 const uint32_t UNLOAD_SA_INTERVAL = 90000;
+const uint32_t QUERY_CUPS_ALIVE_INTERVAL = 10;
+const uint32_t QUERY_CUPS_ALIVE_MAX_RETRY_TIMES = 50;
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -176,6 +178,10 @@ int32_t PrintServiceAbility::Init()
         g_publishState = true;
     }
     state_ = ServiceRunningState::STATE_RUNNING;
+    CheckCupsServerAlive();
+    if (!printSystemData_.CheckPrinterVersionFile()) {
+        RefreshPrinterInfoByPpd();
+    }
     std::vector <PrintExtensionInfo> extensionInfos;
     QueryAllExtension(extensionInfos);
     std::vector <std::string> extensionIds;
@@ -185,6 +191,21 @@ int32_t PrintServiceAbility::Init()
     StartDiscoverPrinter(extensionIds);
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
     return ERR_OK;
+}
+
+void PrintServiceAbility::CheckCupsServerAlive()
+{
+#ifdef CUPS_ENABLE
+    int32_t retryCount = 0;
+    while (retryCount < QUERY_CUPS_ALIVE_MAX_RETRY_TIMES) {
+        if (DelayedSingleton<PrintCupsClient>::GetInstance()->IsCupsServerAlive()) {
+            break;
+        }
+        ++retryCount;
+        std::this_thread::sleep_for(std::chrono::milliseconds(QUERY_CUPS_ALIVE_INTERVAL));
+    }
+    PRINT_HILOGI("retryCount: %{public}d", retryCount);
+#endif
 }
 
 void PrintServiceAbility::OnStart()
@@ -380,6 +401,9 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
             return E_PRINT_SERVER_FAILURE;
         }
         return E_PRINT_NONE;
+    }
+    if (PrintUtils::IsUsbPrinter(printerId)) {
+        return ConnectUsbPrinter(printerId);
     }
     return HandleExtensionConnectPrinter(printerId);
 }
@@ -780,8 +804,10 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
             PRINT_HILOGE("AddPrinterToCups error = %{public}d.", ret);
             return ret;
         }
+        std::string ppdName;
+        QueryPPDInformation(make, ppdName);
         DelayedSingleton<PrintCupsClient>::GetInstance()->
-        QueryPrinterCapabilityFromPPD(printerInfo->GetPrinterName(), printerCaps);
+        QueryPrinterCapabilityFromPPD(printerInfo->GetPrinterName(), printerCaps, ppdName);
     } else {
         DelayedSingleton<PrintCupsClient>::GetInstance()->
             QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
@@ -794,15 +820,21 @@ int32_t PrintServiceAbility::QueryPrinterCapabilityByUri(const std::string &prin
 int32_t PrintServiceAbility::SetPrinterPreference(
     const std::string &printerId, const PrinterPreferences &preferences)
 {
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGD("SetPrinterPreference begin");
     preferences.Dump();
     printSystemData_.UpdatePrinterPreferences(printerId, preferences);
     printSystemData_.SavePrinterFile(printerId);
+    PrinterInfo printerInfo;
+    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+        PRINT_HILOGW("cannot find printer info by printerId");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, printerInfo);
     return E_PRINT_NONE;
 }
 
@@ -824,6 +856,12 @@ bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
     infoJson["printerUri"] = printerInfo.GetUri();
     infoJson["alias"] = printerInfo.GetAlias();
     infoJson["printerMake"] = printerInfo.GetPrinterMake();
+    UpdatePrintJobOptionWithPrinterPreferences(infoJson, printerInfo);
+
+    PrintPageSize pageSize;
+    printJob.GetPageSize(pageSize);
+    UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
+    printJob.SetPageSize(pageSize);
     std::string updatedOption = PrintJsonUtil::WriteString(infoJson);
     PRINT_HILOGD("Updated print job option: %{public}s", updatedOption.c_str());
     printJob.SetOption(updatedOption);
@@ -3037,7 +3075,7 @@ bool PrintServiceAbility::DoAddPrinterToCups(std::shared_ptr<PrinterInfo> printe
     }
     if (needUpdateCapability) {
         PrinterCapability printerCaps;
-        ret = printCupsClient->QueryPrinterCapabilityFromPPD(printerName, printerCaps);
+        ret = printCupsClient->QueryPrinterCapabilityFromPPD(printerName, printerCaps, ppdName);
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGW("QueryPrinterCapabilityFromPPD error = %{public}d.", ret);
         }
@@ -3499,5 +3537,127 @@ bool PrintServiceAbility::DeletePrintJobFromHistoryList(const std::string jobId)
         return false;
     }
     return currentUser->DeletePrintJobFromHistoryList(jobId);
+}
+
+void PrintServiceAbility::UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize)
+{
+    if (!PrintPageSize::FindPageSizeById(pageSize.GetId(), pageSize)) {
+        PrinterCapability printerCapability;
+        printerInfo.GetCapability(printerCapability);
+        std::vector<PrintPageSize> supportedPageSizeList;
+        printerCapability.GetSupportedPageSize(supportedPageSizeList);
+
+        for (const auto& supportedPageSize : supportedPageSizeList) {
+            if (supportedPageSize.GetId() == pageSize.GetId()) {
+                PRINT_HILOGI("PrintJob Set PageSize id=%{public}s, name=%{public}s",
+                    supportedPageSize.GetId().c_str(), supportedPageSize.GetName().c_str());
+                pageSize.SetName(supportedPageSize.GetName());
+                break;
+            }
+        }
+    }
+}
+
+void PrintServiceAbility::UpdatePrintJobOptionWithPrinterPreferences(Json::Value &jobOptions, PrinterInfo &printerInfo)
+{
+    PrinterPreferences preferences;
+    printerInfo.GetPreferences(preferences);
+
+    if (!jobOptions.isMember("isReverse") || !jobOptions["isReverse"].isBool()) {
+        jobOptions["isReverse"] = preferences.GetDefaultReverse();
+    }
+    if (!jobOptions.isMember("isCollate") || !jobOptions["isCollate"].isBool()) {
+        jobOptions["isCollate"] = preferences.GetDefaultCollate();
+    }
+
+    Json::Value preferencesJson = ConvertModifiedPreferencesToJson(preferences);
+    if (preferencesJson.isNull()) {
+        PRINT_HILOGW("cannot find any modified preferences");
+        return;
+    }
+    jobOptions["advancedOptions"] = preferencesJson;
+}
+
+Json::Value PrintServiceAbility::ConvertModifiedPreferencesToJson(PrinterPreferences &preferences)
+{
+    std::string option = preferences.GetOption();
+    PRINT_HILOGD("Print job option: %{public}s", option.c_str());
+    Json::Value opsJson;
+    if (!PrintJsonUtil::Parse(option, opsJson)) {
+        PRINT_HILOGW("parse preferences options error");
+        return Json::nullValue;
+    }
+    return opsJson;
+}
+
+void PrintServiceAbility::RefreshPrinterInfoByPpd()
+{
+#ifdef CUPS_ENABLE
+    std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
+    for (auto &printerId: printerIdList) {
+        PrinterInfo printerInfo;
+        if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+            continue;
+        }
+        PrinterCapability printerCaps;
+        std::string ppdName;
+        QueryPPDInformation(printerInfo.GetPrinterMake(), ppdName);
+        if (ppdName.empty()) {
+            BuildPrinterPreference(printerInfo);
+        } else {
+            int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
+                QueryPrinterCapabilityFromPPD(printerInfo.GetPrinterName(), printerCaps, ppdName);
+            if (ret != E_PRINT_NONE) {
+                PRINT_HILOGE("QueryPrinterCapabilityFromPPD error = %{public}d.", ret);
+                continue;
+            }
+            printerInfo.SetCapability(printerCaps);
+            BuildPrinterPreference(printerInfo);
+        }
+        printSystemData_.InsertAddedPrinter(printerId, printerInfo);
+        printSystemData_.SavePrinterFile(printerId);
+    }
+#endif // CUPS_ENABLE
+}
+
+int32_t PrintServiceAbility::ConnectUsbPrinter(const std::string &printerId)
+{
+    PRINT_HILOGI("ConnectUsbPrinter begin");
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+    if (printerInfo == nullptr) {
+        PRINT_HILOGE("can not find the printer");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    if (!printerInfo->HasPrinterMake()) {
+        PRINT_HILOGE("can not find printer make");
+        return E_PRINT_INVALID_PRINTER;
+    }
+#ifdef CUPS_ENABLE
+    std::string make = printerInfo->GetPrinterMake();
+    auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
+        AddPrinterToCups(printerInfo->GetUri(), printerInfo->GetPrinterName(), make);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("AddPrinterToCups error = %{public}d.", ret);
+        return ret;
+    }
+    PrinterCapability printerCaps;
+    std::string ppdName;
+    QueryPPDInformation(make, ppdName);
+    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
+        QueryPrinterCapabilityFromPPD(printerInfo->GetPrinterName(), printerCaps, ppdName);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("QueryPrinterCapabilityFromPPD error = %{public}d.", ret);
+        return ret;
+    }
+    printerInfo->SetCapability(printerCaps);
+    UpdatePrinterCapability(printerId, *printerInfo);
+
+    printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
+    SendPrinterEvent(*printerInfo);
+    SendPrinterDiscoverEvent(PRINTER_UPDATE_CAP, *printerInfo);
+    printSystemData_.SavePrinterFile(printerId);
+#endif // CUPS_ENABLE
+    PRINT_HILOGI("ConnectUsbPrinter end");
+    return E_PRINT_NONE;
 }
 } // namespace OHOS::Print
