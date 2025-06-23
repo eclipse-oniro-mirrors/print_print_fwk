@@ -27,7 +27,7 @@
 namespace OHOS::Print {
 class PrintAniCallback : public PrintCallbackStub {
 public:
-    PrintAniCallback(ani_vm *vm, ani_object callback);
+    PrintAniCallback(ani_env *env, ani_object callback);
     PrintAniCallback(){};
     ~PrintAniCallback();
     bool OnCallback() override;

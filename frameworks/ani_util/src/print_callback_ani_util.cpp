@@ -15,61 +15,8 @@
 #include "print_callback_ani_util.h"
 #include "print_log.h"
 
-static const char *INVOKE_METHOD_NAME = "invoke";
-
-namespace OHOS::Print {
-
-bool AsyncCallback(ani_env *env, ani_object call, ...)
-{
-    ani_status status = ANI_ERROR;
-    ani_class clsCall {};
-    va_list args;
-    va_start(args, call);
-    if ((status = env->FindClass("L@ohos/print/AsyncCallbackWrapper;", &clsCall)) != ANI_OK) {
-        PRINT_HILOGE("FindClass fail, status: %{public}d", status);
-        return false;
-    }
-    ani_method method = {};
-    if ((status = env->Class_FindMethod(
-        clsCall, INVOKE_METHOD_NAME, "L@ohos/base/BusinessError;Lstd/core/Object;:V", &method)) != ANI_OK) {
-        PRINT_HILOGE("Class_FindMethod fail, status: %{public}d", status);
-        return false;
-    }
-    if ((status = env->Object_CallMethod_Void_V(call, method, args)) != ANI_OK) {
-        PRINT_HILOGE("Object_CallMethod_Void fail, status: %{public}d", status);
-        va_end(args);
-        return false;
-    }
-    va_end(args);
-    return true;
-}
-
-bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_object result)
-{
-    ani_status status = ANI_ERROR;
-    ani_class clsCall {};
-    if ((status = env->FindClass("L@ohos/print/AsyncCallbackArrayWrapper;", &clsCall)) != ANI_OK) {
-        PRINT_HILOGE("FindClass fail, status: %{public}d", status);
-        return false;
-    }
-    ani_method method = {};
-    if ((status = env->Class_FindMethod(
-        clsCall, INVOKE_METHOD_NAME, "L@ohos/base/BusinessError;Lescompat/Array;:V", &method)) != ANI_OK) {
-        PRINT_HILOGE("Class_FindMethod fail, status: %{public}d", status);
-        return false;
-    }
-    if (result == nullptr) {
-        ani_ref nullRef = nullptr;
-        env->GetNull(&nullRef);
-        result = reinterpret_cast<ani_object>(nullRef);
-    }
-    if ((status = env->Object_CallMethod_Void(call, method, error, result)) != ANI_OK) {
-        PRINT_HILOGE("Object_CallMethod_Void fail, status: %{public}d", status);
-        return false;
-    }
-    return true;
-}
-
+namespace {
+const char *INVOKE_METHOD_NAME = "invoke";
 ani_object WrapStsError(ani_env *env, const std::string &msg)
 {
     ani_class cls {};
@@ -108,6 +55,87 @@ ani_object WrapStsError(ani_env *env, const std::string &msg)
         return nullptr;
     }
     return obj;
+}
+}
+
+namespace OHOS::Print {
+
+bool AsyncCallback(ani_env *env, ani_object call, ani_object stsErrCode, ani_object retObj)
+{
+    ani_status status = ANI_ERROR;
+    ani_class clsCall {};
+    if ((status = env->FindClass("L@ohos/print/AsyncCallbackWrapper;", &clsCall)) != ANI_OK) {
+        PRINT_HILOGE("FindClass fail, status: %{public}d", status);
+        return false;
+    }
+    ani_method method = {};
+    if ((status = env->Class_FindMethod(
+        clsCall, INVOKE_METHOD_NAME, nullptr, &method)) != ANI_OK) {
+        PRINT_HILOGE("Class_FindMethod fail, status: %{public}d", status);
+        return false;
+    }
+    if (retObj == nullptr) {
+        ani_ref undefinedRef = nullptr;
+        env->GetUndefined(&undefinedRef);
+        retObj = reinterpret_cast<ani_object>(undefinedRef);
+    }
+    if ((status = env->Object_CallMethod_Void(call, method, stsErrCode, retObj)) != ANI_OK) {
+        PRINT_HILOGE("Object_CallMethod_Void fail, status: %{public}d", status);
+        return false;
+    }
+    return true;
+}
+
+bool StsCallback(ani_env *env, ani_object call, ani_object retObj)
+{
+    ani_status status = ANI_ERROR;
+    ani_class clsCall {};
+    if ((status = env->FindClass("L@ohos/print/CallbackWrapper;", &clsCall)) != ANI_OK) {
+        PRINT_HILOGE("FindClass fail, status: %{public}d", status);
+        return false;
+    }
+    ani_method method = {};
+    if ((status = env->Class_FindMethod(
+        clsCall, INVOKE_METHOD_NAME, nullptr, &method)) != ANI_OK) {
+        PRINT_HILOGE("Class_FindMethod fail, status: %{public}d", status);
+        return false;
+    }
+    if (retObj == nullptr) {
+        ani_ref undefinedRef = nullptr;
+        env->GetUndefined(&undefinedRef);
+        retObj = reinterpret_cast<ani_object>(undefinedRef);
+    }
+    if ((status = env->Object_CallMethod_Void(call, method, retObj)) != ANI_OK) {
+        PRINT_HILOGE("Object_CallMethod_Void fail, status: %{public}d", status);
+        return false;
+    }
+    return true;
+}
+
+bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_object result)
+{
+    ani_status status = ANI_ERROR;
+    ani_class clsCall {};
+    if ((status = env->FindClass("L@ohos/print/AsyncCallbackArrayWrapper;", &clsCall)) != ANI_OK) {
+        PRINT_HILOGE("FindClass fail, status: %{public}d", status);
+        return false;
+    }
+    ani_method method = {};
+    if ((status = env->Class_FindMethod(
+        clsCall, INVOKE_METHOD_NAME, nullptr, &method)) != ANI_OK) {
+        PRINT_HILOGE("Class_FindMethod fail, status: %{public}d", status);
+        return false;
+    }
+    if (result == nullptr) {
+        ani_ref undefinedRef = nullptr;
+        env->GetUndefined(&undefinedRef);
+        result = reinterpret_cast<ani_object>(undefinedRef);
+    }
+    if ((status = env->Object_CallMethod_Void(call, method, error, result)) != ANI_OK) {
+        PRINT_HILOGE("Object_CallMethod_Void fail, status: %{public}d", status);
+        return false;
+    }
+    return true;
 }
 
 ani_object CreateStsError(ani_env *env, ani_int code)

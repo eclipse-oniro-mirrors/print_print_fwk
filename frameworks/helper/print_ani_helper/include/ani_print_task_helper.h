@@ -12,15 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef OHOS_PRINT_CALLBACK_ANI_UTIL_H
-#define OHOS_PRINT_CALLBACK_ANI_UTIL_H
+#ifndef OHOS_ANI_PRINT_TASK_HELPER_H
+#define OHOS_ANI_PRINT_TASK_HELPER_H
 
 #include <ani.h>
 #include <string>
+#include <vector>
+#include "ani_print_task.h"
 namespace OHOS::Print {
-    bool AsyncCallback(ani_env *env, ani_object call, ani_object stsErrCode, ani_object retObj);
-    bool StsCallback(ani_env *env, ani_object call, ani_object retObj);
-    bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_object result);
-    ani_object CreateStsError(ani_env *env, ani_int code);
+class AniPrintTaskHelper {
+public:
+    static ani_object CreatePrintTask(ani_env *env, AniPrintTask* nativePrintTask);
+    static AniPrintTask* UnwrappPrintTask(ani_env *env, ani_object object);
+};
 }  // namespace OHOS::Print
-#endif  // OHOS_PRINT_CALLBACK_ANI_UTIL_H
+#endif  // OHOS_ANI_PRINT_TASK_HELPER_H

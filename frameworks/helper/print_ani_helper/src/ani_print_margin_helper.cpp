@@ -31,20 +31,20 @@ PrintMargin AniPrintMarginHelper::ParsePrintMargin(ani_env *env, ani_object marg
 {
     PRINT_HILOGI("enter ParsePrintMargin");
     PrintMargin margin;
-    int32_t top = 0;
-    if (GetIntByName(env, marginAni, TOP_STR, top)) {
+    double top = 0;
+    if (GetDoubleProperty(env, marginAni, TOP_STR, top)) {
         margin.SetTop(static_cast<uint32_t>(top));
     }
-    int32_t bottom = 0;
-    if (GetIntByName(env, marginAni, BOTTOM_STR, bottom)) {
+    double bottom = 0;
+    if (GetDoubleProperty(env, marginAni, BOTTOM_STR, bottom)) {
         margin.SetBottom(static_cast<uint32_t>(bottom));
     }
-    int32_t left = 0;
-    if (GetIntByName(env, marginAni, LEFT_STR, left)) {
+    double left = 0;
+    if (GetDoubleProperty(env, marginAni, LEFT_STR, left)) {
         margin.SetLeft(static_cast<uint32_t>(left));
     }
-    int32_t right = 0;
-    if (GetIntByName(env, marginAni, RIGHT_STR, right)) {
+    double right = 0;
+    if (GetDoubleProperty(env, marginAni, RIGHT_STR, right)) {
         margin.SetRight(static_cast<uint32_t>(right));
     }
     return margin;
@@ -53,26 +53,25 @@ PrintMargin AniPrintMarginHelper::ParsePrintMargin(ani_env *env, ani_object marg
 ani_object AniPrintMarginHelper::CreatePrintMargin(ani_env *env, const PrintMargin& margin)
 {
     PRINT_HILOGI("enter CreatePrintMargin");
-    ani_class cls;
-    static const char *className = "L@ohos/print/PrintMargin;";
-    ani_object obj = CreateObject(env, className, cls);
+    static const char *className = "L@ohos/print/print/PrintMarginImp;";
 
+    ani_object obj = CreateObject(env, nullptr, className);
     if (margin.HasTop()) {
-        SetFieldInt(env, cls, obj, TOP_STR, static_cast<int32_t>(margin.GetTop()));
+        SetDoubleProperty(env, obj, TOP_STR, static_cast<double>(margin.GetTop()));
     }
 
     if (margin.HasBottom()) {
-        SetFieldInt(env, cls, obj, BOTTOM_STR, static_cast<int32_t>(margin.GetBottom()));
+        SetDoubleProperty(env, obj, BOTTOM_STR, static_cast<double>(margin.GetBottom()));
     }
 
     if (margin.HasLeft()) {
-        SetFieldInt(env, cls, obj, LEFT_STR, static_cast<int32_t>(margin.GetLeft()));
+        SetDoubleProperty(env, obj, LEFT_STR, static_cast<double>(margin.GetLeft()));
     }
 
     if (margin.HasRight()) {
-        SetFieldInt(env, cls, obj, RIGHT_STR, static_cast<int32_t>(margin.GetRight()));
+        SetDoubleProperty(env, obj, RIGHT_STR, static_cast<double>(margin.GetRight()));
     }
 
     return obj;
 }
-}  //
+}  // namespace OHOS::Print

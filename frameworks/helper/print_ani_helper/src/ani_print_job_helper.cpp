@@ -43,7 +43,7 @@ const char* OPTIONS_STR = "options";
 }
 
 namespace OHOS::Print {
-static const char *CLASS_NAME = "L@ohos/print/PrintJob;";
+static const char *CLASS_NAME = "L@ohos/print/print/PrintJobImp;";
 PrintJob AniPrintJobHelper::ParsePrintJob(ani_env *env, ani_object jobInfoAni)
 {
     PRINT_HILOGI("enter ParsePrintJob");
@@ -57,15 +57,15 @@ PrintJob AniPrintJobHelper::ParsePrintJob(ani_env *env, ani_object jobInfoAni)
 void AniPrintJobHelper::ParsePrintJobStringField(ani_env *env, ani_object jobInfoAni, PrintJob& jobInfo)
 {
     std::string jobId;
-    if (GetStringOrUndefined(env, jobInfoAni, JOB_ID_STR, jobId)) {
+    if (GetStringProperty(env, jobInfoAni, JOB_ID_STR, jobId)) {
         jobInfo.SetJobId(jobId);
     }
     std::string printerId;
-    if (GetStringOrUndefined(env, jobInfoAni, PRINTER_ID_STR, printerId)) {
+    if (GetStringProperty(env, jobInfoAni, PRINTER_ID_STR, printerId)) {
         jobInfo.SetPrinterId(printerId);
     }
     std::string option;
-    if (GetStringOrUndefined(env, jobInfoAni, OPTION_STR, option)) {
+    if (GetStringProperty(env, jobInfoAni, OPTION_STR, option)) {
         jobInfo.SetOption(option);
     }
 }
@@ -73,55 +73,60 @@ void AniPrintJobHelper::ParsePrintJobStringField(ani_env *env, ani_object jobInf
 void AniPrintJobHelper::ParsePrintJobDoubleField(ani_env *env, ani_object jobInfoAni, PrintJob& jobInfo)
 {
     std::vector<ani_double> fdList;
-    if (GetDoubleArrayOrUndefined(env, jobInfoAni, FD_LIST_STR, fdList)) {
+    if (GetDoubleArrayProperty(env, jobInfoAni, FD_LIST_STR, fdList)) {
         std::vector<uint32_t> fdUintList;
         for (const auto &fd : fdList) {
             fdUintList.push_back(static_cast<uint32_t>(fd));
         }
         jobInfo.SetFdList(fdUintList);
     }
-    ani_double jobState;
-    if (GetDoubleOrUndefined(env, jobInfoAni, JOB_STATE_STR, jobState)) {
+    ani_double jobState = 0.0;
+    if (GetDoubleProperty(env, jobInfoAni, JOB_STATE_STR, jobState)) {
         jobInfo.SetJobState(static_cast<uint32_t>(jobState));
     }
-    ani_double jobSubstate;
-    if (GetDoubleOrUndefined(env, jobInfoAni, JOB_SUBSTATE_STR, jobSubstate)) {
+    ani_double jobSubstate = 0.0;
+    if (GetDoubleProperty(env, jobInfoAni, JOB_SUBSTATE_STR, jobSubstate)) {
         jobInfo.SetSubState(static_cast<uint32_t>(jobSubstate));
     }
-    ani_double copyNumber;
-    if (GetDoubleOrUndefined(env, jobInfoAni, COPY_NUMBER_STR, copyNumber)) {
+    ani_double copyNumber = 0.0;
+    if (GetDoubleProperty(env, jobInfoAni, COPY_NUMBER_STR, copyNumber)) {
         jobInfo.SetCopyNumber(static_cast<uint32_t>(copyNumber));
     }
-
-    jobInfo.SetIsLandscape(GetBoolOrUndefined(env, jobInfoAni, IS_LANDSCAPE_STR));
-    ani_double colorMode;
-    if (GetDoubleOrUndefined(env, jobInfoAni, COLOR_MODE_STR, colorMode)) {
+    bool isLandscape = false;
+    if (GetBoolProperty(env, jobInfoAni, IS_LANDSCAPE_STR, isLandscape)) {
+        jobInfo.SetIsLandscape(isLandscape);
+    }
+    ani_double colorMode  = false;
+    if (GetDoubleProperty(env, jobInfoAni, COLOR_MODE_STR, colorMode)) {
         jobInfo.SetColorMode(static_cast<uint32_t>(colorMode));
     }
-    ani_double duplexMode;
-    if (GetDoubleOrUndefined(env, jobInfoAni, DUPLEX_MODE_STR, duplexMode)) {
+    ani_double duplexMode = false;
+    if (GetDoubleProperty(env, jobInfoAni, DUPLEX_MODE_STR, duplexMode)) {
         jobInfo.SetDuplexMode(static_cast<uint32_t>(duplexMode));
     }
 }
 
 void AniPrintJobHelper::ParsePrintJobRefField(ani_env *env, ani_object jobInfoAni, PrintJob& jobInfo)
 {
-    ani_ref marginRef;
-    if (GetRefFieldByName(env, jobInfoAni, MARGIN_STR, marginRef)) {
+    ani_ref marginRef = nullptr;
+    if (GetRefProperty(env, jobInfoAni, MARGIN_STR, marginRef)) {
         jobInfo.SetMargin(AniPrintMarginHelper::ParsePrintMargin(env, static_cast<ani_object>(marginRef)));
     }
-    ani_ref previewRef;
-    if (GetRefFieldByName(env, jobInfoAni, PREVIEW_STR, previewRef)) {
+    ani_ref previewRef = nullptr;
+    if (GetRefProperty(env, jobInfoAni, PREVIEW_STR, previewRef)) {
         jobInfo.SetPreview(AniPrintPreviewAttributeHelper::ParsePreviewAttribute(env,
             static_cast<ani_object>(previewRef)));
     }
-    ani_ref pageRangeRef;
-    if (GetRefFieldByName(env, jobInfoAni, PAGE_RANGE_STR, pageRangeRef)) {
+    ani_ref pageRangeRef = nullptr;
+    if (GetRefProperty(env, jobInfoAni, PAGE_RANGE_STR, pageRangeRef)) {
         jobInfo.SetPageRange(AniPrintRangeHelper::ParsePrinterRange(env, static_cast<ani_object>(pageRangeRef)));
     }
-    jobInfo.SetIsSequential(GetBoolOrUndefined(env, jobInfoAni, IS_SEQUENTIAL_STR));
-    ani_ref pageSizeRef;
-    if (GetRefFieldByName(env, jobInfoAni, PAGE_SIZE_STR, pageSizeRef)) {
+    bool isSequential = false;
+    if (GetBoolProperty(env, jobInfoAni, IS_SEQUENTIAL_STR, isSequential)) {
+        jobInfo.SetIsSequential(isSequential);
+    }
+    ani_ref pageSizeRef = nullptr;
+    if (GetRefProperty(env, jobInfoAni, PAGE_SIZE_STR, pageSizeRef)) {
         jobInfo.SetPageSize(AniPrintPageSizeHelper::ParsePrintPageSize(env, static_cast<ani_object>(pageSizeRef)));
     }
 }
@@ -129,42 +134,41 @@ void AniPrintJobHelper::ParsePrintJobRefField(ani_env *env, ani_object jobInfoAn
 ani_object AniPrintJobHelper::CreatePrintJob(ani_env *env, const PrintJob& printJob)
 {
     PRINT_HILOGI("enter CreatePrintJob");
-    ani_class cls;
-    ani_object obj = CreateObject(env, CLASS_NAME, cls);
+    ani_object obj = CreateObject(env, nullptr, CLASS_NAME);
     std::vector<uint32_t> fdList;
     printJob.GetFdList(fdList);
-    SetFieldDoubleArray(env, cls, obj, FD_LIST_STR, std::vector<double>(fdList.begin(), fdList.end()));
-    SetFieldString(env, cls, obj, JOB_ID_STR, printJob.GetJobId());
-    SetFieldString(env, cls, obj, PRINTER_ID_STR, printJob.GetPrinterId());
-    SetFieldInt(env, cls, obj, JOB_STATE_STR, static_cast<int32_t>(printJob.GetJobState()));
-    SetFieldInt(env, cls, obj, JOB_SUBSTATE_STR, static_cast<int32_t>(printJob.GetSubState()));
-    SetFieldInt(env, cls, obj, COPY_NUMBER_STR, printJob.GetCopyNumber());
+    SetDoubleArrayProperty(env, obj, FD_LIST_STR, std::vector<double>(fdList.begin(), fdList.end()));
+    SetStringProperty(env, obj, JOB_ID_STR, printJob.GetJobId());
+    SetStringProperty(env, obj, PRINTER_ID_STR, printJob.GetPrinterId());
+    SetDoubleProperty(env, obj, JOB_STATE_STR, static_cast<double>(printJob.GetJobState()));
+    SetDoubleProperty(env, obj, JOB_SUBSTATE_STR, static_cast<double>(printJob.GetSubState()));
+    SetDoubleProperty(env, obj, COPY_NUMBER_STR, static_cast<double>(printJob.GetCopyNumber()));
     PrintRange range;
     printJob.GetPageRange(range);
     ani_ref pageRangeRef = AniPrintRangeHelper::CreatePrinterRange(env, range);
-    SetFieldRef(env, cls, obj, PAGE_RANGE_STR, pageRangeRef);
-    SetFieldBoolean(env, cls, obj, IS_SEQUENTIAL_STR, printJob.GetIsSequential());
+    SetRefProperty(env, obj, PAGE_RANGE_STR, pageRangeRef);
+    SetBoolProperty(env, obj, IS_SEQUENTIAL_STR, printJob.GetIsSequential());
     PrintPageSize pageSize;
     printJob.GetPageSize(pageSize);
     ani_ref pageSizeRef = AniPrintPageSizeHelper::CreatePageSize(env, pageSize);
-    SetFieldRef(env, cls, obj, PAGE_SIZE_STR, pageSizeRef);
-    SetFieldBoolean(env, cls, obj, IS_LANDSCAPE_STR, printJob.GetIsLandscape());
-    SetFieldInt(env, cls, obj, COLOR_MODE_STR, static_cast<int32_t>(printJob.GetColorMode()));
-    SetFieldInt(env, cls, obj, DUPLEX_MODE_STR, static_cast<int32_t>(printJob.GetDuplexMode()));
+    SetRefProperty(env, obj, PAGE_SIZE_STR, pageSizeRef);
+    SetBoolProperty(env, obj, IS_LANDSCAPE_STR, printJob.GetIsLandscape());
+    SetDoubleProperty(env, obj, COLOR_MODE_STR, static_cast<double>(printJob.GetColorMode()));
+    SetDoubleProperty(env, obj, DUPLEX_MODE_STR, static_cast<double>(printJob.GetDuplexMode()));
     if (printJob.HasMargin()) {
         PrintMargin margin;
         printJob.GetMargin(margin);
         ani_ref marginRef = AniPrintMarginHelper::CreatePrintMargin(env, margin);
-        SetFieldRef(env, cls, obj, MARGIN_STR, marginRef);
+        SetRefProperty(env, obj, MARGIN_STR, marginRef);
     }
     if (printJob.HasPreview()) {
         PrintPreviewAttribute preview;
         printJob.GetPreview(preview);
         ani_ref marginRef = AniPrintPreviewAttributeHelper::CreatePreviewAttribute(env, preview);
-        SetFieldRef(env, cls, obj, PREVIEW_STR, marginRef);
+        SetRefProperty(env, obj, PREVIEW_STR, marginRef);
     }
     if (printJob.HasOption()) {
-        SetFieldString(env, cls, obj, std::string(OPTIONS_STR), printJob.GetOption());
+        SetStringProperty(env, obj, OPTIONS_STR, printJob.GetOption());
     }
     return obj;
 }

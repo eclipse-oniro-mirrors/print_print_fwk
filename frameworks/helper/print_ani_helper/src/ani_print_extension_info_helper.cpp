@@ -20,11 +20,11 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-const std::string EXTENSION_ID_STR = "extensionId";
-const std::string VENDOR_ID_STR = "vendorId";
-const std::string VENDOR_NAME_STR = "vendorName";
-const std::string VENDOR_ICON_STR = "vendorIcon";
-const std::string VERSION_STR = "version";
+const char* EXTENSION_ID_STR = "extensionId";
+const char* VENDOR_ID_STR = "vendorId";
+const char* VENDOR_NAME_STR = "vendorName";
+const char* VENDOR_ICON_STR = "vendorIcon";
+const char* VERSION_STR = "version";
 const char *CLASS_NAME = "L@ohos/print/print/PrinterExtensionInfoImpl;";
 
 ani_object AniPrintExtensionInfoHelper::CreatePrinterExtensionInfoArray(ani_env *env,
@@ -66,11 +66,11 @@ ani_object AniPrintExtensionInfoHelper::CreatePrinterExtensionInfoArray(ani_env 
             PRINT_HILOGE("Create Object Failed");
             return arrayObj;
         }
-        SetFieldString(env, cls, infoObj, EXTENSION_ID_STR, infos[i].GetExtensionId());
-        SetFieldString(env, cls, infoObj, VENDOR_ID_STR, infos[i].GetVendorId());
-        SetFieldString(env, cls, infoObj, VENDOR_NAME_STR, infos[i].GetVendorName());
-        SetFieldDouble(env, cls, infoObj, VENDOR_ICON_STR, infos[i].GetVendorIcon());
-        SetFieldString(env, cls, infoObj, VERSION_STR, infos[i].GetVersion());
+        SetStringProperty(env, infoObj, EXTENSION_ID_STR, infos[i].GetExtensionId());
+        SetStringProperty(env, infoObj, VENDOR_ID_STR, infos[i].GetVendorId());
+        SetStringProperty(env, infoObj, VENDOR_NAME_STR, infos[i].GetVendorName());
+        SetDoubleProperty(env, infoObj, VENDOR_ICON_STR, infos[i].GetVendorIcon());
+        SetStringProperty(env, infoObj, VERSION_STR, infos[i].GetVersion());
         if (ANI_OK != env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", i, infoObj)) {
             PRINT_HILOGE("Set Array Element Failed");
             return arrayObj;

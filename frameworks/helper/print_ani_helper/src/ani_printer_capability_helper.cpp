@@ -39,53 +39,53 @@ PrinterCapability PrinterCapabilityAniHelper::ParsePrinterCapability(ani_env *en
     PRINT_HILOGI("enter ParsePrinterCapability");
     PrinterCapability cap;
     double colorMode;
-    if (GetDoubleOrUndefined(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_COLORMODE, colorMode)) {
+    if (GetDoubleProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_COLORMODE, colorMode)) {
         cap.SetColorMode(static_cast<uint32_t>(colorMode));
     }
 
     double duplexMode;
-    if (GetDoubleOrUndefined(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_DUPLEXMODE, duplexMode)) {
+    if (GetDoubleProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_DUPLEXMODE, duplexMode)) {
         cap.SetDuplexMode(static_cast<uint32_t>(duplexMode));
     }
 
     ani_ref minMarginRef;
-    if (GetRefFieldByName(env, capability, PARAM_CAPABILITY_MINMARGIN, minMarginRef)) {
+    if (GetRefProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_MINMARGIN, minMarginRef)) {
         PrintMargin printMargin = AniPrintMarginHelper::ParsePrintMargin(env, static_cast<ani_object>(minMarginRef));
         cap.SetMinMargin(printMargin);
     }
 
     std::string options;
-    if (GetStringOrUndefined(env, capability, PARAM_CAPABILITY_OPTION, options)) {
+    if (GetStringProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_OPTION, options)) {
         cap.SetOption(options);
     }
 
     std::vector<uint32_t> colorModeList;
-    if (GetEnumArrayOrUndefined(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_SUPPORTED_COLORMODES,
-                                colorModeList)) {
+    if (GetEnumArrayProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_SUPPORTED_COLORMODES,
+        colorModeList)) {
         cap.SetSupportedColorMode(colorModeList);
     }
 
     std::vector<uint32_t> duplexModeList;
-    if (GetEnumArrayOrUndefined(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_SUPPORTED_DUPLEXMODES,
-                                duplexModeList)) {
+    if (GetEnumArrayProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_SUPPORTED_DUPLEXMODES,
+        duplexModeList)) {
         cap.SetSupportedDuplexMode(duplexModeList);
     }
 
     std::vector<uint32_t> qualityList;
-    if (GetEnumArrayOrUndefined(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_SUPPORTED_QUALITIES,
-                                qualityList)) {
+    if (GetEnumArrayProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_SUPPORTED_QUALITIES,
+        qualityList)) {
         cap.SetSupportedQuality(qualityList);
     }
 
     std::vector<uint32_t> orientationList;
-    if (GetEnumArrayOrUndefined(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_SUPPORTED_ORIENTATIONS,
-                                orientationList)) {
+    if (GetEnumArrayProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_SUPPORTED_ORIENTATIONS,
+        orientationList)) {
         cap.SetSupportedOrientation(orientationList);
     }
 
     std::vector<std::string> mediaTypeList;
-    if (GetStringArrayOrUndefined(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_SUPPORTED_MEDIA_TYPES,
-                                  mediaTypeList)) {
+    if (GetStringArrayProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_SUPPORTED_MEDIA_TYPES,
+        mediaTypeList)) {
         cap.SetSupportedMediaType(mediaTypeList);
     }
     return cap;
@@ -94,10 +94,9 @@ PrinterCapability PrinterCapabilityAniHelper::ParsePrinterCapability(ani_env *en
 ani_object PrinterCapabilityAniHelper::CreatePrinterCapability(ani_env *env, const PrinterCapability& cap)
 {
     PRINT_HILOGI("enter CreatePrinterCapability");
-    ani_class cls;
-    ani_object obj = CreateObject(env, CLASS_NAME, cls);
-    SetFieldDouble(env, cls, obj, PARAM_CAPABILITY_COLORMODE, cap.GetColorMode());
-    SetFieldDouble(env, cls, obj, PARAM_CAPABILITY_DUPLEXMODE, cap.GetDuplexMode());
+    ani_object obj = CreateObject(env, nullptr, CLASS_NAME);
+    SetDoubleProperty(env, obj, PARAM_CAPABILITY_COLORMODE, cap.GetColorMode());
+    SetDoubleProperty(env, obj, PARAM_CAPABILITY_DUPLEXMODE, cap.GetDuplexMode());
 
     std::vector<PrintPageSize> supportPageSizeList;
     cap.GetSupportedPageSize(supportPageSizeList);
@@ -107,33 +106,33 @@ ani_object PrinterCapabilityAniHelper::CreatePrinterCapability(ani_env *env, con
 
     PrintMargin minMargin;
     cap.GetMinMargin(minMargin);
-    SetFieldRef(env, cls, obj, PARAM_CAPABILITY_RESOLUTION, AniPrintMarginHelper::CreatePrintMargin(env, minMargin));
+    SetRefProperty(env, obj, PARAM_CAPABILITY_RESOLUTION, AniPrintMarginHelper::CreatePrintMargin(env, minMargin));
 
     std::vector<uint32_t> colorModeList;
     cap.GetSupportedColorMode(colorModeList);
     ani_object colorModeItems = CreateEnumArray(env, "L@ohos/print/print/PrintColorMode;", colorModeList);
-    SetFieldEnumArray(env, cls, obj, PARAM_CAPABILITY_SUPPORTED_COLORMODES, colorModeItems);
+    SetRefProperty(env, obj, PARAM_CAPABILITY_SUPPORTED_COLORMODES, colorModeItems);
 
     std::vector<uint32_t> duplexModeLIst;
     cap.GetSupportedDuplexMode(duplexModeLIst);
     ani_object duplexModeItems = CreateEnumArray(env, "L@ohos/print/print/PrintDuplexMode;", duplexModeLIst);
-    SetFieldEnumArray(env, cls, obj, PARAM_CAPABILITY_SUPPORTED_DUPLEXMODES, duplexModeItems);
+    SetRefProperty(env, obj, PARAM_CAPABILITY_SUPPORTED_DUPLEXMODES, duplexModeItems);
 
     std::vector<uint32_t> qualityList;
     cap.GetSupportedQuality(qualityList);
     ani_object qualityListItems = CreateEnumArray(env, "L@ohos/print/print/PrintQuality;", qualityList);
-    SetFieldEnumArray(env, cls, obj, PARAM_CAPABILITY_SUPPORTED_QUALITIES, qualityListItems);
+    SetRefProperty(env, obj, PARAM_CAPABILITY_SUPPORTED_QUALITIES, qualityListItems);
 
     std::vector<uint32_t> orientationList;
     cap.GetSupportedOrientation(orientationList);
     ani_object orientationItems = CreateEnumArray(env, "L@ohos/print/print/PrintOrientationMode;", orientationList);
-    SetFieldEnumArray(env, cls, obj, PARAM_CAPABILITY_SUPPORTED_ORIENTATIONS, orientationItems);
+    SetRefProperty(env, obj, PARAM_CAPABILITY_SUPPORTED_ORIENTATIONS, orientationItems);
 
     std::vector<std::string> mediaTypeList;
     cap.GetSupportedMediaType(mediaTypeList);
-    SetFieldStringArray(env, cls, obj, PARAM_CAPABILITY_SUPPORTED_MEDIA_TYPES, mediaTypeList);
+    SetStringArrayProperty(env, obj, PARAM_CAPABILITY_SUPPORTED_MEDIA_TYPES, mediaTypeList);
 
-    SetFieldString(env, cls, obj, PARAM_CAPABILITY_OPTION, cap.GetOption());
+    SetStringProperty(env, obj, PARAM_CAPABILITY_OPTION, cap.GetOption());
 
     return nullptr;
 }

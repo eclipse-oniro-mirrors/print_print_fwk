@@ -17,52 +17,37 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-bool GetIntByName(ani_env *env, ani_ref param, const char *name, int32_t &value)
-{
-    ani_int res;
-    ani_status status;
-
-    status = env->Object_GetFieldByName_Int(static_cast<ani_object>(param), name, &res);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
-        return false;
-    }
-
-    value = static_cast<int32_t>(res);
-    return true;
-}
-
-bool GetDoubleArrayOrUndefined(ani_env *env, ani_object param, const char *name, std::vector<ani_double> &res)
+bool GetDoubleArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<double> &res)
 {
     ani_ref arrayObj = nullptr;
     ani_boolean isUndefined = true;
-    ani_status status;
-    ani_double length;
+    ani_status status = ANI_ERROR;
+    ani_double length = 0.0;
     std::string str;
 
-    if ((status = env->Object_GetFieldByName_Ref(param, name, &arrayObj)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+    if ((status = env->Object_GetPropertyByName_Ref(param, name, &arrayObj)) != ANI_OK) {
+        PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
         return false;
     }
     if ((status = env->Reference_IsUndefined(arrayObj, &isUndefined)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
         return false;
     }
     if (isUndefined) {
-        PRINT_HILOGE("%{public}s : undefined", name);
+        PRINT_HILOGD("%{public}s is undefined: undefined", name);
         return false;
     }
 
     status = env->Object_GetPropertyByName_Double(reinterpret_cast<ani_object>(arrayObj), "length", &length);
     if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
         return false;
     }
     for (int32_t i = 0; i < static_cast<int32_t>(length); i++) {
         ani_double value;
         if ((status = env->Object_CallMethodByName_Double(
             reinterpret_cast<ani_object>(arrayObj), "doubleValue", nullptr, &value)) != ANI_OK) {
-            PRINT_HILOGE("status : %{public}d", status);
+            PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
             return false;
         }
         res.push_back(value);
@@ -70,72 +55,79 @@ bool GetDoubleArrayOrUndefined(ani_env *env, ani_object param, const char *name,
     return true;
 }
 
-bool GetStringArrayOrUndefined(ani_env *env, ani_object param, const char *name, std::vector<std::string> &res)
+bool GetStringArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<std::string> &value)
 {
-    ani_ref obj = nullptr;
-    ani_boolean isUndefined = true;
-    ani_status status;
-    ani_size size = 0;
-    ani_size i;
-    ani_ref ref;
-    std::string str;
-
-    if ((status = env->Object_GetFieldByName_Ref(param, name, &obj)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
         return false;
     }
-    if ((status = env->Reference_IsUndefined(obj, &isUndefined)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+
+    ani_ref arrayObj = nullptr;
+    ani_boolean isUndefined = true;
+    ani_status status = ANI_ERROR;
+    ani_double length = 0.0;
+    std::string str;
+
+    if ((status = env->Object_GetPropertyByName_Ref(param, name, &arrayObj)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
+        return false;
+    }
+    if ((status = env->Reference_IsUndefined(arrayObj, &isUndefined)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
     if (isUndefined) {
-        PRINT_HILOGE("%{public}s : undefined", name);
+        PRINT_HILOGD("%{public}s is undefined", name);
         return false;
     }
 
-    if ((status = env->Array_GetLength(reinterpret_cast<ani_array>(obj), &size)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+    status = env->Object_GetPropertyByName_Double(reinterpret_cast<ani_object>(arrayObj), "length", &length);
+    if (status != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
 
-    for (i = 0; i < size; i++) {
-        if ((status = env->Array_Get_Ref(reinterpret_cast<ani_array_ref>(obj), i, &ref)) != ANI_OK) {
-            PRINT_HILOGE("status : %{public}d, index: %{public}zu", status, i);
+    for (int i = 0; i < static_cast<int>(length); i++) {
+        ani_ref stringEntryRef;
+        status = env->Object_CallMethodByName_Ref(reinterpret_cast<ani_object>(arrayObj),
+            "$_get", "I:Lstd/core/Object;", &stringEntryRef, (ani_int)i);
+        if (status != ANI_OK) {
+            PRINT_HILOGE("status: %{public}d, index: %{public}d, name : %{public}s", status, i, name);
             return false;
         }
 
         str = "";
-        if (!GetStdString(env, reinterpret_cast<ani_string>(ref), str)) {
-            PRINT_HILOGE("GetStdString failed, index: %{public}zu", i);
+        if (!GetStdString(env, reinterpret_cast<ani_string>(stringEntryRef), str)) {
+            PRINT_HILOGE("GetStdString failed, index: %{public}d, name : %{public}s", i, name);
             return false;
         }
 
-        res.push_back(str);
+        value.push_back(str);
     }
 
     return true;
 }
 
-bool GetEnumArrayOrUndefined(ani_env *env, ani_object param, const char *name, std::vector<uint32_t> &res)
+bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<uint32_t> &res)
 {
     ani_ref obj = nullptr;
     ani_boolean isUndefined = true;
-    ani_status status;
+    ani_status status = ANI_ERROR;
     ani_size size = 0;
-    ani_size i;
-    ani_ref ref;
+    ani_size i = 0;
+    ani_ref ref = nullptr;
     std::string str;
 
-    if ((status = env->Object_GetFieldByName_Ref(param, name, &obj)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+    if ((status = env->Object_GetPropertyByName_Ref(param, name, &obj)) != ANI_OK) {
+        PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
         return false;
     }
     if ((status = env->Reference_IsUndefined(obj, &isUndefined)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
         return false;
     }
     if (isUndefined) {
-        PRINT_HILOGE("%{public}s : undefined", name);
+        PRINT_HILOGD("%{public}s is undefined", name);
         return false;
     }
 
@@ -156,33 +148,7 @@ bool GetEnumArrayOrUndefined(ani_env *env, ani_object param, const char *name, s
     return true;
 }
 
-bool GetDoubleOrUndefined(ani_env *env, ani_object param, const char *name, ani_double &value)
-{
-    ani_ref obj = nullptr;
-    ani_boolean isUndefined = true;
-    ani_status status = ANI_ERROR;
-
-    if ((status = env->Object_GetFieldByName_Ref(param, name, &obj)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
-        return false;
-    }
-    if ((status = env->Reference_IsUndefined(obj, &isUndefined)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
-        return false;
-    }
-    if (isUndefined) {
-        PRINT_HILOGE("%{public}s : undefined", name);
-        return false;
-    }
-    if ((status = env->Object_CallMethodByName_Double(
-        reinterpret_cast<ani_object>(obj), "doubleValue", nullptr, &value)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
-        return false;
-    }
-    return true;
-}
-
-bool GetBoolOrUndefined(ani_env *env, ani_object param, const char *name)
+bool GetBoolProperty(ani_env *env, ani_object param, const char *name, bool value)
 {
     ani_ref obj = nullptr;
     ani_boolean isUndefined = true;
@@ -190,306 +156,277 @@ bool GetBoolOrUndefined(ani_env *env, ani_object param, const char *name)
     ani_boolean res = 0.0;
 
     if ((status = env->Object_GetFieldByName_Ref(param, name, &obj)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
         return res;
     }
     if ((status = env->Reference_IsUndefined(obj, &isUndefined)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
         return res;
     }
     if (isUndefined) {
-        PRINT_HILOGE("%{public}s : undefined", name);
+        PRINT_HILOGD("%{public}s : undefined", name);
         return res;
     }
     if ((status = env->Object_CallMethodByName_Boolean(
         reinterpret_cast<ani_object>(obj), "booleanValue", nullptr, &res)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
         return res;
     }
     return res;
 }
 
-bool GetStringOrUndefined(ani_env *env, ani_ref param, const char *name, std::string &res)
+bool GetStringProperty(ani_env *env, ani_object param, const char *name, std::string &value)
 {
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
+        return false;
+    }
+
     ani_ref obj = nullptr;
     ani_boolean isUndefined = true;
     ani_status status = ANI_ERROR;
 
-    if ((status = env->Object_GetFieldByName_Ref(static_cast<ani_object>(param), name, &obj)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+    if ((status = env->Object_GetPropertyByName_Ref(param, name, &obj)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
     if ((status = env->Reference_IsUndefined(obj, &isUndefined)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
     if (isUndefined) {
-        PRINT_HILOGE("%{public}s : undefined", name);
+        PRINT_HILOGD("%{public}s : undefined", name);
         return false;
     }
-    if (!GetStdString(env, reinterpret_cast<ani_string>(obj), res)) {
-        PRINT_HILOGE("GetStdString failed");
+    if (!GetStdString(env, reinterpret_cast<ani_string>(obj), value)) {
+        PRINT_HILOGE("GetStdString failed, name : %{public}s", name);
         return false;
     }
     return true;
 }
 
-bool GetRefFieldByName(ani_env *env, ani_ref param, const char *name, ani_ref &ref)
+bool GetRefProperty(ani_env *env, ani_object param, const char *name, ani_ref &value)
 {
-    ani_status status = ANI_ERROR;
-    if ((status = env->Object_GetFieldByName_Ref(static_cast<ani_object>(param), name, &ref)) != ANI_OK) {
-        PRINT_HILOGE("Object_GetFieldByName_Ref failed, status : %{public}d", status);
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
         return false;
     }
 
+    ani_status status;
     ani_boolean isUndefined = true;
-    if ((status = env->Reference_IsUndefined(ref, &isUndefined)) != ANI_OK) {
-        PRINT_HILOGE("Reference_IsUndefined failed, status : %{public}d", status);
+
+    if ((status = env->Object_GetPropertyByName_Ref(param, name, &value)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
+        return false;
+    }
+    if ((status = env->Reference_IsUndefined(value, &isUndefined)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
     if (isUndefined) {
-        PRINT_HILOGE("wantParams is undefined");
         return false;
     }
+    return true;
+}
+
+bool GetDoubleProperty(ani_env *env, ani_object param, const char *name, double &value)
+{
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
+        return false;
+    }
+
+    ani_status status = ANI_ERROR;
+    ani_double res;
+    if ((status = env->Object_GetPropertyByName_Double(param, name, &res)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
+        return false;
+    }
+    value = static_cast<double>(res);
     return true;
 }
 
 // SET
-bool SetFieldDouble(ani_env *env, ani_class cls, ani_object object, const std::string &fieldName, double value)
-{
-    ani_field field = nullptr;
-    ani_status status = env->Class_FindField(cls, fieldName.c_str(), &field);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("find status : %{public}d", status);
-        return false;
-    }
-    status = env->Object_SetField_Double(object, field, value);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("set field status : %{public}d", status);
-        return false;
-    }
-    return true;
-}
-
-bool SetFieldDoubleArray(ani_env *env, ani_class cls, ani_object object, const std::string &fieldName,
+bool SetDoubleArrayProperty(ani_env *env, ani_object param, const char *name,
     const std::vector<double> &values)
 {
-    ani_field field = nullptr;
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
+        return false;
+    }
+
     ani_class arrayCls = nullptr;
     ani_method arrayCtor;
     ani_object arrayObj;
-    
-    ani_status status = env->Class_FindField(cls, fieldName.c_str(), &field);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
-        return false;
-    }
 
-    status = env->FindClass("Lescompat/Array;", &arrayCls);
+    ani_status status = env->FindClass("Lescompat/Array;", &arrayCls);
     if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
 
     status = env->Class_FindMethod(arrayCls, "<ctor>", "I:V", &arrayCtor);
     if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status: %{public}d", status);
         return false;
     }
 
     status = env->Object_New(arrayCls, arrayCtor, &arrayObj, values.size());
     if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
 
     for (size_t i = 0; i < values.size(); i++) {
         status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ID:V", i, values[i]);
         if (status != ANI_OK) {
-            PRINT_HILOGE("status : %{public}d", status);
+            PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
             return false;
         }
     }
-
-    status = env->Object_SetField_Ref(object, field, arrayObj);
+    status = env->Object_SetPropertyByName_Ref(param, name, arrayObj);
     if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
 
     return true;
 }
 
-bool SetFieldBoolean(ani_env *env, ani_class cls, ani_object object, const std::string &fieldName, bool value)
-{
-    ani_field field = nullptr;
-    ani_status status = env->Class_FindField(cls, fieldName.c_str(), &field);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
-        return false;
-    }
-    status = env->Object_SetField_Boolean(object, field, value);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
-        return false;
-    }
-    return true;
-}
-
-bool SetFieldInt(ani_env *env, ani_class cls, ani_object object, const std::string &fieldName, int32_t value)
-{
-    ani_field field = nullptr;
-    ani_status status = env->Class_FindField(cls, fieldName.c_str(), &field);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
-        PRINT_HILOGE("status : %{public}s", fieldName.c_str());
-        return false;
-    }
-    status = env->Object_SetField_Int(object, field, value);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
-        PRINT_HILOGE("status : %{public}s", fieldName.c_str());
-        return false;
-    }
-    return true;
-}
-
-bool SetFieldEnum(ani_env *env, ani_object object, const std::string &fieldName,
+bool SetEnumProperty(ani_env *env, ani_object object, const std::string &fieldName,
     const std::string &signature, ani_enum_item item)
 {
     if (ANI_OK != env->Object_CallMethodByName_Void(object, fieldName.c_str(), signature.c_str(), item)) {
-        PRINT_HILOGE("SetFieldEnum failed");
+        PRINT_HILOGE("SetEnumProperty failed");
         return false;
     }
     return true;
 }
 
-bool SetFieldEnumArray(ani_env *env, ani_class cls, ani_object object, const std::string &fieldName, ani_object items)
+bool SetStringProperty(ani_env *env, ani_object param, const char *name, const std::string &value)
 {
-    ani_field field = nullptr;
-
-    ani_status status = env->Class_FindField(cls, fieldName.c_str(), &field);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
         return false;
     }
-
-    status = env->Object_SetField_Ref(object, field, items);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
-        return false;
-    }
-    return true;
-}
-
-bool SetFieldRef(ani_env *env, ani_class cls, ani_object object, const std::string &fieldName, ani_ref value)
-{
-    ani_field field = nullptr;
-    ani_status status = env->Class_FindField(cls, fieldName.c_str(), &field);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("FindField %{public}s failed, status: %{public}d", fieldName.c_str(), status);
-        return false;
-    }
-    status = env->Object_SetField_Ref(object, field, value);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("SetField_Ref %{public}s failed, status: %{public}d", fieldName.c_str(), status);
-        return false;
-    }
-    return true;
-}
-
-bool SetFieldString(ani_env *env, ani_class cls, ani_object object, const std::string &fieldName,
-    const std::string &value)
-{
-    ani_field field = nullptr;
-    ani_string string = nullptr;
-    ani_status status = env->Class_FindField(cls, fieldName.c_str(), &field);
-
-    PRINT_HILOGI("fieldName : %{public}s", fieldName.c_str());
-
-    if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
-        return false;
-    }
-
+    ani_status status;
+    ani_string aniString = nullptr;
     if (value.empty()) {
         ani_ref nullRef = nullptr;
         if ((status = env->GetNull(&nullRef)) != ANI_OK) {
-            PRINT_HILOGE("status : %{public}d", status);
+            PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
             return false;
         }
-        if ((status = env->Object_SetField_Ref(object, field, nullRef)) != ANI_OK) {
-            PRINT_HILOGE("status : %{public}d", status);
+        if ((status = env->Object_SetPropertyByName_Ref(param, name, nullRef)) != ANI_OK) {
+            PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
             return false;
         }
         return true;
     }
-
-    if ((status = env->String_NewUTF8(value.c_str(), value.size(), &string)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+    if ((status = env->String_NewUTF8(value.c_str(), value.size(), &aniString)) != ANI_OK) {
+        PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
         return false;
     }
-
-    if ((status = env->Object_SetField_Ref(object, field, string)) != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+    if ((status = env->Object_SetPropertyByName_Ref(param, name, aniString)) != ANI_OK) {
+        PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
         return false;
     }
     return true;
 }
 
-bool SetFieldStringArray(ani_env *env, ani_class cls, ani_object object, const std::string &fieldName,
-    const std::vector<std::string> &values)
+bool SetStringArrayProperty(ani_env *env, ani_object param, const char *name, const std::vector<std::string> &values)
 {
-    ani_field field = nullptr;
-    ani_class arrayCls = nullptr;
-    ani_method arrayCtor;
-    ani_object arrayObj;
-    ani_string string = nullptr;
-
-    ani_status status = env->Class_FindField(cls, fieldName.c_str(), &field);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
         return false;
     }
 
-    status = env->FindClass("Lescompat/Array;", &arrayCls);
+    ani_class arrayCls = nullptr;
+    ani_method arrayCtor;
+    ani_object arrayObj;
+
+    ani_status status = env->FindClass("Lescompat/Array;", &arrayCls);
     if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
 
     status = env->Class_FindMethod(arrayCls, "<ctor>", "I:V", &arrayCtor);
     if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
 
     status = env->Object_New(arrayCls, arrayCtor, &arrayObj, values.size());
     if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
-
+    ani_string aniString = nullptr;
     for (size_t i = 0; i < values.size(); i++) {
-        string = nullptr;
-        status = env->String_NewUTF8(values[i].c_str(), values[i].size(), &string);
+        aniString = nullptr;
+        status = env->String_NewUTF8(values[i].c_str(), values[i].size(), &aniString);
         if (status != ANI_OK) {
-            PRINT_HILOGE("status : %{public}d", status);
+            PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
             return false;
         }
 
-        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", i, string);
+        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", i, aniString);
         if (status != ANI_OK) {
-            PRINT_HILOGE("status : %{public}d", status);
+            PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
             return false;
         }
     }
-    status = env->Object_SetField_Ref(object, field, arrayObj);
+    status = env->Object_SetPropertyByName_Ref(param, name, arrayObj);
     if (status != ANI_OK) {
-        PRINT_HILOGE("status : %{public}d", status);
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
 
+    return true;
+}
+
+bool SetRefProperty(ani_env *env, ani_object param, const char *name, ani_ref value)
+{
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
+        return false;
+    }
+
+    ani_status status;
+    if ((status = env->Object_SetPropertyByName_Ref(param, name, value)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
+        return false;
+    }
+    return true;
+}
+
+bool SetDoubleProperty(ani_env *env, ani_object param, const char *name, double value)
+{
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
+        return false;
+    }
+
+    ani_status status = ANI_ERROR;
+    if ((status = env->Object_SetPropertyByName_Double(param, name, value)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
+        return false;
+    }
+    return true;
+}
+
+bool SetBoolProperty(ani_env *env, ani_object param, const char *name, bool value)
+{
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
+        return false;
+    }
+    ani_status status = ANI_ERROR;
+    if ((status = env->Object_SetPropertyByName_Boolean(param, name, value)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
+        return false;
+    }
     return true;
 }
 

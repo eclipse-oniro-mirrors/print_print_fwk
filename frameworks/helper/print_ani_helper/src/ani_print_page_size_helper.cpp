@@ -24,29 +24,29 @@ const char* ID_STR = "id";
 const char* NAME_STR = "name";
 const char* WIDTH_STR = "width";
 const char* HEIGHT_STR = "height";
+const char *CLASS_NAME = "L@ohos/print/print/PrintPageSizeImp;";
 }
 
 namespace OHOS::Print {
-static const char *CLASS_NAME = "L@ohos/print/PrintPageSize;";
 PrintPageSize AniPrintPageSizeHelper::ParsePrintPageSize(ani_env *env, ani_object pageSizeAni)
 {
     PRINT_HILOGI("enter ParsePrintPageSize");
     PrintPageSize pageSize;
 
     std::string id;
-    if (GetStringOrUndefined(env, pageSizeAni, ID_STR, id)) {
+    if (GetStringProperty(env, pageSizeAni, ID_STR, id)) {
         pageSize.SetId(id);
     }
     std::string name;
-    if (GetStringOrUndefined(env, pageSizeAni, NAME_STR, name)) {
+    if (GetStringProperty(env, pageSizeAni, NAME_STR, name)) {
         pageSize.SetName(name);
     }
-    int32_t width = 0;
-    if (GetIntByName(env, pageSizeAni, WIDTH_STR, width)) {
+    double width = 0;
+    if (GetDoubleProperty(env, pageSizeAni, WIDTH_STR, width)) {
         pageSize.SetWidth(static_cast<uint32_t>(width));
     }
-    int32_t height = 0;
-    if (GetIntByName(env, pageSizeAni, HEIGHT_STR, height)) {
+    double height = 0;
+    if (GetDoubleProperty(env, pageSizeAni, HEIGHT_STR, height)) {
         pageSize.SetHeight(static_cast<uint32_t>(height));
     }
     return pageSize;
@@ -55,13 +55,12 @@ PrintPageSize AniPrintPageSizeHelper::ParsePrintPageSize(ani_env *env, ani_objec
 ani_object AniPrintPageSizeHelper::CreatePageSize(ani_env *env, const PrintPageSize& pageSize)
 {
     PRINT_HILOGI("enter CreatePageSize");
-    ani_class cls;
-    ani_object obj = CreateObject(env, CLASS_NAME, cls);
+    ani_object obj = CreateObject(env, nullptr, CLASS_NAME);
 
-    SetFieldString(env, cls, obj, ID_STR, pageSize.GetId());
-    SetFieldString(env, cls, obj, NAME_STR, pageSize.GetName());
-    SetFieldInt(env, cls, obj, WIDTH_STR, static_cast<int32_t>(pageSize.GetWidth()));
-    SetFieldInt(env, cls, obj, HEIGHT_STR, static_cast<int32_t>(pageSize.GetHeight()));
+    SetStringProperty(env, obj, ID_STR, pageSize.GetId());
+    SetStringProperty(env, obj, NAME_STR, pageSize.GetName());
+    SetDoubleProperty(env, obj, WIDTH_STR, static_cast<double>(pageSize.GetWidth()));
+    SetDoubleProperty(env, obj, HEIGHT_STR, static_cast<double>(pageSize.GetHeight()));
 
     return obj;
 }

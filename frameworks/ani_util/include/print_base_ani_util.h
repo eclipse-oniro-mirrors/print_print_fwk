@@ -19,17 +19,16 @@
 #include <string>
 #include <vector>
 namespace OHOS::Print {
-ani_object CreateInt(ani_env *env, ani_double value);
 ani_object CreateDouble(ani_env *env, ani_double value);
 ani_object CreateBoolean(ani_env *env, ani_boolean value);
 ani_string CreateAniString(ani_env *env, const std::string &str);
 ani_object CreateAniStringArray(ani_env *env, const std::vector<std::string>& strs);
-ani_enum_item CreateEnumByIndex(ani_env *env, const std::string &enum_descriptor, ani_int enumIndex);
-ani_object CreateEnumArray(ani_env *env, const std::string &enum_descriptor, std::vector<uint32_t> enumArray);
-ani_object CreateObject(ani_env *env, const char* className, ani_class& cls);
+ani_enum_item CreateEnumByIndex(ani_env *env, const std::string &enumDescriptor, ani_size enumIndex);
+ani_object CreateEnumArray(ani_env *env, const std::string &enumDescriptor, std::vector<uint32_t> enumIndexArray);
+ani_object CreateObject(ani_env *env, const char *signature, const char* className);
 
 bool GetStdString(ani_env *env, ani_string str, std::string &res);
 bool GetStdStringArray(ani_env *env, ani_object param, std::vector<std::string> &res);
-uint32_t GetEnumValueInt(ani_env *env, const char *enumName, ani_int enumIndex);
+bool GetEnumValueInt(ani_env *env, ani_enum_item enumObj, uint32_t& enumValue);
 }  // namespace OHOS::Print
 #endif  // OHOS_COMMON_PRINT_ANI_UTIL_H
