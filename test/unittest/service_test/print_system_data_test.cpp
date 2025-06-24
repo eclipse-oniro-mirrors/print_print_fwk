@@ -1608,7 +1608,8 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0104_NeedRename, TestSize.Leve
     EXPECT_EQ(printer.GetUri(), uri);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0105_NeedRename, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest,
+    BuildPrinterPreferenceByDefault_WrongTypeValueInJson_HasDefaultPageSizeIdReturnFalse, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1619,11 +1620,14 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0105_NeedRename, TestSize.Leve
     capOpt["sides-default"] = 1;
     capOpt["print-quality-default"] = 1;
     capOpt["media-type-default"] = 1;
+    capOpt["defaultColorMode"] = 1;
+    capOpt["advanceDefault"] = 1;
     systemData->BuildPrinterPreferenceByDefault(capOpt, printPreferences);
     EXPECT_EQ(printPreferences.HasDefaultPageSizeId(), false);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0106_NeedRename, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest,
+    BuildPrinterPreferenceByDefault_CorrectValueInJson_GetDefaultPageSizeIdReturnSameValue, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1634,11 +1638,13 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0106_NeedRename, TestSize.Leve
     capOpt["sides-default"] = "1";
     capOpt["print-quality-default"] = "1";
     capOpt["media-type-default"] = "plain";
+    capOpt["defaultColorMode"] = "1";
+    capOpt["advanceDefault"] = "1";
     systemData->BuildPrinterPreferenceByDefault(capOpt, printPreferences);
     EXPECT_EQ(printPreferences.GetDefaultPageSizeId(), "ISO_A4");
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0107_NeedRename, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, BuildPrinterPreferenceBySupport_SetValue_HasBorderlessReturnTrue, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1648,11 +1654,12 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0107_NeedRename, TestSize.Leve
     printPreferences.SetDefaultDuplexMode(0);
     printPreferences.SetDefaultPrintQuality(0);
     printPreferences.SetDefaultMediaType("plain");
+    printPreferences.SetDefaultColorMode(0);
     systemData->BuildPrinterPreferenceBySupport(cap, printPreferences);
     EXPECT_EQ(printPreferences.HasBorderless(), true);
 }
 
-HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0108_NeedRename, TestSize.Level1)
+HWTEST_F(PrintSystemDataTest, BuildPrinterPreferenceBySupport_SetCap_HasBorderlessReturnTrue, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     EXPECT_NE(systemData, nullptr);
@@ -1667,8 +1674,61 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0108_NeedRename, TestSize.Leve
     std::vector<std::string> supportedMediaTypeList;
     supportedMediaTypeList.emplace_back("plain");
     cap.SetSupportedMediaType(supportedMediaTypeList);
+    std::vector<uint32_t> supportedColorModeList;
+    supportedColorModeList.emplace_back(0);
+    cap.SetSupportedColorMode(supportedColorModeList);
     systemData->BuildPrinterPreferenceBySupport(cap, printPreferences);
     EXPECT_EQ(printPreferences.HasBorderless(), true);
+}
+
+HWTEST_F(PrintSystemDataTest,
+    BuildPrinterPreferenceByDefault_SetPreferencesValue_GetDefaultPageSizeIdReturnSameValue, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capOpt;
+    PrinterPreferences printPreferences;
+    printPreferences.SetDefaultPageSizeId("ISO_A5");
+    printPreferences.SetDefaultOrientation(PRINT_ORIENTATION_MODE_PORTRAIT);
+    printPreferences.SetDefaultDuplexMode(DUPLEX_MODE_LONG_EDGE);
+    printPreferences.SetDefaultPrintQuality(PRINT_QUALITY_DRAFT);
+    printPreferences.SetDefaultMediaType("photo");
+    capOpt["defaultPageSizeId"] = "ISO_A4";
+    capOpt["orientation-requested-default"] = "1";
+    capOpt["sides-default"] = "1";
+    capOpt["print-quality-default"] = "1";
+    capOpt["media-type-default"] = "plain";
+    capOpt["defaultColorMode"] = "1";
+    capOpt["advanceDefault"] = "1";
+    systemData->BuildPrinterPreferenceByDefault(capOpt, printPreferences);
+    EXPECT_EQ(printPreferences.GetDefaultPageSizeId(), "ISO_A5");
+}
+
+HWTEST_F(PrintSystemDataTest,
+    BuildPrinterPreferenceByDefault_NullValueInJson_HasDefaultPageSizeIdReturnfalse, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    Json::Value capOpt;
+    PrinterPreferences printPreferences;
+    systemData->BuildPrinterPreferenceByDefault(capOpt, printPreferences);
+    EXPECT_EQ(printPreferences.HasDefaultPageSizeId(), false);
+}
+
+HWTEST_F(PrintSystemDataTest, BuildPrinterPreferenceBySupport_NoValueSet_HasBorderlessReturnTrue, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    PrinterCapability cap;
+    PrinterPreferences printPreferences;
+    systemData->BuildPrinterPreferenceBySupport(cap, printPreferences);
+    EXPECT_EQ(printPreferences.HasBorderless(), true);
+}
+
+HWTEST_F(PrintSystemDataTest, CheckPrinterVersionFile_FileExist_ReturnTrue, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_EQ(systemData->CheckPrinterVersionFile(), true);
 }
 }  // namespace Print
 }  // namespace OHOS

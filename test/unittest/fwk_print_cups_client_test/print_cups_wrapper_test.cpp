@@ -691,5 +691,24 @@ HWTEST_F(PrintCupsWrapperTest, Modify_ShouldReturnFail_WhenResponseError, TestSi
     };
     DoMockTest(testFunc);
 }
+
+/**
+ * @tc.name: PrintCupsWrapperTest_0001
+ * @tc.desc: QueryPrinterCapabilityFromPPD
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsWrapperTest, QueryPrinterCapabilityFromPPD_PpdNameNotEmpty_ReturnIOError, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    if (printCupsClient.printAbility_ != nullptr) {
+        delete printCupsClient.printAbility_;
+        printCupsClient.printAbility_ = nullptr;
+    }
+    std::string printerName = "testPrinterName";
+    std::string ppdName = "testPpdName";
+    PrinterCapability printerCap;
+    EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCap, ppdName), E_PRINT_FILE_IO);
+}
 }  // namespace Print
 }  // namespace OHOS

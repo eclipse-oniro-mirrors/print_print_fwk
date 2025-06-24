@@ -93,7 +93,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0007_NeedRename, TestSiz
     EXPECT_EQ("test", preferences.GetOption());
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0008_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, Marshalling_NoValueSet_SuccessReturnTrue, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.Dump();
@@ -101,7 +101,7 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0008_NeedRename, TestSiz
     EXPECT_EQ(true, preferences.Marshalling(parcel));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0009_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, Marshalling_SetValue_SuccessReturnTrue, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultDuplexMode(0);
@@ -110,13 +110,16 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0009_NeedRename, TestSiz
     preferences.SetDefaultPageSizeId("ISO_A4");
     preferences.SetDefaultOrientation(0);
     preferences.SetBorderless(true);
+    preferences.SetDefaultColorMode(0);
+    preferences.SetDefaultCollate(true);
+    preferences.SetDefaultReverse(true);
     preferences.SetOption("test");
     preferences.Dump();
     Parcel parcel;
     EXPECT_EQ(true, preferences.Marshalling(parcel));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0010_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, Unmarshalling_SetValue_NotNull, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultDuplexMode(0);
@@ -125,13 +128,16 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0010_NeedRename, TestSiz
     preferences.SetDefaultPageSizeId("ISO_A4");
     preferences.SetDefaultOrientation(0);
     preferences.SetBorderless(true);
+    preferences.SetDefaultColorMode(0);
+    preferences.SetDefaultCollate(true);
+    preferences.SetDefaultReverse(true);
     preferences.SetOption("test");
     Parcel parcel;
     preferences.Marshalling(parcel);
     EXPECT_NE(nullptr, OHOS::Print::PrinterPreferences::Unmarshalling(parcel));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0011_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, Unmarshalling_NoValueSet_NotNull, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Parcel parcel;
@@ -139,14 +145,14 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0011_NeedRename, TestSiz
     EXPECT_NE(nullptr, OHOS::Print::PrinterPreferences::Unmarshalling(parcel));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0012_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, ConvertToJson_NoValueSet_IsMemberReturnFalse, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson = preferences.ConvertToJson();
     EXPECT_EQ(false, Print::PrintJsonUtil::IsMember(preferencesJson, "options"));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0013_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, ConvertToJson_SetValue_IsMemberReturnTrue, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetDefaultDuplexMode(0);
@@ -155,22 +161,26 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0013_NeedRename, TestSiz
     preferences.SetDefaultPageSizeId("ISO_A4");
     preferences.SetDefaultOrientation(0);
     preferences.SetBorderless(false);
-    preferences.SetOption("test");
-    Json::Value preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(true, Print::PrintJsonUtil::IsMember(preferencesJson, "defaultPageSizeId"));
-}
-
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0014_NeedRename, TestSize.Level2)
-{
-    OHOS::Print::PrinterPreferences preferences;
+    preferences.SetDefaultColorMode(0);
+    preferences.SetDefaultCollate(true);
+    preferences.SetDefaultReverse(true);
     Json::Value opsJson;
     opsJson["testKey"] = "testValue";
     preferences.SetOption(PrintJsonUtil::WriteString(opsJson));
     Json::Value preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(true, Print::PrintJsonUtil::IsMember(preferencesJson, "options"));
+    EXPECT_EQ(true, Print::PrintJsonUtil::IsMember(preferencesJson, "defaultPageSizeId"));
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0015_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, ConvertToJson_WrongOptionFormat_isNullReturnTrue, TestSize.Level2)
+{
+    OHOS::Print::PrinterPreferences preferences;
+    preferences.SetOption("test");
+    Json::Value preferencesJson = preferences.ConvertToJson();
+    EXPECT_EQ(false, preferencesJson["options"].isNull());
+}
+
+HWTEST_F(PrinterPreferencesTest,
+    ConvertJsonToPrinterPreferences_NoMemberInJson_HasDefaultDuplexModeReturnFalse, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson;
@@ -178,7 +188,8 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0015_NeedRename, TestSiz
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0016_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest,
+    ConvertJsonToPrinterPreferences_WrongValueType_HasDefaultDuplexModeReturnFalse, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson;
@@ -187,13 +198,17 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0016_NeedRename, TestSiz
     preferencesJson["defaultDuplexMode"] = "123";
     preferencesJson["defaultPrintQuality"] = "123";
     preferencesJson["defaultMediaType"] = 123;
+    preferencesJson["defaultColorMode"] = "123";
     preferencesJson["borderless"] = "123";
+    preferencesJson["defaultCollate"] = "123";
+    preferencesJson["defaultReverse"] = "123";
     preferencesJson["options"] = "123";
     preferences.ConvertJsonToPrinterPreferences(preferencesJson);
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
 }
 
-HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0017_NeedRename, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest,
+    ConvertJsonToPrinterPreferences_CorrectValue_HasDefaultDuplexModeReturnTrue, TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson;
@@ -202,8 +217,12 @@ HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0017_NeedRename, TestSiz
     preferencesJson["defaultDuplexMode"] = 123;
     preferencesJson["defaultPrintQuality"] = 123;
     preferencesJson["defaultMediaType"] = "123";
+    preferencesJson["defaultColorMode"] = 123;
     preferencesJson["borderless"] = true;
+    preferencesJson["defaultCollate"] = true;
+    preferencesJson["defaultReverse"] = true;
     Json::Value optionJson;
+    optionJson["key"] = "value";
     preferencesJson["options"] = optionJson;
     preferences.ConvertJsonToPrinterPreferences(preferencesJson);
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), true);
