@@ -125,11 +125,11 @@ static void PrintTaskAfterCallFun(uv_work_t *work, int status)
             callbackValues[0] = NapiPrintUtils::GetUndefined(cbParam->env);
             napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_ZERO,
                 callbackValues, &callbackResult);
-            napi_close_handle_scope(cbParam->env, scope);
             PRINT_HILOGI("OnCallback end run PrintTaskAfterCallFun success");
         } else {
             PRINT_HILOGE("PrintTaskAfterCallFun get reference failed");
         }
+        napi_close_handle_scope(cbParam->env, scope);
         delete cbParam;
         cbParam = nullptr;
     }
@@ -157,11 +157,11 @@ static void PrinterAfterCallFun(uv_work_t *work, int status)
             callbackValues[1] = PrinterInfoHelper::MakeJsObject(cbParam->env, cbParam->printerInfo);
             napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
                 callbackValues, &callbackResult);
-            napi_close_handle_scope(cbParam->env, scope);
             PRINT_HILOGI("OnCallback end run PrinterAfterCallFun success");
         } else {
             PRINT_HILOGE("PrinterAfterCallFun get reference failed");
         }
+        napi_close_handle_scope(cbParam->env, scope);
         delete cbParam;
         cbParam = nullptr;
     }
@@ -191,11 +191,11 @@ static void PrintJobAfterCallFun(uv_work_t *work, int status)
                 : PrintJobHelper::MakeJsObject(cbParam->env, cbParam->jobInfo);
             napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
                 callbackValues, &callbackResult);
-            napi_close_handle_scope(cbParam->env, scope);
             PRINT_HILOGI("OnCallback end run PrintJobAfterCallFun success");
         } else {
             PRINT_HILOGE("PrintJobAfterCallFun get reference failed");
         }
+        napi_close_handle_scope(cbParam->env, scope);
         delete cbParam;
         cbParam = nullptr;
     }
@@ -225,11 +225,11 @@ static void ExtensionAfterCallFun(uv_work_t *work, int status)
                 NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->info);
             napi_call_function(cbParam->env, nullptr, callbackFunc, NapiPrintUtils::ARGC_TWO,
                 callbackValues, &callbackResult);
-            napi_close_handle_scope(cbParam->env, scope);
             PRINT_HILOGI("OnCallback end run ExtensionAfterCallFun success");
         } else {
             PRINT_HILOGE("ExtensionAfterCallFun get reference failed");
         }
+        napi_close_handle_scope(cbParam->env, scope);
         delete cbParam;
         cbParam = nullptr;
     }
@@ -281,10 +281,9 @@ static void PrintAdapterAfterCallFun(uv_work_t *work, int status)
 
             napi_call_function(cbParam->env, adapterObj, layoutWriteFunc, NapiPrintUtils::ARGC_FIVE,
                 callbackValues, &callbackResult);
-
-            napi_close_handle_scope(cbParam->env, scope);
             PRINT_HILOGI("OnCallback end run PrintAdapterAfterCallFun success");
         }
+        napi_close_handle_scope(cbParam->env, scope);
         delete cbParam;
         cbParam = nullptr;
     }
@@ -316,12 +315,11 @@ static void PrintAdapterJobStateChangedAfterCallFun(uv_work_t *work, int status)
 
             napi_call_function(cbParam->env, adapterObj, jobStateChangedFunc, NapiPrintUtils::ARGC_TWO,
                 callbackValues, &callbackResult);
-
-            napi_close_handle_scope(cbParam->env, scope);
             PRINT_HILOGI("OnCallback end run PrintAdapterJobStateChangedAfterCallFun success");
         } else {
             PRINT_HILOGE("PrintAdapterJobStateChangedAfterCallFun get reference failed");
         }
+        napi_close_handle_scope(cbParam->env, scope);
         delete cbParam;
         cbParam = nullptr;
     }
@@ -348,11 +346,11 @@ static void PrintAdapterGetFileAfterCallFun(uv_work_t *work, int status)
             callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
             napi_call_function(cbParam->env, nullptr, callbackFunc, 1,
                 callbackValues, &callbackResult);
-            napi_close_handle_scope(cbParam->env, scope);
             PRINT_HILOGI("OnCallback end run PrintAdapterGetFileAfterCallFun success");
         } else {
             PRINT_HILOGE("PrintAdapterGetFileAfterCallFun get reference failed");
         }
+        napi_close_handle_scope(cbParam->env, scope);
         delete cbParam;
         cbParam = nullptr;
     }

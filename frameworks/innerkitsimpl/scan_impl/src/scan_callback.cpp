@@ -154,10 +154,10 @@ bool ScanCallback::ExecuteUvQueueWork(CallbackContext* &context, uv_work_t* &wor
                     auto uvWorkLambda = context->uvWorkLambda;
                     uvWorkLambda(cbParam, callbackFunc, callbackResult);
                     SCAN_HILOGD("run napi call deviceInfo callback fun success");
-                    napi_close_handle_scope(cbParam->env, scope);
                 } else {
                     SCAN_HILOGE("get reference failed");
                 }
+                napi_close_handle_scope(cbParam->env, scope);
             }
             DELETE_AND_NULLIFY(work);
             DELETE_AND_NULLIFY(cbParam);
