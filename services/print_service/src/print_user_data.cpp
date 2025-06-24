@@ -959,7 +959,6 @@ bool PrintUserData::ContainsHistoryPrintJob(std::vector<std::string> printerIds,
         if ((it->second)->find(jobId) != (it->second)->end()) {
             return true;
         }
-        return false;
     }
     return false;
 }
