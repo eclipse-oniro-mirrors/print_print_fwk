@@ -882,6 +882,31 @@ void TestStartPrintJobInternal(const uint8_t *data, size_t size, FuzzedDataProvi
     PrintServiceAbility::GetInstance()->StartPrintJobInternal(printJob);
 }
 
+void TestUpdatePageSizeNameWithPrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string pageSizeId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintPageSize pageSize;
+    pageSize.SetId(pageSizeId);
+    PrinterInfo printerInfo;
+    PrintServiceAbility::GetInstance()->UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
+}
+
+void TestUpdatePrintJobOptionWithPrinterPreferences(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string key = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string value = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    Json::Value jobOptions;
+    jobOptions[key] = value;
+    PrinterInfo printerInfo;
+    PrintServiceAbility::GetInstance()->UpdatePrintJobOptionWithPrinterPreferences(jobOptions, printerInfo);
+}
+
+void TestConnectUsbPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->ConnectUsbPrinter(printerId);
+}
+
 void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestChangeDefaultPrinterForDelete(data, size, dataProvider);
@@ -945,6 +970,9 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
     TestSendPrinterChangeEvent(data, size, dataProvider);
     TestCheckJobQueueBlocked(data, size, dataProvider);
     TestGetListeningState(data, size, dataProvider);
+    TestUpdatePageSizeNameWithPrinterInfo(data, size, dataProvider);
+    TestUpdatePrintJobOptionWithPrinterPreferences(data, size, dataProvider);
+    TestConnectUsbPrinter(data, size, dataProvider);
     TestMoreFunction(data, size, dataProvider);
 }
 

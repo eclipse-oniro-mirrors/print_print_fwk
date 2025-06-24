@@ -526,7 +526,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0024_NeedRename, TestSize.Leve
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025_NeedRename, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, FillJobOptions_SetNullValue_ReturnCorrectNumOptions, TestSize.Level1)
 {
     int num = 0;
     cups_option_t *options = nullptr;
@@ -543,8 +543,10 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025_NeedRename, TestSize.Leve
     jobParams->printQuality = "";
     jobParams->color = "";
     jobParams->isAutoRotate = true;
+    jobParams->isCollate = false;
+    jobParams->isReverse = false;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 8);
+    EXPECT_EQ(ret, 9);
     delete jobParams;
     delete options;
 }
@@ -555,7 +557,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0025_NeedRename, TestSize.Leve
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0026_NeedRename, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, FillJobOptions_SetTrueValue_ReturnCorrectNumOptions, TestSize.Level1)
 {
     int num = 0;
     cups_option_t *options = nullptr;
@@ -574,8 +576,10 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0026_NeedRename, TestSize.Leve
     jobParams->borderless = 1;
     jobParams->mediaType = CUPS_MEDIA_TYPE_PHOTO_GLOSSY;
     jobParams->mediaSize = CUPS_MEDIA_4X6;
+    jobParams->isCollate = true;
+    jobParams->isReverse = true;
     int ret = printCupsClient.FillJobOptions(jobParams, num, &options);
-    EXPECT_EQ(ret, 7);
+    EXPECT_EQ(ret, 8);
     delete jobParams;
     delete options;
 }
@@ -1815,6 +1819,179 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0093_NeedRename, TestSize.Leve
     EXPECT_STREQ(StandardizePrinterUri(printerUri, "").c_str(), printerUri.c_str());
     EXPECT_STREQ(StandardizePrinterUri(printerUri, BSUNI_PPD_NAME).c_str(), printerUri.c_str());
     EXPECT_STREQ(StandardizePrinterUri("ipp://test", BSUNI_PPD_NAME).c_str(), "bsUniBackend://test");
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0094
+ * @tc.desc: FillAdvancedOptions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillAdvancedOptions_SetAdvancedOpsJson_NumOptionsReturnOne, TestSize.Level1)
+{
+    int num = 0;
+    cups_option_t *options = nullptr;
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob jobInfo;
+    jobInfo.SetCopyNumber(2);
+    jobInfo.SetDuplexMode(1);
+    jobInfo.SetColorMode(0);
+    jobInfo.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(jobInfo, JOB_USER_NAME);
+    Json::Value advancedOpsJson;
+    advancedOpsJson["key"] = "value";
+    jobParams->advancedOpsJson = advancedOpsJson;
+    int ret = printCupsClient.FillAdvancedOptions(jobParams, num, &options);
+    EXPECT_EQ(ret, 1);
+    delete jobParams;
+    delete options;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0095
+ * @tc.desc: FillAdvancedOptions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, FillAdvancedOptions_SetNullAdvancedOpsJson_ReturnCorrectNumOptions, TestSize.Level1)
+{
+    int num = 0;
+    cups_option_t *options = nullptr;
+    OHOS::Print::PrintCupsClient printCupsClient;
+    PrintJob jobInfo;
+    jobInfo.SetCopyNumber(2);
+    jobInfo.SetDuplexMode(1);
+    jobInfo.SetColorMode(0);
+    jobInfo.SetOption(JOB_OPTIONS);
+    JobParameters *jobParams = printCupsClient.BuildJobParameters(jobInfo, JOB_USER_NAME);
+    Json::Value advancedOpsJson;
+    jobParams->advancedOpsJson = advancedOpsJson;
+    int ret = printCupsClient.FillAdvancedOptions(jobParams, num, &options);
+    EXPECT_EQ(ret, 0);
+    delete jobParams;
+    delete options;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0096
+ * @tc.desc: UpdateJobParameterByBoolOption
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest,
+    UpdateJobParameterByBoolOption_SetCorrectValue_ReturnSameParamValue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    optionJson["isBorderless"] = false;
+    optionJson["isAutoRotate"] = false;
+    optionJson["isReverse"] = false;
+    optionJson["isCollate"] = false;
+    printCupsClient.UpdateJobParameterByBoolOption(optionJson, jobParams);
+    EXPECT_EQ(jobParams->borderless, optionJson["isBorderless"].asBool());
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0097
+ * @tc.desc: UpdateJobParameterByBoolOption
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest,
+    UpdateJobParameterByBoolOption_SetWrongTypeValue_ReturndefaultValue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    optionJson["isBorderless"] = 1;
+    optionJson["isAutoRotate"] = 1;
+    optionJson["isReverse"] = 1;
+    optionJson["isCollate"] = 1;
+    printCupsClient.UpdateJobParameterByBoolOption(optionJson, jobParams);
+    EXPECT_EQ(jobParams->borderless, 1);
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0098
+ * @tc.desc: UpdateJobParameterByBoolOption
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest,
+    UpdateJobParameterByBoolOption_NoValueSet_ReturndefaultValue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    printCupsClient.UpdateJobParameterByBoolOption(optionJson, jobParams);
+    EXPECT_EQ(jobParams->borderless, 1);
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0099
+ * @tc.desc: UpdateJobParameterByOption
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest,
+    UpdateJobParameterByOption_SetCorrectValue_ReturnSameParamValue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    optionJson["cupsOptions"] = "1";
+    optionJson["printQuality"] = "4";
+    optionJson["jobName"] = "1";
+    optionJson["mediaType"] = "1";
+    Json::Value advancedOptions;
+    advancedOptions["key"] = "value";
+    optionJson["advancedOptions"] = advancedOptions;
+    printCupsClient.UpdateJobParameterByOption(optionJson, jobParams);
+    EXPECT_EQ(jobParams->printQuality, optionJson["printQuality"].asString());
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0100
+ * @tc.desc: UpdateJobParameterByOption
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest,
+    UpdateJobParameterByOption_SetWrongTypeValue_ReturndefaultValue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    optionJson["cupsOptions"] = 1;
+    optionJson["printQuality"] = 4;
+    optionJson["jobName"] = 1;
+    optionJson["mediaType"] = 1;
+    optionJson["advancedOptions"] = 1;
+    printCupsClient.UpdateJobParameterByOption(optionJson, jobParams);
+    EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
+    delete jobParams;
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_0101
+ * @tc.desc: UpdateJobParameterByOption
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest,
+    UpdateJobParameterByOption_NoValueSet_ReturndefaultValue, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    Json::Value optionJson;
+    JobParameters *jobParams = new JobParameters();
+    printCupsClient.UpdateJobParameterByOption(optionJson, jobParams);
+    EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
+    delete jobParams;
 }
 }  // namespace Print
 }  // namespace OHOS

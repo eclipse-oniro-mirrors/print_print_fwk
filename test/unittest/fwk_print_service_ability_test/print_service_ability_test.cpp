@@ -2141,7 +2141,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0141_NeedRename, TestS
     EXPECT_EQ(service->AddSinglePrinterInfo(info, extensionId), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0143_NeedRename, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, SetPrinterPreference_NoDiscoveredPrinter_InvalidPrinter, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -2149,7 +2149,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0143_NeedRename, TestS
     std::string printerId = "123";
     PrinterPreferences preferences;
     preferences.SetBorderless(true);
-    EXPECT_EQ(service->SetPrinterPreference(printerId, preferences), E_PRINT_NONE);
+    EXPECT_EQ(service->SetPrinterPreference(printerId, preferences), E_PRINT_INVALID_PRINTER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0144_NeedRename, TestSize.Level1)
@@ -2506,5 +2506,165 @@ HWTEST_F(PrintServiceAbilityTest, AddPrintJobToHistoryList, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     auto printJob = std::make_shared<PrintJob>();
     EXPECT_EQ(service->AddPrintJobToHistoryList(printJob), false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ConnectPrinter_UsbPrinterId_InvalidPrinter, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "com.ohos.spooler:USB-printer-1";
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    auto infoPtr = std::make_shared<PrinterInfo>(info);
+    service->printSystemData_.AddPrinterToDiscovery(infoPtr);
+    EXPECT_EQ(service->ConnectPrinter(info.GetPrinterId()), E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, SetPrinterPreference_AddedPrinterId_NoError, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::string printerId = "123";
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    PrinterPreferences preferences;
+    preferences.SetBorderless(true);
+    service->printSystemData_.InsertAddedPrinter(printerId, info);
+    EXPECT_EQ(service->SetPrinterPreference(printerId, preferences), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdatePageSizeNameWithPrinterInfo_StandardPageSize_NameUnchanged, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrinterInfo printerInfo;
+    PrintPageSize pageSize;
+    pageSize.SetId("ISO_A4");
+    pageSize.SetName("iso_a4_210x297mm");
+    service->UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
+    EXPECT_EQ(pageSize.GetName(), "iso_a4_210x297mm");
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    UpdatePageSizeNameWithPrinterInfo_FindNonStandardPageSize_NameChanged, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrintPageSize pageSize;
+    pageSize.SetId("A4.borderless");
+    pageSize.SetName("iso_a4_210x297mm");
+
+    PrinterInfo printerInfo;
+    PrinterCapability printerCapability;
+    std::vector<PrintPageSize> supportedPageSizeList;
+    PrintPageSize custompPageSize;
+    custompPageSize.SetId("A4.borderless");
+    custompPageSize.SetName("A4.borderless");
+    supportedPageSizeList.emplace_back(custompPageSize);
+    printerCapability.SetSupportedPageSize(supportedPageSizeList);
+    printerInfo.SetCapability(printerCapability);
+    service->UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
+    EXPECT_EQ(pageSize.GetName(), "A4.borderless");
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    UpdatePageSizeNameWithPrinterInfo_CannotFindNonStandardPageSize_NameUnchanged, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrintPageSize pageSize;
+    pageSize.SetId("A4.borderless");
+    pageSize.SetName("iso_a4_210x297mm");
+
+    PrinterInfo printerInfo;
+    PrinterCapability printerCapability;
+    std::vector<PrintPageSize> supportedPageSizeList;
+    PrintPageSize custompPageSize;
+    custompPageSize.SetId("A5.borderless");
+    custompPageSize.SetName("A5.borderless");
+    supportedPageSizeList.emplace_back(custompPageSize);
+    printerInfo.SetCapability(printerCapability);
+    printerCapability.SetSupportedPageSize(supportedPageSizeList);
+    service->UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
+    EXPECT_EQ(pageSize.GetName(), "iso_a4_210x297mm");
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    UpdatePrintJobOptionWithPrinterPreferences_NoValueSet_NoAdvancedOptions, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    Json::Value jobOptions;
+    PrinterInfo printerInfo;
+    service->UpdatePrintJobOptionWithPrinterPreferences(jobOptions, printerInfo);
+    EXPECT_EQ(jobOptions.isMember("advancedOptions"), false);
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    UpdatePrintJobOptionWithPrinterPreferences_SetWrongTypeValue_NoAdvancedOptions, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    Json::Value jobOptions;
+    jobOptions["isReverse"] = "isReverse";
+    jobOptions["isCollate"] = "isCollate";
+    PrinterInfo printerInfo;
+    service->UpdatePrintJobOptionWithPrinterPreferences(jobOptions, printerInfo);
+    EXPECT_EQ(jobOptions.isMember("advancedOptions"), false);
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    UpdatePrintJobOptionWithPrinterPreferences_SetCorrectValue_HasAdvancedOptions, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    Json::Value jobOptions;
+    jobOptions["isReverse"] = true;
+    jobOptions["isCollate"] = true;
+    PrinterInfo printerInfo;
+    Json::Value preferenceOptions;
+    preferenceOptions["key"] = "value";
+    PrinterPreferences preferences;
+    preferences.SetOption(PrintJsonUtil::WriteString(preferenceOptions));
+    printerInfo.SetPreferences(preferences);
+    service->UpdatePrintJobOptionWithPrinterPreferences(jobOptions, printerInfo);
+    EXPECT_EQ(jobOptions.isMember("advancedOptions"), true);
+}
+
+HWTEST_F(PrintServiceAbilityTest, RefreshPrinterInfoByPpd_InsertAddedPrinter_CapabilityUnchanged, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId1 = "printerId1";
+    std::string printerId2 = "printerId2";
+    PrinterInfo info;
+    info.SetPrinterId(printerId2);
+    service->printSystemData_.addedPrinterMap_.Insert(printerId1, nullptr);
+    service->printSystemData_.addedPrinterMap_.Insert(printerId2, info);
+    service->RefreshPrinterInfoByPpd();
+    EXPECT_EQ(info.HasCapability(), false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ConnectUsbPrinter_NoDiscoveredPrinter_InvalidPrinter, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "printerId";
+    EXPECT_EQ(service->ConnectUsbPrinter(printerId), E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ConnectUsbPrinter_NoMake_InvalidPrinter, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "printerId";
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    auto infoPtr = std::make_shared<PrinterInfo>(info);
+    service->printSystemData_.AddPrinterToDiscovery(infoPtr);
+    EXPECT_EQ(service->ConnectUsbPrinter(printerId), E_PRINT_INVALID_PRINTER);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ConnectUsbPrinter_HasMake_ServerFailure, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "printerId";
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetPrinterMake("testMake");
+    auto infoPtr = std::make_shared<PrinterInfo>(info);
+    service->printSystemData_.AddPrinterToDiscovery(infoPtr);
+    EXPECT_EQ(service->ConnectUsbPrinter(printerId), E_PRINT_SERVER_FAILURE);
 }
 } // namespace OHOS::Print

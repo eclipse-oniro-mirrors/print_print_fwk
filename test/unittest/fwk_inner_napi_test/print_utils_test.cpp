@@ -92,7 +92,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0003_NeedRename, TestSize.Level2)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintUtilsTest, PrintUtilsTest_0004_NeedRename, TestSize.Level2)
+HWTEST_F(PrintUtilsTest, GetGlobalId_NotIncludeExtensionId_ReturnWithExtensionId, TestSize.Level2)
 {
     std::string id = "com.sample.ext";
     std::string localId = "1234";
@@ -462,7 +462,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0027_NeedRename, TestSize.Level2)
 }
 
 /**
- * @tc.name: PrintUtilsTest_0027
+ * @tc.name: PrintUtilsTest_0028
  * @tc.desc: Verify the CheckUserIdInEventType function.
  * @tc.type: FUNC
  * @tc.require:
@@ -480,5 +480,45 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0028_NeedRename, TestSize.Level2)
     EXPECT_TRUE(PrintUtils::CheckUserIdInEventType(type, callerUserId));
 }
 
+/**
+ * @tc.name: PrintUtilsTest_0029
+ * @tc.desc: Verify the getGlobalId function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, GetGlobalId_IncludeExtensionId_ReturnLocalId, TestSize.Level2)
+{
+    std::string id = "com.sample.ext";
+    std::string localId = "com.sample.ext:1234";
+    std::string testResult = "com.sample.ext:1234";
+    std::string result = PrintUtils::GetGlobalId(id, localId);
+    EXPECT_EQ(testResult, result);
+}
+
+/**
+ * @tc.name: PrintUtilsTest_0030
+ * @tc.desc: Verify the IsUsbPrinter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, IsUsbPrinter_NotIncludeUSBString_Returnfalse, TestSize.Level2)
+{
+    std::string printerId = "com.sample.ext:1234";
+    bool result = PrintUtils::IsUsbPrinter(printerId);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.name: PrintUtilsTest_0031
+ * @tc.desc: Verify the IsUsbPrinter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, IsUsbPrinter_IncludeUSBString_ReturnTrue, TestSize.Level2)
+{
+    std::string printerId = "com.sample.ext:USB-printer-1234";
+    bool result = PrintUtils::IsUsbPrinter(printerId);
+    EXPECT_EQ(result, true);
+}
 }  // namespace Print
 }  // namespace OHOS
