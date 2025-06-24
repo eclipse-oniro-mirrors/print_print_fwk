@@ -2539,12 +2539,13 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePageSizeNameWithPrinterInfo_StandardPage
     PrinterInfo printerInfo;
     PrintPageSize pageSize;
     pageSize.SetId("ISO_A4");
-    pageSize.SetName("iso_a4_210x297mm")；
+    pageSize.SetName("iso_a4_210x297mm");
     service->UpdatePageSizeNameWithPrinterInfo(printerInfo, pageSize);
     EXPECT_EQ(pageSize.GetName(), "iso_a4_210x297mm");
 }
 
-HWTEST_F(PrintServiceAbilityTest, UpdatePageSizeNameWithPrinterInfo_FindNonStandardPageSize_NameChanged, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest,
+    UpdatePageSizeNameWithPrinterInfo_FindNonStandardPageSize_NameChanged, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrintPageSize pageSize;
