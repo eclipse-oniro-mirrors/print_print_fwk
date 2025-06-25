@@ -39,6 +39,16 @@ void PrintEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
         int32_t userId = data.GetCode();
         PRINT_HILOGI("user removed, removed userId: %{public}d", userId);
         PrintServiceAbility::GetInstance()->CancelUserPrintJobs(userId);
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_ENTER_HIBERNATE ||
+        action == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_OFF ||
+        action == EventFwk::CommonEventSupport::COMMON_EVENT_ENTER_FORCE_SLEEP) {
+        PRINT_HILOGI("enter low-power mode, stop discovery");
+        PrintServiceAbility::GetInstance()->DelayEnterLowPowerMode();
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_EXIT_HIBERNATE ||
+        action == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON ||
+        action == EventFwk::CommonEventSupport::COMMON_EVENT_EXIT_FORCE_SLEEP) {
+        PRINT_HILOGI("exit low-power mode, restart discovery");
+        PrintServiceAbility::GetInstance()->ExitLowPowerMode();
     }
 }
 

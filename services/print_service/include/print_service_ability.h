@@ -114,6 +114,8 @@ public:
     int32_t RemovePrinterFromDiscovery(const std::string &printerId) override;
     int32_t UpdatePrinterInSystem(const PrinterInfo &printerInfo) override;
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) override;
+    void DelayEnterLowPowerMode();
+    void ExitLowPowerMode();
 
 protected:
     void OnStart() override;
@@ -265,6 +267,8 @@ private:
 
     uint32_t printAppCount_;
     uint32_t unloadCount_;
+    uint32_t enterLowPowerCount_;
+    bool isLowPowerMode_;
     VendorManager vendorManager;
 };
 }  // namespace OHOS::Print
