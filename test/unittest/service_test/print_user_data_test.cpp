@@ -408,11 +408,51 @@ HWTEST_F(PrintUserDataTest, QueryQueuedPrintJobById_WhenExistenceJob_ShouldNoneE
     EXPECT_EQ(userData->QueryQueuedPrintJobById(jobId, getPrintJob), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0031_NeedRename, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0031_NeedRename0, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::vector<std::string> printerIds;
+    std::string jobOrderId = "0";
+    std::string printerId = "1";
+    std::string jobId = "123";
+    printerIds.push_back(printerId);
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
+    userData->AddToPrintJobList(jobId, printJob);
+    userData->UpdateQueuedJobList(jobId, printJob, jobOrderId);
+    std::vector<PrintJob> printJobs;
+    EXPECT_EQ(userData->QueryAllHistoryPrintJob(printerIds, printJobs), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0031_NeedRename1, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::vector<std::string> printerIds;
+    std::string jobOrderId = "0";
+    std::string printerId = "1";
+    std::string jobId = "123";
+    printerIds.push_back(printerId);
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
+    userData->jobOrderList_.insert(std::make_pair(jobOrderId, jobId));
+    std::vector<PrintJob> printJobs;
+    EXPECT_EQ(userData->QueryAllHistoryPrintJob(printerIds, printJobs), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0031_NeedRename2, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::vector<std::string> printerIds;
     std::vector<PrintJob> printJobs;
+    std::string printerId = "1";
+    std::string jobId = "123";
+    printerIds.push_back(printerId);
+    userData->InitPrintHistoryJobList(printerId);
+    userData->printHistoryJobList_[printerId]->insert(std::make_pair(jobId, nullptr));
+    EXPECT_EQ(userData->QueryAllHistoryPrintJob(printerIds, printJobs), E_PRINT_INVALID_PRINTJOB);
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
+    printJob->SetPrinterId(printerId);
+    printJob->SetJobId(jobId);
+    userData->printHistoryJobList_[printerId]->erase(jobId);
+    userData->printHistoryJobList_[printerId]->insert(std::make_pair(jobId, printJob));
     EXPECT_EQ(userData->QueryAllHistoryPrintJob(printerIds, printJobs), E_PRINT_NONE);
 }
 
@@ -420,8 +460,28 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0032_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string jobId = "0";
+    std::string printerId = "1";
     PrintJob printJob;
+    userData->InitPrintHistoryJobList(printerId);
+    userData->printHistoryJobList_.insert(std::make_pair(printerId, nullptr));
     EXPECT_EQ(userData->QueryHistoryPrintJobById(jobId, printJob), E_PRINT_INVALID_PRINTJOB);
+    userData->printHistoryJobList_.erase(printerId);
+    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>> printerHistoryJobList =
+        std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
+    printerHistoryJobList->insert(std::make_pair(jobId, nullptr));
+    userData->printHistoryJobList_.insert(std::pair<std::string,
+    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(printerId, std::move(printerHistoryJobList)));
+    EXPECT_EQ(userData->QueryHistoryPrintJobById(jobId, printJob), E_PRINT_INVALID_PRINTJOB);
+    std::shared_ptr<PrintJob> printJob1 = std::make_shared<PrintJob>();
+    printJob1->SetOption("{\"test\":\"test\"}");
+    printJob1->SetJobId(jobId);
+    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>> printerHistoryJobList1 =
+        std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
+    printerHistoryJobList1->insert(std::pair<std::string, std::shared_ptr<PrintJob>>(jobId, printJob1));
+    userData->printHistoryJobList_.erase(printerId);
+    userData->printHistoryJobList_.insert(std::pair<std::string,
+    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(printerId, std::move(printerHistoryJobList1)));
+    EXPECT_EQ(userData->QueryHistoryPrintJobById(jobId, printJob), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0033_NeedRename, TestSize.Level1)
@@ -429,8 +489,19 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0033_NeedRename, TestSize.Level1)
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string printerId = "1";
     std::string jobId = "1";
-    std::shared_ptr<PrintJob> printjob;
-    EXPECT_EQ(userData->AddPrintJobToHistoryList(printerId, jobId, printjob), E_PRINT_NONE);
+    std::shared_ptr<PrintJob> printjob = std::make_shared<PrintJob>();
+    EXPECT_EQ(userData->AddPrintJobToHistoryList(printerId, jobId, printjob), false);
+    printjob = std::make_shared<PrintJob>();
+    printjob->SetOption("test");
+    EXPECT_EQ(userData->AddPrintJobToHistoryList(printerId, jobId, printjob), false);
+    printjob->SetOption("{\"test\":\"test\"}");
+    EXPECT_EQ(userData->AddPrintJobToHistoryList(printerId, jobId, printjob), true);
+    auto printerHistroyJobList = userData->printHistoryJobList_.find(printerId);
+    for (int32_t i = 2; i <= 501; i++) {
+        std::shared_ptr<PrintJob> printjob1 = std::make_shared<PrintJob>();
+        (printerHistroyJobList->second)->insert(std::make_pair(std::to_string(i), printjob1));
+    }
+    EXPECT_EQ(userData->AddPrintJobToHistoryList(printerId, jobId, printjob), true);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0034_NeedRename, TestSize.Level1)
@@ -438,6 +509,8 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0034_NeedRename, TestSize.Level1)
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string printerId = "1";
     bool complete = true;
+    int32_t userId = 100;
+    userData->SetUserId(userId);
     userData->FlushPrintHistoryJobFile(printerId);
     EXPECT_EQ(complete, true);
 }
@@ -448,21 +521,28 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0036_NeedRename, TestSize.Level1)
     Json::Value jsonObject;
     std::string filePath = "";
     std::string printerId = "1";
-    EXPECT_EQ(userData->GetJsonObjectFromFile(jsonObject, filePath, printerId), E_PRINT_NONE);
+    EXPECT_EQ(userData->GetJsonObjectFromFile(jsonObject, filePath, printerId), false);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0037_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
-    Json::Value jsonObject;
+    Json::Value printerHistoryJson;
+    Json::Value printJobInfoJson;
     std::string printerId = "1";
-    EXPECT_EQ(userData->ParseJsonObjectToPrintHistory(jsonObject, printerId), false);
+    printerHistoryJson[printerId] = printJobInfoJson;
+    EXPECT_EQ(userData->ParseJsonObjectToPrintHistory(printerHistoryJson, printerId), false);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0038_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string printerId = "123";
     std::string jobId = "1";
+    std::shared_ptr<PrintJob> printjob = std::make_shared<PrintJob>();
+    EXPECT_EQ(userData->DeletePrintJobFromHistoryList(jobId), false);
+    userData->InitPrintHistoryJobList(printerId);
+    userData->AddPrintJobToHistoryList(printerId, jobId, printjob);
     EXPECT_EQ(userData->DeletePrintJobFromHistoryList(jobId), false);
 }
 
@@ -470,10 +550,28 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0039_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string printerId = "1";
+    std::string jobId = "1";
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
+    printJob->SetPrinterId(printerId);
+    printJob->SetJobId(jobId);
     EXPECT_EQ(userData->DeletePrintJobFromHistoryListByPrinterId(printerId), true);
+    userData->AddPrintJobToHistoryList(printerId, jobId, printJob);
+    EXPECT_EQ(userData->DeletePrintJobFromHistoryListByPrinterId(jobId), true);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0040_NeedRename, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string printerId = "1";
+    std::vector<std::string> printerIds = {printerId};
+    std::string jobId = "1";
+    std::shared_ptr<PrintJob> printjob = std::make_shared<PrintJob>();
+    EXPECT_EQ(userData->ContainsHistoryPrintJob(printerIds, jobId), false);
+    userData->AddPrintJobToHistoryList(printerId, jobId, printjob);
+    EXPECT_EQ(userData->ContainsHistoryPrintJob(printerIds, jobId), false);
+}
+
+HWTEST_F(PrintUserDataTest, PrintUserDataTest_0041_NeedRename, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     std::string printerId = "1";
