@@ -60,6 +60,7 @@ const int32_t UID_TRANSFORM_DIVISOR = 200000;
 const uint32_t UNLOAD_SA_INTERVAL = 90000;
 const uint32_t QUERY_CUPS_ALIVE_INTERVAL = 10;
 const uint32_t QUERY_CUPS_ALIVE_MAX_RETRY_TIMES = 50;
+const uint32_t ENTER_LOW_POWER_INTERVAL = 90000;
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -128,7 +129,9 @@ PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCrea
       isJobQueueBlocked_(false),
       currentUserId_(-1),
       printAppCount_(0),
-      unloadCount_(0)
+      unloadCount_(0),
+      enterLowPowerCount_(0),
+      isLowPowerMode_(false)
 {}
 
 PrintServiceAbility::~PrintServiceAbility()
@@ -1760,6 +1763,51 @@ void PrintServiceAbility::UnloadSystemAbility()
     serviceHandler_->PostTask(unloadTask, UNLOAD_SA_INTERVAL);
     unloadCount_++;
     PRINT_HILOGI("unloadCount_: %{public}u", unloadCount_);
+}
+
+void PrintServiceAbility::DelayEnterLowPowerMode()
+{
+    PRINT_HILOGI("delay enter low power mode");
+    auto lowPowerTask = [this]() {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        enterLowPowerCount_--;
+        PRINT_HILOGI("enter low power task, enterLowPowerCount_: %{public}u", enterLowPowerCount_);
+        if (enterLowPowerCount_ > 0 || !isLowPowerMode_) {
+            PRINT_HILOGW("Not need to enter low power mode");
+            return;
+        }
+        if (StopDiscoverPrinter() != ERR_OK) {
+            PRINT_HILOGE("Stop discovery failed, enter low power mode failed.");
+        }
+        PRINT_HILOGI("Enter low power mode successfully.");
+    };
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    isLowPowerMode_ = true;
+    enterLowPowerCount_++;
+    serviceHandler_->PostTask(lowPowerTask, ENTER_LOW_POWER_INTERVAL);
+    PRINT_HILOGI("enterLowPowerCount_: %{public}u", enterLowPowerCount_);
+}
+
+void PrintServiceAbility::ExitLowPowerMode()
+{
+    PRINT_HILOGI("exit low power mode");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    if (!isLowPowerMode_) {
+        PRINT_HILOGW("allready exit low power mode");
+        return;
+    }
+    isLowPowerMode_ = false;
+    std::vector <PrintExtensionInfo> extensionInfos;
+    QueryAllExtension(extensionInfos);
+    std::vector <std::string> extensionIds;
+    for (const auto &extensionInfo : extensionInfos) {
+        extensionIds.emplace_back(extensionInfo.GetExtensionId());
+    }
+    if (StartDiscoverPrinter(extensionIds) != ERR_OK) {
+        PRINT_HILOGE("exit low power mode failed.");
+        return;
+    }
+    PRINT_HILOGI("exit low power mode successfully");
 }
 
 bool PrintServiceAbility::CheckPermission(const std::string &permissionName)

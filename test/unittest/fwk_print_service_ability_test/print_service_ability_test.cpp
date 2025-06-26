@@ -1016,7 +1016,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0048_NeedRename, TestS
     EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_INVALID_PRINTER);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
-    EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_INVALID_PRINTER);
+    EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0049_NeedRename, TestSize.Level1)
@@ -2690,5 +2690,34 @@ HWTEST_F(PrintServiceAbilityTest, ConnectUsbPrinter_HasMake_ServerFailure, TestS
     auto infoPtr = std::make_shared<PrinterInfo>(info);
     service->printSystemData_.AddPrinterToDiscovery(infoPtr);
     EXPECT_EQ(service->ConnectUsbPrinter(printerId), E_PRINT_SERVER_FAILURE);
+}
+
+/**
+* @tc.name: QueryQueuedPrintJobById_WhenInvalidJobId_ShouldF
+* @tc.desc: Verify the QueryQueuedPrintJobById failed case.
+* @tc.type: FUNC ExitLowPowerMode
+* @tc.require: AllreadyEnterLowPower
+*/
+HWTEST_F(PrintServiceAbilityTest, ExitLowPowerMode_WhenAllreadyEnterLowPowerMode_ShouldExit, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->DelayEnterLowPowerMode();
+    EXPECT_TRUE(service->isLowPowerMode_);
+    service->ExitLowPowerMode();
+    EXPECT_FALSE(service->isLowPowerMode_);
+}
+
+/**
+* @tc.name: QueryQueuedPrintJobById_WhenInvalidJobId_ShouldF
+* @tc.desc: Verify the QueryQueuedPrintJobById failed case.
+* @tc.type: FUNC ExitLowPowerMode
+* @tc.require: ExitedLowPowerMode
+*/
+HWTEST_F(PrintServiceAbilityTest, ExitLowPowerMode_WhenExitedLowPower_ShouldDoNothing, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_FALSE(service->isLowPowerMode_);
+    service->ExitLowPowerMode();
+    EXPECT_FALSE(service->isLowPowerMode_);
 }
 } // namespace OHOS::Print

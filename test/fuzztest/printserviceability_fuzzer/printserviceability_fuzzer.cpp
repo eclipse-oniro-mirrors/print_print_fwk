@@ -907,6 +907,16 @@ void TestConnectUsbPrinter(const uint8_t *data, size_t size, FuzzedDataProvider 
     PrintServiceAbility::GetInstance()->ConnectUsbPrinter(printerId);
 }
 
+void TestDelayEnterLowPowerMode(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintServiceAbility::GetInstance()->DelayEnterLowPowerMode();
+}
+
+void TestExitLowPowerMode(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintServiceAbility::GetInstance()->ExitLowPowerMode();
+}
+
 void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestChangeDefaultPrinterForDelete(data, size, dataProvider);
@@ -939,6 +949,8 @@ void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *data
     TestReportPrinterIdle(data, size, dataProvider);
     TestQueryPPDInformation(data, size, dataProvider);
     TestStartPrintJobInternal(data, size, dataProvider);
+    TestDelayEnterLowPowerMode(data, size, dataProvider);
+    TestExitLowPowerMode(data, size, dataProvider);
 }
 
 void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
