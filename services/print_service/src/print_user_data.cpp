@@ -537,7 +537,9 @@ bool PrintUserData::FlushCacheFile(uint32_t fd, const std::string jobId, int32_t
             break;
         }
     }
-    if (fclose(srcFile) != 0 || fclose(destFile) != 0) {
+    int srcCloseRet = fclose(srcFile);
+    int destCloseRet = fclose(destFile);
+    if (srcCloseRet != 0 || destCloseRet != 0) {
         PRINT_HILOGE("File Operation Failure.");
         ret = false;
     };
