@@ -36,19 +36,6 @@ napi_value PrintPageSizeHelper::MakeJsObject(napi_env env, const PrintPageSize &
     return jsObj;
 }
 
-std::string PrintPageSizeHelper::GetCustomPageNameFromMilSize(const std::string &name,
-    const uint32_t width, const uint32_t height)
-{
-    if (name.find(CUSTOM_PREFIX) != std::string::npos) {
-        PRINT_HILOGI("Already custom page size.");
-        return name;
-    }
-    std::stringstream sizeName;
-    sizeName << CUSTOM_PREFIX << round(width / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x"
-        << round(height / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
-    return sizeName.str();
-}
-
 std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJs(napi_env env, napi_value jsValue)
 {
     auto nativeObj = std::make_shared<PrintPageSize>();
@@ -67,18 +54,15 @@ std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJs(napi_env env, na
         PRINT_HILOGE("Invalid resolution id or name");
         return nullptr;
     }
-
+    PrintPageSize pageSize(id, name, width, height);
     PAGE_SIZE_ID ret = PrintPageSize::MatchPageSize(name);
-    if (ret.empty()) {
-        std::string customName = GetCustomPageNameFromMilSize(name, width, height);
-        name = customName;
+    if (ret.empty() && !pageSize.ConvertToPwgStyle()) {
+        PRINT_HILOGE("pwgMedia build fail from JS!");
+        return nullptr;
     }
-
-    nativeObj->SetId(id);
-    nativeObj->SetName(name);
-    nativeObj->SetWidth(width);
-    nativeObj->SetHeight(height);
-    PRINT_HILOGI("Build Page Size success, id: %{public}s, name: %{public}s", id.c_str(), name.c_str());
+    *nativeObj = std::move(pageSize);
+    PRINT_HILOGI("Build Page Size success, id: %{public}s, name: %{public}s",
+        pageSize.GetId().c_str(), pageSize.GetName().c_str());
     return nativeObj;
 }
 

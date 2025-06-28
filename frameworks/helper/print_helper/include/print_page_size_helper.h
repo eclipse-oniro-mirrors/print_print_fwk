@@ -25,8 +25,6 @@ class PrintPageSizeHelper {
 public:
     static napi_value MakeJsObject(napi_env env, const PrintPageSize &pageSize);
     static std::shared_ptr<PrintPageSize> BuildFromJs(napi_env env, napi_value jsValue);
-    static std::string GetCustomPageNameFromMilSize(const std::string &name,
-        const uint32_t width, const uint32_t height);
 
 private:
     static bool ValidateProperty(napi_env env, napi_value object);

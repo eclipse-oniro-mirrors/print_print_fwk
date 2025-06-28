@@ -3651,6 +3651,7 @@ void PrintServiceAbility::RefreshPrinterInfoByPpd()
         std::string ppdName;
         QueryPPDInformation(printerInfo.GetPrinterMake(), ppdName);
         if (ppdName.empty()) {
+            RefreshPrinterPageSize(printerInfo);
             BuildPrinterPreference(printerInfo);
         } else {
             int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->
@@ -3707,5 +3708,22 @@ int32_t PrintServiceAbility::ConnectUsbPrinter(const std::string &printerId)
 #endif // CUPS_ENABLE
     PRINT_HILOGI("ConnectUsbPrinter end");
     return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::RefreshPrinterPageSize(PrinterInfo &printerInfo)
+{
+    PrinterCapability cap;
+    printerInfo.GetCapability(cap);
+    std::vector<PrintPageSize> pageSizeList;
+    cap.GetSupportedPageSize(pageSizeList);
+    pageSizeList.erase(
+        std::remove_if(pageSizeList.begin(), pageSizeList.end(),
+            [](PrintPageSize& pageSize) {
+            return !pageSize.ConvertToPwgStyle();
+        }),
+        pageSizeList.end()
+    );
+    cap.SetSupportedPageSize(pageSizeList);
+    printerInfo.SetCapability(cap);
 }
 } // namespace OHOS::Print

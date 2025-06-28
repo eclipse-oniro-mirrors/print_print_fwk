@@ -20,6 +20,10 @@
 
 using namespace testing::ext;
 
+static constexpr uint32_t ISO_A4_WIDTH = 8268;
+static constexpr uint32_t ISO_A4_HEIGHT = 11692;
+static constexpr uint32_t CUSTOM_WIDTH = 7283;
+static constexpr uint32_t CUSTOM_HEIGHT = 10236;
 namespace OHOS {
 namespace Print {
 class PrintPageSizeTest : public testing::Test {
@@ -206,6 +210,26 @@ HWTEST_F(PrintPageSizeTest, PrintPageSizeTest_0013, TestSize.Level1)
     OHOS::Print::PrintPageSize size;
     size.SetId("ISO_A4");
     EXPECT_TRUE(printPageSize == size);
+}
+
+/**
+ * @tc.name: ConvertToPwgStyle
+ * @tc.desc: ConvertToPwgStyle.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintPageSizeTest, ConvertToPwgStyle, TestSize.Level1)
+{
+    PrintPageSize page;
+    page.SetWidth(ISO_A4_WIDTH);
+    page.SetHeight(ISO_A4_HEIGHT);
+    page.ConvertToPwgStyle();
+    EXPECT_EQ(page.GetName(), "iso_a4_210x297mm");
+
+    page.SetWidth(CUSTOM_WIDTH);
+    page.SetHeight(CUSTOM_HEIGHT);
+    page.ConvertToPwgStyle();
+    EXPECT_EQ(page.GetName(), "Custom.185x260mm");
 }
 
 } // namespace Print
