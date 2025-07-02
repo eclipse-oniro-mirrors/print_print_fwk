@@ -35,6 +35,7 @@
 #include "print_user_data.h"
 #include "print_system_data.h"
 #include "vendor_manager.h"
+#include "os_account_manager.h"
 
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
@@ -203,6 +204,9 @@ private:
     void RefreshPrinterInfoByPpd();
     void CheckCupsServerAlive();
     void RefreshPrinterPageSize(PrinterInfo& printerInfo);
+    int32_t BlockPrintJob(const std::string &jobId);
+    void BlockUserPrintJobs(const int32_t userId);
+    bool CheckPrintConstraint();
     
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
@@ -271,6 +275,17 @@ private:
     uint32_t enterLowPowerCount_;
     bool isLowPowerMode_;
     VendorManager vendorManager;
+
+#ifdef ENTERPRISE_ENABLE
+private:
+    std::atomic<bool> isEnterprise_ = false;
+    std::atomic<int32_t> lastUserId_ = -1;
+public:
+    void UpdateIsEnterprise();
+    bool IsEnterpriseEnable();
+    bool IsEnterprise();
+    void RefreshPrinterStatusOnSwitchUser();
+#endif // ENTERPRISE_ENABLE
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_SYSTEM_ABILITY_H

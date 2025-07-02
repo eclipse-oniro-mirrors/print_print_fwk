@@ -30,6 +30,7 @@
 #include "ipc_skeleton.h"
 #include "os_account_manager.h"
 #include "iservice_registry.h"
+#include "parameters.h"
 #include "print_bms_helper.h"
 #include "print_constant.h"
 #include "print_log.h"
@@ -108,6 +109,12 @@ static const std::string NOTIFY_INFO_SPOOLER_CLOSED_FOR_STARTED = "spooler_close
 static const std::string PRINTER_ID_DELIMITER = ":";
 static const std::string USB_PRINTER = "usb";
 static const std::string DEVICE_TYPE = "PRINTER";
+static const std::string PRINT_CONSTRAINT = "constraint.print";
+
+#if ENTERPRISE_ENABLE
+static const std::string IS_ENTERPRISE_ENABLE = "2";
+static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.enterprise_space_init";
+#endif // ENTERPRISE_ENABLE
 
 static const std::vector<std::string> PRINT_TASK_EVENT_LIST = {EVENT_BLOCK, EVENT_SUCCESS, EVENT_FAIL, EVENT_CANCEL};
 
@@ -895,6 +902,10 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    if (CheckPrintConstraint()) {
+        PRINT_HILOGE("user is not allow print job");
+        return E_PRINT_NO_PERMISSION;
+    }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!UpdatePrintJobOptionByPrinterId(printJob)) {
         PRINT_HILOGW("cannot update printer name/uri");
@@ -924,6 +935,10 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    if (CheckPrintConstraint()) {
+        PRINT_HILOGE("user is not allow print job");
+        return E_PRINT_NO_PERMISSION;
+    }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!CheckPrintJob(jobInfo)) {
         PRINT_HILOGW("check printJob unavailable");
@@ -946,6 +961,10 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    if (CheckPrintConstraint()) {
+        PRINT_HILOGE("user is not allow print job");
         return E_PRINT_NO_PERMISSION;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -1133,6 +1152,26 @@ void PrintServiceAbility::CancelPrintJobHandleCallback(const std::shared_ptr<Pri
     }
 }
 
+int32_t PrintServiceAbility::BlockPrintJob(const std::string &jobId)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
+    auto userData = GetUserDataByJobId(jobId);
+    if (userData == nullptr) {
+        PRINT_HILOGE("Get user data failed.");
+        return E_PRINT_INVALID_USERID;
+    }
+    auto jobIt = userData->queuedJobList_.find(jobId);
+    if (jobIt == userData->queuedJobList_.end()) {
+        PRINT_HILOGE("invalid job id");
+        return E_PRINT_INVALID_PRINTJOB;
+    }
+
+    PrintCupsClient::GetInstance()->InterruptCupsJob(jobId);
+    PRINT_HILOGE("UpdatePrintJobState PRINT_JOB_BLOCKED");
+    return E_PRINT_NONE;
+}
+
 void PrintServiceAbility::SetPrintJobCanceled(PrintJob &jobinfo)
 {
     auto printJob = std::make_shared<PrintJob>(jobinfo);
@@ -1173,6 +1212,25 @@ void PrintServiceAbility::CancelUserPrintJobs(const int32_t userId)
     }
     printUserMap_.erase(userId);
     PRINT_HILOGI("remove user-%{public}d success.", userId);
+}
+
+void PrintServiceAbility::BlockUserPrintJobs(const int32_t userId)
+{
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    auto blockUser = printUserMap_.find(userId);
+    if (blockUser == printUserMap_.end()) {
+        PRINT_HILOGE("User dose not exist.");
+        return;
+    }
+    if (blockUser->second == nullptr) {
+        PRINT_HILOGE("PrintUserData is nullptr.");
+        return;
+    }
+    for (auto jobIt: blockUser->second->queuedJobList_) {
+        int32_t ret = BlockPrintJob(jobIt.first);
+        PRINT_HILOGI("BlockUserPrintJobs BlockPrintJob ret: %{public}d", ret);
+    }
+    PRINT_HILOGI("block user-%{public}d success.", userId);
 }
 
 void PrintServiceAbility::NotifyCurrentUserChanged(const int32_t userId)
@@ -1746,7 +1804,15 @@ void PrintServiceAbility::UnloadSystemAbility()
             return;
         }
 #ifdef CUPS_ENABLE
-        DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdService();
+#ifdef ENTERPRISE_ENABLE
+        if (IsEnterpriseEnable() && !IsEnterprise()) {
+            DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdSecondaryService();
+        } else {
+#endif // ENTERPRISE_ENABLE
+            DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdService();
+#ifdef ENTERPRISE_ENABLE
+        }
+#endif // ENTERPRISE_ENABLE
 #endif // CUPS_ENABLE
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {
@@ -3725,5 +3791,74 @@ void PrintServiceAbility::RefreshPrinterPageSize(PrinterInfo &printerInfo)
     );
     cap.SetSupportedPageSize(pageSizeList);
     printerInfo.SetCapability(cap);
+}
+
+#ifdef ENTERPRISE_ENABLE
+void PrintServiceAbility::UpdateIsEnterprise()
+{
+    if (!IsEnterpriseEnable()) {
+        PRINT_HILOGI("IsEnterpriseEnable false.");
+        return;
+    }
+
+    PRINT_HILOGI("RefreshPrinterStatusOnSwitchUser");
+    int32_t localId = -1;
+    AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
+    lastUserId_ = localId;
+    AccountSA::DomainAccountInfo domainInfo;
+    auto ret = AccountSA::OsAccountManager::GetOsAccountDomainInfo(localId, domainInfo);
+    PRINT_HILOGI("GetOsAccountDomainInfo ret = %{public}d", ret);
+    if (ret == 0 && !domainInfo.accountName_.empty()) {
+        isEnterprise_ = true;
+    } else {
+        isEnterprise_ = false;
+    }
+}
+
+bool PrintServiceAbility::IsEnterprise()
+{
+    return isEnterprise_;
+}
+
+bool PrintServiceAbility::IsEnterpriseEnable()
+{
+    std::string enterpriseEnable = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
+    if (enterpriseEnable == IS_ENTERPRISE_ENABLE) {
+        PRINT_HILOGI("IsEnterpriseEnable return true.");
+        return true;
+    }
+    PRINT_HILOGE("IsEnterpriseEnable return false.");
+    return false;
+}
+void PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
+{
+    if (!IsEnterpriseEnable()) {
+        PRINT_HILOGI("IsEnterpriseEnable false.");
+        return;
+    }
+
+    PRINT_HILOGI("RefreshPrinterStatusOnSwitchUser");
+    BlockUserPrintJobs(lastUserId_);
+    UpdateIsEnterprise();
+    if (IsEnterpriseEnable() && !IsEnterprise()) {
+        PrintCupsClient::GetInstance()->StopCupsdService();
+    } else {
+        PrintCupsClient::GetInstance()->StopCupsdSecondaryService();
+    }
+    printSystemData_.Init();
+    PrintCupsClient::GetInstance()->InitCupsResources();
+}
+#endif // ENTERPRISE_ENABLE
+
+bool PrintServiceAbility::CheckPrintConstraint()
+{
+    bool isEnabled = false;
+    int userId = GetCurrentUserId();
+    auto ret = AccountSA::OsAccountManager::CheckOsAccountConstraintEnabled(userId, PRINT_CONSTRAINT, isEnabled);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("CheckOsAccountConstarintEnabled error = %{public}d.", ret);
+    }
+    PRINT_HILOGD("print constraint for user %{public}d is %{public}d.", userId, isEnabled);
+    return isEnabled;
 }
 } // namespace OHOS::Print

@@ -305,6 +305,8 @@ static napi_value NapiCreatePrintJobSubStateEnum(napi_env env)
         static_cast<int32_t>(PRINT_JOB_BLOCKED_FILE_PARSING_ERROR));
     SetEnumProperty(env, object, "PRINT_JOB_BLOCK_SLOW_FILE_CONVERSION",
         static_cast<int32_t>(PRINT_JOB_BLOCKED_SLOW_FILE_CONVERSION));
+    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_INTERRUPT",
+        static_cast<int32_t>(PRINT_JOB_BLOCKED_INTERRUPT));
     SetEnumProperty(env, object, "PRINT_JOB_RUNNING_UPLOADING_FILES",
         static_cast<int32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES));
     SetEnumProperty(env, object, "PRINT_JOB_RUNNING_CONVERTING_FILES",

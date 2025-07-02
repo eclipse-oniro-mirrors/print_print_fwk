@@ -23,6 +23,7 @@
 #include "print_log.h"
 #include "print_util.h"
 #include "print_constant.h"
+#include "print_service_ability.h"
 
 namespace OHOS {
 namespace Print {
@@ -110,9 +111,9 @@ void PrintSystemData::ConvertInnerJsonToPrinterInfo(Json::Value &object, Printer
 
 bool PrintSystemData::Init()
 {
-    addedPrinterMap_.Clear();
+    GetAddedPrinterMap().Clear();
     PRINT_HILOGI("load new printer list file");
-    std::filesystem::path printersDir(PRINTER_SERVICE_PRINTERS_PATH);
+    std::filesystem::path printersDir(GetPrintersPath());
     for (const auto& entry : std::filesystem::directory_iterator(printersDir)) {
         if (!entry.is_directory()) {
             ReadJsonFile(entry.path());
@@ -211,7 +212,7 @@ bool PrintSystemData::ParsePrinterPreferencesJson(Json::Value &jsonObject)
         Json::Value::Members keys = object.getMemberNames();
         for (auto it = keys.begin(); it != keys.end(); it++) {
             std::string printerId = *it;
-            auto info = addedPrinterMap_.Find(printerId);
+            auto info = GetAddedPrinterMap().Find(printerId);
             if (info == nullptr) {
                 continue;
             }
@@ -284,10 +285,10 @@ bool PrintSystemData::ParsePreviousPreferencesSetting(Json::Value &settingJson, 
 
 void PrintSystemData::InsertAddedPrinter(const std::string &printerId, const PrinterInfo &printerInfo)
 {
-    auto info = addedPrinterMap_.Find(printerId);
+    auto info = GetAddedPrinterMap().Find(printerId);
     if (info == nullptr) {
         PRINT_HILOGI("insert new printer");
-        addedPrinterMap_.Insert(printerId, printerInfo);
+        GetAddedPrinterMap().Insert(printerId, printerInfo);
     } else {
         PRINT_HILOGI("update exist printer");
         *info = printerInfo;
@@ -298,9 +299,9 @@ void PrintSystemData::DeleteAddedPrinter(const std::string &printerId, const std
 {
     if (!printerId.empty()) {
         PRINT_HILOGI("DeleteAddedPrinter printerName: %{private}s", printerName.c_str());
-        addedPrinterMap_.Remove(printerId);
+        GetAddedPrinterMap().Remove(printerId);
         std::filesystem::path filePath =
-            PRINTER_SERVICE_PRINTERS_PATH + "/" + PrintUtil::StandardizePrinterName(printerName) + ".json";
+            GetPrintersPath() + "/" + PrintUtil::StandardizePrinterName(printerName) + ".json";
         DeleteFile(filePath);
     }
 }
@@ -316,12 +317,12 @@ void PrintSystemData::DeleteFile(const std::filesystem::path &path)
 
 void PrintSystemData::SavePrinterFile(const std::string &printerId)
 {
-    auto info = addedPrinterMap_.Find(printerId);
+    auto info = GetAddedPrinterMap().Find(printerId);
     if (info == nullptr) {
         return;
     }
     std::string printerListFilePath =
-        PRINTER_SERVICE_PRINTERS_PATH + "/" + PrintUtil::StandardizePrinterName(info->GetPrinterName()) + ".json";
+        GetPrintersPath() + "/" + PrintUtil::StandardizePrinterName(info->GetPrinterName()) + ".json";
     char realPidFile[PATH_MAX] = {};
     if (realpath(PRINTER_SERVICE_FILE_PATH.c_str(), realPidFile) == nullptr) {
         PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
@@ -366,14 +367,14 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
 std::string PrintSystemData::QueryPrinterIdByStandardizeName(const std::string &printerName)
 {
     std::string stardardizeName = PrintUtil::StandardizePrinterName(printerName);
-    return addedPrinterMap_.FindKey([this, stardardizeName](const PrinterInfo &printer) -> bool {
+    return GetAddedPrinterMap().FindKey([this, stardardizeName](const PrinterInfo &printer) -> bool {
         return PrintUtil::StandardizePrinterName(printer.GetPrinterName()) == stardardizeName;
     });
 }
 
 bool PrintSystemData::QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer)
 {
-    auto info = addedPrinterMap_.Find(printerId);
+    auto info = GetAddedPrinterMap().Find(printerId);
     if (info == nullptr) {
         return false;
     }
@@ -398,7 +399,7 @@ void PrintSystemData::QueryPrinterInfoById(const std::string &printerId, Printer
 
 void PrintSystemData::UpdatePrinterStatus(const std::string& printerId, PrinterStatus printerStatus)
 {
-    auto info = addedPrinterMap_.Find(printerId);
+    auto info = GetAddedPrinterMap().Find(printerId);
     if (info != nullptr) {
         info->SetPrinterStatus(printerStatus);
         PRINT_HILOGI("UpdatePrinterStatus success, status: %{public}d", info->GetPrinterStatus());
@@ -407,7 +408,7 @@ void PrintSystemData::UpdatePrinterStatus(const std::string& printerId, PrinterS
 
 bool PrintSystemData::UpdatePrinterAlias(const std::string& printerId, const std::string& printerAlias)
 {
-    auto info = addedPrinterMap_.Find(printerId);
+    auto info = GetAddedPrinterMap().Find(printerId);
     if (info != nullptr) {
         if (info->GetAlias() != printerAlias) {
             info->SetAlias(printerAlias);
@@ -423,7 +424,7 @@ bool PrintSystemData::UpdatePrinterAlias(const std::string& printerId, const std
 
 void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo)
 {
-    auto info = addedPrinterMap_.Find(printerInfo->GetPrinterId());
+    auto info = GetAddedPrinterMap().Find(printerInfo->GetPrinterId());
     if (info != nullptr) {
         info->SetUri(printerInfo->GetUri());
         PRINT_HILOGI("UpdatePrinterUri success");
@@ -433,7 +434,7 @@ void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &print
 
 void PrintSystemData::UpdatePrinterPreferences(const std::string &printerId, const PrinterPreferences &preferences)
 {
-    auto info = addedPrinterMap_.Find(printerId);
+    auto info = GetAddedPrinterMap().Find(printerId);
     if (info != nullptr) {
         info->SetPreferences(preferences);
         PRINT_HILOGI("UpdatePrinterPreferences success");
@@ -445,7 +446,7 @@ void PrintSystemData::GetAddedPrinterListFromSystemData(std::vector<std::string>
 {
     std::vector<std::string> addedPrinterList = QueryAddedPrinterIdList();
     for (auto printerId : addedPrinterList) {
-        auto info = addedPrinterMap_.Find(printerId);
+        auto info = GetAddedPrinterMap().Find(printerId);
         if (info == nullptr) {
             continue;
         }
@@ -456,7 +457,7 @@ void PrintSystemData::GetAddedPrinterListFromSystemData(std::vector<std::string>
 
 bool PrintSystemData::IsPrinterAdded(const std::string &printerId)
 {
-    auto info = addedPrinterMap_.Find(printerId);
+    auto info = GetAddedPrinterMap().Find(printerId);
     if (info == nullptr) {
         return false;
     }
@@ -928,7 +929,7 @@ bool PrintSystemData::ParseUserListJsonV1(Json::Value &jsonObject, std::vector<i
 
 std::vector<std::string> PrintSystemData::QueryAddedPrinterIdList()
 {
-    return addedPrinterMap_.GetKeyList();
+    return GetAddedPrinterMap().GetKeyList();
 }
 
 std::shared_ptr<PrinterInfo> PrintSystemData::QueryDiscoveredPrinterInfoById(const std::string &printerId)
@@ -1167,7 +1168,7 @@ std::string PrintSystemData::ParseDefaultPageSizeId(const PrinterCapability &cap
 
 bool PrintSystemData::CheckPrinterVersionFile()
 {
-    std::string fileName = PRINTER_SERVICE_PRINTERS_PATH + "/" + PRINTER_LIST_VERSION_FILE;
+    std::string fileName = GetPrintersPath() + "/" + PRINTER_LIST_VERSION_FILE;
     std::filesystem::path filePath(fileName);
     if (std::filesystem::exists(filePath)) {
         PRINT_HILOGI("version file exists.");
@@ -1207,5 +1208,28 @@ void PrintSystemData::SaveJsonFile(const std::string &fileName, const std::strin
     }
     PRINT_HILOGI("SaveJsonFile end.");
 }
+
+PrintMapSafe<PrinterInfo>& PrintSystemData::GetAddedPrinterMap()
+{
+#ifdef ENTERPRISE_ENABLE
+    if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&
+        !PrintServiceAbility::GetInstance()->IsEnterprise()) {
+        return addedPrinterSecondaryMap_;
+    }
+#endif // ENTERPRISE_ENABLE
+    return addedPrinterMap_;
+}
+
+const std::string& PrintSystemData::GetPrintersPath()
+{
+#ifdef ENTERPRISE_ENABLE
+    if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&
+        !PrintServiceAbility::GetInstance()->IsEnterprise()) {
+        return PRINTER_SERVICE_PRINTERS_SECONDARY_PATH;
+    }
+#endif // ENTERPRISE_ENABLE
+    return PRINTER_SERVICE_PRINTERS_PATH;
+}
+
 }  // namespace Print
 }  // namespace OHOS

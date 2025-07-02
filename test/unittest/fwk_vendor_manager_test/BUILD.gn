@@ -42,6 +42,9 @@ ohos_unittest("fwk_vendor_manager_test") {
     "vendor_wlan_group_test.cpp",
   ]
   cflags_cc = []
+  if (print_fwk_feature_enterprise) {
+    cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+  }
 
   deps = [
     "${print_path}/etc/init:printservice.rc",
@@ -73,6 +76,7 @@ ohos_unittest("fwk_vendor_manager_test") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",

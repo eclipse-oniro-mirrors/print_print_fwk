@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("../../print.gni")
 
 ################################################################################
 
@@ -69,4 +70,20 @@ ohos_prebuilt_etc("saneservice.rc") {
   relative_install_dir = "init"
   part_name = "print_fwk"
   subsystem_name = "print"
+}
+
+if (print_fwk_feature_enterprise) {
+  ohos_prebuilt_etc("cupsd_secondary-files.conf") {
+    source = "cupsd_secondary-files.conf"
+    relative_install_dir = "cups"
+    part_name = "print_fwk"
+    subsystem_name = "print"
+  }
+
+  ohos_prebuilt_etc("cups_service_secondary.cfg") {
+    source = "cups_service_secondary.cfg"
+    relative_install_dir = "init"
+    part_name = "print_fwk"
+    subsystem_name = "print"
+  }
 }

@@ -62,15 +62,21 @@ ohos_unittest("print_service_test") {
     "//third_party/jsoncpp:jsoncpp",
   ]
 
+  cflags_cc = []
+  
   if (cups_enable) {
     include_dirs += [ "//third_party/cups/cups-2.4.0" ]
-    cflags_cc = [ "-DCUPS_ENABLE" ]
+    cflags_cc += [ "-DCUPS_ENABLE" ]
     deps += [
       "//third_party/cups:third_party_cups",
       "//third_party/cups-filters:third_party_cupsfilters",
     ]
   }
 
+  if (print_fwk_feature_enterprise) {
+    cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+  }
+  
   external_deps = [
     "ability_base:base",
     "ability_base:want",
