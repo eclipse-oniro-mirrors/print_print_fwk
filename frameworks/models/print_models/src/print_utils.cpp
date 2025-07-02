@@ -123,6 +123,17 @@ std::string PrintUtils::GetEventType(const std::string &type)
     return eventType;
 }
 
+std::string PrintUtils::GetEventUserId(const std::string &type)
+{
+    auto userIdPos = type.find(USER_ID_DELIMITER);
+    if (userIdPos == std::string::npos || userIdPos >= type.length()) {
+        return "";
+    }
+    std::string userIdStr = type.substr(0, userIdPos);
+    PRINT_HILOGD("userId: %{public}s", userIdStr.c_str());
+    return userIdStr;
+}
+
 bool PrintUtils::CheckUserIdInEventType(const std::string &type, int32_t callerUserId)
 {
     auto userIdPos = type.find(USER_ID_DELIMITER);
