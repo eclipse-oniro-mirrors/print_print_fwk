@@ -66,6 +66,8 @@ static const std::string EXTINFO_EVENT_TYPE = "extInfoChange";
 static const std::string PRINT_ADAPTER_EVENT_TYPE = "printCallback_adapter";
 static const std::string EVENT_CANCEL = "cancel";
 const uint32_t MAX_JOBQUEUE_NUM = 512;
+static constexpr uint32_t ISO_A4_WIDTH = 8268;
+static constexpr uint32_t ISO_A4_HEIGHT = 11692;
 
 enum EXTENSION_ID_TYPE {
     TYPE_DEFAULT,
@@ -2719,5 +2721,23 @@ HWTEST_F(PrintServiceAbilityTest, ExitLowPowerMode_WhenExitedLowPower_ShouldDoNo
     EXPECT_FALSE(service->isLowPowerMode_);
     service->ExitLowPowerMode();
     EXPECT_FALSE(service->isLowPowerMode_);
+}
+
+HWTEST_F(PrintServiceAbilityTest, RefreshPrinterPageSize, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrinterInfo printerInfo;
+    PrinterCapability cap;
+    std::vector<PrintPageSize> pageSizeList;
+    PrintPageSize pageSize;
+    pageSize.SetWidth(ISO_A4_WIDTH);
+    pageSize.SetHeight(ISO_A4_HEIGHT);
+    pageSizeList.push_back(pageSize);
+    cap.SetSupportedPageSize(pageSizeList);
+    printerInfo.SetCapability(cap);
+    service->RefreshPrinterPageSize(printerInfo);
+    printerInfo.GetCapability(cap);
+    cap.GetSupportedPageSize(pageSizeList);
+    EXPECT_EQ(pageSizeList.size(), 1);
 }
 } // namespace OHOS::Print

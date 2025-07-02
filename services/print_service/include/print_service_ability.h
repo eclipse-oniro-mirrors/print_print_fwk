@@ -202,6 +202,7 @@ private:
     int32_t ConnectUsbPrinter(const std::string &printerId);
     void RefreshPrinterInfoByPpd();
     void CheckCupsServerAlive();
+    void RefreshPrinterPageSize(PrinterInfo& printerInfo);
     
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;

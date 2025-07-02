@@ -477,6 +477,11 @@ bool UpdatePageSizeCapability(PrinterCapability &printerCap, const Print_Printer
     }
     std::vector<PrintPageSize> pageSizeList;
     for (uint32_t i = 0; i < capability->supportedPageSizesCount; ++i) {
+        if (strstr(capability->supportedPageSizes[i].id, "CUSTOM_MIN") ||
+            strstr(capability->supportedPageSizes[i].id, "CUSTOM_MAX")) {
+            PRINT_HILOGW("skip pageSize: %{public}s", capability->supportedPageSizes[i].name);
+            continue;
+        }
         PrintPageSize printPageSize;
         if (capability->supportedPageSizes[i].name != nullptr) {
             std::string pageSizeName(capability->supportedPageSizes[i].name);
@@ -498,15 +503,14 @@ bool UpdatePageSizeCapability(PrinterCapability &printerCap, const Print_Printer
             }
         }
         if (capability->supportedPageSizes[i].name != nullptr) {
-            if (ConvertCustomPageSizeFromPwgName(capability->supportedPageSizes[i].name, printPageSize)) {
-                printPageSize.SetId(std::string(capability->supportedPageSizes[i].id));
+            printPageSize.SetWidth(capability->supportedPageSizes[i].width);
+            printPageSize.SetHeight(capability->supportedPageSizes[i].height);
+            if (printPageSize.ConvertToPwgStyle()) {
                 AddUniquePageSize(pageSizeList, printPageSize);
                 PRINT_HILOGD("custom page size matched = %{public}s", printPageSize.GetId().c_str());
                 continue;
             }
         }
-        PRINT_HILOGD("page size = %{public}u x %{public}u", capability->supportedPageSizes[i].width,
-                     capability->supportedPageSizes[i].height);
     }
     printerCap.SetSupportedPageSize(pageSizeList);
     return true;

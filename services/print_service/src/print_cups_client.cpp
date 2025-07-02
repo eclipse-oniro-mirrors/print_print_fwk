@@ -1078,8 +1078,10 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
     Json::Value::Members keys = jobParams->advancedOpsJson.getMemberNames();
     for (auto key = keys.begin(); key != keys.end(); key++) {
         std::string keyStr = *key;
-        std::string valueStr = jobParams->advancedOpsJson[keyStr].asString();
-        num_options = cupsAddOption(keyStr.c_str(), valueStr.c_str(), num_options, options);
+        if (jobParams->advancedOpsJson.isMember(keyStr) || jobParams->advancedOpsJson[keyStr].isString()) {
+            std::string valueStr = jobParams->advancedOpsJson[keyStr].asString();
+            num_options = cupsAddOption(keyStr.c_str(), valueStr.c_str(), num_options, options);
+        }
     }
     return num_options;
 }

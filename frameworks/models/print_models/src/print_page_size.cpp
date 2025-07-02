@@ -15,6 +15,7 @@
 
 #include "print_page_size.h"
 #include "print_log.h"
+#include <cups/cups.h>
 
 namespace {
 const uint32_t ISO_A0_WIDTH  = 33110;
@@ -524,5 +525,34 @@ Json::Value PrintPageSize::ConvertToJsonObject() const
     pageSizeJson["width_"] = width_;
     pageSizeJson["height_"] = height_;
     return pageSizeJson;
+}
+
+bool PrintPageSize::ConvertToPwgStyle()
+{
+    pwg_media_t* pwgMedia = pwgMediaForSize(
+        round(GetWidth() * ONE_HUNDRED / HUNDRED_OF_MILLIMETRE_TO_INCH),
+        round(GetHeight() * ONE_HUNDRED / HUNDRED_OF_MILLIMETRE_TO_INCH));
+    if (pwgMedia && pwgMedia->ppd && pwgMedia->pwg) {
+        std::string ppdName(pwgMedia->ppd);
+        std::string pwgName(pwgMedia->pwg);
+        SetId(ppdName);
+        SetName(pwgName);
+        if (pwgName.find("custom_") != std::string::npos) {
+            ConvertToCustomStyle();
+        }
+        return true;
+    }
+    PRINT_HILOGE("pwgMedia Convert fail!");
+    return false;
+}
+
+bool PrintPageSize::ConvertToCustomStyle()
+{
+    std::stringstream sizeName;
+    sizeName << CUSTOM_PREFIX << round(GetWidth() / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x"
+        << round(GetHeight() / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
+    SetId(sizeName.str());
+    SetName(sizeName.str());
+    return true;
 }
 } // namespace OHOS::Print

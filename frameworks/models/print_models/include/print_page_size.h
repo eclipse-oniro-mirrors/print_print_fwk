@@ -75,6 +75,10 @@ public:
 
     Json::Value ConvertToJsonObject() const;
 
+    bool ConvertToPwgStyle();
+
+    bool ConvertToCustomStyle();
+
 private:
     void ReadFromParcel(Parcel &parcel);
 

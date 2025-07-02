@@ -35,7 +35,8 @@ const std::vector<std::string> baseOptionStr = {
     "KD03Duplex",
     "Collate",
     "OutputOrder",
-    "CNGrayscale"
+    "CNGrayscale",
+    "BRMonoColor"
 };
 
 const char *GetCNFromPpdAttr(ppd_file_t *ppd, const char *keyword, const char* choice, const char* defaultText)
@@ -142,18 +143,17 @@ void ParsePageSizeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerC
     pwg_size_t *cacheSizes = ppdCache->sizes;
     if (cacheSizes == nullptr) {
         PRINT_HILOGE("cacheSizes get nullptr!");
+        return;
     }
     std::vector<PrintPageSize> supportedPageSizes;
     ppd_option_t *sizeOption = ppdFindOption(ppd, "PageSize");
-    if (sizeOption == nullptr) {
-        PRINT_HILOGE("sizeOption get nullptr!");
-    }
 
     for (int i = 0; i < ppdCache->num_sizes; i++) {
         pwg_size_t pwgSize = cacheSizes[i];
         ppd_choice_t *sizeChoice = ppdFindChoice(sizeOption, pwgSize.map.ppd);
         if (sizeChoice == nullptr) {
             PRINT_HILOGE("sizeChoice get nullptr!");
+            return;
         }
         std::string id = PrintPageSize::MatchPageSize(pwgSize.map.pwg);
         PrintPageSize dst;
@@ -309,9 +309,11 @@ void ParseColorModeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printer
 void ParseQualityAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
 {
     std::vector<PrintQualityCode> supportedQualitiesList;
-    ppd_option_t *outputMode;
-    if ((outputMode = ppdFindOption(ppd, "OutputMode")) ||
-        (outputMode = ppdFindOption(ppd, "cupsPrintQuality"))) {
+    ppd_option_t *outputMode = ppdFindOption(ppd, "OutputMode");
+    if (!outputMode) {
+        outputMode = ppdFindOption(ppd, "cupsPrintQuality");
+    }
+    if (outputMode) {
         if (ppdFindChoice(outputMode, "draft") || ppdFindChoice(outputMode, "fast")) {
             supportedQualitiesList.emplace_back(PrintQualityCode::PRINT_QUALITY_DRAFT);
         }
