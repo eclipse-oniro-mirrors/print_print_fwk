@@ -131,7 +131,7 @@ private:
     bool DelayStartDiscovery(const std::string &extensionId);
     int32_t SendPrinterDiscoverEvent(int event, const PrinterInfo &info);
     int32_t SendPrinterChangeEvent(int event, const PrinterInfo &info);
-    void SendPrinterEvent(const PrinterInfo &info);
+    void SendPrinterEvent(const PrinterInfo &info, const std::string userId = "");
     int32_t SendPrinterEventChangeEvent(PrinterEvent printerEvent, const PrinterInfo &info, bool isSignalUser = false);
     void SendPrintJobEvent(const PrintJob &jobInfo);
     int32_t SendExtensionEvent(const std::string &extensionId, const std::string &extInfo);
