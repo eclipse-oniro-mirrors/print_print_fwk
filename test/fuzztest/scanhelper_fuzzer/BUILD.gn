@@ -21,9 +21,7 @@ ohos_fuzztest("ScanHelperFuzzTest") {
 
   fuzz_config_file = "${print_path}/test/fuzztest/scanhelper_fuzzer"
 
-  include_dirs = [
-    "//third_party/node/${print_path}/frameworks/helper/scan_helper/src",
-    "//third_party/curl/include",
+  include_dirs = [ 
     "${print_path}/frameworks/innerkitsimpl/scan_impl/include",
     "${print_path}/frameworks/helper/scan_helper/include",
     "${print_utils_path}/include",
