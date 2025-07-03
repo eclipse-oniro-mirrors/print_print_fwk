@@ -61,6 +61,7 @@ ohos_unittest("fwk_print_service_ability_test") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "bounds_checking_function:libsec_shared",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "cJSON:cjson",
@@ -73,6 +74,7 @@ ohos_unittest("fwk_print_service_ability_test") {
     "napi:ace_napi",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
     "usb_manager:usbsrv_client",
   ]
 }
