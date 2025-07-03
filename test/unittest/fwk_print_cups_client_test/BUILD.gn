@@ -25,7 +25,6 @@ ohos_unittest("fwk_print_cups_client_test") {
     "${print_path}/interfaces/kits/napi/print_napi/include",
     "${print_path}/services/print_service/include",
     "${print_utils_path}/include",
-    "//third_party/node/src",
   ]
 
   sanitize = {
@@ -49,7 +48,6 @@ ohos_unittest("fwk_print_cups_client_test") {
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service:print_service_test",
-    "//third_party/googletest:gmock_main",
   ]
 
   external_deps = [
@@ -65,6 +63,7 @@ ohos_unittest("fwk_print_cups_client_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
+    "googletest:gmock_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
@@ -76,7 +75,6 @@ ohos_unittest("fwk_print_cups_client_test") {
   ]
 
   if (cups_enable) {
-    include_dirs += [ "//third_party/cups/cups-2.4.0" ]
     sources += [
       "print_cups_client_test.cpp",
       "print_cups_wrapper_test.cpp",

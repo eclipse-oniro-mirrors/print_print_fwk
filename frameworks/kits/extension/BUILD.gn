@@ -22,7 +22,6 @@ config("ability_config") {
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/kits/extension/include",
     "${print_utils_path}/include",
-    "//third_party/node/src",
   ]
 
   cflags_cc += [
@@ -49,9 +48,7 @@ config("ability_public_config") {
   visibility = [ ":*" ]
   include_dirs = [
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
-    "${print_path}/frameworks/kits/extension/include",
-    "//third_party/libuv/include",
-    "//third_party/json/include",
+    "${print_path}/frameworks/kits/extension/include",  
   ]
 }
 
@@ -84,7 +81,6 @@ ohos_shared_library("print_extension_framework") {
   configs = [ ":ability_config" ]
   public_configs = [
     ":ability_public_config",
-    "${ability_runtime_path}/frameworks/native/ability:ability_context_public_config",
   ]
 
   deps = [

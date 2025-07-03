@@ -26,7 +26,6 @@ ohos_unittest("print_service_test") {
     "${print_path}/interfaces/kits/napi/print_napi/include",
     "${print_path}/services/print_service/include",
     "${print_utils_path}/include",
-    "//third_party/node/src",
   ]
 
   sanitize = {
@@ -58,18 +57,7 @@ ohos_unittest("print_service_test") {
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service:print_service_test",
-    "//third_party/googletest:gmock_main",
-    "//third_party/jsoncpp:jsoncpp",
   ]
-
-  if (cups_enable) {
-    include_dirs += [ "//third_party/cups/cups-2.4.0" ]
-    cflags_cc = [ "-DCUPS_ENABLE" ]
-    deps += [
-      "//third_party/cups:third_party_cups",
-      "//third_party/cups-filters:third_party_cupsfilters",
-    ]
-  }
 
   external_deps = [
     "ability_base:base",
@@ -84,14 +72,24 @@ ohos_unittest("print_service_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
+    "googletest:gmock_main",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "napi:ace_napi",
     "openssl:libssl_shared",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "usb_manager:usbsrv_client",
   ]
+
+  if (cups_enable) {
+    cflags_cc = [ "-DCUPS_ENABLE" ]
+    external_deps += [
+      "cups:cups",
+      "cups-filters:cupsfilters",
+    ]
+  }
 }
 
 ohos_unittest("scan_service_test") {
@@ -103,7 +101,6 @@ ohos_unittest("scan_service_test") {
     "${print_path}/interfaces/kits/napi/scan_napi/include",
     "${print_path}/services/scan_service/include",
     "${print_utils_path}/include",
-    "//third_party/node/src",
   ]
 
   sources = [
@@ -119,8 +116,6 @@ ohos_unittest("scan_service_test") {
     "${print_path}/interfaces/kits/napi/scan_napi:scan_napi",
     "${print_path}/profile:scan_sa_profiles",
     "${print_path}/services/scan_service:scan_service_test",
-    "//third_party/googletest:gmock_main",
-    "//third_party/jsoncpp:jsoncpp",
   ]
 
   external_deps = [
@@ -134,6 +129,7 @@ ohos_unittest("scan_service_test") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
+    "googletest:gmock_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",

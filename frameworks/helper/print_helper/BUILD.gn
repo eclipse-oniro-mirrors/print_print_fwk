@@ -31,8 +31,6 @@ config("print_interfaces_kits_napi_config") {
 }
 ohos_shared_library("print_helper") {
   include_dirs = [
-    "//third_party/node/src",
-    "//third_party/curl/include",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/models/print_models/include",
     "${print_utils_path}/include",
