@@ -877,15 +877,15 @@ void PrintUserData::ParseOptionalJsonObjectToPrintJob(
     if (PrintJsonUtil::IsMember(printJobInfoJson, "pageSize") && printJobInfoJson["pageSize"].isObject()) {
         printHistoryJob->SetPageSize(ParseJsonObjectToPrintPageSize(printJobInfoJson["pageSize"]));
     }
-    if (CheckOptionalParam(jsonObject, "hasmargin") &&
+    if (CheckOptionalParam(printJobInfoJson, "hasmargin") &&
         PrintJsonUtil::IsMember(printJobInfoJson, "margin") && printJobInfoJson["margin"].isObject()) {
         printHistoryJob->SetMargin(ParseJsonObjectToMargin(printJobInfoJson["margin"]));
     }
-    if (CheckOptionalParam(jsonObject, "hasPreview") &&
+    if (CheckOptionalParam(printJobInfoJson, "hasPreview") &&
         PrintJsonUtil::IsMember(printJobInfoJson, "preview") && printJobInfoJson["preview"].isObject()) {
         printHistoryJob->SetPreview(ParseJsonObjectToPrintPreviewAttribute(printJobInfoJson["preview"]));
     }
-    if (CheckOptionalParam(jsonObject, "hasOption") &&
+    if (CheckOptionalParam(printJobInfoJson, "hasOption") &&
         PrintJsonUtil::IsMember(printJobInfoJson, "option") && printJobInfoJson["option"].isString()) {
         printHistoryJob->SetOption(printJobInfoJson["option"].asString());
     }
