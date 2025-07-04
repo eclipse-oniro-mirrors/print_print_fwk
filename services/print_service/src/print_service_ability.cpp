@@ -2504,8 +2504,13 @@ std::shared_ptr<PrintUserData> PrintServiceAbility::GetUserDataByJobId(const std
     int32_t userId = GetUserIdByJobId(jobId);
     PRINT_HILOGI("the job is belong to user-%{public}d.", userId);
     if (userId == E_PRINT_INVALID_PRINTJOB) {
-        if (GetCurrentUserData()->ContainsHistoryPrintJob(printSystemData_.QueryAddedPrinterIdList(), jobId)) {
-            return GetCurrentUserData();
+        auto userData = GetCurrentUserData();
+        if (userData == nullptr) {
+            PRINT_HILOGE("Get user data failed.");
+            return nullptr;
+        }
+        if (userData->ContainsHistoryPrintJob(printSystemData_.QueryAddedPrinterIdList(), jobId)) {
+            return userData;
         }
         for (auto it = printUserMap_.begin(); it != printUserMap_.end(); it++) {
             if ((it->second)->ContainsHistoryPrintJob(printSystemData_.QueryAddedPrinterIdList(), jobId)) {

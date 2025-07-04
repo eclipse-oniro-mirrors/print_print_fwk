@@ -38,7 +38,7 @@ public:
     int32_t On(const std::string& type);
     int32_t Off(const std::string& type);
 private:
-    uint32_t CallSpooler(const std::shared_ptr<AdapterParam> &adapterParam,
+    int32_t CallSpooler(const std::shared_ptr<AdapterParam> &adapterParam,
         const std::vector<std::string>& files);
 };
 }  // namespace OHOS::Print

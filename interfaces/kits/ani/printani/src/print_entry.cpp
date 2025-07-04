@@ -82,7 +82,7 @@ int32_t PrintEntry::Off(const std::string& type)
     return E_PRINT_NONE;
 }
 
-uint32_t PrintEntry::CallSpooler(const std::shared_ptr<AdapterParam> &adapterParam,
+int32_t PrintEntry::CallSpooler(const std::shared_ptr<AdapterParam> &adapterParam,
     const std::vector<std::string>& files)
 {
     PRINT_HILOGI("enter CallSpooler.");
