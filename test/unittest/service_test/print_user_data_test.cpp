@@ -861,7 +861,7 @@ HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_HasResultIsFalse_H
     userData->ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
     PrintPreviewAttribute previewAttr;
     printHistoryJob->GetPreview(previewAttr);
-    EXPECT_EQ(previewAtt.HasResult(), false);
+    EXPECT_EQ(previewAttr.HasResult(), false);
 }
 
 HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_NoResultInJson_HasResultReturnFalse, TestSize.Level1)
