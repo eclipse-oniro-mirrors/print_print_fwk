@@ -143,6 +143,7 @@ public:
         std::vector<std::string> &valueList);
     int32_t QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info);
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
+    int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers);
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,
         const std::string &ppdName);
     bool CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monitorParams, const uint32_t timeout = 3000);

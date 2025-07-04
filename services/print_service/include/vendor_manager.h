@@ -46,6 +46,7 @@ public:
     virtual bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) = 0;
     virtual bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
                                            const std::string &ppdName, const std::string &ppdData) = 0;
+    virtual int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) = 0;
 };
 
 class PrintServiceAbility;
@@ -95,6 +96,7 @@ public:
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) override;
     std::shared_ptr<VendorDriverBase> FindDriverByPrinterId(const std::string &globalPrinterId);
     std::shared_ptr<VendorDriverBase> FindDriverByVendorName(const std::string &vendorName);
+    int32_t DiscoverBackendPrinters(const std::string &vendorName, std::vector<PrinterInfo> &printers) override;
 
 private:
     void StatusMonitorProcess();

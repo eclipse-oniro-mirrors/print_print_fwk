@@ -17,14 +17,31 @@
 #include "print_log.h"
 
 using namespace OHOS::Print;
+const int DISCOVERY_INTERVAL_MS = 5000;
 
 VendorPpdDriver::VendorPpdDriver() {}
 
-VendorPpdDriver::~VendorPpdDriver() {}
+VendorPpdDriver::~VendorPpdDriver()
+{
+    startDiscovery_ = false;
+}
 
 std::string VendorPpdDriver::GetVendorName()
 {
     return VENDOR_PPD_DRIVER;
+}
+
+bool VendorPpdDriver::OnQueryCapability(const std::string &printerId, int timeout)
+{
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return false;
+    }
+    auto printerInfo = vendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
+    if (printerInfo != nullptr && TryConnectByPpdDriver(*printerInfo)) {
+        PRINT_HILOGI("Connect by ppdDriver success.");
+    }
+    return true;
 }
 
 int32_t VendorPpdDriver::OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo)
@@ -64,4 +81,114 @@ std::string VendorPpdDriver::QueryPpdName(const std::string &makeAndModel)
         return std::string();
     }
     return ppdName;
+}
+
+void VendorPpdDriver::UpdateAllPrinterStatus()
+{
+    // not need update vendor backend printer by monitor. use default status by discovered state.
+    return;
+}
+
+void VendorPpdDriver::DiscoverBackendPrinters()
+{
+    std::vector<PrinterInfo> printers = {};
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return;
+    }
+    if (vendorManager->DiscoverBackendPrinters(GetVendorName(), printers) != E_PRINT_NONE) {
+        PRINT_HILOGW("Discovery backend printer fail.");
+        return;
+    }
+    std::unique_lock<std::mutex> lock(updateDiscoveryMutex_);
+    for (auto &isDiscoveredPair : discoveredPrinters_) {
+        isDiscoveredPair.second = false;
+    }
+    // add or update new printer is discovered
+    for (const auto &printer : printers) {
+        discoveredPrinters_[printer.GetPrinterId()] = true;
+        vendorManager->AddPrinterToDiscovery(GetVendorName(), printer);
+    }
+    // remove non-discovered printer
+    for (const auto &isDiscoveredPair : discoveredPrinters_) {
+        if (!isDiscoveredPair.second) {
+            vendorManager->RemovePrinterFromDiscovery(GetVendorName(), isDiscoveredPair.first);
+        }
+    }
+}
+
+void VendorPpdDriver::OnStartDiscovery()
+{
+    PRINT_HILOGD("OnStartDiscovery enter");
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("OnStartDiscovery vendorManager is null.");
+        return;
+    }
+    if (!startDiscovery_) {
+        startDiscovery_ = true;
+        discoveryThread_ = std::thread(&VendorPpdDriver::DiscoveryProcess, this);
+    } else {
+        PRINT_HILOGW("allready start backend discovery.");
+    }
+}
+
+void VendorPpdDriver::OnStopDiscovery()
+{
+    PRINT_HILOGD("OnStartDiscovery enter");
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("OnStartDiscovery vendorManager is null.");
+        return;
+    }
+    startDiscovery_ = false;
+    if (discoveryThread_.joinable()) {
+        discoveryThread_.join();
+    }
+}
+
+void VendorPpdDriver::DiscoveryProcess()
+{
+    PRINT_HILOGI("DiscoveryProcess Enter");
+    while (WaitNext()) {
+        DiscoverBackendPrinters();
+    }
+    std::unique_lock<std::mutex> lock(updateDiscoveryMutex_);
+    for (const auto &isDiscoveredPair : discoveredPrinters_) {
+        vendorManager->RemovePrinterFromDiscovery(GetVendorName(), isDiscoveredPair.first);
+    }
+    PRINT_HILOGI("DiscoveryProcess Quit");
+}
+
+bool VendorPpdDriver::WaitNext()
+{
+    std::unique_lock<std::mutex> lock(startDiscoveryMutex_);
+    if (!startDiscovery_) {
+        return false;
+    }
+    startDiscoveryCondition_.wait_for(lock, std::chrono::milliseconds(DISCOVERY_INTERVAL_MS));
+    if (!startDiscovery_) {
+        return false;
+    }
+    return true;
+}
+
+bool VendorPpdDriver::TryConnectByPpdDriver(const PrinterInfo &printerInfo)
+{
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return false;
+    }
+    OnPrinterDiscovered(GetVendorName(), printerInfo);
+    std::string printerId = printerInfo.GetPrinterId();
+    std::string ppdName;
+    if (!QueryProperty(printerId, PRINTER_PROPERTY_KEY_CUPS_PPD_NAME, ppdName)) {
+        PRINT_HILOGI("no matched ppd");
+        return false;
+    }
+    if (vendorManager->AddPrinterToCupsWithPpd(GetVendorName(), VendorManager::ExtractPrinterId(printerId),
+        ppdName, "") != EXTENSION_ERROR_NONE) {
+        PRINT_HILOGI("AddPrinterToCupsWithPpd fail.");
+        return false;
+    }
+    PRINT_HILOGI("AddPrinterToCupsWithPpd success.");
+    return true;
 }

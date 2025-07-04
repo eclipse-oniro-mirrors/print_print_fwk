@@ -140,6 +140,7 @@ static const std::string PRINTER_MAKE_UNKNOWN = "Unknown";
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string VENDOR_MANAGER_PREFIX = "fwk.";
 static const std::string DEFAULT_POLICY = "default";
+static const std::string BACKEND_URI_DELIMITER = "://";
 
 static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST {
     { PRINTER_STATE_MEDIA_EMPTY,    PRINT_JOB_BLOCKED_OUT_OF_PAPER },
@@ -198,6 +199,24 @@ void ClearUsbPrinters()
     g_usbPrinters.clear();
 }
 
+static std::mutex g_backendPrintersLock;
+static std::vector<PrinterInfo> g_backendPrinters;
+std::vector<PrinterInfo> GetBackendPrinters()
+{
+    std::lock_guard<std::mutex> lock(g_backendPrintersLock);
+    return g_backendPrinters;
+}
+void AddBackendPrinter(PrinterInfo &info)
+{
+    std::lock_guard<std::mutex> lock(g_backendPrintersLock);
+    g_backendPrinters.emplace_back(info);
+}
+void ClearBackendPrinters()
+{
+    std::lock_guard<std::mutex> lock(g_backendPrintersLock);
+    g_backendPrinters.clear();
+}
+
 static void ParseDeviceInfo(const char *deviceLocation, Json::Value &infoOps)
 {
     if (deviceLocation == nullptr) {
@@ -237,12 +256,14 @@ void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceI
     PRINT_HILOGD("make-and-model = %{private}s\n", deviceMakeAndModel);
     std::string printerUri(deviceUri);
     std::string printerMake(deviceMakeAndModel);
-    if (printerUri.length() > SERIAL_LENGTH && printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER &&
-        printerMake != PRINTER_MAKE_UNKNOWN) {
-        std::string printerName(deviceInfo);
+    if (printerUri.length() > SERIAL_LENGTH && printerMake != PRINTER_MAKE_UNKNOWN) {
+        std::string id(deviceInfo);
         std::string serial = GetUsbPrinterSerial(printerUri);
         PRINT_HILOGD("serial = %{private}s\n", serial.c_str());
-        std::string id = PRINTER_ID_USB_PREFIX + "-" + printerName;
+        bool isUsbBackend = printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER;
+        if (isUsbBackend) {
+            id = PRINTER_ID_USB_PREFIX + "-" + id;
+        }
         if (!serial.empty()) {
             id += "-" + serial;
         }
@@ -254,13 +275,18 @@ void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceI
         info.SetPrinterState(PRINTER_ADDED);
         PrinterCapability printerCapability;
         info.SetCapability(printerCapability);
-        info.SetDescription("usb");
         Json::Value infoOps;
         infoOps["printerUri"] = printerUri;
         infoOps["make"] = printerMake;
         ParseDeviceInfo(deviceLocation, infoOps);
         info.SetOption(PrintJsonUtil::WriteString(infoOps));
-        AddUsbPrinter(info);
+        if (isUsbBackend) {
+            info.SetDescription("usb");
+            AddUsbPrinter(info);
+        } else {
+            info.SetDescription("vendor");
+            AddBackendPrinter(info);
+        }
     } else {
         PRINT_HILOGW("verify uri or make failed");
     }
@@ -1819,9 +1845,10 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     PRINT_HILOGD("CheckPrinterOnline printerId: %{public}s", printerId.c_str());
     bool isUsbPrinter = monitorParams->printerUri.length() > USB_PRINTER.length() &&
                         monitorParams->printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER;
+    bool isBackendPrinter = strstr(printerId.c_str(), VENDOR_PPD_DRIVER.c_str()) != nullptr;
     bool isCustomizedExtension = !(PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME) ||
                                    PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX));
-    if ((isUsbPrinter || isCustomizedExtension) && monitorParams->serviceAbility != nullptr) {
+    if ((isUsbPrinter || isCustomizedExtension || isBackendPrinter) && monitorParams->serviceAbility != nullptr) {
         if (monitorParams->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
             PRINT_HILOGI("printer offline");
             return false;
@@ -2231,6 +2258,23 @@ int32_t PrintCupsClient::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
         return E_PRINT_SERVER_FAILURE;
     }
     printers = GetUsbPrinters();
+    return E_PRINT_NONE;
+}
+
+int32_t PrintCupsClient::DiscoverBackendPrinters(std::vector<PrinterInfo> &printers)
+{
+    int longStatus = 0;
+    const char* include_schemes = CUPS_INCLUDE_ALL;
+    const char* exclude_schemes = CUPS_EXCLUDE_NONE;
+    int timeout = CUPS_TIMEOUT_DEFAULT;
+    PRINT_HILOGD("DiscoverBackendPrinters cupsGetDevices");
+    ClearBackendPrinters();
+    if (cupsGetDevices(CUPS_HTTP_DEFAULT, timeout, include_schemes, exclude_schemes,
+        DeviceCb, &longStatus) != IPP_OK) {
+        PRINT_HILOGE("lpinfo error : %{public}s", cupsLastErrorString());
+        return E_PRINT_SERVER_FAILURE;
+    }
+    printers = GetBackendPrinters();
     return E_PRINT_NONE;
 }
 

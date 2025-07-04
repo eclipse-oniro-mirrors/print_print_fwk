@@ -69,6 +69,7 @@ public:
         PrinterInfo &info) = 0;
     virtual bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) = 0;
     virtual ConnectMethod GetConnectingMethod(const std::string &id) = 0;
+    virtual int32_t DiscoverBackendPrinters(const std::string &vendorName, std::vector<PrinterInfo> &printers) = 0;
 };
 
 class VendorDriverBase {
@@ -88,8 +89,8 @@ public:
     virtual int32_t OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo);
     virtual bool MonitorPrinterStatus(const std::string &printerId, bool on);
     virtual bool QueryProperty(const std::string &printerId, const std::string &key, std::string &value);
-
-    void UpdateAllPrinterStatus();
+    virtual void UpdateAllPrinterStatus();
+    
     std::shared_ptr<PrinterVendorStatus> GetMonitorVendorStatus(const std::string &printerId);
     std::string GetGlobalVendorName();
     std::string GetGlobalPrinterId(const std::string &printerId);

@@ -14,6 +14,7 @@
  */
 
 #include <chrono>
+#include <memory>
 #include "vendor_manager.h"
 #include "vendor_helper.h"
 #include "vendor_bsuni_driver.h"
@@ -612,4 +613,13 @@ ConnectMethod VendorManager::GetConnectingMethod(const std::string &globalPrinte
         return ID_AUTO;
     }
     return connectingMethod;
+}
+
+int32_t VendorManager::DiscoverBackendPrinters(const std::string &vendorName, std::vector<PrinterInfo> &printers)
+{
+    if (printServiceAbility == nullptr) {
+        PRINT_HILOGW("QueryPrinterInfoByPrinterId printServiceAbility is null");
+        return false;
+    }
+    return printServiceAbility->DiscoverBackendPrinters(printers);
 }

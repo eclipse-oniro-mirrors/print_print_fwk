@@ -2918,6 +2918,26 @@ int32_t PrintServiceAbility::DiscoverUsbPrinters(std::vector<PrinterInfo> &print
     return E_PRINT_NONE;
 }
 
+
+int32_t PrintServiceAbility::DiscoverBackendPrinters(std::vector<PrinterInfo> &printers)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGD("DiscoverBackendPrinters started.");
+#ifdef CUPS_ENABLE
+    int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->DiscoverBackendPrinters(printers);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("DiscoverBackendPrinters failed.");
+        return ret;
+    }
+#endif  // CUPS_ENABLE
+    PRINT_HILOGD("DiscoverBackendPrinters printers size: %{public}zu", printers.size());
+    return E_PRINT_NONE;
+}
+
 int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const std::string &extensionId)
 {
     auto infoPtr = std::make_shared<PrinterInfo>(info);

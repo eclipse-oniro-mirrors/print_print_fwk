@@ -220,6 +220,8 @@ public:
     bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
         const std::string &ppdName, const std::string &ppdData) override;
+    int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) override;
+
 private:
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
