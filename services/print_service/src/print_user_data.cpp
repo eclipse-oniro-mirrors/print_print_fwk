@@ -864,13 +864,6 @@ bool PrintUserData::ParseJsonObjectToPrintJob(
         printHistoryJob->SetDuplexMode(printJobInfoJson["duplexMode"].asInt());
     }
 
-    if (PrintJsonUtil::IsMember(printJobInfoJson, "pageRange") && printJobInfoJson["pageRange"].isObject()) {
-        printHistoryJob->SetPageRange(ParseJsonObjectToPrintRange(printJobInfoJson["pageRange"]));
-    }
-    if (PrintJsonUtil::IsMember(printJobInfoJson, "pageSize") && printJobInfoJson["pageSize"].isObject()) {
-        printHistoryJob->SetPageSize(ParseJsonObjectToPrintPageSize(printJobInfoJson["pageSize"]));
-    }
-
     ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
     return true;
 }
@@ -878,32 +871,38 @@ bool PrintUserData::ParseJsonObjectToPrintJob(
 void PrintUserData::ParseOptionalJsonObjectToPrintJob(
     const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob)
 {
-    if (PrintJsonUtil::IsMember(printJobInfoJson, "hasmargin") && printJobInfoJson["hasmargin"].isBool() &&
-        printJobInfoJson["hasmargin"].asBool() &&
+    if (PrintJsonUtil::IsMember(printJobInfoJson, "pageRange") && printJobInfoJson["pageRange"].isObject()) {
+        printHistoryJob->SetPageRange(ParseJsonObjectToPrintRange(printJobInfoJson["pageRange"]));
+    }
+    if (PrintJsonUtil::IsMember(printJobInfoJson, "pageSize") && printJobInfoJson["pageSize"].isObject()) {
+        printHistoryJob->SetPageSize(ParseJsonObjectToPrintPageSize(printJobInfoJson["pageSize"]));
+    }
+    if (CheckOptionalParam(jsonObject, "hasmargin") &&
         PrintJsonUtil::IsMember(printJobInfoJson, "margin") && printJobInfoJson["margin"].isObject()) {
         printHistoryJob->SetMargin(ParseJsonObjectToMargin(printJobInfoJson["margin"]));
     }
-    if (PrintJsonUtil::IsMember(printJobInfoJson, "hasPreview") && printJobInfoJson["hasPreview"].isBool() &&
-        printJobInfoJson["hasPreview"].asBool() &&
+    if (CheckOptionalParam(jsonObject, "hasPreview") &&
         PrintJsonUtil::IsMember(printJobInfoJson, "preview") && printJobInfoJson["preview"].isObject()) {
-        PrintPreviewAttribute printPreviewAttribute;
-        Json::Value previewJson = printJobInfoJson["preview"];
-        if (PrintJsonUtil::IsMember(previewJson, "hasResult_") && previewJson["hasResult_"].isBool() &&
-            previewJson["hasResult_"].asBool() &&
-            PrintJsonUtil::IsMember(previewJson, "result_") && previewJson["result_"].isInt()) {
-            printPreviewAttribute.SetResult(previewJson["result_"].asInt());
-        }
-        if (PrintJsonUtil::IsMember(previewJson, "previewRange_") && previewJson["previewRange_"].isObject()) {
-            printPreviewAttribute.SetPreviewRange(
-                ParseJsonObjectToPrintRange(previewJson["previewRange_"]));
-        }
-        printHistoryJob->SetPreview(printPreviewAttribute);
+        printHistoryJob->SetPreview(ParseJsonObjectToPrintPreviewAttribute(printJobInfoJson["preview"]));
     }
-    if (PrintJsonUtil::IsMember(printJobInfoJson, "hasOption") && printJobInfoJson["hasOption"].isBool() &&
-        printJobInfoJson["hasOption"].asBool() &&
+    if (CheckOptionalParam(jsonObject, "hasOption") &&
         PrintJsonUtil::IsMember(printJobInfoJson, "option") && printJobInfoJson["option"].isString()) {
         printHistoryJob->SetOption(printJobInfoJson["option"].asString());
     }
+}
+
+PrintPreviewAttribute PrintUserData::ParseJsonObjectToPrintPreviewAttribute(const Json::Value &jsonObject)
+{
+    PrintPreviewAttribute printPreviewAttribute;
+    if (CheckOptionalParam(jsonObject, "hasResult_") &&
+        PrintJsonUtil::IsMember(jsonObject, "result_") && jsonObject["result_"].isInt()) {
+        printPreviewAttribute.SetResult(jsonObject["result_"].asInt());
+    }
+    if (PrintJsonUtil::IsMember(jsonObject, "previewRange_") && jsonObject["previewRange_"].isObject()) {
+        printPreviewAttribute.SetPreviewRange(
+            ParseJsonObjectToPrintRange(jsonObject["previewRange_"]));
+    }
+    return printPreviewAttribute;
 }
 
 PrintPageSize PrintUserData::ParseJsonObjectToPrintPageSize(const Json::Value &jsonObject)
@@ -928,13 +927,11 @@ PrintPageSize PrintUserData::ParseJsonObjectToPrintPageSize(const Json::Value &j
 PrintRange PrintUserData::ParseJsonObjectToPrintRange(const Json::Value &jsonObject)
 {
     PrintRange printRange;
-    if (PrintJsonUtil::IsMember(jsonObject, "hasStartPage_") && jsonObject["hasStartPage_"].isBool() &&
-        jsonObject["hasStartPage_"].asBool() &&
+    if (CheckOptionalParam(jsonObject, "hasStartPage_") &&
         PrintJsonUtil::IsMember(jsonObject, "startPage") && jsonObject["startPage"].isInt()) {
         printRange.SetStartPage(jsonObject["startPage"].asInt());
     }
-    if (PrintJsonUtil::IsMember(jsonObject, "hasEndPage_") && jsonObject["hasEndPage_"].isBool() &&
-        jsonObject["hasEndPage_"].asBool() &&
+    if (CheckOptionalParam(jsonObject, "hasEndPage_") &&
         PrintJsonUtil::IsMember(jsonObject, "endPage") && jsonObject["endPage"].isInt()) {
         printRange.SetStartPage(jsonObject["endPage"].asInt());
     }
@@ -954,27 +951,32 @@ PrintRange PrintUserData::ParseJsonObjectToPrintRange(const Json::Value &jsonObj
 PrintMargin PrintUserData::ParseJsonObjectToMargin(const Json::Value &jsonObject)
 {
     PrintMargin margin;
-    if (PrintJsonUtil::IsMember(jsonObject, "hasTop_") && jsonObject["hasTop_"].isBool() &&
-        jsonObject["hasTop_"].asBool() &&
+    if (CheckOptionalParam(jsonObject, "hasTop_") &&
         PrintJsonUtil::IsMember(jsonObject, "top_") && jsonObject["top_"].isInt()) {
         margin.SetTop(jsonObject["top_"].asInt());
     }
-    if (PrintJsonUtil::IsMember(jsonObject, "hasLeft_") && jsonObject["hasLeft_"].isBool() &&
-        jsonObject["hasLeft_"].asBool() &&
+    if (CheckOptionalParam(jsonObject, "hasLeft_") &&
         PrintJsonUtil::IsMember(jsonObject, "left_") && jsonObject["left_"].isInt()) {
         margin.SetTop(jsonObject["left_"].asInt());
     }
-    if (PrintJsonUtil::IsMember(jsonObject, "hasRight_") && jsonObject["hasRight_"].isBool() &&
-        jsonObject["hasRight_"].asBool() &&
+    if (CheckOptionalParam(jsonObject, "hasRight_") &&
         PrintJsonUtil::IsMember(jsonObject, "right_") && jsonObject["right_"].isInt()) {
         margin.SetTop(jsonObject["right_"].asInt());
     }
-    if (PrintJsonUtil::IsMember(jsonObject, "hasBottom_") && jsonObject["hasBottom_"].isBool() &&
-        jsonObject["hasBottom_"].asBool() &&
+    if (CheckOptionalParam(jsonObject, "hasBottom_") &&
         PrintJsonUtil::IsMember(jsonObject, "bottom_") && jsonObject["bottom_"].isInt()) {
         margin.SetTop(jsonObject["bottom_"].asInt());
     }
     return margin;
+}
+
+bool PrintUserData::CheckOptionalParam(const Json::Value &jsonObject, const std::string &param)
+{
+    if (PrintJsonUtil::IsMember(jsonObject, param) && jsonObject[param].isBool() &&
+        jsonObject[param].asBool()) {
+        return true;
+    }
+    return false;
 }
 
 bool PrintUserData::DeletePrintJobFromHistoryList(const std::string &jobId)
