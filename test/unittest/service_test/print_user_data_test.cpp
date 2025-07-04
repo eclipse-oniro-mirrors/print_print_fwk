@@ -524,7 +524,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0036_NeedRename, TestSize.Level1)
     EXPECT_EQ(userData->GetJsonObjectFromFile(jsonObject, filePath, printerId), false);
 }
 
-HWTEST_F(PrintUserDataTest, PrintUserDataTest_0037_NeedRename, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintHistory_NoJobInPrintHistoryJobList_ReturnFalse, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     Json::Value printerHistoryJson;
@@ -578,6 +578,538 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0041_NeedRename, TestSize.Level1)
     bool complete = true;
     userData->InitPrintHistoryJobList(printerId);
     EXPECT_EQ(complete, true);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintHistory_NoPrinterInJson_ReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printerHistoryJson;
+    Json::Value printJobInfoJson;
+    std::string printerId = "testPrinterId";
+    std::string jobId = "testJobId";
+    std::shared_ptr<PrintJob> printjob = std::make_shared<PrintJob>();
+    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>> printerHistoryJobList1 =
+        std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
+    printerHistoryJobList1->insert(std::pair<std::string, std::shared_ptr<PrintJob>>(jobId, printjob));
+    userData->printHistoryJobList_.insert(std::pair<std::string,
+    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(printerId, std::move(printerHistoryJobList1)));
+    EXPECT_EQ(userData->ParseJsonObjectToPrintHistory(printerHistoryJson, printerId), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintHistory_WrongTypeOfJob_ReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printerHistoryJson;
+    std::string printerId = "testPrinterId";
+    std::string jobId = "testJobId";
+    std::shared_ptr<PrintJob> printjob = std::make_shared<PrintJob>();
+    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>> printerHistoryJobList1 =
+        std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
+    printerHistoryJobList1->insert(std::pair<std::string, std::shared_ptr<PrintJob>>(jobId, printjob));
+    userData->printHistoryJobList_.insert(std::pair<std::string,
+    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(printerId, std::move(printerHistoryJobList1)));
+    printerHistoryJson[printerId] = "testResult";
+    EXPECT_EQ(userData->ParseJsonObjectToPrintHistory(printerHistoryJson, printerId), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintHistory_JobIsNull_ReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printerHistoryJson;
+    Json::Value printJobInfoJson;
+    std::string printerId = "testPrinterId";
+    std::string jobId = "testJobId";
+    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>> printerHistoryJobList1 =
+        std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
+    printerHistoryJobList1->insert(std::pair<std::string, std::shared_ptr<PrintJob>>(jobId, nullptr));
+    userData->printHistoryJobList_.insert(std::pair<std::string,
+    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(printerId, std::move(printerHistoryJobList1)));
+    printerHistoryJson[printerId] = printJobInfoJson;
+    EXPECT_EQ(userData->ParseJsonObjectToPrintHistory(printerHistoryJson, printerId), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintHistory_JobNotNull_ReturnTrue, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printerHistoryJson;
+    Json::Value printJobInfoJson;
+    printJobInfoJson["jobId"] = "testJobId";
+    printJobInfoJson["printerId"] = "testPrinterId";
+    std::string printerId = "testPrinterId";
+    std::string jobId = "testJobId";
+    std::shared_ptr<PrintJob> printjob = std::make_shared<PrintJob>();
+    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>> printerHistoryJobList1 =
+        std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
+    printerHistoryJobList1->insert(std::pair<std::string, std::shared_ptr<PrintJob>>(jobId, printjob));
+    userData->printHistoryJobList_.insert(std::pair<std::string,
+    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(printerId, std::move(printerHistoryJobList1)));
+    printerHistoryJson[printerId] = printJobInfoJson;
+    EXPECT_EQ(userData->ParseJsonObjectToPrintHistory(printerHistoryJson, printerId), true);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintJob_NoJobIdInJson_ReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    EXPECT_EQ(userData->ParseJsonObjectToPrintJob(printJobInfoJson, printHistoryJob), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintJob_WrongTypeOfJobId_ReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["jobId"] = 123;
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    EXPECT_EQ(userData->ParseJsonObjectToPrintJob(printJobInfoJson, printHistoryJob), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintJob_NoPrinterIdInJson_ReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["jobId"] = "testJobId";
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    EXPECT_EQ(userData->ParseJsonObjectToPrintJob(printJobInfoJson, printHistoryJob), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintJob_WrongTypeOfPrinterId_ReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["jobId"] = "testJobId";
+    printJobInfoJson["printerId"] = 123;
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    EXPECT_EQ(userData->ParseJsonObjectToPrintJob(printJobInfoJson, printHistoryJob), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintJob_NoMemberInJson_GetJobStateReturnDefaultValue, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["jobId"] = "testJobId";
+    printJobInfoJson["printerId"] = "testPrinterId";
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    EXPECT_EQ(printHistoryJob->GetJobState(), PRINT_JOB_PREPARED);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintJob_WrongValueType_GetJobStateReturnDefaultValue, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["jobId"] = "testJobId";
+    printJobInfoJson["printerId"] = "testPrinterId";
+    printJobInfoJson["jobState"] = "1";
+    printJobInfoJson["subState"] = "1";
+    printJobInfoJson["copyNumber"] = "1";
+    printJobInfoJson["isSequential"] = "1";
+    printJobInfoJson["isLandscape"] = "1";
+    printJobInfoJson["colorMode"] = "1";
+    printJobInfoJson["duplexMode"] = "1";
+    printJobInfoJson["pageRange"] = "1";
+    printJobInfoJson["pageSize"] = "1";
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    EXPECT_EQ(printHistoryJob->GetJobState(), PRINT_JOB_PREPARED);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintJob_CorrectValue_GetJobStateCorrectly, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["jobId"] = "testJobId";
+    printJobInfoJson["printerId"] = "testPrinterId";
+    printJobInfoJson["jobState"] = 4;
+    printJobInfoJson["subState"] = 0;
+    printJobInfoJson["copyNumber"] = 1;
+    printJobInfoJson["isSequential"] = true;
+    printJobInfoJson["isLandscape"] = true;
+    printJobInfoJson["colorMode"] = 1;
+    printJobInfoJson["duplexMode"] = 1;
+    Json::Value pageRangeJson;
+    pageRangeJson["key"] = "value";
+    printJobInfoJson["pageRange"] = pageRangeJson;
+    Json::Value pageSizeJson;
+    pageSizeJson["key"] = "value";
+    printJobInfoJson["pageSize"] = pageSizeJson;
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    EXPECT_EQ(printHistoryJob->GetJobState(), 4);
+}
+
+HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_NoMemberInJson_HasMarginReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    EXPECT_EQ(printHistoryJob->HasMargin(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_WrongValueType_HasMarginReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["hasmargin"] = "1";
+    printJobInfoJson["hasPreview"] = "1";
+    printJobInfoJson["hasOption"] = "1";
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    EXPECT_EQ(printHistoryJob->HasMargin(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_HasmarginIsFalse_HasMarginReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["hasmargin"] = false;
+    printJobInfoJson["hasPreview"] = false;
+    printJobInfoJson["hasOption"] = false;
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    EXPECT_EQ(printHistoryJob->HasMargin(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_NoMarginInJson_HasMarginReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["hasmargin"] = true;
+    printJobInfoJson["hasPreview"] = true;
+    printJobInfoJson["hasOption"] = true;
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    EXPECT_EQ(printHistoryJob->HasMargin(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_WrongTypeOfMargin_HasMarginReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["hasmargin"] = true;
+    printJobInfoJson["margin"] = "1";
+    printJobInfoJson["hasPreview"] = true;
+    printJobInfoJson["preview"] = "1";
+    printJobInfoJson["hasOption"] = true;
+    printJobInfoJson["option"] = 1;
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    EXPECT_EQ(printHistoryJob->HasMargin(), false);
+}
+
+HWTEST_F(PrintUserDataTest,
+    ParseOptionalJsonObjectToPrintJob_NoHasResultInPreview_HasMarginReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["hasmargin"] = true;
+    Json::Value marginJson;
+    marginJson["key"] = "value";
+    printJobInfoJson["margin"] = marginJson;
+    printJobInfoJson["hasPreview"] = true;
+    Json::Value previewJson;
+    previewJson["key"] = "value";
+    printJobInfoJson["preview"] = previewJson;
+    printJobInfoJson["hasOption"] = true;
+    printJobInfoJson["option"] = "1";
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    EXPECT_EQ(printHistoryJob->HasMargin(), true);
+}
+
+HWTEST_F(PrintUserDataTest,
+    ParseOptionalJsonObjectToPrintJob_WrongTypeOfHasResult_HasResultReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["hasmargin"] = true;
+    Json::Value marginJson;
+    marginJson["key"] = "value";
+    printJobInfoJson["margin"] = marginJson;
+    printJobInfoJson["hasPreview"] = true;
+    Json::Value previewJson;
+    previewJson["hasResult_"] = "1";
+    previewJson["previewRange_"] = "1";
+    printJobInfoJson["preview"] = previewJson;
+    printJobInfoJson["hasOption"] = true;
+    printJobInfoJson["option"] = "1";
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    PrintPreviewAttribute previewAttr;
+    printHistoryJob->GetPreview(previewAttr);
+    EXPECT_EQ(previewAttr.HasResult(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_HasResultIsFalse_HasResultReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["hasmargin"] = true;
+    Json::Value marginJson;
+    marginJson["key"] = "value";
+    printJobInfoJson["margin"] = marginJson;
+    printJobInfoJson["hasPreview"] = true;
+    Json::Value previewJson;
+    previewJson["hasResult_"] = false;
+    Json::Value previewRangeJson;
+    previewJson["previewRange_"] = previewRangeJson;
+    printJobInfoJson["preview"] = previewJson;
+    printJobInfoJson["hasOption"] = true;
+    printJobInfoJson["option"] = "1";
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    PrintPreviewAttribute previewAttr;
+    printHistoryJob->GetPreview(previewAttr);
+    EXPECT_EQ(previewAtt.HasResult(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_NoResultInJson_HasResultReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["hasmargin"] = true;
+    Json::Value marginJson;
+    marginJson["key"] = "value";
+    printJobInfoJson["margin"] = marginJson;
+    printJobInfoJson["hasPreview"] = true;
+    Json::Value previewJson;
+    previewJson["hasResult_"] = true;
+    Json::Value previewRangeJson;
+    previewJson["previewRange_"] = previewRangeJson;
+    printJobInfoJson["preview"] = previewJson;
+    printJobInfoJson["hasOption"] = true;
+    printJobInfoJson["option"] = "1";
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    PrintPreviewAttribute previewAttr;
+    printHistoryJob->GetPreview(previewAttr);
+    EXPECT_EQ(previewAttr.HasResult(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_WrongTypeOfResult_HasResultReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["hasmargin"] = true;
+    Json::Value marginJson;
+    marginJson["key"] = "value";
+    printJobInfoJson["margin"] = marginJson;
+    printJobInfoJson["hasPreview"] = true;
+    Json::Value previewJson;
+    previewJson["hasResult_"] = true;
+    previewJson["result_"] = "1";
+    Json::Value previewRangeJson;
+    previewJson["previewRange_"] = previewRangeJson;
+    printJobInfoJson["preview"] = previewJson;
+    printJobInfoJson["hasOption"] = true;
+    printJobInfoJson["option"] = "1";
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    PrintPreviewAttribute previewAttr;
+    printHistoryJob->GetPreview(previewAttr);
+    EXPECT_EQ(previewAttr.HasResult(), false);
+}
+
+HWTEST_F(PrintUserDataTest,
+    ParseOptionalJsonObjectToPrintJob_CorrectValueOfResult_HasResultReturnTrue, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value printJobInfoJson;
+    printJobInfoJson["hasmargin"] = true;
+    Json::Value marginJson;
+    marginJson["key"] = "value";
+    printJobInfoJson["margin"] = marginJson;
+    printJobInfoJson["hasPreview"] = true;
+    Json::Value previewJson;
+    previewJson["hasResult_"] = true;
+    previewJson["result_"] = 1;
+    Json::Value previewRangeJson;
+    previewRangeJson["key"] = "value";
+    previewJson["previewRange_"] = previewRangeJson;
+    printJobInfoJson["preview"] = previewJson;
+    printJobInfoJson["hasOption"] = true;
+    printJobInfoJson["option"] = "1";
+    std::shared_ptr<PrintJob> printHistoryJob = std::make_shared<PrintJob>();
+    userData->ParseOptionalJsonObjectToPrintJob(printJobInfoJson, printHistoryJob);
+    PrintPreviewAttribute previewAttr;
+    printHistoryJob->GetPreview(previewAttr);
+    EXPECT_EQ(previewAttr.HasResult(), true);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintPageSize_NullValue_GetEmptyId, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    PrintPageSize pageSize = userData->ParseJsonObjectToPrintPageSize(jsonObject);
+    EXPECT_EQ(pageSize.GetId(), "");
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintPageSize_WrongValueType_GetEmptyId, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["id_"] = 1;
+    jsonObject["name_"] = 1;
+    jsonObject["width_"] = "1";
+    jsonObject["height_"] = "1";
+    PrintPageSize pageSize = userData->ParseJsonObjectToPrintPageSize(jsonObject);
+    EXPECT_EQ(pageSize.GetId(), "");
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintPageSize_WrongType_GetEmptyId, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["id_"] = "1";
+    jsonObject["name_"] = "1";
+    jsonObject["width_"] = 1;
+    jsonObject["height_"] = 1;
+    PrintPageSize pageSize = userData->ParseJsonObjectToPrintPageSize(jsonObject);
+    EXPECT_EQ(pageSize.GetId(), "1");
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintRange_NullValue_HasStartPageReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    PrintRange printRange = userData->ParseJsonObjectToPrintRange(jsonObject);
+    EXPECT_EQ(printRange.HasStartPage(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintRange_WrongValueType_HasStartPageReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["hasStartPage_"] = "1";
+    jsonObject["hasEndPage_"] = "1";
+    jsonObject["pages"] = "1";
+    PrintRange printRange = userData->ParseJsonObjectToPrintRange(jsonObject);
+    EXPECT_EQ(printRange.HasStartPage(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintRange_HasStartPageIsFalse_HasStartPageReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["hasStartPage_"] = false;
+    jsonObject["hasEndPage_"] = false;
+    Json::Value pagesJsonObject;
+    pagesJsonObject.append("1");
+    pagesJsonObject.append(1);
+    jsonObject["pages"] = pagesJsonObject;
+    PrintRange printRange = userData->ParseJsonObjectToPrintRange(jsonObject);
+    EXPECT_EQ(printRange.HasStartPage(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintRange_NoStartPage_HasStartPageReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["hasStartPage_"] = true;
+    jsonObject["hasEndPage_"] = true;
+    PrintRange printRange = userData->ParseJsonObjectToPrintRange(jsonObject);
+    EXPECT_EQ(printRange.HasStartPage(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintRange_WrongTyprOfStartPage_HasStartPageReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["hasStartPage_"] = true;
+    jsonObject["startPage"] = "1";
+    jsonObject["hasEndPage_"] = true;
+    jsonObject["endPage"] = "2";
+    PrintRange printRange = userData->ParseJsonObjectToPrintRange(jsonObject);
+    EXPECT_EQ(printRange.HasStartPage(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintRange_CorrectValue_HasStartPageReturnTrue, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["hasStartPage_"] = true;
+    jsonObject["startPage"] = 1;
+    jsonObject["hasEndPage_"] = true;
+    jsonObject["endPage"] = 2;
+    PrintRange printRange = userData->ParseJsonObjectToPrintRange(jsonObject);
+    EXPECT_EQ(printRange.HasStartPage(), true);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToMargin_NullValue_HasTopReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    PrintMargin margin = userData->ParseJsonObjectToMargin(jsonObject);
+    EXPECT_EQ(margin.HasTop(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToMargin_WrongValueType_HasTopReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["hasTop_"] = "1";
+    jsonObject["hasLeft_"] = "1";
+    jsonObject["hasRight_"] = "1";
+    jsonObject["hasBottom_"] = "1";
+    PrintMargin margin = userData->ParseJsonObjectToMargin(jsonObject);
+    EXPECT_EQ(margin.HasTop(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToMargin_HasTopIsFalse_HasTopReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["hasTop_"] = false;
+    jsonObject["hasLeft_"] = false;
+    jsonObject["hasRight_"] = false;
+    jsonObject["hasBottom_"] = false;
+    PrintMargin margin = userData->ParseJsonObjectToMargin(jsonObject);
+    EXPECT_EQ(margin.HasTop(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToMargin_NoTop_HasTopReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["hasTop_"] = true;
+    jsonObject["hasLeft_"] = true;
+    jsonObject["hasRight_"] = true;
+    jsonObject["hasBottom_"] = true;
+    PrintMargin margin = userData->ParseJsonObjectToMargin(jsonObject);
+    EXPECT_EQ(margin.HasTop(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToMargin_WrongTypeOfTop_HasTopReturnFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["hasTop_"] = true;
+    jsonObject["top_"] = "1";
+    jsonObject["hasLeft_"] = true;
+    jsonObject["left_"] = "1";
+    jsonObject["hasRight_"] = true;
+    jsonObject["right_"] = "1";
+    jsonObject["hasBottom_"] = true;
+    jsonObject["bottom_"] = "1";
+    PrintMargin margin = userData->ParseJsonObjectToMargin(jsonObject);
+    EXPECT_EQ(margin.HasTop(), false);
+}
+
+HWTEST_F(PrintUserDataTest, ParseJsonObjectToMargin_CorrectValue_HasTopReturnTrue, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    Json::Value jsonObject;
+    jsonObject["hasTop_"] = true;
+    jsonObject["top_"] = 1;
+    jsonObject["hasLeft_"] = true;
+    jsonObject["left_"] = 1;
+    jsonObject["hasRight_"] = true;
+    jsonObject["right_"] = 1;
+    jsonObject["hasBottom_"] = true;
+    jsonObject["bottom_"] = 1;
+    PrintMargin margin = userData->ParseJsonObjectToMargin(jsonObject);
+    EXPECT_EQ(margin.HasTop(), true);
 }
 }
 }

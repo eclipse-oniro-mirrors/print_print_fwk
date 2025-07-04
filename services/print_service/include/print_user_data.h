@@ -93,6 +93,10 @@ private:
     bool ParseJsonObjectToPrintHistory(Json::Value &jsonObject, const std::string &printerId);
     PrintMargin  ParseJsonObjectToMargin(const Json::Value &jsonObject);
     PrintRange ParseJsonObjectToPrintRange(const Json::Value &jsonObject);
+    PrintPageSize ParseJsonObjectToPrintPageSize(const Json::Value &jsonObject);
+    void ParseOptionalJsonObjectToPrintJob(
+        const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob);
+    bool ParseJsonObjectToPrintJob(const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob);
     void InitPrintHistoryJobList(const std::string &printerId);
 
 public:
