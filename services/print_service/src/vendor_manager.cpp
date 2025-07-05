@@ -14,7 +14,6 @@
  */
 
 #include <chrono>
-#include <memory>
 #include "vendor_manager.h"
 #include "vendor_helper.h"
 #include "vendor_bsuni_driver.h"
@@ -619,7 +618,7 @@ int32_t VendorManager::DiscoverBackendPrinters(const std::string &vendorName, st
 {
     if (printServiceAbility == nullptr) {
         PRINT_HILOGW("QueryPrinterInfoByPrinterId printServiceAbility is null");
-        return false;
+        return EXTENSION_ERROR_CALLBACK_FAIL;
     }
     return printServiceAbility->DiscoverBackendPrinters(printers);
 }

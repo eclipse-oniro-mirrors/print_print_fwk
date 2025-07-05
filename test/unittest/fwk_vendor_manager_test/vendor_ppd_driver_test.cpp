@@ -13,10 +13,13 @@
  * limitations under the License.
  */
 
+#include <thread>
 #include <gtest/gtest.h>
 #define private public
+#define protected public
 #include "vendor_ppd_driver.h"
 #undef private
+#undef protected
 #include "vendor_manager.h"
 #include "print_constant.h"
 #include "print_log.h"
@@ -108,5 +111,105 @@ HWTEST_F(VendorPpdDriverTest, QueryPpdName_ShouldReturnFalse_WhenVendorManagerIs
     EXPECT_TRUE(vendorDriver.QueryPpdName("TestMake").empty());
 }
 
+/**
+ * @tc.name: DiscoverBackendPrinters_WhenDiscoverOne_ShouldAddIt
+ * @tc.desc: when discover one device should add it.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(VendorPpdDriverTest, DiscoverBackendPrinters_WhenDiscoverOne_ShouldAddIt, TestSize.Level1)
+{
+    MockVendorManager mock;
+    VendorPpdDriver vendorDriver;
+    EXPECT_TRUE(vendorDriver.Init(&mock));
+    PrinterInfo info;
+    info.SetPrinterId("test1");
+    std::vector<PrinterInfo> infoVec = { info };
+    EXPECT_CALL(mock, DiscoverBackendPrinters(_, _)).Times(1)
+        .WillRepeatedly(DoAll(SetArgReferee<1>(infoVec), Return(E_PRINT_NONE)));
+    EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(mock, RemovePrinterFromDiscovery(_, _)).Times(0).WillRepeatedly(Return(E_PRINT_NONE));
+    vendorDriver.DiscoverBackendPrinters();
+}
+
+/**
+ * @tc.name: DiscoverBackendPrinters_WhenLoseOne_ShouldRemoveIt
+ * @tc.desc: when lose one discovered device should remote it.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(VendorPpdDriverTest, DiscoverBackendPrinters_WhenLoseOne_ShouldRemoveIt, TestSize.Level1)
+{
+    MockVendorManager mock;
+    VendorPpdDriver vendorDriver;
+    EXPECT_TRUE(vendorDriver.Init(&mock));
+    vendorDriver.discoveredPrinters_["test1"] = true;
+    EXPECT_CALL(mock, DiscoverBackendPrinters(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).Times(0).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(mock, RemovePrinterFromDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
+    vendorDriver.DiscoverBackendPrinters();
+}
+
+/**
+ * @tc.name: DiscoverBackendPrinters_WhenLoseOne_ShouldRemoveIt
+ * @tc.desc: when woke normolly.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(VendorPpdDriverTest, DiscoverBackendPrinters_ShouldWorkNormolly, TestSize.Level1)
+{
+    MockVendorManager mock;
+    VendorPpdDriver vendorDriver;
+    EXPECT_TRUE(vendorDriver.Init(&mock));
+    PrinterInfo info;
+    info.SetPrinterId("test1");
+    std::vector<PrinterInfo> infoVec = { info };
+    vendorDriver.discoveredPrinters_["test2"] = true;
+    EXPECT_CALL(mock, DiscoverBackendPrinters(_, _)).Times(1)
+        .WillRepeatedly(DoAll(SetArgReferee<1>(infoVec), Return(E_PRINT_NONE)));
+    EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(mock, RemovePrinterFromDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
+    vendorDriver.DiscoverBackendPrinters();
+}
+
+/**
+ * @tc.name: StartAndStopDiscovery_ShouldWorkNormolly
+ * @tc.desc: Start and stop discovery when woke normolly.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(VendorPpdDriverTest, StartAndStopDiscovery_ShouldWorkNormolly, TestSize.Level1)
+{
+    MockVendorManager mock;
+    VendorPpdDriver vendorDriver;
+    EXPECT_TRUE(vendorDriver.Init(&mock));
+    EXPECT_CALL(mock, DiscoverBackendPrinters(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).Times(0).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(mock, RemovePrinterFromDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
+    vendorDriver.OnStartDiscovery();
+    std::this_thread::sleep_for(std::chrono::seconds(10));
+    vendorDriver.OnStopDiscovery();
+}
+
+/**
+ * @tc.name: StartAndStopDiscovery_ShouldWorkNormolly
+ * @tc.desc: Start and stop discovery when woke normolly.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(VendorPpdDriverTest, AllCallVendorMgrFunc_WhenAfterUninit_ShouldFail, TestSize.Level1)
+{
+    MockVendorManager mock;
+    VendorPpdDriver vendorDriver;
+    EXPECT_TRUE(vendorDriver.Init(&mock));
+    vendorDriver.vendorManager = nullptr;
+    PrinterInfo printerInfo;
+    EXPECT_FALSE(vendorDriver.OnQueryCapability("", 0));
+    EXPECT_TRUE(vendorDriver.QueryPpdName("").empty());
+    vendorDriver.DiscoverBackendPrinters();
+    vendorDriver.OnStartDiscovery();
+    vendorDriver.OnStopDiscovery();
+    EXPECT_FALSE(vendorDriver.TryConnectByPpdDriver(printerInfo));
+}
 }  // namespace Print
 }  // namespace OHOS

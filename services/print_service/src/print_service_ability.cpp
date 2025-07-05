@@ -2918,7 +2918,6 @@ int32_t PrintServiceAbility::DiscoverUsbPrinters(std::vector<PrinterInfo> &print
     return E_PRINT_NONE;
 }
 
-
 int32_t PrintServiceAbility::DiscoverBackendPrinters(std::vector<PrinterInfo> &printers)
 {
     ManualStart();

@@ -165,9 +165,6 @@ bool VendorPpdDriver::WaitNext()
         return false;
     }
     startDiscoveryCondition_.wait_for(lock, std::chrono::milliseconds(DISCOVERY_INTERVAL_MS));
-    if (!startDiscovery_) {
-        return false;
-    }
     return true;
 }
 

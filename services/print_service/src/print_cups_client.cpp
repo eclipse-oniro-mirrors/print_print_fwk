@@ -140,7 +140,6 @@ static const std::string PRINTER_MAKE_UNKNOWN = "Unknown";
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string VENDOR_MANAGER_PREFIX = "fwk.";
 static const std::string DEFAULT_POLICY = "default";
-static const std::string BACKEND_URI_DELIMITER = "://";
 
 static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST {
     { PRINTER_STATE_MEDIA_EMPTY,    PRINT_JOB_BLOCKED_OUT_OF_PAPER },
@@ -206,7 +205,7 @@ std::vector<PrinterInfo> GetBackendPrinters()
     std::lock_guard<std::mutex> lock(g_backendPrintersLock);
     return g_backendPrinters;
 }
-void AddBackendPrinter(PrinterInfo &info)
+void AddVendorPrinter(PrinterInfo &info)
 {
     std::lock_guard<std::mutex> lock(g_backendPrintersLock);
     g_backendPrinters.emplace_back(info);
@@ -285,7 +284,7 @@ void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceI
             AddUsbPrinter(info);
         } else {
             info.SetDescription("vendor");
-            AddBackendPrinter(info);
+            AddVendorPrinter(info);
         }
     } else {
         PRINT_HILOGW("verify uri or make failed");
@@ -1845,10 +1844,10 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     PRINT_HILOGD("CheckPrinterOnline printerId: %{public}s", printerId.c_str());
     bool isUsbPrinter = monitorParams->printerUri.length() > USB_PRINTER.length() &&
                         monitorParams->printerUri.substr(INDEX_ZERO, INDEX_THREE) == USB_PRINTER;
-    bool isBackendPrinter = strstr(printerId.c_str(), VENDOR_PPD_DRIVER.c_str()) != nullptr;
+    bool isVendorPrinter = strstr(printerId.c_str(), VENDOR_PPD_DRIVER.c_str()) != nullptr;
     bool isCustomizedExtension = !(PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME) ||
                                    PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX));
-    if ((isUsbPrinter || isCustomizedExtension || isBackendPrinter) && monitorParams->serviceAbility != nullptr) {
+    if ((isUsbPrinter || isCustomizedExtension || isVendorPrinter) && monitorParams->serviceAbility != nullptr) {
         if (monitorParams->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
             PRINT_HILOGI("printer offline");
             return false;
