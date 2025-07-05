@@ -385,6 +385,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_Sh
     EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NO_PERMISSION);
     std::vector<PrinterInfo> printers;
     EXPECT_EQ(service->DiscoverUsbPrinters(printers), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->DiscoverBackendPrinters(printers), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_NO_PERMISSION);
 
     PrintServiceMockPermission::MockPermission();
@@ -1963,13 +1964,23 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0128_NeedRename, TestS
     EXPECT_EQ(service->UpdatePrinterCapability(printerId, info), true);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0129_NeedRename, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, DiscoverBackendPrinters_WhenNotExistUsbDevice_ShouldNull, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
     std::vector<PrinterInfo> printers;
     service->DiscoverUsbPrinters(printers);
+    EXPECT_EQ(printers.size(), 0);
+}
+
+HWTEST_F(PrintServiceAbilityTest, DiscoverBackendPrinters_WhenNotExistVendorDevice_ShouldNull, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::vector<PrinterInfo> printers;
+    service->DiscoverBackendPrinters(printers);
     EXPECT_EQ(printers.size(), 0);
 }
 

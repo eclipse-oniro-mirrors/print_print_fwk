@@ -109,6 +109,8 @@ struct MediaSize {
 std::string GetUsbPrinterSerial(const std::string &deviceUri);
 std::vector<PrinterInfo> GetUsbPrinters();
 void ClearUsbPrinters();
+std::vector<PrinterInfo> GetBackendPrinters();
+void ClearBackendPrinters();
 void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
     const char *deviceMakeAndModel, const char *deviceUri, const char *deviceLocation, void *userData);
 std::string StandardizePrinterUri(const std::string &printerUri, const std::string &ppdName);
@@ -148,6 +150,7 @@ public:
         std::vector<std::string> &valueList);
     int32_t QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info);
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
+    int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers);
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,
         const std::string &ppdName);
     bool CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monitorParams, const uint32_t timeout = 3000);

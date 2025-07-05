@@ -17,7 +17,9 @@
 #define VENDOR_PPD_DRIVER_H
 
 #include <vector>
+#include <mutex>
 #include "vendor_driver_base.h"
+#include "vendor_manager.h"
 
 namespace OHOS {
 namespace Print {
@@ -29,13 +31,28 @@ public:
     std::string GetVendorName() override;
     int32_t OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo) override;
     bool QueryProperty(const std::string &printerId, const std::string &key, std::string &value) override;
+    void OnStartDiscovery() override;
+    void OnStopDiscovery() override;
+    bool OnQueryCapability(const std::string &printerId, int timeout) override;
+    void UpdateAllPrinterStatus() override;
 
 private:
     std::string QueryPpdName(const std::string &makeAndModel);
+    void DiscoverBackendPrinters();
+    void DiscoveryProcess();
+    bool WaitNext();
+    bool TryConnectByPpdDriver(const PrinterInfo &printerInfo);
 
 private:
     std::string connectingVendorGroup;
     std::shared_ptr<PrinterInfo> connectingPrinterInfo;
+    std::map<std::string, std::vector<std::string>> privatePrinterPpdMap;
+    std::mutex updateDiscoveryMutex_;
+    std::map<std::string, bool> discoveredPrinters_;
+    bool startDiscovery_ = false;
+    std::thread discoveryThread_;
+    std::mutex startDiscoveryMutex_;
+    std::condition_variable startDiscoveryCondition_;
 };
 }  // namespace Print
 }  // namespace OHOS

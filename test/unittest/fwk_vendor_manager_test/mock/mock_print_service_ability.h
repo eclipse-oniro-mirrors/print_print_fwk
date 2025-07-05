@@ -38,6 +38,7 @@ public:
     MOCK_METHOD2(AddIpPrinterToSystemData, bool (const std::string &, const PrinterInfo &));
     MOCK_METHOD4(AddIpPrinterToCupsWithPpd, bool (const std::string &, const std::string &, const std::string &,
         const std::string &));
+    MOCK_METHOD2(DiscoverBackendPrinters, int32_t (const std::string &, std::vector<PrinterInfo> &));
 };
 }  // namespace Print
 }  // namespace OHOS

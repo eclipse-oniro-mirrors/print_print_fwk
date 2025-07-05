@@ -613,3 +613,12 @@ ConnectMethod VendorManager::GetConnectingMethod(const std::string &globalPrinte
     }
     return connectingMethod;
 }
+
+int32_t VendorManager::DiscoverBackendPrinters(const std::string &vendorName, std::vector<PrinterInfo> &printers)
+{
+    if (printServiceAbility == nullptr) {
+        PRINT_HILOGW("QueryPrinterInfoByPrinterId printServiceAbility is null");
+        return EXTENSION_ERROR_CALLBACK_FAIL;
+    }
+    return printServiceAbility->DiscoverBackendPrinters(printers);
+}
