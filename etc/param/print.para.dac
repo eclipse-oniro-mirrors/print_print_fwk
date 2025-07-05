@@ -13,3 +13,4 @@
 
 print.cupsd.ready = print:print:0775
 print.libbsUniDiscovery.so.path = print:print:0775
+print.cupsd_secondary.ready = print:print:0775

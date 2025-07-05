@@ -30,6 +30,7 @@
 #include "int_wrapper.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
+#include "parameters.h"
 #include "print_constant.h"
 #include "print_log.h"
 #include "printer_info.h"
@@ -68,6 +69,8 @@ static const std::string EVENT_CANCEL = "cancel";
 const uint32_t MAX_JOBQUEUE_NUM = 512;
 static constexpr uint32_t ISO_A4_WIDTH = 8268;
 static constexpr uint32_t ISO_A4_HEIGHT = 11692;
+static const std::string IS_ENTERPRISE_ENABLE = "2";
+static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.enterprise_space_init";
 
 enum EXTENSION_ID_TYPE {
     TYPE_DEFAULT,
@@ -91,6 +94,8 @@ public:
     void InitExtPrinterIdList(std::vector<std::string> &idList, size_t count);
     void InitFileList(std::vector<std::string> &fileList);
     void InitExtensionList(std::vector<AppExecFwk::ExtensionAbilityInfo>& extList);
+private:
+    std::string parameterSaved;
 };
 
 void PrintServiceAbilityTest::SetUpTestCase(void) {}
@@ -101,9 +106,14 @@ void PrintServiceAbilityTest::SetUp(void)
 {
     static int32_t testNo = 0;
     PRINT_HILOGE("PrintServiceAbilityTest_%{public}d", ++testNo);
+    parameterSaved = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, "");
 }
 
-void PrintServiceAbilityTest::TearDown(void) {}
+void PrintServiceAbilityTest::TearDown(void)
+{
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
+}
 
 std::string PrintServiceAbilityTest::GetExtensionId(EXTENSION_ID_TYPE type)
 {
@@ -2739,5 +2749,49 @@ HWTEST_F(PrintServiceAbilityTest, RefreshPrinterPageSize, TestSize.Level1)
     printerInfo.GetCapability(cap);
     cap.GetSupportedPageSize(pageSizeList);
     EXPECT_EQ(pageSizeList.size(), 1);
+}
+
+/**
+* @tc.name: RefreshPrinterStatusOnSwitchUser_NotEnterpriseEnable
+* @tc.desc: Verify the RefreshPrinterStatusOnSwitchUser failed case.
+* @tc.type: ENTERPRISE_ENABLE is true
+* @tc.require: ENTERPRISE_SPACE_PARAM not 2
+*/
+HWTEST_F(PrintServiceAbilityTest, RefreshPrinterStatusOnSwitchUser_NotEnterpriseEnable, TestSize.Level1)
+{
+#ifdef ENTERPRISE_ENABLE
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string parameterSaved = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, "");
+    bool res = service->RefreshPrinterStatusOnSwitchUser();
+    EXPECT_FALSE(res);
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
+#endif // ENTERPRISE_ENABLE
+}
+ 
+HWTEST_F(PrintServiceAbilityTest, RefreshPrinterStatusOnSwitchUser_EnterpriseEnable_IsEnterprise, TestSize.Level1)
+{
+#ifdef ENTERPRISE_ENABLE
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string parameterSaved = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, IS_ENTERPRISE_ENABLE);
+    service->isEnterprise_ = true;
+    bool res = service->RefreshPrinterStatusOnSwitchUser();
+    EXPECT_TRUE(res);
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
+#endif // ENTERPRISE_ENABLE
+}
+ 
+HWTEST_F(PrintServiceAbilityTest, RefreshPrinterStatusOnSwitchUser_EnterpriseEnable_NotEnterprise, TestSize.Level1)
+{
+#ifdef ENTERPRISE_ENABLE
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string parameterSaved = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, IS_ENTERPRISE_ENABLE);
+    service->isEnterprise_ = false;
+    bool res = service->RefreshPrinterStatusOnSwitchUser();
+    EXPECT_TRUE(res);
+    OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
+#endif // ENTERPRISE_ENABLE
 }
 } // namespace OHOS::Print

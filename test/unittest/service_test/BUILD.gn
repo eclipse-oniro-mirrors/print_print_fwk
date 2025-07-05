@@ -59,6 +59,12 @@ ohos_unittest("print_service_test") {
     "${print_path}/services/print_service:print_service_test",
   ]
 
+  cflags_cc = []
+
+  if (print_fwk_feature_enterprise) {
+    cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+  }
+  
   external_deps = [
     "ability_base:base",
     "ability_base:want",
@@ -85,7 +91,7 @@ ohos_unittest("print_service_test") {
   ]
 
   if (cups_enable) {
-    cflags_cc = [ "-DCUPS_ENABLE" ]
+    cflags_cc += [ "-DCUPS_ENABLE" ]
     external_deps += [
       "cups:cups",
       "cups-filters:cupsfilters",

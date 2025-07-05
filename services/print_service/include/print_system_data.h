@@ -103,6 +103,8 @@ private:
     void BuildPrinterPreferenceBySupport(const PrinterCapability &cap, PrinterPreferences &printPreferences);
     Json::Value GetCupsOptionsJson(const PrinterCapability &cap);
     void SaveJsonFile(const std::string &fileName, const std::string &jsonString);
+    PrintMapSafe<PrinterInfo>& GetAddedPrinterMap();
+    const std::string& GetPrintersPath();
     
     template<typename T>
     bool ProcessJsonToCapabilityList(Json::Value &capsJson,
@@ -154,6 +156,9 @@ private:
 
 private:
     PrintMapSafe<PrinterInfo> addedPrinterMap_;
+#ifdef ENTERPRISE_ENABLE
+    PrintMapSafe<PrinterInfo> addedPrinterSecondaryMap_;
+#endif // ENTERPRISE_ENABLE
     std::map<std::string, std::shared_ptr<PrinterInfo>> discoveredPrinterInfoList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> connectingIpPrinterInfoList_;
     std::mutex discoveredListMutex;

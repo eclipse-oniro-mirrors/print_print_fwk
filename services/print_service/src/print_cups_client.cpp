@@ -81,8 +81,6 @@ const uint32_t MONITOR_STEP_TIME_MS = 2000;
 const int32_t STATE_UPDATE_STEP = 5;
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
-static const std::string CUPS_RUN_DIR = "/data/service/el1/public/print_service/cups/run";
-static const std::string CUPS_PPD_DIR = "/data/service/el1/public/print_service/cups/datadir/model";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
 static const std::string REMOTE_PRINTER_MAKE_MODEL = "Remote Printer";
 static const std::string LOCAL_RAW_PRINTER_PPD_NAME = "Local Raw Printer";
@@ -140,6 +138,10 @@ static const std::string PRINTER_MAKE_UNKNOWN = "Unknown";
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string VENDOR_MANAGER_PREFIX = "fwk.";
 static const std::string DEFAULT_POLICY = "default";
+#ifdef ENTERPRISE_ENABLE
+static const std::string CUPS_SECONDARY_ROOT_DIR = "/data/service/el1/public/print_service/cups_secondary";
+static const std::string CUPSD_SECONDARY_CONTROL_PARAM = "print.cupsd_secondary.ready";
+#endif // ENTERPRISE_ENABLE
 
 static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST {
     { PRINTER_STATE_MEDIA_EMPTY,    PRINT_JOB_BLOCKED_OUT_OF_PAPER },
@@ -306,14 +308,15 @@ PrintCupsClient::~PrintCupsClient()
 int32_t PrintCupsClient::StartCupsdServiceNotAlive()
 {
     PRINT_HILOGI("The cupsd process is not started, start it now.");
-    int result = SetParameter(CUPSD_CONTROL_PARAM.c_str(), "true");
+    std::string param = GetCurCupsdControlParam();
+    int result = SetParameter(param.c_str(), "true");
     if (result) {
         PRINT_HILOGD("SetParameter failed: %{public}d.", result);
         return E_PRINT_SERVER_FAILURE;
     }
     char value[CUPSD_CONTROL_PARAM_SIZE] = {0};
-    GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, CUPSD_CONTROL_PARAM_SIZE - 1);
-    PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
+    GetParameter(param.c_str(), "", value, CUPSD_CONTROL_PARAM_SIZE - 1);
+    PRINT_HILOGD("%{public}s value: %{public}s.", param.c_str(), value);
     return E_PRINT_NONE;
 }
 
@@ -323,7 +326,7 @@ int32_t PrintCupsClient::StartCupsdService()
     if (!IsCupsServerAlive()) {
         return StartCupsdServiceNotAlive();
     }
-    std::string pidFile = CUPS_RUN_DIR + "/cupsd.pid";
+    std::string pidFile = GetCurCupsRootDir() + "/run/cupsd.pid";
     struct stat sb;
     if (stat(pidFile.c_str(), &sb) != 0) {
         PRINT_HILOGI("stat pidFile failed.");
@@ -514,11 +517,34 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
     closedir(dir);
 }
 
+const std::string& PrintCupsClient::GetCurCupsRootDir()
+{
+#ifdef ENTERPRISE_ENABLE
+    if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&
+        !PrintServiceAbility::GetInstance()->IsEnterprise()) {
+        return CUPS_SECONDARY_ROOT_DIR;
+    }
+#endif // ENTERPRISE_ENABLE
+    return CUPS_ROOT_DIR;
+}
+
+const std::string& PrintCupsClient::GetCurCupsdControlParam()
+{
+#ifdef ENTERPRISE_ENABLE
+    if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&
+        !PrintServiceAbility::GetInstance()->IsEnterprise()) {
+        return CUPSD_SECONDARY_CONTROL_PARAM;
+    }
+#endif // ENTERPRISE_ENABLE
+    return CUPSD_CONTROL_PARAM;
+}
+
 int32_t PrintCupsClient::InitCupsResources()
 {
+    std::string curDir = GetCurCupsRootDir();
     string array[RESOURCE_COUNT][DIR_COUNT] = {
-        {"/system/bin/cups/", CUPS_ROOT_DIR + "/serverbin", CUPS_ROOT_DIR + "/serverbin/daemon"},
-        {"/system/etc/cups/share/", CUPS_ROOT_DIR + "/datadir", CUPS_ROOT_DIR + "/datadir/mime"}
+        {"/system/bin/cups/", curDir + "/serverbin", curDir + "/serverbin/daemon"},
+        {"/system/etc/cups/share/", curDir + "/datadir", curDir + "/datadir/mime"}
     };
     for (uint32_t i = 0; i < RESOURCE_COUNT; i++) {
         if (!i) {
@@ -529,15 +555,15 @@ int32_t PrintCupsClient::InitCupsResources()
     }
     const std::string driverDir = "/system/bin/uni_print_driver";
     std::string srcDir = driverDir + "/filter";
-    std::string dstDir = CUPS_ROOT_DIR + "/serverbin/filter";
+    std::string dstDir = curDir + "/serverbin/filter";
     SymlinkDirectory(srcDir.c_str(), dstDir.c_str());
     srcDir = driverDir + "/backend";
-    dstDir = CUPS_ROOT_DIR + "/serverbin/backend";
+    dstDir = curDir + "/serverbin/backend";
     SymlinkDirectory(srcDir.c_str(), dstDir.c_str());
     srcDir = "/system/bin/cups/backend/ipp";
-    dstDir = CUPS_ROOT_DIR + "/serverbin/backend/http";
+    dstDir = curDir + "/serverbin/backend/http";
     SymlinkFile(srcDir, dstDir);
-    dstDir = CUPS_ROOT_DIR + "/serverbin/backend/ipps";
+    dstDir = curDir + "/serverbin/backend/ipps";
     SymlinkFile(srcDir, dstDir);
     return StartCupsdService();
 }
@@ -560,6 +586,28 @@ void PrintCupsClient::StopCupsdService()
     GetParameter(CUPSD_CONTROL_PARAM.c_str(), "", value, bufferSize - 1);
     PRINT_HILOGD("print.cupsd.ready value: %{public}s.", value);
 }
+
+#ifdef ENTERPRISE_ENABLE
+void PrintCupsClient::StopCupsdSecondaryService()
+{
+    PRINT_HILOGD("StopCupsdSecondaryService enter");
+    if (!IsCupsServerAlive()) {
+        PRINT_HILOGI("The cupsd process is not started, no need stop.");
+        return;
+    }
+
+    PRINT_HILOGI("The cupsd_secondary process is started, stop it now.");
+    int result = SetParameter(CUPSD_SECONDARY_CONTROL_PARAM.c_str(), "false");
+    if (result) {
+        PRINT_HILOGD("SetParameter failed: %{public}d.", result);
+        return;
+    }
+    const int bufferSize = 96;
+    char secondary_value[bufferSize] = {0};
+    GetParameter(CUPSD_SECONDARY_CONTROL_PARAM.c_str(), "", secondary_value, bufferSize - 1);
+    PRINT_HILOGD("print.cupsd_secondary.ready value: %{public}s.", secondary_value);
+}
+#endif // ENTERPRISE_ENABLE
 
 bool PrintCupsClient::QueryPPDInformation(const std::string &makeModel, std::string &ppdName)
 {
@@ -645,8 +693,9 @@ int32_t PrintCupsClient::AddPrinterToCups(const std::string &printerUri, const s
 int32_t PrintCupsClient::AddPrinterToCupsWithSpecificPpd(const std::string &printerUri, const std::string &printerName,
     const std::string &ppdName)
 {
+    std::string curDir = GetCurCupsRootDir();
     if (ppdName != DEFAULT_PPD_NAME) {
-        std::string serverBin = CUPS_ROOT_DIR + "/serverbin";
+        std::string serverBin = curDir + "/serverbin";
         mode_t permissions = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH;
         int ret = ChangeFilterPermission(serverBin, permissions);
         PRINT_HILOGI("ChangeFilterPermission result: %{public}d", ret);
@@ -860,7 +909,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printe
     const std::string &ppdName)
 {
     if (!ppdName.empty()) {
-        return QueryPrinterCapabilityFromPPDFile(printerCaps, CUPS_PPD_DIR + "/" + ppdName);
+        return QueryPrinterCapabilityFromPPDFile(printerCaps, GetCurCupsRootDir() + "/ppd/" + ppdName);
     }
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     PRINT_HILOGI("QueryPrinterCapabilityFromPPD printerName: %{private}s", standardName.c_str());
@@ -1157,7 +1206,7 @@ ppd_file_t* PrintCupsClient::GetPPDFile(const std::string &printerName)
         return nullptr;
     }
     ppd_file_t *ppd = 0;
-    std::string fileDir = "/data/service/el1/public/print_service/cups/ppd/";
+    std::string fileDir = GetCurCupsRootDir() + "/ppd/";
     std::string pName = printerName;
     std::string filePath = fileDir + pName + ".ppd";
     PRINT_HILOGI("GetPPDFile started filePath %{public}s", filePath.c_str());
@@ -1526,6 +1575,17 @@ bool PrintCupsClient::IfContinueToHandleJobState(std::shared_ptr<JobMonitorParam
             return false;
         }
     }
+    if (monitorParams->isInterrupt) {
+        PRINT_HILOGI("Interrupt job and stop monitor it");
+        monitorParams->serviceAbility->UpdatePrintJobState(monitorParams->serviceJobId, PRINT_JOB_BLOCKED,
+            PRINT_JOB_BLOCKED_INTERRUPT);
+        return false;
+    }
+    return QueryJobStateAndCallback(monitorParams);
+}
+
+bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> monitorParams)
+{
     if (httpGetFd(monitorParams->http) < 0) {
         PRINT_HILOGE("http is nullptr");
         httpReconnect2(monitorParams->http, LONG_LONG_TIME_OUT, nullptr);
@@ -1931,6 +1991,50 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
         }
         auto canceledMonitor = *monitorItem;
         canceledMonitor->isCanceled = true;
+    }
+}
+
+void PrintCupsClient::InterruptCupsJob(std::string serviceJobId)
+{
+    PRINT_HILOGD("InterruptCupsJob(): Enter, serviceJobId: %{public}s", serviceJobId.c_str());
+    int jobIndex = -1;
+    for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
+        PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
+        if (jobQueue_[index]->serviceJobId == serviceJobId) {
+            jobIndex = index;
+            break;
+        }
+    }
+    PRINT_HILOGI("jobIndex: %{public}d", jobIndex);
+    if (jobIndex >= 0) {
+        PRINT_HILOGI("job in queue, delete");
+        JobParameters* erasedJob = jobQueue_.at(jobIndex);
+        if (erasedJob != nullptr) {
+            delete erasedJob;
+        }
+        jobQueue_.erase(jobQueue_.begin() + jobIndex);
+        PrintServiceAbility::GetInstance()->UpdatePrintJobState(serviceJobId, PRINT_JOB_BLOCKED,
+            PRINT_JOB_BLOCKED_INTERRUPT);
+    } else {
+        // job is processing
+        if (currentJob_ != nullptr && currentJob_->serviceJobId == serviceJobId) {
+            currentJob_->isCanceled = true;
+        }
+        std::lock_guard<std::mutex> lock(jobMonitorMutex_);
+        auto cmp = [serviceJobId](std::shared_ptr<JobMonitorParam> monitorParams) {
+            return (monitorParams != nullptr && monitorParams->serviceJobId == serviceJobId);
+        };
+        auto monitorItem = std::find_if(jobMonitorList_.begin(), jobMonitorList_.end(), cmp);
+        if (monitorItem == jobMonitorList_.end()) {
+            PRINT_HILOGW("job is not exist");
+            return;
+        }
+        auto interruptMonitor = *monitorItem;
+        if (!CancelPrinterJob(interruptMonitor->cupsJobId, interruptMonitor->printerName,
+            interruptMonitor->jobOriginatingUserName)) {
+            PRINT_HILOGE("cancel Job Error");
+        }
+        interruptMonitor->isInterrupt = true;
     }
 }
 

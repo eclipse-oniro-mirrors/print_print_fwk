@@ -143,6 +143,7 @@ enum PrintJobSubState {
     PRINT_JOB_CREATE_FILE_COMPLETED_FAILED = 29, // print job create file fail
     PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR = 30, // File uploading exception.
     PRINT_JOB_BLOCKED_DRIVER_MISSING = 34, // driver file missing
+    PRINT_JOB_BLOCKED_INTERRUPT = 35, // print job interrupt
     PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE = 98, // Printer is stopped.
     PRINT_JOB_BLOCKED_UNKNOWN = 99,             // unknown issue
     PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 101, // For internal use only: Click Cancel
@@ -255,6 +256,7 @@ static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
 const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
 const std::string PRINTER_SERVICE_PRINTERS_PATH = "/data/service/el2/public/print_service/printers";
+const std::string PRINTER_SERVICE_PRINTERS_SECONDARY_PATH = "/data/service/el2/public/print_service/printers_secondary";
 const std::string PRINTER_LIST_FILE = "printer_list.json";
 const std::string PRINTER_LIST_VERSION_FILE = "version.json";
 const std::string PRINTER_LIST_VERSION_V1 = "v1";

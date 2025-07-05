@@ -39,6 +39,11 @@ ohos_unittest("fwk_print_service_ability_test") {
     "print_service_mock_permission.cpp",
   ]
 
+  cflags_cc = []
+  if (print_fwk_feature_enterprise) {
+    cflags_cc += [ "-DENTERPRISE_ENABLE" ]
+  }
+  
   deps = [
     "${print_path}/etc/init:printservice.rc",
     "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
@@ -72,6 +77,7 @@ ohos_unittest("fwk_print_service_ability_test") {
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
     "napi:ace_napi",
+    "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
