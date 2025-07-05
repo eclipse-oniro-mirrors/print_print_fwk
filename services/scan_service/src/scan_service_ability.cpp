@@ -418,7 +418,7 @@ void ScanServiceAbility::SetScannerSerialNumberByUSB(ScanDeviceInfo &info)
         SCAN_HILOGD("set serialNumber [%{private}s]", it->second.c_str());
         info.serialNumber = it->second;
         info.uniqueId = it->second;
-    }else if (it == usbSnMap.end()) {
+    } else if (it == usbSnMap.end()) {
         SCAN_HILOGD("usb can't find device: %{private}s", usbScannerPort.c_str());
         info.SetDeviceAvailable(false);
     } else {
