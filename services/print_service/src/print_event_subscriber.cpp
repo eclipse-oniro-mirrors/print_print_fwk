@@ -34,6 +34,8 @@ void PrintEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
         int32_t userId = data.GetCode();
         PRINT_HILOGI("user switched, current userId: %{public}d", userId);
+        constexpr int32_t WAIT_TIME = 3;
+        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
         PrintServiceAbility::GetInstance()->NotifyCurrentUserChanged(userId);
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED) {
         int32_t userId = data.GetCode();
