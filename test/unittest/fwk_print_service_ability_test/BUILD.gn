@@ -55,7 +55,6 @@ ohos_unittest("fwk_print_service_ability_test") {
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service:print_service_test",
-    "//third_party/googletest:gmock_main",
   ]
 
   external_deps = [
@@ -67,11 +66,13 @@ ohos_unittest("fwk_print_service_ability_test") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "bounds_checking_function:libsec_shared",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "cJSON:cjson",
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
+    "googletest:gmock_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
@@ -79,6 +80,7 @@ ohos_unittest("fwk_print_service_ability_test") {
     "os_account:os_account_innerkits",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
     "usb_manager:usbsrv_client",
   ]
 }

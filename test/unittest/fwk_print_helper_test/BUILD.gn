@@ -46,7 +46,6 @@ ohos_unittest("fwk_print_helper_test") {
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service:print_service_test",
-    "//third_party/googletest:gmock_main",
   ]
 
   external_deps = [
@@ -63,6 +62,7 @@ ohos_unittest("fwk_print_helper_test") {
     "cJSON:cjson",
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
+    "googletest:gmock_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",

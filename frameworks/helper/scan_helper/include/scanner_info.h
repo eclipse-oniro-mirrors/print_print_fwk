@@ -106,6 +106,7 @@ public:
     void SetDeviceName(const std::string &newDeviceName);
     void SetUniqueId(const std::string &uniqueId);
     void SetUuid(const std::string &uuid);
+    void SetDeviceAvailable(bool deviceAvailable);
 
     [[nodiscard]] const std::string &GetDeviceId() const;
     [[nodiscard]] const std::string &GetManufacturer() const;
@@ -117,6 +118,7 @@ public:
     [[nodiscard]] const std::string &GetDeviceName() const;
     [[nodiscard]] const std::string &GetUniqueId() const;
     [[nodiscard]] const std::string &GetUuid() const;
+    [[nodiscard]] bool GetDeviceAvailable() const;
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
@@ -140,6 +142,7 @@ private:
     std::string deviceName;
     std::string uniqueId;
     std::string uuid;
+    bool deviceAvailable;
 };
 
 class ScanDeviceInfoSync final : public Parcelable {

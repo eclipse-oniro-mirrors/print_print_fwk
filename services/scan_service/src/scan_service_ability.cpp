@@ -418,6 +418,9 @@ void ScanServiceAbility::SetScannerSerialNumberByUSB(ScanDeviceInfo &info)
         SCAN_HILOGD("set serialNumber [%{private}s]", it->second.c_str());
         info.serialNumber = it->second;
         info.uniqueId = it->second;
+    } else if (it == usbSnMap.end()) {
+        SCAN_HILOGD("usb can't find device: %{private}s", usbScannerPort.c_str());
+        info.SetDeviceAvailable(false);
     } else {
         SCAN_HILOGE("usb can't find serialNumber");
     }
@@ -438,6 +441,10 @@ void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
 void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo& info)
 {
     std::lock_guard<std::mutex> autoLock(clearMapLock_);
+    if (info.GetDeviceAvailable() == false) {
+        SCAN_HILOGE("device is unavailable");
+        return;
+    }
     if (info.discoverMode != "USB" && info.discoverMode != "TCP") {
         SCAN_HILOGE("discoverMode is invalid:[%{public}s]", info.discoverMode.c_str());
         return;

@@ -25,7 +25,6 @@ ohos_unittest("print_ext_test") {
     "${print_path}/frameworks/helper/print_helper/include",
     "${print_path}/frameworks/models/print_models/include",
     "${print_utils_path}/include",
-    "//third_party/node/src",
   ]
 
   sources = [
@@ -45,7 +44,6 @@ ohos_unittest("print_ext_test") {
     "${print_path}/interfaces/kits/napi/print_napi:print_napi",
     "${print_path}/profile:print_sa_profiles",
     "${print_path}/services/print_service:print_service_test",
-    "//third_party/googletest:gmock_main",
   ]
 
   external_deps = [
@@ -62,12 +60,11 @@ ohos_unittest("print_ext_test") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
     "hilog:libhilog",
-    "i18n:intl_util",
     "ipc:ipc_core",
     "ipc:ipc_napi",
     "napi:ace_napi",
-    "preferences:native_preferences",
     "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
     "relational_store:native_rdb",

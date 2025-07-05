@@ -2166,14 +2166,15 @@ int32_t PrintServiceAbility::SendPrinterChangeEvent(int event, const PrinterInfo
     return num;
 }
 
-void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info)
+void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info, const std::string userId)
 {
     PRINT_HILOGD("PrintServiceAbility::SendPrinterEvent type %{private}s, %{public}d",
                  info.GetPrinterId().c_str(), info.GetPrinterState());
     for (auto eventIt: registeredListeners_) {
-        if (PrintUtils::GetEventType(eventIt.first) == PRINTER_EVENT_TYPE && eventIt.second != nullptr) {
-            PRINT_HILOGD("PrintServiceAbility::SendPrinterEvent find PRINTER_EVENT_TYPE");
-            eventIt.second->OnCallback(info.GetPrinterState(), info);
+        if (PrintUtils::GetEventType(eventIt.first) == PRINTER_EVENT_TYPE && eventIt.second != nullptr &&
+            (userId == "" || userId == PrintUtils::GetEventUserId(eventIt.first))) {
+                PRINT_HILOGD("PrintServiceAbility::SendPrinterEvent find PRINTER_EVENT_TYPE");
+                eventIt.second->OnCallback(info.GetPrinterState(), info);
         }
     }
 }
@@ -2569,8 +2570,13 @@ std::shared_ptr<PrintUserData> PrintServiceAbility::GetUserDataByJobId(const std
     int32_t userId = GetUserIdByJobId(jobId);
     PRINT_HILOGI("the job is belong to user-%{public}d.", userId);
     if (userId == E_PRINT_INVALID_PRINTJOB) {
-        if (GetCurrentUserData()->ContainsHistoryPrintJob(printSystemData_.QueryAddedPrinterIdList(), jobId)) {
-            return GetCurrentUserData();
+        auto userData = GetCurrentUserData();
+        if (userData == nullptr) {
+            PRINT_HILOGE("Get user data failed.");
+            return nullptr;
+        }
+        if (userData->ContainsHistoryPrintJob(printSystemData_.QueryAddedPrinterIdList(), jobId)) {
+            return userData;
         }
         for (auto it = printUserMap_.begin(); it != printUserMap_.end(); it++) {
             if ((it->second)->ContainsHistoryPrintJob(printSystemData_.QueryAddedPrinterIdList(), jobId)) {
@@ -2995,7 +3001,7 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
     infoPtr->SetPrinterState(PRINTER_ADDED);
 
     SendPrinterDiscoverEvent(PRINTER_ADDED, *infoPtr);
-    SendPrinterEvent(*infoPtr);
+    SendPrinterEvent(*infoPtr, std::to_string(GetCurrentUserId()));
 
     if (printSystemData_.IsPrinterAdded(infoPtr->GetPrinterId()) &&
         !printSystemData_.CheckPrinterBusy(infoPtr->GetPrinterId())) {
