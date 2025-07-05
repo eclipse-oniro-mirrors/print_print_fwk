@@ -215,6 +215,7 @@ ScanDeviceInfo::ScanDeviceInfo()
     deviceName = "";
     uniqueId = "";
     uuid = "";
+    deviceAvailable = true;
 }
 
 ScanDeviceInfo::ScanDeviceInfo(const ScanDeviceInfo &right)
@@ -229,6 +230,7 @@ ScanDeviceInfo::ScanDeviceInfo(const ScanDeviceInfo &right)
     deviceName = right.deviceName;
     uniqueId = right.uniqueId;
     uuid = right.uuid;
+    deviceAvailable = right.deviceAvailable;
 }
 
 ScanDeviceInfo &ScanDeviceInfo::operator=(const ScanDeviceInfo &right)
@@ -244,6 +246,7 @@ ScanDeviceInfo &ScanDeviceInfo::operator=(const ScanDeviceInfo &right)
         deviceName = right.deviceName;
         uniqueId = right.uniqueId;
         uuid = right.uuid;
+        deviceAvailable = right.deviceAvailable;
     }
     return *this;
 }
@@ -347,6 +350,16 @@ void ScanDeviceInfo::SetUuid(const std::string& uuid)
 const std::string& ScanDeviceInfo::GetUuid() const
 {
     return uuid;
+}
+
+void ScanDeviceInfo::SetDeviceAvailable(bool deviceAvailable)
+{
+    this->deviceAvailable = deviceAvailable;
+}
+
+bool ScanDeviceInfo::GetDeviceAvailable() const
+{
+    return deviceAvailable;
 }
 
 bool ScanDeviceInfo::ReadFromParcel(Parcel &parcel)
