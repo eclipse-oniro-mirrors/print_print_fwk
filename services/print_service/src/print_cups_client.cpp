@@ -182,7 +182,7 @@ std::string GetUsbPrinterSerial(const std::string &deviceUri)
 
 static std::mutex g_usbPrintersLock;
 static std::vector<PrinterInfo> g_usbPrinters;
-std::vector<PrinterInfo> GetUsbPrinters()
+std::vector<PrinterInfo>& GetUsbPrinters()
 {
     std::lock_guard<std::mutex> lock(g_usbPrintersLock);
     return g_usbPrinters;
@@ -200,7 +200,7 @@ void ClearUsbPrinters()
 
 static std::mutex g_backendPrintersLock;
 static std::vector<PrinterInfo> g_backendPrinters;
-std::vector<PrinterInfo> GetBackendPrinters()
+std::vector<PrinterInfo>& GetBackendPrinters()
 {
     std::lock_guard<std::mutex> lock(g_backendPrintersLock);
     return g_backendPrinters;
