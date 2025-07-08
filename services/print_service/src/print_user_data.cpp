@@ -1034,7 +1034,7 @@ void PrintUserData::InitPrintHistoryJobList(const std::string &printerId)
     }
 }
 
-bool PrintUserData::ContainsHistoryPrintJob(std::vector<std::string> printerIds, const std::string jobId)
+bool PrintUserData::ContainsHistoryPrintJob(const std::vector<std::string> &printerIds, const std::string &jobId)
 {
     for (std::string printerId : printerIds) {
         InitPrintHistoryJobList(printerId);
