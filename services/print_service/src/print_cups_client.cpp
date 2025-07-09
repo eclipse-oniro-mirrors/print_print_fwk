@@ -934,7 +934,7 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(const std::string &printe
     const std::string &ppdName)
 {
     if (!ppdName.empty()) {
-        return QueryPrinterCapabilityFromPPDFile(printerCaps, GetCurCupsRootDir() + "/ppd/" + ppdName);
+        return QueryPrinterCapabilityFromPPDFile(printerCaps, GetCurCupsRootDir() + "/datadir/model/" + ppdName);
     }
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     PRINT_HILOGI("QueryPrinterCapabilityFromPPD printerName: %{private}s", standardName.c_str());
