@@ -3848,12 +3848,7 @@ bool PrintServiceAbility::IsEnterprise()
 bool PrintServiceAbility::IsEnterpriseEnable()
 {
     std::string enterpriseEnable = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
-    if (enterpriseEnable == IS_ENTERPRISE_ENABLE) {
-        PRINT_HILOGI("IsEnterpriseEnable return true.");
-        return true;
-    }
-    PRINT_HILOGE("IsEnterpriseEnable return false.");
-    return false;
+    return enterpriseEnable == IS_ENTERPRISE_ENABLE;
 }
 void PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
 {
