@@ -106,9 +106,9 @@ struct MediaSize {
 };
 
 std::string GetUsbPrinterSerial(const std::string &deviceUri);
-std::vector<PrinterInfo> GetUsbPrinters();
+std::vector<PrinterInfo>& GetUsbPrinters();
 void ClearUsbPrinters();
-std::vector<PrinterInfo> GetBackendPrinters();
+std::vector<PrinterInfo>& GetBackendPrinters();
 void ClearBackendPrinters();
 void DeviceCb(const char *deviceClass, const char *deviceId, const char *deviceInfo,
     const char *deviceMakeAndModel, const char *deviceUri, const char *deviceLocation, void *userData);

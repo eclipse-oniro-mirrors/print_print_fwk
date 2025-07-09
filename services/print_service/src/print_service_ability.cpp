@@ -2920,11 +2920,6 @@ int32_t PrintServiceAbility::DiscoverUsbPrinters(std::vector<PrinterInfo> &print
 
 int32_t PrintServiceAbility::DiscoverBackendPrinters(std::vector<PrinterInfo> &printers)
 {
-    ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
-        PRINT_HILOGE("no permission to access print service");
-        return E_PRINT_NO_PERMISSION;
-    }
     PRINT_HILOGD("DiscoverBackendPrinters started.");
 #ifdef CUPS_ENABLE
     int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->DiscoverBackendPrinters(printers);
