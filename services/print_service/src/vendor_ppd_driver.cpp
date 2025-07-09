@@ -23,7 +23,22 @@ VendorPpdDriver::VendorPpdDriver() {}
 
 VendorPpdDriver::~VendorPpdDriver()
 {
-    startDiscovery_ = false;
+    UnInit();
+}
+
+bool VendorPpdDriver::Init(IPrinterVendorManager *manager)
+{
+    if (!VendorDriverBase::Init(manager)) {
+        PRINT_HILOGE("VendorDriverBase init fail");
+        return false;
+    }
+    return true;
+}
+
+void VendorPpdDriver::UnInit()
+{
+    OnStopDiscovery();
+    VendorDriverBase::UnInit();
 }
 
 std::string VendorPpdDriver::GetVendorName()
@@ -40,6 +55,7 @@ bool VendorPpdDriver::OnQueryCapability(const std::string &printerId, int timeou
     auto printerInfo = vendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
     if (printerInfo != nullptr && TryConnectByPpdDriver(*printerInfo)) {
         PRINT_HILOGI("Connect by ppdDriver success.");
+        return false;
     }
     return true;
 }
@@ -124,8 +140,9 @@ void VendorPpdDriver::OnStartDiscovery()
         PRINT_HILOGW("OnStartDiscovery vendorManager is null.");
         return;
     }
-    if (!startDiscovery_) {
-        startDiscovery_ = true;
+    std::unique_lock<std::mutex> lock(discoveryStateChangeMutex_);
+    if (!isDiscovering_) {
+        isDiscovering_ = true;
         discoveryThread_ = std::thread(&VendorPpdDriver::DiscoveryProcess, this);
     } else {
         PRINT_HILOGW("allready start backend discovery.");
@@ -134,12 +151,14 @@ void VendorPpdDriver::OnStartDiscovery()
 
 void VendorPpdDriver::OnStopDiscovery()
 {
-    PRINT_HILOGD("OnStartDiscovery enter");
-    if (vendorManager == nullptr) {
-        PRINT_HILOGW("OnStartDiscovery vendorManager is null.");
+    PRINT_HILOGD("OnStopDiscovery enter");
+    std::unique_lock<std::mutex> lock(discoveryStateChangeMutex_);
+    if (!isDiscovering_) {
+        PRINT_HILOGW("already stop discovery");
         return;
     }
-    startDiscovery_ = false;
+    isDiscovering_ = false;
+    waitDiscoveryCondition_.notify_all();
     if (discoveryThread_.joinable()) {
         discoveryThread_.join();
     }
@@ -151,6 +170,10 @@ void VendorPpdDriver::DiscoveryProcess()
     while (WaitNext()) {
         DiscoverBackendPrinters();
     }
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("VendorManager is null. DiscoveryProcess Quit");
+        return;
+    }
     std::unique_lock<std::mutex> lock(updateDiscoveryMutex_);
     for (const auto &isDiscoveredPair : discoveredPrinters_) {
         vendorManager->RemovePrinterFromDiscovery(GetVendorName(), isDiscoveredPair.first);
@@ -160,11 +183,14 @@ void VendorPpdDriver::DiscoveryProcess()
 
 bool VendorPpdDriver::WaitNext()
 {
-    std::unique_lock<std::mutex> lock(startDiscoveryMutex_);
-    if (!startDiscovery_) {
+    {
+        std::unique_lock<std::mutex> lock(waitDiscoveryMutex_);
+        waitDiscoveryCondition_.wait_for(lock, std::chrono::milliseconds(DISCOVERY_INTERVAL_MS),
+            [this] { return !isDiscovering_; });
+    }
+    if (!isDiscovering_) {
         return false;
     }
-    startDiscoveryCondition_.wait_for(lock, std::chrono::milliseconds(DISCOVERY_INTERVAL_MS));
     return true;
 }
 

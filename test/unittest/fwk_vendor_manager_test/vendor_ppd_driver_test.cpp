@@ -128,7 +128,7 @@ HWTEST_F(VendorPpdDriverTest, DiscoverBackendPrinters_WhenDiscoverOne_ShouldAddI
     EXPECT_CALL(mock, DiscoverBackendPrinters(_, _)).Times(1)
         .WillRepeatedly(DoAll(SetArgReferee<1>(infoVec), Return(E_PRINT_NONE)));
     EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
-    EXPECT_CALL(mock, RemovePrinterFromDiscovery(_, _)).Times(0).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(mock, RemovePrinterFromDiscovery(_, _)).Times(0);
     vendorDriver.DiscoverBackendPrinters();
 }
 
@@ -145,7 +145,7 @@ HWTEST_F(VendorPpdDriverTest, DiscoverBackendPrinters_WhenLoseOne_ShouldRemoveIt
     EXPECT_TRUE(vendorDriver.Init(&mock));
     vendorDriver.discoveredPrinters_["test1"] = true;
     EXPECT_CALL(mock, DiscoverBackendPrinters(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
-    EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).Times(0).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).Times(0);
     EXPECT_CALL(mock, RemovePrinterFromDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
     vendorDriver.DiscoverBackendPrinters();
 }
@@ -183,8 +183,12 @@ HWTEST_F(VendorPpdDriverTest, StartAndStopDiscovery_ShouldWorkNormolly, TestSize
     MockVendorManager mock;
     VendorPpdDriver vendorDriver;
     EXPECT_TRUE(vendorDriver.Init(&mock));
-    EXPECT_CALL(mock, DiscoverBackendPrinters(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
-    EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).Times(0).WillRepeatedly(Return(E_PRINT_NONE));
+    PrinterInfo info;
+    info.SetPrinterId("test1");
+    std::vector<PrinterInfo> infoVec = { info };
+    EXPECT_CALL(mock, DiscoverBackendPrinters(_, _)).Times(1)
+        .WillRepeatedly(DoAll(SetArgReferee<1>(infoVec), Return(E_PRINT_NONE)));
+    EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(mock, RemovePrinterFromDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
     vendorDriver.OnStartDiscovery();
     std::this_thread::sleep_for(std::chrono::seconds(10));

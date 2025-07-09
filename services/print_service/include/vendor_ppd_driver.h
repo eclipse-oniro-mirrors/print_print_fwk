@@ -28,6 +28,8 @@ class VendorPpdDriver : public VendorDriverBase {
 public:
     VendorPpdDriver();
     ~VendorPpdDriver();
+    bool Init(IPrinterVendorManager *manager) override;
+    void UnInit() override;
     std::string GetVendorName() override;
     int32_t OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo) override;
     bool QueryProperty(const std::string &printerId, const std::string &key, std::string &value) override;
@@ -46,13 +48,13 @@ private:
 private:
     std::string connectingVendorGroup;
     std::shared_ptr<PrinterInfo> connectingPrinterInfo;
-    std::map<std::string, std::vector<std::string>> privatePrinterPpdMap;
     std::mutex updateDiscoveryMutex_;
     std::map<std::string, bool> discoveredPrinters_;
-    bool startDiscovery_ = false;
+    bool isDiscovering_ = false;
     std::thread discoveryThread_;
-    std::mutex startDiscoveryMutex_;
-    std::condition_variable startDiscoveryCondition_;
+    std::mutex discoveryStateChangeMutex_;
+    std::mutex waitDiscoveryMutex_;
+    std::condition_variable waitDiscoveryCondition_;
 };
 }  // namespace Print
 }  // namespace OHOS

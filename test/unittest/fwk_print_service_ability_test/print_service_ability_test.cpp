@@ -385,7 +385,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_Sh
     EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NO_PERMISSION);
     std::vector<PrinterInfo> printers;
     EXPECT_EQ(service->DiscoverUsbPrinters(printers), E_PRINT_NO_PERMISSION);
-    EXPECT_EQ(service->DiscoverBackendPrinters(printers), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_NO_PERMISSION);
 
     PrintServiceMockPermission::MockPermission();
