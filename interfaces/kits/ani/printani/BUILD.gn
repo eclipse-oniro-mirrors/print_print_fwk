@@ -46,10 +46,32 @@ ohos_shared_library("print_ani") {
     integer_overflow = true
     ubsan = true
   }
-  include_dirs = [ "${print_path}/frameworks/innerkitsimpl/print_impl/include" ]
+  include_dirs = [ 
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/helper/print_ani_helper/include",
+    "${print_path}/frameworks/ani_util/include",
+  ]
   sources = [
     "src/print_ani.cpp",
-    "src/print_entry.cpp",
+    "src/fd_list_wrapper.cpp",
+    "src/print_ets_ui_callback.cpp",
+    "src/print_ani_callback.cpp",
+    "src/ani_print_task.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_attributes_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_extension_info_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_job_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_margin_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_page_size_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_preview_attribute_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_range_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_resolution_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_printer_capability_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_printer_info_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_printer_preferences_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_task_helper.cpp",
+    "${print_path}/frameworks/ani_util/src/print_base_ani_util.cpp",
+    "${print_path}/frameworks/ani_util/src/print_callback_ani_util.cpp",
+    "${print_path}/frameworks/ani_util/src/print_object_ani_util.cpp",
   ]
   deps = [
     "${print_path}/frameworks/helper/print_helper:print_helper",
@@ -66,6 +88,7 @@ ohos_shared_library("print_ani") {
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
     "ability_runtime:ui_extension",
+    "ability_runtime:ani_base_context",
     "access_token:libaccesstoken_sdk",
     "ace_engine:ace_uicontent",
     "bundle_framework:appexecfwk_core",
@@ -101,9 +124,53 @@ generate_static_abc("print") {
 }
 
 
+generate_static_abc("print_extension_ability_ani_abc") {
+  base_url = "./ets"
+
+  files = [
+    "./ets/@ohos.app.ability.PrintExtensionAbility.ets",
+  ]
+
+  dst_file = "$target_out_dir/print_extension_ability_ani.abc"
+  out_puts = [ "$target_out_dir/print_extension_ability_ani.abc" ]
+
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/print_extension_ability_ani.abc"
+}
+
+ohos_prebuilt_etc("print_extension_ability_ani_etc") {
+  source = "$target_out_dir/print_extension_ability_ani.abc"
+  deps = [ ":print_extension_ability_ani_abc" ]
+  module_install_dir = "framework"
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
+
+generate_static_abc("print_extension_context_abc") {
+  base_url = "./ets"
+
+  files = [ "./ets/PrintExtensionContext.ets" ]
+
+  dst_file = "$target_out_dir/print_extension_context_abc.abc"
+  out_puts = [ "$target_out_dir/print_extension_context_abc.abc" ]
+
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/print_extension_context_abc.abc"
+}
+
+ohos_prebuilt_etc("print_extension_context_abc_etc") {
+  source = "$target_out_dir/print_extension_context_abc.abc"
+  deps = [ ":print_extension_context_abc" ]
+  module_install_dir = "framework"
+  subsystem_name = "print"
+  part_name = "print_fwk"
+}
+
 group("anipackage") {
   deps = [
     ":print_abc_etc",
     ":print_ani",
+    ":print_extension_ability_ani_etc",
+    ":print_extension_context_abc_etc",
   ]
 }

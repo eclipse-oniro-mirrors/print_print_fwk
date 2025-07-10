@@ -12,34 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef OHOS_ANI_PRINT_ATTRIBUTES_HELPER_H
+#define OHOS_ANI_PRINT_ATTRIBUTES_HELPER_H
 
-#ifndef PRINT_ENTRY_H
-#define PRINT_ENTRY_H
-
-#include <memory>
+#include <ani.h>
 #include <string>
-#include <stdint.h>
-
-#include "ui_content.h"
-#include "modal_ui_extension_config.h"
-#include "want.h"
-#include "ipc_skeleton.h"
-#include "bundle_mgr_client.h"
-#include "iremote_object.h"
-#include "print_utils.h"
-
+#include "print_attributes.h"
 namespace OHOS::Print {
-class PrintEntry {
+class AniPrintAttributesHelper {
 public:
-    PrintEntry();
-    ~PrintEntry();
-    static std::shared_ptr<PrintEntry> GetInstance();
-    int32_t StartPrint(const std::vector<std::string>& files);
-    int32_t On(const std::string& type);
-    int32_t Off(const std::string& type);
-private:
-    uint32_t CallSpooler(const std::shared_ptr<AdapterParam> &adapterParam,
-        const std::vector<std::string>& files);
+    static PrintAttributes ParsePrintAttributes(ani_env *env, ani_object printAttribute);
 };
 }  // namespace OHOS::Print
-#endif  // PRINT_ENTRY_H
+#endif  // OHOS_ANI_PRINT_ATTRIBUTES_HELPER_H
