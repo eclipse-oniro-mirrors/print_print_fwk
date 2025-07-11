@@ -31,12 +31,12 @@ PrintResolution AniPrintResolutionHelper::ParsePrintResolution(ani_env *env, ani
     if (GetStringProperty(env, resolutionAni, ID, id)) {
         resolution.SetId(id);
     }
-    double horizontalDpi = 0;
-    if (GetDoubleProperty(env, resolutionAni, HORIZONTAL_DPI, horizontalDpi)) {
+    int32_t horizontalDpi = 0;
+    if (GetIntProperty(env, resolutionAni, HORIZONTAL_DPI, horizontalDpi)) {
         resolution.SetHorizontalDpi(static_cast<uint32_t>(horizontalDpi));
     }
-    double verticalDpi = 0;
-    if (GetDoubleProperty(env, resolutionAni, VERTICAL_DPI, verticalDpi)) {
+    int32_t verticalDpi = 0;
+    if (GetIntProperty(env, resolutionAni, VERTICAL_DPI, verticalDpi)) {
         resolution.SetVerticalDpi(static_cast<uint32_t>(verticalDpi));
     }
     return resolution;

@@ -60,7 +60,7 @@ export default namespace print {
         extensionId: string;
         vendorId: string;
         vendorName: string;
-        vendorIcon: number;
+        vendorIcon: int;
         version: string;
     }
 
@@ -68,18 +68,18 @@ export default namespace print {
         extensionId: string;
         vendorId: string;
         vendorName: string;
-        vendorIcon: number;
+        vendorIcon: int;
         version: string;
     }
 
     export interface PrintPageRange {
-        startPage?: number;
-        endPage?: number;
-        pages?: Array<number>;
+        startPage?: int;
+        endPage?: int;
+        pages?: Array<int>;
     }
 
     export interface PrintAttributes {
-        copyNumber?: number;
+        copyNumber?: int;
         pageRange?: PrintPageRange;
         pageSize?: PrintPageSize | PrintPageType;
         directionMode?: PrintDirectionMode;
@@ -88,7 +88,7 @@ export default namespace print {
     }
 
     export interface PrintDocumentAdapter {
-        onStartLayoutWrite(jobId: string, oldAttrs: PrintAttributes, newAttrs: PrintAttributes, fd: number,
+        onStartLayoutWrite(jobId: string, oldAttrs: PrintAttributes, newAttrs: PrintAttributes, fd: int,
         writeResultCallback: (jobId: string, writeResult: PrintFileCreationState) => void): void;
         onJobStateChanged(jobId: string, state: PrintDocumentAdapterState): void;
     }
@@ -113,15 +113,15 @@ export default namespace print {
     export interface PrintPageSize {
         id: string;
         name: string;
-        width: number;
-        height: number;
+        width: int;
+        height: int;
     }
 
     export class PrintPageSizeImp implements PrintPageSize {
         id: string = "";
         name: string = "";
-        width: number = 0;
-        height: number = 0;
+        width: int = 0;
+        height: int = 0;
     }
 
     export enum PrintPageType {
@@ -247,8 +247,8 @@ export default namespace print {
     }
 
     export interface PrinterCapability {
-        colorMode: number;
-        duplexMode: number;
+        colorMode: int;
+        duplexMode: int;
         pageSize: Array<PrintPageSize>;
         resolution?: Array<PrintResolution>;
         minMargin?: PrintMargin;
@@ -256,8 +256,8 @@ export default namespace print {
     }
 
     export class PrinterCapabilityImpl implements PrinterCapability {
-        colorMode: number;
-        duplexMode: number;
+        colorMode: int;
+        duplexMode: int;
         pageSize: Array<PrintPageSize>;
         resolution?: Array<PrintResolution>;
         minMargin?: PrintMargin;
@@ -271,72 +271,72 @@ export default namespace print {
     }
 
     export interface PrintMargin {
-        top?: number;
-        bottom?: number;
-        left?: number;
-        right?: number;
+        top?: int;
+        bottom?: int;
+        left?: int;
+        right?: int;
     }
 
     export class PrintMarginImp implements PrintMargin {
-        top?: number = undefined;
-        bottom?: number = undefined;
-        left?: number = undefined;
-        right?: number = undefined;
+        top?: int = undefined;
+        bottom?: int = undefined;
+        left?: int = undefined;
+        right?: int = undefined;
     }
 
     export interface PrintResolution {
         id: string;
-        horizontalDpi: number;
-        verticalDpi: number;
+        horizontalDpi: int;
+        verticalDpi: int;
     }
 
     export interface PrinterRange {
-        startPage?: number;
-        endPage?: number;
-        pages?: Array<number>;
+        startPage?: int;
+        endPage?: int;
+        pages?: Array<int>;
     }
 
     export class PrinterRangeImp implements PrinterRange {
-        startPage?: number = undefined;
-        endPage?: number = undefined;
-        pages?: Array<number> = undefined;
+        startPage?: int = undefined;
+        endPage?: int = undefined;
+        pages?: Array<int> = undefined;
     }
 
     export interface PreviewAttribute {
         previewRange: PrinterRange;
-        result?: number;
+        result?: int;
     }
 
     export class PreviewAttributeImp implements PreviewAttribute {
         previewRange: PrinterRange;
-        result?: number = undefined;
+        result?: int = undefined;
     }
 
     export interface PrintJob {
-        fdList: Array<number>;
+        fdList: Array<int>;
         jobId: string;
         printerId: string;
         jobState: PrintJobState;
         jobSubstate: PrintJobSubState;
-        copyNumber: number;
+        copyNumber: int;
         pageRange: PrinterRange;
         isSequential: boolean;
         pageSize: PrintPageSize;
         isLandscape: boolean;
-        colorMode: number;
-        duplexMode: number;
+        colorMode: int;
+        duplexMode: int;
         margin?: PrintMargin;
         preview?: PreviewAttribute;
         options?: Object;
     }
 
     export class PrintJobImp implements PrintJob {
-        fdList: Array<number> = new Array<number>();
+        fdList: Array<int> = new Array<int>();
         jobId: string = "";
         printerId: string = "";
         jobState: PrintJobState = PrintJobState.PRINT_JOB_BLOCKED;
         jobSubstate: PrintJobSubState = PrintJobSubState.PRINT_JOB_COMPLETED_SUCCESS;
-        copyNumber: number = 0;
+        copyNumber: int = 0;
         pageRange: PrinterRange = {
             startPage: undefined,
             endPage: undefined,
@@ -350,8 +350,8 @@ export default namespace print {
             height: 0
         };
         isLandscape: boolean = false;
-        colorMode: number = 0;
-        duplexMode: number = 0;
+        colorMode: int = 0;
+        duplexMode: int = 0;
         margin?: PrintMargin;
         preview?: PreviewAttribute;
         options?: Object;
@@ -361,7 +361,7 @@ export default namespace print {
         printerId: string;
         printerName: string;
         printerState: PrinterState;
-        printerIcon?: number;
+        printerIcon?: int;
         description?: string;
         capability?: PrinterCapability;
         options?: Object;
@@ -371,7 +371,7 @@ export default namespace print {
         printerId: string = "";
         printerName: string = "";
         printerState: PrinterState = PrinterState.PRINTER_ADDED;
-        printerIcon?: number = undefined;
+        printerIcon?: int = undefined;
         description?: string = undefined;
         capability?: PrinterCapability = undefined;
         options?: Object = undefined;
@@ -477,11 +477,11 @@ export default namespace print {
 
     native function cancelPrintJobNative(jobId: string, callback: AsyncCallbackWrapper<void>): void;
 
-    native function requestPrintPreviewNative(jobInfo: PrintJob, callback: CallbackWrapper<number>): void;
+    native function requestPrintPreviewNative(jobInfo: PrintJob, callback: CallbackWrapper<int>): void;
 
-    native function requestPrintPreviewCallbackNative(jobInfo: PrintJob, callback: CallbackWrapper<number>): void;
+    native function requestPrintPreviewCallbackNative(jobInfo: PrintJob, callback: CallbackWrapper<int>): void;
 
-    native function requestPrintPreviewAsyncCallbackNative(jobInfo: PrintJob, callback: AsyncCallbackWrapper<number>): void;
+    native function requestPrintPreviewAsyncCallbackNative(jobInfo: PrintJob, callback: AsyncCallbackWrapper<int>): void;
 
     native function addPrintersNative(printers: Array<PrinterInfo>, callback: AsyncCallbackWrapper<void>): void;
 
@@ -501,11 +501,11 @@ export default namespace print {
 
     native function queryPrintJobByIdNative(jobId: string, callback: AsyncCallbackWrapper<PrintJob>): void;
 
-    native function startGettingPrintFileNative(jobId: string, printAttributes: PrintAttributes, fd: number, callback: CallbackWrapper<PrintFileCreationState>): void;
+    native function startGettingPrintFileNative(jobId: string, printAttributes: PrintAttributes, fd: int, callback: CallbackWrapper<PrintFileCreationState>): void;
 
     native function notifyPrintServiceNative(jobId: string, type:string, callback: AsyncCallbackWrapper<void>): void;
 
-    native function notifyPrintServiceWithStateNative(jobId: string, state: number, callback: AsyncCallbackWrapper<void>): void;
+    native function notifyPrintServiceWithStateNative(jobId: string, state: int, callback: AsyncCallbackWrapper<void>): void;
 
     native function getAddedPrintersNative(callback: AsyncCallbackArrayWrapper<string>): void;
 
@@ -798,16 +798,16 @@ export default namespace print {
         });
     }
 
-    export function requestPrintPreview(jobInfo: PrintJob, callback: Callback<number>): void {
-        let myCall = new CallbackWrapper<number>(callback);
+    export function requestPrintPreview(jobInfo: PrintJob, callback: Callback<int>): void {
+        let myCall = new CallbackWrapper<int>(callback);
         taskpool.execute((): void => {
             requestPrintPreviewCallbackNative(jobInfo, myCall);
         });
     }
 
-    export function requestPrintPreview(jobInfo: PrintJob): Promise<number> {
-        return new Promise<number>((resolve: (data:number | undefined)=>void, reject:(err: BusinessError<void> | null)=>void):void => {
-            let myCall = new AsyncCallbackWrapper<number>((err, data) => {
+    export function requestPrintPreview(jobInfo: PrintJob): Promise<int> {
+        return new Promise<int>((resolve: (data:int | undefined)=>void, reject:(err: BusinessError<void> | null)=>void):void => {
+            let myCall = new AsyncCallbackWrapper<int>((err, data) => {
                 if (err === null || err.code == 0) {
                     resolve(data);
                 } else {
@@ -1100,7 +1100,7 @@ export default namespace print {
         });
     }
 
-    export function startGettingPrintFile(jobId: string, printAttributes: PrintAttributes, fd: number, callback: Callback<PrintFileCreationState>): void {
+    export function startGettingPrintFile(jobId: string, printAttributes: PrintAttributes, fd: int, callback: Callback<PrintFileCreationState>): void {
         let myCall = new CallbackWrapper<PrintFileCreationState>(callback);
         taskpool.execute((): void => {
             startGettingPrintFileNative(jobId, printAttributes, fd, myCall);

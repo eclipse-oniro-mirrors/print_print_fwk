@@ -31,20 +31,20 @@ PrintMargin AniPrintMarginHelper::ParsePrintMargin(ani_env *env, ani_object marg
 {
     PRINT_HILOGI("enter ParsePrintMargin");
     PrintMargin margin;
-    double top = 0;
-    if (GetDoubleProperty(env, marginAni, TOP_STR, top)) {
+    int32_t top = 0;
+    if (GetIntProperty(env, marginAni, TOP_STR, top)) {
         margin.SetTop(static_cast<uint32_t>(top));
     }
-    double bottom = 0;
-    if (GetDoubleProperty(env, marginAni, BOTTOM_STR, bottom)) {
+    int32_t bottom = 0;
+    if (GetIntProperty(env, marginAni, BOTTOM_STR, bottom)) {
         margin.SetBottom(static_cast<uint32_t>(bottom));
     }
-    double left = 0;
-    if (GetDoubleProperty(env, marginAni, LEFT_STR, left)) {
+    int32_t left = 0;
+    if (GetIntProperty(env, marginAni, LEFT_STR, left)) {
         margin.SetLeft(static_cast<uint32_t>(left));
     }
-    double right = 0;
-    if (GetDoubleProperty(env, marginAni, RIGHT_STR, right)) {
+    int32_t right = 0;
+    if (GetIntProperty(env, marginAni, RIGHT_STR, right)) {
         margin.SetRight(static_cast<uint32_t>(right));
     }
     return margin;
@@ -57,19 +57,19 @@ ani_object AniPrintMarginHelper::CreatePrintMargin(ani_env *env, const PrintMarg
 
     ani_object obj = CreateObject(env, nullptr, className);
     if (margin.HasTop()) {
-        SetDoubleProperty(env, obj, TOP_STR, static_cast<double>(margin.GetTop()));
+        SetIntProperty(env, obj, TOP_STR, static_cast<int32_t>(margin.GetTop()));
     }
 
     if (margin.HasBottom()) {
-        SetDoubleProperty(env, obj, BOTTOM_STR, static_cast<double>(margin.GetBottom()));
+        SetIntProperty(env, obj, BOTTOM_STR, static_cast<int32_t>(margin.GetBottom()));
     }
 
     if (margin.HasLeft()) {
-        SetDoubleProperty(env, obj, LEFT_STR, static_cast<double>(margin.GetLeft()));
+        SetIntProperty(env, obj, LEFT_STR, static_cast<int32_t>(margin.GetLeft()));
     }
 
     if (margin.HasRight()) {
-        SetDoubleProperty(env, obj, RIGHT_STR, static_cast<double>(margin.GetRight()));
+        SetIntProperty(env, obj, RIGHT_STR, static_cast<int32_t>(margin.GetRight()));
     }
 
     return obj;

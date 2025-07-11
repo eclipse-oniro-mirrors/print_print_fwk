@@ -41,12 +41,12 @@ PrintPageSize AniPrintPageSizeHelper::ParsePrintPageSize(ani_env *env, ani_objec
     if (GetStringProperty(env, pageSizeAni, NAME_STR, name)) {
         pageSize.SetName(name);
     }
-    double width = 0;
-    if (GetDoubleProperty(env, pageSizeAni, WIDTH_STR, width)) {
+    int32_t width = 0;
+    if (GetIntProperty(env, pageSizeAni, WIDTH_STR, width)) {
         pageSize.SetWidth(static_cast<uint32_t>(width));
     }
-    double height = 0;
-    if (GetDoubleProperty(env, pageSizeAni, HEIGHT_STR, height)) {
+    int32_t height = 0;
+    if (GetIntProperty(env, pageSizeAni, HEIGHT_STR, height)) {
         pageSize.SetHeight(static_cast<uint32_t>(height));
     }
     return pageSize;
@@ -59,8 +59,8 @@ ani_object AniPrintPageSizeHelper::CreatePageSize(ani_env *env, const PrintPageS
 
     SetStringProperty(env, obj, ID_STR, pageSize.GetId());
     SetStringProperty(env, obj, NAME_STR, pageSize.GetName());
-    SetDoubleProperty(env, obj, WIDTH_STR, static_cast<double>(pageSize.GetWidth()));
-    SetDoubleProperty(env, obj, HEIGHT_STR, static_cast<double>(pageSize.GetHeight()));
+    SetIntProperty(env, obj, WIDTH_STR, static_cast<int32_t>(pageSize.GetWidth()));
+    SetIntProperty(env, obj, HEIGHT_STR, static_cast<int32_t>(pageSize.GetHeight()));
 
     return obj;
 }

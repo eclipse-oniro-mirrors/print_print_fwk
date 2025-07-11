@@ -38,13 +38,13 @@ PrinterCapability PrinterCapabilityAniHelper::ParsePrinterCapability(ani_env *en
 {
     PRINT_HILOGI("enter ParsePrinterCapability");
     PrinterCapability cap;
-    double colorMode;
-    if (GetDoubleProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_COLORMODE, colorMode)) {
+    int32_t colorMode = 0;
+    if (GetIntProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_COLORMODE, colorMode)) {
         cap.SetColorMode(static_cast<uint32_t>(colorMode));
     }
 
-    double duplexMode;
-    if (GetDoubleProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_DUPLEXMODE, duplexMode)) {
+    int32_t duplexMode = 0;
+    if (GetIntProperty(env, static_cast<ani_object>(capability), PARAM_CAPABILITY_DUPLEXMODE, duplexMode)) {
         cap.SetDuplexMode(static_cast<uint32_t>(duplexMode));
     }
 
@@ -95,8 +95,8 @@ ani_object PrinterCapabilityAniHelper::CreatePrinterCapability(ani_env *env, con
 {
     PRINT_HILOGI("enter CreatePrinterCapability");
     ani_object obj = CreateObject(env, nullptr, CLASS_NAME);
-    SetDoubleProperty(env, obj, PARAM_CAPABILITY_COLORMODE, cap.GetColorMode());
-    SetDoubleProperty(env, obj, PARAM_CAPABILITY_DUPLEXMODE, cap.GetDuplexMode());
+    SetIntProperty(env, obj, PARAM_CAPABILITY_COLORMODE, static_cast<int32_t>(cap.GetColorMode()));
+    SetIntProperty(env, obj, PARAM_CAPABILITY_DUPLEXMODE, static_cast<int32_t>(cap.GetDuplexMode()));
 
     std::vector<PrintPageSize> supportPageSizeList;
     cap.GetSupportedPageSize(supportPageSizeList);

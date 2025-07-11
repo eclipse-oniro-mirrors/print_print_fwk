@@ -31,19 +31,19 @@ PrintRange AniPrintRangeHelper::ParsePrinterRange(ani_env *env, ani_object range
 {
     PRINT_HILOGI("enter ParsePrinterRange");
     PrintRange range;
-    ani_double startPageAni;
-    if (GetDoubleProperty(env, rangeAni, START_PAGE_STR, startPageAni)) {
+    int32_t startPageAni = 0;
+    if (GetIntProperty(env, rangeAni, START_PAGE_STR, startPageAni)) {
         PRINT_HILOGD("The parsed colorMode part %{public}d", static_cast<uint32_t>(startPageAni));
         range.SetStartPage(static_cast<uint32_t>(startPageAni));
     }
-    ani_double endPageAni;
-    if (GetDoubleProperty(env, rangeAni, END_PAGE_STR, endPageAni)) {
+    int32_t endPageAni = 0;
+    if (GetIntProperty(env, rangeAni, END_PAGE_STR, endPageAni)) {
         PRINT_HILOGD("The parsed colorMode part %{public}d", static_cast<uint32_t>(endPageAni));
         range.SetEndPage(static_cast<uint32_t>(endPageAni));
     }
 
-    std::vector<ani_double> pagesAni;
-    if (GetDoubleArrayProperty(env, rangeAni, PAGES_STR, pagesAni)) {
+    std::vector<int32_t> pagesAni;
+    if (GetIntArrayProperty(env, rangeAni, PAGES_STR, pagesAni)) {
         std::vector<uint32_t> pages;
         for (auto page : pagesAni) {
             pages.push_back(static_cast<uint32_t>(page));
@@ -58,11 +58,11 @@ ani_object AniPrintRangeHelper::CreatePrinterRange(ani_env *env, const PrintRang
     PRINT_HILOGI("enter CreatePrinterRange");
     ani_object obj = CreateObject(env, nullptr, CLASS_NAME);
 
-    SetDoubleProperty(env, obj, START_PAGE_STR, static_cast<double>(printRange.GetStartPage()));
-    SetDoubleProperty(env, obj, END_PAGE_STR, static_cast<double>(printRange.GetEndPage()));
+    SetIntProperty(env, obj, START_PAGE_STR, static_cast<int32_t>(printRange.GetStartPage()));
+    SetIntProperty(env, obj, END_PAGE_STR, static_cast<int32_t>(printRange.GetEndPage()));
     std::vector<uint32_t> pages;
     printRange.GetPages(pages);
-    SetDoubleArrayProperty(env, obj, PAGES_STR, std::vector<double>(pages.begin(), pages.end()));
+    SetIntArrayProperty(env, obj, PAGES_STR, std::vector<int32_t>(pages.begin(), pages.end()));
     return obj;
 }
 }  // namespace OHOS::Print
