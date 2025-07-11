@@ -61,6 +61,8 @@ ohos_shared_library("print_extension_framework") {
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/kits/extension/include",
+    "${print_path}/frameworks/helper/print_ani_helper/include",
+    "${print_path}/frameworks/ani_util/include",
   ]
 
   branch_protector_ret = "pac_ret"
@@ -80,6 +82,14 @@ ohos_shared_library("print_extension_framework") {
     "src/js_print_extension_context.cpp",
     "src/print_extension.cpp",
     "src/print_extension_context.cpp",
+    "src/ets_print_extension.cpp",
+    "${print_path}/frameworks/ani_util/src/print_base_ani_util.cpp",
+    "${print_path}/frameworks/ani_util/src/print_object_ani_util.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_range_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_job_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_page_size_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_margin_helper.cpp",
+    "${print_path}/frameworks/helper/print_ani_helper/src/ani_print_preview_attribute_helper.cpp",
   ]
   configs = [ ":ability_config" ]
   public_configs = [
@@ -103,6 +113,7 @@ ohos_shared_library("print_extension_framework") {
     "ability_runtime:extensionkit_native",
     "ability_runtime:napi_common",
     "ability_runtime:runtime",
+    "ability_runtime:ani_common",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
@@ -111,6 +122,9 @@ ohos_shared_library("print_extension_framework") {
     "ipc:ipc_single",
     "ipc:rpc",
     "napi:ace_napi",
+    "bundle_framework:bms_ani_common",
+    "runtime_core:ani",
+    "runtime_core:libarkruntime",
   ]
 
   if (build_variant == "user") {
