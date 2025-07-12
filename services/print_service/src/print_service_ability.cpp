@@ -1401,13 +1401,13 @@ bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, 
     printerInfo.SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo.SetPrinterId(printerId);
     if (!printSystemData_.IsPrinterAdded(printerId)) {
+        BuildPrinterPreference(printerInfo);
+        printSystemData_.InsertAddedPrinter(printerId, printerInfo);
         SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, printerInfo, true);
         SendPrinterChangeEvent(PRINTER_EVENT_ADDED, printerInfo);
     } else {
         PRINT_HILOGW("Printer added.");
     }
-    BuildPrinterPreference(printerInfo);
-    printSystemData_.InsertAddedPrinter(printerId, printerInfo);
     SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, printerInfo);
     SetLastUsedPrinter(printerId);
     return true;
