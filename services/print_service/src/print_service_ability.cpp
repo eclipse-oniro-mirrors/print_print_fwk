@@ -171,6 +171,9 @@ int32_t PrintServiceAbility::Init()
         DelayedSingleton<PrintBMSHelper>::GetInstance()->SetHelper(helper_);
         helper_->PrintSubscribeCommonEvent();
     }
+#ifdef ENTERPRISE_ENABLE
+    UpdateIsEnterprise();
+#endif
     printSystemData_.Init();
     vendorManager.Init(GetInstance(), true);
 #ifdef CUPS_ENABLE
