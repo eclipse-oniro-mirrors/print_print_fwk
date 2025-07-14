@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 namespace OHOS::Print {
-ani_object CreateDouble(ani_env *env, ani_double value);
+ani_object CreateInt(ani_env *env, ani_int value);
 ani_object CreateBoolean(ani_env *env, ani_boolean value);
 ani_string CreateAniString(ani_env *env, const std::string &str);
 ani_object CreateAniStringArray(ani_env *env, const std::vector<std::string>& strs);

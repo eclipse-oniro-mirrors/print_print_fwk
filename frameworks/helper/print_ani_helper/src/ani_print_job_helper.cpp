@@ -49,7 +49,7 @@ PrintJob AniPrintJobHelper::ParsePrintJob(ani_env *env, ani_object jobInfoAni)
     PRINT_HILOGI("enter ParsePrintJob");
     PrintJob jobInfo;
     ParsePrintJobStringField(env, jobInfoAni, jobInfo);
-    ParsePrintJobDoubleField(env, jobInfoAni, jobInfo);
+    ParsePrintJobIntField(env, jobInfoAni, jobInfo);
     ParsePrintJobRefField(env, jobInfoAni, jobInfo);
     return jobInfo;
 }
@@ -70,38 +70,38 @@ void AniPrintJobHelper::ParsePrintJobStringField(ani_env *env, ani_object jobInf
     }
 }
 
-void AniPrintJobHelper::ParsePrintJobDoubleField(ani_env *env, ani_object jobInfoAni, PrintJob& jobInfo)
+void AniPrintJobHelper::ParsePrintJobIntField(ani_env *env, ani_object jobInfoAni, PrintJob& jobInfo)
 {
-    std::vector<ani_double> fdList;
-    if (GetDoubleArrayProperty(env, jobInfoAni, FD_LIST_STR, fdList)) {
+    std::vector<int32_t> fdList;
+    if (GetIntArrayProperty(env, jobInfoAni, FD_LIST_STR, fdList)) {
         std::vector<uint32_t> fdUintList;
         for (const auto &fd : fdList) {
             fdUintList.push_back(static_cast<uint32_t>(fd));
         }
         jobInfo.SetFdList(fdUintList);
     }
-    ani_double jobState = 0.0;
-    if (GetDoubleProperty(env, jobInfoAni, JOB_STATE_STR, jobState)) {
+    int32_t jobState = 0;
+    if (GetIntProperty(env, jobInfoAni, JOB_STATE_STR, jobState)) {
         jobInfo.SetJobState(static_cast<uint32_t>(jobState));
     }
-    ani_double jobSubstate = 0.0;
-    if (GetDoubleProperty(env, jobInfoAni, JOB_SUBSTATE_STR, jobSubstate)) {
+    int32_t jobSubstate = 0;
+    if (GetIntProperty(env, jobInfoAni, JOB_SUBSTATE_STR, jobSubstate)) {
         jobInfo.SetSubState(static_cast<uint32_t>(jobSubstate));
     }
-    ani_double copyNumber = 0.0;
-    if (GetDoubleProperty(env, jobInfoAni, COPY_NUMBER_STR, copyNumber)) {
+    int32_t copyNumber = 0;
+    if (GetIntProperty(env, jobInfoAni, COPY_NUMBER_STR, copyNumber)) {
         jobInfo.SetCopyNumber(static_cast<uint32_t>(copyNumber));
     }
     bool isLandscape = false;
     if (GetBoolProperty(env, jobInfoAni, IS_LANDSCAPE_STR, isLandscape)) {
         jobInfo.SetIsLandscape(isLandscape);
     }
-    ani_double colorMode  = false;
-    if (GetDoubleProperty(env, jobInfoAni, COLOR_MODE_STR, colorMode)) {
+    int32_t colorMode  = 0;
+    if (GetIntProperty(env, jobInfoAni, COLOR_MODE_STR, colorMode)) {
         jobInfo.SetColorMode(static_cast<uint32_t>(colorMode));
     }
-    ani_double duplexMode = false;
-    if (GetDoubleProperty(env, jobInfoAni, DUPLEX_MODE_STR, duplexMode)) {
+    int32_t duplexMode = 0;
+    if (GetIntProperty(env, jobInfoAni, DUPLEX_MODE_STR, duplexMode)) {
         jobInfo.SetDuplexMode(static_cast<uint32_t>(duplexMode));
     }
 }
@@ -137,12 +137,12 @@ ani_object AniPrintJobHelper::CreatePrintJob(ani_env *env, const PrintJob& print
     ani_object obj = CreateObject(env, nullptr, CLASS_NAME);
     std::vector<uint32_t> fdList;
     printJob.GetFdList(fdList);
-    SetDoubleArrayProperty(env, obj, FD_LIST_STR, std::vector<double>(fdList.begin(), fdList.end()));
+    SetIntArrayProperty(env, obj, FD_LIST_STR, std::vector<int32_t>(fdList.begin(), fdList.end()));
     SetStringProperty(env, obj, JOB_ID_STR, printJob.GetJobId());
     SetStringProperty(env, obj, PRINTER_ID_STR, printJob.GetPrinterId());
-    SetDoubleProperty(env, obj, JOB_STATE_STR, static_cast<double>(printJob.GetJobState()));
-    SetDoubleProperty(env, obj, JOB_SUBSTATE_STR, static_cast<double>(printJob.GetSubState()));
-    SetDoubleProperty(env, obj, COPY_NUMBER_STR, static_cast<double>(printJob.GetCopyNumber()));
+    SetIntProperty(env, obj, JOB_STATE_STR, static_cast<int32_t>(printJob.GetJobState()));
+    SetIntProperty(env, obj, JOB_SUBSTATE_STR, static_cast<int32_t>(printJob.GetSubState()));
+    SetIntProperty(env, obj, COPY_NUMBER_STR, static_cast<int32_t>(printJob.GetCopyNumber()));
     PrintRange range;
     printJob.GetPageRange(range);
     ani_ref pageRangeRef = AniPrintRangeHelper::CreatePrinterRange(env, range);
@@ -153,8 +153,8 @@ ani_object AniPrintJobHelper::CreatePrintJob(ani_env *env, const PrintJob& print
     ani_ref pageSizeRef = AniPrintPageSizeHelper::CreatePageSize(env, pageSize);
     SetRefProperty(env, obj, PAGE_SIZE_STR, pageSizeRef);
     SetBoolProperty(env, obj, IS_LANDSCAPE_STR, printJob.GetIsLandscape());
-    SetDoubleProperty(env, obj, COLOR_MODE_STR, static_cast<double>(printJob.GetColorMode()));
-    SetDoubleProperty(env, obj, DUPLEX_MODE_STR, static_cast<double>(printJob.GetDuplexMode()));
+    SetIntProperty(env, obj, COLOR_MODE_STR, static_cast<int32_t>(printJob.GetColorMode()));
+    SetIntProperty(env, obj, DUPLEX_MODE_STR, static_cast<int32_t>(printJob.GetDuplexMode()));
     if (printJob.HasMargin()) {
         PrintMargin margin;
         printJob.GetMargin(margin);

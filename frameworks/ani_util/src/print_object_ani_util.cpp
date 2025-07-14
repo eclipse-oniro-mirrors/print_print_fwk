@@ -17,7 +17,7 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-bool GetDoubleArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<double> &res)
+bool GetIntArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<int32_t> &res)
 {
     ani_ref arrayObj = nullptr;
     ani_boolean isUndefined = true;
@@ -44,9 +44,9 @@ bool GetDoubleArrayProperty(ani_env *env, ani_object param, const char *name, st
         return false;
     }
     for (int32_t i = 0; i < static_cast<int32_t>(length); i++) {
-        ani_double value;
-        if ((status = env->Object_CallMethodByName_Double(
-            reinterpret_cast<ani_object>(arrayObj), "doubleValue", nullptr, &value)) != ANI_OK) {
+        ani_int value;
+        if ((status = env->Object_CallMethodByName_Int(
+            reinterpret_cast<ani_object>(arrayObj), "intValue", nullptr, &value)) != ANI_OK) {
             PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
             return false;
         }
@@ -229,7 +229,7 @@ bool GetRefProperty(ani_env *env, ani_object param, const char *name, ani_ref &v
     return true;
 }
 
-bool GetDoubleProperty(ani_env *env, ani_object param, const char *name, double &value)
+bool GetIntProperty(ani_env *env, ani_object param, const char *name, int32_t &value)
 {
     if (env == nullptr) {
         PRINT_HILOGE("null env");
@@ -237,18 +237,15 @@ bool GetDoubleProperty(ani_env *env, ani_object param, const char *name, double 
     }
 
     ani_status status = ANI_ERROR;
-    ani_double res;
-    if ((status = env->Object_GetPropertyByName_Double(param, name, &res)) != ANI_OK) {
+    if ((status = env->Object_GetPropertyByName_Int(param, name, &value)) != ANI_OK) {
         PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }
-    value = static_cast<double>(res);
     return true;
 }
 
-// SET
-bool SetDoubleArrayProperty(ani_env *env, ani_object param, const char *name,
-    const std::vector<double> &values)
+bool SetIntArrayProperty(ani_env *env, ani_object param, const char *name,
+    const std::vector<int32_t> &values)
 {
     if (env == nullptr) {
         PRINT_HILOGE("null env");
@@ -278,7 +275,7 @@ bool SetDoubleArrayProperty(ani_env *env, ani_object param, const char *name,
     }
 
     for (size_t i = 0; i < values.size(); i++) {
-        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ID:V", i, values[i]);
+        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "II:V", i, values[i]);
         if (status != ANI_OK) {
             PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
             return false;
@@ -401,7 +398,7 @@ bool SetRefProperty(ani_env *env, ani_object param, const char *name, ani_ref va
     return true;
 }
 
-bool SetDoubleProperty(ani_env *env, ani_object param, const char *name, double value)
+bool SetIntProperty(ani_env *env, ani_object param, const char *name, int32_t value)
 {
     if (env == nullptr) {
         PRINT_HILOGE("null env");
@@ -409,7 +406,7 @@ bool SetDoubleProperty(ani_env *env, ani_object param, const char *name, double 
     }
 
     ani_status status = ANI_ERROR;
-    if ((status = env->Object_SetPropertyByName_Double(param, name, value)) != ANI_OK) {
+    if ((status = env->Object_SetPropertyByName_Int(param, name, value)) != ANI_OK) {
         PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
     }

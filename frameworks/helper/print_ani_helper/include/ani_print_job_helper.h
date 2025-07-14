@@ -27,7 +27,7 @@ public:
     static ani_object CreatePrintJobArray(ani_env *env, const std::vector<PrintJob>& jobs);
 private:
     static void ParsePrintJobStringField(ani_env *env, ani_object jobInfoAni, PrintJob& jobInfo);
-    static void ParsePrintJobDoubleField(ani_env *env, ani_object jobInfoAni, PrintJob& jobInfo);
+    static void ParsePrintJobIntField(ani_env *env, ani_object jobInfoAni, PrintJob& jobInfo);
     static void ParsePrintJobRefField(ani_env *env, ani_object jobInfoAni, PrintJob& jobInfo);
 };
 }  // namespace OHOS::Print

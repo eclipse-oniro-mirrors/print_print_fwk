@@ -19,8 +19,8 @@ import print from './@ohos.print';
 class ExtensionAbility {}
 
 class PrinterCapabilityImp implements print.PrinterCapability {
-    colorMode: number = 0;
-    duplexMode: number = 0;
+    colorMode: int = 0;
+    duplexMode: int = 0;
     pageSize: Array<print.PrintPageSize> = {};
     resolution?: Array<print.PrintResolution> = {};
     minMargin?: print.PrintMargin = undefined;
@@ -36,15 +36,15 @@ export default class PrintExtensionAbility {
 
     onStopDiscoverPrinter(): void {}
 
-    onConnectPrinter(printerId: number): void {}
+    onConnectPrinter(printerId: int): void {}
 
-    onDisconnectPrinter(printerId: number): void {}
+    onDisconnectPrinter(printerId: int): void {}
 
     onStartPrintJob(jobInfo: print.PrintJob): void {}
 
     onCancelPrintJob(jobInfo: print.PrintJob): void {}
 
-    onRequestPrinterCapability(printerId: number): print.PrinterCapability {
+    onRequestPrinterCapability(printerId: int): print.PrinterCapability {
         return new PrinterCapabilityImp();
     }
 

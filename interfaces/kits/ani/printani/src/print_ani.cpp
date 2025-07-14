@@ -269,7 +269,7 @@ static void RequestPrintPreviewCallbackNative(ani_env *env, ani_object jobInfo, 
     PrintJob job = AniPrintJobHelper::ParsePrintJob(env, jobInfo);
     std::string previewResult;
     int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(job, previewResult);
-    ani_object resultObj = CreateDouble(env, static_cast<ani_double>(ret));
+    ani_object resultObj = CreateInt(env, ret);
     if (ret != E_PRINT_NONE) {
         StsCallback(env, callback, nullptr);
     } else {
@@ -284,7 +284,7 @@ static void RequestPrintPreviewAsyncCallbackNative(ani_env *env, ani_object jobI
     std::string previewResult;
     int32_t ret = PrintManagerClient::GetInstance()->RequestPreview(job, previewResult);
     ani_object stsErrCode = CreateStsError(env, ret);
-    AsyncCallback(env, callback, stsErrCode, CreateDouble(env, static_cast<ani_double>(ret)));
+    AsyncCallback(env, callback, stsErrCode, CreateInt(env, ret));
 }
 
 static void AddPrintersNative(ani_env *env, ani_object printers, ani_object callback)

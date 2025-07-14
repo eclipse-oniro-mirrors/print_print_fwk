@@ -33,8 +33,8 @@ PrintAttributes AniPrintAttributesHelper::ParsePrintAttributes(ani_env *env, ani
 {
     PRINT_HILOGI("enter ParsePrintAttributes");
     PrintAttributes attrs;
-    ani_double copyNumber;
-    if (GetDoubleProperty(env, attributes, COPY_NUMBER_STR, copyNumber)) {
+    int32_t copyNumber;
+    if (GetIntProperty(env, attributes, COPY_NUMBER_STR, copyNumber)) {
         attrs.SetCopyNumber(static_cast<uint32_t>(copyNumber));
     }
     ani_ref pageRangeRef;

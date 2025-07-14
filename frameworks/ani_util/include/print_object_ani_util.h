@@ -20,8 +20,8 @@
 #include <vector>
 namespace OHOS::Print {
     // get property
-    bool GetDoubleProperty(ani_env *env, ani_object param, const char *name, double &value);
-    bool GetDoubleArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<double> &value);
+    bool GetIntProperty(ani_env *env, ani_object param, const char *name, int32_t &value);
+    bool GetIntArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<int32_t> &value);
     bool GetStringProperty(ani_env *env, ani_object param, const char *name, std::string &value);
     bool GetStringArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<std::string> &value);
     bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std::vector<uint32_t> &res);
@@ -31,12 +31,12 @@ namespace OHOS::Print {
     // set property
     bool SetEnumProperty(ani_env *env, ani_object object, const std::string &fieldName, const std::string &signature,
         ani_enum_item item);
-    bool SetDoubleArrayProperty(ani_env *env, ani_object param, const char *name, const std::vector<double> &values);
+    bool SetIntArrayProperty(ani_env *env, ani_object param, const char *name, const std::vector<int32_t> &values);
     bool SetStringProperty(ani_env *env, ani_object param, const char *name, const std::string &value);
     bool SetStringArrayProperty(ani_env *env, ani_object param, const char *name,
         const std::vector<std::string> &values);
     bool SetRefProperty(ani_env *env, ani_object param, const char *name, ani_ref value);
-    bool SetDoubleProperty(ani_env *env, ani_object param, const char *name, double value);
+    bool SetIntProperty(ani_env *env, ani_object param, const char *name, int32_t value);
     bool SetBoolProperty(ani_env *env, ani_object param, const char *name, bool value);
 }  // namespace OHOS::Print
 #endif  // OHOS_PRINT_OBJECT_FIELD_ANI_UTIL_H

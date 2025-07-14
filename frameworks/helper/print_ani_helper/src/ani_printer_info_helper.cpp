@@ -53,8 +53,8 @@ PrinterInfo PrinterInfoAniHelper::ParsePrinterInfo(ani_env *env, ani_ref printer
         GetEnumValueInt(env, static_cast<ani_enum_item>(statusEnum), statusValue)) {
         info.SetPrinterState(statusValue);
     }
-    double printerIcon;
-    if (GetDoubleProperty(env, static_cast<ani_object>(printerInfo), PARAM_INFO_PRINTERICON, printerIcon)) {
+    int32_t printerIcon = 0;
+    if (GetIntProperty(env, static_cast<ani_object>(printerInfo), PARAM_INFO_PRINTERICON, printerIcon)) {
         info.SetPrinterIcon(static_cast<uint32_t>(printerIcon));
     }
     ani_ref capabilityRef;
@@ -148,7 +148,7 @@ ani_object PrinterInfoAniHelper::CreatePrinterInfo(ani_env *env, const PrinterIn
     ani_object obj = CreateObject(env, nullptr, className);
     SetStringProperty(env, obj, PARAM_INFO_PRINTERID, info.GetPrinterId());
     SetStringProperty(env, obj, PARAM_INFO_PRINTERNAME, info.GetPrinterName());
-    SetDoubleProperty(env, obj, PARAM_INFO_PRINTERICON, info.GetPrinterIcon());
+    SetIntProperty(env, obj, PARAM_INFO_PRINTERICON, static_cast<int32_t>(info.GetPrinterIcon()));
     SetStringProperty(env, obj, PARAM_INFO_DESCRIPTION, info.GetDescription());
     SetStringProperty(env, obj, PARAM_INFO_URI, info.GetUri());
     SetStringProperty(env, obj, PARAM_INFO_PRINTER_MAKE, info.GetPrinterMake());
@@ -184,7 +184,7 @@ ani_object PrinterInfoAniHelper::CreatePrinterInformation(ani_env *env, const Pr
 
     SetStringProperty(env, obj, PARAM_INFO_PRINTERNAME, info.GetPrinterName());
 
-    SetDoubleProperty(env, obj, PARAM_INFO_PRINTER_STATUS, static_cast<int32_t>(info.GetPrinterState()));
+    SetIntProperty(env, obj, PARAM_INFO_PRINTER_STATUS, static_cast<int32_t>(info.GetPrinterState()));
 
     SetStringProperty(env, obj, PARAM_INFO_DESCRIPTION, info.GetDescription());
 

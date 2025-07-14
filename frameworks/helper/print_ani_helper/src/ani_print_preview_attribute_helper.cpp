@@ -38,7 +38,7 @@ ani_object AniPrintPreviewAttributeHelper::CreatePreviewAttribute(ani_env *env, 
     SetRefProperty(env, obj, PREVIEW_RANGE_STR, previewRangeRef);
 
     if (preview.HasResult()) {
-        SetDoubleProperty(env, obj, RESULT_STR, static_cast<double>(preview.GetResult()));
+        SetIntProperty(env, obj, RESULT_STR, static_cast<int32_t>(preview.GetResult()));
     }
 
     return obj;
@@ -53,8 +53,8 @@ PrintPreviewAttribute AniPrintPreviewAttributeHelper::ParsePreviewAttribute(ani_
         preview.SetPreviewRange(AniPrintRangeHelper::ParsePrinterRange(env, static_cast<ani_object>(previewRangeRef)));
     }
 
-    ani_double result;
-    if (GetDoubleProperty(env, previewAttribute, RESULT_STR, result)) {
+    int32_t result = 0;
+    if (GetIntProperty(env, previewAttribute, RESULT_STR, result)) {
         preview.SetResult(static_cast<uint32_t>(result));
     }
 

@@ -69,7 +69,7 @@ ani_object AniPrintExtensionInfoHelper::CreatePrinterExtensionInfoArray(ani_env 
         SetStringProperty(env, infoObj, EXTENSION_ID_STR, infos[i].GetExtensionId());
         SetStringProperty(env, infoObj, VENDOR_ID_STR, infos[i].GetVendorId());
         SetStringProperty(env, infoObj, VENDOR_NAME_STR, infos[i].GetVendorName());
-        SetDoubleProperty(env, infoObj, VENDOR_ICON_STR, infos[i].GetVendorIcon());
+        SetIntProperty(env, infoObj, VENDOR_ICON_STR, infos[i].GetVendorIcon());
         SetStringProperty(env, infoObj, VERSION_STR, infos[i].GetVersion());
         if (ANI_OK != env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", i, infoObj)) {
             PRINT_HILOGE("Set Array Element Failed");

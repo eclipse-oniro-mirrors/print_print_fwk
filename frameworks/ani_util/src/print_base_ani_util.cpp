@@ -17,26 +17,50 @@
 
 namespace OHOS::Print {
 
-ani_object CreateDouble(ani_env *env, ani_double value)
+ani_object CreateInt(ani_env *env, ani_int value)
 {
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    ani_class cls;
+    ani_status status = ANI_ERROR;
+    if ((status = env->FindClass("Lstd/core/Int;", &cls)) != ANI_OK) {
+        PRINT_HILOGE("FindClass status : %{public}d", status);
         return nullptr;
     }
-    const char* classNameDouble = "Lstd/core/Double;";
-    const char* signature = "D:V";
-    return CreateObject(env, signature, classNameDouble);
+    ani_method ctor;
+    if ((status = env->Class_FindMethod(cls, "<ctor>", "I:V", &ctor)) != ANI_OK) {
+        PRINT_HILOGE("Class_FindMethod status : %{public}d", status);
+        return nullptr;
+    }
+    ani_object object;
+    if ((status = env->Object_New(cls, ctor, &object, value)) != ANI_OK) {
+        PRINT_HILOGE("Object_New status : %{public}d", status);
+        return nullptr;
+    }
+    return object;
 }
 
 ani_object CreateBoolean(ani_env *env, ani_boolean value)
 {
     if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+        PRINT_HILOGE("null env");
         return nullptr;
     }
-    const char* classNameBoolean = "Lstd/core/Boolean;";
-    const char* signature = "Z:V";
-    return CreateObject(env, signature, classNameBoolean);
+    ani_status status = ANI_ERROR;
+    ani_class cls = nullptr;
+    if ((status = env->FindClass("Lstd/core/Boolean;", &cls)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d", status);
+        return nullptr;
+    }
+    ani_method ctor = nullptr;
+    if ((status = env->Class_FindMethod(cls, "<ctor>", "Z:V", &ctor)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d", status);
+        return nullptr;
+    }
+    ani_object obj = nullptr;
+    if ((status = env->Object_New(cls, ctor, &obj, value)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d", status);
+        return nullptr;
+    }
+    return obj;
 }
 
 ani_string CreateAniString(ani_env *env, const std::string &str)
