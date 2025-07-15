@@ -21,12 +21,12 @@ ani_object CreateInt(ani_env *env, ani_int value)
 {
     ani_class cls;
     ani_status status = ANI_ERROR;
-    if ((status = env->FindClass("Lstd/core/Int;", &cls)) != ANI_OK) {
+    if ((status = env->FindClass("std.core.Int", &cls)) != ANI_OK) {
         PRINT_HILOGE("FindClass status : %{public}d", status);
         return nullptr;
     }
     ani_method ctor;
-    if ((status = env->Class_FindMethod(cls, "<ctor>", "I:V", &ctor)) != ANI_OK) {
+    if ((status = env->Class_FindMethod(cls, "<ctor>", "i:", &ctor)) != ANI_OK) {
         PRINT_HILOGE("Class_FindMethod status : %{public}d", status);
         return nullptr;
     }
@@ -46,12 +46,12 @@ ani_object CreateBoolean(ani_env *env, ani_boolean value)
     }
     ani_status status = ANI_ERROR;
     ani_class cls = nullptr;
-    if ((status = env->FindClass("Lstd/core/Boolean;", &cls)) != ANI_OK) {
+    if ((status = env->FindClass("std.core.Boolean", &cls)) != ANI_OK) {
         PRINT_HILOGE("status: %{public}d", status);
         return nullptr;
     }
     ani_method ctor = nullptr;
-    if ((status = env->Class_FindMethod(cls, "<ctor>", "Z:V", &ctor)) != ANI_OK) {
+    if ((status = env->Class_FindMethod(cls, "<ctor>", "z:", &ctor)) != ANI_OK) {
         PRINT_HILOGE("status: %{public}d", status);
         return nullptr;
     }
@@ -89,13 +89,13 @@ ani_object CreateAniStringArray(ani_env *env, const std::vector<std::string>& st
     ani_method arrayCtor;
     ani_string aniStr = nullptr;
     ani_status status = ANI_ERROR;
-    constexpr const char *classArray = "Lescompat/Array;";
+    constexpr const char *classArray = "escompat.Array";
     status = env->FindClass(classArray, &arrayCls);
     if (status != ANI_OK) {
         PRINT_HILOGE("status : %{public}d", status);
         return nullptr;
     }
-    status = env->Class_FindMethod(arrayCls, "<ctor>", "I:V", &arrayCtor);
+    status = env->Class_FindMethod(arrayCls, "<ctor>", "i:", &arrayCtor);
     if (status != ANI_OK) {
         PRINT_HILOGE("status : %{public}d", status);
         return nullptr;
@@ -116,7 +116,7 @@ ani_object CreateAniStringArray(ani_env *env, const std::vector<std::string>& st
             PRINT_HILOGE("status : %{public}d", status);
             return nullptr;
         }
-        constexpr const char *SET_OBJECT_VOID_SIGNATURE = "ILstd/core/Object;:V";
+        constexpr const char *SET_OBJECT_VOID_SIGNATURE = "iC{std.core.Object}:";
         status = env->Object_CallMethodByName_Void(arrayObj, "$_set", SET_OBJECT_VOID_SIGNATURE, i, aniStr);
         if (status != ANI_OK) {
             PRINT_HILOGE("status : %{public}d", status);
@@ -154,13 +154,13 @@ ani_object CreateEnumArray(ani_env *env, const std::string &enumDescriptor, std:
         return nullptr;
     }
     ani_class arrayCls = nullptr;
-    ani_status status = env->FindClass("Lescompat/Array;", &arrayCls);
+    ani_status status = env->FindClass("escompat.Array", &arrayCls);
     if (status != ANI_OK) {
         PRINT_HILOGE("[ANI] find class fail");
         return nullptr;
     }
     ani_method arrayCtor = nullptr;
-    status = env->Class_FindMethod(arrayCls, "<ctor>", "I:V", &arrayCtor);
+    status = env->Class_FindMethod(arrayCls, "<ctor>", "i:", &arrayCtor);
     if (status != ANI_OK) {
         PRINT_HILOGE("[ANI] Class_FindMethod Failed");
         return nullptr;
@@ -175,7 +175,7 @@ ani_object CreateEnumArray(ani_env *env, const std::string &enumDescriptor, std:
 
     for (size_t i = 0; i < enumIndexArray.size(); i++) {
         ani_enum_item item = CreateEnumByIndex(env, enumDescriptor, enumIndexArray[i]);
-        if (ANI_OK != env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", i, item)) {
+        if (ANI_OK != env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, item)) {
             PRINT_HILOGE("Set Array item Failed");
             return nullptr;
         }

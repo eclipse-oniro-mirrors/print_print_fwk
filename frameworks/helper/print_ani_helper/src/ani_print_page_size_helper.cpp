@@ -24,7 +24,7 @@ const char* ID_STR = "id";
 const char* NAME_STR = "name";
 const char* WIDTH_STR = "width";
 const char* HEIGHT_STR = "height";
-const char *CLASS_NAME = "L@ohos/print/print/PrintPageSizeImp;";
+const char *CLASS_NAME = "@ohos.print.print.PrintPageSizeImp";
 }
 
 namespace OHOS::Print {

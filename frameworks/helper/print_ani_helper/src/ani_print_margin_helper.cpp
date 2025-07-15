@@ -53,7 +53,7 @@ PrintMargin AniPrintMarginHelper::ParsePrintMargin(ani_env *env, ani_object marg
 ani_object AniPrintMarginHelper::CreatePrintMargin(ani_env *env, const PrintMargin& margin)
 {
     PRINT_HILOGI("enter CreatePrintMargin");
-    static const char *className = "L@ohos/print/print/PrintMarginImp;";
+    static const char *className = "@ohos.print.print.PrintMarginImp";
 
     ani_object obj = CreateObject(env, nullptr, className);
     if (margin.HasTop()) {

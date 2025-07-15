@@ -25,19 +25,19 @@ const char* VENDOR_ID_STR = "vendorId";
 const char* VENDOR_NAME_STR = "vendorName";
 const char* VENDOR_ICON_STR = "vendorIcon";
 const char* VERSION_STR = "version";
-const char *CLASS_NAME = "L@ohos/print/print/PrinterExtensionInfoImpl;";
+const char *CLASS_NAME = "@ohos.print.print.PrinterExtensionInfoImpl";
 
 ani_object AniPrintExtensionInfoHelper::CreatePrinterExtensionInfoArray(ani_env *env,
     const std::vector<PrintExtensionInfo>& infos)
 {
     ani_class arrayCls = nullptr;
-    ani_status status = env->FindClass("Lescompat/Array;", &arrayCls);
+    ani_status status = env->FindClass("escompat.Array", &arrayCls);
     if (status != ANI_OK) {
         PRINT_HILOGE("[ANI] find class fail");
         return nullptr;
     }
     ani_method arrayCtor;
-    status = env->Class_FindMethod(arrayCls, "<ctor>", "I:V", &arrayCtor);
+    status = env->Class_FindMethod(arrayCls, "<ctor>", "i:", &arrayCtor);
     if (status != ANI_OK) {
         PRINT_HILOGE("[ANI] Class_FindMethod Failed");
         return nullptr;
@@ -71,7 +71,7 @@ ani_object AniPrintExtensionInfoHelper::CreatePrinterExtensionInfoArray(ani_env 
         SetStringProperty(env, infoObj, VENDOR_NAME_STR, infos[i].GetVendorName());
         SetIntProperty(env, infoObj, VENDOR_ICON_STR, infos[i].GetVendorIcon());
         SetStringProperty(env, infoObj, VERSION_STR, infos[i].GetVersion());
-        if (ANI_OK != env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", i, infoObj)) {
+        if (ANI_OK != env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, infoObj)) {
             PRINT_HILOGE("Set Array Element Failed");
             return arrayObj;
         }

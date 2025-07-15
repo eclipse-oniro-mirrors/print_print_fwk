@@ -44,7 +44,7 @@ ani_object WrapStsError(ani_env *env, const std::string &msg)
         PRINT_HILOGE("FindClass failed %{public}d", static_cast<int32_t>(status));
         return nullptr;
     }
-    if ((status = env->Class_FindMethod(cls, "<ctor>", "Lstd/core/String;Lescompat/ErrorOptions;:V", &method)) !=
+    if ((status = env->Class_FindMethod(cls, "<ctor>", "C{std.core.String}C{escompat.ErrorOptions}:", &method)) !=
         ANI_OK) {
         PRINT_HILOGE("Class_FindMethod failed %{public}d", static_cast<int32_t>(status));
         return nullptr;
@@ -64,7 +64,7 @@ bool AsyncCallback(ani_env *env, ani_object call, ani_object stsErrCode, ani_obj
 {
     ani_status status = ANI_ERROR;
     ani_class clsCall {};
-    if ((status = env->FindClass("L@ohos/print/AsyncCallbackWrapper;", &clsCall)) != ANI_OK) {
+    if ((status = env->FindClass("@ohos.print.AsyncCallbackWrapper", &clsCall)) != ANI_OK) {
         PRINT_HILOGE("FindClass fail, status: %{public}d", status);
         return false;
     }
@@ -90,7 +90,7 @@ bool StsCallback(ani_env *env, ani_object call, ani_object retObj)
 {
     ani_status status = ANI_ERROR;
     ani_class clsCall {};
-    if ((status = env->FindClass("L@ohos/print/CallbackWrapper;", &clsCall)) != ANI_OK) {
+    if ((status = env->FindClass("@ohos.print.CallbackWrapper", &clsCall)) != ANI_OK) {
         PRINT_HILOGE("FindClass fail, status: %{public}d", status);
         return false;
     }
@@ -116,7 +116,7 @@ bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_obj
 {
     ani_status status = ANI_ERROR;
     ani_class clsCall {};
-    if ((status = env->FindClass("L@ohos/print/AsyncCallbackArrayWrapper;", &clsCall)) != ANI_OK) {
+    if ((status = env->FindClass("@ohos.print.AsyncCallbackArrayWrapper", &clsCall)) != ANI_OK) {
         PRINT_HILOGE("FindClass fail, status: %{public}d", status);
         return false;
     }
@@ -148,11 +148,11 @@ ani_object CreateStsError(ani_env *env, ani_int code)
         PRINT_HILOGE("null env");
         return nullptr;
     }
-    if ((status = env->FindClass("L@ohos/base/BusinessError;", &cls)) != ANI_OK) {
+    if ((status = env->FindClass("@ohos.base.BusinessError", &cls)) != ANI_OK) {
         PRINT_HILOGE("FindClass failed %{public}d", static_cast<int32_t>(status));
         return nullptr;
     }
-    if ((status = env->Class_FindMethod(cls, "<ctor>", "DLescompat/Error;:V", &method)) != ANI_OK) {
+    if ((status = env->Class_FindMethod(cls, "<ctor>", "dC{escompat.Error}:", &method)) != ANI_OK) {
         PRINT_HILOGE("Class_FindMethod failed %{public}d", static_cast<int32_t>(status));
         return nullptr;
     }

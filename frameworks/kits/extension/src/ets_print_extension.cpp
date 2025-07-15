@@ -108,7 +108,7 @@ void StsPrintExtension::OnStart(const AAFwk::Want &want)
         return;
     }
     const char *signature =
-        "L@ohos/app/ability/Want/Want;:V";
+        "C{@ohos.app.ability.Want.Want}:";
     CallObjectMethod(false, "onCreate", signature, nullptr);
     PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
     RegisterCb();
@@ -220,11 +220,11 @@ ani_object StsPrintExtension::CreateStsPrintExtensionContext(ani_env *env,
     ani_status status = ANI_ERROR;
     ani_method method = nullptr;
     ani_object contextObj = nullptr;
-    if ((env->FindClass("LPrintExtensionContext/PrintExtensionContext;", &cls)) != ANI_OK) {
+    if ((env->FindClass("C{PrintExtensionContext.PrintExtensionContext}", &cls)) != ANI_OK) {
         PRINT_HILOGE("status: %{public}d", status);
         return nullptr;
     }
-    if ((status = env->Class_FindMethod(cls, "<ctor>", ":V", &method)) != ANI_OK) {
+    if ((status = env->Class_FindMethod(cls, "<ctor>", ":", &method)) != ANI_OK) {
         PRINT_HILOGE("status: %{public}d", status);
         return nullptr;
     }
@@ -313,7 +313,7 @@ bool StsPrintExtension::Callback(const std::string &funcName, const std::string 
     }
     
     ani_string stsPrinterId = CreateAniString(env, printerId);
-    return CallObjectMethod(false, funcName.c_str(), "L@ohos/lang/String;:V", stsPrinterId);
+    return CallObjectMethod(false, funcName.c_str(), "C{@ohos.lang.String}:", stsPrinterId);
 }
 
 bool StsPrintExtension::Callback(const std::string &funcName, const Print::PrintJob &job)
@@ -331,7 +331,7 @@ bool StsPrintExtension::Callback(const std::string &funcName, const Print::Print
     }
     
     ani_object stsJob = AniPrintJobHelper::CreatePrintJob(env, job);
-    return CallObjectMethod(false, funcName.c_str(), "L@ohos/print/PrintJob;:V", stsJob);
+    return CallObjectMethod(false, funcName.c_str(), "C{@ohos.print.PrintJob}:", stsJob);
 }
 
 void StsPrintExtension::RegisterCb()
