@@ -76,14 +76,6 @@ bool PrintCallbackStub::HandlePrintJobEvent(MessageParcel &data, MessageParcel &
     uint32_t state = data.ReadUint32();
     auto info = PrintJob::Unmarshalling(data);
     bool result = false;
-    // close useless fd
-    std::vector<uint32_t> fdList;
-    info->GetFdList(fdList);
-    for (uint32_t fd : fdList) {
-        if (static_cast<int32_t>(fd) >= 0) { close(fd); }
-    }
-    fdList.clear();
-    info->SetFdList(fdList);
     if (info != nullptr) {
         result = OnCallback(state, *info);
         reply.WriteBool(result);

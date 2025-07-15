@@ -484,7 +484,7 @@ bool PrintUserData::FlushCacheFileToUserData(const std::string &jobId)
         return false;
     }
     std::vector<uint32_t> fdList;
-    printJob.GetFdList(fdList);
+    printJob.DupFdList(fdList);
     if (fdList.empty()) {
         PRINT_HILOGE("fdList is empty, nothing to do");
         return false;
@@ -492,17 +492,21 @@ bool PrintUserData::FlushCacheFileToUserData(const std::string &jobId)
     int32_t index = 1;
     bool ret = true;
     for (uint32_t fd : fdList) {
-        if (!ret) { close(fd); } // close the remaining fd
+        if (!ret) {
+            close(fd); // close the remaining fd
+        }
         ret = FlushCacheFile(fd, printJob.GetJobId(), index);
         index++;
     }
-    if (!ret) { DeleteCacheFileFromUserData(jobId); }
+    if (!ret) {
+        DeleteCacheFileFromUserData(jobId);
+    }
     return ret;
 }
 
 bool PrintUserData::FlushCacheFile(uint32_t fd, const std::string jobId, int32_t index)
 {
-    if (lseek(fd, 0, SEEK_SET) == -1) {
+    if (lseek(fd, 0, SEEK_SET) != 0) {
         PRINT_HILOGE("Unable to reset fd offset");
         close(fd);
         return false;
@@ -536,6 +540,10 @@ bool PrintUserData::FlushCacheFile(uint32_t fd, const std::string jobId, int32_t
             ret = false;
             break;
         }
+    }
+    if (fseek(srcFile, 0, SEEK_SET) != 0) {
+        PRINT_HILOGE("Error seeking to the beginning of the file");
+        ret = false;
     }
     int srcCloseRet = fclose(srcFile);
     int destCloseRet = fclose(destFile);

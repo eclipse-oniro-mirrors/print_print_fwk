@@ -1779,7 +1779,7 @@ bool PrintCupsClient::GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorPara
     }
     char* result = strstr(monitorParams->job_printer_state_reasons, substateString.c_str());
     if (result != nullptr) {
-        PRINT_HILOGI("match %{public}s reason seccess", substateString.c_str());
+        PRINT_HILOGI("match %{public}s reason success", substateString.c_str());
         monitorParams->substate = GetNewSubstate(monitorParams->substate, jobSubstate);
         substateString.append(PRINTER_STATE_ERROR);
         if (strstr(monitorParams->job_printer_state_reasons, substateString.c_str()) != nullptr) {

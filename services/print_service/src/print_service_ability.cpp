@@ -1557,6 +1557,7 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     auto printerId = printJob->GetPrinterId();
     if (state == PRINT_JOB_COMPLETED) {
         if (jobInQueue) {
+            ClosePrintJobFd(jobIt->second); // Close fd dependency primitive class.
             DeleteCacheFileFromUserData(jobId);
             printerJobMap_[printerId].erase(jobId);
             userData->queuedJobList_.erase(jobId);
@@ -1571,6 +1572,23 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     }
     PRINT_HILOGD("CheckAndSendQueuePrintJob end.");
     return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::ClosePrintJobFd(std::shared_ptr<PrintJob> printJob)
+{
+    if (printJob == nullptr) {
+        PRINT_HILOGE("printJob is nullptr.");
+        return;
+    }
+    std::vector<uint32_t> fdList;
+    printJob->GetFdList(fdList);
+    for (uint32_t fd : fdList) {
+        PRINT_HILOGI("close fd: %{public}d", fd);
+        if (static_cast<int32_t>(fd) < 0 || close(fd) == -1) {
+            PRINT_HILOGW("Invalid fd.");
+        }
+    }
+    printJob->SetFdList(std::vector<uint32_t>());
 }
 
 void PrintServiceAbility::ReportPrinterIdle(const std::string &printerId)
@@ -2223,7 +2241,9 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
             continue;
         }
         if (CheckUserIdInEventType(eventIt.first)) {
-            eventIt.second->OnCallback(jobInfo.GetJobState(), jobInfo);
+            PrintJob callbackJobInfo = jobInfo;
+            callbackJobInfo.SetFdList(std::vector<uint32_t>()); // State callback don't need fd.
+            eventIt.second->OnCallback(jobInfo.GetJobState(), callbackJobInfo);
         }
     }
 
@@ -3415,6 +3435,9 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
         auto cbIter = extCallbackMap_.find(cid);
         if (cbIter == extCallbackMap_.end()) {
             return E_PRINT_SERVER_FAILURE;
+        }
+        if (!FlushCacheFileToUserData(printJob->GetJobId())) {
+            PRINT_HILOGW("Flush cache file failed");
         }
         auto cbFunc = cbIter->second;
         auto callback = [=]() {

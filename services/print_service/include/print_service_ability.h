@@ -191,6 +191,7 @@ private:
     int32_t HandleExtensionConnectPrinter(const std::string &printerId);
     bool CheckUserIdInEventType(const std::string &type);
     void BuildPrinterPreference(PrinterInfo &printerInfo);
+    void ClosePrintJobFd(std::shared_ptr<PrintJob> printJob);
     bool OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList);
     int32_t QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob);
     int32_t QueryHistoryPrintJobById(const std::string &printJobId, PrintJob &printJob);
