@@ -236,6 +236,8 @@ private:
     void UnregisterPrintTaskCallback(const std::string &jobId, const uint32_t state, const uint32_t subState);
     bool DoAddPrinterToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName,
         const std::string &ppdData);
+    bool DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
+        std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData);
     void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo);
     bool DeletePrintJobFromHistoryList(const std::string jobId);
 

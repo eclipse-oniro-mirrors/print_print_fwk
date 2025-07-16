@@ -3181,6 +3181,17 @@ bool PrintServiceAbility::DoAddPrinterToCups(std::shared_ptr<PrinterInfo> printe
     std::string printerUri = printerInfo->GetUri();
     std::string printerName = RenamePrinterWhenAdded(*printerInfo);
 #ifdef CUPS_ENABLE
+    if (!DoAddPrinterToCupsEnable(printerUri, printerName, printerInfo, ppdName, ppdData)) {
+        return false;
+    }
+#endif // CUPS_ENABLE
+    printerInfo->SetPrinterName(printerName);
+    return true;
+}
+
+bool PrintServiceAbility::DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
+    std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData)
+{
     auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
     if (printCupsClient == nullptr) {
         PRINT_HILOGW("printCupsClient is null.");
@@ -3188,15 +3199,20 @@ bool PrintServiceAbility::DoAddPrinterToCups(std::shared_ptr<PrinterInfo> printe
     }
     int32_t ret = E_PRINT_NONE;
     bool needUpdateCapability = false;
+    std::string option = printerInfo->GetOption();
+    Json::Value optionJson;
+    PrintJsonUtil::Parse(option, optionJson);
     if (ppdData.empty()) {
         if (ppdName.empty()) {
             if (!printerInfo->HasCapability() || !printerInfo->HasPrinterMake()) {
                 PRINT_HILOGW("empty capability or invalid printer maker");
                 return false;
             }
+            optionJson["driver"] = "IPPEVERYWHERE";
             ret = printCupsClient->AddPrinterToCups(printerUri, printerName, printerInfo->GetPrinterMake());
         } else {
             needUpdateCapability = true;
+            optionJson["driver"] = "VENDOR";
             ret = printCupsClient->AddPrinterToCupsWithSpecificPpd(printerUri, printerName, ppdName);
         }
     } else {
@@ -3204,8 +3220,10 @@ bool PrintServiceAbility::DoAddPrinterToCups(std::shared_ptr<PrinterInfo> printe
             PRINT_HILOGW("empty capability");
             return false;
         }
+        optionJson["driver"] = "BSUNI";
         ret = printCupsClient->AddPrinterToCupsWithPpd(printerUri, printerName, ppdName, ppdData);
     }
+    printerInfo->SetOption(PrintJsonUtil::WriteString(optionJson));
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGW("AddPrinterToCups error = %{public}d.", ret);
         return false;
@@ -3218,8 +3236,6 @@ bool PrintServiceAbility::DoAddPrinterToCups(std::shared_ptr<PrinterInfo> printe
         }
         printerInfo->SetCapability(printerCaps);
     }
-#endif // CUPS_ENABLE
-    printerInfo->SetPrinterName(printerName);
     return true;
 }
 
