@@ -110,7 +110,7 @@ void GetAdvanceOptionsFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
 
 int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdFilePath)
 {
-    PRINT_HILOGW("QueryPrinterCapabilityFromPPDFile start %{public}s", ppdFilePath.c_str());
+    PRINT_HILOGI("QueryPrinterCapabilityFromPPDFile start %{private}s", ppdFilePath.c_str());
     char *locale = setlocale(LC_ALL, "zh_CN.UTF-8");
     if (locale == nullptr) {
         PRINT_HILOGE("setlocale fail");
