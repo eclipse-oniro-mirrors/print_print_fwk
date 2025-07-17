@@ -49,7 +49,7 @@ export default class PrintExtensionAbility {
     }
 
     onRequestPreview(jobInfo: print.PrintJob): string {
-        return "";
+        return '';
     }
 
     onDestroy(): void {}

@@ -54,7 +54,7 @@ export class AsyncCallbackArrayWrapper<T> {
 }
 
 export default namespace print {
-    loadLibrary("print_ani");
+    loadLibrary('print_ani');
 
     export interface PrinterExtensionInfo {
         extensionId: string;
@@ -118,8 +118,8 @@ export default namespace print {
     }
 
     export class PrintPageSizeImp implements PrintPageSize {
-        id: string = "";
-        name: string = "";
+        id: string = '';
+        name: string = '';
         width: int = 0;
         height: int = 0;
     }
@@ -234,13 +234,13 @@ export default namespace print {
     }
 
     export class PrinterInformationImp implements PrinterInformation {
-        printerId: string = "";
-        printerName: string = "";
+        printerId: string = '';
+        printerName: string = '';
         printerStatus: PrinterStatus = PrinterStatus.PRINTER_BUSY;
         description?: string = undefined;
         capability?: PrinterCapability = undefined;
         uri?: string = undefined;
-        printerMake?: string = "";
+        printerMake?: string = '';
         preferences?: PrinterPreferences = undefined;
         alias?: string = undefined;
         options?: Object = undefined;
@@ -332,8 +332,8 @@ export default namespace print {
 
     export class PrintJobImp implements PrintJob {
         fdList: Array<int> = new Array<int>();
-        jobId: string = "";
-        printerId: string = "";
+        jobId: string = '';
+        printerId: string = '';
         jobState: PrintJobState = PrintJobState.PRINT_JOB_BLOCKED;
         jobSubstate: PrintJobSubState = PrintJobSubState.PRINT_JOB_COMPLETED_SUCCESS;
         copyNumber: int = 0;
@@ -344,8 +344,8 @@ export default namespace print {
         };
         isSequential: boolean = false;
         pageSize: PrintPageSize = {
-            id: "",
-            name: "",
+            id: '',
+            name: '',
             width: 0,
             height: 0
         };
@@ -368,8 +368,8 @@ export default namespace print {
     }
 
     class PrinterInfoImpl implements PrinterInfo {
-        printerId: string = "";
-        printerName: string = "";
+        printerId: string = '';
+        printerName: string = '';
         printerState: PrinterState = PrinterState.PRINTER_ADDED;
         printerIcon?: int = undefined;
         description?: string = undefined;
