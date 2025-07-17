@@ -484,36 +484,29 @@ bool PrintUserData::FlushCacheFileToUserData(const std::string &jobId)
         return false;
     }
     std::vector<uint32_t> fdList;
-    printJob.DupFdList(fdList);
-    if (fdList.empty()) {
-        PRINT_HILOGE("fdList is empty, nothing to do");
-        return false;
-    }
-    int32_t index = 1;
-    bool ret = true;
-    for (uint32_t fd : fdList) {
-        if (!ret) {
-            close(fd); // close the remaining fd
+    printJob.GetFdList(fdList);
+    PRINT_HILOGI("fdList size: %{public}d", fdList.size());
+    bool ret = false;
+    for (uint32_t i = 0; i < fdList.size(); i++) {
+        int32_t srcFd = dup(static_cast<int32_t>(fdList[i]));
+        ret = srcFd >= 0;
+        if (ret) {
+            ret = FlushCacheFile(srcFd, printJob.GetJobId(), i);
+            close(srcFd);
         }
-        ret = FlushCacheFile(fd, printJob.GetJobId(), index);
-        index++;
-    }
-    if (!ret) {
-        DeleteCacheFileFromUserData(jobId);
+        if (!ret) {
+            PRINT_HILOGE("flush cache file failed, fd: %{public}d.", srcFd);
+            DeleteCacheFileFromUserData(jobId);
+            break;
+        }
     }
     return ret;
 }
 
-bool PrintUserData::FlushCacheFile(uint32_t fd, const std::string jobId, int32_t index)
+bool PrintUserData::FlushCacheFile(int32_t fd, const std::string jobId, uint32_t index)
 {
     if (lseek(fd, 0, SEEK_SET) != 0) {
-        PRINT_HILOGE("Unable to reset fd offset");
-        close(fd);
-        return false;
-    }
-    FILE *srcFile = fdopen(fd, "rb");
-    if (srcFile == nullptr) {
-        close(fd);
+        PRINT_HILOGE("Error seeking to the beginning of the file");
         return false;
     }
     char cachePath[PATH_MAX] = { 0 };
@@ -523,34 +516,34 @@ bool PrintUserData::FlushCacheFile(uint32_t fd, const std::string jobId, int32_t
         return false;
     }
     cacheDir = cachePath;
-    std::ostringstream destFileStream;
-    destFileStream << cacheDir << "/" << jobId << "_" << std::setw(FD_INDEX_LEN) << std::setfill('0') << index;
-    std::string destFilePath = destFileStream.str();
-    FILE *destFile = fopen(destFilePath.c_str(), "wb");
-    if (destFile == nullptr) {
-        fclose(srcFile);
+    std::ostringstream cacheFileStream;
+    cacheFileStream << cacheDir << "/" << jobId << "_" << std::setw(FD_INDEX_LEN) << std::setfill('0') << index;
+    std::string cacheFilePath = cacheFileStream.str();
+    int32_t cacheFileFd = open(cacheFilePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 644);
+    if (cacheFileFd == -1) {
+        PRINT_HILOGE("Open file failed");
         return false;
     }
 
     char buffer[DEFAULT_BUFFER_SIZE_4K] = { 0 };
-    size_t bytesRead = 0;
+    ssize_t bytesRead = -1;
     bool ret = true;
-    while ((bytesRead = fread(buffer, 1, sizeof(buffer), srcFile)) > 0) {
-        if (fwrite(buffer, 1, bytesRead, destFile) < bytesRead) {
+    while ((bytesRead = read(fd, buffer, sizeof(buffer))) > 0) {
+        if (write(cacheFileFd, buffer, bytesRead) < bytesRead) {
             ret = false;
+            PRINT_HILOGE("write file failed");
             break;
         }
     }
-    if (fseek(srcFile, 0, SEEK_SET) != 0) {
+    if (bytesRead == -1) {
+        PRINT_HILOGE("read file failed");
+        ret = false;
+    }
+    if (lseek(fd, 0, SEEK_SET) != 0) {
         PRINT_HILOGE("Error seeking to the beginning of the file");
         ret = false;
     }
-    int srcCloseRet = fclose(srcFile);
-    int destCloseRet = fclose(destFile);
-    if (srcCloseRet != 0 || destCloseRet != 0) {
-        PRINT_HILOGE("File Operation Failure.");
-        ret = false;
-    };
+    close(cacheFileFd);
     return ret;
 }
 
