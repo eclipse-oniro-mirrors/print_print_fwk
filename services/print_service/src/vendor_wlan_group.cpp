@@ -419,8 +419,12 @@ bool VendorWlanGroup::OnPrinterStatusChanged(const std::string &vendorName, cons
         PRINT_HILOGE("VendorManager is null.");
         return false;
     }
+    parentVendorManager->OnPrinterStatusChanged(GetVendorName(), printerId, status);
     std::string groupPrinterId = GetGroupPrinterId(printerId);
-    return parentVendorManager->OnPrinterStatusChanged(GetVendorName(), groupPrinterId, status);
+    if (groupPrinterId != printerId) {
+        parentVendorManager->OnPrinterStatusChanged(GetVendorName(), groupPrinterId, status);
+    }
+    return true;
 }
 
 bool VendorWlanGroup::OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo)

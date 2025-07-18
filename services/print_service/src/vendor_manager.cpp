@@ -315,6 +315,12 @@ int32_t VendorManager::AddPrinterToCupsWithPpd(const std::string &vendorName, co
     }
     auto targetVendorName = IsWlanGroupDriver(ExtractPrinterId(printerId)) ? VENDOR_WLAN_GROUP : vendorName;
     std::string globalVendorName = GetGlobalVendorName(targetVendorName);
+    std::string globalPrinterId = GetGlobalPrinterId(globalVendorName, printerId);
+    if (GetConnectingMethod(globalPrinterId) == IP_AUTO &&
+        printServiceAbility->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData)) {
+        PRINT_HILOGI("AddIpPrinterToCupsWithPpd succeed");
+        return EXTENSION_ERROR_NONE;
+    }
     if (!printServiceAbility->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData)) {
         PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
         return EXTENSION_ERROR_CALLBACK_FAIL;
@@ -367,12 +373,7 @@ bool VendorManager::OnPrinterPpdQueried(const std::string &vendorName, const std
         PRINT_HILOGW("not connecting");
         return false;
     }
-    if (GetConnectingMethod(globalPrinterId) == IP_AUTO &&
-        printServiceAbility->AddIpPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData)) {
-        PRINT_HILOGI("AddIpPrinterToCupsWithPpd succeed");
-        return true;
-    }
-    if (!printServiceAbility->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData)) {
+    if (AddPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData) != EXTENSION_ERROR_NONE) {
         PRINT_HILOGW("AddPrinterToCupsWithPpd fail");
         return false;
     }
