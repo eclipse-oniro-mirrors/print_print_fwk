@@ -354,7 +354,7 @@ HWTEST_F(VendorManagerTest, DiscoverBackendPrinters_ShouldSuccess, TestSize.Leve
     VendorManager vendorManager;
     EXPECT_TRUE(vendorManager.Init(mock, false));
     std::vector<PrinterInfo> printers;
-    EXPECT_CALL(*mock, DiscoverBackendPrinters(_, _)).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(*mock, DiscoverBackendPrinters(_)).WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_EQ(vendorManager.DiscoverBackendPrinters(VENDOR_PPD_DRIVER, printers), EXTENSION_ERROR_NONE);
 }
 
