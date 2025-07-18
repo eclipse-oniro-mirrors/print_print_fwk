@@ -62,6 +62,7 @@ const uint32_t UNLOAD_SA_INTERVAL = 90000;
 const uint32_t QUERY_CUPS_ALIVE_INTERVAL = 10;
 const uint32_t QUERY_CUPS_ALIVE_MAX_RETRY_TIMES = 50;
 const uint32_t ENTER_LOW_POWER_INTERVAL = 90000;
+const uint32_t UNREGISTER_TASK_CALLBACK_INTERVAL = 5000;
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -3595,7 +3596,11 @@ bool PrintServiceAbility::CheckUserIdInEventType(const std::string &type)
 void PrintServiceAbility::UnregisterPrintTaskCallback(const std::string &jobId, const uint32_t state,
     const uint32_t subState)
 {
-    if (subState == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED || state == PRINT_JOB_COMPLETED) {
+    if (subState != PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED && state != PRINT_JOB_COMPLETED) {
+        PRINT_HILOGW("The job is not completed.");
+        return;
+    }
+    auto unregisterTask = [this, jobId]() {
         for (auto event : PRINT_TASK_EVENT_LIST) {
             int32_t ret = Off(jobId, event);
             if (ret != E_PRINT_NONE) {
@@ -3604,7 +3609,8 @@ void PrintServiceAbility::UnregisterPrintTaskCallback(const std::string &jobId, 
                     ret, jobId.c_str(), event.c_str());
             }
         }
-    }
+    };
+    serviceHandler_->PostTask(unregisterTask, UNREGISTER_TASK_CALLBACK_INTERVAL);
 }
 
 void PrintServiceAbility::BuildPrinterPreference(PrinterInfo &printerInfo)
