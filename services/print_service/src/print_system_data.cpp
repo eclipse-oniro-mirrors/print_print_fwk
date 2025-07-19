@@ -283,8 +283,9 @@ bool PrintSystemData::ParsePreviousPreferencesSetting(Json::Value &settingJson, 
     return updatePreferences;
 }
 
-void PrintSystemData::InsertAddedPrinter(const std::string &printerId, const PrinterInfo &printerInfo)
+void PrintSystemData::InsertAddedPrinter(const std::string &printerId, PrinterInfo &printerInfo)
 {
+    printerInfo.SetIsLastUsedPrinter(false);
     auto info = GetAddedPrinterMap().Find(printerId);
     if (info == nullptr) {
         PRINT_HILOGI("insert new printer");

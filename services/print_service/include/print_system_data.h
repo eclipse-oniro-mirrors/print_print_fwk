@@ -34,7 +34,7 @@ namespace Print {
 class PrintSystemData {
 public:
     bool Init();
-    void InsertAddedPrinter(const std::string &printerId, const PrinterInfo &printerInfo);
+    void InsertAddedPrinter(const std::string &printerId, PrinterInfo &printerInfo);
     void SavePrinterFile(const std::string &printerId);
     std::string QueryPrinterIdByStandardizeName(const std::string &printerName);
     bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
