@@ -187,13 +187,13 @@ void PrinterInfo::SetOption(const std::string &option)
 void PrinterInfo::SetIsDefaultPrinter(bool isDefaultPrinter)
 {
     hasIsDefaultPrinter_ = true;
-    isDefaultPrinter_ = true;
+    isDefaultPrinter_ = isDefaultPrinter;
 }
 
 void PrinterInfo::SetIsLastUsedPrinter(bool isLastUsedPrinter)
 {
     hasIsLastUsedPrinter_ = true;
-    isLastUsedPrinter_ = true;
+    isLastUsedPrinter_ = isLastUsedPrinter;
 }
 
 void PrinterInfo::SetPrinterStatus(uint32_t printerStatus)
