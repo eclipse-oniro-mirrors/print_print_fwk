@@ -3269,7 +3269,6 @@ void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> prin
     auto globalPrinterId = printerInfo->GetPrinterId();
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
-    printerInfo->SetIsLastUsedPrinter(true);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     if (printSystemData_.IsPrinterAdded(globalPrinterId)) {
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
@@ -3352,7 +3351,6 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     }
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
-    printerInfo->SetIsLastUsedPrinter(true);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     BuildPrinterPreference(*printerInfo);
     printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
