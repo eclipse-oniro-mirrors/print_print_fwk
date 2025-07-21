@@ -520,7 +520,7 @@ void PrinterPreferences::ConvertJsonToPrinterPreferences(Json::Value &preference
 
     if (PrintJsonUtil::IsMember(preferencesJson, "defaultColorMode") &&
         preferencesJson["defaultColorMode"].isInt()) {
-        SetDefaultOrientation(preferencesJson["defaultColorMode"].asInt());
+        SetDefaultColorMode(preferencesJson["defaultColorMode"].asInt());
     }
 
     if (PrintJsonUtil::IsMember(preferencesJson, "options") && preferencesJson["options"].isObject()) {
