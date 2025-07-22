@@ -847,7 +847,7 @@ bool PrintUserData::ParseJsonObjectToPrintJob(
         printHistoryJob->SetJobState(printJobInfoJson["jobState"].asInt());
     }
     if (PrintJsonUtil::IsMember(printJobInfoJson, "subState") && printJobInfoJson["subState"].isInt()) {
-        printHistoryJob->SetJobState(printJobInfoJson["subState"].asInt());
+        printHistoryJob->SetSubState(printJobInfoJson["subState"].asInt());
     }
     if (PrintJsonUtil::IsMember(printJobInfoJson, "copyNumber") && printJobInfoJson["copyNumber"].isInt()) {
         printHistoryJob->SetCopyNumber(printJobInfoJson["copyNumber"].asInt());
