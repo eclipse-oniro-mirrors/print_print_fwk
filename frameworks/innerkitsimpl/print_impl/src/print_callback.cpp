@@ -99,6 +99,7 @@ static bool InitUvWorkCallbackEnv(uv_work_t *work, napi_handle_scope &scope)
     napi_open_handle_scope(cbParam->env, &scope);
     if (scope == nullptr) {
         PRINT_HILOGE("fail to open scope");
+        close(cbParam->fd);
         delete cbParam;
         cbParam = nullptr;
         delete work;
@@ -283,7 +284,9 @@ static void PrintAdapterAfterCallFun(uv_work_t *work, int status)
                 callbackValues, &callbackResult);
             PRINT_HILOGI("OnCallback end run PrintAdapterAfterCallFun success");
         }
-        napi_close_handle_scope(cbParam->env, scope);
+        if (napi_close_handle_scope(cbParam->env, scope) != napi_ok) {
+            close(cbParam->fd);
+        }
         delete cbParam;
         cbParam = nullptr;
     }
