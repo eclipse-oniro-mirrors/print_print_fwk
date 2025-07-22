@@ -16,8 +16,6 @@
       "SystemCapability.Print.PrintFramework"
     ],
     "features": [
-      "print_fwk_feature_bsuni_driver",
-      "print_fwk_feature_bsuni_ghostscript",
       "print_fwk_feature_enterprise"
     ],
     "adapted_system_type": [
