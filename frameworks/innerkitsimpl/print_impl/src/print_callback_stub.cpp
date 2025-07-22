@@ -102,10 +102,15 @@ bool PrintCallbackStub::HandlePrintAdapterJobEvent(MessageParcel &data, MessageP
         PRINT_HILOGE("invalid print attributes object");
         return false;
     }
-    uint32_t fd = static_cast<uint32_t>(data.ReadFileDescriptor());
-
-    PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobEvent jobId:%{public}s, fd:%{public}d", jobId.c_str(), fd);
-    bool result = OnCallbackAdapterLayout(jobId, *oldAttrs, *newAttrs, fd);
+    int32_t fd = data.ReadFileDescriptor();
+    bool result = false;
+    if (fd >= 0) {
+        PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobEvent jobId:%{public}s, fd:%{public}d", jobId.c_str(), fd);
+        result = OnCallbackAdapterLayout(jobId, *oldAttrs, *newAttrs, static_cast<uint32_t>(fd));
+        if (!result) {
+            close(fd);
+        }
+    }
     reply.WriteBool(result);
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobEvent end");
     return true;

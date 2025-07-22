@@ -39,7 +39,7 @@ struct CallbackParam {
     std::string jobId;
     PrintAttributes oldAttrs;
     PrintAttributes newAttrs;
-    uint32_t fd;
+    uint32_t fd = 0;
 };
 
 struct Param {

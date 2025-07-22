@@ -754,9 +754,10 @@ bool PrintServiceStub::OnStartGetPrintFile(MessageParcel &data, MessageParcel &r
     int32_t ret = E_PRINT_RPC_FAILURE;
     std::string jobId = data.ReadString();
     auto attrs = PrintAttributes::Unmarshalling(data);
-    uint32_t fd = static_cast<uint32_t>(data.ReadFileDescriptor());
-    if (attrs != nullptr) {
-        ret = StartGetPrintFile(jobId, *attrs, fd);
+    int32_t fd = data.ReadFileDescriptor();
+    if (fd >= 0 && attrs != nullptr) {
+        ret = StartGetPrintFile(jobId, *attrs, static_cast<uint32_t>(fd));
+        close(fd);
     }
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnStartGetPrintFile out");

@@ -233,6 +233,9 @@ bool ScanServiceStub::OnGetSingleFrameFD(MessageParcel &data, MessageParcel &rep
     if (ret == E_SCAN_NONE) {
         reply.WriteInt32(frameSize);
     }
+    if (fd >= 0) {
+        close(fd);
+    }
     SCAN_HILOGD("ScanServiceStub::OnGetSingleFrameFD end");
     return ret == E_SCAN_NONE;
 }
