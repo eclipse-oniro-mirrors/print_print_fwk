@@ -144,7 +144,7 @@ ani_object PrinterInfoAniHelper::CreatePrinterInfo(ani_env *env, const PrinterIn
 {
     PRINT_HILOGI("enter CreatePrinterInfo");
 
-    static const char *className = "L@ohos/print/print/PrinterInfoImpl;";
+    static const char *className = "@ohos.print.print.PrinterInfoImpl";
     ani_object obj = CreateObject(env, nullptr, className);
     SetStringProperty(env, obj, PARAM_INFO_PRINTERID, info.GetPrinterId());
     SetStringProperty(env, obj, PARAM_INFO_PRINTERNAME, info.GetPrinterName());
@@ -156,10 +156,10 @@ ani_object PrinterInfoAniHelper::CreatePrinterInfo(ani_env *env, const PrinterIn
     SetStringProperty(env, obj, PARAM_JOB_OPTION, info.GetOption());
     SetBoolProperty(env, obj, PARAM_INFO_IS_DAFAULT_PRINTER, info.GetIsDefaultPrinter());
     SetBoolProperty(env, obj, PARAM_INFO_IS_LAST_USED_PRINTER, info.GetIsLastUsedPrinter());
-    ani_enum_item printerStateEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrinterState;",
+    ani_enum_item printerStateEnum = CreateEnumByIndex(env, "@ohos.print.print.PrinterState",
         static_cast<int32_t>(info.GetPrinterState()));
     SetRefProperty(env, obj, PARAM_INFO_PRINTERSTATE, static_cast<ani_ref>(printerStateEnum));
-    ani_enum_item printerStatusEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrinterStatus;",
+    ani_enum_item printerStatusEnum = CreateEnumByIndex(env, "@ohos.print.print.PrinterStatus",
         static_cast<int32_t>(info.GetPrinterStatus()));
     SetRefProperty(env, obj, PARAM_INFO_PRINTER_STATUS, static_cast<ani_ref>(printerStatusEnum));
     PrinterCapability cap;
@@ -177,7 +177,7 @@ ani_object PrinterInfoAniHelper::CreatePrinterInformation(ani_env *env, const Pr
 {
     PRINT_HILOGI("enter CreatePrinterInformation");
 
-    static const char *className = "L@ohos/print/print/PrinterInformationImp;";
+    static const char *className = "C{@ohos.print.print.PrinterInformationImp}";
     ani_object obj = CreateObject(env, nullptr, className);
 
     SetStringProperty(env, obj, PARAM_INFO_PRINTERID, info.GetPrinterId());

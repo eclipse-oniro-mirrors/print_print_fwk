@@ -26,7 +26,7 @@ ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, AniPrintTask* nativ
         return nullptr;
     }
 
-    static const char *className = "L@ohos/print/print/PrintTaskImpl;";
+    static const char *className = "@ohos.print.print.PrintTaskImpl";
     ani_class cls;
     if (ANI_OK != env->FindClass(className, &cls)) {
         PRINT_HILOGE("[ANI] Not found className");
@@ -34,7 +34,7 @@ ani_object AniPrintTaskHelper::CreatePrintTask(ani_env *env, AniPrintTask* nativ
     }
 
     ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "J:V", &ctor)) {
+    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "l:", &ctor)) {
         PRINT_HILOGE("[ANI] Not found ctor");
         return nullptr;
     }

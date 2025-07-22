@@ -32,7 +32,7 @@ static constexpr const char *PARAM_CAPABILITY_SUPPORTED_DUPLEXMODES = "supported
 static constexpr const char *PARAM_CAPABILITY_SUPPORTED_MEDIA_TYPES = "supportedMediaTypes";
 static constexpr const char *PARAM_CAPABILITY_SUPPORTED_QUALITIES = "supportedQualities";
 static constexpr const char *PARAM_CAPABILITY_SUPPORTED_ORIENTATIONS = "supportedOrientations";
-static constexpr const char *CLASS_NAME = "L@ohos/print/print/PrinterCapabilityImpl;";
+static constexpr const char *CLASS_NAME = "@ohos.print.print.PrinterCapabilityImpl";
 
 PrinterCapability PrinterCapabilityAniHelper::ParsePrinterCapability(ani_env *env, ani_ref capability)
 {
@@ -110,22 +110,22 @@ ani_object PrinterCapabilityAniHelper::CreatePrinterCapability(ani_env *env, con
 
     std::vector<uint32_t> colorModeList;
     cap.GetSupportedColorMode(colorModeList);
-    ani_object colorModeItems = CreateEnumArray(env, "L@ohos/print/print/PrintColorMode;", colorModeList);
+    ani_object colorModeItems = CreateEnumArray(env, "@ohos.print.print.PrintColorMode", colorModeList);
     SetRefProperty(env, obj, PARAM_CAPABILITY_SUPPORTED_COLORMODES, colorModeItems);
 
     std::vector<uint32_t> duplexModeLIst;
     cap.GetSupportedDuplexMode(duplexModeLIst);
-    ani_object duplexModeItems = CreateEnumArray(env, "L@ohos/print/print/PrintDuplexMode;", duplexModeLIst);
+    ani_object duplexModeItems = CreateEnumArray(env, "@ohos.print.print.PrintDuplexMode", duplexModeLIst);
     SetRefProperty(env, obj, PARAM_CAPABILITY_SUPPORTED_DUPLEXMODES, duplexModeItems);
 
     std::vector<uint32_t> qualityList;
     cap.GetSupportedQuality(qualityList);
-    ani_object qualityListItems = CreateEnumArray(env, "L@ohos/print/print/PrintQuality;", qualityList);
+    ani_object qualityListItems = CreateEnumArray(env, "@ohos.print.print.PrintQuality", qualityList);
     SetRefProperty(env, obj, PARAM_CAPABILITY_SUPPORTED_QUALITIES, qualityListItems);
 
     std::vector<uint32_t> orientationList;
     cap.GetSupportedOrientation(orientationList);
-    ani_object orientationItems = CreateEnumArray(env, "L@ohos/print/print/PrintOrientationMode;", orientationList);
+    ani_object orientationItems = CreateEnumArray(env, "@ohos.print.print.PrintOrientationMode", orientationList);
     SetRefProperty(env, obj, PARAM_CAPABILITY_SUPPORTED_ORIENTATIONS, orientationItems);
 
     std::vector<std::string> mediaTypeList;
