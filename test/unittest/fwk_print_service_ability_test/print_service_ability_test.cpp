@@ -1043,12 +1043,12 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0049_NeedRename, TestS
     state = PRINT_JOB_BLOCKED;
     subState = PRINT_JOB_BLOCKED_OFFLINE - 1;
     EXPECT_EQ(service->checkJobState(state, subState), false);
-    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
-    service->userJobMap_.insert(std::make_pair(jobId, userId));
-    service->printUserMap_.insert(std::make_pair(userId, userData));
     EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_PARAMETER);
     subState = PRINT_JOB_BLOCKED_UNKNOWN + 1;
     EXPECT_EQ(service->checkJobState(state, subState), true);
+    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
+    service->userJobMap_.insert(std::make_pair(jobId, userId));
+    service->printUserMap_.insert(std::make_pair(userId, userData));
     EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_PRINTJOB);
     state = PRINT_JOB_COMPLETED;
     subState = PRINT_JOB_COMPLETED_FILE_CORRUPT + 1;
