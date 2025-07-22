@@ -124,7 +124,7 @@ public:
     int32_t InitCupsResources();
     void StopCupsdService();
 #ifdef ENTERPRISE_ENABLE
-    void StopCupsdSecondaryService();
+    void StopCupsdEnterpriseService();
 #endif // ENTERPRISE_ENABLE
     bool IsCupsServerAlive();
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName);

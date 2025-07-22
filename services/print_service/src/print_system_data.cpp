@@ -1213,8 +1213,8 @@ PrintMapSafe<PrinterInfo>& PrintSystemData::GetAddedPrinterMap()
 {
 #ifdef ENTERPRISE_ENABLE
     if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&
-        !PrintServiceAbility::GetInstance()->IsEnterprise()) {
-        return addedPrinterSecondaryMap_;
+        PrintServiceAbility::GetInstance()->IsEnterprise()) {
+        return addedPrinterEnterpriseMap_;
     }
 #endif // ENTERPRISE_ENABLE
     return addedPrinterMap_;
@@ -1224,8 +1224,8 @@ const std::string& PrintSystemData::GetPrintersPath()
 {
 #ifdef ENTERPRISE_ENABLE
     if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&
-        !PrintServiceAbility::GetInstance()->IsEnterprise()) {
-        return PRINTER_SERVICE_PRINTERS_SECONDARY_PATH;
+        PrintServiceAbility::GetInstance()->IsEnterprise()) {
+        return PRINTER_SERVICE_PRINTERS_ENTERPRISE_PATH;
     }
 #endif // ENTERPRISE_ENABLE
     return PRINTER_SERVICE_PRINTERS_PATH;

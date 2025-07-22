@@ -72,15 +72,15 @@ ohos_prebuilt_etc("saneservice.rc") {
   subsystem_name = "print"
 }
 
-ohos_prebuilt_etc("cups_secondary-files.conf") {
-  source = "cups_secondary-files.conf"
+ohos_prebuilt_etc("cups_enterprise-files.conf") {
+  source = "cups_enterprise-files.conf"
   relative_install_dir = "cups"
   part_name = "print_fwk"
   subsystem_name = "print"
 }
 
-ohos_prebuilt_etc("cups_service_secondary.cfg") {
-  source = "cups_service_secondary.cfg"
+ohos_prebuilt_etc("cups_service_enterprise.cfg") {
+  source = "cups_service_enterprise.cfg"
   relative_install_dir = "init"
   part_name = "print_fwk"
   subsystem_name = "print"
@@ -89,8 +89,8 @@ ohos_prebuilt_etc("cups_service_secondary.cfg") {
 group("enterprise_cfgs") {
   if (print_fwk_feature_enterprise) {
     deps = [
-      ":cups_secondary-files.conf",
-      ":cups_service_secondary.cfg"
+      ":cups_enterprise-files.conf",
+      ":cups_service_enterprise.cfg"
     ]
   }
 }
