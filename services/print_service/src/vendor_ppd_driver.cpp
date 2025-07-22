@@ -49,15 +49,15 @@ std::string VendorPpdDriver::GetVendorName()
 bool VendorPpdDriver::OnQueryCapability(const std::string &printerId, int timeout)
 {
     if (vendorManager == nullptr) {
-        PRINT_HILOGW("vendorManager is null");
+        PRINT_HILOGE("vendorManager is null");
         return false;
     }
     auto printerInfo = vendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
-    if (printerInfo != nullptr && TryConnectByPpdDriver(*printerInfo)) {
-        PRINT_HILOGI("Connect by ppdDriver success.");
+    if (printerInfo == nullptr) {
+        PRINT_HILOGE("printer is not discovered.");
         return false;
     }
-    return true;
+    return TryConnectByPpdDriver(*printerInfo);
 }
 
 int32_t VendorPpdDriver::OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo)
