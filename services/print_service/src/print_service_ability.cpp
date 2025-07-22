@@ -1529,7 +1529,7 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
 
 int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState)
 {
-    auto userData = GetCurrentUserData();
+    auto userData = GetUserDataByJobId(jobId);
     if (userData == nullptr) {
         PRINT_HILOGE("Get user data failed.");
         return E_PRINT_INVALID_USERID;
@@ -3700,7 +3700,7 @@ int32_t PrintServiceAbility::QueryHistoryPrintJobById(const std::string &printJo
 bool PrintServiceAbility::AddPrintJobToHistoryList(const std::shared_ptr<PrintJob> &printjob)
 {
     PRINT_HILOGI("AddPrintJobToHistoryList start.");
-    auto currentUser = GetCurrentUserData();
+    auto currentUser = GetUserDataByJobId(printjob->GetJobId());
     if (currentUser == nullptr) {
         PRINT_HILOGE("Current user is not added.");
         return false;
