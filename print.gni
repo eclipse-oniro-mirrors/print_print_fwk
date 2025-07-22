@@ -29,7 +29,5 @@ cups_enable = true
 debug_enable = false
 
 declare_args() {
-  print_fwk_feature_bsuni_driver = false
-  print_fwk_feature_bsuni_ghostscript = false
   print_fwk_feature_enterprise = false
 }
