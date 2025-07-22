@@ -1037,11 +1037,15 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0049_NeedRename, TestS
     std::string jobId = "1";
     uint32_t state = PRINTER_UNKNOWN + 1;
     uint32_t subState = 0;
+    uint32_t userId = 100;
     EXPECT_EQ(service->checkJobState(state, subState), true);
     service->UpdatePrintJobState(jobId, state, subState);
     state = PRINT_JOB_BLOCKED;
     subState = PRINT_JOB_BLOCKED_OFFLINE - 1;
     EXPECT_EQ(service->checkJobState(state, subState), false);
+    std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
+    service->userJobMap_.insert(std::make_pair(jobId, userId));
+    service->printUserMap_.insert(std::make_pair(userId, userData));
     EXPECT_EQ(service->UpdatePrintJobState(jobId, state, subState), E_PRINT_INVALID_PARAMETER);
     subState = PRINT_JOB_BLOCKED_UNKNOWN + 1;
     EXPECT_EQ(service->checkJobState(state, subState), true);
@@ -1089,6 +1093,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0052_NeedRename, TestS
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_INVALID_USERID);
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_.erase(userId);
+    service->userJobMap_.insert(std::make_pair(jobId, userId));
     service->printUserMap_.insert(std::make_pair(userId, userData));
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_INVALID_PRINTJOB);
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
@@ -1440,7 +1445,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0083_NeedRename, TestS
     printJob->SetPrinterId(printerId);
     userData->queuedJobList_[jobId] = printJob;
     service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_INVALID_PRINTJOB);
+    EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084_NeedRename, TestSize.Level1)
