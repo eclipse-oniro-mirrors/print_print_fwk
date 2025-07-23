@@ -412,7 +412,7 @@ bool PrintSystemData::UpdatePrinterAlias(const std::string& printerId, const std
     if (info != nullptr) {
         if (info->GetAlias() != printerAlias) {
             info->SetAlias(printerAlias);
-            PRINT_HILOGI("UpdatePrinterAlias success, alias: %{public}s", (info->GetAlias()).c_str());
+            PRINT_HILOGI("UpdatePrinterAlias success, alias: %{private}s", (info->GetAlias()).c_str());
             return true;
         }
         PRINT_HILOGW("Alias is the same, no update needed.");
