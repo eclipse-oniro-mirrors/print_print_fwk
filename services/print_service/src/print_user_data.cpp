@@ -724,7 +724,6 @@ void PrintUserData::FlushPrintHistoryJobFile(const std::string &printerId)
         return;
     }
     std::string jsonString = ParsePrintHistoryJobListToJsonString(printerId);
-    PRINT_HILOGI("ParsePrintHistoryJobListToJsonString: %{public}s", jsonString.c_str());
     size_t jsonLength = jsonString.length();
     size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), printHistoryJobFile);
     int fcloseResult = fclose(printHistoryJobFile);
