@@ -157,7 +157,7 @@ private:
 private:
     PrintMapSafe<PrinterInfo> addedPrinterMap_;
 #ifdef ENTERPRISE_ENABLE
-    PrintMapSafe<PrinterInfo> addedPrinterSecondaryMap_;
+    PrintMapSafe<PrinterInfo> addedPrinterEnterpriseMap_;
 #endif // ENTERPRISE_ENABLE
     std::map<std::string, std::shared_ptr<PrinterInfo>> discoveredPrinterInfoList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> connectingIpPrinterInfoList_;

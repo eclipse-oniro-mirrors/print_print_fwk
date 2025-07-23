@@ -139,8 +139,8 @@ static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string VENDOR_MANAGER_PREFIX = "fwk.";
 static const std::string DEFAULT_POLICY = "default";
 #ifdef ENTERPRISE_ENABLE
-static const std::string CUPS_SECONDARY_ROOT_DIR = "/data/service/el1/public/print_service/cups_secondary";
-static const std::string CUPSD_SECONDARY_CONTROL_PARAM = "print.cupsd_secondary.ready";
+static const std::string CUPS_ENTERPRISE_ROOT_DIR = "/data/service/el1/public/print_service/cups_enterprise";
+static const std::string CUPSD_ENTERPRISE_CONTROL_PARAM = "print.cupsd_enterprise.ready";
 #endif // ENTERPRISE_ENABLE
 
 static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST {
@@ -546,8 +546,8 @@ const std::string& PrintCupsClient::GetCurCupsRootDir()
 {
 #ifdef ENTERPRISE_ENABLE
     if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&
-        !PrintServiceAbility::GetInstance()->IsEnterprise()) {
-        return CUPS_SECONDARY_ROOT_DIR;
+        PrintServiceAbility::GetInstance()->IsEnterprise()) {
+        return CUPS_ENTERPRISE_ROOT_DIR;
     }
 #endif // ENTERPRISE_ENABLE
     return CUPS_ROOT_DIR;
@@ -557,8 +557,8 @@ const std::string& PrintCupsClient::GetCurCupsdControlParam()
 {
 #ifdef ENTERPRISE_ENABLE
     if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&
-        !PrintServiceAbility::GetInstance()->IsEnterprise()) {
-        return CUPSD_SECONDARY_CONTROL_PARAM;
+        PrintServiceAbility::GetInstance()->IsEnterprise()) {
+        return CUPSD_ENTERPRISE_CONTROL_PARAM;
     }
 #endif // ENTERPRISE_ENABLE
     return CUPSD_CONTROL_PARAM;
@@ -613,24 +613,24 @@ void PrintCupsClient::StopCupsdService()
 }
 
 #ifdef ENTERPRISE_ENABLE
-void PrintCupsClient::StopCupsdSecondaryService()
+void PrintCupsClient::StopCupsdEnterpriseService()
 {
-    PRINT_HILOGD("StopCupsdSecondaryService enter");
+    PRINT_HILOGD("StopCupsdEnterpriseService enter");
     if (!IsCupsServerAlive()) {
         PRINT_HILOGI("The cupsd process is not started, no need stop.");
         return;
     }
 
-    PRINT_HILOGI("The cupsd_secondary process is started, stop it now.");
-    int result = SetParameter(CUPSD_SECONDARY_CONTROL_PARAM.c_str(), "false");
+    PRINT_HILOGI("The cupsd_enterprise process is started, stop it now.");
+    int result = SetParameter(CUPSD_ENTERPRISE_CONTROL_PARAM.c_str(), "false");
     if (result) {
         PRINT_HILOGD("SetParameter failed: %{public}d.", result);
         return;
     }
     const int bufferSize = 96;
-    char secondary_value[bufferSize] = {0};
-    GetParameter(CUPSD_SECONDARY_CONTROL_PARAM.c_str(), "", secondary_value, bufferSize - 1);
-    PRINT_HILOGD("print.cupsd_secondary.ready value: %{public}s.", secondary_value);
+    char enterprise_value[bufferSize] = {0};
+    GetParameter(CUPSD_ENTERPRISE_CONTROL_PARAM.c_str(), "", enterprise_value, bufferSize - 1);
+    PRINT_HILOGD("print.cupsd_enterprise.ready value: %{public}s.", enterprise_value);
 }
 #endif // ENTERPRISE_ENABLE
 

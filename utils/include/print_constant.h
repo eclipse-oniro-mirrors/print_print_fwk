@@ -256,7 +256,8 @@ static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
 const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
 const std::string PRINTER_SERVICE_PRINTERS_PATH = "/data/service/el2/public/print_service/printers";
-const std::string PRINTER_SERVICE_PRINTERS_SECONDARY_PATH = "/data/service/el2/public/print_service/printers_secondary";
+const std::string PRINTER_SERVICE_PRINTERS_ENTERPRISE_PATH =
+    "/data/service/el2/public/print_service/printers_enterprise";
 const std::string PRINTER_LIST_FILE = "printer_list.json";
 const std::string PRINTER_LIST_VERSION_FILE = "version.json";
 const std::string PRINTER_LIST_VERSION_V1 = "v1";

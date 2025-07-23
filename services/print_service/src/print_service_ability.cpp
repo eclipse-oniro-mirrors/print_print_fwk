@@ -1172,7 +1172,6 @@ int32_t PrintServiceAbility::BlockPrintJob(const std::string &jobId)
     }
 
     PrintCupsClient::GetInstance()->InterruptCupsJob(jobId);
-    PRINT_HILOGE("UpdatePrintJobState PRINT_JOB_BLOCKED");
     return E_PRINT_NONE;
 }
 
@@ -1827,8 +1826,8 @@ void PrintServiceAbility::UnloadSystemAbility()
         }
 #ifdef CUPS_ENABLE
 #ifdef ENTERPRISE_ENABLE
-        if (IsEnterpriseEnable() && !IsEnterprise()) {
-            DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdSecondaryService();
+        if (IsEnterpriseEnable() && IsEnterprise()) {
+            DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdEnterpriseService();
         } else {
 #endif // ENTERPRISE_ENABLE
             DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdService();
@@ -3901,10 +3900,10 @@ void PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
     PRINT_HILOGI("RefreshPrinterStatusOnSwitchUser");
     BlockUserPrintJobs(lastUserId_);
     UpdateIsEnterprise();
-    if (IsEnterpriseEnable() && !IsEnterprise()) {
+    if (IsEnterpriseEnable() && IsEnterprise()) {
         PrintCupsClient::GetInstance()->StopCupsdService();
     } else {
-        PrintCupsClient::GetInstance()->StopCupsdSecondaryService();
+        PrintCupsClient::GetInstance()->StopCupsdEnterpriseService();
     }
     printSystemData_.Init();
     PrintCupsClient::GetInstance()->InitCupsResources();
