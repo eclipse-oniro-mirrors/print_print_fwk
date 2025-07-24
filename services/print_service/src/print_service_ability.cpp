@@ -3345,6 +3345,11 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     return true;
 }
 
+std::vector<std::string> PrintServiceAbility::QueryAddedPrintersByIp(const std::string &printerIp)
+{
+    return printSystemData_.QueryAddedPrintersByIp(printerIp);
+}
+
 bool PrintServiceAbility::OnVendorStatusUpdate(const std::string &globalVendorName, const std::string &printerId,
     const PrinterVendorStatus &status)
 {

@@ -57,6 +57,7 @@ private:
     PrinterInfo ConvertIpPrinterName(const PrinterInfo &printerInfo);
     std::string QueryVendorDriverByGroupPrinterId(const std::string &groupPrinterId);
     bool TryConnectByPpdDriver(const PrinterInfo &printerInfo);
+    bool MonitorStatusByBsuniDriver(const std::string &groupPrinterId, bool on);
 
 private:
     VendorManager* parentVendorManager = nullptr;

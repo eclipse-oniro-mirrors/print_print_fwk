@@ -42,6 +42,7 @@ public:
     virtual std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &printerId) = 0;
     virtual std::shared_ptr<PrinterInfo> QueryConnectingPrinterInfoById(const std::string &printerId) = 0;
     virtual int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) = 0;
+    virtual std::vector<std::string> QueryAddedPrintersByIp(const std::string &printerIp) = 0;
     virtual bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) = 0;
     virtual bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) = 0;
     virtual bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
@@ -93,6 +94,7 @@ public:
         const std::string &printerId) override;
     int32_t QueryPrinterInfoByPrinterId(const std::string &vendorName, const std::string &printerId,
         PrinterInfo &info) override;
+    std::vector<std::string> QueryAddedPrintersByIp(const std::string &printerIp) override;
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) override;
     std::shared_ptr<VendorDriverBase> FindDriverByPrinterId(const std::string &globalPrinterId);
     std::shared_ptr<VendorDriverBase> FindDriverByVendorName(const std::string &vendorName);

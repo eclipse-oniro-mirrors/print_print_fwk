@@ -586,6 +586,15 @@ int32_t VendorManager::QueryPrinterInfoByPrinterId(const std::string &vendorName
     return printServiceAbility->QueryPrinterInfoByPrinterId(globalPrinterId, info);
 }
 
+std::vector<std::string> VendorManager::QueryAddedPrintersByIp(const std::string &printerIp)
+{
+    if (printServiceAbility == nullptr) {
+        PRINT_HILOGW("printServiceAbility is null");
+        return std::vector<std::string>();
+    }
+    return printServiceAbility->QueryAddedPrintersByIp(printerIp);
+}
+
 bool VendorManager::QueryPPDInformation(const std::string &makeModel, std::string &ppdName)
 {
     if (printServiceAbility == nullptr) {
