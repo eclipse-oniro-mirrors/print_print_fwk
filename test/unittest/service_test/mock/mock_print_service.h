@@ -121,11 +121,11 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override
+    int32_t QueryAllActivePrintJob(std::vector<PrintJob> &printJobs) override
     {
         return E_PRINT_NONE;
     }
-    int32_t QueryAllHistoryPrintJob(std::vector<PrintJob> &printJobs) override
+    int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override
     {
         return E_PRINT_NONE;
     }
@@ -251,7 +251,7 @@ public:
     MOCK_METHOD1(UnregisterAllExtCallback, int32_t(const std::string&));
     MOCK_METHOD1(LoadExtSuccess, int32_t(const std::string&));
     MOCK_METHOD1(QueryAllPrintJob, int32_t(std::vector<PrintJob>&));
-    MOCK_METHOD1(QueryAllHistoryPrintJob, int32_t(std::vector<PrintJob>&));
+    MOCK_METHOD1(QueryAllActivePrintJob, int32_t(std::vector<PrintJob>&));
     MOCK_METHOD2(QueryPrintJobById, int32_t(std::string&, PrintJob&));
     MOCK_METHOD3(AddPrinterToCups, int32_t(const std::string&, const std::string&, const std::string&));
     MOCK_METHOD3(QueryPrinterCapabilityByUri, int32_t(const std::string&, const std::string&, PrinterCapability&));

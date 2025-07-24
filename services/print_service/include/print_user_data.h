@@ -56,8 +56,8 @@ public:
         const std::string &jobId, const std::shared_ptr<PrintJob> &printJob, std::string jobOrderId);
     int32_t QueryPrintJobById(const std::string &printJobId, PrintJob &printJob);
     int32_t QueryHistoryPrintJobById(const std::string &printJobId, PrintJob &printJob);
-    int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs);
-    int32_t QueryAllHistoryPrintJob(std::vector<std::string> printerIds, std::vector<PrintJob> &printJobs);
+    int32_t QueryAllActivePrintJob(std::vector<PrintJob> &printJobs);
+    int32_t QueryAllPrintJob(std::vector<std::string> printerIds, std::vector<PrintJob> &printJobs);
     int32_t SetDefaultPrinter(const std::string &printerId, uint32_t type);
     int32_t SetLastUsedPrinter(const std::string &printerId);
     bool ParseUserData();

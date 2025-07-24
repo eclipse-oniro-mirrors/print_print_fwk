@@ -499,9 +499,9 @@ napi_value NapiInnerPrint::QueryAllPrintJob(napi_env env, napi_callback_info inf
     return asyncCall.Call(env, exec);
 }
 
-napi_value NapiInnerPrint::QueryAllHistoryPrintJob(napi_env env, napi_callback_info info)
+napi_value NapiInnerPrint::QueryAllActivePrintJob(napi_env env, napi_callback_info info)
 {
-    PRINT_HILOGI("Enter QueryAllHistoryPrintJob---->");
+    PRINT_HILOGI("Enter QueryAllActivePrintJob---->");
     auto context = std::make_shared<InnerPrintContext>();
     auto input =
         [context](
@@ -527,7 +527,7 @@ napi_value NapiInnerPrint::QueryAllHistoryPrintJob(napi_env env, napi_callback_i
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->QueryAllHistoryPrintJob(context->allPrintJobs);
+        int32_t ret = PrintManagerClient::GetInstance()->QueryAllActivePrintJob(context->allPrintJobs);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to query printJobList");

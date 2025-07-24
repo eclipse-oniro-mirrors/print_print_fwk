@@ -606,23 +606,23 @@ int32_t PrintServiceProxy::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceProxy::QueryAllHistoryPrintJob(std::vector<PrintJob> &printJobs)
+int32_t PrintServiceProxy::QueryAllActivePrintJob(std::vector<PrintJob> &printJobs)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(GetDescriptor());
-    PRINT_HILOGD("PrintServiceProxy QueryAllHistoryPrintJob started.");
+    PRINT_HILOGD("PrintServiceProxy QueryAllActivePrintJob started.");
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        PRINT_HILOGE("PrintServiceProxy QueryAllHistoryPrintJob remote is null");
+        PRINT_HILOGE("PrintServiceProxy QueryAllActivePrintJob remote is null");
         return E_PRINT_RPC_FAILURE;
     }
-    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLHISTORYPRINTJOB,
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLACTIVEPRINTJOB,
         data, reply, option);
     ret = GetResult(ret, reply);
     if (ret != E_PRINT_NONE) {
-        PRINT_HILOGD("PrintServiceProxy QueryAllHistoryPrintJob Failed.");
+        PRINT_HILOGD("PrintServiceProxy QueryAllActivePrintJob Failed.");
         return ret;
     }
 
@@ -639,7 +639,7 @@ int32_t PrintServiceProxy::QueryAllHistoryPrintJob(std::vector<PrintJob> &printJ
         }
         printJobs.emplace_back(*jobPtr);
     }
-    PRINT_HILOGD("PrintServiceProxy QueryAllHistoryPrintJob succeeded.");
+    PRINT_HILOGD("PrintServiceProxy QueryAllActivePrintJob succeeded.");
     return E_PRINT_NONE;
 }
 

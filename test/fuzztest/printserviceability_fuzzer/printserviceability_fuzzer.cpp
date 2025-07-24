@@ -270,7 +270,7 @@ void TestLoadExtSuccess(const uint8_t *data, size_t size, FuzzedDataProvider *da
     PrintServiceAbility::GetInstance()->LoadExtSuccess(extensionId);
 }
 
-void TestQueryAllPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+void TestQueryAllActivePrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintJob printJob;
     printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
@@ -282,7 +282,7 @@ void TestQueryAllPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *
     printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     std::vector<PrintJob> printJobs;
     printJobs.push_back(printJob);
-    PrintServiceAbility::GetInstance()->QueryAllPrintJob(printJobs);
+    PrintServiceAbility::GetInstance()->QueryAllActivePrintJob(printJobs);
 }
 
 void TestQueryPrintJobById(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -1010,7 +1010,7 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestOff(data, size, dataProvider);
     TestCallback(data, size, dataProvider);
     TestLoadExtSuccess(data, size, dataProvider);
-    TestQueryAllPrintJob(data, size, dataProvider);
+    TestQueryAllActivePrintJob(data, size, dataProvider);
     TestQueryPrintJobById(data, size, dataProvider);
     TestAddPrinterToCups(data, size, dataProvider);
     TestQueryPrinterCapabilityByUri(data, size, dataProvider);
