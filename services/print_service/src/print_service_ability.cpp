@@ -190,6 +190,7 @@ int32_t PrintServiceAbility::Init()
         }
         g_publishState = true;
     }
+    StartUnloadThread();
     state_ = ServiceRunningState::STATE_RUNNING;
     CheckCupsServerAlive();
     if (!printSystemData_.CheckPrinterVersionFile()) {
@@ -274,7 +275,6 @@ void PrintServiceAbility::ManualStart()
             }
         }
     }
-    StartUnloadThread();
 
     if (state_ != ServiceRunningState::STATE_RUNNING) {
         PRINT_HILOGI("PrintServiceAbility restart.");
