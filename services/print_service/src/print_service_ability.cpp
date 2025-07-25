@@ -1874,7 +1874,7 @@ void PrintServiceAbility::CallerAppsMonitor()
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
         if (callerMap_.size() == 0 && queuedJobList_.size() == 0) {
             if (UnloadSystemAbility()) {
-                break;
+                return;
             }
         }
     }
