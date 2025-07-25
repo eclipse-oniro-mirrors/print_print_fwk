@@ -271,7 +271,6 @@ void PrintServiceAbility::ManualStart()
             callerMap_[callerPid] = bundleName;
         }
     }
-    
 
     if (state_ != ServiceRunningState::STATE_RUNNING) {
         PRINT_HILOGI("PrintServiceAbility restart.");
