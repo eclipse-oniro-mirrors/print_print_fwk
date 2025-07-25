@@ -3977,10 +3977,6 @@ std::vector<AppExecFwk::RunningProcessInfo> PrintServiceAbility::GetRunningProce
 bool PrintServiceAbility::IsAppAlive(const std::string &bundleName, int32_t pid)
 {
     std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(bundleName);
-    if (processInfos.empty() || processInfos[0].pid_ == 0) {
-        PRINT_HILOGE("Get running process information pid empty");
-        return false;
-    }
     for (auto processInfo: processInfos) {
         PRINT_HILOGD("processName: %{public}s, pid: %{public}d", processInfo.processName_.c_str(), processInfo.pid_);
         if (processInfo.pid_ == pid && processInfo.processName_.find(PRINT_EXTENSION_SUFFIX) == std::string::npos) {
