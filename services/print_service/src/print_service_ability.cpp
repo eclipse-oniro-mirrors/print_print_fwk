@@ -267,8 +267,11 @@ void PrintServiceAbility::ManualStart()
             processInfo.processName_.c_str(), processInfo.pid_, callerPid);
         if (processInfo.pid_ != 0 && !bundleName.empty() && callerPid == processInfo.pid_ &&
             processInfo.processName_ != SPOOLER_EXTENSION_BUNDLE_NAME) {
-            PRINT_HILOGD("add callerPid: %{public}d", callerPid);
-            callerMap_[callerPid] = bundleName;
+            {
+                std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+                PRINT_HILOGD("add callerPid: %{public}d", callerPid);
+                callerMap_[callerPid] = bundleName;
+            }
         }
     }
     StartUnloadThread();
