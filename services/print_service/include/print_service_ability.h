@@ -287,7 +287,7 @@ private:
 
     std::map<int32_t, std::string> callerMap_;
     bool unloadThread = false;
-    std::recursive_mutex callMapMutex_;
+    std::recursive_mutex callerMapMutex_;
 
 #ifdef ENTERPRISE_ENABLE
 private:
