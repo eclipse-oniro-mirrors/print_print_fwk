@@ -174,7 +174,7 @@ inline bool PrintUtil::ConvertToInt(const std::string& str, int32_t& value)
     return ec == std::errc{} && ptr == str.data() + str.size();
 }
 
-inline std::string PrintUtil::ExtractHostFromUri(const std::string &uri)
+std::string PrintUtil::ExtractHostFromUri(const std::string &uri)
 {
     size_t startPos = uri.find("://");
     if (startPos == std::string::npos) {

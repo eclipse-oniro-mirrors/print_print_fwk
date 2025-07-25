@@ -373,5 +373,114 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0023_NeedRename, TestSize.Leve
     vendorWlanGroup->parentVendorManager = nullptr;
     EXPECT_EQ(vendorWlanGroup->OnPrinterStatusChanged(VENDOR_WLAN_GROUP, printerId, state), false);
 }
+
+HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnEmpty_WhenUriNotContainScheme, TestSize.Level1)
+{
+    std::string uri = "aaa";
+    EXPECT_TRUE(PrintUtil::ExtractHostFromUri(uri).empty());
+}
+
+HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnEmpty_WhenUriNotContainHost, TestSize.Level1)
+{
+    std::string uri = "aaa://";
+    EXPECT_TRUE(PrintUtil::ExtractHostFromUri(uri).empty());
+}
+
+HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriContainScheme, TestSize.Level1)
+{
+    std::string uri = "aaa://b";
+    std::string expected = "b";
+    EXPECT_EQ(expected, PrintUtil::ExtractHostFromUri(uri));
+}
+
+HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriContainPort, TestSize.Level1)
+{
+    std::string uri = "aaa://b:80";
+    std::string expected = "b";
+    EXPECT_EQ(expected, PrintUtil::ExtractHostFromUri(uri));
+}
+
+HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriContainPath, TestSize.Level1)
+{
+    std::string uri = "aaa://b/path";
+    std::string expected = "b";
+    EXPECT_EQ(expected, PrintUtil::ExtractHostFromUri(uri));
+}
+
+HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriContainQuery, TestSize.Level1)
+{
+    std::string uri = "aaa://b?query";
+    std::string expected = "b";
+    EXPECT_EQ(expected, PrintUtil::ExtractHostFromUri(uri));
+}
+
+HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriContainFragment, TestSize.Level1)
+{
+    std::string uri = "aaa://example.cc#fragment";
+    std::string expected = "example.cc";
+    EXPECT_EQ(expected, PrintUtil::ExtractHostFromUri(uri));
+}
+
+HWTEST_F(VendorWlanGroupTest, MonitorStatusByBsuniDriver_ShouldReturnFalse_WhenVendorManagerIsNull, TestSize.Level1)
+{
+    VendorWlanGroup group(nullptr);
+    std::string printerId = "testId";
+    EXPECT_FALSE(group.MonitorStatusByBsuniDriver(printerId, true));
+}
+
+HWTEST_F(VendorWlanGroupTest, MonitorStatusByBsuniDriver_ShouldReturnFalse_WhenGetPrinterInfoFailed, TestSize.Level1)
+{
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+    std::string printerId = "testId";
+    EXPECT_CALL(*mock, QueryPrinterInfoByPrinterId(_, _)).WillOnce(Return(E_PRINT_GENERIC_FAILURE));
+    EXPECT_FALSE(vendorWlanGroup->MonitorStatusByBsuniDriver(printerId, true));
+}
+
+HWTEST_F(VendorWlanGroupTest, MonitorStatusByBsuniDriver_ShouldReturnFalse_WhenGetPrinterIpFailed, TestSize.Level1)
+{
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+    std::string printerId = "testId";
+    EXPECT_CALL(*mock, QueryPrinterInfoByPrinterId(_, _)).WillOnce(Return(E_PRINT_NONE));
+    EXPECT_FALSE(vendorWlanGroup->MonitorStatusByBsuniDriver(printerId, true));
+}
+
+HWTEST_F(VendorWlanGroupTest, MonitorStatusByBsuniDriver_ShouldReturnFalse_WhenBsuniDriverIsNull, TestSize.Level1)
+{
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+    std::string printerId = "testId";
+    PrinterInfo info;
+    info.SetUri(PRINTER_TEST_URI);
+    EXPECT_CALL(*mock, QueryPrinterInfoByPrinterId(_, _)).WillOnce(DoAll(SetArgReferee<1>(info), Return(E_PRINT_NONE)));
+    EXPECT_FALSE(vendorWlanGroup->MonitorStatusByBsuniDriver(printerId, true));
+}
+
+HWTEST_F(VendorWlanGroupTest, MonitorStatusByBsuniDriver_ShouldReturnFalse_WhenOtherInMonitor, TestSize.Level1)
+{
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+    std::string printerId = "testId";
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    info.SetUri(PRINTER_TEST_URI);
+    std::vector<std::string> printers;
+    printers.push_back("fwk.test.group:" + PRINTER_TEST_IP);
+    printers.push_back(printerId);
+    printers.push_back("fwk.driver.wlan.group:" + PRINTER_TEST_IP);
+    EXPECT_CALL(*mock, QueryPrinterInfoByPrinterId(_, _)).WillOnce(DoAll(SetArgReferee<1>(info), Return(E_PRINT_NONE)));
+    EXPECT_CALL(*mock, QueryAddedPrintersByIp(_)).WillOnce(Return(printers));
+    EXPECT_FALSE(vendorWlanGroup->MonitorStatusByBsuniDriver(printerId, false));
+}
+
 }  // namespace Print
 }  // namespace OHOS

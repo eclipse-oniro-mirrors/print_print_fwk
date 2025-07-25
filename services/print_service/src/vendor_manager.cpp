@@ -579,7 +579,7 @@ int32_t VendorManager::QueryPrinterInfoByPrinterId(const std::string &vendorName
 {
     if (printServiceAbility == nullptr) {
         PRINT_HILOGW("QueryPrinterInfoByPrinterId printServiceAbility is null");
-        return false;
+        return E_PRINT_GENERIC_FAILURE;
     }
     auto targetVendorName = IsWlanGroupDriver(printerId) ? VENDOR_WLAN_GROUP : vendorName;
     auto globalPrinterId = PrintUtils::GetGlobalId(VendorManager::GetGlobalVendorName(targetVendorName), printerId);

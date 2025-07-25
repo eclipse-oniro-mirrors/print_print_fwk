@@ -396,9 +396,8 @@ bool VendorWlanGroup::MonitorPrinterStatus(const std::string &groupPrinterId, bo
 
 bool VendorWlanGroup::MonitorStatusByBsuniDriver(const std::string &groupPrinterId, bool on)
 {
-    auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
-    if (bsuniDriver != nullptr) {
-        PRINT_HILOGW("bsuniDriver is null");
+    if (parentVendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
         return false;
     }
     PrinterInfo printerInfo;
@@ -425,6 +424,11 @@ bool VendorWlanGroup::MonitorStatusByBsuniDriver(const std::string &groupPrinter
                 return false;
             }
         }
+    }
+    auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
+    if (bsuniDriver == nullptr) {
+        PRINT_HILOGW("bsuniDriver is null");
+        return false;
     }
     return bsuniDriver->MonitorPrinterStatus(printerIp, on);
 }
