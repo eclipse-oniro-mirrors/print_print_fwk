@@ -1853,7 +1853,7 @@ bool PrintServiceAbility::UnloadSystemAbility()
 void PrintServiceAbility::CallerAppsMonitor()
 {
     PRINT_HILOGI("start monitor caller apps");
-    while (callerMap_.size() != 0 || queuedJobList_.size() != 0 || !UnloadSystemAbility()) {
+    do {
         {
             std::lock_guard<std::recursive_mutex> lock(apiMutex_);
             for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
@@ -1870,7 +1870,7 @@ void PrintServiceAbility::CallerAppsMonitor()
             PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
         }
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
-    }
+    } while (callerMap_.size() != 0 || queuedJobList_.size() != 0 || !UnloadSystemAbility());
 }
 
 void PrintServiceAbility::StartUnloadThread()
