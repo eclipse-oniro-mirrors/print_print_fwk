@@ -59,6 +59,8 @@ public:
     static std::string GetEventUserId(const std::string &type);
     static bool CheckUserIdInEventType(const std::string &type, int32_t callerUserId);
     static bool IsUsbPrinter(const std::string &printerId);
+    static std::string ExtractHostFromUri(const std::string &uri);
+
     template <typename T, typename ReadFunc>
     static bool readListFromParcel(Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc)
     {

@@ -15,7 +15,6 @@
 
 #include "vendor_wlan_group.h"
 #include "print_log.h"
-#include "print_util.h"
 #include "print_utils.h"
 #include "file_ex.h"
 
@@ -368,7 +367,7 @@ PrinterInfo VendorWlanGroup::ConvertIpPrinterName(const PrinterInfo &printerInfo
 
 std::string VendorWlanGroup::ExtractPrinterIdByPrinterInfo(const PrinterInfo &printerInfo)
 {
-    return PrintUtil::ExtractHostFromUri(printerInfo.GetUri());
+    return PrintUtils::ExtractHostFromUri(printerInfo.GetUri());
 }
 
 bool VendorWlanGroup::MonitorPrinterStatus(const std::string &groupPrinterId, bool on)
@@ -406,7 +405,7 @@ bool VendorWlanGroup::MonitorStatusByBsuniDriver(const std::string &groupPrinter
         PRINT_HILOGW("get printerInfo failed.");
         return false;
     }
-    auto printerIp = PrintUtil::ExtractHostFromUri(printerInfo.GetUri());
+    auto printerIp = PrintUtils::ExtractHostFromUri(printerInfo.GetUri());
     if (printerIp.empty()) {
         PRINT_HILOGW("printerIp empty");
         return false;

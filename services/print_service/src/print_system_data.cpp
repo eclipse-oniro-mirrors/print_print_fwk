@@ -935,7 +935,7 @@ std::vector<std::string> PrintSystemData::QueryAddedPrinterIdList()
 std::vector<std::string> PrintSystemData::QueryAddedPrintersByIp(const std::string &printerIp)
 {
     return GetAddedPrinterMap().GetKeyList([this, printerIp](const PrinterInfo &printer) -> bool {
-        return PrintUtil::ExtractHostFromUri(printer.GetUri()) == printerIp;
+        return PrintUtils::ExtractHostFromUri(printer.GetUri()) == printerIp;
     });
 }
 

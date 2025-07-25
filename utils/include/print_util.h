@@ -30,7 +30,6 @@
 namespace OHOS::Print {
 const uint32_t MAX_PRINTER_NAME_LENGTH = 127;
 const uint32_t MIN_INT_LIST_STRLENGTH = 2;
-const uint32_t URI_HOST_START_STR_LEN = 3;
 class PrintUtil {
 public:
     static std::string ParseListToString(const std::vector<std::string> &list);
@@ -52,8 +51,6 @@ public:
     static bool startsWith(const std::string& str, const std::string& prefix);
 
     static bool ConvertToInt(const std::string& str, int32_t& value);
-
-    static std::string ExtractHostFromUri(const std::string &uri);
 };
 
 inline std::vector<uint32_t> PrintUtil::Str2Vec(std::string str)
@@ -174,28 +171,6 @@ inline bool PrintUtil::ConvertToInt(const std::string& str, int32_t& value)
     return ec == std::errc{} && ptr == str.data() + str.size();
 }
 
-std::string PrintUtil::ExtractHostFromUri(const std::string &uri)
-{
-    size_t startPos = uri.find("://");
-    if (startPos == std::string::npos) {
-        return "";
-    }
-    startPos += URI_HOST_START_STR_LEN;
-    size_t atPos = uri.find('@', startPos);
-    if (atPos != std::string::npos) {
-        startPos = atPos + 1;
-    }
-    size_t endPos = uri.find_first_of("/?#", startPos);
-    if (endPos == std::string::npos) {
-        endPos = uri.length();
-    }
-    std::string host = uri.substr(startPos, endPos - startPos);
-    size_t colonPos = host.find(':');
-    if (colonPos != std::string::npos) {
-        return host.substr(0, colonPos);
-    }
-    return host;
-}
 } // namespace OHOS::Print
 
 #endif // PRINT_UTIL_H

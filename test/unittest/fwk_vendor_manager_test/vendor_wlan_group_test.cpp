@@ -377,48 +377,48 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0023_NeedRename, TestSize.Leve
 HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnEmpty_WhenUriNotContainScheme, TestSize.Level1)
 {
     std::string uri = "aaa";
-    EXPECT_TRUE(PrintUtil::ExtractHostFromUri(uri).empty());
+    EXPECT_TRUE(PrintUtils::ExtractHostFromUri(uri).empty());
 }
 
 HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnEmpty_WhenUriNotContainHost, TestSize.Level1)
 {
     std::string uri = "aaa://";
-    EXPECT_TRUE(PrintUtil::ExtractHostFromUri(uri).empty());
+    EXPECT_TRUE(PrintUtils::ExtractHostFromUri(uri).empty());
 }
 
 HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriContainScheme, TestSize.Level1)
 {
     std::string uri = "aaa://b";
     std::string expected = "b";
-    EXPECT_EQ(expected, PrintUtil::ExtractHostFromUri(uri));
+    EXPECT_EQ(expected, PrintUtils::ExtractHostFromUri(uri));
 }
 
 HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriContainPort, TestSize.Level1)
 {
     std::string uri = "aaa://b:80";
     std::string expected = "b";
-    EXPECT_EQ(expected, PrintUtil::ExtractHostFromUri(uri));
+    EXPECT_EQ(expected, PrintUtils::ExtractHostFromUri(uri));
 }
 
 HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriContainPath, TestSize.Level1)
 {
     std::string uri = "aaa://b/path";
     std::string expected = "b";
-    EXPECT_EQ(expected, PrintUtil::ExtractHostFromUri(uri));
+    EXPECT_EQ(expected, PrintUtils::ExtractHostFromUri(uri));
 }
 
 HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriContainQuery, TestSize.Level1)
 {
     std::string uri = "aaa://b?query";
     std::string expected = "b";
-    EXPECT_EQ(expected, PrintUtil::ExtractHostFromUri(uri));
+    EXPECT_EQ(expected, PrintUtils::ExtractHostFromUri(uri));
 }
 
 HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriContainFragment, TestSize.Level1)
 {
     std::string uri = "aaa://example.cc#fragment";
     std::string expected = "example.cc";
-    EXPECT_EQ(expected, PrintUtil::ExtractHostFromUri(uri));
+    EXPECT_EQ(expected, PrintUtils::ExtractHostFromUri(uri));
 }
 
 HWTEST_F(VendorWlanGroupTest, MonitorStatusByBsuniDriver_ShouldReturnFalse_WhenVendorManagerIsNull, TestSize.Level1)
