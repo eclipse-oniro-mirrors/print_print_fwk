@@ -125,7 +125,7 @@ bool PrintCallbackStub::HandlePrintAdapterJobChangedEvent(MessageParcel &data, M
 
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobChangedEvent jobId:%{public}s, subState:%{public}d",
         jobId.c_str(), subState);
-    bool result = onCallbackAdapterJobStateChanged(jobId, state, subState);
+    bool result = OnCallbackAdapterJobStateChanged(jobId, state, subState);
     reply.WriteBool(result);
     PRINT_HILOGI("PrintCallbackStub HandlePrintAdapterJobChangedEvent end");
     return true;

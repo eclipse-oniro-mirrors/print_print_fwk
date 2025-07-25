@@ -31,7 +31,7 @@ public:
     virtual bool OnCallback(const std::string &extensionId, const std::string &info) = 0;
     virtual bool OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
         const PrintAttributes &newAttrs, uint32_t fd) = 0;
-    virtual bool onCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
+    virtual bool OnCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
         const uint32_t subState) = 0;
     virtual bool OnCallbackAdapterGetFile(uint32_t state) = 0;
 };

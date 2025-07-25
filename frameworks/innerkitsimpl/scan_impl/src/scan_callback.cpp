@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include <uv.h>
-#include <functional>
 #include "scan_callback.h"
 #include "napi/native_node_api.h"
 #include "napi_scan_utils.h"
@@ -75,247 +73,216 @@ void CallbackParam::InitialCallbackParam(napi_env &env_, napi_ref &ref_, std::mu
 
 void CallbackParam::SetCallbackParam(uint32_t &state, const ScanDeviceInfoTCP &deviceInfoTCP)
 {
-    std::lock_guard<std::mutex> lock(*mutexPtr);
     this->state = state;
     this->deviceInfoTCP = deviceInfoTCP;
 }
 
 void CallbackParam::SetCallbackParam(uint32_t &state, const ScanDeviceInfo &deviceInfo)
 {
-    std::lock_guard<std::mutex> lock(*mutexPtr);
     this->state = state;
     this->deviceInfo = deviceInfo;
 }
 
 void CallbackParam::SetCallbackSyncParam(uint32_t &state, const ScanDeviceInfoSync &deviceInfoSync)
 {
-    std::lock_guard<std::mutex> lock(*mutexPtr);
     this->state = state;
     this->deviceInfoSync = deviceInfoSync;
 }
 
 void CallbackParam::SetCallbackParam(bool &isGetSucc, int32_t &sizeRead)
 {
-    std::lock_guard<std::mutex> lock(*mutexPtr);
     this->isGetSucc = isGetSucc;
     this->sizeRead = sizeRead;
 }
 
 void CallbackParam::SetCallbackParam(int32_t &scanVersion)
 {
-    std::lock_guard<std::mutex> lock(*mutexPtr);
     this->scanVersion = scanVersion;
 }
 
 void CallbackParam::SetCallbackParam(std::string &message)
 {
-    std::lock_guard<std::mutex> lock(*mutexPtr);
     this->message = message;
 }
 
-void CallbackContext::SetCallbackContext(CallbackParam* &callBackParam,
-    uv_work_function &uvWorkLambda, std::mutex &mutex_)
+bool ScanCallback::ExecuteNapiEventWork(CallbackParam* param, std::function<void(CallbackParam*)> workFunc)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    this->callBackParam = callBackParam;
-    this->uvWorkLambda = uvWorkLambda;
-}
+    auto task = [param, workFunc]() {
+        if (param == nullptr) {
+            SCAN_HILOGE("param is a nullptr");
+            return;
+        }
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(param->env, &scope);
+        if (scope == nullptr) {
+            delete param;
+            return;
+        }
+        std::lock_guard<std::mutex> autoLock(*param->mutexPtr);
+        napi_value callbackFunc = NapiScanUtils::GetReference(param->env, param->ref);
+        if (callbackFunc != nullptr) {
+            workFunc(param);
+            SCAN_HILOGD("run napi call deviceInfo callback fun success");
+        } else {
+            SCAN_HILOGE("get reference failed");
+        }
+        napi_close_handle_scope(param->env, scope);
+        delete param;
+    };
 
-void ScanCallback::CreateCallbackParam(uv_work_t *&work, CallbackParam *&param, CallbackContext *&context, bool &flag)
-{
-    work = new (std::nothrow) uv_work_t;
-    CHECK_AND_CREATE(work, "Failed to create uv_work_t work", flag);
-    param = new (std::nothrow) CallbackParam;
-    CHECK_AND_CREATE(param, "Failed to create CallbackParam param", flag);
-    context = new (std::nothrow) CallbackContext;
-    CHECK_AND_CREATE(context, "Failed to create CallbackContext context", flag);
-    if (!flag) {
-        DELETE_AND_NULLIFY(work);
-        DELETE_AND_NULLIFY(param);
-        DELETE_AND_NULLIFY(context);
-    }
-}
-
-bool ScanCallback::ExecuteUvQueueWork(CallbackContext* &context, uv_work_t* &work, uv_loop_s *&loop)
-{
-    work->data = context;
-    int32_t retVal = uv_queue_work(
-        loop, work, [](uv_work_t *work) {},
-        [](uv_work_t *work, int statusInt) {
-            CallbackContext *context = static_cast<CallbackContext*>(work->data);
-            CallbackParam *cbParam = context->callBackParam;
-            napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(cbParam->env, &scope);
-            if (scope != nullptr) {
-                std::lock_guard<std::mutex> autoLock(*cbParam->mutexPtr);
-                napi_value callbackFunc = NapiScanUtils::GetReference(cbParam->env, cbParam->ref);
-                if (callbackFunc != nullptr) {
-                    napi_value callbackResult = nullptr;
-                    auto uvWorkLambda = context->uvWorkLambda;
-                    uvWorkLambda(cbParam, callbackFunc, callbackResult);
-                    SCAN_HILOGD("run napi call deviceInfo callback fun success");
-                } else {
-                    SCAN_HILOGE("get reference failed");
-                }
-                napi_close_handle_scope(cbParam->env, scope);
-            }
-            DELETE_AND_NULLIFY(work);
-            DELETE_AND_NULLIFY(cbParam);
-            DELETE_AND_NULLIFY(context);
-        });
-    if (retVal != 0) {
-        SCAN_HILOGE("failed to get uv_queue_work.");
-        DELETE_AND_NULLIFY(work);
-        DELETE_AND_NULLIFY(context->callBackParam);
-        DELETE_AND_NULLIFY(context);
+    napi_status ret = napi_send_event(env_, task, napi_eprio_immediate);
+    if (ret != napi_ok) {
+        SCAN_HILOGE("napi_send_event fail");
+        delete param;
         return false;
     }
     return true;
+}
+
+void ScanCallback::NapiCallFunction(CallbackParam* cbParam, size_t argcCount, napi_value* callbackValues)
+{
+    if (cbParam == nullptr) {
+        SCAN_HILOGE("cbParam is a nullptr");
+        return;
+    }
+    napi_value callbackFunc = NapiScanUtils::GetReference(cbParam->env, cbParam->ref);
+    if (callbackFunc != nullptr) {
+        napi_call_function(cbParam->env, nullptr, callbackFunc,
+            argcCount, callbackValues, nullptr);
+    }
 }
 
 bool ScanCallback::OnCallback(uint32_t state, const ScanDeviceInfoTCP &info)
 {
     SCAN_HILOGD("Enter OnCallback::ScanDeviceInfoTCP");
 
-    INIT_CALLBACK_PARAMS;
-
-    if (!flag) {
-        SCAN_HILOGE("ScanCallback::OnCallback ScanDeviceInfoTCP error exit");
+    CallbackParam *param = new (std::nothrow) CallbackParam;
+    if (param == nullptr) {
+        SCAN_HILOGE("Failed to create callback parameter");
         return false;
     }
 
-    uv_work_function uvWorkLambda = [](CallbackParam* &cbParam, napi_value &callbackFunc, napi_value &callbackResult) {
-        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
-        callbackValues[0] = ScannerInfoHelperTCP::MakeJsObject(cbParam->env, cbParam->deviceInfoTCP);
-        napi_call_function(cbParam->env, nullptr, callbackFunc,
-            NapiScanUtils::ARGC_ONE, callbackValues, &callbackResult);
-    };
     param->InitialCallbackParam(env_, ref_, mutex_);
     param->SetCallbackParam(state, info);
-    context->SetCallbackContext(param, uvWorkLambda, mutex_);
 
-    return ExecuteUvQueueWork(context, work, loop);
+    auto workFunc = [this](CallbackParam* cbParam) {
+        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
+        callbackValues[0] = ScannerInfoHelperTCP::MakeJsObject(cbParam->env, cbParam->deviceInfoTCP);
+        NapiCallFunction(cbParam, NapiScanUtils::ARGC_ONE, callbackValues);
+    };
+
+    return ExecuteNapiEventWork(param, workFunc);
 }
 
 bool ScanCallback::OnCallback(uint32_t state, const ScanDeviceInfo &info)
 {
     SCAN_HILOGD("Enter OnCallback::ScanDeviceInfo");
 
-    INIT_CALLBACK_PARAMS;
-
-    if (!flag) {
-        SCAN_HILOGE("ScanCallback::OnCallback ScanDeviceInfo error exit");
+    CallbackParam *param = new (std::nothrow) CallbackParam;
+    if (param == nullptr) {
+        SCAN_HILOGE("Failed to create callback parameter");
         return false;
     }
 
-    uv_work_function uvWorkLambda = [](CallbackParam* &cbParam, napi_value &callbackFunc, napi_value &callbackResult) {
-        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
-        callbackValues[0] = ScannerInfoHelper::MakeJsObject(cbParam->env, cbParam->deviceInfo);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiScanUtils::ARGC_ONE,
-            callbackValues, &callbackResult);
-    };
     param->InitialCallbackParam(env_, ref_, mutex_);
     param->SetCallbackParam(state, info);
-    context->SetCallbackContext(param, uvWorkLambda, mutex_);
 
-    return ExecuteUvQueueWork(context, work, loop);
+    auto workFunc = [this](CallbackParam* cbParam) {
+        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
+        callbackValues[0] = ScannerInfoHelper::MakeJsObject(cbParam->env, cbParam->deviceInfo);
+        NapiCallFunction(cbParam, NapiScanUtils::ARGC_ONE, callbackValues);
+    };
+
+    return ExecuteNapiEventWork(param, workFunc);
 }
 
 bool ScanCallback::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &info)
 {
     SCAN_HILOGD("Enter OnCallback::ScanDeviceInfo");
 
-    INIT_CALLBACK_PARAMS;
-
-    if (!flag) {
-        SCAN_HILOGE("ScanCallback::OnCallback ScanDeviceInfo error exit");
+    CallbackParam *param = new (std::nothrow) CallbackParam;
+    if (param == nullptr) {
+        SCAN_HILOGE("Failed to create callback parameter");
         return false;
     }
 
-    uv_work_function uvWorkLambda = [](CallbackParam* &cbParam, napi_value &callbackFunc, napi_value &callbackResult) {
-        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
-        callbackValues[0] = ScannerInfoSyncHelper::MakeJsObject(cbParam->env, cbParam->deviceInfoSync);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiScanUtils::ARGC_ONE,
-            callbackValues, &callbackResult);
-    };
     param->InitialCallbackParam(env_, ref_, mutex_);
     param->SetCallbackSyncParam(state, info);
-    context->SetCallbackContext(param, uvWorkLambda, mutex_);
 
-    return ExecuteUvQueueWork(context, work, loop);
+    auto workFunc = [this](CallbackParam* cbParam) {
+        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
+        callbackValues[0] = ScannerInfoSyncHelper::MakeJsObject(cbParam->env, cbParam->deviceInfoSync);
+        NapiCallFunction(cbParam, NapiScanUtils::ARGC_ONE, callbackValues);
+    };
+
+    return ExecuteNapiEventWork(param, workFunc);
 }
 
 bool ScanCallback::OnGetFrameResCallback(bool isGetSucc, int32_t sizeRead)
 {
     SCAN_HILOGD("Enter OnCallback::OnGetFrameResCallback");
 
-    INIT_CALLBACK_PARAMS;
-
-    if (!flag) {
-        SCAN_HILOGE("ScanCallback::OnCallback OnGetFrameResCallback error exit");
+    CallbackParam *param = new (std::nothrow) CallbackParam;
+    if (param == nullptr) {
+        SCAN_HILOGE("Failed to create callback parameter");
         return false;
     }
 
-    uv_work_function uvWorkLambda = [](CallbackParam* &cbParam, napi_value &callbackFunc, napi_value &callbackResult) {
+    param->InitialCallbackParam(env_, ref_, mutex_);
+    param->SetCallbackParam(isGetSucc, sizeRead);
+
+    auto workFunc = [this](CallbackParam* cbParam) {
         napi_value callbackValues[NapiScanUtils::ARGC_TWO] = { 0 };
         callbackValues[0] = NapiScanUtils::CreateBoolean(cbParam->env, cbParam->isGetSucc);
         callbackValues[1] = NapiScanUtils::CreateInt32(cbParam->env, cbParam->sizeRead);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiScanUtils::ARGC_TWO,
-            callbackValues, &callbackResult);
+        NapiCallFunction(cbParam, NapiScanUtils::ARGC_TWO, callbackValues);
     };
-    param->InitialCallbackParam(env_, ref_, mutex_);
-    param->SetCallbackParam(isGetSucc, sizeRead);
-    context->SetCallbackContext(param, uvWorkLambda, mutex_);
 
-    return ExecuteUvQueueWork(context, work, loop);
+    return ExecuteNapiEventWork(param, workFunc);
 }
 
 bool ScanCallback::OnScanInitCallback(int32_t &scanVersion)
 {
     SCAN_HILOGD("Enter OnCallback::OnScanInitCallback");
 
-    INIT_CALLBACK_PARAMS;
-
-    if (!flag) {
-        SCAN_HILOGE("ScanCallback::OnCallback OnScanInitCallback error exit");
+    CallbackParam *param = new (std::nothrow) CallbackParam;
+    if (param == nullptr) {
+        SCAN_HILOGE("Failed to create callback parameter");
         return false;
     }
 
-    uv_work_function uvWorkLambda = [](CallbackParam* &cbParam, napi_value &callbackFunc, napi_value &callbackResult) {
-        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
-        callbackValues[0] = NapiScanUtils::CreateInt32(cbParam->env, cbParam->scanVersion);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiScanUtils::ARGC_ONE,
-            callbackValues, &callbackResult);
-    };
     param->InitialCallbackParam(env_, ref_, mutex_);
     param->SetCallbackParam(scanVersion);
-    context->SetCallbackContext(param, uvWorkLambda, mutex_);
 
-    return ExecuteUvQueueWork(context, work, loop);
+    auto workFunc = [this](CallbackParam* cbParam) {
+        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
+        callbackValues[0] = NapiScanUtils::CreateInt32(cbParam->env, cbParam->scanVersion);
+        NapiCallFunction(cbParam, NapiScanUtils::ARGC_ONE, callbackValues);
+    };
+
+    return ExecuteNapiEventWork(param, workFunc);
 }
 
 bool ScanCallback::OnSendSearchMessage(std::string &message)
 {
     SCAN_HILOGD("Enter OnCallback::OnSendSearchMessage");
 
-    INIT_CALLBACK_PARAMS;
-
-    if (!flag) {
-        SCAN_HILOGE("ScanCallback::OnCallback OnSendSearchMessage error exit");
+    CallbackParam *param = new (std::nothrow) CallbackParam;
+    if (param == nullptr) {
+        SCAN_HILOGE("Failed to create callback parameter");
         return false;
     }
 
-    uv_work_function uvWorkLambda = [](CallbackParam* &cbParam, napi_value &callbackFunc, napi_value &callbackResult) {
-        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
-        callbackValues[0] = NapiScanUtils::CreateStringUtf8(cbParam->env, cbParam->message);
-        napi_call_function(cbParam->env, nullptr, callbackFunc, NapiScanUtils::ARGC_ONE,
-            callbackValues, &callbackResult);
-    };
     param->InitialCallbackParam(env_, ref_, mutex_);
     param->SetCallbackParam(message);
-    context->SetCallbackContext(param, uvWorkLambda, mutex_);
 
-    return ExecuteUvQueueWork(context, work, loop);
+    auto workFunc = [this](CallbackParam* cbParam) {
+        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
+        callbackValues[0] = NapiScanUtils::CreateStringUtf8(cbParam->env, cbParam->message);
+        NapiCallFunction(cbParam, NapiScanUtils::ARGC_ONE, callbackValues);
+    };
+
+    return ExecuteNapiEventWork(param, workFunc);
 }
 
 bool ScanCallback::OnGetDevicesList(std::vector<ScanDeviceInfo> &infos)

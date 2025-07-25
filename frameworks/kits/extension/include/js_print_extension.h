@@ -29,15 +29,6 @@ namespace AbilityRuntime {
 class PrintExtension;
 class JsRuntime;
 
-struct WorkParam {
-    napi_env env;
-    std::string funcName;
-    std::string printerId;
-    Print::PrintJob job;
-    WorkParam(napi_env env, std::string funcName) : env(env), funcName(funcName)
-    {}
-};
-
 /**
  * @brief Basic Print components.
  */

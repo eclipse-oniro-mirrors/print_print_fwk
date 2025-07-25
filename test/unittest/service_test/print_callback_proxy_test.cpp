@@ -281,7 +281,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0008_NeedRename, TestSiz
     uint32_t testState = 0;
     uint32_t testSubState = 0;
     std::string jobId = "job:1234";
-    EXPECT_FALSE(proxy->onCallbackAdapterJobStateChanged(jobId, testState, testSubState));
+    EXPECT_FALSE(proxy->OnCallbackAdapterJobStateChanged(jobId, testState, testSubState));
 }
  
 /**
@@ -307,7 +307,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0009_NeedRename, TestSiz
     uint32_t testState = 0;
     uint32_t testSubState = 0;
     std::string jobId = "job:1234";
-    EXPECT_FALSE(proxy->onCallbackAdapterJobStateChanged(jobId, testState, testSubState));
+    EXPECT_FALSE(proxy->OnCallbackAdapterJobStateChanged(jobId, testState, testSubState));
 }
  
 

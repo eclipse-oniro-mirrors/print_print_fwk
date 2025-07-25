@@ -20,6 +20,7 @@
 #include <uv.h>
 #include <functional>
 #include "napi/native_api.h"
+#include "napi/native_node_api.h"
 #include "print_callback_stub.h"
 #include "iprint_adapter.h"
 #include "print_manager_client.h"
@@ -59,7 +60,7 @@ public:
     bool OnCallback(const std::string &extensionId, const std::string &info) override;
     bool OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
         const PrintAttributes &newAttrs, uint32_t fd) override;
-    bool onCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
+    bool OnCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
         const uint32_t subState) override;
     bool OnCallbackAdapterGetFile(uint32_t state) override;
 
@@ -69,7 +70,7 @@ public:
     }
 
 private:
-    bool onBaseCallback(std::function<void(CallbackParam*)> paramFun, uv_after_work_cb after_work_cb);
+    bool OnBaseCallback(std::function<void(CallbackParam*)> paramFun, std::function<void(CallbackParam*)> workCb);
 
 private:
     napi_env env_ = nullptr;

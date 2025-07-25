@@ -335,19 +335,18 @@ bool JsPrintExtension::Callback(std::string funcName)
     napi_env env = (JsPrintExtension::jsExtension_->jsRuntime_).GetNapiEnv();
     WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
     if (workParam == nullptr) {
+        PRINT_HILOGE("workParam is a nullptr");
         return false;
     }
-    uv_after_work_cb afterCallback = [](uv_work_t *work, int32_t status) {
-        WorkParam *param = reinterpret_cast<WorkParam *>(work->data);
+    auto workCb = [](WorkParam *param) {
         if (param == nullptr) {
-            delete work;
+            PRINT_HILOGE("param is a nullptr");
             return;
         }
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(param->env, &scope);
         if (scope == nullptr) {
-            delete param;
-            delete work;
+            PRINT_HILOGE("scope is a nullptr");
             return;
         }
         napi_value arg[] = { 0 };
@@ -356,14 +355,11 @@ bool JsPrintExtension::Callback(std::string funcName)
             JsPrintExtension::jsExtension_->CallObjectMethod(param->funcName.c_str(), arg, NapiPrintUtils::ARGC_ZERO);
         }
         napi_close_handle_scope(param->env, scope);
-        delete param;
-        delete work;
     };
-    bool ret = JsPrintCallback::Call(env, workParam, afterCallback);
+    bool ret = JsPrintCallback::Call(env, workParam, workCb);
     if (!ret) {
-        delete workParam;
-        workParam = nullptr;
         PRINT_HILOGE("Callback fail, delete param");
+        delete workParam;
         return false;
     }
     return true;
@@ -379,20 +375,20 @@ bool JsPrintExtension::Callback(const std::string funcName, const std::string &p
     napi_env env = (JsPrintExtension::jsExtension_->jsRuntime_).GetNapiEnv();
     WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
     if (workParam == nullptr) {
+        PRINT_HILOGE("workParam is a nullptr");
         return false;
     }
     workParam->printerId = printerId;
-    uv_after_work_cb afterCallback = [](uv_work_t *work, int32_t status) {
-        WorkParam *param = reinterpret_cast<WorkParam *>(work->data);
+    
+    auto workCb = [](WorkParam *param) {
         if (param == nullptr) {
-            delete work;
+            PRINT_HILOGE("param is a nullptr");
             return;
         }
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(param->env, &scope);
         if (scope == nullptr) {
-            delete param;
-            delete work;
+            PRINT_HILOGE("scope is a nullptr");
             return;
         }
         napi_value id = OHOS::AppExecFwk::WrapStringToJS(param->env, param->printerId);
@@ -402,14 +398,12 @@ bool JsPrintExtension::Callback(const std::string funcName, const std::string &p
             JsPrintExtension::jsExtension_->CallObjectMethod(param->funcName.c_str(), arg, NapiPrintUtils::ARGC_ONE);
         }
         napi_close_handle_scope(param->env, scope);
-        delete param;
-        delete work;
     };
-    bool ret = JsPrintCallback::Call(env, workParam, afterCallback);
+    
+    bool ret = JsPrintCallback::Call(env, workParam, workCb);
     if (!ret) {
-        delete workParam;
-        workParam = nullptr;
         PRINT_HILOGE("Callback fail, delete param");
+        delete workParam;
         return false;
     }
     return true;
@@ -425,20 +419,20 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
     napi_env env = (JsPrintExtension::jsExtension_->jsRuntime_).GetNapiEnv();
     WorkParam *workParam = new (std::nothrow) WorkParam(env, funcName);
     if (workParam == nullptr) {
+        PRINT_HILOGE("workParam is a nullptr");
         return false;
     }
     workParam->job = job;
-    uv_after_work_cb afterCallback = [](uv_work_t *work, int32_t status) {
-        WorkParam *param = reinterpret_cast<WorkParam *>(work->data);
+    
+    auto workCb = [](WorkParam *param) {
         if (param == nullptr) {
-            delete work;
+            PRINT_HILOGE("param is a nullptr");
             return;
         }
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(param->env, &scope);
         if (scope == nullptr) {
-            delete param;
-            delete work;
+            PRINT_HILOGE("scope is a nullptr");
             return;
         }
         napi_value jobObject = PrintJobHelper::MakeJsObject(param->env, param->job);
@@ -448,14 +442,12 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
             JsPrintExtension::jsExtension_->CallObjectMethod(param->funcName.c_str(), arg, NapiPrintUtils::ARGC_ONE);
         }
         napi_close_handle_scope(param->env, scope);
-        delete param;
-        delete work;
     };
-    bool ret = JsPrintCallback::Call(env, workParam, afterCallback);
+    
+    bool ret = JsPrintCallback::Call(env, workParam, workCb);
     if (!ret) {
-        delete workParam;
-        workParam = nullptr;
         PRINT_HILOGE("Callback fail, delete param");
+        delete workParam;
         return false;
     }
     return true;
