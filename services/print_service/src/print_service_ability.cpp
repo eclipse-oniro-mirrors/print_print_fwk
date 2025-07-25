@@ -269,7 +269,7 @@ void PrintServiceAbility::ManualStart()
         if (processInfo.pid_ != 0 && !bundleName.empty() && callerPid == processInfo.pid_ &&
             processInfo.processName_.find(PRINT_EXTENSION_SUFFIX) == std::string::npos) {
             {
-                std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+                std::lock_guard<std::recursive_mutex> lock(callMapMutex_);
                 PRINT_HILOGD("add callerPid: %{public}d", callerPid);
                 callerMap_[callerPid] = bundleName;
             }
@@ -1813,10 +1813,12 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
 
 bool PrintServiceAbility::UnloadSystemAbility()
 {
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (callerMap_.size() > 0 || queuedJobList_.size() > 0) {
-        PRINT_HILOGE("There are still print jobs being executed.");
-        return false;
+    {
+        std::lock_guard<std::recursive_mutex> lock(callMapMutex_);
+        if (callerMap_.size() > 0 || queuedJobList_.size() > 0) {
+            PRINT_HILOGE("There are still print jobs being executed.");
+            return false;
+        }
     }
     PRINT_HILOGI("unload task begin");
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_UNSUBSCRIBE);
@@ -1855,7 +1857,7 @@ void PrintServiceAbility::CallerAppsMonitor()
     PRINT_HILOGI("start monitor caller apps");
     do {
         {
-            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+            std::lock_guard<std::recursive_mutex> lock(callMapMutex_);
             for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
                 PRINT_HILOGD("check caller process, pid: %{public}d, bundleName: %{public}s",
                     iter->first, iter->second.c_str());
