@@ -70,7 +70,7 @@ const uint32_t SERIAL_LENGTH = 6;
 
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
-static const std::string SPOOLER_EXTENSION_BUNDLE_NAME = "com.ohos.spooler:print";
+static const std::string PRINT_EXTENSION_SUFFIX = ":print";
 static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.ohos.hwprintext";
 static const std::string SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
@@ -266,7 +266,7 @@ void PrintServiceAbility::ManualStart()
         PRINT_HILOGD("processName: %{public}s, processId: %{public}d, callerPid: %{public}d",
             processInfo.processName_.c_str(), processInfo.pid_, callerPid);
         if (processInfo.pid_ != 0 && !bundleName.empty() && callerPid == processInfo.pid_ &&
-            processInfo.processName_ != SPOOLER_EXTENSION_BUNDLE_NAME) {
+            processInfo.processName_.find(PRINT_EXTENSION_SUFFIX) == std::string::npos) {
             {
                 std::lock_guard<std::recursive_mutex> lock(apiMutex_);
                 PRINT_HILOGD("add callerPid: %{public}d", callerPid);
@@ -3981,7 +3981,7 @@ bool PrintServiceAbility::IsAppAlive(const std::string &bundleName, int32_t pid)
     }
     for (auto processInfo: processInfos) {
         PRINT_HILOGD("processName: %{public}s, pid: %{public}d", processInfo.processName_.c_str(), processInfo.pid_);
-        if (processInfo.pid_ == pid && processInfo.processName_ != SPOOLER_EXTENSION_BUNDLE_NAME) {
+        if (processInfo.pid_ == pid && processInfo.processName_.find(PRINT_EXTENSION_SUFFIX) == std::string::npos) {
             return true;
         }
     }
