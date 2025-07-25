@@ -58,11 +58,11 @@ const uint32_t MAX_JOBQUEUE_NUM = 512;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t INIT_INTERVAL = 5000L;
 const int32_t UID_TRANSFORM_DIVISOR = 200000;
-const uint32_t UNLOAD_SA_INTERVAL = 90000;
 const uint32_t QUERY_CUPS_ALIVE_INTERVAL = 10;
 const uint32_t QUERY_CUPS_ALIVE_MAX_RETRY_TIMES = 50;
 const uint32_t ENTER_LOW_POWER_INTERVAL = 90000;
 const uint32_t UNREGISTER_TASK_CALLBACK_INTERVAL = 5000;
+const uint32_t CHECK_CALLER_APP_INTERVAL = 5;
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -70,6 +70,7 @@ const uint32_t SERIAL_LENGTH = 6;
 
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
+static const std::string SPOOLER_EXTENSION_BUNDLE_NAME = "com.ohos.spooler:print";
 static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.ohos.hwprintext";
 static const std::string SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
@@ -136,8 +137,6 @@ PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCrea
       helper_(nullptr),
       isJobQueueBlocked_(false),
       currentUserId_(-1),
-      printAppCount_(0),
-      unloadCount_(0),
       enterLowPowerCount_(0),
       isLowPowerMode_(false)
 {}
@@ -260,6 +259,20 @@ void PrintServiceAbility::InitServiceHandler()
 
 void PrintServiceAbility::ManualStart()
 {
+    std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(bundleName);
+    for (auto processInfo: processInfos) {
+        PRINT_HILOGD("processName: %{public}s, processId: %{public}d, callerPid: %{public}d",
+            processInfo.processName_.c_str(), processInfo.pid_, callerPid);
+        if (processInfo.pid_ != 0 && !bundleName.empty() && callerPid == processInfo.pid_ &&
+            processInfo.processName_ != SPOOLER_EXTENSION_BUNDLE_NAME) {
+            PRINT_HILOGD("add callerPid: %{public}d", callerPid);
+            callerMap_[callerPid] = bundleName;
+        }
+    }
+    
+
     if (state_ != ServiceRunningState::STATE_RUNNING) {
         PRINT_HILOGI("PrintServiceAbility restart.");
         OnStart();
@@ -306,8 +319,6 @@ int32_t PrintServiceAbility::StartService()
             printUserDataMap_.insert(std::make_pair(callerTokenId, userData));
         }
     }
-    printAppCount_++;
-    PRINT_HILOGI("NativePrint PrintServiceAbility StartService started. PrintAppCount_: %{public}u", printAppCount_);
 #ifdef CUPS_ENABLE
     return DelayedSingleton<PrintCupsClient>::GetInstance()->InitCupsResources();
 #endif // CUPS_ENABLE
@@ -350,8 +361,6 @@ int32_t PrintServiceAbility::CallSpooler(const std::vector<std::string> &fileLis
     SendPrintJobEvent(*printJob);
     securityGuardManager_.receiveBaseInfo(taskId, callerPkg, fileList);
 
-    printAppCount_++;
-    PRINT_HILOGI("printAppCount_: %{public}u", printAppCount_);
     return E_PRINT_NONE;
 }
 
@@ -1627,9 +1636,8 @@ void PrintServiceAbility::ReportCompletedPrint(const std::string &printerId)
 {
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_COMPLETED);
     PRINT_HILOGD("no print job exists, destroy extension");
-    PRINT_HILOGI("printAppCount_: %{public}u", printAppCount_);
-    if (queuedJobList_.size() == 0 && printAppCount_ == 0) {
-        UnloadSystemAbility();
+    if (queuedJobList_.size() == 0) {
+        StartUnloadThread();
     }
 }
 
@@ -1790,15 +1798,13 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
                 AddToPrintJobList(jobId, printJob);
                 SendPrintJobEvent(*printJob);
             }
-            printAppCount_++;
-            PRINT_HILOGI("printAppCount_: %{public}u", printAppCount_);
             break;
         case APPLICATION_CLOSED_FOR_STARTED:
-            ReduceAppCount();
+            StartUnloadThread();
             break;
         case APPLICATION_CLOSED_FOR_CANCELED:
             UnregisterPrintTaskCallback(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED);
-            ReduceAppCount();
+            StartUnloadThread();
             break;
         default:
             PRINT_HILOGW("unsupported event");
@@ -1809,47 +1815,76 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
 
 void PrintServiceAbility::UnloadSystemAbility()
 {
-    PRINT_HILOGI("delay unload task begin");
-    auto unloadTask = [this]() {
-        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-        unloadCount_--;
-        PRINT_HILOGI("do unload task, unloadCount_: %{public}u", unloadCount_);
-        if (printAppCount_ != 0 || queuedJobList_.size() > 0 || unloadCount_ != 0) {
-            PRINT_HILOGE("There are still print jobs being executed.");
-            return;
-        }
-        NotifyAppJobQueueChanged(QUEUE_JOB_LIST_UNSUBSCRIBE);
-        int32_t ret = DestroyExtension();
-        if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("DestroyExtension failed.");
-            return;
-        }
+    if (callerMap_.size() > 0 || queuedJobList_.size() > 0) {
+        PRINT_HILOGE("There are still print jobs being executed.");
+        return;
+    }
+    PRINT_HILOGI("unload task begin");
+    NotifyAppJobQueueChanged(QUEUE_JOB_LIST_UNSUBSCRIBE);
+    int32_t ret = DestroyExtension();
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("DestroyExtension failed.");
+        return;
+    }
 #ifdef CUPS_ENABLE
 #ifdef ENTERPRISE_ENABLE
-        if (IsEnterpriseEnable() && IsEnterprise()) {
-            DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdEnterpriseService();
-        } else {
+    if (IsEnterpriseEnable() && IsEnterprise()) {
+        DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdEnterpriseService();
+    } else {
 #endif // ENTERPRISE_ENABLE
-            DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdService();
+        DelayedSingleton<PrintCupsClient>::GetInstance()->StopCupsdService();
 #ifdef ENTERPRISE_ENABLE
-        }
+    }
 #endif // ENTERPRISE_ENABLE
 #endif // CUPS_ENABLE
-        auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (samgrProxy == nullptr) {
-            PRINT_HILOGE("get samgr failed");
-            return;
+    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgrProxy == nullptr) {
+        PRINT_HILOGE("get samgr failed");
+        return;
+    }
+    ret = samgrProxy->UnloadSystemAbility(PRINT_SERVICE_ID);
+    if (ret != ERR_OK) {
+        PRINT_HILOGE("unload print system ability failed");
+        return;
+    }
+    PRINT_HILOGI("unload print system ability successfully");
+}
+
+void PrintServiceAbility::CallerAppsMonitor()
+{
+    if (unloadThread == false) {
+        unloadThread = true;
+    } else {
+        return;
+    }
+    PRINT_HILOGI("start monitor caller apps");
+    while (true) {
+        for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
+            PRINT_HILOGD("check caller process, pid: %{public}d, bundleName: %{public}s",
+                iter->first, iter->second.c_str());
+            if (IsAppAlive(iter->second, iter->first)) {
+                PRINT_HILOGI("app still alive");
+                break;
+            } else {
+                PRINT_HILOGI("app not alive, erase it");
+                iter = callerMap_.erase(iter);
+            }
         }
-        ret = samgrProxy->UnloadSystemAbility(PRINT_SERVICE_ID);
-        if (ret != ERR_OK) {
-            PRINT_HILOGE("unload print system ability failed");
-            return;
+        PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
+        std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
+        if (callerMap_.size() == 0 && queuedJobList_.size() == 0) {
+            UnloadSystemAbility();
         }
-        PRINT_HILOGI("unload print system ability successfully");
-    };
-    serviceHandler_->PostTask(unloadTask, UNLOAD_SA_INTERVAL);
-    unloadCount_++;
-    PRINT_HILOGI("unloadCount_: %{public}u", unloadCount_);
+    }
+}
+
+void PrintServiceAbility::StartUnloadThread()
+{
+    if (unloadThread == false) {
+        PRINT_HILOGI("start unload thread");
+        std::thread startUnloadThread([this] { this->CallerAppsMonitor(); });
+        startUnloadThread.detach();
+    }
 }
 
 void PrintServiceAbility::DelayEnterLowPowerMode()
@@ -1943,7 +1978,7 @@ int32_t PrintServiceAbility::UnregisterPrinterCallback(const std::string &type)
     iter->second->UnregisterPrinterCallback(type);
     PRINT_HILOGD("PrintServiceAbility::UnregisterPrinterCallback end.");
     if (type == PRINTER_CHANGE_EVENT_TYPE) {
-        ReduceAppCount();
+        StartUnloadThread();
     }
     return E_PRINT_NONE;
 }
@@ -2132,7 +2167,7 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
         PRINT_HILOGI("PrintServiceAbility::Off delete type=%{public}s object message.", eventType.c_str());
         registeredListeners_.erase(iter);
         if (PrintUtils::GetEventType(eventType) == PRINTER_CHANGE_EVENT_TYPE) {
-            ReduceAppCount();
+            StartUnloadThread();
         }
         return E_PRINT_NONE;
     }
@@ -2400,26 +2435,17 @@ int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const 
     if (type == "0" || type == NOTIFY_INFO_SPOOLER_CLOSED_FOR_STARTED) {
         PRINT_HILOGI("Notify Spooler Closed for started jobId : %{public}s", jobId.c_str());
         notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED);
-        ReduceAppCount();
+        StartUnloadThread();
         return E_PRINT_NONE;
     }
 
     if (type == NOTIFY_INFO_SPOOLER_CLOSED_FOR_CANCELLED) {
         PRINT_HILOGI("Notify Spooler Closed for canceled jobId : %{public}s", jobId.c_str());
         notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED);
-        ReduceAppCount();
+        StartUnloadThread();
         return E_PRINT_NONE;
     }
     return E_PRINT_INVALID_PARAMETER;
-}
-
-void PrintServiceAbility::ReduceAppCount()
-{
-    printAppCount_ = printAppCount_ >= 1 ? printAppCount_ - 1 : 0;
-    PRINT_HILOGI("printAppCount_: %{public}u", printAppCount_);
-    if (printAppCount_ == 0 && queuedJobList_.size() == 0) {
-        UnloadSystemAbility();
-    }
 }
 
 void PrintServiceAbility::notifyAdapterJobChanged(const std::string jobId, const uint32_t state,
@@ -3544,8 +3570,6 @@ void PrintServiceAbility::HandlePrinterChangeRegister(const std::string &eventTy
         QueryAllExtension(extensionInfos);
         std::vector <std::string> extensionIds;
         StartDiscoverPrinter(extensionIds);
-        printAppCount_++;
-        PRINT_HILOGD("end HandlePrinterChangeRegister, printAppCount_: %{public}u", printAppCount_);
     }
 }
 
@@ -3920,5 +3944,58 @@ bool PrintServiceAbility::CheckPrintConstraint()
     }
     PRINT_HILOGD("print constraint for user %{public}d is %{public}d.", userId, isEnabled);
     return isEnabled;
+}
+
+sptr<AppExecFwk::IAppMgr> PrintServiceAbility::GetAppManager()
+{
+    auto sysAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sysAbilityMgr == nullptr) {
+        PRINT_HILOGE("GetSystemAbilityManager fail");
+        return nullptr;
+    }
+    auto remoteObject = sysAbilityMgr->GetSystemAbility(APP_MGR_SERVICE_ID);
+    if (remoteObject == nullptr) {
+        PRINT_HILOGE("GetSystemAbility fail");
+        return nullptr;
+    }
+    return iface_cast<AppExecFwk::IAppMgr>(remoteObject);
+}
+
+std::vector<AppExecFwk::RunningProcessInfo> PrintServiceAbility::GetRunningProcessInformation(
+    const std::string &bundleName)
+{
+    std::vector<AppExecFwk::RunningProcessInfo> processInfos;
+    auto appManager = GetAppManager();
+    if (appManager == nullptr) {
+        PRINT_HILOGE("appManager is nullptr");
+        return processInfos;
+    }
+    int32_t userId = GetCurrentUserId();
+    if (userId == INVALID_USER_ID) {
+        PRINT_HILOGE("Invalid user id.");
+        return processInfos;
+    }
+    int32_t ret = appManager->GetRunningProcessInformation(bundleName, userId, processInfos);
+    if (ret != ERR_OK) {
+        PRINT_HILOGE("GetRunningProcessInformation fail");
+        return processInfos;
+    }
+    return processInfos;
+}
+
+bool PrintServiceAbility::IsAppAlive(const std::string &bundleName, int32_t pid)
+{
+    std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(bundleName);
+    if (processInfos.empty() || processInfos[0].pid_ == 0) {
+        PRINT_HILOGE("Get running process information pid empty");
+        return false;
+    }
+    for (auto processInfo: processInfos) {
+        PRINT_HILOGD("processName: %{public}s, pid: %{public}d", processInfo.processName_.c_str(), processInfo.pid_);
+        if (processInfo.pid_ == pid && processInfo.processName_ != SPOOLER_EXTENSION_BUNDLE_NAME) {
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace OHOS::Print
