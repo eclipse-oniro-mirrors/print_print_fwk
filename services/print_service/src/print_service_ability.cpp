@@ -1812,18 +1812,18 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
     return E_PRINT_NONE;
 }
 
-void PrintServiceAbility::UnloadSystemAbility()
+bool PrintServiceAbility::UnloadSystemAbility()
 {
     if (callerMap_.size() > 0 || queuedJobList_.size() > 0) {
         PRINT_HILOGE("There are still print jobs being executed.");
-        return;
+        return false;
     }
     PRINT_HILOGI("unload task begin");
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_UNSUBSCRIBE);
     int32_t ret = DestroyExtension();
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("DestroyExtension failed.");
-        return;
+        return false;
     }
 #ifdef CUPS_ENABLE
 #ifdef ENTERPRISE_ENABLE
@@ -1839,14 +1839,15 @@ void PrintServiceAbility::UnloadSystemAbility()
     auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgrProxy == nullptr) {
         PRINT_HILOGE("get samgr failed");
-        return;
+        return false;
     }
     ret = samgrProxy->UnloadSystemAbility(PRINT_SERVICE_ID);
     if (ret != ERR_OK) {
         PRINT_HILOGE("unload print system ability failed");
-        return;
+        return false;
     }
     PRINT_HILOGI("unload print system ability successfully");
+    return true;
 }
 
 void PrintServiceAbility::CallerAppsMonitor()
@@ -1872,7 +1873,9 @@ void PrintServiceAbility::CallerAppsMonitor()
         PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
         if (callerMap_.size() == 0 && queuedJobList_.size() == 0) {
-            UnloadSystemAbility();
+            if (UnloadSystemAbility()) {
+                break;
+            }
         }
     }
 }

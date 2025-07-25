@@ -170,7 +170,7 @@ private:
     std::shared_ptr<PrintUserData> GetUserDataByJobId(const std::string jobId);
     bool IsQueuedJobListEmpty(const std::string &jobId);
     void SetPrintJobCanceled(PrintJob &jobinfo);
-    void UnloadSystemAbility();
+    bool UnloadSystemAbility();
     bool CheckIsDefaultPrinter(const std::string &printerId);
     bool CheckIsLastUsedPrinter(const std::string &printerId);
     void SetLastUsedPrinter(const std::string &printerId);
