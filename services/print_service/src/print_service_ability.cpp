@@ -1858,7 +1858,7 @@ void PrintServiceAbility::CallerAppsMonitor()
         return;
     }
     PRINT_HILOGI("start monitor caller apps");
-    while (true) {
+    while (callerMap_.size() != 0 || queuedJobList_.size() != 0 || !UnloadSystemAbility()) {
         for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
             PRINT_HILOGD("check caller process, pid: %{public}d, bundleName: %{public}s",
                 iter->first, iter->second.c_str());
@@ -1872,11 +1872,6 @@ void PrintServiceAbility::CallerAppsMonitor()
         }
         PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
-        if (callerMap_.size() == 0 && queuedJobList_.size() == 0) {
-            if (UnloadSystemAbility()) {
-                return;
-            }
-        }
     }
 }
 
