@@ -271,6 +271,7 @@ void PrintServiceAbility::ManualStart()
             callerMap_[callerPid] = bundleName;
         }
     }
+    StartUnloadThread();
 
     if (state_ != ServiceRunningState::STATE_RUNNING) {
         PRINT_HILOGI("PrintServiceAbility restart.");
@@ -1635,9 +1636,6 @@ void PrintServiceAbility::ReportCompletedPrint(const std::string &printerId)
 {
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_COMPLETED);
     PRINT_HILOGD("no print job exists, destroy extension");
-    if (queuedJobList_.size() == 0) {
-        StartUnloadThread();
-    }
 }
 
 void PrintServiceAbility::NotifyAppJobQueueChanged(const std::string &applyResult)
@@ -1799,11 +1797,9 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
             }
             break;
         case APPLICATION_CLOSED_FOR_STARTED:
-            StartUnloadThread();
             break;
         case APPLICATION_CLOSED_FOR_CANCELED:
             UnregisterPrintTaskCallback(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED);
-            StartUnloadThread();
             break;
         default:
             PRINT_HILOGW("unsupported event");
@@ -1814,6 +1810,7 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
 
 bool PrintServiceAbility::UnloadSystemAbility()
 {
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (callerMap_.size() > 0 || queuedJobList_.size() > 0) {
         PRINT_HILOGE("There are still print jobs being executed.");
         return false;
@@ -1852,33 +1849,33 @@ bool PrintServiceAbility::UnloadSystemAbility()
 
 void PrintServiceAbility::CallerAppsMonitor()
 {
-    if (unloadThread == false) {
-        unloadThread = true;
-    } else {
-        return;
-    }
     PRINT_HILOGI("start monitor caller apps");
     while (callerMap_.size() != 0 || queuedJobList_.size() != 0 || !UnloadSystemAbility()) {
-        for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
-            PRINT_HILOGD("check caller process, pid: %{public}d, bundleName: %{public}s",
-                iter->first, iter->second.c_str());
-            if (IsAppAlive(iter->second, iter->first)) {
-                PRINT_HILOGI("app still alive");
-                break;
-            } else {
-                PRINT_HILOGI("app not alive, erase it");
-                iter = callerMap_.erase(iter);
+        {
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+            for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
+                PRINT_HILOGD("check caller process, pid: %{public}d, bundleName: %{public}s",
+                    iter->first, iter->second.c_str());
+                if (IsAppAlive(iter->second, iter->first)) {
+                    PRINT_HILOGI("app still alive");
+                    break;
+                } else {
+                    PRINT_HILOGI("app not alive, erase it");
+                    iter = callerMap_.erase(iter);
+                }
             }
+            PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
         }
-        PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
     }
 }
 
 void PrintServiceAbility::StartUnloadThread()
 {
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (unloadThread == false) {
         PRINT_HILOGI("start unload thread");
+        unloadThread = true;
         std::thread startUnloadThread([this] { this->CallerAppsMonitor(); });
         startUnloadThread.detach();
     }
@@ -1974,9 +1971,6 @@ int32_t PrintServiceAbility::UnregisterPrinterCallback(const std::string &type)
     }
     iter->second->UnregisterPrinterCallback(type);
     PRINT_HILOGD("PrintServiceAbility::UnregisterPrinterCallback end.");
-    if (type == PRINTER_CHANGE_EVENT_TYPE) {
-        StartUnloadThread();
-    }
     return E_PRINT_NONE;
 }
 
@@ -2163,9 +2157,6 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
     if (iter != registeredListeners_.end()) {
         PRINT_HILOGI("PrintServiceAbility::Off delete type=%{public}s object message.", eventType.c_str());
         registeredListeners_.erase(iter);
-        if (PrintUtils::GetEventType(eventType) == PRINTER_CHANGE_EVENT_TYPE) {
-            StartUnloadThread();
-        }
         return E_PRINT_NONE;
     }
     PRINT_HILOGI("PrintServiceAbility::Off has already delete type=%{public}s delete.", eventType.c_str());
@@ -2432,14 +2423,12 @@ int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const 
     if (type == "0" || type == NOTIFY_INFO_SPOOLER_CLOSED_FOR_STARTED) {
         PRINT_HILOGI("Notify Spooler Closed for started jobId : %{public}s", jobId.c_str());
         notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED);
-        StartUnloadThread();
         return E_PRINT_NONE;
     }
 
     if (type == NOTIFY_INFO_SPOOLER_CLOSED_FOR_CANCELLED) {
         PRINT_HILOGI("Notify Spooler Closed for canceled jobId : %{public}s", jobId.c_str());
         notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED);
-        StartUnloadThread();
         return E_PRINT_NONE;
     }
     return E_PRINT_INVALID_PARAMETER;

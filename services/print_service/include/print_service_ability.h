@@ -37,8 +37,6 @@
 #include "vendor_manager.h"
 #include "os_account_manager.h"
 #include "singleton.h"
-#include "iservice_registry.h"
-#include "system_ability_definition.h"
 #include "app_mgr_client.h"
 
 namespace OHOS::Print {
