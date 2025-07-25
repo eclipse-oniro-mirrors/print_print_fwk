@@ -18,8 +18,8 @@ import ApplicationContext from './ApplicationContext'
 
 export class Context extends BaseContext {
   area: int = 0;
-  filesDir: string = "";
-  tempDir: string = "";
+  filesDir: string = '';
+  tempDir: string = '';
   private applicationContext?: ApplicationContext;
 
   getApplicationContext(): ApplicationContext | undefined {
