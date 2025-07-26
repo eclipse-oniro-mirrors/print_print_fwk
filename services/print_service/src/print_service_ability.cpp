@@ -3359,7 +3359,7 @@ bool PrintServiceAbility::OnVendorStatusUpdate(const std::string &globalVendorNa
     printSystemData_.UpdatePrinterStatus(globalPrinterId, static_cast<PrinterStatus>(status.state));
     PrinterInfo printerInfo;
     if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printerInfo)) {
-        PRINT_HILOGW("cannot find added printer info");
+        PRINT_HILOGD("cannot find added printer info");
         return false;
     }
     printerInfo.SetPrinterStatus(static_cast<uint32_t>(status.state));

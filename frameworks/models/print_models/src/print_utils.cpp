@@ -366,15 +366,10 @@ std::string PrintUtils::ExtractHostFromUri(const std::string &uri)
     if (atPos != std::string::npos) {
         startPos = atPos + 1;
     }
-    size_t endPos = uri.find_first_of("/?#", startPos);
+    size_t endPos = uri.find_first_of("/?#:", startPos);
     if (endPos == std::string::npos) {
-        endPos = uri.length();
+        return uri.substr(startPos);
     }
-    std::string host = uri.substr(startPos, endPos - startPos);
-    size_t colonPos = host.find(':');
-    if (colonPos != std::string::npos) {
-        return host.substr(0, colonPos);
-    }
-    return host;
+    return uri.substr(startPos, endPos - startPos);
 }
 }  // namespace OHOS::Print
