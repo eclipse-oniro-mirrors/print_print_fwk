@@ -1468,7 +1468,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0069_NeedRename, TestSiz
     std::vector<PrintJob> testPrintJobs;
 
     PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(testPrintJobs);
+    int32_t ret = PrintManagerClient::GetInstance()->QueryAllActivePrintJob(testPrintJobs);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1484,7 +1484,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0070_NeedRename, TestSiz
 
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(testPrintJobs);
+    int32_t ret = PrintManagerClient::GetInstance()->QueryAllActivePrintJob(testPrintJobs);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1499,7 +1499,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0071_NeedRename, TestSiz
     std::vector<PrintJob> testPrintJobs;
     PrintManagerClient::GetInstance()->LoadServerFail();
     PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(testPrintJobs);
+    int32_t ret = PrintManagerClient::GetInstance()->QueryAllActivePrintJob(testPrintJobs);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -1518,8 +1518,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0072_NeedRename, TestSiz
 
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, QueryAllPrintJob(_)).Times(1);
-    ON_CALL(*service, QueryAllPrintJob).WillByDefault(
+    EXPECT_CALL(*service, QueryAllActivePrintJob(_)).Times(1);
+    ON_CALL(*service, QueryAllActivePrintJob).WillByDefault(
             [&testPrintJobs](std::vector<PrintJob> &printJobs) {
                 printJobs.assign(testPrintJobs.begin(), testPrintJobs.end());
                 return E_PRINT_NONE;
@@ -1529,7 +1529,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0072_NeedRename, TestSiz
     CallRemoteObject(service, obj, dr);
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     std::vector<PrintJob> result;
-    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(result);
+    int32_t ret = PrintManagerClient::GetInstance()->QueryAllActivePrintJob(result);
     EXPECT_EQ(testPrintJobs.size(), result.size());
     for (size_t index = 0; index < testPrintJobs.size(); index++)
     {
@@ -2574,7 +2574,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0143_NeedRename, TestSiz
     mockPrintManagerClient.QueryPrinterProperties(printerId, keyList, valueList);
     mockPrintManagerClient.StartNativePrintJob(jobinfo);
     std::vector<PrintJob> printJobs;
-    ret = mockPrintManagerClient.QueryAllPrintJob(printJobs);
+    ret = mockPrintManagerClient.QueryAllActivePrintJob(printJobs);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
     std::vector<PrinterInfo> printers;
     ret = mockPrintManagerClient.DiscoverUsbPrinters(printers);

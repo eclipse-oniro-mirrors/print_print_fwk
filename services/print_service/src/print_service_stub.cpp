@@ -53,9 +53,9 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_EXT_CB] = &PrintServiceStub::OnRegisterExtCallback;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UNREG_EXT_CB] = &PrintServiceStub::OnUnregisterAllExtCallback;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_LOAD_EXT] = &PrintServiceStub::OnLoadExtSuccess;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLPRINTJOB] = &PrintServiceStub::OnQueryAllPrintJob;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLHISTORYPRINTJOB] =
-        &PrintServiceStub::OnQueryAllHistoryPrintJob;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLACTIVEPRINTJOB] = &PrintServiceStub::OnQueryAllActivePrintJob;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLPRINTJOB] =
+        &PrintServiceStub::OnQueryAllPrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTJOBBYID] = &PrintServiceStub::OnQueryPrintJobById;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ADDPRINTERTOCUPS] = &PrintServiceStub::OnAddPrinterToCups;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERCAPABILITYBYURI] =
@@ -485,6 +485,24 @@ bool PrintServiceStub::OnQueryPrinterCapability(MessageParcel &data, MessageParc
     return ret == E_PRINT_NONE;
 }
 
+bool PrintServiceStub::OnQueryAllActivePrintJob(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnQueryAllActivePrintJob in");
+    std::vector<PrintJob> printJob;
+    printJob.clear();
+    int32_t ret = QueryAllActivePrintJob(printJob);
+    reply.WriteInt32(ret);
+    if (ret == E_PRINT_NONE) {
+        uint32_t size = static_cast<uint32_t>(printJob.size());
+        reply.WriteUint32(size);
+        for (uint32_t index = 0; index < size; index++) {
+            printJob[index].Marshalling(reply);
+        }
+    }
+    PRINT_HILOGD("PrintServiceStub::OnQueryAllActivePrintJob out");
+    return ret == E_PRINT_NONE;
+}
+
 bool PrintServiceStub::OnQueryAllPrintJob(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnQueryAllPrintJob in");
@@ -500,24 +518,6 @@ bool PrintServiceStub::OnQueryAllPrintJob(MessageParcel &data, MessageParcel &re
         }
     }
     PRINT_HILOGD("PrintServiceStub::OnQueryAllPrintJob out");
-    return ret == E_PRINT_NONE;
-}
-
-bool PrintServiceStub::OnQueryAllHistoryPrintJob(MessageParcel &data, MessageParcel &reply)
-{
-    PRINT_HILOGI("PrintServiceStub::OnQueryAllHistoryPrintJob in");
-    std::vector<PrintJob> printJob;
-    printJob.clear();
-    int32_t ret = QueryAllHistoryPrintJob(printJob);
-    reply.WriteInt32(ret);
-    if (ret == E_PRINT_NONE) {
-        uint32_t size = static_cast<uint32_t>(printJob.size());
-        reply.WriteUint32(size);
-        for (uint32_t index = 0; index < size; index++) {
-            printJob[index].Marshalling(reply);
-        }
-    }
-    PRINT_HILOGD("PrintServiceStub::OnQueryAllHistoryPrintJob out");
     return ret == E_PRINT_NONE;
 }
 

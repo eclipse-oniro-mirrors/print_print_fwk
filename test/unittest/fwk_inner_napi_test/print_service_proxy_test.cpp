@@ -664,7 +664,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0019_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, QueryAllPrintJob(_)).Times(Exactly(1)).WillOnce(
+    EXPECT_CALL(*service, QueryAllActivePrintJob(_)).Times(Exactly(1)).WillOnce(
         [&testPrintJobs](std::vector<PrintJob> &printJobs) {
             EXPECT_EQ(testPrintJobs.size(), printJobs.size());
             return E_PRINT_NONE;
@@ -675,7 +675,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0019_NeedRename, TestSize.
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
         });
-    proxy->QueryAllPrintJob(testPrintJobs);
+    proxy->QueryAllActivePrintJob(testPrintJobs);
 }
 
 /**

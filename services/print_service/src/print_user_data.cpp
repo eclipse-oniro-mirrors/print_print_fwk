@@ -128,11 +128,11 @@ int32_t PrintUserData::QueryHistoryPrintJobById(const std::string &printJobId, P
     return E_PRINT_INVALID_PRINTJOB;
 }
 
-int32_t PrintUserData::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
+int32_t PrintUserData::QueryAllActivePrintJob(std::vector<PrintJob> &printJobs)
 {
     printJobs.clear();
     for (auto iter : jobOrderList_) {
-        PRINT_HILOGI("QueryAllPrintJob queuedJobList_ jobOrderId: %{public}s, jobId: %{public}s",
+        PRINT_HILOGI("QueryAllActivePrintJob queuedJobList_ jobOrderId: %{public}s, jobId: %{public}s",
             iter.first.c_str(),
             iter.second.c_str());
         auto jobIt = queuedJobList_.find(iter.second);
@@ -145,13 +145,13 @@ int32_t PrintUserData::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
             }
         }
     }
-    PRINT_HILOGI("QueryAllPrintJob End.");
+    PRINT_HILOGI("QueryAllActivePrintJob End.");
     return E_PRINT_NONE;
 }
 
-int32_t PrintUserData::QueryAllHistoryPrintJob(std::vector<std::string> printerIds, std::vector<PrintJob> &printJobs)
+int32_t PrintUserData::QueryAllPrintJob(std::vector<std::string> printerIds, std::vector<PrintJob> &printJobs)
 {
-    PRINT_HILOGI("QueryAllHistoryPrintJob Start.");
+    PRINT_HILOGI("QueryAllPrintJob Start.");
     printJobs.clear();
     for (auto iter : jobOrderList_) {
         auto jobIt = queuedJobList_.find(iter.second);
@@ -175,7 +175,7 @@ int32_t PrintUserData::QueryAllHistoryPrintJob(std::vector<std::string> printerI
             printJobs.emplace_back(*(innerIt->second));
         }
     }
-    PRINT_HILOGI("QueryAllHistoryPrintJob End.");
+    PRINT_HILOGI("QueryAllPrintJob End.");
     return E_PRINT_NONE;
 }
 

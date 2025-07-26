@@ -279,9 +279,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartOne_ErrorToken_Shou
     std::vector<PrintExtensionInfo> extensionInfos;
     EXPECT_EQ(service->QueryAllExtension(extensionInfos), E_PRINT_NO_PERMISSION);
     std::vector<PrintJob> printJobs;
-    EXPECT_EQ(service->QueryAllPrintJob(printJobs), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->QueryAllActivePrintJob(printJobs), E_PRINT_NO_PERMISSION);
     std::vector<PrintJob> historyPrintJobs;
-    EXPECT_EQ(service->QueryAllHistoryPrintJob(historyPrintJobs), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->QueryAllPrintJob(historyPrintJobs), E_PRINT_NO_PERMISSION);
     std::vector<std::string> printerList;
     EXPECT_EQ(service->QueryAddedPrinter(printerList), E_PRINT_NO_PERMISSION);
     PrinterInfo info;
@@ -712,7 +712,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0029_NeedRename, TestS
     int32_t userId = 100;
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_.insert(std::make_pair(userId, userData));
-    EXPECT_EQ(service->QueryAllPrintJob(printJobs), E_PRINT_NONE);
+    EXPECT_EQ(service->QueryAllActivePrintJob(printJobs), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0156_NeedRename, TestSize.Level1)
@@ -721,11 +721,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0156_NeedRename, TestS
     std::vector<PrintJob> printJobs;
     int32_t userId = 100;
     service->printUserMap_.insert(std::make_pair(userId, nullptr));
-    EXPECT_EQ(service->QueryAllHistoryPrintJob(printJobs), E_PRINT_INVALID_USERID);
+    EXPECT_EQ(service->QueryAllPrintJob(printJobs), E_PRINT_INVALID_USERID);
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_.erase(userId);
     service->printUserMap_.insert(std::make_pair(userId, userData));
-    EXPECT_EQ(service->QueryAllHistoryPrintJob(printJobs), E_PRINT_NONE);
+    EXPECT_EQ(service->QueryAllPrintJob(printJobs), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0030_NeedRename, TestSize.Level1)
@@ -734,12 +734,12 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0030_NeedRename, TestS
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
     std::vector<PrintJob> printJobs;
-    service->QueryAllPrintJob(printJobs);
-    EXPECT_EQ(service->QueryAllPrintJob(printJobs), E_PRINT_NONE);
+    service->QueryAllActivePrintJob(printJobs);
+    EXPECT_EQ(service->QueryAllActivePrintJob(printJobs), E_PRINT_NONE);
     int32_t userId = 100;
     service->printUserMap_.insert(std::make_pair(userId, nullptr));
-    service->QueryAllPrintJob(printJobs);
-    EXPECT_EQ(service->QueryAllPrintJob(printJobs), E_PRINT_NONE);
+    service->QueryAllActivePrintJob(printJobs);
+    EXPECT_EQ(service->QueryAllActivePrintJob(printJobs), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0031_NeedRename, TestSize.Level1)

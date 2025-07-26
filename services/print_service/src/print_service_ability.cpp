@@ -617,6 +617,29 @@ int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceAbility::QueryAllActivePrintJob(std::vector<PrintJob> &printJobs)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGD("QueryAllActivePrintJob started.");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    auto userData = GetCurrentUserData();
+    if (userData == nullptr) {
+        PRINT_HILOGE("Get user data failed.");
+        return E_PRINT_INVALID_USERID;
+    }
+    int32_t ret = userData->QueryAllActivePrintJob(printJobs);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("QueryAllActivePrintJob failed.");
+        return ret;
+    }
+    return E_PRINT_NONE;
+}
+
+
 int32_t PrintServiceAbility::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
 {
     ManualStart();
@@ -631,32 +654,9 @@ int32_t PrintServiceAbility::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
         PRINT_HILOGE("Get user data failed.");
         return E_PRINT_INVALID_USERID;
     }
-    int32_t ret = userData->QueryAllPrintJob(printJobs);
+    int32_t ret = userData->QueryAllPrintJob(printSystemData_.QueryAddedPrinterIdList(), printJobs);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("QueryAllPrintJob failed.");
-        return ret;
-    }
-    return E_PRINT_NONE;
-}
-
-
-int32_t PrintServiceAbility::QueryAllHistoryPrintJob(std::vector<PrintJob> &printJobs)
-{
-    ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
-        PRINT_HILOGE("no permission to access print service");
-        return E_PRINT_NO_PERMISSION;
-    }
-    PRINT_HILOGD("QueryAllHistoryPrintJob started.");
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    auto userData = GetCurrentUserData();
-    if (userData == nullptr) {
-        PRINT_HILOGE("Get user data failed.");
-        return E_PRINT_INVALID_USERID;
-    }
-    int32_t ret = userData->QueryAllHistoryPrintJob(printSystemData_.QueryAddedPrinterIdList(), printJobs);
-    if (ret != E_PRINT_NONE) {
-        PRINT_HILOGE("QueryAllHistoryPrintJob failed.");
         return ret;
     }
     return E_PRINT_NONE;
@@ -1184,6 +1184,7 @@ int32_t PrintServiceAbility::BlockPrintJob(const std::string &jobId)
     }
 
     PrintCupsClient::GetInstance()->InterruptCupsJob(jobId);
+    PRINT_HILOGE("UpdatePrintJobState PRINT_JOB_BLOCKED");
     return E_PRINT_NONE;
 }
 

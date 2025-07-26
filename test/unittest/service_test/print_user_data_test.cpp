@@ -163,7 +163,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0009_NeedRename, TestSize.Level1)
     userData->AddToPrintJobList(jobId, printJob);
     userData->UpdateQueuedJobList(jobId, printJob, jobOrderId);
     std::vector<PrintJob> printJobs;
-    EXPECT_EQ(userData->QueryAllPrintJob(printJobs), E_PRINT_NONE);
+    EXPECT_EQ(userData->QueryAllActivePrintJob(printJobs), E_PRINT_NONE);
     printJob = nullptr;
     userData->UpdateQueuedJobList(jobId, printJob, jobOrderId);
 }
@@ -204,7 +204,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0012_NeedRename, TestSize.Level1)
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     userData->jobOrderList_.insert(std::make_pair(jobOrderId, jobId));
     std::vector<PrintJob> printJobs;
-    EXPECT_EQ(userData->QueryAllPrintJob(printJobs), E_PRINT_NONE);
+    EXPECT_EQ(userData->QueryAllActivePrintJob(printJobs), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0013_NeedRename, TestSize.Level1)
@@ -420,7 +420,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0031_NeedRename0, TestSize.Level1)
     userData->AddToPrintJobList(jobId, printJob);
     userData->UpdateQueuedJobList(jobId, printJob, jobOrderId);
     std::vector<PrintJob> printJobs;
-    EXPECT_EQ(userData->QueryAllHistoryPrintJob(printerIds, printJobs), E_PRINT_NONE);
+    EXPECT_EQ(userData->QueryAllPrintJob(printerIds, printJobs), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0031_NeedRename1, TestSize.Level1)
@@ -434,7 +434,7 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0031_NeedRename1, TestSize.Level1)
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     userData->jobOrderList_.insert(std::make_pair(jobOrderId, jobId));
     std::vector<PrintJob> printJobs;
-    EXPECT_EQ(userData->QueryAllHistoryPrintJob(printerIds, printJobs), E_PRINT_NONE);
+    EXPECT_EQ(userData->QueryAllPrintJob(printerIds, printJobs), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0031_NeedRename2, TestSize.Level1)
@@ -447,13 +447,13 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0031_NeedRename2, TestSize.Level1)
     printerIds.push_back(printerId);
     userData->InitPrintHistoryJobList(printerId);
     userData->printHistoryJobList_[printerId]->insert(std::make_pair(jobId, nullptr));
-    EXPECT_EQ(userData->QueryAllHistoryPrintJob(printerIds, printJobs), E_PRINT_INVALID_PRINTJOB);
+    EXPECT_EQ(userData->QueryAllPrintJob(printerIds, printJobs), E_PRINT_INVALID_PRINTJOB);
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     printJob->SetPrinterId(printerId);
     printJob->SetJobId(jobId);
     userData->printHistoryJobList_[printerId]->erase(jobId);
     userData->printHistoryJobList_[printerId]->insert(std::make_pair(jobId, printJob));
-    EXPECT_EQ(userData->QueryAllHistoryPrintJob(printerIds, printJobs), E_PRINT_NONE);
+    EXPECT_EQ(userData->QueryAllPrintJob(printerIds, printJobs), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0032_NeedRename, TestSize.Level1)

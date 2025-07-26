@@ -751,13 +751,13 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0030_NeedRename, TestSize.Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(CMD_QUERYALLPRINTJOB);
+    uint32_t code = static_cast<uint32_t>(CMD_QUERYALLACTIVEPRINTJOB);
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
 
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, QueryAllPrintJob).WillByDefault(Return(E_PRINT_NONE));
+    ON_CALL(*stub, QueryAllActivePrintJob).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
@@ -766,13 +766,13 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0065_NeedRename, TestSize.Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(CMD_QUERYALLHISTORYPRINTJOB);
+    uint32_t code = static_cast<uint32_t>(CMD_QUERYALLPRINTJOB);
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
 
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, QueryAllHistoryPrintJob).WillByDefault(Return(E_PRINT_NONE));
+    ON_CALL(*stub, QueryAllPrintJob).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 /**
