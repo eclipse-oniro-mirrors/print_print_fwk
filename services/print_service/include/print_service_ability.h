@@ -36,6 +36,8 @@
 #include "print_system_data.h"
 #include "vendor_manager.h"
 #include "os_account_manager.h"
+#include "singleton.h"
+#include "app_mgr_client.h"
 
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
@@ -166,8 +168,7 @@ private:
     std::shared_ptr<PrintUserData> GetUserDataByJobId(const std::string jobId);
     bool IsQueuedJobListEmpty(const std::string &jobId);
     void SetPrintJobCanceled(PrintJob &jobinfo);
-    void UnloadSystemAbility();
-    void ReduceAppCount();
+    bool UnloadSystemAbility();
     bool CheckIsDefaultPrinter(const std::string &printerId);
     bool CheckIsLastUsedPrinter(const std::string &printerId);
     void SetLastUsedPrinter(const std::string &printerId);
@@ -208,6 +209,11 @@ private:
     int32_t BlockPrintJob(const std::string &jobId);
     void BlockUserPrintJobs(const int32_t userId);
     bool CheckPrintConstraint();
+    sptr<AppExecFwk::IAppMgr> GetAppManager();
+    bool IsAppAlive(const std::string &bundleName, int32_t pid);
+    void CallerAppsMonitor();
+    void StartUnloadThread();
+    std::vector<AppExecFwk::RunningProcessInfo> GetRunningProcessInformation(const std::string &bundleName);
     
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
@@ -275,11 +281,13 @@ private:
     std::map<std::string, int32_t> userJobMap_;
     int32_t currentUserId_;
 
-    uint32_t printAppCount_;
-    uint32_t unloadCount_;
     uint32_t enterLowPowerCount_;
     bool isLowPowerMode_;
     VendorManager vendorManager;
+
+    std::map<int32_t, std::string> callerMap_;
+    bool unloadThread = false;
+    std::recursive_mutex callerMapMutex_;
 
 #ifdef ENTERPRISE_ENABLE
 private:
