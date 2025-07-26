@@ -112,12 +112,6 @@ napi_value NapiInnerPrint::StartDiscovery(napi_env env, napi_callback_info info)
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
-            PRINT_HILOGE("Non-system applications use system APIS!");
-            context->result = false;
-            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
-            return;
-        }
         int32_t ret = PrintManagerClient::GetInstance()->StartDiscoverPrinter(context->extensionList);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -146,12 +140,6 @@ napi_value NapiInnerPrint::StopDiscovery(napi_env env, napi_callback_info info)
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
-            PRINT_HILOGE("Non-system applications use system APIS!");
-            context->result = false;
-            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
-            return;
-        }
         int32_t ret = PrintManagerClient::GetInstance()->StopDiscoverPrinter();
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
@@ -186,12 +174,6 @@ napi_value NapiInnerPrint::ConnectPrinter(napi_env env, napi_callback_info info)
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
-            PRINT_HILOGE("Non-system applications use system APIS!");
-            context->result = false;
-            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
-            return;
-        }
         int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinter(context->printerId);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {

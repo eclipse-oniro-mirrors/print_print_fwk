@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <map>
 #include "napi_inner_print.h"
 #include "napi_print_ext.h"
 #include "napi_print_task.h"
@@ -66,6 +67,43 @@ static constexpr const char *FUNCTION_GET_PRINTER_INFORMATION_BY_ID = "getPrinte
 static constexpr const char *FUNCTION_UPDATE_PRINTER_IN_SYSTEM = "updatePrinterInSystem";
 static constexpr const char *FUNCTION_UPDATE_PRINTER_INFORMATION = "updatePrinterInformation";
 static constexpr const char *FUNCTION_SET_PRINTER_PREFERENCES = "setPrinterPreferences";
+
+static const std::map<std::string, uint32_t> PRINT_JOB_SUBSTATE_MAP = {
+    { "PRINT_JOB_COMPLETED_SUCCESS",                    PRINT_JOB_COMPLETED_SUCCESS },
+    { "PRINT_JOB_COMPLETED_FAILED",                     PRINT_JOB_COMPLETED_FAILED },
+    { "PRINT_JOB_COMPLETED_CANCELLED",                  PRINT_JOB_COMPLETED_CANCELLED },
+    { "PRINT_JOB_COMPLETED_FILE_CORRUPTED",             PRINT_JOB_COMPLETED_FILE_CORRUPT },
+    { "PRINT_JOB_BLOCK_OFFLINE",                        PRINT_JOB_BLOCKED_OFFLINE },
+    { "PRINT_JOB_BLOCK_BUSY",                           PRINT_JOB_BLOCKED_BUSY },
+    { "PRINT_JOB_BLOCK_CANCELLED",                      PRINT_JOB_BLOCKED_CANCELLED },
+    { "PRINT_JOB_BLOCK_OUT_OF_PAPER",                   PRINT_JOB_BLOCKED_OUT_OF_PAPER },
+    { "PRINT_JOB_BLOCK_OUT_OF_INK",                     PRINT_JOB_BLOCKED_OUT_OF_INK },
+    { "PRINT_JOB_BLOCK_OUT_OF_TONER",                   PRINT_JOB_BLOCKED_OUT_OF_TONER },
+    { "PRINT_JOB_BLOCK_JAMMED",                         PRINT_JOB_BLOCKED_JAMMED },
+    { "PRINT_JOB_BLOCK_DOOR_OPEN",                      PRINT_JOB_BLOCKED_DOOR_OPEN },
+    { "PRINT_JOB_BLOCK_SERVICE_REQUEST",                PRINT_JOB_BLOCKED_SERVICE_REQUEST },
+    { "PRINT_JOB_BLOCK_LOW_ON_INK",                     PRINT_JOB_BLOCKED_LOW_ON_INK },
+    { "PRINT_JOB_BLOCK_LOW_ON_TONER",                   PRINT_JOB_BLOCKED_LOW_ON_TONER },
+    { "PRINT_JOB_BLOCK_REALLY_LOW_ON_INK",              PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK },
+    { "PRINT_JOB_BLOCK_BAD_CERTIFICATE",                PRINT_JOB_BLOCKED_BAD_CERTIFICATE },
+    { "PRINT_JOB_BLOCK_DRIVER_EXCEPTION",               PRINT_JOB_BLOCKED_DRIVER_EXCEPTION },
+    { "PRINT_JOB_BLOCK_ACCOUNT_ERROR",                  PRINT_JOB_BLOCKED_ACCOUNT_ERROR },
+    { "PRINT_JOB_BLOCK_PRINT_PERMISSION_ERROR",         PRINT_JOB_BLOCKED_PRINT_PERMISSION_ERROR },
+    { "PRINT_JOB_BLOCK_PRINT_COLOR_PERMISSION_ERROR",   PRINT_JOB_BLOCKED_PRINT_COLOR_PERMISSION_ERROR },
+    { "PRINT_JOB_BLOCK_NETWORK_ERROR",                  PRINT_JOB_BLOCKED_NETWORK_ERROR },
+    { "PRINT_JOB_BLOCK_SERVER_CONNECTION_ERROR",        PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR },
+    { "PRINT_JOB_BLOCK_LARGE_FILE_ERROR",               PRINT_JOB_BLOCKED_LARGE_FILE_ERROR },
+    { "PRINT_JOB_BLOCK_FILE_PARSING_ERROR",             PRINT_JOB_BLOCKED_FILE_PARSING_ERROR },
+    { "PRINT_JOB_BLOCK_SLOW_FILE_CONVERSION",           PRINT_JOB_BLOCKED_SLOW_FILE_CONVERSION },
+    { "PRINT_JOB_RUNNING_UPLOADING_FILES",              PRINT_JOB_RUNNING_UPLOADING_FILES },
+    { "PRINT_JOB_RUNNING_CONVERTING_FILES",             PRINT_JOB_RUNNING_CONVERTING_FILES },
+    { "PRINT_JOB_BLOCK_INTERRUPT",                      PRINT_JOB_BLOCKED_INTERRUPT },
+    { "PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR",           PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR },
+    { "PRINT_JOB_BLOCK_DRIVER_MISSING",                 PRINT_JOB_BLOCKED_DRIVER_MISSING },
+    { "PRINT_JOB_BLOCK_INTERRUPT",                      PRINT_JOB_BLOCKED_INTERRUPT },
+    { "PRINT_JOB_BLOCK_PRINTER_UNAVAILABLE",            PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE },
+    { "PRINT_JOB_BLOCK_UNKNOWN",                        PRINT_JOB_BLOCKED_UNKNOWN },
+};
 
 #define PRINT_NAPI_METHOD(name, func)           \
     {                                           \
@@ -256,15 +294,6 @@ static napi_value NapiCreatePrintJobStateEnum(napi_env env)
     return object;
 }
 
-static void SetCompletedStateEnum(napi_env env, napi_value &object)
-{
-    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_SUCCESS", static_cast<int32_t>(PRINT_JOB_COMPLETED_SUCCESS));
-    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_FAILED", static_cast<int32_t>(PRINT_JOB_COMPLETED_FAILED));
-    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_CANCELLED", static_cast<int32_t>(PRINT_JOB_COMPLETED_CANCELLED));
-    SetEnumProperty(env, object, "PRINT_JOB_COMPLETED_FILE_CORRUPTED",
-        static_cast<int32_t>(PRINT_JOB_COMPLETED_FILE_CORRUPT));
-}
-
 static napi_value NapiCreatePrintJobSubStateEnum(napi_env env)
 {
     napi_value object = nullptr;
@@ -272,48 +301,9 @@ static napi_value NapiCreatePrintJobSubStateEnum(napi_env env)
         PRINT_HILOGE("Failed to create object");
         return nullptr;
     }
-    SetCompletedStateEnum(env, object);
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OFFLINE", static_cast<int32_t>(PRINT_JOB_BLOCKED_OFFLINE));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_BUSY", static_cast<int32_t>(PRINT_JOB_BLOCKED_BUSY));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_CANCELLED", static_cast<int32_t>(PRINT_JOB_BLOCKED_CANCELLED));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OUT_OF_PAPER", static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_PAPER));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OUT_OF_INK", static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_INK));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_OUT_OF_TONER", static_cast<int32_t>(PRINT_JOB_BLOCKED_OUT_OF_TONER));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_JAMMED", static_cast<int32_t>(PRINT_JOB_BLOCKED_JAMMED));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_DOOR_OPEN", static_cast<int32_t>(PRINT_JOB_BLOCKED_DOOR_OPEN));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_SERVICE_REQUEST",
-        static_cast<int32_t>(PRINT_JOB_BLOCKED_SERVICE_REQUEST));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_LOW_ON_INK", static_cast<int32_t>(PRINT_JOB_BLOCKED_LOW_ON_INK));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_LOW_ON_TONER", static_cast<int32_t>(PRINT_JOB_BLOCKED_LOW_ON_TONER));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_REALLY_LOW_ON_INK",
-        static_cast<int32_t>(PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_BAD_CERTIFICATE",
-        static_cast<int32_t>(PRINT_JOB_BLOCKED_BAD_CERTIFICATE));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_ACCOUNT_ERROR",
-        static_cast<int32_t>(PRINT_JOB_BLOCKED_ACCOUNT_ERROR));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_PRINT_PERMISSION_ERROR",
-        static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_PERMISSION_ERROR));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_PRINT_COLOR_PERMISSION_ERROR",
-        static_cast<int32_t>(PRINT_JOB_BLOCKED_PRINT_COLOR_PERMISSION_ERROR));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_NETWORK_ERROR",
-        static_cast<int32_t>(PRINT_JOB_BLOCKED_NETWORK_ERROR));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_SERVER_CONNECTION_ERROR",
-        static_cast<int32_t>(PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_LARGE_FILE_ERROR",
-        static_cast<int32_t>(PRINT_JOB_BLOCKED_LARGE_FILE_ERROR));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_FILE_PARSING_ERROR",
-        static_cast<int32_t>(PRINT_JOB_BLOCKED_FILE_PARSING_ERROR));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_SLOW_FILE_CONVERSION",
-        static_cast<int32_t>(PRINT_JOB_BLOCKED_SLOW_FILE_CONVERSION));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_INTERRUPT",
-        static_cast<int32_t>(PRINT_JOB_BLOCKED_INTERRUPT));
-    SetEnumProperty(env, object, "PRINT_JOB_RUNNING_UPLOADING_FILES",
-        static_cast<int32_t>(PRINT_JOB_RUNNING_UPLOADING_FILES));
-    SetEnumProperty(env, object, "PRINT_JOB_RUNNING_CONVERTING_FILES",
-        static_cast<int32_t>(PRINT_JOB_RUNNING_CONVERTING_FILES));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR",
-        static_cast<int32_t>(PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR));
-    SetEnumProperty(env, object, "PRINT_JOB_BLOCK_UNKNOWN", static_cast<int32_t>(PRINT_JOB_BLOCKED_UNKNOWN));
+    for (const auto& [key, value] : PRINT_JOB_SUBSTATE_MAP) {
+        SetEnumProperty(env, object, key, static_cast<int32_t>(value));
+    }
     return object;
 }
 
