@@ -43,7 +43,7 @@ public:
     {
         return true;
     }
-    bool onCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
+    bool OnCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
         const uint32_t subState) override
     {
         return true;

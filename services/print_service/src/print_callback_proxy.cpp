@@ -151,10 +151,10 @@ bool PrintCallbackProxy::OnCallbackAdapterLayout(const std::string &jobId, const
     return true;
 }
 
-bool PrintCallbackProxy::onCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
+bool PrintCallbackProxy::OnCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
     const uint32_t subState)
 {
-    PRINT_HILOGI("PrintCallbackProxy::onCallbackAdapterJobStateChanged Start");
+    PRINT_HILOGI("PrintCallbackProxy::OnCallbackAdapterJobStateChanged Start");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
@@ -178,7 +178,7 @@ bool PrintCallbackProxy::onCallbackAdapterJobStateChanged(const std::string jobI
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
     }
-    PRINT_HILOGI("PrintCallbackProxy::onCallbackAdapterJobStateChanged End");
+    PRINT_HILOGI("PrintCallbackProxy::OnCallbackAdapterJobStateChanged End");
     return true;
 }
 

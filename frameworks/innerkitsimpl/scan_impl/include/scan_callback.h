@@ -54,16 +54,6 @@ struct Param {
     napi_ref callbackRef;
 };
 
-typedef std::function<void(CallbackParam* &cbParam, napi_value &callbackFunc,
-    napi_value &callbackResult)> uv_work_function;
-
-struct CallbackContext {
-    CallbackParam* callBackParam;
-    uv_work_function uvWorkLambda;
-    void SetCallbackContext(CallbackParam* &callBackParam, uv_work_function &uvWorkLambda, std::mutex &mutex_);
-};
-
-
 class ScanCallback : public ScanCallbackStub {
 public:
     ScanCallback(napi_env env, napi_ref ref);
@@ -76,13 +66,12 @@ public:
     bool OnScanInitCallback(int32_t &scanVersion) override;
     bool OnSendSearchMessage(std::string &message) override;
     bool OnGetDevicesList(std::vector<ScanDeviceInfo> &info) override;
-    bool ExecuteUvQueueWork(CallbackContext* &param, uv_work_t* &work, uv_loop_s* &loop);
-    void CreateCallbackParam(uv_work_t *&work, CallbackParam *&param, CallbackContext *&context, bool &flag);
 
 #ifndef TDD_ENABLE
 private:
 #endif
-    int UvQueueWork(uv_loop_s *loop, uv_work_t *work);
+    bool ExecuteNapiEventWork(CallbackParam* param, std::function<void(CallbackParam*)> workFunc);
+    void NapiCallFunction(CallbackParam* cbParam, size_t argcCount, napi_value* callbackValues);
     napi_env env_;
     napi_ref ref_;
     std::function<void(std::vector<ScanDeviceInfo> &infos)> callbackFunction_;

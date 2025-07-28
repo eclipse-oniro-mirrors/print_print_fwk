@@ -64,16 +64,6 @@ namespace OHOS::Scan {
         (ptr) = nullptr; \
     }
 
-#define INIT_CALLBACK_PARAMS \
-        uv_loop_s *loop = nullptr; \
-        bool flag = true; \
-        napi_get_uv_event_loop(env_, &loop); \
-        CHECK_AND_CREATE(loop, "Failed to get uv event loop", flag); \
-        uv_work_t *work = nullptr; \
-        CallbackParam *param = nullptr; \
-        CallbackContext *context = nullptr; \
-        CreateCallbackParam(work, param, context, flag) \
-
 #define CHECK_AND_CREATE(pointer, error_message, flag) \
     if ((pointer) == nullptr) { \
         SCAN_HILOGE(error_message); \

@@ -2462,7 +2462,7 @@ void PrintServiceAbility::notifyAdapterJobChanged(const std::string jobId, const
     uint32_t printAdapterListeningState = GetListeningState(state, subState);
     PRINT_HILOGI("notifyAdapterJobChanged for subState: %{public}d, listeningState: %{public}d",
         subState, printAdapterListeningState);
-    eventIt->second->onCallbackAdapterJobStateChanged(jobId, state, printAdapterListeningState);
+    eventIt->second->OnCallbackAdapterJobStateChanged(jobId, state, printAdapterListeningState);
 
     if (subState == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED || state == PRINT_JOB_COMPLETED) {
         PRINT_HILOGI("erase adapterListenersByJobId_ %{public}s", jobId.c_str());

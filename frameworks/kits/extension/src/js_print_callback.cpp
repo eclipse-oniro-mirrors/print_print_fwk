@@ -47,23 +47,20 @@ uv_loop_s* JsPrintCallback::GetJsLoop(JsRuntime &jsRuntime)
     return loop;
 }
 
-bool JsPrintCallback::Call(napi_env env, void *data, uv_after_work_cb afterCallback)
+bool JsPrintCallback::Call(napi_env env, WorkParam *param, std::function<void(WorkParam*)> workCb)
 {
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env, &loop);
-    if (loop == nullptr) {
-        return false;
-    }
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        return false;
-    }
-    work->data = data;
-    int retVal = uv_queue_work_with_qos(loop, work,
-                                        [](uv_work_t *work) {}, afterCallback, uv_qos_user_initiated);
-    if (retVal != 0) {
-        PRINT_HILOGE("Failed to create uv work");
-        delete work;
+    auto task = [param, workCb]() {
+        if (param == nullptr) {
+            PRINT_HILOGE("param is a nullptr");
+            return;
+        }
+        workCb(param);
+        delete param;
+    };
+
+    napi_status ret = napi_send_event(env, task, napi_eprio_immediate);
+    if (ret != napi_ok) {
+        PRINT_HILOGE("napi_send_event fail");
         return false;
     }
     return true;
