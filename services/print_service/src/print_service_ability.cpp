@@ -1620,7 +1620,7 @@ void PrintServiceAbility::ReportPrinterIdle(const std::string &printerId)
 
 bool PrintServiceAbility::IsQueuedJobListEmpty(const std::string &jobId)
 {
-    auto userData = GetCurrentUserData();
+    auto userData = GetUserDataByJobId(jobId);
     if (userData == nullptr) {
         PRINT_HILOGE("Get user data failed.");
         return false;
