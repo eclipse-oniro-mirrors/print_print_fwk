@@ -263,16 +263,16 @@ void PrintServiceAbility::ManualStart()
     std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(bundleName);
-    for (auto processInfo: processInfos) {
+    for (auto &processInfo: processInfos) {
         PRINT_HILOGD("processName: %{public}s, processId: %{public}d, callerPid: %{public}d",
             processInfo.processName_.c_str(), processInfo.pid_, callerPid);
         if (processInfo.pid_ != 0 && !bundleName.empty() && callerPid == processInfo.pid_ &&
             processInfo.processName_.find(PRINT_EXTENSION_SUFFIX) == std::string::npos) {
             {
                 std::lock_guard<std::recursive_mutex> lock(callerMapMutex_);
-                PRINT_HILOGD("add callerPid: %{public}d", callerPid);
                 callerMap_[callerPid] = bundleName;
             }
+            PRINT_HILOGD("add callerPid: %{public}d", callerPid);
         }
     }
 
@@ -1816,7 +1816,7 @@ bool PrintServiceAbility::UnloadSystemAbility()
 {
     {
         std::lock_guard<std::recursive_mutex> lock(callerMapMutex_);
-        if (callerMap_.size() > 0 || queuedJobList_.size() > 0) {
+        if (!callerMap_.empty() || !queuedJobList_.empty()) {
             PRINT_HILOGE("There are still print jobs being executed.");
             return false;
         }
@@ -1873,13 +1873,13 @@ void PrintServiceAbility::CallerAppsMonitor()
             PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
         }
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
-    } while (callerMap_.size() != 0 || queuedJobList_.size() != 0 || !UnloadSystemAbility());
+    } while (!UnloadSystemAbility());
 }
 
 void PrintServiceAbility::StartUnloadThread()
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (unloadThread == false) {
+    if (!unloadThread) {
         PRINT_HILOGI("start unload thread");
         unloadThread = true;
         std::thread startUnloadThread([this] { this->CallerAppsMonitor(); });
@@ -3978,7 +3978,7 @@ std::vector<AppExecFwk::RunningProcessInfo> PrintServiceAbility::GetRunningProce
 bool PrintServiceAbility::IsAppAlive(const std::string &bundleName, int32_t pid)
 {
     std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(bundleName);
-    for (auto processInfo: processInfos) {
+    for (auto &processInfo: processInfos) {
         PRINT_HILOGD("processName: %{public}s, pid: %{public}d", processInfo.processName_.c_str(), processInfo.pid_);
         if (processInfo.pid_ == pid && processInfo.processName_.find(PRINT_EXTENSION_SUFFIX) == std::string::npos) {
             return true;
