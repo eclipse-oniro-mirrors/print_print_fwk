@@ -176,7 +176,7 @@ HWTEST_F(PrinterPreferencesTest, ConvertToJson_WrongOptionFormat_isNullReturnTru
     OHOS::Print::PrinterPreferences preferences;
     preferences.SetOption("test");
     Json::Value preferencesJson = preferences.ConvertToJson();
-    EXPECT_EQ(false, preferencesJson["options"].isNull());
+    EXPECT_EQ(true, preferencesJson["options"].isNull());
 }
 
 HWTEST_F(PrinterPreferencesTest,
