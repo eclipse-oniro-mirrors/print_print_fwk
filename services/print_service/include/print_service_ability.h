@@ -231,6 +231,7 @@ public:
     bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
         const std::string &ppdName, const std::string &ppdData) override;
+    std::vector<std::string> QueryAddedPrintersByIp(const std::string &printerIp) override;
     int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) override;
 
 private:

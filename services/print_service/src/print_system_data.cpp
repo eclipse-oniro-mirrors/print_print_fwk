@@ -932,6 +932,13 @@ std::vector<std::string> PrintSystemData::QueryAddedPrinterIdList()
     return GetAddedPrinterMap().GetKeyList();
 }
 
+std::vector<std::string> PrintSystemData::QueryAddedPrintersByIp(const std::string &printerIp)
+{
+    return GetAddedPrinterMap().GetKeyList([this, printerIp](const PrinterInfo &printer) -> bool {
+        return PrintUtils::ExtractHostFromUri(printer.GetUri()) == printerIp;
+    });
+}
+
 std::shared_ptr<PrinterInfo> PrintSystemData::QueryDiscoveredPrinterInfoById(const std::string &printerId)
 {
     std::lock_guard<std::mutex> lock(discoveredListMutex);

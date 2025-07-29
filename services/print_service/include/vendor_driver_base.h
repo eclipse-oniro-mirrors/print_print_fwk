@@ -67,6 +67,7 @@ public:
         const std::string &printerId) = 0;
     virtual int32_t QueryPrinterInfoByPrinterId(const std::string &vendorName, const std::string &printerId,
         PrinterInfo &info) = 0;
+    virtual std::vector<std::string> QueryAddedPrintersByIp(const std::string &printerIp) = 0;
     virtual bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) = 0;
     virtual ConnectMethod GetConnectingMethod(const std::string &id) = 0;
     virtual int32_t DiscoverBackendPrinters(const std::string &vendorName, std::vector<PrinterInfo> &printers) = 0;
@@ -88,6 +89,7 @@ public:
     virtual std::string GetVendorName() = 0;
     virtual int32_t OnPrinterDiscovered(const std::string &vendorName, const PrinterInfo &printerInfo);
     virtual bool MonitorPrinterStatus(const std::string &printerId, bool on);
+    virtual bool IsStatusMonitoring(const std::string &printerId);
     virtual bool QueryProperty(const std::string &printerId, const std::string &key, std::string &value);
     virtual void UpdateAllPrinterStatus();
     

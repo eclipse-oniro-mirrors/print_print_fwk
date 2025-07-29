@@ -2794,4 +2794,60 @@ HWTEST_F(PrintServiceAbilityTest, RefreshPrinterStatusOnSwitchUser_EnterpriseEna
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
 #endif // ENTERPRISE_ENABLE
 }
+
+HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnEmptyList_WhenCompIsNull, TestSize.Level1)
+{
+    PrintMapSafe<std::string> map;
+    std::function<bool (const std::string &)> comp = nullptr;
+    std::vector<std::string> result = map.GetKeyList(comp);
+    EXPECT_TRUE(result.empty());
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnEmptyList_WhenMapIsEmpty, TestSize.Level1)
+{
+    PrintMapSafe<std::string> map;
+    std::function<bool (const std::string &)> comp = [](const std::string &value) {
+        return value == "test";
+    };
+    std::vector<std::string> result = map.GetKeyList(comp);
+    EXPECT_TRUE(result.empty());
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnEmptyList_WhenNotElementsSatisfiesComp, TestSize.Level1)
+{
+    PrintMapSafe<std::string> map;
+    std::function<bool (const std::string &)> comp = [](const std::string &value) {
+        return value == "test";
+    };
+    map.Insert("key1", "value1");
+    map.Insert("key2", "value2");
+    std::vector<std::string> result = map.GetKeyList(comp);
+    EXPECT_TRUE(result.empty());
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnListOfKeys_WhenElementSatifiesComp, TestSize.Level1)
+{
+    PrintMapSafe<std::string> map;
+    std::function<bool (const std::string &)> comp = [](const std::string &value) {
+        return value == "value2";
+    };
+    map.Insert("key1", "value1");
+    map.Insert("key2", "value2");
+    std::vector<std::string> result = map.GetKeyList(comp);
+    EXPECT_EQ(result.size(), 1); // 1 element matched
+    EXPECT_EQ(result[0], "key2");
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnListOfKeys_WhenMultiElementSatifiesComp, TestSize.Level1)
+{
+    PrintMapSafe<std::string> map;
+    std::function<bool (const std::string &)> comp = [](const std::string &value) {
+        return value == "value2";
+    };
+    map.Insert("key1", "value1");
+    map.Insert("key2", "value2");
+    map.Insert("key3", "value2");
+    std::vector<std::string> result = map.GetKeyList(comp);
+    EXPECT_EQ(result.size(), 2); // 2 elements matched
+}
 } // namespace OHOS::Print

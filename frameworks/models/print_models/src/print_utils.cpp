@@ -41,6 +41,7 @@ const std::string USER_ID_DELIMITER = ":";
 const int32_t DEFAULT_FD = 99;
 const int32_t MINIMUN_RANDOM_NUMBER_100 = 100;
 const int32_t MAXIMUN_RANDOM_NUMBER_999 = 999;
+const uint32_t URI_HOST_START_STR_LEN = 3;
 
 std::string PrintUtils::ToLower(const std::string &s)
 {
@@ -354,4 +355,21 @@ bool PrintUtils::IsUsbPrinter(const std::string &printerId)
     return true;
 }
 
+std::string PrintUtils::ExtractHostFromUri(const std::string &uri)
+{
+    size_t startPos = uri.find("://");
+    if (startPos == std::string::npos) {
+        return "";
+    }
+    startPos += URI_HOST_START_STR_LEN;
+    size_t atPos = uri.find('@', startPos);
+    if (atPos != std::string::npos) {
+        startPos = atPos + 1;
+    }
+    size_t endPos = uri.find_first_of("/?#:", startPos);
+    if (endPos == std::string::npos) {
+        return uri.substr(startPos);
+    }
+    return uri.substr(startPos, endPos - startPos);
+}
 }  // namespace OHOS::Print

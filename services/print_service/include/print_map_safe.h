@@ -101,6 +101,25 @@ public:
         return list;
     }
 
+    std::vector<std::string> GetKeyList(std::function<bool(const T &)> comp)
+    {
+        std::vector<std::string> list;
+        if (comp == nullptr) {
+            return list;
+        }
+        std::lock_guard<std::mutex> lock(mapMutex);
+        for (const auto &pair : printMap) {
+            if (pair.second == nullptr) {
+                continue;
+            }
+            if (!comp(*(pair.second))) {
+                continue;
+            }
+            list.push_back(pair.first);
+        }
+        return list;
+    }
+
 private:
     std::mutex mapMutex;
     std::map<std::string, std::shared_ptr<T>> printMap;

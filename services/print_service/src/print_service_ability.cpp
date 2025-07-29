@@ -3376,8 +3376,14 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
     SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
+    vendorManager.MonitorPrinterStatus(globalPrinterId, true);
     printSystemData_.RemoveIpPrinterFromList(globalPrinterId);
     return true;
+}
+
+std::vector<std::string> PrintServiceAbility::QueryAddedPrintersByIp(const std::string &printerIp)
+{
+    return printSystemData_.QueryAddedPrintersByIp(printerIp);
 }
 
 bool PrintServiceAbility::OnVendorStatusUpdate(const std::string &globalVendorName, const std::string &printerId,
@@ -3387,14 +3393,14 @@ bool PrintServiceAbility::OnVendorStatusUpdate(const std::string &globalVendorNa
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
     PRINT_HILOGD("OnVendorStatusUpdate %{public}s", globalPrinterId.c_str());
     printSystemData_.UpdatePrinterStatus(globalPrinterId, static_cast<PrinterStatus>(status.state));
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
-    if (printerInfo == nullptr) {
-        PRINT_HILOGW("printer info missing");
+    PrinterInfo printerInfo;
+    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printerInfo)) {
+        PRINT_HILOGD("cannot find added printer info");
         return false;
     }
-    printerInfo->SetPrinterStatus(static_cast<uint32_t>(status.state));
-    SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-    SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+    printerInfo.SetPrinterStatus(static_cast<uint32_t>(status.state));
+    SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
+    SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
     return true;
 }
 
