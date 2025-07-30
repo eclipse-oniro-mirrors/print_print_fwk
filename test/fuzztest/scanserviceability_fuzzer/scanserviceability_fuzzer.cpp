@@ -245,7 +245,6 @@ namespace Scan {
 
         ScanDeviceInfo usbInfo;
         usbInfo.deviceId = "pantum6500:libusb:002:003";
-        ScanServiceAbility::usbSnMap["2-3"] = "QWERTY";
         ScanServiceAbility::GetInstance()->SetScannerSerialNumber(usbInfo);
 
         usbInfo.deviceId = "pantum6500:libusb:002:004";

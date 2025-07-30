@@ -44,6 +44,7 @@ _sources = [
   "src/scan_service_stub.cpp",
   "src/scan_system_data.cpp",
   "src/scan_usb_manager.cpp",
+  "src/scan_service_utils.cpp",
 ]
 
 _branch_protector_ret = "pac_ret"

@@ -25,6 +25,8 @@
 #include "scan_system_data.h"
 #include "scan_usb_manager.h"
 #include "scanner_info.h"
+#include "scan_service_utils.h"
+#include "scan_util.h"
 
 namespace OHOS::Scan {
 using namespace OHOS;
@@ -53,6 +55,7 @@ void ScanUsbManager::Init()
         SCAN_HILOGE("subscribe common event failed");
         return;
     }
+    RefreshUsbDevice();
     isInit = true;
 }
 
@@ -66,53 +69,40 @@ void ScanUsbManager::RefreshUsbDevice()
         SCAN_HILOGE("RefreshDeviceList GetDevices failed with ret = %{public}d.", ret);
         return;
     }
+    std::lock_guard<std::mutex> autoLock(usbSnMapLock_);
+    usbSnMap_.clear();
     SCAN_HILOGI("RefreshDeviceList DeviceList size = %{public}zu.", devlist.size());
-    for (auto dev : devlist) {
+    for (auto& dev : devlist) {
         std::string serialNumber = GetSerialNumber(dev);
-        if (serialNumber == "") {
-            SCAN_HILOGW("Seria number is empty.");
+        if (serialNumber.empty()) {
+            SCAN_HILOGW("Seria number is empty, port = %{private}s", dev.GetName().c_str());
             continue;
         }
-        SCAN_HILOGI("RefreshDeviceList serialNumber = %{private}s.", serialNumber.c_str());
+        SCAN_HILOGD("RefreshDeviceList serialNumber = %{private}s.", serialNumber.c_str());
         std::string devicePort = dev.GetName();
-        std::regex pattern("\\d+-\\d+");
-        if (std::regex_match(devicePort, pattern)) {
-            SCAN_HILOGI("RefreshDeviceList dev.GetName() %{private}s ", devicePort.c_str());
-            ScanServiceAbility::usbSnMap[devicePort] = serialNumber;
-        } else {
-            SCAN_HILOGW("Incorrect port number format.");
-        }
+        dev.SetmSerial(serialNumber);
+        usbSnMap_[devicePort] = dev;
     }
 }
 
-void ScanUsbManager::RefreshUsbDevicePort(std::map<std::string, std::string> &usbSnToPortMap)
+std::string ScanUsbManager::GetScannerNameBySn(const std::string& serialNumber)
 {
-    SCAN_HILOGI("RefreshUsbDevicePort start");
-    usbSnToPortMap.clear();
-    std::vector<UsbDevice> devlist;
-    auto &UsbSrvClient = UsbSrvClient::GetInstance();
-    auto ret = UsbSrvClient.GetDevices(devlist);
-    if (ret != ERR_OK) {
-        SCAN_HILOGE("RefreshUsbDevicePort GetDevices failed with ret = %{public}d.", ret);
-        return;
-    }
-    SCAN_HILOGI("RefreshUsbDevicePort DeviceList size = %{public}zu.", devlist.size());
-    for (auto dev : devlist) {
-        SCAN_HILOGI("RefreshUsbDevicePort dev.GetName() %{private}s ", dev.GetName().c_str());
-        std::string serialNumber = GetSerialNumber(dev);
-        if (serialNumber == "") {
-            SCAN_HILOGW("Seria number is empty.");
-            continue;
-        }
-        SCAN_HILOGI("RefreshUsbDevicePort serialNumber = %{private}s.", serialNumber.c_str());
-        std::string devicePort = dev.GetName();
-        std::regex pattern("\\d+-\\d+");
-        if (std::regex_match(devicePort, pattern)) {
-            usbSnToPortMap[serialNumber] = devicePort;
-        } else {
-            SCAN_HILOGW("Incorrect port number format.");
+    std::lock_guard<std::mutex> autoLock(usbSnMapLock_);
+    for (const auto& [port, device] : usbSnMap_) {
+        std::string sn = device.GetmSerial();
+        if (serialNumber == sn) {
+            std::ostringstream oss;
+            oss << "USB-" << device.GetManufacturerName() << " " << device.GetProductName() << "-";
+            constexpr int32_t INDEX_SIX = 6;
+            if (serialNumber.size() <= INDEX_SIX) {
+                oss << serialNumber;
+            } else {
+                oss << serialNumber.substr(serialNumber.size() - INDEX_SIX);
+            }
+            return oss.str();
         }
     }
+    return "";
 }
 
 std::string ScanUsbManager::GetSerialNumber(UsbDevice &usbDevice)
@@ -125,10 +115,9 @@ std::string ScanUsbManager::GetSerialNumber(UsbDevice &usbDevice)
         SCAN_HILOGE("openDevice fail with ret = %{public}d", openDeviceRet);
         return "";
     }
-    SCAN_HILOGI("openDevice ret = %{public}d", openDeviceRet);
     std::string serialNumber = GetDeviceSerialNumber(usbDevicePipe);
     bool closeDeviceRet = UsbSrvClient.Close(usbDevicePipe);
-    SCAN_HILOGI("openDevice ret = %{public}d", closeDeviceRet);
+    SCAN_HILOGD("openDevice ret = %{public}d", closeDeviceRet);
     size_t pos = serialNumber.find_last_not_of('\0');
     size_t newSize = (pos == std::string::npos) ? 0 : pos + 1;
     serialNumber.resize(newSize);
@@ -138,7 +127,6 @@ std::string ScanUsbManager::GetSerialNumber(UsbDevice &usbDevice)
 std::string ScanUsbManager::GetDeviceSerialNumber(USBDevicePipe &usbDevicePipe)
 {
     auto &UsbSrvClient = UsbSrvClient::GetInstance();
-    SCAN_HILOGI("Enter GetDeviceSerialNumber");
     uint16_t indexInStringDescriptor = USB_VALUE_DESCRIPTOR_INDEX_SERIAL_NUMBER;
     uint8_t requestType = USB_REQUESTTYPE_DEVICE_TO_HOST;
     uint8_t request = USB_REQUEST_GET_DESCRIPTOR;
@@ -159,31 +147,53 @@ std::string ScanUsbManager::GetDeviceSerialNumber(USBDevicePipe &usbDevicePipe)
         arr[arrIndex++] = bufferData[i];
         i += HTTP_COMMON_CONST_VALUE_2;
     }
-    std::string scannerInfo(arr.begin(), arr.end());
-    SCAN_HILOGI("bufferData scanerInfo: %{public}s\n", scannerInfo.c_str());
-    return scannerInfo;
+    std::string serialNumber(arr.begin(), arr.end());
+    return serialNumber;
 }
 
-void ScanUsbManager::FormatUsbPort(std::string &port)
+std::string ScanUsbManager::GetSerialNumberByPort(const std::string& port)
 {
-    for (auto size = port.size(); size < USB_DEVICEID_FIRSTID_LEN_3; size++) {
-        std::string newString = "0";
-        newString.append(port);
-        port = newString;
+    std::lock_guard<std::mutex> autoLock(usbSnMapLock_);
+    auto it = usbSnMap_.find(port);
+    if (it == usbSnMap_.end()) {
+        SCAN_HILOGW("Cannot find sn by %{public}s", port.c_str());
+        return "";
     }
+    return it->second.GetmSerial();
 }
 
-std::string ScanUsbManager::getNewDeviceId(std::string oldDeviceId, std::string usbDevicePort)
+std::string ScanUsbManager::GetPortBySerialNumber(const std::string& serialNumber)
 {
-    std::string deviceIdHead = oldDeviceId.substr(0, oldDeviceId.find_last_of(":")
-                                                    - USB_DEVICEID_FIRSTID_LEN_3);
-    std::string firstPort = usbDevicePort.substr(0, usbDevicePort.find("-"));
-    std::string secondPort = usbDevicePort.substr(usbDevicePort.find("-") + 1, usbDevicePort.size() - 1);
-    SCAN_HILOGI("firstPort = %{public}s, secondPort = %{public}s.",
-                firstPort.c_str(), secondPort.c_str());
-    FormatUsbPort(firstPort);
-    FormatUsbPort(secondPort);
-    return deviceIdHead + firstPort + ":" + secondPort;
+    std::lock_guard<std::mutex> autoLock(usbSnMapLock_);
+    for (const auto& [port, device] : usbSnMap_) {
+        if (serialNumber == device.GetmSerial()) {
+            return port;
+        }
+    }
+    return "";
+}
+
+bool ScanUsbManager::IsDeviceAvailable(const std::string& firstId, const std::string& secondId)
+{
+    int32_t busNum = 0;
+    int32_t devAddr = 0;
+    if (!ScanUtil::ConvertToInt(firstId, busNum) || !ScanUtil::ConvertToInt(secondId, devAddr)) {
+        SCAN_HILOGE("[%{public}s][%{public}s] format error", firstId.c_str(), secondId.c_str());
+        return false;
+    }
+    UsbDevice usbDevice;
+    usbDevice.SetBusNum(static_cast<uint8_t>(busNum));
+    usbDevice.SetDevAddr(static_cast<uint8_t>(devAddr));
+    USBDevicePipe usbDevicePipe;
+    auto &UsbSrvClient = UsbSrvClient::GetInstance();
+    int32_t openDeviceRet = UsbSrvClient.OpenDevice(usbDevice, usbDevicePipe);
+    if (openDeviceRet != UEC_OK) {
+        SCAN_HILOGE("openDevice fail with ret = %{public}d", openDeviceRet);
+        return false;
+    }
+    bool closeDeviceRet = UsbSrvClient.Close(usbDevicePipe);
+    SCAN_HILOGD("openDevice ret = %{public}d", closeDeviceRet);
+    return true;
 }
 
 void ScanUsbManager::UpdateUsbScannerId(std::string serialNumber, std::string usbDevicePort)
@@ -202,7 +212,7 @@ void ScanUsbManager::UpdateUsbScannerId(std::string serialNumber, std::string us
     if (it != ScanServiceAbility::saneGetUsbDeviceInfoMap.end()) {
         SCAN_HILOGD("DealUsbDevStatusChange attached find out usbDevicePort = %{private}s, deviceId = %{private}s.",
                     usbDevicePort.c_str(), it->second.deviceId.c_str());
-        std::string newDeviceId = getNewDeviceId(it->second.deviceId, usbDevicePort);
+        std::string newDeviceId = ScanServiceUtils::ReplaceDeviceIdUsbPort(it->second.deviceId, usbDevicePort);
         ScanDeviceInfoSync syncInfo;
         syncInfo.deviceId = newDeviceId;
         syncInfo.serialNumber = serialNumber;
@@ -210,14 +220,6 @@ void ScanUsbManager::UpdateUsbScannerId(std::string serialNumber, std::string us
         syncInfo.discoverMode = "USB";
         syncInfo.syncMode = "update";
         ScanServiceAbility::GetInstance()->UpdateScannerId(syncInfo);
-        for (auto &t : ScanServiceAbility::usbSnMap) {
-            if (t.second == serialNumber) {
-                SCAN_HILOGD("UpdateUsbScannerId usbSnMap erase %{private}s.", t.first.c_str());
-                ScanServiceAbility::usbSnMap.erase(t.first);
-                break;
-            }
-        }
-        ScanServiceAbility::usbSnMap[usbDevicePort] = serialNumber;
     } else {
         SCAN_HILOGD("DealUsbDevStatusChange attached find out usbDevicePort = %{private}s. "
                     "No matched device in saneGetUsbDeviceInfoMap.", usbDevicePort.c_str());
@@ -228,24 +230,37 @@ void ScanUsbManager::UpdateUsbScannerId(std::string serialNumber, std::string us
 void ScanUsbManager::DisConnectUsbScanner(std::string usbDevicePort)
 {
     if (usbDevicePort.empty()) {
-        SCAN_HILOGE("DisConnectUsbScanner usbDevicePort is null.");
+        SCAN_HILOGD("DisConnectUsbScanner usbDevicePort is null.");
         return;
     }
-    auto usbSnMapit = ScanServiceAbility::usbSnMap.find(usbDevicePort);
-    if (usbSnMapit != ScanServiceAbility::usbSnMap.end()) {
-        std::string serialNumber = usbSnMapit->second;
-        if (!serialNumber.empty()) {
-            auto it = ScanServiceAbility::saneGetUsbDeviceInfoMap.find(serialNumber);
-            if (it != ScanServiceAbility::saneGetUsbDeviceInfoMap.end()) {
-                ScanServiceAbility::GetInstance()->DisConnectUsbScanner(serialNumber, it->second.deviceId);
-                ScanServiceAbility::usbSnMap.erase(usbDevicePort);
-            }
+    std::lock_guard<std::mutex> autoLock(usbSnMapLock_);
+    auto usbSnMapit = usbSnMap_.find(usbDevicePort);
+    if (usbSnMapit != usbSnMap_.end()) {
+        std::string serialNumber = usbSnMapit->second.GetmSerial();
+        auto it = ScanServiceAbility::saneGetUsbDeviceInfoMap.find(serialNumber);
+        if (it != ScanServiceAbility::saneGetUsbDeviceInfoMap.end()) {
+            ScanServiceAbility::GetInstance()->DisConnectUsbScanner(serialNumber, it->second.deviceId);
         }
-#ifdef DEBUG_ENABLE
-        SCAN_HILOGD("DealUsbDevStatusChange detached usbDevicePort = %{public}s, serialNumber = %{public}s. end",
+        usbSnMap_.erase(usbDevicePort);
+        SCAN_HILOGD("DealUsbDevStatusChange detached usbDevicePort = %{private}s, serialNumber = %{private}s",
                     usbDevicePort.c_str(), serialNumber.c_str());
-#endif
     }
+}
+
+void ScanUsbManager::ConnectUsbScanner(UsbDevice& device)
+{
+    std::string serialNumber = GetSerialNumber(device);
+    if (serialNumber.empty()) {
+        SCAN_HILOGD("ConnectUsbScanner serialNumber is null.");
+        return;
+    }
+    std::string port = device.GetName();
+    UpdateUsbScannerId(serialNumber, port);
+    std::lock_guard<std::mutex> autoLock(usbSnMapLock_);
+    device.SetmSerial(serialNumber);
+    usbSnMap_.insert({port, device});
+    SCAN_HILOGD("ConnectUsbScanner usbDevicePort = %{private}s, serialNumber = %{private}s",
+                port.c_str(), serialNumber.c_str());
 }
 
 void ScanUsbManager::DealUsbDevStatusChange(const std::string &devStr, bool isAttach)
@@ -262,10 +277,7 @@ void ScanUsbManager::DealUsbDevStatusChange(const std::string &devStr, bool isAt
     if (!isAttach) {
         DisConnectUsbScanner(usbDevicePort);
     } else {
-        std::string serialNumber = GetSerialNumber(*dev);
-        if (!serialNumber.empty()) {
-            UpdateUsbScannerId(serialNumber, usbDevicePort);
-        }
+        ConnectUsbScanner(*dev);
     }
     cJSON_Delete(devJson);
     delete dev;

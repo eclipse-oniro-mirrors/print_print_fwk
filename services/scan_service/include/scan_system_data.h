@@ -45,13 +45,11 @@ public:
     bool SaveScannerMap();
     bool IsContainScanner(const std::string &uniqueId);
     std::pair<std::string, std::string> UpdateNetScannerByUuid(const std::string &uuid, const std::string& ip);
-    static std::string ReplaceDeviceIdUsbPort(const std::string& deviceId, const std::string& usbPort);
 private:
     bool ParseScannerListJsonV1(Json::Value& jsonObject);
     bool CheckJsonObjectValue(const Json::Value& object);
     void ParseScannerJsonV1(ScanDeviceInfo &scanDeviceInfo, Json::Value &object);
     std::map<std::string, std::shared_ptr<ScanDeviceInfo>> addedScannerMap_;
-    std::map<std::string, std::string> usbSnToPortMap_;
     std::mutex addedScannerMapLock_;
     const uint32_t MAX_SCANNER_SIZE = 1000;
 };

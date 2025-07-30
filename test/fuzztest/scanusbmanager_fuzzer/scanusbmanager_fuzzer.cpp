@@ -35,7 +35,6 @@ namespace Scan {
         std::string devStrOne = "2-3";
         DelayedSingleton<ScanUsbManager>::GetInstance()->DealUsbDevStatusChange(devStr, isAttach);
         DelayedSingleton<ScanUsbManager>::GetInstance()->DealUsbDevStatusChange(devStrOne, true);
-        ScanServiceAbility::usbSnMap[devStrOne] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         DelayedSingleton<ScanUsbManager>::GetInstance()->DealUsbDevStatusChange(devStrOne, false);
         USB::USBDevicePipe usbDevicePipe;
         DelayedSingleton<ScanUsbManager>::GetInstance()->GetDeviceSerialNumber(usbDevicePipe);
@@ -45,7 +44,6 @@ namespace Scan {
     {
         std::string usbDeviceName = "2-4";
         std::string serialNumber = "QWERTY";
-        ScanServiceAbility::usbSnMap[usbDeviceName] = serialNumber;
         ScanDeviceInfo scanDeviceInfo;
         scanDeviceInfo.deviceId = "pantu:libusb:002:004";
         scanDeviceInfo.serialNumber = serialNumber;
@@ -54,7 +52,6 @@ namespace Scan {
 
         std::string fuzzUsbDeviceName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         std::string fuzzSerialNumber = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanServiceAbility::usbSnMap[fuzzUsbDeviceName] = fuzzSerialNumber;
         ScanDeviceInfo fuzzScanDeviceInfo;
         scanDeviceInfo.deviceId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         scanDeviceInfo.serialNumber = fuzzSerialNumber;
@@ -66,7 +63,6 @@ namespace Scan {
     {
         std::string usbDeviceName = "2-3";
         std::string serialNumber = "ASDFGH";
-        ScanServiceAbility::usbSnMap[usbDeviceName] = serialNumber;
         ScanDeviceInfo scanDeviceInfo;
         scanDeviceInfo.deviceId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         scanDeviceInfo.serialNumber = serialNumber;
@@ -75,7 +71,6 @@ namespace Scan {
 
         std::string fuzzUsbDeviceName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         std::string fuzzSerialNumber = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanServiceAbility::usbSnMap[fuzzUsbDeviceName] = fuzzSerialNumber;
         ScanDeviceInfo fuzzScanDeviceInfo;
         scanDeviceInfo.deviceId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         scanDeviceInfo.serialNumber = fuzzSerialNumber;

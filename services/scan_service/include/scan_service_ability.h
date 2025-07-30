@@ -93,7 +93,6 @@ private:
 public:
     static std::map<std::string, ScanDeviceInfo> saneGetUsbDeviceInfoMap;
     static std::map<std::string, ScanDeviceInfo> saneGetTcpDeviceInfoMap;
-    static std::map<std::string, std::string> usbSnMap;
     void UnloadSystemAbility();
     static int32_t appCount_;
 protected:

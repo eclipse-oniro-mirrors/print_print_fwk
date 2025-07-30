@@ -29,19 +29,24 @@ class ScanUsbManager final : public DelayedSingleton<ScanUsbManager> {
 public:
     ScanUsbManager();
     ~ScanUsbManager();
-    void RefreshUsbDevice();
-    std::string GetSerialNumber(USB::UsbDevice &usbDevice);
-    void DealUsbDevStatusChange(const std::string &devStr, bool isAttach);
-    void RefreshUsbDevicePort(std::map<std::string, std::string> &usbSnToPortMap);
     void Init();
+    void DealUsbDevStatusChange(const std::string &devStr, bool isAttach);
+    bool IsDeviceAvailable(const std::string& firstId, const std::string& secondId);
+    std::string GetPortBySerialNumber(const std::string& serialNumber);
+    std::string GetSerialNumberByPort(const std::string& port);
+    std::string GetScannerNameBySn(const std::string& serialNumber);
 private:
-    std::string GetDeviceSerialNumber(USB::USBDevicePipe &usbDevicePipe);
-    void FormatUsbPort(std::string &port);
-    std::string getNewDeviceId(std::string oldDeviceId, std::string usbDevicePort);
+    void RefreshUsbDevice();
     void UpdateUsbScannerId(std::string serialNumber, std::string usbDevicePort);
     void DisConnectUsbScanner(std::string usbDeviceName);
+    void ConnectUsbScanner(OHOS::USB::UsbDevice& device);
+    std::string GetSerialNumber(OHOS::USB::UsbDevice &usbDevice);
+    std::string GetDeviceSerialNumber(OHOS::USB::USBDevicePipe &usbDevicePipe);
     std::shared_ptr<ScanEventSubscriber> usbDevStatusListener;
+    
     bool isInit = false;
+    std::map<std::string, OHOS::USB::UsbDevice> usbSnMap_;
+    std::mutex usbSnMapLock_;
 };
 
 }

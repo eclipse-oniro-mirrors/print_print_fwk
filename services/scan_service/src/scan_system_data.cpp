@@ -23,6 +23,7 @@
 #include "scan_util.h"
 #include "scan_system_data.h"
 #include "scan_service_ability.h"
+#include "scan_service_utils.h"
 
 namespace {
 const std::string SCANNER_LIST_FILE = "/data/service/el1/public/print_service/scanner_list.json";
@@ -133,29 +134,19 @@ bool ScanSystemData::Init()
 void ScanSystemData::RefreshUsbDeviceId()
 {
     std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
-    auto usbIt = ScanUsbManager::GetInstance();
-    if (usbIt == nullptr) {
-        SCAN_HILOGE("usbIt is a nullptr.");
-        return;
-    }
-    usbIt->RefreshUsbDevicePort(usbSnToPortMap_);
-    if (usbSnToPortMap_.empty()) {
-        SCAN_HILOGW("usbSnToPortMap_ is empty");
-        return;
-    }
     for (auto &scanDevIt : addedScannerMap_) {
         std::string discoverMode = scanDevIt.second->discoverMode;
         if (discoverMode != "USB") {
             continue;
         }
         std::string serialNumber = scanDevIt.second->serialNumber;
-        auto it = usbSnToPortMap_.find(serialNumber);
-        if (it == usbSnToPortMap_.end()) {
+        auto usbPort = DelayedSingleton<ScanUsbManager>::GetInstance()->
+            GetPortBySerialNumber(serialNumber);
+        if (usbPort == "") {
             continue;
         }
         std::string oldDeviceId = scanDevIt.second->deviceId;
-        std::string usbPort = it->second;
-        std::string newDeviceId = ReplaceDeviceIdUsbPort(oldDeviceId, usbPort);
+        std::string newDeviceId = ScanServiceUtils::ReplaceDeviceIdUsbPort(oldDeviceId, usbPort);
         if (newDeviceId == "" || newDeviceId == oldDeviceId) {
             SCAN_HILOGD("cannot update usb deviceId.");
             continue;
@@ -175,47 +166,13 @@ void ScanSystemData::RefreshUsbDeviceId()
     }
 }
 
-std::string ScanSystemData::ReplaceDeviceIdUsbPort(const std::string& deviceId, const std::string& usbPort)
-{
-    constexpr int32_t invalidPort = -1;
-    int32_t start = invalidPort;
-    int32_t end = invalidPort;
-    char dash;
-    std::istringstream(usbPort) >> start >> dash >> end;
-    if (start < 0 || end < 0 || dash != '-') {
-        SCAN_HILOGE("usbPort format is error");
-        return "";
-    }
-    std::ostringstream oss;
-    char zero = '0';
-    constexpr int32_t portWidth = 3;
-    oss << std::setw(portWidth) << std::setfill(zero) << start;
-    std::string formattedStart = oss.str();
-    oss.str("");
-    oss << std::setw(portWidth) << std::setfill(zero) << end;
-    std::string formattedEnd = oss.str();
-    size_t pos1 = deviceId.rfind(':');
-    if (pos1 == std::string::npos) {
-        SCAN_HILOGE("deviceId format is error");
-        return "";
-    }
-    size_t pos2 = deviceId.rfind(':', pos1 - 1);
-    if (pos2 == std::string::npos) {
-        SCAN_HILOGE("deviceId format is error");
-        return "";
-    }
-    std::string newDeviceId = deviceId.substr(0, pos2 + 1).append(formattedStart).append(":").append(formattedEnd);
-    SCAN_HILOGD("new deviceId = %{private}s", newDeviceId.c_str());
-    return newDeviceId;
-}
-
 bool ScanSystemData::UpdateScannerIdByUsbDevicePort(const std::string &uniqueId, const std::string &usbDevicePort)
 {
     std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
     auto iter = addedScannerMap_.find(uniqueId);
     if (iter != addedScannerMap_.end() && iter->second != nullptr) {
         std::string oldDeviceId = iter->second->deviceId;
-        std::string newDeviceId = ReplaceDeviceIdUsbPort(oldDeviceId, usbDevicePort);
+        std::string newDeviceId = ScanServiceUtils::ReplaceDeviceIdUsbPort(oldDeviceId, usbDevicePort);
         SCAN_HILOGD("newDeviceId : %{private}s", newDeviceId.c_str());
         if (newDeviceId == "" || newDeviceId == oldDeviceId) {
             SCAN_HILOGD("cannot update usb deviceId.");

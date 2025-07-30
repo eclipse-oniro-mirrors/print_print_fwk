@@ -127,7 +127,6 @@ sptr<ScanServiceAbility> ScanServiceAbility::instance_;
 std::shared_ptr<AppExecFwk::EventHandler> ScanServiceAbility::serviceHandler_;
 std::map<std::string, ScanDeviceInfo> ScanServiceAbility::saneGetUsbDeviceInfoMap;
 std::map<std::string, ScanDeviceInfo> ScanServiceAbility::saneGetTcpDeviceInfoMap;
-std::map<std::string, std::string> ScanServiceAbility::usbSnMap;
 
 ScanServiceAbility::ScanServiceAbility(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START),
@@ -412,19 +411,26 @@ void ScanServiceAbility::SetScannerSerialNumberByUSB(ScanDeviceInfo &info)
         return;
     }
     std::string usbScannerPort = firstId + "-" + secondId;
-    DelayedSingleton<ScanUsbManager>::GetInstance()->RefreshUsbDevice();
-    auto it = usbSnMap.find(usbScannerPort);
-    if (it != usbSnMap.end() && it->second != "") {
-        SCAN_HILOGD("set serialNumber [%{private}s]", it->second.c_str());
-        info.serialNumber = it->second;
-        info.uniqueId = it->second;
-    } else if (it == usbSnMap.end()) {
+    auto scanUsbManager = DelayedSingleton<ScanUsbManager>::GetInstance();
+    if (scanUsbManager == nullptr) {
+        SCAN_HILOGE("scanUsbManager is nullptr");
+        return;
+    }
+    std::string serialNumber = scanUsbManager->GetSerialNumberByPort(usbScannerPort);
+    if (serialNumber.empty() && !scanUsbManager->IsDeviceAvailable(firstId, secondId)) {
         SCAN_HILOGD("usb can't find device: %{private}s", usbScannerPort.c_str());
         info.SetDeviceAvailable(false);
-    } else {
-        SCAN_HILOGE("usb can't find serialNumber");
+        return;
     }
-    info.deviceName = info.manufacturer + "-" + info.model + "-" + info.serialNumber;
+    if (serialNumber.empty()) {
+        std::ostringstream oss;
+        oss << "USB-" << info.manufacturer << " " << info.model << " " << usbScannerPort;
+        info.deviceName = oss.str();
+    } else {
+        info.serialNumber = serialNumber;
+        info.uniqueId = serialNumber;
+        info.deviceName = scanUsbManager->GetScannerNameBySn(serialNumber);
+    }
 }
 
 void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
