@@ -562,6 +562,10 @@ bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
     }
     cacheDir = cachePath;
     DIR *dir = opendir(cachePath);
+    if (dir == nullptr) {
+        PRINT_HILOGE("Failed to open Dir: %{private}s", cachePath);
+        return false;
+    }
     struct dirent *file;
     std::vector<std::string> fileNames;
     std::string cacheFile;
