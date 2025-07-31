@@ -1728,6 +1728,7 @@ HWTEST_F(PrintSystemDataTest, BuildPrinterPreferenceBySupport_NoValueSet_HasBord
 HWTEST_F(PrintSystemDataTest, CheckPrinterVersionFile_FileExist_ReturnTrue, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    systemData->CheckPrinterVersionFile();
     EXPECT_EQ(systemData->CheckPrinterVersionFile(), true);
 }
 }  // namespace Print
