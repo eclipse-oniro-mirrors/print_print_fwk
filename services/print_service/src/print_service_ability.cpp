@@ -3336,7 +3336,7 @@ bool PrintServiceAbility::AddIpPrinterToSystemData(const std::string &globalVend
     PRINT_HILOGI("AddIpPrinterToSystemData");
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, info.GetPrinterId());
     auto printerInfo = printSystemData_.QueryIpPrinterInfoById(globalPrinterId);
-    if (printerInfo == nullptr) {
+    if (printerInfo == nullptr || (!info.GetUri().empty() && printerInfo->GetUri() != info.GetUri())) {
         PRINT_HILOGI("new printer, add it");
         printerInfo = std::make_shared<PrinterInfo>(info);
         if (printerInfo == nullptr) {
