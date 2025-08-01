@@ -481,6 +481,9 @@ void ParsePrinterPreference(const PrinterInfo &info, Print_PrinterInfo &nativePr
     if (!preferences.GetDefaultMediaType().empty()) {
         nativePrinterInfo.defaultValue.defaultMediaType = CopyString(preferences.GetDefaultMediaType());
     }
+    if (preferences.HasDefaultColorMode()) {
+        ConvertColorMode(preferences.GetDefaultColorMode(), nativePrinterInfo.defaultValue.defaultColorMode);
+    }
 }
 
 char *ParseDetailInfo(const PrinterInfo &info)
