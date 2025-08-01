@@ -198,7 +198,8 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0006, TestSize.Level1)
     EXPECT_FALSE(vendorManager.QueryPrinterStatusByUri(PRINTER_TEST_IP, status));
     PrinterVendorStatus vendorStatus;
     EXPECT_TRUE(vendorManager.OnPrinterStatusChanged("vendor", PRINTER_TEST_IP, vendorStatus));
-    EXPECT_FALSE(vendorManager.QueryPrinterInfoByPrinterId("vendor", PRINTER_TEST_IP, printerInfo));
+    EXPECT_EQ(vendorManager.QueryPrinterInfoByPrinterId("vendor", PRINTER_TEST_IP, printerInfo),
+        E_PRINT_GENERIC_FAILURE);
     std::string mekeModel = "test_makeModel";
     std::string ppdName;
     EXPECT_FALSE(vendorManager.QueryPPDInformation(mekeModel, ppdName));
@@ -223,7 +224,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0007, TestSize.Level2)
     EXPECT_CALL(*mock, AddVendorPrinterToCupsWithPpd(_, _, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, OnVendorStatusUpdate(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, RemoveVendorPrinterFromCups(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*mock, QueryPrinterInfoByPrinterId(_, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock, QueryPrinterInfoByPrinterId(_, _)).WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(*mock, QueryPPDInformation(_, _)).WillRepeatedly(Return(true));
     PrinterStatus status = PRINTER_STATUS_UNAVAILABLE;
     EXPECT_FALSE(vendorManager.QueryPrinterStatusByUri(PRINTER_TEST_IP, status));
@@ -242,7 +243,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0007, TestSize.Level2)
     EXPECT_TRUE(vendorManager.OnPrinterStatusChanged(vendorName, PRINTER_TEST_IP, vendorStatus));
     EXPECT_EQ(vendorManager.RemovePrinterFromCups(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromCups(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_NONE);
-    EXPECT_TRUE(vendorManager.QueryPrinterInfoByPrinterId("vendor", PRINTER_TEST_IP, printerInfo));
+    EXPECT_EQ(vendorManager.QueryPrinterInfoByPrinterId("vendor", PRINTER_TEST_IP, printerInfo), E_PRINT_NONE);
     std::string makeModel = "test_makeModel";
     EXPECT_TRUE(vendorManager.QueryPPDInformation(makeModel, ppdName));
     vendorManager.UnInit();
