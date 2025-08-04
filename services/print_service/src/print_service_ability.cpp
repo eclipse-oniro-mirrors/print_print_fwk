@@ -61,7 +61,7 @@ const int32_t UID_TRANSFORM_DIVISOR = 200000;
 const uint32_t QUERY_CUPS_ALIVE_INTERVAL = 10;
 const uint32_t QUERY_CUPS_ALIVE_MAX_RETRY_TIMES = 50;
 const uint32_t ENTER_LOW_POWER_INTERVAL = 90000;
-const uint32_t UNREGISTER_TASK_CALLBACK_INTERVAL = 5000;
+const uint32_t UNREGISTER_CALLBACK_INTERVAL = 5000;
 const uint32_t CHECK_CALLER_APP_INTERVAL = 60;
 
 const uint32_t INDEX_ZERO = 0;
@@ -2465,8 +2465,16 @@ void PrintServiceAbility::notifyAdapterJobChanged(const std::string jobId, const
     eventIt->second->OnCallbackAdapterJobStateChanged(jobId, state, printAdapterListeningState);
 
     if (subState == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED || state == PRINT_JOB_COMPLETED) {
-        PRINT_HILOGI("erase adapterListenersByJobId_ %{public}s", jobId.c_str());
-        adapterListenersByJobId_.erase(jobId);
+        auto unregisterTask = [this, jobId]() {
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+            auto eventIt = adapterListenersByJobId_.find(jobId);
+            if (eventIt == adapterListenersByJobId_.end() || eventIt->second == nullptr) {
+                return;
+            }
+            PRINT_HILOGI("erase adapterListenersByJobId_ %{public}s", jobId.c_str());
+            adapterListenersByJobId_.erase(jobId);
+        };
+        serviceHandler_->PostTask(unregisterTask, UNREGISTER_CALLBACK_INTERVAL);
     }
 }
 
@@ -3652,7 +3660,7 @@ void PrintServiceAbility::UnregisterPrintTaskCallback(const std::string &jobId, 
             }
         }
     };
-    serviceHandler_->PostTask(unregisterTask, UNREGISTER_TASK_CALLBACK_INTERVAL);
+    serviceHandler_->PostTask(unregisterTask, UNREGISTER_CALLBACK_INTERVAL);
 }
 
 void PrintServiceAbility::BuildPrinterPreference(PrinterInfo &printerInfo)
