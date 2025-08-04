@@ -17,6 +17,7 @@
 #include "napi/native_node_api.h"
 #include "napi_scan_utils.h"
 #include "scan_log.h"
+#include "scanner_info_helper.h"
 
 namespace OHOS::Scan {
 ScanCallback::ScanCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref), callbackFunction_(nullptr)
@@ -71,12 +72,6 @@ void CallbackParam::InitialCallbackParam(napi_env &env_, napi_ref &ref_, std::mu
     this->mutexPtr = &mutex_;
 }
 
-void CallbackParam::SetCallbackParam(uint32_t &state, const ScanDeviceInfoTCP &deviceInfoTCP)
-{
-    this->state = state;
-    this->deviceInfoTCP = deviceInfoTCP;
-}
-
 void CallbackParam::SetCallbackParam(uint32_t &state, const ScanDeviceInfo &deviceInfo)
 {
     this->state = state;
@@ -87,22 +82,6 @@ void CallbackParam::SetCallbackSyncParam(uint32_t &state, const ScanDeviceInfoSy
 {
     this->state = state;
     this->deviceInfoSync = deviceInfoSync;
-}
-
-void CallbackParam::SetCallbackParam(bool &isGetSucc, int32_t &sizeRead)
-{
-    this->isGetSucc = isGetSucc;
-    this->sizeRead = sizeRead;
-}
-
-void CallbackParam::SetCallbackParam(int32_t &scanVersion)
-{
-    this->scanVersion = scanVersion;
-}
-
-void CallbackParam::SetCallbackParam(std::string &message)
-{
-    this->message = message;
 }
 
 bool ScanCallback::ExecuteNapiEventWork(CallbackParam* param, std::function<void(CallbackParam*)> workFunc)
@@ -152,28 +131,6 @@ void ScanCallback::NapiCallFunction(CallbackParam* cbParam, size_t argcCount, na
     }
 }
 
-bool ScanCallback::OnCallback(uint32_t state, const ScanDeviceInfoTCP &info)
-{
-    SCAN_HILOGD("Enter OnCallback::ScanDeviceInfoTCP");
-
-    CallbackParam *param = new (std::nothrow) CallbackParam;
-    if (param == nullptr) {
-        SCAN_HILOGE("Failed to create callback parameter");
-        return false;
-    }
-
-    param->InitialCallbackParam(env_, ref_, mutex_);
-    param->SetCallbackParam(state, info);
-
-    auto workFunc = [this](CallbackParam* cbParam) {
-        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
-        callbackValues[0] = ScannerInfoHelperTCP::MakeJsObject(cbParam->env, cbParam->deviceInfoTCP);
-        NapiCallFunction(cbParam, NapiScanUtils::ARGC_ONE, callbackValues);
-    };
-
-    return ExecuteNapiEventWork(param, workFunc);
-}
-
 bool ScanCallback::OnCallback(uint32_t state, const ScanDeviceInfo &info)
 {
     SCAN_HILOGD("Enter OnCallback::ScanDeviceInfo");
@@ -212,73 +169,6 @@ bool ScanCallback::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &info
     auto workFunc = [this](CallbackParam* cbParam) {
         napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
         callbackValues[0] = ScannerInfoSyncHelper::MakeJsObject(cbParam->env, cbParam->deviceInfoSync);
-        NapiCallFunction(cbParam, NapiScanUtils::ARGC_ONE, callbackValues);
-    };
-
-    return ExecuteNapiEventWork(param, workFunc);
-}
-
-bool ScanCallback::OnGetFrameResCallback(bool isGetSucc, int32_t sizeRead)
-{
-    SCAN_HILOGD("Enter OnCallback::OnGetFrameResCallback");
-
-    CallbackParam *param = new (std::nothrow) CallbackParam;
-    if (param == nullptr) {
-        SCAN_HILOGE("Failed to create callback parameter");
-        return false;
-    }
-
-    param->InitialCallbackParam(env_, ref_, mutex_);
-    param->SetCallbackParam(isGetSucc, sizeRead);
-
-    auto workFunc = [this](CallbackParam* cbParam) {
-        napi_value callbackValues[NapiScanUtils::ARGC_TWO] = { 0 };
-        callbackValues[0] = NapiScanUtils::CreateBoolean(cbParam->env, cbParam->isGetSucc);
-        callbackValues[1] = NapiScanUtils::CreateInt32(cbParam->env, cbParam->sizeRead);
-        NapiCallFunction(cbParam, NapiScanUtils::ARGC_TWO, callbackValues);
-    };
-
-    return ExecuteNapiEventWork(param, workFunc);
-}
-
-bool ScanCallback::OnScanInitCallback(int32_t &scanVersion)
-{
-    SCAN_HILOGD("Enter OnCallback::OnScanInitCallback");
-
-    CallbackParam *param = new (std::nothrow) CallbackParam;
-    if (param == nullptr) {
-        SCAN_HILOGE("Failed to create callback parameter");
-        return false;
-    }
-
-    param->InitialCallbackParam(env_, ref_, mutex_);
-    param->SetCallbackParam(scanVersion);
-
-    auto workFunc = [this](CallbackParam* cbParam) {
-        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
-        callbackValues[0] = NapiScanUtils::CreateInt32(cbParam->env, cbParam->scanVersion);
-        NapiCallFunction(cbParam, NapiScanUtils::ARGC_ONE, callbackValues);
-    };
-
-    return ExecuteNapiEventWork(param, workFunc);
-}
-
-bool ScanCallback::OnSendSearchMessage(std::string &message)
-{
-    SCAN_HILOGD("Enter OnCallback::OnSendSearchMessage");
-
-    CallbackParam *param = new (std::nothrow) CallbackParam;
-    if (param == nullptr) {
-        SCAN_HILOGE("Failed to create callback parameter");
-        return false;
-    }
-
-    param->InitialCallbackParam(env_, ref_, mutex_);
-    param->SetCallbackParam(message);
-
-    auto workFunc = [this](CallbackParam* cbParam) {
-        napi_value callbackValues[NapiScanUtils::ARGC_ONE] = { 0 };
-        callbackValues[0] = NapiScanUtils::CreateStringUtf8(cbParam->env, cbParam->message);
         NapiCallFunction(cbParam, NapiScanUtils::ARGC_ONE, callbackValues);
     };
 

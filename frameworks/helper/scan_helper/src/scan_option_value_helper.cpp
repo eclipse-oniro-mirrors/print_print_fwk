@@ -20,9 +20,7 @@
 
 namespace OHOS::Scan {
 static constexpr const char *PARAM_SCAN_OPTION_VALUE_TYPE = "valueType";
-static constexpr const char *PARAM_SCAN_OPTION_VALUE_SIZE = "valueSize";
 static constexpr const char *PARAM_SCAN_OPTION_NUM_VALUE = "numValue";
-static constexpr const char *PARAM_SCAN_OPTION_NUM_LIST_VALUE = "numListValue";
 static constexpr const char *PARAM_SCAN_OPTION_STR_VALUE = "strValue";
 static constexpr const char *PARAM_SCAN_OPTION_BOOL_VALUE = "boolValue";
 
@@ -33,9 +31,6 @@ napi_value ScanOptionValueHelper::MakeJsObject(napi_env env, const ScanOptionVal
 
     ScanOptionValueType valueType = optionValue.GetScanOptionValueType();
     NapiScanUtils::SetUint32Property(env, jsObj, PARAM_SCAN_OPTION_VALUE_TYPE, valueType);
-
-    int32_t valueSize = optionValue.GetValueSize();
-    NapiScanUtils::SetInt32Property(env, jsObj, PARAM_SCAN_OPTION_VALUE_SIZE, valueSize);
 
     if (valueType == SCAN_VALUE_NUM) {
         NapiScanUtils::SetInt32Property(env, jsObj, PARAM_SCAN_OPTION_NUM_VALUE, optionValue.GetNumValue());
@@ -57,8 +52,6 @@ std::shared_ptr<ScanOptionValue> ScanOptionValueHelper::BuildFromJs(napi_env env
     ScanOptionValueType valueType = (ScanOptionValueType
         ) NapiScanUtils::GetUint32Property(env, jsValue, PARAM_SCAN_OPTION_VALUE_TYPE);
     nativeObj->SetScanOptionValueType(valueType);
-    int32_t valueSize = NapiScanUtils::GetInt32Property(env, jsValue, PARAM_SCAN_OPTION_VALUE_SIZE);
-    nativeObj->SetValueSize(valueSize);
     if (valueType == SCAN_VALUE_NUM) {
         int32_t numValue = NapiScanUtils::GetInt32Property(env, jsValue, PARAM_SCAN_OPTION_NUM_VALUE);
         nativeObj->SetNumValue(numValue);
@@ -77,9 +70,7 @@ bool ScanOptionValueHelper::ValidateProperty(napi_env env, napi_value object)
 {
     std::map<std::string, ScanParamStatus> propertyList = {
         {PARAM_SCAN_OPTION_VALUE_TYPE, SCAN_PARAM_OPT},
-        {PARAM_SCAN_OPTION_VALUE_SIZE, SCAN_PARAM_OPT},
         {PARAM_SCAN_OPTION_NUM_VALUE, SCAN_PARAM_OPT},
-        {PARAM_SCAN_OPTION_NUM_LIST_VALUE, SCAN_PARAM_OPT},
         {PARAM_SCAN_OPTION_STR_VALUE, SCAN_PARAM_OPT},
         {PARAM_SCAN_OPTION_BOOL_VALUE, SCAN_PARAM_OPT},
     };
@@ -92,8 +83,7 @@ bool ScanOptionValueHelper::ValidateProperty(napi_env env, napi_value object)
         propertyList[name] = SCAN_PARAM_SET;
     }
     bool hasValueType = propertyList[PARAM_SCAN_OPTION_VALUE_TYPE] == SCAN_PARAM_SET;
-    bool hasValueSize = propertyList[PARAM_SCAN_OPTION_VALUE_SIZE] == SCAN_PARAM_SET;
-    if (!hasValueType || !hasValueSize) {
+    if (!hasValueType) {
         return false;
     }
     return true;

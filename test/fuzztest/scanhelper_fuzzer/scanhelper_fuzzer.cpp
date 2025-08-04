@@ -25,10 +25,10 @@
 #include "scan_range.h"
 #include "scan_option_descriptor_helper.h"
 #include "scan_option_value_helper.h"
-#include "scan_parameters_helper.h"
 #include "scan_progress_helper.h"
 #include "scan_range_helper.h"
 #include "scanner_info_helper.h"
+#include "napi_scan_utils.h"
 
 namespace OHOS {
 namespace Scan {
@@ -75,22 +75,6 @@ void TestSetOptionUnit(const uint8_t* data, size_t size, FuzzedDataProvider* dat
     uint32_t optionUnit = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     scanOptDes.SetOptionUnit(optionUnit);
     optionUnit = scanOptDes.GetOptionUnit();
-}
-
-void TestSetOptionSize(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    ScanOptionDescriptor scanOptDes;
-    int32_t optionSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    scanOptDes.SetOptionSize(optionSize);
-    optionSize = scanOptDes.GetOptionSize();
-}
-
-void TestSetOptionCap(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    ScanOptionDescriptor scanOptDes;
-    int32_t optionCap = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    scanOptDes.SetOptionCap(optionCap);
-    optionCap = scanOptDes.GetOptionCap();
 }
 
 void TestSetOptionConstraintType(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -548,17 +532,6 @@ void TestScanOptValNapiInterface(const uint8_t* data, size_t size, FuzzedDataPro
     ScanOptionValueHelper::BuildFromJs(env, jsValue);
 }
 
-void TestScanParaNapiInterface(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    ScanParameters info;
-    int32_t format = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    info.SetFormat(static_cast<ScanFrame>(format));
-    ScanParametersHelper::MakeJsObject(env, info);
-    napi_value jsValue = nullptr;
-    ScanParametersHelper::BuildFromJs(env, jsValue);
-}
-
 void TestScanProgNapiInterface(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     napi_env env = nullptr;
@@ -586,15 +559,6 @@ void TestScannerInfoNapiInterface(const uint8_t* data, size_t size, FuzzedDataPr
     std::string deviceId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     info.SetDeviceId(deviceId);
     ScannerInfoHelper::MakeJsObject(env, info);
-}
-
-void TestScannerInfoTCPNapiInterface(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    ScanDeviceInfoTCP info;
-    uint32_t deviceState = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
-    info.SetDeviceState(deviceState);
-    ScannerInfoHelperTCP::MakeJsObject(env, info);
 }
 
 void TestSetNamedProperty(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -750,22 +714,6 @@ void TestDecodeExtensionCid(const uint8_t* data, size_t size, FuzzedDataProvider
     NapiScanUtils::DecodeExtensionCid(cid, extensionId, callbackId);
 }
 
-void TestGetTaskEventId(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    int32_t callerPid = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    NapiScanUtils::GetTaskEventId(taskId, type, userId, callerPid);
-}
-
-void TestEncodeTaskEventId(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    std::string eventType = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string type;
-    NapiScanUtils::EncodeTaskEventId(eventType, type);
-}
-
 void TestOpenFile(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     std::string filePath = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -794,8 +742,6 @@ void ScanOptionDescriptorFuzzTest(const uint8_t* data, size_t size, FuzzedDataPr
     TestSetOptionDesc(data, size, dataProvider);
     TestSetOptionType(data, size, dataProvider);
     TestSetOptionUnit(data, size, dataProvider);
-    TestSetOptionSize(data, size, dataProvider);
-    TestSetOptionCap(data, size, dataProvider);
     TestSetOptionConstraintType(data, size, dataProvider);
     TestSetOptionConstraintString(data, size, dataProvider);
     TestSetOptionConstraintNumber(data, size, dataProvider);
@@ -875,11 +821,6 @@ void ScanOptionValueHelperFuzzTest(const uint8_t* data, size_t size, FuzzedDataP
     TestScanOptValNapiInterface(data, size, dataProvider);
 }
 
-void ScanParametersHelperFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    TestScanParaNapiInterface(data, size, dataProvider);
-}
-
 void ScanProgressHelperFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     TestScanProgNapiInterface(data, size, dataProvider);
@@ -893,7 +834,6 @@ void ScanRangeHelperFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvide
 void ScannerInfoHelperFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     TestScannerInfoNapiInterface(data, size, dataProvider);
-    TestScannerInfoTCPNapiInterface(data, size, dataProvider);
 }
 
 void NapiScanUtilsFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -919,8 +859,6 @@ void NapiScanUtilsFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider*
     TestGetLocalIdInterface(data, size, dataProvider);
     TestEncodeExtensionCidInterface(data, size, dataProvider);
     TestDecodeExtensionCid(data, size, dataProvider);
-    TestGetTaskEventId(data, size, dataProvider);
-    TestEncodeTaskEventId(data, size, dataProvider);
     TestOpenFile(data, size, dataProvider);
     TestIsPathValid(data, size, dataProvider);
     TestGetJsVal(data, size, dataProvider);
@@ -948,7 +886,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::ScanRangeFuzzTest(data, size, &dataProvider);
     OHOS::Scan::ScanOptionDescriptorHelperFuzzTest(data, size, &dataProvider);
     OHOS::Scan::ScanOptionValueHelperFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::ScanParametersHelperFuzzTest(data, size, &dataProvider);
     OHOS::Scan::ScanProgressHelperFuzzTest(data, size, &dataProvider);
     OHOS::Scan::ScanRangeHelperFuzzTest(data, size, &dataProvider);
     OHOS::Scan::ScannerInfoHelperFuzzTest(data, size, &dataProvider);

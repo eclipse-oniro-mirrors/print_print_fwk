@@ -17,8 +17,9 @@
 #include "scan_log.h"
 
 namespace OHOS::Scan {
-ScanOptionDescriptor::ScanOptionDescriptor() : optionName_(""), optionTitle_(""), optionDesc_(""),
-    optionType_(0), optionUnit_(0), optionSize_(0), optionCap_(0), optionConstraintType_(0) {
+ScanOptionDescriptor::ScanOptionDescriptor() : optionName_(""), optionIndex_(0),
+    optionTitle_(""), optionDesc_(""),
+    optionType_(0), optionUnit_(0), optionConstraintType_(0) {
     optionConstraintString_.clear();
     optionConstraintNumber_.clear();
 }
@@ -26,14 +27,11 @@ ScanOptionDescriptor::ScanOptionDescriptor() : optionName_(""), optionTitle_("")
 ScanOptionDescriptor::ScanOptionDescriptor(const ScanOptionDescriptor &right)
 {
     optionName_ = right.optionName_;
+    optionIndex_ = right.optionIndex_;
     optionTitle_ = right.optionTitle_;
     optionDesc_ = right.optionDesc_;
     optionType_ = right.optionType_;
     optionUnit_ = right.optionUnit_;
-
-    optionSize_ = right.optionSize_;
-    optionCap_ = right.optionCap_;
-
     optionConstraintType_ = right.optionConstraintType_;
     optionConstraintString_.assign(right.optionConstraintString_.begin(), right.optionConstraintString_.end());
     optionConstraintNumber_.assign(right.optionConstraintNumber_.begin(), right.optionConstraintNumber_.end());
@@ -44,14 +42,11 @@ ScanOptionDescriptor &ScanOptionDescriptor::operator=(const ScanOptionDescriptor
 {
     if (this != &right) {
         optionName_ = right.optionName_;
+        optionIndex_ = right.optionIndex_;
         optionTitle_ = right.optionTitle_;
         optionDesc_ = right.optionDesc_;
         optionType_ = right.optionType_;
         optionUnit_ = right.optionUnit_;
-    
-        optionSize_ = right.optionSize_;
-        optionCap_ = right.optionCap_;
-    
         optionConstraintType_ = right.optionConstraintType_;
         optionConstraintString_.assign(right.optionConstraintString_.begin(), right.optionConstraintString_.end());
         optionConstraintNumber_.assign(right.optionConstraintNumber_.begin(), right.optionConstraintNumber_.end());
@@ -63,6 +58,11 @@ ScanOptionDescriptor &ScanOptionDescriptor::operator=(const ScanOptionDescriptor
 void ScanOptionDescriptor::SetOptionName(const std::string &optionName)
 {
     optionName_ = optionName;
+}
+
+void ScanOptionDescriptor::SetOptionIndex(const uint32_t& optionIndex)
+{
+    optionIndex_ = optionIndex;
 }
 
 void ScanOptionDescriptor::SetOptionTitle(const std::string &optionTitle)
@@ -83,16 +83,6 @@ void ScanOptionDescriptor::SetOptionType(const uint32_t &optionType)
 void ScanOptionDescriptor::SetOptionUnit(const uint32_t &optionUnit)
 {
     optionUnit_ = optionUnit;
-}
-
-void ScanOptionDescriptor::SetOptionSize(const int32_t &optionSize)
-{
-    optionSize_ = optionSize;
-}
-
-void ScanOptionDescriptor::SetOptionCap(const int32_t &optionCap)
-{
-    optionCap_ = optionCap;
 }
 
 void ScanOptionDescriptor::SetOptionConstraintType(const uint32_t &optionConstraintType)
@@ -120,6 +110,11 @@ std::string ScanOptionDescriptor::GetOptionName() const
     return optionName_;
 }
 
+uint32_t ScanOptionDescriptor::GetOptionIndex() const
+{
+    return optionIndex_;
+}
+
 std::string ScanOptionDescriptor::GetOptionTitle() const
 {
     return optionTitle_;
@@ -138,16 +133,6 @@ uint32_t ScanOptionDescriptor::GetOptionType() const
 uint32_t ScanOptionDescriptor::GetOptionUnit() const
 {
     return optionUnit_;
-}
-
-int32_t ScanOptionDescriptor::GetOptionSize() const
-{
-    return optionSize_;
-}
-
-int32_t ScanOptionDescriptor::GetOptionCap() const
-{
-    return optionCap_;
 }
 
 uint32_t ScanOptionDescriptor::GetOptionConstraintType() const
@@ -178,9 +163,6 @@ void ScanOptionDescriptor::ReadFromParcel(Parcel &parcel)
     SetOptionType(parcel.ReadUint32());
     SetOptionUnit(parcel.ReadUint32());
 
-    SetOptionSize(parcel.ReadInt32());
-    SetOptionCap(parcel.ReadInt32());
-
     SetOptionConstraintType(parcel.ReadUint32());
 
     std::vector<std::string> optionConstraintString;
@@ -210,9 +192,6 @@ bool ScanOptionDescriptor::Marshalling(Parcel &parcel) const
     parcel.WriteUint32(optionType_);
     parcel.WriteUint32(optionUnit_);
 
-    parcel.WriteInt32(optionSize_);
-    parcel.WriteInt32(optionCap_);
-
     parcel.WriteUint32(optionConstraintType_);
 
     parcel.WriteStringVector(optionConstraintString_);
@@ -237,9 +216,6 @@ void ScanOptionDescriptor::Dump()
     SCAN_HILOGD("optionDesc = %{public}s", optionDesc_.c_str());
     SCAN_HILOGD("optionType = %{public}d", optionType_);
     SCAN_HILOGD("optionUnit = %{public}d", optionUnit_);
-
-    SCAN_HILOGD("optionSize = %{public}d", optionSize_);
-    SCAN_HILOGD("optionCap = %{public}d", optionCap_);
 
     SCAN_HILOGD("optionConstraintType = %{public}d", optionConstraintType_);
     for (const auto& str : optionConstraintString_) {

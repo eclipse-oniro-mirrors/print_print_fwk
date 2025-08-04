@@ -46,9 +46,7 @@ void ScanManagerClientTest::TearDown(void) {}
  */
 HWTEST_F(ScanManagerClientTest, ScanManagerClientTest_0001_NeedRename, TestSize.Level1)
 {
-    int32_t scanVersion = 0;
-    auto status = smgPtr->InitScan(scanVersion);
-    EXPECT_NE(scanVersion, 0);
+    auto status = smgPtr->InitScan();
     EXPECT_EQ(status, 0);
 }
 
@@ -60,9 +58,7 @@ HWTEST_F(ScanManagerClientTest, ScanManagerClientTest_0001_NeedRename, TestSize.
  */
 HWTEST_F(ScanManagerClientTest, ScanManagerClientTest_0002_NeedRename, TestSize.Level1)
 {
-    int32_t scanVersion = 0;
-    auto status = smgPtr->ExitScan(scanVersion);
-    EXPECT_NE(scanVersion, 0);
+    auto status = smgPtr->ExitScan();
     EXPECT_EQ(status, 0);
 }
 

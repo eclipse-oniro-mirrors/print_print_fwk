@@ -93,12 +93,9 @@ int32_t ScanContext::GetScannerParaCount(const std::string& deviceId, int32_t& s
         return StatusConvert(ret);
     }
     uint32_t optionType = desc.GetOptionType();
-    int32_t optionSize = desc.GetOptionSize();
     ScanOptionValue value;
     value.SetScanOptionValueType(static_cast<ScanOptionValueType>(optionType));
-    value.SetValueSize(optionSize);
-    int32_t info = 0;
-    ret = client->OpScanOptionValue(deviceId, 0, SCAN_ACTION_GET_VALUE, value, info);
+    ret = client->OpScanOptionValue(deviceId, 0, SCAN_ACTION_GET_VALUE, value);
     if (ret != E_SCAN_NONE) {
         SCAN_HILOGE("OpScanOptionValue failed, ErrorCode: [%{public}d]", ret);
         return StatusConvert(ret);

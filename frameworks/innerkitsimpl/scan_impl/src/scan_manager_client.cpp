@@ -14,7 +14,7 @@
  */
 
 #include "scan_manager_client.h"
-
+#include "scan_log.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 
@@ -120,7 +120,7 @@ void ScanManagerClient::OnRemoteSaDied(const wptr<IRemoteObject>& object)
     scanServiceProxy_ = nullptr;
 }
 
-int32_t ScanManagerClient::InitScan(int32_t &scanVersion)
+int32_t ScanManagerClient::InitScan()
 {
     SCAN_HILOGD("ScanManagerClient InitScan start.");
     if (scanServiceProxy_ == nullptr) {
@@ -132,7 +132,7 @@ int32_t ScanManagerClient::InitScan(int32_t &scanVersion)
         SCAN_HILOGE("On quit because redoing GetScanServiceProxy failed.");
         return E_SCAN_RPC_FAILURE;
     }
-    int32_t ret = scanServiceProxy_->InitScan(scanVersion);
+    int32_t ret = scanServiceProxy_->InitScan();
     SCAN_HILOGD("ScanManagerClient InitScan end ret = [%{public}d].", ret);
     return ret;
 }
@@ -168,23 +168,6 @@ int32_t ScanManagerClient::GetScannerList()
     }
     int32_t ret = scanServiceProxy_->GetScannerList();
     SCAN_HILOGD("ScanManagerClient GetScannerList end ret = [%{public}d].", ret);
-    return ret;
-}
-
-int32_t ScanManagerClient::StopDiscover()
-{
-    SCAN_HILOGD("ScanManagerClient StopDiscover start.");
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGW("Redo GetScanServiceProxy");
-        scanServiceProxy_ = GetScanServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(proxyLock_);
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetScanServiceProxy failed.");
-        return E_SCAN_RPC_FAILURE;
-    }
-    int32_t ret = scanServiceProxy_->StopDiscover();
-    SCAN_HILOGD("ScanManagerClient StopDiscover end ret = [%{public}d].", ret);
     return ret;
 }
 
@@ -241,7 +224,7 @@ int32_t ScanManagerClient::GetScanOptionDesc(
 }
 
 int32_t ScanManagerClient::OpScanOptionValue(const std::string scannerId, const int32_t optionIndex,
-    const ScanOptionOpType op, ScanOptionValue &value, int32_t &info)
+    const ScanOptionOpType op, ScanOptionValue &value)
 {
     SCAN_HILOGD("ScanManagerClient OpScanOptionValue start.");
     if (scanServiceProxy_ == nullptr) {
@@ -253,7 +236,7 @@ int32_t ScanManagerClient::OpScanOptionValue(const std::string scannerId, const 
         SCAN_HILOGE("On quit because redoing GetScanServiceProxy failed.");
         return E_SCAN_RPC_FAILURE;
     }
-    int32_t ret = scanServiceProxy_->OpScanOptionValue(scannerId, optionIndex, op, value, info);
+    int32_t ret = scanServiceProxy_->OpScanOptionValue(scannerId, optionIndex, op, value);
     SCAN_HILOGD("ScanManagerClient OpScanOptionValue end ret = [%{public}d].", ret);
     return ret;
 }
@@ -292,23 +275,6 @@ int32_t ScanManagerClient::StartScan(const std::string scannerId, const bool &ba
     return ret;
 }
 
-int32_t ScanManagerClient::GetSingleFrameFD(const std::string scannerId, uint32_t &size, uint32_t fd)
-{
-    SCAN_HILOGD("ScanManagerClient GetSingleFrameFD start.");
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGW("Redo GetScanServiceProxy");
-        scanServiceProxy_ = GetScanServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(proxyLock_);
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetScanServiceProxy failed.");
-        return E_SCAN_RPC_FAILURE;
-    }
-    int32_t ret = scanServiceProxy_->GetSingleFrameFD(scannerId, size, fd);
-    SCAN_HILOGD("ScanManagerClient GetSingleFrameFD end ret = [%{public}d].", ret);
-    return ret;
-}
-
 int32_t ScanManagerClient::CancelScan(const std::string scannerId)
 {
     SCAN_HILOGD("ScanManagerClient CancelScan start.");
@@ -323,40 +289,6 @@ int32_t ScanManagerClient::CancelScan(const std::string scannerId)
     }
     int32_t ret = scanServiceProxy_->CancelScan(scannerId);
     SCAN_HILOGD("ScanManagerClient CancelScan end ret = [%{public}d].", ret);
-    return ret;
-}
-
-int32_t ScanManagerClient::SetScanIOMode(const std::string scannerId, const bool isNonBlocking)
-{
-    SCAN_HILOGD("ScanManagerClient SetScanIOMode start.");
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGW("Redo GetScanServiceProxy");
-        scanServiceProxy_ = GetScanServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(proxyLock_);
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetScanServiceProxy failed.");
-        return E_SCAN_RPC_FAILURE;
-    }
-    int32_t ret = scanServiceProxy_->SetScanIOMode(scannerId, isNonBlocking);
-    SCAN_HILOGD("ScanManagerClient SetScanIOMode end ret = [%{public}d].", ret);
-    return ret;
-}
-
-int32_t ScanManagerClient::GetScanSelectFd(const std::string scannerId, int32_t &fd)
-{
-    SCAN_HILOGD("ScanManagerClient GetScanSelectFd start.");
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGW("Redo GetScanServiceProxy");
-        scanServiceProxy_ = GetScanServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(proxyLock_);
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetScanServiceProxy failed.");
-        return E_SCAN_RPC_FAILURE;
-    }
-    int32_t ret = scanServiceProxy_->GetScanSelectFd(scannerId, fd);
-    SCAN_HILOGD("ScanManagerClient GetScanSelectFd end ret = [%{public}d].", ret);
     return ret;
 }
 
@@ -391,23 +323,6 @@ int32_t ScanManagerClient::Off(const std::string &taskId, const std::string &typ
     }
     int32_t ret = scanServiceProxy_->Off(taskId, type);
     SCAN_HILOGD("ScanManagerClient Off out ret = [%{public}d].", ret);
-    return ret;
-}
-
-int32_t ScanManagerClient::GetScannerState(int32_t &scannerState)
-{
-    SCAN_HILOGD("ScanManagerClient GetScannerState start.");
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGW("Redo GetScanServiceProxy");
-        scanServiceProxy_ = GetScanServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(proxyLock_);
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetScanServiceProxy failed.");
-        return E_SCAN_RPC_FAILURE;
-    }
-    int32_t ret = scanServiceProxy_->GetScannerState(scannerState);
-    SCAN_HILOGD("ScanManagerClient GetScannerState end ret = [%{public}d].", ret);
     return ret;
 }
 
@@ -476,24 +391,6 @@ int32_t ScanManagerClient::GetAddedScanner(std::vector<ScanDeviceInfo>& allAdded
     }
     int32_t ret = scanServiceProxy_->GetAddedScanner(allAddedScanner);
     SCAN_HILOGD("ScanManagerClient GetAddedScanner end ret = [%{public}d].", ret);
-    return ret;
-}
-
-int32_t ScanManagerClient::UpdateScannerName(const std::string& serialNumber,
-    const std::string& discoverMode, const std::string& deviceName)
-{
-    SCAN_HILOGD("ScanManagerClient UpdateScannerName start.");
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGW("Redo GetScanServiceProxy");
-        scanServiceProxy_ = GetScanServiceProxy();
-    }
-    std::shared_lock<std::shared_mutex> lock(proxyLock_);
-    if (scanServiceProxy_ == nullptr) {
-        SCAN_HILOGE("On quit because redoing GetScanServiceProxy failed.");
-        return E_SCAN_RPC_FAILURE;
-    }
-    int32_t ret = scanServiceProxy_->UpdateScannerName(serialNumber, discoverMode, deviceName);
-    SCAN_HILOGD("ScanManagerClient UpdateScannerName end ret = [%{public}d].", ret);
     return ret;
 }
 

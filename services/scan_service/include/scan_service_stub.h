@@ -29,23 +29,17 @@ private:
     bool OnInitScan(MessageParcel &data, MessageParcel &reply);
     bool OnExitScan(MessageParcel &data, MessageParcel &reply);
     bool OnGetScannerList(MessageParcel &data, MessageParcel &reply);
-    bool OnStopDiscover(MessageParcel &data, MessageParcel &reply);
     bool OnOpenScanner(MessageParcel &data, MessageParcel &reply);
     bool OnCloseScanner(MessageParcel &data, MessageParcel &reply);
     bool OnGetScanOptionDesc(MessageParcel &data, MessageParcel &reply);
     bool OnOpScanOptionValue(MessageParcel &data, MessageParcel &reply);
     bool OnGetScanParameters(MessageParcel &data, MessageParcel &reply);
     bool OnStartScan(MessageParcel &data, MessageParcel &reply);
-    bool OnGetSingleFrameFD(MessageParcel &data, MessageParcel &reply);
     bool OnCancelScan(MessageParcel &data, MessageParcel &reply);
-    bool OnSetScanIOMode(MessageParcel &data, MessageParcel &reply);
-    bool OnGetScanSelectFd(MessageParcel &data, MessageParcel &reply);
-    bool OnGetScannerState(MessageParcel &data, MessageParcel &reply);
     bool OnGetScanProgress(MessageParcel &data, MessageParcel &reply);
     bool OnConnectScanner(MessageParcel &data, MessageParcel &reply);
     bool OnDisConnectScanner(MessageParcel &data, MessageParcel &reply);
     bool OnGetConnectedScanner(MessageParcel &data, MessageParcel &reply);
-    bool OnUpdateScannerName(MessageParcel &data, MessageParcel &reply);
 
     bool OnEventOn(MessageParcel &data, MessageParcel &reply);
     bool OnEventOff(MessageParcel &data, MessageParcel &reply);

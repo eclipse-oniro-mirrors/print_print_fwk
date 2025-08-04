@@ -39,8 +39,7 @@ int32_t OH_Scan_Init()
         SCAN_HILOGE("client is a nullptr");
         return SCAN_ERROR_GENERIC_FAILURE;
     }
-    int32_t scanVersion = 0;
-    int32_t ret = client->InitScan(scanVersion);
+    int32_t ret = client->InitScan();
     if (ret != SCAN_ERROR_NONE) {
         SCAN_HILOGE("InitScan failed, ErrorCode: [%{public}d]", ret);
         return ScanContext::StatusConvert(ret);
@@ -189,14 +188,13 @@ int32_t OH_Scan_SetScannerParameter(const char* scannerId, const int32_t option,
         SCAN_HILOGE("client is a nullptr");
         return SCAN_ERROR_GENERIC_FAILURE;
     }
-    int32_t info = 0;
     int32_t innerOption = option;
     if (!context.ParaIndexConvert(option, innerOption, deviceId)) {
         SCAN_HILOGE("index [%{private}d] is error", option);
         return SCAN_ERROR_INVALID_PARAMETER;
     }
     ret = client->OpScanOptionValue(deviceId, innerOption,
-        SCAN_ACTION_SET_VALUE, optionValue, info);
+        SCAN_ACTION_SET_VALUE, optionValue);
     if (ret != SCAN_ERROR_NONE) {
         SCAN_HILOGE("SetScannerParameter failed, ErrorCode: [%{public}d]", ret);
         return ScanContext::StatusConvert(ret);

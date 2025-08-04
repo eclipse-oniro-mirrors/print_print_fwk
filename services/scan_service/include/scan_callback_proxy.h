@@ -25,12 +25,8 @@ public:
     explicit ScanCallbackProxy(const sptr<IRemoteObject> &impl);
     ~ScanCallbackProxy() = default;
 
-    bool OnCallback(uint32_t state, const ScanDeviceInfoTCP &info) override;
     bool OnCallback(uint32_t state, const ScanDeviceInfo &info) override;
     bool OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &info) override;
-    bool OnGetFrameResCallback(bool isGetSucc, int32_t sizeRead) override;
-    bool OnScanInitCallback(int32_t &scanVersion) override;
-    bool OnSendSearchMessage(std::string &message) override;
     bool OnGetDevicesList(std::vector<ScanDeviceInfo> &info) override;
 
 private:

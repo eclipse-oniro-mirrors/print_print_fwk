@@ -31,12 +31,8 @@ public:
 #ifndef TDD_ENABLE
 private:
 #endif
-    bool HandleDeviceInfoTcpEvent(MessageParcel &data, MessageParcel &reply);
     bool HandleDeviceInfoEvent(MessageParcel &data, MessageParcel &reply);
     bool HandleDeviceInfoSyncEvent(MessageParcel &data, MessageParcel &reply);
-    bool HandleGetFrameResEvent(MessageParcel &data, MessageParcel &reply);
-    bool HandleScanInitEvent(MessageParcel &data, MessageParcel &reply);
-    bool HandleSendSearchMessage(MessageParcel &data, MessageParcel &reply);
     bool HandleSendDeviceList(MessageParcel &data, MessageParcel &reply);
 #ifndef TDD_ENABLE
 private:

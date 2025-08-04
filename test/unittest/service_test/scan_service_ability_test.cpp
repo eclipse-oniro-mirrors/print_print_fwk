@@ -88,11 +88,9 @@ void ScanServiceAbilityTest::SetScannerId(const std::string& scannerId)
  */
 HWTEST_F(ScanServiceAbilityTest, integer_sub_001_NeedRename, TestSize.Level1) {
     SetUp();
-    int32_t scanVersion = DEFAULT_NUMBER;
     int32_t status = E_SCAN_NONE;
-    status = InitScan(scanVersion);
+    status = InitScan();
     EXPECT_EQ(status, E_SCAN_NONE)
-    EXPECT_NE(scanVersion, DEFAULT_NUMBER);
 }
 
 /**
@@ -118,19 +116,6 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_004_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = GetScannerList();
-    EXPECT_EQ(status, E_SCAN_NONE)
-}
-
-/**
- * @tc.name: ScanServiceAbilityTest_0004
- * @tc.desc: Verify the sub function.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_004_NeedRename, TestSize.Level1) {
-    SetUp();
-    int32_t status = E_SCAN_NONE;
-    status = StopDiscover();
     EXPECT_EQ(status, E_SCAN_NONE)
 }
 
@@ -226,19 +211,6 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_011_NeedRename, TestSize.Level1) {
 }
 
 /**
- * @tc.name: ScanServiceAbilityTest_0012
- * @tc.desc: Verify the sub function.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_012_NeedRename, TestSize.Level1) {
-    SetUp();
-    int32_t status = E_SCAN_NONE;
-    status = GetSingleFrameFD(scannerId);
-    EXPECT_EQ(status, E_SCAN_NONE)
-}
-
-/**
  * @tc.name: ScanServiceAbilityTest_0013
  * @tc.desc: Verify the sub function.
  * @tc.type: FUNC
@@ -248,32 +220,6 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_013_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = CancelScan(scannerId);
-    EXPECT_EQ(status, E_SCAN_NONE)
-}
-
-/**
- * @tc.name: ScanServiceAbilityTest_0014
- * @tc.desc: Verify the sub function.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_014_NeedRename, TestSize.Level1) {
-    SetUp();
-    int32_t status = E_SCAN_NONE;
-    status = SetScanIOMode(scannerId);
-    EXPECT_EQ(status, E_SCAN_NONE)
-}
-
-/**
- * @tc.name: ScanServiceAbilityTest_0015
- * @tc.desc: Verify the sub function.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-HWTEST_F(ScanServiceAbilityTest, integer_sub_015_NeedRename, TestSize.Level1) {
-    SetUp();
-    int32_t status = E_SCAN_NONE;
-    status = GetScanSelectFd(scannerId);
     EXPECT_EQ(status, E_SCAN_NONE)
 }
 
@@ -300,20 +246,6 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_017_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
     status = Off(scannerId);
-    EXPECT_EQ(status, E_SCAN_NONE)
-}
-
-/**
- * @tc.name: ScanServiceAbilityTest_0018
- * @tc.desc: Verify the sub function.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-HWTEST_F(ScanServiceAbilityTest, integer_sub_018_NeedRename, TestSize.Level1) {
-    SetUp();
-    int32_t status = E_SCAN_NONE;
-    status = GetScannerState(scannerId);
     EXPECT_EQ(status, E_SCAN_NONE)
 }
 
@@ -366,8 +298,7 @@ HWTEST_F(ScanServiceAbilityTest, integer_sub_021_NeedRename, TestSize.Level1) {
 HWTEST_F(ScanServiceAbilityTest, integer_sub_022_NeedRename, TestSize.Level1) {
     SetUp();
     int32_t status = E_SCAN_NONE;
-    int32_t scanVersion = 0;
-    status= scanSa->InitScan(scanVersion);
+    status= scanSa->InitScan();
     EXPECT_EQ(scanSa->appCount_, 0);
 }
 

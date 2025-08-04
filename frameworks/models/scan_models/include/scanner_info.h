@@ -18,11 +18,7 @@
 #define TDD_ENABLE 1
 
 #include <map>
-#include "napi/native_api.h"
 #include "parcel.h"
-
-#include "napi_scan_utils.h"
-
 
 namespace OHOS::Scan {
 class ScanDeviceInfoTCP final : public Parcelable {
@@ -67,8 +63,6 @@ public:
 private:
 #endif
     bool ReadFromParcel(Parcel &parcel);
-
-    static bool ValidateProperty(napi_env env, napi_value object);
 
 #ifndef TDD_ENABLE
 private:

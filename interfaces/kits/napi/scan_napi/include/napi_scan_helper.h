@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
-#ifndef SCAN_PARAMETERS_HELPER_H
-#define SCAN_PARAMETERS_HELPER_H
+#ifndef NAPI_SCAN_HELPER
+#define NAPI_SCAN_HELPER
 
-#include <map>
-#include "napi/native_api.h"
-#include "scan_parameters.h"
+#include <stdint.h>
+#include <string>
+#include "scan_option_descriptor.h"
 
 namespace OHOS::Scan {
-class ScanParametersHelper {
+class NapiScanHelper {
 public:
-    static napi_value MakeJsObject(napi_env env, const ScanParameters &para);
-    static std::shared_ptr<ScanParameters> BuildFromJs(napi_env env, napi_value jsValue);
-
+    static int32_t GetScannerAllPara(const std::string &deviceId, std::vector<ScanOptionDescriptor> &allDesc);
 private:
-    static bool ValidateProperty(napi_env env, napi_value object);
+    static int32_t GetScannerParaCount(const std::string& deviceId, int32_t& scannerParaCount);
+    static int32_t GetScannerParameter(const std::string &deviceId,
+        int32_t scannerParaCount, std::vector<ScanOptionDescriptor> &allDesc);
 };
-}  // namespace OHOS::Scan
-#endif  // SCAN_PARAMETERS_H
+} // namespace OHOS::Scan
+#endif // NAPI_SCAN_HELPER

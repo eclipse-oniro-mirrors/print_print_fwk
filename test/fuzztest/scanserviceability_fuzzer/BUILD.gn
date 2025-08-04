@@ -37,7 +37,7 @@ ohos_fuzztest("ScanServiceAbilityFuzzTest") {
   ]
 
   deps = [
-    "${print_path}/frameworks/helper/scan_helper:scan_helper",
+    "${print_path}/frameworks/models/scan_models:scan_models",
     "${print_path}/frameworks/innerkitsimpl/scan_impl:scan_client",
     "${print_path}/services/scan_service:scan_service_test",
   ]

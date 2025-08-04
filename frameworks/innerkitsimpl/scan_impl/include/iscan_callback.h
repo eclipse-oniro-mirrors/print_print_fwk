@@ -24,22 +24,14 @@ namespace OHOS::Scan {
 class IScanCallback : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Scan.IScanCallback");
-    virtual bool OnCallback(uint32_t state, const ScanDeviceInfoTCP &info) = 0;
     virtual bool OnCallback(uint32_t state, const ScanDeviceInfo &info) = 0;
     virtual bool OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &info) = 0;
-    virtual bool OnGetFrameResCallback(bool isGetFrameSucc, int32_t sizeRead) = 0;
-    virtual bool OnScanInitCallback(int32_t &scanVersion) = 0;
-    virtual bool OnSendSearchMessage(std::string &message) = 0;
     virtual bool OnGetDevicesList(std::vector<ScanDeviceInfo> &info) = 0;
 };
 
 enum {
-    SCAN_CALLBACK_DEVICE_TCP,
     SCAN_CALLBACK_DEVICE,
     SCAN_CALLBACK_DEVICE_SYNC,
-    SCAN_CALLBACK_GET_FRAME_RES,
-    SCAN_CALLBACK_SCAN_INIT,
-    SCAN_CALLBACK_SEND_MESSAGE,
     SCAN_CALLBACK_DEVICE_LIST,
 };
 } // namespace OHOS::Scan

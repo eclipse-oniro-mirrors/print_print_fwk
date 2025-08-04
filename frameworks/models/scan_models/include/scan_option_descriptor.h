@@ -29,28 +29,22 @@ public:
     ScanOptionDescriptor &operator=(const ScanOptionDescriptor &right);
 
     void SetOptionName(const std::string &optionName);
+    void SetOptionIndex(const uint32_t& optionIndex);
     void SetOptionTitle(const std::string &optionTitle);
     void SetOptionDesc(const std::string &optionDesc);
     void SetOptionType(const uint32_t &optionType);
     void SetOptionUnit(const uint32_t &optionUnit);
-
-    void SetOptionSize(const int32_t &optionSize);
-    void SetOptionCap(const int32_t &optionCap);
-
     void SetOptionConstraintType(const uint32_t &optionConstraintType);
     void SetOptionConstraintString(const std::vector<std::string> &optionConstraintString);
     void SetOptionConstraintNumber(const std::vector<int32_t> &optionConstraintNumber);
     void SetOptionConstraintRange(const ScanRange& optionConstraintRange);
 
     [[nodiscard]] std::string GetOptionName() const;
+    [[nodiscard]] uint32_t GetOptionIndex() const;
     [[nodiscard]] std::string GetOptionTitle() const;
     [[nodiscard]] std::string GetOptionDesc() const;
     [[nodiscard]] uint32_t GetOptionType() const;
     [[nodiscard]] uint32_t GetOptionUnit() const;
-
-    [[nodiscard]] int32_t GetOptionSize() const;
-    [[nodiscard]] int32_t GetOptionCap() const;
-
     [[nodiscard]] uint32_t GetOptionConstraintType() const;
     void GetOptionConstraintString(std::vector<std::string> &optionConstraintString) const;
     void GetOptionConstraintNumber(std::vector<int32_t> &optionConstraintNumber) const;
@@ -67,14 +61,11 @@ private:
 
 private:
     std::string optionName_;
+    uint32_t optionIndex_;
     std::string optionTitle_;
     std::string optionDesc_;
     uint32_t optionType_;
     uint32_t optionUnit_;
-
-    int32_t optionSize_;
-    int32_t optionCap_;
-
     uint32_t optionConstraintType_;
     std::vector<std::string> optionConstraintString_;
     std::vector<std::int32_t> optionConstraintNumber_;

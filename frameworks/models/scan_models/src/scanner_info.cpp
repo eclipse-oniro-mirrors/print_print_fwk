@@ -14,10 +14,9 @@
  */
 
 #include "scanner_info.h"
+#include "scan_log.h"
 
 namespace OHOS::Scan {
-
-
 //tcp
 ScanDeviceInfoTCP::ScanDeviceInfoTCP()
 {

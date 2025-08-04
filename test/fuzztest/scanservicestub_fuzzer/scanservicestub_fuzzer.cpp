@@ -44,7 +44,6 @@ namespace Scan {
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         datas.WriteString(scannerId);
         ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_GET_SCANNER_LIST, datas, reply, option);
-        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_STOP_DISCOVER, datas, reply, option);
         ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_INIT_SCAN, datas, reply, option);
         ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_OPEN_SCANNER, datas, reply, option);
         ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_EXIT_SCAN, datas, reply, option);
@@ -129,22 +128,6 @@ namespace Scan {
         return true;
     }
 
-    bool TestOnGetSingleFrameFD(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        MessageParcel datas;
-        MessageParcel reply;
-        MessageOption option;
-        if (!WriteInterfaceToken(datas)) {
-            return false;
-        }
-        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        datas.WriteString(scannerId);
-        uint32_t fd = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
-        datas.WriteFileDescriptor(fd);
-        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_GET_SINGLE_FRAME_FD, datas, reply, option);
-        return true;
-    }
-
     bool TestOnCancelScan(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         MessageParcel datas;
@@ -159,36 +142,6 @@ namespace Scan {
         return true;
     }
 
-    bool TestOnSetScanIOMode(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        MessageParcel datas;
-        MessageParcel reply;
-        MessageOption option;
-        if (!WriteInterfaceToken(datas)) {
-            return false;
-        }
-        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        datas.WriteString(scannerId);
-        bool isNonBlocking = dataProvider->ConsumeBool();
-        datas.WriteBool(isNonBlocking);
-        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_SET_SCAN_IO_MODE, datas, reply, option);
-        return true;
-    }
-
-    bool TestOnGetScanSelectFd(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        MessageParcel datas;
-        MessageParcel reply;
-        MessageOption option;
-        if (!WriteInterfaceToken(datas)) {
-            return false;
-        }
-        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        datas.WriteString(scannerId);
-        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_GET_SCAN_SELECT_FD, datas, reply, option);
-        return true;
-    }
-
     bool TestOnGetScanProgress(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         MessageParcel datas;
@@ -200,7 +153,6 @@ namespace Scan {
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         datas.WriteString(scannerId);
         ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_GET_SCAN_PROGRESS, datas, reply, option);
-        ScanServiceAbility::GetInstance()->OnRemoteRequest(CMD_GET_SCANNER_STATE, datas, reply, option);
         return true;
     }
 
@@ -257,28 +209,6 @@ namespace Scan {
         return true;
     }
 
-    bool TestOnStopDiscover(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        MessageParcel datas;
-        MessageParcel reply;
-        if (!WriteInterfaceToken(datas)) {
-            return false;
-        }
-        ScanServiceAbility::GetInstance()->OnStopDiscover(datas, reply);
-        return true;
-    }
-
-    bool TestOnGetScannerState(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        MessageParcel datas;
-        MessageParcel reply;
-        if (!WriteInterfaceToken(datas)) {
-            return false;
-        }
-        ScanServiceAbility::GetInstance()->OnGetScannerState(datas, reply);
-        return true;
-    }
-
     bool TestOnConnectScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         MessageParcel datas;
@@ -319,23 +249,6 @@ namespace Scan {
         ScanServiceAbility::GetInstance()->OnGetConnectedScanner(datas, reply);
         return true;
     }
-
-    bool TestOnUpdateScannerName(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        MessageParcel datas;
-        MessageParcel reply;
-        if (!WriteInterfaceToken(datas)) {
-            return false;
-        }
-        std::string serialNumber = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        datas.WriteString(serialNumber);
-        std::string discoverMode = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        datas.WriteString(discoverMode);
-        std::string deviceName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        datas.WriteString(deviceName);
-        ScanServiceAbility::GetInstance()->OnUpdateScannerName(datas, reply);
-        return true;
-    }
 }
 }
 
@@ -356,20 +269,14 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::TestOnOpScanOptionValue(data, size, &dataProvider);
     OHOS::Scan::TestOnGetScanParameters(data, size, &dataProvider);
     OHOS::Scan::TestOnStartScan(data, size, &dataProvider);
-    OHOS::Scan::TestOnGetSingleFrameFD(data, size, &dataProvider);
     OHOS::Scan::TestOnCancelScan(data, size, &dataProvider);
-    OHOS::Scan::TestOnSetScanIOMode(data, size, &dataProvider);
-    OHOS::Scan::TestOnGetScanSelectFd(data, size, &dataProvider);
     OHOS::Scan::TestOnGetScanProgress(data, size, &dataProvider);
     OHOS::Scan::TestOnEventOn(data, size, &dataProvider);
     OHOS::Scan::TestOnEventOff(data, size, &dataProvider);
     OHOS::Scan::TestOnInitScan(data, size, &dataProvider);
     OHOS::Scan::TestOnExitScan(data, size, &dataProvider);
-    OHOS::Scan::TestOnStopDiscover(data, size, &dataProvider);
-    OHOS::Scan::TestOnGetScannerState(data, size, &dataProvider);
     OHOS::Scan::TestOnConnectScanner(data, size, &dataProvider);
     OHOS::Scan::TestOnDisConnectScanner(data, size, &dataProvider);
     OHOS::Scan::TestOnGetConnectedScanner(data, size, &dataProvider);
-    OHOS::Scan::TestOnUpdateScannerName(data, size, &dataProvider);
     return 0;
 }

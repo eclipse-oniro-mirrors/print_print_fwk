@@ -17,7 +17,7 @@
 
 #include <functional>
 #include <memory>
-#include <map>
+#include <unordered_map>
 
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -92,13 +92,9 @@ public:
         uint32_t errorIndex_ = E_SCAN_NONE;
     };
 
-    // The default AsyncCallback in the parameters is at the end position.
-    static constexpr size_t ASYNC_DEFAULT_POS = -1;
-    ScanAsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context,
-            size_t pos = ASYNC_DEFAULT_POS);
+    ScanAsyncCall(napi_env env, napi_callback_info info, std::shared_ptr<Context> context);
     ~ScanAsyncCall();
-    napi_value Call(napi_env env, Context::ExecAction exec = nullptr);
-    napi_value SyncCall(napi_env env, Context::ExecAction exec = nullptr);
+    napi_value Call(napi_env env, Context::ExecAction exec);
 
 #ifndef TDD_ENABLE
 private:
@@ -109,14 +105,15 @@ private:
     static std::string GetErrorText(uint32_t code);
     struct AsyncContext {
         std::shared_ptr<Context> ctx = nullptr;
-        napi_ref callback = nullptr;
         napi_ref self = nullptr;
         napi_deferred defer = nullptr;
         napi_async_work work = nullptr;
         napi_status paramStatus = napi_ok;
     };
+    static void PrepareSuccessResult(napi_env env, napi_value output, napi_value result[]);
+    static void PrepareErrorResult(napi_env env, const AsyncContext* context, napi_value result[]);
     static void DeleteContext(napi_env env, AsyncContext *context);
-    static std::map<uint32_t, std::string> scanErrorCodeMap;
+    static void SetErrorText(uint32_t& code, std::string& message);
 
     AsyncContext *context_ = nullptr;
     napi_env env_ = nullptr;

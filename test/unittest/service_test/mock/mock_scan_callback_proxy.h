@@ -24,11 +24,7 @@ namespace Scan {
 class MockScanCallbackProxy final : public ScanCallbackProxy {
 public:
     MockScanCallbackProxy() : ScanCallbackProxy(nullptr) {}
-    MOCK_METHOD2(OnCallback, bool(uint32_t, const ScanDeviceInfoTCP &));
     MOCK_METHOD2(OnCallback, bool(uint32_t, const ScanDeviceInfo &));
-    MOCK_METHOD2(OnGetFrameResCallback, bool(bool, int32_t));
-    MOCK_METHOD1(OnScanInitCallback, bool(int32_t &));
-    MOCK_METHOD1(OnSendSearchMessage, bool(std::string &));
 };
 }  // namespace Print
 }  // namespace OHOS
