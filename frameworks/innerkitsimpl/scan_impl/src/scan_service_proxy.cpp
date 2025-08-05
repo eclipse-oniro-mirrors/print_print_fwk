@@ -37,7 +37,7 @@ int32_t ScanServiceProxy::GetResult(int32_t retCode, MessageParcel &reply)
     return retCode;
 }
 
-int32_t ScanServiceProxy::InitScan(int32_t &scanVersion)
+int32_t ScanServiceProxy::InitScan()
 {
     SCAN_HILOGD("ScanServiceProxy InitScan start");
     CREATE_PRC_MESSAGE;
@@ -52,7 +52,6 @@ int32_t ScanServiceProxy::InitScan(int32_t &scanVersion)
         SCAN_HILOGE("ScanServiceProxy InitScan failed");
         return ret;
     }
-    scanVersion = reply.ReadInt32();
     SCAN_HILOGD("ScanServiceProxy InitScan end.");
     return ret;
 }
@@ -94,27 +93,6 @@ int32_t ScanServiceProxy::GetScannerList()
     SCAN_HILOGD("ScanServiceProxy GetScannerList end");
     return ret;
 }
-
-
-int32_t ScanServiceProxy::StopDiscover()
-{
-    SCAN_HILOGD("ScanServiceProxy StopDiscover start");
-    CREATE_PRC_MESSAGE;
-    auto remote = Remote();
-    if (remote == nullptr) {
-        SCAN_HILOGE("ScanServiceProxy::StopDiscover remote is null");
-        return E_SCAN_RPC_FAILURE;
-    }
-    int32_t ret = remote->SendRequest(CMD_STOP_DISCOVER, data, reply, option);
-    ret = GetResult(ret, reply);
-    if (ret != E_SCAN_NONE) {
-        SCAN_HILOGE("ScanServiceProxy StopDiscover failed");
-        return ret;
-    }
-    SCAN_HILOGD("ScanServiceProxy StopDiscover end");
-    return ret;
-}
-
 
 int32_t ScanServiceProxy::OpenScanner(const std::string scannerId)
 {
@@ -181,7 +159,7 @@ int32_t ScanServiceProxy::GetScanOptionDesc(const std::string scannerId, const i
 }
 
 int32_t ScanServiceProxy::OpScanOptionValue(const std::string scannerId,
-    const int32_t optionIndex, const ScanOptionOpType op, ScanOptionValue &value, int32_t &info)
+    const int32_t optionIndex, const ScanOptionOpType op, ScanOptionValue &value)
 {
     SCAN_HILOGD("ScanServiceProxy OpScanOptionValue start");
     CREATE_PRC_MESSAGE;
@@ -206,9 +184,6 @@ int32_t ScanServiceProxy::OpScanOptionValue(const std::string scannerId,
         return E_SCAN_GENERIC_FAILURE;
     }
     value = *scanOptionValue;
-    if (op == SCAN_ACTION_GET_VALUE) {
-        info = reply.ReadInt32();
-    }
     SCAN_HILOGD("ScanServiceProxy OpScanOptionValue end");
     return ret;
 }
@@ -256,28 +231,6 @@ int32_t ScanServiceProxy::StartScan(const std::string scannerId, const bool &bat
     return ret;
 }
 
-int32_t ScanServiceProxy::GetSingleFrameFD(const std::string scannerId, uint32_t &size, uint32_t fd)
-{
-    SCAN_HILOGE("ScanServiceProxy GetSingleFrameFD start");
-    CREATE_PRC_MESSAGE;
-    auto remote = Remote();
-    if (remote == nullptr) {
-        SCAN_HILOGE("ScanServiceProxy::GetSingleFrameFD remote is null");
-        return E_SCAN_RPC_FAILURE;
-    }
-    data.WriteString(scannerId);
-    data.WriteFileDescriptor(fd);
-    int32_t ret = remote->SendRequest(CMD_GET_SINGLE_FRAME_FD, data, reply, option);
-    ret = GetResult(ret, reply);
-    if (ret != E_SCAN_NONE) {
-        SCAN_HILOGE("ScanServiceProxy GetSingleFrameFD failed");
-        return ret;
-    }
-    size = reply.ReadUint32();
-    SCAN_HILOGD("ScanServiceProxy GetSingleFrameFD end");
-    return ret;
-}
-
 int32_t ScanServiceProxy::CancelScan(const std::string scannerId)
 {
     SCAN_HILOGD("ScanServiceProxy CancelScan start");
@@ -295,48 +248,6 @@ int32_t ScanServiceProxy::CancelScan(const std::string scannerId)
         return ret;
     }
     SCAN_HILOGD("ScanServiceProxy CancelScan end");
-    return ret;
-}
-
-int32_t ScanServiceProxy::SetScanIOMode(const std::string scannerId, const bool isNonBlocking)
-{
-    SCAN_HILOGD("ScanServiceProxy SetScanIOMode start");
-    CREATE_PRC_MESSAGE;
-    auto remote = Remote();
-    if (remote == nullptr) {
-        SCAN_HILOGE("ScanServiceProxy::SetScanIOMode remote is null");
-        return E_SCAN_RPC_FAILURE;
-    }
-    data.WriteString(scannerId);
-    data.WriteBool(isNonBlocking);
-    int32_t ret = remote->SendRequest(CMD_SET_SCAN_IO_MODE, data, reply, option);
-    ret = GetResult(ret, reply);
-    if (ret != E_SCAN_NONE) {
-        SCAN_HILOGE("ScanServiceProxy SetScanIOMode failed");
-        return ret;
-    }
-    SCAN_HILOGD("ScanServiceProxy SetScanIOMode end");
-    return ret;
-}
-
-int32_t ScanServiceProxy::GetScanSelectFd(const std::string scannerId, int32_t &fd)
-{
-    SCAN_HILOGD("ScanServiceProxy GetScanSelectFd start");
-    CREATE_PRC_MESSAGE;
-    auto remote = Remote();
-    if (remote == nullptr) {
-        SCAN_HILOGE("ScanServiceProxy::GetScanSelectFd remote is null");
-        return E_SCAN_RPC_FAILURE;
-    }
-    data.WriteString(scannerId);
-    int32_t ret = remote->SendRequest(CMD_GET_SCAN_SELECT_FD, data, reply, option);
-    ret = GetResult(ret, reply);
-    if (ret != E_SCAN_NONE) {
-        SCAN_HILOGE("ScanServiceProxy GetScanSelectFd failed");
-        return ret;
-    }
-    fd = reply.ReadInt32();
-    SCAN_HILOGD("ScanServiceProxy GetScanSelectFd end");
     return ret;
 }
 
@@ -401,27 +312,6 @@ int32_t ScanServiceProxy::Off(const std::string taskId, const std::string &type)
     }
 
     SCAN_HILOGD("ScanServiceProxy Off out");
-    return ret;
-}
-
-int32_t ScanServiceProxy::GetScannerState(int32_t &scannerState)
-{
-    SCAN_HILOGD("ScanServiceProxy GetScannerState start");
-    CREATE_PRC_MESSAGE;
-
-    auto remote = Remote();
-    if (remote == nullptr) {
-        SCAN_HILOGE("ScanServiceProxy::SetScanIOMode remote is null");
-        return E_SCAN_RPC_FAILURE;
-    }
-    int32_t ret = remote->SendRequest(CMD_GET_SCANNER_STATE, data, reply, option);
-    ret = GetResult(ret, reply);
-    if (ret != E_SCAN_NONE) {
-        SCAN_HILOGE("ScanServiceProxy GetScannerState failed");
-        return ret;
-    }
-    scannerState = reply.ReadInt32();
-    SCAN_HILOGD("ScanServiceProxy GetScannerState end.");
     return ret;
 }
 
@@ -523,29 +413,6 @@ int32_t ScanServiceProxy::GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedS
         allAddedScanner.emplace_back(*infoPtr);
     }
     SCAN_HILOGD("ScanServiceProxy GetAddedScanner end");
-    return ret;
-}
-
-int32_t ScanServiceProxy::UpdateScannerName(const std::string& serialNumber,
-    const std::string& discoverMode, const std::string& deviceName)
-{
-    SCAN_HILOGD("ScanServiceProxy UpdateScannerName start");
-    CREATE_PRC_MESSAGE;
-    auto remote = Remote();
-    if (remote == nullptr) {
-        SCAN_HILOGE("ScanServiceProxy::UpdateScannerName remote is null");
-        return E_SCAN_RPC_FAILURE;
-    }
-    data.WriteString(serialNumber);
-    data.WriteString(discoverMode);
-    data.WriteString(deviceName);
-    int32_t ret = remote->SendRequest(CMD_UPDATE_SCANNER_NAME, data, reply, option);
-    ret = GetResult(ret, reply);
-    if (ret != E_SCAN_NONE) {
-        SCAN_HILOGE("ScanServiceProxy UpdateScannerName failed");
-        return ret;
-    }
-    SCAN_HILOGD("ScanServiceProxy UpdateScannerName end");
     return ret;
 }
 

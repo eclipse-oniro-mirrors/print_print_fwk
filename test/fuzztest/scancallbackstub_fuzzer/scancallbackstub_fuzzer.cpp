@@ -21,7 +21,6 @@
 #include "scancallbackstub_fuzzer.h"
 
 namespace OHOS::Scan {
-constexpr uint8_t MAX_STRING_LENGTH = 255;
 constexpr int MAX_SET_NUMBER = 100;
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
@@ -35,16 +34,6 @@ void OnRemoteRequestFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvide
     ScanCallback callBack(nullptr, nullptr);
     MessageOption option;
     callBack.OnRemoteRequest(code, parcelData, reply, option);
-}
-
-void HandleDeviceInfoTcpEventFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    MessageParcel parcelData;
-    uint32_t state = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
-    parcelData.WriteUint32(state);
-    ScanCallback callBack(nullptr, nullptr);
-    MessageParcel reply;
-    callBack.HandleDeviceInfoTcpEvent(parcelData, reply);
 }
 
 void HandleDeviceInfoEventFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -65,40 +54,6 @@ void HandleDeviceInfoSyncEventFuzzTest(const uint8_t* data, size_t size, FuzzedD
     ScanCallback callBack(nullptr, nullptr);
     MessageParcel reply;
     callBack.HandleDeviceInfoSyncEvent(parcelData, reply);
-}
-
-void HandleGetFrameResEventFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    MessageParcel parcelData;
-    bool isGetSucc = dataProvider->ConsumeBool();
-    parcelData.WriteBool(isGetSucc);
-    int32_t sizeRead = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    parcelData.WriteInt32(sizeRead);
-    ScanCallback callBack(nullptr, nullptr);
-    MessageParcel reply;
-    callBack.HandleGetFrameResEvent(parcelData, reply);
-}
-
-void HandleScanInitEventFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    MessageParcel parcelData;
-    int32_t scanVersion = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    parcelData.WriteInt32(scanVersion);
-    ScanCallback callBack(nullptr, nullptr);
-    MessageParcel reply;
-    callBack.HandleScanInitEvent(parcelData, reply);
-}
-
-void HandleSendSearchMessageFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    MessageParcel parcelData;
-    std::string message = parcelData.ReadString();
-    parcelData.WriteString(message);
-    message = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    parcelData.WriteString(message);
-    ScanCallback callBack(nullptr, nullptr);
-    MessageParcel reply;
-    callBack.HandleSendSearchMessage(parcelData, reply);
 }
 
 void HandleSendDeviceListFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -129,12 +84,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
     FuzzedDataProvider dataProvider(data, size);
     OHOS::Scan::OnRemoteRequestFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::HandleDeviceInfoTcpEventFuzzTest(data, size, &dataProvider);
     OHOS::Scan::HandleDeviceInfoEventFuzzTest(data, size, &dataProvider);
     OHOS::Scan::HandleDeviceInfoSyncEventFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::HandleGetFrameResEventFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::HandleScanInitEventFuzzTest(data, size, &dataProvider);
-    OHOS::Scan::HandleSendSearchMessageFuzzTest(data, size, &dataProvider);
     OHOS::Scan::HandleSendDeviceListFuzzTest(data, size, &dataProvider);
     return 0;
 }

@@ -20,42 +20,8 @@
 namespace OHOS::Scan {
 ScanCallbackProxy::ScanCallbackProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IScanCallback>(impl) {}
 
-
-bool ScanCallbackProxy::OnCallback(uint32_t state, const ScanDeviceInfoTCP &info)
-{
-    SCAN_HILOGD("GetScannerList ScanCallbackProxy::OnCallback");
-    SCAN_HILOGD("ScanCallbackProxy::OnCallback Start");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        SCAN_HILOGE("write descriptor failed");
-        return false;
-    }
-
-    data.WriteUint32(state);
-    info.Marshalling(data);
-
-    auto remote = Remote();
-    if (remote == nullptr) {
-        SCAN_HILOGE("ScanCallbackProxy::OnCallback remote is null");
-        return false;
-    }
-
-    int error = remote->SendRequest(SCAN_CALLBACK_DEVICE_TCP, data, reply, option);
-    if (error != 0) {
-        SCAN_HILOGE("SendRequest failed, error %{public}d", error);
-        return false;
-    }
-
-    SCAN_HILOGD("ScanCallbackProxy::OnCallback End");
-    return true;
-}
-
 bool ScanCallbackProxy::OnCallback(uint32_t state, const ScanDeviceInfo &info)
 {
-    SCAN_HILOGD("GetScannerList ScanCallbackProxy::OnCallback");
     SCAN_HILOGD("ScanCallbackProxy::OnCallback Start");
     MessageParcel data;
     MessageParcel reply;
@@ -112,95 +78,6 @@ bool ScanCallbackProxy::OnCallbackSync(uint32_t state, const ScanDeviceInfoSync 
     }
 
     SCAN_HILOGD("ScanCallbackProxy::OnCallbackSync End");
-    return true;
-}
-
-bool ScanCallbackProxy::OnGetFrameResCallback(bool isGetSucc, int32_t sizeRead)
-{
-    SCAN_HILOGD("ScanCallbackProxy::OnGetFrameResCallback Start");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        SCAN_HILOGE("write descriptor failed");
-        return false;
-    }
-
-    data.WriteBool(isGetSucc);
-    data.WriteInt32(sizeRead);
-
-    auto remote = Remote();
-    if (remote == nullptr) {
-        SCAN_HILOGE("ScanCallbackProxy::OnGetFrameResCallback remote is null");
-        return false;
-    }
-
-    int error = remote->SendRequest(SCAN_CALLBACK_GET_FRAME_RES, data, reply, option);
-    if (error != 0) {
-        SCAN_HILOGE("SendRequest failed, error %{public}d", error);
-        return false;
-    }
-    SCAN_HILOGD("ScanCallbackProxy::OnGetFrameResCallback End");
-    return true;
-}
-
-bool ScanCallbackProxy::OnScanInitCallback(int32_t &scanVersion)
-{
-    SCAN_HILOGE("Enter OnScanInitCallback");
-    SCAN_HILOGD("ScanCallbackProxy::OnCallback Start");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        SCAN_HILOGE("write descriptor failed");
-        return false;
-    }
-
-    data.WriteUint32(scanVersion);
-
-    auto remote = Remote();
-    if (remote == nullptr) {
-        SCAN_HILOGE("ScanCallbackProxy::OnScanInitCallback remote is null");
-        return false;
-    }
-
-    int error = remote->SendRequest(SCAN_CALLBACK_SCAN_INIT, data, reply, option);
-    if (error != 0) {
-        SCAN_HILOGE("SendRequest failed, error %{public}d", error);
-        return false;
-    }
-
-    SCAN_HILOGD("ScanCallbackProxy::OnCallback End");
-    return true;
-}
-
-bool ScanCallbackProxy::OnSendSearchMessage(std::string &message)
-{
-    SCAN_HILOGD("Enter OnSendSearchMessage");
-    SCAN_HILOGD("ScanCallbackProxy::OnSendSearchMessage Start");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        SCAN_HILOGE("write descriptor failed");
-        return false;
-    }
-
-    data.WriteString(message);
-    auto remotePtr = Remote();
-    if (!remotePtr) {
-        SCAN_HILOGE("Remote() nullptr failed");
-        return false;
-    }
-    int error = remotePtr->SendRequest(SCAN_CALLBACK_SEND_MESSAGE, data, reply, option);
-    if (error != 0) {
-        SCAN_HILOGE("SendRequest failed, error %{public}d", error);
-        return false;
-    }
-    SCAN_HILOGD("ScanCallbackProxy::OnSendSearchMessage End");
     return true;
 }
 

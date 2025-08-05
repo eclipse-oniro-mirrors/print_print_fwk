@@ -14,19 +14,14 @@
  */
 
 #include "scan_callback_stub.h"
-
 #include "scan_constant.h"
 #include "scan_log.h"
 
 namespace OHOS::Scan {
 ScanCallbackStub::ScanCallbackStub()
 {
-    cmdMap_[SCAN_CALLBACK_DEVICE_TCP] = &ScanCallbackStub::HandleDeviceInfoTcpEvent;
     cmdMap_[SCAN_CALLBACK_DEVICE] = &ScanCallbackStub::HandleDeviceInfoEvent;
     cmdMap_[SCAN_CALLBACK_DEVICE_SYNC] = &ScanCallbackStub::HandleDeviceInfoSyncEvent;
-    cmdMap_[SCAN_CALLBACK_GET_FRAME_RES] = &ScanCallbackStub::HandleGetFrameResEvent;
-    cmdMap_[SCAN_CALLBACK_SCAN_INIT] = &ScanCallbackStub::HandleGetFrameResEvent;
-    cmdMap_[SCAN_CALLBACK_SEND_MESSAGE] = &ScanCallbackStub::HandleSendSearchMessage;
     cmdMap_[SCAN_CALLBACK_DEVICE_LIST] = &ScanCallbackStub::HandleSendDeviceList;
 }
 
@@ -52,19 +47,6 @@ int32_t ScanCallbackStub::OnRemoteRequest(
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
-bool ScanCallbackStub::HandleDeviceInfoTcpEvent(MessageParcel &data, MessageParcel &reply)
-{
-    uint32_t state = data.ReadUint32();
-    auto info = ScanDeviceInfoTCP::Unmarshalling(data);
-    if (info == nullptr) {
-        SCAN_HILOGE("invalid scaner info object");
-        return false;
-    }
-    bool result = OnCallback(state, *info);
-    reply.WriteBool(result);
-    return true;
-}
-
 bool ScanCallbackStub::HandleDeviceInfoEvent(MessageParcel &data, MessageParcel &reply)
 {
     uint32_t state = data.ReadUint32();
@@ -87,31 +69,6 @@ bool ScanCallbackStub::HandleDeviceInfoSyncEvent(MessageParcel &data, MessagePar
         return false;
     }
     bool result = OnCallbackSync(state, *info);
-    reply.WriteBool(result);
-    return true;
-}
-
-bool ScanCallbackStub::HandleGetFrameResEvent(MessageParcel &data, MessageParcel &reply)
-{
-    bool isGetSucc = data.ReadBool();
-    int32_t sizeRead = data.ReadInt32();
-    bool result = OnGetFrameResCallback(isGetSucc, sizeRead);
-    reply.WriteBool(result);
-    return true;
-}
-
-bool ScanCallbackStub::HandleScanInitEvent(MessageParcel &data, MessageParcel &reply)
-{
-    int32_t scanVersion = data.ReadInt32();
-    bool result = OnScanInitCallback(scanVersion);
-    reply.WriteBool(result);
-    return true;
-}
-
-bool ScanCallbackStub::HandleSendSearchMessage(MessageParcel &data, MessageParcel &reply)
-{
-    std::string message = data.ReadString();
-    bool result = OnSendSearchMessage(message);
     reply.WriteBool(result);
     return true;
 }

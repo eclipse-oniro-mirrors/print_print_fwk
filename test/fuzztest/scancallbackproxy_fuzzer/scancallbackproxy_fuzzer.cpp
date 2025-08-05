@@ -18,19 +18,9 @@
 
 namespace OHOS {
 namespace Scan {
-    constexpr uint8_t MAX_STRING_LENGTH = 255;
     constexpr int MAX_SET_NUMBER = 100;
     constexpr size_t FOO_MAX_LEN = 1024;
     constexpr size_t U32_AT_SIZE = 4;
-
-    void TestTcpOnCallback(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        uint32_t state = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
-        ScanDeviceInfoTCP info;
-        sptr<IRemoteObject> impl;
-        ScanCallbackProxy scanCallbackProxy(impl);
-        scanCallbackProxy.OnCallback(state, info);
-    }
 
     void TestUsbOnCallback(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
@@ -50,31 +40,6 @@ namespace Scan {
         scanCallbackProxy.OnCallbackSync(state, info);
     }
 
-    void TestOnGetFrameResCallback(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        bool isGetSucc = dataProvider->ConsumeBool();
-        int32_t sizeRead = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        sptr<IRemoteObject> impl;
-        ScanCallbackProxy scanCallbackProxy(impl);
-        scanCallbackProxy.OnGetFrameResCallback(isGetSucc, sizeRead);
-    }
-
-    void TestOnScanInitCallback(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        int32_t scanVersion = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        sptr<IRemoteObject> impl;
-        ScanCallbackProxy scanCallbackProxy(impl);
-        scanCallbackProxy.OnScanInitCallback(scanVersion);
-    }
-
-    void TestOnSendSearchMessage(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        std::string message = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        sptr<IRemoteObject> impl;
-        ScanCallbackProxy scanCallbackProxy(impl);
-        scanCallbackProxy.OnSendSearchMessage(message);
-    }
-
 }
 }
 
@@ -89,12 +54,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
     FuzzedDataProvider dataProvider(data, size);
-    OHOS::Scan::TestTcpOnCallback(data, size, &dataProvider);
     OHOS::Scan::TestUsbOnCallback(data, size, &dataProvider);
     OHOS::Scan::TestOnCallbackSync(data, size, &dataProvider);
-    OHOS::Scan::TestOnGetFrameResCallback(data, size, &dataProvider);
-    OHOS::Scan::TestOnScanInitCallback(data, size, &dataProvider);
-    OHOS::Scan::TestOnSendSearchMessage(data, size, &dataProvider);
     return 0;
 }
 

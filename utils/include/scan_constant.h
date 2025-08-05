@@ -90,27 +90,24 @@ namespace OHOS::Scan {
 #define CHECK_IS_EXCEED_SCAN_RANGE_INT(count)      CHECK_IS_EXCEED_SCAN_RANGE_BASE(count, E_SCAN_INVALID_PARAMETER)
 
 enum ScanErrorCode {
-    // FWK ERROR
     E_SCAN_NONE = 0, // no error
     E_SCAN_NO_PERMISSION = 201, // no permission
+    E_SCAN_ERROR_NOT_SYSTEM_APPLICATION = 202, // not system application
     E_SCAN_INVALID_PARAMETER = 401, // invalid parameter
     E_SCAN_GENERIC_FAILURE = 13100001, // generic failure of scan
     E_SCAN_RPC_FAILURE = 13100002, // RPC failure
     E_SCAN_SERVER_FAILURE = 13100003, // failure of scan service
-
-    // DEVICE ERROR
-    E_SCAN_GOOD = 13200000,  /* everything A-OK */
-    E_SCAN_UNSUPPORTED = 13200001,  /* operation is not supported */
-    E_SCAN_CANCELLED = 13200002,  /* operation was cancelled */
-    E_SCAN_DEVICE_BUSY = 13200003,  /* device is busy; try again later */
-    E_SCAN_INVAL = 13200004,  /* data is invalid (includes no dev at open) */
-    E_SCAN_EOF = 13200005,  /* no more data available (end-of-file) */
-    E_SCAN_JAMMED = 13200006,  /* document feeder jammed */
-    E_SCAN_NO_DOCS = 13200007,  /* document feeder out of documents */
-    E_SCAN_COVER_OPEN = 13200008,  /* scanner cover is open */
-    E_SCAN_IO_ERROR = 13200009,  /* error during device I/O */
-    E_SCAN_NO_MEM = 13200010,  /* out of memory */
-    E_SCAN_ACCESS_DENIED = 13200011,  /* access to resource has been denied */
+    E_SCAN_UNSUPPORTED = 13100004,  // operation is not supported
+    E_SCAN_CANCELLED = 13100005,  // operation was cancelled
+    E_SCAN_DEVICE_BUSY = 13100006,  // device is busy; try again later
+    E_SCAN_INVAL = 13100007,  // data is invalid (includes no dev at open)
+    E_SCAN_JAMMED = 13100008,  // document feeder jammed
+    E_SCAN_NO_DOCS = 13100009,  // document feeder out of documents
+    E_SCAN_COVER_OPEN = 13100010,  // scanner cover is open
+    E_SCAN_IO_ERROR = 13100011,  // error during device I/O
+    E_SCAN_NO_MEM = 13200012,  // out of memory
+    E_SCAN_EOF = 132000013,  // no more data available (end-of-file)
+    E_SCAN_ACCESS_DENIED = 13200014,  // access to resource has been denied
 };
 
 const uint32_t SCAN_INVALID_ID = 0xFFFFFFFF;   // -1
@@ -182,6 +179,11 @@ enum PhysicalUnit {
     SCANNER_UNIT_DPI, // value is resolution in dots/inch
     SCANNER_UNIT_PERCENT, // value is a percentage
     SCANNER_UNIT_MICROSECOND // value is micro seconds
+};
+
+enum DiscoveryModeType {
+    TCP_STR = 0,
+    USB_STR,
 };
 } // namespace OHOS::Scan
 #endif // SCAN_CONSTANT_H

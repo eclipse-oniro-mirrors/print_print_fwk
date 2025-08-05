@@ -260,7 +260,7 @@ bool ScanSystemData::QueryScannerInfoByUniqueId(const std::string &uniqueId, Sca
         std::string iterSn = info->discoverMode + info->serialNumber;
         std::string iterUniqueId = info->discoverMode + info->uniqueId;
         if (uniqueId == iterSn || uniqueId == iterUniqueId) {
-            *iter->second = scannerInfo;
+            scannerInfo = *info;
             return true;
         }
     }

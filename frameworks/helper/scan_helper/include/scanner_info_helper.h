@@ -22,11 +22,6 @@
 
 namespace OHOS::Scan {
     
-class ScannerInfoHelperTCP {
-public:
-    static napi_value MakeJsObject(napi_env env, const ScanDeviceInfoTCP &info);
-};
-
 class ScannerInfoHelper {
 public:
     static napi_value MakeJsObject(napi_env env, const ScanDeviceInfo &info);

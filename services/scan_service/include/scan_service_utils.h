@@ -25,6 +25,12 @@ namespace OHOS::Scan {
 class ScanServiceUtils {
 public:
     static std::string ReplaceDeviceIdUsbPort(const std::string& deviceId, const std::string& usbPort);
+    static bool EncodeTaskEventId(const std::string &eventType, std::string &type);
+    static std::string GetTaskEventId(const std::string &taskId, const std::string &type,
+        int32_t userId, int32_t callerPid);
+    static ScanErrorCode ConvertErro(const SaneStatus status);
+private:
+    static std::unordered_map<SaneStatus, ScanErrorCode> saneStatusToScanErrorCodeMap_;
 };
 }  // namespace OHOS::Scan
 #endif  // SCAN_SERVICE_UTILS_H

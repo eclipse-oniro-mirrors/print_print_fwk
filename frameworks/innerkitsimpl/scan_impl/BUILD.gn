@@ -57,7 +57,10 @@ ohos_shared_library("scan_client") {
     "src/scan_sync_load_callback.cpp",
   ]
 
-  deps = [ "${print_path}/frameworks/helper/scan_helper:scan_helper" ]
+  deps = [
+    "${print_path}/frameworks/helper/scan_helper:scan_helper",
+    "${print_path}/frameworks/models/scan_models:scan_models"
+   ]
 
   external_deps = [
     "ability_base:want",

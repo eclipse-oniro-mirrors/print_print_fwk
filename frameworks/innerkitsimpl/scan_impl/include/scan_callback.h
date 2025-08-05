@@ -22,7 +22,6 @@
 #include <functional>
 #include "napi/native_api.h"
 #include "scan_callback_stub.h"
-#include "scanner_info_helper.h"
 
 namespace OHOS::Scan {
 struct CallbackParam {
@@ -33,7 +32,6 @@ struct CallbackParam {
 
     bool isGetSucc;
     int32_t sizeRead;
-    int32_t scanVersion;
     std::string message;
 
     ScanDeviceInfoTCP deviceInfoTCP;
@@ -41,12 +39,8 @@ struct CallbackParam {
     ScanDeviceInfoSync deviceInfoSync;
 
     void InitialCallbackParam(napi_env &env_, napi_ref &ref_, std::mutex &mutex_);
-    void SetCallbackParam(uint32_t &state, const ScanDeviceInfoTCP &deviceInfoTCP);
     void SetCallbackParam(uint32_t &state, const ScanDeviceInfo &deviceInfo);
     void SetCallbackSyncParam(uint32_t &state, const ScanDeviceInfoSync &deviceInfoSync);
-    void SetCallbackParam(bool &isGetSucc, int32_t &sizeRead);
-    void SetCallbackParam(int32_t &scanVersion);
-    void SetCallbackParam(std::string &message);
 };
 
 struct Param {
@@ -59,12 +53,8 @@ public:
     ScanCallback(napi_env env, napi_ref ref);
     explicit ScanCallback(std::function<void(std::vector<ScanDeviceInfo> &infos)> callbackFunction);
     virtual ~ScanCallback();
-    bool OnCallback(uint32_t state, const ScanDeviceInfoTCP &info) override;
     bool OnCallback(uint32_t state, const ScanDeviceInfo &info) override;
     bool OnCallbackSync(uint32_t state, const ScanDeviceInfoSync &info) override;
-    bool OnGetFrameResCallback(bool isGetSucc, int32_t sizeRead) override;
-    bool OnScanInitCallback(int32_t &scanVersion) override;
-    bool OnSendSearchMessage(std::string &message) override;
     bool OnGetDevicesList(std::vector<ScanDeviceInfo> &info) override;
 
 #ifndef TDD_ENABLE

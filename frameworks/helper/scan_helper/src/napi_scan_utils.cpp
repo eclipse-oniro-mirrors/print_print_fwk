@@ -20,14 +20,31 @@
 #include "napi_base_context.h"
 #include "scan_log.h"
 #include "scan_util.h"
-#include "securec.h"
+#include "accesstoken_kit.h"
+#include "tokenid_kit.h"
 
 namespace OHOS::Scan {
 static constexpr const int MAX_STRING_LENGTH = 65536;
 const std::string GLOBAL_ID_DELIMITER = ":";
 const std::string EXTENSION_CID_DELIMITER = ":";
 const std::string TASK_EVENT_DELIMITER = "-";
-
+std::unordered_map<uint32_t, std::string> NapiScanUtils::scanErrorCodeMap_ = {
+    {E_SCAN_NO_PERMISSION, "SCAN_ERROR_NO_PERMISSION", },
+    {E_SCAN_ERROR_NOT_SYSTEM_APPLICATION, "SCAN_ERROR_NOT_SYSTEM_APPLICATION", },
+    {E_SCAN_INVALID_PARAMETER, "SCAN_ERROR_INVALID_PARAMETER"},
+    {E_SCAN_GENERIC_FAILURE, "SCAN_ERROR_GENERIC_FAILURE"},
+    {E_SCAN_RPC_FAILURE, "SCAN_ERROR_RPC_FAILURE"},
+    {E_SCAN_SERVER_FAILURE, "SCAN_ERROR_SERVER_FAILURE"},
+    {E_SCAN_UNSUPPORTED, "SCAN_ERROR_UNSUPPORTED"},
+    {E_SCAN_CANCELLED, "SCAN_ERROR_CANCELED"},
+    {E_SCAN_DEVICE_BUSY, "SCAN_ERROR_DEVICE_BUSY"},
+    {E_SCAN_INVAL, "SCAN_ERROR_INVALID"},
+    {E_SCAN_JAMMED, "SCAN_ERROR_JAMMED"},
+    {E_SCAN_NO_DOCS, "SCAN_ERROR_NO_DOCS"},
+    {E_SCAN_COVER_OPEN, "SCAN_ERROR_COVER_OPEN"},
+    {E_SCAN_IO_ERROR, "SCAN_ERROR_IO_ERROR"},
+    {E_SCAN_NO_MEM, "SCAN_ERROR_NO_MEMORY"},
+};
 napi_valuetype NapiScanUtils::GetValueType(napi_env env, napi_value value)
 {
     if (value == nullptr) {
@@ -450,28 +467,6 @@ bool NapiScanUtils::DecodeExtensionCid(const std::string &cid, std::string &exte
     return true;
 }
 
-std::string NapiScanUtils::GetTaskEventId(const std::string &taskId, const std::string &type,
-    int32_t userId, int32_t callerPid)
-{
-    std::ostringstream eventTypeStream;
-    eventTypeStream << userId << TASK_EVENT_DELIMITER << callerPid << TASK_EVENT_DELIMITER;
-    if (!taskId.empty()) {
-        eventTypeStream << taskId << TASK_EVENT_DELIMITER;
-    }
-    eventTypeStream << type;
-    return eventTypeStream.str();
-}
-
-bool NapiScanUtils::EncodeTaskEventId(const std::string &eventType, std::string &type)
-{
-    size_t pos = eventType.find_last_of(TASK_EVENT_DELIMITER);
-    if (pos != std::string::npos) {
-        type = eventType.substr(pos + 1);
-        return true;
-    }
-    return false;
-}
-
 int32_t NapiScanUtils::OpenFile(const std::string &filePath)
 {
     if (!IsPathValid(filePath)) {
@@ -518,4 +513,36 @@ size_t NapiScanUtils::GetJsVal(napi_env env, napi_callback_info info, napi_value
     return argc;
 }
 
+void NapiScanUtils::NapiThrowError(napi_env env, uint32_t errCode)
+{
+    std::string message;
+    SetErrorText(errCode, message);
+    napi_value result = nullptr;
+    napi_create_error(env, CreateUint32(env, errCode), CreateStringUtf8(env, message), &result);
+    napi_throw(env, result);
+}
+
+void NapiScanUtils::SetErrorText(uint32_t& code, std::string& message)
+{
+    auto it = scanErrorCodeMap_.find(code);
+    if (it != scanErrorCodeMap_.end()) {
+        message = it->second;
+    } else {
+        SCAN_HILOGD("ErrorText not found");
+        code = E_SCAN_GENERIC_FAILURE;
+    }
+}
+
+bool NapiScanUtils::CheckCallerIsSystemApp()
+{
+    auto callerToken = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        SCAN_HILOGD("tokenType check passed.");
+        return true;
+    }
+    auto accessTokenId = IPCSkeleton::GetCallingFullTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenId);
+}
 } // namespace OHOS::Scan

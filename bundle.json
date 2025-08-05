@@ -80,6 +80,7 @@
           "//base/print/print_fwk/frameworks/helper/print_helper:print_helper",
           "//base/print/print_fwk/frameworks/helper/scan_helper:scan_helper",
           "//base/print/print_fwk/frameworks/models/print_models:print_models",
+          "//base/print/print_fwk/frameworks/models/scan_models:scan_models",
           "//base/print/print_fwk/frameworks/ohprint:ohprint",
           "//base/print/print_fwk/frameworks/ohscan:ohscan"
       ],

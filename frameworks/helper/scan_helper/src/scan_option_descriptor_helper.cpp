@@ -20,16 +20,14 @@
 
 namespace OHOS::Scan {
 static constexpr const char *PARAM_OPTION_NAME = "optionName";
+static constexpr const char *PARAM_OPTION_INDEX = "optionIndex";
 static constexpr const char *PARAM_OPTION_TITLE = "optionTitle";
 static constexpr const char *PARAM_OPTION_DESC = "optionDesc";
 static constexpr const char *PARAM_OPTION_TYPE = "optionType";
 static constexpr const char *PARAM_OPTION_UNIT = "optionUnit";
-static constexpr const char *PARAM_OPTION_SIZE = "optionSize";
-static constexpr const char *PARAM_OPTION_CAP = "optionCap";
 static constexpr const char *PARAM_OPTION_CONSTRAINT_TYPE = "optionConstraintType";
 static constexpr const char *PARAM_OPTION_CONSTRAINT_STRING = "optionConstraintString";
-static constexpr const char *PARAM_OPTION_CONSTRAINT_NUMBER = "optionConstraintNumber";
-static constexpr const char *PARAM_OPTION_CONSTRAINT_RANGE = "optionConstraintRange";
+static constexpr const char *PARAM_OPTION_CONSTRAINT_NUMBER = "optionConstraintInt";
 
 napi_value ScanOptionDescriptorHelper::MakeJsObject(napi_env env, const ScanOptionDescriptor &desc)
 {
@@ -40,14 +38,11 @@ napi_value ScanOptionDescriptorHelper::MakeJsObject(napi_env env, const ScanOpti
         return nullptr;
     }
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_OPTION_NAME, desc.GetOptionName());
+    NapiScanUtils::SetUint32Property(env, jsObj, PARAM_OPTION_INDEX, desc.GetOptionIndex());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_OPTION_TITLE, desc.GetOptionTitle());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_OPTION_DESC, desc.GetOptionDesc());
     NapiScanUtils::SetUint32Property(env, jsObj, PARAM_OPTION_TYPE, desc.GetOptionType());
     NapiScanUtils::SetUint32Property(env, jsObj, PARAM_OPTION_UNIT, desc.GetOptionUnit());
-
-    NapiScanUtils::SetInt32Property(env, jsObj, PARAM_OPTION_SIZE, desc.GetOptionSize());
-    NapiScanUtils::SetInt32Property(env, jsObj, PARAM_OPTION_CAP, desc.GetOptionCap());
-
     NapiScanUtils::SetUint32Property(env, jsObj, PARAM_OPTION_CONSTRAINT_TYPE, desc.GetOptionConstraintType());
 
     std::vector<std::string> optionConstraintString;
@@ -73,11 +68,6 @@ napi_value ScanOptionDescriptorHelper::MakeJsObject(napi_env env, const ScanOpti
     }
     SCAN_CALL(env, napi_set_named_property(env, jsObj, PARAM_OPTION_CONSTRAINT_NUMBER, arrOptionConstraintNumber));
 
-    ScanRange optionConstraintRange;
-    desc.GetOptionConstraintRange(optionConstraintRange);
-    napi_value scanRange = ScanRangeHelper::MakeJsObject(env, optionConstraintRange);
-    SCAN_CALL(env, napi_set_named_property(env, jsObj, PARAM_OPTION_CONSTRAINT_RANGE, scanRange));
-
     return jsObj;
 }
 
@@ -86,6 +76,9 @@ napi_value ScanOptionDescriptorHelper::GetValueFromJs(napi_env env, napi_value j
 {
     std::string optionName = NapiScanUtils::GetStringPropertyUtf8(env, jsValue, PARAM_OPTION_NAME);
     nativeObj->SetOptionName(optionName);
+
+    uint32_t optionIndex = NapiScanUtils::GetUint32Property(env, jsValue, PARAM_OPTION_INDEX);
+    nativeObj->SetOptionIndex(optionIndex);
 
     std::string optionTitle = NapiScanUtils::GetStringPropertyUtf8(env, jsValue, PARAM_OPTION_TITLE);
     nativeObj->SetOptionTitle(optionTitle);
@@ -98,12 +91,6 @@ napi_value ScanOptionDescriptorHelper::GetValueFromJs(napi_env env, napi_value j
 
     uint32_t optionUnit = NapiScanUtils::GetUint32Property(env, jsValue, PARAM_OPTION_UNIT);
     nativeObj->SetOptionUnit(optionUnit);
-
-    int32_t optionSize = NapiScanUtils::GetInt32Property(env, jsValue, PARAM_OPTION_SIZE);
-    nativeObj->SetOptionSize(optionSize);
-
-    int32_t optionCap = NapiScanUtils::GetInt32Property(env, jsValue, PARAM_OPTION_CAP);
-    nativeObj->SetOptionCap(optionCap);
 
     uint32_t optionConstraintType = NapiScanUtils::GetUint32Property(env, jsValue, PARAM_OPTION_CONSTRAINT_TYPE);
     nativeObj->SetOptionConstraintType(optionConstraintType);
@@ -162,21 +149,6 @@ napi_value ScanOptionDescriptorHelper::ObjSetOptionConstraintNumber(napi_env env
     return nullptr;
 }
 
-napi_value ScanOptionDescriptorHelper::ObjSetOptionConstraintRange(napi_env env, napi_value jsValue,
-                                                                   std::shared_ptr<ScanOptionDescriptor> &nativeObj)
-{
-    auto jsOptionConstraintRange = NapiScanUtils::GetNamedProperty(env, jsValue, PARAM_OPTION_CONSTRAINT_RANGE);
-    if (jsOptionConstraintRange != nullptr) {
-        auto scanRange = ScanRangeHelper::BuildFromJs(env, jsOptionConstraintRange);
-        if (scanRange == nullptr) {
-            SCAN_HILOGE("Failed to get scan range from js");
-            return nullptr;
-        }
-        nativeObj->SetOptionConstraintRange(*scanRange);
-    }
-    return nullptr;
-}
-
 std::shared_ptr<ScanOptionDescriptor> ScanOptionDescriptorHelper::BuildFromJs(napi_env env, napi_value jsValue)
 {
     auto nativeObj = std::make_shared<ScanOptionDescriptor>();
@@ -189,7 +161,6 @@ std::shared_ptr<ScanOptionDescriptor> ScanOptionDescriptorHelper::BuildFromJs(na
     GetValueFromJs(env, jsValue, nativeObj);
     ObjSetOptionConstraintString(env, jsValue, nativeObj);
     ObjSetOptionConstraintNumber(env, jsValue, nativeObj);
-    ObjSetOptionConstraintRange(env, jsValue, nativeObj);
     return nativeObj;
 }
 }  // namespace OHOS::Scan

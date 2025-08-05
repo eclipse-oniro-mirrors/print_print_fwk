@@ -52,19 +52,14 @@ ohos_shared_library("scan_helper") {
 
   sources = [
     "src/napi_scan_utils.cpp",
-    "src/scan_option_descriptor.cpp",
     "src/scan_option_descriptor_helper.cpp",
-    "src/scan_option_value.cpp",
     "src/scan_option_value_helper.cpp",
-    "src/scan_parameters.cpp",
-    "src/scan_parameters_helper.cpp",
-    "src/scan_progress.cpp",
     "src/scan_progress_helper.cpp",
-    "src/scan_range.cpp",
     "src/scan_range_helper.cpp",
-    "src/scanner_info.cpp",
     "src/scanner_info_helper.cpp",
   ]
+
+  deps = [ "${print_path}/frameworks/models/scan_models:scan_models" ]
 
   external_deps = [
     "ability_base:want",
@@ -73,6 +68,8 @@ ohos_shared_library("scan_helper") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:data_ability_helper",
     "ability_runtime:napi_base_context",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",

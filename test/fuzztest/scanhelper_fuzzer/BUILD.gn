@@ -34,7 +34,10 @@ ohos_fuzztest("ScanHelperFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
-  deps = [ "${print_path}/frameworks/helper/scan_helper:scan_helper" ]
+  deps = [ 
+    "${print_path}/frameworks/helper/scan_helper:scan_helper",
+    "${print_path}/frameworks/models/scan_models:scan_models",
+    ]
 
   external_deps = [
     "ability_base:want",

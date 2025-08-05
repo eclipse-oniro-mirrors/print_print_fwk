@@ -20,7 +20,7 @@
 namespace OHOS::Scan {
 using SteadyTimePoint = std::chrono::steady_clock::time_point;
 ScanProgress::ScanProgress() : progress_(0),
-    fd_(0), isFinal_(true), pictureId_(0), taskCode_(E_SCAN_GOOD), imageRealPath_("")
+    fd_(0), isFinal_(true), pictureId_(0), taskCode_(E_SCAN_NONE), imageRealPath_("")
 {}
 
 ScanProgress::ScanProgress(const ScanProgress &right)

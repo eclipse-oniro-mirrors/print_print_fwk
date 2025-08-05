@@ -83,13 +83,15 @@ public:
     static std::string GetLocalId(const std::string& globalId, const std::string& extensionId);
     static std::string EncodeExtensionCid(const std::string &extensionId, uint32_t callbackId);
     static bool DecodeExtensionCid(const std::string &cid, std::string &extensionId, uint32_t &callbackId);
-    static std::string GetTaskEventId(const std::string &taskId, const std::string &type,
-        int32_t userId, int32_t callerPid);
-    static bool EncodeTaskEventId(const std::string &eventType, std::string &type);
     static int32_t OpenFile(const std::string &filePath);
     static bool IsPathValid(const std::string &filePath);
     static uint32_t GetIdFromFdPath(const std::string &fdPath);
     static size_t GetJsVal(napi_env env, napi_callback_info info, napi_value argv[], size_t length);
+    static void NapiThrowError(napi_env env, uint32_t errCode);
+    static void SetErrorText(uint32_t& code, std::string& message);
+    static bool CheckCallerIsSystemApp();
+
+    static std::unordered_map<uint32_t, std::string> scanErrorCodeMap_;
 };
 } // namespace OHOS::Scan
 #endif // NAPI_SCAN_UTILS_H

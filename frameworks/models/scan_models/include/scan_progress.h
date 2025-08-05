@@ -21,7 +21,6 @@
 #include "parcel.h"
 #include "scan_constant.h"
 
-
 namespace OHOS::Scan {
 using SteadyTimePoint = std::chrono::steady_clock::time_point;
 class ScanProgress final : public Parcelable {

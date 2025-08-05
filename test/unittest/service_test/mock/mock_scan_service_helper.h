@@ -17,7 +17,7 @@
 #define MOCK_PRINT_SERVICE_HELPER_H
 
 #include <gmock/gmock.h>
-#include "scan_service_helper.h"
+#include "scan_service_utils.h"
 
 namespace OHOS {
 namespace Scan {

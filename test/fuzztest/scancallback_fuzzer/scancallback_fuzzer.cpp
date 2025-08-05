@@ -19,7 +19,6 @@
 #include "scancallback_fuzzer.h"
 
 namespace OHOS::Scan {
-constexpr uint8_t MAX_STRING_LENGTH = 255;
 constexpr int MAX_SET_NUMBER = 100;
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
@@ -31,9 +30,6 @@ void TestSetCallbackParam(const uint8_t* data, size_t size, FuzzedDataProvider* 
     napi_env env = nullptr;
     napi_ref ref = nullptr;
     param.InitialCallbackParam(env, ref, mutex);
-    uint32_t state = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
-    ScanDeviceInfoTCP tcpInfo;
-    param.SetCallbackParam(state, tcpInfo);
 }
 
 void TestSetCallbackSyncParam(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -54,8 +50,6 @@ void TestOnCallback(const uint8_t* data, size_t size, FuzzedDataProvider* dataPr
     napi_ref ref = nullptr;
     ScanCallback callBack(env, ref);
     uint32_t state = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
-    ScanDeviceInfoTCP tcpInfo;
-    callBack.OnCallback(state, tcpInfo);
     ScanDeviceInfo deviceInfo;
     callBack.OnCallback(state, deviceInfo);
 }
@@ -69,34 +63,6 @@ void TestOnCallbackSync(const uint8_t* data, size_t size, FuzzedDataProvider* da
     uint32_t state = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     ScanDeviceInfoSync syncInfo;
     callBack.OnCallbackSync(state, syncInfo);
-}
-
-void TestOnGetFrameResCallback(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    napi_ref ref = nullptr;
-    ScanCallback callBack(env, ref);
-    bool isGetSucc = dataProvider->ConsumeBool();
-    int32_t sizeRead = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    callBack.OnGetFrameResCallback(isGetSucc, sizeRead);
-}
-
-void TestOnScanInitCallback(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    napi_ref ref = nullptr;
-    ScanCallback callBack(env, ref);
-    int32_t scanVersion = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    callBack.OnScanInitCallback(scanVersion);
-}
-
-void TestOnSendSearchMessage(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    napi_ref ref = nullptr;
-    ScanCallback callBack(env, ref);
-    std::string message = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    callBack.OnSendSearchMessage(message);
 }
 
 void TestOnGetDevicesList(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -126,9 +92,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::TestSetCallbackSyncParam(data, size, &dataProvider);
     OHOS::Scan::TestOnCallback(data, size, &dataProvider);
     OHOS::Scan::TestOnCallbackSync(data, size, &dataProvider);
-    OHOS::Scan::TestOnGetFrameResCallback(data, size, &dataProvider);
-    OHOS::Scan::TestOnScanInitCallback(data, size, &dataProvider);
-    OHOS::Scan::TestOnSendSearchMessage(data, size, &dataProvider);
     OHOS::Scan::TestOnGetDevicesList(data, size, &dataProvider);
 
     return 0;

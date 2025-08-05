@@ -37,14 +37,6 @@ public:
     static bool ExtractIpAddresses(const std::string& str, std::string& ip);
     static std::string ReplaceIpAddress(const std::string& deviceId, const std::string& newIp);
 };
-inline ScanErrorCode ScanUtil::ConvertErro(const SaneStatus status)
-{
-    if (status < SANE_STATUS_NO_PERMISSION) {
-        return static_cast<ScanErrorCode> (status + E_SCAN_GOOD);
-    } else {
-        return static_cast<ScanErrorCode> (status);
-    }
-}
 inline bool ScanUtil::ConvertToInt(const std::string& str, int32_t& value)
 {
     auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);

@@ -40,29 +40,21 @@ public:
 
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
 
-    int32_t InitScan(int32_t &scanVersion);
+    int32_t InitScan();
     int32_t ExitScan();
     int32_t GetScannerList();
-    int32_t StopDiscover();
     int32_t OpenScanner(const std::string scannerId);
     int32_t CloseScanner(const std::string scannerId);
     int32_t GetScanOptionDesc(const std::string scannerId, const int32_t optionIndex, ScanOptionDescriptor &desc);
     int32_t OpScanOptionValue(const std::string scannerId, const int32_t optionIndex,
-    const ScanOptionOpType op, ScanOptionValue &value, int32_t &info);
+    const ScanOptionOpType op, ScanOptionValue &value);
     int32_t GetScanParameters(const std::string scannerId, ScanParameters &para);
     int32_t StartScan(const std::string scannerId, const bool &batchMode);
-    int32_t GetSingleFrameFD(const std::string scannerId, uint32_t &size, uint32_t fd);
     int32_t CancelScan(const std::string scannerId);
-    int32_t SetScanIOMode(const std::string scannerId, const bool isNonBlocking);
-    int32_t GetScanSelectFd(const std::string scannerId, int32_t &fd);
-    int32_t GetScannerState(int32_t &scannerState);
     int32_t GetScanProgress(const std::string scannerId, ScanProgress &prog);
     int32_t AddScanner(const std::string& serialNumber, const std::string& discoverMode);
     int32_t DeleteScanner(const std::string& serialNumber, const std::string& discoverMode);
     int32_t GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner);
-    int32_t UpdateScannerName(const std::string& serialNumber,
-        const std::string& discoverMode, const std::string& deviceName);
-
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IScanCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);
 

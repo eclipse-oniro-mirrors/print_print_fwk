@@ -18,61 +18,27 @@
 #include "scan_log.h"
 
 namespace OHOS::Scan {
-static constexpr const char *PARAM_TCP_DEVICENAME = "deviceName";
-static constexpr const char *PARAM_TCP_UUID = "uuid";
-static constexpr const char *PARAM_TCP_MODEL = "model";
-static constexpr const char *PARAM_TCP_MANUFACTURER = "manufacturer";
-static constexpr const char *PARAM_TCP_DEVICETYPE = "deviceType";
-static constexpr const char *PARAM_TCP_PORT = "port";
-static constexpr const char *PARAM_TCP_ADDR = "address";
-static constexpr const char *PARAM_TCP_BUTTON = "button";
-static constexpr const char *PARAM_TCP_FEEDER = "feeder";
 
-
-static constexpr const char *PARAM_SCANNERID = "deviceId";
-static constexpr const char *PARAM_OLD_SCANNERID = "oldDeviceId";
+static constexpr const char *PARAM_SCANNERID = "scannerId";
+static constexpr const char *PARAM_INFO_DISCOVERMODE = "discoveryMode";
+static constexpr const char *PARAM_UNIQUE_ID = "uniqueId";
 static constexpr const char *PARAM_MANUFACTURER = "manufacturer";
 static constexpr const char *PARAM_MODEL = "model";
-static constexpr const char *PARAM_DEVICETYPE = "deviceType";
-
-static constexpr const char *PARAM_INFO_DEVICESTATE = "deviceState";
-static constexpr const char *PARAM_INFO_DISCOVERMODE = "discoverMode";
-static constexpr const char *PARAM_INFO_SERIALNUMBER = "serialNumber";
 static constexpr const char *PARAM_INFO_DEVICENAME = "deviceName";
+
+static constexpr const char *PARAM_OLD_SCANNERID = "oldScannerId";
 static constexpr const char *PARAM_INFO_SYNCMODE = "syncMode";
-static constexpr const char *PARAM_UNIQUE_ID = "uniqueId";
-
-napi_value ScannerInfoHelperTCP::MakeJsObject(napi_env env, const ScanDeviceInfoTCP &info)
-{
-    napi_value jsObj = nullptr;
-    SCAN_CALL(env, napi_create_object(env, &jsObj));
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_TCP_DEVICENAME, info.GetDeviceName());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_TCP_UUID, info.GetUuid());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_TCP_MODEL, info.GetModel());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_TCP_MANUFACTURER, info.GetManufacturer());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_TCP_DEVICETYPE, info.GetDeviceType());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_TCP_PORT, info.GetPort());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_TCP_ADDR, info.GetAddr());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_TCP_BUTTON, info.GetButton());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_TCP_FEEDER, info.GetFeeder());
-    NapiScanUtils::SetUint32Property(env, jsObj, PARAM_INFO_DEVICESTATE, info.GetDeviceState());
-    return jsObj;
-}
-
 
 napi_value ScannerInfoHelper::MakeJsObject(napi_env env, const ScanDeviceInfo &info)
 {
     napi_value jsObj = nullptr;
     SCAN_CALL(env, napi_create_object(env, &jsObj));
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_SCANNERID, info.GetDeviceId());
+    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_DISCOVERMODE, info.GetDiscoverMode());
+    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_UNIQUE_ID, info.GetUniqueId());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_MANUFACTURER, info.GetManufacturer());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_MODEL, info.GetModel());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_DEVICETYPE, info.GetDeviceType());
-    NapiScanUtils::SetUint32Property(env, jsObj, PARAM_INFO_DEVICESTATE, info.GetDeviceState());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_DISCOVERMODE, info.GetDiscoverMode());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_SERIALNUMBER, info.GetSerialNumber());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_DEVICENAME, info.GetDeviceName());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_UNIQUE_ID, info.GetUniqueId());
     return jsObj;
 }
 
@@ -82,11 +48,11 @@ napi_value ScannerInfoSyncHelper::MakeJsObject(napi_env env, const ScanDeviceInf
     SCAN_CALL(env, napi_create_object(env, &jsObj));
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_SCANNERID, info.GetDeviceId());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_DISCOVERMODE, info.GetDiscoverMode());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_SERIALNUMBER, info.GetSerialNumber());
+    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_UNIQUE_ID, info.GetUniqueId());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_SYNCMODE, info.GetSyncMode());
-    NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_OLD_SCANNERID, info.GetOldDeviceId());
+    if (info.GetSyncMode() == "update") {
+        NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_OLD_SCANNERID, info.GetOldDeviceId());
+    }
     return jsObj;
 }
-
-
 }  // namespace OHOS::Print

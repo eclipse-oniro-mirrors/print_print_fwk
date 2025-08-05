@@ -45,31 +45,24 @@ public:
     ScanServiceAbility();
     ~ScanServiceAbility();
     static sptr<ScanServiceAbility> GetInstance();
-    int32_t InitScan(int32_t &scanVersion) override;
+    int32_t InitScan() override;
     int32_t ExitScan() override;
     int32_t GetScannerList() override;
-    int32_t StopDiscover() override;
     int32_t OpenScanner(const std::string scannerId) override;
     int32_t CloseScanner(const std::string scannerId) override;
     int32_t GetScanOptionDesc(const std::string scannerId, const int32_t optionIndex,
         ScanOptionDescriptor &desc) override;
     int32_t OpScanOptionValue(const std::string scannerId, const int32_t optionIndex,
-        const ScanOptionOpType op, ScanOptionValue &value, int32_t &info) override;
+        const ScanOptionOpType op, ScanOptionValue &value) override;
     int32_t GetScanParameters(const std::string scannerId, ScanParameters &para) override;
     int32_t StartScan(const std::string scannerId, const bool &batchMode) override;
-    int32_t GetSingleFrameFD(const std::string scannerId, uint32_t &size, uint32_t fd) override;
     int32_t CancelScan(const std::string scannerId) override;
-    int32_t SetScanIOMode(const std::string scannerId, const bool isNonBlocking) override;
-    int32_t GetScanSelectFd(const std::string scannerId, int32_t &fd) override;
     int32_t On(const std::string taskId, const std::string &type, const sptr<IScanCallback> &listener) override;
     int32_t Off(const std::string taskId, const std::string &type) override;
-    int32_t GetScannerState(int32_t &scannerState) override;
     int32_t GetScanProgress(const std::string scannerId, ScanProgress &prog) override;
     int32_t AddScanner(const std::string& serialNumber, const std::string& discoverMode) override;
     int32_t DeleteScanner(const std::string& serialNumber, const std::string& discoverMode) override;
     int32_t GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner) override;
-    int32_t UpdateScannerName(const std::string& serialNumber,
-        const std::string& discoverMode, const std::string& deviceName) override;
     int32_t OnStartScan(const std::string scannerId, const bool &batchMode);
     void DisConnectUsbScanner(std::string serialNumber, std::string newDeviceId); // public
     void UpdateScannerId(const ScanDeviceInfoSync& usbSyncInfo); // public
@@ -78,14 +71,11 @@ private:
     int32_t ActionSetAuto(const std::string &scannerId, const int32_t &optionIndex);
     int32_t ActionGetValue(const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex);
     int32_t ActionSetValue(const std::string &scannerId, ScanOptionValue &value,
-                           const int32_t &optionIndex, int32_t &info);
+                           const int32_t &optionIndex);
     int32_t DoScanTask(const std::string& scannerId);
     void StartScanTask(const std::string scannerId);
-    void SendDeviceInfoTCP(const ScanDeviceInfoTCP &info, std::string event);
     void SendDeviceInfo(const ScanDeviceInfo &info, std::string event);
     void SendDeviceInfoSync(const ScanDeviceInfoSync &info, std::string event);
-    void SendInitEvent(int32_t &scanVersion, std::string event);
-    void SendDeviceSearchEnd(std::string &info, std::string event);
     void SetScannerSerialNumber(ScanDeviceInfo &info);
     void SaneGetScanner();
     void SetScannerSerialNumberByTCP(ScanDeviceInfo &info);
