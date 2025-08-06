@@ -570,85 +570,6 @@ void TestSetNamedProperty(const uint8_t* data, size_t size, FuzzedDataProvider* 
     NapiScanUtils::SetNamedProperty(env, object, name, value);
 }
 
-void TestGetUint32FromValue(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    napi_value value = nullptr;
-    NapiScanUtils::GetUint32FromValue(env, value);
-}
-
-void TestGetInt32FromValue(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    napi_value value = nullptr;
-    NapiScanUtils::GetInt32FromValue(env, value);
-}
-
-void TestGetStringFromValueUtf8(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    napi_value value = nullptr;
-    NapiScanUtils::GetStringFromValueUtf8(env, value);
-}
-
-void TestValueIsArrayBuffer(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    napi_value value = nullptr;
-    NapiScanUtils::ValueIsArrayBuffer(env, value);
-}
-
-void TestGetInfoFromArrayBufferValue(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    napi_value value = nullptr;
-    size_t *length = nullptr;
-    NapiScanUtils::GetInfoFromArrayBufferValue(env, value, length);
-}
-
-void TestCreateObject(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    NapiScanUtils::CreateObject(env);
-}
-
-void TestGetUndefined(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    NapiScanUtils::GetUndefined(env);
-}
-
-void TestCallFunction(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    napi_value recv = nullptr;
-    napi_value func = nullptr;
-    size_t argc = 0;
-    napi_value *argv = nullptr;
-    NapiScanUtils::CallFunction(env, recv, func, argc, argv);
-}
-
-void TestCreateReference(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    napi_value callback = nullptr;
-    NapiScanUtils::CreateReference(env, callback);
-}
-
-void TestCreateBoolean(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    bool value = 1;
-    NapiScanUtils::CreateBoolean(env, value);
-}
-
-void TestGetBooleanFromValue(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    napi_value value = nullptr;
-    NapiScanUtils::GetBooleanFromValue(env, value);
-}
-
 void TestGetBooleanProperty(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     napi_env env = nullptr;
@@ -670,13 +591,6 @@ void TestToLower(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvi
 {
     std::string s = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     NapiScanUtils::ToLower(s);
-}
-
-void TestGetValueString(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-{
-    napi_env env = nullptr;
-    napi_value jsValue = nullptr;
-    NapiScanUtils::GetValueString(env, jsValue);
 }
 
 void TestGetExtensionIdInterface(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -726,13 +640,37 @@ void TestIsPathValid(const uint8_t* data, size_t size, FuzzedDataProvider* dataP
     NapiScanUtils::IsPathValid(filePath);
 }
 
-void TestGetJsVal(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+void TestNoParmFuncs(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     napi_env env = nullptr;
-    napi_callback_info info = nullptr;
-    napi_value* jsValue = nullptr;
+    napi_value value = nullptr;
     size_t length = 1;
-    NapiScanUtils::GetJsVal(env, info, jsValue, length);
+    napi_value recv = nullptr;
+    napi_value func = nullptr;
+    napi_value jsValue = nullptr;
+    napi_callback_info info = nullptr;
+    napi_value callback = nullptr;
+    size_t argc = 0;
+    const napi_value *argv = nullptr;
+    std::string filePath = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string cid = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string extensionId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    uint32_t callbackId = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    NapiScanUtils::GetUint32FromValue(env, value);
+    NapiScanUtils::GetInt32FromValue(env, value);
+    NapiScanUtils::GetStringFromValueUtf8(env, value);
+    NapiScanUtils::ValueIsArrayBuffer(env, value);
+    NapiScanUtils::GetInfoFromArrayBufferValue(env, value, &length);
+    NapiScanUtils::CreateObject(env);
+    NapiScanUtils::GetUndefined(env);
+    NapiScanUtils::CallFunction(env, recv, func, argc, argv);
+    NapiScanUtils::CreateReference(env, callback);
+    NapiScanUtils::CreateBoolean(env, value);
+    NapiScanUtils::GetBooleanFromValue(env, value);
+    NapiScanUtils::GetValueString(env, jsValue);
+    NapiScanUtils::GetJsVal(env, info, &jsValue, length);
+    NapiScanUtils::IsPathValid(filePath);
+    NapiScanUtils::DecodeExtensionCid(cid, extensionId, callbackId);
 }
 
 void ScanOptionDescriptorFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -747,6 +685,7 @@ void ScanOptionDescriptorFuzzTest(const uint8_t* data, size_t size, FuzzedDataPr
     TestSetOptionConstraintNumber(data, size, dataProvider);
     TestSetOptionConstraintRange(data, size, dataProvider);
     TestScanOptionDescriptor(data, size, dataProvider);
+    TestNoParmFuncs(data, size, dataProvider);
 }
 
 void ScanOptionValueFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -839,21 +778,9 @@ void ScannerInfoHelperFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvi
 void NapiScanUtilsFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
 {
     TestSetNamedProperty(data, size, dataProvider);
-    TestGetUint32FromValue(data, size, dataProvider);
-    TestGetInt32FromValue(data, size, dataProvider);
-    TestGetStringFromValueUtf8(data, size, dataProvider);
-    TestValueIsArrayBuffer(data, size, dataProvider);
-    TestGetInfoFromArrayBufferValue(data, size, dataProvider);
-    TestCreateObject(data, size, dataProvider);
-    TestGetUndefined(data, size, dataProvider);
-    TestCallFunction(data, size, dataProvider);
-    TestCreateReference(data, size, dataProvider);
-    TestCreateBoolean(data, size, dataProvider);
-    TestGetBooleanFromValue(data, size, dataProvider);
     TestGetBooleanProperty(data, size, dataProvider);
     TestSetBooleanProperty(data, size, dataProvider);
     TestToLower(data, size, dataProvider);
-    TestGetValueString(data, size, dataProvider);
     TestGetExtensionIdInterface(data, size, dataProvider);
     TestGetGlobalIdInterface(data, size, dataProvider);
     TestGetLocalIdInterface(data, size, dataProvider);
@@ -861,7 +788,6 @@ void NapiScanUtilsFuzzTest(const uint8_t* data, size_t size, FuzzedDataProvider*
     TestDecodeExtensionCid(data, size, dataProvider);
     TestOpenFile(data, size, dataProvider);
     TestIsPathValid(data, size, dataProvider);
-    TestGetJsVal(data, size, dataProvider);
 }
 
 }
