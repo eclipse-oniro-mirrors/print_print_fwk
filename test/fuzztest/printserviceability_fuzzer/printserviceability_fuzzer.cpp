@@ -672,11 +672,6 @@ void TestSendQueuePrintJob(const uint8_t *data, size_t size, FuzzedDataProvider 
     PrintServiceAbility::GetInstance()->SendQueuePrintJob(printerId);
 }
 
-void TestUnloadSystemAbility(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrintServiceAbility::GetInstance()->UnloadSystemAbility();
-}
-
 void TestAddPrinterToDiscovery(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrinterInfo printerInfo;
@@ -906,14 +901,13 @@ void TestConnectUsbPrinter(const uint8_t *data, size_t size, FuzzedDataProvider 
     PrintServiceAbility::GetInstance()->ConnectUsbPrinter(printerId);
 }
 
-void TestDelayEnterLowPowerMode(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+void TestNoParmFuncs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
+    std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->StopPrint(taskId);
     PrintServiceAbility::GetInstance()->DelayEnterLowPowerMode();
-}
-
-void TestExitLowPowerMode(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
     PrintServiceAbility::GetInstance()->ExitLowPowerMode();
+    PrintServiceAbility::GetInstance()->UnloadSystemAbility();
 }
 
 void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -924,7 +918,6 @@ void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *data
     TestNotifyCurrentUserChanged(data, size, dataProvider);
     TestHandleExtensionConnectPrinter(data, size, dataProvider);
     TestSendQueuePrintJob(data, size, dataProvider);
-    TestUnloadSystemAbility(data, size, dataProvider);
     TestAddPrinterToDiscovery(data, size, dataProvider);
     TestUpdatePrinterInDiscovery(data, size, dataProvider);
     TestRemovePrinterFromDiscovery(data, size, dataProvider);
@@ -948,8 +941,6 @@ void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *data
     TestReportPrinterIdle(data, size, dataProvider);
     TestQueryPPDInformation(data, size, dataProvider);
     TestStartPrintJobInternal(data, size, dataProvider);
-    TestDelayEnterLowPowerMode(data, size, dataProvider);
-    TestExitLowPowerMode(data, size, dataProvider);
 }
 
 void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -985,6 +976,7 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
     TestUpdatePrintJobOptionWithPrinterPreferences(data, size, dataProvider);
     TestConnectUsbPrinter(data, size, dataProvider);
     TestMoreFunction(data, size, dataProvider);
+    TestNoParmFuncs(data, size, dataProvider);
 }
 
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

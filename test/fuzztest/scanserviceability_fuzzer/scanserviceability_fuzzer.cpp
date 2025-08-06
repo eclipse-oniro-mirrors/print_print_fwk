@@ -30,18 +30,6 @@ namespace Scan {
     constexpr uint8_t MAX_STRING_LENGTH = 255;
     constexpr int MAX_SET_NUMBER = 100;
 
-    void TestInitScan(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        ScanServiceAbility::GetInstance()->InitScan();
-        ScanServiceAbility::GetInstance()->ExitScan();
-    }
-
-    void TestGetScannerList(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        ScanServiceAbility::GetInstance()->InitScan();
-        ScanServiceAbility::GetInstance()->GetScannerList();
-    }
-
     void TestOpenScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         ScanServiceAbility::GetInstance()->InitScan();
@@ -180,17 +168,6 @@ namespace Scan {
         ScanServiceAbility::GetInstance()->SetScannerSerialNumber(usbInfo);
     }
 
-    void TestReInitScan(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        ScanServiceAbility::GetInstance()->ServiceInit();
-        ScanServiceAbility::GetInstance()->InitServiceHandler();
-        ScanServiceAbility::GetInstance()->OnStart();
-        ScanServiceAbility::GetInstance()->OnStop();
-        ScanServiceAbility::GetInstance()->ManualStart();
-        ScanServiceAbility::GetInstance()->ReInitScan();
-        ScanServiceAbility::GetInstance()->SaneGetScanner();
-    }
-
     void TestCheckPermission(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         std::string permissionName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -243,12 +220,28 @@ namespace Scan {
         ScanServiceAbility::GetInstance()->GetAddedScanner(allAddedScanner);
     }
 
+    void TestNoParmFuncs(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
+    {
+        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+        ScanServiceAbility::GetInstance()->InitScan();
+        ScanServiceAbility::GetInstance()->ServiceInit();
+        ScanServiceAbility::GetInstance()->InitServiceHandler();
+        ScanServiceAbility::GetInstance()->OnStart();
+        ScanServiceAbility::GetInstance()->OnStop();
+        ScanServiceAbility::GetInstance()->ManualStart();
+        ScanServiceAbility::GetInstance()->ReInitScan();
+        ScanServiceAbility::GetInstance()->SaneGetScanner();
+        ScanServiceAbility::GetInstance()->CleanScanTask(scannerId);
+        ScanServiceAbility::GetInstance()->GetScannerList();
+        ScanServiceAbility::GetInstance()->ExitScan();
+    }
+
     void TestNotPublicFunction(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         if (dataProvider == nullptr) {
             return;
         }
-        OHOS::Scan::TestReInitScan(data, size, dataProvider);
+        OHOS::Scan::TestNoParmFuncs(data, size, dataProvider);
         OHOS::Scan::TestCheckPermission(data, size, dataProvider);
         OHOS::Scan::TestGeneratePictureBatch(data, size, dataProvider);
         OHOS::Scan::TestAddFoundScanner(data, size, dataProvider);
@@ -462,8 +455,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
     FuzzedDataProvider dataProvider(data, size);
     OHOS::Scan::ScanServiceAbilityMock::MockPermission();
-    OHOS::Scan::TestInitScan(data, size, &dataProvider);
-    OHOS::Scan::TestGetScannerList(data, size, &dataProvider);
     OHOS::Scan::TestOpenScanner(data, size, &dataProvider);
     OHOS::Scan::TestCloseScanner(data, size, &dataProvider);
     OHOS::Scan::TestGetScanOptionDesc(data, size, &dataProvider);
