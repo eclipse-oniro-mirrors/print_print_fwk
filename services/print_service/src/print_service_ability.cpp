@@ -864,10 +864,26 @@ int32_t PrintServiceAbility::SetPrinterPreference(
     return E_PRINT_NONE;
 }
 
+bool PrintServiceAbility::QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer)
+{
+    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printer)) {
+        return true;
+    }
+
+    if (printerId.find(P2P_PRINTER) != std::string::npos) {
+        auto printerInfoPtr = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+        if (printerInfoPtr != nullptr) {
+            printer = *printerInfoPtr;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool PrintServiceAbility::UpdatePrintJobOptionByPrinterId(PrintJob &printJob)
 {
     PrinterInfo printerInfo;
-    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printJob.GetPrinterId(), printerInfo)) {
+    if (!QueryAddedPrinterInfoByPrinterId(printJob.GetPrinterId(), printerInfo)) {
         PRINT_HILOGW("cannot find printer info by printerId");
         return false;
     }
@@ -1412,6 +1428,10 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
 
 bool PrintServiceAbility::UpdatePrinterCapability(const std::string &printerId, const PrinterInfo &info)
 {
+    if (printerId.find(P2P_PRINTER) != std::string::npos) {
+        PRINT_HILOGD("The printer is p2p: %{private}s", printerId.c_str());
+        return true;
+    }
     PRINT_HILOGI("UpdatePrinterCapability Enter");
     PrinterInfo printerInfo(info);
     printerInfo.SetPrinterStatus(PRINTER_STATUS_IDLE);

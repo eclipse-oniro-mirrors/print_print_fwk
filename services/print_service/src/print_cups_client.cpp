@@ -130,7 +130,6 @@ static const std::string PRINTER_SPOOL_AREA_FULL = "spool-area-full";
 static const std::string JOB_STATE_REASON_PRINTER_STOP = "printer-stopped";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
-static const std::string P2P_PRINTER = "p2p";
 static const std::string USB_PRINTER = "usb";
 static const std::string SERIAL = "serial=";
 static const std::string PRINTER_ID_USB_PREFIX = "USB";

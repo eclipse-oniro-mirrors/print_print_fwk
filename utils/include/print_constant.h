@@ -268,6 +268,7 @@ const std::string PRINTER_PREFERENCE_FILE = "printer_preference.json";
 const std::string DEFAULT_PAGESIZE_ID = "ISO_A4";
 const std::string DEFAULT_MEDIA_TYPE = "stationery";
 const std::string DEFAULT_USER_NAME = "print";
+static const std::string P2P_PRINTER = "p2p";
 
 const std::string E_PRINT_MSG_NONE = "none";
 const std::string E_PRINT_MSG_NO_PERMISSION = "the application does not hace permission";

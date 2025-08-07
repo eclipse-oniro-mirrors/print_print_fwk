@@ -214,6 +214,7 @@ private:
     void CallerAppsMonitor();
     void StartUnloadThread();
     std::vector<AppExecFwk::RunningProcessInfo> GetRunningProcessInformation(const std::string &bundleName);
+    bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
     
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
