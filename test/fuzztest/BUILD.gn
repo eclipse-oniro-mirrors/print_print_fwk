@@ -18,7 +18,6 @@ group("fuzztest") {
   deps = [
     "printcupsattribute_fuzzer:fuzztest",
     "printcupsclient_fuzzer:fuzztest",
-    "printservice_fuzzer:fuzztest",
     "printserviceability_fuzzer:fuzztest",
     "scancallback_fuzzer:fuzztest",
     "scancallbackproxy_fuzzer:fuzztest",
