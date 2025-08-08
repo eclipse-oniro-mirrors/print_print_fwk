@@ -105,7 +105,6 @@ private:
     void GeneratePictureSingle(const std::string &scannerId);
     bool GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId);
     bool GetTcpDeviceIp(const std::string &deviceId, std::string &ip);
-    void CleanScanTask(const std::string &scannerId);
     void SendDeviceList(std::vector<ScanDeviceInfo> &info, std::string event);
     int32_t GetCurrentUserId();
     std::string ObtainUserCacheDirectory(const int32_t& userId);
@@ -128,7 +127,6 @@ private:
     uint64_t currentJobId_;
     int32_t currentUseScannerUserId_;
     std::map<std::string, int32_t> imageFdMap_;
-    std::function<void()> cyclicCallExe;
     std::queue<int32_t> scanQueue;
     std::map<int32_t, ScanProgress> scanTaskMap;
     std::vector<ScanDeviceInfo> deviceInfos_;
@@ -138,7 +136,6 @@ private:
     uint8_t *saneReadBuf;
     struct jpeg_compress_struct *cinfoPtr;
     FILE *ofp = nullptr;
-    bool isCancel = false;
     int32_t dpi = 0;
     JSAMPLE *jpegbuf = nullptr;
 };
