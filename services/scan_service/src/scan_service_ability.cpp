@@ -102,7 +102,6 @@ const int64_t UNLOAD_SYSTEMABILITY_DELAY = 1000 * 30;
 constexpr int32_t INVALID_USER_ID = -1;
 
 static int32_t g_scannerState = SCANNER_READY;
-static bool g_hasIoFaild = false;
 static bool g_isJpegWriteSuccess = false;
 static const std::string PERMISSION_NAME_SCAN = "ohos.permission.SCAN";
 static const std::string PERMISSION_NAME_SCAN_JOB = "ohos.permission.MANAGE_SCAN_JOB";
@@ -546,7 +545,7 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
         return E_SCAN_INVALID_PARAMETER;
     }
     if (openedScannerList_.find(scannerId) != openedScannerList_.end()) {
-        SCAN_HILOGD("scannerId %{public}s is already opened", scannerId.c_str());
+        SCAN_HILOGD("scannerId %{private}s is already opened", scannerId.c_str());
         return E_SCAN_NONE;
     }
     SaneStatus status = SaneManagerClient::GetInstance()->SaneOpen(scannerId);
@@ -573,6 +572,10 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
         return E_SCAN_NO_PERMISSION;
     }
     SCAN_HILOGI("ScanServiceAbility CloseScanner start");
+    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
+        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
+        return E_SCAN_INVALID_PARAMETER;
+    }
     scanTaskMap.clear();
     std::queue<int32_t> emptyQueue;
     scanQueue.swap(emptyQueue);
@@ -596,7 +599,10 @@ int32_t ScanServiceAbility::GetScanOptionDesc(
         return E_SCAN_NO_PERMISSION;
     }
     SCAN_HILOGI("ScanServiceAbility GetScanOptionDesc start");
-    SCAN_HILOGD("optionIndex [%{public}d]", optionIndex);
+    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
+        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
+        return E_SCAN_INVALID_PARAMETER;
+    }
     SaneOptionDescriptor saneDesc;
     SaneStatus status = SaneManagerClient::GetInstance()->SaneGetOptionDescriptor(scannerId, optionIndex, saneDesc);
     if (status != SANE_STATUS_GOOD) {
@@ -697,7 +703,7 @@ int32_t ScanServiceAbility::ActionSetValue(const std::string &scannerId, ScanOpt
     status = SaneManagerClient::GetInstance()->SaneControlOption(scannerId, controlParam, outParam);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneControlOption failed, ret = [%{public}d]", status);
-        return status;
+        return ScanServiceUtils::ConvertErro(status);
     }
     return status;
 }
@@ -710,21 +716,12 @@ int32_t ScanServiceAbility::OpScanOptionValue(const std::string scannerId, const
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-    SCAN_HILOGI("optionIndex [%{public}d]", optionIndex);
-    int32_t state = E_SCAN_NONE;
-
-    if (g_hasIoFaild) {
-        SCAN_HILOGI("OpScanOptionValue try to reOpenScanner start");
-        int32_t openRet = SaneManagerClient::GetInstance()->SaneOpen(scannerId);
-        if (openRet != E_SCAN_NONE) {
-            SCAN_HILOGE("OpScanOptionValue try to reOpenScanner failed");
-            return E_SCAN_DEVICE_BUSY;
-        }
-        g_hasIoFaild = false;
+    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
+        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
+        return E_SCAN_INVALID_PARAMETER;
     }
-
+    int32_t state = E_SCAN_NONE;
     std::lock_guard<std::mutex> autoLock(lock_);
-
     SCAN_HILOGD("ScanServiceAbility OpScanOptionValue start to dump value");
     value.Dump();
     switch (op) {
@@ -761,6 +758,10 @@ int32_t ScanServiceAbility::GetScanParameters(const std::string scannerId, ScanP
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
+        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
+        return E_SCAN_INVALID_PARAMETER;
+    }
     SCAN_HILOGD("ScanServiceAbility GetScanParameters start");
     SaneParameters saneParams;
     SaneStatus status = SaneManagerClient::GetInstance()->SaneGetParameters(scannerId, saneParams);
@@ -786,6 +787,10 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
+    }
+    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
+        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
+        return E_SCAN_INVALID_PARAMETER;
     }
     SCAN_HILOGI("ScanServiceAbility CancelScan start");
     SaneStatus saneStatus = SaneManagerClient::GetInstance()->SaneCancel(scannerId);
@@ -991,12 +996,12 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-
+    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
+        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
+        return E_SCAN_INVALID_PARAMETER;
+    }
     if (scanQueue.empty()) {
         SCAN_HILOGE("Not exist scan progress");
-        if (g_hasIoFaild) {
-            return E_SCAN_INVALID_PARAMETER;
-        }
         return E_SCAN_GENERIC_FAILURE;
     }
     int32_t frontPicId = scanQueue.front();
@@ -1124,6 +1129,10 @@ int32_t ScanServiceAbility::OnStartScan(const std::string scannerId, const bool 
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
+    }
+    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
+        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
+        return E_SCAN_INVALID_PARAMETER;
     }
     std::string userCachedImageDir = ObtainUserCacheDirectory(GetCurrentUserId());
     if (!std::filesystem::exists(userCachedImageDir)) {
@@ -1414,13 +1423,6 @@ int32_t ScanServiceAbility::WriteJpegHeader(ScanParameters &parm, struct jpeg_er
     jpeg_start_compress(cinfoPtr, TRUE);
     SCAN_HILOGI("finish write jpegHeader");
     return E_SCAN_NONE;
-}
-
-void ScanServiceAbility::CleanScanTask(const std::string &scannerId)
-{
-    CancelScan(scannerId);
-    scanTaskMap.clear();
-    g_hasIoFaild = true;
 }
 
 void ScanServiceAbility::SetScanProgr(int64_t &totalBytes, const int64_t& hundredPercent, const int32_t& curReadSize)

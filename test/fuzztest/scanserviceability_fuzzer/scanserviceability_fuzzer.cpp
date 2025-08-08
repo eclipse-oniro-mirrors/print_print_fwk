@@ -204,12 +204,6 @@ namespace Scan {
         ScanServiceAbility::GetInstance()->AddScanner(serialNumber, discoverMode);
     }
 
-    void TestCleanScanTask(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanServiceAbility::GetInstance()->CleanScanTask(scannerId);
-    }
-
     void TestGetAddedScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         ScanDeviceInfo addedScanner;
@@ -231,7 +225,6 @@ namespace Scan {
         ScanServiceAbility::GetInstance()->ManualStart();
         ScanServiceAbility::GetInstance()->ReInitScan();
         ScanServiceAbility::GetInstance()->SaneGetScanner();
-        ScanServiceAbility::GetInstance()->CleanScanTask(scannerId);
         ScanServiceAbility::GetInstance()->GetScannerList();
         ScanServiceAbility::GetInstance()->ExitScan();
     }
@@ -247,7 +240,6 @@ namespace Scan {
         OHOS::Scan::TestAddFoundScanner(data, size, dataProvider);
         OHOS::Scan::TestSendDeviceList(data, size, dataProvider);
         OHOS::Scan::TestAddScanner(data, size, dataProvider);
-        OHOS::Scan::TestCleanScanTask(data, size, dataProvider);
         OHOS::Scan::TestGetAddedScanner(data, size, dataProvider);
     }
 

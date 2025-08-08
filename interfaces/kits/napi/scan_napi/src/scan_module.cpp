@@ -138,6 +138,19 @@ static napi_value NapiCreateScannerDiscoveryModeEnum(napi_env env)
     return object;
 }
 
+static napi_value NapiCreateScannerSyncModeEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        SCAN_HILOGE("Failed to create object");
+        return nullptr;
+    }
+    NapiScanUtils::SetStringPropertyUtf8(env, object, "UPDATE_STR", "update");
+    NapiScanUtils::SetStringPropertyUtf8(env, object, "DELETE_STR", "delete");
+    return object;
+}
+
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
@@ -163,6 +176,7 @@ static napi_value Init(napi_env env, napi_value exports)
         SCAN_NAPI_PROPERTY("PhysicalUnit", NapiCreatePhysicalUnitEnum(env)),
         SCAN_NAPI_PROPERTY("OptionValueType", NapiCreateOptionValueTypeEnum(env)),
         SCAN_NAPI_PROPERTY("ScannerDiscoveryMode", NapiCreateScannerDiscoveryModeEnum(env)),
+        SCAN_NAPI_PROPERTY("ScannerSyncMode", NapiCreateScannerSyncModeEnum(env)),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
