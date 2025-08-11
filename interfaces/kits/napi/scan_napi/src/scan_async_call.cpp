@@ -21,7 +21,15 @@ namespace OHOS::Scan {
 ScanAsyncCall::ScanAsyncCall(napi_env env, napi_callback_info info,
     std::shared_ptr<Context> context) : env_(env)
 {
-    context_ = new AsyncContext();
+    if (context == nullptr) {
+        SCAN_HILOGE("context is nullptr");
+        return;
+    }
+    context_ = new (std::nothrow) AsyncContext();
+    if (context_ == nullptr) {
+        SCAN_HILOGE("context_ is nullptr");
+        return;
+    }
     size_t argc = NapiScanUtils::MAX_ARGC;
     napi_value self = nullptr;
     napi_value argv[NapiScanUtils::MAX_ARGC] = { nullptr };
@@ -76,18 +84,18 @@ void ScanAsyncCall::OnExecute(napi_env env, void *data)
     }
 }
 
-void ScanAsyncCall::PrepareSuccessResult(napi_env env, napi_value output, napi_value result[])
+void ScanAsyncCall::PrepareSuccessResult(napi_env env, napi_value output, AsyncResult& result)
 {
-    napi_get_undefined(env, &result[ARG_ERROR]);
+    napi_get_undefined(env, &result.error);
     if (output != nullptr) {
-        result[ARG_DATA] = output;
+        result.data = output;
         SCAN_HILOGD("async call napi_ok.");
     } else {
-        napi_get_undefined(env, &result[ARG_DATA]);
+        napi_get_undefined(env, &result.data);
     }
 }
 
-void ScanAsyncCall::PrepareErrorResult(napi_env env, const AsyncContext* context, napi_value result[])
+void ScanAsyncCall::PrepareErrorResult(napi_env env, const AsyncContext* context, AsyncResult& result)
 {
     uint32_t errorCode = E_SCAN_GENERIC_FAILURE;
     if (context->paramStatus != napi_ok) {
@@ -114,8 +122,8 @@ void ScanAsyncCall::PrepareErrorResult(napi_env env, const AsyncContext* context
         napi_set_named_property(env, businessError, "message", messageValue);
     }
 
-    result[ARG_ERROR] = businessError;
-    napi_get_undefined(env, &result[ARG_DATA]);
+    result.error = businessError;
+    napi_get_undefined(env, &result.data);
 }
 
 void ScanAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
@@ -134,16 +142,16 @@ void ScanAsyncCall::OnComplete(napi_env env, napi_status status, void *data)
         runStatus = (*context->ctx)(env, &output);
     }
     SCAN_HILOGD("runStatus: [%{public}d], status: [%{public}d]", runStatus, status);
-    napi_value result[ARG_BUTT] = { 0 };
+    AsyncResult result;
     if (status == napi_ok && runStatus == napi_ok) {
         PrepareSuccessResult(env, output, result);
     } else {
         PrepareErrorResult(env, context, result);
     }
     if (status == napi_ok && runStatus == napi_ok) {
-        napi_resolve_deferred(env, context->defer, result[ARG_DATA]);
+        napi_resolve_deferred(env, context->defer, result.data);
     } else {
-        napi_reject_deferred(env, context->defer, result[ARG_ERROR]);
+        napi_reject_deferred(env, context->defer, result.error);
     }
     DeleteContext(env, context);
 }
