@@ -530,6 +530,7 @@ void NapiScanUtils::SetErrorText(uint32_t& code, std::string& message)
     } else {
         SCAN_HILOGD("ErrorText not found");
         code = E_SCAN_GENERIC_FAILURE;
+        message = "SCAN_ERROR_GENERIC_FAILURE";
     }
 }
 

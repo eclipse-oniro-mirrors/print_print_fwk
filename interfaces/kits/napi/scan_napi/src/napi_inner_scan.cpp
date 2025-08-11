@@ -642,6 +642,8 @@ uint32_t NapiInnerScan::IsSupportType(const std::string& type)
         if (!NapiScanUtils::CheckCallerIsSystemApp()) {
             SCAN_HILOGE("not system app");
             return E_SCAN_ERROR_NOT_SYSTEM_APPLICATION;
+        } else {
+            return E_SCAN_NONE;
         }
     }
     SCAN_HILOGE("type : %{public}s is invalid", type.c_str());

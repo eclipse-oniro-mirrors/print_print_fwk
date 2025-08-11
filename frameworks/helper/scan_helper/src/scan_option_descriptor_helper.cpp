@@ -28,6 +28,7 @@ static constexpr const char *PARAM_OPTION_UNIT = "optionUnit";
 static constexpr const char *PARAM_OPTION_CONSTRAINT_TYPE = "optionConstraintType";
 static constexpr const char *PARAM_OPTION_CONSTRAINT_STRING = "optionConstraintString";
 static constexpr const char *PARAM_OPTION_CONSTRAINT_NUMBER = "optionConstraintInt";
+static constexpr const char *PARAM_OPTION_CONSTRAINT_RANGE = "optionConstraintRange";
 
 napi_value ScanOptionDescriptorHelper::MakeJsObject(napi_env env, const ScanOptionDescriptor &desc)
 {
@@ -44,30 +45,37 @@ napi_value ScanOptionDescriptorHelper::MakeJsObject(napi_env env, const ScanOpti
     NapiScanUtils::SetUint32Property(env, jsObj, PARAM_OPTION_TYPE, desc.GetOptionType());
     NapiScanUtils::SetUint32Property(env, jsObj, PARAM_OPTION_UNIT, desc.GetOptionUnit());
     NapiScanUtils::SetUint32Property(env, jsObj, PARAM_OPTION_CONSTRAINT_TYPE, desc.GetOptionConstraintType());
-
-    std::vector<std::string> optionConstraintString;
-    desc.GetOptionConstraintString(optionConstraintString);
-    napi_value arrOptionConstraintString = nullptr;
-    SCAN_CALL(env, napi_create_array(env, &arrOptionConstraintString));
-    uint32_t arrOptionConstraintStringLength = optionConstraintString.size();
-    for (uint32_t i = 0; i < arrOptionConstraintStringLength; i++) {
-        napi_value value = NapiScanUtils::CreateStringUtf8(env, optionConstraintString[i]);
-        SCAN_CALL(env, napi_set_element(env, arrOptionConstraintString, i, value));
+    if (desc.GetOptionConstraintType() == SCAN_CONSTRAINT_STRING_LIST) {
+        std::vector<std::string> optionConstraintString;
+        desc.GetOptionConstraintString(optionConstraintString);
+        napi_value arrOptionConstraintString = nullptr;
+        SCAN_CALL(env, napi_create_array(env, &arrOptionConstraintString));
+        uint32_t arrOptionConstraintStringLength = optionConstraintString.size();
+        for (uint32_t i = 0; i < arrOptionConstraintStringLength; i++) {
+            napi_value value = NapiScanUtils::CreateStringUtf8(env, optionConstraintString[i]);
+            SCAN_CALL(env, napi_set_element(env, arrOptionConstraintString, i, value));
+        }
+        SCAN_CALL(env, napi_set_named_property(env, jsObj, PARAM_OPTION_CONSTRAINT_STRING, arrOptionConstraintString));
+    } else if (desc.GetOptionConstraintType() == SCAN_CONSTRAINT_WORD_LIST) {
+        std::vector<int32_t> optionConstraintNumber;
+        desc.GetOptionConstraintNumber(optionConstraintNumber);
+        napi_value arrOptionConstraintNumber = nullptr;
+        SCAN_CALL(env, napi_create_array(env, &arrOptionConstraintNumber));
+        uint32_t arrOptionConstraintNumberLength = optionConstraintNumber.size();
+        for (uint32_t i = 0; i < arrOptionConstraintNumberLength; i++) {
+            napi_value value;
+            SCAN_CALL(env, napi_create_int32(env, optionConstraintNumber[i], &value));
+            SCAN_CALL(env, napi_set_element(env, arrOptionConstraintNumber, i, value));
+        }
+        SCAN_CALL(env, napi_set_named_property(env, jsObj, PARAM_OPTION_CONSTRAINT_NUMBER, arrOptionConstraintNumber));
+    } else if (desc.GetOptionConstraintType() == SCAN_CONSTRAINT_RANGE) {
+        ScanRange range;
+        desc.GetOptionConstraintRange(range);
+        SCAN_CALL(env, napi_set_named_property(env, jsObj, PARAM_OPTION_CONSTRAINT_RANGE,
+            ScanRangeHelper::MakeJsObject(env, range)));
+    } else {
+        SCAN_HILOGD("type (%{public}u) does not meet the format requirements", desc.GetOptionConstraintType());
     }
-    SCAN_CALL(env, napi_set_named_property(env, jsObj, PARAM_OPTION_CONSTRAINT_STRING, arrOptionConstraintString));
-
-    std::vector<int32_t> optionConstraintNumber;
-    desc.GetOptionConstraintNumber(optionConstraintNumber);
-    napi_value arrOptionConstraintNumber = nullptr;
-    SCAN_CALL(env, napi_create_array(env, &arrOptionConstraintNumber));
-    uint32_t arrOptionConstraintNumberLength = optionConstraintNumber.size();
-    for (uint32_t i = 0; i < arrOptionConstraintNumberLength; i++) {
-        napi_value value;
-        SCAN_CALL(env, napi_create_int32(env, optionConstraintNumber[i], &value));
-        SCAN_CALL(env, napi_set_element(env, arrOptionConstraintNumber, i, value));
-    }
-    SCAN_CALL(env, napi_set_named_property(env, jsObj, PARAM_OPTION_CONSTRAINT_NUMBER, arrOptionConstraintNumber));
-
     return jsObj;
 }
 

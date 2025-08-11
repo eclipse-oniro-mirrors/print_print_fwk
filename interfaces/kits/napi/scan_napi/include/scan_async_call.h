@@ -26,6 +26,10 @@
 #define TDD_ENABLE 1
 
 namespace OHOS::Scan {
+struct AsyncResult {
+    napi_value error = nullptr;
+    napi_value data = nullptr;
+};
 
 class ScanAsyncCall final {
 public:
@@ -99,7 +103,6 @@ public:
 #ifndef TDD_ENABLE
 private:
 #endif
-    enum { ARG_ERROR, ARG_DATA, ARG_BUTT };
     static void OnExecute(napi_env env, void *data);
     static void OnComplete(napi_env env, napi_status status, void *data);
     static std::string GetErrorText(uint32_t code);
@@ -110,8 +113,8 @@ private:
         napi_async_work work = nullptr;
         napi_status paramStatus = napi_ok;
     };
-    static void PrepareSuccessResult(napi_env env, napi_value output, napi_value result[]);
-    static void PrepareErrorResult(napi_env env, const AsyncContext* context, napi_value result[]);
+    static void PrepareSuccessResult(napi_env env, napi_value output, AsyncResult& result);
+    static void PrepareErrorResult(napi_env env, const AsyncContext* context, AsyncResult& result);
     static void DeleteContext(napi_env env, AsyncContext *context);
     static void SetErrorText(uint32_t& code, std::string& message);
 
