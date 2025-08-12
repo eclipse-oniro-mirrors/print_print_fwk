@@ -22,8 +22,10 @@
 #include "scan_util.h"
 
 namespace OHOS::Scan {
-ScanContext::ScanContext() : isListening_(false)
-{}
+constexpr int32_t YES_VALUE = 1;
+constexpr int32_t NO_VALUE = 1;
+
+ScanContext::ScanContext() {}
 
 ScanContext::~ScanContext()
 {
@@ -157,6 +159,7 @@ std::string ScanContext::SetRangeStrInParaTable(const ScanOptionDescriptor& desc
 {
     std::string rangeStr;
     uint32_t constraintType = desc.GetOptionConstraintType();
+    uint32_t optionType = desc.GetOptionType();
     if (constraintType == SCAN_CONSTRAINT_WORD_LIST) {
         std::vector<std::int32_t> optionConstraintNumber;
         desc.GetOptionConstraintNumber(optionConstraintNumber);
@@ -185,8 +188,10 @@ std::string ScanContext::SetRangeStrInParaTable(const ScanOptionDescriptor& desc
         }
         const std::string symbol = "..";
         rangeStr.append(std::to_string(minValue).append(symbol).append(std::to_string(maxValue)));
+    } else if (constraintType == SCAN_CONSTRAINT_NONE && optionType == SCAN_VALUE_BOOL) {
+        rangeStr = "yes,no";
     } else {
-        SCAN_HILOGW("not support ConstraintType [%{public}u]", constraintType);
+        SCAN_HILOGD("not support ConstraintType[%{public}u], optionType[%{public}u]", constraintType, optionType);
         return "";
     }
     return rangeStr;
@@ -251,6 +256,15 @@ int32_t ScanContext::GetOptionValueFromTable(const std::string& deviceId, int32_
     optionValue.SetScanOptionValueType(static_cast<ScanOptionValueType>(optionType));
     if (optionType == SCAN_VALUE_STR) {
         optionValue.SetStrValue(std::string(value));
+    } else if (optionType == SCAN_VALUE_BOOL) {
+        if (strcmp(value, "yes") == 0) {
+            optionValue.SetNumValue(YES_VALUE);
+        } else if (strcmp(value, "no") == 0) {
+            optionValue.SetNumValue(NO_VALUE);
+        } else {
+            SCAN_HILOGE("option [%{private}d] is invalid.", option);
+            return SCAN_ERROR_INVALID_PARAMETER;
+        }
     } else {
         int32_t numValue = 0;
         if (!ScanUtil::ConvertToInt(std::string(value), numValue)) {
@@ -444,7 +458,6 @@ void ScanContext::Clear()
     }
     exScanParaTables_.clear();
     innerScanParaTables_.clear();
-    isListening_ = false;
     discoverCallback_ = nullptr;
 }
 
@@ -478,18 +491,6 @@ void ScanContext::SetDiscoverCallback(Scan_ScannerDiscoveryCallback callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     discoverCallback_ = callback;
-}
-
-bool ScanContext::IsListening() const
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    return isListening_;
-}
-
-void ScanContext::SetListening(bool listening)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    isListening_ = listening;
 }
 
 const std::string& ScanContext::GetRegisterType()
