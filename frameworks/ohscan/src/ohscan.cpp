@@ -51,6 +51,10 @@ int32_t OH_Scan_Init()
 
 int32_t OH_Scan_StartScannerDiscovery(Scan_ScannerDiscoveryCallback callback)
 {
+    if (callback == nullptr) {
+        SCAN_HILOGE("callback is a nullptr");
+        return SCAN_ERROR_INVALID_PARAMETER;
+    }
     auto& context = ScanContext::GetInstance();
     context.SetDiscoverCallback(callback);
     auto client = ScanManagerClient::GetInstance();
@@ -62,18 +66,15 @@ int32_t OH_Scan_StartScannerDiscovery(Scan_ScannerDiscoveryCallback callback)
     auto scannerDiscoveryCallback = [](std::vector<ScanDeviceInfo> &infos) {
         ScanContext::GetInstance().ExecuteCallback(infos);
     };
-    if (!context.IsListening()) {
-        OHOS::sptr<IScanCallback> call = new (std::nothrow) ScanCallback(scannerDiscoveryCallback);
-        if (call == nullptr) {
-            SCAN_HILOGE("call is null");
-            return SCAN_ERROR_GENERIC_FAILURE;
-        }
-        ret = client->On("", context.GetRegisterType(), call);
-        if (ret != SCAN_ERROR_NONE) {
-            SCAN_HILOGE("Failed to register event");
-            return ScanContext::StatusConvert(ret);
-        }
-        context.SetListening(true);
+    OHOS::sptr<IScanCallback> call = new (std::nothrow) ScanCallback(scannerDiscoveryCallback);
+    if (call == nullptr) {
+        SCAN_HILOGE("call is null");
+        return SCAN_ERROR_GENERIC_FAILURE;
+    }
+    ret = client->On("", context.GetRegisterType(), call);
+    if (ret != SCAN_ERROR_NONE) {
+        SCAN_HILOGE("Failed to register event");
+        return ScanContext::StatusConvert(ret);
     }
     ret = client->GetScannerList();
     if (ret != SCAN_ERROR_NONE) {
@@ -282,14 +283,7 @@ int32_t OH_Scan_Exit()
         SCAN_HILOGE("ExitScan failed, ErrorCode: [%{public}d]", ret);
         return ScanContext::StatusConvert(ret);
     }
-    if (context.IsListening()) {
-        ret = client->Off("", context.GetRegisterType());
-        if (ret != SCAN_ERROR_NONE) {
-            SCAN_HILOGE("Off failed, ErrorCode: [%{public}d]", ret);
-            return ScanContext::StatusConvert(ret);
-        }
-    }
-    context.SetListening(false);
+    client->Off("", context.GetRegisterType());
     context.Clear();
     SCAN_HILOGI("ExitScan successfully");
     return SCAN_ERROR_NONE;

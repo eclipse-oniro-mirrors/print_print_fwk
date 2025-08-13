@@ -52,8 +52,6 @@ public:
     void SetScannerOptions(const std::string& scannerId, Scan_ScannerOptions* options);
     Scan_ScannerOptions* GetScannerOptions(const std::string& scannerId);
     void SetScanParaTable(const std::string& scannerId, std::unique_ptr<ScanParaTable> table);
-    bool IsListening() const;
-    void SetListening(bool listening);
     const std::string& GetRegisterType();
     void Clear();
     bool ParaIndexConvert(const int32_t option, int32_t& innerOption, const std::string& deviceId);
@@ -78,7 +76,6 @@ private:
     mutable std::mutex mutex_;
     std::map<std::string, Scan_ScannerOptions*> exScanParaTables_;
     std::map<std::string, std::unique_ptr<ScanParaTable>> innerScanParaTables_;
-    bool isListening_ = false;
     Scan_ScannerDiscoveryCallback discoverCallback_ = nullptr;
 };
 } // namespace OHOS::Scan
