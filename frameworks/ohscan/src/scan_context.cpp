@@ -23,7 +23,7 @@
 
 namespace OHOS::Scan {
 constexpr int32_t YES_VALUE = 1;
-constexpr int32_t NO_VALUE = 1;
+constexpr int32_t NO_VALUE = 0;
 
 ScanContext::ScanContext() {}
 

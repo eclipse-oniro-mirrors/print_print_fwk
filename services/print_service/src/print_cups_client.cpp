@@ -31,6 +31,9 @@
 #include <wifi_p2p.h>
 #include <wifi_p2p_msg.h>
 #include <arpa/inet.h>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
 
 #include "system_ability_definition.h"
 #include "parameter.h"
@@ -2249,7 +2252,7 @@ bool PrintCupsClient::IsCupsServerAlive()
  * @return true printer exist
  * @return false printer is not exist
  */
-bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printerName, const char *ppdName)
+bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName)
 {
     bool printerExist = false;
     cups_dest_t *dest;
@@ -2258,7 +2261,7 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         PRINT_HILOGW("printAbility_ is null");
         return printerExist;
     }
-    dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, printerName, nullptr);
+    dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, standardPrinterName, nullptr);
     if (dest != nullptr) {
         const char *deviceUri = cupsGetOption("device-uri", dest->num_options, dest->options);
         if (deviceUri == nullptr) {
@@ -2286,8 +2289,12 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *printer
         } else if (strcmp(ppdName, BSUNI_PPD_NAME.c_str()) == 0) {
             printerExist = (strstr(makeModel, BSUNI_PPD_NAME.c_str()) != nullptr);
         } else {
-            // vendor ppd always need to be reloaded
-            printerExist = false;
+            // vendor ppd need to be checked
+            if (!PrintServiceAbility::GetInstance()->IsPrinterPpdUpdateRequired(standardPrinterName,
+                GetPpdHashCode(ppdName))) {
+                printerExist = true;
+                PRINT_HILOGD("no need to update ppd");
+            }
         }
         printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
     }
@@ -2454,6 +2461,45 @@ bool PrintCupsClient::IsIpAddress(const char* host)
         PRINT_HILOGW("not ipv4 or ipv6");
         return false;
     }
+}
+
+std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)
+{
+    std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + ppdName;
+    
+    std::ifstream file(ppdFilePath, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+        PRINT_HILOGE("ppd %{private}s open failed", ppdName.c_str());
+        return "";
+    }
+    
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
+    
+    std::vector<char> buffer(size);
+    if (!file.read(buffer.data(), size)) {
+        PRINT_HILOGE("ppd %{private}s read failed", ppdName.c_str());
+        return "";
+    }
+    
+    int32_t HASH_BUFFER_SIZE = 32;
+    unsigned char hash[HASH_BUFFER_SIZE];
+    size_t hashSize = sizeof(hash);
+    
+    const char* HASH_ALGORITHM = "sha2-256";
+    ssize_t result = cupsHashData(HASH_ALGORITHM, buffer.data(), size, hash, hashSize);
+    if (result <= 0) {
+        PRINT_HILOGE("cupsHashData fail, ret = %{public}d", result);
+        return "";
+    }
+    
+    std::ostringstream oss;
+    constexpr int32_t HEX_STRING_WIDTH = 2;
+    oss << std::hex << std::setfill('0');
+    for (int i = 0; i < result; ++i) {
+        oss << std::setw(HEX_STRING_WIDTH) << static_cast<unsigned>(hash[i]);
+    }
+    return oss.str();
 }
 
 }
