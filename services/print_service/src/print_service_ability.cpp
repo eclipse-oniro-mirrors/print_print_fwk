@@ -126,7 +126,6 @@ const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(PrintServiceA
 
 std::mutex PrintServiceAbility::instanceLock_;
 sptr<PrintServiceAbility> PrintServiceAbility::instance_;
-std::shared_ptr<AppExecFwk::EventHandler> PrintServiceAbility::serviceHandler_;
 std::chrono::time_point<std::chrono::high_resolution_clock> PrintServiceAbility::startPrintTime_;
 std::string PrintServiceAbility::ingressPackage;
 
@@ -135,6 +134,7 @@ PrintServiceAbility::PrintServiceAbility(int32_t systemAbilityId, bool runOnCrea
       state_(ServiceRunningState::STATE_NOT_START),
       currentJobOrderId_(0),
       helper_(nullptr),
+      serviceHandler_(nullptr),
       isJobQueueBlocked_(false),
       currentUserId_(-1),
       enterLowPowerCount_(0),
@@ -1923,6 +1923,10 @@ void PrintServiceAbility::DelayEnterLowPowerMode()
         }
         PRINT_HILOGI("Enter low power mode successfully.");
     };
+    if (serviceHandler_ == nullptr) {
+        PRINT_HILOGE("serviceHandler_ is nullptr");
+        return;
+    }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     isLowPowerMode_ = true;
     enterLowPowerCount_++;
@@ -3680,6 +3684,10 @@ void PrintServiceAbility::UnregisterPrintTaskCallback(const std::string &jobId, 
             }
         }
     };
+    if (serviceHandler_ == nullptr) {
+        PRINT_HILOGE("serviceHandler_ is nullptr");
+        return;
+    }
     serviceHandler_->PostTask(unregisterTask, UNREGISTER_CALLBACK_INTERVAL);
 }
 

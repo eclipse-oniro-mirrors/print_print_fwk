@@ -872,6 +872,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0038_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0040_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->ManualStart();
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
@@ -1432,6 +1433,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0082_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0083_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->ManualStart();
     std::string jobId = "1";
     int32_t userId = 100;
     service->userJobMap_[jobId] = userId;
@@ -1703,6 +1705,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0100_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0102_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->ManualStart();
     std::string jobId = "123";
     uint32_t state = PRINT_JOB_RUNNING;
     uint32_t subState = PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED;
@@ -1807,6 +1810,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0111_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0112_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->ManualStart();
     std::string jobId = "1";
     int32_t userId = 0;
     service->userJobMap_[jobId] = userId;
@@ -2713,6 +2717,7 @@ HWTEST_F(PrintServiceAbilityTest, ConnectUsbPrinter_HasMake_ServerFailure, TestS
 HWTEST_F(PrintServiceAbilityTest, ExitLowPowerMode_WhenAllreadyEnterLowPowerMode_ShouldExit, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->ManualStart();
     service->DelayEnterLowPowerMode();
     EXPECT_TRUE(service->isLowPowerMode_);
     service->ExitLowPowerMode();
@@ -2728,6 +2733,7 @@ HWTEST_F(PrintServiceAbilityTest, ExitLowPowerMode_WhenAllreadyEnterLowPowerMode
 HWTEST_F(PrintServiceAbilityTest, ExitLowPowerMode_WhenExitedLowPower_ShouldDoNothing, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->ManualStart();
     EXPECT_FALSE(service->isLowPowerMode_);
     service->ExitLowPowerMode();
     EXPECT_FALSE(service->isLowPowerMode_);
