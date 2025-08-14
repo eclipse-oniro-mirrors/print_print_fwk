@@ -255,7 +255,6 @@ private:
     ServiceRunningState state_;
     static std::mutex instanceLock_;
     static sptr<PrintServiceAbility> instance_;
-    static std::shared_ptr<AppExecFwk::EventHandler> serviceHandler_;
     static std::chrono::time_point<std::chrono::high_resolution_clock> startPrintTime_;
     static std::string ingressPackage;
 
@@ -275,6 +274,7 @@ private:
 
     uint64_t currentJobOrderId_;
     std::shared_ptr<PrintServiceHelper> helper_;
+    std::shared_ptr<AppExecFwk::EventHandler> serviceHandler_;
 
     bool isJobQueueBlocked_;
     std::map<int64_t, std::shared_ptr<PrintUserData>> printUserDataMap_;
