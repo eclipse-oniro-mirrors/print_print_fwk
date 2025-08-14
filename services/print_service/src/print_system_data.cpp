@@ -88,6 +88,10 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     info.SetUri(uri);
     info.SetPrinterMake(maker);
     info.SetCapability(printerCapability);
+    if (PrintJsonUtil::IsMember(object, "ppdHashCode") && object["ppdHashCode"].isString()) {
+        std::string ppdHashCode = object["ppdHashCode"].asString();
+        info.SetPpdHashCode(ppdHashCode);
+    }
     ConvertInnerJsonToPrinterInfo(object, info);
     InsertAddedPrinter(id, info);
     return true;
@@ -339,6 +343,7 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     printerJson["uri"] = info->GetUri();
     printerJson["maker"] = info->GetPrinterMake();
     printerJson["alias"] = info->GetAlias();
+    printerJson["ppdHashCode"] = info->GetPpdHashCode();
     if (QueryIpPrinterInfoById(printerId) != nullptr) {
         printerJson["printerStatus"] = info->GetPrinterStatus();
     }
@@ -394,6 +399,22 @@ void PrintSystemData::QueryPrinterInfoById(const std::string &printerId, Printer
         printerInfo.Dump();
     } else {
         PRINT_HILOGE("query printer info failed.");
+    }
+}
+
+bool PrintSystemData::QueryPpdHashCodeByPrinterName(const std::string &standardPrinterName,
+    std::string &ppdHashCode)
+{
+    auto printerId = GetAddedPrinterMap().FindKey([this, standardPrinterName](const PrinterInfo &printer) -> bool {
+        return PrintUtil::StandardizePrinterName(printer.GetPrinterName()) == standardPrinterName;
+    });
+    auto info = GetAddedPrinterMap().Find(printerId);
+    if (info != nullptr) {
+        ppdHashCode = info->GetPpdHashCode();
+        return true;
+    } else {
+        PRINT_HILOGE("query ppd hash code failed.");
+        return false;
     }
 }
 

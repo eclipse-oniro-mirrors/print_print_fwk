@@ -119,6 +119,7 @@ public:
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) override;
     void DelayEnterLowPowerMode();
     void ExitLowPowerMode();
+    bool IsPrinterPpdUpdateRequired(const std::string& standardPrinterName, const std::string& ppdHashCode);
 
 protected:
     void OnStart() override;
@@ -247,7 +248,7 @@ private:
         const std::string &ppdData);
     bool DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
         std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData);
-    void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo);
+    void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string& ppdName);
     bool DeletePrintJobFromHistoryList(const std::string jobId);
 
 private:

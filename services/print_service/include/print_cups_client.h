@@ -155,6 +155,7 @@ public:
         const std::string &ppdName);
     bool CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monitorParams, const uint32_t timeout = 3000);
     bool ModifyCupsPrinterUri(const std::string &printerName, const std::string &printerUri);
+    std::string GetPpdHashCode(const std::string& ppdName);
 
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
@@ -201,7 +202,7 @@ private:
     std::string GetMedieSize(const PrintJob &jobInfo);
     std::string GetDulpexString(uint32_t duplexCode);
     void DumpJobParameters(JobParameters* jobParams);
-    bool IsPrinterExist(const char *printerUri, const char *printerName, const char *ppdName);
+    bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
 
     void ParsePPDInfo(ipp_t *response, std::vector<std::string> &ppds);
     ipp_t *QueryPrinterAttributesByUri(const std::string &printerUri, const std::string &nic, int num,

@@ -61,6 +61,8 @@ public:
 
     void SetAlias(const std::string &alias);
 
+    void SetPpdHashCode(const std::string &ppdHashCode);
+
     [[nodiscard]] const std::string &GetPrinterId() const;
 
     [[nodiscard]] const std::string &GetPrinterName() const;
@@ -114,6 +116,8 @@ public:
     [[nodiscard]] bool HasAlias() const;
 
     [[nodiscard]] std::string GetAlias() const;
+
+    [[nodiscard]] std::string GetPpdHashCode() const;
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
@@ -184,6 +188,8 @@ private:
     bool hasIsLastUsedPrinter_; // Deprecated, to be removed in a future version.
 
     bool isLastUsedPrinter_; // Deprecated, to be removed in a future version.
+
+    std::string ppdHashCode_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_INFO_H

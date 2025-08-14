@@ -3237,7 +3237,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
         PRINT_HILOGW("AddPrinterToCups fail.");
         return false;
     }
-    OnPrinterAddedToCups(printerInfo);
+    OnPrinterAddedToCups(printerInfo, ppdName);
     return true;
 }
 
@@ -3309,7 +3309,7 @@ bool PrintServiceAbility::DoAddPrinterToCupsEnable(const std::string &printerUri
     return true;
 }
 
-void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo)
+void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string& ppdName)
 {
     if (printerInfo == nullptr) {
         PRINT_HILOGW("printerInfo is null");
@@ -3319,6 +3319,8 @@ void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> prin
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
+    std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
+    printerInfo->SetPpdHashCode(ppdHashCode);
     if (printSystemData_.IsPrinterAdded(globalPrinterId)) {
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
@@ -3401,6 +3403,8 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo->SetPrinterState(PRINTER_CONNECTED);
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
+    std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
+    printerInfo->SetPpdHashCode(ppdHashCode);
     BuildPrinterPreference(*printerInfo);
     printSystemData_.InsertAddedPrinter(globalPrinterId, *printerInfo);
     printSystemData_.SavePrinterFile(globalPrinterId);
@@ -3852,6 +3856,8 @@ void PrintServiceAbility::RefreshPrinterInfoByPpd()
             printerInfo.SetCapability(printerCaps);
             BuildPrinterPreference(printerInfo);
         }
+        std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
+        printerInfo.SetPpdHashCode(ppdHashCode);
         printSystemData_.InsertAddedPrinter(printerId, printerInfo);
         printSystemData_.SavePrinterFile(printerId);
     }
@@ -3888,6 +3894,8 @@ int32_t PrintServiceAbility::ConnectUsbPrinter(const std::string &printerId)
         return ret;
     }
     printerInfo->SetCapability(printerCaps);
+    std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
+    printerInfo->SetPpdHashCode(ppdHashCode);
     UpdatePrinterCapability(printerId, *printerInfo);
 
     printerInfo->SetPrinterState(PRINTER_UPDATE_CAP);
@@ -4028,4 +4036,20 @@ bool PrintServiceAbility::IsAppAlive(const std::string &bundleName, int32_t pid)
     }
     return false;
 }
+
+bool PrintServiceAbility::IsPrinterPpdUpdateRequired(const std::string& standardPrinterName,
+    const std::string& ppdHashCode)
+{
+    std::string lastPrinterPpdHashCode;
+    if (!printSystemData_.QueryPpdHashCodeByPrinterName(standardPrinterName, lastPrinterPpdHashCode)) {
+        PRINT_HILOGD("PrintSystemData does not save printerPpdHashCode");
+        return true;
+    }
+    if (lastPrinterPpdHashCode == ppdHashCode) {
+        PRINT_HILOGD("The content of ppdhashCode is the same as the previous ppdhashCode");
+        return false;
+    }
+    return true;
+}
+
 } // namespace OHOS::Print

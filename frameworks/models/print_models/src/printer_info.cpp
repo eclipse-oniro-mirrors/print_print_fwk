@@ -76,7 +76,8 @@ PrinterInfo::PrinterInfo(const PrinterInfo &right)
       hasIsDefaultPrinter_(right.hasIsDefaultPrinter_),
       isDefaultPrinter_(right.isDefaultPrinter_),
       hasIsLastUsedPrinter_(right.hasIsLastUsedPrinter_),
-      isLastUsedPrinter_(right.isLastUsedPrinter_)
+      isLastUsedPrinter_(right.isLastUsedPrinter_),
+      ppdHashCode_(right.ppdHashCode_)
 {
 }
 PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
@@ -109,6 +110,7 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         isLastUsedPrinter_ = right.isLastUsedPrinter_;
         hasPrinterStatus_ = right.hasPrinterStatus_;
         printerStatus_ = right.printerStatus_;
+        ppdHashCode_ = right.ppdHashCode_;
     }
     return *this;
 }
@@ -202,6 +204,11 @@ void PrinterInfo::SetPrinterStatus(uint32_t printerStatus)
     printerStatus_ = printerStatus;
 }
 
+void PrinterInfo::SetPpdHashCode(const std::string &ppdHashCode)
+{
+    ppdHashCode_ = ppdHashCode;
+}
+
 const std::string &PrinterInfo::GetPrinterId() const
 {
     return printerId_;
@@ -275,6 +282,11 @@ bool PrinterInfo::HasAlias() const
 std::string PrinterInfo::GetAlias() const
 {
     return alias_;
+}
+
+std::string PrinterInfo::GetPpdHashCode() const
+{
+    return ppdHashCode_;
 }
 
 bool PrinterInfo::HasPrinterUuid() const
