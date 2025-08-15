@@ -47,8 +47,6 @@ private:
 private:
     using ScanCmdHandler = bool (ScanServiceStub::*)(MessageParcel &, MessageParcel &);
     std::map<uint32_t, ScanCmdHandler> cmdMap_;
-    bool isSaneInit_ = false;
-    std::mutex lock_;
 };
 } // namespace OHOS::Scan
 #endif // SCAN_SERVICE_STUB_H

@@ -223,7 +223,6 @@ namespace Scan {
         ScanServiceAbility::GetInstance()->OnStart();
         ScanServiceAbility::GetInstance()->OnStop();
         ScanServiceAbility::GetInstance()->ManualStart();
-        ScanServiceAbility::GetInstance()->ReInitScan();
         ScanServiceAbility::GetInstance()->SaneGetScanner();
         ScanServiceAbility::GetInstance()->GetScannerList();
         ScanServiceAbility::GetInstance()->ExitScan();
