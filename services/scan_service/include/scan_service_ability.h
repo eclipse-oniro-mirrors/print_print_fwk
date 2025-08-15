@@ -22,6 +22,7 @@
 #include <functional>
 #include <queue>
 #include <chrono>
+#include <atomic>
 
 #include "ability_manager_client.h"
 #include "event_handler.h"
@@ -84,7 +85,6 @@ public:
     static std::map<std::string, ScanDeviceInfo> saneGetUsbDeviceInfoMap;
     static std::map<std::string, ScanDeviceInfo> saneGetTcpDeviceInfoMap;
     void UnloadSystemAbility();
-    static int32_t appCount_;
 protected:
     void OnStart() override;
     void OnStop() override;
@@ -93,7 +93,6 @@ private:
     int32_t ServiceInit();
     void InitServiceHandler();
     void ManualStart();
-    int32_t ReInitScan();
     bool CheckPermission(const std::string &permissionName);
     int32_t WriteJpegHeader(ScanParameters &parm, struct jpeg_error_mgr* jerr);
     void GeneratePicture(const std::string &scannerId, std::string &fileName,
@@ -140,6 +139,7 @@ private:
     FILE *ofp = nullptr;
     int32_t dpi = 0;
     JSAMPLE *jpegbuf = nullptr;
+    std::atomic<int32_t> appCount_{0};
 };
 } // namespace OHOS::Scan
 #endif // SCAN_SYSTEM_ABILITY_H

@@ -120,7 +120,6 @@ std::map<std::string, sptr<IScanCallback>> OHOS::Scan::ScanServiceAbility::regis
 
 REGISTER_SYSTEM_ABILITY_BY_ID(ScanServiceAbility, SCAN_SERVICE_ID, true);
 
-int32_t ScanServiceAbility::appCount_ = 0;
 std::mutex ScanServiceAbility::instanceLock_;
 sptr<ScanServiceAbility> ScanServiceAbility::instance_;
 std::shared_ptr<AppExecFwk::EventHandler> ScanServiceAbility::serviceHandler_;
@@ -231,15 +230,12 @@ void ScanServiceAbility::OnStop()
 }
 void ScanServiceAbility::UnloadSystemAbility()
 {
-    SCAN_HILOGI("appCount_= %{public}d", appCount_);
     auto unloadTask = [this]() {
-        if (ScanServiceAbility::appCount_ != 0) {
-            SCAN_HILOGW("appCount is not equal to zerro");
+        if (appCount_.load() != 0) {
+            SCAN_HILOGW("appCount = %{public}d is not equal to zerro", appCount_.load());
             return;
         }
-        this->ExitScan();
         SaneManagerClient::GetInstance()->UnloadSystemAbility();
-        ScanMdnsService::OnStopDiscoverService();
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {
             SCAN_HILOGE("get samgr failed");
@@ -247,10 +243,10 @@ void ScanServiceAbility::UnloadSystemAbility()
         }
         int32_t ret = samgrProxy->UnloadSystemAbility(SCAN_SERVICE_ID);
         if (ret != ERR_OK) {
-            SCAN_HILOGE("unload system ability failed");
+            SCAN_HILOGE("unload scan_service failed");
             return;
         }
-        SCAN_HILOGI("unload system ability successfully");
+        SCAN_HILOGI("unload scan_service successfully");
     };
     serviceHandler_->PostTask(unloadTask, UNLOAD_SYSTEMABILITY_DELAY);
 }
@@ -262,12 +258,11 @@ int32_t ScanServiceAbility::InitScan()
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-    std::lock_guard<std::mutex> autoLock(lock_);
-    if (appCount_ == 0) {
+    if (appCount_.load() == 0) {
         InitializeScanService();
     }
-    appCount_++;
-    SCAN_HILOGD("appCount = %{public}d", appCount_);
+    appCount_.fetch_add(1);
+    SCAN_HILOGD("appCount = %{public}d", appCount_.load());
     return E_SCAN_NONE;
 }
 
@@ -278,10 +273,9 @@ int32_t ScanServiceAbility::ExitScan()
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-    std::lock_guard<std::mutex> autoLock(lock_);
-    appCount_ = appCount_ - 1 >= 0 ? appCount_ - 1 : 0;
-    SCAN_HILOGD("appCount = %{public}d", appCount_);
-    if (appCount_ == 0) {
+    appCount_.fetch_sub(1);
+    SCAN_HILOGD("appCount = %{public}d", appCount_.load());
+    if (appCount_.load() == 0) {
         CleanupScanService();
         UnloadSystemAbility();
     }
@@ -305,6 +299,7 @@ void ScanServiceAbility::CleanupScanService()
     }
     openedScannerList_.clear();
     SaneManagerClient::GetInstance()->SaneExit();
+    ScanMdnsService::OnStopDiscoverService();
     g_scannerState = SCANNER_READY;
     std::queue<int32_t> empty;
     scanQueue.swap(empty);
@@ -319,30 +314,6 @@ void ScanServiceAbility::CleanupScanService()
         }
     }
     imageFdMap_.clear();
-}
-
-int32_t ScanServiceAbility::ReInitScan()
-{
-    ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
-        SCAN_HILOGE("no permission to access scan service");
-        return E_SCAN_NO_PERMISSION;
-    }
-    SCAN_HILOGD("ScanServiceAbility ReInitScan start");
-    SaneManagerClient::GetInstance()->SaneExit();
-    openedScannerList_.clear();
-    g_scannerState = SCANNER_READY;
-    std::queue<int32_t> empty;
-    scanQueue.swap(empty);
-    scanTaskMap.clear();
-    SaneStatus status = SaneManagerClient::GetInstance()->SaneInit();
-    if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("SaneInit failed, status: [%{public}u]", status);
-        return ScanServiceUtils::ConvertErro(status);
-    }
-
-    DelayedSingleton<ScanUsbManager>::GetInstance()->Init();
-    return E_SCAN_NONE;
 }
 
 bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId)
