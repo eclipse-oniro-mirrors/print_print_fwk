@@ -262,17 +262,12 @@ int32_t ScanServiceAbility::InitScan()
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-    ExitScan();
-    SCAN_HILOGI("ScanServiceAbility InitScan start");
-    SaneStatus status = SaneManagerClient::GetInstance()->SaneInit();
-    if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("SaneInit failed, status: [%{public}u]", status);
-        return ScanServiceUtils::ConvertErro(status);
+    std::lock_guard<std::mutex> autoLock(lock_);
+    if (appCount_ == 0) {
+        InitializeScanService();
     }
-    DelayedSingleton<ScanUsbManager>::GetInstance()->Init();
-    ScanSystemData::GetInstance().Init();
-    ScanMdnsService::OnStartDiscoverService();
-    SCAN_HILOGI("ScanServiceAbility InitScan end");
+    appCount_++;
+    SCAN_HILOGD("appCount = %{public}d", appCount_);
     return E_SCAN_NONE;
 }
 
@@ -283,7 +278,26 @@ int32_t ScanServiceAbility::ExitScan()
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-    SCAN_HILOGI("ScanServiceAbility ExitScan start");
+    std::lock_guard<std::mutex> autoLock(lock_);
+    appCount_ = appCount_ - 1 >= 0 ? appCount_ - 1 : 0;
+    SCAN_HILOGD("appCount = %{public}d", appCount_);
+    if (appCount_ == 0) {
+        CleanupScanService();
+        UnloadSystemAbility();
+    }
+    return E_SCAN_NONE;
+}
+
+void ScanServiceAbility::InitializeScanService()
+{
+    SaneManagerClient::GetInstance()->SaneInit();
+    DelayedSingleton<ScanUsbManager>::GetInstance()->Init();
+    ScanSystemData::GetInstance().Init();
+    ScanMdnsService::OnStartDiscoverService();
+}
+
+void ScanServiceAbility::CleanupScanService()
+{
     std::lock_guard<std::mutex> autoLock(lock_);
     for (const auto& scannerId : openedScannerList_) {
         SaneManagerClient::GetInstance()->SaneCancel(scannerId);
@@ -305,8 +319,6 @@ int32_t ScanServiceAbility::ExitScan()
         }
     }
     imageFdMap_.clear();
-    SCAN_HILOGI("ScanServiceAbility ExitScan end");
-    return E_SCAN_NONE;
 }
 
 int32_t ScanServiceAbility::ReInitScan()
@@ -518,7 +530,8 @@ int32_t ScanServiceAbility::GetScannerList()
         SCAN_HILOGW("is working");
         return E_SCAN_DEVICE_BUSY;
     }
-    InitScan();
+    CleanupScanService();
+    InitializeScanService();
     SCAN_HILOGD("ScanServiceAbility GetScannerList start");
     std::lock_guard<std::mutex> autoLock(lock_);
     auto exec_sane_getscaner = [=]() {

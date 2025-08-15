@@ -114,6 +114,8 @@ private:
     void AddFoundScanner(ScanDeviceInfo& info);
     void CleanUpAfterScan(int32_t scanStatus);
     int32_t RestartScan(const std::string &scannerId);
+    void InitializeScanService();
+    void CleanupScanService();
     std::set<std::string> openedScannerList_;
     ServiceRunningState state_;
     std::mutex lock_;

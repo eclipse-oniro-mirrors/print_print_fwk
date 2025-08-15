@@ -70,18 +70,7 @@ int32_t ScanServiceStub::OnRemoteRequest(
 bool ScanServiceStub::OnInitScan(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnInitScan start");
-    int32_t ret = E_SCAN_RPC_FAILURE;
-    {
-        std::lock_guard<std::mutex> autoLock(lock_);
-        ScanServiceAbility::appCount_++;
-        SCAN_HILOGI("ScanServiceAbility::appCount_= %{public}d", ScanServiceAbility::appCount_);
-    }
-    if (isSaneInit_) {
-        SCAN_HILOGW("is isSaneInit_ed");
-        return true;
-    }
-    ret = InitScan();
-    isSaneInit_ = true;
+    int32_t ret = InitScan();
     reply.WriteInt32(ret);
     SCAN_HILOGI("ScanServiceStub::OnInitScan end");
     return ret == E_SCAN_NONE;
@@ -90,24 +79,10 @@ bool ScanServiceStub::OnInitScan(MessageParcel &data, MessageParcel &reply)
 bool ScanServiceStub::OnExitScan(MessageParcel &data, MessageParcel &reply)
 {
     SCAN_HILOGI("ScanServiceStub::OnExitScan start");
-    auto scanServiceAbilityPtr = ScanServiceAbility::GetInstance();
-    if (scanServiceAbilityPtr == nullptr) {
-        SCAN_HILOGE("scanServiceAbilityPtr is a nullptr");
-        reply.WriteInt32(E_SCAN_GENERIC_FAILURE);
-        return false;
-    }
-    {
-        std::lock_guard<std::mutex> autoLock(lock_);
-        ScanServiceAbility::appCount_ = ScanServiceAbility::appCount_ - 1 >= 0 ? ScanServiceAbility::appCount_ - 1 : 0;
-        SCAN_HILOGI("appCount = %{public}d", ScanServiceAbility::appCount_);
-        if (ScanServiceAbility::appCount_ == 0) {
-            SCAN_HILOGI("connected app number = 0, start unloadSA");
-            scanServiceAbilityPtr->UnloadSystemAbility();
-        }
-    }
-    reply.WriteInt32(E_SCAN_NONE);
+    int32_t ret = ExitScan();
+    reply.WriteInt32(ret);
     SCAN_HILOGI("ScanServiceStub::OnExitScan end");
-    return true;
+    return ret == E_SCAN_NONE;
 }
 
 bool ScanServiceStub::OnGetScannerList(MessageParcel &data, MessageParcel &reply)
