@@ -178,19 +178,14 @@ ani_object AniPrintJobHelper::CreatePrintJobArray(ani_env *env, const std::vecto
     PRINT_HILOGI("enter CreatePrintJobArray");
 
     ani_object arrayObj = {};
-    ani_class cls;
-    if (ANI_OK != env->FindClass(CLASS_NAME, &cls)) {
-        PRINT_HILOGE("[ANI] find class fail");
-        return arrayObj;
-    }
 
     ani_ref undefinedRef = nullptr;
     if (ANI_OK != env->GetUndefined(&undefinedRef)) {
         PRINT_HILOGE("GetUndefined Failed");
         return arrayObj;
     }
-    ani_array_ref arrayRef;
-    if (ANI_OK != env->Array_New_Ref(cls, jobs.size(), undefinedRef, &arrayRef)) {
+    ani_array arrayRef;
+    if (ANI_OK != env->Array_New(jobs.size(), undefinedRef, &arrayRef)) {
         PRINT_HILOGE("Create Array Failed");
         return arrayObj;
     }
@@ -198,7 +193,7 @@ ani_object AniPrintJobHelper::CreatePrintJobArray(ani_env *env, const std::vecto
 
     for (size_t i = 0; i < jobs.size(); i++) {
         ani_object jobObj = CreatePrintJob(env, jobs[i]);
-        if (ANI_OK != env->Array_Set_Ref(arrayRef, i, jobObj)) {
+        if (ANI_OK != env->Array_Set(arrayRef, i, jobObj)) {
             PRINT_HILOGE("Set Array Element Failed");
             return arrayObj;
         }
