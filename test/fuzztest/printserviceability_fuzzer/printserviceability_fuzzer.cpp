@@ -140,6 +140,25 @@ void TestCancelPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *da
     PrintServiceAbility::GetInstance()->CancelPrintJob(jobId);
 }
 
+void TestRestartPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->RestartPrintJob(jobId);
+}
+
+void TestFlushCacheFileToUserData(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->FlushCacheFileToUserData(jobId);
+    PrintServiceAbility::GetInstance()->DeleteCacheFileFromUserData(jobId);
+    std::vector<uint32_t> fdList = {};
+    PrintServiceAbility::GetInstance()->OpenCacheFileFd(jobId, fdList);
+    for (uint32_t fd : fdList) {
+        if (static_cast<int32_t>(fd) > 0) {
+            close(fd);
+        }
+    }
+}
 void TestAddPrinters(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrinterInfo printerInfo;
@@ -184,6 +203,22 @@ void TestUpdatePrintJobStateOnlyForSystemApp(const uint8_t *data, size_t size, F
     uint32_t state = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     uint32_t subState = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     PrintServiceAbility::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(jobId, state, subState);
+}
+
+void TestUpdatePrintJobStateForNormalApp(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    uint32_t state = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    uint32_t subState = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->UpdatePrintJobStateForNormalApp(jobId, state, subState);
+}
+
+void TestUnregisterPrintTaskCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    uint32_t state = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    uint32_t subState = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->UnregisterPrintTaskCallback(jobId, state, subState);
 }
 
 void TestUpdateExtensionInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -285,6 +320,21 @@ void TestQueryAllActivePrintJob(const uint8_t *data, size_t size, FuzzedDataProv
     PrintServiceAbility::GetInstance()->QueryAllActivePrintJob(printJobs);
 }
 
+void TestQueryAllPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintJob printJob;
+    printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::vector<uint32_t> files = {0};
+    printJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printJob.SetPageSize(pageSize);
+    printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::vector<PrintJob> printJobs;
+    printJobs.push_back(printJob);
+    PrintServiceAbility::GetInstance()->QueryAllPrintJob(printJobs);
+}
+
 void TestQueryPrintJobById(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintJob printJob;
@@ -297,6 +347,20 @@ void TestQueryPrintJobById(const uint8_t *data, size_t size, FuzzedDataProvider 
     printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     std::string printJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->QueryPrintJobById(printJobId, printJob);
+}
+
+void TestQueryQueuedPrintJobById(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintJob printJob;
+    printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::vector<uint32_t> files = {0};
+    printJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printJob.SetPageSize(pageSize);
+    printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::string printJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->QueryQueuedPrintJobById(printJobId, printJob);
 }
 
 void TestAddPrinterToCups(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -409,6 +473,18 @@ void TestDiscoverUsbPrinters(const uint8_t *data, size_t size, FuzzedDataProvide
     PrintServiceAbility::GetInstance()->DiscoverUsbPrinters(printers);
 }
 
+void TestDiscoverBackendPrinters(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    std::vector<PrinterInfo> printers;
+    printers.push_back(printerInfo);
+    PrintServiceAbility::GetInstance()->DiscoverBackendPrinters(printers);
+}
+
 void TestStartNativePrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintJob testJob;
@@ -498,6 +574,14 @@ void TestCancelUserPrintJobs(const uint8_t *data, size_t size, FuzzedDataProvide
     want.SetElementName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH),
         dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     PrintServiceAbility::GetInstance()->StartPluginPrintIconExtAbility(want);
+}
+
+void TestBlockUserPrintJobs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->BlockUserPrintJobs(userId);
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->RestartPrintJob(jobId);
 }
 
 void TestSendExtensionEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -604,7 +688,7 @@ void TestNotifyAppJobQueueChanged(const uint8_t *data, size_t size, FuzzedDataPr
 
 void TestSendPrinterChangeEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    int event = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    int event = dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER);
     PrinterInfo printerInfo;
     printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
@@ -625,8 +709,10 @@ void TestCheckJobQueueBlocked(const uint8_t *data, size_t size, FuzzedDataProvid
 
 void TestGetListeningState(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    uint32_t subState = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    uint32_t subState = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
     PrintServiceAbility::GetInstance()->GetListeningState(subState);
+    uint32_t state = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->GetListeningState(state, subState);
 }
 
 void TestChangeDefaultPrinterForDelete(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -756,6 +842,21 @@ void TestAddVendorPrinterToCupsWithPpd(const uint8_t *data, size_t size, FuzzedD
     std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string ppdData = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->AddVendorPrinterToCupsWithPpd(globalVendorName, printerId, ppdName, ppdData);
+}
+
+void TestDoAddPrinterToCupsEnable(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdData = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterId(printerId);
+    printerInfo->SetPrinterName(printerName);
+    PrintServiceAbility::GetInstance()->DoAddPrinterToCupsEnable(printerUri, printerName,
+        printerInfo, ppdName, ppdData);
+    PrintServiceAbility::GetInstance()->OnPrinterAddedToCups(printerInfo, ppdName);
 }
 
 void TestRemoveVendorPrinterFromCups(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -901,6 +1002,58 @@ void TestConnectUsbPrinter(const uint8_t *data, size_t size, FuzzedDataProvider 
     PrintServiceAbility::GetInstance()->ConnectUsbPrinter(printerId);
 }
 
+void TestClosePrintJobFd(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId(jobId);
+    printJob->SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrintServiceAbility::GetInstance()->ClosePrintJobFd(printJob);
+}
+
+void TestTryConnectPrinterByIp(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->TryConnectPrinterByIp(printerId);
+}
+
+void TestAddPrintJobToHistoryList(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId(jobId);
+    printJob->SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrintServiceAbility::GetInstance()->AddPrintJobToHistoryList(printJob);
+    PrintServiceAbility::GetInstance()->DeletePrintJobFromHistoryList(jobId);
+}
+
+void TestDeletePrintJobFromHistoryList(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetJobId(jobId);
+    printJob->SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrintServiceAbility::GetInstance()->DeletePrintJobFromHistoryList(jobId);
+}
+
+void TestRefreshPrinterPageSize(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
+    PrintServiceAbility::GetInstance()->RefreshPrinterPageSize(printerInfo);
+}
+
+void TestIsAppAlive(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string bundleName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    int32_t pid = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->IsAppAlive(bundleName, pid);
+}
+
+
 void TestNoParmFuncs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -928,6 +1081,7 @@ void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *data
     TestUpdateVendorPrinterToDiscovery(data, size, dataProvider);
     TestRemoveVendorPrinterFromDiscovery(data, size, dataProvider);
     TestAddVendorPrinterToCupsWithPpd(data, size, dataProvider);
+    TestDoAddPrinterToCupsEnable(data, size, dataProvider);
     TestRemoveVendorPrinterFromCups(data, size, dataProvider);
     TestOnVendorStatusUpdate(data, size, dataProvider);
     TestQueryVendorPrinterInfo(data, size, dataProvider);
@@ -939,6 +1093,11 @@ void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *data
     TestCheckUserIdInEventType(data, size, dataProvider);
     TestCallSpooler(data, size, dataProvider);
     TestReportPrinterIdle(data, size, dataProvider);
+    TestTryConnectPrinterByIp(data, size, dataProvider);
+    TestAddPrintJobToHistoryList(data, size, dataProvider);
+    TestDeletePrintJobFromHistoryList(data, size, dataProvider);
+    TestRefreshPrinterPageSize(data, size, dataProvider);
+    TestIsAppAlive(data, size, dataProvider);
     TestQueryPPDInformation(data, size, dataProvider);
     TestStartPrintJobInternal(data, size, dataProvider);
 }
@@ -946,6 +1105,7 @@ void TestMoreFunction(const uint8_t *data, size_t size, FuzzedDataProvider *data
 void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestDiscoverUsbPrinters(data, size, dataProvider);
+    TestDiscoverBackendPrinters(data, size, dataProvider);
     TestStartNativePrintJob(data, size, dataProvider);
     TestNotifyPrintServiceEvent(data, size, dataProvider);
     TestUpdateQueuedJobList(data, size, dataProvider);
@@ -956,6 +1116,7 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
     TestIsQueuedJobListEmpty(data, size, dataProvider);
     TestSetPrintJobCanceled(data, size, dataProvider);
     TestCancelUserPrintJobs(data, size, dataProvider);
+    TestBlockUserPrintJobs(data, size, dataProvider);
     TestSendExtensionEvent(data, size, dataProvider);
     TestNotifyAdapterJobChanged(data, size, dataProvider);
     TestRegisterAdapterListener(data, size, dataProvider);
@@ -975,6 +1136,7 @@ void TestNotPublicFunction(const uint8_t *data, size_t size, FuzzedDataProvider 
     TestUpdatePageSizeNameWithPrinterInfo(data, size, dataProvider);
     TestUpdatePrintJobOptionWithPrinterPreferences(data, size, dataProvider);
     TestConnectUsbPrinter(data, size, dataProvider);
+    TestClosePrintJobFd(data, size, dataProvider);
     TestMoreFunction(data, size, dataProvider);
     TestNoParmFuncs(data, size, dataProvider);
 }
@@ -989,11 +1151,15 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestQueryAllExtension(data, size, dataProvider);
     TestStartPrintJob(data, size, dataProvider);
     TestCancelPrintJob(data, size, dataProvider);
+    TestRestartPrintJob(data, size, dataProvider);
+    TestFlushCacheFileToUserData(data, size, dataProvider);
     TestAddPrinters(data, size, dataProvider);
     TestRemovePrinters(data, size, dataProvider);
     TestUpdatePrinters(data, size, dataProvider);
     TestUpdatePrinterState(data, size, dataProvider);
     TestUpdatePrintJobStateOnlyForSystemApp(data, size, dataProvider);
+    TestUpdatePrintJobStateForNormalApp(data, size, dataProvider);
+    TestUnregisterPrintTaskCallback(data, size, dataProvider);
     TestUpdateExtensionInfo(data, size, dataProvider);
     TestRequestPreview(data, size, dataProvider);
     TestQueryPrinterCapability(data, size, dataProvider);
@@ -1002,7 +1168,9 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestCallback(data, size, dataProvider);
     TestLoadExtSuccess(data, size, dataProvider);
     TestQueryAllActivePrintJob(data, size, dataProvider);
+    TestQueryAllPrintJob(data, size, dataProvider);
     TestQueryPrintJobById(data, size, dataProvider);
+    TestQueryQueuedPrintJobById(data, size, dataProvider);
     TestAddPrinterToCups(data, size, dataProvider);
     TestQueryPrinterCapabilityByUri(data, size, dataProvider);
     TestPrintByAdapter(data, size, dataProvider);

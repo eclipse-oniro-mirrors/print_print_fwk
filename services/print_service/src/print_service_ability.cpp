@@ -1607,7 +1607,7 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
     return E_PRINT_NONE;
 }
 
-void PrintServiceAbility::ClosePrintJobFd(std::shared_ptr<PrintJob> printJob)
+void PrintServiceAbility::ClosePrintJobFd(const std::shared_ptr<PrintJob> &printJob)
 {
     if (printJob == nullptr) {
         PRINT_HILOGE("printJob is nullptr.");
