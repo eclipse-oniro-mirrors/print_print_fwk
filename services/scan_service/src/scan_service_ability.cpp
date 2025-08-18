@@ -456,17 +456,14 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo& info)
 
 void ScanServiceAbility::SaneGetScanner()
 {
-    std::lock_guard<std::mutex> autoLock(lock_);
     clearMapLock_.lock();
     saneGetTcpDeviceInfoMap.clear();
     saneGetUsbDeviceInfoMap.clear();
     clearMapLock_.unlock();
-    g_scannerState = SCANNER_SEARCHING;
     std::vector<SaneDevice> deviceInfos;
     SaneStatus status = SaneManagerClient::GetInstance()->SaneGetDevices(deviceInfos);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneGetDevices failed, ret: [%{public}u]", status);
-        g_scannerState = SCANNER_READY;
         return;
     }
     for (const auto& device: deviceInfos) {
@@ -488,7 +485,6 @@ void ScanServiceAbility::SaneGetScanner()
         deviceInfos_.emplace_back(t.second);
     }
     clearMapLock_.unlock();
-    g_scannerState = SCANNER_READY;
 }
 
 int32_t ScanServiceAbility::GetScannerList()
