@@ -59,7 +59,7 @@ void PrintModalUICallback::OnRelease(int32_t releaseCode)
 
     this->isResultForModal = true;
 
-    this->baseContext->errorMessage.code = E_PRINT_SERVER_FAILURE;
+    this->baseContext->errorMessage.code = releaseCode;
     SendMessageBack();
     return;
 }
@@ -154,6 +154,9 @@ void PrintModalUICallback::SendMessageBack()
         delete work;
         work = nullptr;
         return;
+    }
+    if (this->baseContext->callback != nullptr && this->baseContext->jsCallback != nullptr) {
+        napi_create_reference(this->baseContext->env, this->baseContext->jsCallback, 1, &printBaseContext->callback);
     }
     work->data = reinterpret_cast<void*>(printBaseContext);
 
