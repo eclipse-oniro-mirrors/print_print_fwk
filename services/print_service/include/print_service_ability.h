@@ -269,7 +269,6 @@ private:
     std::map<int32_t, std::string> callerMap_;
     bool unloadThread = false;
     std::recursive_mutex callerMapMutex_;
-
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_SYSTEM_ABILITY_H

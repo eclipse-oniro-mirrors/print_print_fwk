@@ -60,8 +60,6 @@ const uint32_t MAX_JOBQUEUE_NUM = 512;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t INIT_INTERVAL = 5000L;
 const int32_t UID_TRANSFORM_DIVISOR = 200000;
-const std::int32_t START_USER_ID = 100;
-const std::int32_t MAX_USER_ID = 1099;
 const uint32_t CHECK_CALLER_APP_INTERVAL = 60;
 
 const uint32_t INDEX_ZERO = 0;
@@ -1246,7 +1244,7 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
     }
 
     int32_t userId = GetCurrentUserId();
-    if (userId == E_PRINT_INVALID_USERID) {
+    if (userId == INVALID_USER_ID) {
         PRINT_HILOGE("Invalid user id.");
         return;
     }
@@ -2061,7 +2059,7 @@ void PrintServiceAbility::CallerAppsMonitor()
                     iter = callerMap_.erase(iter);
                 }
             }
-            PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
+            PRINT_HILOGI("callerMap size: %{public}zu", callerMap_.size());
         }
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
     } while (callerMap_.size() != 0 || queuedJobList_.size() != 0 || !UnloadSystemAbility());
@@ -2685,7 +2683,7 @@ bool PrintServiceAbility::StartPluginPrintIconExtAbility(const AAFwk::Want &want
 std::shared_ptr<PrintUserData> PrintServiceAbility::GetCurrentUserData()
 {
     int32_t userId = GetCurrentUserId();
-    if (userId == E_PRINT_INVALID_USERID) {
+    if (userId == INVALID_USER_ID) {
         PRINT_HILOGE("Invalid user id.");
         return nullptr;
     }
@@ -2705,15 +2703,18 @@ std::shared_ptr<PrintUserData> PrintServiceAbility::GetCurrentUserData()
 int32_t PrintServiceAbility::GetCurrentUserId()
 {
     int32_t userId = IPCSkeleton::GetCallingUid() / UID_TRANSFORM_DIVISOR;
+    if (userId <= 0 && helper_ != nullptr) {
+        PRINT_HILOGD("print sa calling, use current active userId");
+        std::vector<int32_t> userIds;
+        helper_->QueryAccounts(userIds);
+        if (userIds.empty()) {
+            PRINT_HILOGE("get use current active userId failed");
+            userId = -1;
+        } else {
+            userId = userIds[0];
+        }
+    }
     PRINT_HILOGI("Current userId = %{public}d", userId);
-    if (userId < START_USER_ID) {
-        PRINT_HILOGE("id %{public}d is system reserved", userId);
-        return E_PRINT_INVALID_USERID;
-    }
-    if (userId > MAX_USER_ID) {
-        PRINT_HILOGE("id %{public}d is out of range", userId);
-        return E_PRINT_INVALID_USERID;
-    }
     return userId;
 }
 
@@ -2756,7 +2757,7 @@ void PrintServiceAbility::UpdatePrintUserMap()
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     int32_t userId = GetCurrentUserId();
-    if (userId == E_PRINT_INVALID_USERID) {
+    if (userId == INVALID_USER_ID) {
         PRINT_HILOGE("Invalid user id.");
         return;
     }
