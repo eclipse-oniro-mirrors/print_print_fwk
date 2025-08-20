@@ -679,7 +679,6 @@ void TestSendPrinterChangeEvent(const uint8_t *data, size_t size, FuzzedDataProv
     printerInfo.SetPrinterState(dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER));
     PrintServiceAbility::GetInstance()->SendPrinterChangeEvent(event, printerInfo);
     PrintServiceAbility::GetInstance()->DestroyExtension();
-    PrintServiceAbility::GetInstance()->ReduceAppCount();
 }
 
 void TestCheckJobQueueBlocked(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

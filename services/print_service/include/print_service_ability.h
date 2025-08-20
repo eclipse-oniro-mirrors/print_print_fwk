@@ -36,6 +36,8 @@
 #include "print_system_data.h"
 #include "print_attribute_preference.h"
 #include "vendor_manager.h"
+#include "singleton.h"
+#include "app_mgr_client.h"
 
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
@@ -160,8 +162,6 @@ private:
     std::shared_ptr<PrintUserData> GetUserDataByJobId(const std::string jobId);
     bool IsQueuedJobListEmpty(const std::string &jobId);
     void SetPrintJobCanceled(PrintJob &jobinfo);
-    void UnloadSystemAbility();
-    void ReduceAppCount();
     void InitPreferenceMap();
     bool WritePreferenceToFile();
     bool WritePrinterPreference(const std::string &printerId, PrinterCapability &printerCaps);
@@ -173,6 +173,7 @@ private:
         std::vector<std::string>& optAttrs);
     void BuildPrinterAttrComponentByJson(std::string& key, nlohmann::json& jsonArrObject,
         std::vector<std::string> &printerAttrs);
+    bool UnloadSystemAbility();
     bool CheckIsDefaultPrinter(const std::string &printerId);
     bool CheckIsLastUsedPrinter(const std::string &printerId);
     void SetLastUsedPrinter(const std::string &printerId);
@@ -196,6 +197,12 @@ private:
     bool UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri);
     int32_t HandleExtensionConnectPrinter(const std::string &printerId);
     bool CheckUserIdInEventType(const std::string &type);
+    sptr<AppExecFwk::IAppMgr> GetAppManager();
+    bool IsAppAlive(const std::string &bundleName, int32_t pid);
+    void CallerAppsMonitor();
+    void StartUnloadThread();
+    std::vector<AppExecFwk::RunningProcessInfo> GetRunningProcessInformation(const std::string &bundleName);
+
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
@@ -255,11 +262,14 @@ private:
     std::map<std::string, int32_t> userJobMap_;
     int32_t currentUserId_;
 
-    uint32_t printAppCount_;
-    uint32_t unloadCount_;
     std::map<std::string, std::string> printerIdAndPreferenceMap_;
     std::recursive_mutex printerPreferenceMapMutex_;
     VendorManager vendorManager;
+
+    std::map<int32_t, std::string> callerMap_;
+    bool unloadThread = false;
+    std::recursive_mutex callerMapMutex_;
+
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_SYSTEM_ABILITY_H
