@@ -135,10 +135,10 @@ bool PrintAniCallback::OnCallbackAdapterLayout(const std::string &jobId,
 }
 
 
-bool PrintAniCallback::onCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
+bool PrintAniCallback::OnCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
                                                         const uint32_t subState)
 {
-    PRINT_HILOGI("PrintCallback onCallbackAdapterJobStateChanged Notification in, jobId:%{public}s subState:%{public}d",
+    PRINT_HILOGI("PrintCallback OnCallbackAdapterJobStateChanged Notification in, jobId:%{public}s subState:%{public}d",
                  jobId.c_str(), subState);
     if (aniVm_ != nullptr && aniCallback_ != nullptr) {
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
