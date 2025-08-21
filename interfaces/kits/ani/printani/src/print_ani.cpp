@@ -749,8 +749,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_ERROR;
     }
 
-    ani_namespace ns;
-    const char* targetNamespace = "C{@ohos.print.print}";
+    ani_namespace ns {};
+    const char* targetNamespace = "@ohos.print.print";
     status = env->FindNamespace(targetNamespace, &ns);
     if (status != ANI_OK) {
         PRINT_HILOGE("FindNamespace failed");
