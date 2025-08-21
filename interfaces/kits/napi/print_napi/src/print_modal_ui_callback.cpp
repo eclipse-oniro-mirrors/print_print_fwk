@@ -155,9 +155,6 @@ void PrintModalUICallback::SendMessageBack()
         work = nullptr;
         return;
     }
-    if (this->baseContext->callback != nullptr && this->baseContext->jsCallback != nullptr) {
-        napi_create_reference(this->baseContext->env, this->baseContext->jsCallback, 1, &printBaseContext->callback);
-    }
     work->data = reinterpret_cast<void*>(printBaseContext);
 
     int ret = uv_queue_work(

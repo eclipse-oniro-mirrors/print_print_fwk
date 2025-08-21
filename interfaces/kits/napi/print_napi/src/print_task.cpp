@@ -200,12 +200,11 @@ uint32_t PrintTask::CallSpooler(
 
     if (argc == argMaxNum) {
         napi_valuetype valueType = napi_undefined;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[callBackIndex], &valueType), napi_undefined);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[callBackIndex], &valueType), E_PRINT_INVALID_PARAMETER);
         if (valueType == napi_function) {
             PRINT_CALL_BASE(env, napi_create_reference(env, argv[callBackIndex], 1, &asyncContext->callback),
                 E_PRINT_INVALID_PARAMETER);
             PRINT_HILOGD("is a callback api");
-            asyncContext->jsCallback = argv[callBackIndex];
         }
     } else {
         PRINT_CALL_BASE(env, napi_create_promise(env, &asyncContext->deferred, &result), E_PRINT_INVALID_PARAMETER);
