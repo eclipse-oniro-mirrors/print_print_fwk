@@ -1474,9 +1474,8 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize,
             scanStatus = E_SCAN_NO_MEM;
             return false;
         }
-        int ret = memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(),
-            saneReadBuf + i, parm.GetBytesPerLine() - jpegrow);
-        if (ret != ERR_OK) {
+        if (memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(), saneReadBuf + i, parm.GetBytesPerLine() - jpegrow)
+            != ERR_OK) {
             scanStatus = E_SCAN_GENERIC_FAILURE;
             SCAN_HILOGE("memcpy_s failed");
             return false;

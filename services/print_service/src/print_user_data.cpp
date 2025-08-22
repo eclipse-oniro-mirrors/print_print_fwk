@@ -736,7 +736,7 @@ void PrintUserData::FlushPrintHistoryJobFile(const std::string &printerId)
         return;
     }
     PRINT_HILOGI("FlushPrintHistoryJobFile End.");
-    if (writeLength < 0 || writeLength != jsonLength) {
+    if (writeLength != jsonLength) {
         PRINT_HILOGE("SavePrintHistoryJobFile error");
     }
 }
