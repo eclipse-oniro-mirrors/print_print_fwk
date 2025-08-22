@@ -100,6 +100,7 @@ private:
     void GetPicFrame(const std::string scannerId,
         int32_t &scanStatus, ScanParameters &parm);
     bool WritePicData(int &jpegrow, int32_t curReadSize, ScanParameters &parm, int32_t &scanStatus);
+    bool ProcessFullLines(int &jpegrow, int &i, int &left, ScanParameters &parm, int32_t &scanStatus);
     void GeneratePictureBatch(const std::string &scannerId);
     void GeneratePictureSingle(const std::string &scannerId);
     bool GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId);
