@@ -1507,7 +1507,6 @@ bool ScanServiceAbility::ProcessFullLines(int &jpegrow, int &i, int &left, ScanP
 bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize,
     ScanParameters &parm, int32_t &scanStatus)
 {
-    constexpr int bit = 1;
     int i = 0;
     int left = curReadSize;
     while (jpegrow + left >= parm.GetBytesPerLine()) {
