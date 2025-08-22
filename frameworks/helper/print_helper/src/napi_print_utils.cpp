@@ -372,15 +372,6 @@ void NapiPrintUtils::SetBooleanProperty(napi_env env, napi_value object, const s
     napi_set_named_property(env, object, name.c_str(), jsValue);
 }
 
-/* define properties */
-void NapiPrintUtils::DefineProperties(
-    napi_env env, napi_value object, const std::initializer_list<napi_property_descriptor> &properties)
-{
-    std::vector<napi_property_descriptor> descriptors(properties.begin(), properties.end());
-
-    (void)napi_define_properties(env, object, properties.size(), descriptors.data());
-}
-
 std::string NapiPrintUtils::GetValueString(napi_env env, napi_value value)
 {
     if (value == nullptr) {
