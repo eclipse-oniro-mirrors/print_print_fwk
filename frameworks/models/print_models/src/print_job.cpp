@@ -107,11 +107,7 @@ void PrintJob::SetJobState(uint32_t jobState)
 
 void PrintJob::SetSubState(uint32_t subState)
 {
-    if (jobState_ == PRINT_JOB_COMPLETED && subState <= PRINT_JOB_COMPLETED_FILE_CORRUPT) {
-        subState_ = subState;
-    } else {
-        subState_ = subState;
-    }
+    subState_ = subState;
 }
 
 void PrintJob::SetCopyNumber(uint32_t copyNumber)

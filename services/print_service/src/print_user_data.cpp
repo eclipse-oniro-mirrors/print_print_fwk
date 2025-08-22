@@ -399,7 +399,7 @@ bool PrintUserData::GetFileData(std::string &fileData)
         size_t jsonLength = fileData.length();
         size_t writeLength = fwrite(fileData.c_str(), 1, strlen(fileData.c_str()), file);
         int fcloseResult = fclose(file);
-        if (fcloseResult != 0 || writeLength < 0 || writeLength != jsonLength) {
+        if (fcloseResult != 0 || writeLength != jsonLength) {
             PRINT_HILOGE("File Operation Failure.");
             return false;
         }
@@ -446,7 +446,7 @@ bool PrintUserData::SetUserDataToFile()
         size_t jsonLength = jsonString.length();
         size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
         int fcloseResult = fclose(file);
-        if (fcloseResult != 0 || writeLength < 0) {
+        if (fcloseResult != 0) {
             PRINT_HILOGE("File Operation Failure.");
             return false;
         }

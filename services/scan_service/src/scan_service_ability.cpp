@@ -1489,6 +1489,10 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize,
             continue;
         }
         constexpr int byteBits = 8;
+        if (parm.GetBytesPerLine() > SIZE_MAX / byteBits) {
+            SCAN_HILOGE("nultiplication would overflow");
+            return false;
+        }
         JSAMPLE *buf8 = (JSAMPLE *)malloc(parm.GetBytesPerLine() * byteBits);
         if (buf8 == nullptr) {
             scanStatus = E_SCAN_GENERIC_FAILURE;

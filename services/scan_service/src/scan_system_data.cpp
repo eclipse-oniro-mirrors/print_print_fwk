@@ -317,11 +317,6 @@ bool ScanSystemData::SaveScannerMap()
         return false;
     }
     SCAN_HILOGI("SaveScannerMap finished");
-    if (writeLength < 0) {
-        SCAN_HILOGW("Failed to open file errno: %{public}s", std::to_string(errno).c_str());
-        return false;
-    }
-
     return writeLength == jsonLength;
 }
 
