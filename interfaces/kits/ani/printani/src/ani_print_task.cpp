@@ -85,6 +85,10 @@ int32_t AniPrintTask::StartPrintWithAttributes(const std::string& jobName, std::
 {
     std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext =
         OHOS::AbilityRuntime::Context::ConvertTo<OHOS::AbilityRuntime::AbilityContext>(ctx);
+    if (abilityContext == nullptr) {
+        PRINT_HILOGE("abilityContext is a nullptr");
+        return E_PRINT_GENERIC_FAILURE;
+    }
     sptr<IRemoteObject> callerToken = abilityContext->GetToken();
     std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
     adapterParam->documentName = jobName;
