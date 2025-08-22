@@ -100,6 +100,7 @@ private:
     bool ParseJsonObjectToPrintJob(const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob);
     void InitPrintHistoryJobList(const std::string &printerId);
     bool CheckOptionalParam(const Json::Value &jsonObject, const std::string &param);
+    void deleteOldestHistoryPrintJob();
 
 public:
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
@@ -115,7 +116,7 @@ private:
     deque<std::string> usedPrinterList_;
     std::recursive_mutex userDataMutex_;
     const uint32_t MAX_PRINTER_SIZE = 1000;
-    const uint32_t MAX_HISTORY_JOB_NUM = 500;
+    const uint32_t MAX_HISTORY_JOB_NUM = 100;
     std::map<std::string, std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>
         printHistoryJobList_;
 };

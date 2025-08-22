@@ -153,6 +153,7 @@ int32_t PrintUserData::QueryAllPrintJob(std::vector<std::string> printerIds, std
 {
     PRINT_HILOGI("QueryAllPrintJob Start.");
     printJobs.clear();
+    std::vector<std::string> jobIds;
     for (auto iter : jobOrderList_) {
         auto jobIt = queuedJobList_.find(iter.second);
         if (jobIt == queuedJobList_.end()) {
@@ -160,6 +161,7 @@ int32_t PrintUserData::QueryAllPrintJob(std::vector<std::string> printerIds, std
             continue;
         } else {
             if (jobIt->second != nullptr) {
+                jobIds.emplace_back((jobIt->second)->GetJobId());
                 printJobs.emplace_back(*jobIt->second);
             }
         }
@@ -172,7 +174,9 @@ int32_t PrintUserData::QueryAllPrintJob(std::vector<std::string> printerIds, std
             if (innerIt->second == nullptr) {
                 return E_PRINT_INVALID_PRINTJOB;
             }
-            printJobs.emplace_back(*(innerIt->second));
+            if (std::find(jobIds.begin(), jobIds.end(), innerIt->first) == jobIds.end()) {
+                printJobs.emplace_back(*(innerIt->second));
+            }
         }
     }
     PRINT_HILOGI("QueryAllPrintJob End.");
@@ -699,10 +703,36 @@ bool PrintUserData::AddPrintJobToHistoryList(const std::string &printerId,
         it = printerHistroyJobList->erase(it);
     }
     if ((printerHistroyJobList->insert(std::make_pair(jobId, printJob))).second) {
+        int32_t historyPrintJobNum = 0;
+        for (const auto& pair: printHistoryJobList_) {
+            historyPrintJobNum += pair.second->size();
+        }
+        if (historyPrintJobNum > MAX_HISTORY_JOB_NUM) {
+            deleteOldestHistoryPrintJob();
+        }
+        
         FlushPrintHistoryJobFile(printerId);
         return true;
     }
     return false;
+}
+
+void PrintUserData::deleteOldestHistoryPrintJob()
+{
+    if (printHistoryJobList_.empty()) {
+        return;
+    }
+    auto maxIt = printHistoryJobList_.begin();
+    size_t maxSize = maxIt->second ? maxIt->second->size() : 0;
+    for (auto it = printHistoryJobList_.begin(); it != printHistoryJobList_.end(); it++) {
+        if (it->second && it->second->size() > maxSize) {
+            maxIt = it;
+            maxSize = it->second->size();
+        }
+    }
+    if (maxIt->second && !maxIt->second->empty()) {
+        DeletePrintJobFromHistoryList(maxIt->first);
+    }
 }
 
 void PrintUserData::FlushPrintHistoryJobFile(const std::string &printerId)
