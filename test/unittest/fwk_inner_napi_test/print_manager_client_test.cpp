@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 #include <memory>
+#include <fcntl.h>
 #define private public
 #include "print_manager_client.h"
 #undef private
@@ -2426,9 +2427,10 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0129_NeedRename, TestSiz
 {
     std::string jobId = "1";
     PrintAttributes testPrintAttributes;
-    uint32_t fd = 0;
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    uint32_t fd = open("/dev/null", O_RDONLY);
+    PrintManagerClient::GetInstance()->LoadServerFail();
     int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, testPrintAttributes, fd);
+    close(fd);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
@@ -2583,24 +2585,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0143_NeedRename, TestSiz
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0144_NeedRename, TestSize.Level1)
 {
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    uint32_t event = 0;
-    std::string jobId = "jobId";
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyPrintServiceEvent(jobId, event);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0145_NeedRename, TestSize.Level1)
-{
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    uint32_t event = 0;
-    std::string jobId = "jobId";
-    int32_t ret = PrintManagerClient::GetInstance()->NotifyPrintServiceEvent(jobId, event);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0146_NeedRename, TestSize.Level1)
-{
     MockPrintManagerClient mockPrintManagerClient;
     uint32_t event = 0;
     std::string jobId = "jobId";
@@ -2645,6 +2629,24 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0146_NeedRename, TestSiz
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
     ret = mockPrintManagerClient.LoadExtSuccess(testExtensionId);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0145_NeedRename, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    uint32_t event = 0;
+    std::string jobId = "jobId";
+    int32_t ret = PrintManagerClient::GetInstance()->NotifyPrintServiceEvent(jobId, event);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0146_NeedRename, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    uint32_t event = 0;
+    std::string jobId = "jobId";
+    int32_t ret = PrintManagerClient::GetInstance()->NotifyPrintServiceEvent(jobId, event);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0147_NeedRename, TestSize.Level1)
