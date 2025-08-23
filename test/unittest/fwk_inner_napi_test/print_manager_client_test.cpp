@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 #include <memory>
+#include <fcntl.h>
 #define private public
 #include "print_manager_client.h"
 #undef private
@@ -2426,9 +2427,10 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0129_NeedRename, TestSiz
 {
     std::string jobId = "1";
     PrintAttributes testPrintAttributes;
-    uint32_t fd = 0;
+    uint32_t fd = open("/dev/null", O_RDONLY);
     PrintManagerClient::GetInstance()->LoadServerFail();
     int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, testPrintAttributes, fd);
+    close(fd);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
