@@ -332,7 +332,7 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
     constexpr size_t STRING_POS_ONE = 1;
     constexpr size_t STRING_POS_TWO = 2;
     constexpr size_t STRING_POS_THREE = 3;
-    if (tokens.size() < TOKEN_SIZE_FOUR || tokens[STRING_POST_ONE] != "libusb") {
+    if (tokens.size() < TOKEN_SIZE_FOUR || tokens[STRING_POS_ONE] != "libusb") {
         SCAN_HILOGE("parse [%{public}s] fail", deviceId.c_str());
         return false;
     }
