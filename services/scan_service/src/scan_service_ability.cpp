@@ -318,21 +318,15 @@ void ScanServiceAbility::CleanupScanService()
 
 bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId)
 {
-    std::vector<string> tokens;
-    char delimiter = ':';
-    size_t start = 0;
-    size_t end = deviceId.find(delimiter);
-    while (end != std::string::npos) {
-        tokens.push_back(deviceId.substr(start, end - start));
-        start = end + 1;
-        end = deviceId.find(delimiter, start);
+    std::vector<std::string> tokens = ScanUtil::ExtractIPOrPortFromUrl(deviceId, ':', 4);
+    if (tokens.empty()) {
+        SCAN_HILOGE("split [%{public}s] fail ", deviceId.c_str());
+        return false;
     }
-    tokens.push_back(deviceId.substr(start));
-    constexpr size_t TOKEN_SIZE_FOUR = 4;
     constexpr size_t STRING_POS_ONE = 1;
     constexpr size_t STRING_POS_TWO = 2;
     constexpr size_t STRING_POS_THREE = 3;
-    if (tokens.size() < TOKEN_SIZE_FOUR || tokens[STRING_POS_ONE] != "libusb") {
+    if (tokens[STRING_POS_ONE] != "libusb") {
         SCAN_HILOGE("parse [%{public}s] fail", deviceId.c_str());
         return false;
     }
@@ -359,19 +353,9 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
 
 bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string &ip)
 {
-    std::vector <std::string> tokens;
-    size_t start = 0;
-    char delimiter = ' ';
-    size_t end = deviceId.find(delimiter);
-    while (end != std::string::npos) {
-        tokens.push_back(deviceId.substr(start, end - start));
-        start = end + 1;
-        end = deviceId.find(delimiter, start);
-    }
-    tokens.push_back(deviceId.substr(start));
-    constexpr size_t TOKEN_SIZE_2 = 2;
-    if (tokens.size() < TOKEN_SIZE_2) {
-        SCAN_HILOGE("In TCP mode, the deviceId string format does not match, size < 2");
+    std::vector <std::string> tokens = ScanUtil::ExtractIPOrPortFromUrl(deviceId, ' ', 2);
+    if (tokens.empty()) {
+        SCAN_HILOGE("split [%{public}s] fail ", deviceId.c_str());
         return false;
     }
     constexpr size_t STRING_POS_ONE = 1;
