@@ -2474,6 +2474,10 @@ std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)
     }
     
     std::streamsize size = file.tellg();
+    if (size <= 0) {
+        PRINT_HILOGE("pdd file length error %{public}d ", size);
+        return "";
+    }
     file.seekg(0, std::ios::beg);
     
     std::vector<char> buffer(size);

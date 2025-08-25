@@ -328,12 +328,14 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
         end = deviceId.find(delimiter, start);
     }
     tokens.push_back(deviceId.substr(start));
-    if (tokens.size() < 4 || tokens[1] != "libusb") {
+    constexpr size_t TOKEN_SIZE_FOUR = 4;
+    constexpr size_t STRING_POS_ONE = 1;
+    constexpr size_t STRING_POS_TWO = 2;
+    constexpr size_t STRING_POS_THREE = 3;
+    if (tokens.size() < TOKEN_SIZE_FOUR || tokens[STRING_POST_ONE] != "libusb") {
         SCAN_HILOGE("parse [%{public}s] fail", deviceId.c_str());
         return false;
     }
-    constexpr size_t STRING_POS_TWO = 2;
-    constexpr size_t STRING_POS_THREE = 3;
     static const std::regex pattern(R"(([0-9]{3}))");
     if (!std::regex_match(tokens[STRING_POS_TWO], pattern) ||
         !std::regex_match(tokens[STRING_POS_THREE], pattern)) {
@@ -366,11 +368,13 @@ bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string
         end = deviceId.find(delimiter, start);
     }
     tokens.push_back(deviceId.substr(start));
-    if (tokens.size() < 2) {
+    constexpr size_t TOKEN_SIZE_2 = 2;
+    if (tokens.size() < TOKEN_SIZE_2) {
         SCAN_HILOGE("In TCP mode, the deviceId string format does not match, size < 2");
         return false;
     }
-    std::string rawIp = tokens[1];
+    constexpr size_t STRING_POS_ONE = 1;
+    std::string rawIp = tokens[STRING_POS_ONE];
     static const std::regex pattern(R"((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))");
     std::smatch match;
     if (std::regex_match(rawIp, match, pattern)) {
