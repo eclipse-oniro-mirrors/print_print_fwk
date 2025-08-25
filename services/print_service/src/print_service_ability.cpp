@@ -1880,7 +1880,7 @@ void PrintServiceAbility::CallerAppsMonitor()
         {
             std::lock_guard<std::recursive_mutex> lock(callerMapMutex_);
             for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
-                PRINT_HILOGD("check caller process, pid: %{public}d, bundleName: %{public}s",
+                PRINT_HILOGI("check caller process, pid: %{public}d, bundleName: %{public}s",
                     iter->first, iter->second.c_str());
                 if (IsAppAlive(iter->second, iter->first)) {
                     PRINT_HILOGI("app still alive");

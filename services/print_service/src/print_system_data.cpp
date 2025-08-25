@@ -364,7 +364,7 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
         return;
     }
     PRINT_HILOGI("SavePrinterFile finished");
-    if (writeLength < 0 || (size_t)writeLength != jsonLength) {
+    if (writeLength != jsonLength) {
         PRINT_HILOGE("SavePrinterFile error");
     }
 }
@@ -1230,7 +1230,7 @@ void PrintSystemData::SaveJsonFile(const std::string &fileName, const std::strin
         PRINT_HILOGE("Close file failure.");
         return;
     }
-    if (writeLength < 0 || (size_t)writeLength != jsonLength) {
+    if (writeLength != jsonLength) {
         PRINT_HILOGE("SaveJsonFile error.");
         return;
     }

@@ -1463,10 +1463,50 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId,
     }
 }
 
+bool ScanServiceAbility::ProcessFullLines(int &jpegrow, int &i, int &left, ScanParameters &parm, int32_t &scanStatus)
+{
+    constexpr int bit = 1;
+    if (memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(), saneReadBuf + i, parm.GetBytesPerLine() - jpegrow)
+        != ERR_OK) {
+        scanStatus = E_SCAN_GENERIC_FAILURE;
+        SCAN_HILOGE("memcpy_s failed");
+        return false;
+    }
+    if (parm.GetDepth() != 1) {
+        jpeg_write_scanlines(cinfoPtr, &jpegbuf, bit);
+        i += parm.GetBytesPerLine() - jpegrow;
+        left -= parm.GetBytesPerLine() - jpegrow;
+        jpegrow = 0;
+        return true;
+    }
+    constexpr int byteBits = 8;
+    if (parm.GetBytesPerLine() > SIZE_MAX / byteBits) {
+        SCAN_HILOGE("nultiplication would overflow");
+        return false;
+    }
+    JSAMPLE *buf8 = (JSAMPLE *)malloc(parm.GetBytesPerLine() * byteBits);
+    if (buf8 == nullptr) {
+        scanStatus = E_SCAN_GENERIC_FAILURE;
+        SCAN_HILOGE("pic buffer malloc fail");
+        return false;
+    }
+    for (int col1 = 0; col1 < parm.GetBytesPerLine(); col1++) {
+        for (int col8 = 0; col8 < byteBits; col8++) {
+            buf8[col1 * byteBits + col8] = jpegbuf[col1] & (1 << (byteBits - col8 - bit)) ? 0 : 0xff;
+        }
+    }
+    jpeg_write_scanlines(cinfoPtr, &buf8, bit);
+    free(buf8);
+    i += parm.GetBytesPerLine() - jpegrow;
+    left -= parm.GetBytesPerLine() - jpegrow;
+    jpegrow = 0;
+
+    return true;
+}
+
 bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize,
     ScanParameters &parm, int32_t &scanStatus)
 {
-    constexpr int bit = 1;
     int i = 0;
     int left = curReadSize;
     while (jpegrow + left >= parm.GetBytesPerLine()) {
@@ -1474,37 +1514,9 @@ bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize,
             scanStatus = E_SCAN_NO_MEM;
             return false;
         }
-        int ret = memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(),
-            saneReadBuf + i, parm.GetBytesPerLine() - jpegrow);
-        if (ret != ERR_OK) {
-            scanStatus = E_SCAN_GENERIC_FAILURE;
-            SCAN_HILOGE("memcpy_s failed");
+        if (!ProcessFullLines(jpegrow, i, left, parm, scanStatus)) {
             return false;
         }
-        if (parm.GetDepth() != 1) {
-            jpeg_write_scanlines(cinfoPtr, &jpegbuf, bit);
-            i += parm.GetBytesPerLine() - jpegrow;
-            left -= parm.GetBytesPerLine() - jpegrow;
-            jpegrow = 0;
-            continue;
-        }
-        constexpr int byteBits = 8;
-        JSAMPLE *buf8 = (JSAMPLE *)malloc(parm.GetBytesPerLine() * byteBits);
-        if (buf8 == nullptr) {
-            scanStatus = E_SCAN_GENERIC_FAILURE;
-            SCAN_HILOGE("pic buffer malloc fail");
-            return false;
-        }
-        for (int col1 = 0; col1 < parm.GetBytesPerLine(); col1++) {
-            for (int col8 = 0; col8 < byteBits; col8++) {
-                buf8[col1 * byteBits + col8] = jpegbuf[col1] & (1 << (byteBits - col8 - bit)) ? 0 : 0xff;
-            }
-        }
-        jpeg_write_scanlines(cinfoPtr, &buf8, bit);
-        free(buf8);
-        i += parm.GetBytesPerLine() - jpegrow;
-        left -= parm.GetBytesPerLine() - jpegrow;
-        jpegrow = 0;
     }
     if (memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(), saneReadBuf + i, left) != ERR_OK) {
         scanStatus = E_SCAN_GENERIC_FAILURE;

@@ -1359,6 +1359,7 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams, bool &driv
             }
             PRINT_HILOGD("makeModel=%{private}s", makeModel);
             if (!CheckPrinterDriverExist(std::string(makeModel))) {
+                printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
                 driverMissing = true;
                 break;
             }

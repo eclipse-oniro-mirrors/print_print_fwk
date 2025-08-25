@@ -44,7 +44,6 @@ struct ErrorMessage {
 
 struct BaseContext {
     napi_env env = nullptr;
-    napi_value jsCallback = nullptr;
     napi_deferred deferred = nullptr;
     napi_ref callback = nullptr;
 
