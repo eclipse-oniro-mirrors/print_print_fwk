@@ -322,7 +322,7 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
     char delimiter = ':';
     size_t start = 0;
     size_t end = deviceId.find(delimiter);
-    while(end != std::string::npos) {
+    while (end != std::string::npos) {
         tokens.push_back(deviceId.substr(start, end - start));
         start = end + 1;
         end = deviceId.find(delimiter, start);
@@ -339,7 +339,8 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
     static const std::regex pattern(R"(([0-9]{3}))");
     if (!std::regex_match(tokens[STRING_POS_TWO], pattern) ||
         !std::regex_match(tokens[STRING_POS_THREE], pattern)) {
-        SCAN_HILOGE("parse [%{public}s]:[%{public}s] fail", tokens[STRING_POS_TWO].c_str(), tokens[STRING_POS_THREE].c_str());
+        SCAN_HILOGE("parse [%{public}s]:[%{public}s] fail", tokens[STRING_POS_TWO].c_str(),
+                    tokens[STRING_POS_THREE].c_str());
         return false;
     }
     int32_t firstNumTmp = 0;
