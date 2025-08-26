@@ -705,7 +705,7 @@ bool PrintUserData::AddPrintJobToHistoryList(const std::string &printerId,
     if ((printerHistroyJobList->insert(std::make_pair(jobId, printJob))).second) {
         int32_t historyPrintJobNum = 0;
         for (const auto& pair: printHistoryJobList_) {
-            historyPrintJobNum += pair.second->size();
+            historyPrintJobNum += static_cast<int>(pair.second->size());
         }
         if (historyPrintJobNum > MAX_HISTORY_JOB_NUM) {
             deleteOldestHistoryPrintJob();
