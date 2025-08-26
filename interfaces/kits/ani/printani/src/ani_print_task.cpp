@@ -12,11 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "accesstoken_kit.h"
 #include "ani_print_task.h"
 #include "print_log.h"
 #include "print_manager_client.h"
 
 namespace OHOS::Print {
+using namespace Security::AccessToken;
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_PREVIEW_ABILITY_NAME = "PrintServiceExtAbility";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
@@ -43,6 +45,44 @@ AniPrintTask::~AniPrintTask()
     aniVm_ = nullptr;
 }
 
+int32_t AniPrintTask::StartPrint(const std::vector<std::string>& files)
+{
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        PRINT_HILOGE("no permission to StartPrint");
+        return E_PRINT_NO_PERMISSION;
+    }
+    if (files.empty()) {
+        PRINT_HILOGE("fileList and fdList are both empty");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    FdListWrapper fdList;
+    if (files.begin()->find("fd://") == 0) {
+        PRINT_HILOGD("list type: fdlist");
+        for (auto fdPath : files) {
+            uint32_t fd = PrintUtils::GetIdFromFdPath(fdPath);
+            fdList.Add(fd);
+        }
+    } else if (files.begin()->find("file://") == 0) {
+        PRINT_HILOGD("starts_with file://");
+        return E_PRINT_INVALID_PARAMETER;
+    } else {
+        PRINT_HILOGD("list type: filelist");
+        for (auto file : files) {
+            int32_t fd = PrintUtils::OpenFile(file);
+            if (fd < 0) {
+                PRINT_HILOGE("file[%{private}s] is invalid", file.c_str());
+                return E_PRINT_INVALID_PARAMETER;
+            }
+            fdList.Add(fd);
+        }
+    }
+    std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
+    adapterParam->jobId = jobId_;
+    adapterParam->documentName = "";
+    adapterParam->isCheckFdList = true;
+    return PrintManagerClient::GetInstance()->StartPrint(files, fdList.Get(), jobId_);
+}
+
 int32_t AniPrintTask::StartPrintWithContext(const std::vector<std::string>& files,
     std::shared_ptr<AbilityRuntime::Context> ctx)
 {
@@ -57,6 +97,8 @@ int32_t AniPrintTask::StartPrintWithContext(const std::vector<std::string>& file
             uint32_t fd = PrintUtils::GetIdFromFdPath(fdPath);
             fdList.Add(fd);
         }
+    } else if (files.begin()->find("file://") == 0) {
+        PRINT_HILOGD("starts_with file://");
     } else {
         PRINT_HILOGD("list type: filelist");
         for (auto file : files) {
@@ -83,13 +125,6 @@ int32_t AniPrintTask::StartPrintWithContext(const std::vector<std::string>& file
 int32_t AniPrintTask::StartPrintWithAttributes(const std::string& jobName, std::shared_ptr<AbilityRuntime::Context> ctx,
     const PrintAttributes& attributes, const sptr<IPrintCallback> &listener)
 {
-    std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext =
-        OHOS::AbilityRuntime::Context::ConvertTo<OHOS::AbilityRuntime::AbilityContext>(ctx);
-    if (abilityContext == nullptr) {
-        PRINT_HILOGE("abilityContext is a nullptr");
-        return E_PRINT_GENERIC_FAILURE;
-    }
-    sptr<IRemoteObject> callerToken = abilityContext->GetToken();
     std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
     adapterParam->documentName = jobName;
     adapterParam->isCheckFdList = false;
@@ -100,6 +135,13 @@ int32_t AniPrintTask::StartPrintWithAttributes(const std::string& jobName, std::
         PRINT_HILOGE("CallSpooler fail");
         return ret;
     }
+    std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext =
+        OHOS::AbilityRuntime::Context::ConvertTo<OHOS::AbilityRuntime::AbilityContext>(ctx);
+    if (abilityContext == nullptr) {
+        PRINT_HILOGE("abilityContext is a nullptr");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    sptr<IRemoteObject> callerToken = abilityContext->GetToken();
     return PrintManagerClient::GetInstance()->Print(
         jobName, listener, attributes, jobId_, callerToken);
 }
@@ -107,6 +149,11 @@ int32_t AniPrintTask::StartPrintWithAttributes(const std::string& jobName, std::
 uint32_t AniPrintTask::CallSpooler(const std::shared_ptr<AdapterParam>& adapterParam,
     const std::vector<std::string>& files, std::shared_ptr<AbilityRuntime::Context> ctx)
 {
+    PRINT_HILOGI("enter CallSpooler.");
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
+        return E_PRINT_NO_PERMISSION;
+    }
     if (adapterParam == nullptr || ctx == nullptr) {
         PRINT_HILOGE("Invalid parameters");
         return E_PRINT_INVALID_PARAMETER;
@@ -130,7 +177,7 @@ uint32_t AniPrintTask::CallSpooler(const std::shared_ptr<AdapterParam>& adapterP
     auto uiContent = GetUIContent(ctx);
     if (uiContent == nullptr) {
         PRINT_HILOGE("GetUIContent failed");
-        return E_PRINT_GENERIC_FAILURE;
+        return E_PRINT_INVALID_PARAMETER;
     }
     auto callback = std::make_shared<PrintEtsUICallback>(uiContent);
     OHOS::Ace::ModalUIExtensionCallbacks extensionCallbacks = {
@@ -176,4 +223,21 @@ int32_t AniPrintTask::Off(std::string type, sptr<IPrintCallback> callback)
     int32_t ret = PrintManagerClient::GetInstance()->Off(jobId_, type);
     return ret;
 }
+
+bool AniPrintTask::CheckPermission(const std::string &name)
+{
+    AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
+    TypeATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenType == TOKEN_INVALID) {
+        PRINT_HILOGE("invalid token id %{public}d", tokenId);
+        return false;
+    }
+    int result = AccessTokenKit::VerifyAccessToken(tokenId, name);
+    if (result != PERMISSION_GRANTED) {
+        PRINT_HILOGE("Current tokenId permission is %{public}d", result);
+    }
+    return result == PERMISSION_GRANTED;
+}
+
+
 } // namespace OHOS::Print
