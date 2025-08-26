@@ -186,6 +186,7 @@ export default namespace print {
         PRINT_JOB_BLOCK_LOW_ON_TONER = 14,
         PRINT_JOB_BLOCK_REALLY_LOW_ON_INK = 15,
         PRINT_JOB_BLOCK_BAD_CERTIFICATE = 16,
+        PRINT_JOB_BLOCK_DRIVER_EXCEPTION = 17,
         PRINT_JOB_BLOCK_ACCOUNT_ERROR = 18,
         PRINT_JOB_BLOCK_PRINT_PERMISSION_ERROR = 19,
         PRINT_JOB_BLOCK_PRINT_COLOR_PERMISSION_ERROR = 20,
@@ -196,6 +197,10 @@ export default namespace print {
         PRINT_JOB_BLOCK_SLOW_FILE_CONVERSION = 25,
         PRINT_JOB_RUNNING_UPLOADING_FILES = 26,
         PRINT_JOB_RUNNING_CONVERTING_FILES = 27,
+        PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR = 30,
+        PRINT_JOB_BLOCK_DRIVER_MISSING = 34,
+        PRINT_JOB_BLOCK_INTERRUPT = 35,
+        PRINT_JOB_BLOCK_PRINTER_UNAVAILABLE = 98,
         PRINT_JOB_BLOCK_UNKNOWN = 99
     }
 
@@ -223,12 +228,12 @@ export default namespace print {
         printerName: string;
         printerStatus: PrinterStatus;
         description?: string;
-        capability?: PrinterCapability;
+        capability?: PrinterCapabilities;
         uri?: string;
         printerMake?: string;
         preferences?: PrinterPreferences;
         alias?: string;
-        options?: Object;
+        options?: string;
     }
 
     export class PrinterInformationImp implements PrinterInformation {
@@ -236,12 +241,12 @@ export default namespace print {
         printerName: string = '';
         printerStatus: PrinterStatus = PrinterStatus.PRINTER_BUSY;
         description?: string = undefined;
-        capability?: PrinterCapability = undefined;
+        capability?: PrinterCapabilities = undefined;
         uri?: string = undefined;
         printerMake?: string = '';
         preferences?: PrinterPreferences = undefined;
         alias?: string = undefined;
-        options?: Object = undefined;
+        options?: string = undefined;
     }
 
     export interface PrinterCapability {
@@ -365,7 +370,17 @@ export default namespace print {
         options?: Object;
     }
 
-    class PrinterInfoImpl implements PrinterInfo {
+    export interface PrinterCapabilities {
+        supportedPageSizes: Array<PrintPageSize>;
+        supportedColorModes: Array<PrintColorMode>;
+        supportedDuplexModes: Array<PrintDuplexMode>;
+        supportedMediaTypes?: Array<string>;
+        supportedQualities?: Array<PrintQuality>;
+        supportedOrientations?: Array<PrintOrientationMode>;
+        options?: string;
+    }
+
+    export class PrinterInfoImpl implements PrinterInfo {
         printerId: string = '';
         printerName: string = '';
         printerState: PrinterState = PrinterState.PRINTER_ADDED;
@@ -375,7 +390,7 @@ export default namespace print {
         options?: Object = undefined;
     }
 
-    interface PrinterPreferences {
+    export interface PrinterPreferences {
         defaultDuplexMode?: PrintDuplexMode;
         defaultPrintQuality?: PrintQuality;
         defaultMediaType?: string;
@@ -409,7 +424,7 @@ export default namespace print {
         ORIENTATION_MODE_NONE = 4,
     }
 
-    enum PrinterStatus {
+    export enum PrinterStatus {
         PRINTER_IDLE = 0,
         PRINTER_BUSY = 1,
         PRINTER_UNAVAILABLE = 2,

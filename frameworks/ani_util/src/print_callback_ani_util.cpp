@@ -144,6 +144,7 @@ bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_obj
 
 ani_object CreateStsError(ani_env *env, ani_int code, const std::string& msg)
 {
+    PRINT_HILOGD("CreateStsError code %{public}d", code);
     if (env == nullptr) {
         PRINT_HILOGE("env is nullptr");
         return nullptr;

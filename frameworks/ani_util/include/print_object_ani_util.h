@@ -37,6 +37,7 @@ namespace OHOS::Print {
         const std::vector<std::string> &values);
     bool SetRefProperty(ani_env *env, ani_object param, const char *name, ani_ref value);
     bool SetIntProperty(ani_env *env, ani_object param, const char *name, int32_t value);
+    bool SetIntPropertyObject(ani_env *env, ani_object param, const char *name, int32_t value);
     bool SetBoolProperty(ani_env *env, ani_object param, const char *name, bool value);
 }  // namespace OHOS::Print
 #endif  // OHOS_PRINT_OBJECT_FIELD_ANI_UTIL_H
