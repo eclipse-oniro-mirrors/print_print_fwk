@@ -422,7 +422,8 @@ bool PrintCupsClient::ChangeFilterPermission(const std::string &path, mode_t mod
             continue;
         }
         if (S_ISDIR(fileStat.st_mode)) {
-            ChangeFilterPermission(filePath.c_str(), mode);
+            int ret = ChangeFilterPermission(filePath.c_str(), mode);
+            PRINT_HILOGD("ChangeFilterPermission result: %{public}d", ret);
         } else if (S_ISREG(fileStat.st_mode)) {
             if (chmod(filePath.c_str(), mode) == -1) {
                 PRINT_HILOGE("Failed to change mode");

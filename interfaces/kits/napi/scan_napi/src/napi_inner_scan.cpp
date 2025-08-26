@@ -612,6 +612,9 @@ napi_value NapiInnerScan::GetAddedScanner(napi_env env, napi_callback_info info)
         uint32_t index = 0;
         for (auto scanDeviceInfo : context->allAddedScanner) {
             status = napi_set_element(env, *result, index++, ScannerInfoHelper::MakeJsObject(env, scanDeviceInfo));
+            if (status != napi_ok) {
+                SCAN_HILOGE("napi_set_element from allAddedScanner failed");
+            }
         }
         return napi_ok;
     };
