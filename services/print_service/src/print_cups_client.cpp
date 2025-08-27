@@ -2475,7 +2475,9 @@ std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)
     }
     
     std::streamsize size = file.tellg();
-    if (size <= 0) {
+    constexpr std::streamsize MAX_ALLOWED_PPD_SIZE = 10 * 1024 * 1024;  // 10 MB
+
+    if (size <= 0 || size > MAX_ALLOWED_PPD_SIZE) {
         PRINT_HILOGE("pdd file length error %{public}d ", size);
         return "";
     }
