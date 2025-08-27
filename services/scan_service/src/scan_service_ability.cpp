@@ -316,20 +316,51 @@ void ScanServiceAbility::CleanupScanService()
     imageFdMap_.clear();
 }
 
+std::vector<std::string> ScanServiceAbility::ExtractIpOrPortFromUrl(const std::string& url,
+                                                                    const char delimiter, const int32_t minTokenLength)
+{
+    std::vector<std::string> tokens;
+    size_t start = 0;
+    size_t end = url.find(delimiter);
+    while (end != std::string::npos) {
+        tokens.push_back(url.substr(start, end - start));
+        start = end + 1;
+        end = url.find(delimiter, start);
+    }
+    tokens.push_back(url.substr(start));
+    if (tokens.size() < minTokenLength) {
+        SCAN_HILOGE("Url size < %{public}d ", minTokenLength);
+        tokens.clear();
+    }
+    return tokens;
+}
+
 bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId)
 {
-    static const std::regex pattern(R"(([a-zA-Z0-9_]+):(libusb):([0-9]{3}):([0-9]{3}))");
-    std::smatch match;
-    constexpr size_t STRING_POS_THREE = 3;
-    constexpr size_t STRING_POS_FOUR = 4;
-    if (!std::regex_match(deviceId, match, pattern) || match.size() <= STRING_POS_FOUR) {
-        SCAN_HILOGE("In USB mode, the deviceId string format does not match");
+    constexpr int32_t TOKEN_SIZE_FOUR = 4;
+    std::vector<std::string> tokens = ExtractIpOrPortFromUrl(deviceId, ':', TOKEN_SIZE_FOUR);
+    if (tokens.empty()) {
+        SCAN_HILOGE("split [%{public}s] fail ", deviceId.c_str());
         return false;
     }
-    const std::string firstIdTmp = match[STRING_POS_THREE].str();
-    const std::string secondIdTmp = match[STRING_POS_FOUR].str();
+    constexpr size_t STRING_POS_ONE = 1;
+    constexpr size_t STRING_POS_TWO = 2;
+    constexpr size_t STRING_POS_THREE = 3;
+    if (tokens[STRING_POS_ONE] != "libusb") {
+        SCAN_HILOGE("parse [%{public}s] fail", deviceId.c_str());
+        return false;
+    }
+    static const std::regex pattern(R"(([0-9]{3}))");
+    if (!std::regex_match(tokens[STRING_POS_TWO], pattern) ||
+        !std::regex_match(tokens[STRING_POS_THREE], pattern)) {
+        SCAN_HILOGE("parse [%{public}s]:[%{public}s] fail", tokens[STRING_POS_TWO].c_str(),
+                    tokens[STRING_POS_THREE].c_str());
+        return false;
+    }
     int32_t firstNumTmp = 0;
     int32_t secondNumTmp = 0;
+    const std::string firstIdTmp = tokens[STRING_POS_TWO];
+    const std::string secondIdTmp = tokens[STRING_POS_THREE];
     if (!ScanUtil::ConvertToInt(firstIdTmp, firstNumTmp) ||
         !ScanUtil::ConvertToInt(secondIdTmp, secondNumTmp)) {
         SCAN_HILOGE("parse [%{public}s]:[%{public}s] fail", firstIdTmp.c_str(), secondIdTmp.c_str());
@@ -342,14 +373,22 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
 
 bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string &ip)
 {
-    static const std::regex pattern(R"(([^ ]+) (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) ([^ ]+))");
+    constexpr int32_t TOKEN_SIZE_TWO = 2;
+    std::vector <std::string> tokens = ExtractIpOrPortFromUrl(deviceId, ' ', TOKEN_SIZE_TWO);
+    if (tokens.empty()) {
+        SCAN_HILOGE("split [%{public}s] fail ", deviceId.c_str());
+        return false;
+    }
+    constexpr size_t STRING_POS_ONE = 1;
+    std::string rawIp = tokens[STRING_POS_ONE];
+    static const std::regex pattern(R"((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))");
     std::smatch match;
-    if (std::regex_match(deviceId, match, pattern)) {
-        constexpr size_t STRING_POS_TWO = 2;
-        ip = match[STRING_POS_TWO];
+    if (std::regex_match(rawIp, match, pattern)) {
+        constexpr size_t STRING_POS_ZERO = 0;
+        ip = match[STRING_POS_ZERO];
         return true;
     } else {
-        SCAN_HILOGE("In TCP mode, the deviceId string format does not match");
+        SCAN_HILOGE("In TCP mode, the deviceId string format does not match, ip invalid form");
         return false;
     }
 }

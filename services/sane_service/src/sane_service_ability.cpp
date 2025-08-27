@@ -437,7 +437,7 @@ ErrCode SaneServerManager::SaneRead(const std::string& scannerId,
         SCAN_HILOGE("no permission to access sane_service");
         return SANE_STATUS_NO_PERMISSION;
     }
-    if (buflen < 0 || buflen > MAX_BUFLEN) {
+    if (buflen <= 0 || buflen > MAX_BUFLEN) {
         SCAN_HILOGE("invalid buflen, buflen = %{public}d", buflen);
         status = SANE_STATUS_INVAL;
         return ERR_OK;
