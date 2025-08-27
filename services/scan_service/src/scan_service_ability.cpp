@@ -384,8 +384,7 @@ bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string
     static const std::regex pattern(R"((\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}))");
     std::smatch match;
     if (std::regex_match(rawIp, match, pattern)) {
-        constexpr
-        size_t STRING_POS_ZERO = 0;
+        constexpr size_t STRING_POS_ZERO = 0;
         ip = match[STRING_POS_ZERO];
         return true;
     } else {
