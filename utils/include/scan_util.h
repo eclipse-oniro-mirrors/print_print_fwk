@@ -36,8 +36,8 @@ public:
     static bool ConvertToInt(const std::string& str, int32_t& value);
     static bool ExtractIpAddresses(const std::string& str, std::string& ip);
     static std::string ReplaceIpAddress(const std::string& deviceId, const std::string& newIp);
-    static std::vector<std::string> ExtractIPOrPortFromUrl(
-        const std::string& url, const char delimiter, const int32_t minTokenLength);
+    static std::vector<std::string> ExtractIpOrPortFromUrl(const std::string& url,
+                                                           const char delimiter, const int32_t minTokenLength);
 };
 inline bool ScanUtil::ConvertToInt(const std::string& str, int32_t& value)
 {
@@ -60,8 +60,8 @@ inline std::string ScanUtil::ReplaceIpAddress(const std::string& deviceId, const
     std::regex ipRegex(R"((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b))");
     return std::regex_replace(deviceId, ipRegex, newIp);
 }
-inline std::vector<std::string> ScanUtil::ExtractIPOrPortFromUrl(
-        const std::string& url, const char delimiter, const int32_t minTokenLength)
+inline std::vector<std::string> ScanUtil::ExtractIpOrPortFromUrl(const std::string& url,
+                                                                 const char delimiter, const int32_t minTokenLength)
 {
     std::vector<std::string> tokens;
     size_t start = 0;
