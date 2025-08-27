@@ -316,10 +316,29 @@ void ScanServiceAbility::CleanupScanService()
     imageFdMap_.clear();
 }
 
+std::vector<std::string> ScanServiceAbility::ExtractIpOrPortFromUrl(const std::string& url,
+                                                                    const char delimiter, const int32_t minTokenLength)
+{
+    std::vector<std::string> tokens;
+    size_t start = 0;
+    size_t end = url.find(delimiter);
+    while (end != std::string::npos) {
+        tokens.push_back(url.substr(start, end - start));
+        start = end + 1;
+        end = url.find(delimiter, start);
+    }
+    tokens.push_back(url.substr(start));
+    if (tokens.size() < minTokenLength) {
+        SCAN_HILOGE("Url size < %{public}d ", minTokenLength);
+        tokens.clear();
+    }
+    return tokens;
+}
+
 bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId)
 {
     constexpr int32_t TOKEN_SIZE_FOUR = 4;
-    std::vector<std::string> tokens = ScanUtil::ExtractIpOrPortFromUrl(deviceId, ':', TOKEN_SIZE_FOUR);
+    std::vector<std::string> tokens = ExtractIpOrPortFromUrl(deviceId, ':', TOKEN_SIZE_FOUR);
     if (tokens.empty()) {
         SCAN_HILOGE("split [%{public}s] fail ", deviceId.c_str());
         return false;
@@ -355,7 +374,7 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
 bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string &ip)
 {
     constexpr int32_t TOKEN_SIZE_TWO = 2;
-    std::vector <std::string> tokens = ScanUtil::ExtractIpOrPortFromUrl(deviceId, ' ', TOKEN_SIZE_TWO);
+    std::vector <std::string> tokens = ExtractIpOrPortFromUrl(deviceId, ' ', TOKEN_SIZE_TWO);
     if (tokens.empty()) {
         SCAN_HILOGE("split [%{public}s] fail ", deviceId.c_str());
         return false;
