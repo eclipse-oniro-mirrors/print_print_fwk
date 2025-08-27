@@ -141,7 +141,7 @@ private:
     JSAMPLE *jpegbuf = nullptr;
     std::atomic<int32_t> appCount_{0};
     std::vector<std::string> ExtractIpOrPortFromUrl(const std::string& url,
-                                                    const char delimiter, const int32_t minTokenLength)
+                                                    const char delimiter, const int32_t minTokenLength);
 };
 } // namespace OHOS::Scan
 #endif // SCAN_SYSTEM_ABILITY_H
