@@ -34,7 +34,7 @@ __thread napi_ref NapiPrintTask::globalCtor = nullptr;
 napi_value NapiPrintTask::Print(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter print JsMain.");
-    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
     size_t paramCount = NapiPrintUtils::GetJsVal(env, info, argv, NapiPrintUtils::MAX_ARGC);
     napi_valuetype type;
     PRINT_CALL(env, napi_typeof(env, argv[0], &type));
@@ -48,10 +48,13 @@ napi_value NapiPrintTask::CreatePrintTask(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGI("CreatePrintTask start ---->");
     auto context = std::make_shared<PrintTaskContext>();
-    auto input = [context](
+    auto input =
+        [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
-            "need 1 or 2 parameter!", napi_invalid_arg);
+        PRINT_ASSERT_BASE(env,
+            argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
+            "need 1 or 2 parameter!",
+            napi_invalid_arg);
         napi_status checkStatus = VerifyParameters(env, argc, argv, context);
         if (argc == NapiPrintUtils::ARGC_TWO && checkStatus != napi_ok) {
             return checkStatus;
@@ -169,7 +172,7 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
         auto task = new (std::nothrow) PrintTask(printJobName, callback, printAttributes, callerToken);
 
         if (task == nullptr) {
-            PRINT_HILOGE("print task fail");    // callback结束时自动释放adapterRef
+            PRINT_HILOGE("print task fail");  // callback结束时自动释放adapterRef
             return nullptr;
         }
         auto finalize = [](napi_env env, void *data, void *hint) {
@@ -178,7 +181,8 @@ napi_value NapiPrintTask::ParsePrintAdapterParameter(napi_env env, size_t argc, 
             delete task;
         };
         if (napi_wrap(env, self, task, finalize, nullptr, nullptr) != napi_ok) {
-            finalize(env, task, nullptr);   // finalize里释放了tack，然后函数走完后释放callback，callback中自动释放adapterRef
+            finalize(
+                env, task, nullptr);  // finalize里释放了tack，然后函数走完后释放callback，callback中自动释放adapterRef
             return nullptr;
         }
         PRINT_HILOGD("Succeed to allocate print task");
@@ -225,11 +229,18 @@ napi_value NapiPrintTask::GetCtor(napi_env env)
     }
 
     napi_property_descriptor clzDes[] = {
-        { FUNCTION_ON, 0, PrintTask::On, 0, 0, 0, napi_default, 0 },
-        { FUNCTION_OFF, 0, PrintTask::Off, 0, 0, 0, napi_default, 0 },
+        {FUNCTION_ON, 0, PrintTask::On, 0, 0, 0, napi_default, 0},
+        {FUNCTION_OFF, 0, PrintTask::Off, 0, 0, 0, napi_default, 0},
     };
-    PRINT_CALL(env, napi_define_class(env, "NapiPrintTask", NAPI_AUTO_LENGTH, Initialize, nullptr,
-                       sizeof(clzDes) / sizeof(napi_property_descriptor), clzDes, &cons));
+    PRINT_CALL(env,
+        napi_define_class(env,
+            "NapiPrintTask",
+            NAPI_AUTO_LENGTH,
+            Initialize,
+            nullptr,
+            sizeof(clzDes) / sizeof(napi_property_descriptor),
+            clzDes,
+            &cons));
     PRINT_CALL(env, napi_create_reference(env, cons, 1, &globalCtor));
     return cons;
 }
@@ -239,9 +250,9 @@ napi_value NapiPrintTask::Initialize(napi_env env, napi_callback_info info)
     PRINT_HILOGD("constructor print task!");
     napi_value self = nullptr;
     size_t argc = NapiPrintUtils::MAX_ARGC;
-    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
     PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &self, nullptr));
-    
+
     if (argc > NapiPrintUtils::ARGC_THREE) {
         return ParsePrintAdapterParameter(env, argc, argv, self);
     } else {
@@ -308,8 +319,8 @@ bool NapiPrintTask::IsValidFile(const std::string &fileName)
     return false;
 }
 
-napi_status NapiPrintTask::VerifyParameters(napi_env env, size_t argc, napi_value *argv,
-    const std::shared_ptr<PrintTaskContext> context)
+napi_status NapiPrintTask::VerifyParameters(
+    napi_env env, size_t argc, napi_value *argv, const std::shared_ptr<PrintTaskContext> context)
 {
     if (argc > NapiPrintUtils::ARGC_THREE) {
         std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> abilityContext;
@@ -341,4 +352,4 @@ napi_status NapiPrintTask::VerifyParameters(napi_env env, size_t argc, napi_valu
     }
     return napi_ok;
 }
-} // namespace OHOS::Print
+}  // namespace OHOS::Print

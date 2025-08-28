@@ -19,7 +19,7 @@
 #include "napi_print_task.h"
 #ifdef PDFIUM_ENABLE
 #include "napi_print_pdf_render.h"
-#endif // PDFIUM_ENABLE
+#endif  // PDFIUM_ENABLE
 #include "print_constant.h"
 #include "print_log.h"
 
@@ -69,40 +69,40 @@ static constexpr const char *FUNCTION_UPDATE_PRINTER_INFORMATION = "updatePrinte
 static constexpr const char *FUNCTION_SET_PRINTER_PREFERENCES = "setPrinterPreferences";
 
 static const std::map<std::string, uint32_t> PRINT_JOB_SUBSTATE_MAP = {
-    { "PRINT_JOB_COMPLETED_SUCCESS",                    PRINT_JOB_COMPLETED_SUCCESS },
-    { "PRINT_JOB_COMPLETED_FAILED",                     PRINT_JOB_COMPLETED_FAILED },
-    { "PRINT_JOB_COMPLETED_CANCELLED",                  PRINT_JOB_COMPLETED_CANCELLED },
-    { "PRINT_JOB_COMPLETED_FILE_CORRUPTED",             PRINT_JOB_COMPLETED_FILE_CORRUPT },
-    { "PRINT_JOB_BLOCK_OFFLINE",                        PRINT_JOB_BLOCKED_OFFLINE },
-    { "PRINT_JOB_BLOCK_BUSY",                           PRINT_JOB_BLOCKED_BUSY },
-    { "PRINT_JOB_BLOCK_CANCELLED",                      PRINT_JOB_BLOCKED_CANCELLED },
-    { "PRINT_JOB_BLOCK_OUT_OF_PAPER",                   PRINT_JOB_BLOCKED_OUT_OF_PAPER },
-    { "PRINT_JOB_BLOCK_OUT_OF_INK",                     PRINT_JOB_BLOCKED_OUT_OF_INK },
-    { "PRINT_JOB_BLOCK_OUT_OF_TONER",                   PRINT_JOB_BLOCKED_OUT_OF_TONER },
-    { "PRINT_JOB_BLOCK_JAMMED",                         PRINT_JOB_BLOCKED_JAMMED },
-    { "PRINT_JOB_BLOCK_DOOR_OPEN",                      PRINT_JOB_BLOCKED_DOOR_OPEN },
-    { "PRINT_JOB_BLOCK_SERVICE_REQUEST",                PRINT_JOB_BLOCKED_SERVICE_REQUEST },
-    { "PRINT_JOB_BLOCK_LOW_ON_INK",                     PRINT_JOB_BLOCKED_LOW_ON_INK },
-    { "PRINT_JOB_BLOCK_LOW_ON_TONER",                   PRINT_JOB_BLOCKED_LOW_ON_TONER },
-    { "PRINT_JOB_BLOCK_REALLY_LOW_ON_INK",              PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK },
-    { "PRINT_JOB_BLOCK_BAD_CERTIFICATE",                PRINT_JOB_BLOCKED_BAD_CERTIFICATE },
-    { "PRINT_JOB_BLOCK_DRIVER_EXCEPTION",               PRINT_JOB_BLOCKED_DRIVER_EXCEPTION },
-    { "PRINT_JOB_BLOCK_ACCOUNT_ERROR",                  PRINT_JOB_BLOCKED_ACCOUNT_ERROR },
-    { "PRINT_JOB_BLOCK_PRINT_PERMISSION_ERROR",         PRINT_JOB_BLOCKED_PRINT_PERMISSION_ERROR },
-    { "PRINT_JOB_BLOCK_PRINT_COLOR_PERMISSION_ERROR",   PRINT_JOB_BLOCKED_PRINT_COLOR_PERMISSION_ERROR },
-    { "PRINT_JOB_BLOCK_NETWORK_ERROR",                  PRINT_JOB_BLOCKED_NETWORK_ERROR },
-    { "PRINT_JOB_BLOCK_SERVER_CONNECTION_ERROR",        PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR },
-    { "PRINT_JOB_BLOCK_LARGE_FILE_ERROR",               PRINT_JOB_BLOCKED_LARGE_FILE_ERROR },
-    { "PRINT_JOB_BLOCK_FILE_PARSING_ERROR",             PRINT_JOB_BLOCKED_FILE_PARSING_ERROR },
-    { "PRINT_JOB_BLOCK_SLOW_FILE_CONVERSION",           PRINT_JOB_BLOCKED_SLOW_FILE_CONVERSION },
-    { "PRINT_JOB_RUNNING_UPLOADING_FILES",              PRINT_JOB_RUNNING_UPLOADING_FILES },
-    { "PRINT_JOB_RUNNING_CONVERTING_FILES",             PRINT_JOB_RUNNING_CONVERTING_FILES },
-    { "PRINT_JOB_BLOCK_INTERRUPT",                      PRINT_JOB_BLOCKED_INTERRUPT },
-    { "PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR",           PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR },
-    { "PRINT_JOB_BLOCK_DRIVER_MISSING",                 PRINT_JOB_BLOCKED_DRIVER_MISSING },
-    { "PRINT_JOB_BLOCK_INTERRUPT",                      PRINT_JOB_BLOCKED_INTERRUPT },
-    { "PRINT_JOB_BLOCK_PRINTER_UNAVAILABLE",            PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE },
-    { "PRINT_JOB_BLOCK_UNKNOWN",                        PRINT_JOB_BLOCKED_UNKNOWN },
+    {"PRINT_JOB_COMPLETED_SUCCESS", PRINT_JOB_COMPLETED_SUCCESS},
+    {"PRINT_JOB_COMPLETED_FAILED", PRINT_JOB_COMPLETED_FAILED},
+    {"PRINT_JOB_COMPLETED_CANCELLED", PRINT_JOB_COMPLETED_CANCELLED},
+    {"PRINT_JOB_COMPLETED_FILE_CORRUPTED", PRINT_JOB_COMPLETED_FILE_CORRUPT},
+    {"PRINT_JOB_BLOCK_OFFLINE", PRINT_JOB_BLOCKED_OFFLINE},
+    {"PRINT_JOB_BLOCK_BUSY", PRINT_JOB_BLOCKED_BUSY},
+    {"PRINT_JOB_BLOCK_CANCELLED", PRINT_JOB_BLOCKED_CANCELLED},
+    {"PRINT_JOB_BLOCK_OUT_OF_PAPER", PRINT_JOB_BLOCKED_OUT_OF_PAPER},
+    {"PRINT_JOB_BLOCK_OUT_OF_INK", PRINT_JOB_BLOCKED_OUT_OF_INK},
+    {"PRINT_JOB_BLOCK_OUT_OF_TONER", PRINT_JOB_BLOCKED_OUT_OF_TONER},
+    {"PRINT_JOB_BLOCK_JAMMED", PRINT_JOB_BLOCKED_JAMMED},
+    {"PRINT_JOB_BLOCK_DOOR_OPEN", PRINT_JOB_BLOCKED_DOOR_OPEN},
+    {"PRINT_JOB_BLOCK_SERVICE_REQUEST", PRINT_JOB_BLOCKED_SERVICE_REQUEST},
+    {"PRINT_JOB_BLOCK_LOW_ON_INK", PRINT_JOB_BLOCKED_LOW_ON_INK},
+    {"PRINT_JOB_BLOCK_LOW_ON_TONER", PRINT_JOB_BLOCKED_LOW_ON_TONER},
+    {"PRINT_JOB_BLOCK_REALLY_LOW_ON_INK", PRINT_JOB_BLOCKED_REALLY_LOW_ON_INK},
+    {"PRINT_JOB_BLOCK_BAD_CERTIFICATE", PRINT_JOB_BLOCKED_BAD_CERTIFICATE},
+    {"PRINT_JOB_BLOCK_DRIVER_EXCEPTION", PRINT_JOB_BLOCKED_DRIVER_EXCEPTION},
+    {"PRINT_JOB_BLOCK_ACCOUNT_ERROR", PRINT_JOB_BLOCKED_ACCOUNT_ERROR},
+    {"PRINT_JOB_BLOCK_PRINT_PERMISSION_ERROR", PRINT_JOB_BLOCKED_PRINT_PERMISSION_ERROR},
+    {"PRINT_JOB_BLOCK_PRINT_COLOR_PERMISSION_ERROR", PRINT_JOB_BLOCKED_PRINT_COLOR_PERMISSION_ERROR},
+    {"PRINT_JOB_BLOCK_NETWORK_ERROR", PRINT_JOB_BLOCKED_NETWORK_ERROR},
+    {"PRINT_JOB_BLOCK_SERVER_CONNECTION_ERROR", PRINT_JOB_BLOCKED_SERVER_CONNECTION_ERROR},
+    {"PRINT_JOB_BLOCK_LARGE_FILE_ERROR", PRINT_JOB_BLOCKED_LARGE_FILE_ERROR},
+    {"PRINT_JOB_BLOCK_FILE_PARSING_ERROR", PRINT_JOB_BLOCKED_FILE_PARSING_ERROR},
+    {"PRINT_JOB_BLOCK_SLOW_FILE_CONVERSION", PRINT_JOB_BLOCKED_SLOW_FILE_CONVERSION},
+    {"PRINT_JOB_RUNNING_UPLOADING_FILES", PRINT_JOB_RUNNING_UPLOADING_FILES},
+    {"PRINT_JOB_RUNNING_CONVERTING_FILES", PRINT_JOB_RUNNING_CONVERTING_FILES},
+    {"PRINT_JOB_BLOCK_INTERRUPT", PRINT_JOB_BLOCKED_INTERRUPT},
+    {"PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR", PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR},
+    {"PRINT_JOB_BLOCK_DRIVER_MISSING", PRINT_JOB_BLOCKED_DRIVER_MISSING},
+    {"PRINT_JOB_BLOCK_INTERRUPT", PRINT_JOB_BLOCKED_INTERRUPT},
+    {"PRINT_JOB_BLOCK_PRINTER_UNAVAILABLE", PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE},
+    {"PRINT_JOB_BLOCK_UNKNOWN", PRINT_JOB_BLOCKED_UNKNOWN},
 };
 
 #define PRINT_NAPI_METHOD(name, func)           \
@@ -110,9 +110,9 @@ static const std::map<std::string, uint32_t> PRINT_JOB_SUBSTATE_MAP = {
         name, 0, func, 0, 0, 0, napi_default, 0 \
     }
 
-#define PRINT_NAPI_PROPERTY(name, val)                                          \
-    {                                                                           \
-        (name), nullptr, nullptr, nullptr, nullptr, val, napi_static, nullptr   \
+#define PRINT_NAPI_PROPERTY(name, val)                                        \
+    {                                                                         \
+        (name), nullptr, nullptr, nullptr, nullptr, val, napi_static, nullptr \
     }
 
 static void SetEnumProperty(napi_env env, napi_value object, const std::string &name, uint32_t value)
@@ -199,10 +199,14 @@ static napi_value NapiCreateOrientationEnum(napi_env env)
     }
     SetEnumProperty(env, object, "ORIENTATION_MODE_PORTRAIT", static_cast<int32_t>(PRINT_ORIENTATION_MODE_PORTRAIT));
     SetEnumProperty(env, object, "ORIENTATION_MODE_LANDSCAPE", static_cast<int32_t>(PRINT_ORIENTATION_MODE_LANDSCAPE));
-    SetEnumProperty(env, object, "ORIENTATION_MODE_REVERSE_LANDSCAPE",
-                    static_cast<int32_t>(PRINT_ORIENTATION_MODE_REVERSE_LANDSCAPE));
-    SetEnumProperty(env, object, "ORIENTATION_MODE_REVERSE_PORTRAIT",
-                    static_cast<int32_t>(PRINT_ORIENTATION_MODE_REVERSE_PORTRAIT));
+    SetEnumProperty(env,
+        object,
+        "ORIENTATION_MODE_REVERSE_LANDSCAPE",
+        static_cast<int32_t>(PRINT_ORIENTATION_MODE_REVERSE_LANDSCAPE));
+    SetEnumProperty(env,
+        object,
+        "ORIENTATION_MODE_REVERSE_PORTRAIT",
+        static_cast<int32_t>(PRINT_ORIENTATION_MODE_REVERSE_PORTRAIT));
     SetEnumProperty(env, object, "ORIENTATION_MODE_NONE", static_cast<int32_t>(PRINT_ORIENTATION_MODE_NONE));
     return object;
 }
@@ -256,8 +260,8 @@ static napi_value NapiCreateFileCreationStateEnum(napi_env env)
     }
     SetEnumProperty(env, object, "PRINT_FILE_CREATED", static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS));
     SetEnumProperty(env, object, "PRINT_FILE_CREATION_FAILED", static_cast<int32_t>(PRINT_FILE_CREATED_FAIL));
-    SetEnumProperty(env, object, "PRINT_FILE_CREATED_UNRENDERED",
-        static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS_UNRENDERED));
+    SetEnumProperty(
+        env, object, "PRINT_FILE_CREATED_UNRENDERED", static_cast<int32_t>(PRINT_FILE_CREATED_SUCCESS_UNRENDERED));
     return object;
 }
 
@@ -301,7 +305,7 @@ static napi_value NapiCreatePrintJobSubStateEnum(napi_env env)
         PRINT_HILOGE("Failed to create object");
         return nullptr;
     }
-    for (const auto& [key, value] : PRINT_JOB_SUBSTATE_MAP) {
+    for (const auto &[key, value] : PRINT_JOB_SUBSTATE_MAP) {
         SetEnumProperty(env, object, key, static_cast<int32_t>(value));
     }
     return object;
@@ -462,13 +466,13 @@ static napi_value Init(napi_env env, napi_value exports)
 
 static __attribute__((constructor)) void RegisterModule()
 {
-    static napi_module module = { .nm_version = 1,
+    static napi_module module = {.nm_version = 1,
         .nm_flags = 0,
         .nm_filename = nullptr,
         .nm_register_func = Init,
         .nm_modname = "print",
         .nm_priv = ((void *)0),
-        .reserved = { 0 } };
+        .reserved = {0}};
     napi_module_register(&module);
     PRINT_HILOGD("module register print");
 }

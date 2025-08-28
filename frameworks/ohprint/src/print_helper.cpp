@@ -51,8 +51,8 @@ char *CopyString(const std::string &source)
     return dest;
 }
 
-void AddJsonFieldStringToJsonObject(const Json::Value &cupsOpt, const std::string &keyword,
-    Json::Value &advancedCapJson)
+void AddJsonFieldStringToJsonObject(
+    const Json::Value &cupsOpt, const std::string &keyword, Json::Value &advancedCapJson)
 {
     PRINT_HILOGD("AddJsonFieldStringToJsonObject %{public}s", keyword.c_str());
     if (!PrintJsonUtil::IsMember(cupsOpt, keyword)) {
@@ -68,8 +68,8 @@ void AddJsonFieldStringToJsonObject(const Json::Value &cupsOpt, const std::strin
     advancedCapJson[keyword] = optionString;
 }
 
-void ParseJsonFieldAsArrayOpt(const Json::Value &cupsOpt, const std::string &key,
-    Print_PrinterInfo &nativePrinterInfo, void (*arrayOpteration)(const Json::Value &, Print_PrinterInfo &))
+void ParseJsonFieldAsArrayOpt(const Json::Value &cupsOpt, const std::string &key, Print_PrinterInfo &nativePrinterInfo,
+    void (*arrayOpteration)(const Json::Value &, Print_PrinterInfo &))
 {
     PRINT_HILOGD("ParseJsonFieldAsArrayOpt: %{public}s", key.c_str());
     if (arrayOpteration == nullptr) {
@@ -90,7 +90,7 @@ void ParseJsonFieldAsArrayOpt(const Json::Value &cupsOpt, const std::string &key
         PRINT_HILOGW("accept fail");
         return;
     }
-    
+
     if (!arrayOpt.isArray()) {
         PRINT_HILOGW("not array");
         return;
@@ -189,15 +189,11 @@ void PageSizeArrayConvert(const OHOS::Print::PrinterCapability &cap, Print_Print
     std::vector<Print_PageSize> nativePageSizeVector;
     cap.GetSupportedPageSize(pageSizeVector);
     for (const auto &pageSize : pageSizeVector) {
-        nativePageSizeVector.push_back({
-            CopyString(pageSize.GetId()),
-            CopyString(pageSize.GetName()),
-            pageSize.GetWidth(),
-            pageSize.GetHeight()
-        });
+        nativePageSizeVector.push_back(
+            {CopyString(pageSize.GetId()), CopyString(pageSize.GetName()), pageSize.GetWidth(), pageSize.GetHeight()});
     }
-    nativePrinterInfo.capability.supportedPageSizes = CopyArray<Print_PageSize>(nativePageSizeVector,
-        nativePrinterInfo.capability.supportedPageSizesCount);
+    nativePrinterInfo.capability.supportedPageSizes =
+        CopyArray<Print_PageSize>(nativePageSizeVector, nativePrinterInfo.capability.supportedPageSizesCount);
     PRINT_HILOGD("Get nativePageSizeVector size = %{public}zu from printerCap", nativePageSizeVector.size());
 }
 
@@ -256,7 +252,7 @@ void MediaTypeArrayConvert(const OHOS::Print::PrinterCapability &cap, Print_Prin
     cap.GetSupportedMediaType(mediaTypeVector);
     if (mediaTypeVector.size() > 0) {
         Json::Value mediaTypeJson;
-        for (auto const &mediaType: mediaTypeVector) {
+        for (auto const &mediaType : mediaTypeVector) {
             mediaTypeJson.append(mediaType);
         }
         nativePrinterInfo.capability.supportedMediaTypes = CopyString(PrintJsonUtil::WriteString(mediaTypeJson));
@@ -630,8 +626,8 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     }
     jsonOptions["borderless"] = nativePrintJob.borderless ? "true" : "false";
     Print_Quality quality = nativePrintJob.printQuality;
-    if (quality > static_cast<Print_Quality>(PRINT_QUALITY_HIGH)
-        || quality < static_cast<Print_Quality>(PRINT_QUALITY_DRAFT)) {
+    if (quality > static_cast<Print_Quality>(PRINT_QUALITY_HIGH) ||
+        quality < static_cast<Print_Quality>(PRINT_QUALITY_DRAFT)) {
         quality = static_cast<Print_Quality>(PRINT_QUALITY_NORMAL);
     }
     jsonOptions["printQuality"] = quality;
@@ -673,8 +669,8 @@ int32_t ConvertNativeJobToPrintJob(const Print_PrintJob &nativePrintJob, PrintJo
     return E_PRINT_NONE;
 }
 
-Print_ErrorCode ConvertStringVectorToPropertyList(const std::vector<std::string> &valueList,
-    Print_PropertyList *propertyList)
+Print_ErrorCode ConvertStringVectorToPropertyList(
+    const std::vector<std::string> &valueList, Print_PropertyList *propertyList)
 {
     if (valueList.size() == 0) {
         PRINT_HILOGW("empty valueList");
@@ -685,7 +681,9 @@ Print_ErrorCode ConvertStringVectorToPropertyList(const std::vector<std::string>
         PRINT_HILOGW("propertyList->list is null");
         return PRINT_ERROR_GENERIC_FAILURE;
     }
-    if (memset_s(propertyList->list, valueList.size() * sizeof(Print_Property), 0,
+    if (memset_s(propertyList->list,
+        valueList.size() * sizeof(Print_Property),
+        0,
         valueList.size() * sizeof(Print_Property)) != 0) {
         PRINT_HILOGW("memset_s fail");
         delete[] propertyList->list;

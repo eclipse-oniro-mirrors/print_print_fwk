@@ -22,8 +22,8 @@
 
 namespace OHOS::Print {
 template <typename T>
-bool ParseAttributeToValue(ipp_t *response, const std::string &keyword, T &value,
-    bool (*convertAttr)(const char *src, T &dst))
+bool ParseAttributeToValue(
+    ipp_t *response, const std::string &keyword, T &value, bool (*convertAttr)(const char *src, T &dst))
 {
     if (convertAttr == nullptr) {
         PRINT_HILOGW("convertAttr is null");
@@ -48,8 +48,8 @@ bool ParseAttributeToValue(ipp_t *response, const std::string &keyword, T &value
 }
 
 template <typename T>
-bool ParseAttributesToList(ipp_t *response, const std::string &keyword, std::vector<T> &list,
-    bool (*convertAttr)(const char *src, T &dst))
+bool ParseAttributesToList(
+    ipp_t *response, const std::string &keyword, std::vector<T> &list, bool (*convertAttr)(const char *src, T &dst))
 {
     if (convertAttr == nullptr) {
         PRINT_HILOGW("convertAttr is null");
@@ -117,8 +117,8 @@ void SetCapabilityGroupAttribute(ipp_t *response, PrinterCapability &printerCaps
 {
     ipp_attribute_t *attrPtr;
     if ((attrPtr = ippFindAttribute(response, "printer-state", IPP_TAG_ENUM)) != nullptr) {
-        printerCaps.SetPrinterAttrNameAndValue("printer-state",
-            ippEnumString("printer-state", ippGetInteger(attrPtr, 0)));
+        printerCaps.SetPrinterAttrNameAndValue(
+            "printer-state", ippEnumString("printer-state", ippGetInteger(attrPtr, 0)));
     }
     if ((attrPtr = ippFindAttribute(response, "printer-info", IPP_TAG_TEXTLANG)) != nullptr) {
         printerCaps.SetPrinterAttrNameAndValue("printer-info", ippGetString(attrPtr, 0, nullptr));
@@ -165,7 +165,7 @@ void ParseColorModeAttributes(ipp_t *response, PrinterCapability &printerCaps)
         uint32_t mode = static_cast<uint32_t>(code);
         printerCaps.SetPrinterAttrNameAndValue("defaultColorMode", std::to_string(mode).c_str());
     }
-    for (auto& color : supportedColorModes) {
+    for (auto &color : supportedColorModes) {
         if (color == ColorModeCode::COLOR_MODE_COLOR) {
             printerCaps.SetColorMode(ColorModeCode::COLOR_MODE_COLOR);
             break;
@@ -351,20 +351,20 @@ void ParseMediaMarginAttributes(ipp_t *response, PrinterCapability &printerCaps)
 {
     ipp_attribute_t *attrPtr;
     if ((attrPtr = ippFindAttribute(response, "media-bottom-margin-supported", IPP_TAG_INTEGER)) != nullptr) {
-        printerCaps.SetPrinterAttrNameAndValue("media-bottom-margin-supported",
-            std::to_string(ippGetInteger(attrPtr, 0)).c_str());
+        printerCaps.SetPrinterAttrNameAndValue(
+            "media-bottom-margin-supported", std::to_string(ippGetInteger(attrPtr, 0)).c_str());
     }
     if ((attrPtr = ippFindAttribute(response, "media-top-margin-supported", IPP_TAG_INTEGER)) != nullptr) {
-        printerCaps.SetPrinterAttrNameAndValue("media-top-margin-supported",
-            std::to_string(ippGetInteger(attrPtr, 0)).c_str());
+        printerCaps.SetPrinterAttrNameAndValue(
+            "media-top-margin-supported", std::to_string(ippGetInteger(attrPtr, 0)).c_str());
     }
     if ((attrPtr = ippFindAttribute(response, "media-left-margin-supported", IPP_TAG_INTEGER)) != nullptr) {
-        printerCaps.SetPrinterAttrNameAndValue("media-left-margin-supported",
-            std::to_string(ippGetInteger(attrPtr, 0)).c_str());
+        printerCaps.SetPrinterAttrNameAndValue(
+            "media-left-margin-supported", std::to_string(ippGetInteger(attrPtr, 0)).c_str());
     }
     if ((attrPtr = ippFindAttribute(response, "media-right-margin-supported", IPP_TAG_INTEGER)) != nullptr) {
-        printerCaps.SetPrinterAttrNameAndValue("media-right-margin-supported",
-            std::to_string(ippGetInteger(attrPtr, 0)).c_str());
+        printerCaps.SetPrinterAttrNameAndValue(
+            "media-right-margin-supported", std::to_string(ippGetInteger(attrPtr, 0)).c_str());
     }
 }
 
@@ -391,8 +391,8 @@ void ParseOrientationAttributes(ipp_t *response, PrinterCapability &printerCaps)
                 supportedOrientations.emplace_back(orientationEnum);
                 PRINT_HILOGD("orientation-supported found: %{public}d", orientationEnum);
             }
-            printerCaps.SetPrinterAttrNameAndValue(keyword.c_str(),
-                (PrintJsonUtil::WriteString(supportedOrientationArray)).c_str());
+            printerCaps.SetPrinterAttrNameAndValue(
+                keyword.c_str(), (PrintJsonUtil::WriteString(supportedOrientationArray)).c_str());
             printerCaps.SetSupportedOrientation(supportedOrientations);
         }
     }

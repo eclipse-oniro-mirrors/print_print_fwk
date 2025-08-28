@@ -22,17 +22,9 @@
 
 namespace OHOS::Print {
 PrinterCapability::PrinterCapability()
-    : colorMode_(0),
-      duplexMode_(0),
-      hasResolution_(false),
-      hasSupportedColorMode_(false),
-      hasSupportedDuplexMode_(false),
-      hasSupportedMediaType_(false),
-      hasSupportedQuality_(false),
-      hasSupportedOrientation_(false),
-      hasMargin_(false),
-      hasOption_(false),
-      option_("")
+    : colorMode_(0), duplexMode_(0), hasResolution_(false), hasSupportedColorMode_(false),
+      hasSupportedDuplexMode_(false), hasSupportedMediaType_(false), hasSupportedQuality_(false),
+      hasSupportedOrientation_(false), hasMargin_(false), hasOption_(false), option_("")
 {
     pageSizeList_.clear();
     resolutionList_.clear();
@@ -73,13 +65,14 @@ PrinterCapability &PrinterCapability::operator=(const PrinterCapability &right)
         supportedDuplexModeList_.assign(right.supportedDuplexModeList_.begin(), right.supportedDuplexModeList_.end());
         supportedMediaTypeList_.assign(right.supportedMediaTypeList_.begin(), right.supportedMediaTypeList_.end());
         supportedQualityList_.assign(right.supportedQualityList_.begin(), right.supportedQualityList_.end());
-        supportedOrientationList_.assign(right.supportedOrientationList_.begin(),
-            right.supportedOrientationList_.end());
+        supportedOrientationList_.assign(
+            right.supportedOrientationList_.begin(), right.supportedOrientationList_.end());
     }
     return *this;
 }
 
-PrinterCapability::~PrinterCapability() {}
+PrinterCapability::~PrinterCapability()
+{}
 
 void PrinterCapability::Reset()
 {
@@ -334,31 +327,36 @@ bool PrinterCapability::Marshalling(Parcel &parcel) const
     parcel.WriteUint32(GetDuplexMode());
 
     PrintUtils::WriteListToParcel(
-        parcel, supportedPageSizeList_,
-        [](Parcel &p, const PrintPageSize& item) { item.Marshalling(p); });
+        parcel, supportedPageSizeList_, [](Parcel &p, const PrintPageSize &item) { item.Marshalling(p); });
 
     PrintUtils::WriteListToParcel(
-        parcel, resolutionList_, [](Parcel& p, const PrintResolution& item) { item.Marshalling(p); },
-        hasResolution_);
+        parcel, resolutionList_, [](Parcel &p, const PrintResolution &item) { item.Marshalling(p); }, hasResolution_);
 
     PrintUtils::WriteListToParcel(
-        parcel, supportedColorModeList_, [](Parcel& p, const int& item) { p.WriteUint32(item); },
+        parcel,
+        supportedColorModeList_,
+        [](Parcel &p, const int &item) { p.WriteUint32(item); },
         hasSupportedColorMode_);
 
     PrintUtils::WriteListToParcel(
-        parcel, supportedDuplexModeList_, [](Parcel& p, const int& item) { p.WriteUint32(item); },
+        parcel,
+        supportedDuplexModeList_,
+        [](Parcel &p, const int &item) { p.WriteUint32(item); },
         hasSupportedDuplexMode_);
 
     PrintUtils::WriteListToParcel(
-        parcel, supportedMediaTypeList_, [](Parcel& p, const std::string& item) { p.WriteString(item); },
+        parcel,
+        supportedMediaTypeList_,
+        [](Parcel &p, const std::string &item) { p.WriteString(item); },
         hasSupportedMediaType_);
 
     PrintUtils::WriteListToParcel(
-        parcel, supportedQualityList_, [](Parcel& p, const int& item) { p.WriteUint32(item); },
-        hasSupportedQuality_);
+        parcel, supportedQualityList_, [](Parcel &p, const int &item) { p.WriteUint32(item); }, hasSupportedQuality_);
 
     PrintUtils::WriteListToParcel(
-        parcel, supportedOrientationList_, [](Parcel& p, const int& item) { p.WriteUint32(item); },
+        parcel,
+        supportedOrientationList_,
+        [](Parcel &p, const int &item) { p.WriteUint32(item); },
         hasSupportedOrientation_);
 
     parcel.WriteBool(hasMargin_);
@@ -466,21 +464,23 @@ void PrinterCapability::ClearCurPrinterAttrGroup()
     printerAttr_group.clear();
 }
 
-std::vector<PrintPageSize> PrinterCapability::RemoveDuplicatePageSize
-    (const std::vector<PrintPageSize> &supportedPageSizeList)
+std::vector<PrintPageSize> PrinterCapability::RemoveDuplicatePageSize(
+    const std::vector<PrintPageSize> &supportedPageSizeList)
 {
     std::vector<PrintPageSize> uniquePageSizeList = supportedPageSizeList;
     // Move custom to the end to show standard sizes preferentially
-    std::stable_partition(uniquePageSizeList.begin(), uniquePageSizeList.end(),
-        [](const PrintPageSize& p) { return p.GetName().find(CUSTOM_PREFIX) == std::string::npos; });
+    std::stable_partition(uniquePageSizeList.begin(), uniquePageSizeList.end(), [](const PrintPageSize &p) {
+        return p.GetName().find(CUSTOM_PREFIX) == std::string::npos;
+    });
     std::unordered_set<std::string> uniquePageSizeSet;
     auto it = uniquePageSizeList.begin();
     while (it != uniquePageSizeList.end()) {
         std::stringstream widthAndHeight;
-        widthAndHeight << round(it->GetWidth() / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x" <<
-            round(it->GetHeight() / HUNDRED_OF_MILLIMETRE_TO_INCH);
+        widthAndHeight << round(it->GetWidth() / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x"
+                       << round(it->GetHeight() / HUNDRED_OF_MILLIMETRE_TO_INCH);
         PRINT_HILOGI("SetSupportedPageSize: %{public}s, uniqueFlag: %{public}s",
-            it->GetName().c_str(), widthAndHeight.str().c_str());
+            it->GetName().c_str(),
+            widthAndHeight.str().c_str());
         if (uniquePageSizeSet.insert(widthAndHeight.str()).second) {
             ++it;
         } else {
@@ -492,4 +492,4 @@ std::vector<PrintPageSize> PrinterCapability::RemoveDuplicatePageSize
     }
     return uniquePageSizeList;
 }
-} // namespace OHOS::Print
+}  // namespace OHOS::Print

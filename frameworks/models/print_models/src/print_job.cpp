@@ -19,10 +19,10 @@
 
 namespace OHOS::Print {
 PrintJob::PrintJob()
-    : jobId_(""), printerId_(""), jobState_(PRINT_JOB_PREPARED),
-      subState_(PRINT_JOB_BLOCKED_UNKNOWN), copyNumber_(0),
-      isSequential_(false), isLandscape_(false), colorMode_(0), duplexMode_(0),
-      hasMargin_(false), hasPreview_(false), hasOption_(false), option_("") {
+    : jobId_(""), printerId_(""), jobState_(PRINT_JOB_PREPARED), subState_(PRINT_JOB_BLOCKED_UNKNOWN), copyNumber_(0),
+      isSequential_(false), isLandscape_(false), colorMode_(0), duplexMode_(0), hasMargin_(false), hasPreview_(false),
+      hasOption_(false), option_("")
+{
     margin_.Reset();
     preview_.Reset();
 }
@@ -79,8 +79,7 @@ PrintJob &PrintJob::operator=(const PrintJob &right)
 }
 
 PrintJob::~PrintJob()
-{
-}
+{}
 
 void PrintJob::SetFdList(const std::vector<uint32_t> &fdList)
 {
@@ -295,7 +294,7 @@ void PrintJob::ReadParcelFD(Parcel &parcel)
     fdList_.clear();
 
     CHECK_IS_EXCEED_PRINT_RANGE_VOID(fdSize);
-    auto msgParcel = static_cast<MessageParcel*>(&parcel);
+    auto msgParcel = static_cast<MessageParcel *>(&parcel);
     for (uint32_t index = 0; index < fdSize; index++) {
         auto fd = msgParcel->ReadFileDescriptor();
         PRINT_HILOGD("fd[%{public}d] = %{public}d", index, fd);
@@ -350,7 +349,7 @@ void PrintJob::ReadFromParcel(Parcel &parcel)
 bool PrintJob::Marshalling(Parcel &parcel) const
 {
     parcel.WriteUint32(fdList_.size());
-    auto msgParcel = static_cast<MessageParcel*>(&parcel);
+    auto msgParcel = static_cast<MessageParcel *>(&parcel);
     if (msgParcel != nullptr) {
         for (auto fd : fdList_) {
             msgParcel->WriteFileDescriptor(fd);
@@ -478,4 +477,4 @@ Json::Value PrintJob::ConvertToJsonObject() const
     }
     return jsonObject;
 }
-} // namespace OHOS::Print
+}  // namespace OHOS::Print

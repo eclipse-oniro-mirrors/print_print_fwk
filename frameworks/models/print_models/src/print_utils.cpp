@@ -59,7 +59,7 @@ std::string PrintUtils::GetExtensionId(const std::string &globalId)
     return globalId.substr(0, pos);
 }
 
-std::string PrintUtils::GetGlobalId(const std::string& extensionId, const std::string& localId)
+std::string PrintUtils::GetGlobalId(const std::string &extensionId, const std::string &localId)
 {
     if (localId.find(extensionId) != std::string::npos) {
         return localId;
@@ -67,7 +67,7 @@ std::string PrintUtils::GetGlobalId(const std::string& extensionId, const std::s
     return extensionId + GLOBAL_ID_DELIMITER + localId;
 }
 
-std::string PrintUtils::GetLocalId(const std::string& globalId, const std::string& extensionId)
+std::string PrintUtils::GetLocalId(const std::string &globalId, const std::string &extensionId)
 {
     auto pos = globalId.find(GLOBAL_ID_DELIMITER);
     if (pos == std::string::npos) {
@@ -170,7 +170,7 @@ int32_t PrintUtils::OpenFile(const std::string &filePath)
 bool PrintUtils::IsPathValid(const std::string &filePath)
 {
     auto path = filePath.substr(0, filePath.rfind('/'));
-    char resolvedPath[PATH_MAX] = { 0 };
+    char resolvedPath[PATH_MAX] = {0};
     if (path.length() >= PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr ||
         strncmp(resolvedPath, path.c_str(), path.length()) != 0) {
         PRINT_HILOGE("invalid file path!");
@@ -203,7 +203,7 @@ std::string PrintUtils::GetJobStateChar(const uint32_t state)
     }
     auto it = jobStateMap_.find(state);
     if (it != jobStateMap_.end()) {
-        return it -> second;
+        return it->second;
     }
     return "PRINT_JOB_UNKNOWN";
 }

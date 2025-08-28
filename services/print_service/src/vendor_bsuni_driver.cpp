@@ -23,7 +23,7 @@ using namespace OHOS::Print;
 namespace {
 std::mutex g_driverMutex;
 VendorBsuniDriver *g_driverWrapper = nullptr;
-}
+}  // namespace
 
 void VendorBsuniDriver::SetDriverWrapper(VendorBsuniDriver *driver)
 {
@@ -128,8 +128,7 @@ int32_t VendorBsuniDriver::RemovePrinterFromDiscovery(const char *printerId)
 }
 
 int32_t VendorBsuniDriver::AddPrinterToCups(const Print_DiscoveryItem *printer,
-                                            const Print_PrinterCapability *capability,
-                                            const Print_DefaultValue *defaultValue, const char *ppdData)
+    const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue, const char *ppdData)
 {
     PRINT_HILOGI("BsUni callback AddPrinterToCups");
     auto info = std::make_shared<PrinterInfo>();
@@ -180,8 +179,7 @@ int32_t VendorBsuniDriver::RemovePrinterFromCups(const char *printerId)
 }
 
 int32_t VendorBsuniDriver::OnCapabilityQueried(const Print_DiscoveryItem *printer,
-                                               const Print_PrinterCapability *capability,
-                                               const Print_DefaultValue *defaultValue)
+    const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue)
 {
     PRINT_HILOGI("BsUni callback OnCapabilityQueried");
     LogDiscoveryItem(printer);
@@ -241,9 +239,11 @@ int32_t VendorBsuniDriver::OnPropertiesQueried(const char *printerId, const Prin
     return EXTENSION_ERROR_NONE;
 }
 
-VendorBsuniDriver::VendorBsuniDriver() {}
+VendorBsuniDriver::VendorBsuniDriver()
+{}
 
-VendorBsuniDriver::~VendorBsuniDriver() {}
+VendorBsuniDriver::~VendorBsuniDriver()
+{}
 
 bool VendorBsuniDriver::Init(IPrinterVendorManager *manager)
 {
@@ -398,7 +398,7 @@ bool VendorBsuniDriver::OnQueryProperties(const std::string &printerId, const st
         PRINT_HILOGW("onQueryProperties is null");
         return ret;
     }
-    Print_StringList propertyKeyList = { 0 };
+    Print_StringList propertyKeyList = {0};
     if (ConvertStringVectorToStringList(propertyKeys, propertyKeyList)) {
         int32_t result = vendorExtension->onQueryProperties(printerId.c_str(), &propertyKeyList);
         PRINT_HILOGI("OnQueryProperties quit: %{public}d", result);
@@ -437,8 +437,7 @@ void VendorBsuniDriver::OnDiscoveredPrinterRemove(std::shared_ptr<std::string> p
     vendorManager->RemovePrinterFromDiscovery(GetVendorName(), *printerId);
 }
 
-void VendorBsuniDriver::OnCupsPrinterAdd(std::shared_ptr<PrinterInfo> printerInfo,
-    std::shared_ptr<std::string> ppdData)
+void VendorBsuniDriver::OnCupsPrinterAdd(std::shared_ptr<PrinterInfo> printerInfo, std::shared_ptr<std::string> ppdData)
 {
     if (printerInfo == nullptr) {
         PRINT_HILOGW("printerInfo is null");

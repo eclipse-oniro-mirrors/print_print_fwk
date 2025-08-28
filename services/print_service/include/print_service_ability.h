@@ -53,8 +53,8 @@ public:
     ~PrintServiceAbility();
     static sptr<PrintServiceAbility> GetInstance();
     int32_t StartService() override;
-    int32_t StartPrint(const std::vector<std::string> &fileList,
-        const std::vector<uint32_t> &fdList, std::string &taskId) override;
+    int32_t StartPrint(
+        const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId) override;
     int32_t StopPrint(const std::string &taskId) override;
     int32_t ConnectPrinter(const std::string &printerId) override;
     int32_t DisconnectPrinter(const std::string &printerId) override;
@@ -77,22 +77,22 @@ public:
     int32_t Off(const std::string taskId, const std::string &type) override;
     int32_t RegisterPrinterCallback(const std::string &type, const sptr<IPrintCallback> &listener) override;
     int32_t UnregisterPrinterCallback(const std::string &type) override;
-    int32_t RegisterExtCallback(const std::string &extensionCID,
-        const sptr<IPrintExtensionCallback> &listener) override;
+    int32_t RegisterExtCallback(
+        const std::string &extensionCID, const sptr<IPrintExtensionCallback> &listener) override;
     int32_t UnregisterAllExtCallback(const std::string &extensionId) override;
     int32_t LoadExtSuccess(const std::string &extensionId) override;
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override;
     int32_t QueryAllActivePrintJob(std::vector<PrintJob> &printJobs) override;
     int32_t QueryPrintJobById(std::string &printJobId, PrintJob &printjob) override;
-    int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
-        const std::string &printerMake) override;
-    int32_t QueryPrinterCapabilityByUri(const std::string &printerUri, const std::string &printerId,
-        PrinterCapability &printerCaps) override;
+    int32_t AddPrinterToCups(
+        const std::string &printerUri, const std::string &printerName, const std::string &printerMake) override;
+    int32_t QueryPrinterCapabilityByUri(
+        const std::string &printerUri, const std::string &printerId, PrinterCapability &printerCaps) override;
     void SetHelper(const std::shared_ptr<PrintServiceHelper> &helper);
-    int32_t PrintByAdapter(const std::string jobName, const PrintAttributes &printAttributes,
-        std::string &taskId) override;
-    int32_t StartGetPrintFile(const std::string &jobId, const PrintAttributes &printAttributes,
-        const uint32_t fd) override;
+    int32_t PrintByAdapter(
+        const std::string jobName, const PrintAttributes &printAttributes, std::string &taskId) override;
+    int32_t StartGetPrintFile(
+        const std::string &jobId, const PrintAttributes &printAttributes, const uint32_t fd) override;
     int32_t NotifyPrintService(const std::string &jobId, const std::string &type) override;
 
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
@@ -119,7 +119,7 @@ public:
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) override;
     void DelayEnterLowPowerMode();
     void ExitLowPowerMode();
-    bool IsPrinterPpdUpdateRequired(const std::string& standardPrinterName, const std::string& ppdHashCode);
+    bool IsPrinterPpdUpdateRequired(const std::string &standardPrinterName, const std::string &ppdHashCode);
 
 protected:
     void OnStart() override;
@@ -146,8 +146,8 @@ private:
     int32_t ReportHisysEvent(const std::shared_ptr<PrintJob> &jobInfo, const std::string &printerId, uint32_t subState);
     void ReportCompletedPrint(const std::string &printerId);
     void CheckJobQueueBlocked(const PrintJob &jobInfo);
-    int32_t CallSpooler(const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList,
-        std::string &taskId);
+    int32_t CallSpooler(
+        const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId);
     void notifyAdapterJobChanged(const std::string jobId, const uint32_t state, const uint32_t subState);
     bool checkJobState(uint32_t state, uint32_t subState);
     int32_t CheckAndSendQueuePrintJob(const std::string &jobId, uint32_t state, uint32_t subState);
@@ -206,7 +206,7 @@ private:
     int32_t ConnectUsbPrinter(const std::string &printerId);
     void RefreshPrinterInfoByPpd();
     void CheckCupsServerAlive();
-    void RefreshPrinterPageSize(PrinterInfo& printerInfo);
+    void RefreshPrinterPageSize(PrinterInfo &printerInfo);
     int32_t BlockPrintJob(const std::string &jobId);
     void BlockUserPrintJobs(const int32_t userId);
     bool CheckPrintConstraint();
@@ -216,7 +216,7 @@ private:
     void StartUnloadThread();
     std::vector<AppExecFwk::RunningProcessInfo> GetRunningProcessInformation(const std::string &bundleName);
     bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
-    
+
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool UpdateVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
@@ -224,8 +224,8 @@ public:
     bool AddVendorPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
         const std::string &ppdName, const std::string &ppdData) override;
     bool RemoveVendorPrinterFromCups(const std::string &vendorName, const std::string &printerId) override;
-    bool OnVendorStatusUpdate(const std::string &globalVendorName, const std::string &printerId,
-        const PrinterVendorStatus &status) override;
+    bool OnVendorStatusUpdate(
+        const std::string &globalVendorName, const std::string &printerId, const PrinterVendorStatus &status) override;
     bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) override;
     bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
     std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &printerId) override;
@@ -244,11 +244,11 @@ private:
     std::string RenamePrinterWhenAdded(const PrinterInfo &info);
     void ReportPrinterIdle(const std::string &printerId);
     void UnregisterPrintTaskCallback(const std::string &jobId, const uint32_t state, const uint32_t subState);
-    bool DoAddPrinterToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName,
-        const std::string &ppdData);
+    bool DoAddPrinterToCups(
+        std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData);
     bool DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
         std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData);
-    void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string& ppdName);
+    void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName);
     bool DeletePrintJobFromHistoryList(const std::string jobId);
 
 private:
@@ -296,12 +296,13 @@ private:
 private:
     std::atomic<bool> isEnterprise_ = false;
     std::atomic<int32_t> lastUserId_ = -1;
+
 public:
     void UpdateIsEnterprise();
     bool IsEnterpriseEnable();
     bool IsEnterprise();
     void RefreshPrinterStatusOnSwitchUser();
-#endif // ENTERPRISE_ENABLE
+#endif  // ENTERPRISE_ENABLE
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_SYSTEM_ABILITY_H

@@ -177,7 +177,7 @@ uint32_t PrintTask::CallSpooler(
     size_t contextIndex = isPrintByAdapter ? NapiPrintUtils::INDEX_THREE : NapiPrintUtils::INDEX_ONE;
     size_t callBackIndex = isPrintByAdapter ? NapiPrintUtils::INDEX_FOUR : NapiPrintUtils::INDEX_TWO;
     size_t argMaxNum = isPrintByAdapter ? NapiPrintUtils::ARGC_FIVE : NapiPrintUtils::ARGC_THREE;
-    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
     napi_value thisArg = nullptr;
     void *data = nullptr;
     napi_value result = nullptr;
@@ -202,7 +202,8 @@ uint32_t PrintTask::CallSpooler(
         napi_valuetype valueType = napi_undefined;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[callBackIndex], &valueType), E_PRINT_INVALID_PARAMETER);
         if (valueType == napi_function) {
-            PRINT_CALL_BASE(env, napi_create_reference(env, argv[callBackIndex], 1, &asyncContext->callback),
+            PRINT_CALL_BASE(env,
+                napi_create_reference(env, argv[callBackIndex], 1, &asyncContext->callback),
                 E_PRINT_INVALID_PARAMETER);
             PRINT_HILOGD("is a callback api");
         }
@@ -318,14 +319,12 @@ uint32_t PrintTask::StartUIExtensionAbility(OHOS::AAFwk::Want &want, std::shared
     }
     OHOS::Ace::ModalUIExtensionCallbacks extensionCallbacks = {
         [callback](int32_t releaseCode) { callback->OnRelease(releaseCode); },
-        [callback](int32_t resultCode, const OHOS::AAFwk::Want& result) {
-            callback->OnResultForModal(resultCode, result);
-        },
-        [callback](const OHOS::AAFwk::WantParams& request) { callback->OnReceive(request); },
-        [callback](int32_t code, const std::string& name, const std::string& message) {
+        [callback](
+            int32_t resultCode, const OHOS::AAFwk::Want &result) { callback->OnResultForModal(resultCode, result); },
+        [callback](const OHOS::AAFwk::WantParams &request) { callback->OnReceive(request); },
+        [callback](int32_t code, const std::string &name, const std::string &message) {
             callback->OnError(code, name, message);
-        }
-    };
+        }};
 
     OHOS::Ace::ModalUIExtensionConfig config;
     config.isProhibitBack = true;
@@ -378,7 +377,7 @@ napi_value PrintTask::On(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
     size_t argc = NapiPrintUtils::MAX_ARGC;
-    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
     napi_value thisVal = nullptr;
     void *data = nullptr;
     PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
@@ -481,4 +480,4 @@ bool PrintTask::CheckPermission(const std::string &name)
     }
     return result == PERMISSION_GRANTED;
 }
-} // namespace OHOS::Print
+}  // namespace OHOS::Print

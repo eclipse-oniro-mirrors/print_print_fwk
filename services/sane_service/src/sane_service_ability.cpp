@@ -46,7 +46,7 @@ void SaneServerManager::OnStart()
     SCAN_HILOGI("SaneServerManager start success");
 }
 
-SANE_Handle SaneServerManager::GetScanHandle(const std::string& scannerId)
+SANE_Handle SaneServerManager::GetScanHandle(const std::string &scannerId)
 {
     auto it = scannerHandleList_.find(scannerId);
     if (it == scannerHandleList_.end()) {
@@ -74,7 +74,7 @@ bool SaneServerManager::CheckPermission()
     return true;
 }
 
-ErrCode SaneServerManager::SaneInit(int32_t& status)
+ErrCode SaneServerManager::SaneInit(int32_t &status)
 {
     SCAN_HILOGI("SaneInit start");
     if (!CheckPermission()) {
@@ -100,7 +100,7 @@ ErrCode SaneServerManager::SaneExit()
     return ERR_OK;
 }
 
-ErrCode SaneServerManager::SaneOpen(const std::string& scannerId, int32_t& status)
+ErrCode SaneServerManager::SaneOpen(const std::string &scannerId, int32_t &status)
 {
     SCAN_HILOGI("SaneOpen start");
     if (!CheckPermission()) {
@@ -129,7 +129,7 @@ ErrCode SaneServerManager::SaneOpen(const std::string& scannerId, int32_t& statu
     return ERR_OK;
 }
 
-ErrCode SaneServerManager::SaneClose(const std::string& scannerId)
+ErrCode SaneServerManager::SaneClose(const std::string &scannerId)
 {
     SCAN_HILOGI("SaneClose start");
     if (!CheckPermission()) {
@@ -146,7 +146,7 @@ ErrCode SaneServerManager::SaneClose(const std::string& scannerId)
     return ERR_OK;
 }
 
-ErrCode SaneServerManager::SaneStart(const std::string& scannerId, int32_t& status)
+ErrCode SaneServerManager::SaneStart(const std::string &scannerId, int32_t &status)
 {
     SCAN_HILOGI("SaneStart start");
     if (!CheckPermission()) {
@@ -165,7 +165,7 @@ ErrCode SaneServerManager::SaneStart(const std::string& scannerId, int32_t& stat
     return ERR_OK;
 }
 
-ErrCode SaneServerManager::SaneCancel(const std::string& scannerId)
+ErrCode SaneServerManager::SaneCancel(const std::string &scannerId)
 {
     SCAN_HILOGI("SaneCancel start");
     if (!CheckPermission()) {
@@ -182,8 +182,8 @@ ErrCode SaneServerManager::SaneCancel(const std::string& scannerId)
     return ERR_OK;
 }
 
-ErrCode SaneServerManager::SaneGetOptionDescriptor(const std::string& scannerId, int32_t saneOption,
-    SaneOptionDescriptor& saneOptDes, int32_t& status)
+ErrCode SaneServerManager::SaneGetOptionDescriptor(
+    const std::string &scannerId, int32_t saneOption, SaneOptionDescriptor &saneOptDes, int32_t &status)
 {
     SCAN_HILOGI("SaneGetOptionDescriptor start");
     if (!CheckPermission()) {
@@ -197,7 +197,7 @@ ErrCode SaneServerManager::SaneGetOptionDescriptor(const std::string& scannerId,
         return ERR_OK;
     }
     SCAN_HILOGD("saneOption %{public}d", saneOption);
-    const SANE_Option_Descriptor* saneDesc = sane_get_option_descriptor(handle, saneOption);
+    const SANE_Option_Descriptor *saneDesc = sane_get_option_descriptor(handle, saneOption);
     if (saneDesc == nullptr) {
         SCAN_HILOGE("saneDesc is a nullptr");
         status = SANE_STATUS_INVAL;
@@ -210,8 +210,7 @@ ErrCode SaneServerManager::SaneGetOptionDescriptor(const std::string& scannerId,
     return ERR_OK;
 }
 
-void SaneServerManager::ConvertSaneDescriptor(const SANE_Option_Descriptor* saneDesc,
-    SaneOptionDescriptor& saneOptDes)
+void SaneServerManager::ConvertSaneDescriptor(const SANE_Option_Descriptor *saneDesc, SaneOptionDescriptor &saneOptDes)
 {
     SCAN_HILOGI("ConvertSaneDescriptor start");
     if (saneDesc == nullptr) {
@@ -236,16 +235,15 @@ void SaneServerManager::ConvertSaneDescriptor(const SANE_Option_Descriptor* sane
         saneOptDes.minValue_ = saneDesc->constraint.range->min;
         saneOptDes.maxValue_ = saneDesc->constraint.range->max;
         saneOptDes.quantValue_ = saneDesc->constraint.range->quant;
-    } else if (saneDesc->constraint_type == ::SANE_CONSTRAINT_WORD_LIST
-        && saneDesc->constraint.word_list != nullptr) {
+    } else if (saneDesc->constraint_type == ::SANE_CONSTRAINT_WORD_LIST && saneDesc->constraint.word_list != nullptr) {
         saneOptDes.optionConstraintNumber_.clear();
         int32_t sizeNumber = saneDesc->constraint.word_list[0];
         for (int32_t i = 1; i <= sizeNumber; i++) {
             SCAN_HILOGD("SANE_CONSTRAINT_WORD_LIST: %{public}d", saneDesc->constraint.word_list[i]);
             saneOptDes.optionConstraintNumber_.push_back(saneDesc->constraint.word_list[i]);
         }
-    } else if (saneDesc->constraint_type == ::SANE_CONSTRAINT_STRING_LIST
-        && saneDesc->constraint.string_list != nullptr) {
+    } else if (saneDesc->constraint_type == ::SANE_CONSTRAINT_STRING_LIST &&
+               saneDesc->constraint.string_list != nullptr) {
         for (int32_t i = 0; saneDesc->constraint.string_list[i] != nullptr; i++) {
             SCAN_HILOGD("SANE_CONSTRAINT_STRING_LIST: %{public}s", saneDesc->constraint.string_list[i]);
             saneOptDes.optionConstraintString_.push_back(std::string(saneDesc->constraint.string_list[i]));
@@ -254,7 +252,7 @@ void SaneServerManager::ConvertSaneDescriptor(const SANE_Option_Descriptor* sane
     SCAN_HILOGI("ConvertSaneDescriptor end");
 }
 
-ErrCode SaneServerManager::SaneGetParameters(const std::string& scannerId, SaneParameters& spm, int32_t& status)
+ErrCode SaneServerManager::SaneGetParameters(const std::string &scannerId, SaneParameters &spm, int32_t &status)
 {
     SCAN_HILOGI("SaneGetParameters start");
     if (!CheckPermission()) {
@@ -285,7 +283,7 @@ ErrCode SaneServerManager::SaneGetParameters(const std::string& scannerId, SaneP
     return ERR_OK;
 }
 
-ErrCode SaneServerManager::SaneGetDevices(std::vector<SaneDevice>& deviceInfos, int32_t& status)
+ErrCode SaneServerManager::SaneGetDevices(std::vector<SaneDevice> &deviceInfos, int32_t &status)
 {
     SCAN_HILOGI("SaneGetDevices start");
     if (!CheckPermission()) {
@@ -321,8 +319,8 @@ ErrCode SaneServerManager::SaneGetDevices(std::vector<SaneDevice>& deviceInfos, 
     return ERR_OK;
 }
 
-ErrCode SaneServerManager::SaneControlOption(const std::string& scannerId, const SaneControlParam& controlParam,
-    SaneOutParam& outParam, int32_t& status)
+ErrCode SaneServerManager::SaneControlOption(
+    const std::string &scannerId, const SaneControlParam &controlParam, SaneOutParam &outParam, int32_t &status)
 {
     SCAN_HILOGI("SaneControlOption start");
     if (!CheckPermission()) {
@@ -367,8 +365,8 @@ ErrCode SaneServerManager::SaneControlOption(const std::string& scannerId, const
     return ERR_OK;
 }
 
-SaneStatus SaneServerManager::GetControlOption(SANE_Handle& handle,
-    const SaneControlParam& controlParam, SaneOutParam& outParam)
+SaneStatus SaneServerManager::GetControlOption(
+    SANE_Handle &handle, const SaneControlParam &controlParam, SaneOutParam &outParam)
 {
     if (handle == nullptr) {
         SCAN_HILOGE("handle is a nullptr");
@@ -399,8 +397,8 @@ SaneStatus SaneServerManager::GetControlOption(SANE_Handle& handle,
     return SANE_STATUS_GOOD;
 }
 
-SaneStatus SaneServerManager::SetControlOption(SANE_Handle& handle,
-    const SaneControlParam& controlParam, SaneOutParam& outParam)
+SaneStatus SaneServerManager::SetControlOption(
+    SANE_Handle &handle, const SaneControlParam &controlParam, SaneOutParam &outParam)
 {
     if (handle == nullptr) {
         SCAN_HILOGE("handle is a nullptr");
@@ -408,14 +406,13 @@ SaneStatus SaneServerManager::SetControlOption(SANE_Handle& handle,
     }
     SANE_Int option = controlParam.option_;
     SANE_Action action = static_cast<SANE_Action>(controlParam.action_);
-    SANE_Int& info = outParam.info_;
+    SANE_Int &info = outParam.info_;
     int32_t valueType = controlParam.valueType_;
-    SCAN_HILOGD("valueType = [%{public}d], option = [%{public}d], action = [%{public}u]",
-        valueType, option, action);
+    SCAN_HILOGD("valueType = [%{public}d], option = [%{public}d], action = [%{public}u]", valueType, option, action);
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
     if (valueType == SCAN_VALUE_STR) {
         std::string value = controlParam.valueStr_;
-        saneStatus = sane_control_option(handle, option, action, const_cast<char*>(&value.front()), &info);
+        saneStatus = sane_control_option(handle, option, action, const_cast<char *>(&value.front()), &info);
         SCAN_HILOGD("SetControlOption, value = [%{public}s]", value.c_str());
     } else {
         int32_t value = controlParam.valueNumber_;
@@ -429,8 +426,8 @@ SaneStatus SaneServerManager::SetControlOption(SANE_Handle& handle,
     return SANE_STATUS_GOOD;
 }
 
-ErrCode SaneServerManager::SaneRead(const std::string& scannerId,
-    const int32_t buflen, SanePictureData& pictureData, int32_t& status)
+ErrCode SaneServerManager::SaneRead(
+    const std::string &scannerId, const int32_t buflen, SanePictureData &pictureData, int32_t &status)
 {
     SCAN_HILOGI("SaneRead start");
     if (!CheckPermission()) {
@@ -478,7 +475,7 @@ ErrCode SaneServerManager::UnloadSystemAbility()
         return SANE_STATUS_NO_PERMISSION;
     }
     std::lock_guard<std::mutex> autoLock(scannerHandleListlock_);
-    for (const auto& scanner : scannerHandleList_) {
+    for (const auto &scanner : scannerHandleList_) {
         sane_cancel(scanner.second);
         sane_close(scanner.second);
     }
@@ -487,12 +484,12 @@ ErrCode SaneServerManager::UnloadSystemAbility()
     const std::string dataTmpDir = "/data/service/el2/public/print_service/sane/tmp";
     std::vector<std::string> files;
     GetDirFiles(dataTmpDir, files);
-    for (const auto& file : files) {
+    for (const auto &file : files) {
         if (!RemoveFile(file)) {
             SCAN_HILOGW("RemoveFile failed");
         }
     }
-    auto task = [this] () {
+    auto task = [this]() {
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {
             SCAN_HILOGE("get samgr failed");
@@ -509,5 +506,5 @@ ErrCode SaneServerManager::UnloadSystemAbility()
     unloadThead.detach();
     return ERR_OK;
 }
-}
-}
+}  // namespace Scan
+}  // namespace OHOS

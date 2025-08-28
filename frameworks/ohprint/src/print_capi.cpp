@@ -46,8 +46,8 @@ static Print_PrinterChangeCallback g_printerChangeCallback = nullptr;
 
 static bool NativePrinterDiscoverFunction(uint32_t event, const PrinterInfo &info)
 {
-    PRINT_HILOGD("NativePrinterDiscoverFunction event: %{public}d, printerId: %{private}s",
-        event, info.GetPrinterId().c_str());
+    PRINT_HILOGD(
+        "NativePrinterDiscoverFunction event: %{public}d, printerId: %{private}s", event, info.GetPrinterId().c_str());
     if (g_printerDiscoverCallback == nullptr) {
         PRINT_HILOGW("g_printerDiscoverCallback is null");
         return false;
@@ -72,8 +72,8 @@ static bool NativePrinterDiscoverFunction(uint32_t event, const PrinterInfo &inf
 
 static bool NativePrinterInfoFunction(uint32_t event, const PrinterInfo &info)
 {
-    PRINT_HILOGD("NativePrinterInfoFunction event: %{public}d, printerId: %{private}s",
-        event, info.GetPrinterId().c_str());
+    PRINT_HILOGD(
+        "NativePrinterInfoFunction event: %{public}d, printerId: %{private}s", event, info.GetPrinterId().c_str());
     if (g_printerChangeCallback == nullptr) {
         PRINT_HILOGW("g_printerChangeCallback is null");
         return false;
@@ -103,14 +103,13 @@ static OHOS::Ace::UIContent *GetUIContent(void *context)
         return nullptr;
     }
 
-    auto weakContext = static_cast<std::weak_ptr<OHOS::AbilityRuntime::Context>*>(context);
+    auto weakContext = static_cast<std::weak_ptr<OHOS::AbilityRuntime::Context> *>(context);
     if (weakContext == nullptr) {
         PRINT_HILOGE("cast context to weak is null.");
         return nullptr;
     }
     auto sharedContext = weakContext->lock();
-    auto abilityContext =
-        OHOS::AbilityRuntime::Context::ConvertTo<OHOS::AbilityRuntime::AbilityContext>(sharedContext);
+    auto abilityContext = OHOS::AbilityRuntime::Context::ConvertTo<OHOS::AbilityRuntime::AbilityContext>(sharedContext);
     if (abilityContext != nullptr) {
         PRINT_HILOGD("get ability ui content.");
         return abilityContext->GetUIContent();
@@ -147,7 +146,7 @@ static void ReleasePrintAttributes(Print_PrintAttributes *attr)
         return;
     }
     if (attr->pageRange.pagesArray != nullptr) {
-        delete [] attr->pageRange.pagesArray;
+        delete[] attr->pageRange.pagesArray;
         attr->pageRange.pagesArray = nullptr;
     }
     delete attr;
@@ -401,8 +400,8 @@ Print_ErrorCode OH_Print_UpdatePrinterProperties(const char *printerId, const Pr
     for (uint32_t i = 0; i < propertyList->count; i++) {
         settingJson[propertyList->list[i].key] = propertyList->list[i].value;
     }
-    PRINT_HILOGD("OH_Print_UpdatePrinterProperties setting : %{public}s.",
-        (PrintJsonUtil::WriteString(settingJson)).c_str());
+    PRINT_HILOGD(
+        "OH_Print_UpdatePrinterProperties setting : %{public}s.", (PrintJsonUtil::WriteString(settingJson)).c_str());
     PrinterPreferences preferences;
     preferences.ConvertJsonToPrinterPreferences(settingJson);
     int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(printerId, preferences);
@@ -422,11 +421,8 @@ namespace {
 class PrintDocumentAdapterWrapper : public PrintDocumentAdapter {
 public:
     explicit PrintDocumentAdapterWrapper(Print_PrintDocCallback PrintCallback);
-    void onStartLayoutWrite(const std::string &jobId,
-                            const PrintAttributes &oldAttrs,
-                            const PrintAttributes &newAttrs,
-                            uint32_t fd,
-                            std::function<void(std::string, uint32_t)> writeResultCallback) override;
+    void onStartLayoutWrite(const std::string &jobId, const PrintAttributes &oldAttrs, const PrintAttributes &newAttrs,
+        uint32_t fd, std::function<void(std::string, uint32_t)> writeResultCallback) override;
     void onJobStateChanged(const std::string &jobId, uint32_t state) override;
     void OnWriteResultCallback(const std::string &jobId, uint32_t code);
     static void WriteResultCallback(const char *jobId, uint32_t code);
@@ -437,22 +433,19 @@ private:
     Print_PrintDocCallback printCb_;
     std::function<void(std::string, uint32_t)> writeResultCb_;
     static std::mutex printDocMutex_;
-    static std::map<std::string, PrintDocumentAdapterWrapper*> printDocAdapterMap_;
+    static std::map<std::string, PrintDocumentAdapterWrapper *> printDocAdapterMap_;
 };
 
 std::mutex PrintDocumentAdapterWrapper::printDocMutex_;
-std::map<std::string, PrintDocumentAdapterWrapper*> PrintDocumentAdapterWrapper::printDocAdapterMap_;
+std::map<std::string, PrintDocumentAdapterWrapper *> PrintDocumentAdapterWrapper::printDocAdapterMap_;
 
 PrintDocumentAdapterWrapper::PrintDocumentAdapterWrapper(Print_PrintDocCallback PrintCallback)
 {
     printCb_ = PrintCallback;
 }
 
-void PrintDocumentAdapterWrapper::onStartLayoutWrite(const std::string &jobId,
-                                                     const PrintAttributes &oldAttrs,
-                                                     const PrintAttributes &newAttrs,
-                                                     uint32_t fd,
-                                                     std::function<void(std::string, uint32_t)> writeResultCallback)
+void PrintDocumentAdapterWrapper::onStartLayoutWrite(const std::string &jobId, const PrintAttributes &oldAttrs,
+    const PrintAttributes &newAttrs, uint32_t fd, std::function<void(std::string, uint32_t)> writeResultCallback)
 {
     if (printCb_.startLayoutWriteCb == nullptr) {
         PRINT_HILOGE("OH_Print start layout callback is null.");
@@ -461,17 +454,14 @@ void PrintDocumentAdapterWrapper::onStartLayoutWrite(const std::string &jobId,
     {
         std::lock_guard<std::mutex> lock(printDocMutex_);
         if (printDocAdapterMap_.find(jobId) == printDocAdapterMap_.end()) {
-            printDocAdapterMap_.insert({ jobId, this });
+            printDocAdapterMap_.insert({jobId, this});
         }
     }
     writeResultCb_ = writeResultCallback;
     auto oldAttrsPtr = BuildPrintAttributes(oldAttrs);
     auto newAttrsPtr = BuildPrintAttributes(newAttrs);
-    printCb_.startLayoutWriteCb(jobId.c_str(),
-                                fd,
-                                oldAttrsPtr,
-                                newAttrsPtr,
-                                PrintDocumentAdapterWrapper::WriteResultCallback);
+    printCb_.startLayoutWriteCb(
+        jobId.c_str(), fd, oldAttrsPtr, newAttrsPtr, PrintDocumentAdapterWrapper::WriteResultCallback);
     ReleasePrintAttributes(oldAttrsPtr);
     ReleasePrintAttributes(newAttrsPtr);
     oldAttrsPtr = nullptr;
@@ -484,8 +474,8 @@ void PrintDocumentAdapterWrapper::onJobStateChanged(const std::string &jobId, ui
         PRINT_HILOGE("OH_Print job state callback is null.");
         return;
     }
-    if (state == PRINT_DOC_ADAPTER_PREVIEW_ABILITY_DESTROY_FOR_CANCELED
-        || state == PRINT_DOC_ADAPTER_PREVIEW_ABILITY_DESTROY_FOR_STARTED) {
+    if (state == PRINT_DOC_ADAPTER_PREVIEW_ABILITY_DESTROY_FOR_CANCELED ||
+        state == PRINT_DOC_ADAPTER_PREVIEW_ABILITY_DESTROY_FOR_STARTED) {
         std::lock_guard<std::mutex> lock(printDocMutex_);
         printDocAdapterMap_.erase(jobId);
     }
@@ -499,7 +489,7 @@ void PrintDocumentAdapterWrapper::WriteResultCallback(const char *jobId, uint32_
         return;
     }
     std::string jobIdStr = jobId;
-    PrintDocumentAdapterWrapper* wrapper = nullptr;
+    PrintDocumentAdapterWrapper *wrapper = nullptr;
     {
         std::lock_guard<std::mutex> lock(printDocMutex_);
         auto iter = printDocAdapterMap_.find(jobId);
@@ -568,11 +558,10 @@ Print_PrintAttributes *PrintDocumentAdapterWrapper::BuildPrintAttributes(const P
     attributes->pageMargin = printMargin;
     return attributes.release();
 }
-}
+}  // namespace
 
-Print_ErrorCode OH_Print_StartPrintByNative(const char *printJobName,
-                                            Print_PrintDocCallback printDocCallback,
-                                            void *context)
+Print_ErrorCode OH_Print_StartPrintByNative(
+    const char *printJobName, Print_PrintDocCallback printDocCallback, void *context)
 {
     if (printJobName == nullptr) {
         PRINT_HILOGE("OH_Print start print native print job name is null.");
@@ -597,8 +586,7 @@ Print_ErrorCode OH_Print_StartPrintByNative(const char *printJobName,
     }
     auto attributes = std::make_shared<PrintAttributes>();
     std::string printJobNameStr = printJobName;
-    int32_t ret =
-        PrintManagerClient::GetInstance()->Print(printJobNameStr, printCb, attributes, uiContent);
+    int32_t ret = PrintManagerClient::GetInstance()->Print(printJobNameStr, printCb, attributes, uiContent);
     if (ret != PRINT_ERROR_NONE) {
         PRINT_HILOGE("OH_Print start print start failed, error code : %{public}d.", ret);
         return ConvertToNativeErrorCode(ret);

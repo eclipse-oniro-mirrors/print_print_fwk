@@ -55,7 +55,7 @@ int32_t OH_Scan_StartScannerDiscovery(Scan_ScannerDiscoveryCallback callback)
         SCAN_HILOGE("callback is a nullptr");
         return SCAN_ERROR_INVALID_PARAMETER;
     }
-    auto& context = ScanContext::GetInstance();
+    auto &context = ScanContext::GetInstance();
     context.SetDiscoverCallback(callback);
     auto client = ScanManagerClient::GetInstance();
     if (client == nullptr) {
@@ -84,7 +84,7 @@ int32_t OH_Scan_StartScannerDiscovery(Scan_ScannerDiscoveryCallback callback)
     return SCAN_ERROR_NONE;
 }
 
-int32_t OH_Scan_OpenScanner(const char* scannerId)
+int32_t OH_Scan_OpenScanner(const char *scannerId)
 {
     if (scannerId == nullptr) {
         SCAN_HILOGE("Invalid parameter.");
@@ -105,7 +105,7 @@ int32_t OH_Scan_OpenScanner(const char* scannerId)
     }
 }
 
-int32_t OH_Scan_CloseScanner(const char* scannerId)
+int32_t OH_Scan_CloseScanner(const char *scannerId)
 {
     if (scannerId == nullptr) {
         SCAN_HILOGE("Invalid parameter.");
@@ -126,13 +126,13 @@ int32_t OH_Scan_CloseScanner(const char* scannerId)
     }
 }
 
-Scan_ScannerOptions* OH_Scan_GetScannerParameter(const char* scannerId, int32_t* errorCode)
+Scan_ScannerOptions *OH_Scan_GetScannerParameter(const char *scannerId, int32_t *errorCode)
 {
     if (scannerId == nullptr || errorCode == nullptr) {
         SCAN_HILOGE("Invalid parameter.");
         return nullptr;
     }
-    auto& context = ScanContext::GetInstance();
+    auto &context = ScanContext::GetInstance();
     std::string deviceId(scannerId);
     auto cachedOptions = context.GetScannerOptions(deviceId);
     if (cachedOptions != nullptr) {
@@ -159,7 +159,7 @@ Scan_ScannerOptions* OH_Scan_GetScannerParameter(const char* scannerId, int32_t*
         *errorCode = status;
         return nullptr;
     }
-    Scan_ScannerOptions* scaParaOptions = context.ConvertToScannerOptions(*paraTable);
+    Scan_ScannerOptions *scaParaOptions = context.ConvertToScannerOptions(*paraTable);
     if (scaParaOptions == nullptr) {
         *errorCode = SCAN_ERROR_GENERIC_FAILURE;
         return nullptr;
@@ -170,7 +170,7 @@ Scan_ScannerOptions* OH_Scan_GetScannerParameter(const char* scannerId, int32_t*
     return scaParaOptions;
 }
 
-int32_t OH_Scan_SetScannerParameter(const char* scannerId, const int32_t option, const char* value)
+int32_t OH_Scan_SetScannerParameter(const char *scannerId, const int32_t option, const char *value)
 {
     if (scannerId == nullptr || value == nullptr) {
         SCAN_HILOGE("Invalid parameter.");
@@ -178,7 +178,7 @@ int32_t OH_Scan_SetScannerParameter(const char* scannerId, const int32_t option,
     }
     std::string deviceId(scannerId);
     ScanOptionValue optionValue;
-    auto& context = ScanContext::GetInstance();
+    auto &context = ScanContext::GetInstance();
     int32_t ret = context.GetOptionValueFromTable(deviceId, option, value, optionValue);
     if (ret != SCAN_ERROR_NONE) {
         SCAN_HILOGE("GetOptionValueFromTable error");
@@ -194,8 +194,7 @@ int32_t OH_Scan_SetScannerParameter(const char* scannerId, const int32_t option,
         SCAN_HILOGE("index [%{private}d] is error", option);
         return SCAN_ERROR_INVALID_PARAMETER;
     }
-    ret = client->OpScanOptionValue(deviceId, innerOption,
-        SCAN_ACTION_SET_VALUE, optionValue);
+    ret = client->OpScanOptionValue(deviceId, innerOption, SCAN_ACTION_SET_VALUE, optionValue);
     if (ret != SCAN_ERROR_NONE) {
         SCAN_HILOGE("SetScannerParameter failed, ErrorCode: [%{public}d]", ret);
         return ScanContext::StatusConvert(ret);
@@ -203,7 +202,7 @@ int32_t OH_Scan_SetScannerParameter(const char* scannerId, const int32_t option,
     return SCAN_ERROR_NONE;
 }
 
-int32_t OH_Scan_StartScan(const char* scannerId, bool batchMode)
+int32_t OH_Scan_StartScan(const char *scannerId, bool batchMode)
 {
     if (scannerId == nullptr) {
         SCAN_HILOGE("Invalid parameter.");
@@ -224,7 +223,7 @@ int32_t OH_Scan_StartScan(const char* scannerId, bool batchMode)
     }
 }
 
-int32_t OH_Scan_CancelScan(const char* scannerId)
+int32_t OH_Scan_CancelScan(const char *scannerId)
 {
     if (scannerId == nullptr) {
         SCAN_HILOGE("Invalid parameter.");
@@ -245,7 +244,7 @@ int32_t OH_Scan_CancelScan(const char* scannerId)
     }
 }
 
-int32_t OH_Scan_GetPictureScanProgress(const char* scannerId, Scan_PictureScanProgress* prog)
+int32_t OH_Scan_GetPictureScanProgress(const char *scannerId, Scan_PictureScanProgress *prog)
 {
     if (prog == nullptr) {
         SCAN_HILOGE("Invalid parameter.");
@@ -272,7 +271,7 @@ int32_t OH_Scan_GetPictureScanProgress(const char* scannerId, Scan_PictureScanPr
 
 int32_t OH_Scan_Exit()
 {
-    auto& context = ScanContext::GetInstance();
+    auto &context = ScanContext::GetInstance();
     auto client = ScanManagerClient::GetInstance();
     if (client == nullptr) {
         SCAN_HILOGE("client is a nullptr");

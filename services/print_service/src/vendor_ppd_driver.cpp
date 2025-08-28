@@ -19,7 +19,8 @@
 using namespace OHOS::Print;
 const int DISCOVERY_INTERVAL_MS = 5000;
 
-VendorPpdDriver::VendorPpdDriver() {}
+VendorPpdDriver::VendorPpdDriver()
+{}
 
 VendorPpdDriver::~VendorPpdDriver()
 {
@@ -185,8 +186,8 @@ bool VendorPpdDriver::WaitNext()
 {
     {
         std::unique_lock<std::mutex> lock(waitDiscoveryMutex_);
-        waitDiscoveryCondition_.wait_for(lock, std::chrono::milliseconds(DISCOVERY_INTERVAL_MS),
-            [this] { return !isDiscovering_; });
+        waitDiscoveryCondition_.wait_for(
+            lock, std::chrono::milliseconds(DISCOVERY_INTERVAL_MS), [this] { return !isDiscovering_; });
     }
     if (!isDiscovering_) {
         return false;
@@ -207,8 +208,8 @@ bool VendorPpdDriver::TryConnectByPpdDriver(const PrinterInfo &printerInfo)
         PRINT_HILOGI("no matched ppd");
         return false;
     }
-    if (vendorManager->AddPrinterToCupsWithPpd(GetVendorName(), VendorManager::ExtractPrinterId(printerId),
-        ppdName, "") != EXTENSION_ERROR_NONE) {
+    if (vendorManager->AddPrinterToCupsWithPpd(
+        GetVendorName(), VendorManager::ExtractPrinterId(printerId), ppdName, "") != EXTENSION_ERROR_NONE) {
         PRINT_HILOGI("AddPrinterToCupsWithPpd fail.");
         return false;
     }
