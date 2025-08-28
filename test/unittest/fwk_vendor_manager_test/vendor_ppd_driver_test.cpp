@@ -38,9 +38,11 @@ public:
     void TearDown();
 };
 
-void VendorPpdDriverTest::SetUpTestCase(void) {}
+void VendorPpdDriverTest::SetUpTestCase(void)
+{}
 
-void VendorPpdDriverTest::TearDownTestCase(void) {}
+void VendorPpdDriverTest::TearDownTestCase(void)
+{}
 
 void VendorPpdDriverTest::SetUp(void)
 {
@@ -48,7 +50,8 @@ void VendorPpdDriverTest::SetUp(void)
     PRINT_HILOGI("VendorPpdDriverTest_%{public}d", ++testNo);
 }
 
-void VendorPpdDriverTest::TearDown(void) {}
+void VendorPpdDriverTest::TearDown(void)
+{}
 
 HWTEST_F(VendorPpdDriverTest, GetVendorName_ShouldReturnVendorName_WhenCalled, TestSize.Level0)
 {
@@ -56,8 +59,8 @@ HWTEST_F(VendorPpdDriverTest, GetVendorName_ShouldReturnVendorName_WhenCalled, T
     EXPECT_EQ(vendorDriver.GetVendorName(), VENDOR_PPD_DRIVER);
 }
 
-HWTEST_F(VendorPpdDriverTest, OnPrinterDiscovered_ShouldSetConnectingVendorGroupAndPrinterInfo_WhenCalled,
-    TestSize.Level0)
+HWTEST_F(
+    VendorPpdDriverTest, OnPrinterDiscovered_ShouldSetConnectingVendorGroupAndPrinterInfo_WhenCalled, TestSize.Level0)
 {
     VendorPpdDriver vendorDriver;
     std::string vendorName = "TestVendor";
@@ -68,8 +71,7 @@ HWTEST_F(VendorPpdDriverTest, OnPrinterDiscovered_ShouldSetConnectingVendorGroup
     EXPECT_EQ(vendorDriver.connectingPrinterInfo->GetPrinterId(), "12345");
 }
 
-HWTEST_F(VendorPpdDriverTest, QueryProperty_ShouldReturnFalse_WhenPrinterIdDoesNotMatch,
-    TestSize.Level1)
+HWTEST_F(VendorPpdDriverTest, QueryProperty_ShouldReturnFalse_WhenPrinterIdDoesNotMatch, TestSize.Level1)
 {
     VendorPpdDriver vendorDriver;
     std::string vendorName = "TestVendor";
@@ -83,8 +85,7 @@ HWTEST_F(VendorPpdDriverTest, QueryProperty_ShouldReturnFalse_WhenPrinterIdDoesN
     EXPECT_FALSE(vendorDriver.QueryProperty("23", key, value));
 }
 
-HWTEST_F(VendorPpdDriverTest, QueryProperty_ShouldReturnTrue_WhenKeyIsCupsPpdNameAndQuerySucceeds,
-    TestSize.Level1)
+HWTEST_F(VendorPpdDriverTest, QueryProperty_ShouldReturnTrue_WhenKeyIsCupsPpdNameAndQuerySucceeds, TestSize.Level1)
 {
     MockVendorManager mock;
     VendorPpdDriver vendorDriver;
@@ -104,8 +105,7 @@ HWTEST_F(VendorPpdDriverTest, QueryProperty_ShouldReturnTrue_WhenKeyIsCupsPpdNam
     EXPECT_FALSE(vendorDriver.QueryProperty(printerId, key, value));
 }
 
-HWTEST_F(VendorPpdDriverTest, QueryPpdName_ShouldReturnFalse_WhenVendorManagerIsNull,
-    TestSize.Level1)
+HWTEST_F(VendorPpdDriverTest, QueryPpdName_ShouldReturnFalse_WhenVendorManagerIsNull, TestSize.Level1)
 {
     VendorPpdDriver vendorDriver;
     EXPECT_TRUE(vendorDriver.QueryPpdName("TestMake").empty());
@@ -124,8 +124,9 @@ HWTEST_F(VendorPpdDriverTest, DiscoverBackendPrinters_WhenDiscoverOne_ShouldAddI
     EXPECT_TRUE(vendorDriver.Init(&mock));
     PrinterInfo info;
     info.SetPrinterId("test1");
-    std::vector<PrinterInfo> infoVec = { info };
-    EXPECT_CALL(mock, DiscoverBackendPrinters(_, _)).Times(1)
+    std::vector<PrinterInfo> infoVec = {info};
+    EXPECT_CALL(mock, DiscoverBackendPrinters(_, _))
+        .Times(1)
         .WillRepeatedly(DoAll(SetArgReferee<1>(infoVec), Return(E_PRINT_NONE)));
     EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(mock, RemovePrinterFromDiscovery(_, _)).Times(0);
@@ -163,9 +164,10 @@ HWTEST_F(VendorPpdDriverTest, DiscoverBackendPrinters_ShouldWorkNormolly, TestSi
     EXPECT_TRUE(vendorDriver.Init(&mock));
     PrinterInfo info;
     info.SetPrinterId("test1");
-    std::vector<PrinterInfo> infoVec = { info };
+    std::vector<PrinterInfo> infoVec = {info};
     vendorDriver.discoveredPrinters_["test2"] = true;
-    EXPECT_CALL(mock, DiscoverBackendPrinters(_, _)).Times(1)
+    EXPECT_CALL(mock, DiscoverBackendPrinters(_, _))
+        .Times(1)
         .WillRepeatedly(DoAll(SetArgReferee<1>(infoVec), Return(E_PRINT_NONE)));
     EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(mock, RemovePrinterFromDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
@@ -185,8 +187,9 @@ HWTEST_F(VendorPpdDriverTest, StartAndStopDiscovery_ShouldWorkNormolly, TestSize
     EXPECT_TRUE(vendorDriver.Init(&mock));
     PrinterInfo info;
     info.SetPrinterId("test1");
-    std::vector<PrinterInfo> infoVec = { info };
-    EXPECT_CALL(mock, DiscoverBackendPrinters(_, _)).Times(1)
+    std::vector<PrinterInfo> infoVec = {info};
+    EXPECT_CALL(mock, DiscoverBackendPrinters(_, _))
+        .Times(1)
         .WillRepeatedly(DoAll(SetArgReferee<1>(infoVec), Return(E_PRINT_NONE)));
     EXPECT_CALL(mock, AddPrinterToDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(mock, RemovePrinterFromDiscovery(_, _)).Times(1).WillRepeatedly(Return(E_PRINT_NONE));

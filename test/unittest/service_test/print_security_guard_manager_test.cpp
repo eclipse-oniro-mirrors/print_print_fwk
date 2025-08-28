@@ -32,20 +32,24 @@ public:
     void TearDown();
 };
 
-void PrintSecurityGuardManagerTest::SetUpTestCase(void) {}
+void PrintSecurityGuardManagerTest::SetUpTestCase(void)
+{}
 
-void PrintSecurityGuardManagerTest::TearDownTestCase(void) {}
+void PrintSecurityGuardManagerTest::TearDownTestCase(void)
+{}
 
-void PrintSecurityGuardManagerTest::SetUp(void) {}
+void PrintSecurityGuardManagerTest::SetUp(void)
+{}
 
-void PrintSecurityGuardManagerTest::TearDown(void) {}
+void PrintSecurityGuardManagerTest::TearDown(void)
+{}
 
 /**
-* @tc.name: PrintSecurityGuardManagerTest_0001
-* @tc.desc: receiveBaseInfo
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintSecurityGuardManagerTest_0001
+ * @tc.desc: receiveBaseInfo
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0001_NeedRename, TestSize.Level1)
 {
     PrintSecurityGuardManager printSerPrintSecurityGuardManager;
@@ -54,16 +58,16 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0001_NeedR
     PrintJob printJob;
     int num = printSerPrintSecurityGuardManager.securityMap_.size();
     printSerPrintSecurityGuardManager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
-    EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.size(), num+1);
+    EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.size(), num + 1);
     printSerPrintSecurityGuardManager.receiveJobStateUpdate("jobId-2", printerInfo, printJob);
 }
 
 /**
-* @tc.name: PrintSecurityGuardManagerTest_0002
-* @tc.desc: receiveBaseInfo
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintSecurityGuardManagerTest_0002
+ * @tc.desc: receiveBaseInfo
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0002_NeedRename, TestSize.Level1)
 {
     PrintSecurityGuardManager printSerPrintSecurityGuardManager;
@@ -72,8 +76,8 @@ HWTEST_F(PrintSecurityGuardManagerTest, PrintSecurityGuardManagerTest_0002_NeedR
     PrintJob printJob;
     int num = printSerPrintSecurityGuardManager.securityMap_.size();
     printSerPrintSecurityGuardManager.receiveBaseInfo("jobId-1", "callerPkg-1", fileList);
-    EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.size(), num+1);
+    EXPECT_EQ(printSerPrintSecurityGuardManager.securityMap_.size(), num + 1);
     printSerPrintSecurityGuardManager.receiveJobStateUpdate("jobId-1", printerInfo, printJob);
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

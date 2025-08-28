@@ -23,10 +23,10 @@ namespace OHOS {
 namespace Print {
 class MockPrintCupsWrapper final : public IPrintAbilityBase {
 public:
-    MOCK_METHOD3(GetNamedDest, cups_dest_t*(http_t *, const char *, const char *));
+    MOCK_METHOD3(GetNamedDest, cups_dest_t *(http_t *, const char *, const char *));
     MOCK_METHOD2(FreeDests, void(int, cups_dest_t *));
     MOCK_METHOD3(DoRequest, ipp_t *(http_t *, ipp_t *, const char *));
-    MOCK_METHOD2(CopyDestInfo, cups_dinfo_t*(http_t *, cups_dest_t *));
+    MOCK_METHOD2(CopyDestInfo, cups_dinfo_t *(http_t *, cups_dest_t *));
     MOCK_METHOD1(FreeDestInfo, void(cups_dinfo_t *dinfo));
     MOCK_METHOD1(FreeRequest, void(ipp_t *response));
 };

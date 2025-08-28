@@ -36,9 +36,11 @@ public:
     sptr<ScanServiceAbility> scanSa;
 };
 
-void ScanServiceStubTest::SetUpTestCase(void) {}
+void ScanServiceStubTest::SetUpTestCase(void)
+{}
 
-void ScanServiceStubTest::TearDownTestCase(void) {}
+void ScanServiceStubTest::TearDownTestCase(void)
+{}
 
 void ScanServiceStubTest::SetUp(void)
 {
@@ -62,7 +64,8 @@ void ScanServiceStubTest::SetUp(void)
     EXPECT_TRUE(scannerId != nullptr && scannerId != "")
 }
 
-void ScanServiceStubTest::TearDown(void) {}
+void ScanServiceStubTest::TearDown(void)
+{}
 
 /**
  * @tc.name: ScanMdnsServiceTest_0001
@@ -70,7 +73,8 @@ void ScanServiceStubTest::TearDown(void) {}
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitScanOneTime, TestSize.Level1) {
+HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitScanOneTime, TestSize.Level1)
+{
     auto itFunc = cmdMap_.find(CMD_INIT_SCAN);
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
@@ -87,7 +91,8 @@ HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitScanOneTime, TestSize
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallEXITScanOneTime, TestSize.Level1) {
+HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallEXITScanOneTime, TestSize.Level1)
+{
     auto itFunc = cmdMap_.find(CMD_EXIT_SCAN);
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
@@ -104,7 +109,8 @@ HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallEXITScanOneTime, TestSize
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitAndExitBothOneTime, TestSize.Level1) {
+HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitAndExitBothOneTime, TestSize.Level1)
+{
     auto itFunc = cmdMap_.find(CMD_INIT_SCAN);
     if (itFunc != cmdMap_.end()) {
         auto requestFunc = itFunc->second;
@@ -128,8 +134,8 @@ HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitAndExitBothOneTime, T
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitFiveTimes, TestSize.Level1) {
-
+HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitFiveTimes, TestSize.Level1)
+{
     for (int i = 0; i < 5; i++) {
         auto itFunc = cmdMap_.find(CMD_INIT_SCAN);
         if (itFunc != cmdMap_.end()) {
@@ -148,8 +154,8 @@ HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallInitFiveTimes, TestSize.L
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallExitFiveTimes, TestSize.Level1) {
-
+HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallExitFiveTimes, TestSize.Level1)
+{
     for (int i = 0; i < 5; i++) {
         auto itFunc = cmdMap_.find(CMD_EXIT_SCAN);
         if (itFunc != cmdMap_.end()) {
@@ -161,5 +167,5 @@ HWTEST_F(ScanServiceStubTest, VerfifyAppCount_When_CallExitFiveTimes, TestSize.L
     }
     EXPECT_EQ(scanSa->appCount_, 0);
 }
-} // namespace Scan
-} // namespace OHOS
+}  // namespace Scan
+}  // namespace OHOS

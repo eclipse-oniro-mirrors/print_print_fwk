@@ -32,13 +32,17 @@ public:
     void TearDown();
 };
 
-void PrintExtensionCallbackStubTest::SetUpTestCase(void) {}
+void PrintExtensionCallbackStubTest::SetUpTestCase(void)
+{}
 
-void PrintExtensionCallbackStubTest::TearDownTestCase(void) {}
+void PrintExtensionCallbackStubTest::TearDownTestCase(void)
+{}
 
-void PrintExtensionCallbackStubTest::SetUp(void) {}
+void PrintExtensionCallbackStubTest::SetUp(void)
+{}
 
-void PrintExtensionCallbackStubTest::TearDown(void) {}
+void PrintExtensionCallbackStubTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintExtensionCallbackStubTest_0001
@@ -108,9 +112,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0004, Te
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
     PrintExtensionCallbackStub callback;
-    PrintExtCallback extCb = []() -> bool {
-        return true;
-    };
+    PrintExtCallback extCb = []() -> bool { return true; };
     callback.SetExtCallback(extCb);
     EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
 }
@@ -148,9 +150,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0006, Te
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
     PrintExtensionCallbackStub callback;
-    PrintJobCallback printJobCb = [](const PrintJob&) -> bool {
-        return true;
-    };
+    PrintJobCallback printJobCb = [](const PrintJob &) -> bool { return true; };
     callback.SetPrintJobCallback(printJobCb);
     EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
 }
@@ -191,9 +191,7 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0008, Te
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintExtensionCallback::GetDescriptor()));
     EXPECT_TRUE(data.WriteString(testPrinterId));
     PrintExtensionCallbackStub callback;
-    PrinterCallback printerCb = [](const std::string&) -> bool {
-        return true;
-    };
+    PrinterCallback printerCb = [](const std::string &) -> bool { return true; };
     callback.SetPrinterCallback(printerCb);
     EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
 }
@@ -237,13 +235,11 @@ HWTEST_F(PrintExtensionCallbackStubTest, PrintExtensionCallbackStubTest_0010, Te
     EXPECT_TRUE(testCap.Marshalling(data));
 
     PrintExtensionCallbackStub callback;
-    PrinterCapabilityCallback testCb = [](const std::string &, PrinterCapability &) -> bool {
-        return true;
-    };
+    PrinterCapabilityCallback testCb = [](const std::string &, PrinterCapability &) -> bool { return true; };
     callback.SetCapabilityCallback(testCb);
     EXPECT_EQ(callback.OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
     auto result = PrinterCapability::Unmarshalling(reply);
     EXPECT_NE(result, nullptr);
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

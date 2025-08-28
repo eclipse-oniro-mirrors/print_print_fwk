@@ -31,13 +31,17 @@ public:
     void TearDown();
 };
 
-void PrintExtensionTest::SetUpTestCase(void) {}
+void PrintExtensionTest::SetUpTestCase(void)
+{}
 
-void PrintExtensionTest::TearDownTestCase(void) {}
+void PrintExtensionTest::TearDownTestCase(void)
+{}
 
-void PrintExtensionTest::SetUp(void) {}
+void PrintExtensionTest::SetUp(void)
+{}
 
-void PrintExtensionTest::TearDown(void) {}
+void PrintExtensionTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintExtensionTest_0001
@@ -70,10 +74,10 @@ HWTEST_F(PrintExtensionTest, PrintExtensionTest_0004, TestSize.Level0)
     std::shared_ptr<OHOSApplication> application = nullptr;
     std::shared_ptr<AbilityHandler> handler = nullptr;
     sptr<IRemoteObject> token = nullptr;
-    PrintExtension* printExtension = PrintExtension::Create(runtime);
+    PrintExtension *printExtension = PrintExtension::Create(runtime);
     std::shared_ptr<PrintExtensionContext> context;
     context = printExtension->CreateAndInitContext(record, application, handler, token);
     EXPECT_NE(context, nullptr);
 }
-} // namespace AbilityRuntime
-} // namespace OHOS
+}  // namespace AbilityRuntime
+}  // namespace OHOS

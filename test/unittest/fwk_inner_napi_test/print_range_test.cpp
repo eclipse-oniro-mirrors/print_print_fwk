@@ -32,13 +32,17 @@ public:
     void TearDown();
 };
 
-void PrintRangeTest::SetUpTestCase(void) {}
+void PrintRangeTest::SetUpTestCase(void)
+{}
 
-void PrintRangeTest::TearDownTestCase(void) {}
+void PrintRangeTest::TearDownTestCase(void)
+{}
 
-void PrintRangeTest::SetUp(void) {}
+void PrintRangeTest::SetUp(void)
+{}
 
-void PrintRangeTest::TearDown(void) {}
+void PrintRangeTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintRangeTest_0002
@@ -269,5 +273,5 @@ HWTEST_F(PrintRangeTest, PrintRangeTest_0016_NeedRename, TestSize.Level1)
     EXPECT_EQ(range.hasPages_, true);
 }
 
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

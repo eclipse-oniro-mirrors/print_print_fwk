@@ -23,7 +23,7 @@ namespace OHOS {
 namespace Print {
 class MockHisysEventUtil {
 public:
-    MOCK_METHOD3(reportBehaviorEvent, void (std::string name, int behaviorCode, const std::string &msg));
+    MOCK_METHOD3(reportBehaviorEvent, void(std::string name, int behaviorCode, const std::string &msg));
 };
 }  // namespace Print
 }  // namespace OHOS

@@ -30,13 +30,17 @@ public:
     void TearDown();
 };
 
-void PrinterCapabilityTest::SetUpTestCase(void) {}
+void PrinterCapabilityTest::SetUpTestCase(void)
+{}
 
-void PrinterCapabilityTest::TearDownTestCase(void) {}
+void PrinterCapabilityTest::TearDownTestCase(void)
+{}
 
-void PrinterCapabilityTest::SetUp(void) {}
+void PrinterCapabilityTest::SetUp(void)
+{}
 
-void PrinterCapabilityTest::TearDown(void) {}
+void PrinterCapabilityTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrinterCapabilityTest_0002
@@ -283,5 +287,5 @@ HWTEST_F(PrinterCapabilityTest, PrinterCapabilityTest_0016_NeedRename, TestSize.
     capability.GetSupportedPageSize(getPagesize);
     EXPECT_EQ(getPagesize.size(), 1);
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

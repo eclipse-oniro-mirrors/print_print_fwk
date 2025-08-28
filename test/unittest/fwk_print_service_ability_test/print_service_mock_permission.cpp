@@ -22,10 +22,7 @@ namespace OHOS {
 namespace Print {
 void PrintServiceMockPermission::MockPermission()
 {
-    static const char *PERMS[] = {
-        "ohos.permission.PRINT",
-        "ohos.permission.MANAGE_PRINT_JOB"
-    };
+    static const char *PERMS[] = {"ohos.permission.PRINT", "ohos.permission.MANAGE_PRINT_JOB"};
     uint64_t tokenId;
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
@@ -40,5 +37,5 @@ void PrintServiceMockPermission::MockPermission()
     tokenId = GetAccessTokenId(&infoInstance);
     SetSelfTokenID(tokenId);
 }
-}
-}
+}  // namespace Print
+}  // namespace OHOS

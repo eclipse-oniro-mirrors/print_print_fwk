@@ -37,9 +37,11 @@ public:
     void CallRemoteObject(const sptr<MockBundleMgr> &obj, sptr<IRemoteObject::DeathRecipient> &dr);
 };
 
-void PrintBMSHelperTest::SetUpTestCase(void) {}
+void PrintBMSHelperTest::SetUpTestCase(void)
+{}
 
-void PrintBMSHelperTest::TearDownTestCase(void) {}
+void PrintBMSHelperTest::TearDownTestCase(void)
+{}
 
 void PrintBMSHelperTest::SetUp(void)
 {
@@ -47,26 +49,25 @@ void PrintBMSHelperTest::SetUp(void)
     PRINT_HILOGI("PrintBMSHelperTest_%{public}d", ++testNo);
 }
 
-void PrintBMSHelperTest::TearDown(void) {}
+void PrintBMSHelperTest::TearDown(void)
+{}
 
-void PrintBMSHelperTest::CallRemoteObject(const sptr<MockBundleMgr> &obj,
-    sptr<IRemoteObject::DeathRecipient> &dr)
+void PrintBMSHelperTest::CallRemoteObject(const sptr<MockBundleMgr> &obj, sptr<IRemoteObject::DeathRecipient> &dr)
 {
     EXPECT_CALL(*obj, IsProxyObject()).WillRepeatedly(Return(true));
     EXPECT_CALL(*obj, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*obj, AddDeathRecipient(_)).WillRepeatedly(
-        [&dr](const sptr<IRemoteObject::DeathRecipient> &recipient) {
-            dr = recipient;
-            return true;
-        });
+    EXPECT_CALL(*obj, AddDeathRecipient(_)).WillRepeatedly([&dr](const sptr<IRemoteObject::DeathRecipient> &recipient) {
+        dr = recipient;
+        return true;
+    });
 }
 
 /**
-* @tc.name: PrintBMSHelperTest_0002
-* @tc.desc: PrintBMSHelper
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintBMSHelperTest_0002
+ * @tc.desc: PrintBMSHelper
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0002_NeedRename, TestSize.Level0)
 {
     PrintBMSHelper printBMSHelper;
@@ -78,11 +79,11 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0002_NeedRename, TestSize.Level0
 }
 
 /**
-* @tc.name: PrintBMSHelperTest_0003
-* @tc.desc: QueryExtensionInfos
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintBMSHelperTest_0003
+ * @tc.desc: QueryExtensionInfos
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0003_NeedRename, TestSize.Level0)
 {
     std::vector<AppExecFwk::ExtensionAbilityInfo> resultInfo;
@@ -96,11 +97,11 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0003_NeedRename, TestSize.Level0
 }
 
 /**
-* @tc.name: PrintBMSHelperTest_0008
-* @tc.desc: QueryCallerBundleName fail
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintBMSHelperTest_0008
+ * @tc.desc: QueryCallerBundleName fail
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0008_NeedRename, TestSize.Level0)
 {
     std::string testName = "";
@@ -110,11 +111,11 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0008_NeedRename, TestSize.Level0
 }
 
 /**
-* @tc.name: PrintBMSHelperTest_0009
-* @tc.desc: QueryCallerBundleName fail
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintBMSHelperTest_0009
+ * @tc.desc: QueryCallerBundleName fail
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0009_NeedRename, TestSize.Level0)
 {
     PrintBMSHelper printBMSHelper;
@@ -128,11 +129,11 @@ HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0009_NeedRename, TestSize.Level0
 }
 
 /**
-* @tc.name: PrintBMSHelperTest_0010
-* @tc.desc: QueryCallerBundleName fail
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintBMSHelperTest_0010
+ * @tc.desc: QueryCallerBundleName fail
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintBMSHelperTest, PrintBMSHelperTest_0010_NeedRename, TestSize.Level0)
 {
     PrintBMSHelper printBMSHelper;

@@ -40,9 +40,11 @@ public:
     void TearDown();
 };
 
-void PrintServiceHelperTest::SetUpTestCase(void) {}
+void PrintServiceHelperTest::SetUpTestCase(void)
+{}
 
-void PrintServiceHelperTest::TearDownTestCase(void) {}
+void PrintServiceHelperTest::TearDownTestCase(void)
+{}
 
 void PrintServiceHelperTest::SetUp(void)
 {
@@ -50,14 +52,15 @@ void PrintServiceHelperTest::SetUp(void)
     PRINT_HILOGI("PrintServiceHelperTest_%{public}d", ++testNo);
 }
 
-void PrintServiceHelperTest::TearDown(void) {}
+void PrintServiceHelperTest::TearDown(void)
+{}
 
 /**
-* @tc.name: PrintServiceHelperTest_0002
-* @tc.desc: faultPrint
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintServiceHelperTest_0002
+ * @tc.desc: faultPrint
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0002_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
@@ -65,11 +68,11 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0002_NeedRename, TestSiz
 }
 
 /**
-* @tc.name: PrintServiceHelperTest_0003
-* @tc.desc: faultPrint
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintServiceHelperTest_0003
+ * @tc.desc: faultPrint
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0003_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
@@ -78,11 +81,11 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0003_NeedRename, TestSiz
 }
 
 /**
-* @tc.name: PrintServiceHelperTest_0004
-* @tc.desc: faultPrint
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintServiceHelperTest_0004
+ * @tc.desc: faultPrint
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0004_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
@@ -91,11 +94,11 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0004_NeedRename, TestSiz
 }
 
 /**
-* @tc.name: PrintServiceHelperTest_0005
-* @tc.desc: faultPrint
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintServiceHelperTest_0005
+ * @tc.desc: faultPrint
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0005_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
@@ -104,11 +107,11 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0005_NeedRename, TestSiz
 }
 
 /**
-* @tc.name: PrintServiceHelperTest_0006
-* @tc.desc: faultPrint
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintServiceHelperTest_0006
+ * @tc.desc: faultPrint
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0006_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
@@ -119,11 +122,11 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0006_NeedRename, TestSiz
 }
 
 /**
-* @tc.name: PrintServiceHelperTest_0007
-* @tc.desc: faultPrint
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintServiceHelperTest_0007
+ * @tc.desc: faultPrint
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0007_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
@@ -134,11 +137,11 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0007_NeedRename, TestSiz
 }
 
 /**
-* @tc.name: PrintServiceHelperTest_0008
-* @tc.desc: faultPrint
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintServiceHelperTest_0008
+ * @tc.desc: faultPrint
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0008_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
@@ -146,23 +149,24 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0008_NeedRename, TestSiz
 }
 
 /**
-* @tc.name: PrintServiceHelperTest_009
-* @tc.desc: faultPrint
-* @tc.type: FUNC
-* @tc.require:
-*/
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0009_NeedRename, TestSize.Level1) {
+ * @tc.name: PrintServiceHelperTest_009
+ * @tc.desc: faultPrint
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0009_NeedRename, TestSize.Level1)
+{
     PrintServiceHelper helper;
     AAFwk::Want want;
     EXPECT_FALSE(helper.StartAbility(want));
 }
- 
+
 /**
-* @tc.name: PrintServiceHelperTest_0010
-* @tc.desc: faultPrint
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: PrintServiceHelperTest_0010
+ * @tc.desc: faultPrint
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0010_NeedRename, TestSize.Level1)
 {
     PrintServiceHelper helper;
@@ -172,15 +176,16 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0010_NeedRename, TestSiz
 }
 
 /**
-* @tc.name: PrintServiceHelperTest_0011
-* @tc.desc: StartPluginPrintIconExtAbility
-* @tc.type: FUNC
-* @tc.require:
-*/
-HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0011_NeedRename, TestSize.Level1) {
+ * @tc.name: PrintServiceHelperTest_0011
+ * @tc.desc: StartPluginPrintIconExtAbility
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0011_NeedRename, TestSize.Level1)
+{
     PrintServiceHelper helper;
     AAFwk::Want want;
     EXPECT_FALSE(helper.StartPluginPrintIconExtAbility(want));
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

@@ -34,13 +34,17 @@ public:
     void TearDown();
 };
 
-void PrintPageSizeTest::SetUpTestCase(void) {}
+void PrintPageSizeTest::SetUpTestCase(void)
+{}
 
-void PrintPageSizeTest::TearDownTestCase(void) {}
+void PrintPageSizeTest::TearDownTestCase(void)
+{}
 
-void PrintPageSizeTest::SetUp(void) {}
+void PrintPageSizeTest::SetUp(void)
+{}
 
-void PrintPageSizeTest::TearDown(void) {}
+void PrintPageSizeTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintPageSizeTest_0002
@@ -232,5 +236,5 @@ HWTEST_F(PrintPageSizeTest, ConvertToPwgStyle, TestSize.Level1)
     EXPECT_EQ(page.GetName(), "Custom.185x260mm");
 }
 
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

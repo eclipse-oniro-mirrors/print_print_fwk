@@ -25,10 +25,17 @@ public:
     void TearDown();
 };
 
-void ScanServiceProxyTest::SetUpTestCase(void) {}
+void ScanServiceProxyTest::SetUpTestCase(void)
+{}
 
-void ScanServiceProxyTest::TearDownTestCase(void) {}
+void ScanServiceProxyTest::TearDownTestCase(void)
+{}
 
-void ScanServiceProxyTest::SetUp(void) {}
+void ScanServiceProxyTest::SetUp(void)
+{}
 
-void ScanServiceProxyTest::TearDown(void) {}
+void ScanServiceProxyTest::TearDown(void)
+{}
+
+}  // namespace Scan
+}  // namespace OHOS

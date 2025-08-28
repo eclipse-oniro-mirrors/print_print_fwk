@@ -34,13 +34,17 @@ public:
     OHOS::Print::PrintAttributes GetDefaultPrintAttributes();
 };
 
-void PrintAttributesTest::SetUpTestCase(void) {}
+void PrintAttributesTest::SetUpTestCase(void)
+{}
 
-void PrintAttributesTest::TearDownTestCase(void) {}
+void PrintAttributesTest::TearDownTestCase(void)
+{}
 
-void PrintAttributesTest::SetUp(void) {}
+void PrintAttributesTest::SetUp(void)
+{}
 
-void PrintAttributesTest::TearDown(void) {}
+void PrintAttributesTest::TearDown(void)
+{}
 
 OHOS::Print::PrintAttributes PrintAttributesTest::GetDefaultPrintAttributes()
 {
@@ -310,5 +314,5 @@ HWTEST_F(PrintAttributesTest, PrintAttributesTest_0015, TestSize.Level1)
     EXPECT_FALSE(printAttributes.ReadFromParcel(parcel));
 }
 
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

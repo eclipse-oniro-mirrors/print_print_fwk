@@ -32,14 +32,17 @@ public:
     void TearDown();
 };
 
-void PrintCallbackStubTest::SetUpTestCase(void) {}
+void PrintCallbackStubTest::SetUpTestCase(void)
+{}
 
-void PrintCallbackStubTest::TearDownTestCase(void) {}
+void PrintCallbackStubTest::TearDownTestCase(void)
+{}
 
-void PrintCallbackStubTest::SetUp(void) {}
+void PrintCallbackStubTest::SetUp(void)
+{}
 
-void PrintCallbackStubTest::TearDown(void) {}
-
+void PrintCallbackStubTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintCallbackStubTest_0001
@@ -100,13 +103,13 @@ HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0003, TestSize.Level1)
 
 MATCHER_P(PrinterInfoMatcher, oParam, "Match Printer Info")
 {
-    const PrinterInfo& op = (const PrinterInfo&)arg;
+    const PrinterInfo &op = (const PrinterInfo &)arg;
     return op.GetPrinterId() == oParam.GetPrinterId();
 }
 
 MATCHER_P(PrintJobMatcher, oParam, "Match Print Job")
 {
-    const PrintJob& op = (const PrintJob&)arg;
+    const PrintJob &op = (const PrintJob &)arg;
     return op.GetJobId() == oParam.GetJobId();
 }
 
@@ -133,8 +136,9 @@ HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0004, TestSize.Level1)
     EXPECT_TRUE(testInfo.Marshalling(data));
     auto callback = std::make_shared<MockPrintCallbackStub>();
     EXPECT_NE(callback, nullptr);
-    EXPECT_CALL(*callback, OnCallback(testState,
-        Matcher<const PrinterInfo&>(PrinterInfoMatcher(testInfo)))).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*callback, OnCallback(testState, Matcher<const PrinterInfo &>(PrinterInfoMatcher(testInfo))))
+        .Times(1)
+        .WillOnce(Return(true));
     EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
     EXPECT_TRUE(reply.ReadBool());
 }
@@ -162,8 +166,9 @@ HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0005, TestSize.Level1)
     EXPECT_TRUE(testJob.Marshalling(data));
     auto callback = std::make_shared<MockPrintCallbackStub>();
     EXPECT_NE(callback, nullptr);
-    EXPECT_CALL(*callback, OnCallback(testState,
-        Matcher<const PrintJob&>(PrintJobMatcher(testJob)))).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*callback, OnCallback(testState, Matcher<const PrintJob &>(PrintJobMatcher(testJob))))
+        .Times(1)
+        .WillOnce(Return(true));
     EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
     EXPECT_TRUE(reply.ReadBool());
 }

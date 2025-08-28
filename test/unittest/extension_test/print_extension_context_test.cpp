@@ -31,13 +31,17 @@ public:
     void TearDown();
 };
 
-void PrintExtensionContextTest::SetUpTestCase(void) {}
+void PrintExtensionContextTest::SetUpTestCase(void)
+{}
 
-void PrintExtensionContextTest::TearDownTestCase(void) {}
+void PrintExtensionContextTest::TearDownTestCase(void)
+{}
 
-void PrintExtensionContextTest::SetUp(void) {}
+void PrintExtensionContextTest::SetUp(void)
+{}
 
-void PrintExtensionContextTest::TearDown(void) {}
+void PrintExtensionContextTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintExtensionContextTest_0001
@@ -96,5 +100,5 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0007, TestSize.Lev
     PrintExtensionContext printExtensionContext;
     EXPECT_EQ(printExtensionContext.GetAbilityInfoType(), AppExecFwk::AbilityType::UNKNOWN);
 }
-} // namespace AbilityRuntime
-} // namespace OHOS
+}  // namespace AbilityRuntime
+}  // namespace OHOS

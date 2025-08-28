@@ -25,10 +25,14 @@ public:
     void TearDown();
 };
 
-void ScanCallbackProxyTest::SetUpTestCase(void) {}
+void ScanCallbackProxyTest::SetUpTestCase(void)
+{}
 
-void ScanCallbackProxyTest::TearDownTestCase(void) {}
+void ScanCallbackProxyTest::TearDownTestCase(void)
+{}
 
-void ScanCallbackProxyTest::SetUp(void) {}
+void ScanCallbackProxyTest::SetUp(void)
+{}
 
-void ScanCallbackProxyTest::TearDown(void) {}
+void ScanCallbackProxyTest::TearDown(void)
+{}

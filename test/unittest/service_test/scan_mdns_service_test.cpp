@@ -27,13 +27,17 @@ public:
     void TearDown();
 };
 
-void ScanMdnsServiceTest::SetUpTestCase(void) {}
+void ScanMdnsServiceTest::SetUpTestCase(void)
+{}
 
-void ScanMdnsServiceTest::TearDownTestCase(void) {}
+void ScanMdnsServiceTest::TearDownTestCase(void)
+{}
 
-void ScanMdnsServiceTest::SetUp(void) {}
+void ScanMdnsServiceTest::SetUp(void)
+{}
 
-void ScanMdnsServiceTest::TearDown(void) {}
+void ScanMdnsServiceTest::TearDown(void)
+{}
 
 /**
  * @tc.name: ScanMdnsServiceTest_0001
@@ -58,5 +62,5 @@ HWTEST_F(ScanMdnsServiceTest, ScanMdnsServiceTest_0002_NeedRename, TestSize.Leve
     EXPECT_EQ(ScanMdnsService::OnStopDiscoverService(), true);
 }
 
-} // namespace Scan
-} // namespace OHOS
+}  // namespace Scan
+}  // namespace OHOS

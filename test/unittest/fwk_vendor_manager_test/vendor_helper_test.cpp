@@ -32,7 +32,7 @@ const uint32_t DPI_A = 300;
 const uint32_t DPI_B = 600;
 const uint32_t DEFAULT_COUNT = 2;
 const uint32_t TEST_MAX_COPIES = 99;
-}
+}  // namespace
 namespace OHOS {
 namespace Print {
 class VendorHelperTest : public testing::Test {
@@ -43,9 +43,11 @@ public:
     void TearDown();
 };
 
-void VendorHelperTest::SetUpTestCase(void) {}
+void VendorHelperTest::SetUpTestCase(void)
+{}
 
-void VendorHelperTest::TearDownTestCase(void) {}
+void VendorHelperTest::TearDownTestCase(void)
+{}
 
 void VendorHelperTest::SetUp(void)
 {
@@ -53,7 +55,8 @@ void VendorHelperTest::SetUp(void)
     PRINT_HILOGI("VendorHelperTest_%{public}d", ++testNo);
 }
 
-void VendorHelperTest::TearDown(void) {}
+void VendorHelperTest::TearDown(void)
+{}
 
 static void BuildDiscoveryItem(Print_DiscoveryItem &discoveryItem)
 {
@@ -295,10 +298,10 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0012, TestSize.Level1)
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
     discoveryItem.detailInfo = "detailInfo";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
-    discoveryItem.detailInfo ="{\"key\":\"value\"}";
+    discoveryItem.detailInfo = "{\"key\":\"value\"}";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
     discoveryItem.detailInfo = "{\"bsunidriver_support\": \"false\"}";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

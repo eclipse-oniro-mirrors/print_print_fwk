@@ -24,7 +24,7 @@
 namespace {
 const int WAIT_TIME_MS = 100;
 const std::string PRINTER_TEST_IP = "192.168.2.222";
-}
+}  // namespace
 using namespace testing;
 using namespace testing::ext;
 
@@ -45,9 +45,11 @@ public:
     void TearDown();
 };
 
-void VendorIppEverywhereTest::SetUpTestCase(void) {}
+void VendorIppEverywhereTest::SetUpTestCase(void)
+{}
 
-void VendorIppEverywhereTest::TearDownTestCase(void) {}
+void VendorIppEverywhereTest::TearDownTestCase(void)
+{}
 
 void VendorIppEverywhereTest::SetUp(void)
 {
@@ -55,7 +57,8 @@ void VendorIppEverywhereTest::SetUp(void)
     PRINT_HILOGI("VendorIppEverywhereTest_%{public}d", ++testNo);
 }
 
-void VendorIppEverywhereTest::TearDown(void) {}
+void VendorIppEverywhereTest::TearDown(void)
+{}
 
 HWTEST_F(VendorIppEverywhereTest, VendorIppEverywhereTest_0001, TestSize.Level1)
 {

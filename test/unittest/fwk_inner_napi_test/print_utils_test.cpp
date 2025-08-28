@@ -37,13 +37,17 @@ public:
     void TearDown();
 };
 
-void PrintUtilsTest::SetUpTestCase(void) {}
+void PrintUtilsTest::SetUpTestCase(void)
+{}
 
-void PrintUtilsTest::TearDownTestCase(void) {}
+void PrintUtilsTest::TearDownTestCase(void)
+{}
 
-void PrintUtilsTest::SetUp(void) {}
+void PrintUtilsTest::SetUp(void)
+{}
 
-void PrintUtilsTest::TearDown(void) {}
+void PrintUtilsTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintUtilsTest_0001
@@ -381,9 +385,10 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0022_NeedRename, TestSize.Level2)
     PrintPageSize pageSize("11", "123", 400, 600);
     attrParam.SetPageSize(pageSize);
     printUtils.ParseAttributesObjectParamForJson(attrParam, attrJson);
-    EXPECT_EQ(PrintJsonUtil::WriteString(attrJson), "{\"pageRange\":{\"endPage\":1,\"pages\":[1],\"startPage\":1},"
-                    "\"pageSize\":{\"height\":600,\"id\":\"11\",\"name\":\"123\","
-                    "\"width\":400}}");
+    EXPECT_EQ(PrintJsonUtil::WriteString(attrJson),
+        "{\"pageRange\":{\"endPage\":1,\"pages\":[1],\"startPage\":1},"
+        "\"pageSize\":{\"height\":600,\"id\":\"11\",\"name\":\"123\","
+        "\"width\":400}}");
 
     PrintMargin margin;
     margin.SetTop(100);
@@ -392,9 +397,10 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0022_NeedRename, TestSize.Level2)
     margin.SetRight(100);
     attrParam.SetMargin(margin);
     printUtils.ParseAttributesObjectParamForJson(attrParam, attrJson);
-    EXPECT_EQ(PrintJsonUtil::WriteString(attrJson), "{\"margin\":{\"bottom\":100,\"left\":100,\"right\":100,"
-                "\"top\":100},\"pageRange\":{\"endPage\":1,\"pages\":[1],\"startPage\":1},"
-                "\"pageSize\":{\"height\":600,\"id\":\"11\",\"name\":\"123\",\"width\":400}}");
+    EXPECT_EQ(PrintJsonUtil::WriteString(attrJson),
+        "{\"margin\":{\"bottom\":100,\"left\":100,\"right\":100,"
+        "\"top\":100},\"pageRange\":{\"endPage\":1,\"pages\":[1],\"startPage\":1},"
+        "\"pageSize\":{\"height\":600,\"id\":\"11\",\"name\":\"123\",\"width\":400}}");
 }
 
 HWTEST_F(PrintUtilsTest, PrintUtilsTest_0023_NeedRename, TestSize.Level2)
@@ -470,7 +476,7 @@ HWTEST_F(PrintUtilsTest, PrintUtilsTest_0027_NeedRename, TestSize.Level2)
 HWTEST_F(PrintUtilsTest, PrintUtilsTest_0028_NeedRename, TestSize.Level2)
 {
     std::string type = "test";
-    int32_t callerUserId = 100; // defaute test user id
+    int32_t callerUserId = 100;  // defaute test user id
     EXPECT_FALSE(PrintUtils::CheckUserIdInEventType(type, callerUserId));
     type = "test:";
     EXPECT_FALSE(PrintUtils::CheckUserIdInEventType(type, callerUserId));

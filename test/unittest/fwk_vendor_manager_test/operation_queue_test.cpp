@@ -26,7 +26,7 @@ using namespace testing::ext;
 namespace {
 const int WAIT_TIME_MS = 100;
 const size_t OPERATOIN_QUEUE_COUNT_TEST = 2;
-}
+}  // namespace
 
 namespace OHOS {
 namespace Print {
@@ -38,9 +38,11 @@ public:
     void TearDown();
 };
 
-void OperatonQueueTest::SetUpTestCase(void) {}
+void OperatonQueueTest::SetUpTestCase(void)
+{}
 
-void OperatonQueueTest::TearDownTestCase(void) {}
+void OperatonQueueTest::TearDownTestCase(void)
+{}
 
 void OperatonQueueTest::SetUp(void)
 {
@@ -48,7 +50,8 @@ void OperatonQueueTest::SetUp(void)
     PRINT_HILOGI("OperatonQueueTest_%{public}d", ++testNo);
 }
 
-void OperatonQueueTest::TearDown(void) {}
+void OperatonQueueTest::TearDown(void)
+{}
 
 HWTEST_F(OperatonQueueTest, OperatonQueueTest_0001, TestSize.Level1)
 {

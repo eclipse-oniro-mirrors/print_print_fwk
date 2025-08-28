@@ -31,13 +31,17 @@ public:
     void TearDown();
 };
 
-void PrintPreviewAttributeTest::SetUpTestCase(void) {}
+void PrintPreviewAttributeTest::SetUpTestCase(void)
+{}
 
-void PrintPreviewAttributeTest::TearDownTestCase(void) {}
+void PrintPreviewAttributeTest::TearDownTestCase(void)
+{}
 
-void PrintPreviewAttributeTest::SetUp(void) {}
+void PrintPreviewAttributeTest::SetUp(void)
+{}
 
-void PrintPreviewAttributeTest::TearDown(void) {}
+void PrintPreviewAttributeTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintPreviewAttributeTest_0001
@@ -144,5 +148,5 @@ HWTEST_F(PrintPreviewAttributeTest, PrintPreviewAttributeTest_0007, TestSize.Lev
     auto result = OHOS::Print::PrintPreviewAttribute::Unmarshalling(parcel);
     EXPECT_NE(nullptr, result);
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

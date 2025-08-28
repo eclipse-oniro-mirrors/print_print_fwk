@@ -39,13 +39,17 @@ public:
     void TearDown();
 };
 
-void PrintJobTest::SetUpTestCase(void) {}
+void PrintJobTest::SetUpTestCase(void)
+{}
 
-void PrintJobTest::TearDownTestCase(void) {}
+void PrintJobTest::TearDownTestCase(void)
+{}
 
-void PrintJobTest::SetUp(void) {}
+void PrintJobTest::SetUp(void)
+{}
 
-void PrintJobTest::TearDown(void) {}
+void PrintJobTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintJobTest_0002_NeedRename
@@ -108,7 +112,7 @@ HWTEST_F(PrintJobTest, PrintJobTest_0003_NeedRename, TestSize.Level1)
 HWTEST_F(PrintJobTest, DupFdlist_WhenBadfd_ShouldReturnSameFd, TestSize.Level1)
 {
     PrintJob job;
-    std::vector<uint32_t> fdList = { 997, 998, 999 };
+    std::vector<uint32_t> fdList = {997, 998, 999};
     std::vector<uint32_t> dupFdList;
     job.SetFdList(fdList);
     job.DupFdList(dupFdList);
@@ -491,5 +495,5 @@ HWTEST_F(PrintJobTest, PrintJobTest_0028_NeedRename, TestSize.Level1)
     PrintJob getJob = job;
     EXPECT_EQ(getJob.GetIsSequential(), true);
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS
