@@ -148,7 +148,13 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
             return false;
         }
         for (int32_t index = 0; index < len; index++) {
-            uint32_t fd = static_cast<uint32_t>(data.ReadFileDescriptor());
+            int fdTemp = data.ReadFileDescriptor();
+            if (fdTemp < 0) {
+                PRINT_HILOGE("invalid fd");
+                reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
+                return false;
+            }
+            uint32_t fd = static_cast<uint32_t>(fdTemp);
             PRINT_HILOGD("fdList[%{public}d] = %{public}d", index, fd);
             fdList.emplace_back(fd);
         }
