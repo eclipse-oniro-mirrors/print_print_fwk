@@ -46,14 +46,14 @@ void PrintModalUICallback::SetSessionId(int32_t sessionId)
 
 void PrintModalUICallback::OnRelease(int32_t releaseCode)
 {
-    PRINT_HILOGE("OnRelease enter. release code is %{public}d", releaseCode);
+    PRINT_HILOGI("OnRelease enter. release code is %{public}d", releaseCode);
     if (this->baseContext == nullptr) {
         PRINT_HILOGE("OnRelease baseContext is null");
         return;
     }
 
     if (this->isResultForModal) {
-        PRINT_HILOGE("SendMessageBack isResultForModal true.");
+        PRINT_HILOGW("SendMessageBack isResultForModal true.");
         return;
     }
 
@@ -81,7 +81,7 @@ void PrintModalUICallback::OnError(int32_t code, const std::string &name, const 
     }
 
     if (this->isResultForModal) {
-        PRINT_HILOGE("SendMessageBack isResultForModal true.");
+        PRINT_HILOGW("SendMessageBack isResultForModal true.");
         return;
     }
 
@@ -101,7 +101,7 @@ void PrintModalUICallback::OnResultForModal(int32_t resultCode, const OHOS::AAFw
     }
 
     if (this->isResultForModal) {
-        PRINT_HILOGI("SendMessageBack isResultForModal true.");
+        PRINT_HILOGW("SendMessageBack isResultForModal true.");
         return;
     }
 
@@ -125,18 +125,21 @@ void PrintModalUICallback::SendMessageBack()
         return;
     }
 
-    auto abilityContext = this->baseContext->context;
-    auto uiExtContext = this->baseContext->uiExtensionContext;
-    OHOS::Ace::UIContent *uiContent = nullptr;
-    if (abilityContext != nullptr) {
-        uiContent = abilityContext->GetUIContent();
-    } else if (uiExtContext != nullptr) {
-        uiContent = uiExtContext->GetUIContent();
-    }
+    if (this->baseContext->errorMessage.code == E_PRINT_NONE) {
+        auto abilityContext = this->baseContext->context;
+        auto uiExtContext = this->baseContext->uiExtensionContext;
+        OHOS::Ace::UIContent *uiContent = nullptr;
+        if (abilityContext != nullptr) {
+            uiContent = abilityContext->GetUIContent();
+        } else if (uiExtContext != nullptr) {
+            uiContent = uiExtContext->GetUIContent();
+        }
 
-    if (uiContent != nullptr) {
-        PRINT_HILOGE("CloseModalUIExtension");
-        uiContent->CloseModalUIExtension(this->sessionId_);
+        if (uiContent != nullptr) {
+            PRINT_HILOGI("CloseModalUIExtension");
+            uiContent->CloseModalUIExtension(this->sessionId_);
+        }
+        return;
     }
 
     uv_loop_s *loop = nullptr;
@@ -157,6 +160,7 @@ void PrintModalUICallback::SendMessageBack()
         work = nullptr;
         return;
     }
+    printBaseContext->sessionId = this->sessionId_;
     work->data = reinterpret_cast<void *>(printBaseContext);
 
     int ret = uv_queue_work(
@@ -216,12 +220,30 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
     PRINT_HILOGD("uv_queue_work callback success");
     napi_close_handle_scope(context->env, scope);
 
+    CloseModalUIExtension(context);
+
     // context.callback will be deleted on other share_ptr, not need delete it!
     context->callback = nullptr;
     delete context;
     context = nullptr;
     delete work;
     work = nullptr;
+}
+
+void PrintModalUICallback::CloseModalUIExtension(BaseContext *context)
+{
+    auto abilityContext = context->context;
+    auto uiExtContext = context->uiExtensionContext;
+    OHOS::Ace::UIContent *uiContent = nullptr;
+    if (abilityContext != nullptr) {
+        uiContent = abilityContext->GetUIContent();
+    } else if (uiExtContext != nullptr) {
+        uiContent = uiExtContext->GetUIContent();
+    }
+    if (uiContent != nullptr) {
+        PRINT_HILOGI("CloseModalUIExtension");
+        uiContent->CloseModalUIExtension(context->sessionId);
+    }
 }
 
 napi_status PrintModalUICallback::CreateResultMessage(BaseContext *context, napi_value *result, uint32_t length)
