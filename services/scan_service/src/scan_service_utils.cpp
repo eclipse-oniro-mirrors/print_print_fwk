@@ -43,7 +43,7 @@ std::string ScanServiceUtils::ReplaceDeviceIdUsbPort(const std::string& deviceId
     constexpr int32_t invalidPort = -1;
     int32_t start = invalidPort;
     int32_t end = invalidPort;
-    char dash;
+    char dash = '\0';
     std::istringstream(usbPort) >> start >> dash >> end;
     if (start < 0 || end < 0 || dash != '-') {
         SCAN_HILOGE("usbPort format is error");
