@@ -205,6 +205,10 @@ int32_t ScanServiceProxy::GetScanParameters(const std::string scannerId, ScanPar
         return ret;
     }
     auto scanParameters = ScanParameters::Unmarshalling(reply);
+    if (scanParameters == nullptr) {
+        SCAN_HILOGE("ScanServiceProxy scanParameters is nullptr");
+        return E_SCAN_INVALID_PARAMETER;
+    }
     para = *scanParameters;
     SCAN_HILOGD("ScanServiceProxy GetScanParameters end");
     return ret;

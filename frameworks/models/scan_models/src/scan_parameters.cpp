@@ -142,7 +142,9 @@ bool ScanParameters::Marshalling(Parcel &parcel) const
 std::shared_ptr<ScanParameters> ScanParameters::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<ScanParameters>();
-    nativeObj->ReadFromParcel(parcel);
+    if (nativeObj) {
+        nativeObj->ReadFromParcel(parcel);
+    }
     return nativeObj;
 }
 

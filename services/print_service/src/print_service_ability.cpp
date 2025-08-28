@@ -3938,8 +3938,6 @@ void PrintServiceAbility::UpdateIsEnterprise()
         PRINT_HILOGI("IsEnterpriseEnable false.");
         return;
     }
-
-    PRINT_HILOGI("RefreshPrinterStatusOnSwitchUser");
     int32_t localId = -1;
     AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
     lastUserId_ = localId;
@@ -3963,14 +3961,15 @@ bool PrintServiceAbility::IsEnterpriseEnable()
     std::string enterpriseEnable = OHOS::system::GetParameter(ENTERPRISE_SPACE_PARAM, "");
     return enterpriseEnable == IS_ENTERPRISE_ENABLE;
 }
-void PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
+
+bool PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
 {
     if (!IsEnterpriseEnable()) {
-        PRINT_HILOGI("IsEnterpriseEnable false.");
-        return;
+        PRINT_HILOGW("IsEnterpriseEnable false.");
+        return false;
     }
 
-    PRINT_HILOGI("RefreshPrinterStatusOnSwitchUser");
+    PRINT_HILOGD("RefreshPrinterStatusOnSwitchUser");
     BlockUserPrintJobs(lastUserId_);
     UpdateIsEnterprise();
     if (IsEnterpriseEnable() && IsEnterprise()) {
@@ -3980,6 +3979,7 @@ void PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
     }
     printSystemData_.Init();
     PrintCupsClient::GetInstance()->InitCupsResources();
+    return true;
 }
 #endif  // ENTERPRISE_ENABLE
 
