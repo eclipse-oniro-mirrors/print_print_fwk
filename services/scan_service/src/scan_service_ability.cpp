@@ -1480,7 +1480,7 @@ bool ScanServiceAbility::ProcessFullLines(int &jpegrow, int &i, int &left, ScanP
         return true;
     }
     constexpr int byteBits = 8;
-    if (parm.GetBytesPerLine() > SIZE_MAX / byteBits) {
+    if (static_cast<int64_t>(parm.GetBytesPerLine()) > static_cast<int64_t>(SIZE_MAX) / byteBits) {
         SCAN_HILOGE("nultiplication would overflow");
         return false;
     }
