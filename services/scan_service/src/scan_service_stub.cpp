@@ -134,7 +134,7 @@ bool ScanServiceStub::OnOpScanOptionValue(MessageParcel &data, MessageParcel &re
     SCAN_HILOGD("ScanServiceStub::OnOpScanOptionValue start");
     std::string scannerId = data.ReadString();
     int32_t optionIndex = data.ReadInt32();
-    ScanOptionOpType op = (ScanOptionOpType) data.ReadUint32();
+    ScanOptionOpType op = (ScanOptionOpType)data.ReadUint32();
     ScanOptionValue value;
     auto scanOptionValue = ScanOptionValue::Unmarshalling(data);
     if (scanOptionValue == nullptr) {
@@ -279,4 +279,4 @@ bool ScanServiceStub::OnGetConnectedScanner(MessageParcel &data, MessageParcel &
     return ret == E_SCAN_NONE;
 }
 
-} // namespace OHOS::Scan
+}  // namespace OHOS::Scan

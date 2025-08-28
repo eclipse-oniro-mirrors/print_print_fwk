@@ -91,8 +91,8 @@ bool SaneManagerClient::LoadSaneService()
         SCAN_HILOGE("LoadSystemAbility failed");
         return false;
     }
-    auto waitStatus = syncCon_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
-        [this]() { return proxy_ != nullptr; });
+    auto waitStatus =
+        syncCon_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS), [this]() { return proxy_ != nullptr; });
     if (!waitStatus) {
         return false;
     }
@@ -117,7 +117,7 @@ void SaneManagerClient::LoadSystemAbilityFail()
     proxy_ = nullptr;
 }
 
-void SaneManagerClient::OnRemoteSaDied(const wptr<IRemoteObject>& object)
+void SaneManagerClient::OnRemoteSaDied(const wptr<IRemoteObject> &object)
 {
     std::unique_lock<std::shared_mutex> lock(serviceLock_);
     proxy_ = nullptr;
@@ -166,7 +166,7 @@ SaneStatus SaneManagerClient::SaneExit()
     return SANE_STATUS_GOOD;
 }
 
-SaneStatus SaneManagerClient::SaneOpen(const std::string& scannerId)
+SaneStatus SaneManagerClient::SaneOpen(const std::string &scannerId)
 {
     SCAN_HILOGI("SaneManagerClient SaneOpen start.");
     if (proxy_ == nullptr) {
@@ -188,7 +188,7 @@ SaneStatus SaneManagerClient::SaneOpen(const std::string& scannerId)
     return static_cast<SaneStatus>(saneStatus);
 }
 
-SaneStatus SaneManagerClient::SaneClose(const std::string& scannerId)
+SaneStatus SaneManagerClient::SaneClose(const std::string &scannerId)
 {
     SCAN_HILOGI("SaneManagerClient SaneClose start.");
     if (proxy_ == nullptr) {
@@ -209,7 +209,7 @@ SaneStatus SaneManagerClient::SaneClose(const std::string& scannerId)
     return SANE_STATUS_GOOD;
 }
 
-SaneStatus SaneManagerClient::SaneStart(const std::string& scannerId)
+SaneStatus SaneManagerClient::SaneStart(const std::string &scannerId)
 {
     SCAN_HILOGI("SaneManagerClient SaneStart start.");
     if (proxy_ == nullptr) {
@@ -231,7 +231,7 @@ SaneStatus SaneManagerClient::SaneStart(const std::string& scannerId)
     return static_cast<SaneStatus>(saneStatus);
 }
 
-SaneStatus SaneManagerClient::SaneCancel(const std::string& scannerId)
+SaneStatus SaneManagerClient::SaneCancel(const std::string &scannerId)
 {
     SCAN_HILOGI("SaneManagerClient SaneCancel start.");
     if (proxy_ == nullptr) {
@@ -252,8 +252,8 @@ SaneStatus SaneManagerClient::SaneCancel(const std::string& scannerId)
     return SANE_STATUS_GOOD;
 }
 
-SaneStatus SaneManagerClient::SaneGetOptionDescriptor(const std::string& scannerId, const int32_t& option,
-    SaneOptionDescriptor& desc)
+SaneStatus SaneManagerClient::SaneGetOptionDescriptor(
+    const std::string &scannerId, const int32_t &option, SaneOptionDescriptor &desc)
 {
     SCAN_HILOGI("SaneManagerClient SaneGetOptionDescriptor start.");
     if (proxy_ == nullptr) {
@@ -275,7 +275,7 @@ SaneStatus SaneManagerClient::SaneGetOptionDescriptor(const std::string& scanner
     return static_cast<SaneStatus>(saneStatus);
 }
 
-SaneStatus SaneManagerClient::SaneGetParameters(const std::string& scannerId, SaneParameters& params)
+SaneStatus SaneManagerClient::SaneGetParameters(const std::string &scannerId, SaneParameters &params)
 {
     SCAN_HILOGI("SaneManagerClient SaneGetParameters start.");
     if (proxy_ == nullptr) {
@@ -297,7 +297,7 @@ SaneStatus SaneManagerClient::SaneGetParameters(const std::string& scannerId, Sa
     return static_cast<SaneStatus>(saneStatus);
 }
 
-SaneStatus SaneManagerClient::SaneGetDevices(std::vector<SaneDevice>& deviceInfos)
+SaneStatus SaneManagerClient::SaneGetDevices(std::vector<SaneDevice> &deviceInfos)
 {
     SCAN_HILOGI("SaneManagerClient SaneGetDevices start.");
     if (proxy_ == nullptr) {
@@ -319,8 +319,8 @@ SaneStatus SaneManagerClient::SaneGetDevices(std::vector<SaneDevice>& deviceInfo
     return static_cast<SaneStatus>(saneStatus);
 }
 
-SaneStatus SaneManagerClient::SaneControlOption(const std::string& scannerId, SaneControlParam& controlParam,
-    SaneOutParam& outParam)
+SaneStatus SaneManagerClient::SaneControlOption(
+    const std::string &scannerId, SaneControlParam &controlParam, SaneOutParam &outParam)
 {
     SCAN_HILOGI("SaneManagerClient SaneControlOption start.");
     if (proxy_ == nullptr) {
@@ -342,8 +342,7 @@ SaneStatus SaneManagerClient::SaneControlOption(const std::string& scannerId, Sa
     return static_cast<SaneStatus>(saneStatus);
 }
 
-SaneStatus SaneManagerClient::SaneRead(const std::string& scannerId, const int32_t buflen,
-    SanePictureData& pictureData)
+SaneStatus SaneManagerClient::SaneRead(const std::string &scannerId, const int32_t buflen, SanePictureData &pictureData)
 {
     SCAN_HILOGI("SaneManagerClient SaneRead start.");
     if (proxy_ == nullptr) {

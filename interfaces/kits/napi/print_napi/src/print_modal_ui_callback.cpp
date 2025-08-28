@@ -64,15 +64,17 @@ void PrintModalUICallback::OnRelease(int32_t releaseCode)
     return;
 }
 
-void PrintModalUICallback::OnReceive(const OHOS::AAFwk::WantParams& request)
+void PrintModalUICallback::OnReceive(const OHOS::AAFwk::WantParams &request)
 {
     PRINT_HILOGI("OnReceive enter.");
 }
 
-void PrintModalUICallback::OnError(int32_t code, const std::string& name, const std::string& message)
+void PrintModalUICallback::OnError(int32_t code, const std::string &name, const std::string &message)
 {
     PRINT_HILOGE("OnError enter. errorCode=%{public}d, name=%{public}s, message=%{public}s",
-        code, name.c_str(), message.c_str());
+        code,
+        name.c_str(),
+        message.c_str());
     if (this->baseContext == nullptr) {
         PRINT_HILOGE("OnError baseContext is null");
         return;
@@ -90,7 +92,7 @@ void PrintModalUICallback::OnError(int32_t code, const std::string& name, const 
     return;
 }
 
-void PrintModalUICallback::OnResultForModal(int32_t resultCode, const OHOS::AAFwk::Want& result)
+void PrintModalUICallback::OnResultForModal(int32_t resultCode, const OHOS::AAFwk::Want &result)
 {
     PRINT_HILOGI("OnResultForModal enter. resultCode is %{public}d", resultCode);
     if (this->baseContext == nullptr) {
@@ -125,7 +127,7 @@ void PrintModalUICallback::SendMessageBack()
 
     auto abilityContext = this->baseContext->context;
     auto uiExtContext = this->baseContext->uiExtensionContext;
-    OHOS::Ace::UIContent* uiContent = nullptr;
+    OHOS::Ace::UIContent *uiContent = nullptr;
     if (abilityContext != nullptr) {
         uiContent = abilityContext->GetUIContent();
     } else if (uiExtContext != nullptr) {
@@ -137,13 +139,13 @@ void PrintModalUICallback::SendMessageBack()
         uiContent->CloseModalUIExtension(this->sessionId_);
     }
 
-    uv_loop_s* loop = nullptr;
+    uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(this->baseContext->env, &loop);
     if (loop == nullptr) {
         PRINT_HILOGE("loop is nullptr");
         return;
     }
-    uv_work_t* work = new (std::nothrow) uv_work_t;
+    uv_work_t *work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
         PRINT_HILOGE("work is nullptr");
         return;
@@ -155,10 +157,10 @@ void PrintModalUICallback::SendMessageBack()
         work = nullptr;
         return;
     }
-    work->data = reinterpret_cast<void*>(printBaseContext);
+    work->data = reinterpret_cast<void *>(printBaseContext);
 
     int ret = uv_queue_work(
-        loop, work, [](uv_work_t* work) { (void)work; }, SendMessageBackWork);
+        loop, work, [](uv_work_t *work) { (void)work; }, SendMessageBackWork);
     if (ret != 0) {
         PRINT_HILOGE("Failed to get uv_queue_work.");
         delete printBaseContext;
@@ -167,7 +169,7 @@ void PrintModalUICallback::SendMessageBack()
     }
 }
 
-void PrintModalUICallback::SendMessageBackWork(uv_work_t* work, int statusIn)
+void PrintModalUICallback::SendMessageBackWork(uv_work_t *work, int statusIn)
 {
     (void)statusIn;
     napi_handle_scope scope = nullptr;
@@ -175,7 +177,7 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t* work, int statusIn)
         PRINT_HILOGE("work is nullptr");
         return;
     }
-    BaseContext* context = reinterpret_cast<BaseContext*>(work->data);
+    BaseContext *context = reinterpret_cast<BaseContext *>(work->data);
     if (context == nullptr) {
         PRINT_HILOGE("context is null");
         delete work;
@@ -193,7 +195,7 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t* work, int statusIn)
         PRINT_HILOGE("open handle scope failed");
     }
 
-    napi_value result[2] = { nullptr };
+    napi_value result[2] = {nullptr};
     CreateResultMessage(context, result, resultLength);
     if (context->deferred) {
         if (context->errorMessage.code == E_PRINT_NONE) {
@@ -206,8 +208,8 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t* work, int statusIn)
     } else {
         napi_value callback = nullptr;
         status = napi_get_reference_value(context->env, context->callback, &callback);
-        status = napi_call_function(context->env, nullptr, callback, sizeof(result) / sizeof(result[0]), result,
-                                    nullptr);
+        status =
+            napi_call_function(context->env, nullptr, callback, sizeof(result) / sizeof(result[0]), result, nullptr);
         PRINT_HILOGD("callBack status %{public}d", (status == napi_ok));
     }
 
@@ -222,7 +224,7 @@ void PrintModalUICallback::SendMessageBackWork(uv_work_t* work, int statusIn)
     work = nullptr;
 }
 
-napi_status PrintModalUICallback::CreateResultMessage(BaseContext* context, napi_value* result, uint32_t length)
+napi_status PrintModalUICallback::CreateResultMessage(BaseContext *context, napi_value *result, uint32_t length)
 {
     PRINT_HILOGD("CreateResultMessage resultLength %{public}d", length);
     size_t errorIndex = NapiPrintUtils::INDEX_ZERO;
@@ -240,7 +242,7 @@ napi_status PrintModalUICallback::CreateResultMessage(BaseContext* context, napi
     PRINT_HILOGD("errorcode: %{public}d", context->errorMessage.code);
     if (context->errorMessage.code == E_PRINT_NONE) {
         if (context->requestType == PrintRequestType::REQUEST_TYPE_START) {
-            PrintContext* printContext = static_cast<PrintContext*>(context);
+            PrintContext *printContext = static_cast<PrintContext *>(context);
             CreatePrintResult(printContext, result[resultIndex]);
             status = napi_get_undefined(context->env, &result[errorIndex]);
             return status;
@@ -256,7 +258,7 @@ napi_status PrintModalUICallback::CreateResultMessage(BaseContext* context, napi
     }
 }
 
-napi_status PrintModalUICallback::CreatePrintResult(PrintContext* printContext, napi_value& result)
+napi_status PrintModalUICallback::CreatePrintResult(PrintContext *printContext, napi_value &result)
 {
     if (printContext == nullptr) {
         PRINT_HILOGE("printContext is nullptr");
@@ -269,7 +271,7 @@ napi_status PrintModalUICallback::CreatePrintResult(PrintContext* printContext, 
     return status;
 }
 
-napi_value PrintModalUICallback::CreateBusinessError(const napi_env& env, int32_t errCode, const std::string& errMsg)
+napi_value PrintModalUICallback::CreateBusinessError(const napi_env &env, int32_t errCode, const std::string &errMsg)
 {
     PRINT_HILOGD("CreateBusinessError errCode: %{public}d errMsg: %{public}s", errCode, errMsg.c_str());
 
@@ -308,5 +310,5 @@ napi_value PrintModalUICallback::CreateBusinessError(const napi_env& env, int32_
     return businessError;
 }
 
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

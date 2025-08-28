@@ -32,10 +32,10 @@ const std::string SCANNER_LIST_VERSION = "v1";
 
 namespace OHOS {
 namespace Scan {
-bool ScanSystemData::CheckJsonObjectValue(const Json::Value& object)
+bool ScanSystemData::CheckJsonObjectValue(const Json::Value &object)
 {
-    const std::vector<std::string> keyList = {"deviceId", "manufacturer", "model", "deviceType",
-        "discoverMode", "serialNumber", "deviceName", "uniqueId"};
+    const std::vector<std::string> keyList = {
+        "deviceId", "manufacturer", "model", "deviceType", "discoverMode", "serialNumber", "deviceName", "uniqueId"};
     for (auto key : keyList) {
         if (!Print::PrintJsonUtil::IsMember(object, key) || !object[key].isString()) {
             SCAN_HILOGW("can not find %{public}s", key.c_str());
@@ -76,7 +76,7 @@ void ScanSystemData::ParseScannerJsonV1(ScanDeviceInfo &scanDeviceInfo, Json::Va
     }
 }
 
-bool ScanSystemData::ParseScannerListJsonV1(Json::Value& jsonObject)
+bool ScanSystemData::ParseScannerListJsonV1(Json::Value &jsonObject)
 {
     if (!Print::PrintJsonUtil::IsMember(jsonObject, "scaner_list") || !jsonObject["scaner_list"].isArray()) {
         SCAN_HILOGW("can not find scaner_list");
@@ -140,8 +140,7 @@ void ScanSystemData::RefreshUsbDeviceId()
             continue;
         }
         std::string serialNumber = scanDevIt.second->serialNumber;
-        auto usbPort = DelayedSingleton<ScanUsbManager>::GetInstance()->
-            GetPortBySerialNumber(serialNumber);
+        auto usbPort = DelayedSingleton<ScanUsbManager>::GetInstance()->GetPortBySerialNumber(serialNumber);
         if (usbPort == "") {
             continue;
         }
@@ -332,13 +331,13 @@ bool ScanSystemData::IsContainScanner(const std::string &uniqueId)
     }
 }
 
-std::pair<std::string, std::string> ScanSystemData::UpdateNetScannerByUuid(const std::string &uuid,
-    const std::string& ip)
+std::pair<std::string, std::string> ScanSystemData::UpdateNetScannerByUuid(
+    const std::string &uuid, const std::string &ip)
 {
     std::string oldKey;
     std::shared_ptr<ScanDeviceInfo> scannerInfo;
     std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
-    for (const auto& [key, info] : addedScannerMap_) {
+    for (const auto &[key, info] : addedScannerMap_) {
         if (info != nullptr && !info->uuid.empty() && info->uuid == uuid) {
             oldKey = key;
             scannerInfo = info;

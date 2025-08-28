@@ -18,7 +18,7 @@
 #include <cups/cups.h>
 
 namespace {
-const uint32_t ISO_A0_WIDTH  = 33110;
+const uint32_t ISO_A0_WIDTH = 33110;
 const uint32_t ISO_A0_HEIGHT = 46810;
 const uint32_t ISO_A1_WIDTH = 23390;
 const uint32_t ISO_A1_HEIGHT = 33110;
@@ -174,13 +174,13 @@ const uint32_t PRC16_WIDTH = 5749;
 const uint32_t PRC16_HEIGHT = 8465;
 const uint32_t NA_EXECUTIVE_WIDTH = 7250;
 const uint32_t NA_EXECUTIVE_HEIGHT = 10500;
-}
+}  // namespace
 
 namespace OHOS::Print {
 std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>> PrintPageSize::pageSize_;
 std::mutex PrintPageSize::pageSizeMapMutex;
 
-void UpdatePageSizeMapOther(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>>& pageSize_)
+void UpdatePageSizeMapOther(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>> &pageSize_)
 {
     pageSize_["NA_ARCH_A"] =
         std::make_shared<PrintPageSize>("NA_ARCH_A", "na_arch-a_9x12in", NA_ARCH_A_WIDTH, NA_ARCH_A_HEIGHT);
@@ -194,8 +194,7 @@ void UpdatePageSizeMapOther(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize
         std::make_shared<PrintPageSize>("NA_ARCH_E", "na_arch-e_36x48in", NA_ARCH_E_WIDTH, NA_ARCH_E_HEIGHT);
     pageSize_["NA_FOOLSCAP"] =
         std::make_shared<PrintPageSize>("NA_FOOLSCAP", "na_foolscap_8.5x13in", NA_FOOLSCAP_WIDTH, NA_FOOLSCAP_HEIGHT);
-    pageSize_["NA_LEGAL"] =
-        std::make_shared<PrintPageSize>("NA_LEGAL", "na_legal_8.5x14in", LEGAL_WIDTH, LEGAL_HEIGHT);
+    pageSize_["NA_LEGAL"] = std::make_shared<PrintPageSize>("NA_LEGAL", "na_legal_8.5x14in", LEGAL_WIDTH, LEGAL_HEIGHT);
     pageSize_["NA_LETTER"] =
         std::make_shared<PrintPageSize>("NA_LETTER", "na_letter_8.5x11in", LETTER_WIDTH, LETTER_HEIGHT);
     pageSize_["NA_INDEX_3X5"] =
@@ -208,142 +207,88 @@ void UpdatePageSizeMapOther(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize
         std::make_shared<PrintPageSize>("NA_INDEX_4X6", "na_index-4x6_4x6in", PHOTO_4R_WIDTH, PHOTO_4R_HEIGHT);
     pageSize_["NA_GOVT_LETTER"] = std::make_shared<PrintPageSize>(
         "NA_GOVT_LETTER", "na_govt-letter_8x10in", NA_GOVT_LETTER_8IN_WIDTH, NA_GOVT_LETTER_8IN_HEIGHT);
-    pageSize_["NA_LEDGER"] = std::make_shared<PrintPageSize>(
-        "NA_LEDGER", "na_ledger_11x17in", NA_LEDGER_11IN_WIDTH, NA_LEDGER_11IN_HEIGHT);
+    pageSize_["NA_LEDGER"] =
+        std::make_shared<PrintPageSize>("NA_LEDGER", "na_ledger_11x17in", NA_LEDGER_11IN_WIDTH, NA_LEDGER_11IN_HEIGHT);
     pageSize_["OM_DSC_PHOTO"] = std::make_shared<PrintPageSize>(
         "OM_DSC_PHOTO", "om_dsc-photo_89x119mm", OM_SDC_PHOTO_WIDTH, OM_SDC_PHOTO_HEIGHT);
-    pageSize_["OM_CARD"] = std::make_shared<PrintPageSize>(
-        "OM_CARD", "om_card_54x86mm", OM_CARD_WIDTH, OM_CARD_HEIGHT);
-    pageSize_["OE_PHOTO_L"] = std::make_shared<PrintPageSize>(
-        "OE_PHOTO_L", "oe_photo-l_3.5x5in", OE_PHOTO_L_WIDTH, OE_PHOTO_L_HEIGHT);
-    pageSize_["NA_TABLOID"] = std::make_shared<PrintPageSize>(
-        "NA_TABLOID", "B_TABLOID", B_TABLOID_L_WIDTH, B_TABLOID_L_HEIGHT);
+    pageSize_["OM_CARD"] = std::make_shared<PrintPageSize>("OM_CARD", "om_card_54x86mm", OM_CARD_WIDTH, OM_CARD_HEIGHT);
+    pageSize_["OE_PHOTO_L"] =
+        std::make_shared<PrintPageSize>("OE_PHOTO_L", "oe_photo-l_3.5x5in", OE_PHOTO_L_WIDTH, OE_PHOTO_L_HEIGHT);
+    pageSize_["NA_TABLOID"] =
+        std::make_shared<PrintPageSize>("NA_TABLOID", "B_TABLOID", B_TABLOID_L_WIDTH, B_TABLOID_L_HEIGHT);
     pageSize_["NA_EXECUTIVE"] = std::make_shared<PrintPageSize>(
         "NA_EXECUTIVE", "na_executive_7.25x10.5in", NA_EXECUTIVE_WIDTH, NA_EXECUTIVE_HEIGHT);
 }
 
-void UpdatePageSizeMapPRC(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>>& pageSize_)
+void UpdatePageSizeMapPRC(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>> &pageSize_)
 {
-    pageSize_["PRC1"] =
-        std::make_shared<PrintPageSize>("PRC1", "prc_1_102x165mm", PRC1_WIDTH, PRC1_HEIGHT);
-    pageSize_["PRC2"] =
-        std::make_shared<PrintPageSize>("PRC2", "prc_2_102x176mm", PRC2_WIDTH, PRC2_HEIGHT);
-    pageSize_["PRC4"] =
-        std::make_shared<PrintPageSize>("PRC4", "prc_4_110x208mm", PRC4_WIDTH, PRC4_HEIGHT);
-    pageSize_["PRC6"] =
-        std::make_shared<PrintPageSize>("PRC6", "prc_6_120x320mm", PRC6_WIDTH, PRC6_HEIGHT);
-    pageSize_["PRC7"] =
-        std::make_shared<PrintPageSize>("PRC7", "prc_7_160x230mm", PRC7_WIDTH, PRC7_HEIGHT);
-    pageSize_["PRC8"] =
-        std::make_shared<PrintPageSize>("PRC8", "prc_8_120x309mm", PRC8_WIDTH, PRC8_HEIGHT);
-    pageSize_["PRC16"] =
-        std::make_shared<PrintPageSize>("PRC16", "prc_16k_146x215mm", PRC16_WIDTH, PRC16_HEIGHT);
-    pageSize_["ROC_16K"] = std::make_shared<PrintPageSize>(
-        "ROC_16K", "roc_16k_7.75x10.75in", ROC_16K_WIDTH, ROC_16K_HEIGHT);
-    pageSize_["ROC_8K"] = std::make_shared<PrintPageSize>(
-        "ROC_8K", "roc_8k_10.75x15.5in", ROC_8K_WIDTH, ROC_8K_HEIGHT);
+    pageSize_["PRC1"] = std::make_shared<PrintPageSize>("PRC1", "prc_1_102x165mm", PRC1_WIDTH, PRC1_HEIGHT);
+    pageSize_["PRC2"] = std::make_shared<PrintPageSize>("PRC2", "prc_2_102x176mm", PRC2_WIDTH, PRC2_HEIGHT);
+    pageSize_["PRC4"] = std::make_shared<PrintPageSize>("PRC4", "prc_4_110x208mm", PRC4_WIDTH, PRC4_HEIGHT);
+    pageSize_["PRC6"] = std::make_shared<PrintPageSize>("PRC6", "prc_6_120x320mm", PRC6_WIDTH, PRC6_HEIGHT);
+    pageSize_["PRC7"] = std::make_shared<PrintPageSize>("PRC7", "prc_7_160x230mm", PRC7_WIDTH, PRC7_HEIGHT);
+    pageSize_["PRC8"] = std::make_shared<PrintPageSize>("PRC8", "prc_8_120x309mm", PRC8_WIDTH, PRC8_HEIGHT);
+    pageSize_["PRC16"] = std::make_shared<PrintPageSize>("PRC16", "prc_16k_146x215mm", PRC16_WIDTH, PRC16_HEIGHT);
+    pageSize_["ROC_16K"] =
+        std::make_shared<PrintPageSize>("ROC_16K", "roc_16k_7.75x10.75in", ROC_16K_WIDTH, ROC_16K_HEIGHT);
+    pageSize_["ROC_8K"] = std::make_shared<PrintPageSize>("ROC_8K", "roc_8k_10.75x15.5in", ROC_8K_WIDTH, ROC_8K_HEIGHT);
 }
 
-void UpdatePageSizeMapIso(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>>& pageSize_)
+void UpdatePageSizeMapIso(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>> &pageSize_)
 {
-    pageSize_["ISO_A0"] =
-        std::make_shared<PrintPageSize>("ISO_A0", "iso_a0_841x1189mm", ISO_A0_WIDTH, ISO_A0_HEIGHT);
-    pageSize_["ISO_A1"] =
-        std::make_shared<PrintPageSize>("ISO_A1", "iso_a1_594x841mm", ISO_A1_WIDTH, ISO_A1_HEIGHT);
-    pageSize_["ISO_A2"] =
-        std::make_shared<PrintPageSize>("ISO_A2", "iso_a2_420x594mm", ISO_A2_WIDTH, ISO_A2_HEIGHT);
-    pageSize_["ISO_A3"] =
-        std::make_shared<PrintPageSize>("ISO_A3", "iso_a3_297x420mm", ISO_A3_WIDTH, ISO_A3_HEIGHT);
-    pageSize_["ISO_A4"] =
-        std::make_shared<PrintPageSize>("ISO_A4", "iso_a4_210x297mm", ISO_A4_WIDTH, ISO_A4_HEIGHT);
-    pageSize_["ISO_A5"] =
-        std::make_shared<PrintPageSize>("ISO_A5", "iso_a5_148x210mm", ISO_A5_WIDTH, ISO_A5_HEIGHT);
-    pageSize_["ISO_A6"] =
-        std::make_shared<PrintPageSize>("ISO_A6", "iso_a6_105x148mm", ISO_A6_WIDTH, ISO_A6_HEIGHT);
-    pageSize_["ISO_A7"] =
-        std::make_shared<PrintPageSize>("ISO_A7", "iso_a7_74x105mm", ISO_A7_WIDTH, ISO_A7_HEIGHT);
-    pageSize_["ISO_A8"] =
-        std::make_shared<PrintPageSize>("ISO_A8", "iso_a8_52x74mm", ISO_A8_WIDTH, ISO_A8_HEIGHT);
-    pageSize_["ISO_A9"] =
-        std::make_shared<PrintPageSize>("ISO_A9", "iso_a9_37x52mm", ISO_A9_WIDTH, ISO_A9_HEIGHT);
-    pageSize_["ISO_A10"] =
-        std::make_shared<PrintPageSize>("ISO_A10", "iso_a10_26x37mm", ISO_A10_WIDTH, ISO_A10_HEIGHT);
-    pageSize_["ISO_B0"] =
-        std::make_shared<PrintPageSize>("ISO_B0", "iso_b0_1000x1414mm", ISO_B0_WIDTH, ISO_B0_HEIGHT);
-    pageSize_["ISO_B1"] =
-        std::make_shared<PrintPageSize>("ISO_B1", "iso_b1_707x1000mm", ISO_B1_WIDTH, ISO_B1_HEIGHT);
-    pageSize_["ISO_B2"] =
-        std::make_shared<PrintPageSize>("ISO_B2", "iso_b2_500x707mm", ISO_B2_WIDTH, ISO_B2_HEIGHT);
-    pageSize_["ISO_B3"] =
-        std::make_shared<PrintPageSize>("ISO_B3", "iso_b3_353x500mm", ISO_B3_WIDTH, ISO_B3_HEIGHT);
-    pageSize_["ISO_B4"] =
-        std::make_shared<PrintPageSize>("ISO_B4", "iso_b4_250x353mm", ISO_B4_WIDTH, ISO_B4_HEIGHT);
-    pageSize_["ISO_B5"] =
-        std::make_shared<PrintPageSize>("ISO_B5", "iso_b5_176x250mm", ISO_B5_WIDTH, ISO_B5_HEIGHT);
-    pageSize_["ISO_B6"] =
-        std::make_shared<PrintPageSize>("ISO_B6", "iso_b6_125x176mm", ISO_B6_WIDTH, ISO_B6_HEIGHT);
-    pageSize_["ISO_B7"] =
-        std::make_shared<PrintPageSize>("ISO_B7", "iso_b7_88x125mm", ISO_B7_WIDTH, ISO_B7_HEIGHT);
-    pageSize_["ISO_B8"] =
-        std::make_shared<PrintPageSize>("ISO_B8", "iso_b8_62x88mm", ISO_B8_WIDTH, ISO_B8_HEIGHT);
-    pageSize_["ISO_B9"] =
-        std::make_shared<PrintPageSize>("ISO_B9", "iso_b9_44x62mm", ISO_B9_WIDTH, ISO_B9_HEIGHT);
-    pageSize_["ISO_B10"] =
-        std::make_shared<PrintPageSize>("ISO_B10", "iso_b10_31x44mm", ISO_B10_WIDTH, ISO_B10_HEIGHT);
+    pageSize_["ISO_A0"] = std::make_shared<PrintPageSize>("ISO_A0", "iso_a0_841x1189mm", ISO_A0_WIDTH, ISO_A0_HEIGHT);
+    pageSize_["ISO_A1"] = std::make_shared<PrintPageSize>("ISO_A1", "iso_a1_594x841mm", ISO_A1_WIDTH, ISO_A1_HEIGHT);
+    pageSize_["ISO_A2"] = std::make_shared<PrintPageSize>("ISO_A2", "iso_a2_420x594mm", ISO_A2_WIDTH, ISO_A2_HEIGHT);
+    pageSize_["ISO_A3"] = std::make_shared<PrintPageSize>("ISO_A3", "iso_a3_297x420mm", ISO_A3_WIDTH, ISO_A3_HEIGHT);
+    pageSize_["ISO_A4"] = std::make_shared<PrintPageSize>("ISO_A4", "iso_a4_210x297mm", ISO_A4_WIDTH, ISO_A4_HEIGHT);
+    pageSize_["ISO_A5"] = std::make_shared<PrintPageSize>("ISO_A5", "iso_a5_148x210mm", ISO_A5_WIDTH, ISO_A5_HEIGHT);
+    pageSize_["ISO_A6"] = std::make_shared<PrintPageSize>("ISO_A6", "iso_a6_105x148mm", ISO_A6_WIDTH, ISO_A6_HEIGHT);
+    pageSize_["ISO_A7"] = std::make_shared<PrintPageSize>("ISO_A7", "iso_a7_74x105mm", ISO_A7_WIDTH, ISO_A7_HEIGHT);
+    pageSize_["ISO_A8"] = std::make_shared<PrintPageSize>("ISO_A8", "iso_a8_52x74mm", ISO_A8_WIDTH, ISO_A8_HEIGHT);
+    pageSize_["ISO_A9"] = std::make_shared<PrintPageSize>("ISO_A9", "iso_a9_37x52mm", ISO_A9_WIDTH, ISO_A9_HEIGHT);
+    pageSize_["ISO_A10"] = std::make_shared<PrintPageSize>("ISO_A10", "iso_a10_26x37mm", ISO_A10_WIDTH, ISO_A10_HEIGHT);
+    pageSize_["ISO_B0"] = std::make_shared<PrintPageSize>("ISO_B0", "iso_b0_1000x1414mm", ISO_B0_WIDTH, ISO_B0_HEIGHT);
+    pageSize_["ISO_B1"] = std::make_shared<PrintPageSize>("ISO_B1", "iso_b1_707x1000mm", ISO_B1_WIDTH, ISO_B1_HEIGHT);
+    pageSize_["ISO_B2"] = std::make_shared<PrintPageSize>("ISO_B2", "iso_b2_500x707mm", ISO_B2_WIDTH, ISO_B2_HEIGHT);
+    pageSize_["ISO_B3"] = std::make_shared<PrintPageSize>("ISO_B3", "iso_b3_353x500mm", ISO_B3_WIDTH, ISO_B3_HEIGHT);
+    pageSize_["ISO_B4"] = std::make_shared<PrintPageSize>("ISO_B4", "iso_b4_250x353mm", ISO_B4_WIDTH, ISO_B4_HEIGHT);
+    pageSize_["ISO_B5"] = std::make_shared<PrintPageSize>("ISO_B5", "iso_b5_176x250mm", ISO_B5_WIDTH, ISO_B5_HEIGHT);
+    pageSize_["ISO_B6"] = std::make_shared<PrintPageSize>("ISO_B6", "iso_b6_125x176mm", ISO_B6_WIDTH, ISO_B6_HEIGHT);
+    pageSize_["ISO_B7"] = std::make_shared<PrintPageSize>("ISO_B7", "iso_b7_88x125mm", ISO_B7_WIDTH, ISO_B7_HEIGHT);
+    pageSize_["ISO_B8"] = std::make_shared<PrintPageSize>("ISO_B8", "iso_b8_62x88mm", ISO_B8_WIDTH, ISO_B8_HEIGHT);
+    pageSize_["ISO_B9"] = std::make_shared<PrintPageSize>("ISO_B9", "iso_b9_44x62mm", ISO_B9_WIDTH, ISO_B9_HEIGHT);
+    pageSize_["ISO_B10"] = std::make_shared<PrintPageSize>("ISO_B10", "iso_b10_31x44mm", ISO_B10_WIDTH, ISO_B10_HEIGHT);
 }
 
-void UpdatePageSizeMapIsoEnv(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>>& pageSize_)
+void UpdatePageSizeMapIsoEnv(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>> &pageSize_)
 {
-    pageSize_["ISO_C0"] =
-        std::make_shared<PrintPageSize>("ISO_C0", "iso_c0_917x1297mm", ISO_C0_WIDTH, ISO_C0_HEIGHT);
-    pageSize_["ISO_C1"] =
-        std::make_shared<PrintPageSize>("ISO_C1", "iso_c1_648x917mm", ISO_C1_WIDTH, ISO_C1_HEIGHT);
-    pageSize_["ISO_C2"] =
-        std::make_shared<PrintPageSize>("ISO_C2", "iso_c2_458x648mm", ISO_C2_WIDTH, ISO_C2_HEIGHT);
-    pageSize_["ISO_C3"] =
-        std::make_shared<PrintPageSize>("ISO_C3", "iso_c3_324x458mm", ISO_C3_WIDTH, ISO_C3_HEIGHT);
-    pageSize_["ISO_C4"] =
-        std::make_shared<PrintPageSize>("ISO_C4", "iso_c4_229x324mm", ISO_C4_WIDTH, ISO_C4_HEIGHT);
-    pageSize_["ISO_C5"] =
-        std::make_shared<PrintPageSize>("ISO_C5", "iso_c5_162x229mm", ISO_C5_WIDTH, ISO_C5_HEIGHT);
-    pageSize_["ISO_C6"] =
-        std::make_shared<PrintPageSize>("ISO_C6", "iso_c6_114x162mm", ISO_C6_WIDTH, ISO_C6_HEIGHT);
-    pageSize_["ISO_C7"] =
-        std::make_shared<PrintPageSize>("ISO_C7", "iso_c7_81x114mm", ISO_C7_WIDTH, ISO_C7_HEIGHT);
-    pageSize_["ISO_C8"] =
-        std::make_shared<PrintPageSize>("ISO_C8", "iso_c8_57x81mm", ISO_C8_WIDTH, ISO_C8_HEIGHT);
-    pageSize_["ISO_C9"] =
-        std::make_shared<PrintPageSize>("ISO_C9", "iso_c9_40x57mm", ISO_C9_WIDTH, ISO_C9_HEIGHT);
-    pageSize_["ISO_C10"] =
-        std::make_shared<PrintPageSize>("ISO_C10", "iso_c10_28x40mm", ISO_C10_WIDTH, ISO_C10_HEIGHT);
-    pageSize_["ISO_DL"] =
-        std::make_shared<PrintPageSize>("ISO_DL", "iso_dl_110x220mm", ISO_DL_WIDTH, ISO_DL_HEIGHT);
+    pageSize_["ISO_C0"] = std::make_shared<PrintPageSize>("ISO_C0", "iso_c0_917x1297mm", ISO_C0_WIDTH, ISO_C0_HEIGHT);
+    pageSize_["ISO_C1"] = std::make_shared<PrintPageSize>("ISO_C1", "iso_c1_648x917mm", ISO_C1_WIDTH, ISO_C1_HEIGHT);
+    pageSize_["ISO_C2"] = std::make_shared<PrintPageSize>("ISO_C2", "iso_c2_458x648mm", ISO_C2_WIDTH, ISO_C2_HEIGHT);
+    pageSize_["ISO_C3"] = std::make_shared<PrintPageSize>("ISO_C3", "iso_c3_324x458mm", ISO_C3_WIDTH, ISO_C3_HEIGHT);
+    pageSize_["ISO_C4"] = std::make_shared<PrintPageSize>("ISO_C4", "iso_c4_229x324mm", ISO_C4_WIDTH, ISO_C4_HEIGHT);
+    pageSize_["ISO_C5"] = std::make_shared<PrintPageSize>("ISO_C5", "iso_c5_162x229mm", ISO_C5_WIDTH, ISO_C5_HEIGHT);
+    pageSize_["ISO_C6"] = std::make_shared<PrintPageSize>("ISO_C6", "iso_c6_114x162mm", ISO_C6_WIDTH, ISO_C6_HEIGHT);
+    pageSize_["ISO_C7"] = std::make_shared<PrintPageSize>("ISO_C7", "iso_c7_81x114mm", ISO_C7_WIDTH, ISO_C7_HEIGHT);
+    pageSize_["ISO_C8"] = std::make_shared<PrintPageSize>("ISO_C8", "iso_c8_57x81mm", ISO_C8_WIDTH, ISO_C8_HEIGHT);
+    pageSize_["ISO_C9"] = std::make_shared<PrintPageSize>("ISO_C9", "iso_c9_40x57mm", ISO_C9_WIDTH, ISO_C9_HEIGHT);
+    pageSize_["ISO_C10"] = std::make_shared<PrintPageSize>("ISO_C10", "iso_c10_28x40mm", ISO_C10_WIDTH, ISO_C10_HEIGHT);
+    pageSize_["ISO_DL"] = std::make_shared<PrintPageSize>("ISO_DL", "iso_dl_110x220mm", ISO_DL_WIDTH, ISO_DL_HEIGHT);
 }
 
-void UpdatePageSizeMapJIS(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>>& pageSize_)
+void UpdatePageSizeMapJIS(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>> &pageSize_)
 {
-    pageSize_["JIS_B0"] =
-        std::make_shared<PrintPageSize>("JIS_B0", "jis_b0_1030x1456mm", JIS_B0_WIDTH, JIS_B0_HEIGHT);
-    pageSize_["JIS_B1"] =
-        std::make_shared<PrintPageSize>("JIS_B1", "jis_b1_728x1030mm", JIS_B1_WIDTH, JIS_B1_HEIGHT);
-    pageSize_["JIS_B2"] =
-        std::make_shared<PrintPageSize>("JIS_B2", "jis_b2_515x728mm", JIS_B2_WIDTH, JIS_B2_HEIGHT);
-    pageSize_["JIS_B3"] =
-        std::make_shared<PrintPageSize>("JIS_B3", "jis_b3_364x515mm", JIS_B3_WIDTH, JIS_B3_HEIGHT);
-    pageSize_["JIS_B4"] =
-        std::make_shared<PrintPageSize>("JIS_B4", "jis_b4_257x364mm", JIS_B4_WIDTH, JIS_B4_HEIGHT);
-    pageSize_["JIS_B5"] =
-        std::make_shared<PrintPageSize>("JIS_B5", "jis_b5_182x257mm", JIS_B5_WIDTH, JIS_B5_HEIGHT);
-    pageSize_["JIS_B6"] =
-        std::make_shared<PrintPageSize>("JIS_B6", "jis_b6_128x182mm", JIS_B6_WIDTH, JIS_B6_HEIGHT);
-    pageSize_["JIS_B7"] =
-        std::make_shared<PrintPageSize>("JIS_B7", "jis_b7_91x128mm", JIS_B7_WIDTH, JIS_B7_HEIGHT);
-    pageSize_["JIS_B8"] =
-        std::make_shared<PrintPageSize>("JIS_B8", "jis_b8_64x91mm", JIS_B8_WIDTH, JIS_B8_HEIGHT);
-    pageSize_["JIS_B9"] =
-        std::make_shared<PrintPageSize>("JIS_B9", "jis_b9_45x64mm", JIS_B9_WIDTH, JIS_B9_HEIGHT);
-    pageSize_["JIS_B10"] =
-        std::make_shared<PrintPageSize>("JIS_B10", "jis_b10_32x45mm", JIS_B10_WIDTH, JIS_B10_HEIGHT);
+    pageSize_["JIS_B0"] = std::make_shared<PrintPageSize>("JIS_B0", "jis_b0_1030x1456mm", JIS_B0_WIDTH, JIS_B0_HEIGHT);
+    pageSize_["JIS_B1"] = std::make_shared<PrintPageSize>("JIS_B1", "jis_b1_728x1030mm", JIS_B1_WIDTH, JIS_B1_HEIGHT);
+    pageSize_["JIS_B2"] = std::make_shared<PrintPageSize>("JIS_B2", "jis_b2_515x728mm", JIS_B2_WIDTH, JIS_B2_HEIGHT);
+    pageSize_["JIS_B3"] = std::make_shared<PrintPageSize>("JIS_B3", "jis_b3_364x515mm", JIS_B3_WIDTH, JIS_B3_HEIGHT);
+    pageSize_["JIS_B4"] = std::make_shared<PrintPageSize>("JIS_B4", "jis_b4_257x364mm", JIS_B4_WIDTH, JIS_B4_HEIGHT);
+    pageSize_["JIS_B5"] = std::make_shared<PrintPageSize>("JIS_B5", "jis_b5_182x257mm", JIS_B5_WIDTH, JIS_B5_HEIGHT);
+    pageSize_["JIS_B6"] = std::make_shared<PrintPageSize>("JIS_B6", "jis_b6_128x182mm", JIS_B6_WIDTH, JIS_B6_HEIGHT);
+    pageSize_["JIS_B7"] = std::make_shared<PrintPageSize>("JIS_B7", "jis_b7_91x128mm", JIS_B7_WIDTH, JIS_B7_HEIGHT);
+    pageSize_["JIS_B8"] = std::make_shared<PrintPageSize>("JIS_B8", "jis_b8_64x91mm", JIS_B8_WIDTH, JIS_B8_HEIGHT);
+    pageSize_["JIS_B9"] = std::make_shared<PrintPageSize>("JIS_B9", "jis_b9_45x64mm", JIS_B9_WIDTH, JIS_B9_HEIGHT);
+    pageSize_["JIS_B10"] = std::make_shared<PrintPageSize>("JIS_B10", "jis_b10_32x45mm", JIS_B10_WIDTH, JIS_B10_HEIGHT);
     pageSize_["JIS_EXEC"] =
         std::make_shared<PrintPageSize>("JIS_EXEC", "jis_exec_216x330mm", JIS_EXEC_WIDTH, JIS_EXEC_HEIGHT);
     pageSize_["JPN_CHOU2"] =
@@ -352,8 +297,8 @@ void UpdatePageSizeMapJIS(std::map<PAGE_SIZE_ID, std::shared_ptr<PrintPageSize>>
         std::make_shared<PrintPageSize>("JPN_CHOU3", "jpn_chou3_120x235mm", JPN_CHOU3_WIDTH, JPN_CHOU3_HEIGHT);
     pageSize_["JPN_CHOU4"] =
         std::make_shared<PrintPageSize>("JPN_CHOU4", "jpn_chou4_90x205mm", JPN_CHOU4_WIDTH, JPN_CHOU4_HEIGHT);
-    pageSize_["JPN_HAGAKI"] = std::make_shared<PrintPageSize>(
-        "JPN_HAGAKI", "jpn_hagaki_100x148mm", JPN_HAGAKI_WIDTH, JPN_HAGAKI_HEIGHT);
+    pageSize_["JPN_HAGAKI"] =
+        std::make_shared<PrintPageSize>("JPN_HAGAKI", "jpn_hagaki_100x148mm", JPN_HAGAKI_WIDTH, JPN_HAGAKI_HEIGHT);
 }
 
 void PrintPageSize::BuildPageSizeMap()
@@ -367,13 +312,13 @@ void PrintPageSize::BuildPageSizeMap()
     PRINT_HILOGD("BuildPageSizeMap count = %{public}zu", pageSize_.size());
 }
 
-PAGE_SIZE_ID PrintPageSize::MatchPageSize(const std::string& pageString)
+PAGE_SIZE_ID PrintPageSize::MatchPageSize(const std::string &pageString)
 {
     std::lock_guard<std::mutex> lock(pageSizeMapMutex);
     if (pageSize_.size() == 0) {
         BuildPageSizeMap();
     }
-    for (auto& item : pageSize_) {
+    for (auto &item : pageSize_) {
         auto pageSizeItem = item.second;
         if (pageSizeItem == nullptr) {
             continue;
@@ -385,7 +330,7 @@ PAGE_SIZE_ID PrintPageSize::MatchPageSize(const std::string& pageString)
     return "";
 }
 
-bool PrintPageSize::FindPageSizeById(const PAGE_SIZE_ID &id, PrintPageSize& pageSize)
+bool PrintPageSize::FindPageSizeById(const PAGE_SIZE_ID &id, PrintPageSize &pageSize)
 {
     std::lock_guard<std::mutex> lock(pageSizeMapMutex);
     if (pageSize_.size() == 0) {
@@ -529,8 +474,7 @@ Json::Value PrintPageSize::ConvertToJsonObject() const
 
 bool PrintPageSize::ConvertToPwgStyle()
 {
-    pwg_media_t* pwgMedia = pwgMediaForSize(
-        round(GetWidth() * ONE_HUNDRED / HUNDRED_OF_MILLIMETRE_TO_INCH),
+    pwg_media_t *pwgMedia = pwgMediaForSize(round(GetWidth() * ONE_HUNDRED / HUNDRED_OF_MILLIMETRE_TO_INCH),
         round(GetHeight() * ONE_HUNDRED / HUNDRED_OF_MILLIMETRE_TO_INCH));
     if (pwgMedia && pwgMedia->ppd && pwgMedia->pwg) {
         std::string ppdName(pwgMedia->ppd);
@@ -550,9 +494,9 @@ bool PrintPageSize::ConvertToCustomStyle()
 {
     std::stringstream sizeName;
     sizeName << CUSTOM_PREFIX << round(GetWidth() / HUNDRED_OF_MILLIMETRE_TO_INCH) << "x"
-        << round(GetHeight() / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
+             << round(GetHeight() / HUNDRED_OF_MILLIMETRE_TO_INCH) << "mm";
     SetId(sizeName.str());
     SetName(sizeName.str());
     return true;
 }
-} // namespace OHOS::Print
+}  // namespace OHOS::Print

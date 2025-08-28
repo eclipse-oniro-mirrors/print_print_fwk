@@ -27,7 +27,7 @@ const uint32_t ORIENTATION_OFFSET = 3;
 const int NUMBER_BASE = 10;
 const size_t MAX_STRING_COUNT = 1000;
 const uint32_t MAX_MEDIA_TYPE_SIZE = 200;
-}
+}  // namespace
 
 namespace OHOS::Print {
 
@@ -261,8 +261,9 @@ void LogPageCapability(const Print_PrinterCapability *capability)
             if (capability->supportedPageSizes[i].name != nullptr) {
                 PRINT_HILOGD("page name = %{public}s", capability->supportedPageSizes[i].name);
             }
-            PRINT_HILOGD("page size = %{public}u x %{public}u", capability->supportedPageSizes[i].width,
-                         capability->supportedPageSizes[i].height);
+            PRINT_HILOGD("page size = %{public}u x %{public}u",
+                capability->supportedPageSizes[i].width,
+                capability->supportedPageSizes[i].height);
         }
     }
     if (capability->supportedMediaTypes != nullptr) {
@@ -297,8 +298,9 @@ void LogOtherCapability(const Print_PrinterCapability *capability)
     PRINT_HILOGD("copy count = %{public}u", capability->supportedCopies);
     if (capability->supportedResolutions != nullptr && capability->supportedResolutionsCount > 0) {
         for (uint32_t i = 0; i < capability->supportedResolutionsCount; ++i) {
-            PRINT_HILOGD("dpi = %{public}u x %{public}u", capability->supportedResolutions[i].horizontalDpi,
-                         capability->supportedResolutions[i].verticalDpi);
+            PRINT_HILOGD("dpi = %{public}u x %{public}u",
+                capability->supportedResolutions[i].horizontalDpi,
+                capability->supportedResolutions[i].verticalDpi);
         }
     }
     if (capability->supportedOrientations != nullptr && capability->supportedOrientationsCount > 0) {
@@ -326,15 +328,18 @@ void LogDefaultValue(const Print_DefaultValue *defaultValue)
         PRINT_HILOGD("defaultPageSizeId = %{public}s", defaultValue->defaultPageSizeId);
     }
     PRINT_HILOGD("defaultMargin = [%{public}u, %{public}u, %{public}u, %{public}u]",
-                 defaultValue->defaultMargin.leftMargin, defaultValue->defaultMargin.topMargin,
-                 defaultValue->defaultMargin.rightMargin, defaultValue->defaultMargin.bottomMargin);
+        defaultValue->defaultMargin.leftMargin,
+        defaultValue->defaultMargin.topMargin,
+        defaultValue->defaultMargin.rightMargin,
+        defaultValue->defaultMargin.bottomMargin);
     if (defaultValue->defaultPaperSource != nullptr) {
         PRINT_HILOGD("defaultPaperSource = %{public}s", defaultValue->defaultPaperSource);
     }
     PRINT_HILOGD("defaultPrintQuality = %{public}u", static_cast<uint32_t>(defaultValue->defaultPrintQuality));
     PRINT_HILOGD("defaultCopies = %{public}u", defaultValue->defaultCopies);
-    PRINT_HILOGD("defaultResolution = %{public}u x %{public}u", defaultValue->defaultResolution.horizontalDpi,
-                 defaultValue->defaultResolution.verticalDpi);
+    PRINT_HILOGD("defaultResolution = %{public}u x %{public}u",
+        defaultValue->defaultResolution.horizontalDpi,
+        defaultValue->defaultResolution.verticalDpi);
     PRINT_HILOGD("defaultOrientation = %{public}u", static_cast<uint32_t>(defaultValue->defaultOrientation));
     if (defaultValue->otherDefaultValues != nullptr) {
         PRINT_HILOGD("otherDefaultValues = %{public}s", defaultValue->otherDefaultValues);
@@ -365,8 +370,8 @@ void LogProperties(const Print_PropertyList *propertyList)
     }
 }
 
-std::shared_ptr<std::string> FindPropertyFromPropertyList(const Print_PropertyList *propertyList,
-    const std::string &keyName)
+std::shared_ptr<std::string> FindPropertyFromPropertyList(
+    const Print_PropertyList *propertyList, const std::string &keyName)
 {
     if (propertyList == nullptr) {
         PRINT_HILOGW("propertyList is null");
@@ -431,8 +436,8 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
         if (discoveryItem->detailInfo != nullptr) {
             Json::Value detailInfo;
             std::istringstream iss(std::string(discoveryItem->detailInfo));
-            if (PrintJsonUtil::ParseFromStream(iss, detailInfo) && !detailInfo.isNull()
-                && PrintJsonUtil::IsMember(detailInfo, "bsunidriver_support") &&
+            if (PrintJsonUtil::ParseFromStream(iss, detailInfo) && !detailInfo.isNull() &&
+                PrintJsonUtil::IsMember(detailInfo, "bsunidriver_support") &&
                 detailInfo["bsunidriver_support"].isString()) {
                 option["bsunidriverSupport"] = detailInfo["bsunidriver_support"].asString();
             }
@@ -455,7 +460,7 @@ void AddUniquePageSize(std::vector<PrintPageSize> &pageSizeList, const PrintPage
 }
 
 bool UpdateDefaultPageSizeId(PrinterCapability &printerCap, const std::string &defaultPageId, const std::string &pageId,
-                             const Print_PageSize &page)
+    const Print_PageSize &page)
 {
     if (page.id != nullptr && defaultPageId == std::string(page.id)) {
         printerCap.SetPrinterAttrNameAndValue("defaultPageSizeId", pageId.c_str());
@@ -464,8 +469,8 @@ bool UpdateDefaultPageSizeId(PrinterCapability &printerCap, const std::string &d
     return false;
 }
 
-bool UpdatePageSizeCapability(PrinterCapability &printerCap, const Print_PrinterCapability *capability,
-                              const Print_DefaultValue *defaultValue)
+bool UpdatePageSizeCapability(
+    PrinterCapability &printerCap, const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue)
 {
     if (capability == nullptr || capability->supportedPageSizes == nullptr) {
         PRINT_HILOGW("supportedPageSizes is null");
@@ -523,8 +528,11 @@ bool UpdateQualityCapability(PrinterCapability &printerCap, const Print_PrinterC
         return false;
     }
     std::vector<uint32_t> supportedQualityList;
-    if (ConvertArrayToList<Print_Quality, uint32_t>(capability->supportedQualities,
-        capability->supportedQualitiesCount, supportedQualityList, ConvertQuality)) {
+    if (ConvertArrayToList<Print_Quality, uint32_t>(
+        capability->supportedQualities,
+        capability->supportedQualitiesCount,
+        supportedQualityList,
+        ConvertQuality)) {
         printerCap.SetSupportedQuality(supportedQualityList);
     }
     std::string supportedQualities = ConvertArrayToJson<Print_Quality>(
@@ -543,8 +551,11 @@ bool UpdateColorCapability(PrinterCapability &printerCap, const Print_PrinterCap
         return false;
     }
     std::vector<uint32_t> supportedColorModes;
-    if (ConvertArrayToList<Print_ColorMode, uint32_t>(capability->supportedColorModes,
-        capability->supportedColorModesCount, supportedColorModes, ConvertColorMode)) {
+    if (ConvertArrayToList<Print_ColorMode, uint32_t>(
+        capability->supportedColorModes,
+        capability->supportedColorModesCount,
+        supportedColorModes,
+        ConvertColorMode)) {
         printerCap.SetSupportedColorMode(supportedColorModes);
     }
     std::string colorModeJson = ConvertArrayToJson<Print_ColorMode>(
@@ -568,8 +579,11 @@ bool UpdateDuplexCapability(PrinterCapability &printerCap, const Print_PrinterCa
         return false;
     }
     std::vector<uint32_t> supportedDuplexModes;
-    if (ConvertArrayToList<Print_DuplexMode, uint32_t>(capability->supportedDuplexModes,
-        capability->supportedDuplexModesCount, supportedDuplexModes, ConvertDuplexMode)) {
+    if (ConvertArrayToList<Print_DuplexMode, uint32_t>(
+        capability->supportedDuplexModes,
+        capability->supportedDuplexModesCount,
+        supportedDuplexModes,
+        ConvertDuplexMode)) {
         printerCap.SetSupportedDuplexMode(supportedDuplexModes);
     }
     std::string duplexModeJson = ConvertArrayToJson<Print_DuplexMode>(
@@ -604,8 +618,8 @@ bool UpdateResolutionCapability(PrinterCapability &printerCap, const Print_Print
         resolutionArray.append(object);
     }
     printerCap.SetResolution(resolutionList);
-    printerCap.SetPrinterAttrNameAndValue("printer-resolution-supported",
-        (PrintJsonUtil::WriteString(resolutionArray)).c_str());
+    printerCap.SetPrinterAttrNameAndValue(
+        "printer-resolution-supported", (PrintJsonUtil::WriteString(resolutionArray)).c_str());
     return true;
 }
 
@@ -622,8 +636,8 @@ bool UpdateResolutionDefaultValue(PrinterCapability &printerCap, const Print_Def
     return true;
 }
 
-bool UpdateCopiesCapability(PrinterCapability &printerCap, const Print_PrinterCapability *capability,
-                            const Print_DefaultValue *defaultValue)
+bool UpdateCopiesCapability(
+    PrinterCapability &printerCap, const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue)
 {
     if (capability == nullptr || defaultValue == nullptr) {
         PRINT_HILOGW("capability or defaultValue is null");
@@ -634,15 +648,15 @@ bool UpdateCopiesCapability(PrinterCapability &printerCap, const Print_PrinterCa
     return true;
 }
 
-bool UpdateOrientationCapability(PrinterCapability &printerCap, const Print_PrinterCapability *capability,
-                                 const Print_DefaultValue *defaultValue)
+bool UpdateOrientationCapability(
+    PrinterCapability &printerCap, const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue)
 {
     if (capability == nullptr || defaultValue == nullptr) {
         PRINT_HILOGW("capability or defaultValue is null");
         return false;
     }
-    printerCap.SetPrinterAttrNameAndValue("orientation-requested-default",
-                                          std::to_string(defaultValue->defaultOrientation).c_str());
+    printerCap.SetPrinterAttrNameAndValue(
+        "orientation-requested-default", std::to_string(defaultValue->defaultOrientation).c_str());
     if (capability->supportedOrientations != nullptr) {
         Json::Value supportedOrientationArray;
         std::vector<uint32_t> supportedOrientations;
@@ -652,14 +666,14 @@ bool UpdateOrientationCapability(PrinterCapability &printerCap, const Print_Prin
             supportedOrientations.push_back(static_cast<uint32_t>(orientationEnum));
         }
         printerCap.SetSupportedOrientation(supportedOrientations);
-        printerCap.SetPrinterAttrNameAndValue("orientation-requested-supported",
-                                              (PrintJsonUtil::WriteString(supportedOrientationArray)).c_str());
+        printerCap.SetPrinterAttrNameAndValue(
+            "orientation-requested-supported", (PrintJsonUtil::WriteString(supportedOrientationArray)).c_str());
     }
     return true;
 }
 
-bool UpdateMediaCapability(PrinterCapability &printerCap, const Print_PrinterCapability *capability,
-                           const Print_DefaultValue *defaultValue)
+bool UpdateMediaCapability(
+    PrinterCapability &printerCap, const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue)
 {
     if (capability == nullptr || defaultValue == nullptr) {
         PRINT_HILOGW("capability or defaultValue is null");
@@ -698,13 +712,15 @@ bool UpdateMarginCapability(PrinterCapability &printerCap, const Print_DefaultVa
     printMargin.SetRight(defaultValue->defaultMargin.rightMargin);
     printMargin.SetBottom(defaultValue->defaultMargin.bottomMargin);
     PRINT_HILOGD("margin left = %{public}u, top =  %{public}u, right = %{public}u, bottom =  %{public}u",
-                 defaultValue->defaultMargin.leftMargin, defaultValue->defaultMargin.topMargin,
-                 defaultValue->defaultMargin.rightMargin, defaultValue->defaultMargin.bottomMargin);
+        defaultValue->defaultMargin.leftMargin,
+        defaultValue->defaultMargin.topMargin,
+        defaultValue->defaultMargin.rightMargin,
+        defaultValue->defaultMargin.bottomMargin);
     printerCap.SetMinMargin(printMargin);
     return true;
 }
-bool UpdatePrinterCapability(PrinterCapability &printerCap, const Print_PrinterCapability *capability,
-                             const Print_DefaultValue *defaultValue)
+bool UpdatePrinterCapability(
+    PrinterCapability &printerCap, const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue)
 {
     if (capability == nullptr || defaultValue == nullptr) {
         PRINT_HILOGW("capability or defaultValue is null");
@@ -730,7 +746,7 @@ bool UpdatePrinterCapability(PrinterCapability &printerCap, const Print_PrinterC
 }
 
 bool UpdatePrinterInfoWithCapability(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem,
-                                     const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue)
+    const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue)
 {
     PrinterCapability printerCap;
     if (!UpdatePrinterCapability(printerCap, capability, defaultValue)) {
@@ -760,8 +776,7 @@ bool UpdatePrinterInfoWithCapability(PrinterInfo &info, const Print_DiscoveryIte
 }
 
 std::shared_ptr<PrinterInfo> ConvertVendorCapabilityToPrinterInfo(const Print_DiscoveryItem *printer,
-                                                                  const Print_PrinterCapability *capability,
-                                                                  const Print_DefaultValue *defaultValue)
+    const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue)
 {
     if (printer == nullptr || printer->printerId == nullptr) {
         PRINT_HILOGW("printer null");
@@ -818,4 +833,4 @@ void ReleaseStringList(Print_StringList &stringList)
     }
     stringList.count = 0;
 }
-}
+}  // namespace OHOS::Print

@@ -25,20 +25,21 @@ namespace OHOS::Scan {
 constexpr int32_t YES_VALUE = 1;
 constexpr int32_t NO_VALUE = 0;
 
-ScanContext::ScanContext() {}
+ScanContext::ScanContext()
+{}
 
 ScanContext::~ScanContext()
 {
     Clear();
 }
 
-ScanContext& ScanContext::GetInstance()
+ScanContext &ScanContext::GetInstance()
 {
     static ScanContext instance;
     return instance;
 }
 
-void ScanContext::ExecuteCallback(const std::vector<ScanDeviceInfo>& infos)
+void ScanContext::ExecuteCallback(const std::vector<ScanDeviceInfo> &infos)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (discoverCallback_ == nullptr) {
@@ -81,7 +82,7 @@ void ScanContext::ExecuteCallback(const std::vector<ScanDeviceInfo>& infos)
     DELETE_ARRAY_AND_NULLIFY(devices);
 }
 
-int32_t ScanContext::GetScannerParaCount(const std::string& deviceId, int32_t& scannerParaCount)
+int32_t ScanContext::GetScannerParaCount(const std::string &deviceId, int32_t &scannerParaCount)
 {
     auto client = ScanManagerClient::GetInstance();
     if (client == nullptr) {
@@ -106,7 +107,7 @@ int32_t ScanContext::GetScannerParaCount(const std::string& deviceId, int32_t& s
     return SCAN_ERROR_NONE;
 }
 
-bool ScanContext::ParaIndexConvert(const int32_t option, int32_t& innerOption, const std::string& deviceId)
+bool ScanContext::ParaIndexConvert(const int32_t option, int32_t &innerOption, const std::string &deviceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = innerScanParaTables_.find(deviceId);
@@ -114,12 +115,12 @@ bool ScanContext::ParaIndexConvert(const int32_t option, int32_t& innerOption, c
         SCAN_HILOGE("cannot find deviceId [%{public}s] in innerScanParaTables", deviceId.c_str());
         return false;
     }
-    auto& tablePtr = it->second;
+    auto &tablePtr = it->second;
     if (tablePtr == nullptr) {
         SCAN_HILOGE("tablePtr is a nullptr");
         return false;
     }
-    auto& indexMap = tablePtr->indexMap;
+    auto &indexMap = tablePtr->indexMap;
     auto indexMapIt = indexMap.find(option);
     if (indexMapIt == indexMap.end()) {
         SCAN_HILOGE("cannot find option [%{public}d] in indexMap", option);
@@ -129,8 +130,8 @@ bool ScanContext::ParaIndexConvert(const int32_t option, int32_t& innerOption, c
     return true;
 }
 
-int32_t ScanContext::GetScannerParameter(const std::string &deviceId,
-    int32_t scannerParaCount, ScanParaTable &paraTable)
+int32_t ScanContext::GetScannerParameter(
+    const std::string &deviceId, int32_t scannerParaCount, ScanParaTable &paraTable)
 {
     int32_t buffLength = 0;
     for (int i = 1; i < scannerParaCount; i++) {
@@ -154,8 +155,8 @@ int32_t ScanContext::GetScannerParameter(const std::string &deviceId,
     return SCAN_ERROR_NONE;
 }
 
-std::string ScanContext::SetRangeStrInParaTable(const ScanOptionDescriptor& desc,
-    ScanParaTable& paraTable, const int32_t& buffLength)
+std::string ScanContext::SetRangeStrInParaTable(
+    const ScanOptionDescriptor &desc, ScanParaTable &paraTable, const int32_t &buffLength)
 {
     std::string rangeStr;
     uint32_t constraintType = desc.GetOptionConstraintType();
@@ -215,7 +216,7 @@ std::string ScanContext::GetPhysicalUnitDesc(uint32_t physicalUnit)
     return it->second;
 }
 
-bool ScanContext::SetParaTable(ScanOptionDescriptor& desc, ScanParaTable& paraTable, int32_t& buffLength)
+bool ScanContext::SetParaTable(ScanOptionDescriptor &desc, ScanParaTable &paraTable, int32_t &buffLength)
 {
     std::string rangeStr = SetRangeStrInParaTable(desc, paraTable, buffLength);
     if (rangeStr == "") {
@@ -235,10 +236,10 @@ bool ScanContext::SetParaTable(ScanOptionDescriptor& desc, ScanParaTable& paraTa
     return true;
 }
 
-int32_t ScanContext::GetOptionValueFromTable(const std::string& deviceId, int32_t option,
-    const char* value, ScanOptionValue& optionValue)
+int32_t ScanContext::GetOptionValueFromTable(
+    const std::string &deviceId, int32_t option, const char *value, ScanOptionValue &optionValue)
 {
-    auto* paraTable = GetScanParaTable(deviceId);
+    auto *paraTable = GetScanParaTable(deviceId);
     std::lock_guard<std::mutex> lock(mutex_);
     if (paraTable == nullptr) {
         SCAN_HILOGE("cannot find scannerId [%{private}s] in parameter tables.", deviceId.c_str());
@@ -280,7 +281,7 @@ int32_t ScanContext::GetOptionValueFromTable(const std::string& deviceId, int32_
     return SCAN_ERROR_NONE;
 }
 
-void ScanContext::FreeScannerOptionsMemory(Scan_ScannerOptions* scannerOptions)
+void ScanContext::FreeScannerOptionsMemory(Scan_ScannerOptions *scannerOptions)
 {
     if (scannerOptions == nullptr) {
         SCAN_HILOGW("scannerOptions is a nullptr.");
@@ -311,14 +312,14 @@ void ScanContext::FreeScannerOptionsMemory(Scan_ScannerOptions* scannerOptions)
     DELETE_AND_NULLIFY(scannerOptions)
 }
 
-Scan_ScannerOptions* ScanContext::CreateScannerOptions(int32_t &optionCount)
+Scan_ScannerOptions *ScanContext::CreateScannerOptions(int32_t &optionCount)
 {
     constexpr int32_t maxOptionCount = 1000;
     if (optionCount > maxOptionCount) {
         SCAN_HILOGE("optionCount [%{public}d] exceeded the maximum value", optionCount);
         return nullptr;
     }
-    Scan_ScannerOptions* scannerOptions = new (std::nothrow) Scan_ScannerOptions();
+    Scan_ScannerOptions *scannerOptions = new (std::nothrow) Scan_ScannerOptions();
     if (scannerOptions == nullptr) {
         SCAN_HILOGE("scannerOptions is a nullptr");
         return nullptr;
@@ -329,27 +330,27 @@ Scan_ScannerOptions* ScanContext::CreateScannerOptions(int32_t &optionCount)
         FreeScannerOptionsMemory(scannerOptions);
         return nullptr;
     }
-    scannerOptions->titles = new (std::nothrow) char* [optionCount];
-    scannerOptions->descriptions = new (std::nothrow) char* [optionCount];
-    scannerOptions->ranges = new (std::nothrow) char* [optionCount];
+    scannerOptions->titles = new (std::nothrow) char *[optionCount];
+    scannerOptions->descriptions = new (std::nothrow) char *[optionCount];
+    scannerOptions->ranges = new (std::nothrow) char *[optionCount];
     scannerOptions->optionCount = optionCount;
     if (scannerOptions->titles == nullptr || scannerOptions->descriptions == nullptr ||
         scannerOptions->ranges == nullptr) {
         FreeScannerOptionsMemory(scannerOptions);
         return nullptr;
     }
-    int32_t stringMemSize = optionCount * sizeof(char*);
+    int32_t stringMemSize = optionCount * sizeof(char *);
     if (memset_s(scannerOptions->titles, stringMemSize, 0, stringMemSize) != 0 ||
         memset_s(scannerOptions->descriptions, stringMemSize, 0, stringMemSize) != 0 ||
         memset_s(scannerOptions->ranges, stringMemSize, 0, stringMemSize) != 0) {
-            SCAN_HILOGW("memset_s fail");
-            FreeScannerOptionsMemory(scannerOptions);
-            return nullptr;
+        SCAN_HILOGW("memset_s fail");
+        FreeScannerOptionsMemory(scannerOptions);
+        return nullptr;
     }
     return scannerOptions;
 }
 
-bool ScanContext::CopySingleBuf(char* destBuf, const char* srcBuf, size_t bufferSize)
+bool ScanContext::CopySingleBuf(char *destBuf, const char *srcBuf, size_t bufferSize)
 {
     if (destBuf == nullptr || srcBuf == nullptr) {
         SCAN_HILOGW("CopySingleBuf new fail");
@@ -367,12 +368,12 @@ bool ScanContext::CopySingleBuf(char* destBuf, const char* srcBuf, size_t buffer
     return true;
 }
 
-bool ScanContext::MemSetScannerOptions(Scan_ScannerOptions* scannerOptions,
-    int32_t &optionCount, ScanParaTable &paraTable)
+bool ScanContext::MemSetScannerOptions(
+    Scan_ScannerOptions *scannerOptions, int32_t &optionCount, ScanParaTable &paraTable)
 {
     for (int i = 0; i < optionCount; i++) {
         auto bufferSize = paraTable.titBuff[i].length() + 1;
-        char* titBuff = new (std::nothrow) char[bufferSize];
+        char *titBuff = new (std::nothrow) char[bufferSize];
         if (!CopySingleBuf(titBuff, paraTable.titBuff[i].c_str(), bufferSize)) {
             if (titBuff != nullptr) {
                 delete[] titBuff;
@@ -382,7 +383,7 @@ bool ScanContext::MemSetScannerOptions(Scan_ScannerOptions* scannerOptions,
         scannerOptions->titles[i] = titBuff;
 
         bufferSize = paraTable.desBuff[i].length() + 1;
-        char* desBuff = new (std::nothrow) char[bufferSize];
+        char *desBuff = new (std::nothrow) char[bufferSize];
         if (!CopySingleBuf(desBuff, paraTable.desBuff[i].c_str(), bufferSize)) {
             if (desBuff != nullptr) {
                 delete[] desBuff;
@@ -392,7 +393,7 @@ bool ScanContext::MemSetScannerOptions(Scan_ScannerOptions* scannerOptions,
         scannerOptions->descriptions[i] = desBuff;
 
         bufferSize = paraTable.rangesBuff[i].length() + 1;
-        char* rangesBuff = new (std::nothrow) char[bufferSize];
+        char *rangesBuff = new (std::nothrow) char[bufferSize];
         if (!CopySingleBuf(rangesBuff, paraTable.rangesBuff[i].c_str(), bufferSize)) {
             if (rangesBuff != nullptr) {
                 delete[] rangesBuff;
@@ -404,14 +405,14 @@ bool ScanContext::MemSetScannerOptions(Scan_ScannerOptions* scannerOptions,
     return true;
 }
 
-Scan_ScannerOptions* ScanContext::ConvertToScannerOptions(ScanParaTable &paraTable)
+Scan_ScannerOptions *ScanContext::ConvertToScannerOptions(ScanParaTable &paraTable)
 {
     int32_t optionCount = paraTable.buffLength;
     if (optionCount <= 0) {
         SCAN_HILOGE("optionCount is less than 0");
         return nullptr;
     }
-    Scan_ScannerOptions* scannerOptions = CreateScannerOptions(optionCount);
+    Scan_ScannerOptions *scannerOptions = CreateScannerOptions(optionCount);
     if (scannerOptions == nullptr) {
         SCAN_HILOGE("scannerOptions is a nullptr");
         return nullptr;
@@ -426,8 +427,7 @@ Scan_ScannerOptions* ScanContext::ConvertToScannerOptions(ScanParaTable &paraTab
 
 int32_t ScanContext::StatusConvert(int32_t status)
 {
-    static const std::map<uint32_t, uint32_t> errorCodeMap = {
-        {E_SCAN_GENERIC_FAILURE, SCAN_ERROR_GENERIC_FAILURE},
+    static const std::map<uint32_t, uint32_t> errorCodeMap = {{E_SCAN_GENERIC_FAILURE, SCAN_ERROR_GENERIC_FAILURE},
         {E_SCAN_RPC_FAILURE, SCAN_ERROR_RPC_FAILURE},
         {E_SCAN_SERVER_FAILURE, SCAN_ERROR_SERVER_FAILURE},
         {E_SCAN_UNSUPPORTED, SCAN_ERROR_UNSUPPORTED},
@@ -439,8 +439,7 @@ int32_t ScanContext::StatusConvert(int32_t status)
         {E_SCAN_COVER_OPEN, SCAN_ERROR_COVER_OPEN},
         {E_SCAN_IO_ERROR, SCAN_ERROR_IO_ERROR},
         {E_SCAN_NO_MEM, SCAN_ERROR_NO_MEMORY},
-        {E_SCAN_ACCESS_DENIED, SCAN_ERROR_INVALID}
-    };
+        {E_SCAN_ACCESS_DENIED, SCAN_ERROR_INVALID}};
     auto it = errorCodeMap.find(status);
     if (it != errorCodeMap.end()) {
         return it->second;
@@ -453,7 +452,7 @@ int32_t ScanContext::StatusConvert(int32_t status)
 void ScanContext::Clear()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    for (auto& pair : exScanParaTables_) {
+    for (auto &pair : exScanParaTables_) {
         FreeScannerOptionsMemory(pair.second);
     }
     exScanParaTables_.clear();
@@ -461,27 +460,27 @@ void ScanContext::Clear()
     discoverCallback_ = nullptr;
 }
 
-ScanParaTable* ScanContext::GetScanParaTable(const std::string& scannerId)
+ScanParaTable *ScanContext::GetScanParaTable(const std::string &scannerId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = innerScanParaTables_.find(scannerId);
     return it != innerScanParaTables_.end() ? it->second.get() : nullptr;
 }
 
-void ScanContext::SetScanParaTable(const std::string& scannerId, std::unique_ptr<ScanParaTable> table)
+void ScanContext::SetScanParaTable(const std::string &scannerId, std::unique_ptr<ScanParaTable> table)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     innerScanParaTables_[scannerId] = std::move(table);
 }
 
-Scan_ScannerOptions* ScanContext::GetScannerOptions(const std::string& scannerId)
+Scan_ScannerOptions *ScanContext::GetScannerOptions(const std::string &scannerId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = exScanParaTables_.find(scannerId);
     return it != exScanParaTables_.end() ? it->second : nullptr;
 }
 
-void ScanContext::SetScannerOptions(const std::string& scannerId, Scan_ScannerOptions* options)
+void ScanContext::SetScannerOptions(const std::string &scannerId, Scan_ScannerOptions *options)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     exScanParaTables_[scannerId] = options;
@@ -493,7 +492,7 @@ void ScanContext::SetDiscoverCallback(Scan_ScannerDiscoveryCallback callback)
     discoverCallback_ = callback;
 }
 
-const std::string& ScanContext::GetRegisterType()
+const std::string &ScanContext::GetRegisterType()
 {
     static const std::string discoveryRegistryType = "GET_SCANNER_DEVICE_LIST";
     return discoveryRegistryType;

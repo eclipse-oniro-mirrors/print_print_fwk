@@ -133,7 +133,7 @@ napi_value NapiPrintExt::UpdatePrinters(napi_env env, napi_callback_info info)
 {
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](
-            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         bool isArray = false;
         napi_is_array(env, argv[NapiPrintUtils::INDEX_ZERO], &isArray);
@@ -241,7 +241,7 @@ napi_value NapiPrintExt::UpdatePrintJobStateOnlyForSystemApp(napi_env env, napi_
 {
     auto context = std::make_shared<NapiPrintExtContext>();
     auto input = [context](
-            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
@@ -276,8 +276,8 @@ napi_value NapiPrintExt::UpdatePrintJobStateOnlyForSystemApp(napi_env env, napi_
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
         }
-        int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(context->printJobId,
-            context->printJobState, context->jobSubState);
+        int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateOnlyForSystemApp(
+            context->printJobId, context->printJobState, context->jobSubState);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to update state of print job");
@@ -372,8 +372,8 @@ napi_value NapiPrintExt::AddPrinterToCups(napi_env env, napi_callback_info info)
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToCups(context->printerUri, context->printerName,
-            context->printerMake);
+        int32_t ret = PrintManagerClient::GetInstance()->AddPrinterToCups(
+            context->printerUri, context->printerName, context->printerMake);
         PRINT_HILOGD("ret: %{public}d", ret);
         context->result = (ret == E_PRINT_NONE);
         if (ret != E_PRINT_NONE) {
@@ -424,8 +424,8 @@ napi_value NapiPrintExt::QueryPrinterCapabilityByUri(napi_env env, napi_callback
     };
 
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(context->printerUri,
-            context->printerId, context->printerCaps);
+        int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterCapabilityByUri(
+            context->printerUri, context->printerId, context->printerCaps);
         context->result = (ret == E_PRINT_NONE);
         PRINT_HILOGD("ret: %d", ret);
         if (ret != E_PRINT_NONE) {
@@ -463,8 +463,7 @@ napi_value NapiPrintExt::DeletePrinterFromCups(napi_env env, napi_callback_info 
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret =
-            PrintManagerClient::GetInstance()->DeletePrinterFromCups(context->printerName);
+        int32_t ret = PrintManagerClient::GetInstance()->DeletePrinterFromCups(context->printerName);
         PRINT_HILOGD("ret: %d", ret);
         context->result = (ret == E_PRINT_NONE);
         if (ret != E_PRINT_NONE) {
@@ -518,7 +517,7 @@ napi_value NapiPrintExt::AddPrinterToDiscovery(napi_env env, napi_callback_info 
 
     auto input =
         [context](
-            napi_env env, size_t argc, napi_value* argv, napi_value self, napi_callback_info info) -> napi_status {
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should have 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
@@ -569,7 +568,7 @@ napi_value NapiPrintExt::UpdatePrinterInDiscovery(napi_env env, napi_callback_in
 
     auto input =
         [context](
-            napi_env env, size_t argc, napi_value* argv, napi_value self, napi_callback_info info) -> napi_status {
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should have 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
@@ -620,7 +619,7 @@ napi_value NapiPrintExt::RemovePrinterFromDiscovery(napi_env env, napi_callback_
 
     auto input =
         [context](
-            napi_env env, size_t argc, napi_value* argv, napi_value self, napi_callback_info info) -> napi_status {
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should have 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
@@ -665,7 +664,7 @@ napi_value NapiPrintExt::UpdatePrinterInSystem(napi_env env, napi_callback_info 
 
     auto input =
         [context](
-            napi_env env, size_t argc, napi_value* argv, napi_value self, napi_callback_info info) -> napi_status {
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should have 1 parameter!", napi_invalid_arg);
         napi_valuetype valuetype;
         napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype);
@@ -735,8 +734,10 @@ bool NapiPrintExt::IsValidPrintJobSubState(uint32_t subState)
 void NapiPrintExt::NapiThrowError(napi_env env, const int32_t errCode)
 {
     napi_value result = nullptr;
-    napi_create_error(env, NapiPrintUtils::CreateInt32(env, errCode),
-        NapiPrintUtils::CreateStringUtf8(env, NapiPrintUtils::GetPrintErrorMsg(errCode)), &result);
+    napi_create_error(env,
+        NapiPrintUtils::CreateInt32(env, errCode),
+        NapiPrintUtils::CreateStringUtf8(env, NapiPrintUtils::GetPrintErrorMsg(errCode)),
+        &result);
     napi_throw(env, result);
 }
 }  // namespace OHOS::Print

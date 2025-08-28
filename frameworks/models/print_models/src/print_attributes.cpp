@@ -20,9 +20,10 @@
 namespace OHOS::Print {
 PrintAttributes::PrintAttributes()
     : hasCopyNumber_(false), copyNumber_(0), hasPageRange_(false), hasSequential_(false), isSequential_(false),
-    hasPageSize_(false), hasLandscape_(false), isLandscape_(false), hasDirectionMode_(false), directionMode_(0),
-    hasColorMode_(false), colorMode_(0), hasDuplexMode_(false), duplexMode_(0),
-    hasMargin_(false), hasOption_(false), option_("") {
+      hasPageSize_(false), hasLandscape_(false), isLandscape_(false), hasDirectionMode_(false), directionMode_(0),
+      hasColorMode_(false), colorMode_(0), hasDuplexMode_(false), duplexMode_(0), hasMargin_(false), hasOption_(false),
+      option_("")
+{
     pageRange_.Reset();
     pageSize_.Reset();
     margin_.Reset();
@@ -80,8 +81,7 @@ PrintAttributes &PrintAttributes::operator=(const PrintAttributes &right)
 }
 
 PrintAttributes::~PrintAttributes()
-{
-}
+{}
 
 void PrintAttributes::SetCopyNumber(uint32_t copyNumber)
 {
@@ -438,4 +438,4 @@ void PrintAttributes::Dump()
         PRINT_HILOGD("option: %{private}s", option_.c_str());
     }
 }
-} // namespace OHOS::Print
+}  // namespace OHOS::Print

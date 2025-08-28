@@ -24,7 +24,7 @@
 #undef private
 #ifdef CUPS_ENABLE
 #include "print_cups_client.h"
-#endif // CUPS_ENABLE
+#endif  // CUPS_ENABLE
 #include "accesstoken_kit.h"
 #include "array_wrapper.h"
 #include "int_wrapper.h"
@@ -43,7 +43,6 @@
 #include <json/json.h>
 #include "mock_print_callback_proxy.h"
 #include "mock_print_extension_callback_proxy.h"
-
 
 using namespace testing;
 using namespace testing::ext;
@@ -93,14 +92,17 @@ public:
     void InitPrinterList(std::vector<PrinterInfo> &printerList, size_t count);
     void InitExtPrinterIdList(std::vector<std::string> &idList, size_t count);
     void InitFileList(std::vector<std::string> &fileList);
-    void InitExtensionList(std::vector<AppExecFwk::ExtensionAbilityInfo>& extList);
+    void InitExtensionList(std::vector<AppExecFwk::ExtensionAbilityInfo> &extList);
+
 private:
     std::string parameterSaved;
 };
 
-void PrintServiceAbilityTest::SetUpTestCase(void) {}
+void PrintServiceAbilityTest::SetUpTestCase(void)
+{}
 
-void PrintServiceAbilityTest::TearDownTestCase(void) {}
+void PrintServiceAbilityTest::TearDownTestCase(void)
+{}
 
 void PrintServiceAbilityTest::SetUp(void)
 {
@@ -193,7 +195,7 @@ void PrintServiceAbilityTest::InitFileList(std::vector<std::string> &fileList)
     fileList.emplace_back(DEFAULT_PRINT_FILE_C);
 }
 
-void PrintServiceAbilityTest::InitExtensionList(std::vector<AppExecFwk::ExtensionAbilityInfo>& extList)
+void PrintServiceAbilityTest::InitExtensionList(std::vector<AppExecFwk::ExtensionAbilityInfo> &extList)
 {
     std::vector<std::string> nameList = {DEFAULT_EXTENSION_ID, UNLOAD_EXTENSION_ID};
     AppExecFwk::ExtensionAbilityInfo loadInfo;
@@ -205,19 +207,19 @@ void PrintServiceAbilityTest::InitExtensionList(std::vector<AppExecFwk::Extensio
     }
 }
 /**
-* @tc.name: PrintServiceAbilityTest_0001
-* @tc.desc: PrintServiceAbility ctor/dtor
-* @tc.type: FUNC ~PrintServiceAbility()
-* @tc.require:
-*/
+ * @tc.name: PrintServiceAbilityTest_0001
+ * @tc.desc: PrintServiceAbility ctor/dtor
+ * @tc.type: FUNC ~PrintServiceAbility()
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001_NeedRename, TestSize.Level0)
 {
-    PrintServiceAbility* print_service = new PrintServiceAbility(PRINT_SERVICE_ID, true);
+    PrintServiceAbility *print_service = new PrintServiceAbility(PRINT_SERVICE_ID, true);
     if (print_service != nullptr) {
         delete print_service;
         print_service = nullptr;
     }
-    PrintServiceAbility* new_print_service = new PrintServiceAbility(PRINT_SERVICE_ID, false);
+    PrintServiceAbility *new_print_service = new PrintServiceAbility(PRINT_SERVICE_ID, false);
     if (new_print_service != nullptr) {
         delete new_print_service;
         new_print_service = nullptr;
@@ -229,11 +231,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0001_NeedRename, TestS
     EXPECT_EQ(PrintServiceAbility::GetInstance()->Init(), E_PRINT_SERVER_FAILURE);
 }
 /**
-* @tc.name: PrintServiceAbilityTest_0002
-* @tc.desc: PrintServiceAbility ctor/dtor
-* @tc.type: FUNC ManualStart()
-* @tc.require:
-*/
+ * @tc.name: PrintServiceAbilityTest_0002
+ * @tc.desc: PrintServiceAbility ctor/dtor
+ * @tc.type: FUNC ManualStart()
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002_NeedRename, TestSize.Level0)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -242,11 +244,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0002_NeedRename, TestS
     EXPECT_EQ(state, 0);
 }
 /**
-* @tc.name: PrintServiceAbilityTest_0003
-* @tc.desc: PrintServiceAbility ctor/dtor
-* @tc.type: FUNC GetPrintJobOrderId()
-* @tc.require:
-*/
+ * @tc.name: PrintServiceAbilityTest_0003
+ * @tc.desc: PrintServiceAbility ctor/dtor
+ * @tc.type: FUNC GetPrintJobOrderId()
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0003_NeedRename, TestSize.Level0)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -254,11 +256,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0003_NeedRename, TestS
     EXPECT_NE(service->currentJobOrderId_, 0);
 }
 /**
-* @tc.name: PrintServiceAbilityTestPartOne_ErrorToken_ShouldNoPermission
-* @tc.desc: PrintServiceAbility ctor/dtor
-* @tc.type: FUNC
-* @tc.require: return E_PRINT_NO_PERMISSION
-*/
+ * @tc.name: PrintServiceAbilityTestPartOne_ErrorToken_ShouldNoPermission
+ * @tc.desc: PrintServiceAbility ctor/dtor
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NO_PERMISSION
+ */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartOne_ErrorToken_ShouldNoPermission, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -305,11 +307,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartOne_ErrorToken_Shou
 }
 
 /**
-* @tc.name: PrintServiceAbilityTestPartTwo_ErrorToken_ShouldNoPermission
-* @tc.desc: PrintServiceAbility ctor/dtor
-* @tc.type: FUNC
-* @tc.require: return E_PRINT_NO_PERMISSION
-*/
+ * @tc.name: PrintServiceAbilityTestPartTwo_ErrorToken_ShouldNoPermission
+ * @tc.desc: PrintServiceAbility ctor/dtor
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NO_PERMISSION
+ */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartTwo_ErrorToken_ShouldNoPermission, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -358,11 +360,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartTwo_ErrorToken_Shou
 }
 
 /**
-* @tc.name: PrintServiceAbilityTestPartThree_ErrorToken_ShouldNoPermission
-* @tc.desc: PrintServiceAbility ctor/dtor
-* @tc.type: FUNC
-* @tc.require: return E_PRINT_NO_PERMISSION
-*/
+ * @tc.name: PrintServiceAbilityTestPartThree_ErrorToken_ShouldNoPermission
+ * @tc.desc: PrintServiceAbility ctor/dtor
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NO_PERMISSION
+ */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_ShouldNoPermission, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -377,7 +379,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_Sh
     std::string type = "";
     sptr<IPrintCallback> listener = nullptr;
     PrinterPreferences printerPreference;
-    
+
     EXPECT_EQ(service->SetPrinterPreference(printerId, printerPreference), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->Off(taskId, type), E_PRINT_NO_PERMISSION);
@@ -396,11 +398,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_Sh
 }
 
 /**
-* @tc.name: PrintServiceAbilityTest_0006
-* @tc.desc: PrintServiceAbility ctor/dtor
-* @tc.type: FUNC CallSpooler
-* @tc.require: has token
-*/
+ * @tc.name: PrintServiceAbilityTest_0006
+ * @tc.desc: PrintServiceAbility ctor/dtor
+ * @tc.type: FUNC CallSpooler
+ * @tc.require: has token
+ */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0006_NeedRename, TestSize.Level0)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -413,11 +415,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0006_NeedRename, TestS
 }
 
 /**
-* @tc.name: PrintServiceAbilityTest_0007
-* @tc.desc: PrintServiceAbility ctor/dtor
-* @tc.type: FUNC SetHelper
-* @tc.require: has token
-*/
+ * @tc.name: PrintServiceAbilityTest_0007
+ * @tc.desc: PrintServiceAbility ctor/dtor
+ * @tc.type: FUNC SetHelper
+ * @tc.require: has token
+ */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0007_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -432,15 +434,15 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0007_NeedRename, TestS
 }
 
 /**
-* @tc.name: PrintServiceAbilityTest_0008
-* @tc.desc: PrintServiceAbility ctor/dtor
-* @tc.type: FUNC ConnectPrinter
-* @tc.require:
-*/
+ * @tc.name: PrintServiceAbilityTest_0008
+ * @tc.desc: PrintServiceAbility ctor/dtor
+ * @tc.type: FUNC ConnectPrinter
+ * @tc.require:
+ */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0008_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId ="1234";
+    std::string printerId = "1234";
     EXPECT_EQ(service->ConnectPrinter(printerId), E_PRINT_INVALID_PRINTER);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
@@ -462,7 +464,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0008_NeedRename, TestS
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0009_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId ="1234";
+    std::string printerId = "1234";
     EXPECT_EQ(service->DisconnectPrinter(printerId), E_PRINT_INVALID_PRINTER);
     std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
@@ -578,7 +580,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0018_NeedRename, TestS
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
-    std::string jobId ="1";
+    std::string jobId = "1";
     uint32_t state = PRINT_JOB_PREPARED;
     uint32_t subState = PRINT_JOB_COMPLETED_SUCCESS;
     service->notifyAdapterJobChanged(jobId, state, subState);
@@ -601,7 +603,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0019_NeedRename, TestS
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
-    std::string jobId ="1";
+    std::string jobId = "1";
     uint32_t state = PRINT_JOB_PREPARED;
     uint32_t subState = PRINT_JOB_COMPLETED_SUCCESS;
 
@@ -618,7 +620,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0020_NeedRename, TestS
     service->helper_ = helper;
     std::string jobName = "a.jpeg";
     PrintAttributes printAttributes;
-    std::string taskId ="1";
+    std::string taskId = "1";
     EXPECT_EQ(service->PrintByAdapter(jobName, printAttributes, taskId), E_PRINT_NONE);
 }
 
@@ -648,7 +650,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0022_NeedRename, TestS
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
     service->helper_ = helper;
     std::string printerId = "1234";
-    std::shared_ptr<PrinterInfo> info =std::make_shared<PrinterInfo>();
+    std::shared_ptr<PrinterInfo> info = std::make_shared<PrinterInfo>();
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = info;
     EXPECT_EQ(service->printSystemData_.QueryDiscoveredPrinterInfoById(printerId), info);
 }
@@ -886,7 +888,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0040_NeedRename, TestS
     int32_t userId = 100;
     service->printUserMap_.insert(std::make_pair(userId, nullptr));
     service->UpdateQueuedJobList("515", printJob);
-    std::string type ="0";
+    std::string type = "0";
     EXPECT_EQ(service->NotifyPrintService(jobId, type), E_PRINT_NONE);
     type = "spooler_closed_for_started";
     EXPECT_EQ(service->NotifyPrintService(jobId, type), E_PRINT_NONE);
@@ -1022,7 +1024,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0048_NeedRename, TestS
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     uint32_t state = PRINTER_UNKNOWN + 1;
-    std::string printerId ="1234";
+    std::string printerId = "1234";
     EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_INVALID_PARAMETER);
     state = PrinterState::PRINTER_ADDED;
     EXPECT_EQ(service->UpdatePrinterState(printerId, state), E_PRINT_INVALID_PRINTER);
@@ -1073,7 +1075,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0051_NeedRename, TestS
     uint32_t subState = 0;
     EXPECT_EQ(service->AdapterGetFileCallBack(jobId, state, subState), E_PRINT_NONE);
     std::string type = PRINT_GET_FILE_EVENT_TYPE;
-    sptr<IPrintCallback>  listener = new MockPrintCallbackProxy();
+    sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
     service->registeredListeners_[type] = listener;
     service->AdapterGetFileCallBack(jobId, state, subState);
     subState = PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS;
@@ -2327,11 +2329,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0155_NeedRename, TestS
 }
 
 /**
-* @tc.name: PrintServiceAbilityTest_0157
-* @tc.desc: PrintServiceAbility ctor/dtor
-* @tc.type: FUNC ConnectPrinter
-* @tc.require: use old version printerId
-*/
+ * @tc.name: PrintServiceAbilityTest_0157
+ * @tc.desc: PrintServiceAbility ctor/dtor
+ * @tc.type: FUNC ConnectPrinter
+ * @tc.require: use old version printerId
+ */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0157_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2346,11 +2348,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0157_NeedRename, TestS
 }
 
 /**
-* @tc.name: PrintServiceAbilityTest_CheckPrinterUriDifferent
-* @tc.desc: PrintServiceAbility ctor/dtor
-* @tc.type: FUNC CheckPrinterUriDifferent
-* @tc.require: use old version printerId
-*/
+ * @tc.name: PrintServiceAbilityTest_CheckPrinterUriDifferent
+ * @tc.desc: PrintServiceAbility ctor/dtor
+ * @tc.type: FUNC CheckPrinterUriDifferent
+ * @tc.require: use old version printerId
+ */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_CheckPrinterUriSame, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2367,11 +2369,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_CheckPrinterUriSame, T
 }
 
 /**
-* @tc.name: PrintServiceAbilityTest_CheckPrinterUriDifferent
-* @tc.desc: PrintServiceAbility ctor/dtor
-* @tc.type: FUNC CheckPrinterUriDifferent
-* @tc.require: use new version printerId
-*/
+ * @tc.name: PrintServiceAbilityTest_CheckPrinterUriDifferent
+ * @tc.desc: PrintServiceAbility ctor/dtor
+ * @tc.type: FUNC CheckPrinterUriDifferent
+ * @tc.require: use new version printerId
+ */
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_CheckPrinterUriDifferent, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2388,11 +2390,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_CheckPrinterUriDiffere
 }
 
 /**
-* @tc.name: FlushCacheFileToUserData_WhenEmptyFdlist_ShouldTrue
-* @tc.desc: Verify the FlushCacheFileToUserData do nothing case.
-* @tc.type: FUNC FlushCacheFileToUserData
-* @tc.require: EmptyFdlist printJob
-*/
+ * @tc.name: FlushCacheFileToUserData_WhenEmptyFdlist_ShouldTrue
+ * @tc.desc: Verify the FlushCacheFileToUserData do nothing case.
+ * @tc.type: FUNC FlushCacheFileToUserData
+ * @tc.require: EmptyFdlist printJob
+ */
 HWTEST_F(PrintServiceAbilityTest, FlushCacheFileToUserData_WhenEmptyFdlist_ShouldFalse, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2402,17 +2404,17 @@ HWTEST_F(PrintServiceAbilityTest, FlushCacheFileToUserData_WhenEmptyFdlist_Shoul
     service->currentUserId_ = userId;
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
-    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>(); // EmptyFdlist
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();  // EmptyFdlist
     userData->queuedJobList_[jobId] = printJob;
     EXPECT_EQ(service->FlushCacheFileToUserData(jobId), false);
 }
 
 /**
-* @tc.name: FlushCacheFileToUserData_WhenEmptyFdlist_ShouldTrue
-* @tc.desc: Verify the FlushCacheFileToUserData failed case.
-* @tc.type: FUNC FlushCacheFileToUserData
-* @tc.require: BedFdlist printJob
-*/
+ * @tc.name: FlushCacheFileToUserData_WhenEmptyFdlist_ShouldTrue
+ * @tc.desc: Verify the FlushCacheFileToUserData failed case.
+ * @tc.type: FUNC FlushCacheFileToUserData
+ * @tc.require: BedFdlist printJob
+ */
 HWTEST_F(PrintServiceAbilityTest, FlushCacheFileToUserData_WhenBedFdlist_ShouldFalse, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2424,17 +2426,17 @@ HWTEST_F(PrintServiceAbilityTest, FlushCacheFileToUserData_WhenBedFdlist_ShouldF
     service->printUserMap_[userId] = userData;
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     userData->queuedJobList_[jobId] = printJob;
-    std::vector<uint32_t> fdList = { 999 }; // Bed Fdlist
+    std::vector<uint32_t> fdList = {999};  // Bed Fdlist
     printJob->SetFdList(fdList);
     EXPECT_EQ(service->FlushCacheFileToUserData(jobId), false);
 }
 
 /**
-* @tc.name: DeleteCacheFileFromUserData_WhenEmptyFdlist_ShouldTrue
-* @tc.desc: Verify the DeleteCacheFileFromUserData failed case.
-* @tc.type: FUNC DeleteCacheFileFromUserData
-* @tc.require: EmptyFdlist printJob
-*/
+ * @tc.name: DeleteCacheFileFromUserData_WhenEmptyFdlist_ShouldTrue
+ * @tc.desc: Verify the DeleteCacheFileFromUserData failed case.
+ * @tc.type: FUNC DeleteCacheFileFromUserData
+ * @tc.require: EmptyFdlist printJob
+ */
 HWTEST_F(PrintServiceAbilityTest, DeleteCacheFileFromUserData_WhenEmptyFdlist_ShouldFalse, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2450,11 +2452,11 @@ HWTEST_F(PrintServiceAbilityTest, DeleteCacheFileFromUserData_WhenEmptyFdlist_Sh
 }
 
 /**
-* @tc.name: OpenCacheFileFd_WhenEmptyFdlist_ShouldTrue
-* @tc.desc: Verify the OpenCacheFileFd do nothing case.
-* @tc.type: FUNC OpenCacheFileFd
-* @tc.require: EmptyFdlist printJob
-*/
+ * @tc.name: OpenCacheFileFd_WhenEmptyFdlist_ShouldTrue
+ * @tc.desc: Verify the OpenCacheFileFd do nothing case.
+ * @tc.type: FUNC OpenCacheFileFd
+ * @tc.require: EmptyFdlist printJob
+ */
 HWTEST_F(PrintServiceAbilityTest, OpenCacheFileFd_WhenEmptyFdlist_ShouldFalse, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2465,17 +2467,17 @@ HWTEST_F(PrintServiceAbilityTest, OpenCacheFileFd_WhenEmptyFdlist_ShouldFalse, T
     std::vector<uint32_t> getFdList;
     std::shared_ptr<PrintUserData> userData = std::make_shared<PrintUserData>();
     service->printUserMap_[userId] = userData;
-    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>(); // EmptyFdlist
+    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();  // EmptyFdlist
     userData->queuedJobList_[jobId] = printJob;
     EXPECT_EQ(service->OpenCacheFileFd(jobId, getFdList), false);
 }
 
 /**
-* @tc.name: OpenCacheFileFd_WhenEmptyFdlist_ShouldTrue
-* @tc.desc: Verify the OpenCacheFileFd failed case.
-* @tc.type: FUNC OpenCacheFileFd
-* @tc.require: BedFdlist printJob
-*/
+ * @tc.name: OpenCacheFileFd_WhenEmptyFdlist_ShouldTrue
+ * @tc.desc: Verify the OpenCacheFileFd failed case.
+ * @tc.type: FUNC OpenCacheFileFd
+ * @tc.require: BedFdlist printJob
+ */
 HWTEST_F(PrintServiceAbilityTest, OpenCacheFileFd_WhenBedFdlist_ShouldFalse, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2489,18 +2491,17 @@ HWTEST_F(PrintServiceAbilityTest, OpenCacheFileFd_WhenBedFdlist_ShouldFalse, Tes
     EXPECT_EQ(service->OpenCacheFileFd(jobId, getFdList), false);
     std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
     userData->queuedJobList_[jobId] = printJob;
-    std::vector<uint32_t> fdList = { 999 }; // Bed Fdlist
+    std::vector<uint32_t> fdList = {999};  // Bed Fdlist
     printJob->SetFdList(fdList);
     EXPECT_EQ(service->OpenCacheFileFd(jobId, getFdList), false);
 }
 
-
 /**
-* @tc.name: QueryQueuedPrintJobById_WhenInvalidJobId_ShouldF
-* @tc.desc: Verify the QueryQueuedPrintJobById failed case.
-* @tc.type: FUNC QueryQueuedPrintJobById
-* @tc.require: BedFdlist printJob
-*/
+ * @tc.name: QueryQueuedPrintJobById_WhenInvalidJobId_ShouldF
+ * @tc.desc: Verify the QueryQueuedPrintJobById failed case.
+ * @tc.type: FUNC QueryQueuedPrintJobById
+ * @tc.require: BedFdlist printJob
+ */
 HWTEST_F(PrintServiceAbilityTest, QueryQueuedPrintJobById_WhenBedFdlist_ShouldFalse, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2584,8 +2585,8 @@ HWTEST_F(PrintServiceAbilityTest, UpdatePageSizeNameWithPrinterInfo_StandardPage
     EXPECT_EQ(pageSize.GetName(), "iso_a4_210x297mm");
 }
 
-HWTEST_F(PrintServiceAbilityTest,
-    UpdatePageSizeNameWithPrinterInfo_FindNonStandardPageSize_NameChanged, TestSize.Level1)
+HWTEST_F(
+    PrintServiceAbilityTest, UpdatePageSizeNameWithPrinterInfo_FindNonStandardPageSize_NameChanged, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrintPageSize pageSize;
@@ -2605,8 +2606,8 @@ HWTEST_F(PrintServiceAbilityTest,
     EXPECT_EQ(pageSize.GetName(), "A4.borderless");
 }
 
-HWTEST_F(PrintServiceAbilityTest,
-    UpdatePageSizeNameWithPrinterInfo_CannotFindNonStandardPageSize_NameUnchanged, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, UpdatePageSizeNameWithPrinterInfo_CannotFindNonStandardPageSize_NameUnchanged,
+    TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrintPageSize pageSize;
@@ -2626,8 +2627,8 @@ HWTEST_F(PrintServiceAbilityTest,
     EXPECT_EQ(pageSize.GetName(), "iso_a4_210x297mm");
 }
 
-HWTEST_F(PrintServiceAbilityTest,
-    UpdatePrintJobOptionWithPrinterPreferences_NoValueSet_NoAdvancedOptions, TestSize.Level1)
+HWTEST_F(
+    PrintServiceAbilityTest, UpdatePrintJobOptionWithPrinterPreferences_NoValueSet_NoAdvancedOptions, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     Json::Value jobOptions;
@@ -2636,8 +2637,8 @@ HWTEST_F(PrintServiceAbilityTest,
     EXPECT_EQ(jobOptions.isMember("advancedOptions"), false);
 }
 
-HWTEST_F(PrintServiceAbilityTest,
-    UpdatePrintJobOptionWithPrinterPreferences_SetWrongTypeValue_NoAdvancedOptions, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobOptionWithPrinterPreferences_SetWrongTypeValue_NoAdvancedOptions,
+    TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     Json::Value jobOptions;
@@ -2648,8 +2649,8 @@ HWTEST_F(PrintServiceAbilityTest,
     EXPECT_EQ(jobOptions.isMember("advancedOptions"), false);
 }
 
-HWTEST_F(PrintServiceAbilityTest,
-    UpdatePrintJobOptionWithPrinterPreferences_SetCorrectValue_HasAdvancedOptions, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, UpdatePrintJobOptionWithPrinterPreferences_SetCorrectValue_HasAdvancedOptions,
+    TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     Json::Value jobOptions;
@@ -2709,11 +2710,11 @@ HWTEST_F(PrintServiceAbilityTest, ConnectUsbPrinter_HasMake_ServerFailure, TestS
 }
 
 /**
-* @tc.name: QueryQueuedPrintJobById_WhenInvalidJobId_ShouldF
-* @tc.desc: Verify the QueryQueuedPrintJobById failed case.
-* @tc.type: FUNC ExitLowPowerMode
-* @tc.require: AllreadyEnterLowPower
-*/
+ * @tc.name: QueryQueuedPrintJobById_WhenInvalidJobId_ShouldF
+ * @tc.desc: Verify the QueryQueuedPrintJobById failed case.
+ * @tc.type: FUNC ExitLowPowerMode
+ * @tc.require: AllreadyEnterLowPower
+ */
 HWTEST_F(PrintServiceAbilityTest, ExitLowPowerMode_WhenAllreadyEnterLowPowerMode_ShouldExit, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2725,11 +2726,11 @@ HWTEST_F(PrintServiceAbilityTest, ExitLowPowerMode_WhenAllreadyEnterLowPowerMode
 }
 
 /**
-* @tc.name: QueryQueuedPrintJobById_WhenInvalidJobId_ShouldF
-* @tc.desc: Verify the QueryQueuedPrintJobById failed case.
-* @tc.type: FUNC ExitLowPowerMode
-* @tc.require: ExitedLowPowerMode
-*/
+ * @tc.name: QueryQueuedPrintJobById_WhenInvalidJobId_ShouldF
+ * @tc.desc: Verify the QueryQueuedPrintJobById failed case.
+ * @tc.type: FUNC ExitLowPowerMode
+ * @tc.require: ExitedLowPowerMode
+ */
 HWTEST_F(PrintServiceAbilityTest, ExitLowPowerMode_WhenExitedLowPower_ShouldDoNothing, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2758,11 +2759,11 @@ HWTEST_F(PrintServiceAbilityTest, RefreshPrinterPageSize, TestSize.Level1)
 }
 
 /**
-* @tc.name: RefreshPrinterStatusOnSwitchUser_NotEnterpriseEnable
-* @tc.desc: Verify the RefreshPrinterStatusOnSwitchUser failed case.
-* @tc.type: ENTERPRISE_ENABLE is true
-* @tc.require: ENTERPRISE_SPACE_PARAM not 2
-*/
+ * @tc.name: RefreshPrinterStatusOnSwitchUser_NotEnterpriseEnable
+ * @tc.desc: Verify the RefreshPrinterStatusOnSwitchUser failed case.
+ * @tc.type: ENTERPRISE_ENABLE is true
+ * @tc.require: ENTERPRISE_SPACE_PARAM not 2
+ */
 HWTEST_F(PrintServiceAbilityTest, RefreshPrinterStatusOnSwitchUser_NotEnterpriseEnable, TestSize.Level1)
 {
 #ifdef ENTERPRISE_ENABLE
@@ -2772,9 +2773,9 @@ HWTEST_F(PrintServiceAbilityTest, RefreshPrinterStatusOnSwitchUser_NotEnterprise
     bool res = service->RefreshPrinterStatusOnSwitchUser();
     EXPECT_FALSE(res);
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
-#endif // ENTERPRISE_ENABLE
+#endif  // ENTERPRISE_ENABLE
 }
- 
+
 HWTEST_F(PrintServiceAbilityTest, RefreshPrinterStatusOnSwitchUser_EnterpriseEnable_IsEnterprise, TestSize.Level1)
 {
 #ifdef ENTERPRISE_ENABLE
@@ -2785,9 +2786,9 @@ HWTEST_F(PrintServiceAbilityTest, RefreshPrinterStatusOnSwitchUser_EnterpriseEna
     bool res = service->RefreshPrinterStatusOnSwitchUser();
     EXPECT_TRUE(res);
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
-#endif // ENTERPRISE_ENABLE
+#endif  // ENTERPRISE_ENABLE
 }
- 
+
 HWTEST_F(PrintServiceAbilityTest, RefreshPrinterStatusOnSwitchUser_EnterpriseEnable_NotEnterprise, TestSize.Level1)
 {
 #ifdef ENTERPRISE_ENABLE
@@ -2798,13 +2799,13 @@ HWTEST_F(PrintServiceAbilityTest, RefreshPrinterStatusOnSwitchUser_EnterpriseEna
     bool res = service->RefreshPrinterStatusOnSwitchUser();
     EXPECT_TRUE(res);
     OHOS::system::SetParameter(ENTERPRISE_SPACE_PARAM, parameterSaved);
-#endif // ENTERPRISE_ENABLE
+#endif  // ENTERPRISE_ENABLE
 }
 
 HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnEmptyList_WhenCompIsNull, TestSize.Level1)
 {
     PrintMapSafe<std::string> map;
-    std::function<bool (const std::string &)> comp = nullptr;
+    std::function<bool(const std::string &)> comp = nullptr;
     std::vector<std::string> result = map.GetKeyList(comp);
     EXPECT_TRUE(result.empty());
 }
@@ -2812,9 +2813,7 @@ HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnEmptyList_WhenCompIsNul
 HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnEmptyList_WhenMapIsEmpty, TestSize.Level1)
 {
     PrintMapSafe<std::string> map;
-    std::function<bool (const std::string &)> comp = [](const std::string &value) {
-        return value == "test";
-    };
+    std::function<bool(const std::string &)> comp = [](const std::string &value) { return value == "test"; };
     std::vector<std::string> result = map.GetKeyList(comp);
     EXPECT_TRUE(result.empty());
 }
@@ -2822,9 +2821,7 @@ HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnEmptyList_WhenMapIsEmpt
 HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnEmptyList_WhenNotElementsSatisfiesComp, TestSize.Level1)
 {
     PrintMapSafe<std::string> map;
-    std::function<bool (const std::string &)> comp = [](const std::string &value) {
-        return value == "test";
-    };
+    std::function<bool(const std::string &)> comp = [](const std::string &value) { return value == "test"; };
     map.Insert("key1", "value1");
     map.Insert("key2", "value2");
     std::vector<std::string> result = map.GetKeyList(comp);
@@ -2834,26 +2831,22 @@ HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnEmptyList_WhenNotElemen
 HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnListOfKeys_WhenElementSatifiesComp, TestSize.Level1)
 {
     PrintMapSafe<std::string> map;
-    std::function<bool (const std::string &)> comp = [](const std::string &value) {
-        return value == "value2";
-    };
+    std::function<bool(const std::string &)> comp = [](const std::string &value) { return value == "value2"; };
     map.Insert("key1", "value1");
     map.Insert("key2", "value2");
     std::vector<std::string> result = map.GetKeyList(comp);
-    EXPECT_EQ(result.size(), 1); // 1 element matched
+    EXPECT_EQ(result.size(), 1);  // 1 element matched
     EXPECT_EQ(result[0], "key2");
 }
 
 HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnListOfKeys_WhenMultiElementSatifiesComp, TestSize.Level1)
 {
     PrintMapSafe<std::string> map;
-    std::function<bool (const std::string &)> comp = [](const std::string &value) {
-        return value == "value2";
-    };
+    std::function<bool(const std::string &)> comp = [](const std::string &value) { return value == "value2"; };
     map.Insert("key1", "value1");
     map.Insert("key2", "value2");
     map.Insert("key3", "value2");
     std::vector<std::string> result = map.GetKeyList(comp);
-    EXPECT_EQ(result.size(), 2); // 2 elements matched
+    EXPECT_EQ(result.size(), 2);  // 2 elements matched
 }
-} // namespace OHOS::Print
+}  // namespace OHOS::Print

@@ -133,7 +133,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0003_NeedRename, TestSize.Leve
         mkdir(srcDir, DIR_MODE);
     }
     if (access(destDir, F_OK) != 0) {
-        mkdir (destDir, DIR_MODE);
+        mkdir(destDir, DIR_MODE);
     }
 
     std::string srcFilePath = "./PrintCupsClientTest_0003_srcDir/PrintCupsClientTestFileName";
@@ -144,8 +144,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0003_NeedRename, TestSize.Leve
     printCupsClient.SymlinkDirectory(srcDir, destDir);
 
     struct stat destDirstat = {};
-    EXPECT_EQ(lstat((std::string(destDir)
-                + "/PrintCupsClientTestFileName").c_str(), &destDirstat), 0);
+    EXPECT_EQ(lstat((std::string(destDir) + "/PrintCupsClientTestFileName").c_str(), &destDirstat), 0);
     EXPECT_EQ(S_ISLNK(destDirstat.st_mode), true);
 
     EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / srcDir), 0);
@@ -184,9 +183,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0004_NeedRename, TestSize.Leve
 
     printCupsClient.CopyDirectory(srcDir, destDir);
 
-    EXPECT_EQ(std::filesystem::is_regular_file(
-           std::string(destDir) + "/PrintCupsClientTest/PrintCupsClientTestFileName"),
-           true);
+    EXPECT_EQ(
+        std::filesystem::is_regular_file(std::string(destDir) + "/PrintCupsClientTest/PrintCupsClientTestFileName"),
+        true);
     EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / srcDir), 0);
     EXPECT_GE(std::filesystem::remove_all(std::filesystem::current_path() / destDir), 0);
 }
@@ -383,9 +382,9 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0019_NeedRename, TestSize.Leve
     testJob.SetPrinterId("printid-1234");
     testJob.SetOption(JOB_OPTIONS);
     JobParameters *jobParams = printCupsClient->BuildJobParameters(testJob, JOB_USER_NAME);
-    printCupsClient->JobSentCallback(); // currentJob_ is null, do nothing
+    printCupsClient->JobSentCallback();  // currentJob_ is null, do nothing
     printCupsClient->currentJob_ = jobParams;
-    printCupsClient->JobSentCallback(); // clear currentJob_
+    printCupsClient->JobSentCallback();  // clear currentJob_
     EXPECT_EQ(printCupsClient->currentJob_, nullptr);
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 }
@@ -767,7 +766,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0043_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.StartMonitor();
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     printCupsClient.StartMonitor();
     EXPECT_EQ(printCupsClient.jobMonitorList_.size(), 0);
 }
@@ -783,7 +787,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0047_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.IsPrinterStopped(nullptr);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     EXPECT_FALSE(printCupsClient.IsPrinterStopped(param));
 }
 
@@ -798,7 +807,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0048_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.IfContinueToHandleJobState(nullptr);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     EXPECT_TRUE(printCupsClient.IfContinueToHandleJobState(param));
     param->isCanceled = true;
     EXPECT_FALSE(printCupsClient.IfContinueToHandleJobState(param));
@@ -815,7 +829,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0049_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_COMPLETED;
     param->isBlock = false;
@@ -838,7 +857,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0050_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_PROCESSING;
     param->isBlock = false;
@@ -861,7 +885,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0051_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_CANCELED;
     param->isBlock = false;
@@ -884,7 +913,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0052_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_ABORTED;
     param->isBlock = false;
@@ -907,7 +941,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0053_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_STOPPED;
     param->isBlock = false;
@@ -930,7 +969,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0054_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_PENDING;
     param->isBlock = false;
@@ -956,7 +1000,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0055_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.JobStatusCallback(nullptr);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     param->substate = 0;
     param->job_state = IPP_JOB_HELD;
     param->isBlock = false;
@@ -979,7 +1028,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0056_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     printCupsClient.ParseStateReasons(nullptr);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     param->isPrinterStopped = false;
     printCupsClient.ParseStateReasons(param);
     EXPECT_EQ(param->substate, 0);
@@ -997,26 +1051,31 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0056_NeedRename, TestSize.Leve
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0057_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    printCupsClient.GetBlockedAndUpdateSubstate(nullptr, STATE_POLICY_STANDARD,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED);
+    printCupsClient.GetBlockedAndUpdateSubstate(
+        nullptr, STATE_POLICY_STANDARD, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     param->substate = 0;
     param->isBlock = false;
     param->timesOfSameState = 0;
     std::string reason = "media-jam-error";
     reason.copy(param->job_printer_state_reasons, reason.length() + 1);
-    EXPECT_TRUE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_STANDARD,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
-    EXPECT_TRUE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_BLOCK,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
-    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_HINT,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
-    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_DELAY,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_TRUE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_STANDARD, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_TRUE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_BLOCK, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_HINT, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_DELAY, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
     param->timesOfSameState = STATE_UPDATE_STEP;
-    EXPECT_TRUE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_DELAY,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_TRUE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_DELAY, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
 }
 
 /**
@@ -1028,26 +1087,31 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0057_NeedRename, TestSize.Leve
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0058_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    printCupsClient.GetBlockedAndUpdateSubstate(nullptr, STATE_POLICY_STANDARD,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED);
+    printCupsClient.GetBlockedAndUpdateSubstate(
+        nullptr, STATE_POLICY_STANDARD, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     param->substate = 0;
     param->isBlock = false;
     param->timesOfSameState = 0;
     std::string reason = "media-jam-warning";
     reason.copy(param->job_printer_state_reasons, reason.length() + 1);
-    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_STANDARD,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
-    EXPECT_TRUE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_BLOCK,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
-    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_HINT,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
-    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_DELAY,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_STANDARD, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_TRUE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_BLOCK, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_HINT, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_DELAY, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
     param->timesOfSameState = STATE_UPDATE_STEP;
-    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_DELAY,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_DELAY, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
 }
 
 /**
@@ -1129,8 +1193,13 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0062_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     std::string serviceJobId = TEST_SERVICE_JOB_ID;
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
-    printCupsClient.jobMonitorList_ = std::vector<std::shared_ptr<JobMonitorParam>> (1, param);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    printCupsClient.jobMonitorList_ = std::vector<std::shared_ptr<JobMonitorParam>>(1, param);
     printCupsClient.CancelCupsJob("invalidId");
     EXPECT_FALSE(param->isCanceled);
     printCupsClient.CancelCupsJob(TEST_SERVICE_JOB_ID);
@@ -1146,26 +1215,31 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0062_NeedRename, TestSize.Leve
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0063_NeedRename, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    printCupsClient.GetBlockedAndUpdateSubstate(nullptr, STATE_POLICY_STANDARD,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED);
+    printCupsClient.GetBlockedAndUpdateSubstate(
+        nullptr, STATE_POLICY_STANDARD, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED);
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     param->substate = 0;
     param->isBlock = false;
     param->timesOfSameState = 0;
     std::string reason = "null";
     reason.copy(param->job_printer_state_reasons, reason.length() + 1);
-    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_STANDARD,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
-    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_BLOCK,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
-    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_HINT,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
-    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_DELAY,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_STANDARD, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_BLOCK, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_HINT, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_DELAY, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
     param->timesOfSameState = STATE_UPDATE_STEP;
-    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(param, STATE_POLICY_DELAY,
-        PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
+    EXPECT_FALSE(printCupsClient.GetBlockedAndUpdateSubstate(
+        param, STATE_POLICY_DELAY, PRINTER_STATE_MEDIA_JAM, PRINT_JOB_BLOCKED_JAMMED));
 }
 
 /**
@@ -1243,7 +1317,7 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067_NeedRename, TestSize.Leve
     jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
     EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
 
-    EXPECT_EQ(jobParams->isAutoRotate, true);   // default true
+    EXPECT_EQ(jobParams->isAutoRotate, true);  // default true
     optionJson["isAutoRotate"] = false;
     testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
@@ -1504,7 +1578,12 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0081_NeedRename, TestSize.Leve
     OHOS::Print::PrintCupsClient printCupsClient;
     EXPECT_FALSE(printCupsClient.UpdateJobState(nullptr, nullptr));
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID, TEST_CUPS_JOB_ID, PRINTER_URI, PRINTER_PRINTER_NAME, PRINTER_PRINTER_ID, nullptr);
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
     EXPECT_FALSE(printCupsClient.UpdateJobState(param, nullptr));
 }
 
@@ -1658,12 +1737,27 @@ HWTEST_F(PrintCupsClientTest, DeviceCb_WhenUsbDevice_ShouldAdd, TestSize.Level0)
     // Act
     ClearUsbPrinters();
     ClearBackendPrinters();
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             deviceUri.c_str(), deviceLocation.c_str(), userData);
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             deviceUri.c_str(), nullptr, userData);
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             "usb://printer_serial=123&111", deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        deviceUri.c_str(),
+        deviceLocation.c_str(),
+        userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        deviceUri.c_str(),
+        nullptr,
+        userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        "usb://printer_serial=123&111",
+        deviceLocation.c_str(),
+        userData);
     // Assert
     auto usbPrinters = GetUsbPrinters();
     EXPECT_EQ(usbPrinters.size(), 3);
@@ -1692,12 +1786,27 @@ HWTEST_F(PrintCupsClientTest, DeviceCb_WhenVendorDevice_ShouldAdd, TestSize.Leve
     // Act
     ClearUsbPrinters();
     ClearBackendPrinters();
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             deviceUri.c_str(), deviceLocation.c_str(), userData);
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             deviceUri.c_str(), nullptr, userData);
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             "vendor://printer_serial=123&111", deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        deviceUri.c_str(),
+        deviceLocation.c_str(),
+        userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        deviceUri.c_str(),
+        nullptr,
+        userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        "vendor://printer_serial=123&111",
+        deviceLocation.c_str(),
+        userData);
     // Assert
     auto usbPrinters = GetUsbPrinters();
     EXPECT_EQ(usbPrinters.size(), 0);
@@ -1724,11 +1833,21 @@ HWTEST_F(PrintCupsClientTest, DeviceCb_WhenUnknownMake_ShouldIgnore, TestSize.Le
     // Act
     ClearUsbPrinters();
     ClearBackendPrinters();
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        deviceUri.c_str(),
+        deviceLocation.c_str(),
+        userData);
     deviceUri = "vendor://printer";
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        deviceUri.c_str(),
+        deviceLocation.c_str(),
+        userData);
     // Assert
     auto usbPrinters = GetUsbPrinters();
     EXPECT_EQ(usbPrinters.size(), 0);
@@ -1753,16 +1872,41 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0090_NeedRename, TestSize.Leve
     std::string deviceLocation = "location123";
     void *userData = nullptr;
     // Act
-    DeviceCb(nullptr, deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             deviceUri.c_str(), deviceLocation.c_str(), userData);
-    DeviceCb(deviceClass.c_str(), nullptr, deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             deviceUri.c_str(), deviceLocation.c_str(), userData);
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), nullptr, deviceMakeAndModel.c_str(),
-             deviceUri.c_str(), deviceLocation.c_str(), userData);
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), nullptr,
-             deviceUri.c_str(), deviceLocation.c_str(), userData);
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             nullptr, deviceLocation.c_str(), userData);
+    DeviceCb(nullptr,
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        deviceUri.c_str(),
+        deviceLocation.c_str(),
+        userData);
+    DeviceCb(deviceClass.c_str(),
+        nullptr,
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        deviceUri.c_str(),
+        deviceLocation.c_str(),
+        userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        nullptr,
+        deviceMakeAndModel.c_str(),
+        deviceUri.c_str(),
+        deviceLocation.c_str(),
+        userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        nullptr,
+        deviceUri.c_str(),
+        deviceLocation.c_str(),
+        userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        nullptr,
+        deviceLocation.c_str(),
+        userData);
     // Assert
     auto usbPrinters = GetUsbPrinters();
     EXPECT_EQ(usbPrinters.size(), 0);
@@ -1785,13 +1929,28 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0091_NeedRename, TestSize.Leve
     std::string deviceLocation = "1234-";
     void *userData = nullptr;
     // Act
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             deviceUri.c_str(), deviceLocation.c_str(), userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        deviceUri.c_str(),
+        deviceLocation.c_str(),
+        userData);
     deviceLocation = "1234-5678";
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             deviceUri.c_str(), deviceLocation.c_str(), userData);
-    DeviceCb(deviceClass.c_str(), deviceId.c_str(), deviceInfo.c_str(), deviceMakeAndModel.c_str(),
-             deviceUri.c_str(), nullptr, userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        deviceUri.c_str(),
+        deviceLocation.c_str(),
+        userData);
+    DeviceCb(deviceClass.c_str(),
+        deviceId.c_str(),
+        deviceInfo.c_str(),
+        deviceMakeAndModel.c_str(),
+        deviceUri.c_str(),
+        nullptr,
+        userData);
     // Assert
     auto usbPrinters = GetUsbPrinters();
     EXPECT_EQ(usbPrinters.size(), 3);
@@ -1895,8 +2054,7 @@ HWTEST_F(PrintCupsClientTest, FillAdvancedOptions_SetNullAdvancedOpsJson_ReturnC
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest,
-    UpdateJobParameterByBoolOption_SetCorrectValue_ReturnSameParamValue, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByBoolOption_SetCorrectValue_ReturnSameParamValue, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     Json::Value optionJson;
@@ -1916,8 +2074,7 @@ HWTEST_F(PrintCupsClientTest,
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest,
-    UpdateJobParameterByBoolOption_SetWrongTypeValue_ReturndefaultValue, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByBoolOption_SetWrongTypeValue_ReturndefaultValue, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     Json::Value optionJson;
@@ -1937,8 +2094,7 @@ HWTEST_F(PrintCupsClientTest,
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest,
-    UpdateJobParameterByBoolOption_NoValueSet_ReturndefaultValue, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByBoolOption_NoValueSet_ReturndefaultValue, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     Json::Value optionJson;
@@ -1954,8 +2110,7 @@ HWTEST_F(PrintCupsClientTest,
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest,
-    UpdateJobParameterByOption_SetCorrectValue_ReturnSameParamValue, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_SetCorrectValue_ReturnSameParamValue, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     Json::Value optionJson;
@@ -1978,8 +2133,7 @@ HWTEST_F(PrintCupsClientTest,
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest,
-    UpdateJobParameterByOption_SetWrongTypeValue_ReturndefaultValue, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_SetWrongTypeValue_ReturndefaultValue, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     Json::Value optionJson;
@@ -2000,8 +2154,7 @@ HWTEST_F(PrintCupsClientTest,
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(PrintCupsClientTest,
-    UpdateJobParameterByOption_NoValueSet_ReturndefaultValue, TestSize.Level1)
+HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_NoValueSet_ReturndefaultValue, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     Json::Value optionJson;

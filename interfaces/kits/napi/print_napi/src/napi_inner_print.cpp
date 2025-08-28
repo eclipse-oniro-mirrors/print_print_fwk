@@ -595,8 +595,8 @@ napi_value NapiInnerPrint::SetPrinterPreference(napi_env env, napi_callback_info
         return status;
     };
     auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->SetPrinterPreference(context->printerId,
-            context->printerPreference);
+        int32_t ret =
+            PrintManagerClient::GetInstance()->SetPrinterPreference(context->printerId, context->printerPreference);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
             PRINT_HILOGE("Failed to SetPrinterPreference");
@@ -612,7 +612,7 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
     size_t argc = NapiPrintUtils::MAX_ARGC;
-    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
     napi_value thisVal = nullptr;
     void *data = nullptr;
     PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
@@ -624,8 +624,7 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
     std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
     PRINT_HILOGD("type : %{public}s", type.c_str());
 
-    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE ||
-        type == EXTINFO_EVENT_TYPE) {
+    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
             PRINT_HILOGE("Non-system applications use system APIS!");
             NapiThrowError(env, E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
@@ -663,7 +662,7 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
     size_t argc = NapiPrintUtils::MAX_ARGC;
-    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
     napi_value thisVal = nullptr;
     void *data = nullptr;
     PRINT_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisVal, &data));
@@ -675,8 +674,7 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
     std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
     PRINT_HILOGD("type : %{public}s", type.c_str());
 
-    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE ||
-        type == EXTINFO_EVENT_TYPE) {
+    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
             PRINT_HILOGE("Non-system applications use system APIS!");
             NapiThrowError(env, E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
@@ -713,7 +711,7 @@ napi_value NapiInnerPrint::StartGetPrintFile(napi_env env, napi_callback_info in
         NapiThrowError(env, E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
         return nullptr;
     }
-    napi_value argv[NapiPrintUtils::MAX_ARGC] = { nullptr };
+    napi_value argv[NapiPrintUtils::MAX_ARGC] = {nullptr};
     size_t argc = NapiPrintUtils::GetJsVal(env, info, argv, NapiPrintUtils::MAX_ARGC);
     PRINT_ASSERT(env, argc == NapiPrintUtils::ARGC_FOUR, "StartGetPrintFile need 4 parameter!");
 
@@ -884,8 +882,10 @@ napi_value NapiInnerPrint::NotifyPrintServiceEvent(napi_env env, napi_callback_i
     auto input =
         [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-            PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
-                              "should 1 or 2 parameter!", napi_invalid_arg);
+        PRINT_ASSERT_BASE(env,
+            argc == NapiPrintUtils::ARGC_ONE || argc == NapiPrintUtils::ARGC_TWO,
+            "should 1 or 2 parameter!",
+            napi_invalid_arg);
         napi_valuetype valuetype;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
@@ -1030,8 +1030,7 @@ bool NapiInnerPrint::IsValidApplicationEvent(uint32_t event)
 
 bool NapiInnerPrint::IsValidDefaultPrinterType(uint32_t type)
 {
-    if (type >= DEFAULT_PRINTER_TYPE_SETTED_BY_USER &&
-        type <= DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER) {
+    if (type >= DEFAULT_PRINTER_TYPE_SETTED_BY_USER && type <= DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER) {
         return true;
     }
     return false;
@@ -1040,8 +1039,10 @@ bool NapiInnerPrint::IsValidDefaultPrinterType(uint32_t type)
 void NapiInnerPrint::NapiThrowError(napi_env env, const int32_t errCode)
 {
     napi_value result = nullptr;
-    napi_create_error(env, NapiPrintUtils::CreateInt32(env, errCode),
-        NapiPrintUtils::CreateStringUtf8(env, NapiPrintUtils::GetPrintErrorMsg(errCode)), &result);
+    napi_create_error(env,
+        NapiPrintUtils::CreateInt32(env, errCode),
+        NapiPrintUtils::CreateStringUtf8(env, NapiPrintUtils::GetPrintErrorMsg(errCode)),
+        &result);
     napi_throw(env, result);
 }
-} // namespace OHOS::Print
+}  // namespace OHOS::Print
