@@ -322,7 +322,7 @@ bool PrintCallback::OnCallbackAdapterJobStateChanged(const std::string jobId, co
         return true;
     } else {
         PRINT_HILOGI("OnCallbackAdapterJobStateChanged run ets");
-        return onBaseCallback(
+        return OnBaseCallback(
             [jobId, subState](CallbackParam* param) {
                 param->jobId = jobId;
                 param->state = subState;
