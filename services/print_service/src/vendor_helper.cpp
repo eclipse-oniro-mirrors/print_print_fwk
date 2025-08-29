@@ -790,7 +790,10 @@ std::shared_ptr<PrinterInfo> ConvertVendorCapabilityToPrinterInfo(const Print_Di
         PRINT_HILOGW("update printer info fail");
         return nullptr;
     }
-    UpdatePrinterInfoWithCapability(*info, printer, capability, defaultValue);
+    if (!UpdatePrinterInfoWithCapability(*info, printer, capability, defaultValue)) {
+        PRINT_HILOGW("update printer capability fail");
+        return nullptr;
+    }
     return info;
 }
 
