@@ -301,7 +301,7 @@ public:
     void UpdateIsEnterprise();
     bool IsEnterpriseEnable();
     bool IsEnterprise();
-    void RefreshPrinterStatusOnSwitchUser();
+    bool RefreshPrinterStatusOnSwitchUser();
 #endif  // ENTERPRISE_ENABLE
 };
 }  // namespace OHOS::Print
