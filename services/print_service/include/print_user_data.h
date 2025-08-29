@@ -100,7 +100,7 @@ private:
     bool ParseJsonObjectToPrintJob(const Json::Value &printJobInfoJson, std::shared_ptr<PrintJob> &printHistoryJob);
     void InitPrintHistoryJobList(const std::string &printerId);
     bool CheckOptionalParam(const Json::Value &jsonObject, const std::string &param);
-    void deleteOldestHistoryPrintJob();
+    void DeleteOldestHistoryPrintJob();
 
 public:
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
