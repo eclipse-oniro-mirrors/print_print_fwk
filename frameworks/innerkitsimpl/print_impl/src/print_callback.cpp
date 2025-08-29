@@ -145,6 +145,39 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
     }
 }
 
+static void PrintAdapterJobStateChangedAfterCallFun(CallbackParam *cbParam)
+{
+    PRINT_HILOGI("OnCallback start run PrintAdapterJobStateChangedAfterCallFun");
+    if (cbParam == nullptr) {
+        PRINT_HILOGE("cbParam is nullptr");
+        return;
+    }
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(cbParam->env, &scope);
+    if (scope == nullptr) {
+        PRINT_HILOGE("fail to open scope");
+        close(cbParam->fd);
+        return;
+    }
+    napi_value adapterObj = NapiPrintUtils::GetReference(cbParam->env, cbParam->ref);
+    if (adapterObj != nullptr) {
+        napi_value jobStateChangedFunc = NapiPrintUtils::GetNamedProperty(cbParam->env, adapterObj,
+            "onJobStateChanged");
+
+        napi_value callbackResult = nullptr;
+        napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
+        callbackValues[0] = NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->jobId);
+        callbackValues[1] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
+
+        napi_call_function(cbParam->env, adapterObj, jobStateChangedFunc, NapiPrintUtils::ARGC_TWO,
+            callbackValues, &callbackResult);
+        PRINT_HILOGI("OnCallback end run PrintAdapterJobStateChangedAfterCallFun success");
+    } else {
+        PRINT_HILOGE("PrintAdapterJobStateChangedAfterCallFun get reference failed");
+    }
+    napi_close_handle_scope(cbParam->env, scope);
+}
+
 bool PrintCallback::OnBaseCallback(std::function<void(CallbackParam*)> paramFun,
     std::function<void(CallbackParam*)> workCb)
 {
@@ -293,14 +326,7 @@ bool PrintCallback::OnCallbackAdapterJobStateChanged(const std::string jobId, co
             [jobId, subState](CallbackParam* param) {
                 param->jobId = jobId;
                 param->state = subState;
-            },
-            [](CallbackParam *cbParam) {
-                PRINT_HILOGI("OnCallback start run PrinterInfoWorkCb");
-                napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
-                callbackValues[0] = NapiPrintUtils::CreateStringUtf8(cbParam->env, cbParam->jobId);
-                callbackValues[1] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
-                    NapiCallFunction(cbParam, NapiPrintUtils::ARGC_TWO, callbackValues);
-            });
+            }, PrintAdapterJobStateChangedAfterCallFun);
     }
 }
 
