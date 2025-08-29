@@ -149,14 +149,19 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
         }
         for (int32_t index = 0; index < len; index++) {
             int fdTemp = data.ReadFileDescriptor();
-            if (fdTemp < 0) {
-                PRINT_HILOGE("invalid fd");
-                reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
-                return false;
+            if (fdTemp >= 0) {
+                uint32_t fd = static_cast<uint32_t>(fdTemp);
+                PRINT_HILOGD("fdList[%{public}d] = %{public}d", index, fd);
+                fdList.emplace_back(fd);
+                continue;
             }
-            uint32_t fd = static_cast<uint32_t>(fdTemp);
-            PRINT_HILOGD("fdList[%{public}d] = %{public}d", index, fd);
-            fdList.emplace_back(fd);
+            PRINT_HILOGE("invalid fd");
+            for (auto fd : fdList) {
+                fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
+            }
+            fdList.clear();
+            reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
+            return false;
         }
     }
     std::string taskId = data.ReadString();
