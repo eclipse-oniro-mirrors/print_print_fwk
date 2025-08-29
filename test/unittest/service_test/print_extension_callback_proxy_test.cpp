@@ -32,13 +32,17 @@ public:
     void TearDown();
 };
 
-void PrintExtensionCallbackProxyTest::SetUpTestCase(void) {}
+void PrintExtensionCallbackProxyTest::SetUpTestCase(void)
+{}
 
-void PrintExtensionCallbackProxyTest::TearDownTestCase(void) {}
+void PrintExtensionCallbackProxyTest::TearDownTestCase(void)
+{}
 
-void PrintExtensionCallbackProxyTest::SetUp(void) {}
+void PrintExtensionCallbackProxyTest::SetUp(void)
+{}
 
-void PrintExtensionCallbackProxyTest::TearDown(void) {}
+void PrintExtensionCallbackProxyTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintExtensionCallbackProxyTest_0001
@@ -247,5 +251,5 @@ HWTEST_F(PrintExtensionCallbackProxyTest, PrintExtensionCallbackProxyTest_0008_N
         });
     EXPECT_FALSE(proxy->OnCallback(testPrinterId, testCap));
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

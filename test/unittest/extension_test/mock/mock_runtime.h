@@ -37,8 +37,9 @@ public:
         return;
     }
 
-    void FinishPreload() override {}
-    bool LoadRepairPatch(const std::string& patchFile, const std::string& baseFile) override
+    void FinishPreload() override
+    {}
+    bool LoadRepairPatch(const std::string &patchFile, const std::string &baseFile) override
     {
         return true;
     }
@@ -50,8 +51,9 @@ public:
     {
         return true;
     }
-    void ResumeVM(uint32_t tid) override {}
-    bool UnLoadRepairPatch(const std::string& patchFile) override
+    void ResumeVM(uint32_t tid) override
+    {}
+    bool UnLoadRepairPatch(const std::string &patchFile) override
     {
         return true;
     }
@@ -83,42 +85,43 @@ public:
     {
         return;
     }
-    void PreloadSystemModule(const std::string& moduleName) override
+    void PreloadSystemModule(const std::string &moduleName) override
     {
         return;
     }
-    void PreloadMainAbility(const std::string& moduleName, const std::string& srcPath,
-        const std::string& hapPath,  bool isEsMode, const std::string& srcEntrance) override
+    void PreloadMainAbility(const std::string &moduleName, const std::string &srcPath, const std::string &hapPath,
+        bool isEsMode, const std::string &srcEntrance) override
     {
         return;
     }
-    void PreloadModule(const std::string& moduleName, const std::string& srcPath,
-        const std::string& hapPath, bool isEsMode, bool useCommonTrunk) override
+    void PreloadModule(const std::string &moduleName, const std::string &srcPath, const std::string &hapPath,
+        bool isEsMode, bool useCommonTrunk) override
     {
         return;
     }
-    bool RunScript(const std::string& path, const std::string& hapPath, bool useCommonChunk = false)
+    bool RunScript(const std::string &path, const std::string &hapPath, bool useCommonChunk = false)
     {
         return true;
     }
-    bool Initialize(const Options& options)
+    bool Initialize(const Options &options)
     {
         return true;
     }
-    void Deinitialize() {}
-    napi_value LoadJsBundle(const std::string& path, const std::string& hapPath, bool useCommonChunk = false)
+    void Deinitialize()
+    {}
+    napi_value LoadJsBundle(const std::string &path, const std::string &hapPath, bool useCommonChunk = false)
     {
         return nullptr;
     }
-    napi_value LoadJsModule(const std::string& path, const std::string& hapPath)
+    napi_value LoadJsModule(const std::string &path, const std::string &hapPath)
     {
         return nullptr;
     }
-    bool LoadScript(const std::string& path, std::vector<uint8_t>* buffer = nullptr, bool isBundle = false)
+    bool LoadScript(const std::string &path, std::vector<uint8_t> *buffer = nullptr, bool isBundle = false)
     {
         return true;
     }
-    void RegisterQuickFixQueryFunc(const std::map<std::string, std::string>& moduleAndPath) override
+    void RegisterQuickFixQueryFunc(const std::map<std::string, std::string> &moduleAndPath) override
     {
         return;
     }
@@ -126,15 +129,19 @@ public:
     {
         return;
     }
-    
+
     void StartProfiler(const DebugOption debugOption) override
     {
         return;
     }
 
-    void DoCleanWorkAfterStageCleaned() override {}
-    void DumpHeapSnapshot(uint32_t tid, bool isFullGC, bool isBinary = false) override {}
-    void ForceFullGC(uint32_t tid) override {}
+    void DoCleanWorkAfterStageCleaned() override
+    {}
+    void DumpHeapSnapshot(uint32_t tid, bool isFullGC, bool isBinary = false) override
+    {}
+    void ForceFullGC(uint32_t tid) override
+    {}
+
 public:
     Language language;
 };
@@ -155,8 +162,9 @@ public:
         return;
     }
 
-    void FinishPreload() override {}
-    bool LoadRepairPatch(const std::string& patchFile, const std::string& baseFile) override
+    void FinishPreload() override
+    {}
+    bool LoadRepairPatch(const std::string &patchFile, const std::string &baseFile) override
     {
         return true;
     }
@@ -168,8 +176,9 @@ public:
     {
         return true;
     }
-    void ResumeVM(uint32_t tid) override {}
-    bool UnLoadRepairPatch(const std::string& patchFile) override
+    void ResumeVM(uint32_t tid) override
+    {}
+    bool UnLoadRepairPatch(const std::string &patchFile) override
     {
         return true;
     }
@@ -201,42 +210,43 @@ public:
     {
         return;
     }
-    void PreloadSystemModule(const std::string& moduleName) override
+    void PreloadSystemModule(const std::string &moduleName) override
     {
         return;
     }
-    void PreloadMainAbility(const std::string& moduleName, const std::string& srcPath,
-        const std::string& hapPath,  bool isEsMode, const std::string& srcEntrance) override
+    void PreloadMainAbility(const std::string &moduleName, const std::string &srcPath, const std::string &hapPath,
+        bool isEsMode, const std::string &srcEntrance) override
     {
         return;
     }
-    void PreloadModule(const std::string& moduleName, const std::string& srcPath,
-        const std::string& hapPath, bool isEsMode, bool useCommonTrunk) override
+    void PreloadModule(const std::string &moduleName, const std::string &srcPath, const std::string &hapPath,
+        bool isEsMode, bool useCommonTrunk) override
     {
         return;
     }
-    bool RunScript(const std::string& path, const std::string& hapPath, bool useCommonChunk = false)
+    bool RunScript(const std::string &path, const std::string &hapPath, bool useCommonChunk = false)
     {
         return true;
     }
-    bool Initialize(const Options& options)
+    bool Initialize(const Options &options)
     {
         return true;
     }
-    void Deinitialize() {}
-    napi_value LoadJsBundle(const std::string& path, const std::string& hapPath, bool useCommonChunk = false)
+    void Deinitialize()
+    {}
+    napi_value LoadJsBundle(const std::string &path, const std::string &hapPath, bool useCommonChunk = false)
     {
         return nullptr;
     }
-    napi_value LoadJsModule(const std::string& path, const std::string& hapPath)
+    napi_value LoadJsModule(const std::string &path, const std::string &hapPath)
     {
         return nullptr;
     }
-    bool LoadScript(const std::string& path, std::vector<uint8_t>* buffer = nullptr, bool isBundle = false)
+    bool LoadScript(const std::string &path, std::vector<uint8_t> *buffer = nullptr, bool isBundle = false)
     {
         return true;
     }
-    void RegisterQuickFixQueryFunc(const std::map<std::string, std::string>& moduleAndPath) override
+    void RegisterQuickFixQueryFunc(const std::map<std::string, std::string> &moduleAndPath) override
     {
         return;
     }
@@ -244,18 +254,22 @@ public:
     {
         return;
     }
-    
+
     void StartProfiler(const DebugOption debugOption) override
     {
         return;
     }
 
-    void DoCleanWorkAfterStageCleaned() override {}
-    void DumpHeapSnapshot(uint32_t tid, bool isFullGC, bool isBinary = false) override {}
-    void ForceFullGC(uint32_t tid) override {}
+    void DoCleanWorkAfterStageCleaned() override
+    {}
+    void DumpHeapSnapshot(uint32_t tid, bool isFullGC, bool isBinary = false) override
+    {}
+    void ForceFullGC(uint32_t tid) override
+    {}
+
 public:
     Language language;
 };
-} // namespace AbilityRuntime
-} // namespace OHOS
-#endif // MOCK_RUNTIME_H
+}  // namespace AbilityRuntime
+}  // namespace OHOS
+#endif  // MOCK_RUNTIME_H

@@ -23,13 +23,13 @@ namespace OHOS {
 namespace Print {
 class MockPrintServiceHelper final : public PrintServiceHelper {
 public:
-    MOCK_METHOD1(CheckPermission, bool(const std::string&));
-    MOCK_METHOD1(StartAbility, bool(const AAFwk::Want&));
+    MOCK_METHOD1(CheckPermission, bool(const std::string &));
+    MOCK_METHOD1(StartAbility, bool(const AAFwk::Want &));
     MOCK_METHOD0(GetBundleMgr, sptr<IRemoteObject>());
-    MOCK_METHOD1(QueryAccounts, bool(std::vector<int>&));
-    MOCK_METHOD3(QueryExtension, bool(sptr<AppExecFwk::IBundleMgr>, int,
-                                            std::vector<AppExecFwk::ExtensionAbilityInfo>&));
-    MOCK_METHOD3(QueryNameForUid, bool(sptr<AppExecFwk::IBundleMgr>, int32_t, std::string&));
+    MOCK_METHOD1(QueryAccounts, bool(std::vector<int> &));
+    MOCK_METHOD3(
+        QueryExtension, bool(sptr<AppExecFwk::IBundleMgr>, int, std::vector<AppExecFwk::ExtensionAbilityInfo> &));
+    MOCK_METHOD3(QueryNameForUid, bool(sptr<AppExecFwk::IBundleMgr>, int32_t, std::string &));
     MOCK_METHOD0(IsSyncMode, bool());
 };
 }  // namespace Print

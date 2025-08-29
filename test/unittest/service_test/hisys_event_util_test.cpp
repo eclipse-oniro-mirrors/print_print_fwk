@@ -31,20 +31,24 @@ public:
     void TearDown();
 };
 
-void HisysEventUtilTest::SetUpTestCase(void) {}
+void HisysEventUtilTest::SetUpTestCase(void)
+{}
 
-void HisysEventUtilTest::TearDownTestCase(void) {}
+void HisysEventUtilTest::TearDownTestCase(void)
+{}
 
-void HisysEventUtilTest::SetUp(void) {}
+void HisysEventUtilTest::SetUp(void)
+{}
 
-void HisysEventUtilTest::TearDown(void) {}
+void HisysEventUtilTest::TearDown(void)
+{}
 
 /**
-* @tc.name: HisysEventUtilTest_0001
-* @tc.desc: reportPrintSuccess
-* @tc.type: FUNC
-* @tc.require:
-*/
+ * @tc.name: HisysEventUtilTest_0001
+ * @tc.desc: reportPrintSuccess
+ * @tc.type: FUNC
+ * @tc.require:
+ */
 HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0001_NeedRename, TestSize.Level1)
 {
     OHOS::Print::HisysEventUtil util;
@@ -52,5 +56,5 @@ HWTEST_F(HisysEventUtilTest, HisysEventUtilTest_0001_NeedRename, TestSize.Level1
     util->reportBehaviorEvent("test", HisysEventUtil::SEND_TASK, param);
     EXPECT_CALL(util, reportBehaviorEvent(_, _, _)).Times(1);
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

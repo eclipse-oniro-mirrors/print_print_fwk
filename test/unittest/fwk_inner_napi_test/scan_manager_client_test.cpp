@@ -26,9 +26,11 @@ public:
     std::shared_ptr<ScanManagerClient> smgPtr;
 };
 
-void ScanManagerClientTest::SetUpTestCase(void) {}
+void ScanManagerClientTest::SetUpTestCase(void)
+{}
 
-void ScanManagerClientTest::TearDownTestCase(void) {}
+void ScanManagerClientTest::TearDownTestCase(void)
+{}
 
 void ScanManagerClientTest::SetUp(void)
 {
@@ -36,7 +38,8 @@ void ScanManagerClientTest::SetUp(void)
     EXPECT_NE(smgPtr, nullptr);
 }
 
-void ScanManagerClientTest::TearDown(void) {}
+void ScanManagerClientTest::TearDown(void)
+{}
 
 /**
  * @tc.name: ScanManagerClientTest_0001
@@ -62,5 +65,5 @@ HWTEST_F(ScanManagerClientTest, ScanManagerClientTest_0002_NeedRename, TestSize.
     EXPECT_EQ(status, 0);
 }
 
-} // namespace Scan
-} // namespace OHOS
+}  // namespace Scan
+}  // namespace OHOS

@@ -25,10 +25,17 @@ public:
     void TearDown();
 };
 
-void ScanModuleTest::SetUpTestCase(void) {}
+void ScanModuleTest::SetUpTestCase(void)
+{}
 
-void ScanModuleTest::TearDownTestCase(void) {}
+void ScanModuleTest::TearDownTestCase(void)
+{}
 
-void ScanModuleTest::SetUp(void) {}
+void ScanModuleTest::SetUp(void)
+{}
 
-void ScanModuleTest::TearDown(void) {}
+void ScanModuleTest::TearDown(void)
+{}
+
+}  // namespace Scan
+}  // namespace OHOS

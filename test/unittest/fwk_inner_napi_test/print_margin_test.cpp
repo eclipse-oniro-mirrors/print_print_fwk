@@ -29,13 +29,17 @@ public:
     void TearDown();
 };
 
-void PrintMarginTest::SetUpTestCase(void) {}
+void PrintMarginTest::SetUpTestCase(void)
+{}
 
-void PrintMarginTest::TearDownTestCase(void) {}
+void PrintMarginTest::TearDownTestCase(void)
+{}
 
-void PrintMarginTest::SetUp(void) {}
+void PrintMarginTest::SetUp(void)
+{}
 
-void PrintMarginTest::TearDown(void) {}
+void PrintMarginTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintMarginTest_002
@@ -367,5 +371,5 @@ HWTEST_F(PrintMarginTest, PrintMarginTest_0023, TestSize.Level1)
     OHOS::Print::PrintMargin copyMargin = margin;
     EXPECT_EQ(copyMargin.GetTop(), margin.GetTop());
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

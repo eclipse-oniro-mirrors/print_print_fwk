@@ -30,13 +30,17 @@ public:
     void TearDown();
 };
 
-void PrintResolutionTest::SetUpTestCase(void) {}
+void PrintResolutionTest::SetUpTestCase(void)
+{}
 
-void PrintResolutionTest::TearDownTestCase(void) {}
+void PrintResolutionTest::TearDownTestCase(void)
+{}
 
-void PrintResolutionTest::SetUp(void) {}
+void PrintResolutionTest::SetUp(void)
+{}
 
-void PrintResolutionTest::TearDown(void) {}
+void PrintResolutionTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintResolutionTest_001

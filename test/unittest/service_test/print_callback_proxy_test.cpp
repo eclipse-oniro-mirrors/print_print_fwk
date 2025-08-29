@@ -37,9 +37,11 @@ public:
     void TearDown();
 };
 
-void PrintCallbackProxyTest::SetUpTestCase(void) {}
+void PrintCallbackProxyTest::SetUpTestCase(void)
+{}
 
-void PrintCallbackProxyTest::TearDownTestCase(void) {}
+void PrintCallbackProxyTest::TearDownTestCase(void)
+{}
 
 void PrintCallbackProxyTest::SetUp(void)
 {
@@ -47,7 +49,8 @@ void PrintCallbackProxyTest::SetUp(void)
     PRINT_HILOGI("PrintCallbackProxyTest_%{public}d", ++testNo);
 }
 
-void PrintCallbackProxyTest::TearDown(void) {}
+void PrintCallbackProxyTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintCallbackProxyTest_0001
@@ -99,13 +102,13 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0002_NeedRename, TestSiz
 
 MATCHER_P(PrinterInfoMatcher, oParam, "Match Printer Info")
 {
-    const PrinterInfo& op = (const PrinterInfo&)arg;
+    const PrinterInfo &op = (const PrinterInfo &)arg;
     return op.GetPrinterId() == oParam.GetPrinterId();
 }
 
 MATCHER_P(PrintJobMatcher, oParam, "Match Print Job")
 {
-    const PrintJob& op = (const PrintJob&)arg;
+    const PrintJob &op = (const PrintJob &)arg;
     return op.GetJobId() == oParam.GetJobId();
 }
 
@@ -129,8 +132,9 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0003_NeedRename, TestSiz
     std::string testPrinterId = "com.sample.ext:1";
     testInfo.SetPrinterId(testPrinterId);
 
-    EXPECT_CALL(*service, OnCallback(testState,
-        Matcher<const PrinterInfo&>(PrinterInfoMatcher(testInfo)))).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*service, OnCallback(testState, Matcher<const PrinterInfo &>(PrinterInfoMatcher(testInfo))))
+        .Times(1)
+        .WillOnce(Return(true));
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -160,8 +164,9 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0004_NeedRename, TestSiz
     std::string testPrinterId = "com.sample.ext:1";
     testInfo.SetPrinterId(testPrinterId);
 
-    EXPECT_CALL(*service, OnCallback(testState,
-        Matcher<const PrinterInfo&>(PrinterInfoMatcher(testInfo)))).Times(1).WillOnce(Return(false));
+    EXPECT_CALL(*service, OnCallback(testState, Matcher<const PrinterInfo &>(PrinterInfoMatcher(testInfo))))
+        .Times(1)
+        .WillOnce(Return(false));
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -191,8 +196,9 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0005_NeedRename, TestSiz
     std::string jobId = "job:1234";
     testJob.SetJobId(jobId);
 
-    EXPECT_CALL(*service, OnCallback(testState,
-        Matcher<const PrintJob&>(PrintJobMatcher(testJob)))).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*service, OnCallback(testState, Matcher<const PrintJob &>(PrintJobMatcher(testJob))))
+        .Times(1)
+        .WillOnce(Return(true));
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -222,8 +228,9 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0006_NeedRename, TestSiz
     std::string jobId = "job:1234";
     testJob.SetJobId(jobId);
 
-    EXPECT_CALL(*service, OnCallback(testState,
-        Matcher<const PrintJob&>(PrintJobMatcher(testJob)))).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*service, OnCallback(testState, Matcher<const PrintJob &>(PrintJobMatcher(testJob))))
+        .Times(1)
+        .WillOnce(Return(true));
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -233,7 +240,6 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0006_NeedRename, TestSiz
     EXPECT_FALSE(proxy->OnCallback(testState, testJob));
 }
 
- 
 /**
  * @tc.name: PrintCallbackProxyTest_0007
  * @tc.desc: printCallbackProxy
@@ -257,7 +263,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0007_NeedRename, TestSiz
     uint32_t testState = 0;
     EXPECT_FALSE(proxy->OnCallbackAdapterGetFile(testState));
 }
- 
+
 /**
  * @tc.name: PrintCallbackProxyTest_0008
  * @tc.desc: printCallbackProxy
@@ -283,7 +289,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0008_NeedRename, TestSiz
     std::string jobId = "job:1234";
     EXPECT_FALSE(proxy->OnCallbackAdapterJobStateChanged(jobId, testState, testSubState));
 }
- 
+
 /**
  * @tc.name: PrintCallbackProxyTest_0009
  * @tc.desc: printCallbackProxy
@@ -309,7 +315,6 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0009_NeedRename, TestSiz
     std::string jobId = "job:1234";
     EXPECT_FALSE(proxy->OnCallbackAdapterJobStateChanged(jobId, testState, testSubState));
 }
- 
 
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

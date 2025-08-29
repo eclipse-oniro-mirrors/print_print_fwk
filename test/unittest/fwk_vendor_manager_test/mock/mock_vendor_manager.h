@@ -23,28 +23,28 @@ namespace OHOS {
 namespace Print {
 class MockVendorManager final : public IPrinterVendorManager {
 public:
-    MOCK_METHOD2(AddPrinterToDiscovery, int32_t (const std::string &, const PrinterInfo &));
-    MOCK_METHOD2(UpdatePrinterToDiscovery, int32_t (const std::string &, const PrinterInfo &));
-    MOCK_METHOD2(RemovePrinterFromDiscovery, int32_t (const std::string &, const std::string &));
-    MOCK_METHOD4(AddPrinterToCupsWithPpd, int32_t (const std::string &, const std::string &, const std::string &,
-        const std::string &));
-    MOCK_METHOD2(RemovePrinterFromCups, int32_t (const std::string &, const std::string &));
-    MOCK_METHOD3(OnPrinterStatusChanged, bool (const std::string &, const std::string &, const PrinterVendorStatus &));
-    MOCK_METHOD2(OnPrinterCapabilityQueried, bool (const std::string &, const PrinterInfo &));
-    MOCK_METHOD4(OnPrinterPpdQueried, bool (const std::string &, const std::string &, const std::string &,
-        const std::string &));
-    MOCK_METHOD2(IsConnectingPrinter, bool (const std::string &, const std::string &));
-    MOCK_METHOD2(SetConnectingPrinter, void (ConnectMethod, const std::string &));
-    MOCK_METHOD0(ClearConnectingPrinter, void ());
-    MOCK_METHOD2(QueryPrinterCapabilityByUri, bool (const std::string &, PrinterCapability &));
-    MOCK_METHOD2(QueryPrinterStatusByUri, bool (const std::string &, PrinterStatus &));
-    MOCK_METHOD2(QueryDiscoveredPrinterInfoById, std::shared_ptr<PrinterInfo> (const std::string &,
-        const std::string &));
-    MOCK_METHOD3(QueryPrinterInfoByPrinterId, int32_t (const std::string &, const std::string &, PrinterInfo &));
-    MOCK_METHOD1(QueryAddedPrintersByIp, std::vector<std::string> (const std::string &));
-    MOCK_METHOD2(QueryPPDInformation, bool (const std::string &, std::string &));
-    MOCK_METHOD1(GetConnectingMethod, ConnectMethod (const std::string &));
-    MOCK_METHOD2(DiscoverBackendPrinters, int32_t (const std::string &, std::vector<PrinterInfo> &));
+    MOCK_METHOD2(AddPrinterToDiscovery, int32_t(const std::string &, const PrinterInfo &));
+    MOCK_METHOD2(UpdatePrinterToDiscovery, int32_t(const std::string &, const PrinterInfo &));
+    MOCK_METHOD2(RemovePrinterFromDiscovery, int32_t(const std::string &, const std::string &));
+    MOCK_METHOD4(AddPrinterToCupsWithPpd,
+        int32_t(const std::string &, const std::string &, const std::string &, const std::string &));
+    MOCK_METHOD2(RemovePrinterFromCups, int32_t(const std::string &, const std::string &));
+    MOCK_METHOD3(OnPrinterStatusChanged, bool(const std::string &, const std::string &, const PrinterVendorStatus &));
+    MOCK_METHOD2(OnPrinterCapabilityQueried, bool(const std::string &, const PrinterInfo &));
+    MOCK_METHOD4(
+        OnPrinterPpdQueried, bool(const std::string &, const std::string &, const std::string &, const std::string &));
+    MOCK_METHOD2(IsConnectingPrinter, bool(const std::string &, const std::string &));
+    MOCK_METHOD2(SetConnectingPrinter, void(ConnectMethod, const std::string &));
+    MOCK_METHOD0(ClearConnectingPrinter, void());
+    MOCK_METHOD2(QueryPrinterCapabilityByUri, bool(const std::string &, PrinterCapability &));
+    MOCK_METHOD2(QueryPrinterStatusByUri, bool(const std::string &, PrinterStatus &));
+    MOCK_METHOD2(
+        QueryDiscoveredPrinterInfoById, std::shared_ptr<PrinterInfo>(const std::string &, const std::string &));
+    MOCK_METHOD3(QueryPrinterInfoByPrinterId, int32_t(const std::string &, const std::string &, PrinterInfo &));
+    MOCK_METHOD1(QueryAddedPrintersByIp, std::vector<std::string>(const std::string &));
+    MOCK_METHOD2(QueryPPDInformation, bool(const std::string &, std::string &));
+    MOCK_METHOD1(GetConnectingMethod, ConnectMethod(const std::string &));
+    MOCK_METHOD2(DiscoverBackendPrinters, int32_t(const std::string &, std::vector<PrinterInfo> &));
 };
 }  // namespace Print
 }  // namespace OHOS

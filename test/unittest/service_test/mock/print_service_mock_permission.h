@@ -22,6 +22,6 @@ class PrintServiceMockPermission {
 public:
     static void MockPermission();
 };
-} // namespace Print
-} // namespace OHOS
-#endif // PRINT_SERVICE_MOCK_PERMISSION_H
+}  // namespace Print
+}  // namespace OHOS
+#endif  // PRINT_SERVICE_MOCK_PERMISSION_H

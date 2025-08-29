@@ -457,7 +457,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0082, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
     std::vector<std::string> ppds;
-    ipp_t* response = ippNew();
+    ipp_t *response = ippNew();
     EXPECT_NE(response, nullptr);
     ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_TEXT, "printer-location", nullptr, "en_us");
     ippAddString(response, IPP_TAG_PRINTER, IPP_TAG_TEXT, "ppd-make-and-model", nullptr, "testmodel");
@@ -533,7 +533,7 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0088, TestSize.Level1)
     printCupsClient.SymlinkDirectory(nullptr, dstDir2.c_str());
     printCupsClient.CopyDirectory(srcDir.c_str(), dstDir1.c_str());
     printCupsClient.SymlinkDirectory(srcDir.c_str(), dstDir2.c_str());
-    mode_t permissions = S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH;
+    mode_t permissions = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH;
     EXPECT_EQ(printCupsClient.ChangeFilterPermission(dstDir1, permissions), true);
 }
 
@@ -547,8 +547,8 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0089, TestSize.Level1)
 {
     cups_dest_t cupsDests = {0};
     cups_dinfo_t cupsDinfo = {0};
-    MockTestFunc testFunc =
-        [this, &cupsDests, &cupsDinfo](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
+    MockTestFunc testFunc = [this, &cupsDests, &cupsDinfo](
+                                PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
         EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillRepeatedly(Return(&cupsDests));
         EXPECT_CALL(mock, CopyDestInfo(_, _)).WillRepeatedly(Return(&cupsDinfo));
         std::string printerName = "testName";
@@ -568,8 +568,8 @@ HWTEST_F(PrintCupsWrapperTest, PrintCupsWrapperTest_0090, TestSize.Level1)
 {
     cups_dest_t cupsDests = {0};
     cups_dinfo_t cupsDinfo = {0};
-    MockTestFunc testFunc =
-        [this, &cupsDests, &cupsDinfo](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
+    MockTestFunc testFunc = [this, &cupsDests, &cupsDinfo](
+                                PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
         EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillOnce(Return(nullptr)).WillRepeatedly(Return(&cupsDests));
         EXPECT_CALL(mock, CopyDestInfo(_, _)).WillOnce(Return(nullptr)).WillRepeatedly(Return(&cupsDinfo));
         std::string printerName = "testName";
@@ -631,8 +631,8 @@ HWTEST_F(PrintCupsWrapperTest, Modify_ShouldReturnSuccess_WhenBsuniPrinterExist,
     MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
         cups_dest_t cupsDest = {0};
         ipp_t cupsRequest = {};
-        cupsDest.num_options = cupsAddOption("printer-make-and-model", BSUNI_PPD_NAME.c_str(), cupsDest.num_options,
-            &cupsDest.options);
+        cupsDest.num_options =
+            cupsAddOption("printer-make-and-model", BSUNI_PPD_NAME.c_str(), cupsDest.num_options, &cupsDest.options);
         EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillOnce(Return(&cupsDest));
         EXPECT_CALL(mock, DoRequest(_, _, _)).WillOnce(Return(&cupsRequest));
         EXPECT_CALL(mock, FreeRequest(_)).Times(1);
@@ -656,8 +656,7 @@ HWTEST_F(PrintCupsWrapperTest, Modify_ShouldReturnSuccess_WhenOtherPrinterExist,
     MockTestFunc testFunc = [this](PrintCupsClient &printCupsClient, MockPrintCupsWrapper &mock) {
         cups_dest_t cupsDest = {0};
         ipp_t cupsRequest = {};
-        cupsDest.num_options = cupsAddOption("printer-make-and-model", "test", cupsDest.num_options,
-            &cupsDest.options);
+        cupsDest.num_options = cupsAddOption("printer-make-and-model", "test", cupsDest.num_options, &cupsDest.options);
         EXPECT_CALL(mock, GetNamedDest(_, _, _)).WillOnce(Return(&cupsDest));
         EXPECT_CALL(mock, DoRequest(_, _, _)).WillOnce(Return(&cupsRequest));
         EXPECT_CALL(mock, FreeRequest(_)).Times(1);

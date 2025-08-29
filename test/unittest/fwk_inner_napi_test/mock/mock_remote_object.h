@@ -25,8 +25,7 @@ namespace Print {
 class MockRemoteObject final : public IRemoteObject {
 public:
     MockRemoteObject() : IRemoteObject(u"")
-    {
-    }
+    {}
     MOCK_METHOD0(GetObjectRefCount, int32_t());
     MOCK_CONST_METHOD0(IsProxyObject, bool());
     MOCK_METHOD4(SendRequest, int(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option));
@@ -34,6 +33,6 @@ public:
     MOCK_METHOD1(RemoveDeathRecipient, bool(const sptr<DeathRecipient> &recipient));
     MOCK_METHOD2(Dump, int(int fd, const std::vector<std::u16string> &args));
 };
-} // namespace Print
-} // namespace OHOS
-#endif // MOCK_REMOTE_OBJECT_H
+}  // namespace Print
+}  // namespace OHOS
+#endif  // MOCK_REMOTE_OBJECT_H

@@ -43,8 +43,8 @@ public:
     {
         return true;
     }
-    bool OnCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
-        const uint32_t subState) override
+    bool OnCallbackAdapterJobStateChanged(
+        const std::string jobId, const uint32_t state, const uint32_t subState) override
     {
         return true;
     }
@@ -57,9 +57,9 @@ public:
 class MockPrintCallbackStub final : public DummyPrintCallbackStub {
 public:
     MOCK_METHOD0(OnCallback, bool());
-    MOCK_METHOD2(OnCallback, bool(uint32_t, const PrinterInfo&));
-    MOCK_METHOD2(OnCallback, bool(uint32_t, const PrintJob&));
-    MOCK_METHOD2(OnCallback, bool(const std::string&, const std::string&));
+    MOCK_METHOD2(OnCallback, bool(uint32_t, const PrinterInfo &));
+    MOCK_METHOD2(OnCallback, bool(uint32_t, const PrintJob &));
+    MOCK_METHOD2(OnCallback, bool(const std::string &, const std::string &));
 };
 }  // namespace Print
 }  // namespace OHOS

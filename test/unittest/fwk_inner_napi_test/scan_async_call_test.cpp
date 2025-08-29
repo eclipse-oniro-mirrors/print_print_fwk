@@ -33,13 +33,17 @@ public:
     void TearDown();
 };
 
-void ScanAsyncCallTest::SetUpTestCase(void) {}
+void ScanAsyncCallTest::SetUpTestCase(void)
+{}
 
-void ScanAsyncCallTest::TearDownTestCase(void) {}
+void ScanAsyncCallTest::TearDownTestCase(void)
+{}
 
-void ScanAsyncCallTest::SetUp(void) {}
+void ScanAsyncCallTest::SetUp(void)
+{}
 
-void ScanAsyncCallTest::TearDown(void) {}
+void ScanAsyncCallTest::TearDown(void)
+{}
 
 /**
  * @tc.name: ScanAsyncCallTest_0001
@@ -53,10 +57,8 @@ HWTEST_F(ScanAsyncCallTest, ScanAsyncCallTest_0001_NeedRename, TestSize.Level1)
     napi_callback_info info;
     auto context = std::make_shared<NapiScanContext>();
     ScanAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<ScanAsyncCall::Context>(context));
-    auto exec = [context](ScanAsyncCall::Context *ctx) {
-        EXPECT_NE(context, nullptr);
-    };
+    auto exec = [context](ScanAsyncCall::Context *ctx) { EXPECT_NE(context, nullptr); };
     asyncCall.Call(env, exec);
 }
-} // namespace Scan
-} // namespace OHOS
+}  // namespace Scan
+}  // namespace OHOS

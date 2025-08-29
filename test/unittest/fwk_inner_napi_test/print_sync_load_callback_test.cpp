@@ -35,13 +35,17 @@ public:
     void TearDown();
 };
 
-void PrintSyncLoadCallbackTest::SetUpTestCase(void) {}
+void PrintSyncLoadCallbackTest::SetUpTestCase(void)
+{}
 
-void PrintSyncLoadCallbackTest::TearDownTestCase(void) {}
+void PrintSyncLoadCallbackTest::TearDownTestCase(void)
+{}
 
-void PrintSyncLoadCallbackTest::SetUp(void) {}
+void PrintSyncLoadCallbackTest::SetUp(void)
+{}
 
-void PrintSyncLoadCallbackTest::TearDown(void) {}
+void PrintSyncLoadCallbackTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintSyncLoadCallbackTest_0001
@@ -59,5 +63,5 @@ HWTEST_F(PrintSyncLoadCallbackTest, PrintSyncLoadCallbackTest_0001_NeedRename, T
     printSyncLoadCallback.OnLoadSystemAbilityFail(systemAbilityId);
     EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, true);
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

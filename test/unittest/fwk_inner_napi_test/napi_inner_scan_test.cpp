@@ -25,13 +25,17 @@ public:
     void TearDown();
 };
 
-void NapiInnerScanTest::SetUpTestCase(void) {}
+void NapiInnerScanTest::SetUpTestCase(void)
+{}
 
-void NapiInnerScanTest::TearDownTestCase(void) {}
+void NapiInnerScanTest::TearDownTestCase(void)
+{}
 
-void NapiInnerScanTest::SetUp(void) {}
+void NapiInnerScanTest::SetUp(void)
+{}
 
-void NapiInnerScanTest::TearDown(void) {}
+void NapiInnerScanTest::TearDown(void)
+{}
 
-} // namespace Scan
-} // namespace OHOS
+}  // namespace Scan
+}  // namespace OHOS

@@ -23,11 +23,12 @@ namespace OHOS {
 namespace Print {
 class MockPrintExtensionCallbackProxy final : public PrintExtensionCallbackProxy {
 public:
-    MockPrintExtensionCallbackProxy() : PrintExtensionCallbackProxy(nullptr) {}
+    MockPrintExtensionCallbackProxy() : PrintExtensionCallbackProxy(nullptr)
+    {}
     MOCK_METHOD0(OnCallback, bool());
-    MOCK_METHOD1(OnCallback, bool(const std::string&));
-    MOCK_METHOD1(OnCallback, bool(const PrintJob&));
-    MOCK_METHOD2(OnCallback, bool(const std::string&, PrinterCapability&));
+    MOCK_METHOD1(OnCallback, bool(const std::string &));
+    MOCK_METHOD1(OnCallback, bool(const PrintJob &));
+    MOCK_METHOD2(OnCallback, bool(const std::string &, PrinterCapability &));
 };
 }  // namespace Print
 }  // namespace OHOS

@@ -29,13 +29,17 @@ public:
     void TearDown();
 };
 
-void PrinterPreferencesTest::SetUpTestCase(void) {}
+void PrinterPreferencesTest::SetUpTestCase(void)
+{}
 
-void PrinterPreferencesTest::TearDownTestCase(void) {}
+void PrinterPreferencesTest::TearDownTestCase(void)
+{}
 
-void PrinterPreferencesTest::SetUp(void) {}
+void PrinterPreferencesTest::SetUp(void)
+{}
 
-void PrinterPreferencesTest::TearDown(void) {}
+void PrinterPreferencesTest::TearDown(void)
+{}
 
 HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0001_NeedRename, TestSize.Level2)
 {
@@ -179,8 +183,8 @@ HWTEST_F(PrinterPreferencesTest, ConvertToJson_WrongOptionFormat_isNullReturnTru
     EXPECT_EQ(true, preferencesJson["options"].isNull());
 }
 
-HWTEST_F(PrinterPreferencesTest,
-    ConvertJsonToPrinterPreferences_NoMemberInJson_HasDefaultDuplexModeReturnFalse, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, ConvertJsonToPrinterPreferences_NoMemberInJson_HasDefaultDuplexModeReturnFalse,
+    TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson;
@@ -188,8 +192,8 @@ HWTEST_F(PrinterPreferencesTest,
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
 }
 
-HWTEST_F(PrinterPreferencesTest,
-    ConvertJsonToPrinterPreferences_WrongValueType_HasDefaultDuplexModeReturnFalse, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, ConvertJsonToPrinterPreferences_WrongValueType_HasDefaultDuplexModeReturnFalse,
+    TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson;
@@ -207,8 +211,8 @@ HWTEST_F(PrinterPreferencesTest,
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), false);
 }
 
-HWTEST_F(PrinterPreferencesTest,
-    ConvertJsonToPrinterPreferences_CorrectValue_HasDefaultDuplexModeReturnTrue, TestSize.Level2)
+HWTEST_F(PrinterPreferencesTest, ConvertJsonToPrinterPreferences_CorrectValue_HasDefaultDuplexModeReturnTrue,
+    TestSize.Level2)
 {
     OHOS::Print::PrinterPreferences preferences;
     Json::Value preferencesJson;
@@ -227,5 +231,5 @@ HWTEST_F(PrinterPreferencesTest,
     preferences.ConvertJsonToPrinterPreferences(preferencesJson);
     EXPECT_EQ(preferences.HasDefaultDuplexMode(), true);
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

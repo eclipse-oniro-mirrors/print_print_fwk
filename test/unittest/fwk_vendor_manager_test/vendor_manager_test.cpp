@@ -30,7 +30,7 @@ using namespace testing::ext;
 namespace {
 const int WAIT_TIME_MS = 100;
 const std::string PRINTER_TEST_IP = "192.168.2.222";
-}
+}  // namespace
 
 namespace OHOS {
 namespace Print {
@@ -42,9 +42,11 @@ public:
     void TearDown();
 };
 
-void VendorManagerTest::SetUpTestCase(void) {}
+void VendorManagerTest::SetUpTestCase(void)
+{}
 
-void VendorManagerTest::TearDownTestCase(void) {}
+void VendorManagerTest::TearDownTestCase(void)
+{}
 
 void VendorManagerTest::SetUp(void)
 {
@@ -52,7 +54,8 @@ void VendorManagerTest::SetUp(void)
     PRINT_HILOGI("VendorManagerTest_%{public}d", ++testNo);
 }
 
-void VendorManagerTest::TearDown(void) {}
+void VendorManagerTest::TearDown(void)
+{}
 
 HWTEST_F(VendorManagerTest, VendorManagerTest_0001, TestSize.Level0)
 {
@@ -198,8 +201,8 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0006, TestSize.Level1)
     EXPECT_FALSE(vendorManager.QueryPrinterStatusByUri(PRINTER_TEST_IP, status));
     PrinterVendorStatus vendorStatus;
     EXPECT_TRUE(vendorManager.OnPrinterStatusChanged("vendor", PRINTER_TEST_IP, vendorStatus));
-    EXPECT_EQ(vendorManager.QueryPrinterInfoByPrinterId("vendor", PRINTER_TEST_IP, printerInfo),
-        E_PRINT_GENERIC_FAILURE);
+    EXPECT_EQ(
+        vendorManager.QueryPrinterInfoByPrinterId("vendor", PRINTER_TEST_IP, printerInfo), E_PRINT_GENERIC_FAILURE);
     std::string mekeModel = "test_makeModel";
     std::string ppdName;
     EXPECT_FALSE(vendorManager.QueryPPDInformation(mekeModel, ppdName));
@@ -275,9 +278,9 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0008, TestSize.Level2)
     EXPECT_EQ(vendorManager.RemovePrinterFromDiscovery(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromDiscovery(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_NONE);
     EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(vendorName, PRINTER_TEST_IP, ppdName, ppdData),
-              EXTENSION_ERROR_CALLBACK_FAIL);
-    EXPECT_EQ(vendorManager.AddPrinterToCupsWithPpd(vendorName, PRINTER_TEST_IP, ppdName, ppdData),
-              EXTENSION_ERROR_NONE);
+        EXTENSION_ERROR_CALLBACK_FAIL);
+    EXPECT_EQ(
+        vendorManager.AddPrinterToCupsWithPpd(vendorName, PRINTER_TEST_IP, ppdName, ppdData), EXTENSION_ERROR_NONE);
     vendorManager.UnInit();
 }
 
@@ -347,7 +350,6 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0012, TestSize.Level1)
     EXPECT_FALSE(vendorManager.IsPrivatePpdDriver(vendorName));
     EXPECT_TRUE(vendorManager.IsPrivatePpdDriver(VENDOR_PPD_DRIVER));
 }
-
 
 HWTEST_F(VendorManagerTest, DiscoverBackendPrinters_ShouldSuccess, TestSize.Level2)
 {

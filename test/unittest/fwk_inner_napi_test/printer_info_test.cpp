@@ -28,13 +28,17 @@ public:
     void TearDown();
 };
 
-void PrinterInfoTest::SetUpTestCase(void) {}
+void PrinterInfoTest::SetUpTestCase(void)
+{}
 
-void PrinterInfoTest::TearDownTestCase(void) {}
+void PrinterInfoTest::TearDownTestCase(void)
+{}
 
-void PrinterInfoTest::SetUp(void) {}
+void PrinterInfoTest::SetUp(void)
+{}
 
-void PrinterInfoTest::TearDown(void) {}
+void PrinterInfoTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrinterInfoTest_0002
@@ -451,5 +455,5 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0027_NeedRename, TestSize.Level2)
     Parcel parcel;
     EXPECT_EQ(true, info.Marshalling(parcel));
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

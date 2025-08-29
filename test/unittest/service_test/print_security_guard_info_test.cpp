@@ -30,13 +30,17 @@ public:
     void TearDown();
 };
 
-void PrintSecurityGuardInfoTest::SetUpTestCase(void) {}
+void PrintSecurityGuardInfoTest::SetUpTestCase(void)
+{}
 
-void PrintSecurityGuardInfoTest::TearDownTestCase(void) {}
+void PrintSecurityGuardInfoTest::TearDownTestCase(void)
+{}
 
-void PrintSecurityGuardInfoTest::SetUp(void) {}
+void PrintSecurityGuardInfoTest::SetUp(void)
+{}
 
-void PrintSecurityGuardInfoTest::TearDown(void) {}
+void PrintSecurityGuardInfoTest::TearDown(void)
+{}
 
 HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0001_NeedRename, TestSize.Level1)
 {
@@ -114,5 +118,5 @@ HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0006_NeedRename,
     printSecurityGuardInfo.SetPrintTypeInfo(printerInfo, printJob);
     EXPECT_NE("", printSecurityGuardInfo.ToJsonStr());
 }
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

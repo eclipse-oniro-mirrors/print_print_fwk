@@ -28,7 +28,7 @@ const std::string PRINTER_TEST_GLOBAL_ID = "fwk.driver.wlan.group:192.168.2.222"
 const std::string PRINTER_TEST_URI = "ipp://192.168.2.222:631";
 const std::string PRINTER_TEST_PPDDTAT = "test_ppd_data";
 const std::string PRINTER_TEST_UUID = "test_uuid";
-}
+}  // namespace
 using namespace testing;
 using namespace testing::ext;
 
@@ -42,9 +42,11 @@ public:
     void TearDown();
 };
 
-void VendorWlanGroupTest::SetUpTestCase(void) {}
+void VendorWlanGroupTest::SetUpTestCase(void)
+{}
 
-void VendorWlanGroupTest::TearDownTestCase(void) {}
+void VendorWlanGroupTest::TearDownTestCase(void)
+{}
 
 void VendorWlanGroupTest::SetUp(void)
 {
@@ -52,7 +54,8 @@ void VendorWlanGroupTest::SetUp(void)
     PRINT_HILOGI("VendorWlanGroupTest_%{public}d", ++testNo);
 }
 
-void VendorWlanGroupTest::TearDown(void) {}
+void VendorWlanGroupTest::TearDown(void)
+{}
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0001_NeedRename, TestSize.Level1)
 {
@@ -353,7 +356,8 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0022_NeedRename, TestSize.Leve
     EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     EXPECT_CALL(*mock, QueryPrinterInfoByPrinterId(_, _))
-        .WillOnce(Return(E_PRINT_SERVER_FAILURE)).WillRepeatedly(Return(E_PRINT_NONE));
+        .WillOnce(Return(E_PRINT_SERVER_FAILURE))
+        .WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_EQ(vendorWlanGroup->MonitorPrinterStatus(printerId, true), false);
     EXPECT_EQ(vendorWlanGroup->MonitorPrinterStatus(printerId, true), false);
     vendorWlanGroup->parentVendorManager = nullptr;

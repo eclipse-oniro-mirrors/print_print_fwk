@@ -39,13 +39,17 @@ public:
     void TearDown();
 };
 
-void PrintServiceProxyTest::SetUpTestCase(void) {}
+void PrintServiceProxyTest::SetUpTestCase(void)
+{}
 
-void PrintServiceProxyTest::TearDownTestCase(void) {}
+void PrintServiceProxyTest::TearDownTestCase(void)
+{}
 
-void PrintServiceProxyTest::SetUp(void) {}
+void PrintServiceProxyTest::SetUp(void)
+{}
 
-void PrintServiceProxyTest::TearDown(void) {}
+void PrintServiceProxyTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintServiceProxyTest_0001
@@ -55,8 +59,8 @@ void PrintServiceProxyTest::TearDown(void) {}
  */
 HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0001_NeedRename, TestSize.Level0)
 {
-    std::vector<std::string> testFileList = {"file://data/print/a.png",
-        "file://data/print/b.png", "file://data/print/c.png"};
+    std::vector<std::string> testFileList = {
+        "file://data/print/a.png", "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> testFdList = {1, 2};
     std::string testTaskId = "2";
     sptr<MockRemoteObject> obj = new MockRemoteObject();
@@ -65,20 +69,22 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0001_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, StartPrint(_, _, _)).Times(Exactly(1)).WillOnce(
-        [&testFileList, &testFdList, &testTaskId](const std::vector<std::string> &fileList,
-            const std::vector<uint32_t> &fdList, std::string &taskId) {
-            EXPECT_EQ(testFileList.size(), fileList.size());
-            for (size_t index = 0; index < testFileList.size(); index++) {
-                EXPECT_EQ(testFileList[index], fileList[index]);
-            }
-            EXPECT_EQ(testFdList.size(), fdList.size());
-            for (size_t index = 0; index < testFdList.size(); index++) {
-                EXPECT_NE(testFdList[index], fdList[index]);
-            }
-            EXPECT_EQ(testTaskId, taskId);
-            return E_PRINT_NONE;
-        });
+    EXPECT_CALL(*service, StartPrint(_, _, _))
+        .Times(Exactly(1))
+        .WillOnce(
+            [&testFileList, &testFdList, &testTaskId](
+                const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId) {
+                EXPECT_EQ(testFileList.size(), fileList.size());
+                for (size_t index = 0; index < testFileList.size(); index++) {
+                    EXPECT_EQ(testFileList[index], fileList[index]);
+                }
+                EXPECT_EQ(testFdList.size(), fdList.size());
+                for (size_t index = 0; index < testFdList.size(); index++) {
+                    EXPECT_NE(testFdList[index], fdList[index]);
+                }
+                EXPECT_EQ(testTaskId, taskId);
+                return E_PRINT_NONE;
+            });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -105,20 +111,22 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0002_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, StartPrint(_, _, _)).Times(Exactly(1)).WillOnce(
-        [&testFileList, &testFdList, &testTaskId](const std::vector<std::string> &fileList,
-            const std::vector<uint32_t> &fdList, std::string &taskId) {
-            EXPECT_EQ(testFileList.size(), fileList.size());
-            for (size_t index = 0; index < testFileList.size(); index++) {
-                EXPECT_EQ(testFileList[index], fileList[index]);
-            }
-            EXPECT_EQ(testFdList.size(), fdList.size());
-            for (size_t index = 0; index < testFdList.size(); index++) {
-                EXPECT_EQ(testFdList[index], fdList[index]);
-            }
-            EXPECT_EQ(testTaskId, taskId);
-            return E_PRINT_NONE;
-        });
+    EXPECT_CALL(*service, StartPrint(_, _, _))
+        .Times(Exactly(1))
+        .WillOnce(
+            [&testFileList, &testFdList, &testTaskId](
+                const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId) {
+                EXPECT_EQ(testFileList.size(), fileList.size());
+                for (size_t index = 0; index < testFileList.size(); index++) {
+                    EXPECT_EQ(testFileList[index], fileList[index]);
+                }
+                EXPECT_EQ(testFdList.size(), fdList.size());
+                for (size_t index = 0; index < testFdList.size(); index++) {
+                    EXPECT_EQ(testFdList[index], fdList[index]);
+                }
+                EXPECT_EQ(testTaskId, taskId);
+                return E_PRINT_NONE;
+            });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -143,11 +151,10 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0003_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, StopPrint(_)).Times(Exactly(1)).WillOnce(
-        [&testTaskId](const std::string &taskId) {
-            EXPECT_EQ(testTaskId, taskId);
-            return E_PRINT_NONE;
-        });
+    EXPECT_CALL(*service, StopPrint(_)).Times(Exactly(1)).WillOnce([&testTaskId](const std::string &taskId) {
+        EXPECT_EQ(testTaskId, taskId);
+        return E_PRINT_NONE;
+    });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -172,11 +179,10 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0004_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, ConnectPrinter(_)).Times(Exactly(1)).WillOnce(
-        [&testPrintId](const std::string &printId) {
-            EXPECT_EQ(testPrintId, printId);
-            return E_PRINT_NONE;
-        });
+    EXPECT_CALL(*service, ConnectPrinter(_)).Times(Exactly(1)).WillOnce([&testPrintId](const std::string &printId) {
+        EXPECT_EQ(testPrintId, printId);
+        return E_PRINT_NONE;
+    });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -201,11 +207,10 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0005_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, DisconnectPrinter(_)).Times(Exactly(1)).WillOnce(
-        [&testPrintId](const std::string &printId) {
-            EXPECT_EQ(testPrintId, printId);
-            return E_PRINT_NONE;
-        });
+    EXPECT_CALL(*service, DisconnectPrinter(_)).Times(Exactly(1)).WillOnce([&testPrintId](const std::string &printId) {
+        EXPECT_EQ(testPrintId, printId);
+        return E_PRINT_NONE;
+    });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -233,8 +238,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0006_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, QueryAllExtension(_)).Times(Exactly(1)).WillOnce(
-        [&testExtInfos](std::vector<PrintExtensionInfo> &extensionInfos) {
+    EXPECT_CALL(*service, QueryAllExtension(_))
+        .Times(Exactly(1))
+        .WillOnce([&testExtInfos](std::vector<PrintExtensionInfo> &extensionInfos) {
             extensionInfos.assign(testExtInfos.begin(), testExtInfos.end());
             return E_PRINT_NONE;
         });
@@ -264,8 +270,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0007_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, StartDiscoverPrinter(_)).Times(Exactly(1)).WillOnce(
-        [&testExtList](const std::vector<std::string> &extensionList) {
+    EXPECT_CALL(*service, StartDiscoverPrinter(_))
+        .Times(Exactly(1))
+        .WillOnce([&testExtList](const std::vector<std::string> &extensionList) {
             EXPECT_EQ(testExtList.size(), extensionList.size());
             return E_PRINT_NONE;
         });
@@ -292,10 +299,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0008_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, StopDiscoverPrinter()).Times(Exactly(1)).WillOnce(
-        []() {
-            return E_PRINT_NONE;
-        });
+    EXPECT_CALL(*service, StopDiscoverPrinter()).Times(Exactly(1)).WillOnce([]() { return E_PRINT_NONE; });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -321,11 +325,10 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0009_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, StartPrintJob(_)).Times(Exactly(1)).WillOnce(
-        [&testJob](const PrintJob &jobinfo) {
-            EXPECT_EQ(testJob.GetJobId(), jobinfo.GetJobId());
-            return E_PRINT_NONE;
-        });
+    EXPECT_CALL(*service, StartPrintJob(_)).Times(Exactly(1)).WillOnce([&testJob](const PrintJob &jobinfo) {
+        EXPECT_EQ(testJob.GetJobId(), jobinfo.GetJobId());
+        return E_PRINT_NONE;
+    });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -350,11 +353,10 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0010_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, CancelPrintJob(_)).Times(Exactly(1)).WillOnce(
-        [&testJobId](const std::string &jobId) {
-            EXPECT_EQ(testJobId, jobId);
-            return E_PRINT_NONE;
-        });
+    EXPECT_CALL(*service, CancelPrintJob(_)).Times(Exactly(1)).WillOnce([&testJobId](const std::string &jobId) {
+        EXPECT_EQ(testJobId, jobId);
+        return E_PRINT_NONE;
+    });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -379,11 +381,10 @@ HWTEST_F(PrintServiceProxyTest, RestartPrintJob_ShouldCallSA, TestSize.Level0)
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, RestartPrintJob(_)).Times(Exactly(1)).WillOnce(
-        [&testJobId](const std::string &jobId) {
-            EXPECT_EQ(testJobId, jobId);
-            return E_PRINT_NONE;
-        });
+    EXPECT_CALL(*service, RestartPrintJob(_)).Times(Exactly(1)).WillOnce([&testJobId](const std::string &jobId) {
+        EXPECT_EQ(testJobId, jobId);
+        return E_PRINT_NONE;
+    });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -411,8 +412,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0011_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, AddPrinters(_)).Times(Exactly(1)).WillOnce(
-        [&testPrinterInfos](const std::vector<PrinterInfo> &printerInfos) {
+    EXPECT_CALL(*service, AddPrinters(_))
+        .Times(Exactly(1))
+        .WillOnce([&testPrinterInfos](const std::vector<PrinterInfo> &printerInfos) {
             EXPECT_EQ(testPrinterInfos.size(), printerInfos.size());
             for (size_t index = 0; index < testPrinterInfos.size(); index++) {
                 EXPECT_EQ(testPrinterInfos[index].GetOption(), printerInfos[index].GetOption());
@@ -443,8 +445,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0012_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, RemovePrinters(_)).Times(Exactly(1)).WillOnce(
-        [&testPrinterIds](const std::vector<std::string> &printerIds) {
+    EXPECT_CALL(*service, RemovePrinters(_))
+        .Times(Exactly(1))
+        .WillOnce([&testPrinterIds](const std::vector<std::string> &printerIds) {
             EXPECT_EQ(testPrinterIds.size(), printerIds.size());
             for (size_t index = 0; index < testPrinterIds.size(); index++) {
                 EXPECT_EQ(testPrinterIds[index], printerIds[index]);
@@ -478,8 +481,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0013_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UpdatePrinters(_)).Times(Exactly(1)).WillOnce(
-        [&testPrinterInfos](const std::vector<PrinterInfo> &printerInfos) {
+    EXPECT_CALL(*service, UpdatePrinters(_))
+        .Times(Exactly(1))
+        .WillOnce([&testPrinterInfos](const std::vector<PrinterInfo> &printerInfos) {
             EXPECT_EQ(testPrinterInfos.size(), printerInfos.size());
             for (size_t index = 0; index < testPrinterInfos.size(); index++) {
                 EXPECT_EQ(testPrinterInfos[index].GetOption(), printerInfos[index].GetOption());
@@ -511,8 +515,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0014_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UpdatePrinterState(_, _)).Times(Exactly(1)).WillOnce(
-        [&testPrinterId, &testState](const std::string &printerId, uint32_t state) {
+    EXPECT_CALL(*service, UpdatePrinterState(_, _))
+        .Times(Exactly(1))
+        .WillOnce([&testPrinterId, &testState](const std::string &printerId, uint32_t state) {
             EXPECT_EQ(testPrinterId, printerId);
             EXPECT_EQ(testState, state);
             return E_PRINT_NONE;
@@ -543,9 +548,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0015_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UpdatePrintJobStateOnlyForSystemApp(_, _, _)).Times(Exactly(1)).WillOnce(
-        [&testJobId, &testState, &testSubState](const std::string &jobId,
-            uint32_t state, uint32_t subState) {
+    EXPECT_CALL(*service, UpdatePrintJobStateOnlyForSystemApp(_, _, _))
+        .Times(Exactly(1))
+        .WillOnce([&testJobId, &testState, &testSubState](const std::string &jobId, uint32_t state, uint32_t subState) {
             EXPECT_EQ(testJobId, jobId);
             EXPECT_EQ(testState, state);
             EXPECT_EQ(testSubState, subState);
@@ -575,8 +580,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0016_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UpdateExtensionInfo(_)).Times(Exactly(1)).WillOnce(
-        [&testExtInfo](const std::string &extInfo) {
+    EXPECT_CALL(*service, UpdateExtensionInfo(_))
+        .Times(Exactly(1))
+        .WillOnce([&testExtInfo](const std::string &extInfo) {
             EXPECT_EQ(testExtInfo, extInfo);
             return E_PRINT_NONE;
         });
@@ -606,8 +612,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0017_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, RequestPreview(_, _)).Times(Exactly(1)).WillOnce(
-        [&testJobInfo, &testPreviewResult](const PrintJob &jobinfo, std::string &previewResult) {
+    EXPECT_CALL(*service, RequestPreview(_, _))
+        .Times(Exactly(1))
+        .WillOnce([&testJobInfo, &testPreviewResult](const PrintJob &jobinfo, std::string &previewResult) {
             EXPECT_EQ(testJobInfo.GetPrinterId(), jobinfo.GetPrinterId());
             return E_PRINT_NONE;
         });
@@ -635,8 +642,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0018_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, QueryPrinterCapability(_)).Times(Exactly(1)).WillOnce(
-        [&testPrintId](const std::string &printerId) {
+    EXPECT_CALL(*service, QueryPrinterCapability(_))
+        .Times(Exactly(1))
+        .WillOnce([&testPrintId](const std::string &printerId) {
             EXPECT_EQ(testPrintId, printerId);
             return E_PRINT_NONE;
         });
@@ -664,8 +672,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0019_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, QueryAllActivePrintJob(_)).Times(Exactly(1)).WillOnce(
-        [&testPrintJobs](std::vector<PrintJob> &printJobs) {
+    EXPECT_CALL(*service, QueryAllActivePrintJob(_))
+        .Times(Exactly(1))
+        .WillOnce([&testPrintJobs](std::vector<PrintJob> &printJobs) {
             EXPECT_EQ(testPrintJobs.size(), printJobs.size());
             return E_PRINT_NONE;
         });
@@ -695,8 +704,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0020_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, QueryPrintJobById(_, _)).Times(Exactly(1)).WillOnce(
-        [&testPrintJobId, &testPrintJob](std::string &printJobId, PrintJob &printJob) {
+    EXPECT_CALL(*service, QueryPrintJobById(_, _))
+        .Times(Exactly(1))
+        .WillOnce([&testPrintJobId, &testPrintJob](std::string &printJobId, PrintJob &printJob) {
             EXPECT_EQ(testPrintJobId, printJobId);
             return E_PRINT_NONE;
         });
@@ -725,8 +735,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0021_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, Off(_, _)).Times(Exactly(1)).WillOnce(
-        [&testTaskId, &testType](const std::string taskId, const std::string &type) {
+    EXPECT_CALL(*service, Off(_, _))
+        .Times(Exactly(1))
+        .WillOnce([&testTaskId, &testType](const std::string taskId, const std::string &type) {
             EXPECT_EQ(testTaskId, taskId);
             EXPECT_EQ(testType, type);
             return E_PRINT_NONE;
@@ -755,8 +766,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0022_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UnregisterAllExtCallback(_)).Times(Exactly(1)).WillOnce(
-        [&testExtId](const std::string &extensionId) {
+    EXPECT_CALL(*service, UnregisterAllExtCallback(_))
+        .Times(Exactly(1))
+        .WillOnce([&testExtId](const std::string &extensionId) {
             EXPECT_EQ(testExtId, extensionId);
             return E_PRINT_NONE;
         });
@@ -784,11 +796,10 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0023_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, LoadExtSuccess(_)).Times(Exactly(1)).WillOnce(
-        [&testExtId](const std::string &extensionId) {
-            EXPECT_EQ(testExtId, extensionId);
-            return E_PRINT_NONE;
-        });
+    EXPECT_CALL(*service, LoadExtSuccess(_)).Times(Exactly(1)).WillOnce([&testExtId](const std::string &extensionId) {
+        EXPECT_EQ(testExtId, extensionId);
+        return E_PRINT_NONE;
+    });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
@@ -798,7 +809,6 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0023_NeedRename, TestSize.
     proxy->LoadExtSuccess(testExtId);
 }
 
- 
 /**
  * @tc.name: PrintServiceProxyTest_0024
  * @tc.desc: Verify the capability function.
@@ -813,7 +823,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0024_NeedRename, TestSize.
     auto proxy = std::make_shared<PrintServiceProxy>(obj);
     EXPECT_EQ(E_PRINT_INVALID_PARAMETER, proxy->RegisterExtCallback(testExtId, nullptr));
 }
- 
+
 /**
  * @tc.name: PrintServiceProxyTest_0025
  * @tc.desc: Verify the capability function.
@@ -827,7 +837,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0025_NeedRename, TestSize.
     auto proxy = std::make_shared<PrintServiceProxy>(obj);
     EXPECT_EQ(E_PRINT_INVALID_PARAMETER, proxy->UnregisterPrinterCallback(""));
 }
- 
+
 /**
  * @tc.name: PrintServiceProxyTest_0026
  * @tc.desc: Verify the capability function.
@@ -884,8 +894,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0029_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, DiscoverUsbPrinters(_)).Times(Exactly(1)).WillOnce(
-        [&testPrinters](std::vector<PrinterInfo> &printers) {
+    EXPECT_CALL(*service, DiscoverUsbPrinters(_))
+        .Times(Exactly(1))
+        .WillOnce([&testPrinters](std::vector<PrinterInfo> &printers) {
             EXPECT_EQ(testPrinters.size(), printers.size());
             return E_PRINT_NONE;
         });
@@ -908,17 +919,18 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0030_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, AddPrinterToDiscovery(_)).Times(Exactly(1)).WillOnce(
-        [&testInfo1](const PrinterInfo &printerInfo) {
+    EXPECT_CALL(*service, AddPrinterToDiscovery(_))
+        .Times(Exactly(1))
+        .WillOnce([&testInfo1](const PrinterInfo &printerInfo) {
             EXPECT_EQ(testInfo1.GetOption(), printerInfo.GetOption());
             return E_PRINT_NONE;
-    });
+        });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
-    });
+        });
     proxy->AddPrinterToDiscovery(testInfo1);
 }
 
@@ -932,17 +944,18 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0031_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UpdatePrinterInDiscovery(_)).Times(Exactly(1)).WillOnce(
-        [&testInfo1](const PrinterInfo &printerInfo) {
+    EXPECT_CALL(*service, UpdatePrinterInDiscovery(_))
+        .Times(Exactly(1))
+        .WillOnce([&testInfo1](const PrinterInfo &printerInfo) {
             EXPECT_EQ(testInfo1.GetOption(), printerInfo.GetOption());
             return E_PRINT_NONE;
-    });
+        });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
-    });
+        });
     proxy->UpdatePrinterInDiscovery(testInfo1);
 }
 
@@ -955,8 +968,9 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0032_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, RemovePrinterFromDiscovery(_)).Times(Exactly(1)).WillOnce(
-        [&testPrinterId](const std::string &printerId) {
+    EXPECT_CALL(*service, RemovePrinterFromDiscovery(_))
+        .Times(Exactly(1))
+        .WillOnce([&testPrinterId](const std::string &printerId) {
             EXPECT_EQ(testPrinterId, printerId);
             return E_PRINT_NONE;
         });
@@ -965,7 +979,7 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0032_NeedRename, TestSize.
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
-    });
+        });
     proxy->RemovePrinterFromDiscovery(testPrinterId);
 }
 
@@ -979,19 +993,20 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0033_NeedRename, TestSize.
     EXPECT_NE(proxy, nullptr);
     auto service = std::make_shared<MockPrintService>();
     EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UpdatePrinterInSystem(_)).Times(Exactly(1)).WillOnce(
-        [&testInfo1](const PrinterInfo &printerInfo) {
+    EXPECT_CALL(*service, UpdatePrinterInSystem(_))
+        .Times(Exactly(1))
+        .WillOnce([&testInfo1](const PrinterInfo &printerInfo) {
             EXPECT_EQ(testInfo1.GetOption(), printerInfo.GetOption());
             return E_PRINT_NONE;
-    });
+        });
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
-    });
+        });
     proxy->UpdatePrinterInSystem(testInfo1);
 }
 
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

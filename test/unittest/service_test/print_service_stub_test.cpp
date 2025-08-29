@@ -34,13 +34,17 @@ public:
     void TearDown();
 };
 
-void PrintServiceStubTest::SetUpTestCase(void) {}
+void PrintServiceStubTest::SetUpTestCase(void)
+{}
 
-void PrintServiceStubTest::TearDownTestCase(void) {}
+void PrintServiceStubTest::TearDownTestCase(void)
+{}
 
-void PrintServiceStubTest::SetUp(void) {}
+void PrintServiceStubTest::SetUp(void)
+{}
 
-void PrintServiceStubTest::TearDown(void) {}
+void PrintServiceStubTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintServiceStubTest_0001
@@ -142,8 +146,8 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0005_NeedRename, TestSize.Le
     MessageOption option(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(CMD_START_PRINT);
 
-    std::vector<std::string> testFileList = {"file://data/print/a.png",
-        "file://data/print/b.png", "file://data/print/c.png"};
+    std::vector<std::string> testFileList = {
+        "file://data/print/a.png", "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> testFdList;
     testFdList.resize(1001);
 
@@ -173,8 +177,8 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0006_NeedRename, TestSize.Le
     MessageOption option(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(CMD_START_PRINT);
 
-    std::vector<std::string> testFileList = {"file://data/print/a.png",
-        "file://data/print/b.png", "file://data/print/c.png"};
+    std::vector<std::string> testFileList = {
+        "file://data/print/a.png", "file://data/print/b.png", "file://data/print/c.png"};
     std::vector<uint32_t> testFdList = {1, 2};
     std::string testTaskId = "2";
 
@@ -442,7 +446,6 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0017_NeedRename, TestSize.Le
     MessageOption option(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(CMD_ADDPRINTERS);
 
-
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
     EXPECT_TRUE(data.WriteUint32(0));
 
@@ -570,7 +573,6 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0022_NeedRename, TestSize.Le
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     uint32_t code = static_cast<uint32_t>(CMD_UPDATEPRINTERS);
-
 
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
     EXPECT_TRUE(data.WriteUint32(0));
@@ -1381,7 +1383,6 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0059_NeedRename, TestSize.Le
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-
 /**
  * @tc.name: PrintServiceStubTest_0060
  * @tc.desc: Verify the capability function.
@@ -1434,7 +1435,6 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0061_NeedRename, TestSize.Le
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-
 /**
  * @tc.name: PrintServiceStubTest_0062
  * @tc.desc: Verify the capability function.
@@ -1485,5 +1485,5 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0063_NeedRename, TestSize.Le
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-} // namespace Print
-} // namespace OHOS
+}  // namespace Print
+}  // namespace OHOS

@@ -40,9 +40,11 @@ public:
     void TearDown();
 };
 
-void PrintUserDataTest::SetUpTestCase(void) {}
+void PrintUserDataTest::SetUpTestCase(void)
+{}
 
-void PrintUserDataTest::TearDownTestCase(void) {}
+void PrintUserDataTest::TearDownTestCase(void)
+{}
 
 void PrintUserDataTest::SetUp(void)
 {
@@ -50,7 +52,8 @@ void PrintUserDataTest::SetUp(void)
     PRINT_HILOGI("PrintUserDataTest_%{public}d", ++testNo);
 }
 
-void PrintUserDataTest::TearDown(void) {}
+void PrintUserDataTest::TearDown(void)
+{}
 
 /**
  * @tc.name: PrintServiceStubTest_0001
@@ -469,8 +472,9 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0032_NeedRename, TestSize.Level1)
     std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>> printerHistoryJobList =
         std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
     printerHistoryJobList->insert(std::make_pair(jobId, nullptr));
-    userData->printHistoryJobList_.insert(std::pair<std::string,
-    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(printerId, std::move(printerHistoryJobList)));
+    userData->printHistoryJobList_.insert(
+        std::pair<std::string, std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(
+            printerId, std::move(printerHistoryJobList)));
     EXPECT_EQ(userData->QueryHistoryPrintJobById(jobId, printJob), E_PRINT_INVALID_PRINTJOB);
     std::shared_ptr<PrintJob> printJob1 = std::make_shared<PrintJob>();
     printJob1->SetOption("{\"test\":\"test\"}");
@@ -479,8 +483,9 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0032_NeedRename, TestSize.Level1)
         std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
     printerHistoryJobList1->insert(std::pair<std::string, std::shared_ptr<PrintJob>>(jobId, printJob1));
     userData->printHistoryJobList_.erase(printerId);
-    userData->printHistoryJobList_.insert(std::pair<std::string,
-    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(printerId, std::move(printerHistoryJobList1)));
+    userData->printHistoryJobList_.insert(
+        std::pair<std::string, std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(
+            printerId, std::move(printerHistoryJobList1)));
     EXPECT_EQ(userData->QueryHistoryPrintJobById(jobId, printJob), E_PRINT_NONE);
 }
 
@@ -591,8 +596,9 @@ HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintHistory_NoPrinterInJson_Return
     std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>> printerHistoryJobList1 =
         std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
     printerHistoryJobList1->insert(std::pair<std::string, std::shared_ptr<PrintJob>>(jobId, printjob));
-    userData->printHistoryJobList_.insert(std::pair<std::string,
-    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(printerId, std::move(printerHistoryJobList1)));
+    userData->printHistoryJobList_.insert(
+        std::pair<std::string, std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(
+            printerId, std::move(printerHistoryJobList1)));
     EXPECT_EQ(userData->ParseJsonObjectToPrintHistory(printerHistoryJson, printerId), false);
 }
 
@@ -606,8 +612,9 @@ HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintHistory_WrongTypeOfJob_ReturnF
     std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>> printerHistoryJobList1 =
         std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
     printerHistoryJobList1->insert(std::pair<std::string, std::shared_ptr<PrintJob>>(jobId, printjob));
-    userData->printHistoryJobList_.insert(std::pair<std::string,
-    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(printerId, std::move(printerHistoryJobList1)));
+    userData->printHistoryJobList_.insert(
+        std::pair<std::string, std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(
+            printerId, std::move(printerHistoryJobList1)));
     printerHistoryJson[printerId] = "testResult";
     EXPECT_EQ(userData->ParseJsonObjectToPrintHistory(printerHistoryJson, printerId), false);
 }
@@ -622,8 +629,9 @@ HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintHistory_JobIsNull_ReturnFalse,
     std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>> printerHistoryJobList1 =
         std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
     printerHistoryJobList1->insert(std::pair<std::string, std::shared_ptr<PrintJob>>(jobId, nullptr));
-    userData->printHistoryJobList_.insert(std::pair<std::string,
-    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(printerId, std::move(printerHistoryJobList1)));
+    userData->printHistoryJobList_.insert(
+        std::pair<std::string, std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(
+            printerId, std::move(printerHistoryJobList1)));
     printerHistoryJson[printerId] = printJobInfoJson;
     EXPECT_EQ(userData->ParseJsonObjectToPrintHistory(printerHistoryJson, printerId), false);
 }
@@ -641,8 +649,9 @@ HWTEST_F(PrintUserDataTest, ParseJsonObjectToPrintHistory_JobNotNull_ReturnTrue,
     std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>> printerHistoryJobList1 =
         std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
     printerHistoryJobList1->insert(std::pair<std::string, std::shared_ptr<PrintJob>>(jobId, printjob));
-    userData->printHistoryJobList_.insert(std::pair<std::string,
-    std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(printerId, std::move(printerHistoryJobList1)));
+    userData->printHistoryJobList_.insert(
+        std::pair<std::string, std::unique_ptr<std::map<std::string, std::shared_ptr<PrintJob>>>>(
+            printerId, std::move(printerHistoryJobList1)));
     printerHistoryJson[printerId] = printJobInfoJson;
     EXPECT_EQ(userData->ParseJsonObjectToPrintHistory(printerHistoryJson, printerId), true);
 }
@@ -798,8 +807,8 @@ HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_WrongTypeOfMargin_
     EXPECT_EQ(printHistoryJob->HasMargin(), false);
 }
 
-HWTEST_F(PrintUserDataTest,
-    ParseOptionalJsonObjectToPrintJob_NoHasResultInPreview_HasMarginReturnFalse, TestSize.Level1)
+HWTEST_F(
+    PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_NoHasResultInPreview_HasMarginReturnFalse, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     Json::Value printJobInfoJson;
@@ -818,8 +827,8 @@ HWTEST_F(PrintUserDataTest,
     EXPECT_EQ(printHistoryJob->HasMargin(), true);
 }
 
-HWTEST_F(PrintUserDataTest,
-    ParseOptionalJsonObjectToPrintJob_WrongTypeOfHasResult_HasResultReturnFalse, TestSize.Level1)
+HWTEST_F(
+    PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_WrongTypeOfHasResult_HasResultReturnFalse, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     Json::Value printJobInfoJson;
@@ -911,8 +920,7 @@ HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_WrongTypeOfResult_
     EXPECT_EQ(previewAttr.HasResult(), false);
 }
 
-HWTEST_F(PrintUserDataTest,
-    ParseOptionalJsonObjectToPrintJob_CorrectValueOfResult_HasResultReturnTrue, TestSize.Level1)
+HWTEST_F(PrintUserDataTest, ParseOptionalJsonObjectToPrintJob_CorrectValueOfResult_HasResultReturnTrue, TestSize.Level1)
 {
     auto userData = std::make_shared<OHOS::Print::PrintUserData>();
     Json::Value printJobInfoJson;
@@ -1111,5 +1119,5 @@ HWTEST_F(PrintUserDataTest, ParseJsonObjectToMargin_CorrectValue_HasTopReturnTru
     PrintMargin margin = userData->ParseJsonObjectToMargin(jsonObject);
     EXPECT_EQ(margin.HasTop(), true);
 }
-}
-}
+}  // namespace Print
+}  // namespace OHOS

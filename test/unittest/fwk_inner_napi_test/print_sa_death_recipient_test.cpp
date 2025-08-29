@@ -33,13 +33,17 @@ public:
     void TearDown();
 };
 
-void PrintSaDeathRecipientTest::SetUpTestCase(void) {}
+void PrintSaDeathRecipientTest::SetUpTestCase(void)
+{}
 
-void PrintSaDeathRecipientTest::TearDownTestCase(void) {}
+void PrintSaDeathRecipientTest::TearDownTestCase(void)
+{}
 
-void PrintSaDeathRecipientTest::SetUp(void) {}
+void PrintSaDeathRecipientTest::SetUp(void)
+{}
 
-void PrintSaDeathRecipientTest::TearDown(void) {}
+void PrintSaDeathRecipientTest::TearDown(void)
+{}
 
 }  // namespace Print
 }  // namespace OHOS

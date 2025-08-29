@@ -23,9 +23,10 @@ namespace OHOS {
 namespace Scan {
 class MockScanCallbackProxy final : public ScanCallbackProxy {
 public:
-    MockScanCallbackProxy() : ScanCallbackProxy(nullptr) {}
+    MockScanCallbackProxy() : ScanCallbackProxy(nullptr)
+    {}
     MOCK_METHOD2(OnCallback, bool(uint32_t, const ScanDeviceInfo &));
 };
-}  // namespace Print
+}  // namespace Scan
 }  // namespace OHOS
 #endif  // MOCK_PRINT_CALLBACK_PROXY_H
