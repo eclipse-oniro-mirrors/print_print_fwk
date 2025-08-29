@@ -46,6 +46,7 @@ struct BaseContext {
     napi_env env = nullptr;
     napi_deferred deferred = nullptr;
     napi_ref callback = nullptr;
+    int32_t sessionId = 0;
 
     std::shared_ptr<OHOS::AbilityRuntime::AbilityContext> context = nullptr;
     std::shared_ptr<OHOS::AbilityRuntime::UIExtensionContext> uiExtensionContext = nullptr;

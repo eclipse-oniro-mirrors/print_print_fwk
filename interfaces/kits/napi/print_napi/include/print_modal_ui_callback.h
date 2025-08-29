@@ -45,6 +45,7 @@ private:
     static napi_value CreateBusinessError(const napi_env& env, int32_t errCode, const std::string& errMsg);
     void SendMessageBack();
     static void SendMessageBackWork(uv_work_t* work, int statusIn);
+    static void CloseModalUIExtension(BaseContext *context);
     int32_t sessionId_ = 0;
     std::shared_ptr<BaseContext> baseContext = nullptr;
     bool isResultForModal = false;
