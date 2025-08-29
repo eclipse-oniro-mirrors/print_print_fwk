@@ -145,7 +145,7 @@ static void PrintAdapterWorkCb(CallbackParam *cbParam)
     }
 }
 
-static void PrintAdapterJobStateChangedAfterCallFun(FunCallbackParam *cbParam)
+static void PrintAdapterJobStateChangedAfterCallFun(CallbackParam *cbParam)
 {
     PRINT_HILOGI("OnCallback start run PrintAdapterJobStateChangedAfterCallFun");
     if (cbParam == nullptr) {
