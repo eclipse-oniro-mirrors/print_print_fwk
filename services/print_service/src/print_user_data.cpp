@@ -698,27 +698,24 @@ bool PrintUserData::AddPrintJobToHistoryList(const std::string &printerId,
     PRINT_HILOGD("Updated print job option: %{public}s", updatedOption.c_str());
     printJob->SetOption(updatedOption);
     auto it = printerHistroyJobList->begin();
-    // erase the history print jobs more than 500
-    while (printerHistroyJobList->size() > MAX_HISTORY_JOB_NUM) {
-        it = printerHistroyJobList->erase(it);
-    }
     if ((printerHistroyJobList->insert(std::make_pair(jobId, printJob))).second) {
         int32_t historyPrintJobNum = 0;
         for (const auto& pair: printHistoryJobList_) {
             historyPrintJobNum += static_cast<int>(pair.second->size());
         }
+        // erase the history print jobs more than 100
         if (historyPrintJobNum > MAX_HISTORY_JOB_NUM) {
-            deleteOldestHistoryPrintJob();
+            DeleteOldestHistoryPrintJob();
         }
-        
         FlushPrintHistoryJobFile(printerId);
         return true;
     }
     return false;
 }
 
-void PrintUserData::deleteOldestHistoryPrintJob()
+void PrintUserData::DeleteOldestHistoryPrintJob()
 {
+    PRINT_HILOGI("HistoryPrintJob number exceeds 100, DeleteOldestHistoryPrintJob start.");
     if (printHistoryJobList_.empty()) {
         return;
     }
@@ -731,7 +728,7 @@ void PrintUserData::deleteOldestHistoryPrintJob()
         }
     }
     if (maxIt->second && !maxIt->second->empty()) {
-        DeletePrintJobFromHistoryList(maxIt->first);
+        DeletePrintJobFromHistoryList((maxIt->second)->begin()->first);
     }
 }
 
@@ -1031,6 +1028,7 @@ bool PrintUserData::DeletePrintJobFromHistoryList(const std::string &jobId)
                 printHistoryJobList_.erase(curPrinterId);
             }
             FlushPrintHistoryJobFile(curPrinterId);
+            PRINT_HILOGI("DeletePrintJobFromHistoryList Success.");
             return true;
         }
     }
