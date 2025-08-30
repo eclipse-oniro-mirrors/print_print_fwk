@@ -205,8 +205,8 @@ sptr<IRemoteObject> JsPrintExtension::OnConnect(const AAFwk::Want &want)
     }
 
     napi_value method = nullptr;
-    napi_get_named_property(nativeEngine, obj, "onConnect", &method);
-    if (method == nullptr) {
+    if (napi_get_named_property(nativeEngine, obj, "onConnect", &method) != napi_ok ||
+        method == nullptr) {
         PRINT_HILOGE("Failed to get onConnect from PrintExtension object");
         return nullptr;
     }
@@ -244,8 +244,8 @@ void JsPrintExtension::OnDisconnect(const AAFwk::Want &want)
     }
 
     napi_value method = nullptr;
-    napi_get_named_property(nativeEngine, obj, "onDisconnect", &method);
-    if (method == nullptr) {
+    if (napi_get_named_property(nativeEngine, obj, "onDisconnect", &method) != napi_ok ||
+        method == nullptr) {
         PRINT_HILOGE("Failed to get onDisconnect from PrintExtension object");
         return;
     }
@@ -292,8 +292,8 @@ napi_value JsPrintExtension::CallObjectMethod(const char *name, napi_value const
     }
 
     napi_value method = nullptr;
-    napi_get_named_property(nativeEngine, obj, name, &method);
-    if (method == nullptr) {
+    if (napi_get_named_property(nativeEngine, obj, name, &method) != napi_ok ||
+        method == nullptr) {
         PRINT_HILOGE("Failed to get '%{public}s' from PrintExtension object", name);
         return nullptr;
     }

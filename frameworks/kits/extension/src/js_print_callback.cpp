@@ -77,8 +77,8 @@ uv_work_t* JsPrintCallback::BuildJsWorker(napi_value jsObj, const std::string &n
 
     napi_env env = jsRuntime_.GetNapiEnv();
     napi_value method = nullptr;
-    napi_get_named_property(env, obj, name.c_str(), &method);
-    if (method == nullptr) {
+    if (napi_get_named_property(env, obj, name.c_str(), &method) != napi_ok ||
+        method == nullptr) {
         PRINT_HILOGE("Failed to get '%{public}s' from PrintExtension object", name.c_str());
         return nullptr;
     }
