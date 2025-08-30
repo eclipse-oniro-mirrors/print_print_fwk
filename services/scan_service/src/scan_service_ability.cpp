@@ -101,7 +101,6 @@ const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t UNLOAD_SYSTEMABILITY_DELAY = 1000 * 30;
 constexpr int32_t INVALID_USER_ID = -1;
 
-static int32_t g_scannerState = SCANNER_READY;
 static bool g_isJpegWriteSuccess = false;
 static const std::string PERMISSION_NAME_SCAN = "ohos.permission.SCAN";
 static const std::string PERMISSION_NAME_SCAN_JOB = "ohos.permission.MANAGE_SCAN_JOB";
@@ -123,8 +122,6 @@ REGISTER_SYSTEM_ABILITY_BY_ID(ScanServiceAbility, SCAN_SERVICE_ID, true);
 std::mutex ScanServiceAbility::instanceLock_;
 sptr<ScanServiceAbility> ScanServiceAbility::instance_;
 std::shared_ptr<AppExecFwk::EventHandler> ScanServiceAbility::serviceHandler_;
-std::map<std::string, ScanDeviceInfo> ScanServiceAbility::saneGetUsbDeviceInfoMap;
-std::map<std::string, ScanDeviceInfo> ScanServiceAbility::saneGetTcpDeviceInfoMap;
 
 ScanServiceAbility::ScanServiceAbility(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START),
@@ -300,7 +297,7 @@ void ScanServiceAbility::CleanupScanService()
     openedScannerList_.clear();
     SaneManagerClient::GetInstance()->SaneExit();
     ScanMdnsService::OnStopDiscoverService();
-    g_scannerState = SCANNER_READY;
+    scannerState_.store(SCANNER_READY);
     std::queue<int32_t> empty;
     scanQueue.swap(empty);
     scanTaskMap.clear();
@@ -316,29 +313,10 @@ void ScanServiceAbility::CleanupScanService()
     imageFdMap_.clear();
 }
 
-std::vector<std::string> ScanServiceAbility::ExtractIpOrPortFromUrl(const std::string& url,
-                                                                    const char delimiter, const int32_t minTokenLength)
-{
-    std::vector<std::string> tokens;
-    size_t start = 0;
-    size_t end = url.find(delimiter);
-    while (end != std::string::npos) {
-        tokens.push_back(url.substr(start, end - start));
-        start = end + 1;
-        end = url.find(delimiter, start);
-    }
-    tokens.push_back(url.substr(start));
-    if (tokens.size() < minTokenLength) {
-        SCAN_HILOGE("Url size < %{public}d ", minTokenLength);
-        tokens.clear();
-    }
-    return tokens;
-}
-
 bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId)
 {
     constexpr int32_t TOKEN_SIZE_FOUR = 4;
-    std::vector<std::string> tokens = ExtractIpOrPortFromUrl(deviceId, ':', TOKEN_SIZE_FOUR);
+    std::vector<std::string> tokens = ScanServiceUtils::ExtractIpOrPortFromUrl(deviceId, ':', TOKEN_SIZE_FOUR);
     if (tokens.empty()) {
         SCAN_HILOGE("split [%{public}s] fail ", deviceId.c_str());
         return false;
@@ -374,7 +352,7 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
 bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string &ip)
 {
     constexpr int32_t TOKEN_SIZE_TWO = 2;
-    std::vector <std::string> tokens = ExtractIpOrPortFromUrl(deviceId, ' ', TOKEN_SIZE_TWO);
+    std::vector <std::string> tokens = ScanServiceUtils::ExtractIpOrPortFromUrl(deviceId, ' ', TOKEN_SIZE_TWO);
     if (tokens.empty()) {
         SCAN_HILOGE("split [%{public}s] fail ", deviceId.c_str());
         return false;
@@ -443,14 +421,21 @@ void ScanServiceAbility::SetScannerSerialNumberByUSB(ScanDeviceInfo &info)
         info.SetDeviceAvailable(false);
         return;
     }
+    std::ostringstream oss;
     if (serialNumber.empty()) {
-        std::ostringstream oss;
         oss << "USB-" << info.manufacturer << " " << info.model << " " << usbScannerPort;
         info.deviceName = oss.str();
     } else {
         info.serialNumber = serialNumber;
         info.uniqueId = serialNumber;
-        info.deviceName = scanUsbManager->GetScannerNameBySn(serialNumber);
+        oss << "USB-" << info.manufacturer << " " << info.model << "-";
+        constexpr int32_t INDEX_SIX = 6;
+        if (serialNumber.size() <= INDEX_SIX) {
+            oss << serialNumber;
+        } else {
+            oss << serialNumber.substr(serialNumber.size() - INDEX_SIX);
+        }
+        info.deviceName = oss.str();
     }
 }
 
@@ -467,7 +452,6 @@ void ScanServiceAbility::SetScannerSerialNumber(ScanDeviceInfo &info)
 
 void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo &info)
 {
-    std::lock_guard<std::mutex> autoLock(clearMapLock_);
     if (info.GetDeviceAvailable() == false) {
         SCAN_HILOGE("device is unavailable");
         return;
@@ -476,29 +460,44 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo &info)
         SCAN_HILOGE("discoverMode is invalid:[%{public}s]", info.discoverMode.c_str());
         return;
     }
-    std::map<std::string, ScanDeviceInfo> &deviceMap =
-        info.discoverMode == "USB" ? saneGetUsbDeviceInfoMap : saneGetTcpDeviceInfoMap;
     if (info.uniqueId.empty()) {
         info.uniqueId = info.deviceId;
     } else {
         std::string uniqueId = info.discoverMode + info.uniqueId;
         ScanSystemData &scanData = ScanSystemData::GetInstance();
+        ScanDeviceInfoSync scanDeviceInfoSync;
+        scanDeviceInfoSync.uniqueId = info.uniqueId;
+        scanDeviceInfoSync.deviceId = info.deviceId;
+        scanDeviceInfoSync.syncMode = "update";
+        scanDeviceInfoSync.discoverMode = info.discoverMode;
         if (info.discoverMode == "USB") {
-            scanData.UpdateScannerInfoByUniqueId(uniqueId, info);
+            ScanDeviceInfo scannerInfo;
+            if (scanData.QueryScannerInfoByUniqueId(uniqueId, scannerInfo)) {
+                scanDeviceInfoSync.oldDeviceId = scannerInfo.deviceId;
+                scanData.UpdateScannerInfoByUniqueId(uniqueId, info);
+                SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
+            }
         } else {
-            scanData.UpdateNetScannerByUuid(info.uuid, info.uniqueId);
+            auto updateResult = scanData.UpdateNetScannerByUuid(info.uuid, info.uniqueId);
+            if (updateResult.has_value()) {
+                scanDeviceInfoSync.oldDeviceId = updateResult.value().first;
+                SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
+            }
         }
         scanData.SaveScannerMap();
     }
-    deviceMap[info.uniqueId] = info;
+    if (info.discoverMode == "USB") {
+        scannerDiscoverData_.AddUsbDevice(info.uniqueId, info);
+    } else {
+        scannerDiscoverData_.AddTcpDevice(info.uniqueId, info);
+    }
 }
 
 void ScanServiceAbility::SaneGetScanner()
 {
-    clearMapLock_.lock();
-    saneGetTcpDeviceInfoMap.clear();
-    saneGetUsbDeviceInfoMap.clear();
-    clearMapLock_.unlock();
+    scannerState_.store(SCANNER_SEARCHING);
+    scannerDiscoverData_.ClearUsbDevices();
+    scannerDiscoverData_.ClearTcpDevices();
     std::vector<SaneDevice> deviceInfos;
     SaneStatus status = SaneManagerClient::GetInstance()->SaneGetDevices(deviceInfos);
     if (status != SANE_STATUS_GOOD) {
@@ -514,16 +513,15 @@ void ScanServiceAbility::SaneGetScanner()
         SetScannerSerialNumber(info);
         AddFoundScanner(info);
     }
-    clearMapLock_.lock();
-    for (auto &t : saneGetUsbDeviceInfoMap) {
+    for (auto &t : scannerDiscoverData_.GetAllUsbDevices()) {
         SendDeviceInfo(t.second, SCAN_DEVICE_FOUND);
         deviceInfos_.emplace_back(t.second);
     }
-    for (auto &t : saneGetTcpDeviceInfoMap) {
+    for (auto &t : scannerDiscoverData_.GetAllTcpDevices()) {
         SendDeviceInfo(t.second, SCAN_DEVICE_FOUND);
         deviceInfos_.emplace_back(t.second);
     }
-    clearMapLock_.unlock();
+    scannerState_.store(SCANNER_READY);
 }
 
 int32_t ScanServiceAbility::GetScannerList()
@@ -532,7 +530,11 @@ int32_t ScanServiceAbility::GetScannerList()
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         return E_SCAN_NO_PERMISSION;
     }
-    if (g_scannerState != SCANNER_READY) {
+    if (scannerState_.load() == SCANNER_SEARCHING) {
+        SCAN_HILOGD("is searching");
+        return E_SCAN_NONE;
+    }
+    if (scannerState_.load() != SCANNER_READY) {
         SCAN_HILOGW("is working");
         return E_SCAN_DEVICE_BUSY;
     }
@@ -818,9 +820,9 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
     }
     std::queue<int32_t> emptyQueue;
     scanQueue.swap(emptyQueue);
-    if (g_scannerState == SCANNER_SCANING) {
+    if (scannerState_.load() == SCANNER_SCANING) {
         SCAN_HILOGW("ScannerState change to SCANNER_CANCELING");
-        g_scannerState = SCANNER_CANCELING;
+        scannerState_.store(SCANNER_CANCELING);
     }
     SCAN_HILOGI("ScanServiceAbility CancelScan end");
     return E_SCAN_NONE;
@@ -917,7 +919,7 @@ void ScanServiceAbility::SendDeviceList(std::vector<ScanDeviceInfo> &infos, std:
 void ScanServiceAbility::SendDeviceInfoSync(const ScanDeviceInfoSync &info, std::string event)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-
+    SCAN_HILOGI("SendDeviceInfo [%{private}s], event = %{public}s", info.deviceId.c_str(), event.c_str());
     if (event.empty()) {
         SCAN_HILOGE("SendDeviceInfoSync parm has nullptr");
         return;
@@ -940,7 +942,7 @@ void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::str
     }
     SCAN_HILOGD("DisConnectUsbScanner start deviceId:%{public}s", deviceId.c_str());
     ScanDeviceInfoSync scanDeviceInfoSync;
-    scanDeviceInfoSync.serialNumber = serialNumber;
+    scanDeviceInfoSync.uniqueId = serialNumber;
     scanDeviceInfoSync.deviceId = deviceId;
     scanDeviceInfoSync.discoverMode = "USB";
     scanDeviceInfoSync.syncMode = "delete";
@@ -961,32 +963,27 @@ void ScanServiceAbility::UpdateScannerId(const ScanDeviceInfoSync &syncInfo)
     }
     SCAN_HILOGD("UpdateScannerId start newDeviceId:[%{private}s]", syncInfo.deviceId.c_str());
     ScanDeviceInfoSync scanDeviceInfoSync = syncInfo;
-    std::lock_guard<std::mutex> autoLock(clearMapLock_);
     if (scanDeviceInfoSync.discoverMode == "USB") {
-        auto it = saneGetUsbDeviceInfoMap.find(scanDeviceInfoSync.serialNumber);
-        if (it != saneGetUsbDeviceInfoMap.end()) {
-            it->second.deviceId = syncInfo.deviceId;
+        if (scannerDiscoverData_.HasUsbDevice(scanDeviceInfoSync.serialNumber)) {
+            ScanDeviceInfo info;
+            scannerDiscoverData_.GetUsbDevice(syncInfo.serialNumber, info);
+            info.deviceId = scanDeviceInfoSync.deviceId;
+            scannerDiscoverData_.AddUsbDevice(scanDeviceInfoSync.uniqueId, info);
         }
         SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
     } else if (scanDeviceInfoSync.discoverMode == "TCP") {
         std::string oldIp;
         ScanUtil::ExtractIpAddresses(scanDeviceInfoSync.oldDeviceId, oldIp);
-        auto it = saneGetTcpDeviceInfoMap.find(oldIp);
-        if (it != saneGetTcpDeviceInfoMap.end()) {
-            auto info = it->second;
-            saneGetTcpDeviceInfoMap.erase(it);
+        if (scannerDiscoverData_.HasTcpDevice(oldIp)) {
+            ScanDeviceInfo info;
+            scannerDiscoverData_.GetTcpDevice(oldIp, info);
             info.deviceId = scanDeviceInfoSync.deviceId;
-            saneGetTcpDeviceInfoMap.insert(std::make_pair(scanDeviceInfoSync.uniqueId, info));
+            scannerDiscoverData_.AddTcpDevice(scanDeviceInfoSync.uniqueId, info);
         }
         SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
     } else {
         SCAN_HILOGE("invalid discover mode %{public}s", scanDeviceInfoSync.discoverMode.c_str());
     }
-#ifdef DEBUG_ENABLE
-    SCAN_HILOGD("GetScannerList UpdateUsbScannerId serialNumber:%{private}s newDeviceId:%{private}s",
-        serialNumber.c_str(),
-        newDeviceId.c_str());
-#endif
 }
 
 bool ScanServiceAbility::CheckPermission(const std::string &permissionName)
@@ -1069,31 +1066,32 @@ int32_t ScanServiceAbility::AddScanner(const std::string &serialNumber, const st
     auto addScannerExe = [=]() {
         std::string uniqueId = discoverMode + serialNumber;
         ScanSystemData &scanData = ScanSystemData::GetInstance();
-        std::lock_guard<std::mutex> autoLock(clearMapLock_);
         if (discoverMode == "USB") {
-            auto usbIt = saneGetUsbDeviceInfoMap.find(serialNumber);
-            if (usbIt == saneGetUsbDeviceInfoMap.end() || scanData.IsContainScanner(uniqueId)) {
+            if (!scannerDiscoverData_.HasUsbDevice(serialNumber) || scanData.IsContainScanner(uniqueId)) {
                 SCAN_HILOGE("Failed to add usb scanner.");
                 return;
             }
-            scanData.InsertScannerInfo(uniqueId, usbIt->second);
+            ScanDeviceInfo info;
+            scannerDiscoverData_.GetUsbDevice(serialNumber, info);
+            scanData.InsertScannerInfo(uniqueId, info);
             if (!scanData.SaveScannerMap()) {
                 SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
                 return;
             }
-            SendDeviceInfo(usbIt->second, SCAN_DEVICE_ADD);
+            SendDeviceInfo(info, SCAN_DEVICE_ADD);
         } else if (discoverMode == "TCP") {
-            auto tcpIt = saneGetTcpDeviceInfoMap.find(serialNumber);
-            if (tcpIt == saneGetTcpDeviceInfoMap.end() || scanData.IsContainScanner(uniqueId)) {
+            if (!scannerDiscoverData_.HasTcpDevice(serialNumber) || scanData.IsContainScanner(uniqueId)) {
                 SCAN_HILOGE("Failed to add tcp scanner.");
                 return;
             }
-            scanData.InsertScannerInfo(uniqueId, tcpIt->second);
+            ScanDeviceInfo info;
+            scannerDiscoverData_.GetTcpDevice(serialNumber, info);
+            scanData.InsertScannerInfo(uniqueId, info);
             if (!scanData.SaveScannerMap()) {
                 SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
                 return;
             }
-            SendDeviceInfo(tcpIt->second, SCAN_DEVICE_ADD);
+            SendDeviceInfo(info, SCAN_DEVICE_ADD);
         } else {
             SCAN_HILOGE("discoverMode is invalid.");
         }
@@ -1167,7 +1165,7 @@ int32_t ScanServiceAbility::OnStartScan(const std::string scannerId, const bool 
     }
     currentUseScannerUserId_ = GetCurrentUserId();
     batchMode_ = batchMode;
-    g_scannerState = SCANNER_SCANING;
+    scannerState_.store(SCANNER_SCANING);
     auto exe = [=]() { StartScanTask(scannerId); };
     serviceHandler_->PostTask(exe, ASYNC_CMD_DELAY);
     SCAN_HILOGI("StartScan successfully");
@@ -1184,7 +1182,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
     }
     SCAN_HILOGI("ScanServiceAbility StartScan start");
 
-    if (g_scannerState == SCANNER_CANCELING) {
+    if (scannerState_.load() == SCANNER_CANCELING) {
         SCAN_HILOGE("scan task is canceling");
         return E_SCAN_DEVICE_BUSY;
     }
@@ -1225,7 +1223,7 @@ void ScanServiceAbility::StartScanTask(const std::string scannerId)
         SCAN_HILOGI("StartScanTask finished, doning sane_cancel");
         SaneManagerClient::GetInstance()->SaneCancel(scannerId);
     }
-    g_scannerState = SCANNER_READY;
+    scannerState_.store(SCANNER_READY);
     SCAN_HILOGI("ScanServiceAbility StartScanTask end");
 }
 

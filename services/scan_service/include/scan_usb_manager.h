@@ -22,6 +22,7 @@
 #include "usb_srv_client.h"
 #include "singleton.h"
 #include "scan_event_subscriber.h"
+#include "scan_discover_data.h"
 
 namespace OHOS::Scan {
 
@@ -46,6 +47,7 @@ private:
     
     bool isInit = false;
     std::map<std::string, OHOS::USB::UsbDevice> usbSnMap_;
+    ScannerDiscoverData& scannerDiscoverData_ = ScannerDiscoverData::GetInstance();
     std::mutex usbSnMapLock_;
 };
 

@@ -232,7 +232,7 @@ bool ScanSystemData::UpdateScannerInfoByUniqueId(const std::string &uniqueId, co
         *iter->second = scannerInfo;
         return true;
     }
-    SCAN_HILOGE("ScanSystemData UpdateScannerInfoByUniqueId not found scannerInfo");
+    SCAN_HILOGD("ScanSystemData UpdateScannerInfoByUniqueId not found scannerInfo");
     return false;
 }
 
@@ -331,8 +331,8 @@ bool ScanSystemData::IsContainScanner(const std::string &uniqueId)
     }
 }
 
-std::pair<std::string, std::string> ScanSystemData::UpdateNetScannerByUuid(
-    const std::string &uuid, const std::string &ip)
+std::optional<std::pair<std::string, std::string>> ScanSystemData::UpdateNetScannerByUuid(const std::string &uuid,
+    const std::string &ip)
 {
     std::string oldKey;
     std::shared_ptr<ScanDeviceInfo> scannerInfo;
@@ -346,13 +346,13 @@ std::pair<std::string, std::string> ScanSystemData::UpdateNetScannerByUuid(
     }
     if (oldKey == "" || scannerInfo == nullptr) {
         SCAN_HILOGW("Cannot find scanner by uuid");
-        return std::make_pair("", "");
+        return std::nullopt;
     }
     std::string oldDeviceId = scannerInfo->deviceId;
     std::string newDeviceId = ScanUtil::ReplaceIpAddress(oldDeviceId, ip);
     if (newDeviceId == scannerInfo->deviceId) {
         SCAN_HILOGE("Get new device Id fail.");
-        return std::make_pair("", "");
+        return std::nullopt;
     }
     SCAN_HILOGD("newdeviceId = %{private}s", newDeviceId.c_str());
     addedScannerMap_.erase(oldKey);

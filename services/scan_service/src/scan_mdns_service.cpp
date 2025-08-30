@@ -191,17 +191,18 @@ int32_t ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info
         }
     }
     ScanSystemData &scanData = ScanSystemData::GetInstance();
-    auto pair = scanData.UpdateNetScannerByUuid(uuidValue, scannerInfo->addr);
-    if (pair.second == "") {
+    auto updateResult = scanData.UpdateNetScannerByUuid(uuidValue, scannerInfo->addr);
+    if (!updateResult.has_value()) {
         SCAN_HILOGE("UpdateNetScannerByUuid fail.");
         return NETMANAGER_EXT_ERR_INTERNAL;
     }
     if (!scanData.SaveScannerMap()) {
         SCAN_HILOGW("SaveScannerMap fail");
     }
+    auto& [oldDeviceId, newDeviceId] = updateResult.value();
     ScanDeviceInfoSync syncInfo;
-    syncInfo.deviceId = pair.second;
-    syncInfo.oldDeviceId = pair.first;
+    syncInfo.deviceId = newDeviceId;
+    syncInfo.oldDeviceId = oldDeviceId;
     syncInfo.discoverMode = "TCP";
     syncInfo.uniqueId = scannerInfo->addr;
     syncInfo.syncMode = "update";

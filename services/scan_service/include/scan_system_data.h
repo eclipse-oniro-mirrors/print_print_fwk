@@ -18,6 +18,7 @@
 
 #include <string>
 #include <map>
+#include <optional>
 #include <json/json.h>
 #include "scanner_info.h"
 #include "print_json_util.h"
@@ -44,7 +45,8 @@ public:
     void GetAddedScannerInfoList(std::vector<ScanDeviceInfo> &infoList);
     bool SaveScannerMap();
     bool IsContainScanner(const std::string &uniqueId);
-    std::pair<std::string, std::string> UpdateNetScannerByUuid(const std::string &uuid, const std::string& ip);
+    std::optional<std::pair<std::string, std::string>> UpdateNetScannerByUuid(const std::string &uuid,
+        const std::string &ip);
 private:
     bool ParseScannerListJsonV1(Json::Value& jsonObject);
     bool CheckJsonObjectValue(const Json::Value& object);

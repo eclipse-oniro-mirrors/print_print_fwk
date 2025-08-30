@@ -102,4 +102,23 @@ ScanErrorCode ScanServiceUtils::ConvertErro(const SaneStatus status)
     }
     return E_SCAN_GENERIC_FAILURE;
 }
+
+std::vector<std::string> ScanServiceUtils::ExtractIpOrPortFromUrl(const std::string& url,
+    const char delimiter, const int32_t minTokenLength)
+{
+    std::vector<std::string> tokens;
+    size_t start = 0;
+    size_t end = url.find(delimiter);
+    while (end != std::string::npos) {
+        tokens.push_back(url.substr(start, end - start));
+        start = end + 1;
+        end = url.find(delimiter, start);
+    }
+    tokens.push_back(url.substr(start));
+    if (tokens.size() < minTokenLength) {
+        SCAN_HILOGE("Url size < %{public}d ", minTokenLength);
+        tokens.clear();
+    }
+    return tokens;
+}
 }  // namespace OHOS::Scan
