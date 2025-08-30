@@ -2009,10 +2009,6 @@ int32_t PrintServiceAbility::UnregisterPrinterCallback(const std::string &type)
 int32_t PrintServiceAbility::RegisterExtCallback(
     const std::string &extensionCID, const sptr<IPrintExtensionCallback> &listener)
 {
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
-        PRINT_HILOGE("no permission to access print service");
-        return E_PRINT_NO_PERMISSION;
-    }
     std::string extensionId = "";
     uint32_t callbackId = 0;
     if (!PrintUtils::DecodeExtensionCid(extensionCID, extensionId, callbackId)) {
@@ -2078,11 +2074,6 @@ int32_t PrintServiceAbility::UnregisterAllExtCallback(const std::string &extensi
 
 int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId)
 {
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
-        PRINT_HILOGE("no permission to access print service");
-        return E_PRINT_NO_PERMISSION;
-    }
-
     PRINT_HILOGD("PrintServiceAbility::LoadExtSuccess started. extensionId=%{public}s:", extensionId.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto it = extensionStateList_.find(extensionId);
