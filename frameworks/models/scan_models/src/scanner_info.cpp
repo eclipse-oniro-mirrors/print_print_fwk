@@ -429,6 +429,7 @@ ScanDeviceInfoSync::ScanDeviceInfoSync(const ScanDeviceInfoSync &right)
     syncMode = right.syncMode;
     deviceState = right.deviceState;
     oldDeviceId = right.oldDeviceId;
+    uniqueId = right.uniqueId;
 }
 
 ScanDeviceInfoSync &ScanDeviceInfoSync::operator=(const ScanDeviceInfoSync &right)
@@ -440,6 +441,7 @@ ScanDeviceInfoSync &ScanDeviceInfoSync::operator=(const ScanDeviceInfoSync &righ
         syncMode = right.syncMode;
         deviceState = right.deviceState;
         oldDeviceId = right.oldDeviceId;
+        uniqueId = right.uniqueId;
     }
     return *this;
 }
@@ -519,7 +521,7 @@ void ScanDeviceInfoSync::ReadFromParcel(Parcel &parcel)
 {
     SetDeviceId(parcel.ReadString());
     SetDiscoverMode(parcel.ReadString());
-    SetSerialNumber(parcel.ReadString());
+    SetUniqueId(parcel.ReadString());
     SetSyncMode(parcel.ReadString());
     SetOldDeviceId(parcel.ReadString());
 }
@@ -528,7 +530,7 @@ bool ScanDeviceInfoSync::Marshalling(Parcel &parcel) const
 {
     parcel.WriteString(deviceId);
     parcel.WriteString(discoverMode);
-    parcel.WriteString(serialNumber);
+    parcel.WriteString(uniqueId);
     parcel.WriteString(syncMode);
     parcel.WriteString(oldDeviceId);
     return true;

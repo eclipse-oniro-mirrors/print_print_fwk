@@ -29,6 +29,8 @@ public:
     static std::string GetTaskEventId(const std::string &taskId, const std::string &type,
         int32_t userId, int32_t callerPid);
     static ScanErrorCode ConvertErro(const SaneStatus status);
+    static std::vector<std::string> ExtractIpOrPortFromUrl(const std::string& url,
+        const char delimiter, const int32_t minTokenLength);
 private:
     static std::unordered_map<SaneStatus, ScanErrorCode> saneStatusToScanErrorCodeMap_;
 };

@@ -36,6 +36,7 @@
 #include "scan_mdns_service.h"
 #include "scan_option_descriptor.h"
 #include "jpeglib.h"
+#include "scan_discover_data.h"
 namespace OHOS::Scan {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 class ScanServiceAbility : public SystemAbility, public ScanServiceStub {
@@ -82,8 +83,6 @@ private:
     void SetScannerSerialNumberByTCP(ScanDeviceInfo &info);
     void SetScannerSerialNumberByUSB(ScanDeviceInfo &info);
 public:
-    static std::map<std::string, ScanDeviceInfo> saneGetUsbDeviceInfoMap;
-    static std::map<std::string, ScanDeviceInfo> saneGetTcpDeviceInfoMap;
     void UnloadSystemAbility();
 protected:
     void OnStart() override;
@@ -119,7 +118,6 @@ private:
     std::set<std::string> openedScannerList_;
     ServiceRunningState state_;
     std::mutex lock_;
-    std::mutex clearMapLock_;
     static std::mutex instanceLock_;
     static sptr<ScanServiceAbility> instance_;
     static std::shared_ptr<AppExecFwk::EventHandler> serviceHandler_;
@@ -141,8 +139,8 @@ private:
     int32_t dpi = 0;
     JSAMPLE *jpegbuf = nullptr;
     std::atomic<int32_t> appCount_{0};
-    std::vector<std::string> ExtractIpOrPortFromUrl(const std::string& url,
-                                                    const char delimiter, const int32_t minTokenLength);
+    std::atomic<int32_t> scannerState_{SCANNER_READY};
+    ScannerDiscoverData& scannerDiscoverData_ = ScannerDiscoverData::GetInstance();
 };
 } // namespace OHOS::Scan
 #endif // SCAN_SYSTEM_ABILITY_H

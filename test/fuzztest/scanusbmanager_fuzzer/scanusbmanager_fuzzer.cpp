@@ -47,7 +47,7 @@ namespace Scan {
         ScanDeviceInfo scanDeviceInfo;
         scanDeviceInfo.deviceId = "pantu:libusb:002:004";
         scanDeviceInfo.serialNumber = serialNumber;
-        ScanServiceAbility::saneGetUsbDeviceInfoMap[serialNumber] = scanDeviceInfo;
+        ScannerDiscoverData::GetInstance().AddUsbDevice(serialNumber, scanDeviceInfo);
         ScanUsbManager::GetInstance()->UpdateUsbScannerId(serialNumber, usbDeviceName);
 
         std::string fuzzUsbDeviceName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -55,7 +55,7 @@ namespace Scan {
         ScanDeviceInfo fuzzScanDeviceInfo;
         scanDeviceInfo.deviceId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         scanDeviceInfo.serialNumber = fuzzSerialNumber;
-        ScanServiceAbility::saneGetUsbDeviceInfoMap[fuzzSerialNumber] = fuzzScanDeviceInfo;
+        ScannerDiscoverData::GetInstance().AddUsbDevice(fuzzSerialNumber, fuzzScanDeviceInfo);
         ScanUsbManager::GetInstance()->UpdateUsbScannerId(fuzzSerialNumber, fuzzUsbDeviceName);
     }
 
@@ -66,7 +66,7 @@ namespace Scan {
         ScanDeviceInfo scanDeviceInfo;
         scanDeviceInfo.deviceId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         scanDeviceInfo.serialNumber = serialNumber;
-        ScanServiceAbility::saneGetUsbDeviceInfoMap[serialNumber] = scanDeviceInfo;
+        ScannerDiscoverData::GetInstance().AddUsbDevice(serialNumber, scanDeviceInfo);
         ScanUsbManager::GetInstance()->DisConnectUsbScanner(usbDeviceName);
 
         std::string fuzzUsbDeviceName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -74,7 +74,7 @@ namespace Scan {
         ScanDeviceInfo fuzzScanDeviceInfo;
         scanDeviceInfo.deviceId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         scanDeviceInfo.serialNumber = fuzzSerialNumber;
-        ScanServiceAbility::saneGetUsbDeviceInfoMap[fuzzSerialNumber] = fuzzScanDeviceInfo;
+        ScannerDiscoverData::GetInstance().AddUsbDevice(fuzzSerialNumber, fuzzScanDeviceInfo);
         ScanUsbManager::GetInstance()->DisConnectUsbScanner(fuzzUsbDeviceName);
     }
 }
