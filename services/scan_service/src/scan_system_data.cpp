@@ -136,7 +136,7 @@ void ScanSystemData::RefreshUsbDeviceId()
     std::lock_guard<std::mutex> autoLock(addedScannerMapLock_);
     for (auto &scanDevIt : addedScannerMap_) {
         std::string discoverMode = scanDevIt.second->discoverMode;
-        if (discoverMode != "USB") {
+        if (discoverMode != ScannerDiscoveryMode::USB_MODE) {
             continue;
         }
         std::string serialNumber = scanDevIt.second->serialNumber;
@@ -155,7 +155,7 @@ void ScanSystemData::RefreshUsbDeviceId()
         syncInfo.deviceId = newDeviceId;
         syncInfo.serialNumber = serialNumber;
         syncInfo.oldDeviceId = oldDeviceId;
-        syncInfo.discoverMode = "USB";
+        syncInfo.discoverMode = ScannerDiscoveryMode::USB_MODE;
         auto saPtr = ScanServiceAbility::GetInstance();
         if (saPtr == nullptr) {
             SCAN_HILOGE("saPtr is a nullptr");
@@ -356,7 +356,7 @@ std::optional<std::pair<std::string, std::string>> ScanSystemData::UpdateNetScan
     }
     SCAN_HILOGD("newdeviceId = %{private}s", newDeviceId.c_str());
     addedScannerMap_.erase(oldKey);
-    std::string newKey = "TCP" + ip;
+    std::string newKey = ScannerDiscoveryMode::TCP_MODE + ip;
     scannerInfo->deviceId = newDeviceId;
     scannerInfo->uniqueId = ip;
     auto it = addedScannerMap_.find(newKey);

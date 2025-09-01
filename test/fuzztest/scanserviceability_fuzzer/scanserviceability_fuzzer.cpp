@@ -137,9 +137,9 @@ namespace Scan {
         ScanDeviceInfoSync usbSyncInfo;
         usbSyncInfo.discoverMode = discoverMode;
         ScanServiceAbility::GetInstance()->UpdateScannerId(usbSyncInfo);
-        usbSyncInfo.discoverMode = "USB";
+        usbSyncInfo.discoverMode = ScannerDiscoveryMode::USB_MODE;
         ScanServiceAbility::GetInstance()->UpdateScannerId(usbSyncInfo);
-        usbSyncInfo.discoverMode = "TCP";
+        usbSyncInfo.discoverMode = ScannerDiscoveryMode::TCP_MODE;
         ScanServiceAbility::GetInstance()->UpdateScannerId(usbSyncInfo);
     }
 

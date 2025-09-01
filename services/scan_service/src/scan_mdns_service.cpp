@@ -203,9 +203,9 @@ int32_t ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info
     ScanDeviceInfoSync syncInfo;
     syncInfo.deviceId = newDeviceId;
     syncInfo.oldDeviceId = oldDeviceId;
-    syncInfo.discoverMode = "TCP";
+    syncInfo.discoverMode = ScannerDiscoveryMode::TCP_MODE;
     syncInfo.uniqueId = scannerInfo->addr;
-    syncInfo.syncMode = "update";
+    syncInfo.syncMode = ScannerSyncMode::UPDATE_MODE;
     {
         std::lock_guard<std::mutex> autoLock(g_infoQueueLock);
         g_infoQueue.push(syncInfo);

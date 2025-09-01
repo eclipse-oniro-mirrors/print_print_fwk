@@ -373,7 +373,7 @@ bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string
 
 void ScanServiceAbility::SetScannerSerialNumberByTCP(ScanDeviceInfo &info)
 {
-    info.discoverMode = "TCP";
+    info.discoverMode = ScannerDiscoveryMode::TCP_MODE;
     std::string ip;
     if (!GetTcpDeviceIp(info.deviceId, ip)) {
         SCAN_HILOGE("cannot get device's ip");
@@ -402,7 +402,7 @@ void ScanServiceAbility::SetScannerSerialNumberByTCP(ScanDeviceInfo &info)
 
 void ScanServiceAbility::SetScannerSerialNumberByUSB(ScanDeviceInfo &info)
 {
-    info.discoverMode = "USB";
+    info.discoverMode = ScannerDiscoveryMode::USB_MODE;
     std::string firstId;
     std::string secondId;
     if (!GetUsbDevicePort(info.deviceId, firstId, secondId)) {
@@ -429,11 +429,11 @@ void ScanServiceAbility::SetScannerSerialNumberByUSB(ScanDeviceInfo &info)
         info.serialNumber = serialNumber;
         info.uniqueId = serialNumber;
         oss << "USB-" << info.manufacturer << " " << info.model << "-";
-        constexpr int32_t INDEX_SIX = 6;
-        if (serialNumber.size() <= INDEX_SIX) {
+        constexpr int32_t SERIAL_NUMBER_SUFFIX_LENGTH  = 6;
+        if (serialNumber.size() <= SERIAL_NUMBER_SUFFIX_LENGTH) {
             oss << serialNumber;
         } else {
-            oss << serialNumber.substr(serialNumber.size() - INDEX_SIX);
+            oss << serialNumber.substr(serialNumber.size() - SERIAL_NUMBER_SUFFIX_LENGTH);
         }
         info.deviceName = oss.str();
     }
@@ -456,7 +456,7 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo &info)
         SCAN_HILOGE("device is unavailable");
         return;
     }
-    if (info.discoverMode != "USB" && info.discoverMode != "TCP") {
+    if (info.discoverMode != ScannerDiscoveryMode::USB_MODE && info.discoverMode != ScannerDiscoveryMode::TCP_MODE) {
         SCAN_HILOGE("discoverMode is invalid:[%{public}s]", info.discoverMode.c_str());
         return;
     }
@@ -468,9 +468,9 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo &info)
         ScanDeviceInfoSync scanDeviceInfoSync;
         scanDeviceInfoSync.uniqueId = info.uniqueId;
         scanDeviceInfoSync.deviceId = info.deviceId;
-        scanDeviceInfoSync.syncMode = "update";
+        scanDeviceInfoSync.syncMode = ScannerSyncMode::UPDATE_MODE;
         scanDeviceInfoSync.discoverMode = info.discoverMode;
-        if (info.discoverMode == "USB") {
+        if (info.discoverMode == ScannerDiscoveryMode::USB_MODE) {
             ScanDeviceInfo scannerInfo;
             if (scanData.QueryScannerInfoByUniqueId(uniqueId, scannerInfo)) {
                 scanDeviceInfoSync.oldDeviceId = scannerInfo.deviceId;
@@ -486,24 +486,24 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo &info)
         }
         scanData.SaveScannerMap();
     }
-    if (info.discoverMode == "USB") {
-        scannerDiscoverData_.AddUsbDevice(info.uniqueId, info);
+    if (info.discoverMode == ScannerDiscoveryMode::USB_MODE) {
+        scannerDiscoverData_.SetUsbDevice(info.uniqueId, info);
     } else {
-        scannerDiscoverData_.AddTcpDevice(info.uniqueId, info);
+        scannerDiscoverData_.SetTcpDevice(info.uniqueId, info);
     }
 }
 
 void ScanServiceAbility::SaneGetScanner()
 {
     scannerState_.store(SCANNER_SEARCHING);
-    scannerDiscoverData_.ClearUsbDevices();
-    scannerDiscoverData_.ClearTcpDevices();
     std::vector<SaneDevice> deviceInfos;
     SaneStatus status = SaneManagerClient::GetInstance()->SaneGetDevices(deviceInfos);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneGetDevices failed, ret: [%{public}u]", status);
         return;
     }
+    scannerDiscoverData_.ClearUsbDevices();
+    scannerDiscoverData_.ClearTcpDevices();
     for (const auto &device : deviceInfos) {
         ScanDeviceInfo info;
         info.deviceId = device.name_;
@@ -513,13 +513,13 @@ void ScanServiceAbility::SaneGetScanner()
         SetScannerSerialNumber(info);
         AddFoundScanner(info);
     }
-    for (auto &t : scannerDiscoverData_.GetAllUsbDevices()) {
-        SendDeviceInfo(t.second, SCAN_DEVICE_FOUND);
-        deviceInfos_.emplace_back(t.second);
+    for (auto& [uniqueId, usbDevice] : scannerDiscoverData_.GetAllUsbDevices()) {
+        SendDeviceInfo(usbDevice, SCAN_DEVICE_FOUND);
+        deviceInfos_.emplace_back(usbDevice);
     }
-    for (auto &t : scannerDiscoverData_.GetAllTcpDevices()) {
-        SendDeviceInfo(t.second, SCAN_DEVICE_FOUND);
-        deviceInfos_.emplace_back(t.second);
+    for (auto& [uniqueId, tcpDevice] : scannerDiscoverData_.GetAllTcpDevices()) {
+        SendDeviceInfo(tcpDevice, SCAN_DEVICE_FOUND);
+        deviceInfos_.emplace_back(tcpDevice);
     }
     scannerState_.store(SCANNER_READY);
 }
@@ -944,8 +944,8 @@ void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::str
     ScanDeviceInfoSync scanDeviceInfoSync;
     scanDeviceInfoSync.uniqueId = serialNumber;
     scanDeviceInfoSync.deviceId = deviceId;
-    scanDeviceInfoSync.discoverMode = "USB";
-    scanDeviceInfoSync.syncMode = "delete";
+    scanDeviceInfoSync.discoverMode = ScannerDiscoveryMode::USB_MODE;
+    scanDeviceInfoSync.syncMode = ScannerSyncMode::DELETE_MODE;
     scanDeviceInfoSync.deviceState = 0;
     SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
 #ifdef DEBUG_ENABLE
@@ -963,22 +963,22 @@ void ScanServiceAbility::UpdateScannerId(const ScanDeviceInfoSync &syncInfo)
     }
     SCAN_HILOGD("UpdateScannerId start newDeviceId:[%{private}s]", syncInfo.deviceId.c_str());
     ScanDeviceInfoSync scanDeviceInfoSync = syncInfo;
-    if (scanDeviceInfoSync.discoverMode == "USB") {
-        if (scannerDiscoverData_.HasUsbDevice(scanDeviceInfoSync.serialNumber)) {
+    if (scanDeviceInfoSync.discoverMode == ScannerDiscoveryMode::USB_MODE) {
+        if (scannerDiscoverData_.HasUsbDevice(scanDeviceInfoSync.uniqueId)) {
             ScanDeviceInfo info;
-            scannerDiscoverData_.GetUsbDevice(syncInfo.serialNumber, info);
+            scannerDiscoverData_.GetUsbDevice(syncInfo.uniqueId, info);
             info.deviceId = scanDeviceInfoSync.deviceId;
-            scannerDiscoverData_.AddUsbDevice(scanDeviceInfoSync.uniqueId, info);
+            scannerDiscoverData_.SetUsbDevice(scanDeviceInfoSync.uniqueId, info);
         }
         SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
-    } else if (scanDeviceInfoSync.discoverMode == "TCP") {
+    } else if (scanDeviceInfoSync.discoverMode == ScannerDiscoveryMode::TCP_MODE) {
         std::string oldIp;
         ScanUtil::ExtractIpAddresses(scanDeviceInfoSync.oldDeviceId, oldIp);
         if (scannerDiscoverData_.HasTcpDevice(oldIp)) {
             ScanDeviceInfo info;
             scannerDiscoverData_.GetTcpDevice(oldIp, info);
             info.deviceId = scanDeviceInfoSync.deviceId;
-            scannerDiscoverData_.AddTcpDevice(scanDeviceInfoSync.uniqueId, info);
+            scannerDiscoverData_.SetTcpDevice(scanDeviceInfoSync.uniqueId, info);
         }
         SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
     } else {
@@ -1059,14 +1059,14 @@ int32_t ScanServiceAbility::AddScanner(const std::string &serialNumber, const st
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
-    if (discoverMode != "USB" && discoverMode != "TCP") {
+    if (discoverMode != ScannerDiscoveryMode::USB_MODE && discoverMode != ScannerDiscoveryMode::TCP_MODE) {
         SCAN_HILOGE("discoverMode is a invalid parameter.");
         return E_SCAN_INVALID_PARAMETER;
     }
     auto addScannerExe = [=]() {
         std::string uniqueId = discoverMode + serialNumber;
         ScanSystemData &scanData = ScanSystemData::GetInstance();
-        if (discoverMode == "USB") {
+        if (discoverMode == ScannerDiscoveryMode::USB_MODE) {
             if (!scannerDiscoverData_.HasUsbDevice(serialNumber) || scanData.IsContainScanner(uniqueId)) {
                 SCAN_HILOGE("Failed to add usb scanner.");
                 return;
@@ -1079,7 +1079,7 @@ int32_t ScanServiceAbility::AddScanner(const std::string &serialNumber, const st
                 return;
             }
             SendDeviceInfo(info, SCAN_DEVICE_ADD);
-        } else if (discoverMode == "TCP") {
+        } else if (discoverMode == ScannerDiscoveryMode::TCP_MODE) {
             if (!scannerDiscoverData_.HasTcpDevice(serialNumber) || scanData.IsContainScanner(uniqueId)) {
                 SCAN_HILOGE("Failed to add tcp scanner.");
                 return;
@@ -1489,6 +1489,7 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, int32_t &scanS
         SetScanProgr(totalBytes, hundredPercent, pictureData.dataBuffer_.size());
         if (!WritePicData(jpegrow, pictureData.dataBuffer_.size(), parm, scanStatus)) {
             SCAN_HILOGE("WritePicData fail");
+            scanStatus = E_SCAN_GENERIC_FAILURE;
             break;
         }
         if (scanStatus == SANE_STATUS_EOF) {
@@ -1514,12 +1515,13 @@ bool ScanServiceAbility::ProcessFullLines(int &jpegrow, int &i, int &left, ScanP
         jpegrow = 0;
         return true;
     }
-    constexpr int byteBits = 8;
-    if (static_cast<int64_t>(parm.GetBytesPerLine()) > static_cast<int64_t>(SIZE_MAX) / byteBits) {
+    size_t byteBits = 8;
+    size_t jpegImageBytes = static_cast<size_t>(parm.GetBytesPerLine() * byteBits);
+    if (jpegImageBytes > SIZE_MAX / byteBits) {
         SCAN_HILOGE("nultiplication would overflow");
         return false;
     }
-    JSAMPLE *buf8 = (JSAMPLE *)malloc(parm.GetBytesPerLine() * byteBits);
+    JSAMPLE *buf8 = (JSAMPLE *)malloc(jpegImageBytes);
     if (buf8 == nullptr) {
         scanStatus = E_SCAN_GENERIC_FAILURE;
         SCAN_HILOGE("pic buffer malloc fail");

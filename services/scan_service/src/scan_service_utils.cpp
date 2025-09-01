@@ -115,7 +115,7 @@ std::vector<std::string> ScanServiceUtils::ExtractIpOrPortFromUrl(const std::str
         end = url.find(delimiter, start);
     }
     tokens.push_back(url.substr(start));
-    if (tokens.size() < minTokenLength) {
+    if (tokens.size() < static_cast<size_t>(minTokenLength)) {
         SCAN_HILOGE("Url size < %{public}d ", minTokenLength);
         tokens.clear();
     }
