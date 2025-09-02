@@ -25,11 +25,11 @@
 
 namespace OHOS::Print {
 using namespace std;
-const std::string SETTINGS_DATA_URI = 
+const std::string SETTINGS_DATA_URI =
     "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true";
-const std::string USER_SETTINGS_DATA_URI = 
+const std::string USER_SETTINGS_DATA_URI =
     "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_#UserId#?Proxy=true";
-const std::string USER_SETTINGS_DATA_SECURE_URI = 
+const std::string USER_SETTINGS_DATA_SECURE_URI =
     "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_SECURE_#UserId#?Proxy=true";
 const std::string SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
 const std::string SETTINGS_DATA_KEYWORD = "KEYWORD";
