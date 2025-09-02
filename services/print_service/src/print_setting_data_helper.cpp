@@ -96,43 +96,6 @@ std::shared_ptr<DataShare::DataShareHelper> PrintSettingDataHelper::CreateDataSh
     return helper;
 }
 
-std::string PrintSettingDataHelper::Query(const std::string &key, int32_t userId, bool isSecureSetting)
-{
-    PRINT_HILOGI("Query key: %{public}s", key.c_str());
-    const std::string baseUri = BuildSettingDataUri(userId, isSecureSetting);
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(baseUri);
-    if (dataShareHelper == nullptr) {
-        PRINT_HILOGE("CreateDataShareHelper is nullptr for key: %{public}s", key.c_str());
-        return "";
-    }
-    Uri settingsUri = Uri(baseUri + "&key=" + key);
-
-    std::vector<std::string> columns;
-    DataShare::DataSharePredicates predicates;
-    predicates.EqualTo(SETTINGS_DATA_KEYWORD, key);
-    auto result = dataShareHelper->Query(settingsUri, predicates, columns);
-    if (result == nullptr) {
-        PRINT_HILOGE("Query error, result is nullptr.");
-        dataShareHelper->Release();
-        return "";
-    }
-    if (result->GoToFirstRow() != DataShare::E_OK) {
-        PRINT_HILOGE("Query error, go to first row error.");
-        result->Close();
-        dataShareHelper->Release();
-        return "";
-    }
-
-    std::string value = "";
-    int columnIndex = 0;
-    result->GetColumnIndex(SETTINGS_DATA_VALUE, columnIndex);
-    result->GetString(columnIndex, value);
-    result->Close();
-    dataShareHelper->Release();
-    PRINT_HILOGI("Query succeed, value: %{public}s", value.c_str());
-    return value;
-}
-
 PrintSettingDataObserver::PrintSettingDataObserver() = default;
 PrintSettingDataObserver::~PrintSettingDataObserver() = default;
 
