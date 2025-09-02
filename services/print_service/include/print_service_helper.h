@@ -39,6 +39,7 @@ public:
     virtual bool IsSyncMode();
     virtual bool StartPluginPrintIconExtAbility(const AAFwk::Want &want);
     virtual void PrintSubscribeCommonEvent();
+    virtual bool DisconnectAbility();
 
 private:
     class PrintAbilityConnection : public AAFwk::AbilityConnectionStub {
@@ -56,6 +57,7 @@ private:
 private:
     std::shared_ptr<PrintEventSubscriber> userStatusListener;
     bool isSubscribeCommonEvent = false;
+    sptr<PrintAbilityConnection> printAbilityConnection_ = nullptr;
 };
 }  // namespace OHOS
 #endif  // PRINT_SERVICE_HELPER_H

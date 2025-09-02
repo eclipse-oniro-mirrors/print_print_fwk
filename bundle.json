@@ -57,7 +57,8 @@
         "runtime_core",
         "ace_engine",
         "libjpeg-turbo",
-        "input"
+        "input",
+        "data_share"
       ],
       "third_party": [
         "zlib"

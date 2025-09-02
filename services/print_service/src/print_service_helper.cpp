@@ -94,6 +94,7 @@ bool PrintServiceHelper::StartPluginPrintIconExtAbility(const AAFwk::Want &want)
     while (retry++ < MAX_RETRY_TIMES) {
         if (AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, printAbilityConnection, -1) == 0) {
             PRINT_HILOGI("PrintServiceHelper::StartPluginPrintIconExtAbility ConnectAbility success");
+            printAbilityConnection_ = printAbilityConnection;
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
@@ -101,6 +102,28 @@ bool PrintServiceHelper::StartPluginPrintIconExtAbility(const AAFwk::Want &want)
     }
     if (retry > MAX_RETRY_TIMES) {
         PRINT_HILOGE("PrintServiceHelper::StartPluginPrintIconExtAbility --> failed ");
+        return false;
+    }
+    return true;
+}
+
+bool PrintServiceHelper::DisconnectAbility()
+{
+    PRINT_HILOGD("enter PrintServiceHelper::DisconnectAbility");
+    AAFwk::AbilityManagerClient::GetInstance()->Connect();
+    uint32_t retry = 0;
+    while (retry++ < MAX_RETRY_TIMES) {
+        if (printAbilityConnection_ != nullptr &&
+            AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(printAbilityConnection_) == 0) {
+            PRINT_HILOGI("PrintServiceHelper::DisconnectAbility success");
+            printAbilityConnection_ = nullptr;
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
+        PRINT_HILOGE("PrintServiceHelper::DisconnectAbility %{public}d", retry);
+    }
+    if (retry > MAX_RETRY_TIMES) {
+        PRINT_HILOGE("PrintServiceHelper::DisconnectAbility --> failed ");
         return false;
     }
     return true;
@@ -172,6 +195,7 @@ void PrintServiceHelper::PrintSubscribeCommonEvent()
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_ON);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_ENTER_FORCE_SLEEP);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_EXIT_FORCE_SLEEP);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
 
