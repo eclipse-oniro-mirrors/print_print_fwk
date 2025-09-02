@@ -170,7 +170,7 @@ bool ScanServiceStub::OnStartScan(MessageParcel &data, MessageParcel &reply)
     SCAN_HILOGI("ScanServiceStub::OnStartScan start");
     std::string scannerId = data.ReadString();
     bool batchMode = data.ReadBool();
-    int32_t ret = ScanServiceAbility::GetInstance()->OnStartScan(scannerId, batchMode);
+    int32_t ret = StartScan(scannerId, batchMode);
     reply.WriteInt32(ret);
     SCAN_HILOGI("ScanServiceStub::OnStartScan end");
     return ret == E_SCAN_NONE;

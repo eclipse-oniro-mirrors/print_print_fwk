@@ -56,24 +56,10 @@
 #include "sane_picture_data.h"
 #include "scan_log.h"
 #include "os_account_manager.h"
+#include "saneopts.h"
 
 namespace OHOS::Scan {
 namespace {
-static int32_t GetElapsedSeconds(const SteadyTimePoint &preTime)
-{
-    auto nowTime = std::chrono::steady_clock::now();
-    auto elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(nowTime - preTime);
-    return elapsedTime.count();
-}
-
-static int32_t GetRandomNumber(const int32_t &lowerBoundary, const int32_t &upperBoundary)
-{
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(lowerBoundary, upperBoundary);
-    return dis(gen);
-}
-
 static std::string GetLastWord(const std::string &str)
 {
     size_t pos = str.find_last_of(' ');
@@ -88,20 +74,10 @@ using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
 using SteadyTimePoint = std::chrono::steady_clock::time_point;
 
-constexpr int ONE_KB = 1024;  // default buffersize 1KB
-constexpr int SCAN_PROGRESS_100 = 100;
-constexpr int SCAN_PROGRESS_10 = 10;
-constexpr int SCAN_PROGRESS_19 = 19;
-constexpr int SCAN_PROGRESS_80 = 80;
-constexpr int JPEG_QUALITY_SEVENTY_FIVE = 75;
-constexpr int CHANNEL_ONE = 1;
-constexpr int CHANNEL_THREE = 3;
 const int64_t INIT_INTERVAL = 5000L;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t UNLOAD_SYSTEMABILITY_DELAY = 1000 * 30;
-constexpr int32_t INVALID_USER_ID = -1;
 
-static bool g_isJpegWriteSuccess = false;
 static const std::string PERMISSION_NAME_SCAN = "ohos.permission.SCAN";
 static const std::string PERMISSION_NAME_SCAN_JOB = "ohos.permission.MANAGE_SCAN_JOB";
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
@@ -124,26 +100,11 @@ sptr<ScanServiceAbility> ScanServiceAbility::instance_;
 std::shared_ptr<AppExecFwk::EventHandler> ScanServiceAbility::serviceHandler_;
 
 ScanServiceAbility::ScanServiceAbility(int32_t systemAbilityId, bool runOnCreate)
-    : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START),
-      currentJobId_(SCAN_CONSTRAINT_NONE), currentUseScannerUserId_(INVALID_USER_ID)
-{
-    constexpr int32_t oneHundred = 100;
-    buffer_size = ONE_KB * oneHundred;
-    saneReadBuf = static_cast<uint8_t *>(malloc(buffer_size));
-    cinfoPtr = new (std::nothrow) jpeg_compress_struct();
-    if (cinfoPtr == nullptr) {
-        SCAN_HILOGE("cinfoPtr allocated failed");
-        return;
-    }
-    cinfoPtr->comps_in_scan = 0;
-}
+    : SystemAbility(systemAbilityId, runOnCreate), state_(ServiceRunningState::STATE_NOT_START)
+{}
 
 ScanServiceAbility::~ScanServiceAbility()
 {
-    FREE_AND_NULLPTR(saneReadBuf);
-    DELETE_ARRAY_AND_NULLIFY(jpegbuf)
-    DELETE_AND_NULLIFY(cinfoPtr);
-    DELETE_AND_NULLIFY(ofp);
     SCAN_HILOGD("~ScanServiceAbility state_  is %{public}d.", static_cast<int>(state_));
 }
 
@@ -298,19 +259,7 @@ void ScanServiceAbility::CleanupScanService()
     SaneManagerClient::GetInstance()->SaneExit();
     ScanMdnsService::OnStopDiscoverService();
     scannerState_.store(SCANNER_READY);
-    std::queue<int32_t> empty;
-    scanQueue.swap(empty);
-    scanTaskMap.clear();
-    for (const auto &[imagePath, fd] : imageFdMap_) {
-        constexpr int32_t INVALID_FILE_DESCRIPTOR = -1;
-        if (fd != INVALID_FILE_DESCRIPTOR) {
-            fdsan_close_with_tag(fd, SCAN_LOG_DOMAIN);
-        }
-        if (FileExists(imagePath)) {
-            unlink(imagePath.c_str());
-        }
-    }
-    imageFdMap_.clear();
+    scanPictureData_.CleanPictureData();
 }
 
 bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId)
@@ -541,7 +490,6 @@ int32_t ScanServiceAbility::GetScannerList()
     CleanupScanService();
     InitializeScanService();
     SCAN_HILOGD("ScanServiceAbility GetScannerList start");
-    std::lock_guard<std::mutex> autoLock(lock_);
     auto exec_sane_getscaner = [=]() {
         deviceInfos_.clear();
         SaneGetScanner();
@@ -597,9 +545,7 @@ int32_t ScanServiceAbility::CloseScanner(const std::string scannerId)
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
         return E_SCAN_INVALID_PARAMETER;
     }
-    scanTaskMap.clear();
-    std::queue<int32_t> emptyQueue;
-    scanQueue.swap(emptyQueue);
+    scanPictureData_.CleanPictureData();
     SaneStatus status = SaneManagerClient::GetInstance()->SaneClose(scannerId);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneClose failed, status: [%{public}u]", status);
@@ -717,8 +663,6 @@ int32_t ScanServiceAbility::ActionSetValue(
     controlParam.valueType_ = static_cast<int32_t>(value.GetScanOptionValueType());
     int32_t numValue = value.GetNumValue();
     controlParam.valueNumber_ = numValue;
-    constexpr int32_t MAX_PICTURE_DPI = 3000;
-    dpi = numValue > 0 && numValue < MAX_PICTURE_DPI ? numValue : dpi;
     controlParam.valueStr_ = value.GetStrValue();
     SaneOutParam outParam;
     status = SaneManagerClient::GetInstance()->SaneControlOption(scannerId, controlParam, outParam);
@@ -737,12 +681,12 @@ int32_t ScanServiceAbility::OpScanOptionValue(
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    std::lock_guard<std::mutex> autoLock(lock_);
     if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
         return E_SCAN_INVALID_PARAMETER;
     }
     int32_t state = E_SCAN_NONE;
-    std::lock_guard<std::mutex> autoLock(lock_);
     SCAN_HILOGD("ScanServiceAbility OpScanOptionValue start to dump value");
     value.Dump();
     switch (op) {
@@ -818,8 +762,7 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
         SCAN_HILOGE("SaneCancel failed, status: [%{public}u]", saneStatus);
         return ScanServiceUtils::ConvertErro(saneStatus);
     }
-    std::queue<int32_t> emptyQueue;
-    scanQueue.swap(emptyQueue);
+    scanPictureData_.CleanPictureData();
     if (scannerState_.load() == SCANNER_SCANING) {
         SCAN_HILOGW("ScannerState change to SCANNER_CANCELING");
         scannerState_.store(SCANNER_CANCELING);
@@ -1016,39 +959,11 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
         return E_SCAN_INVALID_PARAMETER;
     }
-    if (scanQueue.empty()) {
-        SCAN_HILOGE("Not exist scan progress");
-        return E_SCAN_GENERIC_FAILURE;
+    int32_t status = scanPictureData_.GetPictureProgressInQueue(prog);
+    if (status != E_SCAN_NONE) {
+        SCAN_HILOGE("scanprogress exception occurred:[%{public}u]", status);
+        return status;
     }
-    int32_t frontPicId = scanQueue.front();
-    SCAN_HILOGD("frontPicId : [%{public}d]", frontPicId);
-    auto frontProg = scanTaskMap[frontPicId];
-    auto taskCode = frontProg.GetTaskCode();
-    if (taskCode != E_SCAN_NONE) {
-        SCAN_HILOGE("scanprogress exception occurred:[%{public}u]", taskCode);
-        scanQueue.pop();
-        return taskCode;
-    }
-    auto scanProgress = frontProg.GetScanProgress();
-    if (scanProgress == SCAN_PROGRESS_100) {
-        SCAN_HILOGI("get scan picture successfully!");
-        prog = frontProg;
-        int32_t fd = open(prog.GetImageRealPath().c_str(), O_RDONLY);
-        fdsan_exchange_owner_tag(fd, 0, SCAN_LOG_DOMAIN);
-        prog.SetScanPictureFd(fd);
-        imageFdMap_[prog.GetImageRealPath()] = fd;
-        prog.Dump();
-        scanQueue.pop();
-        return E_SCAN_NONE;
-    }
-    int32_t randomNumber = GetRandomNumber(SCAN_PROGRESS_10, SCAN_PROGRESS_19);
-    auto preTime = scanTaskMap[frontPicId].GetScanTime();
-    if (GetElapsedSeconds(preTime) >= 1 && scanProgress < SCAN_PROGRESS_80) {
-        scanTaskMap[frontPicId].SetScanProgress(scanProgress + randomNumber);
-        scanTaskMap[frontPicId].SetScanTime(std::chrono::steady_clock::now());
-    }
-    prog = scanTaskMap[frontPicId];
-    prog.Dump();
     return E_SCAN_NONE;
 }
 
@@ -1141,41 +1056,9 @@ int32_t ScanServiceAbility::GetAddedScanner(std::vector<ScanDeviceInfo> &allAdde
     return E_SCAN_NONE;
 }
 
-int32_t ScanServiceAbility::OnStartScan(const std::string scannerId, const bool &batchMode)
-{
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
-        SCAN_HILOGE("no permission to access scan service");
-        return E_SCAN_NO_PERMISSION;
-    }
-    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
-        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
-        return E_SCAN_INVALID_PARAMETER;
-    }
-    std::string userCachedImageDir = ObtainUserCacheDirectory(GetCurrentUserId());
-    if (!std::filesystem::exists(userCachedImageDir)) {
-        SCAN_HILOGE("The user directory %{public}s does not exist.", userCachedImageDir.c_str());
-        return E_SCAN_GENERIC_FAILURE;
-    }
-    std::queue<int32_t> emptyQueue;
-    scanQueue.swap(emptyQueue);
-    int32_t status = StartScan(scannerId, batchMode_);
-    if (status != E_SCAN_NONE) {
-        SCAN_HILOGE("Start Scan error");
-        return status;
-    }
-    currentUseScannerUserId_ = GetCurrentUserId();
-    batchMode_ = batchMode;
-    scannerState_.store(SCANNER_SCANING);
-    auto exe = [=]() { StartScanTask(scannerId); };
-    serviceHandler_->PostTask(exe, ASYNC_CMD_DELAY);
-    SCAN_HILOGI("StartScan successfully");
-    return E_SCAN_NONE;
-}
-
-int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &batchMode)
+int32_t ScanServiceAbility::StartScanOnce(const std::string scannerId)
 {
     ManualStart();
-    std::lock_guard<std::mutex> autoLock(lock_);
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
@@ -1190,91 +1073,86 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
     if (saneStatus != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneStart failed, status is %{public}u", saneStatus);
         SaneManagerClient::GetInstance()->SaneCancel(scannerId);
-        auto it = scanTaskMap.find(nextPicId);
-        if (it != scanTaskMap.end() && it != scanTaskMap.begin()) {
-            it--;
-            (it->second).SetScanProgress(SCAN_PROGRESS_100);
-        }
         return ScanServiceUtils::ConvertErro(saneStatus);
     }
-    ScanProgress prog;
-    scanTaskMap[nextPicId] = prog;
-    scanQueue.push(nextPicId);
-    scanTaskMap[nextPicId].SetPictureId(nextPicId);
-    auto nowTime = std::chrono::steady_clock::now();
-    scanTaskMap[nextPicId].SetScanTime(nowTime);
-    nextPicId++;
     SCAN_HILOGI("ScanServiceAbility StartScan end");
     return E_SCAN_NONE;
 }
 
-void ScanServiceAbility::StartScanTask(const std::string scannerId)
+int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &batchMode)
 {
-    SCAN_HILOGI("ScanServiceAbility StartScanTask start, batchMode_ = [%{public}d]", batchMode_);
-    if (batchMode_) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        SCAN_HILOGE("no permission to access scan service");
+        return E_SCAN_NO_PERMISSION;
+    }
+    std::lock_guard<std::mutex> autoLock(lock_);
+    if (openedScannerList_.find(scannerId) == openedScannerList_.end()) {
+        SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
+        return E_SCAN_INVALID_PARAMETER;
+    }
+    scanPictureData_.CleanPictureData();
+    int32_t status = StartScanOnce(scannerId);
+    if (status != E_SCAN_NONE) {
+        SCAN_HILOGE("Start Scan error");
+        return status;
+    }
+    scannerState_.store(SCANNER_SCANING);
+    scanPictureData_.PushScanPictureProgress();
+    ScanTask task(scannerId, GetCurrentUserId(), batchMode);
+    auto exe = [=]() { StartScanTask(task); };
+    serviceHandler_->PostTask(exe, ASYNC_CMD_DELAY);
+    SCAN_HILOGI("StartScan successfully");
+    return E_SCAN_NONE;
+}
+
+void ScanServiceAbility::StartScanTask(ScanTask scanTask)
+{
+    if (scanTask.GetBathMode()) {
         SCAN_HILOGI("start batch mode scan");
-        GeneratePictureBatch(scannerId);
+        GeneratePictureBatch(scanTask);
     } else {
         SCAN_HILOGI("start single mode scan");
-        GeneratePictureSingle(scannerId);
+        GeneratePictureSingle(scanTask);
     }
     {
         std::lock_guard<std::mutex> autoLock(lock_);
         SCAN_HILOGI("StartScanTask finished, doning sane_cancel");
-        SaneManagerClient::GetInstance()->SaneCancel(scannerId);
+        SaneManagerClient::GetInstance()->SaneCancel(scanTask.GetScannerId());
     }
     scannerState_.store(SCANNER_READY);
     SCAN_HILOGI("ScanServiceAbility StartScanTask end");
 }
 
-bool ScanServiceAbility::CreateAndOpenScanFile(std::string &outputFile)
+bool ScanServiceAbility::CreateAndOpenScanFile(ScanTask &scanTask)
 {
-    std::string outputDir = ObtainUserCacheDirectory(currentUseScannerUserId_);
-    char canonicalPath[PATH_MAX] = {0};
-    if (realpath(outputDir.c_str(), canonicalPath) == nullptr) {
-        SCAN_HILOGE("The real output dir is null, errno:%{public}s", std::to_string(errno).c_str());
+    std::string filePath;
+    if (!scanTask.CreateAndOpenScanFile(filePath)) {
+        SCAN_HILOGI("ScanTask CreateAndOpenScanFile fail");
         return false;
     }
-    outputDir = canonicalPath;
-    std::ostringstream outputFileStream;
-    int32_t nowScanId = nextPicId - 1;
-    outputFileStream << outputDir << "/"
-                     << "scan_tmp" << std::to_string(nowScanId) << ".jpg";
-    outputFile = outputFileStream.str();
-    if ((ofp = fopen(outputFile.c_str(), "w")) == nullptr) {
-        SCAN_HILOGE("file [%{private}s] open fail", outputFile.c_str());
-        return false;
-    }
-    std::lock_guard<std::mutex> autoLock(lock_);
-    auto it = scanTaskMap.find(nowScanId);
-    if (it == scanTaskMap.end()) {
-        SCAN_HILOGE("cannot find nowScanId %{private}d", nowScanId);
-        return false;
-    }
-    it->second.SetImageRealPath(outputFile);
+    scanPictureData_.SetImageRealPath(filePath);
     return true;
 }
 
-void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId)
+void ScanServiceAbility::GeneratePictureBatch(ScanTask scanTask)
 {
     bool firstScan = true;
-    std::string outputFile;
     int32_t status = E_SCAN_NONE;
     do {
         if (!firstScan) {
             SCAN_HILOGI("not first scan");
-            status = RestartScan(scannerId);
+            status = RestartScan(scanTask.GetScannerId());
             if (status != E_SCAN_NONE) {
                 SCAN_HILOGW("RestartScan fail");
                 break;
             }
         }
-        if (!CreateAndOpenScanFile(outputFile)) {
+        if (!CreateAndOpenScanFile(scanTask)) {
             status = E_SCAN_GENERIC_FAILURE;
             SCAN_HILOGE("CreateAndOpenScanFile fail");
             break;
         }
-        status = DoScanTask(scannerId);
+        status = DoScanTask(scanTask);
         firstScan = false;
     } while (status == E_SCAN_EOF);
     if (status == E_SCAN_NO_DOCS) {
@@ -1284,188 +1162,101 @@ void ScanServiceAbility::GeneratePictureBatch(const std::string &scannerId)
     }
 }
 
-void ScanServiceAbility::GeneratePictureSingle(const std::string &scannerId)
+void ScanServiceAbility::GeneratePictureSingle(ScanTask scanTask)
 {
     int32_t status = E_SCAN_NONE;
-    std::string outputFile;
-    if (!CreateAndOpenScanFile(outputFile)) {
+    if (!CreateAndOpenScanFile(scanTask)) {
         status = E_SCAN_GENERIC_FAILURE;
         SCAN_HILOGE("CreateAndOpenScanFile fail");
         return;
     }
-    status = DoScanTask(scannerId);
+    status = DoScanTask(scanTask);
     if (status == E_SCAN_EOF) {
         SCAN_HILOGI("GeneratePictureSingle exit successfully");
+        scanPictureData_.SetNowScanProgressFinished(true);
     } else {
         SCAN_HILOGE("GeneratePictureSingle fail, status = %{public}d", status);
+        scanPictureData_.SetScanTaskCode(status);
     }
 }
 
-int32_t ScanServiceAbility::DoScanTask(const std::string &scannerId)
+int32_t ScanServiceAbility::DoScanTask(ScanTask &scanTask)
 {
     bool isFirstFrame = true;
     int32_t scanStatus = E_SCAN_NONE;
     ScanParameters parm;
-    struct jpeg_error_mgr jerr;
     do {
         SCAN_HILOGI("start DoScanTask");
         if (!isFirstFrame) {
-            scanStatus = StartScan(scannerId, batchMode_);
+            scanStatus = StartScanOnce(scanTask.GetScannerId());
             if (scanStatus != E_SCAN_NONE) {
                 SCAN_HILOGW("restart scanner fail");
                 break;
             }
         }
-        scanStatus = GetScanParameters(scannerId, parm);
+        scanStatus = GetScanParameters(scanTask.GetScannerId(), parm);
         if (scanStatus != E_SCAN_NONE) {
             SCAN_HILOGE("DoScanTask error, after GetScanParameters");
             break;
         }
         if (isFirstFrame) {
-            scanStatus = WriteJpegHeader(parm, &jerr);
+            int32_t dpi = 0;
+            scanStatus = GetScannerImageDpi(scanTask.GetScannerId(), dpi);
+            if (scanStatus != E_SCAN_NONE) {
+                SCAN_HILOGW("GetScannerImageDpi fail");
+            }
+            scanStatus = scanTask.WriteJpegHeader(parm, dpi);
             if (scanStatus != E_SCAN_NONE) {
                 SCAN_HILOGE("StartScanTask error exit after WriteJpegHeader");
                 break;
             }
-            jpegbuf = new (std::nothrow) JSAMPLE[parm.GetBytesPerLine() / sizeof(JSAMPLE)]{};
-            if (jpegbuf == nullptr) {
-                SCAN_HILOGE("jpegbuf malloc fail");
-                break;
-            }
         }
-        GetPicFrame(scannerId, scanStatus, parm);
+        GetPicFrame(scanTask, scanStatus, parm);
         if (scanStatus != E_SCAN_EOF) {
             SCAN_HILOGE("get scanframe fail");
             break;
         }
         isFirstFrame = false;
     } while (!(parm.GetLastFrame()));
-    CleanUpAfterScan(scanStatus);
+    CleanUpAfterScan(scanTask, scanStatus);
     return scanStatus;
 }
 
 int32_t ScanServiceAbility::RestartScan(const std::string &scannerId)
 {
-    SCAN_HILOGI("not first scan");
-    int32_t status = StartScan(scannerId, batchMode_);
+    SCAN_HILOGI("RestartScan");
+    int32_t status = StartScanOnce(scannerId);
     if (status == E_SCAN_NONE) {
-        SCAN_HILOGI("ScanTask restart success");
-        std::lock_guard<std::mutex> autoLock(lock_);
-        auto it = scanTaskMap.find(nextPicId - 2);
-        if (it != scanTaskMap.end()) {
-            it->second.SetIsFinal(false);
-        }
+        SCAN_HILOGD("ScanTask restart success");
+        scanPictureData_.SetNowScanProgressFinished(false);
+        scanPictureData_.PushScanPictureProgress();
     } else if (status == E_SCAN_NO_DOCS) {
-        SCAN_HILOGI("The feeder is out of paper.");
+        SCAN_HILOGD("The feeder is out of paper.");
+        scanPictureData_.SetNowScanProgressFinished(true);
     } else {
-        std::lock_guard<std::mutex> autoLock(lock_);
-        SCAN_HILOGE("RestartScan fail");
-        scanQueue.push(nextPicId);
-        ScanProgress prog;
-        auto result = scanTaskMap.insert({nextPicId, prog});
-        if (result.second) {
-            auto it = result.first;
-            it->second.SetPictureId(nextPicId);
-            auto nowTime = std::chrono::steady_clock::now();
-            it->second.SetScanTime(nowTime);
-        }
-        nextPicId++;
+        SCAN_HILOGE("restart scan fail");
+        scanPictureData_.SetNowScanProgressFinished(true);
+        scanPictureData_.PushScanPictureProgress();
+        scanPictureData_.SetScanTaskCode(status);
     }
     return status;
 }
 
-void ScanServiceAbility::CleanUpAfterScan(int32_t scanStatus)
+void ScanServiceAbility::CleanUpAfterScan(ScanTask &scanTask, int32_t scanStatus)
 {
-    int32_t nowScanId = nextPicId - 1;
     if (scanStatus != E_SCAN_EOF && scanStatus != E_SCAN_NO_DOCS) {
-        std::lock_guard<std::mutex> autoLock(lock_);
-        auto it = scanTaskMap.find(nowScanId);
-        if (it != scanTaskMap.end()) {
-            it->second.SetTaskCode(static_cast<ScanErrorCode>(scanStatus));
-        }
-        jpeg_destroy_compress(cinfoPtr);
-        SCAN_HILOGE("DoScanTask fail, SetTaskCode : %{public}d", scanStatus);
+        scanTask.JpegDestroyCompress();
+        SCAN_HILOGE("End of failded scan ");
     } else {
-        std::lock_guard<std::mutex> autoLock(lock_);
-        auto it = scanTaskMap.find(nowScanId);
-        if (it != scanTaskMap.end()) {
-            it->second.SetScanProgress(SCAN_PROGRESS_100);
-        }
-        jpeg_finish_compress(cinfoPtr);
-        fflush(ofp);
+        scanTask.JpegFinishCompress();
         SCAN_HILOGD("End of normal scan");
     }
-    DELETE_ARRAY_AND_NULLIFY(jpegbuf)
-    if (ofp != nullptr) {
-        fclose(ofp);
-        ofp = nullptr;
-    }
 }
 
-int32_t ScanServiceAbility::WriteJpegHeader(ScanParameters &parm, struct jpeg_error_mgr *jerr)
-{
-    ScanFrame format = parm.GetFormat();
-    int32_t width = parm.GetPixelsPerLine();
-    int32_t height = parm.GetLines();
-    cinfoPtr->err = jpeg_std_error(jerr);
-    cinfoPtr->err->error_exit = [](j_common_ptr cinfo) { g_isJpegWriteSuccess = false; };
-    g_isJpegWriteSuccess = true;
-    jpeg_create_compress(cinfoPtr);
-    jpeg_stdio_dest(cinfoPtr, ofp);
-
-    cinfoPtr->image_width = (JDIMENSION)width;
-    cinfoPtr->image_height = (JDIMENSION)height;
-    if (format == SCAN_FRAME_RGB) {
-        cinfoPtr->in_color_space = JCS_RGB;
-        cinfoPtr->input_components = CHANNEL_THREE;
-        SCAN_HILOGI("generate RGB picture");
-    } else if (format == SCAN_FRAME_GRAY) {
-        cinfoPtr->in_color_space = JCS_GRAYSCALE;
-        cinfoPtr->input_components = CHANNEL_ONE;
-        SCAN_HILOGI("generate gray picture");
-    } else {
-        SCAN_HILOGE("not support this color");
-        return E_SCAN_INVALID_PARAMETER;
-    }
-    jpeg_set_defaults(cinfoPtr);
-    cinfoPtr->density_unit = 1;
-    cinfoPtr->X_density = dpi;
-    cinfoPtr->Y_density = dpi;
-    cinfoPtr->write_JFIF_header = TRUE;
-    SCAN_HILOGI("width:[%{public}d],height:[%{public}d],dpi:[%{public}d]", width, height, dpi);
-    jpeg_set_quality(cinfoPtr, JPEG_QUALITY_SEVENTY_FIVE, TRUE);
-    jpeg_start_compress(cinfoPtr, TRUE);
-    SCAN_HILOGI("finish write jpegHeader");
-    return E_SCAN_NONE;
-}
-
-void ScanServiceAbility::SetScanProgr(int64_t &totalBytes, const int64_t &hundredPercent, const int32_t &curReadSize)
-{
-    if (hundredPercent == 0) {
-        SCAN_HILOGE("hundredPercent equals zero.");
-        return;
-    }
-    std::lock_guard<std::mutex> autoLock(lock_);
-    int32_t nowScanId = nextPicId - 1;
-    auto it = scanTaskMap.find(nowScanId);
-    if (it == scanTaskMap.end()) {
-        SCAN_HILOGW("cannot find %{public}d", nowScanId);
-        return;
-    }
-    totalBytes += static_cast<int64_t>(curReadSize);
-    int64_t progr = ((totalBytes * SCAN_PROGRESS_100) / hundredPercent);
-    if (progr >= SCAN_PROGRESS_100) {
-        progr = SCAN_PROGRESS_100 - 1;
-    }
-    if (progr > (it->second.GetScanProgress())) {
-        it->second.SetScanProgress(static_cast<int32_t>(progr));
-    }
-}
-
-void ScanServiceAbility::GetPicFrame(const std::string scannerId, int32_t &scanStatus, ScanParameters &parm)
+void ScanServiceAbility::GetPicFrame(ScanTask &scanTask, int32_t &scanStatus, ScanParameters &parm)
 {
     int64_t totalBytes = 0;
-    int jpegrow = 0;
+    int32_t jpegrow = 0;
     int64_t hundredPercent =
         ((int64_t)parm.GetBytesPerLine()) * parm.GetLines() *
         (((SaneFrame)parm.GetFormat() == SANE_FRAME_RGB || (SaneFrame)parm.GetFormat() == SANE_FRAME_GRAY)
@@ -1474,20 +1265,15 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, int32_t &scanS
     scanStatus = E_SCAN_NONE;
     while (scanStatus == E_SCAN_NONE) {
         SanePictureData pictureData;
-        SaneStatus saneStatus = SaneManagerClient::GetInstance()->SaneRead(scannerId, buffer_size, pictureData);
+        SaneStatus saneStatus = SaneManagerClient::GetInstance()->SaneRead(scanTask.GetScannerId(),
+            BUFFER_SIZE, pictureData);
         scanStatus = ScanServiceUtils::ConvertErro(saneStatus);
         if (pictureData.ret_ == SANE_READ_FAIL) {
             SCAN_HILOGE("sane_read failed, scanStatus: [%{public}d]", scanStatus);
             break;
         }
-        auto ret = memcpy_s(saneReadBuf, buffer_size, pictureData.dataBuffer_.data(), pictureData.dataBuffer_.size());
-        if (ret != ERR_OK) {
-            scanStatus = E_SCAN_GENERIC_FAILURE;
-            SCAN_HILOGE("memcpy_s failed, errorCode:[%{public}d]", ret);
-            break;
-        }
-        SetScanProgr(totalBytes, hundredPercent, pictureData.dataBuffer_.size());
-        if (!WritePicData(jpegrow, pictureData.dataBuffer_.size(), parm, scanStatus)) {
+        scanPictureData_.SetScanProgr(totalBytes, hundredPercent, pictureData.dataBuffer_.size());
+        if (scanTask.WritePicData(jpegrow, pictureData.dataBuffer_, parm) != E_SCAN_NONE) {
             SCAN_HILOGE("WritePicData fail");
             scanStatus = E_SCAN_GENERIC_FAILURE;
             break;
@@ -1497,70 +1283,6 @@ void ScanServiceAbility::GetPicFrame(const std::string scannerId, int32_t &scanS
             break;
         }
     }
-}
-
-bool ScanServiceAbility::ProcessFullLines(int &jpegrow, int &i, int &left, ScanParameters &parm, int32_t &scanStatus)
-{
-    constexpr int bit = 1;
-    if (memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(), saneReadBuf + i, parm.GetBytesPerLine() - jpegrow) !=
-        ERR_OK) {
-        scanStatus = E_SCAN_GENERIC_FAILURE;
-        SCAN_HILOGE("memcpy_s failed");
-        return false;
-    }
-    if (parm.GetDepth() != 1) {
-        jpeg_write_scanlines(cinfoPtr, &jpegbuf, bit);
-        i += parm.GetBytesPerLine() - jpegrow;
-        left -= parm.GetBytesPerLine() - jpegrow;
-        jpegrow = 0;
-        return true;
-    }
-    size_t byteBits = 8;
-    size_t jpegImageBytes = static_cast<size_t>(parm.GetBytesPerLine() * byteBits);
-    if (jpegImageBytes > SIZE_MAX / byteBits) {
-        SCAN_HILOGE("nultiplication would overflow");
-        return false;
-    }
-    JSAMPLE *buf8 = (JSAMPLE *)malloc(jpegImageBytes);
-    if (buf8 == nullptr) {
-        scanStatus = E_SCAN_GENERIC_FAILURE;
-        SCAN_HILOGE("pic buffer malloc fail");
-        return false;
-    }
-    for (int col1 = 0; col1 < parm.GetBytesPerLine(); col1++) {
-        for (int col8 = 0; col8 < byteBits; col8++) {
-            buf8[col1 * byteBits + col8] = jpegbuf[col1] & (1 << (byteBits - col8 - bit)) ? 0 : 0xff;
-        }
-    }
-    jpeg_write_scanlines(cinfoPtr, &buf8, bit);
-    free(buf8);
-    i += parm.GetBytesPerLine() - jpegrow;
-    left -= parm.GetBytesPerLine() - jpegrow;
-    jpegrow = 0;
-
-    return true;
-}
-
-bool ScanServiceAbility::WritePicData(int &jpegrow, int32_t curReadSize, ScanParameters &parm, int32_t &scanStatus)
-{
-    int i = 0;
-    int left = curReadSize;
-    while (jpegrow + left >= parm.GetBytesPerLine()) {
-        if (!g_isJpegWriteSuccess) {
-            scanStatus = E_SCAN_NO_MEM;
-            return false;
-        }
-        if (!ProcessFullLines(jpegrow, i, left, parm, scanStatus)) {
-            return false;
-        }
-    }
-    if (memcpy_s(jpegbuf + jpegrow, parm.GetBytesPerLine(), saneReadBuf + i, left) != ERR_OK) {
-        scanStatus = E_SCAN_GENERIC_FAILURE;
-        SCAN_HILOGE("memcpy_s failed");
-        return false;
-    }
-    jpegrow += left;
-    return true;
 }
 
 int32_t ScanServiceAbility::GetCurrentUserId()
@@ -1573,7 +1295,7 @@ int32_t ScanServiceAbility::GetCurrentUserId()
         AccountSA::OsAccountManager::QueryActiveOsAccountIds(userIds);
         if (userIds.empty()) {
             SCAN_HILOGE("get use current active userId failed");
-            userId = INVALID_USER_ID;
+            userId = AppExecFwk::Constants::INVALID_USERID;
         } else {
             userId = userIds[0];
         }
@@ -1582,11 +1304,47 @@ int32_t ScanServiceAbility::GetCurrentUserId()
     return userId;
 }
 
-std::string ScanServiceAbility::ObtainUserCacheDirectory(const int32_t &userId)
+int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int32_t& dpi)
 {
-    std::ostringstream oss;
-    oss << "/data/service/el2/" << userId << "/print_service";
-    return oss.str();
+    SaneControlParam controlParam;
+    controlParam.action_ = SANE_ACTION_GET_VALUE;
+    controlParam.valueType_ = SCAN_VALUE_NUM;
+    SaneOutParam outParam;
+    SaneStatus status = SaneManagerClient::GetInstance()->SaneControlOption(scannerId, controlParam, outParam);
+    if (status != SANE_STATUS_GOOD) {
+        SCAN_HILOGE("SaneControlOption failed, status: [%{public}d]", status);
+        return ScanServiceUtils::ConvertErro(status);
+    }
+    int32_t resolutionIndex = 0;
+    uint32_t dpiType = 0;
+    for (int32_t optionIndex = 1; optionIndex < outParam.valueNumber_; optionIndex++) {
+        SaneOptionDescriptor saneDesc;
+        status = SaneManagerClient::GetInstance()->SaneGetOptionDescriptor(scannerId, optionIndex, saneDesc);
+        if (status != SANE_STATUS_GOOD) {
+            SCAN_HILOGE("SaneGetOptionDescriptor failed, status: [%{public}u]", status);
+            return ScanServiceUtils::ConvertErro(status);
+        }
+        if ((saneDesc.optionType_ == SCAN_VALUE_NUM)
+            && (saneDesc.optionUnit_ == SCANNER_UNIT_DPI)
+            && (saneDesc.optionName_ == SANE_NAME_SCAN_RESOLUTION)) {
+            resolutionIndex = optionIndex;
+            dpiType = saneDesc.optionType_;
+            break;
+        }
+    }
+    if (resolutionIndex == 0) {
+        SCAN_HILOGE("cannot find dpi option");
+        return E_SCAN_GENERIC_FAILURE;
+    }
+    controlParam.action_ = SANE_ACTION_GET_VALUE;
+    controlParam.valueType_ = SCAN_VALUE_NUM;
+    controlParam.option_ = resolutionIndex;
+    status = SaneManagerClient::GetInstance()->SaneControlOption(scannerId, controlParam, outParam);
+    if (status != SANE_STATUS_GOOD) {
+        SCAN_HILOGE("SaneControlOption failed, status: [%{public}d]", status);
+        return ScanServiceUtils::ConvertErro(status);
+    }
+    dpi = outParam.valueNumber_;
+    return E_SCAN_NONE;
 }
-
 }  // namespace OHOS::Scan

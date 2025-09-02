@@ -37,6 +37,8 @@
 #include "scan_option_descriptor.h"
 #include "jpeglib.h"
 #include "scan_discover_data.h"
+#include "scan_task.h"
+#include "scan_picture_data.h"
 namespace OHOS::Scan {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 class ScanServiceAbility : public SystemAbility, public ScanServiceStub {
@@ -65,7 +67,6 @@ public:
     int32_t AddScanner(const std::string& serialNumber, const std::string& discoverMode) override;
     int32_t DeleteScanner(const std::string& serialNumber, const std::string& discoverMode) override;
     int32_t GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner) override;
-    int32_t OnStartScan(const std::string scannerId, const bool &batchMode);
     void DisConnectUsbScanner(std::string serialNumber, std::string newDeviceId); // public
     void UpdateScannerId(const ScanDeviceInfoSync& usbSyncInfo); // public
 
@@ -74,8 +75,8 @@ private:
     int32_t ActionGetValue(const std::string &scannerId, ScanOptionValue &value, const int32_t &optionIndex);
     int32_t ActionSetValue(const std::string &scannerId, ScanOptionValue &value,
                            const int32_t &optionIndex);
-    int32_t DoScanTask(const std::string& scannerId);
-    void StartScanTask(const std::string scannerId);
+    int32_t DoScanTask(ScanTask &scanTask);
+    void StartScanTask(ScanTask scanTask);
     void SendDeviceInfo(const ScanDeviceInfo &info, std::string event);
     void SendDeviceInfoSync(const ScanDeviceInfoSync &info, std::string event);
     void SetScannerSerialNumber(ScanDeviceInfo &info);
@@ -93,28 +94,21 @@ private:
     void InitServiceHandler();
     void ManualStart();
     bool CheckPermission(const std::string &permissionName);
-    int32_t WriteJpegHeader(ScanParameters &parm, struct jpeg_error_mgr* jerr);
-    void GeneratePicture(const std::string &scannerId, std::string &fileName,
-        std::string &outputFile, int32_t &status, ScanProgress* &scanProPtr);
-    void GetPicFrame(const std::string scannerId,
-        int32_t &scanStatus, ScanParameters &parm);
-    bool WritePicData(int &jpegrow, int32_t curReadSize, ScanParameters &parm, int32_t &scanStatus);
-    bool ProcessFullLines(int &jpegrow, int &i, int &left, ScanParameters &parm, int32_t &scanStatus);
-    void GeneratePictureBatch(const std::string &scannerId);
-    void GeneratePictureSingle(const std::string &scannerId);
+    void GetPicFrame(ScanTask &scanTask, int32_t &scanStatus, ScanParameters &parm);
+    void GeneratePictureBatch(ScanTask scanTask);
+    void GeneratePictureSingle(ScanTask scanTask);
     bool GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId);
     bool GetTcpDeviceIp(const std::string &deviceId, std::string &ip);
     void SendDeviceList(std::vector<ScanDeviceInfo> &info, std::string event);
     int32_t GetCurrentUserId();
-    std::string ObtainUserCacheDirectory(const int32_t& userId);
-    void SetScanProgr(int64_t &totalBytes, const int64_t& hundredPercent,
-        const int32_t& curReadSize);
-    bool CreateAndOpenScanFile(std::string &outputFile);
+    bool CreateAndOpenScanFile(ScanTask &scanTask);
     void AddFoundScanner(ScanDeviceInfo& info);
-    void CleanUpAfterScan(int32_t scanStatus);
+    void CleanUpAfterScan(ScanTask &scanTask, int32_t scanStatus);
     int32_t RestartScan(const std::string &scannerId);
     void InitializeScanService();
     void CleanupScanService();
+    int32_t StartScanOnce(const std::string scannerId);
+    int32_t GetScannerImageDpi(const std::string& scannerId, int32_t& dpi);
     std::set<std::string> openedScannerList_;
     ServiceRunningState state_;
     std::mutex lock_;
@@ -124,23 +118,11 @@ private:
     static std::map<std::string, sptr<IScanCallback>> registeredListeners_;
     std::recursive_mutex apiMutex_;
     std::recursive_mutex scanMutex_;
-    uint64_t currentJobId_;
-    int32_t currentUseScannerUserId_;
-    std::map<std::string, int32_t> imageFdMap_;
-    std::queue<int32_t> scanQueue;
-    std::map<int32_t, ScanProgress> scanTaskMap;
     std::vector<ScanDeviceInfo> deviceInfos_;
-    int32_t nextPicId = 1;
-    int32_t buffer_size;
-    bool batchMode_ = false;
-    uint8_t *saneReadBuf;
-    struct jpeg_compress_struct *cinfoPtr;
-    FILE *ofp = nullptr;
-    int32_t dpi = 0;
-    JSAMPLE *jpegbuf = nullptr;
     std::atomic<int32_t> appCount_{0};
     std::atomic<int32_t> scannerState_{SCANNER_READY};
     ScannerDiscoverData& scannerDiscoverData_ = ScannerDiscoverData::GetInstance();
+    ScanPictureData& scanPictureData_ = ScanPictureData::GetInstance();
 };
 } // namespace OHOS::Scan
 #endif // SCAN_SYSTEM_ABILITY_H

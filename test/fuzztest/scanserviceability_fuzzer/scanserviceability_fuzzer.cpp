@@ -22,6 +22,7 @@
 #include "scan_service_ability_mock.h"
 #include "scan_mdns_service.h"
 #include "mdns_common.h"
+#include "scan_task.h"
 
 namespace OHOS {
 namespace Scan {
@@ -100,14 +101,8 @@ namespace Scan {
         if (scanSaPtr == nullptr) {
             return;
         }
-        scanSaPtr->OnStartScan(scannerId, batchMode);
-        int32_t userId = scanSaPtr->GetCurrentUserId();
-        scanSaPtr->ObtainUserCacheDirectory(userId);
-        userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        scanSaPtr->ObtainUserCacheDirectory(userId);
-        constexpr int32_t DEFAULT_USERID = 100;
-        userId = DEFAULT_USERID;
-        scanSaPtr->ObtainUserCacheDirectory(userId);
+        scanSaPtr->StartScan(scannerId, batchMode);
+        scanSaPtr->GetCurrentUserId();
     }
 
     void TestSendDeviceInfo(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -177,8 +172,11 @@ namespace Scan {
     void TestGeneratePictureBatch(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanServiceAbility::GetInstance()->GeneratePictureSingle(scannerId);
-        ScanServiceAbility::GetInstance()->GeneratePictureBatch(scannerId);
+        int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        bool batchMode = dataProvider->ConsumeBool();
+        ScanTask scanTask(scannerId, userId, batchMode);
+        ScanServiceAbility::GetInstance()->GeneratePictureSingle(scanTask);
+        ScanServiceAbility::GetInstance()->GeneratePictureBatch(scanTask);
     }
 
     void TestAddFoundScanner(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -250,7 +248,10 @@ namespace Scan {
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         ScanServiceAbility::GetInstance()->RestartScan(scannerId);
         int32_t scanStatus = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        ScanServiceAbility::GetInstance()->CleanUpAfterScan(scanStatus);
+        int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        bool batchMode = dataProvider->ConsumeBool();
+        ScanTask scanTask(scannerId, userId, batchMode);
+        ScanServiceAbility::GetInstance()->CleanUpAfterScan(scanTask, scanStatus);
     }
 
     void TestActionSetAuto(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -329,21 +330,19 @@ namespace Scan {
     void TestStartScanTask(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanServiceAbility::GetInstance()->StartScanTask(scannerId);
+        int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        bool batchMode = dataProvider->ConsumeBool();
+        ScanTask scanTask(scannerId, userId, batchMode);
+        ScanServiceAbility::GetInstance()->StartScanTask(scanTask);
     }
 
     void TestDoScanTask(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
     {
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanServiceAbility::GetInstance()->DoScanTask(scannerId);
-    }
-
-    void TestSetScanProgr(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        int64_t totalBytes = dataProvider->ConsumeIntegralInRange<int64_t>(0, MAX_SET_NUMBER);
-        int64_t hundredPercent = dataProvider->ConsumeIntegralInRange<int64_t>(0, MAX_SET_NUMBER);
-        int32_t curReadSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        ScanServiceAbility::GetInstance()->SetScanProgr(totalBytes, hundredPercent, curReadSize);
+        int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        bool batchMode = dataProvider->ConsumeBool();
+        ScanTask scanTask(scannerId, userId, batchMode);
+        ScanServiceAbility::GetInstance()->DoScanTask(scanTask);
     }
 
     void TestGetPicFrame(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
@@ -351,16 +350,10 @@ namespace Scan {
         std::string scannerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
         int32_t scanStatus = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
         ScanParameters scanParameters;
-        ScanServiceAbility::GetInstance()->GetPicFrame(scannerId, scanStatus, scanParameters);
-    }
-
-    void TestWritePicData(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
-    {
-        int32_t jpegrow = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        int32_t curReadSize = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        int32_t scanStatus = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-        ScanParameters scanParameters;
-        ScanServiceAbility::GetInstance()->WritePicData(jpegrow, curReadSize, scanParameters, scanStatus);
+        int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+        bool batchMode = dataProvider->ConsumeBool();
+        ScanTask scanTask(scannerId, userId, batchMode);
+        ScanServiceAbility::GetInstance()->GetPicFrame(scanTask, scanStatus, scanParameters);
     }
 
     void TestMdnsDiscoveryHandleServiceFound(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -469,9 +462,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     OHOS::Scan::TestDeleteScanner(data, size, &dataProvider);
     OHOS::Scan::TestStartScanTask(data, size, &dataProvider);
     OHOS::Scan::TestDoScanTask(data, size, &dataProvider);
-    OHOS::Scan::TestSetScanProgr(data, size, &dataProvider);
     OHOS::Scan::TestGetPicFrame(data, size, &dataProvider);
-    OHOS::Scan::TestWritePicData(data, size, &dataProvider);
     OHOS::Scan::TestAllMdnsService(data, size, &dataProvider);
     return 0;
 }
