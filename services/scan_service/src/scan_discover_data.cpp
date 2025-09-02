@@ -23,13 +23,13 @@ ScannerDiscoverData& ScannerDiscoverData::GetInstance()
     return instance;
 }
 
-void ScannerDiscoverData::AddUsbDevice(const std::string& uniqueId, const ScanDeviceInfo& info)
+void ScannerDiscoverData::SetUsbDevice(const std::string& uniqueId, const ScanDeviceInfo& info)
 {
     std::lock_guard<std::mutex> lock(usbMutex_);
     usbDeviceInfoMap_[uniqueId] = info;
 }
 
-void ScannerDiscoverData::AddTcpDevice(const std::string& uniqueId, const ScanDeviceInfo& info)
+void ScannerDiscoverData::SetTcpDevice(const std::string& uniqueId, const ScanDeviceInfo& info)
 {
     std::lock_guard<std::mutex> lock(tcpMutex_);
     tcpDeviceInfoMap_[uniqueId] = info;

@@ -26,8 +26,8 @@ class ScannerDiscoverData {
 public:
     static ScannerDiscoverData& GetInstance();
     
-    void AddUsbDevice(const std::string& uniqueId, const ScanDeviceInfo& info);
-    void AddTcpDevice(const std::string& uniqueId, const ScanDeviceInfo& info);
+    void SetUsbDevice(const std::string& uniqueId, const ScanDeviceInfo& info);
+    void SetTcpDevice(const std::string& uniqueId, const ScanDeviceInfo& info);
     
     bool GetUsbDevice(const std::string& uniqueId, ScanDeviceInfo& info) const;
     bool GetTcpDevice(const std::string& uniqueId, ScanDeviceInfo& info) const;

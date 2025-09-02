@@ -185,5 +185,15 @@ enum DiscoveryModeType {
     TCP_STR = 0,
     USB_STR,
 };
+
+namespace ScannerDiscoveryMode {
+    constexpr const char* TCP_MODE = "TCP";
+    constexpr const char* USB_MODE = "USB";
+};
+
+namespace ScannerSyncMode {
+    constexpr const char* UPDATE_MODE = "update";
+    constexpr const char* DELETE_MODE = "delete";
+};
 } // namespace OHOS::Scan
 #endif // SCAN_CONSTANT_H

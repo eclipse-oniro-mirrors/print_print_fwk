@@ -211,10 +211,10 @@ void ScanUsbManager::UpdateUsbScannerId(std::string serialNumber, std::string us
         std::string newDeviceId = ScanServiceUtils::ReplaceDeviceIdUsbPort(info.deviceId, usbDevicePort);
         ScanDeviceInfoSync syncInfo;
         syncInfo.deviceId = newDeviceId;
-        syncInfo.serialNumber = serialNumber;
+        syncInfo.uniqueId = serialNumber;
         syncInfo.oldDeviceId = info.deviceId;
-        syncInfo.discoverMode = "USB";
-        syncInfo.syncMode = "update";
+        syncInfo.discoverMode = ScannerDiscoveryMode::USB_MODE;
+        syncInfo.syncMode = ScannerSyncMode::UPDATE_MODE;
         ScanServiceAbility::GetInstance()->UpdateScannerId(syncInfo);
     } else {
         SCAN_HILOGD("not find scanner, start discover");

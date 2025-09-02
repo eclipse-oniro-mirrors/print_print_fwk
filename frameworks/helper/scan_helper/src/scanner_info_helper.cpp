@@ -50,7 +50,7 @@ napi_value ScannerInfoSyncHelper::MakeJsObject(napi_env env, const ScanDeviceInf
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_DISCOVERMODE, info.GetDiscoverMode());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_UNIQUE_ID, info.GetUniqueId());
     NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_SYNCMODE, info.GetSyncMode());
-    if (info.GetSyncMode() == "update") {
+    if (info.GetSyncMode() == ScannerSyncMode::UPDATE_MODE) {
         NapiScanUtils::SetStringPropertyUtf8(env, jsObj, PARAM_OLD_SCANNERID, info.GetOldDeviceId());
     }
     return jsObj;
