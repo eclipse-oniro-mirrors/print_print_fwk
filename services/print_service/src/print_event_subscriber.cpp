@@ -55,6 +55,10 @@ void PrintEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
         action == EventFwk::CommonEventSupport::COMMON_EVENT_EXIT_FORCE_SLEEP) {
         PRINT_HILOGI("exit low-power mode, restart discovery");
         PrintServiceAbility::GetInstance()->ExitLowPowerMode();
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED) {
+        PRINT_HILOGI("screen unlocked");
+        // -1 will be replaced by the current user id in NotifyCurrentUserChanged.
+        PrintServiceAbility::GetInstance()->NotifyCurrentUserChanged(-1);
     }
 }
 

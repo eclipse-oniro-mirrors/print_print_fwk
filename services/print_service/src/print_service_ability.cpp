@@ -49,6 +49,8 @@
 #include <fstream>
 #include <streambuf>
 #include "print_json_util.h"
+#include "print_setting_data_helper.h"
+#include "parameters.h"
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -112,6 +114,9 @@ static const std::string PRINTER_ID_DELIMITER = ":";
 static const std::string USB_PRINTER = "usb";
 static const std::string DEVICE_TYPE = "PRINTER";
 static const std::string PRINT_CONSTRAINT = "constraint.print";
+
+static const std::string PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH = "const.window.support_window_pcmode_switch";
+static const std::string WINDOW_PCMODE_SWITCH_STATUS = "window_pcmode_switch_status";
 
 #if ENTERPRISE_ENABLE
 static const std::string IS_ENTERPRISE_ENABLE = "2";
@@ -1053,6 +1058,7 @@ bool PrintServiceAbility::CheckPrintJob(PrintJob &jobInfo)
 void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
 {
     PRINT_HILOGI("enter UpdateQueuedJobList, jobId: %{public}s.", jobId.c_str());
+    RegisterSettingDataObserver();
     std::string jobOrderId = GetPrintJobOrderId();
     if (jobOrderId == "0") {
         jobOrderList_.clear();
@@ -1268,9 +1274,13 @@ void PrintServiceAbility::BlockUserPrintJobs(const int32_t userId)
 void PrintServiceAbility::NotifyCurrentUserChanged(const int32_t userId)
 {
     PRINT_HILOGD("NotifyAppCurrentUserChanged begin");
-    PRINT_HILOGI("currentUserId_ is: %{public}d", userId);
-    currentUserId_ = userId;
-    auto userData = GetUserDataByUserId(userId);
+    if (userId == INVALID_USER_ID) {
+        currentUserId_ = GetCurrentUserId();
+    } else {
+        currentUserId_ = userId;
+    }
+    PRINT_HILOGI("currentUserId_ is: %{public}d", currentUserId_);
+    auto userData = GetUserDataByUserId(currentUserId_);
     if (userData == nullptr) {
         PRINT_HILOGE("Get user data failed.");
         return;
@@ -4050,4 +4060,32 @@ bool PrintServiceAbility::IsPrinterPpdUpdateRequired(
     return true;
 }
 
+void PrintServiceAbility::RegisterSettingDataObserver()
+{
+    if (!IsPcModeSupported()) {
+        PRINT_HILOGW("Dose not support pc mode.");
+        return;
+    }
+    PRINT_HILOGI("Support pc mode.");
+    int32_t userId = GetCurrentUserId();
+    if (userId == INVALID_USER_ID) {
+        PRINT_HILOGE("Invalid user id.");
+        return;
+    }
+    PrintSettingDataObserver::ObserverCallback observerCallback = [this, userId]() {
+        PRINT_HILOGI("observerCallback enter");
+        if (this->helper_ == nullptr) {
+            PRINT_HILOGE("Invalid print service helper.");
+            return;
+        }
+        this->helper_->DisconnectAbility();
+    };
+    PrintSettingDataHelper::GetInstance().RegisterSettingDataObserver(
+        WINDOW_PCMODE_SWITCH_STATUS, observerCallback, userId, false);
+}
+
+bool PrintServiceAbility::IsPcModeSupported()
+{
+    return system::GetParameter(PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH, "false") == "true";
+}
 }  // namespace OHOS::Print
