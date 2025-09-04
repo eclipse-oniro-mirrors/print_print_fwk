@@ -195,5 +195,11 @@ namespace ScannerSyncMode {
     constexpr const char* UPDATE_MODE = "update";
     constexpr const char* DELETE_MODE = "delete";
 };
+
+constexpr size_t BYTE_BITS = 8;
+constexpr int CHANNEL_ONE = 1;
+constexpr int CHANNEL_THREE = 3;
+constexpr int JPEG_QUALITY_SEVENTY_FIVE = 75;
+constexpr int32_t BUFFER_SIZE = 1024 * 100; // 100KB
 } // namespace OHOS::Scan
 #endif // SCAN_CONSTANT_H
