@@ -1,0 +1,115 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//base/print/print_fwk/print.gni")
+import("//build/config/features.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
+
+##############################fuzztest##########################################
+ohos_fuzztest("PrintServicePrintDiscoverFunctionFuzzTest") {
+  module_out_path = fuzz_test_output_path
+
+  fuzz_config_file = "${print_path}/test/fuzztest/printserviceprintdiscoverfunction_fuzzer"
+
+  include_dirs = [
+    "mock",
+    "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/ohprint/include",
+    "${print_utils_path}/include",
+  ]
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+
+  cflags_cc = []
+
+  deps = [
+    "${print_path}/etc/init:printservice.rc",
+    "${print_path}/frameworks/innerkitsimpl/print_impl:print_client",
+    "${print_path}/frameworks/kits/extension:print_extension_framework",
+    "${print_path}/frameworks/kits/extension:print_extension_module",
+    "${print_path}/frameworks/models/print_models:print_models",
+    "${print_path}/interfaces/kits/jsnapi/print_extension:printextensionability_napi",
+    "${print_path}/interfaces/kits/jsnapi/print_extensionctx:printextensioncontext_napi",
+    "${print_path}/interfaces/kits/napi/print_napi:print_napi",
+    "${print_path}/profile:print_sa_profiles",
+    "${print_path}/services/print_service:print_service_test",
+  ]
+
+  sources = [
+    "printserviceability_fuzzer.cpp",
+    "printserviceability_mock_permission.cpp",
+  ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+    "bounds_checking_function:libsec_shared",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "napi:ace_napi",
+    "os_account:os_account_innerkits",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
+    "usb_manager:usbsrv_client",
+    "wifi:wifi_sdk",
+  ]
+
+  if (cups_enable) {
+    cflags_cc += [ "-DCUPS_ENABLE" ]
+    external_deps += [
+      "cJSON:cjson",
+      "cups:cups",
+      "cups-filters:cupsfilters",
+    ]
+  }
+
+  if (security_guard_enabled) {
+    external_deps += [
+      "security_guard:libsg_collect_sdk",
+      "time_service:time_client",
+    ]
+  }
+}
+
+###############################################################################
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [
+    # deps file
+    ":PrintServicePrintDiscoverFunctionFuzzTest",
+  ]
+}
+###############################################################################
