@@ -814,7 +814,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0040, TestSize.Level1)
     int32_t userId = 100;
     service->printUserMap_.insert(std::make_pair(userId, nullptr));
     service->UpdateQueuedJobList("515", printJob);
-    service->printAppCount_ = 3;
     std::string type ="0";
     EXPECT_EQ(service->NotifyPrintService(jobId, type), E_PRINT_NONE);
     type = "spooler_closed_for_started";
@@ -1520,20 +1519,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0084, TestSize.Level1)
     service->printSystemData_.discoveredPrinterInfoList_[printerId] = printerInfo;
     service->printSystemData_.addedPrinterInfoList_[printerId] = printerInfo;
     EXPECT_EQ(service->CheckAndSendQueuePrintJob(jobId, state, subState), E_PRINT_NONE);
-}
-
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0085, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string printerId = "1234";
-    service->printAppCount_ = 1;
-    service->ReportCompletedPrint(printerId);
-    std::string jobId = "1";
-    std::shared_ptr<PrintJob> printJob = std::make_shared<PrintJob>();
-    service->queuedJobList_[jobId] = printJob;
-    service->printAppCount_ = 0;
-    service->ReportCompletedPrint(printerId);
-    EXPECT_EQ(service->unloadCount_, 0);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0086, TestSize.Level1)
