@@ -17,6 +17,7 @@
 #include "scan_constant.h"
 #include "scan_log.h"
 #include "securec.h"
+#include "sane_info.h"
 
 namespace OHOS::Scan {
 constexpr int32_t BIT = 1;
@@ -134,8 +135,8 @@ int32_t ScanTask::WritePicData(int32_t& jpegrow, std::vector<uint8_t>& dataBuffe
             jpegrow = 0;
             continue;
         }
-        size_t jpegImageBytes = static_cast<size_t>(parm.GetBytesPerLine() * BYTE_BITS);
-        if (jpegImageBytes > SIZE_MAX / BYTE_BITS) {
+        int32_t jpegImageBytes = parm.GetBytesPerLine() * BYTE_BITS;
+        if (jpegImageBytes < 0 || jpegImageBytes > MAX_BUFLEN) {
             SCAN_HILOGE("nultiplication would overflow");
             return E_SCAN_GENERIC_FAILURE;
         }
