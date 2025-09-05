@@ -59,16 +59,6 @@
 #include "saneopts.h"
 
 namespace OHOS::Scan {
-namespace {
-static std::string GetLastWord(const std::string &str)
-{
-    size_t pos = str.find_last_of(' ');
-    if (pos == std::string::npos) {
-        return str;
-    }
-    return str.substr(pos + 1);
-}
-};  // namespace
 using namespace std;
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
@@ -341,7 +331,6 @@ void ScanServiceAbility::SetScannerSerialNumberByTCP(ScanDeviceInfo &info)
     } while (!findNetScannerInfoByIp && count < MAX_WAIT_COUNT);
     info.uniqueId = ip;
     if (findNetScannerInfoByIp) {
-        info.serialNumber = GetLastWord(netScannerInfo.deviceName);
         info.uuid = netScannerInfo.uuid;
         info.deviceName = netScannerInfo.deviceName;
     } else {
@@ -1159,6 +1148,7 @@ void ScanServiceAbility::GeneratePictureBatch(ScanTask scanTask)
         SCAN_HILOGI("GeneratePictureBatch exit successfully");
     } else {
         SCAN_HILOGE("GeneratePictureBatch fail, status = %{public}d", status);
+        scanPictureData_.SetScanTaskCode(status);
     }
 }
 
