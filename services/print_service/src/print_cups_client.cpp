@@ -1913,6 +1913,24 @@ bool PrintCupsClient::UpdateJobState(std::shared_ptr<JobMonitorParam> monitorPar
     return true;
 }
 
+bool PrintCupsClient::CheckUsbPrinterOnline(const std::string &printerId)
+{
+    std::vector<PrinterInfo> usbPrinters = GetUsbPrinters();
+    if (usbPrinters.empty()) {
+        int32_t ret = DiscoverUsbPrinters(usbPrinters);
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("discover usb printers failed, ret: %{public}d", ret);
+            return false;
+        }
+    }
+    for (auto &printer: usbPrinters) {
+        if (printerId.find(printer.GetPrinterId()) != std::string::npos) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monitorParams, const uint32_t timeout)
 {
     http_t *http = nullptr;
@@ -1934,12 +1952,13 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     bool isCustomizedExtension = !(PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME) ||
                                    PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX));
     if ((isUsbPrinter || isCustomizedExtension || isVendorPrinter) && monitorParams->serviceAbility != nullptr) {
-        if (monitorParams->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
-            PRINT_HILOGI("printer offline");
-            return false;
-        } else {
+        if ((isUsbPrinter && CheckUsbPrinterOnline(printerId)) ||
+            monitorParams->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) != nullptr) {
             PRINT_HILOGI("printer online");
             return true;
+        } else {
+            PRINT_HILOGI("printer offline");
+            return false;
         }
     } else {
         httpSeparateURI(HTTP_URI_CODING_ALL, printerUri, scheme, sizeof(scheme),
@@ -2381,7 +2400,7 @@ std::string PrintCupsClient::GetIpAddress(unsigned int number)
 int32_t PrintCupsClient::DiscoverUsbPrinters(std::vector<PrinterInfo> &printers)
 {
     int longStatus = 0;
-    const char *include_schemes = CUPS_INCLUDE_ALL;
+    const char *include_schemes = USB_PRINTER.c_str();
     const char *exclude_schemes = CUPS_EXCLUDE_NONE;
     int timeout = CUPS_TIMEOUT_DEFAULT;
     PRINT_HILOGD("DiscoverUsbPrinters cupsGetDevices");
