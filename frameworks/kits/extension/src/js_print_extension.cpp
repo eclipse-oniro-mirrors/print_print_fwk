@@ -42,7 +42,7 @@ using namespace OHOS::Print;
 
 JsPrintExtension *JsPrintExtension::Create(const std::unique_ptr<Runtime> &runtime)
 {
-    PRINT_HILOGD("jws JsPrintExtension begin Create");
+    PRINT_HILOGI("JsPrintExtension begin Create");
     jsExtension_ = new JsPrintExtension(static_cast<JsRuntime &>(*runtime));
     return jsExtension_;
 }
@@ -66,7 +66,7 @@ void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
     const std::shared_ptr<OHOSApplication> &application, std::shared_ptr<AbilityHandler> &handler,
     const sptr<IRemoteObject> &token)
 {
-    PRINT_HILOGD("jws JsPrintExtension begin Init");
+    PRINT_HILOGI("JsPrintExtension begin Init");
     PrintExtension::Init(record, application, handler, token);
 
     if (!InitExtensionObj(jsRuntime_)) {
@@ -84,7 +84,7 @@ void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
         PRINT_HILOGE("Failed to init extension context object");
         return;
     }
-    PRINT_HILOGD("JsPrintExtension::Init end.");
+    PRINT_HILOGI("JsPrintExtension::Init end.");
 }
 
 bool JsPrintExtension::InitExtensionObj(JsRuntime &jsRuntime)
@@ -137,7 +137,7 @@ bool JsPrintExtension::InitContextObj(JsRuntime &jsRuntime, napi_value &extObj, 
 
     napi_wrap(engine, contextObj, new std::weak_ptr<AbilityRuntime::Context>(context),
         [](napi_env, void *data, void *) {
-            PRINT_HILOGD("Finalizer for weak_ptr Print extension context is called");
+            PRINT_HILOGI("Finalizer for weak_ptr Print extension context is called");
             delete static_cast<std::weak_ptr<AbilityRuntime::Context> *>(data);
         },
         nullptr, nullptr);
@@ -147,7 +147,7 @@ bool JsPrintExtension::InitContextObj(JsRuntime &jsRuntime, napi_value &extObj, 
 void JsPrintExtension::OnStart(const AAFwk::Want &want)
 {
     Extension::OnStart(want);
-    PRINT_HILOGD("jws JsPrintExtension OnStart begin..");
+    PRINT_HILOGI("JsPrintExtension OnStart begin..");
     HandleScope handleScope(jsRuntime_);
     napi_env nativeEngine = jsRuntime_.GetNapiEnv();
     napi_value nativeWant = OHOS::AppExecFwk::WrapWant(nativeEngine, want);
@@ -171,7 +171,7 @@ void JsPrintExtension::RegisterCb()
 void JsPrintExtension::OnStop()
 {
     PrintExtension::OnStop();
-    PRINT_HILOGD("jws JsPrintExtension OnStop begin.");
+    PRINT_HILOGI("JsPrintExtension OnStop begin.");
     auto context = GetContext();
     if (context == nullptr) {
         PRINT_HILOGE("Failed to get context");
@@ -186,7 +186,7 @@ void JsPrintExtension::OnStop()
 
 sptr<IRemoteObject> JsPrintExtension::OnConnect(const AAFwk::Want &want)
 {
-    PRINT_HILOGD("jws JsPrintExtension OnConnect begin.");
+    PRINT_HILOGI("JsPrintExtension OnConnect begin.");
     Extension::OnConnect(want);
     PRINT_HILOGD("%{public}s begin.", __func__);
     HandleScope handleScope(jsRuntime_);
@@ -225,7 +225,7 @@ sptr<IRemoteObject> JsPrintExtension::OnConnect(const AAFwk::Want &want)
 
 void JsPrintExtension::OnDisconnect(const AAFwk::Want &want)
 {
-    PRINT_HILOGD("jws JsPrintExtension OnDisconnect begin.");
+    PRINT_HILOGI("JsPrintExtension OnDisconnect begin.");
     Extension::OnDisconnect(want);
     PRINT_HILOGD("%{public}s begin.", __func__);
     HandleScope handleScope(jsRuntime_);
@@ -256,7 +256,7 @@ void JsPrintExtension::OnDisconnect(const AAFwk::Want &want)
 
 void JsPrintExtension::OnCommand(const AAFwk::Want &want, bool restart, int startId)
 {
-    PRINT_HILOGD("jws JsPrintExtension OnCommand begin.");
+    PRINT_HILOGI("JsPrintExtension OnCommand begin.");
     Extension::OnCommand(want, restart, startId);
     PRINT_HILOGD("begin restart=%{public}s,startId=%{public}d.", restart ? "true" : "false", startId);
     if (startId <= 1) {
@@ -275,7 +275,7 @@ void JsPrintExtension::OnCommand(const AAFwk::Want &want, bool restart, int star
 
 napi_value JsPrintExtension::CallObjectMethod(const char *name, napi_value const *argv, size_t argc)
 {
-    PRINT_HILOGD("jws JsPrintExtension::CallObjectMethod(%{public}s), begin", name);
+    PRINT_HILOGI("JsPrintExtension::CallObjectMethod(%{public}s), begin", name);
 
     if (!jsObj_) {
         PRINT_HILOGW("Not found PrintExtension.js");
@@ -305,7 +305,7 @@ napi_value JsPrintExtension::CallObjectMethod(const char *name, napi_value const
 
 void JsPrintExtension::GetSrcPath(std::string &srcPath)
 {
-    PRINT_HILOGD("jws JsPrintExtension GetSrcPath begin.");
+    PRINT_HILOGI("JsPrintExtension GetSrcPath begin.");
     if (!Extension::abilityInfo_->isModuleJson) {
         /* temporary compatibility api8 + config.json */
         srcPath.append(Extension::abilityInfo_->package);
@@ -327,7 +327,7 @@ void JsPrintExtension::GetSrcPath(std::string &srcPath)
 
 bool JsPrintExtension::Callback(std::string funcName)
 {
-    PRINT_HILOGD("call %{public}s", funcName.c_str());
+    PRINT_HILOGI("JsPrintExtension call %{public}s", funcName.c_str());
     std::lock_guard<std::mutex> lock(mtx);
     if (JsPrintExtension::jsExtension_ == nullptr) {
         return false;
