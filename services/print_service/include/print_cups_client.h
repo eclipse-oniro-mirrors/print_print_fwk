@@ -214,6 +214,7 @@ private:
     static int FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     const std::string& GetCurCupsRootDir();
     const std::string& GetCurCupsdControlParam();
+    bool CheckUsbPrinterOnline(const std::string &printerId);
 
 private:
     bool toCups_ = true;
