@@ -48,6 +48,7 @@ void SaneServerManager::OnStart()
 
 SANE_Handle SaneServerManager::GetScanHandle(const std::string &scannerId)
 {
+    std::lock_guard<std::mutex> autoLock(scannerHandleListlock_);
     auto it = scannerHandleList_.find(scannerId);
     if (it == scannerHandleList_.end()) {
         SCAN_HILOGE("ScannerId is not openned!");

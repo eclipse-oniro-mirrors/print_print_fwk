@@ -105,7 +105,7 @@ ScanServiceAbility::ScanServiceAbility(int32_t systemAbilityId, bool runOnCreate
 
 ScanServiceAbility::~ScanServiceAbility()
 {
-    SCAN_HILOGD("~ScanServiceAbility state_  is %{public}d.", static_cast<int>(state_));
+    SCAN_HILOGD("~ScanServiceAbility state_  is %{public}d.", static_cast<int>(state_.load()));
 }
 
 sptr<ScanServiceAbility> ScanServiceAbility::GetInstance()
@@ -127,7 +127,7 @@ int32_t ScanServiceAbility::ServiceInit()
         return E_SCAN_SERVER_FAILURE;
     }
     state_ = ServiceRunningState::STATE_RUNNING;
-    SCAN_HILOGD("state_ is %{public}d.", static_cast<int>(state_));
+    SCAN_HILOGD("state_ is %{public}d.", static_cast<int>(state_.load()));
     SCAN_HILOGI("Init ScanServiceAbility success.");
     return ERR_OK;
 }
