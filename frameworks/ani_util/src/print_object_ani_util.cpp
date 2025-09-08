@@ -275,7 +275,7 @@ bool SetIntArrayProperty(ani_env *env, ani_object param, const char *name,
     }
 
     for (size_t i = 0; i < values.size(); i++) {
-        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ii:V", i, values[i]);
+        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ii:", i, values[i]);
         if (status != ANI_OK) {
             PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
             return false;

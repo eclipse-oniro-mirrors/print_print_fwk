@@ -177,7 +177,7 @@ ani_object PrinterInfoAniHelper::CreatePrinterInformation(ani_env *env, const Pr
 {
     PRINT_HILOGI("enter CreatePrinterInformation");
 
-    static const char *className = "C{@ohos.print.print.PrinterInformationImp}";
+    static const char *className = "@ohos.print.print.PrinterInformationImp";
     ani_object obj = CreateObject(env, nullptr, className);
 
     SetStringProperty(env, obj, PARAM_INFO_PRINTERID, info.GetPrinterId());
@@ -215,7 +215,7 @@ bool PrinterInfoAniHelper::GetPrinterInfoArray(ani_env *env, ani_object param, s
     for (int32_t i = 0; i < static_cast<int32_t>(length); i++) {
         ani_ref aniPrinterInfo;
         status = env->Object_CallMethodByName_Ref(param, "$_get",
-            "L@ohos/print/PrinterInfoImpl;", &aniPrinterInfo, static_cast<ani_int>(i));
+            "i:C{std.core.Object}", &aniPrinterInfo, static_cast<ani_int>(i));
         if (status != ANI_OK) {
             PRINT_HILOGE("Object_CallMethodByName_Ref fail, status = %{public}u", status);
             return false;

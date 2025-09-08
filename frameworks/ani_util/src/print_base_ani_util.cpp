@@ -246,7 +246,7 @@ bool GetStdStringArray(ani_env *env, ani_object param, std::vector<std::string> 
     for (int32_t i = 0; i < static_cast<int32_t>(length); i++) {
         ani_ref stringEntryRef = nullptr;
         status = env->Object_CallMethodByName_Ref(param, "$_get",
-            "I:Lstd/core/Object;", &stringEntryRef, i);
+            "i:C{std.core.Object}", &stringEntryRef, i);
         if (status != ANI_OK) {
             PRINT_HILOGE("Object_CallMethodByName_Ref fail, status = %{public}u", status);
             return false;
