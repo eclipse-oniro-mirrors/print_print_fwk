@@ -76,7 +76,7 @@ private:
     int32_t ActionSetValue(const std::string &scannerId, ScanOptionValue &value,
                            const int32_t &optionIndex);
     int32_t DoScanTask(ScanTask &scanTask);
-    void StartScanTask(ScanTask scanTask);
+    void StartScanTask(ScanTask &scanTask);
     void SendDeviceInfo(const ScanDeviceInfo &info, std::string event);
     void SendDeviceInfoSync(const ScanDeviceInfoSync &info, std::string event);
     void SetScannerSerialNumber(ScanDeviceInfo &info);
@@ -95,8 +95,8 @@ private:
     void ManualStart();
     bool CheckPermission(const std::string &permissionName);
     void GetPicFrame(ScanTask &scanTask, int32_t &scanStatus, ScanParameters &parm);
-    void GeneratePictureBatch(ScanTask scanTask);
-    void GeneratePictureSingle(ScanTask scanTask);
+    void GeneratePictureBatch(ScanTask &scanTask);
+    void GeneratePictureSingle(ScanTask &scanTask);
     bool GetUsbDevicePort(const std::string &deviceId, std::string &firstId, std::string &secondId);
     bool GetTcpDeviceIp(const std::string &deviceId, std::string &ip);
     void SendDeviceList(std::vector<ScanDeviceInfo> &info, std::string event);

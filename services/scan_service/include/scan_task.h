@@ -32,7 +32,7 @@ public:
     ScanTask(const std::string& scannerId, int32_t userId, bool batchMode);
     std::string GetScannerId() const;
     ~ScanTask();
-    bool GetBathMode();
+    bool GetBatchMode();
     bool CreateAndOpenScanFile(std::string& filePath);
     int32_t WriteJpegHeader(ScanParameters &parm, const UINT16& dpi);
     int32_t WritePicData(int32_t& jpegrow, std::vector<uint8_t>& dataBuffer, ScanParameters &parm);
@@ -40,15 +40,17 @@ public:
     void JpegFinishCompress();
 
 private:
+    ScanTask(const ScanTask&) = delete;
+    ScanTask& operator=(const ScanTask&) = delete;
     static void JpegErrorExit(j_common_ptr cinfo);
+    std::string scannerId_;
     bool batchMode_;
     bool isJpegWriteSuccess_;
-    struct jpeg_compress_struct cinfo_;
-    struct jpeg_error_mgr jerr_;
-    std::string scannerId_;
     int32_t userId_;
     FILE *ofp_;
     JSAMPLE *jpegbuf_;
+    struct jpeg_compress_struct cinfo_;
+    struct jpeg_error_mgr jerr_;
 };
 
 } // namespace OHOS::Scan
