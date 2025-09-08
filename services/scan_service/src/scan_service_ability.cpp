@@ -1087,16 +1087,19 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
     }
     scannerState_.store(SCANNER_SCANING);
     scanPictureData_.PushScanPictureProgress();
-    ScanTask task(scannerId, GetCurrentUserId(), batchMode);
-    auto exe = [=]() { StartScanTask(task); };
+    int32_t userId = GetCurrentUserId();
+    auto exe = [=] () {
+        ScanTask task(scannerId, userId, batchMode);
+        StartScanTask(task);
+    };
     serviceHandler_->PostTask(exe, ASYNC_CMD_DELAY);
     SCAN_HILOGI("StartScan successfully");
     return E_SCAN_NONE;
 }
 
-void ScanServiceAbility::StartScanTask(ScanTask scanTask)
+void ScanServiceAbility::StartScanTask(ScanTask &scanTask)
 {
-    if (scanTask.GetBathMode()) {
+    if (scanTask.GetBatchMode()) {
         SCAN_HILOGI("start batch mode scan");
         GeneratePictureBatch(scanTask);
     } else {
@@ -1123,7 +1126,7 @@ bool ScanServiceAbility::CreateAndOpenScanFile(ScanTask &scanTask)
     return true;
 }
 
-void ScanServiceAbility::GeneratePictureBatch(ScanTask scanTask)
+void ScanServiceAbility::GeneratePictureBatch(ScanTask &scanTask)
 {
     bool firstScan = true;
     int32_t status = E_SCAN_NONE;
@@ -1152,7 +1155,7 @@ void ScanServiceAbility::GeneratePictureBatch(ScanTask scanTask)
     }
 }
 
-void ScanServiceAbility::GeneratePictureSingle(ScanTask scanTask)
+void ScanServiceAbility::GeneratePictureSingle(ScanTask &scanTask)
 {
     int32_t status = E_SCAN_NONE;
     if (!CreateAndOpenScanFile(scanTask)) {
@@ -1236,7 +1239,7 @@ void ScanServiceAbility::CleanUpAfterScan(ScanTask &scanTask, int32_t scanStatus
 {
     if (scanStatus != E_SCAN_EOF && scanStatus != E_SCAN_NO_DOCS) {
         scanTask.JpegDestroyCompress();
-        SCAN_HILOGE("End of failded scan ");
+        SCAN_HILOGE("End of failed scan ");
     } else {
         scanTask.JpegFinishCompress();
         SCAN_HILOGD("End of normal scan");
@@ -1306,7 +1309,6 @@ int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int
         return ScanServiceUtils::ConvertErro(status);
     }
     int32_t resolutionIndex = 0;
-    uint32_t dpiType = 0;
     for (int32_t optionIndex = 1; optionIndex < outParam.valueNumber_; optionIndex++) {
         SaneOptionDescriptor saneDesc;
         status = SaneManagerClient::GetInstance()->SaneGetOptionDescriptor(scannerId, optionIndex, saneDesc);
@@ -1318,7 +1320,6 @@ int32_t ScanServiceAbility::GetScannerImageDpi(const std::string& scannerId, int
             && (saneDesc.optionUnit_ == SCANNER_UNIT_DPI)
             && (saneDesc.optionName_ == SANE_NAME_SCAN_RESOLUTION)) {
             resolutionIndex = optionIndex;
-            dpiType = saneDesc.optionType_;
             break;
         }
     }

@@ -23,22 +23,28 @@ namespace OHOS::Scan {
 constexpr int32_t BIT = 1;
 
 ScanTask::ScanTask(const std::string& scannerId, int32_t userId, bool batchMode)
+    :   scannerId_(scannerId),
+        batchMode_(batchMode),
+        isJpegWriteSuccess_(true),
+        userId_(userId),
+        ofp_(nullptr),
+        jpegbuf_(nullptr)
 {
-    scannerId_= scannerId;
-    batchMode_ = batchMode;
-    cinfo_.comps_in_scan = 0;
-    isJpegWriteSuccess_ = true;
-    userId_ = userId;
-    ofp_ = nullptr;
-    jpegbuf_ = nullptr;
+    if (memset_s(&cinfo_, sizeof(cinfo_), 0, sizeof(cinfo_)) != 0) {
+        SCAN_HILOGW("cinfo memset fail");
+    }
+    if (memset_s(&jerr_, sizeof(jerr_), 0, sizeof(jerr_)) != 0) {
+        SCAN_HILOGW("jerr memset fail");
+    }
 }
 
 ScanTask::~ScanTask()
 {
-    jpeg_destroy_compress(&cinfo_);
-    cinfo_.client_data = nullptr;
     DELETE_ARRAY_AND_NULLIFY(jpegbuf_)
-    DELETE_AND_NULLIFY(ofp_);
+    if (ofp_ != nullptr) {
+        fclose(ofp_);
+        ofp_ = nullptr;
+    }
 }
 
 std::string ScanTask::GetScannerId() const
@@ -46,26 +52,22 @@ std::string ScanTask::GetScannerId() const
     return scannerId_;
 }
 
-bool ScanTask::GetBathMode()
+bool ScanTask::GetBatchMode()
 {
     return batchMode_;
 }
 
 bool ScanTask::CreateAndOpenScanFile(std::string& filePath)
 {
-    std::ostringstream oss;
-    oss << "/data/service/el2/" << userId_ << "/print_service";
-    std::string outputDir = oss.str();
+    std::string outputDir = "/data/service/el2/" + std::to_string(userId_) + "/print_service";
     char canonicalPath[PATH_MAX] = {0};
     if (realpath(outputDir.c_str(), canonicalPath) == nullptr) {
         SCAN_HILOGE("The real output dir is null, errno:%{public}s", std::to_string(errno).c_str());
         return false;
     }
     outputDir = canonicalPath;
-    std::ostringstream outputFileStream;
     static int32_t pictureId = 1;
-    outputFileStream << outputDir << "/" << "scan_tmp" << std::to_string(pictureId++) << ".jpg";
-    filePath = outputFileStream.str();
+    filePath = outputDir + "/scan_tmp" + std::to_string(pictureId++) + ".jpg";
     ofp_ = fopen(filePath.c_str(), "w");
     if (ofp_ == nullptr) {
         SCAN_HILOGE("file [%{private}s] open fail", filePath.c_str());
@@ -81,8 +83,8 @@ int32_t ScanTask::WriteJpegHeader(ScanParameters &parm, const UINT16& dpi)
     int32_t height = parm.GetLines();
     cinfo_.err = jpeg_std_error(&jerr_);
     cinfo_.err->error_exit = &ScanTask::JpegErrorExit;
-    isJpegWriteSuccess_ = true;
     jpeg_create_compress(&cinfo_);
+    isJpegWriteSuccess_ = true;
     jpeg_stdio_dest(&cinfo_, ofp_);
     cinfo_.image_width = static_cast<JDIMENSION>(width);
     cinfo_.image_height = static_cast<JDIMENSION>(height);
@@ -123,7 +125,7 @@ int32_t ScanTask::WritePicData(int32_t& jpegrow, std::vector<uint8_t>& dataBuffe
             SCAN_HILOGE("isJpegWrite FaiL");
             return E_SCAN_NO_MEM;
         }
-        if (memcpy_s(jpegbuf_ + jpegrow, parm.GetBytesPerLine(), dataBuffer.data() + i,
+        if (memcpy_s(jpegbuf_ + jpegrow, parm.GetBytesPerLine() - jpegrow, dataBuffer.data() + i,
             parm.GetBytesPerLine() - jpegrow) != E_SCAN_NONE) {
             SCAN_HILOGE("memcpy_s failed");
             return E_SCAN_GENERIC_FAILURE;
