@@ -4078,7 +4078,15 @@ void PrintServiceAbility::RegisterSettingDataObserver()
             PRINT_HILOGE("Invalid print service helper.");
             return;
         }
-        this->helper_->DisconnectAbility();
+        std::string value = PrintSettingDataHelper::GetInstance().Query(WINDOW_PCMODE_SWITCH_STATUS, userId, false);
+        if (value.empty()) {
+            PRINT_HILOGE("Query settings data failed.");
+            return;
+        }
+        PRINT_HILOGI("observerCallback pcmode value: %{public}s", value.c_str());
+        if (value == "false") {
+            this->helper_->DisconnectAbility();
+        }
     };
     PrintSettingDataHelper::GetInstance().RegisterSettingDataObserver(
         WINDOW_PCMODE_SWITCH_STATUS, observerCallback, userId, false);
