@@ -1259,5 +1259,37 @@ const std::string& PrintSystemData::GetPrintersPath()
     return PRINTER_SERVICE_PRINTERS_PATH;
 }
 
+void PrintSystemData::AddPrintEvent(const std::string &printerId, const std::string &type, int32_t code)
+{
+    PRINT_HILOGI("AddPrintEvent printerId: %{private}s, type: %{private}s, code: %{public}d.",
+        printerId.c_str(), type.c_str(), code);
+    auto printEventContainer = printEventMap_.Find(printerId);
+    if (printEventContainer == nullptr) {
+        PrintEventContainer eventContainer(printerId);
+        eventContainer.AddEventCode(type, code);
+        printEventMap_.Insert(printerId, eventContainer);
+    } else {
+        printEventContainer->AddEventCode(type, code);
+    }
+}
+void PrintSystemData::ClearPrintEvents(const std::string &printerId, const std::string &type)
+{
+    PRINT_HILOGI("ClearPrintEvents printerId: %{private}s, type: %{private}s.", printerId.c_str(), type.c_str());
+    auto printEventContainer = printEventMap_.Find(printerId);
+    if (printEventContainer !=  nullptr) {
+        printEventContainer->ClearEventType(type);
+    }
+}
+std::string PrintSystemData::AnalyzePrintEvents(const std::string &printerId, const std::string &type)
+{
+    auto printEventContainer = printEventMap_.Find(printerId);
+    if (printEventContainer ==  nullptr) {
+        PRINT_HILOGI("printEventContainer is null.");
+        return "";
+    }
+    PRINT_HILOGI("AnalyzePrintEvents printerId: %{private}s, type: %{private}s.", printerId.c_str(), type.c_str());
+    return printEventContainer->AnalyzeEventCodes(type);
+}
+
 }  // namespace Print
 }  // namespace OHOS

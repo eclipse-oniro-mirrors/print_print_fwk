@@ -27,6 +27,7 @@
 #include "print_log.h"
 #include "print_map_safe.h"
 #include "printer_preferences.h"
+#include "print_event_container.h"
 
 namespace OHOS {
 namespace Print {
@@ -66,6 +67,10 @@ public:
     std::shared_ptr<PrinterInfo> QueryIpPrinterInfoById(const std::string &printerId);
     int32_t BuildPrinterPreference(const PrinterCapability &cap, PrinterPreferences &printPreferences);
     bool CheckPrinterVersionFile();
+
+    void AddPrintEvent(const std::string &printerId, const std::string &type, int32_t code);
+    void ClearPrintEvents(const std::string &printerId, const std::string &type);
+    std::string AnalyzePrintEvents(const std::string &printerId, const std::string &type);
 
 private:
     bool ParsePrinterListJsonV1(Json::Value& jsonObject);
@@ -166,6 +171,7 @@ private:
     std::mutex discoveredListMutex;
     std::mutex connectingIpPrinterListMutex;
     const uint32_t MAX_PRINTER_SIZE = 1000;
+    PrintMapSafe<PrintEventContainer> printEventMap_;
 };
 
 }  // namespace Print

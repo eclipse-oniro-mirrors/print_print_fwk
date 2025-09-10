@@ -445,6 +445,17 @@ int32_t PrintManagerClient::UpdatePrinterInSystem(const PrinterInfo &printerInfo
     return ret;
 }
 
+int32_t PrintManagerClient::AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->AnalyzePrintEvents(printerId, type, detail);
+        PRINT_HILOGI("PrintManagerClient AnalyzePrintEvents out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::QueryAllPrintJob(std::vector<PrintJob> &printJobs)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);

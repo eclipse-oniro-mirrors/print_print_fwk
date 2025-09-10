@@ -87,6 +87,7 @@ public:
     int32_t UpdatePrinterInDiscovery(const PrinterInfo &printerInfo);
     int32_t RemovePrinterFromDiscovery(const std::string &printerId);
     int32_t UpdatePrinterInSystem(const PrinterInfo &printerInfo);
+    int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail);
 
     int32_t On(const std::string &taskId, const std::string &type, const sptr<IPrintCallback> &listener);
     int32_t Off(const std::string &taskId, const std::string &type);
