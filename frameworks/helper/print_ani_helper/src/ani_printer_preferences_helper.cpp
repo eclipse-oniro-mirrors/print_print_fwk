@@ -35,7 +35,7 @@ ani_object PrinterPreferencesAniHelper::CreatePrinterPreferences(ani_env *env, c
 {
     PRINT_HILOGI("enter PrinterPreferences");
 
-    static const char *className = "C{@ohos.print.print.PrinterPreferencesImpl}";
+    static const char *className = "@ohos.print.print.PrinterPreferencesImpl";
     ani_object obj = CreateObject(env, nullptr, className);
 
     ani_enum_item printDuplexModeEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintDuplexMode",
@@ -43,7 +43,7 @@ ani_object PrinterPreferencesAniHelper::CreatePrinterPreferences(ani_env *env, c
     SetEnumProperty(env, obj, Builder::BuildSetterName("defaultDuplexMode"),
         "c{@ohos.print.print.PrintDuplexMode}:", printDuplexModeEnum);
 
-    ani_enum_item printQualityEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintQualit",
+    ani_enum_item printQualityEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintQuality",
                                                        static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
     SetEnumProperty(env, obj, Builder::BuildSetterName("defaultPrintQuality"),
         "C{@ohos.print.print.PrintQuality}:", printQualityEnum);

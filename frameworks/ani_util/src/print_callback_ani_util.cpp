@@ -40,7 +40,7 @@ ani_object WrapStsError(ani_env *env, const std::string &msg)
         return nullptr;
     }
 
-    if ((status = env->FindClass("Lescompat/Error;", &cls)) != ANI_OK) {
+    if ((status = env->FindClass("escompat.Error", &cls)) != ANI_OK) {
         PRINT_HILOGE("FindClass failed %{public}d", static_cast<int32_t>(status));
         return nullptr;
     }
