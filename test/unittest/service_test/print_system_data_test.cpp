@@ -1738,5 +1738,47 @@ HWTEST_F(PrintSystemDataTest, CheckPrinterVersionFile_FileExist_ReturnTrue, Test
     systemData->CheckPrinterVersionFile();
     EXPECT_EQ(systemData->CheckPrinterVersionFile(), true);
 }
+
+HWTEST_F(PrintSystemDataTest, AddPrintEvent_ShouldAddNewEvent_WhenPrinterIdNotFound, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    systemData->AddPrintEvent("printer1", "test_type", 123);
+    auto eventContainer = systemData->printEventMap_.Find(printerId);
+    EXPECT_NE(eventContainer, nullptr);
+}
+
+HWTEST_F(PrintSystemDataTest, AddPrintEvent_ShouldAddNewEvent_WhenPrinterIdFound, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    systemData->AddPrintEvent("printer1", "test_type", 123);
+    systemData->AddPrintEvent("printer1", "test_type", 456);
+    auto eventContainer = systemData->printEventMap_.Find(printerId);
+    EXPECT_NE(eventContainer, nullptr);
+}
+
+HWTEST_F(PrintSystemDataTest, ClearPrintEvents_ShouldClearEvents_WhenPrinterIdFound, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    systemData->AddPrintEvent("printer1", "test_type", 123);
+    systemData->ClearPrintEvents("printer2");
+    systemData->ClearPrintEvents("printer1");
+    auto eventContainer = systemData->printEventMap_.Find(printerId);
+    EXPECT_NE(eventContainer, nullptr);
+}
+
+HWTEST_F(PrintSystemDataTest, AnalyzePrintEvents_ShouldReturnEmptyString_WhenPrinterIdNotFound, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    systemData->AddPrintEvent("printer1", "test_type", 123);
+    std::string result = systemData->AnalyzePrintEvents("printer2");
+    EXPECT_TRUE(result.empty());
+}
+HWTEST_F(PrintSystemDataTest, AnalyzePrintEvents_ShouldReturnJsonString_WhenPrinterIdFound, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    systemData->AddPrintEvent("printer1", "test_type", 123);
+    std::string result = systemData->AnalyzePrintEvents("printer1");
+    EXPECT_FALSE(result.empty());
+}
 }  // namespace Print
 }  // namespace OHOS

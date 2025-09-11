@@ -1276,14 +1276,14 @@ void PrintSystemData::ClearPrintEvents(const std::string &printerId, const std::
 {
     PRINT_HILOGI("ClearPrintEvents printerId: %{private}s, type: %{private}s.", printerId.c_str(), type.c_str());
     auto printEventContainer = printEventMap_.Find(printerId);
-    if (printEventContainer !=  nullptr) {
+    if (printEventContainer != nullptr) {
         printEventContainer->ClearEventType(type);
     }
 }
 std::string PrintSystemData::AnalyzePrintEvents(const std::string &printerId, const std::string &type)
 {
     auto printEventContainer = printEventMap_.Find(printerId);
-    if (printEventContainer ==  nullptr) {
+    if (printEventContainer == nullptr) {
         PRINT_HILOGI("printEventContainer is null.");
         return "";
     }

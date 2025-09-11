@@ -221,6 +221,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail) override
+    {
+        return E_PRINT_NONE;
+    }
 };
 
 class MockPrintService final : public DummyPrintServiceStub {
