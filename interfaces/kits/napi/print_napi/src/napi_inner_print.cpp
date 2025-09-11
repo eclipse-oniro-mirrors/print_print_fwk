@@ -1028,8 +1028,8 @@ napi_value NapiInnerPrint::AnalyzePrintEvents(napi_env env, napi_callback_info i
         std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         std::string eventType = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
         PRINT_HILOGD("printerId : %{private}s, eventType: %{private}s", printerId.c_str(), eventType.c_str());
-        if (printerId.empty()) {
-            PRINT_HILOGE("printerId is empty!");
+        if (printerId.empty() || eventType.empty()) {
+            PRINT_HILOGE("parameter is empty!");
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             return napi_invalid_arg;
         }

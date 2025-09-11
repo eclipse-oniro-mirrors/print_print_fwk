@@ -13,16 +13,15 @@
 * limitations under the License.
 */
 
-#ifndef PRINT_EVENT_H
-#define PRINT_EVENT_H
+#ifndef PRINT_EVENT_CONTAINER_H
+#define PRINT_EVENT_CONTAINER_H
 
 #include <string>
 #include <vector>
 #include <map>
 
 namespace OHOS::Print {
-class PrintEventContainer
-{
+class PrintEventContainer {
 public:
     PrintEventContainer(const std::string &id);
     void AddEventCode(const std::string &type, int32_t code);
@@ -32,5 +31,5 @@ private:
     std::string printerId;
     std::map<std::string, std::shared_ptr<std::vector<int32_t>>> eventTypeMap;
 };
-}
-#endif
+} // namespace OHOS::Print
+#endif // PRINT_EVENT_CONTAINER_H

@@ -1113,7 +1113,8 @@ int32_t PrintServiceProxy::UpdatePrinterInSystem(const PrinterInfo& printerInfo)
     return ret;
 }
 
-int32_t PrintServiceProxy::AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail)
+int32_t PrintServiceProxy::AnalyzePrintEvents(const std::string &printerId, const std::string &type,
+    std::string &detail)
 {
     PRINT_HILOGD("PrintServiceProxy AnalyzePrintEvents started.");
     sptr<IRemoteObject> remote = Remote();

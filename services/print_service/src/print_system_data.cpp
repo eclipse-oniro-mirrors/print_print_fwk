@@ -1261,8 +1261,12 @@ const std::string& PrintSystemData::GetPrintersPath()
 
 void PrintSystemData::AddPrintEvent(const std::string &printerId, const std::string &type, int32_t code)
 {
-    PRINT_HILOGI("AddPrintEvent printerId: %{private}s, type: %{private}s, code: %{public}d.",
+    PRINT_HILOGD("AddPrintEvent printerId: %{private}s, type: %{private}s, code: %{public}d.",
         printerId.c_str(), type.c_str(), code);
+    if (printerId.empty() || type.empty()) {
+        PRINT_HILOGW("empty string detected!");
+        return;
+    }
     auto printEventContainer = printEventMap_.Find(printerId);
     if (printEventContainer == nullptr) {
         PrintEventContainer eventContainer(printerId);
@@ -1274,7 +1278,7 @@ void PrintSystemData::AddPrintEvent(const std::string &printerId, const std::str
 }
 void PrintSystemData::ClearPrintEvents(const std::string &printerId, const std::string &type)
 {
-    PRINT_HILOGI("ClearPrintEvents printerId: %{private}s, type: %{private}s.", printerId.c_str(), type.c_str());
+    PRINT_HILOGD("ClearPrintEvents printerId: %{private}s, type: %{private}s.", printerId.c_str(), type.c_str());
     auto printEventContainer = printEventMap_.Find(printerId);
     if (printEventContainer != nullptr) {
         printEventContainer->ClearEventType(type);
@@ -1284,10 +1288,10 @@ std::string PrintSystemData::AnalyzePrintEvents(const std::string &printerId, co
 {
     auto printEventContainer = printEventMap_.Find(printerId);
     if (printEventContainer == nullptr) {
-        PRINT_HILOGI("printEventContainer is null.");
+        PRINT_HILOGW("printEventContainer is null.");
         return "";
     }
-    PRINT_HILOGI("AnalyzePrintEvents printerId: %{private}s, type: %{private}s.", printerId.c_str(), type.c_str());
+    PRINT_HILOGD("AnalyzePrintEvents printerId: %{private}s, type: %{private}s.", printerId.c_str(), type.c_str());
     return printEventContainer->AnalyzeEventCodes(type);
 }
 
