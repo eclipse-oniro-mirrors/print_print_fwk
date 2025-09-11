@@ -110,7 +110,7 @@ private:
     int32_t StartScanOnce(const std::string scannerId);
     int32_t GetScannerImageDpi(const std::string& scannerId, int32_t& dpi);
     std::set<std::string> openedScannerList_;
-    ServiceRunningState state_;
+    std::atomic<ServiceRunningState> state_;
     std::mutex lock_;
     static std::mutex instanceLock_;
     static sptr<ScanServiceAbility> instance_;

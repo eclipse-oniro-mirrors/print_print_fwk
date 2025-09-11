@@ -977,25 +977,27 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo, const std::string
 
 JobParameters *PrintCupsClient::GetNextJob()
 {
-    if (jobQueue_.empty()) {
-        PRINT_HILOGE("no active job in jobQueue_");
-        return nullptr;
-    }
-    if (currentJob_ != nullptr) {
-        JobParameters *lastJob = jobQueue_.back();
-        if (lastJob != nullptr) {
-            PrintServiceAbility::GetInstance()->UpdatePrintJobState(
-                lastJob->serviceJobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
+    JobParameters *lastJob = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(jobMutex);
+        if (jobQueue_.empty()) {
+            PRINT_HILOGE("no active job in jobQueue_");
+            return nullptr;
         }
-        PRINT_HILOGE("a active job is sending, job len: %{public}zd", jobQueue_.size());
-        return nullptr;
+        if (currentJob_ == nullptr) {
+            PRINT_HILOGI("start next job from queue");
+            currentJob_ = jobQueue_.at(0);
+            jobQueue_.erase(jobQueue_.begin());
+            return currentJob_;
+        }
+        lastJob = jobQueue_.back();
     }
-    PRINT_HILOGI("start next job from queue");
-
-    std::lock_guard<std::mutex> lock(jobMutex);
-    currentJob_ = jobQueue_.at(0);
-    jobQueue_.erase(jobQueue_.begin());
-    return currentJob_;
+    if (lastJob != nullptr) {
+        PrintServiceAbility::GetInstance()->UpdatePrintJobState(
+            lastJob->serviceJobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
+    }
+    PRINT_HILOGE("a active job is sending, job len: %{public}zd", jobQueue_.size());
+    return nullptr;
 }
 
 void PrintCupsClient::StartNextJob()

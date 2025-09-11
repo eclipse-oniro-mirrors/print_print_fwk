@@ -622,6 +622,7 @@ ConnectMethod VendorManager::GetConnectingMethod(const std::string &globalPrinte
         PRINT_HILOGW("not connecting");
         return ID_AUTO;
     }
+    std::lock_guard<std::mutex> lock(simpleObjectMutex);
     return connectingMethod;
 }
 

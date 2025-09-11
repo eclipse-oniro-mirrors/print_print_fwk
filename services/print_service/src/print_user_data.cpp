@@ -310,6 +310,7 @@ void PrintUserData::ParseUserDataFromJson(Json::Value &jsonObject)
         return;
     }
     PRINT_HILOGI("userId_: %{public}d", userId_);
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     Json::Value userDataList = jsonObject["print_user_data"];
     if (!PrintJsonUtil::IsMember(userDataList, std::to_string(userId_)) ||
         !userDataList[std::to_string(userId_)].isObject()) {
@@ -1071,6 +1072,7 @@ bool PrintUserData::ContainsHistoryPrintJob(const std::vector<std::string> &prin
     for (std::string printerId : printerIds) {
         InitPrintHistoryJobList(printerId);
     }
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     for (auto it = printHistoryJobList_.begin(); it != printHistoryJobList_.end(); it++) {
         if (it->second == nullptr) {
             return false;
