@@ -38,6 +38,7 @@ public:
     static PrintSettingDataHelper& GetInstance();
     void RegisterSettingDataObserver(const std::string &key,
         PrintSettingDataObserver::ObserverCallback &observerCallback, int32_t userId, bool isSecureSetting);
+    std::string Query(const std::string &key, int32_t userId, bool isSecureSetting);
 
 private:
     PrintSettingDataHelper() = default;
