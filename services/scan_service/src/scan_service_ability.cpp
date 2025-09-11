@@ -257,14 +257,14 @@ bool ScanServiceAbility::GetUsbDevicePort(const std::string &deviceId, std::stri
     constexpr int32_t TOKEN_SIZE_FOUR = 4;
     std::vector<std::string> tokens = ScanServiceUtils::ExtractIpOrPortFromUrl(deviceId, ':', TOKEN_SIZE_FOUR);
     if (tokens.empty()) {
-        SCAN_HILOGE("split [%{public}s] fail ", deviceId.c_str());
+        SCAN_HILOGE("split [%{private}s] fail ", deviceId.c_str());
         return false;
     }
     constexpr size_t STRING_POS_ONE = 1;
     constexpr size_t STRING_POS_TWO = 2;
     constexpr size_t STRING_POS_THREE = 3;
     if (tokens[STRING_POS_ONE] != "libusb") {
-        SCAN_HILOGE("parse [%{public}s] fail", deviceId.c_str());
+        SCAN_HILOGE("parse [%{private}s] fail since no libusb", deviceId.c_str());
         return false;
     }
     static const std::regex pattern(R"(([0-9]{3}))");
@@ -293,7 +293,7 @@ bool ScanServiceAbility::GetTcpDeviceIp(const std::string &deviceId, std::string
     constexpr int32_t TOKEN_SIZE_TWO = 2;
     std::vector <std::string> tokens = ScanServiceUtils::ExtractIpOrPortFromUrl(deviceId, ' ', TOKEN_SIZE_TWO);
     if (tokens.empty()) {
-        SCAN_HILOGE("split [%{public}s] fail ", deviceId.c_str());
+        SCAN_HILOGE("split [%{private}s] fail ", deviceId.c_str());
         return false;
     }
     constexpr size_t STRING_POS_ONE = 1;

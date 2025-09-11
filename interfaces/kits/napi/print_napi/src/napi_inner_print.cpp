@@ -54,6 +54,9 @@ napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info i
             PRINT_HILOGD("VendorIcon = %{public}d", extInfo.GetVendorIcon());
             PRINT_HILOGD("Version = %{public}s", extInfo.GetVersion().c_str());
             status = napi_set_element(env, *result, index++, PrintExtensionInfoHelper::MakeJsObject(env, extInfo));
+            if (status != napi_ok) {
+                PRINT_HILOGE("napi_set_element failed");
+            }
         }
         return napi_ok;
     };
