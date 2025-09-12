@@ -165,6 +165,8 @@ static const std::map<std::string, map<std::string, StatePolicy>> SPECIAL_PRINTE
     {"default", {{PRINTER_STATE_MEDIA_EMPTY, STATE_POLICY_BLOCK}, {PRINTER_STATE_MEDIA_JAM, STATE_POLICY_BLOCK}}},
 };
 
+static const std::vector<std::string> PREINSTALLED_DRIVER_PRINTER = {};
+
 std::mutex jobMutex;
 
 std::string GetUsbPrinterSerial(const std::string &deviceUri)
@@ -1001,6 +1003,94 @@ JobParameters *PrintCupsClient::GetNextJob()
     return nullptr;
 }
 
+void PrintCupsClient::CheckPrinterPpdUpdateRequired()
+{
+    if (currentJob_ == nullptr) {
+        PRINT_HILOGE("currentJob is nullptr");
+        return;
+    }
+    PrinterInfo printerInfo;
+    if (PrintServiceAbility::GetInstance()->
+        QueryPrinterInfoByPrinterId(currentJob_->printerId, printerInfo) != E_PRINT_NONE) {
+        PRINT_HILOGE("query printer info failed");
+        return;
+    }
+    std::string printerMake = printerInfo.GetPrinterMake();
+    if (printerMake.empty()) {
+        PRINT_HILOGE("printer make empty");
+        return;
+    }
+    PRINT_HILOGD("CheckPrinterPpdUpdateRequired printerMake: %{public}s", printerMake.c_str());
+    if (!IsPreinstalledDriverPrinter(printerMake) || printerInfo.GetPpdHashCode().empty()) {
+        PRINT_HILOGW("no need to update ppd");
+        return;
+    }
+
+    std::string ppdName = DEFAULT_PPD_NAME;
+    if (!QueryPPDInformation(printerMake.c_str(), ppdName) || ppdName == DEFAULT_PPD_NAME) {
+        PRINT_HILOGW("no ppd file for this printer");
+        return;
+    }
+    PRINT_HILOGI("CheckPrinterPpdUpdateRequired ppd driver: %{public}s", ppdName.c_str());
+
+    std::string standardPrinterName = PrintUtil::StandardizePrinterName(currentJob_->printerName);
+    std::string ppdHashCode = GetPpdHashCode(ppdName);
+    if (printerInfo.GetPpdHashCode() == ppdHashCode) {
+        PRINT_HILOGW("no need to update ppd");
+        return;
+    }
+    if (!ModifyCupsPrinterPpd(standardPrinterName, ppdName)) {
+        PRINT_HILOGE("update cups printer ppd failed");
+        return;
+    }
+    PrintServiceAbility::GetInstance()->UpdatePpdHashCode(currentJob_->printerId, ppdHashCode);
+}
+
+bool PrintCupsClient::ModifyCupsPrinterPpd(const std::string &printerName, const std::string &ppdName)
+{
+    PRINT_HILOGI("ModifyCupsPrinterPpd enter");
+    if (printAbility_ == nullptr) {
+        PRINT_HILOGW("printAbility_ is null");
+        return false;
+    }
+    cups_dest_t *dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, printerName.c_str(), nullptr);
+    if (dest == nullptr) {
+        PRINT_HILOGW("failed to find printer");
+        return false;
+    }
+    printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
+    dest = nullptr;
+
+    ipp_t *request = nullptr;
+    char uri[HTTP_MAX_URI] = {0};
+    ippSetPort(CUPS_SEVER_PORT);
+    request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
+    httpAssembleURIf(
+        HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", printerName.c_str());
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, cupsUser());
+    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", nullptr, ppdName.c_str());
+    ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_IDLE);
+    printAbility_->FreeRequest(printAbility_->DoRequest(nullptr, request, "/admin/"));
+    if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
+        PRINT_HILOGE("modify printer ppd error: %{public}s", cupsLastErrorString());
+        return false;
+    }
+    PRINT_HILOGI("modify printer ppd success");
+    return true;
+}
+
+bool PrintCupsClient::IsPreinstalledDriverPrinter(const std::string &printerMake)
+{
+    for (auto &preinstalledMake: PREINSTALLED_DRIVER_PRINTER) {
+        if (printerMake.find(preinstalledMake) != std::string::npos) {
+            PRINT_HILOGI("find target printer");
+            return true;
+        }
+    }
+    return false;
+}
+
 void PrintCupsClient::StartNextJob()
 {
     auto nextJob = GetNextJob();
@@ -1009,6 +1099,7 @@ void PrintCupsClient::StartNextJob()
         return;
     }
     if (toCups_) {
+        CheckPrinterPpdUpdateRequired();
         auto self = shared_from_this();
         CallbackFunc callback = [self]() { self->JobSentCallback(); };
         std::thread StartPrintThread([self, callback] { self->StartCupsJob(self->currentJob_, callback); });

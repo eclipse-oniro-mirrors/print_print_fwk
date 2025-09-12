@@ -123,6 +123,7 @@ public:
     int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail);
     void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode);
     int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd);
+    void UpdatePpdHashCode(const std::string &printerId, const std::string &ppdHashCode);
     
 protected:
     void OnStart() override;

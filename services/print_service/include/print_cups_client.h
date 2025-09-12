@@ -219,6 +219,9 @@ private:
     bool CheckUsbPrinterOnline(const std::string &printerId);
     int32_t HandleSystemAuthInfo(const std::string &jobId, const std::string &printerUri,
         const std::string &userName, char *userPasswd);
+    void CheckPrinterPpdUpdateRequired();
+    bool IsPreinstalledDriverPrinter(const std::string &printerMake);
+    bool ModifyCupsPrinterPpd(const std::string &printerName, const std::string &ppdName);
 
 private:
     bool toCups_ = true;

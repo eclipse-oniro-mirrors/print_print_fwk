@@ -48,6 +48,7 @@ public:
     bool UpdatePrinterAlias(const std::string &printerId, const std::string &printerAlias);
     void UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo);
     void UpdatePrinterPreferences(const std::string &printerId, const PrinterPreferences &preferences);
+    void UpdatePpdHashCode(const std::string &printerId, const std::string &ppdHashCode);
     void QueryPrinterInfoById(const std::string &printerId, PrinterInfo &printerInfo);
     bool QueryPpdHashCodeByPrinterName(const std::string &standardPrinterName, std::string &ppdHashCode);
     bool CheckPrinterBusy(const std::string &printerId);

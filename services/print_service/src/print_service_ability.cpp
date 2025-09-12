@@ -4154,4 +4154,10 @@ int32_t PrintServiceAbility::AuthPrintJob(const std::string &jobId, const std::s
 #endif // CUPS_ENABLE
     return E_PRINT_NONE;
 }
+
+void PrintServiceAbility::UpdatePpdHashCode(const std::string &printerId, const std::string &ppdHashCode)
+{
+    printSystemData_.UpdatePpdHashCode(printerId, ppdHashCode);
+    printSystemData_.SavePrinterFile(printerId);
+}
 }  // namespace OHOS::Print
