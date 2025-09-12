@@ -1114,6 +1114,33 @@ int32_t PrintServiceProxy::UpdatePrinterInSystem(const PrinterInfo& printerInfo)
     return ret;
 }
 
+int32_t PrintServiceProxy::AnalyzePrintEvents(const std::string &printerId, const std::string &type,
+    std::string &detail)
+{
+    PRINT_HILOGD("PrintServiceProxy AnalyzePrintEvents started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy AnalyzePrintEvents remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(printerId);
+    data.WriteString(type);
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ANALYZEPRINTEVENTS,
+        data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("AnalyzePrintEvents, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+    ret = GetResult(ret, reply);
+    detail = reply.ReadString();
+    PRINT_HILOGD("PrintServiceProxy AnalyzePrintEvents out. ret = [%{public}d]", ret);
+    return ret;
+}
+
 int32_t PrintServiceProxy::UnregisterAllExtCallback(const std::string &extensionId)
 {
     PRINT_HILOGD("PrintServiceProxy::UnregisterAllExtCallback in");

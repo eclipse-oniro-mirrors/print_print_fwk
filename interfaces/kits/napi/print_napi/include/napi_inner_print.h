@@ -56,6 +56,7 @@ public:
     static napi_value SetPrinterPreference(napi_env env, napi_callback_info info);
     static napi_value SetDefaultPrinter(napi_env env, napi_callback_info info);
     static napi_value GetAddedPrinterInfoById(napi_env env, napi_callback_info info);
+    static napi_value AnalyzePrintEvents(napi_env env, napi_callback_info info);
     static napi_value AuthPrintJob(napi_env env, napi_callback_info info);
 
 private:

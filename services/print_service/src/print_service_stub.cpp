@@ -90,6 +90,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERINSYSTEM] =
         &PrintServiceStub::OnUpdatePrinterInSystem;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_RESTARTPRINTJOB] = &PrintServiceStub::OnRestartPrintJob;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ANALYZEPRINTEVENTS] = &PrintServiceStub::OnAnalyzePrintEvents;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_AUTHPRINTJOB] = &PrintServiceStub::OnAuthPrintJob;
 }
 
@@ -866,6 +867,19 @@ bool PrintServiceStub::OnRestartPrintJob(MessageParcel &data, MessageParcel &rep
     int32_t ret = RestartPrintJob(data.ReadString());
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::RestartPrintJob out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnAnalyzePrintEvents(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::AnalyzePrintEvents in");
+    std::string printerId = data.ReadString();
+    std::string eventType = data.ReadString();
+    std::string detail;
+    int32_t ret = AnalyzePrintEvents(printerId, eventType, detail);
+    reply.WriteInt32(ret);
+    reply.WriteString(detail);
+    PRINT_HILOGD("PrintServiceStub::AnalyzePrintEvents out");
     return ret == E_PRINT_NONE;
 }
 

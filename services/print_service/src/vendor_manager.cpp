@@ -634,3 +634,15 @@ int32_t VendorManager::DiscoverBackendPrinters(const std::string &vendorName, st
     }
     return printServiceAbility->DiscoverBackendPrinters(printers);
 }
+
+void VendorManager::AddPrintEvent(const std::string &vendorName, const std::string &printerId,
+    const std::string &eventType, int32_t eventCode)
+{
+    if (printServiceAbility == nullptr) {
+        PRINT_HILOGW("printServiceAbility is null");
+        return;
+    }
+    auto targetVendorName = IsWlanGroupDriver(printerId) ? VENDOR_WLAN_GROUP : vendorName;
+    auto globalPrinterId = PrintUtils::GetGlobalId(VendorManager::GetGlobalVendorName(targetVendorName), printerId);
+    printServiceAbility->AddPrintEvent(globalPrinterId, eventType, eventCode);
+}

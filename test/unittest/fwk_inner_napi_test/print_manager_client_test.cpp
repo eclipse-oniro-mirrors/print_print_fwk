@@ -2764,5 +2764,20 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0161_NeedRename, TestSiz
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
+/**
+ * @tc.name: AnalyzePrintEvents_ShouldReturnNoPermission_WhenNoPermission
+ * @tc.desc: AnalyzePrintEvents failed case.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, AnalyzePrintEvents_ShouldReturnNoPermission_WhenNoPermission, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    std::string printerId = "test";
+    std::string detail;
+    int32_t ret = PrintManagerClient::GetInstance()->AnalyzePrintEvents(printerId, "type", detail);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
 }  // namespace Print
 }  // namespace OHOS

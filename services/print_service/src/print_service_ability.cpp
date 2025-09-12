@@ -426,6 +426,7 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
         PRINT_HILOGI("Invalid printer id, try connect printer by ip");
         return TryConnectPrinterByIp(printerId);
     }
+    printSystemData_.ClearPrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.SetConnectingPrinter(ID_AUTO, printerId);
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
     if (!vendorManager.ExtractVendorName(extensionId).empty()) {
@@ -3580,6 +3581,7 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
     if (PrintJsonUtil::IsMember(connectParamJson, "protocol") && connectParamJson["protocol"].isString()) {
         protocol = connectParamJson["protocol"].asString();
     }
+    printSystemData_.ClearPrintEvents(ip, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.SetConnectingPrinter(IP_AUTO, ip);
     if (!vendorManager.ConnectPrinterByIp(ip, protocol)) {
         PRINT_HILOGW("ConnectPrinterByIp fail");
@@ -4058,6 +4060,24 @@ bool PrintServiceAbility::IsPrinterPpdUpdateRequired(
         return false;
     }
     return true;
+}
+
+int32_t PrintServiceAbility::AnalyzePrintEvents(const std::string &printerId, const std::string &type,
+    std::string &detail)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    detail = printSystemData_.AnalyzePrintEvents(printerId, type);
+    return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode)
+{
+    printSystemData_.AddPrintEvent(printerId, eventType, eventCode);
 }
 
 void PrintServiceAbility::RegisterSettingDataObserver()

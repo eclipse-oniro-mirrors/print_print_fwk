@@ -67,6 +67,7 @@ static constexpr const char *FUNCTION_GET_PRINTER_INFORMATION_BY_ID = "getPrinte
 static constexpr const char *FUNCTION_UPDATE_PRINTER_IN_SYSTEM = "updatePrinterInSystem";
 static constexpr const char *FUNCTION_UPDATE_PRINTER_INFORMATION = "updatePrinterInformation";
 static constexpr const char *FUNCTION_SET_PRINTER_PREFERENCES = "setPrinterPreferences";
+static constexpr const char *FUNCTION_ANYLYZE_PRINT_EVENTS = "analyzePrintEvents";
 static constexpr const char *FUNCTION_AUTH_PRINT_JOB = "authPrintJob";
 
 static const std::map<std::string, uint32_t> PRINT_JOB_SUBSTATE_MAP = {
@@ -458,6 +459,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_IN_SYSTEM, NapiPrintExt::UpdatePrinterInSystem),
         PRINT_NAPI_METHOD(FUNCTION_UPDATE_PRINTER_INFORMATION, NapiPrintExt::UpdatePrinterInSystem),
         PRINT_NAPI_METHOD(FUNCTION_SET_PRINTER_PREFERENCES, NapiInnerPrint::SetPrinterPreference),
+        PRINT_NAPI_METHOD(FUNCTION_ANYLYZE_PRINT_EVENTS, NapiInnerPrint::AnalyzePrintEvents),
         PRINT_NAPI_METHOD(FUNCTION_AUTH_PRINT_JOB, NapiInnerPrint::AuthPrintJob),
     };
 

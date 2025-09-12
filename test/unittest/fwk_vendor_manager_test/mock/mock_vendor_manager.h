@@ -45,6 +45,7 @@ public:
     MOCK_METHOD2(QueryPPDInformation, bool(const std::string &, std::string &));
     MOCK_METHOD1(GetConnectingMethod, ConnectMethod(const std::string &));
     MOCK_METHOD2(DiscoverBackendPrinters, int32_t(const std::string &, std::vector<PrinterInfo> &));
+    MOCK_METHOD4(AddPrintEvent, void(const std::string &, const std::string &, const std::string &, int32_t));
 };
 }  // namespace Print
 }  // namespace OHOS

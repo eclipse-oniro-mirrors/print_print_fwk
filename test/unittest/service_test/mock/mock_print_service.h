@@ -221,6 +221,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail) override
+    {
+        return E_PRINT_NONE;
+    }
     int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd) override
     {
         return E_PRINT_NONE;
@@ -266,7 +270,7 @@ public:
     MOCK_METHOD1(UpdatePrinterInDiscovery, int32_t(const PrinterInfo &));
     MOCK_METHOD1(RemovePrinterFromDiscovery, int32_t(const std::string &));
     MOCK_METHOD1(UpdatePrinterInSystem, int32_t(const PrinterInfo &));
-    MOCK_METHOD3(UpdatePrinterInSystem, int32_t(const std::string &, const std::string &, char *));
+    MOCK_METHOD3(AuthPrintJob, int32_t(const std::string &, const std::string &, char *));
 };
 }  // namespace Print
 }  // namespace OHOS
