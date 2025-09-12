@@ -156,6 +156,8 @@ public:
     bool CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monitorParams, const uint32_t timeout = 3000);
     bool ModifyCupsPrinterUri(const std::string &printerName, const std::string &printerUri);
     std::string GetPpdHashCode(const std::string& ppdName);
+    bool AuthCupsPrintJob(const std::string &jobId, const std::string &printerUri, const std::string &userName,
+        char *userPasswd);
 
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
@@ -215,6 +217,8 @@ private:
     const std::string& GetCurCupsRootDir();
     const std::string& GetCurCupsdControlParam();
     bool CheckUsbPrinterOnline(const std::string &printerId);
+    int32_t HandleSystemAuthInfo(const std::string &jobId, const std::string &printerUri,
+        const std::string &userName, char *userPasswd);
 
 private:
     bool toCups_ = true;

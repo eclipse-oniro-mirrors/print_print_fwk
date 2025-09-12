@@ -4116,4 +4116,42 @@ bool PrintServiceAbility::IsPcModeSupported()
 {
     return system::GetParameter(PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH, "false") == "true";
 }
+
+int32_t PrintServiceAbility::AuthPrintJob(const std::string &jobId, const std::string &userName,
+    char *userPasswd)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
+    auto userData = GetCurrentUserData();
+    if (userData == nullptr) {
+        PRINT_HILOGE("Get user data failed.");
+        return E_PRINT_INVALID_USERID;
+    }
+    auto printJob = std::make_shared<PrintJob>();
+    auto jobIt = userData->queuedJobList_.find(jobId);
+    if (jobIt == userData->queuedJobList_.end()) {
+        if (QueryHistoryPrintJobById(jobId, *printJob) != E_PRINT_NONE) {
+            PRINT_HILOGE("invalid job id");
+            return E_PRINT_INVALID_PRINTJOB;
+        }
+    } else {
+        printJob = jobIt->second;
+    }
+
+    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
+    if (printerInfo == nullptr) {
+        PRINT_HILOGE("can not find the printer");
+        return E_PRINT_INVALID_PRINTER;
+    }
+#ifdef CUPS_ENABLE
+    bool ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AuthCupsPrintJob(printJob->GetJobId(),
+        printerInfo->GetUri(), userName, userPasswd);
+#endif // CUPS_ENABLE
+    return E_PRINT_NONE;
+}
 }  // namespace OHOS::Print

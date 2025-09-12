@@ -80,6 +80,7 @@ public:
     static bool CheckCallerIsSystemApp();
     static const std::string GetErrorMsgByErrorCode(int32_t code);
     static napi_value CreateJsError(napi_env env, int32_t errCode);
+    static char* GetCharPtrFromValueUtf8(napi_env env, napi_value value);
 };
 } // namespace OHOS::Print
 #endif // NAPI_PRINT_UTILS_H

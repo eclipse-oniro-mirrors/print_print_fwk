@@ -144,6 +144,7 @@ enum PrintJobSubState {
     PRINT_JOB_BLOCK_FILE_UPLOADING_ERROR = 30, // File uploading exception.
     PRINT_JOB_BLOCKED_DRIVER_MISSING = 34, // driver file missing
     PRINT_JOB_BLOCKED_INTERRUPT = 35, // print job interrupt
+    PRINT_JOB_BLOCKED_AUTHENTICATION = 36,  // print job need authenticate.
     PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE = 98, // Printer is stopped.
     PRINT_JOB_BLOCKED_UNKNOWN = 99,             // unknown issue
     PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 101, // For internal use only: Click Cancel

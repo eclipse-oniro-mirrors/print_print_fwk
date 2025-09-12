@@ -80,6 +80,7 @@ private:
     bool OnUpdatePrinterInSystem(MessageParcel &data, MessageParcel &reply);
     bool OnRestartPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnAnalyzePrintEvents(MessageParcel &data, MessageParcel &reply);
+    bool OnAuthPrintJob(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

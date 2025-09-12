@@ -226,6 +226,38 @@ std::string NapiPrintUtils::GetStringFromValueUtf8(napi_env env, napi_value valu
     return result;
 }
 
+char* NapiPrintUtils::GetCharPtrFromValueUtf8(napi_env env, napi_value value)
+{
+    if (value == nullptr) {
+        return nullptr;
+    }
+
+    size_t length = 0;
+    napi_status status = napi_get_value_string_utf8(env, value, nullptr, 0, &length);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+
+    if (length == 0) {
+        return nullptr;
+    }
+
+    char* result = new (std::nothrow) char[length + 1];
+    if (result == nullptr) {
+        return nullptr;
+    }
+
+    status = napi_get_value_string_utf8(env, value, result, length + 1, &length);
+    if (status != napi_ok) {
+        delete[] result;
+        return nullptr;
+    }
+
+    result[length] = '\0';
+
+    return result;
+}
+
 std::string NapiPrintUtils::GetStringPropertyUtf8(napi_env env, napi_value object, const std::string &propertyName)
 {
     if (object == nullptr) {

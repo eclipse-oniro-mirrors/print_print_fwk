@@ -131,6 +131,7 @@ static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string PRINTER_STATE_TIMED_OUT = "timed-out";
 static const std::string PRINTER_SPOOL_AREA_FULL = "spool-area-full";
 static const std::string JOB_STATE_REASON_PRINTER_STOP = "printer-stopped";
+static const std::string JOB_STATE_REASON_AUTHENTICATION = "cups-held-for-authentication";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string USB_PRINTER = "usb";
@@ -1704,6 +1705,11 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
                 monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE);
             return true;
         }
+        if (monitorParams->job_state_reasons == JOB_STATE_REASON_AUTHENTICATION) {
+            monitorParams->serviceAbility->UpdatePrintJobState(
+                monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_AUTHENTICATION);
+            return true;
+        }
         monitorParams->serviceAbility->UpdatePrintJobState(
             monitorParams->serviceJobId, PRINT_JOB_QUEUED, PRINT_JOB_COMPLETED_SUCCESS);
         return true;
@@ -1720,6 +1726,61 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
         return false;
     }
     return SpecialJobStatusCallback(monitorParams);
+}
+
+int32_t PrintCupsClient::HandleSystemAuthInfo(const std::string &jobId, const std::string &printerUri,
+    const std::string &userName, char *userPasswd)
+{
+    std::lock_guard<std::mutex> lock(jobMonitorMutex_);
+    auto item = std::find_if(jobMonitorList_.begin(), jobMonitorList_.end(),
+        [jobId](const std::shared_ptr<JobMonitorParam> &jobMonitor) { return jobMonitor->serviceJobId == jobId; });
+    if (item == jobMonitorList_.end()) {
+        PRINT_HILOGE("Printer authenticate http fail.");
+        return E_PRINT_INVALID_PRINTJOB;
+    }
+    int32_t cupsJobId = (*item)->cupsJobId;
+
+    PRINT_HILOGI("Authenticate start: jobId:%{public}s, cupsJobId:%{public}d", jobId.c_str(), cupsJobId);
+
+    return cupsJobId;
+}
+
+bool PrintCupsClient::AuthCupsPrintJob(const std::string &jobId, const std::string &printerUri,
+    const std::string &userName, char *userPasswd)
+{
+    int32_t cupsJobId = HandleSystemAuthInfo(jobId, printerUri, userName, userPasswd);
+    if (cupsJobId == E_PRINT_INVALID_PRINTJOB) {
+        PRINT_HILOGE("invalid auth print job!");
+        return false;
+    }
+    http_t *http = NULL;
+    ipp_t *request = NULL;
+    ipp_t *response = NULL;
+    http = httpConnect2(
+        cupsServer(), ippPort(), nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
+    if (!http) {
+        PRINT_HILOGE("Printer authenticate http fail.");
+        return false;
+    }
+
+    std::vector<const char *> UserNameAndPasswd = { userName.c_str(), userPasswd };
+    request = ippNewRequest(IPP_OP_CUPS_AUTHENTICATE_JOB);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printerUri.c_str());
+    ippAddInteger(request, IPP_TAG_OPERATION, IPP_TAG_INTEGER, "job-id", cupsJobId);
+    ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "auth-info", UserNameAndPasswd.size(), NULL,
+        UserNameAndPasswd.data());
+    response = cupsDoRequest(http, request, "/jobs/");
+    ipp_state_t state = ippGetState(response);
+    if (state == IPP_ERROR) {
+        PRINT_HILOGE("The Printer authenticate fail.");
+        ippDelete(response);
+        httpClose(http);
+        return false;
+    }
+    PRINT_HILOGI("The Printer authentication send success.");
+    ippDelete(response);
+    httpClose(http);
+    return true;
 }
 
 bool PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams)

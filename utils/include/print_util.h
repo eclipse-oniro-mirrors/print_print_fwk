@@ -30,6 +30,7 @@
 namespace OHOS::Print {
 const uint32_t MAX_PRINTER_NAME_LENGTH = 127;
 const uint32_t MIN_INT_LIST_STRLENGTH = 2;
+const uint32_t MAX_BUFFER_SIZE = 1024;
 class PrintUtil {
 public:
     static std::string ParseListToString(const std::vector<std::string> &list);
@@ -51,6 +52,8 @@ public:
     static bool startsWith(const std::string& str, const std::string& prefix);
 
     static bool ConvertToInt(const std::string& str, int32_t& value);
+    
+    static void SafeDeleteAuthInfo(char *userPasswd);
 };
 
 inline std::vector<uint32_t> PrintUtil::Str2Vec(std::string str)
@@ -169,6 +172,20 @@ inline bool PrintUtil::ConvertToInt(const std::string& str, int32_t& value)
 {
     auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
     return ec == std::errc{} && ptr == str.data() + str.size();
+}
+
+inline void PrintUtil::SafeDeleteAuthInfo(char *userPasswd)
+{
+    if (userPasswd == nullptr) {
+        PRINT_HILOGE("The ptr is nullptr!");
+        return;
+    }
+    uint32_t userPasswdLength = strnlen(userPasswd, MAX_BUFFER_SIZE);
+    for (size_t i = 0; i < userPasswdLength; i++) {
+        userPasswd[i] = '\0';
+    }
+    delete []userPasswd;
+    userPasswd = nullptr;
 }
 
 } // namespace OHOS::Print

@@ -22,7 +22,6 @@
 #include "print_constant.h"
 
 namespace OHOS::Print {
-void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps);
 int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdFilePath);
 
 const int ADVANCE_OPTION_MAXLENGTH = 100;

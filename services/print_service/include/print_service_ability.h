@@ -122,7 +122,8 @@ public:
     bool IsPrinterPpdUpdateRequired(const std::string &standardPrinterName, const std::string &ppdHashCode);
     int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail);
     void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode);
-
+    int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd);
+    
 protected:
     void OnStart() override;
     void OnStop() override;

@@ -120,6 +120,7 @@ public:
     void LoadServerFail();
     void SetProxy(const sptr<IRemoteObject> &obj);
     void ResetProxy();
+    int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd);
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);

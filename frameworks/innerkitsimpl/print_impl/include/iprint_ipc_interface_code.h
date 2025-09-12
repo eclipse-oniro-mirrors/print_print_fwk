@@ -68,6 +68,7 @@ namespace OHOS::Print {
         CMD_UPDATEPRINTERINSYSTEM,
         CMD_RESTARTPRINTJOB,
         CMD_ANALYZEPRINTEVENTS,
+        CMD_AUTHPRINTJOB,
     };
 } // namespace OHOS:Print
 #endif // PRINT_SERVICE_INTERFACE_H

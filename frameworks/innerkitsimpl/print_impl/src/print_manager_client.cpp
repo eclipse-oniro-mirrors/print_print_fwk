@@ -29,6 +29,7 @@
 #include "print_utils.h"
 #include "print_callback.h"
 #include "print_innerkit_modal_ui_callback.h"
+#include "print_util.h"
 
 namespace OHOS::Print {
 
@@ -1002,5 +1003,19 @@ int32_t PrintManagerClient::Release()
     SetNativePrinterChangeCallback(PRINTER_DISCOVER_EVENT_TYPE, nullptr);
     SetNativePrinterChangeCallback(PRINTER_CHANGE_EVENT_TYPE, nullptr);
     return E_PRINT_NONE;
+}
+
+int32_t PrintManagerClient::AuthPrintJob(const std::string &jobId, const std::string &userName,
+    char *userPasswd)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->AuthPrintJob(jobId, userName, userPasswd);
+        PRINT_HILOGD("PrintManagerClient AuthPrintJob out ret = [%{public}d].", ret);
+    } else {
+        PrintUtil::SafeDeleteAuthInfo(userPasswd);
+    }
+    return ret;
 }
 } // namespace OHOS::Print
