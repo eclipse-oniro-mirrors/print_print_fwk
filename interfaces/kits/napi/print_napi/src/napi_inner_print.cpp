@@ -1014,6 +1014,56 @@ napi_value NapiInnerPrint::GetAddedPrinterInfoById(napi_env env, napi_callback_i
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiInnerPrint::AnalyzePrintEvents(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter AnalyzePrintEvents---->");
+    auto context = std::make_shared<InnerPrintContext>();
+
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_TWO, " should have 2 parameters!", napi_invalid_arg);
+        napi_valuetype valuetype;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valuetype == napi_string, "eventType is not a string", napi_string_expected);
+        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        std::string eventType = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
+        PRINT_HILOGD("printerId : %{private}s, eventType: %{private}s", printerId.c_str(), eventType.c_str());
+        if (printerId.empty() || eventType.empty()) {
+            PRINT_HILOGE("parameter is empty!");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        context->printerId = printerId;
+        context->type = eventType;
+        return napi_ok;
+    };
+
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_create_string_utf8(env, context->stateType_.c_str(), NAPI_AUTO_LENGTH, result);
+        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
+        return status;
+    };
+
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        std::string detail;
+        int32_t ret = PrintManagerClient::GetInstance()->AnalyzePrintEvents(context->printerId,
+            context->type, detail);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to query printerInfo from printerList");
+            context->SetErrorIndex(ret);
+        }
+        context->stateType_ = detail;
+    };
+
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 bool NapiInnerPrint::IsSupportType(const std::string &type)
 {
     if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||

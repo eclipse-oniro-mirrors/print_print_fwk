@@ -71,6 +71,8 @@ public:
     virtual bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) = 0;
     virtual ConnectMethod GetConnectingMethod(const std::string &id) = 0;
     virtual int32_t DiscoverBackendPrinters(const std::string &vendorName, std::vector<PrinterInfo> &printers) = 0;
+    virtual void AddPrintEvent(const std::string &vendorName, const std::string &printerId,
+        const std::string &eventType, int32_t eventCode) = 0;
 };
 
 class VendorDriverBase {

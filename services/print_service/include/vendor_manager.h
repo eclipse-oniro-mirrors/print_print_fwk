@@ -48,6 +48,7 @@ public:
     virtual bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
                                            const std::string &ppdName, const std::string &ppdData) = 0;
     virtual int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) = 0;
+    virtual void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode) = 0;
 };
 
 class PrintServiceAbility;
@@ -99,6 +100,8 @@ public:
     std::shared_ptr<VendorDriverBase> FindDriverByPrinterId(const std::string &globalPrinterId);
     std::shared_ptr<VendorDriverBase> FindDriverByVendorName(const std::string &vendorName);
     int32_t DiscoverBackendPrinters(const std::string &vendorName, std::vector<PrinterInfo> &printers) override;
+    void AddPrintEvent(const std::string &vendorName, const std::string &printerId,
+        const std::string &eventType, int32_t eventCode) override;
 
 private:
     void StatusMonitorProcess();

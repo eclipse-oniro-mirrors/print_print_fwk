@@ -1485,5 +1485,24 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0063_NeedRename, TestSize.Le
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_ShouldReturnTrue_When, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_ANALYZEPRINTEVENTS);
+
+    std::string testPrinterId = "com.sample.ext:1";
+    std::string eventType = "testType";
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    data.WriteString(testPrinterId);
+    data.WriteString(eventType);
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, AnalyzePrintEvents).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
 }  // namespace Print
 }  // namespace OHOS

@@ -62,9 +62,11 @@ bool VendorWlanGroup::OnQueryCapability(const std::string &printerId, int timeou
         printerVendorGroupList_[printerId] = VENDOR_IPP_EVERYWHERE;
         auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
         if (ippEverywhereDriver != nullptr && ippEverywhereDriver->OnQueryCapability(printerId, 0)) {
-            PRINT_HILOGI("on query capability on ipp everywhere seccess.");
+            PRINT_HILOGI("on query capability on ipp everywhere success.");
             return true;
         }
+        parentVendorManager->AddPrintEvent(GetVendorName(), printerId, CONNECT_PRINT_EVENT_TYPE,
+            CONNECT_PRINT_EVENT_IPP_UNAVAILABLE);
         RemoveGroupPrinterFromVendorGroupList(printerId);
     }
     PRINT_HILOGE("no vendor can query capability.");

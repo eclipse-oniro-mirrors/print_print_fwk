@@ -286,6 +286,9 @@ const std::string VENDOR_IPP_EVERYWHERE = "driver.ipp.everywhere";
 const std::string BSUNI_PPD_NAME = "Brocadesoft Universal Driver";
 static const std::string DEFAULT_PPD_NAME = "everywhere";
 
+const std::string CONNECT_PRINT_EVENT_TYPE = "Event_Connect_Printer";
+const int32_t CONNECT_PRINT_EVENT_IPP_UNAVAILABLE = 24300201;
+
 const int32_t INVALID_USER_ID = -1;
 } // namespace OHOS::Print
 #endif // PRINT_CONSTANT_H
