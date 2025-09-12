@@ -120,7 +120,8 @@ public:
     void DelayEnterLowPowerMode();
     void ExitLowPowerMode();
     bool IsPrinterPpdUpdateRequired(const std::string &standardPrinterName, const std::string &ppdHashCode);
-
+    int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd);
+    
 protected:
     void OnStart() override;
     void OnStop() override;

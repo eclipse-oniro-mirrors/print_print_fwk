@@ -56,6 +56,7 @@ public:
     static napi_value SetPrinterPreference(napi_env env, napi_callback_info info);
     static napi_value SetDefaultPrinter(napi_env env, napi_callback_info info);
     static napi_value GetAddedPrinterInfoById(napi_env env, napi_callback_info info);
+    static napi_value AuthPrintJob(napi_env env, napi_callback_info info);
 
 private:
     static bool IsSupportType(const std::string& type);
@@ -87,6 +88,8 @@ private:
         uint32_t applicationEvent = -1;
         PrinterPreferences printerPreference;
         uint32_t defaultPrinterType = -1;
+        std::string userName = "";
+        char *userPasswd = nullptr;
 
         InnerPrintContext() : Context(nullptr, nullptr) {};
         InnerPrintContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};

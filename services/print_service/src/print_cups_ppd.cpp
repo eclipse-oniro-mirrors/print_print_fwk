@@ -108,32 +108,6 @@ void GetAdvanceOptionsFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
     printerCaps.SetPrinterAttrNameAndValue("advanceDefault", PrintJsonUtil::WriteString(advanceDefaultJs).c_str());
 }
 
-int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdFilePath)
-{
-    PRINT_HILOGI("QueryPrinterCapabilityFromPPDFile start %{private}s", ppdFilePath.c_str());
-    char *locale = setlocale(LC_ALL, "zh_CN.UTF-8");
-    if (locale == nullptr) {
-        PRINT_HILOGE("setlocale fail");
-        return E_PRINT_FILE_IO;
-    }
-    ppd_file_t *ppd = ppdOpenFile(ppdFilePath.c_str());
-    if (ppd == nullptr) {
-        PRINT_HILOGE("Open PPD File fail");
-        return E_PRINT_FILE_IO;
-    }
-
-    ppd->cache = _ppdCacheCreateWithPPD(ppd);
-    if (ppd->cache == nullptr) {
-        PRINT_HILOGE("PPDCacheCreateWithPPD fail");
-        return E_PRINT_FILE_IO;
-    }
-    GetAdvanceOptionsFromPPD(ppd, printerCaps);
-    ParsePrinterAttributesFromPPD(ppd, printerCaps);
-
-    ppdClose(ppd);
-    return E_PRINT_NONE;
-}
-
 void ParsePageSizeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
 {
     Json::Value mediaSizeMap;
@@ -218,6 +192,7 @@ void ParseDuplexModeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printe
             break;
         }
     }
+    // save duplex default option
     if (duplex && duplex->num_choices > 1) {
         if (!strcmp(duplex->defchoice, "DuplexTumble"))
             code = DUPLEX_MODE_TWO_SIDED_SHORT_EDGE;
@@ -273,6 +248,7 @@ void ParseMediaTypeAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerC
             PrintJsonUtil::WriteString(jsonArrayOld).c_str());
     }
 
+    // handle media type default option
     if (typeOption->defchoice == nullptr) {
         PRINT_HILOGE("typeOption->defchoice fail!");
         return;
@@ -368,6 +344,32 @@ void ParsePrinterAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCa
     ParseQualityAttributesFromPPD(ppd, printerCaps);
     ParseMediaTypeAttributeFromPPD(ppd, printerCaps);
     SetOptionAttributeFromPPD(ppd, printerCaps);
+}
+
+int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdFilePath)
+{
+    PRINT_HILOGI("QueryPrinterCapabilityFromPPDFile start %{private}s", ppdFilePath.c_str());
+    char *locale = setlocale(LC_ALL, "zh_CN.UTF-8");
+    if (locale == nullptr) {
+        PRINT_HILOGE("setlocale fail");
+        return E_PRINT_FILE_IO;
+    }
+    ppd_file_t *ppd = ppdOpenFile(ppdFilePath.c_str());
+    if (ppd == nullptr) {
+        PRINT_HILOGE("Open PPD File fail");
+        return E_PRINT_FILE_IO;
+    }
+
+    ppd->cache = _ppdCacheCreateWithPPD(ppd);
+    if (ppd->cache == nullptr) {
+        PRINT_HILOGE("PPDCacheCreateWithPPD fail");
+        return E_PRINT_FILE_IO;
+    }
+    GetAdvanceOptionsFromPPD(ppd, printerCaps);
+    ParsePrinterAttributesFromPPD(ppd, printerCaps);
+
+    ppdClose(ppd);
+    return E_PRINT_NONE;
 }
 
 }

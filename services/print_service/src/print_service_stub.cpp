@@ -21,6 +21,8 @@
 #include "print_extension_info.h"
 #include "print_job.h"
 #include "print_log.h"
+#include "print_util.h"
+#include <securec.h>
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -88,6 +90,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UPDATEPRINTERINSYSTEM] =
         &PrintServiceStub::OnUpdatePrinterInSystem;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_RESTARTPRINTJOB] = &PrintServiceStub::OnRestartPrintJob;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_AUTHPRINTJOB] = &PrintServiceStub::OnAuthPrintJob;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -863,6 +866,40 @@ bool PrintServiceStub::OnRestartPrintJob(MessageParcel &data, MessageParcel &rep
     int32_t ret = RestartPrintJob(data.ReadString());
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::RestartPrintJob out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnAuthPrintJob(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::AuthPrintJob in");
+    std::string jobId = data.ReadString();
+    std::string userName = data.ReadString();
+    uint32_t userPasswdLength = data.ReadUint32();
+    if (userPasswdLength == 0 || userPasswdLength > MAX_BUFFER_SIZE) {
+        PRINT_HILOGE("userPasswdLength acquire fail.");
+        return false;
+    }
+    const uint8_t *outData = data.ReadBuffer(userPasswdLength);
+
+    char* userPasswd = new (std::nothrow) char[userPasswdLength];
+    if (userPasswd == nullptr) {
+        PRINT_HILOGE("Allocate Password fail.");
+        return false;
+    }
+
+    auto memcpyRet = memcpy_s(userPasswd, userPasswdLength, outData, userPasswdLength);
+    if (memcpyRet != E_PRINT_NONE) {
+        PrintUtil::SafeDeleteAuthInfo(userPasswd);
+        PRINT_HILOGE("memcpy_s failed, errorCode:[%{public}d]", memcpyRet);
+        return false;
+    }
+
+    int32_t ret = AuthPrintJob(jobId, userName, userPasswd);
+    reply.WriteInt32(ret);
+
+    PrintUtil::SafeDeleteAuthInfo(userPasswd);
+
+    PRINT_HILOGD("PrintServiceStub::AuthPrintJob out");
     return ret == E_PRINT_NONE;
 }
 

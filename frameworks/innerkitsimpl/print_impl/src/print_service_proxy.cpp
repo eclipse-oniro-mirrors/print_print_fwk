@@ -18,6 +18,7 @@
 #include "print_job.h"
 #include "print_log.h"
 #include "printer_info.h"
+#include "print_util.h"
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -1170,4 +1171,36 @@ int32_t PrintServiceProxy::RestartPrintJob(const std::string &jobId)
     PRINT_HILOGD("PrintServiceProxy RestartPrintJob out. ret = [%{public}d]", ret);
     return ret;
 }
+
+int32_t PrintServiceProxy::AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd)
+{
+    PRINT_HILOGI("PrintServiceProxy AuthPrintJob started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(jobId);
+    data.WriteString(userName);
+
+    if (userPasswd == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy AuthPrintJob parameter is null");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    size_t userPasswdLength = strnlen(userPasswd, MAX_BUFFER_SIZE);
+    data.WriteUint32(userPasswdLength);
+    data.WriteBuffer(static_cast<void*>(userPasswd), userPasswdLength);
+
+    PrintUtil::SafeDeleteAuthInfo(userPasswd);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy AuthPrintJob remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_AUTHPRINTJOB, data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGI("PrintServiceProxy AuthPrintJob out. ret = [%{public}d]", ret);
+    return ret;
+}
+
 } // namespace OHOS::Print
