@@ -1214,9 +1214,7 @@ int32_t PrintServiceProxy::AuthPrintJob(const std::string &jobId, const std::str
         PRINT_HILOGE("PrintServiceProxy AuthPrintJob parameter is null");
         return E_PRINT_INVALID_PARAMETER;
     }
-    size_t userPasswdLength = strnlen(userPasswd, MAX_BUFFER_SIZE);
-    data.WriteUint32(userPasswdLength);
-    data.WriteBuffer(static_cast<void*>(userPasswd), userPasswdLength);
+    data.WriteBuffer(static_cast<void*>(userPasswd), MAX_AUTH_LENGTH_SIZE);
 
     PrintUtil::SafeDeleteAuthInfo(userPasswd);
     sptr<IRemoteObject> remote = Remote();

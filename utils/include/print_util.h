@@ -24,13 +24,14 @@
 #include <vector>
 #include <string>
 #include <regex>
+#include <securec.h>
 
 #include "print_log.h"
 
 namespace OHOS::Print {
 const uint32_t MAX_PRINTER_NAME_LENGTH = 127;
 const uint32_t MIN_INT_LIST_STRLENGTH = 2;
-const uint32_t MAX_BUFFER_SIZE = 1024;
+const uint32_t MAX_AUTH_LENGTH_SIZE = 64;
 class PrintUtil {
 public:
     static std::string ParseListToString(const std::vector<std::string> &list);
@@ -180,10 +181,7 @@ inline void PrintUtil::SafeDeleteAuthInfo(char *userPasswd)
         PRINT_HILOGE("The ptr is nullptr!");
         return;
     }
-    uint32_t userPasswdLength = strnlen(userPasswd, MAX_BUFFER_SIZE);
-    for (size_t i = 0; i < userPasswdLength; i++) {
-        userPasswd[i] = '\0';
-    }
+    memset_s(userPasswd, MAX_AUTH_LENGTH_SIZE, '\0', MAX_AUTH_LENGTH_SIZE);
     delete []userPasswd;
     userPasswd = nullptr;
 }
