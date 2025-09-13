@@ -158,6 +158,7 @@ public:
     std::string GetPpdHashCode(const std::string& ppdName);
     bool AuthCupsPrintJob(const std::string &jobId, const std::string &printerUri, const std::string &userName,
         char *userPasswd);
+    bool ModifyCupsPrinterPpd(const std::string &printerName, const std::string &ppdName);
 
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);

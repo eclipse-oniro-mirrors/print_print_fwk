@@ -2611,4 +2611,37 @@ std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)
     return oss.str();
 }
 
+bool PrintCupsClient::ModifyCupsPrinterPpd(const std::string &printerName, const std::string &ppdName)
+{
+    PRINT_HILOGI("ModifyCupsPrinterPpd enter");
+    if (printAbility_ == nullptr) {
+        PRINT_HILOGW("printAbility_ is null");
+        return false;
+    }
+    cups_dest_t *dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, printerName.c_str(), nullptr);
+    if (dest == nullptr) {
+        PRINT_HILOGW("failed to find printer");
+        return false;
+    }
+    printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
+    dest = nullptr;
+
+    ipp_t *request = nullptr;
+    char uri[HTTP_MAX_URI] = {0};
+    ippSetPort(CUPS_SEVER_PORT);
+    request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
+    httpAssembleURIf(
+        HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", printerName.c_str());
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, uri);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, cupsUser());
+    ippAddString(request, IPP_TAG_PRINTER, IPP_TAG_NAME, "ppd-name", nullptr, ppdName.c_str());
+    ippAddInteger(request, IPP_TAG_PRINTER, IPP_TAG_ENUM, "printer-state", IPP_PRINTER_IDLE);
+    printAbility_->FreeRequest(printAbility_->DoRequest(nullptr, request, "/admin/"));
+    if (cupsLastError() > IPP_STATUS_OK_EVENTS_COMPLETE) {
+        PRINT_HILOGE("modify printer ppd error: %{public}s", cupsLastErrorString());
+        return false;
+    }
+    PRINT_HILOGI("modify printer ppd success");
+    return true;
+}
 }  // namespace OHOS::Print

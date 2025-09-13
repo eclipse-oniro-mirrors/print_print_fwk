@@ -463,6 +463,15 @@ void PrintSystemData::UpdatePrinterPreferences(const std::string &printerId, con
     }
 }
 
+void PrintSystemData::UpdatePpdHashCode(const std::string &printerId, const std::string &ppdHashCode)
+{
+    auto info = GetAddedPrinterMap().Find(printerId);
+    if (info != nullptr) {
+        info->SetPpdHashCode(ppdHashCode);
+        PRINT_HILOGI("UpdatePpdHashCode success");
+    }
+}
+
 void PrintSystemData::GetAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList)
 {
     std::vector<std::string> addedPrinterList = QueryAddedPrinterIdList();

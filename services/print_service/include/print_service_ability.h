@@ -221,6 +221,9 @@ private:
     bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
     void RegisterSettingDataObserver();
     bool IsPcModeSupported();
+    void UpdatePpdForPreinstalledDriverPrinter();
+    bool IsPreinstalledDriverPrinter(const std::string &printerName);
+    void UpdatePpdHashCode(const std::string &printerId, const std::string &ppdHashCode);
 
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
