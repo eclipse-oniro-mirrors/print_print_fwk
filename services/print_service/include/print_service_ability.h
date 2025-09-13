@@ -123,7 +123,6 @@ public:
     int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail);
     void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode);
     int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd);
-    void UpdatePpdHashCode(const std::string &printerId, const std::string &ppdHashCode);
     
 protected:
     void OnStart() override;
@@ -222,6 +221,9 @@ private:
     bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
     void RegisterSettingDataObserver();
     bool IsPcModeSupported();
+    void UpdatePpdForPreinstalledDriverPrinter();
+    bool IsPreinstalledDriverPrinter(const std::string &printerName);
+    void UpdatePpdHashCode(const std::string &printerId, const std::string &ppdHashCode);
 
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;

@@ -125,6 +125,8 @@ static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.ent
 
 static const std::vector<std::string> PRINT_TASK_EVENT_LIST = {EVENT_BLOCK, EVENT_SUCCESS, EVENT_FAIL, EVENT_CANCEL};
 
+static const std::vector<std::string> PREINSTALLED_DRIVER_PRINTER = {};
+
 static bool g_publishState = false;
 
 const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(PrintServiceAbility::GetInstance().GetRefPtr());
@@ -209,7 +211,61 @@ int32_t PrintServiceAbility::Init()
     }
     StartDiscoverPrinter(extensionIds);
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
+    UpdatePpdForPreinstalledDriverPrinter();
     return ERR_OK;
+}
+
+void PrintServiceAbility::UpdatePpdForPreinstalledDriverPrinter()
+{
+#ifdef CUPS_ENABLE
+    std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
+    for (auto &printerId : printerIdList) {
+        PrinterInfo printerInfo;
+        if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
+            continue;
+        }
+        std::string printerMake = printerInfo.GetPrinterMake();
+        if (printerMake.empty()) {
+            PRINT_HILOGE("printer make empty");
+            continue;
+        }
+        PRINT_HILOGD("CheckPrinterPpdUpdateRequired printerMake: %{public}s", printerMake.c_str());
+        if (!IsPreinstalledDriverPrinter(printerInfo.GetPrinterName())) {
+            PRINT_HILOGW("no need to update ppd");
+            continue;
+        }
+        std::string ppdName = DEFAULT_PPD_NAME;
+        if (!QueryPPDInformation(printerMake.c_str(), ppdName) || ppdName == DEFAULT_PPD_NAME) {
+            PRINT_HILOGW("no ppd file for this printer");
+            continue;
+        }
+        PRINT_HILOGI("CheckPrinterPpdUpdateRequired ppd driver: %{public}s", ppdName.c_str());
+
+        std::string standardPrinterName = PrintUtil::StandardizePrinterName(printerInfo.GetPrinterName());
+        std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
+        if (printerInfo.GetPpdHashCode() == ppdHashCode) {
+            PRINT_HILOGW("no need to update ppd");
+            continue;
+        }
+        if (!DelayedSingleton<PrintCupsClient>::GetInstance()->ModifyCupsPrinterPpd(standardPrinterName, ppdName)) {
+            PRINT_HILOGE("update cups printer ppd failed");
+            continue;
+        }
+        printSystemData_.UpdatePpdHashCode(printerId, ppdHashCode);
+        printSystemData_.SavePrinterFile(printerId);
+    }
+#endif
+}
+
+bool PrintServiceAbility::IsPreinstalledDriverPrinter(const std::string &printerName)
+{
+    for (auto &preinstalledMake: PREINSTALLED_DRIVER_PRINTER) {
+        if (printerName.find(preinstalledMake) != std::string::npos) {
+            PRINT_HILOGI("find target printer");
+            return true;
+        }
+    }
+    return false;
 }
 
 void PrintServiceAbility::CheckCupsServerAlive()
@@ -4153,11 +4209,5 @@ int32_t PrintServiceAbility::AuthPrintJob(const std::string &jobId, const std::s
         printerInfo->GetUri(), userName, userPasswd);
 #endif // CUPS_ENABLE
     return E_PRINT_NONE;
-}
-
-void PrintServiceAbility::UpdatePpdHashCode(const std::string &printerId, const std::string &ppdHashCode)
-{
-    printSystemData_.UpdatePpdHashCode(printerId, ppdHashCode);
-    printSystemData_.SavePrinterFile(printerId);
 }
 }  // namespace OHOS::Print
