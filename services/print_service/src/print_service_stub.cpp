@@ -22,7 +22,6 @@
 #include "print_job.h"
 #include "print_log.h"
 #include "print_util.h"
-#include <securec.h>
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -888,20 +887,15 @@ bool PrintServiceStub::OnAuthPrintJob(MessageParcel &data, MessageParcel &reply)
     PRINT_HILOGI("PrintServiceStub::AuthPrintJob in");
     std::string jobId = data.ReadString();
     std::string userName = data.ReadString();
-    uint32_t userPasswdLength = data.ReadUint32();
-    if (userPasswdLength == 0 || userPasswdLength > MAX_BUFFER_SIZE) {
-        PRINT_HILOGE("userPasswdLength acquire fail.");
-        return false;
-    }
-    const uint8_t *outData = data.ReadBuffer(userPasswdLength);
+    const uint8_t *outData = data.ReadBuffer(MAX_AUTH_LENGTH_SIZE);
 
-    char* userPasswd = new (std::nothrow) char[userPasswdLength];
+    char* userPasswd = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE];
     if (userPasswd == nullptr) {
         PRINT_HILOGE("Allocate Password fail.");
         return false;
     }
 
-    auto memcpyRet = memcpy_s(userPasswd, userPasswdLength, outData, userPasswdLength);
+    auto memcpyRet = memcpy_s(userPasswd, MAX_AUTH_LENGTH_SIZE, outData, MAX_AUTH_LENGTH_SIZE);
     if (memcpyRet != E_PRINT_NONE) {
         PrintUtil::SafeDeleteAuthInfo(userPasswd);
         PRINT_HILOGE("memcpy_s failed, errorCode:[%{public}d]", memcpyRet);

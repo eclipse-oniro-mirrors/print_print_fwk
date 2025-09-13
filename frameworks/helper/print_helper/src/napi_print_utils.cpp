@@ -22,6 +22,7 @@
 #include "print_log.h"
 #include "securec.h"
 #include "tokenid_kit.h"
+#include "print_util.h"
 
 namespace OHOS::Print {
 static constexpr const int MAX_STRING_LENGTH = 65536;
@@ -238,11 +239,11 @@ char* NapiPrintUtils::GetCharPtrFromValueUtf8(napi_env env, napi_value value)
         return nullptr;
     }
 
-    if (length == 0) {
+    if (length == 0 || length + 1 > MAX_AUTH_LENGTH_SIZE) {
         return nullptr;
     }
 
-    char* result = new (std::nothrow) char[length + 1];
+    char* result = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE];
     if (result == nullptr) {
         return nullptr;
     }
