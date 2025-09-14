@@ -192,7 +192,7 @@ int32_t PrintServiceAbility::Init()
     if (!g_publishState) {
         bool ret = Publish(PrintServiceAbility::GetInstance());
         if (!ret) {
-            PRINT_HILOGE("PrintServiceAbility Publish failed.");
+            PRINT_HILOGE("PrintServiceAbility Publish failed");
             return E_PRINT_SERVER_FAILURE;
         }
         g_publishState = true;
