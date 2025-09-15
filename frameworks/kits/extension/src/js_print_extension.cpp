@@ -153,19 +153,37 @@ void JsPrintExtension::OnStart(const AAFwk::Want &want)
     napi_value nativeWant = OHOS::AppExecFwk::WrapWant(nativeEngine, want);
     napi_value argv[] = { nativeWant };
     CallObjectMethod("onCreate", argv, NapiPrintUtils::ARGC_ONE);
-    RegisterCb();
+    if (!RegisterCb()) {
+        OnStop();
+        return;
+    }
     PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
     PRINT_HILOGD("%{public}s end.", __func__);
 }
 
-void JsPrintExtension::RegisterCb()
+bool JsPrintExtension::RegisterCb()
 {
-    RegisterDiscoveryCb();
-    RegisterConnectionCb();
-    RegisterPrintJobCb();
-    RegisterPreviewCb();
-    RegisterQueryCapCb();
-    RegisterExtensionCb();
+    return RegisterHelper({
+        { &JsPrintExtension::RegisterDiscoveryCb, "RegisterDiscoveryCb" },
+        { &JsPrintExtension::RegisterConnectionCb, "RegisterConnectionCb" },
+        { &JsPrintExtension::RegisterPrintJobCb, "RegisterPrintJobCb" },
+        { &JsPrintExtension::RegisterPreviewCb, "RegisterPreviewCb" },
+        { &JsPrintExtension::RegisterQueryCapCb, "RegisterQueryCapCb" },
+        { &JsPrintExtension::RegisterExtensionCb, "RegisterExtensionCb" }
+    });
+}
+
+bool JsPrintExtension::RegisterHelper(
+    const std::initializer_list<std::pair<int32_t (JsPrintExtension::*)(), const char*>>& funcList)
+{
+    for (const auto& [func, funcName] : funcList) {
+        int32_t ret = (this->*func)();
+        if (ret != 0) {
+            PRINT_HILOGE("%s failed, errCode: %{public}d", funcName, ret);
+            return false;
+        }
+    }
+    return true;
 }
 
 void JsPrintExtension::OnStop()
@@ -453,28 +471,32 @@ bool JsPrintExtension::Callback(const std::string funcName, const Print::PrintJo
     return true;
 }
 
-void JsPrintExtension::RegisterDiscoveryCb()
+int32_t JsPrintExtension::RegisterDiscoveryCb()
 {
     PRINT_HILOGD("Register Print Extension Callback");
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_DISCOVERY,
+    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_DISCOVERY,
         []() -> bool {
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
             return JsPrintExtension::jsExtension_->Callback("onStartDiscoverPrinter");
     });
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_STOP_DISCOVERY,
+    if (ret) {
+        return ret;
+    }
+    ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_STOP_DISCOVERY,
         []() -> bool {
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
             return JsPrintExtension::jsExtension_->Callback("onStopDiscoverPrinter");
     });
+    return ret;
 }
 
-void JsPrintExtension::RegisterConnectionCb()
+int32_t JsPrintExtension::RegisterConnectionCb()
 {
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CONNECT_PRINTER,
+    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CONNECT_PRINTER,
         [](const std::string &printId) -> bool {
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
@@ -482,7 +504,10 @@ void JsPrintExtension::RegisterConnectionCb()
             std::string realPrinterId = PrintUtils::GetLocalId(printId, jsExtension_->extensionId_);
             return JsPrintExtension::jsExtension_->Callback("onConnectPrinter", realPrinterId);
     });
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER,
+    if (ret) {
+        return ret;
+    }
+    ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DISCONNECT_PRINTER,
         [](const std::string &printId) -> bool {
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
@@ -490,29 +515,34 @@ void JsPrintExtension::RegisterConnectionCb()
             std::string realPrinterId = PrintUtils::GetLocalId(printId, jsExtension_->extensionId_);
             return JsPrintExtension::jsExtension_->Callback("onDisconnectPrinter", realPrinterId);
     });
+    return ret;
 }
 
-void JsPrintExtension::RegisterPrintJobCb()
+int32_t JsPrintExtension::RegisterPrintJobCb()
 {
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_PRINT,
+    int32_t ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_START_PRINT,
         [](const PrintJob &job) -> bool {
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
             return JsPrintExtension::jsExtension_->Callback("onStartPrintJob", job);
     });
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CANCEL_PRINT,
+    if (ret) {
+        return ret;
+    }
+    ret = PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_CANCEL_PRINT,
         [](const PrintJob &job) -> bool {
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
             }
             return JsPrintExtension::jsExtension_->Callback("onCancelPrintJob", job);
     });
+    return ret;
 }
 
-void JsPrintExtension::RegisterPreviewCb()
+int32_t JsPrintExtension::RegisterPreviewCb()
 {
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_PREVIEW,
+    return PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_PREVIEW,
         [](const PrintJob &job) -> bool {
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
@@ -521,9 +551,9 @@ void JsPrintExtension::RegisterPreviewCb()
     });
 }
 
-void JsPrintExtension::RegisterQueryCapCb()
+int32_t JsPrintExtension::RegisterQueryCapCb()
 {
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_CAP,
+    return PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_REQUEST_CAP,
         [](const std::string &printId) -> bool {
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
@@ -533,9 +563,9 @@ void JsPrintExtension::RegisterQueryCapCb()
     });
 }
 
-void JsPrintExtension::RegisterExtensionCb()
+int32_t JsPrintExtension::RegisterExtensionCb()
 {
-    PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DESTROY_EXTENSION,
+    return PrintManagerClient::GetInstance()->RegisterExtCallback(extensionId_, PRINT_EXTCB_DESTROY_EXTENSION,
         []() -> bool {
             if (JsPrintExtension::jsExtension_ == nullptr) {
                 return false;
