@@ -55,6 +55,7 @@ ohos_unittest("print_ext_test") {
     "ability_runtime:abilitykit_native",
     "ability_runtime:app_context",
     "ability_runtime:data_ability_helper",
+    "ability_runtime:extensionkit_native",
     "ability_runtime:napi_base_context",
     "ability_runtime:runtime",
     "c_utils:utils",
