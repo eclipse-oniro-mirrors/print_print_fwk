@@ -17,6 +17,7 @@
 #define OHOS_STS_PRINT_EXTENSION_H
 
 #include <ani.h>
+#include <initializer_list>
 #include "ets_native_reference.h"
 #include "ets_runtime.h"
 #include "print_extension.h"
@@ -60,14 +61,16 @@ private:
     bool Callback(const std::string& funcName, const std::string &printerId);
     bool Callback(const std::string& funcName, const Print::PrintJob &job);
     bool CallObjectMethod(bool withResult, const char* name, const char* signature, ...);
-    void RegisterDiscoveryCb();
-    void RegisterConnectionCb();
-    void RegisterPrintJobCb();
-    void RegisterPreviewCb();
-    void RegisterQueryCapCb();
-    void RegisterExtensionCb();
-    void RegisterCb();
-
+    int32_t RegisterDiscoveryCb();
+    int32_t RegisterConnectionCb();
+    int32_t RegisterPrintJobCb();
+    int32_t RegisterPreviewCb();
+    int32_t RegisterQueryCapCb();
+    int32_t RegisterExtensionCb();
+    bool RegisterCb();
+    bool RegisterHelper(
+        const std::initializer_list<std::pair<int32_t (StsPrintExtension::*)(), const char *>> &funcList);
+    
     ETSRuntime& etsRuntime_;
     sptr<IRemoteObject> token_ = nullptr;
     std::shared_ptr<AppExecFwk::ETSNativeReference> etsObj_ = nullptr;
