@@ -124,15 +124,15 @@ std::string PrintUtils::GetEventType(const std::string &type)
     return eventType;
 }
 
-std::string PrintUtils::GetEventUserId(const std::string &type)
+std::string PrintUtils::GetBundleName(const std::string &printerId)
 {
-    auto userIdPos = type.find(USER_ID_DELIMITER);
-    if (userIdPos == std::string::npos || userIdPos >= type.length()) {
+    auto userIdPos = printerId.find(USER_ID_DELIMITER);
+    if (userIdPos == std::string::npos || userIdPos >= printerId.length()) {
         return "";
     }
-    std::string userIdStr = type.substr(0, userIdPos);
-    PRINT_HILOGD("userId: %{public}s", userIdStr.c_str());
-    return userIdStr;
+    std::string bundleName = printerId.substr(0, userIdPos);
+    PRINT_HILOGD("bundleName: %{public}s", bundleName.c_str());
+    return bundleName;
 }
 
 bool PrintUtils::CheckUserIdInEventType(const std::string &type, int32_t callerUserId)
