@@ -51,6 +51,8 @@
 #include "print_json_util.h"
 #include "print_setting_data_helper.h"
 #include "parameters.h"
+#include "bundle_mgr_client.h"
+#include "bundle_info.h"
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -2315,11 +2317,30 @@ void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info, const std::s
         info.GetPrinterId().c_str(),
         info.GetPrinterState());
     for (auto eventIt : registeredListeners_) {
-        if (PrintUtils::GetEventType(eventIt.first) == PRINTER_EVENT_TYPE && eventIt.second != nullptr &&
-            (userId == "" || userId == PrintUtils::GetEventUserId(eventIt.first))) {
-            PRINT_HILOGD("PrintServiceAbility::SendPrinterEvent find PRINTER_EVENT_TYPE");
-            eventIt.second->OnCallback(info.GetPrinterState(), info);
+        if (PrintUtils::GetEventType(eventIt.first) != PRINTER_EVENT_TYPE) {
+            continue;
         }
+        if (eventIt.second == nullptr) {
+            PRINT_HILOGD("eventIt.second is nullptr");
+            continue;
+        }
+        if (!userId.empty()) {
+            AppExecFwk::BundleInfo bundleInfo;
+            AppExecFwk::BundleMgrClient bundleMgrClient;
+            std::string bundleName = PrintUtils::GetBundleName(info.GetPrinterId());
+            int32_t userIdNum = 0;
+            if (!PrintUtil::ConvertToInt(userId, userIdNum)) {
+                PRINT_HILOGW("userId [%{private}s] ConvertToInt fail", userId.c_str());
+                continue;
+            }
+            if (!bundleMgrClient.GetBundleInfo(bundleName, AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT,
+                bundleInfo, userIdNum)) {
+                PRINT_HILOGD("user [%{private}s] has not installed [%{private}s]", userId.c_str(), bundleName.c_str());
+                continue;
+            }
+        }
+        PRINT_HILOGD("PrintServiceAbility::SendPrinterEvent find PRINTER_EVENT_TYPE");
+        eventIt.second->OnCallback(info.GetPrinterState(), info);
     }
 }
 
@@ -3664,7 +3685,7 @@ void PrintServiceAbility::HandlePrinterStateChangeRegister(const std::string &ev
         for (const auto &pair : discoveredPrinterInfoList_) {
             std::string key = pair.first;
             std::shared_ptr<PrinterInfo> printerInfoPtr = pair.second;
-            SendPrinterEvent(*printerInfoPtr);
+            SendPrinterEvent(*printerInfoPtr, std::to_string(GetCurrentUserId()));
         }
         PRINT_HILOGI("end HandlePrinterStateChangeRegister");
     }
