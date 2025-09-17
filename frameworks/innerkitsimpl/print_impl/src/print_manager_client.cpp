@@ -113,18 +113,6 @@ int32_t PrintManagerClient::StartPrint(const std::vector<std::string> &fileList,
     return ret;
 }
 
-int32_t PrintManagerClient::StopPrint(const std::string &taskId)
-{
-    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
-    PRINT_HILOGD("PrintManagerClient StopPrint start.");
-    int32_t ret = E_PRINT_RPC_FAILURE;
-    if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->StopPrint(taskId);
-        PRINT_HILOGD("PrintManagerClient StopPrint out ret = [%{public}d].", ret);
-    }
-    return ret;
-}
-
 int32_t PrintManagerClient::ConnectPrinter(const std::string &printerId)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
@@ -858,21 +846,6 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
         ret = printServiceProxy_->RegisterExtCallback(extensionCID, callbackStub);
         PRINT_HILOGD("PrintManagerClient RegisterExtCallback out ret = [%{public}d].", ret);
     }
-    return ret;
-}
-
-int32_t PrintManagerClient::UnregisterAllExtCallback(const std::string &extensionId)
-{
-    int32_t ret = E_PRINT_RPC_FAILURE;
-    {
-        std::lock_guard<std::recursive_mutex> lock(proxyLock_);
-        PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback start.");
-        if (LoadServer() && GetPrintServiceProxy()) {
-            ret = printServiceProxy_->UnregisterAllExtCallback(extensionId);
-            PRINT_HILOGD("PrintManagerClient UnregisterAllExtCallback out ret = [%{public}d].", ret);
-        }
-    }
-    extCallbackMap_.clear();
     return ret;
 }
 

@@ -53,12 +53,6 @@ void TestStartPrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataPr
     PrintServiceAbility::GetInstance()->OnStop();
 }
 
-void TestStopPrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->StopPrint(taskId);
-}
-
 void TestConnectPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string printerId = size ? dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH) : DEFAULT_PRINTERID;
@@ -163,7 +157,6 @@ void TestFlushCacheFileToUserData(const uint8_t *data, size_t size, FuzzedDataPr
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestStartPrint(data, size, dataProvider);
-    TestStopPrint(data, size, dataProvider);
     TestConnectPrinter(data, size, dataProvider);
     TestDisconnectPrinter(data, size, dataProvider);
     TestStartDiscoverPrinter(data, size, dataProvider);

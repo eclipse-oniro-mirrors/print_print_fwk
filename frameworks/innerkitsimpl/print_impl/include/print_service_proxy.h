@@ -28,7 +28,6 @@ public:
     virtual int32_t StartService() override;
     int32_t StartPrint(const std::vector<std::string> &fileList,
         const std::vector<uint32_t> &fdList, std::string &taskId) override;
-    int32_t StopPrint(const std::string &taskId) override;
     int32_t ConnectPrinter(const std::string &printerId) override;
     int32_t DisconnectPrinter(const std::string &printerId) override;
     int32_t StartDiscoverPrinter(const std::vector<std::string> &extensionList) override;
@@ -52,7 +51,6 @@ public:
     int32_t UnregisterPrinterCallback(const std::string &type) override;
     int32_t RegisterExtCallback(const std::string &extensionCID,
         const sptr<IPrintExtensionCallback> &listener) override;
-    int32_t UnregisterAllExtCallback(const std::string &extensionId) override;
     int32_t LoadExtSuccess(const std::string &extensionId) override;
     int32_t QueryAllActivePrintJob(std::vector<PrintJob> &printJobs) override;
     int32_t QueryAllPrintJob(std::vector<PrintJob> &printJobs) override;

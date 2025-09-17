@@ -96,25 +96,6 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
     return ret;
 }
 
-int32_t PrintServiceProxy::StopPrint(const std::string &taskId)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(taskId);
-    PRINT_HILOGD("PrintServiceProxy StopPrint started.");
-    sptr<IRemoteObject> remote = Remote();
-    if (remote == nullptr) {
-        PRINT_HILOGE("PrintServiceProxy StopPrint remote is null");
-        return E_PRINT_RPC_FAILURE;
-    }
-    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_STOP_PRINT, data, reply, option);
-    ret = GetResult(ret, reply);
-    PRINT_HILOGD("PrintServiceProxy StopPrint out. ret = [%{public}d]", ret);
-    return ret;
-}
-
 int32_t PrintServiceProxy::ConnectPrinter(const std::string &printerId)
 {
     MessageParcel data;
@@ -1138,25 +1119,6 @@ int32_t PrintServiceProxy::AnalyzePrintEvents(const std::string &printerId, cons
     ret = GetResult(ret, reply);
     detail = reply.ReadString();
     PRINT_HILOGD("PrintServiceProxy AnalyzePrintEvents out. ret = [%{public}d]", ret);
-    return ret;
-}
-
-int32_t PrintServiceProxy::UnregisterAllExtCallback(const std::string &extensionId)
-{
-    PRINT_HILOGD("PrintServiceProxy::UnregisterAllExtCallback in");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(extensionId);
-    sptr<IRemoteObject> remote = Remote();
-    if (remote == nullptr) {
-        PRINT_HILOGE("PrintServiceProxy UnregisterAllExtCallback remote is null");
-        return E_PRINT_RPC_FAILURE;
-    }
-    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UNREG_EXT_CB, data, reply, option);
-    ret = GetResult(ret, reply);
-    PRINT_HILOGD("PrintServiceProxy UnregisterAllExtCallback out. ret = [%{public}d]", ret);
     return ret;
 }
 

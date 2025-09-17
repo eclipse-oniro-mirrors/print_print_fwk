@@ -173,8 +173,6 @@ void TestClosePrintJobFd(const uint8_t *data, size_t size, FuzzedDataProvider *d
 
 void TestNoParmFuncs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    std::string taskId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->StopPrint(taskId);
     PrintServiceAbility::GetInstance()->DelayEnterLowPowerMode();
     PrintServiceAbility::GetInstance()->ExitLowPowerMode();
     PrintServiceAbility::GetInstance()->UnloadSystemAbility();

@@ -271,7 +271,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartOne_ErrorToken_Shou
     std::shared_ptr<AdapterParam> adapterParam = std::make_shared<AdapterParam>();
     EXPECT_EQ(service->StartPrint(fileList, fdList, taskId), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->CallSpooler(fileList, fdList, taskId), E_PRINT_NO_PERMISSION);
-    EXPECT_EQ(service->StopPrint(taskId), E_PRINT_NO_PERMISSION);
     std::string printerId = "1234";
     EXPECT_EQ(service->ConnectPrinter(printerId), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->DisconnectPrinter(printerId), E_PRINT_NO_PERMISSION);
@@ -344,7 +343,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartTwo_ErrorToken_Shou
     std::string extensionCID = "";
     sptr<IPrintExtensionCallback> listenerCB = nullptr;
     EXPECT_EQ(service->RegisterExtCallback(extensionCID, listenerCB), E_PRINT_NO_PERMISSION);
-    EXPECT_EQ(service->UnregisterAllExtCallback(extensionCID), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->LoadExtSuccess(extensionCID), E_PRINT_NO_PERMISSION);
     std::string jobName = "a.jpeg";
     PrintAttributes printAttributes;
@@ -396,7 +394,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_Sh
     EXPECT_EQ(service->StartPrint(fileList, fdList, taskId), E_PRINT_INVALID_PARAMETER);
 
     EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
-    EXPECT_EQ(service->StopPrint(taskId), E_PRINT_NONE);
     EXPECT_EQ(service->AnalyzePrintEvents(printerId, type, detail), E_PRINT_NONE);
 }
 
@@ -1181,19 +1178,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0057_NeedRename, TestS
     EXPECT_EQ(service->SendPrinterChangeEvent(event, info), 0);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0059_NeedRename, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrintJob jobInfo;
-    std::string previewResult = "";
-    service->RequestPreview(jobInfo, previewResult);
-
-    std::string extensionId = "DEFAULT_EXTENSION_ID";
-    std::string extInfo = "spooler";
-    service->SendExtensionEvent(extensionId, extInfo);
-    EXPECT_EQ(service->UnregisterAllExtCallback(extensionId), E_PRINT_NONE);
-}
-
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0060_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -1523,17 +1507,6 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0088_NeedRename, TestS
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0089_NeedRename, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    uint32_t callbackId = 0;
-    std::string extensionId = "123";
-    std::string cid = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
-    sptr<IPrintExtensionCallback> extCb = nullptr;
-    service->extCallbackMap_[cid] = extCb;
-    auto ret = service->UnregisterAllExtCallback(extensionId);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0090_NeedRename, TestSize.Level1)
 {

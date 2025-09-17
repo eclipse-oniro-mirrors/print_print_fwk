@@ -137,34 +137,6 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0002_NeedRename, TestSize.
 }
 
 /**
- * @tc.name: PrintServiceProxyTest_0003
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0003_NeedRename, TestSize.Level0)
-{
-    std::string testTaskId = "2";
-    sptr<MockRemoteObject> obj = new MockRemoteObject();
-    EXPECT_NE(obj, nullptr);
-    auto proxy = std::make_shared<PrintServiceProxy>(obj);
-    EXPECT_NE(proxy, nullptr);
-    auto service = std::make_shared<MockPrintService>();
-    EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, StopPrint(_)).Times(Exactly(1)).WillOnce([&testTaskId](const std::string &taskId) {
-        EXPECT_EQ(testTaskId, taskId);
-        return E_PRINT_NONE;
-    });
-    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
-    ON_CALL(*obj, SendRequest)
-        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
-            service->OnRemoteRequest(code, data, reply, option);
-            return E_PRINT_NONE;
-        });
-    proxy->StopPrint(testTaskId);
-}
-
-/**
  * @tc.name: PrintServiceProxyTest_0004
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
@@ -749,36 +721,6 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0021_NeedRename, TestSize.
             return E_PRINT_NONE;
         });
     proxy->Off(testTaskId, testType);
-}
-
-/**
- * @tc.name: PrintServiceProxyTest_0022
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0022_NeedRename, TestSize.Level1)
-{
-    std::string testExtId = "extId-123";
-    sptr<MockRemoteObject> obj = new MockRemoteObject();
-    EXPECT_NE(obj, nullptr);
-    auto proxy = std::make_shared<PrintServiceProxy>(obj);
-    EXPECT_NE(proxy, nullptr);
-    auto service = std::make_shared<MockPrintService>();
-    EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UnregisterAllExtCallback(_))
-        .Times(Exactly(1))
-        .WillOnce([&testExtId](const std::string &extensionId) {
-            EXPECT_EQ(testExtId, extensionId);
-            return E_PRINT_NONE;
-        });
-    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
-    ON_CALL(*obj, SendRequest)
-        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
-            service->OnRemoteRequest(code, data, reply, option);
-            return E_PRINT_NONE;
-        });
-    proxy->UnregisterAllExtCallback(testExtId);
 }
 
 /**

@@ -159,79 +159,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0004_NeedRename, TestSiz
 }
 
 /**
- * @tc.name: PrintManagerClientTest_0005_NeedRename
- * @tc.desc: StopPrint failed case.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0005_NeedRename, TestSize.Level0)
-{
-    std::string testTaskId = "2";
-
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    int32_t ret = PrintManagerClient::GetInstance()->StopPrint(testTaskId);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-/**
- * @tc.name: PrintManagerClientTest_0006_NeedRename
- * @tc.desc: StopPrint failed case.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0006_NeedRename, TestSize.Level0)
-{
-    std::string testTaskId = "2";
-
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->StopPrint(testTaskId);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-/**
- * @tc.name: PrintManagerClientTest_0007_NeedRename
- * @tc.desc: StartPrint failed case.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0007_NeedRename, TestSize.Level0)
-{
-    std::string testTaskId = "2";
-
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->StopPrint(testTaskId);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-/**
- * @tc.name: PrintManagerClientTest_0008_NeedRename
- * @tc.desc: StopPrint succedd case.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0008_NeedRename, TestSize.Level0)
-{
-    std::string testTaskId = "2";
-    auto service = std::make_shared<MockPrintService>();
-    EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, StopPrint(_)).Times(1);
-    ON_CALL(*service, StopPrint).WillByDefault([&testTaskId](const std::string &taskId) {
-        EXPECT_EQ(testTaskId, taskId);
-        return E_PRINT_NONE;
-    });
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
-    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
-    CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->StopPrint(testTaskId);
-    EXPECT_EQ(ret, E_PRINT_NONE);
-    EXPECT_NE(dr, nullptr);
-    dr->OnRemoteDied(obj);
-}
-
-/**
  * @tc.name: PrintManagerClientTest_0009_NeedRename
  * @tc.desc: QueryAllExtension
  * @tc.type: FUNC
@@ -2075,82 +2002,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0100_NeedRename, TestSiz
 }
 
 /**
- * @tc.name: PrintManagerClientTest_0101_NeedRename
- * @tc.desc: UnregisterAllExtCallback
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0101_NeedRename, TestSize.Level1)
-{
-    std::string testExtensionId = "com.example.ext";
-
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->UnregisterAllExtCallback(testExtensionId);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-/**
- * @tc.name: PrintManagerClientTest_0102_NeedRename
- * @tc.desc: UnregisterAllExtCallback
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0102_NeedRename, TestSize.Level1)
-{
-    std::string testExtensionId = "com.example.ext";
-
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    PrintManagerClient::GetInstance()->ResetProxy();
-    int32_t ret = PrintManagerClient::GetInstance()->UnregisterAllExtCallback(testExtensionId);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
-}
-
-/**
- * @tc.name: PrintManagerClientTest_0103_NeedRename
- * @tc.desc: StartPrint failed case.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0103_NeedRename, TestSize.Level1)
-{
-    std::string testExtensionId = "com.example.ext";
-
-    PrintManagerClient::GetInstance()->LoadServerFail();
-    auto service = std::make_shared<MockPrintService>();
-    EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UnregisterAllExtCallback(_)).Times(1).WillOnce(Return(E_PRINT_NONE));
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
-    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
-    CallRemoteObject(service, obj, dr);
-    int32_t ret = PrintManagerClient::GetInstance()->UnregisterAllExtCallback(testExtensionId);
-    EXPECT_EQ(ret, E_PRINT_NONE);
-}
-
-/**
- * @tc.name: PrintManagerClientTest_0104_NeedRename
- * @tc.desc: StartDiscoverPrinter
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0104_NeedRename, TestSize.Level1)
-{
-    std::string testExtensionId = "com.example.ext";
-
-    auto service = std::make_shared<MockPrintService>();
-    EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*service, UnregisterAllExtCallback(_)).Times(1).WillOnce(Return(E_PRINT_NONE));
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
-    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
-    CallRemoteObject(service, obj, dr);
-    PrintManagerClient::GetInstance()->LoadServerSuccess();
-    int32_t ret = PrintManagerClient::GetInstance()->UnregisterAllExtCallback(testExtensionId);
-    EXPECT_EQ(ret, E_PRINT_NONE);
-    EXPECT_NE(dr, nullptr);
-    dr->OnRemoteDied(obj);
-}
-
-/**
  * @tc.name: PrintManagerClientTest_0105_NeedRename
  * @tc.desc: QueryAllExtension
  * @tc.type: FUNC
@@ -2465,14 +2316,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0135_NeedRename, TestSiz
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 }
 
-HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0137_NeedRename, TestSize.Level1)
-{
-    MockPrintManagerClient mockPrintManagerClient;
-    std::string testTaskId = "2";
-    int32_t ret = mockPrintManagerClient.StopPrint(testTaskId);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
-}
-
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0138_NeedRename, TestSize.Level1)
 {
     MockPrintManagerClient mockPrintManagerClient;
@@ -2597,7 +2440,6 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0144_NeedRename, TestSiz
     mockPrintManagerClient.RegisterExtCallback(testExtensionId, testCallbackId, capCb);
     PrinterCallback printerCb = nullptr;
     mockPrintManagerClient.RegisterExtCallback(testExtensionId, testCallbackId, printerCb);
-    mockPrintManagerClient.UnregisterAllExtCallback(testExtensionId);
     NativePrinterChangeCallback cb = nullptr;
     ret = mockPrintManagerClient.SetNativePrinterChangeCallback(type, cb);
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);

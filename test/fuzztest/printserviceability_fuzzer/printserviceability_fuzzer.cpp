@@ -76,12 +76,10 @@ void TestCallback(const uint8_t *data, size_t size, FuzzedDataProvider *dataProv
 
     for (auto &printExtensionInfo: printExtensionInfos) {
         PrintServiceAbility::GetInstance()->RegisterExtCallback(printExtensionInfo.GetExtensionId(), nullptr);
-        PrintServiceAbility::GetInstance()->UnregisterAllExtCallback(printExtensionInfo.GetExtensionId());
     }
 
     std::string extensionCID = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->RegisterExtCallback(extensionCID, nullptr);
-    PrintServiceAbility::GetInstance()->UnregisterAllExtCallback(extensionCID);
 }
 
 void TestLoadExtSuccess(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
