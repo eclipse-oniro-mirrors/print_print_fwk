@@ -28,7 +28,6 @@ public:
 private:
     bool OnStartService(MessageParcel &data, MessageParcel &reply);
     bool OnStartPrint(MessageParcel &data, MessageParcel &reply);
-    bool OnStopPrint(MessageParcel &data, MessageParcel &reply);
     bool OnEventOn(MessageParcel &data, MessageParcel &reply);
     bool OnEventOff(MessageParcel &data, MessageParcel &reply);
     bool OnFindPrinterExtension(MessageParcel &data, MessageParcel &reply);
@@ -54,7 +53,6 @@ private:
     bool OnRegisterPrinterCallback(MessageParcel &data, MessageParcel &reply);
     bool OnUnregisterPrinterCallback(MessageParcel &data, MessageParcel &reply);
     bool OnRegisterExtCallback(MessageParcel &data, MessageParcel &reply);
-    bool OnUnregisterAllExtCallback(MessageParcel &data, MessageParcel &reply);
     bool OnLoadExtSuccess(MessageParcel &data, MessageParcel &reply);
     bool OnQueryAllPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnQueryAllActivePrintJob(MessageParcel &data, MessageParcel &reply);

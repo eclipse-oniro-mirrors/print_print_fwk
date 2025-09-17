@@ -199,30 +199,6 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0006_NeedRename, TestSize.Le
 }
 
 /**
- * @tc.name: PrintServiceStubTest_0007
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0007_NeedRename, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(CMD_STOP_PRINT);
-
-    std::string testTaskId = "2";
-
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
-    EXPECT_TRUE(data.WriteString(testTaskId));
-
-    auto stub = std::make_shared<MockPrintService>();
-    EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, StopPrint).WillByDefault(Return(E_PRINT_NONE));
-    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
-}
-
-/**
  * @tc.name: PrintServiceStubTest_0008
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
@@ -981,29 +957,6 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0038_NeedRename, TestSize.Le
 }
 
 /**
- * @tc.name: PrintServiceStubTest_0039
- * @tc.desc: Verify the capability function.
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0039_NeedRename, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(CMD_REG_EXT_CB);
-
-    std::string extensionCid = "com.exmpale.ext:1";
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
-    EXPECT_TRUE(data.WriteString(extensionCid));
-
-    auto stub = std::make_shared<MockPrintService>();
-    EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, UnregisterAllExtCallback).WillByDefault(Return(E_PRINT_NONE));
-    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
-}
-
-/**
  * @tc.name: PrintServiceStubTest_0040
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC
@@ -1023,23 +976,6 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0040_NeedRename, TestSize.Le
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
     ON_CALL(*stub, LoadExtSuccess).WillByDefault(Return(E_PRINT_NONE));
-    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
-}
-
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0041_NeedRename, TestSize.Level0)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    uint32_t code = static_cast<uint32_t>(CMD_UNREG_EXT_CB);
-
-    std::string extensionId = "com.exmpale.ext";
-    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
-    EXPECT_TRUE(data.WriteString(extensionId));
-
-    auto stub = std::make_shared<MockPrintService>();
-    EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, UnregisterAllExtCallback).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 

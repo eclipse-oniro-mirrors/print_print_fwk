@@ -364,7 +364,7 @@ void PrintTask::CreateDefaultAdapterParam(const std::shared_ptr<AdapterParam> &a
 
 void PrintTask::Stop()
 {
-    PrintManagerClient::GetInstance()->StopPrint(taskId_);
+    PRINT_HILOGD("PrintServiceAbility StopPrint started.");
     taskId_ = "";
 }
 

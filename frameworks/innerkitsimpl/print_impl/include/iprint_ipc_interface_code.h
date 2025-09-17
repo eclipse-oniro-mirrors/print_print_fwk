@@ -20,7 +20,6 @@
 namespace OHOS::Print {
     enum IPrintInterfaceCode {
         CMD_START_PRINT,
-        CMD_STOP_PRINT,
         CMD_CONNECTPRINTER,
         CMD_DISCONNECTPRINTER,
         CMD_STARTDISCOVERPRINTER,
@@ -40,7 +39,6 @@ namespace OHOS::Print {
         CMD_ON,
         CMD_OFF,
         CMD_REG_EXT_CB,
-        CMD_UNREG_EXT_CB,
         CMD_LOAD_EXT,
         CMD_QUERYALLACTIVEPRINTJOB,
         CMD_QUERYALLPRINTJOB,

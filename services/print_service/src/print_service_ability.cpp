@@ -432,17 +432,6 @@ int32_t PrintServiceAbility::CallSpooler(
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceAbility::StopPrint(const std::string &taskId)
-{
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
-        PRINT_HILOGE("no permission to access print service");
-        return E_PRINT_NO_PERMISSION;
-    }
-
-    PRINT_HILOGD("PrintServiceAbility StopPrint started.");
-    return E_PRINT_NONE;
-}
-
 int32_t PrintServiceAbility::HandleExtensionConnectPrinter(const std::string &printerId)
 {
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
@@ -2125,26 +2114,6 @@ int32_t PrintServiceAbility::RegisterExtCallback(
     return E_PRINT_NONE;
 }
 
-int32_t PrintServiceAbility::UnregisterAllExtCallback(const std::string &extensionId)
-{
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
-        PRINT_HILOGE("no permission to access print service");
-        return E_PRINT_NO_PERMISSION;
-    }
-
-    PRINT_HILOGD("PrintServiceAbility::UnregisterAllExtCallback started.");
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    for (uint32_t callbackId = PRINT_EXTCB_START_DISCOVERY; callbackId < PRINT_EXTCB_MAX; callbackId++) {
-        std::string cid = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
-        auto callbackIt = extCallbackMap_.find(cid);
-        if (callbackIt != extCallbackMap_.end()) {
-            extCallbackMap_.erase(callbackIt);
-        }
-    }
-    PRINT_HILOGD("PrintServiceAbility::UnregisterAllExtCallback end.");
-    return E_PRINT_NONE;
-}
-
 int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId)
 {
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
@@ -2994,7 +2963,7 @@ int32_t PrintServiceAbility::RemovePrinterFromDiscovery(const std::string &print
 int32_t PrintServiceAbility::UpdatePrinterInSystem(const PrinterInfo &printerInfo)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }

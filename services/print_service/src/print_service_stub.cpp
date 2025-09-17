@@ -29,7 +29,6 @@ using namespace OHOS::HiviewDFX;
 PrintServiceStub::PrintServiceStub()
 {
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_START_PRINT] = &PrintServiceStub::OnStartPrint;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_STOP_PRINT] = &PrintServiceStub::OnStopPrint;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTER] = &PrintServiceStub::OnConnectPrinter;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_DISCONNECTPRINTER] = &PrintServiceStub::OnDisconnectPrinter;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_STARTDISCOVERPRINTER] = &PrintServiceStub::OnStartDiscoverPrinter;
@@ -52,7 +51,6 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ON] = &PrintServiceStub::OnEventOn;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_OFF] = &PrintServiceStub::OnEventOff;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_EXT_CB] = &PrintServiceStub::OnRegisterExtCallback;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UNREG_EXT_CB] = &PrintServiceStub::OnUnregisterAllExtCallback;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_LOAD_EXT] = &PrintServiceStub::OnLoadExtSuccess;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLACTIVEPRINTJOB] = &PrintServiceStub::OnQueryAllActivePrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLPRINTJOB] =
@@ -171,16 +169,6 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     int32_t ret = StartPrint(fileList, fdList, taskId);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnStartPrint out");
-    return ret == E_PRINT_NONE;
-}
-
-bool PrintServiceStub::OnStopPrint(MessageParcel &data, MessageParcel &reply)
-{
-    PRINT_HILOGI("PrintServiceStub::OnStopPrint in");
-    std::string taskId = data.ReadString();
-    int32_t ret = StopPrint(taskId);
-    reply.WriteInt32(ret);
-    PRINT_HILOGD("PrintServiceStub::OnStopPrint out");
     return ret == E_PRINT_NONE;
 }
 
@@ -723,16 +711,6 @@ bool PrintServiceStub::OnRegisterExtCallback(MessageParcel &data, MessageParcel 
     int32_t ret = RegisterExtCallback(extensionCID, listener);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnRegisterExtCallback out");
-    return ret == E_PRINT_NONE;
-}
-
-bool PrintServiceStub::OnUnregisterAllExtCallback(MessageParcel &data, MessageParcel &reply)
-{
-    PRINT_HILOGI("PrintServiceStub::OnUnregisterAllExtCallback in");
-    std::string extensionId = data.ReadString();
-    int32_t ret = UnregisterAllExtCallback(extensionId);
-    reply.WriteInt32(ret);
-    PRINT_HILOGD("PrintServiceStub::OnUnregisterAllExtCallback out");
     return ret == E_PRINT_NONE;
 }
 

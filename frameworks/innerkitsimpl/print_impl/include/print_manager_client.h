@@ -48,7 +48,6 @@ public:
     int32_t Release();
     int32_t StartPrint(const std::vector<std::string> &fileList,
         const std::vector<uint32_t> &fdList, std::string &taskId);
-    int32_t StopPrint(const std::string &taskId);
     int32_t QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos);
     int32_t StartDiscoverPrinter(const std::vector<std::string> &extensionList);
     int32_t StopDiscoverPrinter();
@@ -111,7 +110,6 @@ public:
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrintJobCallback cb);
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrinterCallback cb);
     int32_t RegisterExtCallback(const std::string &extensionId, uint32_t callbackId, PrinterCapabilityCallback cb);
-    int32_t UnregisterAllExtCallback(const std::string &extensionId);
     int32_t LoadExtSuccess(const std::string &extensionId);
 
     int32_t SetNativePrinterChangeCallback(const std::string &type, NativePrinterChangeCallback cb);
