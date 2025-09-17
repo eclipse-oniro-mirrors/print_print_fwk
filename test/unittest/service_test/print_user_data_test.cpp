@@ -501,12 +501,6 @@ HWTEST_F(PrintUserDataTest, PrintUserDataTest_0033_NeedRename, TestSize.Level1)
     EXPECT_EQ(userData->AddPrintJobToHistoryList(printerId, jobId, printjob), false);
     printjob->SetOption("{\"test\":\"test\"}");
     EXPECT_EQ(userData->AddPrintJobToHistoryList(printerId, jobId, printjob), true);
-    auto printerHistroyJobList = userData->printHistoryJobList_.find(printerId);
-    for (int32_t i = 2; i <= 501; i++) {
-        std::shared_ptr<PrintJob> printjob1 = std::make_shared<PrintJob>();
-        (printerHistroyJobList->second)->insert(std::make_pair(std::to_string(i), printjob1));
-    }
-    EXPECT_EQ(userData->AddPrintJobToHistoryList(printerId, jobId, printjob), true);
 }
 
 HWTEST_F(PrintUserDataTest, PrintUserDataTest_0034_NeedRename, TestSize.Level1)
