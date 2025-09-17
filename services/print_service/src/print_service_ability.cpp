@@ -3677,6 +3677,10 @@ void PrintServiceAbility::HandlePrinterStateChangeRegister(const std::string &ev
         for (const auto &pair : discoveredPrinterInfoList_) {
             std::string key = pair.first;
             std::shared_ptr<PrinterInfo> printerInfoPtr = pair.second;
+            if (printerInfoPtr == nullptr) {
+                PRINT_HILOGW("printerInfoPtr is nullptr");
+                continue;
+            }
             SendPrinterEvent(*printerInfoPtr, std::to_string(GetCurrentUserId()));
         }
         PRINT_HILOGI("end HandlePrinterStateChangeRegister");
@@ -4169,9 +4173,10 @@ void PrintServiceAbility::RegisterSettingDataObserver()
         PRINT_HILOGE("Invalid user id.");
         return;
     }
-    PrintSettingDataObserver::ObserverCallback observerCallback = [this, userId]() {
+    std::shared_ptr<PrintServiceHelper> helper = helper_;
+    PrintSettingDataObserver::ObserverCallback observerCallback = [helper, userId]() {
         PRINT_HILOGI("observerCallback enter");
-        if (this->helper_ == nullptr) {
+        if (helper == nullptr) {
             PRINT_HILOGE("Invalid print service helper.");
             return;
         }
@@ -4182,7 +4187,7 @@ void PrintServiceAbility::RegisterSettingDataObserver()
         }
         PRINT_HILOGI("observerCallback pcmode value: %{public}s", value.c_str());
         if (value == "false") {
-            this->helper_->DisconnectAbility();
+            helper->DisconnectAbility();
         }
     };
     PrintSettingDataHelper::GetInstance().RegisterSettingDataObserver(
