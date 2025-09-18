@@ -1925,7 +1925,6 @@ bool PrintCupsClient::QueryJobState(http_t *http, std::shared_ptr<JobMonitorPara
         response = printAbility_->DoRequest(http, request, "/");
         if (response == nullptr) {
             PRINT_HILOGE("Failed to get response from CUPS service.");
-            ippDelete(request);
             return false;
         }
         needUpdate = UpdateJobState(monitorParams, response);
