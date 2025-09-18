@@ -261,6 +261,7 @@ bool VendorBsuniDriver::Init(IPrinterVendorManager *manager)
 }
 void VendorBsuniDriver::UnInit()
 {
+    opQueue.Stop();
     SetDriverWrapper(nullptr);
     vendorExtension = nullptr;
     if (bsUniDriverHandler != nullptr) {
@@ -307,8 +308,8 @@ void VendorBsuniDriver::OnDestroy()
         return;
     }
     int32_t result = vendorExtension->onDestroy();
-    SetDriverWrapper(nullptr);
     opQueue.Stop();
+    SetDriverWrapper(nullptr);
     PRINT_HILOGI("OnDestroy quit: %{public}d", result);
 }
 
