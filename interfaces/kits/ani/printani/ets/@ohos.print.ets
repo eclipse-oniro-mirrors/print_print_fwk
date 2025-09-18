@@ -54,7 +54,7 @@ export class AsyncCallbackArrayWrapper<T> {
 }
 
 export default namespace print {
-    loadLibrary('print_ani');
+    loadLibraryWithPermissionCheck('print_ani', "@ohos.print");
 
     export interface PrinterExtensionInfo {
         extensionId: string;
