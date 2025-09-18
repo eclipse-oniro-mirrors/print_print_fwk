@@ -131,7 +131,7 @@ std::string PrintUtils::GetBundleName(const std::string &printerId)
         return "";
     }
     std::string bundleName = printerId.substr(0, userIdPos);
-    PRINT_HILOGD("bundleName: %{public}s", bundleName.c_str());
+    PRINT_HILOGD("bundleName: %{private}s", bundleName.c_str());
     return bundleName;
 }
 
