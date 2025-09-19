@@ -445,7 +445,7 @@ int32_t ScanContext::StatusConvert(int32_t status)
         return it->second;
     } else {
         SCAN_HILOGE("StatusConvert failed, status: [%{public}d]", status);
-        return E_SCAN_GENERIC_FAILURE;
+        return SCAN_ERROR_GENERIC_FAILURE;
     }
 }
 
