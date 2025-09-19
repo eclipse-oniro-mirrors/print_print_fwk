@@ -80,6 +80,12 @@ static const std::string SCAN_INIT_EVENT = "scanInitEvent";
 static const std::string DEVICE_EVENT_TYPE = "deviceStateChange";
 static const std::string GET_SCANNER_DEVICE_LIST = "GET_SCANNER_DEVICE_LIST";
 
+static const std::unordered_map<std::string, std::string> SCAN_PERMISSION_MAP = {
+    {SCAN_DEVICE_FOUND, PERMISSION_NAME_PRINT},
+    {SCAN_DEVICE_SYNC, PERMISSION_NAME_PRINT},
+    {SCAN_DEVICE_ADD, PERMISSION_NAME_PRINT_JOB},
+    {SCAN_DEVICE_DEL, PERMISSION_NAME_PRINT_JOB}};
+
 std::map<std::string, sptr<IScanCallback>> OHOS::Scan::ScanServiceAbility::registeredListeners_;
 
 REGISTER_SYSTEM_ABILITY_BY_ID(ScanServiceAbility, SCAN_SERVICE_ID, true);
@@ -761,8 +767,10 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
 
 int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type, const sptr<IScanCallback> &listener)
 {
-    if ((type == SCAN_DEVICE_FOUND && !CheckPermission(PERMISSION_NAME_PRINT)) ||
-        (type != SCAN_DEVICE_FOUND && !CheckPermission(PERMISSION_NAME_PRINT_JOB))) {
+    const std::string &permission = (SCAN_PERMISSION_MAP.find(type) != SCAN_PERMISSION_MAP.end())
+                                        ? SCAN_PERMISSION_MAP.at(type)
+                                        : PERMISSION_NAME_PRINT_JOB;
+    if (!CheckPermission(permission)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
@@ -794,8 +802,10 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
 
 int32_t ScanServiceAbility::Off(const std::string taskId, const std::string &type)
 {
-    if ((type == SCAN_DEVICE_FOUND && !CheckPermission(PERMISSION_NAME_PRINT)) ||
-        (type != SCAN_DEVICE_FOUND && !CheckPermission(PERMISSION_NAME_PRINT_JOB))) {
+    const std::string &permission = (SCAN_PERMISSION_MAP.find(type) != SCAN_PERMISSION_MAP.end())
+                                        ? SCAN_PERMISSION_MAP.at(type)
+                                        : PERMISSION_NAME_PRINT_JOB;
+    if (!CheckPermission(permission)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
