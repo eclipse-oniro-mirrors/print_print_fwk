@@ -2208,8 +2208,12 @@ void PrintCupsClient::UpdateJobParameterByOption(Json::Value &optionJson, JobPar
         params->printerAttrsOptionCupsOption = optionJson["cupsOptions"].asString();
     }
 
-    if (optionJson.isMember("printQuality") && optionJson["printQuality"].isString()) {
-        params->printQuality = optionJson["printQuality"].asString();
+    if (optionJson.isMember("printQuality")) {
+        if (optionJson["printQuality"].isString()) {
+            params->printQuality = optionJson["printQuality"].asString();
+        } else if (optionJson["printQuality"].isInt()) {
+            params->printQuality = std::to_string(optionJson["printQuality"].asInt());
+        }
     } else {
         params->printQuality = CUPS_PRINT_QUALITY_NORMAL;
     }
