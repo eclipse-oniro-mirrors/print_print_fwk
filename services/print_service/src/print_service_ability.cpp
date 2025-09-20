@@ -3766,6 +3766,9 @@ void PrintServiceAbility::BuildPrinterPreference(PrinterInfo &printerInfo)
     printerInfo.GetCapability(cap);
     PrinterPreferences preferences;
     printSystemData_.BuildPrinterPreference(cap, preferences);
+    if (printerInfo.GetPrinterId().find(EPRINTID) != std::string::npos) {
+        preferences.SetDefaultColorMode(PRINT_COLOR_MODE_MONOCHROME);
+    }
     printerInfo.SetPreferences(preferences);
 }
 
