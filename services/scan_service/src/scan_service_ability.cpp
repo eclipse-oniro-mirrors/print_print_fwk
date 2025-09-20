@@ -188,6 +188,7 @@ void ScanServiceAbility::UnloadSystemAbility()
             SCAN_HILOGW("appCount = %{public}d is not equal to zerro", appCount_.load());
             return;
         }
+        CleanupScanService();
         SaneManagerClient::GetInstance()->UnloadSystemAbility();
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {
@@ -229,7 +230,6 @@ int32_t ScanServiceAbility::ExitScan()
     appCount_.fetch_sub(1);
     SCAN_HILOGD("appCount = %{public}d", appCount_.load());
     if (appCount_.load() == 0) {
-        CleanupScanService();
         UnloadSystemAbility();
     }
     return E_SCAN_NONE;
@@ -439,6 +439,7 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo &info)
 void ScanServiceAbility::SaneGetScanner()
 {
     scannerState_.store(SCANNER_SEARCHING);
+    SaneManagerClient::GetInstance()->SaneInit();
     std::vector<SaneDevice> deviceInfos;
     SaneStatus status = SaneManagerClient::GetInstance()->SaneGetDevices(deviceInfos);
     if (status != SANE_STATUS_GOOD) {
@@ -481,8 +482,6 @@ int32_t ScanServiceAbility::GetScannerList()
         SCAN_HILOGW("is working");
         return E_SCAN_DEVICE_BUSY;
     }
-    CleanupScanService();
-    InitializeScanService();
     SCAN_HILOGD("ScanServiceAbility GetScannerList start");
     auto exec_sane_getscaner = [=]() {
         deviceInfos_.clear();
