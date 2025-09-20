@@ -270,6 +270,7 @@ const std::string DEFAULT_PAGESIZE_ID = "ISO_A4";
 const std::string DEFAULT_MEDIA_TYPE = "stationery";
 const std::string DEFAULT_USER_NAME = "print";
 static const std::string P2P_PRINTER = "p2p";
+static const std::string EPRINTID = "ePrintID";
 
 const std::string E_PRINT_MSG_NONE = "none";
 const std::string E_PRINT_MSG_NO_PERMISSION = "the application does not hace permission";
