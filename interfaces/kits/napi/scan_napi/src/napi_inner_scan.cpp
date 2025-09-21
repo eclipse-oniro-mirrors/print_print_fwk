@@ -515,7 +515,7 @@ napi_value NapiInnerScan::AddScanner(napi_env env, napi_callback_info info)
         SCAN_CALL_BASE(env, napi_typeof(env, argv[NapiScanUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         SCAN_ASSERT_BASE(env, valuetype == napi_string, "scanner uniqueId is not a string", napi_string_expected);
         std::string uniqueId = NapiScanUtils::GetStringFromValueUtf8(env, argv[NapiScanUtils::INDEX_ZERO]);
-        SCAN_HILOGD("uniqueId : %{public}s", uniqueId.c_str());
+        SCAN_HILOGD("uniqueId : %{private}s", uniqueId.c_str());
         std::string ip;
         if (ScanUtil::ExtractIpAddresses(uniqueId, ip)) {
             context->uniqueId = ip;
@@ -562,7 +562,7 @@ napi_value NapiInnerScan::DeleteScanner(napi_env env, napi_callback_info info)
         SCAN_CALL_BASE(env, napi_typeof(env, argv[NapiScanUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         SCAN_ASSERT_BASE(env, valuetype == napi_string, "scanner uniqueId is not a string", napi_string_expected);
         std::string uniqueId = NapiScanUtils::GetStringFromValueUtf8(env, argv[NapiScanUtils::INDEX_ZERO]);
-        SCAN_HILOGD("uniqueId : %{public}s", uniqueId.c_str());
+        SCAN_HILOGD("uniqueId : %{private}s", uniqueId.c_str());
         std::string ip;
         if (ScanUtil::ExtractIpAddresses(uniqueId, ip)) {
             context->uniqueId = ip;
