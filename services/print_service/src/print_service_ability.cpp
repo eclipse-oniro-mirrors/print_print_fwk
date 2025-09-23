@@ -121,8 +121,8 @@ static const std::string PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH = "const.window.
 static const std::string WINDOW_PCMODE_SWITCH_STATUS = "window_pcmode_switch_status";
 
 #if ENTERPRISE_ENABLE
-static const std::string IS_ENTERPRISE_ENABLE = "2";
-static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.enterprise_space_init";
+static const std::string IS_ENTERPRISE_ENABLE = "true";
+static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.enterprise_space_enable";
 #endif  // ENTERPRISE_ENABLE
 
 static const std::vector<std::string> PRINT_TASK_EVENT_LIST = {EVENT_BLOCK, EVENT_SUCCESS, EVENT_FAIL, EVENT_CANCEL};

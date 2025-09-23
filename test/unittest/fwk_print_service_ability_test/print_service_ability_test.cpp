@@ -68,8 +68,8 @@ static const std::string EVENT_CANCEL = "cancel";
 const uint32_t MAX_JOBQUEUE_NUM = 512;
 static constexpr uint32_t ISO_A4_WIDTH = 8268;
 static constexpr uint32_t ISO_A4_HEIGHT = 11692;
-static const std::string IS_ENTERPRISE_ENABLE = "2";
-static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.enterprise_space_init";
+static const std::string IS_ENTERPRISE_ENABLE = "true";
+static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.enterprise_space_enable";
 
 enum EXTENSION_ID_TYPE {
     TYPE_DEFAULT,
