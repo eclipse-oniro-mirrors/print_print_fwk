@@ -102,7 +102,8 @@ private:
     void SendDeviceList(std::vector<ScanDeviceInfo> &info, std::string event);
     int32_t GetCurrentUserId();
     bool CreateAndOpenScanFile(ScanTask &scanTask);
-    void AddFoundScanner(ScanDeviceInfo& info);
+    void AddFoundScanner(ScanDeviceInfo& info, std::vector<ScanDeviceInfo>& scanDeviceInfos);
+    void UpdateScanSystemData(const ScanDeviceInfo &info);
     void CleanUpAfterScan(ScanTask &scanTask, int32_t scanStatus);
     int32_t RestartScan(const std::string &scannerId);
     void InitializeScanService();

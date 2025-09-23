@@ -183,7 +183,8 @@ namespace Scan {
     {
         ScanDeviceInfo info;
         info.serialNumber = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-        ScanServiceAbility::GetInstance()->AddFoundScanner(info);
+        std::vector<ScanDeviceInfo> scanDeviceInfos;
+        ScanServiceAbility::GetInstance()->AddFoundScanner(info, scanDeviceInfos);
     }
 
     void TestSendDeviceList(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
