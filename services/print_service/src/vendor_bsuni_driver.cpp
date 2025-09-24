@@ -21,14 +21,20 @@
 
 using namespace OHOS::Print;
 namespace {
-std::mutex g_driverMutex;
-VendorBsuniDriver *g_driverWrapper = nullptr;
+std::mutex g_instanceMutex;
+std::weak_ptr<VendorBsuniDriver> g_weakInstance;
 }  // namespace
 
-void VendorBsuniDriver::SetDriverWrapper(VendorBsuniDriver *driver)
+void VendorBsuniDriver::SetDriverWrapper(const std::shared_ptr<VendorBsuniDriver>& driver)
 {
-    std::lock_guard<std::mutex> lock(g_driverMutex);
-    g_driverWrapper = driver;
+    std::lock_guard<std::mutex> lock(g_instanceMutex);
+    g_weakInstance = driver;
+}
+
+std::shared_ptr<VendorBsuniDriver> VendorBsuniDriver::GetActiveInstance()
+{
+    std::lock_guard<std::mutex> lock(g_instanceMutex);
+    return g_weakInstance.lock();
 }
 
 bool VendorBsuniDriver::CheckVendorExtension(Print_VendorExtension *extension)
@@ -88,18 +94,26 @@ int32_t VendorBsuniDriver::AddPrinterToDiscovery(const Print_DiscoveryItem *disc
 {
     PRINT_HILOGI("BsUni callback AddPrinterToDiscovery");
     LogDiscoveryItem(discoveryItem);
+    
     auto info = std::make_shared<PrinterInfo>();
     if (!UpdatePrinterInfoWithDiscovery(*info, discoveryItem)) {
         PRINT_HILOGW("fail to convert discoveryItem to printer info");
         return EXTENSION_INVALID_PARAMETER;
     }
-    std::lock_guard<std::mutex> lock(g_driverMutex);
-    if (g_driverWrapper == nullptr) {
-        PRINT_HILOGW("driver released");
+    auto driver = GetActiveInstance();
+    if (!driver) {
+        PRINT_HILOGW("driver instance not available or already destroyed");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    auto op = std::bind(&VendorBsuniDriver::OnDiscoveredPrinterAdd, g_driverWrapper, info);
-    if (!g_driverWrapper->opQueue.Push(op)) {
+    auto weakDriver = std::weak_ptr<VendorBsuniDriver>(driver);
+    auto safeOp = [weakDriver, info]() {
+        if (auto driver = weakDriver.lock()) {
+            driver->OnDiscoveredPrinterAdd(info);
+        } else {
+            PRINT_HILOGW("driver already destroyed");
+        }
+    };
+    if (!driver->opQueue.Push(safeOp)) {
         PRINT_HILOGW("fail to add discovered printer");
         return EXTENSION_ERROR_CALLBACK_FAIL;
     }
@@ -114,13 +128,20 @@ int32_t VendorBsuniDriver::RemovePrinterFromDiscovery(const char *printerId)
         return EXTENSION_INVALID_PARAMETER;
     }
     auto vendorPrinterId = std::make_shared<std::string>(printerId);
-    std::lock_guard<std::mutex> lock(g_driverMutex);
-    if (g_driverWrapper == nullptr) {
-        PRINT_HILOGW("driver released");
+    auto driver = GetActiveInstance();
+    if (!driver) {
+        PRINT_HILOGW("driver instance not available or already destroyed");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    auto op = std::bind(&VendorBsuniDriver::OnDiscoveredPrinterRemove, g_driverWrapper, vendorPrinterId);
-    if (!g_driverWrapper->opQueue.Push(op)) {
+    auto weakDriver = std::weak_ptr<VendorBsuniDriver>(driver);
+    auto safeOp = [weakDriver, vendorPrinterId]() {
+        if (auto driver = weakDriver.lock()) {
+            driver->OnDiscoveredPrinterRemove(vendorPrinterId);
+        } else {
+            PRINT_HILOGW("driver already destroyed");
+        }
+    };
+    if (!driver->opQueue.Push(safeOp)) {
         PRINT_HILOGW("fail to remove discovered printer");
         return EXTENSION_ERROR_CALLBACK_FAIL;
     }
@@ -144,13 +165,20 @@ int32_t VendorBsuniDriver::AddPrinterToCups(const Print_DiscoveryItem *printer,
     if (ppdData != nullptr) {
         ppdContent = std::make_shared<std::string>(ppdData);
     }
-    std::lock_guard<std::mutex> lock(g_driverMutex);
-    if (g_driverWrapper == nullptr) {
-        PRINT_HILOGW("driver released");
+    auto driver = GetActiveInstance();
+    if (!driver) {
+        PRINT_HILOGW("driver instance not available or already destroyed");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    auto op = std::bind(&VendorBsuniDriver::OnCupsPrinterAdd, g_driverWrapper, info, ppdContent);
-    if (!g_driverWrapper->opQueue.Push(op)) {
+    auto weakDriver = std::weak_ptr<VendorBsuniDriver>(driver);
+    auto safeOp = [weakDriver, info, ppdContent]() {
+        if (auto driver = weakDriver.lock()) {
+            driver->OnCupsPrinterAdd(info, ppdContent);
+        } else {
+            PRINT_HILOGW("driver already destroyed");
+        }
+    };
+    if (!driver->opQueue.Push(safeOp)) {
         PRINT_HILOGW("fail to add cups printer");
         return EXTENSION_ERROR_CALLBACK_FAIL;
     }
@@ -165,13 +193,20 @@ int32_t VendorBsuniDriver::RemovePrinterFromCups(const char *printerId)
         return EXTENSION_INVALID_PARAMETER;
     }
     auto vendorPrinterId = std::make_shared<std::string>(printerId);
-    std::lock_guard<std::mutex> lock(g_driverMutex);
-    if (g_driverWrapper == nullptr) {
-        PRINT_HILOGW("driver released");
+    auto driver = GetActiveInstance();
+    if (!driver) {
+        PRINT_HILOGW("driver instance not available or already destroyed");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    auto op = std::bind(&VendorBsuniDriver::OnCupsPrinterRemove, g_driverWrapper, vendorPrinterId);
-    if (!g_driverWrapper->opQueue.Push(op)) {
+    auto weakDriver = std::weak_ptr<VendorBsuniDriver>(driver);
+    auto safeOp = [weakDriver, vendorPrinterId]() {
+        if (auto driver = weakDriver.lock()) {
+            driver->OnCupsPrinterRemove(vendorPrinterId);
+        } else {
+            PRINT_HILOGW("driver already destroyed");
+        }
+    };
+    if (!driver->opQueue.Push(safeOp)) {
         PRINT_HILOGW("fail to remove cups printer");
         return EXTENSION_ERROR_CALLBACK_FAIL;
     }
@@ -191,13 +226,20 @@ int32_t VendorBsuniDriver::OnCapabilityQueried(const Print_DiscoveryItem *printe
         PRINT_HILOGW("printerInfo is null");
         return EXTENSION_INVALID_PARAMETER;
     }
-    std::lock_guard<std::mutex> lock(g_driverMutex);
-    if (g_driverWrapper == nullptr) {
-        PRINT_HILOGW("driver released");
+    auto driver = GetActiveInstance();
+    if (!driver) {
+        PRINT_HILOGW("driver instance not available or already destroyed");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
-    auto op = std::bind(&VendorBsuniDriver::OnPrinterCapabilityQueried, g_driverWrapper, printerInfo);
-    if (!g_driverWrapper->opQueue.Push(op)) {
+    auto weakDriver = std::weak_ptr<VendorBsuniDriver>(driver);
+    auto safeOp = [weakDriver, printerInfo]() {
+        if (auto driver = weakDriver.lock()) {
+            driver->OnPrinterCapabilityQueried(printerInfo);
+        } else {
+            PRINT_HILOGW("driver already destroyed");
+        }
+    };
+    if (!driver->opQueue.Push(safeOp)) {
         PRINT_HILOGW("fail to queue capability");
         return EXTENSION_ERROR_CALLBACK_FAIL;
     }
@@ -213,16 +255,23 @@ int32_t VendorBsuniDriver::OnPropertiesQueried(const char *printerId, const Prin
     }
     LogProperties(propertyList);
     auto vendorPrinterId = std::make_shared<std::string>(printerId);
-    std::lock_guard<std::mutex> lock(g_driverMutex);
-    if (g_driverWrapper == nullptr) {
-        PRINT_HILOGW("driver released");
+    auto driver = GetActiveInstance();
+    if (!driver) {
+        PRINT_HILOGW("driver instance not available or already destroyed");
         return EXTENSION_ERROR_CALLBACK_NULL;
     }
+    auto weakDriver = std::weak_ptr<VendorBsuniDriver>(driver);
     std::string key = PRINTER_PROPERTY_KEY_CUPS_PPD_FILE;
     auto ppdData = FindPropertyFromPropertyList(propertyList, key);
     if (ppdData != nullptr) {
-        auto op = std::bind(&VendorBsuniDriver::OnPpdQueried, g_driverWrapper, vendorPrinterId, ppdData);
-        if (!g_driverWrapper->opQueue.Push(op)) {
+        auto safeOp = [weakDriver, vendorPrinterId, ppdData]() {
+            if (auto driver = weakDriver.lock()) {
+                driver->OnPpdQueried(vendorPrinterId, ppdData);
+            } else {
+                PRINT_HILOGW("driver already destroyed");
+            }
+        };
+        if (!driver->opQueue.Push(safeOp)) {
             PRINT_HILOGW("fail to queue ppd");
             return EXTENSION_ERROR_CALLBACK_FAIL;
         }
@@ -230,8 +279,14 @@ int32_t VendorBsuniDriver::OnPropertiesQueried(const char *printerId, const Prin
     key = PRINTER_PROPERTY_KEY_DEVICE_STATE;
     auto stateData = FindPropertyFromPropertyList(propertyList, key);
     if (stateData != nullptr) {
-        auto op = std::bind(&VendorBsuniDriver::OnStateQueried, g_driverWrapper, vendorPrinterId, stateData);
-        if (!g_driverWrapper->opQueue.Push(op)) {
+        auto safeOp = [weakDriver, vendorPrinterId, stateData]() {
+            if (auto driver = weakDriver.lock()) {
+                driver->OnStateQueried(vendorPrinterId, stateData);
+            } else {
+                PRINT_HILOGW("driver already destroyed");
+            }
+        };
+        if (!driver->opQueue.Push(safeOp)) {
             PRINT_HILOGW("fail to queue state");
             return EXTENSION_ERROR_CALLBACK_FAIL;
         }
@@ -243,7 +298,9 @@ VendorBsuniDriver::VendorBsuniDriver()
 {}
 
 VendorBsuniDriver::~VendorBsuniDriver()
-{}
+{
+    UnInit();
+}
 
 bool VendorBsuniDriver::Init(IPrinterVendorManager *manager)
 {
@@ -284,7 +341,7 @@ void VendorBsuniDriver::OnCreate()
         return;
     }
     opQueue.Run();
-    SetDriverWrapper(this);
+    SetDriverWrapper(shared_from_this());
     printServiceAbility.addPrinterToDiscovery = AddPrinterToDiscovery;
     printServiceAbility.removePrinterFromDiscovery = RemovePrinterFromDiscovery;
     printServiceAbility.addPrinterToCups = AddPrinterToCups;
