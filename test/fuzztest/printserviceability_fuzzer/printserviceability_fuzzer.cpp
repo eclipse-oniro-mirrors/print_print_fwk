@@ -163,6 +163,33 @@ void TestQueryPrinterCapabilityByUri(const uint8_t *data, size_t size, FuzzedDat
     PrintServiceAbility::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
 }
 
+void TestCancelUserPrintJobs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->CancelUserPrintJobs(userId);
+    PrintServiceAbility::GetInstance()->CallStatusBar();
+    AAFwk::Want want;
+    want.SetElementName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH),
+        dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    PrintServiceAbility::GetInstance()->StartPluginPrintIconExtAbility(want);
+}
+
+void TestBlockUserPrintJobs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    int32_t userId = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->BlockUserPrintJobs(userId);
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->RestartPrintJob(jobId);
+}
+
+void TestSendExtensionEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string extensionId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string extInfo = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->SendExtensionEvent(extensionId, extInfo);
+    PrintServiceAbility::GetInstance()->UpdatePrintUserMap();
+}
+
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestOn(data, size, dataProvider);
@@ -175,6 +202,9 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestQueryQueuedPrintJobById(data, size, dataProvider);
     TestAddPrinterToCups(data, size, dataProvider);
     TestQueryPrinterCapabilityByUri(data, size, dataProvider);
+    TestCancelUserPrintJobs(data, size, dataProvider);
+    TestBlockUserPrintJobs(data, size, dataProvider);
+    TestSendExtensionEvent(data, size, dataProvider);
 }
 
 }  // namespace Print

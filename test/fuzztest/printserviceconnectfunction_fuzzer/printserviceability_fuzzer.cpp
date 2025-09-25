@@ -105,6 +105,27 @@ void TestCallSpooler(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     PrintServiceAbility::GetInstance()->CallSpooler(fileList, fdList, taskId);
 }
 
+void TestAddNativePrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintJob printJob;
+    PrintServiceAbility::GetInstance()->AddNativePrintJob(jobId, printJob);
+}
+
+void TestIsQueuedJobListEmpty(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->IsQueuedJobListEmpty(jobId);
+}
+
+void TestSetPrintJobCanceled(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintJob printJob;
+    std::string printerid = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    printJob.SetPrinterId(printerid);
+    PrintServiceAbility::GetInstance()->SetPrintJobCanceled(printJob);
+}
+
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestRemoveVendorPrinterFromCups(data, size, dataProvider);
@@ -117,6 +138,9 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestQueryDiscoveredPrinterInfoById(data, size, dataProvider);
     TestCheckUserIdInEventType(data, size, dataProvider);
     TestCallSpooler(data, size, dataProvider);
+    TestAddNativePrintJob(data, size, dataProvider);
+    TestIsQueuedJobListEmpty(data, size, dataProvider);
+    TestSetPrintJobCanceled(data, size, dataProvider);
 }
 
 }  // namespace Print
