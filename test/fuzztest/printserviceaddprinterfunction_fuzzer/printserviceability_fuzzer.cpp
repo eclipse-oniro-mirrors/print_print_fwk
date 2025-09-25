@@ -114,6 +114,27 @@ void TestStartPrintJobInternal(const uint8_t *data, size_t size, FuzzedDataProvi
     PrintServiceAbility::GetInstance()->StartPrintJobInternal(printJob);
 }
 
+void TestNotifyAdapterJobChanged(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    uint32_t state = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    uint32_t subState = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->notifyAdapterJobChanged(jobId, state, subState);
+}
+
+void TestRegisterAdapterListener(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->RegisterAdapterListener(jobId);
+}
+
+void TestisEprint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->isEprint(printerId);
+    PrintServiceAbility::GetInstance()->GetPrintJobOrderId();
+}
+
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestReportPrinterIdle(data, size, dataProvider);
@@ -126,6 +147,9 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestStartPrintJobInternal(data, size, dataProvider);
     TestAddIpPrinterToSystemData(data, size, dataProvider);
     TestAddIpPrinterToCupsWithPpd(data, size, dataProvider);
+    TestNotifyAdapterJobChanged(data, size, dataProvider);
+    TestRegisterAdapterListener(data, size, dataProvider);
+    TestisEprint(data, size, dataProvider);
 }
 
 }  // namespace Print
