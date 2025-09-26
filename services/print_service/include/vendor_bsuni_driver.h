@@ -21,10 +21,9 @@
 
 namespace OHOS {
 namespace Print {
-class VendorBsuniDriver : public VendorDriverBase, public std::enable_shared_from_this<VendorBsuniDriver> {
+class VendorBsuniDriver : public VendorDriverBase {
 public:
-    static void SetDriverWrapper(const std::shared_ptr<VendorBsuniDriver>& driver);
-    static std::shared_ptr<VendorBsuniDriver> GetActiveInstance();
+    static void SetDriverWrapper(VendorBsuniDriver *driver);
     static bool CheckVendorExtension(Print_VendorExtension *extension);
     static int32_t AddPrinterToDiscovery(const Print_DiscoveryItem *discoveryItem);
     static int32_t RemovePrinterFromDiscovery(const char *printerId);

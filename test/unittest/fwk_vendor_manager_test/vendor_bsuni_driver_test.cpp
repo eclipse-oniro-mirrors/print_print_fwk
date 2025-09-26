@@ -422,8 +422,8 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0012, TestSize.Level2)
 
 HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0013, TestSize.Level2)
 {
-    auto vendorDriver = std::make_shared<VendorBsuniDriver>();
-    VendorBsuniDriver::SetDriverWrapper(vendorDriver);
+    VendorBsuniDriver vendorDriver;
+    VendorBsuniDriver::SetDriverWrapper(&vendorDriver);
     Print_DiscoveryItem discoveryItem = {0};
     BuildDiscoveryItem(discoveryItem);
     Print_PrinterCapability capability = {0};
@@ -453,9 +453,9 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0013, TestSize.Level2)
 
 HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0014, TestSize.Level2)
 {
-    auto vendorDriver = std::make_shared<VendorBsuniDriver>();
-    vendorDriver->opQueue.Run();
-    VendorBsuniDriver::SetDriverWrapper(vendorDriver);
+    VendorBsuniDriver vendorDriver;
+    vendorDriver.opQueue.Run();
+    VendorBsuniDriver::SetDriverWrapper(&vendorDriver);
     Print_DiscoveryItem discoveryItem = {0};
     BuildDiscoveryItem(discoveryItem);
     Print_PrinterCapability capability = {0};
@@ -480,16 +480,16 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0014, TestSize.Level2)
     EXPECT_EQ(VendorBsuniDriver::OnPropertiesQueried(PRINTER_TEST_IP.c_str(), &propertyList), EXTENSION_ERROR_NONE);
     delete[] propertyList.list;
     propertyList.list = nullptr;
-    vendorDriver->opQueue.Stop();
+    vendorDriver.opQueue.Stop();
 }
 
 HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0015, TestSize.Level2)
 {
-    auto vendorDriver = std::make_shared<VendorBsuniDriver>();
+    VendorBsuniDriver vendorDriver;
     MockVendorManager mockManager;
-    vendorDriver->vendorManager = &mockManager;
-    vendorDriver->opQueue.Run();
-    VendorBsuniDriver::SetDriverWrapper(vendorDriver);
+    vendorDriver.vendorManager = &mockManager;
+    vendorDriver.opQueue.Run();
+    VendorBsuniDriver::SetDriverWrapper(&vendorDriver);
     Print_DiscoveryItem discoveryItem = {0};
     BuildDiscoveryItem(discoveryItem);
     Print_PrinterCapability capability = {0};
@@ -526,7 +526,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0015, TestSize.Level2)
     propertyList.list = nullptr;
     ThreadSyncWait syncWait;
     syncWait.Wait(WAIT_TIME_MS);
-    vendorDriver->opQueue.Stop();
+    vendorDriver.opQueue.Stop();
 }
 }  // namespace Print
 }  // namespace OHOS
