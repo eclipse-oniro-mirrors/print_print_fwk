@@ -191,16 +191,17 @@ int32_t PrintServiceAbility::Init()
         return initCupsRet;
     }
 #endif
+    auto tmpState = state_;
+    state_ = ServiceRunningState::STATE_RUNNING;
     if (!g_publishState) {
-        bool ret = Publish(PrintServiceAbility::GetInstance());
-        if (!ret) {
+        if (!Publish(PrintServiceAbility::GetInstance())) {
+            state_ = tmpState;
             PRINT_HILOGE("PrintServiceAbility Publish failed");
             return E_PRINT_SERVER_FAILURE;
         }
         g_publishState = true;
     }
     StartUnloadThread();
-    state_ = ServiceRunningState::STATE_RUNNING;
     CheckCupsServerAlive();
     if (!printSystemData_.CheckPrinterVersionFile()) {
         RefreshPrinterInfoByPpd();
@@ -347,7 +348,7 @@ void PrintServiceAbility::ManualStart()
     } else {
 #ifdef CUPS_ENABLE
         if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsCupsServerAlive()) {
-            DelayedSingleton<PrintCupsClient>::GetInstance()->InitCupsResources();
+            DelayedSingleton<PrintCupsClient>::GetInstance()->StartCupsdServiceNotAlive();
         }
 #endif  // CUPS_ENABLE
     }
