@@ -159,6 +159,7 @@ public:
     bool AuthCupsPrintJob(const std::string &jobId, const std::string &printerUri, const std::string &userName,
         char *userPasswd);
     bool ModifyCupsPrinterPpd(const std::string &printerName, const std::string &ppdName);
+    int32_t StartCupsdServiceNotAlive();
 
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
@@ -192,7 +193,6 @@ private:
     void BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monitorParams);
     void ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams);
 
-    int32_t StartCupsdServiceNotAlive();
     int32_t StartCupsdService();
     JobParameters *GetNextJob();
     void StartNextJob();
