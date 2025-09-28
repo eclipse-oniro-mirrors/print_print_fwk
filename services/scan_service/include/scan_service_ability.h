@@ -83,8 +83,6 @@ private:
     void SaneGetScanner();
     void SetScannerSerialNumberByTCP(ScanDeviceInfo &info);
     void SetScannerSerialNumberByUSB(ScanDeviceInfo &info);
-public:
-    void UnloadSystemAbility();
 protected:
     void OnStart() override;
     void OnStop() override;
@@ -110,6 +108,7 @@ private:
     void CleanupScanService();
     int32_t StartScanOnce(const std::string scannerId);
     int32_t GetScannerImageDpi(const std::string& scannerId, int32_t& dpi);
+    void UnloadSystemAbility();
     std::set<std::string> openedScannerList_;
     std::atomic<ServiceRunningState> state_;
     std::mutex lock_;
@@ -120,7 +119,6 @@ private:
     std::recursive_mutex apiMutex_;
     std::recursive_mutex scanMutex_;
     std::vector<ScanDeviceInfo> deviceInfos_;
-    std::atomic<int32_t> appCount_{0};
     std::atomic<int32_t> scannerState_{SCANNER_READY};
     ScannerDiscoverData& scannerDiscoverData_ = ScannerDiscoverData::GetInstance();
     ScanPictureData& scanPictureData_ = ScanPictureData::GetInstance();
