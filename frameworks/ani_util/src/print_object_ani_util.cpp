@@ -308,18 +308,6 @@ bool SetStringProperty(ani_env *env, ani_object param, const char *name, const s
     }
     ani_status status;
     ani_string aniString = nullptr;
-    if (value.empty()) {
-        ani_ref nullRef = nullptr;
-        if ((status = env->GetNull(&nullRef)) != ANI_OK) {
-            PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
-            return false;
-        }
-        if ((status = env->Object_SetPropertyByName_Ref(param, name, nullRef)) != ANI_OK) {
-            PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
-            return false;
-        }
-        return true;
-    }
     if ((status = env->String_NewUTF8(value.c_str(), value.size(), &aniString)) != ANI_OK) {
         PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
         return false;
@@ -422,6 +410,27 @@ bool SetBoolProperty(ani_env *env, ani_object param, const char *name, bool valu
     ani_status status = ANI_ERROR;
     if ((status = env->Object_SetPropertyByName_Boolean(param, name, value)) != ANI_OK) {
         PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
+        return false;
+    }
+    return true;
+}
+
+bool SetIntPropertyObject(ani_env *env, ani_object param, const char *name, int32_t value)
+{
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
+        return false;
+    }
+
+    ani_object obj = CreateInt(env, value);
+    if (obj == nullptr) {
+        PRINT_HILOGE("null obj");
+        return false;
+    }
+
+    ani_status status = ANI_ERROR;
+    if ((status = env->Object_SetPropertyByName_Ref(param, name, obj)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d", status);
         return false;
     }
     return true;

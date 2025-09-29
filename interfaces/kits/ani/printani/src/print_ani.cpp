@@ -55,21 +55,22 @@ static void PrintNative(ani_env *env, ani_object arrayObj, ani_object callback)
     std::vector<std::string> files;
     if (!GetStdStringArray(env, arrayObj, files)) {
         PRINT_HILOGE("GetStringArray fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
     for (const auto &file : files) {
         PRINT_HILOGD("Array String Content: = %{private}s", file.c_str());
     }
-    ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
     auto nativePrintTask = new AniPrintTask(env);
     if (nativePrintTask == nullptr) {
         PRINT_HILOGE("nativePrintTask is a nullptr");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
+    int32_t ret = nativePrintTask->StartPrint(files);
+    ani_object stsErrCode = CreateStsError(env, ret);
     AsyncCallback(env, callback, stsErrCode, AniPrintTaskHelper::CreatePrintTask(env, nativePrintTask));
 }
 
@@ -83,7 +84,7 @@ static void PrintWithContextNative(ani_env *env, ani_object arrayObj, ani_object
     std::vector<std::string> files;
     if (!GetStdStringArray(env, arrayObj, files)) {
         PRINT_HILOGE("GetStringArray fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -93,14 +94,14 @@ static void PrintWithContextNative(ani_env *env, ani_object arrayObj, ani_object
     auto ctx = OHOS::AbilityRuntime::GetStageModeContext(env, context);
     if (ctx == nullptr) {
         PRINT_HILOGE("Get Context Failed");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
     auto nativePrintTask = new AniPrintTask(env);
     if (nativePrintTask == nullptr) {
         PRINT_HILOGE("nativePrintTask is a nullptr");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -119,19 +120,19 @@ static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object 
     std::string jobName;
     if (!GetStringProperty(env, para, JOB_NAME_STR, jobName)) {
         PRINT_HILOGE("GetStdString fail");
-        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_GENERIC_FAILURE), nullptr);
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
         return;
     }
     ani_ref printAdapter;
     if (!GetRefProperty(env, para, PRINT_ADAPTER_STR, printAdapter)) {
         PRINT_HILOGE("GetRefProperty fail");
-        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_GENERIC_FAILURE), nullptr);
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
         return;
     }
     ani_ref printAttributes;
     if (!GetRefProperty(env, para, PRINT_ATTRIBUTES_STR, printAttributes)) {
         PRINT_HILOGE("GetRefProperty fail");
-        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_GENERIC_FAILURE), nullptr);
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
         return;
     }
     PrintAttributes attributes = AniPrintAttributesHelper::ParsePrintAttributes(env,
@@ -139,20 +140,20 @@ static void PrintWithAttributesNative(ani_env *env, ani_object para, ani_object 
     ani_ref context;
     if (!GetRefProperty(env, para, CONTEXT_STR, context)) {
         PRINT_HILOGE("GetRefProperty fail");
-        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_GENERIC_FAILURE), nullptr);
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
         return;
     }
     auto ctx = OHOS::AbilityRuntime::GetStageModeContext(env, static_cast<ani_object>(context));
     if (ctx == nullptr) {
         PRINT_HILOGE("Get Context Failed");
-        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_GENERIC_FAILURE), nullptr);
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
         return;
     }
     auto nativePrintTask = new AniPrintTask(env);
     OHOS::sptr<IPrintCallback> callbackWrapper = new PrintAniCallback(env, static_cast<ani_object>(printAdapter));
     if (nativePrintTask == nullptr || callbackWrapper == nullptr) {
         PRINT_HILOGE("nativePrintTask or callbackWrapper is nullptr");
-        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_GENERIC_FAILURE), nullptr);
+        AsyncCallback(env, callback, CreateStsError(env, E_PRINT_INVALID_PARAMETER), nullptr);
         return;
     }
     int32_t ret = nativePrintTask->StartPrintWithAttributes(jobName, ctx, attributes, callbackWrapper);
@@ -196,7 +197,7 @@ static void ConnectPrinterNative(ani_env *env, ani_string printerIdAni, ani_obje
     std::string printerId;
     if (!GetStdString(env, printerIdAni, printerId)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -212,7 +213,7 @@ static void DisconnectPrinterNative(ani_env *env, ani_string printerId, ani_obje
     std::string id;
     if (!GetStdString(env, printerId, id)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -228,7 +229,7 @@ static void QueryPrinterCapabilityNative(ani_env *env, ani_string printerId, ani
     std::string id;
     if (!GetStdString(env, printerId, id)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -253,7 +254,7 @@ static void CancelPrintJobNative(ani_env *env, ani_string jobId, ani_object call
     std::string id;
     if (!GetStdString(env, jobId, id)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -293,7 +294,7 @@ static void AddPrintersNative(ani_env *env, ani_object printers, ani_object call
     std::vector<PrinterInfo> printerList;
     if (!PrinterInfoAniHelper::GetPrinterInfoArray(env, printers, printerList)) {
         PRINT_HILOGE("GetPrinterInfoArray fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -308,7 +309,7 @@ static void RemovePrintersNative(ani_env *env, ani_object printerIds, ani_object
     std::vector<std::string> ids;
     if (!GetStdStringArray(env, printerIds, ids)) {
         PRINT_HILOGE("GetStringArray fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -326,7 +327,7 @@ static void UpdatePrintersNative(ani_env *env, ani_object printers, ani_object c
     std::vector<PrinterInfo> printerList;
     if (!PrinterInfoAniHelper::GetPrinterInfoArray(env, printers, printerList)) {
         PRINT_HILOGE("GetPrinterInfoArray fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -341,7 +342,7 @@ static void UpdatePrinterStateNative(ani_env *env, ani_string printerId, ani_enu
     std::string id;
     if (!GetStdString(env, printerId, id)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -349,7 +350,7 @@ static void UpdatePrinterStateNative(ani_env *env, ani_string printerId, ani_enu
     uint32_t enumValue = 0;
     if (!GetEnumValueInt(env, enumObj, enumValue)) {
         PRINT_HILOGE("GetEnumValueInt fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -366,14 +367,14 @@ static void UpdatePrintJobStateNative(ani_env *env, ani_string printerId, ani_en
     std::string id;
     if (!GetStdString(env, printerId, id)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
     uint32_t jobState = 0;
     if (!GetEnumValueInt(env, enumJobSubStateObj, jobState)) {
         PRINT_HILOGE("GetEnumValueInt fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -381,7 +382,7 @@ static void UpdatePrintJobStateNative(ani_env *env, ani_string printerId, ani_en
     uint32_t jobSubState = 0;
     if (!GetEnumValueInt(env, enumJobStateObj, jobSubState)) {
         PRINT_HILOGE("GetEnumValueInt fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -397,7 +398,7 @@ static void UpdateExtensionInfoNative(ani_env *env, ani_string info, ani_object 
     std::string infoStr;
     if (!GetStdString(env, info, infoStr)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -431,7 +432,7 @@ static void QueryPrintJobByIdNative(ani_env *env, ani_string jobId, ani_object c
     std::string id;
     if (!GetStdString(env, jobId, id)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -466,7 +467,7 @@ static void NotifyPrintServiceNative(ani_env *env, ani_string jobId, ani_string 
     std::string id;
     if (!GetStdString(env, jobId, id)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -474,7 +475,7 @@ static void NotifyPrintServiceNative(ani_env *env, ani_string jobId, ani_string 
     std::string type;
     if (!GetStdString(env, typeAni, type)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -500,7 +501,7 @@ static void GetPrinterInfoByIdNative(ani_env *env, ani_string printerId, ani_obj
     std::string id;
     if (!GetStdString(env, printerId, id)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -517,7 +518,7 @@ static void NotifyPrintServiceEventNative(ani_env *env, ani_enum_item enumObj, a
     uint32_t event = 0;
     if (!GetEnumValueInt(env, enumObj, event)) {
         PRINT_HILOGE("GetEnumValueInt fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -553,7 +554,7 @@ static void RemovePrinterFromDiscoveryNative(ani_env *env, ani_string printerId,
     std::string id;
     if (!GetStdString(env, printerId, id)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
     }
@@ -573,9 +574,14 @@ static void GetPrinterInformationByIdNative(ani_env *env, ani_string printerIdAn
     std::string printerId;
     if (!GetStdString(env, printerIdAni, printerId)) {
         PRINT_HILOGE("GetStdString fail");
-        ani_object stsErrCode = CreateStsError(env, E_PRINT_GENERIC_FAILURE);
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
         AsyncCallback(env, callback, stsErrCode, nullptr);
         return;
+    }
+    if (printerId.empty()) {
+        PRINT_HILOGE("printerId is empty");
+        ani_object stsErrCode = CreateStsError(env, E_PRINT_INVALID_PARAMETER);
+        AsyncCallback(env, callback, stsErrCode, nullptr);
     }
     PRINT_HILOGD("printerId: %{public}s", printerId.c_str());
     PrinterInfo info;
@@ -749,8 +755,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_ERROR;
     }
 
-    ani_namespace ns;
-    const char* targetNamespace = "C{@ohos.print.print}";
+    ani_namespace ns {};
+    const char* targetNamespace = "@ohos.print.print";
     status = env->FindNamespace(targetNamespace, &ns);
     if (status != ANI_OK) {
         PRINT_HILOGE("FindNamespace failed");
