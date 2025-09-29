@@ -259,10 +259,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0002, TestSize.Level2)
 {
     MockVendorManager mockManager;
     auto vendorDriver = std::make_shared<VendorBsuniDriver>();
-    if (vendorDriver == nullptr) {
-        PRINT_HILOGE("vendorDriver is a nullptr");
-        return;
-    }
+    EXPECT_NE(vendorDriver, nullptr);
     EXPECT_EQ(vendorDriver->Init(&mockManager), false);
     vendorDriver->UnInit();
 }
@@ -273,10 +270,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0003, TestSize.Level2)
     propertyKeys.push_back(PRINTER_PROPERTY_KEY_DEVICE_STATE);
     propertyKeys.push_back(PRINTER_PROPERTY_KEY_DEVICE_SUPPLIES);
     auto vendorDriver = std::make_shared<VendorBsuniDriver>();
-    if (vendorDriver == nullptr) {
-        PRINT_HILOGE("vendorDriver is a nullptr");
-        return;
-    }
+    EXPECT_NE(vendorDriver, nullptr);
     vendorDriver->OnCreate();
     vendorDriver->OnDestroy();
     vendorDriver->OnStartDiscovery();
@@ -298,10 +292,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0003, TestSize.Level2)
 HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0004, TestSize.Level2)
 {
     auto vendorDriver = std::make_shared<VendorBsuniDriver>();
-    if (vendorDriver == nullptr) {
-        PRINT_HILOGE("vendorDriver is a nullptr");
-        return;
-    }
+    EXPECT_NE(vendorDriver, nullptr);
     vendorDriver->OnCreate();
     vendorDriver->OnDestroy();
     vendorDriver->OnStartDiscovery();
@@ -314,10 +305,7 @@ HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0004, TestSize.Level2)
 HWTEST_F(VendorBsuniDriverTest, VendorBsuniDriverTest_0005, TestSize.Level2)
 {
     auto vendorDriver = std::make_shared<VendorBsuniDriver>();
-    if (vendorDriver == nullptr) {
-        PRINT_HILOGE("vendorDriver is a nullptr");
-        return;
-    }
+    EXPECT_NE(vendorDriver, nullptr);
     g_mockDriver = nullptr;
     Print_VendorExtension vendorExtension = {.onCreate = OnCreateTest,
         .onDestroy = OnDestroyTest,
