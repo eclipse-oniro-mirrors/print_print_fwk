@@ -136,7 +136,7 @@ void VendorPpdDriver::DiscoverBackendPrinters()
 
 void VendorPpdDriver::OnStartDiscovery()
 {
-    PRINT_HILOGD("OnStartDiscovery enter");
+    PRINT_HILOGI("OnStartDiscovery enter");
     if (vendorManager == nullptr) {
         PRINT_HILOGW("OnStartDiscovery vendorManager is null.");
         return;
@@ -152,7 +152,7 @@ void VendorPpdDriver::OnStartDiscovery()
 
 void VendorPpdDriver::OnStopDiscovery()
 {
-    PRINT_HILOGD("OnStopDiscovery enter");
+    PRINT_HILOGI("OnStopDiscovery enter");
     std::unique_lock<std::mutex> lock(discoveryStateChangeMutex_);
     if (!isDiscovering_) {
         PRINT_HILOGW("already stop discovery");

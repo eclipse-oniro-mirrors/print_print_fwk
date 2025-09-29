@@ -42,6 +42,7 @@ bool VendorWlanGroup::OnQueryCapability(const std::string &printerId, int timeou
     }
     printerVendorGroupList_[printerId] = VENDOR_PPD_DRIVER;
     auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
+    PRINT_HILOGE("on query capability, printer name: %{public}s", printerInfo->GetPrinterName().c_str());
     if (printerInfo != nullptr && TryConnectByPpdDriver(*printerInfo)) {
         PRINT_HILOGI("Connect by ppdDriver success.");
         return true;
@@ -223,7 +224,7 @@ bool VendorWlanGroup::IsBsunidriverSupport(const std::string &groupPrinterId)
             supportValue = option["bsunidriverSupport"].asString();
         }
     }
-    PRINT_HILOGD("IsBsunidriverSupport bsunidriverSupport=%{public}s", supportValue.c_str());
+    PRINT_HILOGI("IsBsunidriverSupport bsunidriverSupport=%{public}s", supportValue.c_str());
     if (supportValue == "true") {
         return true;
     } else if (supportValue == "need_gs") {
