@@ -203,6 +203,7 @@ int32_t PrintServiceAbility::Init()
     }
     StartUnloadThread();
     CheckCupsServerAlive();
+    UpdatePpdForPreinstalledDriverPrinter();
     if (!printSystemData_.CheckPrinterVersionFile()) {
         RefreshPrinterInfoByPpd();
     }
@@ -214,7 +215,6 @@ int32_t PrintServiceAbility::Init()
     }
     StartDiscoverPrinter(extensionIds);
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
-    UpdatePpdForPreinstalledDriverPrinter();
     return ERR_OK;
 }
 
