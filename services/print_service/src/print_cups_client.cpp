@@ -594,7 +594,7 @@ int32_t PrintCupsClient::InitCupsResources()
 
 void PrintCupsClient::StopCupsdService()
 {
-    PRINT_HILOGD("StopCupsdService enter");
+    PRINT_HILOGI("StopCupsdService enter");
     if (!IsCupsServerAlive()) {
         PRINT_HILOGI("The cupsd process is not started, no need stop.");
         return;
@@ -614,7 +614,7 @@ void PrintCupsClient::StopCupsdService()
 #ifdef ENTERPRISE_ENABLE
 void PrintCupsClient::StopCupsdEnterpriseService()
 {
-    PRINT_HILOGD("StopCupsdEnterpriseService enter");
+    PRINT_HILOGI("StopCupsdEnterpriseService enter");
     if (!IsCupsServerAlive()) {
         PRINT_HILOGI("The cupsd process is not started, no need stop.");
         return;
@@ -707,7 +707,7 @@ void PrintCupsClient::ParsePPDInfo(ipp_t *response, std::vector<std::string> &pp
 int32_t PrintCupsClient::AddPrinterToCups(
     const std::string &printerUri, const std::string &printerName, const std::string &printerMake)
 {
-    PRINT_HILOGD("PrintCupsClient AddPrinterToCups start, printerMake: %{public}s", printerMake.c_str());
+    PRINT_HILOGI("PrintCupsClient AddPrinterToCups start, printerMake: %{public}s", printerMake.c_str());
     std::string ppdName = DEFAULT_PPD_NAME;
     QueryPPDInformation(printerMake, ppdName);
     PRINT_HILOGI("ppd driver: %{public}s", ppdName.c_str());
@@ -1510,7 +1510,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
         return;
     }
     jobParams->cupsJobId = jobId;
-    PRINT_HILOGD("start job success, jobId: %{public}d", jobId);
+    PRINT_HILOGI("start job success, jobId: %{public}d", jobId);
     auto monitorParams = std::make_shared<JobMonitorParam>(jobParams->serviceAbility,
         jobParams->serviceJobId,
         jobId,
@@ -1519,7 +1519,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
         jobParams->printerId,
         monitorHttp);
     BuildMonitorPolicy(monitorParams);
-    PRINT_HILOGD("MonitorJobState enter, cupsJobId: %{public}d", monitorParams->cupsJobId);
+    PRINT_HILOGI("MonitorJobState enter, cupsJobId: %{public}d", monitorParams->cupsJobId);
     monitorParams->jobOriginatingUserName = jobParams->jobOriginatingUserName;
     {
         std::lock_guard<std::mutex> lock(jobMonitorMutex_);
@@ -2285,23 +2285,23 @@ void PrintCupsClient::DumpJobParameters(JobParameters *jobParams)
         PRINT_HILOGE("DumpJobParameters fail.");
         return;
     }
-    PRINT_HILOGD("jobParams->serviceJobId: %{public}s", jobParams->serviceJobId.c_str());
-    PRINT_HILOGD("jobParams->borderless: %{public}d", jobParams->borderless);
-    PRINT_HILOGD("jobParams->numCopies: %{public}d", jobParams->numCopies);
-    PRINT_HILOGD("jobParams->duplex: %{public}s", jobParams->duplex.c_str());
-    PRINT_HILOGD("jobParams->printQuality: %{public}s", jobParams->printQuality.c_str());
+    PRINT_HILOGI("jobParams->serviceJobId: %{public}s", jobParams->serviceJobId.c_str());
+    PRINT_HILOGI("jobParams->borderless: %{public}d", jobParams->borderless);
+    PRINT_HILOGI("jobParams->numCopies: %{public}d", jobParams->numCopies);
+    PRINT_HILOGI("jobParams->duplex: %{public}s", jobParams->duplex.c_str());
+    PRINT_HILOGI("jobParams->printQuality: %{public}s", jobParams->printQuality.c_str());
     PRINT_HILOGD("jobParams->jobName: %{public}s", jobParams->jobName.c_str());
     PRINT_HILOGD("jobParams->jobOriginatingUserName: %{public}s", jobParams->jobOriginatingUserName.c_str());
     PRINT_HILOGD("jobParams->printerId: %{private}s", jobParams->printerId.c_str());
-    PRINT_HILOGD("jobParams->printerName: %{private}s", jobParams->printerName.c_str());
+    PRINT_HILOGI("jobParams->printerName: %{private}s", jobParams->printerName.c_str());
     PRINT_HILOGD("jobParams->printerUri: %{private}s", jobParams->printerUri.c_str());
     PRINT_HILOGD("jobParams->documentFormat: %{public}s", jobParams->documentFormat.c_str());
-    PRINT_HILOGD("jobParams->mediaSize: %{public}s", jobParams->mediaSize.c_str());
-    PRINT_HILOGD("jobParams->mediaType: %{public}s", jobParams->mediaType.c_str());
-    PRINT_HILOGD("jobParams->color: %{public}s", jobParams->color.c_str());
-    PRINT_HILOGD("jobParams->isLandscape: %{public}d", jobParams->isLandscape);
-    PRINT_HILOGD("jobParams->isAutoRotate: %{public}d", jobParams->isAutoRotate);
-    PRINT_HILOGD("jobParams->isReverse: %{public}d", jobParams->isReverse);
+    PRINT_HILOGI("jobParams->mediaSize: %{public}s", jobParams->mediaSize.c_str());
+    PRINT_HILOGI("jobParams->mediaType: %{public}s", jobParams->mediaType.c_str());
+    PRINT_HILOGI("jobParams->color: %{public}s", jobParams->color.c_str());
+    PRINT_HILOGI("jobParams->isLandscape: %{public}d", jobParams->isLandscape);
+    PRINT_HILOGI("jobParams->isAutoRotate: %{public}d", jobParams->isAutoRotate);
+    PRINT_HILOGI("jobParams->isReverse: %{public}d", jobParams->isReverse);
     PRINT_HILOGD("jobParams->isCollate: %{public}d", jobParams->isCollate);
     PRINT_HILOGD(
         "jobParams->printerAttrsOptionCupsOption: %{public}s", jobParams->printerAttrsOptionCupsOption.c_str());

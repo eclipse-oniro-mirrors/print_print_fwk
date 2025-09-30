@@ -136,6 +136,7 @@ void VendorManager::UnInit()
 
 bool VendorManager::LoadVendorDriver(std::shared_ptr<VendorDriverBase> vendorDriver)
 {
+    PRINT_HILOGI("LoadVendorDriver enter");
     if (vendorDriver == nullptr) {
         PRINT_HILOGW("vendorDriver is null");
         return false;
@@ -151,6 +152,7 @@ bool VendorManager::LoadVendorDriver(std::shared_ptr<VendorDriverBase> vendorDri
 }
 bool VendorManager::UnloadVendorDriver(const std::string &vendorName)
 {
+    PRINT_HILOGI("LoadVendorDriver enter");
     std::lock_guard<std::mutex> lock(vendorMapMutex);
     auto iter = vendorMap.find(vendorName);
     if (iter == vendorMap.end()) {

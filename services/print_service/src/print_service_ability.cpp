@@ -435,6 +435,7 @@ int32_t PrintServiceAbility::CallSpooler(
 
 int32_t PrintServiceAbility::HandleExtensionConnectPrinter(const std::string &printerId)
 {
+    PRINT_HILOGI("HandleExtensionConnectPrinter begin");
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
     std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_CONNECT_PRINTER);
     if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
@@ -614,7 +615,7 @@ int32_t PrintServiceAbility::DestroyExtension()
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    PRINT_HILOGD("DestroyExtension started.");
+    PRINT_HILOGI("DestroyExtension started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     for (auto extension : extensionStateList_) {
@@ -1422,7 +1423,7 @@ int32_t PrintServiceAbility::AddPrinters(const std::vector<PrinterInfo> &printer
     PRINT_HILOGD("AddPrinters started. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
 
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
+    PRINT_HILOGI("Add printer extensionId = %{public}s", extensionId.c_str());
     for (auto &info : printerInfos) {
         AddSinglePrinterInfo(info, extensionId);
     }
@@ -2887,7 +2888,8 @@ int32_t PrintServiceAbility::AddPrinterToDiscovery(const PrinterInfo &printerInf
     PRINT_HILOGD("AddPrinterToDiscovery started. Current total size is %{public}zd",
         printSystemData_.GetDiscoveredPrinterCount());
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
-    PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
+    PRINT_HILOGI("printerName = %{public}s, extensionId = %{public}s",
+        printerInfo.GetPrinterName().c_str(), extensionId.c_str());
 
     int32_t result = AddSinglePrinterInfo(printerInfo, extensionId);
 
@@ -3219,7 +3221,8 @@ bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)
 
 bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info)
 {
-    PRINT_HILOGI("AddPrinterToDiscovery");
+    PRINT_HILOGI("AddPrinterToDiscovery, printerName = %{public}s, backend = %{public}.6s",
+        info.GetPrinterName().c_str(), info.GetUri().c_str());
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, info.GetPrinterId());
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
     if (printerInfo == nullptr) {
