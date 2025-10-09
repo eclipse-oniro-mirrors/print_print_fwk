@@ -48,6 +48,7 @@ _sources = [
   "src/scan_discover_data.cpp",
   "src/scan_task.cpp",
   "src/scan_picture_data.cpp",
+  "src/caller_app_monitor.cpp",
 ]
 
 _branch_protector_ret = "pac_ret"
@@ -80,6 +81,7 @@ _external_deps = [
   "ability_runtime:ability_manager",
   "ability_runtime:abilitykit_native",
   "access_token:libaccesstoken_sdk",
+  "ability_runtime:app_manager",
   "backends:sane",
   "bundle_framework:appexecfwk_base",
   "bundle_framework:appexecfwk_core",
