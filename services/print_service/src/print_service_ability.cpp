@@ -2623,21 +2623,21 @@ int32_t PrintServiceAbility::CallStatusBar()
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_UID, callerUid);
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_PID, callerPid);
     want.SetParam(CALLER_PKG_NAME, callerPkg);
-    if (!StartPluginPrintIconExtAbility(want)) {
+    if (!StartExtensionAbility(want)) {
         PRINT_HILOGE("Failed to start PluginPrintIconExtAbility");
         return E_PRINT_SERVER_FAILURE;
     }
     return E_PRINT_NONE;
 }
 
-bool PrintServiceAbility::StartPluginPrintIconExtAbility(const AAFwk::Want &want)
+bool PrintServiceAbility::StartExtensionAbility(const AAFwk::Want &want)
 {
     if (helper_ == nullptr) {
         PRINT_HILOGE("Invalid print service helper.");
         return false;
     }
-    PRINT_HILOGI("enter PrintServiceAbility::StartPluginPrintIconExtAbility");
-    return helper_->StartPluginPrintIconExtAbility(want);
+    PRINT_HILOGI("enter PrintServiceAbility::StartExtensionAbility");
+    return helper_->StartExtensionAbility(want);
 }
 
 std::shared_ptr<PrintUserData> PrintServiceAbility::GetCurrentUserData()
@@ -3549,7 +3549,7 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
     for (auto ability : abilityList) {
         AAFwk::Want want;
         want.SetElementName(ability.second.bundleName, ability.second.name);
-        if (!StartAbility(want)) {
+        if (!StartExtensionAbility(want)) {
             PRINT_HILOGE("Failed to load extension %{public}s", ability.second.name.c_str());
             continue;
         }

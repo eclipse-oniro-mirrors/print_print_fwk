@@ -171,7 +171,7 @@ void TestCancelUserPrintJobs(const uint8_t *data, size_t size, FuzzedDataProvide
     AAFwk::Want want;
     want.SetElementName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH),
         dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
-    PrintServiceAbility::GetInstance()->StartPluginPrintIconExtAbility(want);
+    PrintServiceAbility::GetInstance()->StartExtensionAbility(want);
 }
 
 void TestBlockUserPrintJobs(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
