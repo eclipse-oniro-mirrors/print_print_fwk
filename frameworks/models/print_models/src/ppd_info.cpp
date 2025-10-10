@@ -83,7 +83,7 @@ bool PpdInfo::ReadFromParcel(Parcel &parcel)
     return true;
 }
 
-bool PpdInfo::Marshalling(Parcel &parcel) const 
+bool PpdInfo::Marshalling(Parcel &parcel) const
 {
     if (!parcel.Writestring(GetManufacturer())) {
         PRINT_HILOGE("parcel WriteString Manufacturer failed");

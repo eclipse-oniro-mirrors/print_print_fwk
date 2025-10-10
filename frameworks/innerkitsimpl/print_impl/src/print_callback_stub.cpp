@@ -98,8 +98,8 @@ bool PrintCallbackStub::HandleGetInfoEvent(MessageParcel &data, MessageParcel &r
 {
     auto info = PrinterInfo::Unmarshalling(data);
     if (info == nullptr) {
-         PRINT_HILOGW("Unmarshalling printerInfo failed");
-         return false;
+        PRINT_HILOGW("Unmarshalling printerInfo failed");
+        return false;
     }
     std::vector<PpdInfo> ppds;
     int32_t ppdsSize = data.ReadInt32();

@@ -49,7 +49,6 @@ private:
     std::string manufacturer_;
     std::string nickName_;
     std::string ppdName_;
-   
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_INFO_H

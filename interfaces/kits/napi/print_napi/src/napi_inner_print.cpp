@@ -1227,21 +1227,6 @@ napi_value NapiInnerPrint::ConnectPrinterByIpAndPpd(napi_env env, napi_callback_
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valueType), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valueType == napi_string, "ppdName is not a string", napi_string_expected);
         std::string ppdName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
-        if (printerIp.empty()) {
-            PRINT_HILOGE("printerIp is empty!");
-            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-            return napi_invalid_arg;
-        }
-        if (protocol.empty()) {
-            PRINT_HILOGE("protocol is empty!");
-            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-            return napi_invalid_arg;
-        }
-        if (ppdName.empty()) {
-            PRINT_HILOGE("ppdName is empty!");
-            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
-            return napi_invalid_arg;
-        }
         context->printerId = printerIp;
         context->fileUri = protocol;
         context->type = ppdName;

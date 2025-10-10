@@ -26,7 +26,6 @@ public:
     static std::shared_ptr<PpdInfo> BuildFromJs(napi_env env, napi_value jsValue);
 
 private:
-
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_JOB_HELPER_H

@@ -272,7 +272,6 @@ bool VendorWlanGroup::IsBsunidriverSupport(const std::string &groupPrinterId)
         return false;
     }
     return IsBsunidriverSupport(*printerInfo);
-    
 }
 
 bool VendorWlanGroup::IsBsunidriverSupport(const PrinterInfo &printerInfo)

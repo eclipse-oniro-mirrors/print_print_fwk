@@ -84,6 +84,8 @@ const uint32_t PHOTO_4R_WIDTH = 4000;
 const uint32_t PHOTO_4R_HEIGHT = 6000;
 const uint32_t MONITOR_STEP_TIME_MS = 2000;
 const int32_t STATE_UPDATE_STEP = 5;
+const uint32_t PPD_EXTENSION_LENGTH = 4;
+const std::string PPD_EXTENSION = ".ppd";
 
 static const std::string CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
 static const std::string DEFAULT_MAKE_MODEL = "IPP Everywhere";
@@ -2664,7 +2666,8 @@ bool PrintCupsClient::QueryAllPPDInformation(const std::string &makeModel, std::
         PRINT_HILOGW("request is null");
         return false;
     }
-    if (ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", nullptr, makeModel.c_str()) == nullptr) {
+    if (ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model",
+        nullptr, makeModel.c_str()) == nullptr) {
         PRINT_HILOGW("attr is null");
         return false;
     }
@@ -2693,7 +2696,7 @@ bool PrintCupsClient::QueryAllPPDInformation(const std::string &makeModel, std::
         }
     }
     PRINT_HILOGI("QueryAllPPDInformation done.");
-    return true;   
+    return true;  
 }
 
 int32_t PrintCupsClient::GetAllPPDFile(std::vector<PpdInfo> &ppdInfos)
@@ -2717,7 +2720,8 @@ int32_t PrintCupsClient::GetAllPPDFile(std::vector<PpdInfo> &ppdInfos)
     struct dirent* entry;
     while ((entry = readdir(dir)) != nullptr) {
         std::string fileName = entry->d_name;
-        if (fileName.length() < 4 || fileName.substr(fileName.size()-4) != ".ppd") {
+        if (fileName.length() < PPD_EXTENSION_LENGTH ||
+            fileName.substr(fileName.size() - PPD_EXTENSION_LENGTH) != PPD_EXTENSION) {
             continue;
         }
         PpdInfo info;
@@ -2791,7 +2795,7 @@ bool PrintCupsClient::QueryPpdInfoMap(const std::string &ppdFilePath,
         }
         value.erase(remove_if(value.begin(), value.end(), [](char c) {
             return c == '"';
-        }), value.end());
+            }), value.end());
         if (find(begin(targetKeys), end(targetKeys), key) != end(targetKeys)) {
             keyValues[key] = value;
         }

@@ -253,7 +253,7 @@ napi_value NapiPrintUtils::CreatePpdInfoVectorUtf8(napi_env env, const std::vect
         }
     }
     return array;
-} 
+}
 
 std::string NapiPrintUtils::GetStringFromValueUtf8(napi_env env, napi_value value)
 {

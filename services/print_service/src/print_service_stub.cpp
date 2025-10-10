@@ -91,9 +91,8 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_AUTHPRINTJOB] = &PrintServiceStub::OnAuthPrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLPPDS] = &PrintServiceStub::OnQueryAllPrinterPpds;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYIPINFO] = &PrintServiceStub::OnQueryPrinterInfoByIp;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIPANDPPD] = 
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIPANDPPD] =
         &PrintServiceStub::OnConnectPrinterByIpAndPpd;
-
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
