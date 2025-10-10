@@ -43,7 +43,8 @@ PrinterInfo::PrinterInfo()
       hasIsDefaultPrinter_(false),
       isDefaultPrinter_(false),
       hasIsLastUsedPrinter_(false),
-      isLastUsedPrinter_(false)
+      isLastUsedPrinter_(false),
+      ppdHashCode_("")
 {
     capability_.Reset();
     preferences_.Reset();
@@ -101,8 +102,8 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         preferences_ = right.preferences_;
         hasAlias_ = right.hasAlias_;
         alias_ = right.alias_;
-        hasPrinterUuid_ = right.hasPrinterUuid_,
-        printerUuid_ = right.printerUuid_,
+        hasPrinterUuid_ = right.hasPrinterUuid_;
+        printerUuid_ = right.printerUuid_;
         option_ = right.option_;
         hasIsDefaultPrinter_ = right.hasIsDefaultPrinter_;
         isDefaultPrinter_ = right.isDefaultPrinter_;

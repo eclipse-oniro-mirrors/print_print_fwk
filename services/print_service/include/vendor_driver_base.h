@@ -43,7 +43,8 @@ static inline uint64_t GetNowTime()
         .count();
 }
 
-enum ConnectMethod { ID_AUTO = 0, IP_AUTO, IP_IPP, IP_LPD, IP_SOCKET };
+enum ConnectMethod { ID_AUTO = 0, IP_AUTO };
+enum ConnectState { STATE_NONE = 0, STATE_CONNECTING, STATE_QUERYING };
 
 class IPrinterVendorManager {
 public:
@@ -62,6 +63,15 @@ public:
     virtual void SetConnectingPrinter(ConnectMethod method, const std::string &printer) = 0;
     virtual void ClearConnectingPrinter() = 0;
     virtual bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) = 0;
+    virtual std::string GetConnectingPpdName() = 0;
+    virtual std::string GetConnectingProtocol() = 0;
+    virtual void ClearConnectingPpdName() = 0;
+    virtual void ClearConnectingProtocol() = 0;
+    virtual bool IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) = 0;
+    virtual bool SetQueryingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) = 0;
+    virtual bool OnQueryCallBackEvent(const PrinterInfo &info) = 0;
+    virtual bool ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+        const std::string &ppdName) = 0;
     virtual bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) = 0;
     virtual std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &vendorName,
         const std::string &printerId) = 0;
@@ -73,6 +83,7 @@ public:
     virtual int32_t DiscoverBackendPrinters(const std::string &vendorName, std::vector<PrinterInfo> &printers) = 0;
     virtual void AddPrintEvent(const std::string &vendorName, const std::string &printerId,
         const std::string &eventType, int32_t eventCode) = 0;
+    virtual bool IsBsunidriverSupport(const PrinterInfo &printerInfo) = 0;
 };
 
 class VendorDriverBase {

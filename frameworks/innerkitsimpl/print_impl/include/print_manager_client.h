@@ -31,6 +31,7 @@
 #include "printer_info.h"
 #include "printer_preferences.h"
 #include "refbase.h"
+#include "ppd_info.h"
 #ifdef PDFIUM_ENABLE
 #include "fpdfview.h"
 #endif // PDFIUM_ENABLE
@@ -119,6 +120,10 @@ public:
     void SetProxy(const sptr<IRemoteObject> &obj);
     void ResetProxy();
     int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd);
+    int32_t QueryAllPrinterPpds(std::vector<PpdInfo> &infos);
+    int32_t QueryPrinterInfoByIp(const std::string &printerIp);
+    int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+        const std::string &ppdName);
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);

@@ -119,6 +119,34 @@ bool PrintCallbackProxy::OnCallback(const std::string &extensionId, const std::s
     return true;
 }
 
+bool PrintCallbackProxy::OnCallback(const PrinterInfo &info, const std::vector<PpdInfo> &ppds)
+{
+    PRINT_HILOGD("PrintCallbackProxy::OnCallback printer driver Start");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+
+    data.WriteInterfaceToken(GetDescriptor());
+    info.Marshalling(data);
+    data.WriteInt32(ppds.size());
+    for (const auto &ppd : ppds) {
+        ppd.Marshalling(data);
+    }
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("SendRequest failed, error: remote is null");
+        return false;
+    }
+    int error = remote->SendRequest(PRINT_CALLBACK_PRINT_QUERY_INFO, data, reply, option);
+    if (error != 0) {
+        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
+        return false;
+    }
+    PRINT_HILOGD("PrintCallbackProxy::OnCallback printer driver End");
+    return true;
+}
+
 bool PrintCallbackProxy::OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
     const PrintAttributes &newAttrs, uint32_t fd)
 {

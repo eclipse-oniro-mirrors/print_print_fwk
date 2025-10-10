@@ -79,6 +79,9 @@ private:
     bool OnRestartPrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnAnalyzePrintEvents(MessageParcel &data, MessageParcel &reply);
     bool OnAuthPrintJob(MessageParcel &data, MessageParcel &reply);
+    bool OnQueryAllPrinterPpds(MessageParcel &data, MessageParcel &reply);
+    bool OnQueryPrinterInfoByIp(MessageParcel &data, MessageParcel &reply);
+    bool OnConnectPrinterByIpAndPpd(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

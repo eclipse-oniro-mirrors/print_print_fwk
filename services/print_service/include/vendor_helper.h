@@ -43,6 +43,7 @@ bool UpdateMediaCapability(PrinterCapability &printerCap, const Print_PrinterCap
 bool UpdateMarginCapability(PrinterCapability &printerCap, const Print_DefaultValue *defaultValue);
 std::shared_ptr<std::string> FindPropertyFromPropertyList(const Print_PropertyList *propertyList,
                                                           const std::string &keyName);
+bool UpdatePrinterDetailInfoToJson(Json::Value &option, const std::string &detailInfo);
 bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem);
 bool UpdatePrinterInfoWithCapability(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem,
                                      const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue);

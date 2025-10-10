@@ -34,6 +34,8 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <unordered_map>
+#include <algorithm>
 
 #include "system_ability_definition.h"
 #include "parameter.h"
@@ -650,7 +652,7 @@ bool PrintCupsClient::QueryPPDInformation(const std::string &makeModel, std::str
 
     PRINT_HILOGD("CUPS_GET_PPDS start.");
     response = printAbility_->DoRequest(CUPS_HTTP_DEFAULT, request, "/");
-    if (response == nullptr) {
+    if (response == NULL) {
         PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
         return false;
     }
@@ -1230,10 +1232,10 @@ ppd_file_t *PrintCupsClient::GetPPDFile(const std::string &printerName)
         return nullptr;
     }
     ppd_file_t *ppd = 0;
-    std::string fileDir = GetCurCupsRootDir() + "/ppd/";
+    std::string fileDir = GetCurCupsRootDir() + "/datadir/model/";
     std::string pName = printerName;
     std::string filePath = fileDir + pName + ".ppd";
-    PRINT_HILOGI("GetPPDFile started filePath %{public}s", filePath.c_str());
+    PRINT_HILOGI("GetPPDFile started filePath %{private}s", filePath.c_str());
     char realPath[PATH_MAX] = {};
     if (realpath(filePath.c_str(), realPath) == nullptr) {
         PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
@@ -2645,6 +2647,174 @@ bool PrintCupsClient::ModifyCupsPrinterPpd(const std::string &printerName, const
         return false;
     }
     PRINT_HILOGI("modify printer ppd success");
+    return true;
+}
+
+bool PrintCupsClient::QueryAllPPDInformation(const std::string &makeModel, Vector<PpdInfo> &ppdInfos)
+{
+    ipp_t *request = nullptr;
+    ipp_t *response = nullptr;
+
+    if (printAbility_ == nullptr) {
+        PRINT_HILOGW("printAbility_ is null");
+        return false;
+    }
+    request = ippNewRequest(CUPS_GET_PPDS);
+    if (request == nullptr) {
+        PRINT_HILOGW("request is null")
+        return false;
+    }
+    if (ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", nullptr, makeModel.c_str()) == nullptr) {
+        PRINT_HILOGW("attr is null");
+        return false;
+    }
+    PRINT_HILOGD("CUPS_GET_PPDS start.");
+    response = printAbility_->DoRequest(CUPS_HTTP_DEFAULT, request, "/");
+    if (response == nullptr) {
+        PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
+        return false;
+    }
+    if (response->request.status.status_code > IPP_OK_CONFLICT) {
+        PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
+        printAbility_->FreeRequest(response);
+        return false;
+    }
+    std::vector<std::string> ppds;
+    ParsePPDInfo(response, ppds);
+    printAbility_->FreeRequest(response);
+    if (ppds.empty()) {
+        PRINT_HILOGI("cannot find any matched ppds");
+        return false;
+    }
+    for (auto &ppd : ppds) {
+        PpdInfo info;
+        if (QueryInfoByPpdName(ppd, info)) {
+            ppdInfos.push_back(info);
+        }
+    }
+    PRINT_HILOGI("QueryAllPPDInfomation done.")
+    return true;   
+}
+
+int32_t PrintCupsClient::GetAllPPDFile(std::vector<PpdInfo> &ppdInfos)
+{
+    PRINT_HILOGI("GetAllPPDFile Enter");
+    if (!IsCupsServerAlive()) {
+        PRINT_HILOGI("The cupsd process is not started, start it now.");
+        int32_t ret = StartCupsdService();
+        if (ret != 0) {
+            PRINT_HILOGE("The cupsd process start fail.");
+            return E_PRINT_SERVER_FAILURE;
+        }
+    }
+    std::string fileDir = GetCurCupsRootDir() + "/datadir/model/";
+    DIR* dir = opendir(fileDir.c_str());
+    if (dir == nullptr) {
+        PRINT_HILOGE("Failed to open PPD directory: %{public}s", fileDir.c_str());
+        return E_PRINT_SERVER_FAILURE;
+    }
+    ppdInfos.clear();
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != nullptr) {
+        std::string fileName = entry->d_name;
+        if (fileName.length() < 4 || fileName.substr(fileName.size()-4) != ".ppd") {
+            continue;
+        }
+        PpdInfo info;
+        if (QueryInfoByPpdName(fileName, info)) {
+            ppdInfos.push_back(info);
+        }
+    }
+    PRINT_HILOGI("GetAllPPDFile done.");
+    closedir(dir);
+    return E_PRINT_NONE;
+}
+
+bool PrintCupsClient::QueryInfoByPpdName(const std::string &fileName, PpdInfo &info)
+{
+    std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + fileName;
+    char realPath[PATH_MAX] = {};
+    if (realpath(filePath.c_str(), realPath) == nullptr) {
+        PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
+        return nullptr;
+    }
+    std::unordered_map<std::string, std::string> keyValues;
+    if (!QueryPpdInfoMap(ppdFilePath, keyValues, info)) {
+        return false;
+    }
+    if (!keyValues["ShortNickName"].empty()) {
+        info.SetNickName(keyValues["ShrotNickName"]);
+    } else if (!keyValues["NickName"].empty()) {
+        info.SetNickName(keyValues["NickName"]);
+    } else if (!keyValues["ModelName"].empty()) {
+        info.SetNickName(keyValues["ModelName"]);
+    }
+    if (info.GetNickName().empty()) {
+        PRINT_HILOGI("nickname empty");
+        info.SetNickName(fileName);
+    }
+    if (info.GetNickName().empty()) {
+        PRINT_HILOGI("nickname empty");
+        info.SetNickName(fileName);
+    }
+    if (info.GetManufacturer().empty()) {
+        PRINT_HILOGI("Manufacturer empty");
+        info.SetManufacturer("others");
+    }
+    info.setPpdName(fileName);
+    return true;
+}
+
+bool PrintCupsClient::QueryPpdInfoMap(const std::string &ppdFilePath,
+    std::unordered_map<std::string, std::string> &keyValues, PpdInfo &info)
+{
+    std::ifstream file(ppdFilePath, std::ios::in);
+    if (!file.is_open()) {
+        PRINT_HILOGE("ppd %{private}s open failed", ppdFilePath.c_str());
+        return false;
+    }
+    const std::string targetKeys[] = {"Manufacturer", "ShortNickName", "NickName", "ModelName"};
+    std::string line;
+    while (std::getline(file, line)) {
+<<<<<<< HEAD
+        if(line.empty() || line[0] != '*' || line[1] == "%") {
+=======
+        if (line.empty() || line[0] != '*' || line[1] == '%') {
+>>>>>>> 9fb2863c (correct form)
+            continue;
+        }
+        size_t colonPos = line.find(":");
+        if (colonPos == string::npos) {
+            continue;
+        }
+        string key = line.substr(1, colonPos - 1);
+        string value = line.substr(colonPos + 1);
+        size_t keyFirst = key.find_first_not_of("\t");
+        size_t valueFirst = value.find_first_not_of("\t");
+        if (keyFirst != std::string::npos) {
+            key = key.substr(keyFirst);
+        }
+        if (valueFirst != std::string::npos) {
+            value = value.substr(valueFirst);
+        }
+        value.erase(remove_if(value.begin(), value.end(), [](char c) {
+            return c == '"';
+        }), value.end());
+        if (find(begin(targetKeys), end(targetKeys), key) != end(targetKeys)) {
+            keyValues[key] = value;
+        }
+        if (key == "Manufacturer") {
+            info.SetManufacturer(value);
+        }
+        if (key == "ShortNickName") {
+            info.SetNickName(value);
+        }
+        if (!info.GetManufacturer().empty() && !info.GetNickName().empty()) {
+            file.close();
+            return true;
+        }
+    }
+    file.close();
     return true;
 }
 }  // namespace OHOS::Print

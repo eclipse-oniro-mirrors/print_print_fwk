@@ -67,6 +67,9 @@ namespace OHOS::Print {
         CMD_RESTARTPRINTJOB,
         CMD_ANALYZEPRINTEVENTS,
         CMD_AUTHPRINTJOB,
+        CMD_QUERYALLPPDS,
+        CMD_QUERYIPINFO,
+        CMD_CONNECTPRINTERBYIPANDPPD,
     };
 } // namespace OHOS:Print
 #endif // PRINT_SERVICE_INTERFACE_H

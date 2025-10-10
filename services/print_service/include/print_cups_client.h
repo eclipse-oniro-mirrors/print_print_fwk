@@ -128,6 +128,7 @@ public:
 #endif // ENTERPRISE_ENABLE
     bool IsCupsServerAlive();
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName);
+    bool QueryAllPPDInformation(const std::string &makeModel, Vector<PpdInfo> &ppdInfos);
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);
     int32_t AddPrinterToCupsWithSpecificPpd(const std::string &printerUri, const std::string &printerName,
@@ -144,6 +145,7 @@ public:
 
     int32_t QueryAddedPrinterList(std::vector<std::string> &printerName);
     ppd_file_t* GetPPDFile(const std::string &printerName);
+    int32_t GetAllPPDFile(std::vector<PpdInfo> &ppdInfos);
     int32_t SetDefaultPrinter(const std::string &printerName);
 
     int32_t QueryPrinterAttrList(const std::string &printerName, const std::vector<std::string> &keyList,
@@ -160,6 +162,9 @@ public:
         char *userPasswd);
     bool ModifyCupsPrinterPpd(const std::string &printerName, const std::string &ppdName);
     int32_t StartCupsdServiceNotAlive();
+    bool QueryInfoByPpdName(const std::string &fileName, PpdInfo &info);
+    bool QueryPpdInfoMap(const std::string &ppdFilePath, std::unordered_map<std::string, std::string> &keyValues,
+        PpdInfo &info);
 
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);

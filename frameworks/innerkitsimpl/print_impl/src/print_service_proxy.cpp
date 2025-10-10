@@ -1190,4 +1190,100 @@ int32_t PrintServiceProxy::AuthPrintJob(const std::string &jobId, const std::str
     return ret;
 }
 
+int32_t PrintServiceProxy::QueryAllPrinterPpds(std::vector<PpdInfo> &ppdInfos)
+{
+    PRINT_HILOGI("PrintServiceProxy QueryAllPrinterPpds started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy QueryAllPrinterPpds remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLPPDS, data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGI("QueryAllPrinterPpds Failed, error code = %{public}d", ret);
+        return E_PRINT_GENERIC_FAILURE;
+    }
+    ret = GetResult(ret, reply);
+    if (ret == ERR_NONE) {
+        uint32_t len = reply.ReadUint32();
+        if (len > PRINT_MAX_PRINT_COUNT) {
+            PRINT_HILOGE("len is out of range.");
+            return E_PRINT_INVALID_PARAMETER;
+        }
+        for (uint32_t i = 0; i < len; ++i) {
+            auto infoPtr = PpdInfo::Unmarshalling(reply);
+            if (infoPtr == nullptr) {
+                PRINT_HILOGW("wrong ppdInfo from data.");
+                return E_PRINT_GENERIC_FAILURE;
+            }
+            ppdInfos.emplace_back(*InfoPtr);
+        }
+    }
+    PRINT_HILOGI("PrintServiceProxy QueryAllPrinterPpds out. ret = [%{public}d]", ret);
+    return ret;
+}
+
+int32_t PrintServiceProxy::QueryPrinterInfoByIp(const std::string &printerIp)
+{
+    PRINT_HILOGI("PrintServiceProxy QueryPrinterInfoByIp started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(PrinterIp);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy QueryPrinterInfoByIp remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYIPINFO, data, reply, option);
+    if (ret != ERR_NONE) {
+<<<<<<< HEAD
+        PRINT_HILOGI("QueryPrinterInfoByIp Failed, error code = %{public}d", ret);
+        return E_PRINT_GENERIC_FAILURE;
+=======
+        PRINT_HILOGE("QueryPrinterInfoByIp Failed, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+>>>>>>> 9fb2863c (correct form)
+    }
+    ret = GetResult(ret, reply);
+    PRINT_HILOGI("PrintServiceProxy QueryPrinterInfoByIp out. ret = [%{public}d]", ret);
+    return ret;
+}
+
+int32_t PrintServiceProxy::ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+    const std::string &ppdName)
+{
+    PRINT_HILOGI("PrintServiceProxy ConnectPrinterByIpAndPpd started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(PrinterIp);
+    data.WriteString(protocol);
+    data.WriteString(ppdName);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy ConnectPrinterByIpAndPpd remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIPANDPPD, data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGI("ConnectPrinterByIpAndPpd Failed, error code = %{public}d", ret);
+        return E_PRINT_GENERIC_FAILURE;
+    }
+    ret = GetResult(ret, reply);
+    PRINT_HILOGI("PrintServiceProxy ConnectPrinterByIpAndPpd out. ret = [%{public}d]", ret);
+    return ret;
+}
 } // namespace OHOS::Print

@@ -90,6 +90,15 @@ public:
     void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIP) override;
     void ClearConnectingPrinter() override;
     bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) override;
+    std::string GetConnectingPpdName() override;
+    std::string GetConnectingProtocol() override;
+    void ClearConnectingPpdName() override;
+    void ClearConnectingProtocol() override;
+    bool IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) override;
+    void SetQueryingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
+    bool OnQueryCallBackEvent(const PrinterInfo &info) override;
+    bool ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+        const std::string &ppdName) override;
     bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
     std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &vendorName,
         const std::string &printerId) override;
@@ -102,6 +111,7 @@ public:
     int32_t DiscoverBackendPrinters(const std::string &vendorName, std::vector<PrinterInfo> &printers) override;
     void AddPrintEvent(const std::string &vendorName, const std::string &printerId,
         const std::string &eventType, int32_t eventCode) override;
+    bool IsBsunidriverSupport(const PrinterInfo &printerInfo) override;
 
 private:
     void StatusMonitorProcess();
@@ -120,10 +130,13 @@ private:
     bool statusMonitorOn = false;
     std::mutex statusMonitorMutex;
     std::condition_variable statusMonitorCondition;
+    ConnectState ConnectState = ConnectState::STATE_NONE;
     std::string connectingPrinterId;
     bool isConnecting = false;
     ConnectMethod connectingMethod = ID_AUTO;
     std::string connectingPrinter;
+    std::string connectingProtocol;
+    std::string connectingPpdName;
     std::mutex simpleObjectMutex;
 };
 }  // namespace Print

@@ -87,6 +87,7 @@ static const std::string PRINTJOB_EVENT_TYPE = "jobStateChange";
 static const std::string EXTINFO_EVENT_TYPE = "extInfoChange";
 static const std::string PRINT_ADAPTER_EVENT_TYPE = "printCallback_adapter";
 static const std::string PRINT_GET_FILE_EVENT_TYPE = "getPrintFileCallback_adapter";
+static const std::string PRINT_QUERY_INFO_EVENT_TYPE = "printerInfoQuery";
 static const std::string EVENT_BLOCK = "block";
 static const std::string EVENT_SUCCESS = "succeed";
 static const std::string EVENT_FAIL = "fail";
@@ -203,7 +204,6 @@ int32_t PrintServiceAbility::Init()
     }
     StartUnloadThread();
     CheckCupsServerAlive();
-    UpdatePpdForPreinstalledDriverPrinter();
     if (!printSystemData_.CheckPrinterVersionFile()) {
         RefreshPrinterInfoByPpd();
     }
@@ -215,6 +215,7 @@ int32_t PrintServiceAbility::Init()
     }
     StartDiscoverPrinter(extensionIds);
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
+    UpdatePpdForPreinstalledDriverPrinter();
     return ERR_OK;
 }
 
@@ -466,6 +467,8 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
     PRINT_HILOGD("ConnectPrinter started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     vendorManager.ClearConnectingPrinter();
+    vendorManager.ClearConnectingProtocol();
+    vendorManager.ClearConnectingPpdName();
     if (printSystemData_.QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
         PRINT_HILOGI("Invalid printer id, try connect printer by ip");
         return TryConnectPrinterByIp(printerId);
@@ -534,6 +537,8 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
     PRINT_HILOGD("StartDiscoverPrinter started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     vendorManager.ClearConnectingPrinter();
+    vendorManager.ClearConnectingProtocol();
+    vendorManager.ClearConnectingPpdName();
     std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
     for (auto &printerId : printerIdList) {
         vendorManager.MonitorPrinterStatus(printerId, true);
@@ -2149,7 +2154,8 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
     ManualStart();
     std::string permission = PERMISSION_NAME_PRINT;
     std::string eventType = type;
-    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE) {
+    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
+        type == PRINT_QUERY_INFO_EVENT_TYPE) {
         permission = PERMISSION_NAME_PRINT_JOB;
     }
     if (!CheckPermission(permission)) {
@@ -2162,7 +2168,8 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
     }
     if (type == PRINT_CALLBACK_ADAPTER) {
         eventType = type;
-    } else if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE) {
+    } else if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE||
+        type == PRINT_QUERY_INFO_EVENT_TYPE) {
         int32_t userId = GetCurrentUserId();
         int32_t callerPid = IPCSkeleton::GetCallingPid();
         eventType = PrintUtils::GetEventTypeWithToken(userId, callerPid, type);
@@ -2195,14 +2202,16 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
 int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &type)
 {
     std::string permission = PERMISSION_NAME_PRINT;
-    if (type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE || type == PRINTER_EVENT_TYPE) {
+    if (type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE || type == PRINTER_EVENT_TYPE ||
+        type == PRINT_QUERY_INFO_EVENT_TYPE) {
         permission = PERMISSION_NAME_PRINT_JOB;
     }
     std::string eventType = type;
     if (taskId != "") {
         eventType = PrintUtils::GetTaskEventId(taskId, type);
     }
-    if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE) {
+    if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || 
+        type == PRINT_QUERY_INFO_EVENT_TYPE) {
         int32_t userId = GetCurrentUserId();
         int32_t callerPid = IPCSkeleton::GetCallingPid();
         eventType = PrintUtils::GetEventTypeWithToken(userId, callerPid, type);
@@ -3312,6 +3321,28 @@ bool PrintServiceAbility::DoAddPrinterToCups(
         return false;
     }
     std::string printerUri = printerInfo->GetUri();
+
+    std::string connectProtocol = vedorManager.GetConnectProtocol();
+    if (!connectProtocol.empty() && connectProtocol != "auto") {
+        char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
+        char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
+        char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
+        char resource[HTTP_MAX_URI] = {0}; /* Resource portion of URI */
+        int port = 0; /* Port portion of URI */
+        httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
+            host, sizeof(host), &port, resource, sizeof(resource));
+        std::string printerIp;
+        printerIp.assign(host);
+        if (connectProtocol == "ipp") {
+            printerUri = "ipp://" + printerIp + ":631/ipp/print";
+        } else if (connectProtocol == "ipps") {
+            printerUri = printerUri;
+        } else if (connectProtocol == "lpd") {
+            printerUri = "lpd://" +printerIp + ":515";
+        } else if (connectProtocol == "socket") {
+            printerUri = "socket://" + printerIp + ":9100";
+        }
+    }
     std::string printerName = RenamePrinterWhenAdded(*printerInfo);
 #ifdef CUPS_ENABLE
     if (!DoAddPrinterToCupsEnable(printerUri, printerName, printerInfo, ppdName, ppdData)) {
@@ -3400,6 +3431,8 @@ void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> prin
     SetLastUsedPrinter(globalPrinterId);
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
+    vendorManager.ClearConnectingProtocol();
+    vendorManager.ClearConnectingPpdName();
     vendorManager.MonitorPrinterStatus(globalPrinterId, true);
 }
 
@@ -3474,6 +3507,8 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
     SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
+    vendorManager.ClearConnectingProtocol();
+    vendorManager.ClearConnectingPpdName();
     vendorManager.MonitorPrinterStatus(globalPrinterId, true);
     printSystemData_.RemoveIpPrinterFromList(globalPrinterId);
     return true;
@@ -4215,4 +4250,82 @@ int32_t PrintServiceAbility::AuthPrintJob(const std::string &jobId, const std::s
 #endif // CUPS_ENABLE
     return E_PRINT_NONE;
 }
+
+int32_t PrintServiceAbility::QueryAllPrinterPpds(std::vector<PpdInfo> &printerPpdList)
+{
+    PRINT_HILOGI("QueryAllPrinterPpds Enter");
+    DelayedSingleton<PrintCupsClient>::GetInstance()->GetAllPPDFile(printerPpdList);
+    PRINT_HILOGI("GetAllPPDFile count = %{public}zu", printerPpdList.size());
+    PpdInfo info;
+    info.SetPpdInfo("Generic", "System Default Driver", BSUNI_PPD_NAME);
+    printerPpdList.push_back(info);
+    return E_PRINT_NONE;
+}
+
+bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
+{
+    PRINT_HILOGI("Start CallBack Printerinfo");
+    std::vector<PpdInfo> ppdInfos;
+    std::string makeModel = info.GetPrinterMake();
+    if (makeModel.empty()) {
+        PRINT_HILOGE("Cannot Find makeModel");
+    } else {
+        if (!DelayedSingleton<PrintCupsClient>::GetInstance()->QueryAllPPDInformation(makeModel)) {
+            PRINT_HILOGE("Cannot Find Ppds")
+        }
+    }
+
+    if (vendorManager.IsBsunidriverSupport(info)) {
+        PpdInfo genericPpd;
+        genericPpd.SetPpdInfo("Generic", "System Default Driver", BSUNI_PPD_NAME);
+        ppdInfos.push_back(genericPpd);
+    }
+
+    for (auto eventIt : registeredListeners_) {
+        if (PrintUnits::GetEventType(eventIt.first) != PRINT_QUERY_INFO_EVENT_TYPE) {
+            continue;
+        }
+        if (eventIt.second == nullptr) {
+            PRINT_HILOGD("eventIt.second is nullptr");
+            continue;
+        }
+        eventIt.second->OnCallBack(info, ppdInfos);
+    }
+    return true;
+}
+
+int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
+{
+    PRINT_HILOGI("QueryPrinterInfoByIp Enter");
+    printerSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
+    vendorManager.ClearConnectingPrinter();
+    vendorManager.ClearConnectingProtocol();
+    vendorManager.ClearConnectingPpdName();
+    vendorManager.setQueryPrinter(IP_AUTO, printerIp);
+    std::string protocol = "auto";
+    if (!vendorManager.ConnectPrinterByIp(printerIp, protocol)) {
+        PRINT_HILOGW("ConnectPrinterByIp failed");
+        return E_PRINT_SERVER_FAILURE;
+    }
+    PRINT_HILOGD("connecting printer by ip success");
+    return E_PRINT_NONE;
+}
+
+int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+    const std::string &ppdName)
+{
+<<<<<<< HEAD
+    PRINT_HILOGI("QueryPrinterInfoByIp Enter");
+    printerSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
+=======
+    PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
+    printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
+>>>>>>> 9fb2863c (correct form)
+    if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName)) {
+        PRINT_HILOGW("ConnectPrinterByIpAndPpd failed");
+            return E_PRINT_SERVER_FAILURE;
+    }
+    return E_PRINT_NONE;
+}
+
 }  // namespace OHOS::Print
