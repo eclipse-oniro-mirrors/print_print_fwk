@@ -95,7 +95,7 @@ public:
     void ClearConnectingPpdName() override;
     void ClearConnectingProtocol() override;
     bool IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) override;
-    void SetQueryingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
+    void SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
     bool OnQueryCallBackEvent(const PrinterInfo &info) override;
     bool ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName) override;
@@ -130,7 +130,7 @@ private:
     bool statusMonitorOn = false;
     std::mutex statusMonitorMutex;
     std::condition_variable statusMonitorCondition;
-    ConnectState ConnectState = ConnectState::STATE_NONE;
+    ConnectState connectingState = ConnectState::STATE_NONE;
     std::string connectingPrinterId;
     bool isConnecting = false;
     ConnectMethod connectingMethod = ID_AUTO;

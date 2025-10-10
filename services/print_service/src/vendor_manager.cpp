@@ -137,6 +137,7 @@ void VendorManager::UnInit()
 bool VendorManager::LoadVendorDriver(std::shared_ptr<VendorDriverBase> vendorDriver)
 {
     PRINT_HILOGI("LoadVendorDriver enter");
+    PRINT_HILOGI("LoadVendorDriver enter");
     if (vendorDriver == nullptr) {
         PRINT_HILOGW("vendorDriver is null");
         return false;
@@ -152,6 +153,7 @@ bool VendorManager::LoadVendorDriver(std::shared_ptr<VendorDriverBase> vendorDri
 }
 bool VendorManager::UnloadVendorDriver(const std::string &vendorName)
 {
+    PRINT_HILOGI("LoadVendorDriver enter");
     PRINT_HILOGI("LoadVendorDriver enter");
     std::lock_guard<std::mutex> lock(vendorMapMutex);
     auto iter = vendorMap.find(vendorName);
@@ -521,6 +523,7 @@ bool VendorManager::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, 
         connectingPrinter.c_str());
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     if (connectingState == STATE_CONNECTING && !connectingPrinter.empty()) {
+    if (connectingState == STATE_CONNECTING && !connectingPrinter.empty()) {
         if (connectingMethod == ID_AUTO) {
             return globalPrinterIdOrIp == connectingPrinter;
         } else {
@@ -565,14 +568,14 @@ std::string VendorManager::GetConnectingProtocol()
 
 void VendorManager::ClearConnectingPpdName()
 {
-    PRINT_HILOGD("ClearConnectingPpdName");
+    PRINT_HILOGD("ClearconnectingPpdName");
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     connectingPpdName.clear();
 }
 
 void VendorManager::ClearConnectingProtocol()
 {
-    PRINT_HILOGD("ClearConnectingPpdName");
+    PRINT_HILOGD("ClearconnectingProtocol");
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     connectingProtocol.clear();
 }
@@ -586,26 +589,26 @@ bool VendorManager::IsQueryingPrinter(const std::string &globalPrinterIdOrIp, co
         globalPrinterIdOrIp.c_str(), connectingPrinter.c_str());
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     if (connectingState == STATE_QUERYING && !connectingPrinter.empty()) {
-        if (ConnectingMethod == ID_AUTO) {
+        if (connectingMethod == ID_AUTO) {
             return globalPrinterIdOrIp == connectingPrinter;
         } else {
             return (globalPrinterIdOrIp.find(connectingPrinter) != std::string::npos) ||
                 (connectingPrinter.find(globalPrinterIdOrIp) != std::string::npos) ||
-                uri.find(globalPrinterIdOrIp) != std::string::npos;
+                uri.find(connectingPrinter) != std::string::npos;
         }
     }
     return false;
 }
 
-void VendorManager::SetQueryingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp)
+void VendorManager::SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp)
 {
     if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER) != std::string::npos && wlanGroupDriver != nullptr) {
         wlanGroupDriver->SetConnectingPrinter(method, globalPrinterIdOrIp);
         return;
     }
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
-    ConnectingMethod = method;
-    ConnectingPrinter = globalPrinterIdOrIp;
+    connectingMethod = method;
+    connectingPrinter = globalPrinterIdOrIp;
     connectingState = ConnectState::STATE_QUERYING;
 }
 
@@ -613,8 +616,9 @@ bool VendorManager::OnQueryCallBackEvent(const PrinterInfo &info)
 {
     if (printServiceAbility == nullptr) {
         PRINT_HILOGE("printServiceAbility is null");
+        return false;
     }
-    return printServiceAbility->OnQyertCallBackEvent(info);
+    return printServiceAbility->OnQueryCallBackEvent(info);
 }
 
 bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
@@ -645,6 +649,14 @@ bool VendorManager::QueryPrinterCapabilityByUri(const std::string &uri, PrinterC
         return false;
     }
     return printServiceAbility->QueryPrinterCapabilityByUri(uri, printerCap);
+}
+
+bool IsBsunidriverSupport(const PrinterInfo &printerInfo)
+{
+    if (wlanGroupDriver != nullptr) {
+        return wlanGroupDriver->IsBsunidriverSupport(printerInfo);
+    }
+    return false;
 }
 
 bool IsBsunidriverSupport(const PrinterInfo &printerInfo)
@@ -743,8 +755,6 @@ void VendorManager::AddPrintEvent(const std::string &vendorName, const std::stri
     auto globalPrinterId = PrintUtils::GetGlobalId(VendorManager::GetGlobalVendorName(targetVendorName), printerId);
     printServiceAbility->AddPrintEvent(globalPrinterId, eventType, eventCode);
 }
-<<<<<<< HEAD
-=======
 
 bool VendorManager::IsBsunidriverSupport(const PrinterInfo &printerInfo)
 {
@@ -753,4 +763,10 @@ bool VendorManager::IsBsunidriverSupport(const PrinterInfo &printerInfo)
     }
     return false;
 }
->>>>>>> 9fb2863c (correct form)
+bool VendorManager::IsBsunidriverSupport(const PrinterInfo &printerInfo)
+{
+    if (wlanGroupDriver != nullptr) {
+        return wlanGroupDriver->IsBsunidriverSupport(printerInfo);
+    }
+    return false;
+}

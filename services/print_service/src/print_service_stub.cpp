@@ -91,7 +91,8 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_AUTHPRINTJOB] = &PrintServiceStub::OnAuthPrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLPPDS] = &PrintServiceStub::OnQueryAllPrinterPpds;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYIPINFO] = &PrintServiceStub::OnQueryPrinterInfoByIp;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIPANDPPD] = &PrintServiceStub::OnConnectPrinterByIpAndPpd;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIPANDPPD] = 
+        &PrintServiceStub::OnConnectPrinterByIpAndPpd;
 
 }
 
@@ -903,7 +904,10 @@ bool PrintServiceStub::OnQueryAllPrinterPpds(MessageParcel &data, MessageParcel 
         uint32_t size = static_cast<uint32_t>(ppdInfos.size());
         reply.WriteUint32(size);
         for (uint32_t index = 0; index < size; ++index) {
-            ppdInfos[index].Marshalling(reply);
+            if (!ppdInfos[index].Marshalling(reply)) {
+                PRINT_HILOGW("Marshalling ppd: %{public}s failed", ppdInfos[index].GetPpdName().c_str());
+                return false;
+            }
         }
     }
     PRINT_HILOGI("PrintServiceStub::OnQueryAllPrinterPpds out");
@@ -912,23 +916,23 @@ bool PrintServiceStub::OnQueryAllPrinterPpds(MessageParcel &data, MessageParcel 
 
 bool PrintServiceStub::OnQueryPrinterInfoByIp(MessageParcel &data, MessageParcel &reply)
 {
-    PRINT_HILOGI("PrintServiceStub::QueryPrinterInfoByIp in");
+    PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoByIp in");
     std::string printerIp = data.ReadString();
     int32_t ret = QueryPrinterInfoByIp(printerIp);
     reply.WriteInt32(ret);
-    PRINT_HILOGI("PrintServiceStub::QueryPrinterInfoByIp out");
+    PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoByIp out");
     return ret == E_PRINT_NONE;
 }
 
 bool PrintServiceStub::OnConnectPrinterByIpAndPpd(MessageParcel &data, MessageParcel &reply)
 {
-    PRINT_HILOGI("PrintServiceStub::QueryPrinterInfoByIp in");
+    PRINT_HILOGI("PrintServiceStub::OnConnectPrinterByIpAndPpd in");
     std::string printerIp = data.ReadString();
     std::string protocol = data.ReadString();
     std::string ppdName = data.ReadString();
     int32_t ret = ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName);
     reply.WriteInt32(ret);
-    PRINT_HILOGI("PrintServiceStub::QueryPrinterInfoByIp out");
+    PRINT_HILOGI("PrintServiceStub::OnConnectPrinterByIpAndPpd out");
     return ret == E_PRINT_NONE;
 }
 

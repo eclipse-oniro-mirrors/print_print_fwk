@@ -128,7 +128,7 @@ public:
 #endif // ENTERPRISE_ENABLE
     bool IsCupsServerAlive();
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName);
-    bool QueryAllPPDInformation(const std::string &makeModel, Vector<PpdInfo> &ppdInfos);
+    bool QueryAllPPDInformation(const std::string &makeModel, std::vector<PpdInfo> &ppdInfos);
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,
         const std::string &printerMake);
     int32_t AddPrinterToCupsWithSpecificPpd(const std::string &printerUri, const std::string &printerName,

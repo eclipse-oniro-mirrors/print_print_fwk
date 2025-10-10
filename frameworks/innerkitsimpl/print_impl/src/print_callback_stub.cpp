@@ -109,13 +109,13 @@ bool PrintCallbackStub::HandleGetInfoEvent(MessageParcel &data, MessageParcel &r
     }
     for (int32_t i = 0; i < ppdsSize; ++i) {
         auto ppd = PpdInfo::Unmarshalling(data);
-        if (ppd == null) {
+        if (ppd == nullptr) {
             PRINT_HILOGW("Unmarshalling ppd failed");
             return false;
         }
         ppds.push_back(*ppd);
     }
-    bool result = OnCallback(extensionId, info);
+    bool result = OnCallback(*info, ppds);
     reply.WriteBool(result);
     return result;
 }

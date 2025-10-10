@@ -58,8 +58,8 @@ public:
     static void SetInt32Property(napi_env env, napi_value object, const std::string &name, int32_t value);
     static napi_value CreateStringUtf8(napi_env env, const std::string &str);
     static std::string GetStringFromValueUtf8(napi_env env, napi_value value);
-    static std::string CreateStringVectorUtf8(napi_env env, const std::vector<std::string> &vec);
-    static std::string CreatePpdInfoVectorUtf8(napi_env env, const std::vector<PpdInfo> &vec);
+    static napi_value CreateStringVectorUtf8(napi_env env, const std::vector<std::string> &vec);
+    static napi_value CreatePpdInfoVectorUtf8(napi_env env, const std::vector<PpdInfo> &vec);
     static std::string GetStringPropertyUtf8(napi_env env, napi_value object, const std::string &propertyName);
     static void SetStringPropertyUtf8(
         napi_env env, napi_value object, const std::string &name, const std::string &value);

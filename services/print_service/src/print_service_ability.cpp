@@ -2210,7 +2210,7 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
     if (taskId != "") {
         eventType = PrintUtils::GetTaskEventId(taskId, type);
     }
-    if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || 
+    if (type == PRINTER_CHANGE_EVENT_TYPE || type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE ||
         type == PRINT_QUERY_INFO_EVENT_TYPE) {
         int32_t userId = GetCurrentUserId();
         int32_t callerPid = IPCSkeleton::GetCallingPid();
@@ -3322,7 +3322,7 @@ bool PrintServiceAbility::DoAddPrinterToCups(
     }
     std::string printerUri = printerInfo->GetUri();
 
-    std::string connectProtocol = vedorManager.GetConnectProtocol();
+    std::string connectProtocol = vendorManager.GetConnectingProtocol();
     if (!connectProtocol.empty() && connectProtocol != "auto") {
         char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
         char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
@@ -4270,8 +4270,8 @@ bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
     if (makeModel.empty()) {
         PRINT_HILOGE("Cannot Find makeModel");
     } else {
-        if (!DelayedSingleton<PrintCupsClient>::GetInstance()->QueryAllPPDInformation(makeModel)) {
-            PRINT_HILOGE("Cannot Find Ppds")
+        if (!DelayedSingleton<PrintCupsClient>::GetInstance()->QueryAllPPDInformation(makeModel, ppdInfos)) {
+            PRINT_HILOGE("Cannot Find Ppds");
         }
     }
 
@@ -4282,14 +4282,14 @@ bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
     }
 
     for (auto eventIt : registeredListeners_) {
-        if (PrintUnits::GetEventType(eventIt.first) != PRINT_QUERY_INFO_EVENT_TYPE) {
+        if (PrintUtils::GetEventType(eventIt.first) != PRINT_QUERY_INFO_EVENT_TYPE) {
             continue;
         }
         if (eventIt.second == nullptr) {
             PRINT_HILOGD("eventIt.second is nullptr");
             continue;
         }
-        eventIt.second->OnCallBack(info, ppdInfos);
+        eventIt.second->OnCallback(info, ppdInfos);
     }
     return true;
 }
@@ -4297,11 +4297,11 @@ bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
 int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
 {
     PRINT_HILOGI("QueryPrinterInfoByIp Enter");
-    printerSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
+    printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.ClearConnectingPrinter();
     vendorManager.ClearConnectingProtocol();
     vendorManager.ClearConnectingPpdName();
-    vendorManager.setQueryPrinter(IP_AUTO, printerIp);
+    vendorManager.SetQueryPrinter(IP_AUTO, printerIp);
     std::string protocol = "auto";
     if (!vendorManager.ConnectPrinterByIp(printerIp, protocol)) {
         PRINT_HILOGW("ConnectPrinterByIp failed");
@@ -4311,16 +4311,11 @@ int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
     return E_PRINT_NONE;
 }
 
-int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
     const std::string &ppdName)
 {
-<<<<<<< HEAD
-    PRINT_HILOGI("QueryPrinterInfoByIp Enter");
-    printerSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
-=======
     PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
->>>>>>> 9fb2863c (correct form)
     if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName)) {
         PRINT_HILOGW("ConnectPrinterByIpAndPpd failed");
             return E_PRINT_SERVER_FAILURE;

@@ -2650,18 +2650,18 @@ bool PrintCupsClient::ModifyCupsPrinterPpd(const std::string &printerName, const
     return true;
 }
 
-bool PrintCupsClient::QueryAllPPDInformation(const std::string &makeModel, Vector<PpdInfo> &ppdInfos)
+bool PrintCupsClient::QueryAllPPDInformation(const std::string &makeModel, std::vector<PpdInfo> &ppdInfos)
 {
     ipp_t *request = nullptr;
     ipp_t *response = nullptr;
 
     if (printAbility_ == nullptr) {
-        PRINT_HILOGW("printAbility_ is null");
+        PRINT_HILOGE("printAbility_ is null");
         return false;
     }
     request = ippNewRequest(CUPS_GET_PPDS);
     if (request == nullptr) {
-        PRINT_HILOGW("request is null")
+        PRINT_HILOGW("request is null");
         return false;
     }
     if (ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model", nullptr, makeModel.c_str()) == nullptr) {
@@ -2670,7 +2670,7 @@ bool PrintCupsClient::QueryAllPPDInformation(const std::string &makeModel, Vecto
     }
     PRINT_HILOGD("CUPS_GET_PPDS start.");
     response = printAbility_->DoRequest(CUPS_HTTP_DEFAULT, request, "/");
-    if (response == nullptr) {
+    if (response == NULL) {
         PRINT_HILOGE("GetAvaiablePPDS failed: %{public}s", cupsLastErrorString());
         return false;
     }
@@ -2692,7 +2692,7 @@ bool PrintCupsClient::QueryAllPPDInformation(const std::string &makeModel, Vecto
             ppdInfos.push_back(info);
         }
     }
-    PRINT_HILOGI("QueryAllPPDInfomation done.")
+    PRINT_HILOGI("QueryAllPPDInformation done.");
     return true;   
 }
 
@@ -2734,16 +2734,16 @@ bool PrintCupsClient::QueryInfoByPpdName(const std::string &fileName, PpdInfo &i
 {
     std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + fileName;
     char realPath[PATH_MAX] = {};
-    if (realpath(filePath.c_str(), realPath) == nullptr) {
-        PRINT_HILOGE("The realPidFile is null, errno:%{public}s", std::to_string(errno).c_str());
-        return nullptr;
+    if (realpath(ppdFilePath.c_str(), realPath) == nullptr) {
+        PRINT_HILOGE("The realPpdFile is null, errno:%{public}s", std::to_string(errno).c_str());
+        return false;
     }
     std::unordered_map<std::string, std::string> keyValues;
     if (!QueryPpdInfoMap(ppdFilePath, keyValues, info)) {
         return false;
     }
     if (!keyValues["ShortNickName"].empty()) {
-        info.SetNickName(keyValues["ShrotNickName"]);
+        info.SetNickName(keyValues["ShortNickName"]);
     } else if (!keyValues["NickName"].empty()) {
         info.SetNickName(keyValues["NickName"]);
     } else if (!keyValues["ModelName"].empty()) {
@@ -2753,15 +2753,11 @@ bool PrintCupsClient::QueryInfoByPpdName(const std::string &fileName, PpdInfo &i
         PRINT_HILOGI("nickname empty");
         info.SetNickName(fileName);
     }
-    if (info.GetNickName().empty()) {
-        PRINT_HILOGI("nickname empty");
-        info.SetNickName(fileName);
-    }
     if (info.GetManufacturer().empty()) {
-        PRINT_HILOGI("Manufacturer empty");
-        info.SetManufacturer("others");
+        PRINT_HILOGI("manufacturer empty");
+        info.SetManufacturer("Others");
     }
-    info.setPpdName(fileName);
+    info.SetPpdName(fileName);
     return true;
 }
 
@@ -2776,21 +2772,17 @@ bool PrintCupsClient::QueryPpdInfoMap(const std::string &ppdFilePath,
     const std::string targetKeys[] = {"Manufacturer", "ShortNickName", "NickName", "ModelName"};
     std::string line;
     while (std::getline(file, line)) {
-<<<<<<< HEAD
-        if(line.empty() || line[0] != '*' || line[1] == "%") {
-=======
         if (line.empty() || line[0] != '*' || line[1] == '%') {
->>>>>>> 9fb2863c (correct form)
             continue;
         }
-        size_t colonPos = line.find(":");
+        size_t colonPos = line.find(':');
         if (colonPos == string::npos) {
             continue;
         }
         string key = line.substr(1, colonPos - 1);
         string value = line.substr(colonPos + 1);
-        size_t keyFirst = key.find_first_not_of("\t");
-        size_t valueFirst = value.find_first_not_of("\t");
+        size_t keyFirst = key.find_first_not_of(" \t");
+        size_t valueFirst = value.find_first_not_of(" \t");
         if (keyFirst != std::string::npos) {
             key = key.substr(keyFirst);
         }

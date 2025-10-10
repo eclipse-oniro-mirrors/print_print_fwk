@@ -20,7 +20,7 @@
 #include "ppd_info.h"
 
 namespace OHOS::Print {
-class PodInfoHelper {
+class PpdInfoHelper {
 public:
     static napi_value MakeJsSimpleObject(napi_env env, const PpdInfo &info);
     static std::shared_ptr<PpdInfo> BuildFromJs(napi_env env, napi_value jsValue);

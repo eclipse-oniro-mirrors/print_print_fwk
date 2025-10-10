@@ -1015,7 +1015,7 @@ int32_t PrintManagerClient::QueryPrinterInfoByIp(const std::string &printerIp)
     return ret;
 }
 
-int32_tPrintManagerClient:: ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+int32_t PrintManagerClient::ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
     const std::string &ppdName)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);

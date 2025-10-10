@@ -303,5 +303,21 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0012, TestSize.Level1)
     discoveryItem.detailInfo = "{\"bsunidriver_support\": \"false\"}";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
 }
+
+HWTEST_F(VendorHelperTest, UpdatePrinterDetailInfoToJsonTest, TestSize.Level1)
+{
+    Json::Value option;
+    EXPECT_FALSE(UpdatePrinterDetailInfoToJson(option, nullptr));
+    std::string detailInfo;
+    EXPECT_FALSE(UpdatePrinterDetailInfoToJson(option, detailInfo));
+    detailInfo = "{\"key\":\"value\"}";
+    EXPECT_FALSE(UpdatePrinterDetailInfoToJson(option, detailInfo));
+    detailInfo = "{\"bsunidriver_support\":\"false\"}";
+    EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
+    detailInfo = "{\"printer_protocols\":\"ipp,ipps,socket\"}";
+    EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
+    detailInfo = "{\"modelName\":\"testPrinterModel\"}";
+    EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
+}
 }  // namespace Print
 }  // namespace OHOS

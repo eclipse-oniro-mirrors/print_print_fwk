@@ -121,7 +121,7 @@ bool PrintCallbackProxy::OnCallback(const std::string &extensionId, const std::s
 
 bool PrintCallbackProxy::OnCallback(const PrinterInfo &info, const std::vector<PpdInfo> &ppds)
 {
-    PRINT_HILOGD("PrintCallbackProxy::OnCallback printer driver Start");
+    PRINT_HILOGI("PrintCallbackProxy::OnCallback printer driver Start");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
@@ -143,7 +143,7 @@ bool PrintCallbackProxy::OnCallback(const PrinterInfo &info, const std::vector<P
         PRINT_HILOGE("SendRequest failed, error %{public}d", error);
         return false;
     }
-    PRINT_HILOGD("PrintCallbackProxy::OnCallback printer driver End");
+    PRINT_HILOGI("PrintCallbackProxy::OnCallback printer driver End");
     return true;
 }
 

@@ -18,6 +18,7 @@
 
 #include "iprint_service.h"
 #include "iremote_stub.h"
+#include "ppd_info.h"
 
 namespace OHOS::Print {
 class PrintServiceStub : public IRemoteStub<IPrintService> {

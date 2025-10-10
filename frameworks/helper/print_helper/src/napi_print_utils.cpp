@@ -212,7 +212,7 @@ napi_value NapiPrintUtils::CreateStringUtf8(napi_env env, const std::string &str
     return value;
 }
 
-std::string NapiPrintUtils::CreateStringVectorUtf8(napi_env env, const std::vector<std::string> &vec)
+napi_value NapiPrintUtils::CreateStringVectorUtf8(napi_env env, const std::vector<std::string> &vec)
 {
     napi_value array = nullptr;
     if (napi_create_array(env, &array) != napi_ok) {
@@ -234,7 +234,7 @@ std::string NapiPrintUtils::CreateStringVectorUtf8(napi_env env, const std::vect
     return array;
 }
 
-std::string NapiPrintUtils::CreatePpdInfoVectorUtf8(napi_env env, const std::vector<PpdInfo> &vec)
+napi_value NapiPrintUtils::CreatePpdInfoVectorUtf8(napi_env env, const std::vector<PpdInfo> &vec)
 {
     napi_value array = nullptr;
     if (napi_create_array(env, &array) != napi_ok) {

@@ -28,6 +28,7 @@ public:
     MOCK_METHOD0(OnCallback, bool());
     MOCK_METHOD2(OnCallback, bool(uint32_t, const PrinterInfo &));
     MOCK_METHOD2(OnCallback, bool(uint32_t, const PrintJob &));
+    MOCK_METHOD2(OnCallback, bool(const PrinterInfo &, const std::vector<PpdInfo> &));
     MOCK_METHOD2(OnCallback, bool(const std::string &, const std::string &));
 };
 }  // namespace Print

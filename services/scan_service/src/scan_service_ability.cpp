@@ -57,7 +57,6 @@
 #include "scan_log.h"
 #include "os_account_manager.h"
 #include "saneopts.h"
-#include "caller_app_monitor.h"
 
 namespace OHOS::Scan {
 using namespace std;
@@ -67,6 +66,7 @@ using SteadyTimePoint = std::chrono::steady_clock::time_point;
 
 const int64_t INIT_INTERVAL = 5000L;
 const uint32_t ASYNC_CMD_DELAY = 10;
+const int64_t UNLOAD_SYSTEMABILITY_DELAY = 1000 * 30;
 
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
@@ -139,10 +139,6 @@ void ScanServiceAbility::OnStart()
     }
 
     InitServiceHandler();
-    InitializeScanService();
-    CallerAppMonitor::GetInstance().StartCallerAppMonitor([this]() {
-        this->UnloadSystemAbility();
-    });
     int32_t ret = ServiceInit();
     if (ret != ERR_OK) {
         auto callback = [=]() { ServiceInit(); };
@@ -150,7 +146,6 @@ void ScanServiceAbility::OnStart()
         SCAN_HILOGE("ScanServiceAbility Init failed. Try again 5s later");
         return;
     }
-    
     state_ = ServiceRunningState::STATE_RUNNING;
     return;
 }
@@ -173,7 +168,6 @@ void ScanServiceAbility::ManualStart()
         SCAN_HILOGI("ScanServiceAbility restart.");
         OnStart();
     }
-    CallerAppMonitor::GetInstance().QueryCallerAppAndSave();
 }
 
 void ScanServiceAbility::OnStop()
@@ -187,22 +181,28 @@ void ScanServiceAbility::OnStop()
     state_ = ServiceRunningState::STATE_NOT_START;
     SCAN_HILOGI("OnStop end.");
 }
-
 void ScanServiceAbility::UnloadSystemAbility()
 {
-    CleanupScanService();
-    SaneManagerClient::GetInstance()->UnloadSystemAbility();
-    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (samgrProxy == nullptr) {
-        SCAN_HILOGE("get samgr failed");
-        return;
-    }
-    int32_t ret = samgrProxy->UnloadSystemAbility(SCAN_SERVICE_ID);
-    if (ret != ERR_OK) {
-        SCAN_HILOGE("unload scan_service failed");
-        return;
-    }
-    SCAN_HILOGI("unload scan_service successfully");
+    auto unloadTask = [this]() {
+        if (appCount_.load() != 0) {
+            SCAN_HILOGW("appCount = %{public}d is not equal to zerro", appCount_.load());
+            return;
+        }
+        CleanupScanService();
+        SaneManagerClient::GetInstance()->UnloadSystemAbility();
+        auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (samgrProxy == nullptr) {
+            SCAN_HILOGE("get samgr failed");
+            return;
+        }
+        int32_t ret = samgrProxy->UnloadSystemAbility(SCAN_SERVICE_ID);
+        if (ret != ERR_OK) {
+            SCAN_HILOGE("unload scan_service failed");
+            return;
+        }
+        SCAN_HILOGI("unload scan_service successfully");
+    };
+    serviceHandler_->PostTask(unloadTask, UNLOAD_SYSTEMABILITY_DELAY);
 }
 
 int32_t ScanServiceAbility::InitScan()
@@ -212,6 +212,11 @@ int32_t ScanServiceAbility::InitScan()
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
     }
+    if (appCount_.load() == 0) {
+        InitializeScanService();
+    }
+    appCount_.fetch_add(1);
+    SCAN_HILOGD("appCount = %{public}d", appCount_.load());
     return E_SCAN_NONE;
 }
 
@@ -221,6 +226,11 @@ int32_t ScanServiceAbility::ExitScan()
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
         return E_SCAN_NO_PERMISSION;
+    }
+    appCount_.fetch_sub(1);
+    SCAN_HILOGD("appCount = %{public}d", appCount_.load());
+    if (appCount_.load() == 0) {
+        UnloadSystemAbility();
     }
     return E_SCAN_NONE;
 }
@@ -661,7 +671,6 @@ int32_t ScanServiceAbility::ActionSetValue(
 int32_t ScanServiceAbility::OpScanOptionValue(
     const std::string scannerId, const int32_t optionIndex, const ScanOptionOpType op, ScanOptionValue &value)
 {
-    ManualStart();
     SCAN_HILOGD("ScanServiceAbility OpScanOptionValue start");
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         SCAN_HILOGE("no permission to access scan service");
@@ -759,7 +768,6 @@ int32_t ScanServiceAbility::CancelScan(const std::string scannerId)
 
 int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type, const sptr<IScanCallback> &listener)
 {
-    ManualStart();
     const std::string &permission = (SCAN_PERMISSION_MAP.find(type) != SCAN_PERMISSION_MAP.end())
                                         ? SCAN_PERMISSION_MAP.at(type)
                                         : PERMISSION_NAME_PRINT_JOB;
@@ -795,7 +803,6 @@ int32_t ScanServiceAbility::On(const std::string taskId, const std::string &type
 
 int32_t ScanServiceAbility::Off(const std::string taskId, const std::string &type)
 {
-    ManualStart();
     const std::string &permission = (SCAN_PERMISSION_MAP.find(type) != SCAN_PERMISSION_MAP.end())
                                         ? SCAN_PERMISSION_MAP.at(type)
                                         : PERMISSION_NAME_PRINT_JOB;

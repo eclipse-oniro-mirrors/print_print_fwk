@@ -38,6 +38,10 @@ public:
     {
         return true;
     }
+    bool OnCallback(const PrinterInfo &info, const std::vector<PpdInfo> &ppds) override
+    {
+        return true;
+    }
     bool OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
         const PrintAttributes &newAttrs, uint32_t fd) override
     {
@@ -60,6 +64,7 @@ public:
     MOCK_METHOD2(OnCallback, bool(uint32_t, const PrinterInfo &));
     MOCK_METHOD2(OnCallback, bool(uint32_t, const PrintJob &));
     MOCK_METHOD2(OnCallback, bool(const std::string &, const std::string &));
+    MOCK_METHOD2(OnCallback, bool(const PrinterInfo &, const std::vector<PpdInfo> &));
 };
 }  // namespace Print
 }  // namespace OHOS

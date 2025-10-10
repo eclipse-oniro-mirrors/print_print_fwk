@@ -22,7 +22,7 @@
 #include "printer_preferences.h"
 
 namespace OHOS::Print {
-class PrinterInfo final : public Parcelable {
+class PpdInfo final : public Parcelable {
 public:
     void SetManufacturer(const std::string &manufacturer);
 
@@ -42,7 +42,7 @@ public:
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
-    static std::shar_ptr<PpdInfo> Unmarshalling(Parcel &parcel);
+    static std::shared_ptr<PpdInfo> Unmarshalling(Parcel &parcel);
 
 private:
 

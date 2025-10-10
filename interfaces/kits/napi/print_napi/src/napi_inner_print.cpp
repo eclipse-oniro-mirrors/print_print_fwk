@@ -630,7 +630,7 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
     PRINT_HILOGD("type : %{public}s", type.c_str());
 
     if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
-        type = PRINT_QUERY_INFO_EVENT_TYPE) {
+        type == PRINT_QUERY_INFO_EVENT_TYPE) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
             PRINT_HILOGE("Non-system applications use system APIS!");
             NapiThrowError(env, E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
@@ -681,7 +681,7 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
     PRINT_HILOGD("type : %{public}s", type.c_str());
 
     if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
-        type = PRINT_QUERY_INFO_EVENT_TYPE) {
+        type == PRINT_QUERY_INFO_EVENT_TYPE) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
             PRINT_HILOGE("Non-system applications use system APIS!");
             NapiThrowError(env, E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
@@ -1130,6 +1130,7 @@ napi_value NapiInnerPrint::QueryAllPrinterPpds(napi_env env, napi_callback_info 
         return napi_ok;
     };
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        PRINT_HILOGI("QueryAllPrinterPpds output Enter ---->");
         napi_status status = napi_create_array(env, result);
         if (status != napi_ok) {
             return status;
@@ -1174,7 +1175,7 @@ napi_value NapiInnerPrint::QueryPrinterInfoByIp(napi_env env, napi_callback_info
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
         napi_valuetype valueType;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valueType), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerIp is not a string", napi_string_expected);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "printerIp is not a string", napi_string_expected);
         std::string printerIp = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         if (printerIp.empty()) {
             PRINT_HILOGE("printerIp is empty!");
@@ -1199,7 +1200,7 @@ napi_value NapiInnerPrint::QueryPrinterInfoByIp(napi_env env, napi_callback_info
             PrintManagerClient::GetInstance()->QueryPrinterInfoByIp(context->printerId);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("Failed to query printer info");
+            PRINT_HILOGE("Failed to Query printer info");
             context->SetErrorIndex(ret);
         }
     };
@@ -1215,16 +1216,16 @@ napi_value NapiInnerPrint::ConnectPrinterByIpAndPpd(napi_env env, napi_callback_
     auto input =
         [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 3 parameter!", napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
         napi_valuetype valueType;
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valueType), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerIp is not a string", napi_string_expected);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "printerIp is not a string", napi_string_expected);
         std::string printerIp = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valueType), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "protocol is not a string", napi_string_expected);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "protocol is not a string", napi_string_expected);
         std::string protocol = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valueType), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "protocol is not a string", napi_string_expected);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "ppdName is not a string", napi_string_expected);
         std::string ppdName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
         if (printerIp.empty()) {
             PRINT_HILOGE("printerIp is empty!");
@@ -1274,7 +1275,7 @@ napi_value NapiInnerPrint::ConnectPrinterByIpAndPpd(napi_env env, napi_callback_
 bool NapiInnerPrint::IsSupportType(const std::string &type)
 {
     if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
-        type == PRINTER_CHANGE_EVENT_TYPE) {
+        type == PRINTER_CHANGE_EVENT_TYPE || type == PRINT_QUERY_INFO_EVENT_TYPE) {
         return true;
     }
     return false;

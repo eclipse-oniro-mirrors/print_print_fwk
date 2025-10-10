@@ -316,5 +316,62 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0009_NeedRename, TestSiz
     EXPECT_FALSE(proxy->OnCallbackAdapterJobStateChanged(jobId, testState, testSubState));
 }
 
+HWTEST_F(PrintCallbackProxyTest, PrintQueryInfoCallbackProxyTest_ReturnTure, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintCallbackProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(service, nullptr);
+
+    PrinterInfo testInfo;
+    std::string testId = "com.sample.ext:1";
+    testInfo.SetPrinterId(testId);
+    std::vector<PpdInfo> testVec;
+    PpdInfo info;
+    info.SetPpdInfo("testmanu", "testnick", "test.ppd");
+    testVec.push_back(info);
+
+    EXPECT_CALL(*service, OnCallback(Matcher<const PrinterInfo &>(PrinterInfoMatcher(testInfo)), testVec))
+        .Times(1)
+        .WillOnce(Return(true));
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(Exactly(1));
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    EXPECT_TRUE(proxy->OnCallback(testInfo, testVec));
+}
+
+HWTEST_F(PrintCallbackProxyTest, PrintQueryInfoCallbackProxyTest_ReturnFalse, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintCallbackProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(service, nullptr);
+
+    PrinterInfo testInfo;
+    std::string testId = "com.sample.ext:1";
+    testInfo.SetPrinterId(testId);
+    std::vector<PpdInfo> testVec;
+    PpdInfo info;
+    info.SetPpdInfo("testmanu", "testnick", "test.ppd");
+    testVec.push_back(info);
+
+    EXPECT_CALL(*service, OnCallback(Matcher<const PrinterInfo &>(PrinterInfoMatcher(testInfo)), testVec))
+        .Times(1)
+        .WillOnce(Return(false));
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(Exactly(1));
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_RPC_FAILURE;
+        });
+    EXPECT_TRUE(proxy->OnCallback(testInfo, testVec));
+}
 }  // namespace Print
 }  // namespace OHOS

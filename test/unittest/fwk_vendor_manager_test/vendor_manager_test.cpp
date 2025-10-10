@@ -393,5 +393,23 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0013, TestSize.Level2)
     vendorManager.OnPrinterStatusChanged(VENDOR_BSUNI_DRIVER, printerId, status);
     vendorManager.UnInit();
 }
+
+HWTEST_F(VendorManagerTest, SetState_test, TestSize.Level2)
+{
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_CALL(*mock, DiscoverBackendPrinters(_)).WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_EQ(vendorManager.DiscoverBackendPrinters(VENDOR_PPD_DRIVER, printers), EXTENSION_ERROR_NONE);
+}
+
+HWTEST_F(VendorManagerTest, DiscoverBackendPrinters_WhenAfterUninit_ShouldFail, TestSize.Level2)
+{
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    vendorManager.UnInit();
+    std::vector<PrinterInfo> printers;
+    EXPECT_EQ(vendorManager.DiscoverBackendPrinters(VENDOR_PPD_DRIVER, printers), EXTENSION_ERROR_CALLBACK_FAIL);
+}
 }  // namespace Print
 }  // namespace OHOS
