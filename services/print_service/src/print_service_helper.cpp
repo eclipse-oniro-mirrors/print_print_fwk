@@ -76,9 +76,9 @@ bool PrintServiceHelper::StartAbility(const AAFwk::Want &want)
     return true;
 }
 
-bool PrintServiceHelper::StartPluginPrintIconExtAbility(const AAFwk::Want &want)
+bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want)
 {
-    PRINT_HILOGD("enter PrintServiceHelper::StartPluginPrintIconExtAbility");
+    PRINT_HILOGD("enter PrintServiceHelper::StartExtensionAbility");
     PRINT_HILOGD("want: %{public}s", want.ToUri().c_str());
     AppExecFwk::ElementName element = want.GetElement();
     AAFwk::AbilityManagerClient::GetInstance()->Connect();
@@ -88,20 +88,20 @@ bool PrintServiceHelper::StartPluginPrintIconExtAbility(const AAFwk::Want &want)
         PRINT_HILOGE("fail to create printAbilityConnection");
         return false;
     }
-    PRINT_HILOGD("PrintServiceHelper::StartPluginPrintIconExtAbility %{public}s %{public}s",
+    PRINT_HILOGD("PrintServiceHelper::StartExtensionAbility %{public}s %{public}s",
         element.GetBundleName().c_str(),
         element.GetAbilityName().c_str());
     while (retry++ < MAX_RETRY_TIMES) {
         if (AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, printAbilityConnection, -1) == 0) {
-            PRINT_HILOGI("PrintServiceHelper::StartPluginPrintIconExtAbility ConnectAbility success");
+            PRINT_HILOGI("PrintServiceHelper::StartExtensionAbility ConnectAbility success");
             printAbilityConnection_ = printAbilityConnection;
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
-        PRINT_HILOGE("PrintServiceHelper::StartPluginPrintIconExtAbility %{public}d", retry);
+        PRINT_HILOGE("PrintServiceHelper::StartExtensionAbility %{public}d", retry);
     }
     if (retry > MAX_RETRY_TIMES) {
-        PRINT_HILOGE("PrintServiceHelper::StartPluginPrintIconExtAbility --> failed ");
+        PRINT_HILOGE("PrintServiceHelper::StartExtensionAbility --> failed ");
         return false;
     }
     return true;

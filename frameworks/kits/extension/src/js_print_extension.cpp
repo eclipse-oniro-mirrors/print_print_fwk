@@ -31,6 +31,7 @@
 #include "print_manager_client.h"
 #include "printer_capability.h"
 #include "print_job_helper.h"
+#include "print_extension_ability_stub.h"
 #include "print_utils.h"
 
 namespace OHOS {
@@ -206,37 +207,10 @@ sptr<IRemoteObject> JsPrintExtension::OnConnect(const AAFwk::Want &want)
 {
     PRINT_HILOGI("JsPrintExtension OnConnect begin.");
     Extension::OnConnect(want);
-    PRINT_HILOGD("%{public}s begin.", __func__);
-    HandleScope handleScope(jsRuntime_);
-    napi_env nativeEngine = jsRuntime_.GetNapiEnv();
-    napi_value nativeWant = OHOS::AppExecFwk::WrapWant(nativeEngine, want);
-    napi_value argv[] = { nativeWant };
-    if (!jsObj_) {
-        PRINT_HILOGW("Not found PrintExtension.js");
-        return nullptr;
-    }
-
-    napi_value obj = jsObj_->GetNapiValue();
-    if (obj == nullptr) {
-        PRINT_HILOGE("Failed to get PrintExtension object");
-        return nullptr;
-    }
-
-    napi_value method = nullptr;
-    if (napi_get_named_property(nativeEngine, obj, "onConnect", &method) != napi_ok ||
-        method == nullptr) {
-        PRINT_HILOGE("Failed to get onConnect from PrintExtension object");
-        return nullptr;
-    }
-    PRINT_HILOGD("JsPrintExtension::napi_call_function onConnect, success");
-    napi_value remoteNative = nullptr;
-    napi_call_function(nativeEngine, obj, method, NapiPrintUtils::ARGC_ONE, argv, &remoteNative);
-    if (remoteNative == nullptr) {
-        PRINT_HILOGE("remoteNative nullptr.");
-    }
-    auto remoteObj = NAPI_ohos_rpc_getNativeRemoteObject(nativeEngine, remoteNative);
+    auto remoteObj = new (std::nothrow) Print::PrintExtensionAbilityStub();
     if (remoteObj == nullptr) {
         PRINT_HILOGE("remoteObj nullptr.");
+        return nullptr;
     }
     return remoteObj;
 }
@@ -245,31 +219,6 @@ void JsPrintExtension::OnDisconnect(const AAFwk::Want &want)
 {
     PRINT_HILOGI("JsPrintExtension OnDisconnect begin.");
     Extension::OnDisconnect(want);
-    PRINT_HILOGD("%{public}s begin.", __func__);
-    HandleScope handleScope(jsRuntime_);
-    napi_env nativeEngine = jsRuntime_.GetNapiEnv();
-    napi_value nativeWant = OHOS::AppExecFwk::WrapWant(nativeEngine, want);
-    napi_value argv[] = { nativeWant };
-    if (!jsObj_) {
-        PRINT_HILOGW("Not found PrintExtension.js");
-        return;
-    }
-
-    napi_value obj = jsObj_->GetNapiValue();
-    if (obj == nullptr) {
-        PRINT_HILOGE("Failed to get PrintExtension object");
-        return;
-    }
-
-    napi_value method = nullptr;
-    if (napi_get_named_property(nativeEngine, obj, "onDisconnect", &method) != napi_ok ||
-        method == nullptr) {
-        PRINT_HILOGE("Failed to get onDisconnect from PrintExtension object");
-        return;
-    }
-    napi_value callResult = nullptr;
-    napi_call_function(nativeEngine, obj, method, NapiPrintUtils::ARGC_ONE, argv, &callResult);
-    PRINT_HILOGD("%{public}s end.", __func__);
 }
 
 void JsPrintExtension::OnCommand(const AAFwk::Want &want, bool restart, int startId)

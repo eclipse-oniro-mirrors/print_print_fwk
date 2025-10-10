@@ -1707,9 +1707,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0103_NeedRename, TestS
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     service->helper_ = nullptr;
     AAFwk::Want want;
-    EXPECT_FALSE(service->StartPluginPrintIconExtAbility(want));
+    EXPECT_FALSE(service->StartExtensionAbility(want));
     service->helper_ = std::make_shared<PrintServiceHelper>();
-    service->StartPluginPrintIconExtAbility(want);
+    service->StartExtensionAbility(want);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0104_NeedRename, TestSize.Level1)

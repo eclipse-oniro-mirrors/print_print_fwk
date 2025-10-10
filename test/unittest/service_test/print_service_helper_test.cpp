@@ -177,7 +177,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0010_NeedRename, TestSiz
 
 /**
  * @tc.name: PrintServiceHelperTest_0011
- * @tc.desc: StartPluginPrintIconExtAbility
+ * @tc.desc: StartExtensionAbility
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -185,7 +185,7 @@ HWTEST_F(PrintServiceHelperTest, PrintServiceHelperTest_0011_NeedRename, TestSiz
 {
     PrintServiceHelper helper;
     AAFwk::Want want;
-    EXPECT_FALSE(helper.StartPluginPrintIconExtAbility(want));
+    EXPECT_FALSE(helper.StartExtensionAbility(want));
 }
 }  // namespace Print
 }  // namespace OHOS
