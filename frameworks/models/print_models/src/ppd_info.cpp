@@ -63,19 +63,19 @@ bool PpdInfo::ReadFromParcel(Parcel &parcel)
         return false;
     }
     std::string element = parcel.ReadString();
-    if (element == "") {
+    if (element.empty()) {
         PRINT_HILOGE("manufacturer is empty");
         return false;
     }
     SetManufacturer(element);
     element = parcel.ReadString();
-    if (element == "") {
+    if (element.empty()) {
         PRINT_HILOGE("nickName is empty");
         return false;
     }
     SetNickName(element);
     element = parcel.ReadString();
-    if (element == "") {
+    if (element.empty()) {
         PRINT_HILOGE("ppdName is empty");
         return false;
     }
@@ -85,25 +85,25 @@ bool PpdInfo::ReadFromParcel(Parcel &parcel)
 
 bool PpdInfo::Marshalling(Parcel &parcel) const
 {
-    if (!parcel.Writestring(GetManufacturer())) {
+    if (!parcel.WriteString(GetManufacturer())) {
         PRINT_HILOGE("parcel WriteString Manufacturer failed");
         return false;
     }
-    if (!parcel.Writestring(GetNickName())) {
+    if (!parcel.WriteString(GetNickName())) {
         PRINT_HILOGE("parcel WriteString NickName failed");
         return false;
     }
-    if (!parcel.Writestring(GetPpdName())) {
+    if (!parcel.WriteString(GetPpdName())) {
         PRINT_HILOGE("parcel WriteString PpdName failed");
         return false;
     }
     return true;
 }
 
-static PpdInfo::std::shar_ptr<PpdInfo> Unmarshalling(Parcel &parcel)
+std::shared_ptr<PpdInfo> PpdInfo::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<PpdInfo>();
-    if (!nativeObj->ReadFromParcel()) {
+    if (!nativeObj->ReadFromParcel(parcel)) {
         return nullptr;
     }
     return nativeObj;
