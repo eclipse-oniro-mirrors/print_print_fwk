@@ -137,7 +137,6 @@ void VendorManager::UnInit()
 bool VendorManager::LoadVendorDriver(std::shared_ptr<VendorDriverBase> vendorDriver)
 {
     PRINT_HILOGI("LoadVendorDriver enter");
-    PRINT_HILOGI("LoadVendorDriver enter");
     if (vendorDriver == nullptr) {
         PRINT_HILOGW("vendorDriver is null");
         return false;
@@ -153,7 +152,6 @@ bool VendorManager::LoadVendorDriver(std::shared_ptr<VendorDriverBase> vendorDri
 }
 bool VendorManager::UnloadVendorDriver(const std::string &vendorName)
 {
-    PRINT_HILOGI("LoadVendorDriver enter");
     PRINT_HILOGI("LoadVendorDriver enter");
     std::lock_guard<std::mutex> lock(vendorMapMutex);
     auto iter = vendorMap.find(vendorName);
@@ -523,7 +521,6 @@ bool VendorManager::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, 
         connectingPrinter.c_str());
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     if (connectingState == STATE_CONNECTING && !connectingPrinter.empty()) {
-    if (connectingState == STATE_CONNECTING && !connectingPrinter.empty()) {
         if (connectingMethod == ID_AUTO) {
             return globalPrinterIdOrIp == connectingPrinter;
         } else {
@@ -651,22 +648,6 @@ bool VendorManager::QueryPrinterCapabilityByUri(const std::string &uri, PrinterC
     return printServiceAbility->QueryPrinterCapabilityByUri(uri, printerCap);
 }
 
-bool IsBsunidriverSupport(const PrinterInfo &printerInfo)
-{
-    if (wlanGroupDriver != nullptr) {
-        return wlanGroupDriver->IsBsunidriverSupport(printerInfo);
-    }
-    return false;
-}
-
-bool IsBsunidriverSupport(const PrinterInfo &printerInfo)
-{
-    if (wlanGroupDriver != nullptr) {
-        return wlanGroupDriver->IsBsunidriverSupport(printerInfo);
-    }
-    return false;
-}
-
 bool VendorManager::QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status)
 {
     if (printServiceAbility == nullptr) {
@@ -756,13 +737,6 @@ void VendorManager::AddPrintEvent(const std::string &vendorName, const std::stri
     printServiceAbility->AddPrintEvent(globalPrinterId, eventType, eventCode);
 }
 
-bool VendorManager::IsBsunidriverSupport(const PrinterInfo &printerInfo)
-{
-    if (wlanGroupDriver != nullptr) {
-        return wlanGroupDriver->IsBsunidriverSupport(printerInfo);
-    }
-    return false;
-}
 bool VendorManager::IsBsunidriverSupport(const PrinterInfo &printerInfo)
 {
     if (wlanGroupDriver != nullptr) {
