@@ -2696,7 +2696,7 @@ bool PrintCupsClient::QueryAllPPDInformation(const std::string &makeModel, std::
         }
     }
     PRINT_HILOGI("QueryAllPPDInformation done.");
-    return true;  
+    return true;
 }
 
 int32_t PrintCupsClient::GetAllPPDFile(std::vector<PpdInfo> &ppdInfos)
