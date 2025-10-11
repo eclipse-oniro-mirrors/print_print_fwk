@@ -119,7 +119,7 @@ private:
     std::recursive_mutex apiMutex_;
     std::recursive_mutex scanMutex_;
     std::vector<ScanDeviceInfo> deviceInfos_;
-    std::atomic<int32_t> appCount_{0};
+    std::atomic<int32_t> scannerState_{SCANNER_READY};
     ScannerDiscoverData& scannerDiscoverData_ = ScannerDiscoverData::GetInstance();
     ScanPictureData& scanPictureData_ = ScanPictureData::GetInstance();
 };
