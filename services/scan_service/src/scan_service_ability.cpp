@@ -953,7 +953,7 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
         SCAN_HILOGE("scannerId %{private}s is not opened", scannerId.c_str());
         return E_SCAN_INVALID_PARAMETER;
     }
-    int32_t status = scanPictureData_.GetPictureProgressInQueue(prog);
+    int32_t status = scanPictureData_.GetPictureProgressInQueue(prog, IPCSkeleton::GetCallingPid());
     if (status != E_SCAN_NONE) {
         SCAN_HILOGE("scanprogress exception occurred:[%{public}u]", status);
         return status;
@@ -1098,6 +1098,7 @@ int32_t ScanServiceAbility::StartScan(const std::string scannerId, const bool &b
         StartScanTask(task);
     };
     serviceHandler_->PostTask(exe, ASYNC_CMD_DELAY);
+    scanPictureData_.SetCallerPid(IPCSkeleton::GetCallingPid());
     SCAN_HILOGI("StartScan successfully");
     return E_SCAN_NONE;
 }

@@ -32,7 +32,8 @@ public:
     void SetNowScanProgressFinished(bool isFinal);
     void SetLastScanProgressFinished();
     bool SetImageRealPath(const std::string& filePath);
-    int32_t GetPictureProgressInQueue(ScanProgress& scanProgress);
+    void SetCallerPid(int32_t callerPid);
+    int32_t GetPictureProgressInQueue(ScanProgress& scanProgress, int32_t callerPid);
     void CleanPictureData();
     void PushScanPictureProgress();
 
@@ -45,6 +46,7 @@ private:
     std::map<std::string, int32_t> imageFdMap_;
     std::map<int32_t, ScanProgress> scanTaskMap_;
     int32_t picId_ = 0;
+    int32_t callerPid_ = 0;
 };
 
 } // namespace OHOS::Scan
