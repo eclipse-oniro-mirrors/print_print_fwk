@@ -307,7 +307,6 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0012, TestSize.Level1)
 HWTEST_F(VendorHelperTest, UpdatePrinterDetailInfoToJsonTest, TestSize.Level1)
 {
     Json::Value option;
-    //EXPECT_FALSE(UpdatePrinterDetailInfoToJson(option, nullptr));
     std::string detailInfo;
     EXPECT_FALSE(UpdatePrinterDetailInfoToJson(option, detailInfo));
     detailInfo = "{\"key\":\"value\"}";
