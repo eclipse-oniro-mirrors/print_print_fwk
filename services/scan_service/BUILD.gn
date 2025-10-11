@@ -141,6 +141,6 @@ ohos_static_library("scan_service_test") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
   }
 
-  subsystem_name = "print"
-  part_name = "print_fwk"
+  subsystem_name = "print"	
+  part_name = "print_fwk"	
 }
