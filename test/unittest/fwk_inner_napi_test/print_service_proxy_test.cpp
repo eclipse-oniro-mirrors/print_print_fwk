@@ -973,5 +973,41 @@ HWTEST_F(PrintServiceProxyTest, QueryAllPrinterPpdsTest, TestSize.Level1)
     proxy->QueryAllPrinterPpds(testPpds);
 }
 
+/**
+ * @tc.name: PrintServiceProxyTest_AddRawPrinter_Success
+ * @tc.desc: Verify the AddRawPrinter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_AddRawPrinter_Success, TestSize.Level0)
+{
+    OHOS::Print::PrinterInfo info;
+    info.SetOption("option");
+
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, AddRawPrinter(_))
+        .Times(Exactly(1))
+        .WillOnce([&info](OHOS::Print::PrinterInfo &printerInfo) {
+            EXPECT_EQ(info.GetOption(), printerInfo.GetOption());
+            return E_PRINT_NONE;
+        });
+
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    int32_t ret = proxy->AddRawPrinter(info);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
 }  // namespace Print
 }  // namespace OHOS

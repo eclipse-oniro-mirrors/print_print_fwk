@@ -137,6 +137,18 @@ int32_t PrintManagerClient::DisconnectPrinter(const std::string &printerId)
     return ret;
 }
 
+int32_t PrintManagerClient::AddRawPrinter(PrinterInfo &info)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGD("PrintManagerClient AddRawPrinter start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->AddRawPrinter(info);
+        PRINT_HILOGD("PrintManagerClient AddRawPrinter out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos)
 {
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
@@ -342,6 +354,18 @@ int32_t PrintManagerClient::QueryAddedPrinter(std::vector<std::string> &printerN
     if (LoadServer() && GetPrintServiceProxy()) {
         ret = printServiceProxy_->QueryAddedPrinter(printerNameList);
         PRINT_HILOGI("PrintManagerClient QueryAddedPrinter out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::QueryRawAddedPrinter(std::vector<std::string> &printerNameList)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGD("PrintManagerClient QueryRawAddedPrinter start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->QueryRawAddedPrinter(printerNameList);
+        PRINT_HILOGD("PrintManagerClient QueryRawAddedPrinter out ret = [%{public}d].", ret);
     }
     return ret;
 }

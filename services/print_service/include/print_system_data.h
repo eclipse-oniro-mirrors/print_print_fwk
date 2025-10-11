@@ -44,6 +44,7 @@ public:
         PrinterInfo &printer, std::string printerId, PrinterCapability &printerCapability);
     void DeleteAddedPrinter(const std::string &printerId, const std::string &printerName);
     void GetAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList);
+    void GetRawAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList);
     void UpdatePrinterStatus(const std::string &printerId, PrinterStatus printerStatus);
     bool UpdatePrinterAlias(const std::string &printerId, const std::string &printerAlias);
     void UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &printerInfo);
@@ -113,7 +114,7 @@ private:
     void SaveJsonFile(const std::string &fileName, const std::string &jsonString);
     PrintMapSafe<PrinterInfo>& GetAddedPrinterMap();
     const std::string& GetPrintersPath();
-    
+
     template<typename T>
     bool ProcessJsonToCapabilityList(Json::Value &capsJson,
                                      const std::string &key,
@@ -153,7 +154,7 @@ private:
         if (vec.size() == 0) {
             return std::nullopt;
         }
-    
+
         for (const auto& elem : vec) {
             if (elem == defaultValue) {
                 return elem;

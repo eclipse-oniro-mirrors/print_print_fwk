@@ -66,6 +66,8 @@ private:
 
     bool OnQueryPrinterInfoByPrinterId(MessageParcel &data, MessageParcel &reply);
     bool OnQueryAddedPrinter(MessageParcel &data, MessageParcel &reply);
+    bool OnQueryRawAddedPrinter(MessageParcel &data, MessageParcel &reply);
+    bool OnAddRawPrinter(MessageParcel &data, MessageParcel &reply);
     bool OnQueryPrinterProperties(MessageParcel &data, MessageParcel &reply);
     bool OnStartNativePrintJob(MessageParcel &data, MessageParcel &reply);
     bool OnNotifyPrintServiceEvent(MessageParcel &data, MessageParcel &reply);

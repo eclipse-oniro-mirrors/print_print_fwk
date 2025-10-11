@@ -1615,6 +1615,53 @@ HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0104_NeedRename, TestSize.Leve
     EXPECT_EQ(printer.GetUri(), uri);
 }
 
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_GetRawAddedPrinterListFromSystemData_HaveRawPrinter, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+
+    std::string printerId = "printer_001";
+    std::string printerName = "RAW_Printer";
+    std::string printerUri = "ipp://test_printer";
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterName(printerName);
+    printerInfo.SetUri(printerUri);
+
+    Json::Value optionJson;
+    optionJson["driver"]= "RAW";
+    std::string option = PrintJsonUtil::WriteString(optionJson);
+    printerInfo.SetOption(option);
+    systemData->addedPrinterMap_.Insert(printerId, std::make_shared<PrinterInfo>(printerInfo));
+    std::vector<std::string> printerNameList;
+    systemData->GetRawAddedPrinterListFromSystemData(printerNameList);
+    EXPECT_EQ(printerNameList.size(), 1);
+    EXPECT_EQ(printerNameList[0], printerName);
+}
+
+HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_GetRawAddedPrinterListFromSystemData_NoRawPrinter, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    EXPECT_NE(systemData, nullptr);
+    std::string printerId = "printer_002";
+    std::string printerName = "Non_RAW_Printer";
+    std::string printerUri = "ipp://test_printer";
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterName(printerName);
+    printerInfo.SetUri(printerUri);
+
+    Json::Value optionJson;
+    optionJson["driver"] = "ipp";
+    std::string option = PrintJsonUtil::WriteString(optionJson);
+    printerInfo.SetOption(option);
+    systemData->addedPrinterMap_.Insert(printerId, std::make_shared<PrinterInfo>(printerInfo));
+
+    std::vector<std::string> printerNameList;
+    systemData->GetRawAddedPrinterListFromSystemData(printerNameList);
+    EXPECT_EQ(printerNameList.size(), 0);
+}
+
 HWTEST_F(PrintSystemDataTest, BuildPrinterPreferenceByDefault_WrongTypeValueInJson_HasDefaultPageSizeIdReturnFalse,
     TestSize.Level1)
 {

@@ -50,6 +50,7 @@ public:
     int32_t StartPrint(const std::vector<std::string> &fileList,
         const std::vector<uint32_t> &fdList, std::string &taskId);
     int32_t QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos);
+    int32_t AddRawPrinter(PrinterInfo &info);
     int32_t StartDiscoverPrinter(const std::vector<std::string> &extensionList);
     int32_t StopDiscoverPrinter();
     int32_t AddPrinters(const std::vector<PrinterInfo> &printerInfos);
@@ -78,6 +79,7 @@ public:
     int32_t DeletePrinterFromCups(const std::string &printerName);
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info);
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList);
+    int32_t QueryRawAddedPrinter(std::vector<std::string> &printerNameList);
     int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList);
     int32_t StartNativePrintJob(PrintJob &printJob);

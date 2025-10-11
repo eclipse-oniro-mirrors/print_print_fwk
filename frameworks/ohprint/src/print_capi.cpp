@@ -152,6 +152,34 @@ static void ReleasePrintAttributes(Print_PrintAttributes *attr)
     delete attr;
 }
 
+static void SetInitRawPrinterInfo(const std::string &printerId,
+                                  const std::string &printerName,
+                                  const std::string &printerUri,
+                                  PrinterInfo &info)
+{
+    PrinterCapability cap;
+    std::vector<PrintPageSize> supportedPageSizes;
+    PrintPageSize a4PageSize;
+    if (PrintPageSize::FindPageSizeById("ISO_A4", a4PageSize)) {
+        supportedPageSizes.push_back(a4PageSize);
+    }
+    cap.SetSupportedPageSize(supportedPageSizes);
+
+    std::vector<uint32_t> supportedColorModes = {PrintColorMode::PRINT_COLOR_MODE_MONOCHROME};
+    cap.SetSupportedColorMode(supportedColorModes);
+    std::vector<uint32_t> supportedDuplexModes = {PrintDuplexMode::DUPLEX_MODE_NONE};
+    cap.SetSupportedDuplexMode(supportedDuplexModes);
+    std::vector<uint32_t> supportedQualities = {PrintQualityCode::PRINT_QUALITY_DRAFT};
+    cap.SetSupportedQuality(supportedQualities);
+    std::vector<uint32_t> supportedOrientations = {PrintOrientationMode::PRINT_ORIENTATION_MODE_PORTRAIT};
+    cap.SetSupportedOrientation(supportedOrientations);
+
+    info.SetPrinterId(printerId);
+    info.SetPrinterName(printerName);
+    info.SetUri(printerUri);
+    info.SetCapability(cap);
+}
+
 // 初始化
 Print_ErrorCode OH_Print_Init()
 {
@@ -166,6 +194,56 @@ Print_ErrorCode OH_Print_Release()
     int32_t ret = PrintManagerClient::GetInstance()->Release();
     PRINT_HILOGI("OH_Print_Release ret = [%{public}d]", ret);
     return ConvertToNativeErrorCode(ret);
+}
+
+Print_ErrorCode OH_Print_AddRawPrinter(const char *printerId, const char *printerName, const char *printerUri)
+{
+    PRINT_HILOGI("OH_Print_AddRawPrinter");
+    if (printerId == nullptr || printerName == nullptr || printerUri == nullptr) {
+        PRINT_HILOGI("OH_Print_AddRawPrinter invalid param.");
+        return PRINT_ERROR_INVALID_PARAMETER;
+    }
+
+    PrinterInfo info;
+    SetInitRawPrinterInfo(printerId, printerName, printerUri, info);
+    int32_t ret = PrintManagerClient::GetInstance()->AddRawPrinter(info);
+    if (ret != PRINT_ERROR_NONE) {
+        PRINT_HILOGI("AddRawPrinter failed, ret = [%{public}d], printerId = [%{private}s].", ret, printerId);
+        return ConvertToNativeErrorCode(ret);
+    }
+
+    return PRINT_ERROR_NONE;
+}
+
+Print_ErrorCode OH_Print_GetRawPrinterList(Print_StringList *printerIdList)
+{
+    if (printerIdList == nullptr) {
+        PRINT_HILOGW("printerIdList is null.");
+        return PRINT_ERROR_INVALID_PARAMETER;
+    }
+    std::vector<std::string> printerNameList;
+    int32_t ret = PrintManagerClient::GetInstance()->QueryRawAddedPrinter(printerNameList);
+    size_t count = printerNameList.size();
+    PRINT_HILOGI("OH_Print_GetRawPrinterList ret = %{public}d, count = %{public}zu.", ret, count);
+    if (ret != 0 || count == 0) {
+        return PRINT_ERROR_INVALID_PRINTER;
+    }
+    printerIdList->list = new (std::nothrow) char *[count];
+    if (printerIdList->list == nullptr) {
+        PRINT_HILOGW("printerIdList->list is null");
+        return PRINT_ERROR_GENERIC_FAILURE;
+    }
+    if (memset_s(printerIdList->list, count * sizeof(char *), 0, count * sizeof(char *)) != 0) {
+        delete[] printerIdList->list;
+        printerIdList->list = nullptr;
+        PRINT_HILOGW("memset_s fail");
+        return PRINT_ERROR_GENERIC_FAILURE;
+    }
+    for (size_t i = 0; i < count; ++i) {
+        printerIdList->list[i] = CopyString(printerNameList[i]);
+    }
+    printerIdList->count = count;
+    return PRINT_ERROR_NONE;
 }
 
 Print_ErrorCode OH_Print_StartPrinterDiscovery(Print_PrinterDiscoveryCallback callback)

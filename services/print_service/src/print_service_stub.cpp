@@ -52,6 +52,8 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_OFF] = &PrintServiceStub::OnEventOff;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_EXT_CB] = &PrintServiceStub::OnRegisterExtCallback;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_LOAD_EXT] = &PrintServiceStub::OnLoadExtSuccess;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_ADD_RAW_PRINTER] = &PrintServiceStub::OnAddRawPrinter;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYRAWADDEDPRINTER] = &PrintServiceStub::OnQueryRawAddedPrinter;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLACTIVEPRINTJOB] = &PrintServiceStub::OnQueryAllActivePrintJob;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYALLPRINTJOB] =
         &PrintServiceStub::OnQueryAllPrintJob;
@@ -215,6 +217,23 @@ bool PrintServiceStub::OnStopDiscoverPrint(MessageParcel &data, MessageParcel &r
     return ret == E_PRINT_NONE;
 }
 
+bool PrintServiceStub::OnAddRawPrinter(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnAddRawPrinter in");
+    auto printerInfoPtr = PrinterInfo::Unmarshalling(data);
+    if (printerInfoPtr == nullptr) {
+        PRINT_HILOGE("Failed to unmarshall printer info");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+    printerInfoPtr->Dump();
+
+    int32_t ret = AddRawPrinter(*printerInfoPtr);
+    reply.WriteInt32(ret);
+    PRINT_HILOGD("PrintServiceStub::OnAddRawPrinter out");
+    return ret == E_PRINT_NONE;
+}
+
 bool PrintServiceStub::OnQueryAllExtension(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnQueryAllExtension in");
@@ -322,12 +341,23 @@ bool PrintServiceStub::OnQueryAddedPrinter(MessageParcel &data, MessageParcel &r
 {
     PRINT_HILOGI("PrintServiceStub::OnQueryAddedPrinter in");
     std::vector<std::string> printerNameList;
-    
     int32_t ret = QueryAddedPrinter(printerNameList);
     reply.WriteInt32(ret);
     reply.WriteStringVector(printerNameList);
-    
     PRINT_HILOGI("PrintServiceStub::OnQueryAddedPrinter out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnQueryRawAddedPrinter(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnQueryRawAddedPrinter in");
+    std::vector<std::string> printerNameList;
+
+    int32_t ret = QueryRawAddedPrinter(printerNameList);
+    reply.WriteInt32(ret);
+    reply.WriteStringVector(printerNameList);
+
+    PRINT_HILOGI("PrintServiceStub::OnQueryRawAddedPrinter out");
     return ret == E_PRINT_NONE;
 }
 
