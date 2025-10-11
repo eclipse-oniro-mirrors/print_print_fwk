@@ -190,18 +190,18 @@ void ScanServiceAbility::OnStop()
 
 void ScanServiceAbility::UnloadSystemAbility()
 {
-    CleanupScanService();	
-    SaneManagerClient::GetInstance()->UnloadSystemAbility();	
-    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();	
-    if (samgrProxy == nullptr) {	
-        SCAN_HILOGE("get samgr failed");	
+    CleanupScanService();
+    SaneManagerClient::GetInstance()->UnloadSystemAbility();
+    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgrProxy == nullptr) {
+        SCAN_HILOGE("get samgr failed");
         return;	
-    }	
-    int32_t ret = samgrProxy->UnloadSystemAbility(SCAN_SERVICE_ID);	
-    if (ret != ERR_OK) {	
-        SCAN_HILOGE("unload scan_service failed");	
-        return;	
-    }	
+    }
+    int32_t ret = samgrProxy->UnloadSystemAbility(SCAN_SERVICE_ID);
+    if (ret != ERR_OK) {
+        SCAN_HILOGE("unload scan_service failed");
+        return;
+    }
     SCAN_HILOGI("unload scan_service successfully");
 }
 
