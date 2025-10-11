@@ -394,22 +394,33 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0013, TestSize.Level2)
     vendorManager.UnInit();
 }
 
-HWTEST_F(VendorManagerTest, SetState_test, TestSize.Level2)
+HWTEST_F(VendorManagerTest, ConnectByIpAndPpdTest, TestSize.Level2)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_CALL(*mock, DiscoverBackendPrinters(_)).WillRepeatedly(Return(E_PRINT_NONE));
-    EXPECT_EQ(vendorManager.DiscoverBackendPrinters(VENDOR_PPD_DRIVER, printers), EXTENSION_ERROR_NONE);
+    std::string testIp = "192.168.1.1";
+    std::string protocol = "ipp";
+    std::string ppdName = BSUNI_PPD_NAME;
+    bool res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
+    EXPECT_TRUE(res);
+    EXPECT_EQ(vendorManager.connectingprotocol, protocol);
+    EXPECT_EQ(vendorManager.connectingPrinter, testIp);
+    EXPECT_EQ(vendorManager.connectingPpdName, ppdName);
+    protocol = "";
+    res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
+    EXPECT_TRUE(res);
+    EXPECT_EQ(vendorManager.connectingprotocol, "auto");
+    vendorManager.wlanGroupDriver = nullptr;
+    res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
+    EXPECT_FALSE(res);
 }
 
-HWTEST_F(VendorManagerTest, DiscoverBackendPrinters_WhenAfterUninit_ShouldFail, TestSize.Level2)
+HWTEST_F(VendorManagerTest, IsBsuniDriverSupport_test, TestSize.Level2)
 {
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(mock, false));
-    vendorManager.UnInit();
-    std::vector<PrinterInfo> printers;
-    EXPECT_EQ(vendorManager.DiscoverBackendPrinters(VENDOR_PPD_DRIVER, printers), EXTENSION_ERROR_CALLBACK_FAIL);
+    PrinterInfo info;
+    EXPECT_FALSE(vendorManager.IsBsunidriverSupport(info));
 }
 }  // namespace Print
 }  // namespace OHOS

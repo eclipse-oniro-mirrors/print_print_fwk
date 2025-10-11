@@ -225,10 +225,6 @@ public:
     {
         return E_PRINT_NONE;
     }
-    bool OnQueryCallbackEvent(const PrinterInfo &info)
-    {
-        return E_PRINT_NONE;
-    }
     int32_t QueryPrinterInfoByIp(const std::string &printerIp)
     {
         return E_PRINT_NONE;
@@ -279,7 +275,6 @@ public:
     MOCK_METHOD1(UpdatePrinterInSystem, int32_t(const PrinterInfo &));
     MOCK_METHOD3(AuthPrintJob, int32_t(const std::string &, const std::string &, char *));
     MOCK_METHOD1(QueryAllPrinterPpds, int32_t(std::vector<PpdInfo> &));
-    MOCK_METHOD1(OnQueryCallbackEvent, bool(const PrinterInfo &));
     MOCK_METHOD1(QueryPrinterInfoByIp, int32_t(const std::string &));
     MOCK_METHOD3(ConnectPrinterByIpAndPpd, int32_t(const std::string &, const std::string &, const std::string &));
 };

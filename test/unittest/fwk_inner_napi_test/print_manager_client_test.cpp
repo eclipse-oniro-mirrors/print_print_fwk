@@ -2491,6 +2491,54 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0149_NeedRename, TestSiz
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
+HWTEST_F(PrintManagerClientTest, QueryAllPrinterPpds_noPermission, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::vector<PpdInfo> infos;
+    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrinterPpds(infos);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, QueryPrinterInfoByIp_noPermission, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::string testIp = "192.168.1.1";
+    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterInfoByIp(testIp);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, ConnectPrinterByIpAndPpd_noPermission, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::string testIp = "192.168.1.1";
+    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIpAndPpd(testIp);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, QueryAllPrinterPpds_Failed, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    std::vector<PpdInfo> infos;
+    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrinterPpds(infos);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, QueryPrinterInfoByIp_Failed, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    std::string testIp = "192.168.1.1";
+    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterInfoByIp(testIp);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, ConnectPrinterByIpAndPpd_Failed, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    std::string testIp = "192.168.1.1";
+    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIpAndPpd(testIp);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0150_NeedRename, TestSize.Level1)
 {
     PrintManagerClient::GetInstance()->LoadServerFail();
