@@ -229,7 +229,7 @@ public:
     {
         return E_PRINT_NONE;
     }
-    int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+    int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName)
     {
         return E_PRINT_NONE;

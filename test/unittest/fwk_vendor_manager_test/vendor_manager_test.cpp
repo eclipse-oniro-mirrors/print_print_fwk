@@ -403,13 +403,13 @@ HWTEST_F(VendorManagerTest, ConnectByIpAndPpdTest, TestSize.Level2)
     std::string ppdName = BSUNI_PPD_NAME;
     bool res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
     EXPECT_TRUE(res);
-    EXPECT_EQ(vendorManager.connectingprotocol, protocol);
+    EXPECT_EQ(vendorManager.connectingProtocol, protocol);
     EXPECT_EQ(vendorManager.connectingPrinter, testIp);
     EXPECT_EQ(vendorManager.connectingPpdName, ppdName);
     protocol = "";
     res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
     EXPECT_TRUE(res);
-    EXPECT_EQ(vendorManager.connectingprotocol, "auto");
+    EXPECT_EQ(vendorManager.connectingProtocol, "auto");
     vendorManager.wlanGroupDriver = nullptr;
     res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
     EXPECT_FALSE(res);

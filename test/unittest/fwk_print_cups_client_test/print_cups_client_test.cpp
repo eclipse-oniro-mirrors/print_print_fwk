@@ -307,8 +307,8 @@ HWTEST_F(PrintCupsClientTest, QueryAllPpdInfoTest, TestSize.Level0)
 {
     auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
     std::vector<PpdInfo> infos;
-    EXPECT_FALSE(printCupsClient->QueryAllPPDInfomation("", infos));
-    EXPECT_FALSE(printCupsClient->QueryAllPPDInfomation("wrongMake", infos));
+    EXPECT_FALSE(printCupsClient->QueryAllPPDInformation("", infos));
+    EXPECT_FALSE(printCupsClient->QueryAllPPDInformation("wrongMake", infos));
 }
 
 
