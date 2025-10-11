@@ -150,7 +150,7 @@ void ScanServiceAbility::OnStart()
         SCAN_HILOGE("ScanServiceAbility Init failed. Try again 5s later");
         return;
     }
-
+    
     state_ = ServiceRunningState::STATE_RUNNING;
     return;
 }
@@ -195,7 +195,7 @@ void ScanServiceAbility::UnloadSystemAbility()
     auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgrProxy == nullptr) {
         SCAN_HILOGE("get samgr failed");
-        return;	
+        return;
     }
     int32_t ret = samgrProxy->UnloadSystemAbility(SCAN_SERVICE_ID);
     if (ret != ERR_OK) {
