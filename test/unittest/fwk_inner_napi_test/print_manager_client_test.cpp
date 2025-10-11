@@ -2512,7 +2512,7 @@ HWTEST_F(PrintManagerClientTest, ConnectPrinterByIpAndPpd_noPermission, TestSize
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     std::string testIp = "192.168.1.1";
     std::string protocol = "ipp";
-    std::string ppdName - DEFAULT_PPD_NAME;
+    std::string ppdName = DEFAULT_PPD_NAME;
     int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
@@ -2538,7 +2538,7 @@ HWTEST_F(PrintManagerClientTest, ConnectPrinterByIpAndPpd_Failed, TestSize.Level
     PrintManagerClient::GetInstance()->LoadServerFail();
     std::string testIp = "192.168.1.1";
     std::string protocol = "ipp";
-    std::string ppdName - DEFAULT_PPD_NAME;
+    std::string ppdName = DEFAULT_PPD_NAME;
     int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
