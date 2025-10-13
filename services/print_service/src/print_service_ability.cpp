@@ -4253,6 +4253,11 @@ int32_t PrintServiceAbility::AuthPrintJob(const std::string &jobId, const std::s
 
 int32_t PrintServiceAbility::QueryAllPrinterPpds(std::vector<PpdInfo> &printerPpdList)
 {
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
+        return E_PRINT_NO_PERMISSION;
+    }
     PRINT_HILOGI("QueryAllPrinterPpds Enter");
     DelayedSingleton<PrintCupsClient>::GetInstance()->GetAllPPDFile(printerPpdList);
     PRINT_HILOGI("GetAllPPDFile count = %{public}zu", printerPpdList.size());
@@ -4296,6 +4301,11 @@ bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
 
 int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
 {
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
+        return E_PRINT_NO_PERMISSION;
+    }
     PRINT_HILOGI("QueryPrinterInfoByIp Enter");
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.ClearConnectingPrinter();
@@ -4314,6 +4324,11 @@ int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
 int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
     const std::string &ppdName)
 {
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
+        return E_PRINT_NO_PERMISSION;
+    }
     PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
     if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName)) {

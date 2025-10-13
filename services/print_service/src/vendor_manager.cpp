@@ -636,7 +636,7 @@ bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const
     }
     connectingPpdName = ppdName;
     SetConnectingPrinter(IP_AUTO, printerIp);
-    return wlanGroupDriver->ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName);
+    return wlanGroupDriver->ConnectPrinterByIpAndPpd(printerIp, connectingProtocol, ppdName);
 }
 
 bool VendorManager::QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap)

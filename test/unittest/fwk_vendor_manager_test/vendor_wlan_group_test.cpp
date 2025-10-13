@@ -166,7 +166,7 @@ HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0009_NeedRename, TestSize.Leve
     EXPECT_TRUE(vendorManager.Init(mock, false));
     auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
     vendorWlanGroup->SetConnectingPrinter(ID_AUTO, printerId);
-    EXPECT_EQ(vendorWlanGroup->parentVendorManager->isConnecting, true);
+    EXPECT_EQ(vendorWlanGroup->parentVendorManager->connectingState, STATE_CONNECTING);
     vendorWlanGroup->parentVendorManager = nullptr;
     vendorWlanGroup->SetConnectingPrinter(ID_AUTO, printerId);
 }

@@ -400,7 +400,11 @@ HWTEST_F(VendorManagerTest, ConnectByIpAndPpdTest, TestSize.Level2)
     VendorManager vendorManager;
     std::string testIp = "192.168.1.1";
     std::string protocol = "ipp";
-    std::string ppdName = BSUNI_PPD_NAME;
+    std::string ppdName = DEFAULT_PPD_NAME;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorIppEverywhere = std::make_shared<VendorIppEveryWhere>();
+    ASSERT_NE(vendorIppEverywhere, nullptr);
+    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorIppEverywhere));
     bool res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
     EXPECT_TRUE(res);
     EXPECT_EQ(vendorManager.connectingProtocol, protocol);

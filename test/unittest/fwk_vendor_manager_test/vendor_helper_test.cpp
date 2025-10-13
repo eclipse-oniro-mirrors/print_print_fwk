@@ -297,7 +297,7 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0012, TestSize.Level1)
     discoveryItem.makeAndModel = "makeAndModel";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
     discoveryItem.detailInfo = "detailInfo";
-    EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
+    EXPECT_FALSE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
     discoveryItem.detailInfo = "{\"key\":\"value\"}";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
     discoveryItem.detailInfo = "{\"bsunidriver_support\": \"false\"}";
