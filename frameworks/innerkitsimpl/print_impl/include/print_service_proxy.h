@@ -18,6 +18,7 @@
 
 #include "iprint_service.h"
 #include "iremote_proxy.h"
+#include "ppd_info.h"
 
 namespace OHOS::Print {
 class PrintServiceProxy : public IRemoteProxy<IPrintService> {
@@ -81,6 +82,10 @@ public:
     int32_t DeletePrinterFromCups(const std::string &printerName) override;
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers) override;
     int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd) override;
+    int32_t QueryAllPrinterPpds(std::vector<PpdInfo> &ppdInfos) override;
+    int32_t QueryPrinterInfoByIp(const std::string &printerIp) override;
+    int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+        const std::string &ppdName) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);

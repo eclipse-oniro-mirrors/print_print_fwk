@@ -324,8 +324,16 @@ void SetOptionAttributeFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
         options["make"] = ppd->nickname;
     } else if (ppd->modelname) {
         options["make"] = ppd->modelname;
+    } else if (ppd->shortnickname) {
+        options["make"] = ppd->shortnickname;
     } else {
         options["make"] = "Bad PPD File";
+    }
+
+    if (ppd->manufacturer) {
+        options["manufacturer"] = ppd->manufacturer;
+    } else {
+        options["manufacturer"] = "others";
     }
 
     Json::Value cupsOptionsJson = printerCaps.GetPrinterAttrGroupJson();

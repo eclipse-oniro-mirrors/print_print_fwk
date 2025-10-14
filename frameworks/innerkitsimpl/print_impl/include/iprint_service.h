@@ -26,6 +26,7 @@
 #include "print_job.h"
 #include "printer_info.h"
 #include "iprint_ipc_interface_code.h"
+#include "ppd_info.h"
 
 namespace OHOS::Print {
 class IPrintService : public IRemoteBroker {
@@ -88,6 +89,10 @@ public:
     virtual int32_t UpdatePrinterInSystem(const PrinterInfo &printerInfo) = 0;
     virtual int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail) = 0;
     virtual int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd) = 0;
+    virtual int32_t QueryAllPrinterPpds(std::vector<PpdInfo> &ppdInfos) = 0;
+    virtual int32_t QueryPrinterInfoByIp(const std::string &printerIp) = 0;
+    virtual int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+        const std::string &ppdName) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

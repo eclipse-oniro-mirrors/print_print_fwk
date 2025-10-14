@@ -1440,5 +1440,58 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_ShouldReturnTrue_When, TestS
     ON_CALL(*stub, AnalyzePrintEvents).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
+
+HWTEST_F(PrintServiceStubTest, OnQueryAllPrinterPpds_ShouldReturnTrue, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_QUERYALLPPDS);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, AnalyzePrintEvents).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
+HWTEST_F(PrintServiceStubTest, OnQueryPrinterInfoByIp_ShouldReturnTrue, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_QUERYIPINFO);
+
+    std::string testIp = "192.168.1.1";
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    data.WriteString(testIp);
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, AnalyzePrintEvents).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
+HWTEST_F(PrintServiceStubTest, OnConnectByIpAndPpd_ShouldReturnTrue, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_QUERYIPINFO);
+
+    std::string testIp = "192.168.1.1";
+    std::string protocol = "ipp";
+    std::string ppdName = "test.ppd";
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    data.WriteString(testIp);
+    data.WriteString(protocol);
+    data.WriteString(ppdName);
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, AnalyzePrintEvents).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
 }  // namespace Print
 }  // namespace OHOS

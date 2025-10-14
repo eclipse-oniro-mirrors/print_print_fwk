@@ -17,6 +17,7 @@
 
 #include "print_constant.h"
 #include "print_log.h"
+#include "ppd_info_helper.h"
 
 namespace OHOS::Print {
 PrintCallbackStub::PrintCallbackStub()
@@ -25,6 +26,7 @@ PrintCallbackStub::PrintCallbackStub()
     cmdMap_[PRINT_CALLBACK_PRINTER] = &PrintCallbackStub::HandlePrinterEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_JOB] = &PrintCallbackStub::HandlePrintJobEvent;
     cmdMap_[PRINT_CALLBACK_EXTINFO] = &PrintCallbackStub::HandleExtEvent;
+    cmdMap_[PRINT_CALLBACK_PRINT_QUERY_INFO] = &PrintCallbackStub::HandleGetInfoEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_JOB_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterJobEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_JOB_CHANGED_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterJobChangedEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_GET_FILE_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterGetFileEvent;
@@ -90,6 +92,32 @@ bool PrintCallbackStub::HandleExtEvent(MessageParcel &data, MessageParcel &reply
     bool result = OnCallback(extensionId, info);
     reply.WriteBool(result);
     return true;
+}
+
+bool PrintCallbackStub::HandleGetInfoEvent(MessageParcel &data, MessageParcel &reply)
+{
+    auto info = PrinterInfo::Unmarshalling(data);
+    if (info == nullptr) {
+        PRINT_HILOGW("Unmarshalling printerInfo failed");
+        return false;
+    }
+    std::vector<PpdInfo> ppds;
+    int32_t ppdsSize = data.ReadInt32();
+    if (ppdsSize == 0) {
+        PRINT_HILOGW("Cannot find ppds");
+        return false;
+    }
+    for (int32_t i = 0; i < ppdsSize; ++i) {
+        auto ppd = PpdInfo::Unmarshalling(data);
+        if (ppd == nullptr) {
+            PRINT_HILOGW("Unmarshalling ppd failed");
+            return false;
+        }
+        ppds.push_back(*ppd);
+    }
+    bool result = OnCallback(*info, ppds);
+    reply.WriteBool(result);
+    return result;
 }
 
 bool PrintCallbackStub::HandlePrintAdapterJobEvent(MessageParcel &data, MessageParcel &reply)

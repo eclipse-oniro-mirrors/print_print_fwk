@@ -37,12 +37,17 @@ public:
     bool IsConnectingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) override;
     ConnectMethod GetConnectingMethod(const std::string &globalPrinterIdOrIp) override;
     void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
+    bool IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) override;
+    void SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
+    bool ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+        const std::string &ppdName) override;
     bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                              const std::string &ppdName, const std::string &ppdData) override;
     bool MonitorPrinterStatus(const std::string &groupPrinterId, bool on) override;
     bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                 const PrinterVendorStatus &status) override;
     bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) override;
+    bool IsBsunidriverSupport(const PrinterInfo &printerInfo) override;
 
 private:
     bool IsBsunidriverSupport(const std::string &groupPrinterId);

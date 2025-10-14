@@ -49,6 +49,8 @@ public:
 
     void SetPrinterUuid(const std::string &printerUuid);
 
+    void SetProtocol(const std::string &protocol);
+
     void SetOption(const std::string &option);
 
     void SetIsDefaultPrinter(bool isDefaultPrinter);
@@ -92,6 +94,10 @@ public:
     [[nodiscard]] bool HasPrinterUuid() const;
 
     [[nodiscard]] std::string GetPrinterUuid() const;
+
+    [[nodiscard]] bool HasProtocol() const;
+
+    [[nodiscard]] std::string GetProtocol() const;
 
     [[nodiscard]] bool HasOption() const;
 

@@ -212,6 +212,49 @@ napi_value NapiPrintUtils::CreateStringUtf8(napi_env env, const std::string &str
     return value;
 }
 
+napi_value NapiPrintUtils::CreateStringVectorUtf8(napi_env env, const std::vector<std::string> &vec)
+{
+    napi_value array = nullptr;
+    if (napi_create_array(env, &array) != napi_ok) {
+        PRINT_HILOGW("failed to create array");
+        return nullptr;
+    }
+
+    for (size_t i = 0; i < vec.size(); ++i) {
+        napi_value element;
+        if (napi_create_string_utf8(env, vec[i].c_str(), vec[i].size(), &element) != napi_ok) {
+            PRINT_HILOGW("failed to create element");
+            return nullptr;
+        }
+        if (napi_set_element(env, array, i, element) != napi_ok) {
+            PRINT_HILOGW("failed to set element");
+            return nullptr;
+        }
+    }
+    return array;
+}
+
+napi_value NapiPrintUtils::CreatePpdInfoVectorUtf8(napi_env env, const std::vector<PpdInfo> &vec)
+{
+    napi_value array = nullptr;
+    if (napi_create_array(env, &array) != napi_ok) {
+        PRINT_HILOGW("failed to create array");
+        return nullptr;
+    }
+
+    for (size_t i = 0; i < vec.size(); ++i) {
+        auto element = PpdInfoHelper::MakeJsSimpleObject(env, vec[i]);
+        if (element == nullptr) {
+            PRINT_HILOGW("failed to create element");
+        }
+        if (napi_set_element(env, array, i, element) != napi_ok) {
+            PRINT_HILOGW("failed to set element");
+            return nullptr;
+        }
+    }
+    return array;
+}
+
 std::string NapiPrintUtils::GetStringFromValueUtf8(napi_env env, napi_value value)
 {
     if (value == nullptr) {

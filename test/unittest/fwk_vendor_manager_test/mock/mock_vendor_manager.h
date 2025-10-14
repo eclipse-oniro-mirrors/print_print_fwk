@@ -37,6 +37,14 @@ public:
     MOCK_METHOD2(SetConnectingPrinter, void(ConnectMethod, const std::string &));
     MOCK_METHOD0(ClearConnectingPrinter, void());
     MOCK_METHOD2(QueryPrinterCapabilityByUri, bool(const std::string &, PrinterCapability &));
+    MOCK_METHOD0(GetConnectingPpdName, std::string());
+    MOCK_METHOD0(GetConnectingProtocol, std::string());
+    MOCK_METHOD0(ClearConnectingPpdName, void());
+    MOCK_METHOD0(ClearConnectingProtocol, void());
+    MOCK_METHOD2(IsQueryingPrinter, bool(const std::string &, const std::string &));
+    MOCK_METHOD2(SetQueryPrinter, void(ConnectMethod, const std::string &));
+    MOCK_METHOD1(OnQueryCallBackEvent, bool(const PrinterInfo &));
+    MOCK_METHOD3(ConnectPrinterByIpAndPpd, bool(const std::string &, const std::string &, const std::string &));
     MOCK_METHOD2(QueryPrinterStatusByUri, bool(const std::string &, PrinterStatus &));
     MOCK_METHOD2(
         QueryDiscoveredPrinterInfoById, std::shared_ptr<PrinterInfo>(const std::string &, const std::string &));
@@ -46,6 +54,7 @@ public:
     MOCK_METHOD1(GetConnectingMethod, ConnectMethod(const std::string &));
     MOCK_METHOD2(DiscoverBackendPrinters, int32_t(const std::string &, std::vector<PrinterInfo> &));
     MOCK_METHOD4(AddPrintEvent, void(const std::string &, const std::string &, const std::string &, int32_t));
+    MOCK_METHOD1(IsBsunidriverSupport, bool(const PrinterInfo &));
 };
 }  // namespace Print
 }  // namespace OHOS

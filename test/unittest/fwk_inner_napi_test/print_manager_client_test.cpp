@@ -2491,6 +2491,58 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0149_NeedRename, TestSiz
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
+HWTEST_F(PrintManagerClientTest, QueryAllPrinterPpds_pass, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::vector<PpdInfo> infos;
+    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrinterPpds(infos);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, QueryPrinterInfoByIp_pass, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::string testIp = "192.168.1.1";
+    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterInfoByIp(testIp);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, ConnectPrinterByIpAndPpd_pass, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::string testIp = "192.168.1.1";
+    std::string protocol = "ipp";
+    std::string ppdName = DEFAULT_PPD_NAME;
+    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, QueryAllPrinterPpds_reload, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    std::vector<PpdInfo> infos;
+    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrinterPpds(infos);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, QueryPrinterInfoByIp_reload, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    std::string testIp = "192.168.1.1";
+    int32_t ret = PrintManagerClient::GetInstance()->QueryPrinterInfoByIp(testIp);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, ConnectPrinterByIpAndPpd_reload, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    std::string testIp = "192.168.1.1";
+    std::string protocol = "ipp";
+    std::string ppdName = DEFAULT_PPD_NAME;
+    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0150_NeedRename, TestSize.Level1)
 {
     PrintManagerClient::GetInstance()->LoadServerFail();

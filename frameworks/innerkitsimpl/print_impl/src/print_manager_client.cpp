@@ -991,4 +991,39 @@ int32_t PrintManagerClient::AuthPrintJob(const std::string &jobId, const std::st
     }
     return ret;
 }
+
+
+int32_t PrintManagerClient::QueryAllPrinterPpds(std::vector<PpdInfo> &infos)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->QueryAllPrinterPpds(infos);
+        PRINT_HILOGD("PrintManagerClient QueryAllPrinterPpds out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::QueryPrinterInfoByIp(const std::string &printerIp)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->QueryPrinterInfoByIp(printerIp);
+        PRINT_HILOGD("PrintManagerClient QueryPrinterInfoByIp out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+    const std::string &ppdName)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName);
+        PRINT_HILOGD("PrintManagerClient ConnectPrinterByIpAndPpd out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
 } // namespace OHOS::Print

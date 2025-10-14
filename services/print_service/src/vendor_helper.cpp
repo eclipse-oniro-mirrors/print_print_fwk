@@ -399,6 +399,30 @@ std::shared_ptr<std::string> FindPropertyFromPropertyList(
     }
     return nullptr;
 }
+
+bool UpdatePrinterDetailInfoToJson(Json::Value &option, const std::string &detailInfo)
+{
+    Json::Value detailInfoJson;
+    std::istringstream iss(detailInfo);
+    if (!PrintJsonUtil::ParseFromStream(iss, detailInfoJson) || detailInfoJson.isNull()) {
+        PRINT_HILOGW("failed to parse detailInfo to json");
+        return false;
+    }
+    if (PrintJsonUtil::IsMember(detailInfoJson, "bsunidriver_support") &&
+        detailInfoJson["bsunidriver_support"].isString()) {
+        option["bsunidriverSupport"] = detailInfoJson["bsunidriver_support"].asString();
+    }
+    if (PrintJsonUtil::IsMember(detailInfoJson, "printer_protocols") &&
+        detailInfoJson["printer_protocols"].isString()) {
+        option["protocol"] = detailInfoJson["printer_protocols"].asString();
+    }
+    if (PrintJsonUtil::IsMember(detailInfoJson, "modelName") &&
+        detailInfoJson["modelName"].isString()) {
+        option["model_Name"] = detailInfoJson["modelName"].asString();
+    }
+    return true;
+}
+
 bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem)
 {
     if (discoveryItem == nullptr) {
@@ -425,7 +449,7 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
         info.SetPrinterUuid(std::string(discoveryItem->printerUuid));
     }
     if (discoveryItem->printerUri != nullptr && discoveryItem->makeAndModel != nullptr) {
-        PRINT_HILOGD("printerUri: %{public}s", discoveryItem->printerUri);
+        PRINT_HILOGD("printerUri: %{private}s", discoveryItem->printerUri);
         Json::Value option;
         option["printerName"] = name;
         option["printerUri"] = std::string(discoveryItem->printerUri);
@@ -434,12 +458,8 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
             option["printer-uuid"] = std::string(discoveryItem->printerUuid);
         }
         if (discoveryItem->detailInfo != nullptr) {
-            Json::Value detailInfo;
-            std::istringstream iss(std::string(discoveryItem->detailInfo));
-            if (PrintJsonUtil::ParseFromStream(iss, detailInfo) && !detailInfo.isNull() &&
-                PrintJsonUtil::IsMember(detailInfo, "bsunidriver_support") &&
-                detailInfo["bsunidriver_support"].isString()) {
-                option["bsunidriverSupport"] = detailInfo["bsunidriver_support"].asString();
+            if (!UpdatePrinterDetailInfoToJson(option, std::string(discoveryItem->detailInfo))) {
+                return false;
             }
         } else {
             PRINT_HILOGW("DetailInfo is null");

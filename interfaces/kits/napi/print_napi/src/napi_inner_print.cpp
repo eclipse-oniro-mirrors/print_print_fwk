@@ -26,11 +26,13 @@
 #include "iprint_adapter_inner.h"
 #include "printer_info_helper.h"
 #include "printer_preferences_helper.h"
+#include "ppd_info_helper.h"
 
 namespace OHOS::Print {
 const std::string PRINTER_EVENT_TYPE = "printerStateChange";
 const std::string PRINTJOB_EVENT_TYPE = "jobStateChange";
 const std::string EXTINFO_EVENT_TYPE = "extInfoChange";
+const std::string PRINT_QUERY_INFO_EVENT_TYPE = "printerInfoQuery";
 const uint32_t ARRAY_LENGTH_ONE_THOUSAND = 1000;
 
 napi_value NapiInnerPrint::QueryExtensionInfo(napi_env env, napi_callback_info info)
@@ -627,7 +629,8 @@ napi_value NapiInnerPrint::On(napi_env env, napi_callback_info info)
     std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
     PRINT_HILOGD("type : %{public}s", type.c_str());
 
-    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE) {
+    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
+        type == PRINT_QUERY_INFO_EVENT_TYPE) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
             PRINT_HILOGE("Non-system applications use system APIS!");
             NapiThrowError(env, E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
@@ -677,7 +680,8 @@ napi_value NapiInnerPrint::Off(napi_env env, napi_callback_info info)
     std::string type = NapiPrintUtils::GetStringFromValueUtf8(env, argv[0]);
     PRINT_HILOGD("type : %{public}s", type.c_str());
 
-    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE) {
+    if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
+        type == PRINT_QUERY_INFO_EVENT_TYPE) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
             PRINT_HILOGE("Non-system applications use system APIS!");
             NapiThrowError(env, E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
@@ -1115,10 +1119,148 @@ napi_value NapiInnerPrint::AuthPrintJob(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiInnerPrint::QueryAllPrinterPpds(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter QueryAllPrinterPpds---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        PRINT_HILOGI("QueryAllPrinterPpds output Enter ---->");
+        napi_status status = napi_create_array(env, result);
+        if (status != napi_ok) {
+            return status;
+        }
+        uint32_t index = 0;
+        for (auto &ppdInfo : context->allPpdInfos) {
+            PRINT_HILOGD("ppdName = %{public}s", ppdInfo.GetPpdName().c_str());
+            status = napi_set_element(env, *result, index++, PpdInfoHelper::MakeJsSimpleObject(env, ppdInfo));
+            if (status != napi_ok) {
+                return status;
+            }
+        }
+        return napi_ok;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        int32_t ret =
+            PrintManagerClient::GetInstance()->QueryAllPrinterPpds(context->allPpdInfos);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to query ppdList");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
+napi_value NapiInnerPrint::QueryPrinterInfoByIp(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter QueryPrinterInfoByIp---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+        napi_valuetype valueType;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "printerIp is not a string", napi_string_expected);
+        std::string printerIp = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        if (printerIp.empty()) {
+            PRINT_HILOGE("printerIp is empty!");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        context->printerId = printerIp;
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        int32_t ret =
+            PrintManagerClient::GetInstance()->QueryPrinterInfoByIp(context->printerId);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to Query printer info");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
+napi_value NapiInnerPrint::ConnectPrinterByIpAndPpd(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter ConnectPrinterByIpAndPpd---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
+        napi_valuetype valueType;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "printerIp is not a string", napi_string_expected);
+        std::string printerIp = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "protocol is not a string", napi_string_expected);
+        std::string protocol = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "ppdName is not a string", napi_string_expected);
+        std::string ppdName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
+        context->printerId = printerIp;
+        context->fileUri = protocol;
+        context->type = ppdName;
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        int32_t ret =
+            PrintManagerClient::GetInstance()->ConnectPrinterByIpAndPpd(context->printerId,
+                context->fileUri, context->type);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to connect printer");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 bool NapiInnerPrint::IsSupportType(const std::string &type)
 {
     if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
-        type == PRINTER_CHANGE_EVENT_TYPE) {
+        type == PRINTER_CHANGE_EVENT_TYPE || type == PRINT_QUERY_INFO_EVENT_TYPE) {
         return true;
     }
     return false;

@@ -29,6 +29,7 @@
 #include "print_utils.h"
 #include "print_constant.h"
 #include "printer_preferences.h"
+#include "ppd_info.h"
 
 namespace OHOS::Print {
 class NapiInnerPrint {
@@ -58,6 +59,9 @@ public:
     static napi_value GetAddedPrinterInfoById(napi_env env, napi_callback_info info);
     static napi_value AnalyzePrintEvents(napi_env env, napi_callback_info info);
     static napi_value AuthPrintJob(napi_env env, napi_callback_info info);
+    static napi_value QueryAllPrinterPpds(napi_env env, napi_callback_info info);
+    static napi_value QueryPrinterInfoByIp(napi_env env, napi_callback_info info);
+    static napi_value ConnectPrinterByIpAndPpd(napi_env env, napi_callback_info info);
 
 private:
     static bool IsSupportType(const std::string& type);
@@ -91,6 +95,7 @@ private:
         uint32_t defaultPrinterType = -1;
         std::string userName = "";
         char *userPasswd = nullptr;
+        std::vector<PpdInfo> allPpdInfos;
 
         InnerPrintContext() : Context(nullptr, nullptr) {};
         InnerPrintContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};

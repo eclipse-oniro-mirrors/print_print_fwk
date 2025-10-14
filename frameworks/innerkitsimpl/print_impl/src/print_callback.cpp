@@ -284,6 +284,25 @@ bool PrintCallback::OnCallback(const std::string &extensionId, const std::string
         });
 }
 
+bool PrintCallback::OnCallback(const PrinterInfo &info, const std::vector<PpdInfo> &ppds)
+{
+    PRINT_HILOGI("QueryPrinterInfo Notification in");
+    return OnBaseCallback(
+        [info, ppds](CallbackParam* param) {
+            param->printerInfo = info;
+            param->ppds = ppds;
+        },
+        [](CallbackParam *cbParam) {
+            PRINT_HILOGI("OnCallback start run QueryPrinterInfoWorkCb");
+            napi_value callbackValues[NapiPrintUtils::ARGC_TWO] = { 0 };
+            callbackValues[0] =
+                PrinterInfoHelper::MakeJsObject(cbParam->env, cbParam->printerInfo);
+            callbackValues[1] =
+                NapiPrintUtils::CreatePpdInfoVectorUtf8(cbParam->env, cbParam->ppds);
+            NapiCallFunction(cbParam, NapiPrintUtils::ARGC_TWO, callbackValues);
+        });
+}
+
 bool PrintCallback::OnCallbackAdapterLayout(
     const std::string &jobId, const PrintAttributes &oldAttrs, const PrintAttributes &newAttrs, uint32_t fd)
 {

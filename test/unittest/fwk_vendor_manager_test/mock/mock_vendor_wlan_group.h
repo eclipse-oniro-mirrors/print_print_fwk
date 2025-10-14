@@ -33,14 +33,18 @@ public:
     MOCK_METHOD1(IsGroupDriver, bool(const std::string &));
     MOCK_METHOD2(ConvertGroupDriver, bool(std::string &, std::string &));
     MOCK_METHOD1(ConvertGroupGlobalPrinterId, std::string(const std::string &));
-    MOCK_METHOD(2OnUpdatePrinterToDiscovery, int32_t(const std::string &, const PrinterInfo &));
+    MOCK_METHOD2(OnUpdatePrinterToDiscovery, int32_t(const std::string &, const PrinterInfo &));
     MOCK_METHOD2(IsConnectingPrinter, bool(const std::string &, const std::string &));
     MOCK_METHOD1(GetConnectingMethod, ConnectMethod(const std::string &));
     MOCK_METHOD2(SetConnectingPrinter, void(ConnectMethod, const std::string &));
+    MOCK_METHOD2(IsQueryingPrinter, bool(const std::string &, const std::string &));
+    MOCK_METHOD2(SetQueryPrinter, void(ConnectMethod, const std::string &));
+    MOCK_METHOD3(ConnectPrinterByIpAndPpd, bool(const std::string &, const std::string &, const std::string &));
     MOCK_METHOD4(
         OnPrinterPpdQueried, bool(const std::string &, const std::string &, const std::string &, const std::string &));
     MOCK_METHOD1(MonitorPrinterStatus, bool(const std::string &, bool));
     MOCK_METHOD3(OnPrinterStatusChanged, bool(const std::string &, const std::string &, const PrinterVendorStatus &));
+    MOCK_METHOD1(IsBsunidriverSupport, bool(const PrinterInfo &));
 };
 }  // namespace Print
 }  // namespace OHOS

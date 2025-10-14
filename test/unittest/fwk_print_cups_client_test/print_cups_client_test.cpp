@@ -303,6 +303,23 @@ HWTEST_F(PrintCupsClientTest, AddCupsPrintJob_ShouldAddSucceed_WhenNormalPrintJo
     EXPECT_EQ(printCupsClient->currentJob_->printerId, "printid-1234");
 }
 
+HWTEST_F(PrintCupsClientTest, QueryAllPpdInfoTest, TestSize.Level0)
+{
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    std::vector<PpdInfo> infos;
+    EXPECT_FALSE(printCupsClient->QueryAllPPDInformation("", infos));
+    EXPECT_FALSE(printCupsClient->QueryAllPPDInformation("wrongMake", infos));
+}
+
+
+HWTEST_F(PrintCupsClientTest, GetAllPPDFileTest, TestSize.Level0)
+{
+    auto printCupsClient = std::make_shared<OHOS::Print::PrintCupsClient>();
+    std::vector<PpdInfo> infos;
+    int32_t ret = printCupsClient->GetAllPPDFile(infos);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
 /**
  * @tc.name: PrintCupsClientTest_0015
  * @tc.desc: StartNextJob

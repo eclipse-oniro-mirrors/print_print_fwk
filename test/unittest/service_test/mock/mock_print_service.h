@@ -221,6 +221,19 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t QueryAllPrinterPpds(std::vector<PpdInfo> &printerPpdList) override
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t QueryPrinterInfoByIp(const std::string &printerIp)
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+        const std::string &ppdName)
+    {
+        return E_PRINT_NONE;
+    }
 };
 
 class MockPrintService final : public DummyPrintServiceStub {
@@ -261,6 +274,9 @@ public:
     MOCK_METHOD1(RemovePrinterFromDiscovery, int32_t(const std::string &));
     MOCK_METHOD1(UpdatePrinterInSystem, int32_t(const PrinterInfo &));
     MOCK_METHOD3(AuthPrintJob, int32_t(const std::string &, const std::string &, char *));
+    MOCK_METHOD1(QueryAllPrinterPpds, int32_t(std::vector<PpdInfo> &));
+    MOCK_METHOD1(QueryPrinterInfoByIp, int32_t(const std::string &));
+    MOCK_METHOD3(ConnectPrinterByIpAndPpd, int32_t(const std::string &, const std::string &, const std::string &));
 };
 }  // namespace Print
 }  // namespace OHOS

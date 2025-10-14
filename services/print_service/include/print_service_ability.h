@@ -38,6 +38,7 @@
 #include "os_account_manager.h"
 #include "singleton.h"
 #include "app_mgr_client.h"
+#include "ppd_info.h"
 
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
@@ -121,6 +122,11 @@ public:
     int32_t AnalyzePrintEvents(const std::string &printerId, const std::string &type, std::string &detail);
     void AddPrintEvent(const std::string &printerId, const std::string &eventType, int32_t eventCode);
     int32_t AuthPrintJob(const std::string &jobId, const std::string &userName, char *userPasswd);
+    int32_t QueryAllPrinterPpds(std::vector<PpdInfo> &printerPpdList);
+    bool OnQueryCallBackEvent(const PrinterInfo &info);
+    int32_t QueryPrinterInfoByIp(const std::string &printerIp);
+    int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
+        const std::string &ppdName);
     
 protected:
     void OnStart() override;

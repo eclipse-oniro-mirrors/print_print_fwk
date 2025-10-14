@@ -24,6 +24,7 @@
 #include "print_callback_stub.h"
 #include "iprint_adapter.h"
 #include "print_manager_client.h"
+#include "ppd_info.h"
 
 namespace OHOS::Print {
 struct CallbackParam {
@@ -41,6 +42,8 @@ struct CallbackParam {
     PrintAttributes oldAttrs;
     PrintAttributes newAttrs;
     uint32_t fd = 0;
+
+    std::vector<PpdInfo> ppds;
 };
 
 struct Param {
@@ -58,6 +61,7 @@ public:
     bool OnCallback(uint32_t state, const PrinterInfo &info) override;
     bool OnCallback(uint32_t state, const PrintJob &info) override;
     bool OnCallback(const std::string &extensionId, const std::string &info) override;
+    bool OnCallback(const PrinterInfo &info, const std::vector<PpdInfo> &ppds) override;
     bool OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
         const PrintAttributes &newAttrs, uint32_t fd) override;
     bool OnCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
