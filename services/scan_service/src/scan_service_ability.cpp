@@ -442,6 +442,7 @@ void ScanServiceAbility::SaneGetScanner()
     SaneStatus status = SaneManagerClient::GetInstance()->SaneGetDevices(deviceInfos);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneGetDevices failed, ret: [%{public}u]", status);
+        scannerState_.store(SCANNER_READY);
         return;
     }
     std::vector<ScanDeviceInfo> scanDeviceInfos;
@@ -1234,7 +1235,7 @@ int32_t ScanServiceAbility::RestartScan(const std::string &scannerId)
         scanPictureData_.SetNowScanProgressFinished(true);
     } else {
         SCAN_HILOGE("restart scan fail");
-        scanPictureData_.SetNowScanProgressFinished(true);
+        scanPictureData_.SetNowScanProgressFinished(false);
         scanPictureData_.PushScanPictureProgress();
         scanPictureData_.SetScanTaskCode(status);
     }
