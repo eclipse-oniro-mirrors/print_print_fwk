@@ -165,6 +165,7 @@ public:
     bool QueryInfoByPpdName(const std::string &fileName, PpdInfo &info);
     bool QueryPpdInfoMap(const std::string &ppdFilePath, std::unordered_map<std::string, std::string> &keyValues,
         PpdInfo &info);
+    int32_t CopyJobOutputFile(const std::string &jobId, uint32_t fd, bool cleanAfterCopied);
 
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
@@ -225,6 +226,9 @@ private:
     bool CheckUsbPrinterOnline(const std::string &printerId);
     int32_t HandleSystemAuthInfo(const std::string &jobId, const std::string &printerUri,
         const std::string &userName, char *userPasswd);
+    void AddPrintCupsJobId(const std::string &jobId, uint32_t cupsJobId);
+    void RemovePrintCupsJobId(const std::string &jobId);
+    uint32_t GetPrintCupsJobId(const std::string &jobId);
 
 private:
     bool toCups_ = true;
@@ -233,6 +237,8 @@ private:
     JobParameters *currentJob_ = nullptr;
     std::vector<std::shared_ptr<JobMonitorParam>> jobMonitorList_;
     std::mutex jobMonitorMutex_;
+    std::map<std::string, uint32_t> cupsJobIdMap_;
+    std::mutex cupsJobIdMapMutex_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_CUPS_CLIENT_H

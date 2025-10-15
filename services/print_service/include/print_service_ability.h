@@ -127,6 +127,7 @@ public:
     int32_t QueryPrinterInfoByIp(const std::string &printerIp);
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName);
+    int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
     
 protected:
     void OnStart() override;

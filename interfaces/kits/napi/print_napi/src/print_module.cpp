@@ -72,6 +72,7 @@ static constexpr const char *FUNCTION_AUTH_PRINT_JOB = "authPrintJob";
 static constexpr const char *FUNCTION_QUERY_ALL_PRINTER_PPDS = "queryAllPrinterPpds";
 static constexpr const char *FUNCTION_QUERY_PRINTER_INFO_BY_IP = "queryPrinterInfoByIp";
 static constexpr const char *FUNCTION_CONNECT_PRINTER_BY_IP_AND_PPD = "connectPrinterByIpAndPpd";
+static constexpr const char *FUNCTION_SAVE_PDF_FILE_JOB = "savePdfFileJob";
 
 static const std::map<std::string, uint32_t> PRINT_JOB_SUBSTATE_MAP = {
     {"PRINT_JOB_COMPLETED_SUCCESS", PRINT_JOB_COMPLETED_SUCCESS},
@@ -467,6 +468,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_QUERY_ALL_PRINTER_PPDS, NapiInnerPrint::QueryAllPrinterPpds),
         PRINT_NAPI_METHOD(FUNCTION_QUERY_PRINTER_INFO_BY_IP, NapiInnerPrint::QueryPrinterInfoByIp),
         PRINT_NAPI_METHOD(FUNCTION_CONNECT_PRINTER_BY_IP_AND_PPD, NapiInnerPrint::ConnectPrinterByIpAndPpd),
+        PRINT_NAPI_METHOD(FUNCTION_SAVE_PDF_FILE_JOB, NapiInnerPrint::SavePdfFileJob),
     };
 
     napi_status status = napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);

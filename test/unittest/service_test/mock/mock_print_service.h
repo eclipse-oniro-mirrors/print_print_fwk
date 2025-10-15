@@ -234,6 +234,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd)
+    {
+        return E_PRINT_NONE;
+    }
 };
 
 class MockPrintService final : public DummyPrintServiceStub {
@@ -277,6 +281,7 @@ public:
     MOCK_METHOD1(QueryAllPrinterPpds, int32_t(std::vector<PpdInfo> &));
     MOCK_METHOD1(QueryPrinterInfoByIp, int32_t(const std::string &));
     MOCK_METHOD3(ConnectPrinterByIpAndPpd, int32_t(const std::string &, const std::string &, const std::string &));
+    MOCK_METHOD2(SavePdfFileJob, int32_t(const std::string &, uint32_t));
 };
 }  // namespace Print
 }  // namespace OHOS
