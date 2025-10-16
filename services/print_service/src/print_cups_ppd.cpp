@@ -371,6 +371,7 @@ int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const 
     ppd->cache = _ppdCacheCreateWithPPD(ppd);
     if (ppd->cache == nullptr) {
         PRINT_HILOGE("PPDCacheCreateWithPPD fail");
+        ppdClose(ppd);
         return E_PRINT_FILE_IO;
     }
     GetAdvanceOptionsFromPPD(ppd, printerCaps);
