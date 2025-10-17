@@ -2180,5 +2180,54 @@ HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_NoValueSet_Returndefaul
     EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
     delete jobParams;
 }
+
+/**
+ * @tc.name: PrintCupsClientTest_HandleSystemAuthInfo
+ * @tc.desc: HandleSystemAuthInfo
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_HandleSystemAuthInfo, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string userName = "userName";
+    char userPassword[] = "userPassword";
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+    printCupsClient.jobMonitorList_ = std::vector<std::shared_ptr<JobMonitorParam>>(1, param);
+    EXPECT_EQ(printCupsClient.HandleSystemAuthInfo("invalidId",
+        PRINTER_URI, userName, userPassword), E_PRINT_INVALID_PRINTJOB);
+    EXPECT_EQ(printCupsClient.HandleSystemAuthInfo(TEST_SERVICE_JOB_ID, PRINTER_URI, userName, userPassword),
+        TEST_CUPS_JOB_ID);
+}
+
+/**
+ * @tc.name: PrintCupsClientTest_AuthCupsPrintJob
+ * @tc.desc: AuthCupsPrintJob
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_AuthCupsPrintJob, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string userName = "userName";
+    char userPassword[] = "userPassword";
+    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        PRINTER_PRINTER_NAME,
+        PRINTER_PRINTER_ID,
+        nullptr);
+
+    printCupsClient.jobMonitorList_ = std::vector<std::shared_ptr<JobMonitorParam>>(1, param);
+    printCupsClient.AuthCupsPrintJob(TEST_SERVICE_JOB_ID, PRINTER_URI, userName, userPassword);
+    EXPECT_EQ(printCupsClient.StartCupsdService(), E_PRINT_NONE);
+}
 }  // namespace Print
 }  // namespace OHOS
