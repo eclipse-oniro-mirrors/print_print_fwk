@@ -42,14 +42,14 @@ void PpdInfoTest::TearDown(void)
 
 HWTEST_F(PpdInfoTest, SetAttributeTest, TestSize.Level1)
 {
-    OHOS::Print::PpdInfo info;  
+    PpdInfo info;
     info.SetManufacturer("TestManu");
     EXPECT_EQ(info.GetManufacturer(), "TestManu");
     info.SetNickName("TestNick");
     EXPECT_EQ(info.GetNickName(), "TestNick");
     info.SetPpdName("Test.ppd");
     EXPECT_EQ(info.GetPpdName(), "Test.ppd");
-    info.SetPpdInfo("Test2","Nick2","2.ppd");
+    info.SetPpdInfo("Test2", "Nick2", "2.ppd");
     EXPECT_EQ(info.GetManufacturer(), "Test2");
     EXPECT_EQ(info.GetNickName(), "Nick2");
     EXPECT_EQ(info.GetPpdName(), "2.ppd");
@@ -58,7 +58,7 @@ HWTEST_F(PpdInfoTest, SetAttributeTest, TestSize.Level1)
 HWTEST_F(PpdInfoTest, MarshallingAndUnmarshalling_Test, TestSize.Level1)
 {
     OHOS::Print::PpdInfo info;
-    info.SetPpdInfo("TestManu","TestNick","Test.ppd");
+    info.SetPpdInfo("TestManu", "TestNick", "Test.ppd");
     Parcel parcel;
     EXPECT_TRUE(info.Marshalling(parcel));
     auto catchInfo = PpdInfo::Unmarshalling(parcel);

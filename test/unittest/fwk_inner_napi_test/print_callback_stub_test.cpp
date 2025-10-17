@@ -281,7 +281,7 @@ HWTEST_F(PrintCallbackStubTest, HandleGetInfoEventTest_TRUE, TestSize.Level1)
     info.SetPrinterId("192.168.1.1");
     std::vector<PpdInfo> ppds;
     PpdInfo testInfo;
-    testInfo.SetPpdInfo("testManu","testNick","test.ppd");
+    testInfo.SetPpdInfo("testManu", "testNick", "test.ppd");
     ppds.push_back(testInfo);
     EXPECT_NE(ppds.size(), 0);
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
@@ -308,9 +308,9 @@ HWTEST_F(PrintCallbackStubTest, HandleGetInfoEventTest_FALSE, TestSize.Level1)
     info.SetPrinterId("192.168.1.1");
     std::vector<PpdInfo> ppds;
     PpdInfo testInfo;
-    testInfo.SetPpdInfo("testManu","testNick","test.ppd");
+    testInfo.SetPpdInfo("testManu", "testNick", "test.ppd");
     ppds.push_back(testInfo);
-    testInfo.SetPpdInfo("testManu","","");
+    testInfo.SetPpdInfo("testManu", "", "");
     ppds.push_back(testInfo);
     EXPECT_NE(ppds.size(), 0);
     EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
