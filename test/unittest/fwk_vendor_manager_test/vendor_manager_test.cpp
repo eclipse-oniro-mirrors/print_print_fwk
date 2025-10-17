@@ -407,15 +407,17 @@ HWTEST_F(VendorManagerTest, ConnectByIpAndPpdTest, TestSize.Level2)
     EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorIppEverywhere));
     bool res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
     EXPECT_TRUE(res);
-    EXPECT_EQ(vendorManager.connectingProtocol, protocol);
+    EXPECT_EQ(vendorManager.GetConnectingProtocol(), protocol);
     EXPECT_EQ(vendorManager.connectingPrinter, testIp);
-    EXPECT_EQ(vendorManager.connectingPpdName, ppdName);
+    EXPECT_EQ(vendorManager.GetConnectingPpdName(), ppdName);
     protocol = "";
     res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
     EXPECT_TRUE(res);
     EXPECT_EQ(vendorManager.connectingProtocol, "auto");
     vendorManager.wlanGroupDriver = nullptr;
     res = vendorManager.ConnectPrinterByIpAndPpd(testIp, protocol, ppdName);
+    EXPECT_FALSE(res);
+    res = vendorManager.ConnectPrinterByIpAndPpd("", protocol, ppdName);
     EXPECT_FALSE(res);
 }
 
@@ -424,6 +426,8 @@ HWTEST_F(VendorManagerTest, IsBsuniDriverSupport_test, TestSize.Level2)
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     VendorManager vendorManager;
     PrinterInfo info;
+    EXPECT_FALSE(vendorManager.IsBsunidriverSupport(info));
+    vendorManager.wlanGroupDriver = nullptr;
     EXPECT_FALSE(vendorManager.IsBsunidriverSupport(info));
 }
 }  // namespace Print

@@ -950,5 +950,28 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0033_NeedRename, TestSize.
     proxy->UpdatePrinterInSystem(testInfo1);
 }
 
+HWTEST_F(PrintServiceProxyTest, QueryAllPrinterPpdsTest, TestSize.Level1)
+{
+    std::vector<PpdInfo> testPpds;
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, QueryAllPrinterPpds(_))
+        .Times(Exactly(1))
+        .WillOnce([&testPpds](const std::vector<PpdInfo> &ppds) {
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    proxy->QueryAllPrinterPpds(testPpds);
+}
+
 }  // namespace Print
 }  // namespace OHOS
