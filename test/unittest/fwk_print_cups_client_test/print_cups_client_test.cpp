@@ -2180,5 +2180,62 @@ HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_NoValueSet_Returndefaul
     EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
     delete jobParams;
 }
+
+HWTEST_F(PrintCupsClientTest, AddPrintCupsJobId_ShouldAddJobId_WhenCalled, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string jobId = "test_job_id";
+    uint32_t cupsJobId = 12345;
+    printCupsClient.AddPrintCupsJobId(jobId, cupsJobId);
+    auto iter = printCupsClient.cupsJobIdMap_.find(jobId);
+    EXPECT_NE(iter, printCupsClient.cupsJobIdMap_.end());
+    EXPECT_EQ(iter->second, cupsJobId);
+}
+
+HWTEST_F(PrintCupsClientTest, RemovePrintCupsJobId_ShouldRemoveJobId_WhenJobIdExist, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string jobId = "test_job_id";
+    uint32_t cupsJobId = 12345;
+    printCupsClient.AddPrintCupsJobId(jobId, cupsJobId);
+    EXPECT_NE(printCupsClient.cupsJobIdMap_.find(jobId), printCupsClient.cupsJobIdMap_.end());
+    printCupsClient.RemovePrintCupsJobId(jobId);
+    EXPECT_EQ(printCupsClient.cupsJobIdMap_.find(jobId), printCupsClient.cupsJobIdMap_.end());
+}
+
+HWTEST_F(PrintCupsClientTest, GetPrintCupsJobId_ShouldReturnZero_WhenJobIdNotExist, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string jobId = "test_job_id";
+    EXPECT_EQ(printCupsClient.GetPrintCupsJobId(jobId), 0);
+}
+
+HWTEST_F(PrintCupsClientTest, GetPrintCupsJobId_ShouldReturnJobId_WhenJobIdExist, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string jobId = "test_job_id";
+    uint32_t cupsJobId = 12345;
+    printCupsClient.AddPrintCupsJobId(jobId, cupsJobId);
+    EXPECT_EQ(printCupsClient.GetPrintCupsJobId(jobId), cupsJobId);
+}
+
+HWTEST_F(PrintCupsClientTest, CopyJobOutputFile_InvalidJobId_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string jobId = "test_job_id";
+    uint32_t fd = 1;
+    int32_t ret = printCupsClient.CopyJobOutputFile(jobId, fd, false);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PRINTJOB);
+}
+
+HWTEST_F(PrintCupsClientTest, CopyJobOutputFile_RealPathError_Test, TestSize.Level1)
+{
+    OHOS::Print::PrintCupsClient printCupsClient;
+    std::string jobId = "test_job_id";
+    uint32_t fd = 1;
+    printCupsClient.AddPrintCupsJobId(jobId, 1);
+    int32_t ret = printCupsClient.CopyJobOutputFile(jobId, fd, false);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PRINTJOB);
+}
 }  // namespace Print
 }  // namespace OHOS

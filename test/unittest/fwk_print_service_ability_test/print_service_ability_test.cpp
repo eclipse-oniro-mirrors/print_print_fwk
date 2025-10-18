@@ -388,6 +388,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_Sh
     EXPECT_EQ(service->DiscoverUsbPrinters(printers), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->AnalyzePrintEvents(printerId, type, detail), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->SavePdfFileJob("job_id", 1), E_PRINT_NO_PERMISSION);
 
     PrintServiceMockPermission::MockPermission();
     EXPECT_EQ(service->StartService(), E_PRINT_NONE);
@@ -395,6 +396,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_Sh
 
     EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
     EXPECT_EQ(service->AnalyzePrintEvents(printerId, type, detail), E_PRINT_NONE);
+    EXPECT_EQ(service->SavePdfFileJob("job_id", 1), E_PRINT_INVALID_USERID);
 }
 
 /**
