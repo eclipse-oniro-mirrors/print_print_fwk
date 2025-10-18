@@ -490,7 +490,9 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
         PRINT_HILOGD("printerUri: %{private}s", discoveryItem->printerUri);
         Json::Value option;
         option["printerName"] = name;
-        option["printerUri"] = std::string(discoveryItem->printerUri);
+        std::string uri = std::string(discoveryItem->printerUri);
+        option["printerUri"] = uri;
+        option["recommend_protocol"] = getScheme(uri);
         option["make"] = std::string(discoveryItem->makeAndModel);
         if (discoveryItem->printerUuid != nullptr) {
             option["printer-uuid"] = std::string(discoveryItem->printerUuid);
