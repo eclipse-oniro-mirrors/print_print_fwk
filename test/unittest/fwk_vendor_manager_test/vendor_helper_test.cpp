@@ -32,8 +32,7 @@ const uint32_t DPI_A = 300;
 const uint32_t DPI_B = 600;
 const uint32_t DEFAULT_COUNT = 2;
 const uint32_t TEST_MAX_COPIES = 99;
-const std::string PROTOCOL_JSON = 
-                "{\"printer_protocols\": {"
+const std::string PROTOCOL_JSON = "{\"printer_protocols\": {"
                 "\"lpd\": \"lpd://192.168.1.1:515/\", "
                 "\"socket\": \"socket://192.168.1.1:9100/\", "
                 "\"ipp\": \"ipp://192.168.1.1:631/ipp/print\", "
@@ -308,21 +307,6 @@ HWTEST_F(VendorHelperTest, VendorHelperTest_0012, TestSize.Level1)
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
     discoveryItem.detailInfo = "{\"bsunidriver_support\": \"false\"}";
     EXPECT_TRUE(UpdatePrinterInfoWithDiscovery(printerInfo, &discoveryItem));
-}
-
-HWTEST_F(VendorHelperTest, UpdatePrinterDetailInfoToJsonTest, TestSize.Level1)
-{
-    Json::Value option;
-    std::string detailInfo;
-    EXPECT_FALSE(UpdatePrinterDetailInfoToJson(option, detailInfo));
-    detailInfo = "{\"key\":\"value\"}";
-    EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
-    detailInfo = "{\"bsunidriver_support\":\"false\"}";
-    EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
-    detailInfo = "{\"printer_protocols\":\"ipp,ipps,socket\"}";
-    EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
-    detailInfo = "{\"modelName\":\"testPrinterModel\"}";
-    EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
 }
 
 HWTEST_F(VendorHelperTest, UpdatePrinterDetailInfoToJsonTest, TestSize.Level1)
