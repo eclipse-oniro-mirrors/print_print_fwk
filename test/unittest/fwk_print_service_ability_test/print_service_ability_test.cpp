@@ -2728,6 +2728,16 @@ HWTEST_F(PrintServiceAbilityTest, QueryInfoByIpTest, TestSize.Level1)
     EXPECT_EQ(service->QueryPrinterInfoByIp(""), E_PRINT_SERVER_FAILURE);
 }
 
+HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIpAndPpdTest, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string ip = "192.168.1.1";
+    std::string protocol = "ipp";
+    std::string ppdName = BSUNI_PPD_NAME;
+    EXPECT_EQ(service->ConnectPrinterByIpAndPpd(ip, protocol, ppdName), E_PRINT_NONE);
+    EXPECT_EQ(service->ConnectPrinterByIpAndPpd("1", protocol, ppdName), E_PRINT_SERVER_FAILURE);
+}
+
 /**
  * @tc.name: QueryQueuedPrintJobById_WhenInvalidJobId_ShouldF
  * @tc.desc: Verify the QueryQueuedPrintJobById failed case.

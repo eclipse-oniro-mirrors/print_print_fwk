@@ -412,9 +412,33 @@ bool UpdatePrinterDetailInfoToJson(Json::Value &option, const std::string &detai
         detailInfoJson["bsunidriver_support"].isString()) {
         option["bsunidriverSupport"] = detailInfoJson["bsunidriver_support"].asString();
     }
-    if (PrintJsonUtil::IsMember(detailInfoJson, "printer_protocols") &&
-        detailInfoJson["printer_protocols"].isString()) {
-        option["protocol"] = detailInfoJson["printer_protocols"].asString();
+if (PrintJsonUtil::IsMember(detailInfoJson, "printer_protocols")) {
+        if (detailInfoJson["printer_protocols"].isObject()) {
+            Json::Value protocols = detailInfoJson["printer_protocols"];
+            std::string protocol;
+            if (PrintJsonUtil::IsMember(protocols, "ipp") && protocols["ipp"].isString()) {
+                option["ipp"] = protocols["ipp"].asString();
+                protocol += "ipp,";
+            }
+            if (PrintJsonUtil::IsMember(protocols, "ipps") && protocols["ipps"].isString()) {
+                option["ipps"] = protocols["ipps"].asString();
+                protocol += "ipps,";
+            }
+            if (PrintJsonUtil::IsMember(protocols, "lpd") && protocols["lpd"].isString()) {
+                option["lpd"] = protocols["lpd"].asString();
+                protocol += "lpd,";
+            }
+            if (PrintJsonUtil::IsMember(protocols, "socket") && protocols["socket"].isString()) {
+                option["socket"] = protocols["socket"].asString();
+                protocol += "socket,";
+            }
+            if (!protocol.empty() && protocol.back() == ',') {
+                protocol.pop_back();
+            }
+            option["protocol"] = protocol;
+        } else if (detailInfoJson["printer_protocols"].isString()) {
+            option["protocol"] = detailInfoJson["printer_protocols"].asString();
+        }
     }
     if (PrintJsonUtil::IsMember(detailInfoJson, "modelName") &&
         detailInfoJson["modelName"].isString()) {
