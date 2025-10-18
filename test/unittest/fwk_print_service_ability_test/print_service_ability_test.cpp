@@ -2044,15 +2044,36 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0134_NeedRename, TestS
     service->AddVendorPrinterToCupsWithPpd(vendorName, printerId, ppdName, ppdData);
     service->RemoveVendorPrinterFromCups(vendorName, printerId);
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
-    info.SetUri("http://192.168.1.1:8080/path/to/print");
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetConnectUriTest, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrinterInfo info;
+    Json::Value option;
+    std::string ppdName = "test.ppd";
+    std::string ppdData = "ppd";
+    info.SetUri("ipp://192.168.1.1:631/ipp/print");
     service->vendorManager.connectingProtocol = "ipp";
-    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
+    option["ipp"] = "ipp://192.168.1.1:631/ipp/print";
+    info.SetOption(PrintJsonUtil::WriteString(option));
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
     service->vendorManager.connectingProtocol = "ipps";
-    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
+    option["ipps"] = "ipps:192.168.1.1:12345";
+    info.SetOption(PrintJsonUtil::WriteString(option));
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
     service->vendorManager.connectingProtocol = "lpd";
-    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
+    option["lpd"] = "lpd://192.168.1.1:515/";
+    info.SetOption(PrintJsonUtil::WriteString(option));
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
     service->vendorManager.connectingProtocol = "socket";
-    EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
+    option["socket"] = "socket://192.168.1.1:9100/";
+    info.SetOption(PrintJsonUtil::WriteString(option));
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0135_NeedRename, TestSize.Level1)
