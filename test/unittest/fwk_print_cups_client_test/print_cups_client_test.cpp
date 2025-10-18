@@ -2284,7 +2284,7 @@ HWTEST_F(PrintCupsClientTest, CopyJobOutputFile_RealPathError_Test, TestSize.Lev
     uint32_t fd = 1;
     printCupsClient.AddPrintCupsJobId(jobId, 1);
     int32_t ret = printCupsClient.CopyJobOutputFile(jobId, fd, false);
-    EXPECT_EQ(ret, E_PRINT_INVALID_PRINTJOB);
+    EXPECT_EQ(ret, E_PRINT_FILE_IO);
 }
 }  // namespace Print
 }  // namespace OHOS
