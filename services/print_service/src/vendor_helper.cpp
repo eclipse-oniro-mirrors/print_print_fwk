@@ -447,6 +447,20 @@ if (PrintJsonUtil::IsMember(detailInfoJson, "printer_protocols")) {
     return true;
 }
 
+std::string getScheme(std::string &printerUri)
+{
+    char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
+    char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
+    char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
+    char resource[HTTP_MAX_URI] = {0}; /* Resource portion of URI */
+    int port = 0; /* Port portion of URI */
+    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
+        host, sizeof(host), &port, resource, sizeof(resource));
+    std::string infoScheme;
+    infoScheme.assign(scheme);
+    return infoScheme;
+}
+
 bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem)
 {
     if (discoveryItem == nullptr) {

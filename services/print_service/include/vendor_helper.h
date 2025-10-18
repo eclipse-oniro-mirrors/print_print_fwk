@@ -44,6 +44,7 @@ bool UpdateMarginCapability(PrinterCapability &printerCap, const Print_DefaultVa
 std::shared_ptr<std::string> FindPropertyFromPropertyList(const Print_PropertyList *propertyList,
                                                           const std::string &keyName);
 bool UpdatePrinterDetailInfoToJson(Json::Value &option, const std::string &detailInfo);
+std::string getScheme(std::string &printerUri);
 bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem);
 bool UpdatePrinterInfoWithCapability(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem,
                                      const Print_PrinterCapability *capability, const Print_DefaultValue *defaultValue);
