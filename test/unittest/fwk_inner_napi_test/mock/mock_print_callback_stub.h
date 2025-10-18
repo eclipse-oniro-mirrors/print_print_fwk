@@ -64,7 +64,6 @@ public:
     MOCK_METHOD2(OnCallback, bool(uint32_t, const PrinterInfo &));
     MOCK_METHOD2(OnCallback, bool(uint32_t, const PrintJob &));
     MOCK_METHOD2(OnCallback, bool(const std::string &, const std::string &));
-    MOCK_METHOD2(OnCallback, bool(const PrinterInfo &, const std::vector<PpdInfo> &));
 };
 }  // namespace Print
 }  // namespace OHOS
