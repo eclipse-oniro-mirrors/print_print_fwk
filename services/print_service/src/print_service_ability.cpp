@@ -3584,7 +3584,7 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
     for (auto ability : abilityList) {
         AAFwk::Want want;
         want.SetElementName(ability.second.bundleName, ability.second.name);
-        if (!StartExtensionAbility(want)) {
+        if (!StartAbility(want) || !StartExtensionAbility(want)) {
             PRINT_HILOGE("Failed to load extension %{public}s", ability.second.name.c_str());
             continue;
         }

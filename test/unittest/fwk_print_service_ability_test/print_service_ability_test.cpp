@@ -378,6 +378,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_Sh
     sptr<IPrintCallback> listener = nullptr;
     PrinterPreferences printerPreference;
     std::string detail;
+    std::string jobId = "jobId";
+    std::string userName = "userName";
+    char userPassword[] = "userPassword";
 
     EXPECT_EQ(service->SetPrinterPreference(printerId, printerPreference), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->On(taskId, type, listener), E_PRINT_NO_PERMISSION);
@@ -388,6 +391,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_Sh
     EXPECT_EQ(service->DiscoverUsbPrinters(printers), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->AnalyzePrintEvents(printerId, type, detail), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->AuthPrintJob(jobId, userName, userPassword), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->SavePdfFileJob("job_id", 1), E_PRINT_NO_PERMISSION);
 
     PrintServiceMockPermission::MockPermission();
@@ -396,6 +400,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_Sh
 
     EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
     EXPECT_EQ(service->AnalyzePrintEvents(printerId, type, detail), E_PRINT_NONE);
+    EXPECT_EQ(service->AuthPrintJob(jobId, userName, userPassword), E_PRINT_INVALID_PRINTJOB);
     EXPECT_EQ(service->SavePdfFileJob("job_id", 1), E_PRINT_INVALID_USERID);
 }
 
