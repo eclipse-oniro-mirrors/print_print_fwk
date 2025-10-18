@@ -60,9 +60,9 @@ std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJs(napi_env env, na
         PRINT_HILOGE("pwgMedia build fail from JS!");
         return nullptr;
     }
-    *nativeObj = std::move(pageSize);
     PRINT_HILOGI("Build Page Size success, id: %{public}s, name: %{public}s",
         pageSize.GetId().c_str(), pageSize.GetName().c_str());
+    *nativeObj = std::move(pageSize);
     return nativeObj;
 }
 
