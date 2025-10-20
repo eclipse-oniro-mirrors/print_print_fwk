@@ -19,7 +19,6 @@
 #include <string>
 #include "printer_info.h"
 #include "vendor_extension.h"
-#include "print_cups_wrapper.h"
 
 namespace OHOS {
 namespace Print {
