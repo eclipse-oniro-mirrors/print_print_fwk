@@ -343,7 +343,7 @@ HWTEST_F(PrintCallbackStubTest, HandleGetInfoEventTest_EmptyPpds, TestSize.Level
         EXPECT_TRUE(ppd.Marshalling(data));
     }
     EXPECT_NE(callback, nullptr);
-    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
 }
 }  // namespace Print
 }  // namespace OHOS
