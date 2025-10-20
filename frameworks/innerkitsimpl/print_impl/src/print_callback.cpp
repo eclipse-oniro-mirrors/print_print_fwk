@@ -360,7 +360,7 @@ bool PrintCallback::OnCallbackAdapterGetFile(uint32_t state)
             PRINT_HILOGI("OnCallback start run PrinterInfoWorkCb");
             napi_value callbackValues[1] = { 0 };
             callbackValues[0] = NapiPrintUtils::CreateUint32(cbParam->env, cbParam->state);
-            NapiCallFunction(cbParam, NapiPrintUtils::ARGC_TWO, callbackValues);
+            NapiCallFunction(cbParam, NapiPrintUtils::ARGC_ONE, callbackValues);
         });
 }
 } // namespace OHOS::Print
