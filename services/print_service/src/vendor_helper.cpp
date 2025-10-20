@@ -19,6 +19,7 @@
 #include "print_log.h"
 #include <json/json.h>
 #include "print_json_util.h"
+#include "print_cups_client.h"
 
 namespace {
 const std::string VENDOR_MANAGER_PREFIX = "fwk.";
