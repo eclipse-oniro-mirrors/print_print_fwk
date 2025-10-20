@@ -483,11 +483,11 @@ void PrinterPreferences::ConvertBoolDefaultJsonToPrinterPreferences(Json::Value 
     }
 
     if (PrintJsonUtil::IsMember(preferencesJson, "defaultCollate") && preferencesJson["defaultCollate"].isBool()) {
-        SetBorderless(preferencesJson["defaultCollate"].asBool());
+        SetDefaultCollate(preferencesJson["defaultCollate"].asBool());
     }
 
     if (PrintJsonUtil::IsMember(preferencesJson, "defaultReverse") && preferencesJson["defaultReverse"].isBool()) {
-        SetBorderless(preferencesJson["defaultReverse"].asBool());
+        SetDefaultReverse(preferencesJson["defaultReverse"].asBool());
     }
 }
 
