@@ -976,7 +976,10 @@ void PrintCupsClient::AddCupsPrintJob(const PrintJob &jobInfo, const std::string
         return;
     }
     DumpJobParameters(jobParams);
-    jobQueue_.push_back(jobParams);
+    {
+        std::lock_guard<std::mutex> lock(jobMutex);
+        jobQueue_.push_back(jobParams);
+    }
     StartNextJob();
 }
 
@@ -1785,7 +1788,6 @@ bool PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> 
         PRINT_HILOGE("monitor job state failed, monitorParams is nullptr");
         return false;
     }
-    
     if (monitorParams->job_state == IPP_JOB_STOPPED) {
         if (CancelPrinterJob(monitorParams->cupsJobId)) {
             PRINT_HILOGI("cancel PrinterJob because stopped");
