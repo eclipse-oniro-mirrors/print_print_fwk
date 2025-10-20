@@ -105,7 +105,6 @@ bool PrintCallbackStub::HandleGetInfoEvent(MessageParcel &data, MessageParcel &r
     int32_t ppdsSize = data.ReadInt32();
     if (ppdsSize == 0) {
         PRINT_HILOGW("Cannot find ppds");
-        return false;
     }
     for (int32_t i = 0; i < ppdsSize; ++i) {
         auto ppd = PpdInfo::Unmarshalling(data);

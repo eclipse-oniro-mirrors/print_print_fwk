@@ -1452,7 +1452,7 @@ HWTEST_F(PrintServiceStubTest, OnQueryAllPrinterPpds_ShouldReturnTrue, TestSize.
 
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, AnalyzePrintEvents).WillByDefault(Return(E_PRINT_NONE));
+    ON_CALL(*stub, QueryAllPrinterPpds).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
@@ -1469,7 +1469,7 @@ HWTEST_F(PrintServiceStubTest, OnQueryPrinterInfoByIp_ShouldReturnTrue, TestSize
 
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, AnalyzePrintEvents).WillByDefault(Return(E_PRINT_NONE));
+    ON_CALL(*stub, QueryPrinterInfoByIp).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
@@ -1490,7 +1490,7 @@ HWTEST_F(PrintServiceStubTest, OnConnectByIpAndPpd_ShouldReturnTrue, TestSize.Le
 
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
-    ON_CALL(*stub, AnalyzePrintEvents).WillByDefault(Return(E_PRINT_NONE));
+    ON_CALL(*stub, ConnectPrinterByIpAndPpd).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 

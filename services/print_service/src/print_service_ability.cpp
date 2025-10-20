@@ -3313,6 +3313,52 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
     return true;
 }
 
+std::string PrintServiceAbility::GetConnectUri(PrinterInfo &printerInfo, std::string connectProtocol)
+{
+    std::string printerUri = printerInfo.GetUri();
+    char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
+    char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
+    char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
+    char resource[HTTP_MAX_URI] = {0}; /* Resource portion of URI */
+    int port = 0; /* Port portion of URI */
+    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
+        host, sizeof(host), &port, resource, sizeof(resource));
+    std::string printerIp;
+    printerIp.assign(host);
+    std::string optionStr = printerInfo.GetOption();
+    Json::Value option;
+    if (!PrintJsonUtil::Parse(optionStr, option)) {
+        PRINT_HILOGE("Failed to parse option JSON");
+        return printerUri;
+    }
+    if (connectProtocol == "ipp") {
+        if (PrintJsonUtil::IsMember(option, "ipp") &&option["ipp"].isString()) {
+            printerUri = option["ipp"].asString();
+        } else {
+            printerUri = "ipp://" + printerIp + ":631/ipp/print";
+        }
+    } else if (connectProtocol == "ipps") {
+        if (PrintJsonUtil::IsMember(option, "ipps") && option["ipps"].isString()) {
+            printerUri = option["ipps"].asString();
+        } else {
+            printerUri = "ipps://" + printerIp + ":443/ipp/print";
+        }
+    } else if (connectProtocol == "lpd") {
+        if (PrintJsonUtil::IsMember(option, "lpd") && option["lpd"].isString()) {
+            printerUri = option["lpd"].asString();
+        } else {
+            printerUri = "lpd://" +printerIp + ":515";
+        }
+    } else if (connectProtocol == "socket") {
+        if (PrintJsonUtil::IsMember(option, "socket") && option["socket"].isString()) {
+            printerUri = option["socket"].asString();
+        } else {
+            printerUri = "socket://" + printerIp + ":9100";
+        }
+    }
+    return printerUri;
+}
+
 bool PrintServiceAbility::DoAddPrinterToCups(
     std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData)
 {
@@ -3324,24 +3370,7 @@ bool PrintServiceAbility::DoAddPrinterToCups(
 
     std::string connectProtocol = vendorManager.GetConnectingProtocol();
     if (!connectProtocol.empty() && connectProtocol != "auto") {
-        char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
-        char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
-        char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
-        char resource[HTTP_MAX_URI] = {0}; /* Resource portion of URI */
-        int port = 0; /* Port portion of URI */
-        httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
-            host, sizeof(host), &port, resource, sizeof(resource));
-        std::string printerIp;
-        printerIp.assign(host);
-        if (connectProtocol == "ipp") {
-            printerUri = "ipp://" + printerIp + ":631/ipp/print";
-        } else if (connectProtocol == "ipps") {
-            printerUri = printerUri;
-        } else if (connectProtocol == "lpd") {
-            printerUri = "lpd://" +printerIp + ":515";
-        } else if (connectProtocol == "socket") {
-            printerUri = "socket://" + printerIp + ":9100";
-        }
+        printerUri = GetConnectUri(*printerInfo, connectProtocol);
     }
     std::string printerName = RenamePrinterWhenAdded(*printerInfo);
 #ifdef CUPS_ENABLE

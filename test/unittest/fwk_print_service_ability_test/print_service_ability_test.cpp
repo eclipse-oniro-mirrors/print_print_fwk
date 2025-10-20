@@ -70,6 +70,7 @@ static constexpr uint32_t ISO_A4_WIDTH = 8268;
 static constexpr uint32_t ISO_A4_HEIGHT = 11692;
 static const std::string IS_ENTERPRISE_ENABLE = "true";
 static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.enterprise_space_enable";
+static const std::string PRINT_QUERY_INFO_EVENT_TYPE = "printerInfoQuery";
 
 enum EXTENSION_ID_TYPE {
     TYPE_DEFAULT,
@@ -2052,6 +2053,36 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0134_NeedRename, TestS
     EXPECT_TRUE(service->AddVendorPrinterToDiscovery(vendorName, info));
 }
 
+HWTEST_F(PrintServiceAbilityTest, GetConnectUriTest, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrinterInfo info;
+    Json::Value option;
+    std::string ppdName = "test.ppd";
+    std::string ppdData = "ppd";
+    info.SetUri("ipp://192.168.1.1:631/ipp/print");
+    service->vendorManager.connectingProtocol = "ipp";
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
+    option["ipp"] = "ipp://192.168.1.1:631/ipp/print";
+    info.SetOption(PrintJsonUtil::WriteString(option));
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
+    service->vendorManager.connectingProtocol = "ipps";
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
+    option["ipps"] = "ipps:192.168.1.1:12345";
+    info.SetOption(PrintJsonUtil::WriteString(option));
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
+    service->vendorManager.connectingProtocol = "lpd";
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
+    option["lpd"] = "lpd://192.168.1.1:515/";
+    info.SetOption(PrintJsonUtil::WriteString(option));
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
+    service->vendorManager.connectingProtocol = "socket";
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
+    option["socket"] = "socket://192.168.1.1:9100/";
+    info.SetOption(PrintJsonUtil::WriteString(option));
+    EXPECT_FALSE(service->DoAddPrinterToCups(std::make_shared<PrinterInfo>(info), ppdName, ppdData));
+}
+
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0135_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -2690,6 +2721,49 @@ HWTEST_F(PrintServiceAbilityTest, ConnectUsbPrinter_HasMake_ServerFailure, TestS
     auto infoPtr = std::make_shared<PrinterInfo>(info);
     service->printSystemData_.AddPrinterToDiscovery(infoPtr);
     EXPECT_EQ(service->ConnectUsbPrinter(printerId), E_PRINT_SERVER_FAILURE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, QueryAllPpdsTest, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::vector<PpdInfo> ppds;
+    EXPECT_EQ(service->QueryAllPrinterPpds(ppds), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, OnQueryCallBackTest, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrinterInfo info;
+    EXPECT_TRUE(service->OnQueryCallBackEvent(info));
+    info.SetPrinterMake("fake make");
+    EXPECT_TRUE(service->OnQueryCallBackEvent(info));
+    Json::Value option;
+    option["bsunidriverSupport"] = "true";
+    info.SetOption(PrintJsonUtil::WriteString(option));
+    std::string type = PRINT_QUERY_INFO_EVENT_TYPE;
+    sptr<IPrintCallback> listener = new MockPrintCallbackProxy();
+    service->registeredListeners_[type] = listener;
+    EXPECT_TRUE(service->OnQueryCallBackEvent(info));
+    service->registeredListeners_[type] = nullptr;
+    EXPECT_TRUE(service->OnQueryCallBackEvent(info));
+}
+
+HWTEST_F(PrintServiceAbilityTest, QueryInfoByIpTest, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string ip = "192.168.1.1";
+    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
+    EXPECT_EQ(service->QueryPrinterInfoByIp(""), E_PRINT_SERVER_FAILURE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIpAndPpdTest, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string ip = "192.168.1.1";
+    std::string protocol = "ipp";
+    std::string ppdName = BSUNI_PPD_NAME;
+    EXPECT_EQ(service->ConnectPrinterByIpAndPpd(ip, protocol, ppdName), E_PRINT_NONE);
+    EXPECT_EQ(service->ConnectPrinterByIpAndPpd("1", protocol, ppdName), E_PRINT_SERVER_FAILURE);
 }
 
 /**

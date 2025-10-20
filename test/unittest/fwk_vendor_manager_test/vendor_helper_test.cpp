@@ -32,6 +32,11 @@ const uint32_t DPI_A = 300;
 const uint32_t DPI_B = 600;
 const uint32_t DEFAULT_COUNT = 2;
 const uint32_t TEST_MAX_COPIES = 99;
+const std::string PROTOCOL_JSON = "{\"printer_protocols\": {"
+                "\"lpd\": \"lpd://192.168.1.1:515/\", "
+                "\"socket\": \"socket://192.168.1.1:9100/\", "
+                "\"ipp\": \"ipp://192.168.1.1:631/ipp/print\", "
+                "\"ipps\": \"ipps://192.168.1.1:12345/ipps\"}}";
 }  // namespace
 namespace OHOS {
 namespace Print {
@@ -316,6 +321,8 @@ HWTEST_F(VendorHelperTest, UpdatePrinterDetailInfoToJsonTest, TestSize.Level1)
     detailInfo = "{\"printer_protocols\":\"ipp,ipps,socket\"}";
     EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
     detailInfo = "{\"modelName\":\"testPrinterModel\"}";
+    EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
+    detailInfo = PROTOCOL_JSON;
     EXPECT_TRUE(UpdatePrinterDetailInfoToJson(option, detailInfo));
 }
 }  // namespace Print

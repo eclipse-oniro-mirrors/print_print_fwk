@@ -53,6 +53,7 @@ ohos_unittest("print_fwk_inner_napi_test") {
     "printer_capability_test.cpp",
     "printer_info_test.cpp",
     "printer_preferences_test.cpp",
+    "ppd_info_test.cpp"
   ]
 
   deps = [

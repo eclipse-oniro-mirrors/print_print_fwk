@@ -19,6 +19,7 @@
 #include "print_log.h"
 #include <json/json.h>
 #include "print_json_util.h"
+#include "print_cups_client.h"
 
 namespace {
 const std::string VENDOR_MANAGER_PREFIX = "fwk.";
@@ -412,15 +413,53 @@ bool UpdatePrinterDetailInfoToJson(Json::Value &option, const std::string &detai
         detailInfoJson["bsunidriver_support"].isString()) {
         option["bsunidriverSupport"] = detailInfoJson["bsunidriver_support"].asString();
     }
-    if (PrintJsonUtil::IsMember(detailInfoJson, "printer_protocols") &&
-        detailInfoJson["printer_protocols"].isString()) {
-        option["protocol"] = detailInfoJson["printer_protocols"].asString();
+if (PrintJsonUtil::IsMember(detailInfoJson, "printer_protocols")) {
+        if (detailInfoJson["printer_protocols"].isObject()) {
+            Json::Value protocols = detailInfoJson["printer_protocols"];
+            std::string protocol;
+            if (PrintJsonUtil::IsMember(protocols, "ipp") && protocols["ipp"].isString()) {
+                option["ipp"] = protocols["ipp"].asString();
+                protocol += "ipp,";
+            }
+            if (PrintJsonUtil::IsMember(protocols, "ipps") && protocols["ipps"].isString()) {
+                option["ipps"] = protocols["ipps"].asString();
+                protocol += "ipps,";
+            }
+            if (PrintJsonUtil::IsMember(protocols, "lpd") && protocols["lpd"].isString()) {
+                option["lpd"] = protocols["lpd"].asString();
+                protocol += "lpd,";
+            }
+            if (PrintJsonUtil::IsMember(protocols, "socket") && protocols["socket"].isString()) {
+                option["socket"] = protocols["socket"].asString();
+                protocol += "socket,";
+            }
+            if (!protocol.empty() && protocol.back() == ',') {
+                protocol.pop_back();
+            }
+            option["protocol"] = protocol;
+        } else if (detailInfoJson["printer_protocols"].isString()) {
+            option["protocol"] = detailInfoJson["printer_protocols"].asString();
+        }
     }
     if (PrintJsonUtil::IsMember(detailInfoJson, "modelName") &&
         detailInfoJson["modelName"].isString()) {
         option["model_Name"] = detailInfoJson["modelName"].asString();
     }
     return true;
+}
+
+std::string getScheme(std::string &printerUri)
+{
+    char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
+    char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
+    char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
+    char resource[HTTP_MAX_URI] = {0}; /* Resource portion of URI */
+    int port = 0; /* Port portion of URI */
+    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
+        host, sizeof(host), &port, resource, sizeof(resource));
+    std::string infoScheme;
+    infoScheme.assign(scheme);
+    return infoScheme;
 }
 
 bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem)
@@ -452,7 +491,9 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
         PRINT_HILOGD("printerUri: %{private}s", discoveryItem->printerUri);
         Json::Value option;
         option["printerName"] = name;
-        option["printerUri"] = std::string(discoveryItem->printerUri);
+        std::string uri = std::string(discoveryItem->printerUri);
+        option["printerUri"] = uri;
+        option["recommend_protocol"] = getScheme(uri);
         option["make"] = std::string(discoveryItem->makeAndModel);
         if (discoveryItem->printerUuid != nullptr) {
             option["printer-uuid"] = std::string(discoveryItem->printerUuid);

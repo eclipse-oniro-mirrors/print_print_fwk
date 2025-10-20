@@ -359,7 +359,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintQueryInfoCallbackProxyTest_ReturnFalse, Te
     testInfo.SetPrinterId(testId);
     std::vector<PpdInfo> testVec;
     PpdInfo info;
-    info.SetPpdInfo("testmanu", "testnick", "test.ppd");
+    info.SetPpdInfo("", "", "");
     testVec.push_back(info);
 
     EXPECT_CALL(*service, OnCallback(Matcher<const PrinterInfo &>(PrinterInfoMatcher(testInfo)), testVec))
@@ -371,7 +371,7 @@ HWTEST_F(PrintCallbackProxyTest, PrintQueryInfoCallbackProxyTest_ReturnFalse, Te
             service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_RPC_FAILURE;
         });
-    EXPECT_TRUE(proxy->OnCallback(testInfo, testVec));
+    EXPECT_FALSE(proxy->OnCallback(testInfo, testVec));
 }
 }  // namespace Print
 }  // namespace OHOS

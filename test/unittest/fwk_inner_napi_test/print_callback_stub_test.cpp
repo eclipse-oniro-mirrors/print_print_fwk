@@ -269,5 +269,81 @@ HWTEST_F(PrintCallbackStubTest, PrintCallbackStubTest_0010, TestSize.Level1)
     EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
     EXPECT_TRUE(reply.ReadBool());
 }
+
+HWTEST_F(PrintCallbackStubTest, HandleGetInfoEventTest_TRUE, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINT_QUERY_INFO);
+
+    PrinterInfo info;
+    info.SetPrinterId("192.168.1.1");
+    std::vector<PpdInfo> ppds;
+    PpdInfo testInfo;
+    testInfo.SetPpdInfo("testManu", "testNick", "test.ppd");
+    ppds.push_back(testInfo);
+    EXPECT_NE(ppds.size(), 0);
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(info.Marshalling(data));
+    EXPECT_TRUE(data.WriteInt32(ppds.size()));
+    for (const auto &ppd : ppds) {
+        EXPECT_TRUE(ppd.Marshalling(data));
+    }
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+    EXPECT_TRUE(reply.ReadBool());
+}
+
+HWTEST_F(PrintCallbackStubTest, HandleGetInfoEventTest_FALSE, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINT_QUERY_INFO);
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+
+    PrinterInfo info;
+    info.SetPrinterId("192.168.1.1");
+    std::vector<PpdInfo> ppds;
+    PpdInfo testInfo;
+    testInfo.SetPpdInfo("testManu", "testNick", "test.ppd");
+    ppds.push_back(testInfo);
+    testInfo.SetPpdInfo("testManu", "", "");
+    ppds.push_back(testInfo);
+    EXPECT_NE(ppds.size(), 0);
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(info.Marshalling(data));
+    EXPECT_TRUE(data.WriteInt32(ppds.size()));
+    for (const auto &ppd : ppds) {
+        EXPECT_TRUE(ppd.Marshalling(data));
+    }
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_SERVER_FAILURE);
+}
+
+HWTEST_F(PrintCallbackStubTest, HandleGetInfoEventTest_EmptyPpds, TestSize.Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(PRINT_CALLBACK_PRINT_QUERY_INFO);
+    auto callback = std::make_shared<MockPrintCallbackStub>();
+
+    PrinterInfo info;
+    info.SetPrinterId("192.168.1.1");
+    std::vector<PpdInfo> ppds;
+    PpdInfo testInfo;
+    EXPECT_EQ(ppds.size(), 0);
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    EXPECT_TRUE(info.Marshalling(data));
+    EXPECT_TRUE(data.WriteInt32(ppds.size()));
+    for (const auto &ppd : ppds) {
+        EXPECT_TRUE(ppd.Marshalling(data));
+    }
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(callback->OnRemoteRequest(code, data, reply, option), E_PRINT_NONE);
+}
 }  // namespace Print
 }  // namespace OHOS
