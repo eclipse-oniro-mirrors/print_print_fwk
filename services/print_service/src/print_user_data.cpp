@@ -66,6 +66,7 @@ void PrintUserData::AddToPrintJobList(const std::string jobId, const std::shared
 void PrintUserData::UpdateQueuedJobList(
     const std::string &jobId, const std::shared_ptr<PrintJob> &printJob, std::string jobOrderId)
 {
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     if (jobOrderId == "0") {
         jobOrderList_.clear();
     }
@@ -1057,6 +1058,7 @@ bool PrintUserData::DeletePrintJobFromHistoryListByPrinterId(const std::string &
 void PrintUserData::InitPrintHistoryJobList(const std::string &printerId)
 {
     PRINT_HILOGI("InitPrintHistoryJobList Start.");
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     auto it = printHistoryJobList_.find(printerId);
     if (it == printHistoryJobList_.end()) {
         auto printerHistoryJobList = std::make_unique<std::map<std::string, std::shared_ptr<PrintJob>>>();
