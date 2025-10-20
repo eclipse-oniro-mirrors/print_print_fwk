@@ -27,7 +27,6 @@ const uint32_t ORIENTATION_OFFSET = 3;
 const int NUMBER_BASE = 10;
 const size_t MAX_STRING_COUNT = 1000;
 const uint32_t MAX_MEDIA_TYPE_SIZE = 200;
-const uint32_t HTTP_MAX_URI = 2083;
 }  // namespace
 
 namespace OHOS::Print {
