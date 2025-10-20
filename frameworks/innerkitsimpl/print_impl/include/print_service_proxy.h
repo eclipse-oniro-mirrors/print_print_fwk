@@ -86,6 +86,7 @@ public:
     int32_t QueryPrinterInfoByIp(const std::string &printerIp) override;
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName) override;
+    int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);

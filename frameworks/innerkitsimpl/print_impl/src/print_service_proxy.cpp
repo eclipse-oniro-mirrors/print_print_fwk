@@ -1282,4 +1282,30 @@ int32_t PrintServiceProxy::ConnectPrinterByIpAndPpd(const std::string &printerIp
     PRINT_HILOGI("PrintServiceProxy ConnectPrinterByIpAndPpd out. ret = [%{public}d]", ret);
     return ret;
 }
+
+int32_t PrintServiceProxy::SavePdfFileJob(const std::string &jobId, uint32_t fd)
+{
+    PRINT_HILOGI("PrintServiceProxy SavePdfFileJob started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(jobId);
+    data.WriteFileDescriptor(fd);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy SavePdfFileJob remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_SAVEPDFFILEJOB, data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("SavePdfFileJob Failed, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+    ret = GetResult(ret, reply);
+    PRINT_HILOGI("PrintServiceProxy SavePdfFileJob out. ret = [%{public}d]", ret);
+    return ret;
+}
 } // namespace OHOS::Print

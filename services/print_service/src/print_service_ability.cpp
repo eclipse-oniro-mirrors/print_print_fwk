@@ -4338,4 +4338,21 @@ int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printer
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceAbility::SavePdfFileJob(const std::string &jobId, uint32_t fd)
+{
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    int32_t userId = GetCurrentUserId();
+    if (GetUserIdByJobId(jobId) != userId) {
+        PRINT_HILOGE("Current user %{private}d is not the owner of the job %{private}s", userId, jobId.c_str());
+        return E_PRINT_INVALID_USERID;
+    }
+#ifdef CUPS_ENABLE
+    return DelayedSingleton<PrintCupsClient>::GetInstance()->CopyJobOutputFile(jobId, fd, true);
+#endif // CUPS_ENABLE
+    return E_PRINT_SERVER_FAILURE;
+}
 }  // namespace OHOS::Print

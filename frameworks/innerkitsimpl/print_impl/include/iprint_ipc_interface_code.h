@@ -70,6 +70,7 @@ namespace OHOS::Print {
         CMD_QUERYALLPPDS,
         CMD_QUERYIPINFO,
         CMD_CONNECTPRINTERBYIPANDPPD,
+        CMD_SAVEPDFFILEJOB,
     };
 } // namespace OHOS:Print
 #endif // PRINT_SERVICE_INTERFACE_H

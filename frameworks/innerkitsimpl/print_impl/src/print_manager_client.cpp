@@ -1026,4 +1026,15 @@ int32_t PrintManagerClient::ConnectPrinterByIpAndPpd(const std::string &printerI
     }
     return ret;
 }
+
+int32_t PrintManagerClient::SavePdfFileJob(const std::string &jobId, uint32_t fd)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->SavePdfFileJob(jobId, fd);
+        PRINT_HILOGD("PrintManagerClient SavePdfFileJob out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
 } // namespace OHOS::Print

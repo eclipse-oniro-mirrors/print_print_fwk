@@ -1511,20 +1511,16 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     }
     http_t *monitorHttp = nullptr;
     ippSetPort(CUPS_SEVER_PORT);
-    monitorHttp = httpConnect2(
-        cupsServer(), ippPort(), nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
+    monitorHttp = httpConnect2(cupsServer(), ippPort(), nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1,
+        LONG_TIME_OUT, nullptr);
     if (monitorHttp == nullptr) {
         return;
     }
     jobParams->cupsJobId = jobId;
+    AddPrintCupsJobId(jobParams->serviceJobId, jobId);
     PRINT_HILOGI("start job success, jobId: %{public}d", jobId);
-    auto monitorParams = std::make_shared<JobMonitorParam>(jobParams->serviceAbility,
-        jobParams->serviceJobId,
-        jobId,
-        jobParams->printerUri,
-        jobParams->printerName,
-        jobParams->printerId,
-        monitorHttp);
+    auto monitorParams = std::make_shared<JobMonitorParam>(jobParams->serviceAbility, jobParams->serviceJobId, jobId,
+        jobParams->printerUri, jobParams->printerName, jobParams->printerId, monitorHttp);
     BuildMonitorPolicy(monitorParams);
     PRINT_HILOGI("MonitorJobState enter, cupsJobId: %{public}d", monitorParams->cupsJobId);
     monitorParams->jobOriginatingUserName = jobParams->jobOriginatingUserName;
@@ -1780,6 +1776,51 @@ bool PrintCupsClient::AuthCupsPrintJob(const std::string &jobId, const std::stri
     ippDelete(response);
     httpClose(http);
     return true;
+}
+
+int32_t PrintCupsClient::CopyJobOutputFile(const std::string &jobId, uint32_t fd, bool cleanAfterCopied)
+{
+    uint32_t cupsJobId = GetPrintCupsJobId(jobId);
+    if (cupsJobId == 0) {
+        PRINT_HILOGW("Invalid job: %{private}s", jobId.c_str());
+        return E_PRINT_INVALID_PRINTJOB;
+    }
+    PRINT_HILOGI("CopyJobOutputFile cupsJobId: %{public}u", cupsJobId);
+    std::string cupsDir = GetCurCupsRootDir();
+    std::string jobFileInCups = std::string("spool/tmp/") + std::to_string(cupsJobId) + std::string(".pdf");
+    std::string srcFilePath = cupsDir + std::string("/") + jobFileInCups;
+    char realSrc[PATH_MAX] = {};
+    if (realpath(srcFilePath.c_str(), realSrc) == nullptr) {
+        PRINT_HILOGW("realpath errno: %{public}d", errno);
+        return E_PRINT_FILE_IO;
+    }
+    FILE *srcFile = fopen(realSrc, "rb");
+    if (srcFile == nullptr) {
+        PRINT_HILOGW("fopen errno: %{public}d", errno);
+        return E_PRINT_FILE_IO;
+    }
+    char buffer[DEFAULT_BUFFER_SIZE_4K];
+    size_t bytesRead;
+    int32_t ret = E_PRINT_NONE;
+    while ((bytesRead = fread(buffer, 1, sizeof(buffer), srcFile)) > 0) {
+        size_t bytesWrite = write(fd, buffer, bytesRead);
+        if (bytesWrite != bytesRead) {
+            PRINT_HILOGW("write abort, errno: %{public}d, read: %{public}zd, write: %{public}zd",
+                errno, bytesRead, bytesWrite);
+            ret = E_PRINT_FILE_IO;
+            break;
+        }
+    }
+    if (fclose(srcFile) != 0) {
+        PRINT_HILOGE("Close File Failure.");
+    }
+    if (cleanAfterCopied) {
+        RemovePrintCupsJobId(jobId);
+        if (unlink(realSrc) != 0) {
+            PRINT_HILOGW("failed to delete job output file, errno: %{public}d", errno);
+        }
+    }
+    return ret;
 }
 
 bool PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams)
@@ -2817,5 +2858,27 @@ bool PrintCupsClient::QueryPpdInfoMap(const std::string &ppdFilePath,
     }
     file.close();
     return true;
+}
+
+void PrintCupsClient::AddPrintCupsJobId(const std::string &jobId, uint32_t cupsJobId)
+{
+    std::lock_guard<std::mutex> lock(cupsJobIdMapMutex_);
+    cupsJobIdMap_[jobId] = cupsJobId;
+}
+
+void PrintCupsClient::RemovePrintCupsJobId(const std::string &jobId)
+{
+    std::lock_guard<std::mutex> lock(cupsJobIdMapMutex_);
+    cupsJobIdMap_.erase(jobId);
+}
+
+uint32_t PrintCupsClient::GetPrintCupsJobId(const std::string &jobId)
+{
+    std::lock_guard<std::mutex> lock(cupsJobIdMapMutex_);
+    auto iter = cupsJobIdMap_.find(jobId);
+    if (iter != cupsJobIdMap_.end()) {
+        return iter->second;
+    }
+    return 0;
 }
 }  // namespace OHOS::Print

@@ -1421,7 +1421,7 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0063_NeedRename, TestSize.Le
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
-HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_ShouldReturnTrue_When, TestSize.Level0)
+HWTEST_F(PrintServiceStubTest, AnalyzePrintEvents_ShouldReturnTrue, TestSize.Level0)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1491,6 +1491,26 @@ HWTEST_F(PrintServiceStubTest, OnConnectByIpAndPpd_ShouldReturnTrue, TestSize.Le
     auto stub = std::make_shared<MockPrintService>();
     EXPECT_NE(stub, nullptr);
     ON_CALL(*stub, AnalyzePrintEvents).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
+HWTEST_F(PrintServiceStubTest, SavePdfFileJob_ShouldReturnTrue, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_SAVEPDFFILEJOB);
+
+    std::string jobId = "test_job";
+    uint32_t fd = 1;
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    data.WriteString(jobId);
+    data.WriteFileDescriptor(fd);
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, SavePdfFileJob).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 }  // namespace Print

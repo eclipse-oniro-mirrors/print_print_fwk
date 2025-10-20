@@ -93,6 +93,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYIPINFO] = &PrintServiceStub::OnQueryPrinterInfoByIp;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIPANDPPD] =
         &PrintServiceStub::OnConnectPrinterByIpAndPpd;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_SAVEPDFFILEJOB] = &PrintServiceStub::OnSavePdfFileJob;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -935,4 +936,18 @@ bool PrintServiceStub::OnConnectPrinterByIpAndPpd(MessageParcel &data, MessagePa
     return ret == E_PRINT_NONE;
 }
 
+bool PrintServiceStub::OnSavePdfFileJob(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnSavePdfFileJob in");
+    std::string jobId = data.ReadString();
+    uint32_t fd = data.ReadFileDescriptor();
+
+    int32_t ret = SavePdfFileJob(jobId, fd);
+    reply.WriteInt32(ret);
+    if (close(fd) != 0) {
+        PRINT_HILOGI("Close File Failure.");
+    }
+    PRINT_HILOGI("PrintServiceStub::OnSavePdfFileJob out");
+    return ret == E_PRINT_NONE;
+}
 } // namespace OHOS::Print
