@@ -48,6 +48,15 @@ public:
     static bool IsPathValid(const std::string &filePath);
     static uint32_t GetIdFromFdPath(const std::string &fdPath);
     static std::string GetJobStateChar(const uint32_t state);
+    static bool ExtractIpv4(const std::string &str, std::string &ip, size_t &startPos);
+    static bool ExtractIpv6(const std::string &str, std::string &ip, size_t &startPos);
+    static std::string AnonymizeIpv4(const std::string &ip);
+    static std::string AnonymizeIpv6(const std::string &ip);
+    static std::string AnonymizeUUid(const std::string &uuid);
+    static std::string AnonymizePrinterId(const std::string &printerId);
+    static std::string AnonymizePrinterUri(const std::string &printerUri);
+    static std::string AnonymizeIp(const std::string &ip);
+    static std::string AnonymizeJobOption(const std::string &option);
 
     static void BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);
     static void BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);

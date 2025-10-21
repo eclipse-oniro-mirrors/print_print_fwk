@@ -68,7 +68,7 @@ public:
     [[nodiscard]] const std::string &GetPrinterId() const;
 
     [[nodiscard]] const std::string &GetPrinterName() const;
-    
+
     [[nodiscard]] bool HasPrinterIcon() const;
 
     [[nodiscard]] uint32_t GetPrinterIcon() const;
@@ -130,6 +130,8 @@ public:
     static std::shared_ptr<PrinterInfo> Unmarshalling(Parcel &parcel);
 
     void Dump() const;
+
+    void DumpInfo() const;
 
 private:
     bool ReadFromParcel(Parcel &parcel);

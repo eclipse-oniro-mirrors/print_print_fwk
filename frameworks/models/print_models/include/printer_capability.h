@@ -106,6 +106,8 @@ public:
 
     void Dump() const;
 
+    void DumpInfo() const;
+
     const char* GetPrinterAttrValue(const char* name);
 
     void SetPrinterAttrNameAndValue(const char* name, const char* value);

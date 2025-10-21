@@ -16,6 +16,7 @@
 #include "printer_info.h"
 #include "print_constant.h"
 #include "print_log.h"
+#include "print_utils.h"
 
 namespace OHOS::Print {
 PrinterInfo::PrinterInfo()
@@ -560,4 +561,26 @@ void PrinterInfo::Dump() const
         PRINT_HILOGD("isLastUsedPrinter: %{public}d", isLastUsedPrinter_);
     }
 }
+
+void PrinterInfo::DumpInfo() const
+{
+    PRINT_HILOGI("printerId: %{public}s", PrintUtils::AnonymizePrinterId(printerId_).c_str());
+    PRINT_HILOGI("printerName: %{public}s", printerName_.c_str());
+    PRINT_HILOGI("printerIcon: %{public}d", printerIcon_);
+    PRINT_HILOGI("printerState: %{public}d", printerState_);
+
+    if (hasCapability_) {
+        capability_.DumpInfo();
+    }
+    if (hasUri_) {
+        PRINT_HILOGI("uri: %{public}s", PrintUtils::AnonymizePrinterUri(uri_).c_str());
+    }
+    if (hasPrinterMake_) {
+        PRINT_HILOGI("printerMake: %{public}s", printerMake_.c_str());
+    }
+    if (hasPreferences_) {
+        preferences_.Dump();
+    }
+}
+
 }  // namespace OHOS::Print

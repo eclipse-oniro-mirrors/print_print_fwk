@@ -430,6 +430,40 @@ void PrinterCapability::Dump() const
     }
 }
 
+void PrinterCapability::DumpInfo() const
+{
+    PRINT_HILOGI("colorMode_ = %{public}d", colorMode_);
+    PRINT_HILOGI("duplexMode_ = %{public}d", duplexMode_);
+
+    for (auto pageItem : supportedPageSizeList_) {
+        PRINT_HILOGI("id_ = %{public}s", pageItem.GetId().c_str());
+    }
+
+    if (hasSupportedColorMode_) {
+        for (auto item : supportedColorModeList_) {
+            PRINT_HILOGI("supportedColorModeItem = %{public}d", item);
+        }
+    }
+
+    if (hasSupportedDuplexMode_) {
+        for (auto item : supportedDuplexModeList_) {
+            PRINT_HILOGI("supportedDuplexModeItem = %{public}d", item);
+        }
+    }
+
+    if (hasSupportedMediaType_) {
+        for (auto item : supportedMediaTypeList_) {
+            PRINT_HILOGI("supportedMediaTypeItem = %{public}s", item.c_str());
+        }
+    }
+
+    if (hasSupportedQuality_) {
+        for (auto item : supportedQualityList_) {
+            PRINT_HILOGI("supportedQualityItem = %{public}d", item);
+        }
+    }
+}
+
 const char *PrinterCapability::GetPrinterAttrValue(const char *name)
 {
     auto iter = printerAttr_group.find(name);
