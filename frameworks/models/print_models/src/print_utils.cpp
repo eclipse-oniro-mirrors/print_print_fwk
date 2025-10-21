@@ -265,7 +265,7 @@ std::string PrintUtils::AnonymizeIpv6(const std::string &ip)
     } else {
         anonymizeMiddle = middlePart.substr(0, middlePart.length() - ANONYMIZE_IPV6_LEN) + "xx";
     }
-    return ip.substr(0,secondColon + 1) + anonymizeMiddle + ":xxxx:xxxx:xxxx:xxxx:xxxx";
+    return ip.substr(0, secondColon + 1) + anonymizeMiddle + ":xxxx:xxxx:xxxx:xxxx:xxxx";
 }
 
 std::string PrintUtils::AnonymizeUUid(const std::string &uuid)
