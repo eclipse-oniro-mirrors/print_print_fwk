@@ -134,6 +134,25 @@ int32_t PrintServiceProxy::DisconnectPrinter(const std::string &printerId)
     return ret;
 }
 
+int32_t PrintServiceProxy::AddRawPrinter(PrinterInfo &info)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    info.Marshalling(data);
+    PRINT_HILOGI("PrintServiceProxy AddRawPrinter started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy AddRawPrinter remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_ADD_RAW_PRINTER, data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy AddRawPrinter out. ret = [%{public}d]", ret);
+    return ret;
+}
+
 int32_t PrintServiceProxy::QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos)
 {
     MessageParcel data;
@@ -484,6 +503,26 @@ int32_t PrintServiceProxy::QueryAddedPrinter(std::vector<std::string> &printerNa
     PRINT_HILOGD("PrintServiceProxy QueryAddedPrinter out. ret = [%{public}d]", ret);
     reply.ReadStringVector(&printerNameList);
     PRINT_HILOGD("PrintServiceProxy QueryAddedPrinter printerNameList size %{public}zu.", printerNameList.size());
+    return ret;
+}
+
+int32_t PrintServiceProxy::QueryRawAddedPrinter(std::vector<std::string> &printerNameList)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    PRINT_HILOGD("PrintServiceProxy QueryRawAddedPrinter started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy QueryRawAddedPrinter remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYRAWADDEDPRINTER, data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy QueryRawAddedPrinter out. ret = [%{public}d]", ret);
+    reply.ReadStringVector(&printerNameList);
+    PRINT_HILOGD("PrintServiceProxy QueryRawAddedPrinter printerNameList size %{public}zu.", printerNameList.size());
     return ret;
 }
 

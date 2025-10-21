@@ -64,6 +64,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t AddRawPrinter(PrinterInfo &printerInfo) override
+    {
+        return E_PRINT_NONE;
+    }
     int32_t RemovePrinters(const std::vector<std::string> &printerIds) override
     {
         return E_PRINT_NONE;
@@ -160,6 +164,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t QueryRawAddedPrinter(std::vector<std::string> &printerNameList) override
+    {
+        return E_PRINT_NONE;
+    }
     int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList) override
     {
@@ -252,6 +260,8 @@ public:
     MOCK_METHOD1(CancelPrintJob, int32_t(const std::string &));
     MOCK_METHOD1(RestartPrintJob, int32_t(const std::string &));
     MOCK_METHOD1(AddPrinters, int32_t(const std::vector<PrinterInfo> &));
+    MOCK_METHOD1(AddRawPrinter, int32_t(PrinterInfo &));
+    MOCK_METHOD1(QueryRawAddedPrinter, int32_t(std::vector<std::string> &));
     MOCK_METHOD1(RemovePrinters, int32_t(const std::vector<std::string> &));
     MOCK_METHOD1(UpdatePrinters, int32_t(const std::vector<PrinterInfo> &));
     MOCK_METHOD2(UpdatePrinterState, int32_t(const std::string &, uint32_t));

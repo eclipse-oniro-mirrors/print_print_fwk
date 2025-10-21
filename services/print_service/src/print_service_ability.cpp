@@ -113,6 +113,7 @@ static const std::string TOKEN_KEY = "ohos.ability.params.token";
 static const std::string NOTIFY_INFO_SPOOLER_CLOSED_FOR_CANCELLED = "spooler_closed_for_cancelled";
 static const std::string NOTIFY_INFO_SPOOLER_CLOSED_FOR_STARTED = "spooler_closed_for_started";
 
+static const std::string RAW_GLOBAL_ID_DELIMITER = ".";
 static const std::string PRINTER_ID_DELIMITER = ":";
 static const std::string USB_PRINTER = "usb";
 static const std::string DEVICE_TYPE = "PRINTER";
@@ -643,6 +644,50 @@ int32_t PrintServiceAbility::DestroyExtension()
     return E_PRINT_NONE;
 }
 
+int32_t PrintServiceAbility::AddRawPrinter(PrinterInfo &info)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGI("AddRawPrinter start.");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+
+    std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());
+    if (extensionId.find(RAW_PPD_DRIVER) != std::string::npos) {
+        PRINT_HILOGD("QueryCallerBundleName error, contains RAW_PPD_DRIVER.");
+        return E_PRINT_INVALID_EXTENSION;
+    }
+    std::string printerId = info.GetPrinterId();
+    std::string globalPrinterId = PrintUtils::GetGlobalId(extensionId, printerId);
+    std::string rawGlobalPrinterId = RAW_PPD_DRIVER + RAW_GLOBAL_ID_DELIMITER + globalPrinterId;
+    PRINT_HILOGD("AddRawPrinter printerId = %{public}s", rawGlobalPrinterId.c_str());
+    info.SetPrinterId(rawGlobalPrinterId);
+    std::string printerName = RenamePrinterWhenAdded(info);
+    PRINT_HILOGI("printerName: %{public}s", printerName.c_str());
+    info.SetPrinterName(printerName);
+
+    Json::Value optionJson;
+    optionJson["driver"] = "RAW";
+    int32_t ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCupsWithSpecificPpd(
+        info.GetUri(), printerName, RAW_PPD_NAME);
+    std::string option = PrintJsonUtil::WriteString(optionJson);
+    PRINT_HILOGD("AddRawPrinter option: %{public}s", option.c_str());
+    info.SetOption(option);
+
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("Failed to add raw printer, ret = [%{public}d]", ret);
+        return ret;
+    }
+
+    std::shared_ptr<PrinterInfo> infoptr = std::make_shared<PrinterInfo>(info);
+    OnPrinterAddedToCups(infoptr, RAW_PPD_NAME);
+    PRINT_HILOGI("AddRawPrinter success.");
+    return E_PRINT_NONE;
+}
+
 int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos)
 {
     ManualStart();
@@ -736,6 +781,32 @@ int32_t PrintServiceAbility::QueryAddedPrinter(std::vector<std::string> &printer
         PRINT_HILOGD("QueryAddedPrinter in printerName %{public}s", printerNameList[i].c_str());
         std::string printerId = printSystemData_.QueryPrinterIdByStandardizeName(printerNameList[i]);
         PRINT_HILOGD("QueryAddedPrinter in printerId %{public}s", printerId.c_str());
+        if (printerId.empty()) {
+            continue;
+        }
+        printerList.push_back(printerId);
+    }
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::QueryRawAddedPrinter(std::vector<std::string> &printerList)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGD("QueryRawAddedPrinter started.");
+    std::vector<std::string> printerNameList;
+    printSystemData_.GetRawAddedPrinterListFromSystemData(printerNameList);
+    if (printerNameList.size() <= 0) {
+        PRINT_HILOGW("no added raw printerId");
+        return E_PRINT_NONE;
+    }
+    for (uint32_t i = 0; i < printerNameList.size(); i++) {
+        PRINT_HILOGD("QueryRawAddedPrinter in printerName %{public}s", printerNameList[i].c_str());
+        std::string printerId = printSystemData_.QueryPrinterIdByStandardizeName(printerNameList[i]);
+        PRINT_HILOGD("QueryRawAddedPrinter in printerId %{public}s", printerId.c_str());
         if (printerId.empty()) {
             continue;
         }
@@ -3688,7 +3759,6 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
         PRINT_HILOGW("invalid params");
         return E_PRINT_INVALID_PRINTER;
     }
-    
     if (!PrintJsonUtil::IsMember(connectParamJson, "ip") || !connectParamJson["ip"].isString()) {
         PRINT_HILOGW("ip missing");
         return E_PRINT_INVALID_PRINTER;

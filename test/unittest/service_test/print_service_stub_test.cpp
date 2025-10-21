@@ -1421,6 +1421,148 @@ HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_0063_NeedRename, TestSize.Le
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
 
+/**
+ * @tc.name: PrintServiceStubTest_OnAddRawPrinter_Success
+ * @tc.desc: Verify the OnAddRawPrinter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_OnAddRawPrinter_Success, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_ADD_RAW_PRINTER);
+
+    PrinterInfo testInfo;
+    testInfo.SetPrinterId("raw_printer");
+    testInfo.SetOption("raw_option");
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    testInfo.Marshalling(data);
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, AddRawPrinter(_)).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
+/**
+ * @tc.name: PrintServiceStubTest_OnQueryRawAddedPrinter_Success
+ * @tc.desc: Verify the OnQueryRawAddedPrinter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_OnQueryRawAddedPrinter_Success, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_QUERYRAWADDEDPRINTER);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+
+    ON_CALL(*stub, QueryRawAddedPrinter).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+/**
+ * @tc.name: PrintServiceStubTest_OnAddRawPrinter_InvalidInput
+ * @tc.desc: Verify the OnAddRawPrinter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_OnAddRawPrinter_InvalidInput, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_ADD_RAW_PRINTER);
+
+    PrinterInfo testInfo;
+    testInfo.SetPrinterId("");
+    testInfo.SetOption("raw_option");
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    testInfo.Marshalling(data);
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, AddRawPrinter(_)).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
+/**
+ * @tc.name: PrintServiceStubTest_OnAddRawPrinter_Success
+ * @tc.desc: Verify the OnAddRawPrinter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_OnAddRawPrinter_Success, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_ADD_RAW_PRINTER);
+
+    PrinterInfo testInfo;
+    testInfo.SetPrinterId("raw_printer");
+    testInfo.SetOption("raw_option");
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    testInfo.Marshalling(data);
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, AddRawPrinter(_)).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
+/**
+ * @tc.name: PrintServiceStubTest_OnQueryRawAddedPrinter_Success
+ * @tc.desc: Verify the OnQueryRawAddedPrinter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_OnQueryRawAddedPrinter_Success, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_QUERYRAWADDEDPRINTER);
+
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+
+    ON_CALL(*stub, QueryRawAddedPrinter).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+/**
+ * @tc.name: PrintServiceStubTest_OnAddRawPrinter_InvalidInput
+ * @tc.desc: Verify the OnAddRawPrinter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceStubTest, PrintServiceStubTest_OnAddRawPrinter_InvalidInput, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_ADD_RAW_PRINTER);
+
+    PrinterInfo testInfo;
+    testInfo.SetPrinterId("");
+    testInfo.SetOption("raw_option");
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    testInfo.Marshalling(data);
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, AddRawPrinter(_)).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
 HWTEST_F(PrintServiceStubTest, AnalyzePrintEvents_ShouldReturnTrue, TestSize.Level0)
 {
     MessageParcel data;

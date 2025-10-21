@@ -1354,6 +1354,10 @@ bool PrintCupsClient::CheckPrinterMakeModel(JobParameters *jobParams, bool &driv
     while (retryCount < GET_OPTION_TIMES) {
         dest = printAbility_->GetNamedDest(CUPS_HTTP_DEFAULT, jobParams->printerName.c_str(), nullptr);
         if (dest != nullptr) {
+            if (PrintUtil::startsWith(jobParams->printerId, RAW_PPD_DRIVER)) {
+                PRINT_HILOGI("raw printer, skip check printer make and model.");
+                return true;
+            }
             const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
             if (makeModel == nullptr || strcmp(makeModel, "Local Raw Printer") == 0) {
                 printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
@@ -1389,6 +1393,9 @@ bool PrintCupsClient::CheckPrinterDriverExist(const std::string &makeModel)
         strstr(makeModel.c_str(), BSUNI_PPD_NAME.c_str()) != nullptr) {
         PRINT_HILOGI("skip check printer driver exist");
         return true;
+    }
+    if (makeModel == "Local Raw Printer") {
+        PRINT_HILOGI("raw printer, skip check printer driver exist.");
     }
     std::string ppdName;
     QueryPPDInformation(makeModel, ppdName);
@@ -2063,6 +2070,11 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     bool isVendorPrinter = strstr(printerId.c_str(), VENDOR_PPD_DRIVER.c_str()) != nullptr;
     bool isCustomizedExtension = !(PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME) ||
                                    PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX));
+    bool isRawPrinter = PrintUtil::startsWith(printerId, RAW_PPD_DRIVER);
+    if (isRawPrinter) {
+        PRINT_HILOGI("printer is raw printer.");
+        return true;
+    }
     if ((isUsbPrinter || isCustomizedExtension || isVendorPrinter) && monitorParams->serviceAbility != nullptr) {
         if ((isUsbPrinter && CheckUsbPrinterOnline(printerId)) ||
             monitorParams->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) != nullptr) {
@@ -2622,13 +2634,13 @@ bool PrintCupsClient::IsIpAddress(const char *host)
 std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)
 {
     std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + ppdName;
-    
+
     std::ifstream file(ppdFilePath, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
         PRINT_HILOGE("ppd %{private}s open failed", ppdName.c_str());
         return "";
     }
-    
+
     std::streamsize size = file.tellg();
     constexpr std::streamsize MAX_ALLOWED_PPD_SIZE = 10 * 1024 * 1024;  // 10 MB
 
@@ -2637,24 +2649,24 @@ std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)
         return "";
     }
     file.seekg(0, std::ios::beg);
-    
+
     std::vector<char> buffer(size);
     if (!file.read(buffer.data(), size)) {
         PRINT_HILOGE("ppd %{private}s read failed", ppdName.c_str());
         return "";
     }
-    
+
     int32_t HASH_BUFFER_SIZE = 32;
     unsigned char hash[HASH_BUFFER_SIZE];
     size_t hashSize = sizeof(hash);
-    
+
     const char* HASH_ALGORITHM = "sha2-256";
     ssize_t result = cupsHashData(HASH_ALGORITHM, buffer.data(), size, hash, hashSize);
     if (result <= 0) {
         PRINT_HILOGE("cupsHashData fail, ret = %{public}d", result);
         return "";
     }
-    
+
     std::ostringstream oss;
     constexpr int32_t HEX_STRING_WIDTH = 2;
     oss << std::hex << std::setfill('0');

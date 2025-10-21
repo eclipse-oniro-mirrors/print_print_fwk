@@ -480,8 +480,44 @@ void PrintSystemData::GetAddedPrinterListFromSystemData(std::vector<std::string>
         if (info == nullptr) {
             continue;
         }
+        std::string option = info->GetOption();
+        if (!option.empty()) {
+            Json::Value optionJson;
+            if (PrintJsonUtil::Parse(option, optionJson)) {
+                if (optionJson.isMember("driver") && optionJson["driver"].isString() &&
+                    optionJson["driver"].asString() == "RAW") {
+                    continue;
+                }
+            }
+        }
         PRINT_HILOGD("GetAddedPrinterListFromSystemData info->name: %{public}s", (info->GetPrinterName()).c_str());
         printerNameList.push_back(info->GetPrinterName());
+    }
+}
+
+void PrintSystemData::GetRawAddedPrinterListFromSystemData(std::vector<std::string> &printerNameList)
+{
+    std::vector<std::string> addedPrinterList = QueryAddedPrinterIdList();
+    for (auto printerId : addedPrinterList) {
+        auto info = GetAddedPrinterMap().Find(printerId);
+        if (info == nullptr) {
+            continue;
+        }
+
+        std::string option = info->GetOption();
+        if (option.empty()) {
+            PRINT_HILOGD("option is empty.");
+            continue;
+        }
+        Json::Value optionJson;
+        if (PrintJsonUtil::Parse(option, optionJson)) {
+            if (optionJson.isMember("driver") && optionJson["driver"].isString() &&
+                optionJson["driver"].asString() == "RAW") {
+                PRINT_HILOGD(
+                    "GetRawAddedPrinterListFromSystemData info->name: %{public}s", (info->GetPrinterName()).c_str());
+                printerNameList.push_back(info->GetPrinterName());
+            }
+        }
     }
 }
 

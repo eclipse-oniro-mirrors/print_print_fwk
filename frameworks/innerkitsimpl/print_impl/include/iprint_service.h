@@ -39,6 +39,7 @@ public:
     virtual int32_t DisconnectPrinter(const std::string &printerId) = 0;
     virtual int32_t StartDiscoverPrinter(const std::vector<std::string> &extensionList) = 0;
     virtual int32_t StopDiscoverPrinter() = 0;
+    virtual int32_t AddRawPrinter(PrinterInfo &info) = 0;
     virtual int32_t QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos) = 0;
     virtual int32_t StartPrintJob(PrintJob &jobInfo) = 0;
     virtual int32_t CancelPrintJob(const std::string &jobId) = 0;
@@ -75,6 +76,7 @@ public:
     virtual int32_t NotifyPrintService(const std::string &jobId, const std::string &type) = 0;
     virtual int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) = 0;
     virtual int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) = 0;
+    virtual int32_t QueryRawAddedPrinter(std::vector<std::string> &printerNameList) = 0;
     virtual int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList) = 0;
     virtual int32_t StartNativePrintJob(PrintJob &printJob) = 0;

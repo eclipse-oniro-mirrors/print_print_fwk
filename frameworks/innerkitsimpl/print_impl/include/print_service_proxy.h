@@ -32,6 +32,7 @@ public:
     int32_t ConnectPrinter(const std::string &printerId) override;
     int32_t DisconnectPrinter(const std::string &printerId) override;
     int32_t StartDiscoverPrinter(const std::vector<std::string> &extensionList) override;
+    int32_t AddRawPrinter(PrinterInfo &info) override;
     int32_t StopDiscoverPrinter() override;
     int32_t QueryAllExtension(std::vector<PrintExtensionInfo> &extensionInfos) override;
     int32_t StartPrintJob(PrintJob &jobinfo) override;
@@ -73,6 +74,7 @@ public:
 
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) override;
+    int32_t QueryRawAddedPrinter(std::vector<std::string> &printerNameList) override;
     int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList) override;
     int32_t StartNativePrintJob(PrintJob &printJob) override;

@@ -45,6 +45,17 @@ void TestAddPrinters(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     PrintServiceAbility::GetInstance()->AddPrinters(printerInfos);
 }
 
+void TestAddRawPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetUri(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetOption(JOB_OPTIONS);
+
+    PrintServiceAbility::GetInstance()->AddRawPrinter(printerInfo);
+}
+
 void TestRemovePrinters(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);

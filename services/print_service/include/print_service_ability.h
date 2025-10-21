@@ -65,6 +65,7 @@ public:
     int32_t CancelPrintJob(const std::string &jobId) override;
     int32_t RestartPrintJob(const std::string &jobId) override;
     int32_t AddPrinters(const std::vector<PrinterInfo> &printerInfos) override;
+    int32_t AddRawPrinter(PrinterInfo &info) override;
     int32_t RemovePrinters(const std::vector<std::string> &printerIds) override;
     int32_t UpdatePrinters(const std::vector<PrinterInfo> &printerInfos) override;
     int32_t UpdatePrinterState(const std::string &printerId, uint32_t state) override;
@@ -97,7 +98,7 @@ public:
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
 
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) override;
-
+    int32_t QueryRawAddedPrinter(std::vector<std::string> &printerNameList) override;
     int32_t QueryPrinterProperties(const std::string &printerId, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList) override;
     int32_t StartNativePrintJob(PrintJob &printJob) override;
@@ -128,7 +129,7 @@ public:
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName);
     int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
-    
+
 protected:
     void OnStart() override;
     void OnStop() override;

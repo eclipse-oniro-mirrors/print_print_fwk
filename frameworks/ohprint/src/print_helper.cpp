@@ -642,6 +642,43 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     PRINT_HILOGI("SetOptionInPrintJob out.");
 }
 
+void SetDefaultCapabilityInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJob)
+{
+    if (nativePrintJob.duplexMode < DUPLEX_MODE_ONE_SIDED ||
+        nativePrintJob.duplexMode > DUPLEX_MODE_TWO_SIDED_SHORT_EDGE) {
+        printJob.SetDuplexMode(DUPLEX_MODE_ONE_SIDED);
+    } else {
+        printJob.SetDuplexMode(static_cast<uint32_t>(nativePrintJob.duplexMode));
+    }
+    if (nativePrintJob.colorMode < COLOR_MODE_MONOCHROME || nativePrintJob.colorMode > COLOR_MODE_AUTO) {
+        printJob.SetColorMode(COLOR_MODE_MONOCHROME);
+    } else {
+        printJob.SetColorMode(static_cast<uint32_t>(nativePrintJob.colorMode));
+    }
+    if (nativePrintJob.orientationMode < ORIENTATION_MODE_PORTRAIT ||
+        nativePrintJob.orientationMode > ORIENTATION_MODE_NONE) {
+        printJob.SetIsLandscape(false);
+        printJob.SetIsSequential(true);
+    } else {
+        SetPrintOrientationInPrintJob(nativePrintJob, printJob);
+    }
+    if (nativePrintJob.pageSizeId == nullptr) {
+        std::string pageSizeId = "ISO_A4";
+        PrintPageSize pageSize;
+        if (!PrintPageSize::FindPageSizeById(pageSizeId, pageSize)) {
+            PRINT_HILOGW("use custom native page size: %{public}s.", pageSizeId.c_str());
+            pageSize.SetId(pageSizeId);
+            pageSize.SetName(pageSizeId);
+        }
+        printJob.SetPageSize(pageSize);
+    } else {
+        SetPrintPageSizeInPrintJob(nativePrintJob, printJob);
+    }
+
+    SetPrintMarginInPrintJob(nativePrintJob, printJob);
+    SetOptionInPrintJob(nativePrintJob, printJob);
+}
+
 int32_t ConvertNativeJobToPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJob)
 {
     if (nativePrintJob.fdList == nullptr || nativePrintJob.copyNumber <= 0) {
@@ -659,6 +696,12 @@ int32_t ConvertNativeJobToPrintJob(const Print_PrintJob &nativePrintJob, PrintJo
     printJob.SetFdList(fdList);
     printJob.SetPrinterId(std::string(nativePrintJob.printerId));
     printJob.SetCopyNumber(nativePrintJob.copyNumber);
+    if (PrintUtil::startsWith(std::string(nativePrintJob.printerId), RAW_PPD_DRIVER)) {
+        PRINT_HILOGI("raw printer, SetDefaultCapabilityInPrintJob start.");
+        SetDefaultCapabilityInPrintJob(nativePrintJob, printJob);
+        return E_PRINT_NONE;
+    }
+
     printJob.SetDuplexMode(static_cast<uint32_t>(nativePrintJob.duplexMode));
     printJob.SetColorMode(static_cast<uint32_t>(nativePrintJob.colorMode));
 

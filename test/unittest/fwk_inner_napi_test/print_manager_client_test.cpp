@@ -2659,6 +2659,116 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0161_NeedRename, TestSiz
 }
 
 /**
+ * @tc.name: PrintManagerClientTest_AddRawPrinter_LoadServerFailed
+ * @tc.desc: AddRawPrinter - LoadServer failed
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_AddRawPrinter_LoadServerFailed, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    PrinterInfo info;
+    int32_t ret = PrintManagerClient::GetInstance()->AddRawPrinter(info);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: PrintManagerClientTest_AddRawPrinter_GetPrintServiceProxyFailed
+ * @tc.desc: AddRawPrinter - LoadServer success, but GetPrintServiceProxy failed
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_AddRawPrinter_GetPrintServiceProxyFailed, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    PrinterInfo info;
+    int32_t ret = PrintManagerClient::GetInstance()->AddRawPrinter(info);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: PrintManagerClientTest_AddRawPrinter_RpcCallSuccess
+ * @tc.desc: AddRawPrinter - RPC call success
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_AddRawPrinter_RpcCallSuccess, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    ON_CALL(*service, AddRawPrinter(_)).WillByDefault(Return(E_PRINT_NONE));
+
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    CallRemoteObject(service, obj, dr);
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrinterInfo info;
+    int32_t ret = PrintManagerClient::GetInstance()->AddRawPrinter(info);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_NE(dr, nullptr);
+    dr->OnRemoteDied(obj);
+}
+
+/**
+ * @tc.name: PrintManagerClientTest_QueryRawAddedPrinter_LoadServerFailed
+ * @tc.desc: QueryRawAddedPrinter - LoadServer failed
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_QueryRawAddedPrinter_LoadServerFailed, TestSize.Level1)
+{
+    std::vector<std::string> printerNameList;
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance()->QueryRawAddedPrinter(printerNameList);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    EXPECT_TRUE(printerNameList.empty());
+}
+
+/**
+ * @tc.name: PrintManagerClientTest_0166_NeedRename
+ * @tc.desc: QueryRawAddedPrinter - GetPrintServiceProxy failed
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_QueryRawAddedPrinter_GetPrintServiceProxyFail, TestSize.Level1)
+{
+    std::vector<std::string> printerNameList;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    int32_t ret = PrintManagerClient::GetInstance()->QueryRawAddedPrinter(printerNameList);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    EXPECT_TRUE(printerNameList.empty());
+}
+
+/**
+ * @tc.name: PrintManagerClientTest_QueryRawAddedPrinter_RpcCallSuccess
+ * @tc.desc: QueryRawAddedPrinter - RPC call success
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_QueryRawAddedPrinter_RpcCallSuccess, TestSize.Level1)
+{
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    std::vector<std::string> expectedPrinters = {"printer1", "printer2"};
+    EXPECT_CALL(*service, QueryRawAddedPrinter(_))
+        .WillOnce(DoAll(SetArgReferee<0>(expectedPrinters), Return(E_PRINT_NONE)));
+
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    CallRemoteObject(service, obj, dr);
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    std::vector<std::string> printerNameList;
+    int32_t ret = PrintManagerClient::GetInstance()->QueryRawAddedPrinter(printerNameList);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(printerNameList, expectedPrinters);
+    EXPECT_NE(dr, nullptr);
+    dr->OnRemoteDied(obj);
+}
+
+/**
  * @tc.name: AnalyzePrintEvents_ShouldReturnNoPermission_WhenNoPermission
  * @tc.desc: AnalyzePrintEvents failed case.
  * @tc.type: FUNC

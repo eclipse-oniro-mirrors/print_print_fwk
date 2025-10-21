@@ -580,6 +580,33 @@ Print_ErrorCode OH_Print_Init();
 Print_ErrorCode OH_Print_Release();
 
 /**
+ * @brief This API add a raw printer to the system by specifying its ID, name, and URI.
+ *
+ * @param printerId The id of the raw printer to be added.
+ * @param printerName The name of the raw printer to be added.
+ * @param printerUri The uri of the raw printer to be added.
+ * @return Returns {@link Print_ErrorCode#PRINT_ERROR_NONE} if the execution is successful.
+ *         {@link PRINT_ERROR_INVALID_EXTENSION} if any input is null or invalid.
+ *         {@link PRINT_ERROR_RPC_FAILURE} Unable to connect to the print service.
+ *         {@link PRINT_ERROR_NO_PERMISSION} The permission {@code ohos.permission.PRINT} is needed.
+ * @syscap SystemCapability.Print.PrintFramework
+ */
+Print_ErrorCode OH_Print_AddRawPrinter(const char *printerId, const char *printerName, const char *printerUri);
+
+/**
+ * @brief This API queries for a list of added raw printers.
+ *
+ * @param printerIdList A pointer to a {@link Print_StringList} instance to store the queried raw printer id list.
+ * @return Returns {@link Print_ErrorCode#PRINT_ERROR_NONE} if the execution is successful.
+ *         {@link PRINT_ERROR_NO_PERMISSION} The permission {@code ohos.permission.PRINT} is needed.
+ *         {@link PRINT_ERROR_INVALID_PARAMETER} printerIdList is NULL.
+ *         {@link PRINT_ERROR_INVALID_PRINTER} Unable to query any connected printers.
+ *         {@link PRINT_ERROR_GENERIC_FAILURE} Unable to copy the printer id list.
+ * @syscap SystemCapability.Print.PrintFramework
+ */
+Print_ErrorCode OH_Print_GetRawPrinterList(Print_StringList *printerIdList);
+
+/**
  * @brief This API starts discovering printers.
  *
  * @permission {@code ohos.permission.PRINT}

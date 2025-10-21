@@ -286,6 +286,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartOne_ErrorToken_Shou
     EXPECT_EQ(service->QueryAllPrintJob(historyPrintJobs), E_PRINT_NO_PERMISSION);
     std::vector<std::string> printerList;
     EXPECT_EQ(service->QueryAddedPrinter(printerList), E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(service->QueryRawAddedPrinter(printerList), E_PRINT_NO_PERMISSION);
     PrinterInfo info;
     EXPECT_EQ(service->QueryPrinterInfoByPrinterId(printerId, info), E_PRINT_NO_PERMISSION);
     std::vector<std::string> keyList;
@@ -356,6 +357,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartTwo_ErrorToken_Shou
     std::string jobId = GetDefaultJobId();
     EXPECT_EQ(service->NotifyPrintServiceEvent(jobId, event), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->DestroyExtension(), E_PRINT_NO_PERMISSION);
+    PrinterInfo info;
+    EXPECT_EQ(service->AddRawPrinter(info), E_PRINT_NO_PERMISSION);
 }
 
 /**
@@ -2359,6 +2362,55 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0157_NeedRename, TestS
     PrinterInfo printer;
     service->printSystemData_.InsertAddedPrinter(info->GetPrinterId(), printer);
     EXPECT_EQ(service->ConnectPrinter(info->GetPrinterId()), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddRawPrinter_Success, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+
+    PrinterInfo info;
+    info.SetPrinterId("test_printer_id");
+    info.SetUri("test_printer_uri");
+    info.SetPrinterName("test_printer_name");
+    int32_t ret = service->AddRawPrinter(info);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_QueryRawAddedPrinter_EmptyList, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::vector<std::string> printerList;
+    EXPECT_EQ(service->QueryRawAddedPrinter(printerList), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_QueryRawAddedPrinter_Success, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::vector<std::string> printerlist;
+    auto printer = std::make_shared<PrinterInfo>();
+    printer->SetPrinterName("testPrinterName");
+    std::string printerId = "testPrinterId";
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
+    EXPECT_EQ(service->QueryRawAddedPrinter(printerlist), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_QueryRawAddedPrinter_EmptyId, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+    std::vector<std::string> printerList;
+    auto printer = std::make_shared<PrinterInfo>();
+    printer->SetPrinterName("testPrinterName");
+    std::string printerId = "";
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
+    EXPECT_EQ(service->QueryRawAddedPrinter(printerList), E_PRINT_NONE);
 }
 
 /**
