@@ -1524,7 +1524,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
 {
     if (jobParams == nullptr) {
         PRINT_HILOGW("jobParams is null");
-        return false;
+        return;
     }
     PRINT_HILOGI("StartCupsJob start, jobId: %{public}s.", jobParams->serviceJobId.c_str());
     http_t *http = nullptr;
