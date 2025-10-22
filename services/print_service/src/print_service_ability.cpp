@@ -122,7 +122,7 @@ static const std::string PRINT_CONSTRAINT = "constraint.print";
 static const std::string PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH = "const.window.support_window_pcmode_switch";
 static const std::string WINDOW_PCMODE_SWITCH_STATUS = "window_pcmode_switch_status";
 
-#if ENTERPRISE_ENABLE
+#if defined(ENTERPRISE_ENABLE) && ENTERPRISE_ENABLE
 static const std::string IS_ENTERPRISE_ENABLE = "true";
 static const std::string ENTERPRISE_SPACE_PARAM = "persist.space_mgr_service.enterprise_space_enable";
 #endif  // ENTERPRISE_ENABLE
