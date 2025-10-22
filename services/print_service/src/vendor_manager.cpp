@@ -541,6 +541,8 @@ void VendorManager::SetConnectingPrinter(ConnectMethod method, const std::string
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     connectingMethod = method;
     connectingPrinter = globalPrinterIdOrIp;
+    connectingProtocol = "auto";
+    connectingPpdName = "auto";
     connectingState = ConnectState::STATE_CONNECTING;
 }
 
@@ -630,12 +632,12 @@ bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const
         PRINT_HILOGE("no driver to connect printer by ip");
         return false;
     }
+    SetConnectingPrinter(IP_AUTO, printerIp);
     connectingProtocol = protocol;
     if (connectingProtocol.empty()) {
         connectingProtocol = "auto";
     }
     connectingPpdName = ppdName;
-    SetConnectingPrinter(IP_AUTO, printerIp);
     return wlanGroupDriver->ConnectPrinterByIpAndPpd(printerIp, connectingProtocol, ppdName);
 }
 
