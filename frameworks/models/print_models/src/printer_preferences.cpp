@@ -433,7 +433,7 @@ void PrinterPreferences::Dump() const
         PRINT_HILOGI("defaultReverse: %{public}d", defaultReverse_);
     }
     if (hasOption_) {
-        PRINT_HILOGD("option: %{private}s", option_.c_str());
+        PRINT_HILOGI("option: %{public}s", option_.c_str());
     }
 }
 

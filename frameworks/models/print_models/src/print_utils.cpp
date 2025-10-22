@@ -42,6 +42,8 @@ const int32_t DEFAULT_FD = 99;
 const int32_t MINIMUN_RANDOM_NUMBER_100 = 100;
 const int32_t MAXIMUN_RANDOM_NUMBER_999 = 999;
 const uint32_t URI_HOST_START_STR_LEN = 3;
+const uint32_t ANONYMIZE_IPV4_LEN = 3;
+const uint32_t ANONYMIZE_IPV6_LEN = 2;
 
 std::string PrintUtils::ToLower(const std::string &s)
 {
@@ -206,6 +208,126 @@ std::string PrintUtils::GetJobStateChar(const uint32_t state)
         return it->second;
     }
     return "PRINT_JOB_UNKNOWN";
+}
+
+bool PrintUtils::ExtractIpv4(const std::string &str, std::string &ip, size_t &startPos)
+{
+    std::regex ipRegex(R"((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b))");
+    std::smatch match;
+    if (std::regex_search(str, match, ipRegex)) {
+        ip = match[0];
+        startPos = match.position();
+        return true;
+    }
+    return false;
+}
+
+bool PrintUtils::ExtractIpv6(const std::string &str, std::string &ip, size_t &startPos)
+{
+    std::regex ipRegex(R"((\b([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b))");
+    std::smatch match;
+    if (std::regex_search(str, match, ipRegex)) {
+        ip = match[0];
+        startPos = match.position();
+        return true;
+    }
+    return false;
+}
+
+std::string PrintUtils::AnonymizeIpv4(const std::string &ip)
+{
+    size_t lastDot = ip.find_last_of('.');
+    if (lastDot != std::string::npos) {
+        std::string lastOctet = ip.substr(lastDot + 1);
+        if (lastOctet.find_first_of('.') == std::string::npos && lastOctet.length() <= ANONYMIZE_IPV4_LEN) {
+            return ip.substr(0, lastDot + 1) + "xxx";
+        }
+    }
+    return ip;
+}
+
+std::string PrintUtils::AnonymizeIpv6(const std::string &ip)
+{
+    size_t firstColon = ip.find(':');
+    size_t secondColon = ip.find(':', firstColon + 1);
+    if (secondColon == std::string::npos) {
+        return ip;
+    }
+    size_t thirdColon = ip.find(':', secondColon + 1);
+    if (thirdColon == std::string::npos) {
+        return ip;
+    }
+
+    std::string middlePart = ip.substr(secondColon + 1, thirdColon - secondColon - 1);
+    std::string anonymizeMiddle;
+    if (middlePart.length() < ANONYMIZE_IPV6_LEN) {
+        anonymizeMiddle = "xx";
+    } else {
+        anonymizeMiddle = middlePart.substr(0, middlePart.length() - ANONYMIZE_IPV6_LEN) + "xx";
+    }
+    return ip.substr(0, secondColon + 1) + anonymizeMiddle + ":xxxx:xxxx:xxxx:xxxx:xxxx";
+}
+
+std::string PrintUtils::AnonymizeUUid(const std::string &uuid)
+{
+    size_t pos = uuid.find_last_of('-');
+    std::string result = uuid.substr(0, pos + 1) + "x";
+    return result;
+}
+
+std::string PrintUtils::AnonymizePrinterId(const std::string &printerId)
+{
+    if (printerId.find_last_of('-') != std::string::npos) {
+        return AnonymizeUUid(printerId);
+    }
+    return printerId;
+}
+
+std::string PrintUtils::AnonymizePrinterUri(const std::string &printerUri)
+{
+    std::string ipv4;
+    size_t startPos;
+    std::string result = printerUri;
+    if (ExtractIpv4(printerUri, ipv4, startPos)) {
+        std::string anonymizeIpv4 = AnonymizeIpv4(ipv4);
+        return result.replace(startPos, ipv4.length(), anonymizeIpv4);
+    }
+
+    std::string ipv6;
+    if (ExtractIpv6(printerUri, ipv6, startPos)) {
+        std::string anonymizeIpv6 = AnonymizeIpv6(ipv6);
+        return result.replace(startPos, ipv6.length(), anonymizeIpv6);
+    }
+    return result;
+}
+
+std::string PrintUtils::AnonymizeIp(const std::string &ip)
+{
+    if (ip.find('.') != std::string::npos) {
+        return AnonymizeIpv4(ip);
+    } else if (ip.find(':') != std::string::npos) {
+        return AnonymizeIpv6(ip);
+    }
+    return ip;
+}
+
+std::string PrintUtils::AnonymizeJobOption(const std::string &option)
+{
+    std::string anonymizeoption = option;
+    std::string ip;
+    size_t startPos;
+    if (ExtractIpv4(option, ip, startPos)) {
+        std::string anonymizeIpv4 = AnonymizeIpv4(ip);
+        anonymizeoption.replace(startPos, ip.length(), anonymizeIpv4);
+    } else if (ExtractIpv6(option, ip, startPos)) {
+        std::string anonymizeIpv6 = AnonymizeIpv6(ip);
+        anonymizeoption.replace(startPos, ip.length(), anonymizeIpv6);
+    }
+
+    if (option.find_last_of('-') != std::string::npos) {
+        anonymizeoption = AnonymizeUUid(anonymizeoption);
+    }
+    return anonymizeoption;
 }
 
 void PrintUtils::BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want)
