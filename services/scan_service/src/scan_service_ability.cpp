@@ -58,6 +58,7 @@
 #include "os_account_manager.h"
 #include "saneopts.h"
 #include "caller_app_monitor.h"
+#include "escl_driver_manager.h"
 
 namespace OHOS::Scan {
 using namespace std;
@@ -230,7 +231,7 @@ void ScanServiceAbility::InitializeScanService()
     SaneManagerClient::GetInstance()->SaneInit();
     DelayedSingleton<ScanUsbManager>::GetInstance()->Init();
     ScanSystemData::GetInstance().Init();
-    ScanMdnsService::OnStartDiscoverService();
+    EsclDriverManager::InitializeEsclScannerDriver();
 }
 
 void ScanServiceAbility::CleanupScanService()
@@ -242,7 +243,7 @@ void ScanServiceAbility::CleanupScanService()
     }
     openedScannerList_.clear();
     SaneManagerClient::GetInstance()->SaneExit();
-    ScanMdnsService::OnStopDiscoverService();
+    ScanMdnsService::GetInstance().OnStopDiscoverService();
     scannerState_.store(SCANNER_READY);
     scanPictureData_.CleanPictureData();
 }
@@ -317,11 +318,11 @@ void ScanServiceAbility::SetScannerSerialNumberByTCP(ScanDeviceInfo &info)
     constexpr int32_t MAX_WAIT_COUNT = 5;
     constexpr int32_t WAIT_TIME = 1;
     ScanDeviceInfoTCP netScannerInfo;
-    bool findNetScannerInfoByIp = ScanMdnsService::FindNetScannerInfoByIp(ip, netScannerInfo);
+    bool findNetScannerInfoByIp = ScanMdnsService::GetInstance().FindNetScannerInfoByIp(ip, netScannerInfo);
     do {
         sleep(WAIT_TIME);
         SCAN_HILOGW("wait a second");
-        findNetScannerInfoByIp = ScanMdnsService::FindNetScannerInfoByIp(ip, netScannerInfo);
+        findNetScannerInfoByIp = ScanMdnsService::GetInstance().FindNetScannerInfoByIp(ip, netScannerInfo);
         count++;
     } while (!findNetScannerInfoByIp && count < MAX_WAIT_COUNT);
     info.uniqueId = ip;
@@ -478,6 +479,7 @@ int32_t ScanServiceAbility::GetScannerList()
         return E_SCAN_DEVICE_BUSY;
     }
     SCAN_HILOGD("ScanServiceAbility GetScannerList start");
+    ScanMdnsService::GetInstance().OnStartDiscoverService();
     auto exec_sane_getscaner = [=]() {
         SaneGetScanner();
     };
@@ -878,7 +880,7 @@ void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::str
         SCAN_HILOGE("no permission to access scan service");
         return;
     }
-    SCAN_HILOGD("DisConnectUsbScanner start deviceId:%{public}s", deviceId.c_str());
+    SCAN_HILOGD("DisConnectUsbScanner start deviceId:%{private}s", deviceId.c_str());
     ScanDeviceInfoSync scanDeviceInfoSync;
     scanDeviceInfoSync.uniqueId = serialNumber;
     scanDeviceInfoSync.deviceId = deviceId;
@@ -886,11 +888,6 @@ void ScanServiceAbility::DisConnectUsbScanner(std::string serialNumber, std::str
     scanDeviceInfoSync.syncMode = ScannerSyncMode::DELETE_MODE;
     scanDeviceInfoSync.deviceState = 0;
     SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
-#ifdef DEBUG_ENABLE
-    SCAN_HILOGD("GetScannerList delete end serialNumber:%{private}s newDeviceId:%{public}s",
-        serialNumber.c_str(),
-        deviceId.c_str());
-#endif
 }
 
 void ScanServiceAbility::UpdateScannerId(const ScanDeviceInfoSync &syncInfo)
@@ -921,6 +918,36 @@ void ScanServiceAbility::UpdateScannerId(const ScanDeviceInfoSync &syncInfo)
         SendDeviceInfoSync(scanDeviceInfoSync, SCAN_DEVICE_SYNC);
     } else {
         SCAN_HILOGE("invalid discover mode %{public}s", scanDeviceInfoSync.discoverMode.c_str());
+    }
+}
+
+void ScanServiceAbility::NetScannerLossNotify(const ScanDeviceInfoSync& syncInfo)
+{
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        SCAN_HILOGE("no permission to access scan service");
+        return;
+    }
+    if (syncInfo.discoverMode != ScannerDiscoveryMode::TCP_MODE) {
+        SCAN_HILOGE("discoverMode is error:[%{private}s]", syncInfo.discoverMode.c_str());
+        return;
+    }
+    SendDeviceInfoSync(syncInfo, SCAN_DEVICE_SYNC);
+}
+
+void ScanServiceAbility::NotifyEsclScannerFound(const ScanDeviceInfo& info)
+{
+    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+        SCAN_HILOGE("no permission to access scan service");
+        return;
+    }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    SCAN_HILOGI("NotifyEsclScannerFound [%{private}s]", info.deviceId.c_str());
+    for (auto [eventType, listener] : registeredListeners_) {
+        std::string type;
+        ScanServiceUtils::EncodeTaskEventId(eventType, type);
+        if (type == SCAN_DEVICE_FOUND && listener != nullptr) {
+            listener->OnCallback(info.GetDeviceState(), info);
+        }
     }
 }
 
@@ -962,7 +989,7 @@ int32_t ScanServiceAbility::GetScanProgress(const std::string scannerId, ScanPro
     return E_SCAN_NONE;
 }
 
-int32_t ScanServiceAbility::AddScanner(const std::string &serialNumber, const std::string &discoverMode)
+int32_t ScanServiceAbility::AddScanner(const std::string &uniqueId, const std::string &discoverMode)
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
@@ -973,41 +1000,68 @@ int32_t ScanServiceAbility::AddScanner(const std::string &serialNumber, const st
         SCAN_HILOGE("discoverMode is a invalid parameter.");
         return E_SCAN_INVALID_PARAMETER;
     }
-    auto addScannerExe = [=]() {
-        std::string uniqueId = discoverMode + serialNumber;
-        ScanSystemData &scanData = ScanSystemData::GetInstance();
+    ScanSystemData &scanData = ScanSystemData::GetInstance();
+    if (scanData.IsContainScanner(discoverMode + uniqueId)) {
+        SCAN_HILOGE("The scanner has already been added");
+        return E_SCAN_NONE;
+    }
+    ScanDeviceInfo info;
+    if (scannerDiscoverData_.HasEsclDevice(uniqueId)) {
+        scannerDiscoverData_.GetEsclDevice(uniqueId, info);
+        SCAN_HILOGD("add escl driver scanner");
+        scanData.InsertScannerInfo(discoverMode + uniqueId, info);
+        scanData.SaveScannerMap();
+        SendDeviceInfo(info, SCAN_DEVICE_ADD);
+        return E_SCAN_NONE;
+    }
+    auto addScannerExe = [uniqueId, discoverMode, this]() {
         if (discoverMode == ScannerDiscoveryMode::USB_MODE) {
-            if (!scannerDiscoverData_.HasUsbDevice(serialNumber) || scanData.IsContainScanner(uniqueId)) {
-                SCAN_HILOGE("Failed to add usb scanner.");
-                return;
-            }
-            ScanDeviceInfo info;
-            scannerDiscoverData_.GetUsbDevice(serialNumber, info);
-            scanData.InsertScannerInfo(uniqueId, info);
-            if (!scanData.SaveScannerMap()) {
-                SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
-                return;
-            }
-            SendDeviceInfo(info, SCAN_DEVICE_ADD);
+            AddUsbScanner(uniqueId, discoverMode);
         } else if (discoverMode == ScannerDiscoveryMode::TCP_MODE) {
-            if (!scannerDiscoverData_.HasTcpDevice(serialNumber) || scanData.IsContainScanner(uniqueId)) {
-                SCAN_HILOGE("Failed to add tcp scanner.");
-                return;
-            }
-            ScanDeviceInfo info;
-            scannerDiscoverData_.GetTcpDevice(serialNumber, info);
-            scanData.InsertScannerInfo(uniqueId, info);
-            if (!scanData.SaveScannerMap()) {
-                SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
-                return;
-            }
-            SendDeviceInfo(info, SCAN_DEVICE_ADD);
+            AddNetScanner(uniqueId, discoverMode);
         } else {
             SCAN_HILOGE("discoverMode is invalid.");
         }
     };
     serviceHandler_->PostTask(addScannerExe, ASYNC_CMD_DELAY);
     return E_SCAN_NONE;
+}
+
+void ScanServiceAbility::AddNetScanner(const std::string& uniqueId, const std::string &discoverMode)
+{
+    ScanSystemData &scanData = ScanSystemData::GetInstance();
+    ScanDeviceInfo info;
+    if (scannerDiscoverData_.HasTcpDevice(uniqueId)) {
+        scannerDiscoverData_.GetTcpDevice(uniqueId, info);
+        SCAN_HILOGD("add private driver scanner");
+    } else {
+        SCAN_HILOGE("AddNetScanner fail, the scanner was not found in the discovery list");
+        return;
+    }
+    scanData.InsertScannerInfo(discoverMode + uniqueId, info);
+    if (!scanData.SaveScannerMap()) {
+        SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
+        return;
+    }
+    SendDeviceInfo(info, SCAN_DEVICE_ADD);
+}
+
+void ScanServiceAbility::AddUsbScanner(const std::string& uniqueId, const std::string &discoverMode)
+{
+    ScanSystemData &scanData = ScanSystemData::GetInstance();
+    ScanDeviceInfo info;
+    if (scannerDiscoverData_.HasUsbDevice(uniqueId)) {
+        scannerDiscoverData_.GetUsbDevice(uniqueId, info);
+    } else {
+        SCAN_HILOGE("AddUsbScanner fail, the scanner was not found in the discovery list");
+        return;
+    }
+    scanData.InsertScannerInfo(discoverMode + uniqueId, info);
+    if (!scanData.SaveScannerMap()) {
+        SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
+        return;
+    }
+    SendDeviceInfo(info, SCAN_DEVICE_ADD);
 }
 
 int32_t ScanServiceAbility::DeleteScanner(const std::string &serialNumber, const std::string &discoverMode)
@@ -1115,8 +1169,10 @@ void ScanServiceAbility::StartScanTask(ScanTask &scanTask)
     }
     {
         std::lock_guard<std::mutex> autoLock(lock_);
-        SCAN_HILOGI("StartScanTask finished, doning sane_cancel");
+        SCAN_HILOGI("StartScanTask finished, doning scan task free");
         SaneManagerClient::GetInstance()->SaneCancel(scanTask.GetScannerId());
+        SaneManagerClient::GetInstance()->SaneClose(scanTask.GetScannerId());
+        SaneManagerClient::GetInstance()->SaneOpen(scanTask.GetScannerId());
     }
     scannerState_.store(SCANNER_READY);
     SCAN_HILOGI("ScanServiceAbility StartScanTask end");

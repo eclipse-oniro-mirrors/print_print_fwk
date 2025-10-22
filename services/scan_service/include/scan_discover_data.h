@@ -28,21 +28,27 @@ public:
     
     void SetUsbDevice(const std::string& uniqueId, const ScanDeviceInfo& info);
     void SetTcpDevice(const std::string& uniqueId, const ScanDeviceInfo& info);
+    void SetEsclDevice(const std::string& uniqueId, const ScanDeviceInfo& info);
     
     bool GetUsbDevice(const std::string& uniqueId, ScanDeviceInfo& info) const;
     bool GetTcpDevice(const std::string& uniqueId, ScanDeviceInfo& info) const;
+    bool GetEsclDevice(const std::string& uniqueId, ScanDeviceInfo& info) const;
     
     bool RemoveUsbDevice(const std::string& uniqueId);
     bool RemoveTcpDevice(const std::string& uniqueId);
+    bool RemoveEsclDevice(const std::string& uniqueId);
     
     std::map<std::string, ScanDeviceInfo> GetAllUsbDevices() const;
     std::map<std::string, ScanDeviceInfo> GetAllTcpDevices() const;
+    std::map<std::string, ScanDeviceInfo> GetAllEsclDevices() const;
     
     void ClearUsbDevices();
     void ClearTcpDevices();
+    void ClearEsclDevices();
     
     bool HasUsbDevice(const std::string& uniqueId) const;
     bool HasTcpDevice(const std::string& uniqueId) const;
+    bool HasEsclDevice(const std::string& uniqueId) const;
 
 private:
     ScannerDiscoverData() = default;
@@ -50,8 +56,10 @@ private:
     
     mutable std::mutex usbMutex_;
     mutable std::mutex tcpMutex_;
+    mutable std::mutex esclMutex_;
     std::map<std::string, ScanDeviceInfo> usbDeviceInfoMap_;
     std::map<std::string, ScanDeviceInfo> tcpDeviceInfoMap_;
+    std::map<std::string, ScanDeviceInfo> esclDeviceInfoMap_;
 };
 
 } // namespace OHOS::Scan

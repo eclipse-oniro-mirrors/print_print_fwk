@@ -145,7 +145,7 @@ namespace Scan {
         std::string ip = "192.168.223.1";
         ScanDeviceInfoTCP scanDeviceInfoTCP;
         scanDeviceInfoTCP.deviceName = "Pantum 6666 54QWER";
-        ScanMdnsService::InsertIpToScannerInfo(ip, scanDeviceInfoTCP);
+        ScanMdnsService::GetInstance().SetScannerInfoMap(ip, scanDeviceInfoTCP);
         ScanServiceAbility::GetInstance()->SetScannerSerialNumber(tcpInfo);
 
         tcpInfo.deviceId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
