@@ -153,7 +153,7 @@ bool GetBoolProperty(ani_env *env, ani_object param, const char *name, bool valu
     ani_ref obj = nullptr;
     ani_boolean isUndefined = true;
     ani_status status = ANI_ERROR;
-    ani_boolean res = 0.0;
+    ani_boolean res = value;
 
     if ((status = env->Object_GetFieldByName_Ref(param, name, &obj)) != ANI_OK) {
         PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
