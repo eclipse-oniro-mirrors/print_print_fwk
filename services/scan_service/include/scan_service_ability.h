@@ -64,11 +64,13 @@ public:
     int32_t On(const std::string taskId, const std::string &type, const sptr<IScanCallback> &listener) override;
     int32_t Off(const std::string taskId, const std::string &type) override;
     int32_t GetScanProgress(const std::string scannerId, ScanProgress &prog) override;
-    int32_t AddScanner(const std::string& serialNumber, const std::string& discoverMode) override;
+    int32_t AddScanner(const std::string& uniqueId, const std::string& discoverMode) override;
     int32_t DeleteScanner(const std::string& serialNumber, const std::string& discoverMode) override;
     int32_t GetAddedScanner(std::vector<ScanDeviceInfo>& allAddedScanner) override;
-    void DisConnectUsbScanner(std::string serialNumber, std::string newDeviceId); // public
-    void UpdateScannerId(const ScanDeviceInfoSync& usbSyncInfo); // public
+    void DisConnectUsbScanner(std::string serialNumber, std::string newDeviceId);
+    void UpdateScannerId(const ScanDeviceInfoSync& usbSyncInfo);
+    void NetScannerLossNotify(const ScanDeviceInfoSync& usbSyncInfo);
+    void NotifyEsclScannerFound(const ScanDeviceInfo& info);
 
 private:
     int32_t ActionSetAuto(const std::string &scannerId, const int32_t &optionIndex);
@@ -109,6 +111,9 @@ private:
     int32_t StartScanOnce(const std::string scannerId);
     int32_t GetScannerImageDpi(const std::string& scannerId, int32_t& dpi);
     void UnloadSystemAbility();
+    int32_t InitializeEsclScannerDriver();
+    void AddNetScanner(const std::string& uniqueId, const std::string &discoverMode);
+    void AddUsbScanner(const std::string& uniqueId, const std::string &discoverMode);
     std::set<std::string> openedScannerList_;
     std::atomic<ServiceRunningState> state_;
     std::mutex lock_;

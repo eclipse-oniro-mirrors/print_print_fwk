@@ -17,6 +17,8 @@
 #define SCAN_MDNS_SERVICE_H
 
 #include <unordered_set>
+#include <condition_variable>
+#include <variant>
 #include "discovery_callback_stub.h"
 #include "resolve_callback_stub.h"
 #include "mdns_client.h"
@@ -60,6 +62,10 @@ public:
     int32_t HandleResolveResult(const MDnsServiceInfo& info, int32_t retCode) override;
 public:
     MDnsServiceInfo _serviceInfo;
+
+private:
+    int32_t SyncSysDataAndNotifyScanService(ScanDeviceInfoTCP& scannerInfo);
+    std::string GetMdnsInfoAttribute(MDnsServiceInfo &info, const std::string& key);
 };
 
 class ScanMDnsLossResolveObserver : public ResolveCallbackStub {
@@ -76,17 +82,32 @@ public:
     MDnsServiceInfo _serviceInfo;
 };
 
+using ScanInfoVariant = std::variant<ScanDeviceInfo, ScanDeviceInfoSync>;
+enum ScanInfoType {
+    SCAN_DEVICEINFO_TYPE = 0,
+    SCAN_DEVICEINFO_SYNC_TYPE = 1,
+};
+
 class ScanMdnsService {
 public:
-    static void InsertIpToScannerInfo(const std::string& ip, ScanDeviceInfoTCP& scanDeviceInfoTCP);
-    static bool OnStartDiscoverService();
-    static bool OnStopDiscoverService();
-    static bool FindNetScannerInfoByIp(const std::string& ip, ScanDeviceInfoTCP& netScannerInfo);
+    static ScanMdnsService& GetInstance();
+    void PushScanInfoToQueue(const ScanDeviceInfo& info);
+    void PushScanInfoToQueue(const ScanDeviceInfoSync& info);
+    void SetScannerInfoMap(const std::string& ip, const ScanDeviceInfoTCP& info);
+    bool OnStartDiscoverService();
+    bool OnStopDiscoverService();
+    bool FindNetScannerInfoByIp(const std::string& ip, ScanDeviceInfoTCP& netScannerInfo);
 private:
-    static void UpdateScannerIdThread();
-    static std::map<std::string, sptr<ScanMDnsDiscoveryObserver>> discoveryCallBackPtrs_;
-    static std::mutex discoveryCallBackPtrsLock_;
-    static bool isListening_;
+    void UpdateScannerIdThread();
+    void SaveMdnsCallbackStubPtr(const std::string& type, sptr<ScanMDnsDiscoveryObserver> callbackPtr);
+    std::queue<ScanInfoVariant> infoQueue_;
+    std::map<std::string, ScanDeviceInfoTCP> netScannerInfoMap_;
+    std::map<std::string, sptr<ScanMDnsDiscoveryObserver>> discoveryCallBackPtrs_;
+    std::mutex discoveryCallBackPtrsLock_;
+    std::mutex infoQueueLock_;
+    std::mutex ipToScannerInfoMapLock_;
+    std::atomic<bool> isListening_{false};
+    std::condition_variable cv_;
 };
 }
 #endif // !SCAN_MDNS_SERVICE_H
