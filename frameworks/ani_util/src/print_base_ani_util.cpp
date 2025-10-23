@@ -271,7 +271,7 @@ bool GetEnumValueInt(ani_env *env, ani_enum_item enumObj, uint32_t& enumValue)
     }
     ani_int result = 0;
     env->EnumItem_GetValue_Int(enumObj, &result);
-    enumValue = static_cast<uint32_t>(result);
+    enumValue = result;
     return true;
 }
 }  // namespace OHOS::Print

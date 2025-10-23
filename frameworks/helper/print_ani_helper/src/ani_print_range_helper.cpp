@@ -23,7 +23,7 @@ namespace {
 const char* START_PAGE_STR = "startPage";
 const char* END_PAGE_STR = "endPage";
 const char* PAGES_STR = "pages";
-const char* CLASS_NAME = "L@ohos/print/print/PrinterRangeImp;";
+const char* CLASS_NAME = "@ohos.print.print.PrinterRangeImp";
 }
 
 namespace OHOS::Print {

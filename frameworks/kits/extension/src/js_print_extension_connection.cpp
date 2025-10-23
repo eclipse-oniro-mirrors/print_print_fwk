@@ -77,8 +77,8 @@ void JSPrintExtensionConnection::HandleOnAbilityConnectDone(const AppExecFwk::El
         return;
     }
     napi_value methodOnConnect = nullptr;
-    if (napi_get_named_property(engine_, obj, "onConnect", &methodOnConnect) != napi_ok ||
-        methodOnConnect == nullptr) {
+    napi_get_named_property(engine_, obj, "onConnect", &methodOnConnect);
+    if (methodOnConnect == nullptr) {
         PRINT_HILOGE("Failed to get onConnect from object");
         return;
     }
@@ -124,8 +124,8 @@ void JSPrintExtensionConnection::HandleOnAbilityDisconnectDone(const AppExecFwk:
     }
 
     napi_value method = nullptr;
-    if (napi_get_named_property(engine_, obj, "onDisconnect", &method) != napi_ok ||
-        method == nullptr) {
+    napi_get_named_property(engine_, obj, "onDisconnect", &method);
+    if (method == nullptr) {
         PRINT_HILOGE("Failed to get onDisconnect from object");
         return;
     }
@@ -173,8 +173,8 @@ void JSPrintExtensionConnection::CallJsFailed(int32_t errorCode)
     }
 
     napi_value method = nullptr;
-    if (napi_get_named_property(engine_, obj, "onFailed", &method) != napi_ok ||
-        method == nullptr) {
+    napi_get_named_property(engine_, obj, "onFailed", &method);
+    if (method == nullptr) {
         PRINT_HILOGE("Failed to get onFailed from object");
         return;
     }

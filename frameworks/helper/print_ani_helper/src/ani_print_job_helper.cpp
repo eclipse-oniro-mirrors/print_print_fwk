@@ -43,7 +43,7 @@ const char* OPTIONS_STR = "options";
 }
 
 namespace OHOS::Print {
-static const char *CLASS_NAME = "L@ohos/print/print/PrintJobImp;";
+static const char *CLASS_NAME = "@ohos.print.print.PrintJobImp";
 PrintJob AniPrintJobHelper::ParsePrintJob(ani_env *env, ani_object jobInfoAni)
 {
     PRINT_HILOGI("enter ParsePrintJob");

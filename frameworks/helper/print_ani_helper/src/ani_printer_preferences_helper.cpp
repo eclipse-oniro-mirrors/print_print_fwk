@@ -32,20 +32,20 @@ ani_object PrinterPreferencesAniHelper::CreatePrinterPreferences(ani_env *env, c
 {
     PRINT_HILOGI("enter PrinterPreferences");
 
-    static const char *className = "L@ohos/print/print/PrinterPreferencesImpl;";
+    static const char *className = "C{@ohos.print.print.PrinterPreferencesImpl}";
     ani_object obj = CreateObject(env, nullptr, className);
 
-    ani_enum_item printDuplexModeEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrintDuplexMode;",
+    ani_enum_item printDuplexModeEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintDuplexMode",
                                                           static_cast<int32_t>(preferences.GetDefaultDuplexMode()));
-    SetEnumProperty(env, obj, "<set>defaultDuplexMode", "L@ohos/print/print/PrintDuplexMode;:V", printDuplexModeEnum);
+    SetEnumProperty(env, obj, "<set>defaultDuplexMode", "C{@ohos.print.print.PrintDuplexMode}:", printDuplexModeEnum);
 
-    ani_enum_item printQualityEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrintQuality;",
+    ani_enum_item printQualityEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintQualit",
                                                        static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
-    SetEnumProperty(env, obj, "<set>defaultPrintQuality", "L@ohos/print/print/PrintQuality;:V", printQualityEnum);
+    SetEnumProperty(env, obj, "<set>defaultPrintQuality", "C{@ohos.print.print.PrintQuality}:", printQualityEnum);
 
-    ani_enum_item orientationModeEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrintOrientationMode;",
+    ani_enum_item orientationModeEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintOrientationMode",
                                                           static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
-    SetEnumProperty(env, obj, "<set>defaultOrientation", "L@ohos/print/print/PrintOrientationMode;:V",
+    SetEnumProperty(env, obj, "<set>defaultOrientation", "C{@ohos.print.print.PrintOrientationMode}:",
         orientationModeEnum);
 
     SetStringProperty(env, obj, PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE, preferences.GetDefaultMediaType());
