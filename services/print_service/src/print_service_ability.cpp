@@ -471,6 +471,11 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
     vendorManager.ClearConnectingPrinter();
     vendorManager.ClearConnectingProtocol();
     vendorManager.ClearConnectingPpdName();
+    std::string oldPrinterId = SPOOLER_BUNDLE_NAME + PRINTER_ID_DELIMITER + MDNS_PRINTER;
+    if (printerId.find(oldPrinterId) != std::string::npos && printSystemData_.IsPrinterAdded(printerId)) {
+        PRINT_HILOGI("old version printerId, check connected successfully");
+        return E_PRINT_NONE;
+    }
     if (printSystemData_.QueryDiscoveredPrinterInfoById(printerId) == nullptr) {
         PRINT_HILOGI("Invalid printer id, try connect printer by ip");
         return TryConnectPrinterByIp(printerId);
