@@ -215,7 +215,7 @@ bool PrinterInfoAniHelper::GetPrinterInfoArray(ani_env *env, ani_object param, s
     for (int32_t i = 0; i < static_cast<int32_t>(length); i++) {
         ani_ref aniPrinterInfo;
         status = env->Object_CallMethodByName_Ref(param, "$_get",
-            "i:C{std.core.Object}", &aniPrinterInfo, static_cast<ani_int>(i));
+            "i:Y", &aniPrinterInfo, static_cast<ani_int>(i));
         if (status != ANI_OK) {
             PRINT_HILOGE("Object_CallMethodByName_Ref fail, status = %{public}u", status);
             return false;
