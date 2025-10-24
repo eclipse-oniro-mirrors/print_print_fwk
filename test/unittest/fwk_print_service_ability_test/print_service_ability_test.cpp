@@ -2364,7 +2364,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0157_NeedRename, TestS
     EXPECT_EQ(service->ConnectPrinter(info->GetPrinterId()), E_PRINT_NONE);
 }
 
-HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddRawPrinter_Success, TestSize.Level1)
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddRawPrinter_ServerFailure, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
@@ -2375,7 +2375,7 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_AddRawPrinter_Success,
     info.SetUri("test_printer_uri");
     info.SetPrinterName("test_printer_name");
     int32_t ret = service->AddRawPrinter(info);
-    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(ret, E_PRINT_SERVER_FAILURE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_QueryRawAddedPrinter_EmptyList, TestSize.Level1)

@@ -2669,7 +2669,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_AddRawPrinter_LoadServer
     PrintManagerClient::GetInstance()->LoadServerFail();
     PrinterInfo info;
     int32_t ret = PrintManagerClient::GetInstance()->AddRawPrinter(info);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 /**
@@ -2684,7 +2684,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_AddRawPrinter_GetPrintSe
     PrintManagerClient::GetInstance()->ResetProxy();
     PrinterInfo info;
     int32_t ret = PrintManagerClient::GetInstance()->AddRawPrinter(info);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 /**
@@ -2721,7 +2721,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_QueryRawAddedPrinter_Loa
     std::vector<std::string> printerNameList;
     PrintManagerClient::GetInstance()->LoadServerFail();
     int32_t ret = PrintManagerClient::GetInstance()->QueryRawAddedPrinter(printerNameList);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
     EXPECT_TRUE(printerNameList.empty());
 }
 
@@ -2737,7 +2737,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_QueryRawAddedPrinter_Get
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
     int32_t ret = PrintManagerClient::GetInstance()->QueryRawAddedPrinter(printerNameList);
-    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
     EXPECT_TRUE(printerNameList.empty());
 }
 

@@ -808,6 +808,7 @@ int32_t PrintServiceAbility::QueryRawAddedPrinter(std::vector<std::string> &prin
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGD("QueryRawAddedPrinter started.");
     std::vector<std::string> printerNameList;
     printSystemData_.GetRawAddedPrinterListFromSystemData(printerNameList);
