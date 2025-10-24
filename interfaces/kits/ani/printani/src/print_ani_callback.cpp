@@ -50,7 +50,7 @@ bool PrintAniCallback::OnCallback()
 bool PrintAniCallback::OnCallback(uint32_t state, const PrinterInfo &info)
 {
     PRINT_HILOGI("Printer Notification in");
-    if (aniVm_ != nullptr && aniCallback_ != nullptr) {
+    if (aniVm_ == nullptr || aniCallback_ == nullptr) {
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
