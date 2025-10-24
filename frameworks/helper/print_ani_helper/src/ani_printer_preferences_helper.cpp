@@ -41,11 +41,11 @@ ani_object PrinterPreferencesAniHelper::CreatePrinterPreferences(ani_env *env, c
 
     ani_enum_item printQualityEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrintQuality;",
                                                        static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
-    SetEnumProperty(env, obj, "<set>defaultPrintQuality", "L@ohos/print/print/PrintQuality;:V", printQualityEnum);
+    SetEnumProperty(env, obj, "<set>defaultPrintQuality", "C{@ohos.print.print.PrintQuality}:", printQualityEnum);
 
-    ani_enum_item orientationModeEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrintOrientationMode;",
+    ani_enum_item orientationModeEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintOrientationMode",
                                                           static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
-    SetEnumProperty(env, obj, "<set>defaultOrientation", "L@ohos/print/print/PrintOrientationMode;:V",
+    SetEnumProperty(env, obj, "<set>defaultOrientation", "C{@ohos.print.print.PrintOrientationMode}:",
         orientationModeEnum);
 
     SetStringProperty(env, obj, PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE, preferences.GetDefaultMediaType());

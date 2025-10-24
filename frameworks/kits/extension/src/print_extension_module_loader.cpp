@@ -24,7 +24,7 @@ PrintExtensionModuleLoader::~PrintExtensionModuleLoader() = default;
 
 Extension *PrintExtensionModuleLoader::Create(const std::unique_ptr<Runtime> &runtime) const
 {
-    PRINT_HILOGI("PrintExtension::Create runtime");
+    PRINT_HILOGD("jws PrintExtension::Create runtime");
     return PrintExtension::Create(runtime);
 }
 

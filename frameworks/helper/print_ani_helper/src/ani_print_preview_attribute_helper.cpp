@@ -23,7 +23,7 @@
 namespace {
 const char* PREVIEW_RANGE_STR = "previewRange";
 const char* RESULT_STR = "result";
-const char *CLASS_NAME = "L@ohos/print/print/PreviewAttributeImp;";
+const char *CLASS_NAME = "@ohos.print.print.PreviewAttributeImp";
 }
 
 namespace OHOS::Print {
