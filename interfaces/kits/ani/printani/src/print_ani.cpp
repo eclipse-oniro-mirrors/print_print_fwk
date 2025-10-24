@@ -590,53 +590,38 @@ static void GetPrinterInformationByIdNative(ani_env *env, ani_string printerIdAn
     AsyncCallback(env, callback, stsErrCode, PrinterInfoAniHelper::CreatePrinterInformation(env, info));
 }
 
-static void OnPrinterStateChangeNative(ani_env *env, ani_string type, ani_object callback)
+static void OnPrinterStateChangeNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter OnPrinterStateChangeNative");
     if (env == nullptr) {
         PRINT_HILOGE("env is nullptr");
         return;
     }
-    std::string typeStr;
-    if (!GetStdString(env, type, typeStr)) {
-        PRINT_HILOGE("GetStdString fail");
-        return;
-    }
-    PRINT_HILOGD("typeStr: %{public}s", typeStr.c_str());
+    std::string typeStr = "printerStateChange";
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
     PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
 
-static void OnJobStateChangeNative(ani_env *env, ani_string type, ani_object callback)
+static void OnJobStateChangeNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter OnJobStateChangeNative");
     if (env == nullptr) {
         PRINT_HILOGE("env is nullptr");
         return;
     }
-    std::string typeStr;
-    if (!GetStdString(env, type, typeStr)) {
-        PRINT_HILOGE("GetStdString fail");
-        return;
-    }
-    PRINT_HILOGD("typeStr: %{public}s", typeStr.c_str());
+    std::string typeStr = "jobStateChange";
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
     PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
 
-static void OnExtInfoChangeNative(ani_env *env, ani_string type, ani_object callback)
+static void OnExtInfoChangeNative(ani_env *env, ani_object callback)
 {
     PRINT_HILOGI("enter OnExtInfoChangeNative");
     if (env == nullptr) {
         PRINT_HILOGE("env is nullptr");
         return;
     }
-    std::string typeStr;
-    if (!GetStdString(env, type, typeStr)) {
-        PRINT_HILOGE("GetStdString fail");
-        return;
-    }
-    PRINT_HILOGD("typeStr: %{public}s", typeStr.c_str());
+    std::string typeStr = "extInfoChange";
     OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
     PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
 }
