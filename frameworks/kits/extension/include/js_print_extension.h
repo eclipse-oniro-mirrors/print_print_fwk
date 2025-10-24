@@ -129,9 +129,7 @@ private:
     void RegisterPreviewCb();
     void RegisterQueryCapCb();
     void RegisterExtensionCb();
-    bool RegisterCb();
-    bool RegisterHelper(
-        const std::initializer_list<std::pair<int32_t (JsPrintExtension::*)(), const char *>> &funcList);
+    void RegisterCb();
 
     void GetSrcPath(std::string &srcPath);
 

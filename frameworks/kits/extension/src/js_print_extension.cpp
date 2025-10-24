@@ -153,37 +153,9 @@ void JsPrintExtension::OnStart(const AAFwk::Want &want)
     napi_value nativeWant = OHOS::AppExecFwk::WrapWant(nativeEngine, want);
     napi_value argv[] = { nativeWant };
     CallObjectMethod("onCreate", argv, NapiPrintUtils::ARGC_ONE);
-    if (!RegisterCb()) {
-        OnStop();
-        return;
-    }
+    RegisterCb();
     PrintManagerClient::GetInstance()->LoadExtSuccess(extensionId_);
     PRINT_HILOGD("%{public}s end.", __func__);
-}
-
-bool JsPrintExtension::RegisterCb()
-{
-    return RegisterHelper({
-        { &JsPrintExtension::RegisterDiscoveryCb, "RegisterDiscoveryCb" },
-        { &JsPrintExtension::RegisterConnectionCb, "RegisterConnectionCb" },
-        { &JsPrintExtension::RegisterPrintJobCb, "RegisterPrintJobCb" },
-        { &JsPrintExtension::RegisterPreviewCb, "RegisterPreviewCb" },
-        { &JsPrintExtension::RegisterQueryCapCb, "RegisterQueryCapCb" },
-        { &JsPrintExtension::RegisterExtensionCb, "RegisterExtensionCb" }
-    });
-}
-
-bool JsPrintExtension::RegisterHelper(
-    const std::initializer_list<std::pair<int32_t (JsPrintExtension::*)(), const char*>>& funcList)
-{
-    for (const auto& [func, funcName] : funcList) {
-        int32_t ret = (this->*func)();
-        if (ret != 0) {
-            PRINT_HILOGE("%s failed, errCode: %{public}d", funcName, ret);
-            return false;
-        }
-    }
-    return true;
 }
 
 void JsPrintExtension::RegisterCb()
