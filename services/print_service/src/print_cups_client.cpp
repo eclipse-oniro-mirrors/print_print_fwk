@@ -134,8 +134,10 @@ static const std::string PRINTER_STATE_OTHER = "other";
 static const std::string PRINTER_STATE_OFFLINE = "offline";
 static const std::string PRINTER_STATE_TIMED_OUT = "timed-out";
 static const std::string PRINTER_SPOOL_AREA_FULL = "spool-area-full";
+static const std::string PRINTER_STATE_STOPPED = "stopped";
 static const std::string JOB_STATE_REASON_PRINTER_STOP = "printer-stopped";
 static const std::string JOB_STATE_REASON_AUTHENTICATION = "cups-held-for-authentication";
+static const std::string JOB_STATE_REASON_JOB_HOLD = "job-hold-until-specified";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string USB_PRINTER = "usb";
@@ -1755,6 +1757,12 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
         if (monitorParams->job_state_reasons == JOB_STATE_REASON_PRINTER_STOP) {
             monitorParams->serviceAbility->UpdatePrintJobState(
                 monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE);
+            return true;
+        }
+        if (monitorParams->job_state_reasons == JOB_STATE_REASON_JOB_HOLD &&
+            monitorParams->job_printer_state_reasons == PRINTER_STATE_STOPPED) {
+            monitorParams->serviceAbility->UpdatePrintJobState(
+                monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_UNKNOWN);
             return true;
         }
         monitorParams->serviceAbility->UpdatePrintJobState(
