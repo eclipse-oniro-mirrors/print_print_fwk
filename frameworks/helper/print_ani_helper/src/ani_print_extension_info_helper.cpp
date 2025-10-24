@@ -31,7 +31,7 @@ ani_object AniPrintExtensionInfoHelper::CreatePrinterExtensionInfoArray(ani_env 
     const std::vector<PrintExtensionInfo>& infos)
 {
     ani_class arrayCls = nullptr;
-    ani_status status = env->FindClass("escompat.Array", &arrayCls);
+    ani_status status = env->FindClass("std.core.Array", &arrayCls);
     if (status != ANI_OK) {
         PRINT_HILOGE("[ANI] find class fail");
         return nullptr;
