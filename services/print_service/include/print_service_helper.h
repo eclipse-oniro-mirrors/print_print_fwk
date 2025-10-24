@@ -17,6 +17,8 @@
 #define PRINT_SERVICE_HELPER_H
 
 #include <string>
+#include <atomic>
+#include <queue>
 #include "ability_manager_client.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_client.h"
@@ -38,26 +40,48 @@ public:
     virtual bool QueryNameForUid(sptr<AppExecFwk::IBundleMgr> mgr, int32_t userId, std::string& name);
     virtual bool IsSyncMode();
     virtual bool StartExtensionAbility(const AAFwk::Want &want);
+    virtual bool StartPluginPrintExtAbility(const AAFwk::Want &want);
     virtual void PrintSubscribeCommonEvent();
     virtual bool DisconnectAbility();
+    virtual bool CheckPluginPrintConnected();
 
 private:
     class PrintAbilityConnection : public AAFwk::AbilityConnectionStub {
         void OnAbilityConnectDone(const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject,
             int32_t resultCode) override
         {
-            PRINT_HILOGI("connect done");
+            if (resultCode == ERR_OK) {
+                PRINT_HILOGI("connect done");
+                isConnected_ = true;
+            } else {
+                PRINT_HILOGI("connect failed, ret = %{public}d", resultCode);
+            }
         }
         void OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int32_t resultCode) override
         {
-            PRINT_HILOGI("disconnect done");
+            if (resultCode == ERR_OK) {
+                PRINT_HILOGI("disconnect done");
+                isDisonnected_ = true;
+            } else {
+                PRINT_HILOGI("disconnect failed, ret = %{public}d", resultCode);
+            }
         }
+
+    public:
+        bool IsConnected() { return isConnected_.load(); }
+        bool IsDisonnected() { return isConnected_.load(); }
+
+    private:
+        std::atomic<bool> isConnected_ = false;
+        std::atomic<bool> isDisonnected_ = false;
     };
 
 private:
     std::shared_ptr<PrintEventSubscriber> userStatusListener;
     bool isSubscribeCommonEvent = false;
     sptr<PrintAbilityConnection> printAbilityConnection_ = nullptr;
+    static std::mutex connectionListLock_;
+    std::queue<sptr<PrintAbilityConnection>> pluginPrintConnectionList_;
 };
 }  // namespace OHOS
 #endif  // PRINT_SERVICE_HELPER_H
