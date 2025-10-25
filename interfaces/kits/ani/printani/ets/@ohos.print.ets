@@ -449,18 +449,18 @@ export default namespace print {
 
     native function onNative(type: string, callback: CallbackWrapper<void>) : int;
 
-    native function onPrinterStateChangeNative(type: 'printerStateChange', callback: PrinterStateChangeWrapper) : int;
+    native function onPrinterStateChangeNative(callback: PrinterStateChangeWrapper) : int;
 
-    native function onJobStateChangeNative(type: 'jobStateChange', callback: JobStateChangeWrapper) : int;
+    native function onJobStateChangeNative(callback: JobStateChangeWrapper) : int;
 
-    native function onExtInfoChangeNative(type: 'extInfoChange', callback: ExtInfoChangeWrapper) : int;
+    native function onExtInfoChangeNative(callback: ExtInfoChangeWrapper) : int;
     
     native function onPrintTask(type: string, callback: CallbackWrapper<void>, task : PrintTaskImpl) : void;
 
     native function offPrintTask(type: string, callback: CallbackWrapper<void>, task : PrintTaskImpl) : void;
 
     native function offNative(type: string, callback: CallbackWrapper<void>) : int;
-    
+
     native function queryAllPrinterExtensionInfosNative(callback: AsyncCallbackArrayWrapper<PrinterExtensionInfo>): void;
     
     native function startDiscoverPrinterNative(extensionList: Array<string>, callback: AsyncCallbackWrapper<void>): void;
@@ -522,27 +522,85 @@ export default namespace print {
     native function getPrinterInformationByIdNative(printerId: string, callback: AsyncCallbackWrapper<PrinterInformation>): void;
 
     export interface PrintTask {
-        on(type: 'block' | 'succeed' | 'fail' | 'cancel', callback: Callback<void>): void;
-        off(type: 'block' | 'succeed' | 'fail' | 'cancel', callback?: Callback<void>): void;
+        onBlock(callback: Callback<void>): void;
+        onSucceed(callback: Callback<void>): void;
+        onFail(callback: Callback<void>): void;
+        onCancel(callback: Callback<void>): void;
+        offBlock(callback?: Callback<void>): void;
+        offSucceed(callback?: Callback<void>): void;
+        offFail(callback?: Callback<void>): void;
+        offCancel(callback?: Callback<void>): void;
     }
 
     export class PrintTaskImpl implements PrintTask {
         private  nativeTask: long = 0;
         constructor(task: long) {
-            if(this.nativeTask == 0){
+            if(this.nativeTask == 0) {
                 this.nativeTask = task;
             }
         }
-        on(type: 'block' | 'succeed' | 'fail' | 'cancel', callback: Callback<void>): void {
+
+        onBlock(callback: Callback<void>): void {
             let myCall = new CallbackWrapper<void>(callback);
+            let type = 'block';
             onPrintTask(type, myCall, this);
         }
-        off(type: 'block' | 'succeed' | 'fail' | 'cancel', callback?: Callback<void>): void {
+
+        onSucceed(callback: Callback<void>): void {
+            let myCall = new CallbackWrapper<void>(callback);
+            let type = 'succeed';
+            onPrintTask(type, myCall, this);
+        }
+
+        onFail(callback: Callback<void>): void {
+            let myCall = new CallbackWrapper<void>(callback);
+            let type = 'fail';
+            onPrintTask(type, myCall, this);
+        }
+
+        onCancel(callback: Callback<void>): void {
+            let myCall = new CallbackWrapper<void>(callback);
+            let type = 'cancel';
+            onPrintTask(type, myCall, this);
+        }
+
+        offBlock(callback?: Callback<void>): void {
             let myCall = new CallbackWrapper<void>(() => {});
             
             if (callback !== undefined) {
                 myCall = new CallbackWrapper<void>(callback);
             }
+            let type = 'block';
+            offPrintTask(type, myCall, this);
+        }
+
+        offSucceed(callback?: Callback<void>): void {
+            let myCall = new CallbackWrapper<void>(() => {});
+            
+            if (callback !== undefined) {
+                myCall = new CallbackWrapper<void>(callback);
+            }
+            let type = 'succeed';
+            offPrintTask(type, myCall, this);
+        }
+
+        offFail(callback?: Callback<void>): void {
+            let myCall = new CallbackWrapper<void>(() => {});
+            
+            if (callback !== undefined) {
+                myCall = new CallbackWrapper<void>(callback);
+            }
+            let type = 'fail';
+            offPrintTask(type, myCall, this);
+        }
+
+        offCancel(callback?: Callback<void>): void {
+            let myCall = new CallbackWrapper<void>(() => {});
+            
+            if (callback !== undefined) {
+                myCall = new CallbackWrapper<void>(callback);
+            }
+            let type = 'cancel';
             offPrintTask(type, myCall, this);
         }
     }
@@ -820,8 +878,6 @@ export default namespace print {
         });
     }
 
-    
-
     export class PrinterStateChangeWrapper {
         private myFun_: (state: PrinterState, info: PrinterInfo) => void;
 
@@ -858,39 +914,31 @@ export default namespace print {
         }
     }
 
-    export function on(type: 'printerStateChange|jobStateChange|extInfoChange',
-        callback: printerStateChangeCallback | jobStateChangeCallback | extInfoChangeCallback): void {
-        switch (type) {
-            case 'printerStateChange': {
-                const typedCallback = callback as (state: PrinterState, info: PrinterInfo) => void;
-                const myCall = new PrinterStateChangeWrapper(typedCallback);
-                taskpool.execute((): void => {
-                    onPrinterStateChangeNative(type as 'printerStateChange', myCall);
-                });
-                break;
-            }
-            case 'jobStateChange': {
-                const typedCallback = callback as (state: PrintJobState, job: PrintJob) => void;
-                const myCall = new JobStateChangeWrapper(typedCallback);
-                taskpool.execute((): void => {
-                    onJobStateChangeNative(type as 'jobStateChange', myCall);
-                });
-                break;
-            }
-            case 'extInfoChange': {
-                const typedCallback = callback as (extensionId: string, info: string) => void;
-                const myCall = new ExtInfoChangeWrapper(typedCallback);
-                taskpool.execute((): void => {
-                    onExtInfoChangeNative(type as 'extInfoChange', myCall);
-                });
-                break;
-            }
-            default:
-                throw new Error(`Unknown event type: ${type}`);
-        }
+    export function onPrinterStateChange(callback: printerStateChangeCallback): void {
+        const typedCallback = callback as (state: PrinterState, info: PrinterInfo) => void;
+        const myCall = new PrinterStateChangeWrapper(typedCallback);
+        taskpool.execute((): void => {
+            onPrinterStateChangeNative(myCall);
+        });
     }
 
-    export function off(type: 'printerStateChange' | 'jobStateChange' | 'extInfoChange', callback?: Callback<void>): void {
+    export function onJobStateChange(callback: jobStateChangeCallback): void {
+        const typedCallback = callback as (state: PrintJobState, job: PrintJob) => void;
+        const myCall = new JobStateChangeWrapper(typedCallback);
+        taskpool.execute((): void => {
+            onJobStateChangeNative(myCall);
+        });
+    }
+
+    export function onExtInfoChange(callback: extInfoChangeCallback): void {
+        const typedCallback = callback as (extensionId: string, info: string) => void;
+        const myCall = new ExtInfoChangeWrapper(typedCallback);
+        taskpool.execute((): void => {
+            onExtInfoChangeNative(myCall);
+        });
+    }
+
+    export function offPrinterStateChange(callback?: Callback<void>): void {
         let myCall = new CallbackWrapper<void>(() => {});
         
         if (callback !== undefined) {
@@ -898,6 +946,33 @@ export default namespace print {
         }
         
         taskpool.execute((): void => {
+            let type = 'printerStateChange';
+            offNative(type, myCall);
+        });
+    }
+
+    export function offJobStateChange(callback?: Callback<void>): void {
+        let myCall = new CallbackWrapper<void>(() => {});
+        
+        if (callback !== undefined) {
+            myCall = new CallbackWrapper<void>(callback);
+        }
+        
+        taskpool.execute((): void => {
+            let type = 'jobStateChange';
+            offNative(type, myCall);
+        });
+    }
+
+    export function offExtInfoChange(callback?: Callback<void>): void {
+        let myCall = new CallbackWrapper<void>(() => {});
+        
+        if (callback !== undefined) {
+            myCall = new CallbackWrapper<void>(callback);
+        }
+        
+        taskpool.execute((): void => {
+            let type = 'extInfoChange';
             offNative(type, myCall);
         });
     }
