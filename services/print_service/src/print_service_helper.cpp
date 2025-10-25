@@ -31,6 +31,8 @@ const uint32_t MAX_RETRY_TIMES = 2;
 const uint32_t START_ABILITY_INTERVAL = 200;
 using namespace Security::AccessToken;
 
+std::mutex PrintServiceHelper::connectionListLock_;
+
 PrintServiceHelper::~PrintServiceHelper()
 {
 }
@@ -107,6 +109,38 @@ bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want)
     return true;
 }
 
+bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
+{
+    PRINT_HILOGD("enter PrintServiceHelper::StartPluginPrintExtAbility");
+    PRINT_HILOGD("want: %{public}s", want.ToUri().c_str());
+    AppExecFwk::ElementName element = want.GetElement();
+    AAFwk::AbilityManagerClient::GetInstance()->Connect();
+    uint32_t retry = 0;
+    sptr<PrintAbilityConnection> printAbilityConnection = new (std::nothrow) PrintAbilityConnection();
+    if (printAbilityConnection == nullptr) {
+        PRINT_HILOGE("fail to create printAbilityConnection");
+        return false;
+    }
+    PRINT_HILOGD("PrintServiceHelper::StartPluginPrintExtAbility %{public}s %{public}s",
+        element.GetBundleName().c_str(),
+        element.GetAbilityName().c_str());
+    while (retry++ < MAX_RETRY_TIMES) {
+        if (AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, printAbilityConnection, -1) == 0) {
+            PRINT_HILOGI("PrintServiceHelper::StartPluginPrintExtAbility ConnectAbility success");
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
+        PRINT_HILOGE("PrintServiceHelper::StartPluginPrintExtAbility %{public}d", retry);
+    }
+    if (retry > MAX_RETRY_TIMES) {
+        PRINT_HILOGE("PrintServiceHelper::StartPluginPrintExtAbility --> failed ");
+        return false;
+    }
+    std::lock_guard<std::mutex> autoLock(connectionListLock_);
+    pluginPrintConnectionList_.push(printAbilityConnection);
+    return true;
+}
+
 bool PrintServiceHelper::DisconnectAbility()
 {
     PRINT_HILOGD("enter PrintServiceHelper::DisconnectAbility");
@@ -127,6 +161,14 @@ bool PrintServiceHelper::DisconnectAbility()
         return false;
     }
     return true;
+}
+
+bool PrintServiceHelper::CheckPluginPrintConnected()
+{
+    std::lock_guard<std::mutex> autoLock(connectionListLock_);
+    auto connection = pluginPrintConnectionList_.front();
+    pluginPrintConnectionList_.pop();
+    return connection->IsConnected();
 }
 
 sptr<IRemoteObject> PrintServiceHelper::GetBundleMgr()

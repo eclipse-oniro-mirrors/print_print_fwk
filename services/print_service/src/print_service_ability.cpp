@@ -67,6 +67,7 @@ const uint32_t QUERY_CUPS_ALIVE_MAX_RETRY_TIMES = 50;
 const uint32_t ENTER_LOW_POWER_INTERVAL = 90000;
 const uint32_t UNREGISTER_CALLBACK_INTERVAL = 5000;
 const uint32_t CHECK_CALLER_APP_INTERVAL = 60;
+const uint32_t CONNECT_PLUGIN_PRINT_TIMEOUT = 5;
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -2748,6 +2749,36 @@ bool PrintServiceAbility::StartExtensionAbility(const AAFwk::Want &want)
     }
     PRINT_HILOGI("enter PrintServiceAbility::StartExtensionAbility");
     return helper_->StartExtensionAbility(want);
+}
+
+bool PrintServiceAbility::StartPluginPrintExtAbility(const AAFwk::Want &want)
+{
+    if (helper_ == nullptr) {
+        PRINT_HILOGE("Invalid print service helper.");
+        return false;
+    }
+    PRINT_HILOGI("enter PrintServiceAbility::StartExtensionAbility");
+    bool ret = helper_->StartPluginPrintExtAbility(want);
+    auto timeoutCheck = [this]() {
+        if (helper_ == nullptr) {
+            PRINT_HILOGE("timeoutCheck, Invalid print service helper.");
+            return;
+        }
+        if (!helper_->CheckPluginPrintConnected()) {
+            PRINT_HILOGE("can't connect extension ability, cancel all prnitJob.");
+            std::vector<std::string> jobIdlListToCancel;
+            for (const auto& jobIt : queuedJobList_) {
+                jobIdlListToCancel.push_back(jobIt.second->GetJobId());
+            }
+            for (const auto& jobId : jobIdlListToCancel) {
+                CancelPrintJob(jobId);
+            }
+        }
+    };
+    if (ret) {
+        serviceHandler_->PostTask(timeoutCheck, CONNECT_PLUGIN_PRINT_TIMEOUT);
+    }
+    return ret;
 }
 
 std::shared_ptr<PrintUserData> PrintServiceAbility::GetCurrentUserData()

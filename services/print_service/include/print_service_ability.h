@@ -168,6 +168,7 @@ private:
     std::shared_ptr<PrintJob> AddNativePrintJob(const std::string &jobId, PrintJob &printJob);
     int32_t CallStatusBar();
     bool StartExtensionAbility(const AAFwk::Want &want);
+    bool StartPluginPrintExtAbility(const AAFwk::Want &want);
     bool IsPrinterJobMapEmpty();
     int32_t GetCurrentUserId();
     std::string GetCallerUserName();
