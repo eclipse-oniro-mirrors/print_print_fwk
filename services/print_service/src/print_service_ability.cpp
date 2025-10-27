@@ -2403,7 +2403,7 @@ void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info, const std::s
             continue;
         }
         if (eventIt.second == nullptr) {
-            PRINT_HILOGD("eventIt.second is nullptr");
+            PRINT_HILOGW("eventIt.second is nullptr");
             continue;
         }
         if (!userId.empty()) {
@@ -2417,11 +2417,11 @@ void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info, const std::s
             }
             if (!bundleMgrClient.GetBundleInfo(bundleName, AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT,
                 bundleInfo, userIdNum)) {
-                PRINT_HILOGD("user [%{private}s] has not installed [%{private}s]", userId.c_str(), bundleName.c_str());
+                PRINT_HILOGW("user [%{private}s] has not installed [%{private}s]", userId.c_str(), bundleName.c_str());
                 continue;
             }
         }
-        PRINT_HILOGD("PrintServiceAbility::SendPrinterEvent find PRINTER_EVENT_TYPE");
+        PRINT_HILOGI("PrintServiceAbility::SendPrinterEvent find PRINTER_EVENT_TYPE");
         eventIt.second->OnCallback(info.GetPrinterState(), info);
     }
 }
