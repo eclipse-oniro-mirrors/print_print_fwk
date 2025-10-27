@@ -46,13 +46,6 @@ void ScanMdnsService::SaveMdnsCallbackStubPtr(const std::string& type, sptr<Scan
     discoveryCallBackPtrs_[type] = callbackPtr;
 }
 
-void ScanMdnsService::PushScanInfoToQueue(const ScanDeviceInfo& info)
-{
-    std::unique_lock<std::mutex> lock(infoQueueLock_);
-    infoQueue_.push(info);
-    cv_.notify_one();
-}
-
 void ScanMdnsService::PushScanInfoToQueue(const ScanDeviceInfoSync& info)
 {
     std::unique_lock<std::mutex> lock(infoQueueLock_);
@@ -121,23 +114,13 @@ void ScanMdnsService::UpdateScannerIdThread()
         cv_.wait(lock, [this]() {
             return !infoQueue_.empty();
         });
-        auto& info = infoQueue_.front();
-        uint32_t index = info.index();
-        if (index == ScanInfoType::SCAN_DEVICEINFO_TYPE) {
-            auto scanInfo = std::get<ScanDeviceInfo>(info);
-            ScannerDiscoverData::GetInstance().SetEsclDevice(scanInfo.uniqueId, scanInfo);
-            saPtr->NotifyEsclScannerFound(scanInfo);
-        } else if (index == ScanInfoType::SCAN_DEVICEINFO_SYNC_TYPE) {
-            auto syncInfo = std::get<ScanDeviceInfoSync>(info);
-            if (syncInfo.syncMode == ScannerSyncMode::UPDATE_MODE) {
-                saPtr->UpdateScannerId(syncInfo);
-            } else if (syncInfo.syncMode == ScannerSyncMode::DELETE_MODE) {
-                saPtr->NetScannerLossNotify(syncInfo);
-            } else {
-                SCAN_HILOGW("syncModee is error : [%{private}s]", syncInfo.syncMode.c_str());
-            }
+        auto& syncInfo = infoQueue_.front();
+        if (syncInfo.syncMode == ScannerSyncMode::UPDATE_MODE) {
+            saPtr->UpdateScannerId(syncInfo);
+        } else if (syncInfo.syncMode == ScannerSyncMode::DELETE_MODE) {
+            saPtr->NetScannerLossNotify(syncInfo);
         } else {
-            SCAN_HILOGW("Index value is error : [%{public}u]", index);
+            SCAN_HILOGW("syncMode is error : [%{private}s]", syncInfo.syncMode.c_str());
         }
         infoQueue_.pop();
     }
@@ -167,13 +150,13 @@ bool ScanMdnsService::OnStopDiscoverService()
 bool ScanMdnsService::FindNetScannerInfoByIp(const std::string& ip, ScanDeviceInfoTCP& netScannerInfo)
 {
     std::lock_guard<std::mutex> autoLock(ipToScannerInfoMapLock_);
-    std::string keyScanner = ip + MDNS_TYPE_SCANNER_TCP;
+    std::string keyScanner = ip + "-" + MDNS_TYPE_SCANNER_TCP;
     auto it = netScannerInfoMap_.find(keyScanner);
     if (it != netScannerInfoMap_.end() && it->second.uuid != "") {
         netScannerInfo = it->second;
         return true;
     }
-    std::string keyUscan = ip + MDNS_TYPE_USCAN_TCP;
+    std::string keyUscan = ip + "-" + MDNS_TYPE_USCAN_TCP;
     it = netScannerInfoMap_.find(keyUscan);
     if (it != netScannerInfoMap_.end() && it->second.uuid != "") {
         netScannerInfo = it->second;
@@ -212,7 +195,7 @@ int32_t ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info
     ScanDeviceInfo scanInfo;
     if (info.type == MDNS_TYPE_USCAN_TCP && EsclDriverManager::GenerateEsclScannerInfo(tcpInfo, scanInfo)) {
         scanInfo.deviceType = MDNS_TYPE_USCAN_TCP;
-        ScanMdnsService::GetInstance().PushScanInfoToQueue(scanInfo);
+        ScannerDiscoverData::GetInstance().SetEsclDevice(scanInfo.uniqueId, scanInfo);
     } else {
         tcpInfo.deviceType = MDNS_TYPE_SCANNER_TCP;
     }

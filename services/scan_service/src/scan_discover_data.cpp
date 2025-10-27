@@ -37,7 +37,7 @@ void ScannerDiscoverData::SetTcpDevice(const std::string& uniqueId, const ScanDe
 
 void ScannerDiscoverData::SetEsclDevice(const std::string& uniqueId, const ScanDeviceInfo& info)
 {
-    std::lock_guard<std::mutex> lock(tcpMutex_);
+    std::lock_guard<std::mutex> lock(esclMutex_);
     esclDeviceInfoMap_[uniqueId] = info;
 }
 

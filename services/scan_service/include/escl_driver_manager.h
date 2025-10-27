@@ -21,6 +21,7 @@ class EsclDriverManager {
 public:
     static int32_t InitializeEsclScannerDriver();
     static bool GenerateEsclScannerInfo(const ScanDeviceInfoTCP& rawInfo, ScanDeviceInfo& info);
+    static void AddEsclScannerInfo(std::vector<ScanDeviceInfo>& discoveredScanners);
 private:
     static bool CreateSoftLink();
     static bool CreateAirscanConfigFile();
