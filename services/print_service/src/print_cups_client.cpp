@@ -475,25 +475,28 @@ void PrintCupsClient::SymlinkDirectory(const char *srcDir, const char *destDir)
         std::string srcFilePath = std::string(srcDir) + "/" + std::string(file->d_name);
         std::string destFilePath = std::string(destDir) + "/" + std::string(file->d_name);
 
-        stat(srcFilePath.c_str(), &filestat);
+        if (stat(srcFilePath.c_str(), &filestat) != 0) {
+            PRINT_HILOGE("srcFilePath stat %{private}s err", srcFilePath.c_str());
+            continue;
+        }
         if (S_ISDIR(filestat.st_mode)) {
             SymlinkDirectory(srcFilePath.c_str(), destFilePath.c_str());
         } else if (lstat(destFilePath.c_str(), &destFilestat) == 0) {
-            PRINT_HILOGD("symlink lstat %{public}s err: %{public}s", destFilePath.c_str(), strerror(errno));
+            PRINT_HILOGD("symlink lstat %{private}s err: %{public}s", destFilePath.c_str(), strerror(errno));
 
             if (S_ISLNK(destFilestat.st_mode)) {
                 PRINT_HILOGW("symlink already exists, continue.");
                 continue;
             }
             if (std::remove(destFilePath.c_str()) != 0) {
-                PRINT_HILOGE("error deleting file %{public}s err: %{public}s", destFilePath.c_str(), strerror(errno));
+                PRINT_HILOGE("error deleting file %{private}s err: %{public}s", destFilePath.c_str(), strerror(errno));
                 continue;
             } else {
                 PRINT_HILOGW("file successfully deleted");
             }
             SymlinkFile(srcFilePath, destFilePath);
         } else {
-            PRINT_HILOGE("symlink lstat %{public}s err: %{public}s", destFilePath.c_str(), strerror(errno));
+            PRINT_HILOGE("symlink lstat %{private}s err: %{public}s", destFilePath.c_str(), strerror(errno));
             SymlinkFile(srcFilePath, destFilePath);
         }
     }
@@ -518,8 +521,9 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
         }
         std::string srcFilePath = std::string(srcDir) + "/" + std::string(file->d_name);
         std::string destFilePath = std::string(destDir) + "/" + std::string(file->d_name);
-
-        stat(srcFilePath.c_str(), &filestat);
+        if (stat(srcFilePath.c_str(), &filestat) != 0) {
+            continue;
+        }
         if (S_ISDIR(filestat.st_mode)) {
             CopyDirectory(srcFilePath.c_str(), destFilePath.c_str());
             chmod(destFilePath.c_str(), filestat.st_mode);
@@ -527,7 +531,6 @@ void PrintCupsClient::CopyDirectory(const char *srcDir, const char *destDir)
             char realSrc[PATH_MAX] = {};
             char destSrc[PATH_MAX] = {};
             if (realpath(srcFilePath.c_str(), realSrc) == nullptr || realpath(destDir, destSrc) == nullptr) {
-                PRINT_HILOGE("The realSrc is null, errno:%{public}s", std::to_string(errno).c_str());
                 continue;
             }
             FILE *srcFile = fopen(realSrc, "rb");
