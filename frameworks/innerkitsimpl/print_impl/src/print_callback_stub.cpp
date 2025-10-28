@@ -103,8 +103,12 @@ bool PrintCallbackStub::HandleGetInfoEvent(MessageParcel &data, MessageParcel &r
     }
     std::vector<PpdInfo> ppds;
     int32_t ppdsSize = data.ReadInt32();
-    if (ppdsSize == 0) {
+    if (ppdsSize <= 0) {
         PRINT_HILOGW("Cannot find ppds");
+    }
+    if (ppdsSize > PRINT_MAX_PPD_COUNT) {
+        PRINT_HILOGE("too much ppds");
+        return false;
     }
     for (int32_t i = 0; i < ppdsSize; ++i) {
         auto ppd = PpdInfo::Unmarshalling(data);

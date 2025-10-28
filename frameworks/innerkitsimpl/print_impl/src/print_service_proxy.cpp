@@ -1251,7 +1251,7 @@ int32_t PrintServiceProxy::QueryAllPrinterPpds(std::vector<PpdInfo> &ppdInfos)
     ret = GetResult(ret, reply);
     if (ret == ERR_NONE) {
         uint32_t len = reply.ReadUint32();
-        if (len > PRINT_MAX_PRINT_COUNT) {
+        if (len > PRINT_MAX_PPD_COUNT) {
             PRINT_HILOGE("len is out of range.");
             return E_PRINT_INVALID_PARAMETER;
         }
