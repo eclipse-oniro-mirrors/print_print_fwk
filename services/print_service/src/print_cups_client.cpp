@@ -201,6 +201,16 @@ std::vector<PrinterInfo> &GetUsbPrinters()
     }
     return g_usbPrinters;
 }
+std::shared_ptr<PrinterInfo> PrintCupsClient::QueryUsbPrinterInfoByPrinterId(const std::string &printerId)
+{
+    std::lock_guard<std::mutex> lock(g_usbPrintersLock);
+    for (auto &printer: g_usbPrinters) {
+        if (printerId.find(printer.GetPrinterId()) != std::string::npos) {
+            return std::make_shared<PrinterInfo>(printer);
+        }
+    }
+    return nullptr;
+}
 void AddUsbPrinter(PrinterInfo &info)
 {
     std::lock_guard<std::mutex> lock(g_usbPrintersLock);

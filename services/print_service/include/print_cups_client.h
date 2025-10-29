@@ -151,6 +151,7 @@ public:
     int32_t QueryPrinterAttrList(const std::string &printerName, const std::vector<std::string> &keyList,
         std::vector<std::string> &valueList);
     int32_t QueryPrinterInfoByPrinterId(const std::string& printerId, PrinterInfo &info);
+    std::shared_ptr<PrinterInfo> QueryUsbPrinterInfoByPrinterId(const std::string &printerId);
     int32_t DiscoverUsbPrinters(std::vector<PrinterInfo> &printers);
     int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers);
     int32_t QueryPrinterCapabilityFromPPD(const std::string &name, PrinterCapability &printerCaps,

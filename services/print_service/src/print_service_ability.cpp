@@ -1799,6 +1799,9 @@ void PrintServiceAbility::ReportPrinterIdle(const std::string &printerId)
     auto iter = printerJobMap_.find(printerId);
     if (iter == printerJobMap_.end() || iter->second.empty()) {
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
+        if (printerInfo == nullptr) {
+            printerInfo = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryUsbPrinterInfoByPrinterId(printerId);
+        }
         if (printerInfo != nullptr) {
             printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
             printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
