@@ -116,7 +116,7 @@ ani_object CreateAniStringArray(ani_env *env, const std::vector<std::string>& st
             PRINT_HILOGE("status : %{public}d", status);
             return nullptr;
         }
-        constexpr const char *SET_OBJECT_VOID_SIGNATURE = "iC{std.core.Object}:";
+        constexpr const char *SET_OBJECT_VOID_SIGNATURE = "iY:";
         status = env->Object_CallMethodByName_Void(arrayObj, "$_set", SET_OBJECT_VOID_SIGNATURE, i, aniStr);
         if (status != ANI_OK) {
             PRINT_HILOGE("status : %{public}d", status);
@@ -175,7 +175,7 @@ ani_object CreateEnumArray(ani_env *env, const std::string &enumDescriptor, std:
 
     for (size_t i = 0; i < enumIndexArray.size(); i++) {
         ani_enum_item item = CreateEnumByIndex(env, enumDescriptor, enumIndexArray[i]);
-        if (ANI_OK != env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, item)) {
+        if (ANI_OK != env->Object_CallMethodByName_Void(arrayObj, "$_set", "iY:", i, item)) {
             PRINT_HILOGE("Set Array item Failed");
             return nullptr;
         }
@@ -246,7 +246,7 @@ bool GetStdStringArray(ani_env *env, ani_object param, std::vector<std::string> 
     for (int32_t i = 0; i < static_cast<int32_t>(length); i++) {
         ani_ref stringEntryRef = nullptr;
         status = env->Object_CallMethodByName_Ref(param, "$_get",
-            "i:C{std.core.Object}", &stringEntryRef, i);
+            "i:Y", &stringEntryRef, i);
         if (status != ANI_OK) {
             PRINT_HILOGE("Object_CallMethodByName_Ref fail, status = %{public}u", status);
             return false;
