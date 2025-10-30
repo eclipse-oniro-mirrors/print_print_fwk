@@ -1870,8 +1870,8 @@ int32_t PrintCupsClient::CopyJobOutputFile(const std::string &jobId, uint32_t fd
     size_t bytesRead;
     int32_t ret = E_PRINT_NONE;
     while ((bytesRead = fread(buffer, 1, sizeof(buffer), srcFile)) > 0) {
-        size_t bytesWrite = write(fd, buffer, bytesRead);
-        if (bytesWrite != bytesRead) {
+        ssize_t bytesWrite = write(fd, buffer, bytesRead);
+        if (static_cast<size_t>(bytesWrite) != bytesRead) {
             PRINT_HILOGW("write abort, errno: %{public}d, read: %{public}zd, write: %{public}zd",
                 errno, bytesRead, bytesWrite);
             ret = E_PRINT_FILE_IO;

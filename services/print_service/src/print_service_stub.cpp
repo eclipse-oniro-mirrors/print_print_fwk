@@ -969,14 +969,18 @@ bool PrintServiceStub::OnConnectPrinterByIpAndPpd(MessageParcel &data, MessagePa
 bool PrintServiceStub::OnSavePdfFileJob(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnSavePdfFileJob in");
+    int32_t ret = E_PRINT_RPC_FAILURE;
     std::string jobId = data.ReadString();
-    uint32_t fd = data.ReadFileDescriptor();
-
-    int32_t ret = SavePdfFileJob(jobId, fd);
-    reply.WriteInt32(ret);
-    if (close(fd) != 0) {
-        PRINT_HILOGI("Close File Failure.");
+    int32_t fd = data.ReadFileDescriptor();
+    if (fd >= 0) {
+        ret = SavePdfFileJob(jobId, static_cast<uint32_t>(fd));
+        if (close(fd) != 0) {
+            PRINT_HILOGI("Close File Failure.");
+        }
+    } else {
+        PRINT_HILOGE("dup fd failed by RPC");
     }
+    reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnSavePdfFileJob out");
     return ret == E_PRINT_NONE;
 }
