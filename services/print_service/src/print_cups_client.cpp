@@ -969,7 +969,11 @@ int32_t PrintCupsClient::QueryPrinterCapabilityFromPPD(
     const std::string &printerName, PrinterCapability &printerCaps, const std::string &ppdName)
 {
     if (!ppdName.empty()) {
-        return QueryPrinterCapabilityFromPPDFile(printerCaps, GetCurCupsRootDir() + "/datadir/model/" + ppdName);
+        std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + ppdName;
+        if (!PrintUtils::IsPathValid(ppdFilePath)) {
+            return E_PRINT_INVALID_PARAMETER;
+        }
+        return QueryPrinterCapabilityFromPPDFile(printerCaps, ppdFilePath);
     }
     std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     PRINT_HILOGI("QueryPrinterCapabilityFromPPD printerName: %{public}s", standardName.c_str());
@@ -2697,7 +2701,9 @@ bool PrintCupsClient::IsIpAddress(const char *host)
 std::string PrintCupsClient::GetPpdHashCode(const std::string& ppdName)
 {
     std::string ppdFilePath = GetCurCupsRootDir() + "/datadir/model/" + ppdName;
-
+    if (!PrintUtils::IsPathValid(ppdFilePath)) {
+        return "";
+    }
     std::ifstream file(ppdFilePath, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
         PRINT_HILOGE("ppd %{private}s open failed", ppdName.c_str());

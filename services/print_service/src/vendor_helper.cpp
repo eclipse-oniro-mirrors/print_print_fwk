@@ -37,11 +37,11 @@ char *CopyString(const std::string &source)
     auto len = source.length();
     char *dest = new (std::nothrow) char[len + 1];
     if (dest == nullptr) {
-        PRINT_HILOGW("allocate failed");
+        PRINT_HILOGE("allocate failed");
         return nullptr;
     }
     if (strcpy_s(dest, len + 1, source.c_str()) != 0) {
-        PRINT_HILOGW("CopyString strcpy_s failed");
+        PRINT_HILOGE("CopyString strcpy_s failed");
     }
     dest[len] = '\0';
     return dest;
@@ -51,14 +51,14 @@ template <typename T1, typename T2>
 bool ConvertArrayToList(const T1 *array, uint32_t count, std::vector<T2> &list, bool (*convertType)(const T1 &, T2 &))
 {
     if (convertType == nullptr) {
-        PRINT_HILOGW("convertType is null");
+        PRINT_HILOGE("convertType is null");
         return false;
     }
     if (count == 0) {
         return true;
     }
     if (array == nullptr) {
-        PRINT_HILOGW("array is null");
+        PRINT_HILOGE("array is null");
         return false;
     }
     for (uint32_t i = 0; i < count; ++i) {
@@ -78,7 +78,7 @@ template <typename T>
 std::string ConvertArrayToJson(const T *array, uint32_t count, bool (*convertToJson)(const T &, Json::Value &))
 {
     if (array == nullptr || convertToJson == nullptr) {
-        PRINT_HILOGW("invalid params");
+        PRINT_HILOGE("invalid params");
         return "";
     }
     std::vector<T> list;
@@ -101,7 +101,7 @@ bool ConvertJsonToStringList(const std::string &jsonString, std::vector<std::str
     }
     uint32_t jsonSize = jsonObject.size();
     if (jsonSize > MAX_MEDIA_TYPE_SIZE) {
-        PRINT_HILOGE("jsonObject size is illegal.");
+        PRINT_HILOGW("jsonObject size is illegal.");
         return false;
     }
     for (uint32_t i = 0; i < jsonSize; i++) {
@@ -130,7 +130,7 @@ bool ConvertStringToLong(const char *src, long &dst)
     char *endPtr = nullptr;
     dst = strtol(src, &endPtr, NUMBER_BASE);
     if (errno == ERANGE || endPtr == src) {
-        PRINT_HILOGW("ConvertStringToLong fail: %{public}s", src);
+        PRINT_HILOGE("ConvertStringToLong fail: %{public}s", src);
         return false;
     }
     return true;
@@ -183,7 +183,7 @@ bool ConvertStringToPrinterState(const std::string &stateData, Print_PrinterStat
     long result = 0;
     Json::Value jsonObject;
     if (!PrintJsonUtil::Parse(stateData, jsonObject)) {
-        PRINT_HILOGW("invalid stateData");
+        PRINT_HILOGE("invalid stateData");
         return false;
     }
     // 参数处理
@@ -198,7 +198,7 @@ bool ConvertStringToPrinterState(const std::string &stateData, Print_PrinterStat
         return true;
     }
     if (result < 0 || result > PRINTER_UNAVAILABLE + 1) {
-        PRINT_HILOGW("invalid state");
+        PRINT_HILOGE("invalid state");
         return false;
     }
     if (result == PRINTER_UNAVAILABLE + 1) {
@@ -214,7 +214,7 @@ bool ConvertStringToPrinterState(const std::string &stateData, Print_PrinterStat
 void LogDiscoveryItem(const Print_DiscoveryItem *discoveryItem)
 {
     if (discoveryItem == nullptr) {
-        PRINT_HILOGW("discoveryItem is null");
+        PRINT_HILOGE("discoveryItem is null");
         return;
     }
     if (discoveryItem->printerId != nullptr) {
@@ -251,7 +251,7 @@ void LogDiscoveryItem(const Print_DiscoveryItem *discoveryItem)
 void LogPageCapability(const Print_PrinterCapability *capability)
 {
     if (capability == nullptr) {
-        PRINT_HILOGW("capability is null");
+        PRINT_HILOGE("capability is null");
         return;
     }
     if (capability->supportedPageSizes != nullptr && capability->supportedPageSizesCount > 0) {
@@ -278,7 +278,7 @@ void LogPageCapability(const Print_PrinterCapability *capability)
 void LogOtherCapability(const Print_PrinterCapability *capability)
 {
     if (capability == nullptr) {
-        PRINT_HILOGW("capability is null");
+        PRINT_HILOGE("capability is null");
         return;
     }
     if (capability->supportedColorModes != nullptr && capability->supportedColorModesCount > 0) {
@@ -317,7 +317,7 @@ void LogOtherCapability(const Print_PrinterCapability *capability)
 void LogDefaultValue(const Print_DefaultValue *defaultValue)
 {
     if (defaultValue == nullptr) {
-        PRINT_HILOGW("defaultValue is null");
+        PRINT_HILOGE("defaultValue is null");
         return;
     }
     PRINT_HILOGD("default color mode = %{public}u", static_cast<uint32_t>(defaultValue->defaultColorMode));
@@ -350,11 +350,11 @@ void LogDefaultValue(const Print_DefaultValue *defaultValue)
 void LogProperties(const Print_PropertyList *propertyList)
 {
     if (propertyList == nullptr) {
-        PRINT_HILOGW("propertyList is null");
+        PRINT_HILOGE("propertyList is null");
         return;
     }
     if (propertyList->count == 0 || propertyList->list == nullptr) {
-        PRINT_HILOGW("propertyList empty");
+        PRINT_HILOGE("propertyList empty");
         return;
     }
     for (uint32_t i = 0; i < propertyList->count; ++i) {
@@ -375,11 +375,11 @@ std::shared_ptr<std::string> FindPropertyFromPropertyList(
     const Print_PropertyList *propertyList, const std::string &keyName)
 {
     if (propertyList == nullptr) {
-        PRINT_HILOGW("propertyList is null");
+        PRINT_HILOGE("propertyList is null");
         return nullptr;
     }
     if (propertyList->count == 0 || propertyList->list == nullptr) {
-        PRINT_HILOGW("propertyList empty");
+        PRINT_HILOGE("propertyList empty");
         return nullptr;
     }
     for (uint32_t i = 0; i < propertyList->count; ++i) {
@@ -465,11 +465,11 @@ std::string getScheme(std::string &printerUri)
 bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem *discoveryItem)
 {
     if (discoveryItem == nullptr) {
-        PRINT_HILOGW("discoveryItem is null");
+        PRINT_HILOGE("discoveryItem is null");
         return false;
     }
     if (discoveryItem->printerId == nullptr || discoveryItem->printerName == nullptr) {
-        PRINT_HILOGW("invalid discoveryItem");
+        PRINT_HILOGE("invalid discoveryItem");
         return false;
     }
     info.SetPrinterId(std::string(discoveryItem->printerId));
