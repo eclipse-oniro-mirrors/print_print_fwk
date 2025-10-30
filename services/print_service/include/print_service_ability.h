@@ -220,11 +220,6 @@ private:
     int32_t BlockPrintJob(const std::string &jobId);
     void BlockUserPrintJobs(const int32_t userId);
     bool CheckPrintConstraint();
-    sptr<AppExecFwk::IAppMgr> GetAppManager();
-    bool IsAppAlive(const std::string &bundleName, int32_t pid);
-    void CallerAppsMonitor();
-    void StartUnloadThread();
-    std::vector<AppExecFwk::RunningProcessInfo> GetRunningProcessInformation(const std::string &bundleName);
     bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
     void RegisterSettingDataObserver();
     bool IsPcModeSupported();
@@ -306,7 +301,6 @@ private:
 
     std::map<int32_t, std::string> callerMap_;
     bool unloadThread = false;
-    std::recursive_mutex callerMapMutex_;
 
 #ifdef ENTERPRISE_ENABLE
 private:

@@ -22,6 +22,7 @@ _sources = [
   "src/print_bms_death_recipient.cpp",
   "src/print_bms_helper.cpp",
   "src/print_callback_proxy.cpp",
+  "src/print_caller_app_monitor.cpp",
   "src/print_event_container.cpp",
   "src/print_event_subscriber.cpp",
   "src/print_extension_callback_proxy.cpp",
