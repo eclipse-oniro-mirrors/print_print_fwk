@@ -2104,6 +2104,7 @@ int32_t PrintServiceAbility::RegisterPrinterCallback(const std::string &type, co
         return E_PRINT_INVALID_TOKEN;
     }
     iter->second->RegisterPrinterCallback(type, listener);
+    PrintCallerAppMonitor::GetInstance().IncrementPrintCounter();
     PRINT_HILOGD("PrintServiceAbility::RegisterPrinterCallback end.");
     return E_PRINT_NONE;
 }
@@ -2114,7 +2115,6 @@ int32_t PrintServiceAbility::UnregisterPrinterCallback(const std::string &type)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    PrintCallerAppMonitor::GetInstance().DecrementPrintCounter();
     int64_t callerTokenId = static_cast<int64_t>(IPCSkeleton::GetCallingTokenID());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto iter = printUserDataMap_.find(callerTokenId);
@@ -2123,6 +2123,7 @@ int32_t PrintServiceAbility::UnregisterPrinterCallback(const std::string &type)
         return E_PRINT_INVALID_TOKEN;
     }
     iter->second->UnregisterPrinterCallback(type);
+    PrintCallerAppMonitor::GetInstance().RemoveCallerAppFromMap();
     PRINT_HILOGD("PrintServiceAbility::UnregisterPrinterCallback end.");
     return E_PRINT_NONE;
 }
