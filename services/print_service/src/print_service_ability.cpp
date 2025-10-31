@@ -212,6 +212,13 @@ int32_t PrintServiceAbility::Init()
     if (!printSystemData_.CheckPrinterVersionFile()) {
         RefreshPrinterInfoByPpd();
     }
+    StartDiscoverPrinter();
+    PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
+    return ERR_OK;
+}
+
+void PrintServiceAbility::StartDiscoverPrinter()
+{
     std::vector<PrintExtensionInfo> extensionInfos;
     QueryAllExtension(extensionInfos);
     std::vector<std::string> extensionIds;
@@ -219,8 +226,6 @@ int32_t PrintServiceAbility::Init()
         extensionIds.emplace_back(extensionInfo.GetExtensionId());
     }
     StartDiscoverPrinter(extensionIds);
-    PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
-    return ERR_OK;
 }
 
 void PrintServiceAbility::UpdatePpdForPreinstalledDriverPrinter()

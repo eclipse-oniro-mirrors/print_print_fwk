@@ -37,11 +37,13 @@ class PrintCounter {
 private:
     std::atomic<int> count_{0};
 public:
-    void Increment() {
+    void Increment()
+    {
         count_.fetch_add(1, std::memory_order_relaxed);
         Value();
     }
-    void Decrement() {
+    void Decrement()
+    {
         int expected;
         do {
             expected = count_.load(std::memory_order_relaxed);
@@ -52,7 +54,8 @@ public:
             expected, expected - 1, std::memory_order_relaxed, std::memory_order_relaxed));
         Value();
     }
-    int Value() const {
+    int Value() const
+    {
         int value = count_.load(std::memory_order_relaxed);
         PRINT_HILOGI("PrintCounter value: %{public}d", value);
         return value;

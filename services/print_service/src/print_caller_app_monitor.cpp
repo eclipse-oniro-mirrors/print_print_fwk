@@ -157,7 +157,8 @@ bool PrintCallerAppMonitor::IsAppAlive(std::shared_ptr<PrintCallerAppInfo> calle
     std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(callerAppInfo->bundleName_);
     for (auto &processInfo : processInfos) {
         PRINT_HILOGD("processName: %{public}s, pid: %{public}d", processInfo.processName_.c_str(), processInfo.pid_);
-        if (processInfo.pid_ == callerAppInfo->pid_ && processInfo.processName_.find(PRINT_EXTENSION_SUFFIX) == std::string::npos) {
+        if (processInfo.pid_ == callerAppInfo->pid_ &&
+            processInfo.processName_.find(PRINT_EXTENSION_SUFFIX) == std::string::npos) {
             return true;
         }
     }
