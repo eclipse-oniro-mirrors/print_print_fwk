@@ -64,13 +64,6 @@ void TestRefreshPrinterPageSize(const uint8_t *data, size_t size, FuzzedDataProv
     PrintServiceAbility::GetInstance()->RefreshPrinterPageSize(printerInfo);
 }
 
-void TestIsAppAlive(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    std::string bundleName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    int32_t pid = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
-    PrintServiceAbility::GetInstance()->IsAppAlive(bundleName, pid);
-}
-
 void TestReportPrinterIdle(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -142,7 +135,6 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestAddPrintJobToHistoryList(data, size, dataProvider);
     TestDeletePrintJobFromHistoryList(data, size, dataProvider);
     TestRefreshPrinterPageSize(data, size, dataProvider);
-    TestIsAppAlive(data, size, dataProvider);
     TestQueryPPDInformation(data, size, dataProvider);
     TestStartPrintJobInternal(data, size, dataProvider);
     TestAddIpPrinterToSystemData(data, size, dataProvider);
