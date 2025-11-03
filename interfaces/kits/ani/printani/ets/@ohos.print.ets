@@ -1367,7 +1367,7 @@ export default namespace print {
         }
 
         invoke(even: PrinterEvent, printerInformation: PrinterInformation): void {
-            this.myFun_(state, info);
+            this.myFun_(even, printerInformation);
         }
     }
 
@@ -1384,7 +1384,7 @@ export default namespace print {
         const myCall = new PrinterChangeWrapper(typedCallback);
         taskpool.execute((): void => {
             let type ='printerChange';
-            offPrinterChangeNative(myCall);
+            offPrinterChangeNative(type, myCall);
         });
     }
 }
