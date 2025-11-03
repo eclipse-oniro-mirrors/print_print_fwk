@@ -90,7 +90,7 @@ bool GetStringArrayProperty(ani_env *env, ani_object param, const char *name, st
     for (int i = 0; i < static_cast<int>(length); i++) {
         ani_ref stringEntryRef;
         status = env->Object_CallMethodByName_Ref(reinterpret_cast<ani_object>(arrayObj),
-            "$_get", "i:C{std.core.Object}", &stringEntryRef, (ani_int)i);
+            "$_get", "i:Y", &stringEntryRef, (ani_int)i);
         if (status != ANI_OK) {
             PRINT_HILOGE("status: %{public}d, index: %{public}d, name : %{public}s", status, i, name);
             return false;
@@ -356,7 +356,7 @@ bool SetStringArrayProperty(ani_env *env, ani_object param, const char *name, co
             return false;
         }
 
-        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, aniString);
+        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iY:", i, aniString);
         if (status != ANI_OK) {
             PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
             return false;
