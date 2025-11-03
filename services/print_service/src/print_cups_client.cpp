@@ -147,6 +147,7 @@ static const std::string PRINTER_MAKE_UNKNOWN = "Unknown";
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string VENDOR_MANAGER_PREFIX = "fwk.";
 static const std::string DEFAULT_POLICY = "default";
+static const std::string VIRTUAL_PRINTER_ID = "fwk.driver.ppd:Virtual PDF Printer";
 #ifdef ENTERPRISE_ENABLE
 static const std::string CUPS_ENTERPRISE_ROOT_DIR = "/data/service/el1/public/print_service/cups_enterprise";
 static const std::string CUPSD_ENTERPRISE_CONTROL_PARAM = "print.cupsd_enterprise.ready";
@@ -1131,7 +1132,7 @@ int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_opti
         return num_options;
     }
     num_options = cupsAddOption("pdfAutoRotate", "false", num_options, options);
-    if (jobParams->isLandscape) {
+    if (jobParams->isLandscape && jobParams -> printerId != VIRTUAL_PRINTER_ID) {
         num_options = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_LANDSCAPE, num_options, options);
     } else {
         num_options = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_PORTRAIT, num_options, options);
