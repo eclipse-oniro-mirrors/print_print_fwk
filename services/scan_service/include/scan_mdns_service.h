@@ -82,16 +82,9 @@ public:
     MDnsServiceInfo _serviceInfo;
 };
 
-using ScanInfoVariant = std::variant<ScanDeviceInfo, ScanDeviceInfoSync>;
-enum ScanInfoType {
-    SCAN_DEVICEINFO_TYPE = 0,
-    SCAN_DEVICEINFO_SYNC_TYPE = 1,
-};
-
 class ScanMdnsService {
 public:
     static ScanMdnsService& GetInstance();
-    void PushScanInfoToQueue(const ScanDeviceInfo& info);
     void PushScanInfoToQueue(const ScanDeviceInfoSync& info);
     void SetScannerInfoMap(const std::string& ip, const ScanDeviceInfoTCP& info);
     bool OnStartDiscoverService();
@@ -100,7 +93,7 @@ public:
 private:
     void UpdateScannerIdThread();
     void SaveMdnsCallbackStubPtr(const std::string& type, sptr<ScanMDnsDiscoveryObserver> callbackPtr);
-    std::queue<ScanInfoVariant> infoQueue_;
+    std::queue<ScanDeviceInfoSync> infoQueue_;
     std::map<std::string, ScanDeviceInfoTCP> netScannerInfoMap_;
     std::map<std::string, sptr<ScanMDnsDiscoveryObserver>> discoveryCallBackPtrs_;
     std::mutex discoveryCallBackPtrsLock_;

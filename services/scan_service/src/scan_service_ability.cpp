@@ -456,6 +456,7 @@ void ScanServiceAbility::SaneGetScanner()
         SetScannerSerialNumber(info);
         AddFoundScanner(info, scanDeviceInfos);
     }
+    EsclDriverManager::AddEsclScannerInfo(scanDeviceInfos);
     for (auto& scanDeviceInfo : scanDeviceInfos) {
         SendDeviceInfo(scanDeviceInfo, SCAN_DEVICE_FOUND);
         deviceInfos_.emplace_back(scanDeviceInfo);
@@ -824,6 +825,7 @@ void ScanServiceAbility::SendDeviceInfo(const ScanDeviceInfo &info, std::string 
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     SCAN_HILOGI("SendDeviceInfo [%{private}s], event = %{public}s", info.deviceId.c_str(), event.c_str());
+    info.Dump();
     if (event.empty()) {
         SCAN_HILOGE("SendDeviceInfo parm has nullptr");
         return;
@@ -864,7 +866,7 @@ void ScanServiceAbility::SendDeviceInfoSync(const ScanDeviceInfoSync &info, std:
         SCAN_HILOGE("SendDeviceInfoSync parm has nullptr");
         return;
     }
-
+    info.Dump();
     for (auto [eventType, listener] : registeredListeners_) {
         std::string type;
         ScanServiceUtils::EncodeTaskEventId(eventType, type);
@@ -934,23 +936,6 @@ void ScanServiceAbility::NetScannerLossNotify(const ScanDeviceInfoSync& syncInfo
     SendDeviceInfoSync(syncInfo, SCAN_DEVICE_SYNC);
 }
 
-void ScanServiceAbility::NotifyEsclScannerFound(const ScanDeviceInfo& info)
-{
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
-        SCAN_HILOGE("no permission to access scan service");
-        return;
-    }
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    SCAN_HILOGI("NotifyEsclScannerFound [%{private}s]", info.deviceId.c_str());
-    for (auto [eventType, listener] : registeredListeners_) {
-        std::string type;
-        ScanServiceUtils::EncodeTaskEventId(eventType, type);
-        if (type == SCAN_DEVICE_FOUND && listener != nullptr) {
-            listener->OnCallback(info.GetDeviceState(), info);
-        }
-    }
-}
-
 bool ScanServiceAbility::CheckPermission(const std::string &permissionName)
 {
     AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
@@ -1005,15 +990,6 @@ int32_t ScanServiceAbility::AddScanner(const std::string &uniqueId, const std::s
         SCAN_HILOGE("The scanner has already been added");
         return E_SCAN_NONE;
     }
-    ScanDeviceInfo info;
-    if (scannerDiscoverData_.HasEsclDevice(uniqueId)) {
-        scannerDiscoverData_.GetEsclDevice(uniqueId, info);
-        SCAN_HILOGD("add escl driver scanner");
-        scanData.InsertScannerInfo(discoverMode + uniqueId, info);
-        scanData.SaveScannerMap();
-        SendDeviceInfo(info, SCAN_DEVICE_ADD);
-        return E_SCAN_NONE;
-    }
     auto addScannerExe = [uniqueId, discoverMode, this]() {
         if (discoverMode == ScannerDiscoveryMode::USB_MODE) {
             AddUsbScanner(uniqueId, discoverMode);
@@ -1033,9 +1009,12 @@ void ScanServiceAbility::AddNetScanner(const std::string& uniqueId, const std::s
     ScanDeviceInfo info;
     if (scannerDiscoverData_.HasTcpDevice(uniqueId)) {
         scannerDiscoverData_.GetTcpDevice(uniqueId, info);
-        SCAN_HILOGD("add private driver scanner");
+        SCAN_HILOGI("add private driver scanner");
+    } else if (scannerDiscoverData_.HasEsclDevice(uniqueId)) {
+        scannerDiscoverData_.GetEsclDevice(uniqueId, info);
+        SCAN_HILOGI("add escl driver scanner");
     } else {
-        SCAN_HILOGE("AddNetScanner fail, the scanner was not found in the discovery list");
+        SCAN_HILOGE("not found net scanner in map");
         return;
     }
     scanData.InsertScannerInfo(discoverMode + uniqueId, info);

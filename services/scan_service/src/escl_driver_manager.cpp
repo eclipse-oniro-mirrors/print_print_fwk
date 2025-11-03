@@ -19,9 +19,11 @@
 #include <unistd.h>
 #include <iostream>
 #include <fstream>
+#include <unordered_set>
 #include "securec.h"
 #include "scan_log.h"
 #include "scan_constant.h"
+#include "scan_discover_data.h"
 #include "escl_driver_manager.h"
 
 namespace OHOS::Scan {
@@ -43,8 +45,8 @@ int32_t EsclDriverManager::InitializeEsclScannerDriver()
     }
     return E_SCAN_NONE;
 }
-bool EsclDriverManager::CreateSoftLink()
 
+bool EsclDriverManager::CreateSoftLink()
 {
     struct stat st;
     if (stat(AIRSCAN_LINKPATH, &st) == 0) {
@@ -106,5 +108,21 @@ bool EsclDriverManager::GenerateEsclScannerInfo(const ScanDeviceInfoTCP& rawInfo
     info.uniqueId = rawInfo.addr;
     info.discoverMode = ScannerDiscoveryMode::TCP_MODE;
     return true;
+}
+
+void EsclDriverManager::AddEsclScannerInfo(std::vector<ScanDeviceInfo>& discoveredScanners)
+{
+    const auto& esclInfos = ScannerDiscoverData::GetInstance().GetAllEsclDevices();
+    
+    std::unordered_set<std::string> existingIds;
+    for (const auto& scanner : discoveredScanners) {
+        existingIds.insert(scanner.uniqueId);
+    }
+    
+    for (const auto& [uniqueId, esclInfo] : esclInfos) {
+        if (existingIds.find(uniqueId) == existingIds.end()) {
+            discoveredScanners.push_back(esclInfo);
+        }
+    }
 }
 } // namespace OHOS::Scan
