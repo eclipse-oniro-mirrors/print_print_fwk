@@ -1360,19 +1360,19 @@ export default namespace print {
     }
 
     export class PrinterChangeWrapper {
-        private myFun_: (even: PrinterEvent, printerInformation: PrinterInformation) => void;
+        private myFun_: (event: PrinterEvent, printerInformation: PrinterInformation) => void;
 
-        constructor(myFun: (even: PrinterEvent, printerInformation: PrinterInformation) => void) {
+        constructor(myFun: (event: PrinterEvent, printerInformation: PrinterInformation) => void) {
             this.myFun_ = myFun;
         }
 
-        invoke(even: PrinterEvent, printerInformation: PrinterInformation): void {
-            this.myFun_(even, printerInformation);
+        invoke(event: PrinterEvent, printerInformation: PrinterInformation): void {
+            this.myFun_(event, printerInformation);
         }
     }
 
     export function onPrinterChange(callback: printerChangeCallback): void {
-        const typedCallback = callback as (even: PrinterEvent, printerInformation: PrinterInformation) => void;
+        const typedCallback = callback as (event: PrinterEvent, printerInformation: PrinterInformation) => void;
         const myCall = new PrinterChangeWrapper(typedCallback);
         taskpool.execute((): void => {
             onPrinterChangeNative(myCall);
@@ -1380,7 +1380,7 @@ export default namespace print {
     }
 
     export function offPrinterChange(callback?: printerChangeCallback): void {
-        const typedCallback = callback as (even: PrinterEvent, printerInformation: PrinterInformation) => void;
+        const typedCallback = callback as (event: PrinterEvent, printerInformation: PrinterInformation) => void;
         const myCall = new PrinterChangeWrapper(typedCallback);
         taskpool.execute((): void => {
             let type ='printerChange';
