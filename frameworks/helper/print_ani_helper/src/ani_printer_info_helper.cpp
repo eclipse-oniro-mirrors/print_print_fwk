@@ -29,8 +29,6 @@ static constexpr const char *PARAM_INFO_PRINTERICON = "printerIcon";
 static constexpr const char *PARAM_INFO_DESCRIPTION = "description";
 static constexpr const char *PARAM_INFO_CAPABILITY = "capability";
 static constexpr const char *PARAM_JOB_OPTION = "options";
-static constexpr const char *PARAM_INFO_IS_DAFAULT_PRINTER = "isDefaultPrinter";
-static constexpr const char *PARAM_INFO_IS_LAST_USED_PRINTER = "isLastUsedPrinter";
 static constexpr const char *PARAM_INFO_PRINTER_STATUS = "printerStatus";
 static constexpr const char *PARAM_INFO_PRINTER_MAKE = "printerMake";
 static constexpr const char *PARAM_INFO_URI = "uri";
@@ -148,14 +146,12 @@ ani_object PrinterInfoAniHelper::CreatePrinterInfo(ani_env *env, const PrinterIn
     ani_object obj = CreateObject(env, nullptr, className);
     SetStringProperty(env, obj, PARAM_INFO_PRINTERID, info.GetPrinterId());
     SetStringProperty(env, obj, PARAM_INFO_PRINTERNAME, info.GetPrinterName());
-    SetIntProperty(env, obj, PARAM_INFO_PRINTERICON, static_cast<int32_t>(info.GetPrinterIcon()));
+    SetIntPropertyObject(env, obj, PARAM_INFO_PRINTERICON, static_cast<int32_t>(info.GetPrinterIcon()));
     SetStringProperty(env, obj, PARAM_INFO_DESCRIPTION, info.GetDescription());
     SetStringProperty(env, obj, PARAM_INFO_URI, info.GetUri());
     SetStringProperty(env, obj, PARAM_INFO_PRINTER_MAKE, info.GetPrinterMake());
     SetStringProperty(env, obj, PARAM_INFO_ALIAS, info.GetAlias());
     SetStringProperty(env, obj, PARAM_JOB_OPTION, info.GetOption());
-    SetBoolProperty(env, obj, PARAM_INFO_IS_DAFAULT_PRINTER, info.GetIsDefaultPrinter());
-    SetBoolProperty(env, obj, PARAM_INFO_IS_LAST_USED_PRINTER, info.GetIsLastUsedPrinter());
     ani_enum_item printerStateEnum = CreateEnumByIndex(env, "@ohos.print.print.PrinterState",
         static_cast<int32_t>(info.GetPrinterState()));
     SetRefProperty(env, obj, PARAM_INFO_PRINTERSTATE, static_cast<ani_ref>(printerStateEnum));
@@ -177,7 +173,7 @@ ani_object PrinterInfoAniHelper::CreatePrinterInformation(ani_env *env, const Pr
 {
     PRINT_HILOGI("enter CreatePrinterInformation");
 
-    static const char *className = "@ohos.print.print.PrinterInformationImp";
+    static const char *className = "C{@ohos.print.print.PrinterInformationImp}";
     ani_object obj = CreateObject(env, nullptr, className);
 
     SetStringProperty(env, obj, PARAM_INFO_PRINTERID, info.GetPrinterId());
@@ -204,18 +200,18 @@ ani_object PrinterInfoAniHelper::CreatePrinterInformation(ani_env *env, const Pr
 
 bool PrinterInfoAniHelper::GetPrinterInfoArray(ani_env *env, ani_object param, std::vector<PrinterInfo> &res)
 {
-    ani_double length;
+    ani_size length = 0;
     ani_status status = ANI_ERROR;
-    status = env->Object_GetPropertyByName_Double(param, "length", &length);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("Object_GetPropertyByName_Double fail, status = %{public}u", status);
+    if ((status = env->Array_GetLength(reinterpret_cast<ani_array>(param), &length)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d", status);
         return false;
     }
+
     PRINT_HILOGD("printerInfo array size = %{public}d", static_cast<int32_t>(length));
     for (int32_t i = 0; i < static_cast<int32_t>(length); i++) {
         ani_ref aniPrinterInfo;
         status = env->Object_CallMethodByName_Ref(param, "$_get",
-            "i:Y", &aniPrinterInfo, static_cast<ani_int>(i));
+            "L@ohos/print/print/PrinterInfoImpl;", &aniPrinterInfo, static_cast<ani_int>(i));
         if (status != ANI_OK) {
             PRINT_HILOGE("Object_CallMethodByName_Ref fail, status = %{public}u", status);
             return false;
@@ -241,8 +237,6 @@ bool PrinterInfoAniHelper::ValidateProperty(ani_env *env, ani_ref printerInfo)
             {PARAM_INFO_PRINTER_STATUS, PRINT_PARAM_OPT},
             {PARAM_INFO_PRINTER_PREFERENCES, PRINT_PARAM_OPT},
             {PARAM_INFO_ALIAS, PRINT_PARAM_OPT},
-            {PARAM_INFO_IS_DAFAULT_PRINTER, PRINT_PARAM_OPT},
-            {PARAM_INFO_IS_LAST_USED_PRINTER, PRINT_PARAM_OPT},
     };
     return true;
 }

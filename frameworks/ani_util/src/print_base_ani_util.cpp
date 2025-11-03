@@ -232,31 +232,33 @@ bool GetStdString(ani_env *env, ani_string str, std::string &res)
 
 bool GetStdStringArray(ani_env *env, ani_object param, std::vector<std::string> &res)
 {
-    if (env == nullptr) {
-        PRINT_HILOGE("env is nullptr");
+    if (env == nullptr || param == nullptr) {
+        PRINT_HILOGE("env null or param null");
         return false;
     }
-    ani_double length = 0.0;
+    res.clear();
+    ani_size size = 0;
     ani_status status = ANI_ERROR;
-    status = env->Object_GetPropertyByName_Double(param, "length", &length);
-    if (status != ANI_OK) {
-        PRINT_HILOGE("Object_GetPropertyByName_Double fail, status = %{public}u", status);
+    if ((status = env->Array_GetLength(reinterpret_cast<ani_array>(param), &size)) != ANI_OK) {
+        PRINT_HILOGE("status: %{public}d", status);
         return false;
     }
-    for (int32_t i = 0; i < static_cast<int32_t>(length); i++) {
-        ani_ref stringEntryRef = nullptr;
-        status = env->Object_CallMethodByName_Ref(param, "$_get",
-            "i:Y", &stringEntryRef, i);
-        if (status != ANI_OK) {
-            PRINT_HILOGE("Object_CallMethodByName_Ref fail, status = %{public}u", status);
+    ani_ref ref = nullptr;
+    for (ani_size idx = 0; idx < size; idx++) {
+        if ((status = env->Array_Get(reinterpret_cast<ani_array>(param), idx, &ref)) != ANI_OK) {
+            PRINT_HILOGE("status: %{public}d, index: %{public}zu", status, idx);
             return false;
         }
-        std::string file;
-        if (!GetStdString(env, static_cast<ani_string>(stringEntryRef), file)) {
-            PRINT_HILOGE("GetStdString fail");
+        if (ref == nullptr) {
+            PRINT_HILOGE("null ref");
             return false;
         }
-        res.emplace_back(file);
+        std::string str;
+        if (!GetStdString(env, reinterpret_cast<ani_string>(ref), str)) {
+            PRINT_HILOGE("GetStdString failed, index: %{public}zu", idx);
+            return false;
+        }
+        res.push_back(str);
     }
     return true;
 }
@@ -269,7 +271,7 @@ bool GetEnumValueInt(ani_env *env, ani_enum_item enumObj, uint32_t& enumValue)
     }
     ani_int result = 0;
     env->EnumItem_GetValue_Int(enumObj, &result);
-    enumValue = result;
+    enumValue = static_cast<uint32_t>(result);
     return true;
 }
 }  // namespace OHOS::Print

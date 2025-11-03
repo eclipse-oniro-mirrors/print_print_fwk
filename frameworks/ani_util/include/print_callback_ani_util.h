@@ -21,6 +21,6 @@ namespace OHOS::Print {
     bool AsyncCallback(ani_env *env, ani_object call, ani_object stsErrCode, ani_object retObj);
     bool StsCallback(ani_env *env, ani_object call, ani_object retObj);
     bool AsyncCallbackArray(ani_env *env, ani_object call, ani_object error, ani_object result);
-    ani_object CreateStsError(ani_env *env, ani_int code);
+    ani_object CreateStsError(ani_env *env, ani_int code, const std::string& msg = "");
 }  // namespace OHOS::Print
 #endif  // OHOS_PRINT_CALLBACK_ANI_UTIL_H

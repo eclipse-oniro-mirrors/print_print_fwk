@@ -36,9 +36,7 @@ config("print_ani_config") {
 }
 
 ohos_shared_library("print_ani") {
-  shlib_type = "ani"
   configs = [ ":print_ani_config" ]
-  branch_protector_ret = "pac_ret"
   sanitize = {
     cfi = true
     cfi_cross_dso = true
@@ -101,7 +99,6 @@ ohos_shared_library("print_ani") {
     "runtime_core:ani",
     "runtime_core:libarkruntime",
     "samgr:samgr_proxy",
-    "runtime_core:ani_helpers",
   ]
   subsystem_name = "print"
   part_name = "print_fwk"
