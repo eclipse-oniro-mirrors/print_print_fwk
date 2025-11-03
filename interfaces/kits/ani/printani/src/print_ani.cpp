@@ -668,6 +668,30 @@ static void OffNative(ani_env *env, ani_string type, ani_string string_object)
     PrintManagerClient::GetInstance()->Off("", typeStr);
 }
 
+static void OffPrinterChangeNative(ani_env *env, ani_string type, ani_object callback)
+{
+    PRINT_HILOGI("enter OffPrinterChangeNative");
+    std::string typeStr;
+    if (!GetStdString(env, type, typeStr)) {
+        PRINT_HILOGE("GetStdString fail");
+        return;
+    }
+    PRINT_HILOGD("CallMeWithOptionalString Get = %{public}s", typeStr.c_str());
+    PrintManagerClient::GetInstance()->Off("", typeStr);
+}
+
+static void OnPrinterChangeNative(ani_env *env, ani_object callback)
+{
+    PRINT_HILOGI("enter OnPrinterChangeNative");
+    if (env == nullptr) {
+        PRINT_HILOGE("env is nullptr");
+        return;
+    }
+    std::string typeStr = "printerChange";
+    OHOS::sptr<IPrintCallback> callbackWrapper = new (std::nothrow) PrintAniCallback(env, callback);
+    PrintManagerClient::GetInstance()->On("", typeStr, callbackWrapper);
+}
+
 template<typename Func>
 static inline ani_native_function MakeNativeFunc(const char* etsFuncName, Func cFunc)
 {
@@ -712,6 +736,8 @@ static std::array methods = {
     MakeNativeFunc("onPrintTask", OnPrintTask),
     MakeNativeFunc("offPrintTask", OffPrintTask),
     MakeNativeFunc("offNative", OffNative),
+    MakeNativeFunc("offPrinterChangeNative", OffPrinterChangeNative),
+    MakeNativeFunc("onPrinterChangeNative", OnPrinterChangeNative),
 };
 
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
