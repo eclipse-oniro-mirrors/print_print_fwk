@@ -1132,7 +1132,7 @@ int PrintCupsClient::FillLandscapeOptions(JobParameters *jobParams, int num_opti
         return num_options;
     }
     num_options = cupsAddOption("pdfAutoRotate", "false", num_options, options);
-    if (jobParams->isLandscape && jobParams -> printerId != VIRTUAL_PRINTER_ID) {
+    if (jobParams->isLandscape && jobParams->printerId != VIRTUAL_PRINTER_ID) {
         num_options = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_LANDSCAPE, num_options, options);
     } else {
         num_options = cupsAddOption(CUPS_ORIENTATION, CUPS_ORIENTATION_PORTRAIT, num_options, options);
