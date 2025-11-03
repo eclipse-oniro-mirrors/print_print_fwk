@@ -71,7 +71,7 @@ bool PrintAniCallback::OnCallback(uint32_t state, const PrinterInfo &info)
 bool PrintAniCallback::OnCallback(uint32_t state, const PrintJob &info)
 {
     PRINT_HILOGI("PrintJob Notification in");
-    if (aniVm_ != nullptr && aniCallback_ != nullptr) {
+    if (aniVm_ == nullptr || aniCallback_ == nullptr) {
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
@@ -92,7 +92,7 @@ bool PrintAniCallback::OnCallback(uint32_t state, const PrintJob &info)
 bool PrintAniCallback::OnCallback(const std::string &extensionId, const std::string &info)
 {
     PRINT_HILOGI("ExtensionInfo Notification in");
-    if (aniVm_ != nullptr && aniCallback_ != nullptr) {
+    if (aniVm_ == nullptr || aniCallback_ == nullptr) {
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
@@ -137,7 +137,7 @@ bool PrintAniCallback::OnCallbackAdapterLayout(const std::string &jobId,
     PRINT_HILOGI("PrintCallback OnCallbackAdapterLayout Notification in, jobId:%{public}s newAttrs copyNum:%{public}d",
                  jobId.c_str(),
                  newAttrs.GetCopyNumber());
-    if (aniVm_ != nullptr && aniCallback_ != nullptr) {
+    if (aniVm_ == nullptr || aniCallback_ == nullptr) {
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
@@ -161,7 +161,7 @@ bool PrintAniCallback::OnCallbackAdapterJobStateChanged(const std::string jobId,
 {
     PRINT_HILOGI("PrintCallback onCallbackAdapterJobStateChanged Notification in, jobId:%{public}s subState:%{public}d",
                  jobId.c_str(), subState);
-    if (aniVm_ != nullptr && aniCallback_ != nullptr) {
+    if (aniVm_ == nullptr || aniCallback_ == nullptr) {
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
@@ -182,7 +182,7 @@ bool PrintAniCallback::OnCallbackAdapterJobStateChanged(const std::string jobId,
 bool PrintAniCallback::OnCallbackAdapterGetFile(uint32_t state)
 {
     PRINT_HILOGI("OnCallbackAdapterGetFile in");
-    if (aniVm_ != nullptr && aniCallback_ != nullptr) {
+    if (aniVm_ == nullptr || aniCallback_ == nullptr) {
         PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
         return false;
     }
