@@ -214,7 +214,8 @@ export default namespace print {
         E_PRINT_INVALID_EXTENSION = 13100004,
         E_PRINT_INVALID_PRINTER = 13100005,
         E_PRINT_INVALID_PRINT_JOB = 13100006,
-        E_PRINT_FILE_IO = 13100007
+        E_PRINT_FILE_IO = 13100007,
+        E_PRINT_TOO_MANY_FILES = 13100010,
     }
 
     export enum ApplicationEvent {
@@ -439,6 +440,11 @@ export default namespace print {
       PRINTER_EVENT_LAST_USED_PRINTER_CHANGED,
     }
 
+    export enum DefaultPrinterType {
+        DEFAULT_PRINTER_TYPE_SET_BY_USER = 0,
+        DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER = 1,
+    }
+
     export interface PrintAttributesParameter {
         jobName: string;
         printAdapter : PrintDocumentAdapter;
@@ -452,7 +458,7 @@ export default namespace print {
 
     type extInfoChangeCallback = (extensionId: string, info: string) => void;
 
-    type printerChangeCallback = (event: PrinterEvent, info: PrinterInfo) => void;
+    type printerChangeCallback = (event: PrinterEvent, printerInformation: PrinterInformation) => void;
 
     native function printNative(files: Array<string>, callback: AsyncCallbackWrapper<PrintTask>): void;
 
@@ -461,6 +467,8 @@ export default namespace print {
     native function printWithAttributesNative(para : PrintAttributesParameter, callback: AsyncCallbackWrapper<PrintTask>): void;
 
     native function onNative(type: string, callback: CallbackWrapper<void>) : int;
+
+    native function onPrinterChangeNative(callback: PrinterChangeWrapper) : int;
 
     native function onPrinterStateChangeNative(callback: PrinterStateChangeWrapper) : int;
 
@@ -472,7 +480,9 @@ export default namespace print {
 
     native function offPrintTask(type: string, callback: CallbackWrapper<void>, task : PrintTaskImpl) : void;
 
-    native function offNative(type: string, callback: CallbackWrapper<void>) : int;
+    native function offNative(type: string, callback: CallbackWrapper<void>) : void;
+
+    native function offPrinterChangeNative(type: string, callback: PrinterChangeWrapper) : void;
 
     native function queryAllPrinterExtensionInfosNative(callback: AsyncCallbackArrayWrapper<PrinterExtensionInfo>): void;
     
@@ -1196,14 +1206,23 @@ export default namespace print {
     }
 
 
-    export function notifyPrintService(jobId: string, type: string, callback: AsyncCallback<void>): void {
+    export function notifyPrintServiceSpoolerCloseForCancelled(jobId: string, callback: AsyncCallback<void>): void {
         let myCall = new AsyncCallbackWrapper<void>(callback);
+        let type = 'spooler_closed_for_cancelled';
         taskpool.execute((): void => {
             notifyPrintServiceNative(jobId, type, myCall);
         });
     }
 
-    export function notifyPrintService(jobId: string, type: string): Promise<void> {
+    export function notifyPrintServiceSpoolerCloseForStarted(jobId: string, callback: AsyncCallback<void>): void {
+        let myCall = new AsyncCallbackWrapper<void>(callback);
+        let type = 'spooler_closed_for_started';
+        taskpool.execute((): void => {
+            notifyPrintServiceNative(jobId, type, myCall);
+        });
+    }
+
+    export function notifyPrintServiceSpoolerCloseForCancelled(jobId: string): Promise<void> {
         return new Promise<void>((resolve: (data:undefined)=>void, reject:(err: BusinessError)=>void):void => {
             let myCall = new AsyncCallbackWrapper<void>((err : BusinessError<void> | null) => {
                 if (err === null || err.code == 0) {
@@ -1212,6 +1231,23 @@ export default namespace print {
                     reject(err);
                 }
             });
+            let type = 'spooler_closed_for_cancelled';
+            taskpool.execute((): void => {
+                notifyPrintServiceNative(jobId, type, myCall);
+            });
+        });
+    }
+
+    export function notifyPrintServiceSpoolerCloseForStarted(jobId: string): Promise<void> {
+        return new Promise<void>((resolve: (data:undefined)=>void, reject:(err: BusinessError)=>void):void => {
+            let myCall = new AsyncCallbackWrapper<void>((err : BusinessError<void> | null) => {
+                if (err === null || err.code == 0) {
+                    resolve(undefined);
+                } else {
+                    reject(err);
+                }
+            });
+            let type = 'spooler_closed_for_started';
             taskpool.execute((): void => {
                 notifyPrintServiceNative(jobId, type, myCall);
             });
@@ -1320,6 +1356,35 @@ export default namespace print {
             taskpool.execute((): void => {
                 getPrinterInformationByIdNative(printerId, myCall);
             });
+        });
+    }
+
+    export class PrinterChangeWrapper {
+        private myFun_: (event: PrinterEvent, printerInformation: PrinterInformation) => void;
+
+        constructor(myFun: (event: PrinterEvent, printerInformation: PrinterInformation) => void) {
+            this.myFun_ = myFun;
+        }
+
+        invoke(event: PrinterEvent, printerInformation: PrinterInformation): void {
+            this.myFun_(event, printerInformation);
+        }
+    }
+
+    export function onPrinterChange(callback: printerChangeCallback): void {
+        const typedCallback = callback as (event: PrinterEvent, printerInformation: PrinterInformation) => void;
+        const myCall = new PrinterChangeWrapper(typedCallback);
+        taskpool.execute((): void => {
+            onPrinterChangeNative(myCall);
+        });
+    }
+
+    export function offPrinterChange(callback?: printerChangeCallback): void {
+        const typedCallback = callback as (event: PrinterEvent, printerInformation: PrinterInformation) => void;
+        const myCall = new PrinterChangeWrapper(typedCallback);
+        taskpool.execute((): void => {
+            let type ='printerChange';
+            offPrinterChangeNative(type, myCall);
         });
     }
 }
