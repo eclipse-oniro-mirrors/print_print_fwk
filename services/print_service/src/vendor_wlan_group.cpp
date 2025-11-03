@@ -541,10 +541,10 @@ bool VendorWlanGroup::OnPrinterCapabilityQueried(const std::string &vendorName, 
             }
             RemoveGroupPrinterFromVendorGroupList(printerId);
             printerVendorGroupList_[printerId] = vendorName;
-        }
-        if (!parentVendorManager->IsBsunidriverSupport(printerInfo)) {
-            PRINT_HILOGW("Bsuni Driver not support!");
-            return false;
+            if (!parentVendorManager->IsBsunidriverSupport(printerInfo)) {
+                PRINT_HILOGW("Bsuni Driver not support!");
+                return false;
+            }
         }
         PRINT_HILOGI("query ppd propertis");
         auto vendorDriver = parentVendorManager->FindDriverByVendorName(vendorName);
