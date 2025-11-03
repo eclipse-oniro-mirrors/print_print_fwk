@@ -27,6 +27,7 @@
 #include "printer_info_helper.h"
 #include "printer_preferences_helper.h"
 #include "ppd_info_helper.h"
+#include "print_util.h"
 
 namespace OHOS::Print {
 const std::string PRINTER_EVENT_TYPE = "printerStateChange";
@@ -1102,6 +1103,7 @@ napi_value NapiInnerPrint::AuthPrintJob(napi_env env, napi_callback_info info)
     auto exec = [context](PrintAsyncCall::Context *ctx) {
         if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
             PRINT_HILOGE("Non-system applications use system APIS!");
+            PrintUtil::SafeDeleteAuthInfo(context->userPasswd);
             context->result = false;
             context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
             return;
