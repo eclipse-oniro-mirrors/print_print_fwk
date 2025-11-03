@@ -36,6 +36,7 @@ class AniPrintTask {
 public:
     AniPrintTask(ani_env *env);
     ~AniPrintTask();
+    int32_t StartPrint(const std::vector<std::string>& files);
     int32_t StartPrintWithContext(const std::vector<std::string>& files, std::shared_ptr<AbilityRuntime::Context> ctx);
     int32_t StartPrintWithAttributes(const std::string& jobName, std::shared_ptr<AbilityRuntime::Context> ctx,
         const PrintAttributes& attributes, const sptr<IPrintCallback> &listener);
@@ -45,7 +46,7 @@ private:
     uint32_t CallSpooler(const std::shared_ptr<AdapterParam>& adapterParam,
         const std::vector<std::string>& files, std::shared_ptr<AbilityRuntime::Context> ctx);
     OHOS::Ace::UIContent* GetUIContent(std::shared_ptr<OHOS::AbilityRuntime::Context> ctx);
-    
+    bool CheckPermission(const std::string &name);
     ani_vm *aniVm_ = nullptr;
     std::string jobId_;
 };

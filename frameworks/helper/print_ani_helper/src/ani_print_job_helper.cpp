@@ -178,6 +178,11 @@ ani_object AniPrintJobHelper::CreatePrintJobArray(ani_env *env, const std::vecto
     PRINT_HILOGI("enter CreatePrintJobArray");
 
     ani_object arrayObj = {};
+    ani_class cls;
+    if (ANI_OK != env->FindClass(CLASS_NAME, &cls)) {
+        PRINT_HILOGE("[ANI] find class fail");
+        return arrayObj;
+    }
 
     ani_ref undefinedRef = nullptr;
     if (ANI_OK != env->GetUndefined(&undefinedRef)) {
