@@ -4443,7 +4443,7 @@ int32_t PrintServiceAbility::AuthPrintJob(const std::string &jobId, const std::s
 int32_t PrintServiceAbility::QueryAllPrinterPpds(std::vector<PpdInfo> &printerPpdList)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
         return E_PRINT_NO_PERMISSION;
     }
@@ -4491,7 +4491,7 @@ bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
 int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
         return E_PRINT_NO_PERMISSION;
     }
@@ -4514,7 +4514,7 @@ int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printer
     const std::string &ppdName)
 {
     ManualStart();
-    if (!CheckPermission(PERMISSION_NAME_PRINT)) {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
         return E_PRINT_NO_PERMISSION;
     }
