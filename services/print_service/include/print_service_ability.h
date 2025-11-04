@@ -220,6 +220,10 @@ private:
     int32_t BlockPrintJob(const std::string &jobId);
     void BlockUserPrintJobs(const int32_t userId);
     bool CheckPrintConstraint();
+    bool IsAppAlive(const std::string &bundleName, int32_t pid);
+    void DiscoveryCallerAppsMonitor();
+    void StartDiscoveryCallerMonitorThread();
+    void StopDiscoveryInternal();
     bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
     void RegisterSettingDataObserver();
     bool IsPcModeSupported();
@@ -300,7 +304,10 @@ private:
     VendorManager vendorManager;
 
     std::map<int32_t, std::string> callerMap_;
+    std::map<int32_t, std::string> discoveryCallerMap_;
+    std::recursive_mutex discoveryMutex_;
     bool unloadThread = false;
+    bool discoveryCallerMonitorThread = false;
 
 #ifdef ENTERPRISE_ENABLE
 private:

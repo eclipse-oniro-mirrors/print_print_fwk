@@ -542,7 +542,17 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
     }
 
     PRINT_HILOGI("StartDiscoverPrinter start.");
+
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
+    StartDiscoveryCallerMonitorThread();
+
+    discoveryCallerMap_.insert(std::make_pair(callerPid, bundleName));
+    PRINT_HILOGI("Add discovery caller, pid: %{public}d, bundleName: %{public}s", callerPid, bundleName.c_str());
+
     vendorManager.ClearConnectingPrinter();
     vendorManager.ClearConnectingProtocol();
     vendorManager.ClearConnectingPpdName();
@@ -590,33 +600,28 @@ int32_t PrintServiceAbility::StopDiscoverPrinter()
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("StopDiscoverPrinter start.");
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    vendorManager.StopDiscovery();
-    vendorManager.StopStatusMonitor();
-    printSystemData_.ClearDiscoveredPrinterList();
-    for (auto extension : extensionStateList_) {
-        if (extension.second < PRINT_EXTENSION_LOADING) {
-            continue;
-        }
-        extension.second = PRINT_EXTENSION_UNLOAD;
-        std::string cid = PrintUtils::EncodeExtensionCid(extension.first, PRINT_EXTCB_STOP_DISCOVERY);
-        if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
-            PRINT_HILOGE("StopDiscoverPrinter Not Register, BUT State is LOADED");
-            continue;
-        }
 
-        auto cbFunc = extCallbackMap_[cid];
-        auto callback = [=]() {
-            if (cbFunc != nullptr) {
-                cbFunc->OnCallback();
-            }
-        };
-        if (helper_->IsSyncMode()) {
-            callback();
-        } else {
-            serviceHandler_->PostTask(callback, 0);
-        }
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
+
+    auto iter = discoveryCallerMap_.find(callerPid);
+    if (iter != discoveryCallerMap_.end()) {
+        PRINT_HILOGI("Remove discovery caller, pid: %{public}d, bundleName: %{public}s",
+                     callerPid, iter->second.c_str());
+        discoveryCallerMap_.erase(iter);
     }
+    PRINT_HILOGI("discoveryCallerMap size: %{public}lu", discoveryCallerMap_.size());
+
+    if (!discoveryCallerMap_.empty()) {
+        PRINT_HILOGI("Other discovery caller processes still discovering, keep discovery running.");
+        return E_PRINT_NONE;
+    }
+
+    PRINT_HILOGI("All discovery callers stopped, stopping discovery");
+    StopDiscoveryInternal();
+
     PRINT_HILOGI("StopDiscoverPrinter end.");
     return E_PRINT_NONE;
 }
@@ -2035,6 +2040,81 @@ bool PrintServiceAbility::UnloadSystemAbility()
     }
     PRINT_HILOGI("unload print system ability successfully");
     return true;
+}
+
+void PrintServiceAbility::DiscoveryCallerAppsMonitor()
+{
+    PRINT_HILOGI("start monitor discovery caller apps");
+    bool running = true;
+    while (running) {
+        std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
+        std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
+
+        for (auto iter = discoveryCallerMap_.begin(); iter != discoveryCallerMap_.end();) {
+            PRINT_HILOGI(
+                "check discovery caller process, pid: %{public}d, bundleName: %{public}s",
+                iter->first, iter->second.c_str());
+            if (IsAppAlive(iter->second, iter->first)) {
+                PRINT_HILOGI("discovery caller app still alive");
+                ++iter;
+            } else {
+                PRINT_HILOGI("discovery caller app not alive, erase it");
+                iter = discoveryCallerMap_.erase(iter);
+            }
+        }
+        PRINT_HILOGI("discoveryCallerMap size: %{public}lu", discoveryCallerMap_.size());
+
+        if (discoveryCallerMap_.empty()) {
+            PRINT_HILOGI("All discovery caller apps exited, stopping discovery");
+            StopDiscoveryInternal();
+            discoveryCallerMonitorThread = false;
+            running = false;
+        }
+    }
+    PRINT_HILOGI("DiscoveryCallerAppsMonitor thread exited");
+}
+
+void PrintServiceAbility::StopDiscoveryInternal()
+{
+    PRINT_HILOGI("StopDiscoveryInternal start.");
+    vendorManager.StopDiscovery();
+    vendorManager.StopStatusMonitor();
+    printSystemData_.ClearDiscoveredPrinterList();
+    for (auto extension : extensionStateList_) {
+        if (extension.second < PRINT_EXTENSION_LOADING) {
+            continue;
+        }
+        extension.second = PRINT_EXTENSION_UNLOAD;
+        std::string cid = PrintUtils::EncodeExtensionCid(extension.first, PRINT_EXTCB_STOP_DISCOVERY);
+        if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
+            PRINT_HILOGE("StopDiscoveryInternal Not Register, BUT State is LOADED");
+            continue;
+        }
+
+        auto cbFunc = extCallbackMap_[cid];
+        auto callback = [=]() {
+            if (cbFunc != nullptr) {
+                cbFunc->OnCallback();
+            }
+        };
+        if (helper_->IsSyncMode()) {
+            callback();
+        } else {
+            serviceHandler_->PostTask(callback, 0);
+        }
+    }
+    PRINT_HILOGI("StopDiscoveryInternal end.");
+}
+
+void PrintServiceAbility::StartDiscoveryCallerMonitorThread()
+{
+    std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
+    if (!discoveryCallerMonitorThread) {
+        PRINT_HILOGI("start discovery caller monitor thread");
+        discoveryCallerMonitorThread = true;
+        std::thread startDiscoveryCallerMonitorThread([this] { this->DiscoveryCallerAppsMonitor(); });
+        startDiscoveryCallerMonitorThread.detach();
+    }
 }
 
 void PrintServiceAbility::DelayEnterLowPowerMode()
@@ -4242,6 +4322,12 @@ bool PrintServiceAbility::CheckPrintConstraint()
     }
     PRINT_HILOGD("print constraint for user %{public}d is %{public}d.", userId, isEnabled);
     return isEnabled;
+}
+
+bool PrintServiceAbility::IsAppAlive(const std::string &bundleName, int32_t pid)
+{
+    auto callerAppInfo = std::make_shared<PrintCallerAppInfo>(pid, bundleName);
+    return PrintCallerAppMonitor::GetInstance().IsAppAlive(callerAppInfo);
 }
 
 bool PrintServiceAbility::IsPrinterPpdUpdateRequired(

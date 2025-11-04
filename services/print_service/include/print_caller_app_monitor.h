@@ -70,6 +70,7 @@ public:
     void StartCallerAppMonitor(std::function<bool()> unloadTask);
     void IncrementPrintCounter();
     void DecrementPrintCounter();
+    bool IsAppAlive(std::shared_ptr<PrintCallerAppInfo> callerAppInfo);
 
 private:
     PrintCallerAppMonitor() = default;
@@ -77,7 +78,6 @@ private:
 
     void MonitorCallerApps(std::function<bool()> unloadTask);
     sptr<AppExecFwk::IAppMgr> GetAppManager();
-    bool IsAppAlive(std::shared_ptr<PrintCallerAppInfo> callerAppInfo);
     std::vector<AppExecFwk::RunningProcessInfo> GetRunningProcessInformation(const std::string &bundleName);
     int32_t GetCurrentUserId();
 
