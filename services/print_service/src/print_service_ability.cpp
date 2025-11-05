@@ -4460,21 +4460,7 @@ bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
 {
     PRINT_HILOGI("Start CallBack Printerinfo");
     std::vector<PpdInfo> ppdInfos;
-    std::string makeModel = info.GetPrinterMake();
-    if (makeModel.empty()) {
-        PRINT_HILOGE("Cannot Find makeModel");
-    } else {
-        if (!DelayedSingleton<PrintCupsClient>::GetInstance()->QueryAllPPDInformation(makeModel, ppdInfos)) {
-            PRINT_HILOGE("Cannot Find Ppds");
-        }
-    }
-
-    if (vendorManager.IsBsunidriverSupport(info)) {
-        PpdInfo genericPpd;
-        genericPpd.SetPpdInfo("Generic", "System Default Driver", BSUNI_PPD_NAME);
-        ppdInfos.push_back(genericPpd);
-    }
-
+    QueryPrinterPpds(info, ppdInfos);
     for (auto eventIt : registeredListeners_) {
         if (PrintUtils::GetEventType(eventIt.first) != PRINT_QUERY_INFO_EVENT_TYPE) {
             continue;
@@ -4543,5 +4529,43 @@ int32_t PrintServiceAbility::SavePdfFileJob(const std::string &jobId, uint32_t f
     return DelayedSingleton<PrintCupsClient>::GetInstance()->CopyJobOutputFile(jobId, fd, true);
 #endif // CUPS_ENABLE
     return E_PRINT_SERVER_FAILURE;
+} 
+
+void PrintServiceAbility::QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds)
+{
+    PRINT_HILOGI("Start QueryPrinterPpds");
+    std::string makeModel = info.GetPrinterMake();
+    if (makeModel.empty()) {
+        PRINT_HILOGW("Cannot Find makeModel");
+    } else {
+        if (!DelayedSingleton<PrintCupsClient>::GetInstance()->QueryAllPPDInformation(makeModel, ppds)) {
+            PRINT_HILOGW("Cannot Find Ppds");
+        }
+    }
+    if (vendorManager.IsBsunidriverSupport(info)) {
+        PpdInfo genericPpd;
+        genericPpd.SetPpdInfo("Generic", "System Default Driver", BSUNI_PPD_NAME);
+        ppds.push_back(genericPpd);
+    }
+    PRINT_HILOGI("QueryPrinterPpds End.");
+}
+ 
+int32_t PrintServiceAbility::QueryPrinterInfoById(const std::string &printerId, PrinterInfo info,
+    std::vector<PpdInfo>ppds)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGI("QueryPrinterInfoById Enter");
+    auto printerInfo = QueryDiscoveredPrinterInfoById(printerId);
+    if (printerInfo == nullptr) {
+        PRINT_HILOGW("printer not found in DiscoveredMap");
+        return E_PRINT_INVALID_PRINTER;
+    }
+    info = *printerInfo;
+    QueryPrinterPpds(info, ppds);
+    return E_PRINT_NONE;
 }
 }  // namespace OHOS::Print

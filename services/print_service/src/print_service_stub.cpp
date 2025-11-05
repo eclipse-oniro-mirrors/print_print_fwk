@@ -96,6 +96,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIPANDPPD] =
         &PrintServiceStub::OnConnectPrinterByIpAndPpd;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_SAVEPDFFILEJOB] = &PrintServiceStub::OnSavePdfFileJob;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERINFOBYID] = &PrintServiceStub::OnQueryPrinterInfoById;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -982,6 +983,28 @@ bool PrintServiceStub::OnSavePdfFileJob(MessageParcel &data, MessageParcel &repl
     }
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnSavePdfFileJob out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnQueryPrinterInfoById(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoById in");
+    std::string printerId = data.ReadString();
+    PrinterInfo info;
+    std::vector<PpdInfo> ppdInfos;
+    int32_t ret = QueryPrinterInfoById(printerId, info, ppdInfos);
+    reply.WriteInt32(ret);
+    if (ret == E_PRINT_NONE) {
+        uint32_t size = static_cast<uint32_t>(ppdInfos.size());
+        reply.WriteUint32(size);
+        for (uint32_t index = 0; index < size; ++index) {
+            if (!ppdInfos[index].Marshalling(reply)) {
+                PRINT_HILOGW("Marshalling ppd: %{public}s failed", ppdInfos[index].GetPpdName().c_str());
+                return false;
+            }
+        }
+    }
+    PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoById out");
     return ret == E_PRINT_NONE;
 }
 } // namespace OHOS::Print

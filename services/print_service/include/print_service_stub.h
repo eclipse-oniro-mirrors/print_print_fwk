@@ -86,6 +86,7 @@ private:
     bool OnQueryPrinterInfoByIp(MessageParcel &data, MessageParcel &reply);
     bool OnConnectPrinterByIpAndPpd(MessageParcel &data, MessageParcel &reply);
     bool OnSavePdfFileJob(MessageParcel &data, MessageParcel &reply);
+    bool OnQueryPrinterInfoById(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

@@ -129,6 +129,8 @@ public:
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName);
     int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
+    int32_t QueryPrinterInfoById(const std::string &printerIp, PrinterInfo info,
+        std::vector<PpdInfo>ppds);
 
 protected:
     void OnStart() override;
@@ -265,6 +267,7 @@ private:
         std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData);
     void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName);
     bool DeletePrintJobFromHistoryList(const std::string jobId);
+    void QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

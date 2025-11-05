@@ -1301,6 +1301,54 @@ napi_value NapiInnerPrint::SavePdfFileJob(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiInnerPrint::QueryPrinterInfoById(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter QueryPrinterInfoById---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+        napi_valuetype valueType;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "printerIp is not a string", napi_string_expected);
+        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        context->printerId = printerId;
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        PRINT_HILOGI("QueryPrinterInfoById output Enter ---->");
+        *result = PrinterInfoHelper::MakeJsObject(env, context->printerInfo);
+        napi_status status = napi_create_array(env, result);
+        if (status != napi_ok) { return status; }
+        uint32_t index = 0;
+        for (auto &ppdInfo : context->allPpdInfos) {
+            PRINT_HILOGD("ppdName = %{public}s", ppdInfo.GetPpdName().c_str());
+            status = napi_set_element(env, *result, index++, PpdInfoHelper::MakeJsSimpleObject(env, ppdInfo));
+            if (status != napi_ok) { return status; }
+        }
+        return napi_ok;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        int32_t ret =
+            PrintManagerClient::GetInstance()->QueryPrinterInfoById(context->printerId, context->printerInfo, context->allPpdInfos);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to query ppdList");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 bool NapiInnerPrint::IsSupportType(const std::string &type)
 {
     if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||

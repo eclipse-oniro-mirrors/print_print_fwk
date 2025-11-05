@@ -63,7 +63,8 @@ public:
     static napi_value QueryPrinterInfoByIp(napi_env env, napi_callback_info info);
     static napi_value ConnectPrinterByIpAndPpd(napi_env env, napi_callback_info info);
     static napi_value SavePdfFileJob(napi_env env, napi_callback_info info);
-
+    static napi_value QueryPrinterInfoById(napi_env env, napi_callback_info info);
+    
 private:
     static bool IsSupportType(const std::string& type);
     static bool IsValidApplicationEvent(uint32_t event);

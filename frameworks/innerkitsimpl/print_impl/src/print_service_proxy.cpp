@@ -1347,4 +1347,51 @@ int32_t PrintServiceProxy::SavePdfFileJob(const std::string &jobId, uint32_t fd)
     PRINT_HILOGI("PrintServiceProxy SavePdfFileJob out. ret = [%{public}d]", ret);
     return ret;
 }
+
+int32_t PrintServiceProxy::QueryPrinterInfoById(const std::string &printerId, PrinterInfo printerInfo,
+    std::vector<PpdInfo> ppds)
+{
+    PRINT_HILOGI("PrintServiceProxy QueryPrinterInfoById started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(printerId);
+ 
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy QueryPrinterInfoById remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERINFOBYID, data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("QueryPrinterInfoById Failed, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+    ret = GetResult(ret, reply);
+    auto printerInfoPtr = PrinterInfo::Unmarshalling(reply);
+    if (printerInfoPtr == nullptr) {
+        PRINT_HILOGE("wrong printerId");
+        return E_PRINT_GENERIC_FAILURE;
+    }
+    printerInfo = *printerInfoPtr;
+    if (ret == ERR_NONE) {
+        uint32_t len = reply.ReadUint32();
+        if (len > PRINT_MAX_PPD_COUNT) {
+            PRINT_HILOGE("len is out of range.");
+            return E_PRINT_INVALID_PARAMETER;
+        }
+        for (uint32_t i = 0; i < len; ++i) {
+            auto infoPtr = PpdInfo::Unmarshalling(reply);
+            if (infoPtr == nullptr) {
+                PRINT_HILOGE("wrong ppdInfo from data.");
+                return E_PRINT_GENERIC_FAILURE;
+            }
+            ppds.emplace_back(*infoPtr);
+        }
+    }
+    PRINT_HILOGI("PrintServiceProxy QueryPrinterInfoById out. ret = [%{public}d]", ret);
+    return ret;
+}
 } // namespace OHOS::Print
