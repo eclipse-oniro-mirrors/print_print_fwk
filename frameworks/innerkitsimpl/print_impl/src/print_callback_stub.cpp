@@ -102,15 +102,15 @@ bool PrintCallbackStub::HandleGetInfoEvent(MessageParcel &data, MessageParcel &r
         return false;
     }
     std::vector<PpdInfo> ppds;
-    int32_t ppdsSize = data.ReadInt32();
-    if (ppdsSize <= 0) {
+    uint32_t ppdsSize = data.ReadUint32();
+    if (ppdsSize == 0) {
         PRINT_HILOGW("Cannot find ppds");
     }
     if (ppdsSize > PRINT_MAX_PPD_COUNT) {
         PRINT_HILOGE("too much ppds");
         return false;
     }
-    for (int32_t i = 0; i < ppdsSize; ++i) {
+    for (uint32_t i = 0; i < ppdsSize; ++i) {
         auto ppd = PpdInfo::Unmarshalling(data);
         if (ppd == nullptr) {
             PRINT_HILOGW("Unmarshalling ppd failed");

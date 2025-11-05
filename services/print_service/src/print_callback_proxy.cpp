@@ -128,7 +128,7 @@ bool PrintCallbackProxy::OnCallback(const PrinterInfo &info, const std::vector<P
 
     data.WriteInterfaceToken(GetDescriptor());
     info.Marshalling(data);
-    data.WriteInt32(ppds.size());
+    data.WriteUint32(ppds.size());
     for (const auto &ppd : ppds) {
         ppd.Marshalling(data);
     }
