@@ -115,13 +115,13 @@ private:
     bool Callback(const std::string funcName);
     bool Callback(const std::string funcName, const std::string &printerId);
     bool Callback(const std::string funcName, const Print::PrintJob &job);
-    int32_t RegisterDiscoveryCb();	
-    int32_t RegisterConnectionCb();	
-    int32_t RegisterPrintJobCb();	
-    int32_t RegisterPreviewCb();	
-    int32_t RegisterQueryCapCb();	
-    int32_t RegisterExtensionCb();	
-    bool RegisterCb();	
+    int32_t RegisterDiscoveryCb();
+    int32_t RegisterConnectionCb();
+    int32_t RegisterPrintJobCb();
+    int32_t RegisterPreviewCb();
+    int32_t RegisterQueryCapCb();
+    int32_t RegisterExtensionCb();
+    bool RegisterCb();
     bool RegisterHelper(
         const std::initializer_list<std::pair<int32_t (JsPrintExtension::*)(), const char *>> &funcList);
 

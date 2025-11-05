@@ -47,19 +47,19 @@ uv_loop_s* JsPrintCallback::GetJsLoop(JsRuntime &jsRuntime)
     return loop;
 }
 
-bool JsPrintCallback::Call(napi_env env, WorkParam *param, std::function<void(WorkParam*)> workCb)	
-{	
-    auto task = [param, workCb]() {	
-        if (param == nullptr) {	
-            PRINT_HILOGE("param is a nullptr");	
-            return;	
-        }	
-        workCb(param);	
-        delete param;	
-    };	
+bool JsPrintCallback::Call(napi_env env, WorkParam *param, std::function<void(WorkParam*)> workCb)
+{
+    auto task = [param, workCb]() {
+        if (param == nullptr) {
+            PRINT_HILOGE("param is a nullptr");
+            return;
+        }
+        workCb(param);
+        delete param;
+    };
 
-    napi_status ret = napi_send_event(env, task, napi_eprio_immediate);	
-    if (ret != napi_ok) {	
+    napi_status ret = napi_send_event(env, task, napi_eprio_immediate);
+    if (ret != napi_ok) {
         PRINT_HILOGE("napi_send_event fail");
         return false;
     }
@@ -77,7 +77,7 @@ uv_work_t* JsPrintCallback::BuildJsWorker(napi_value jsObj, const std::string &n
 
     napi_env env = jsRuntime_.GetNapiEnv();
     napi_value method = nullptr;
-    if (napi_get_named_property(env, obj, name.c_str(), &method) != napi_ok ||	
+    if (napi_get_named_property(env, obj, name.c_str(), &method) != napi_ok ||
         method == nullptr) {
         PRINT_HILOGE("Failed to get '%{public}s' from PrintExtension object", name.c_str());
         return nullptr;
