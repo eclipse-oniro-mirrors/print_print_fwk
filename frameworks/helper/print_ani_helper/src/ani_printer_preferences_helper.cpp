@@ -14,6 +14,7 @@
  */
 
 #include "ani_printer_preferences_helper.h"
+#include <ani_signature_builder.h>
 #include "print_constant.h"
 #include "print_log.h"
 #include "print_base_ani_util.h"
@@ -28,6 +29,8 @@ static constexpr const char *PARAM_PREFERENCES_DEFAULT_ORIENTATION = "defaultOri
 static constexpr const char *PARAM_PREFERENCES_BORDERLESS = "borderless";
 static constexpr const char *PARAM_PREFERENCES_OPTION = "options";
 
+using namespace arkts::ani_signature;
+
 ani_object PrinterPreferencesAniHelper::CreatePrinterPreferences(ani_env *env, const PrinterPreferences &preferences)
 {
     PRINT_HILOGI("enter PrinterPreferences");
@@ -37,16 +40,18 @@ ani_object PrinterPreferencesAniHelper::CreatePrinterPreferences(ani_env *env, c
 
     ani_enum_item printDuplexModeEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrintDuplexMode;",
                                                           static_cast<int32_t>(preferences.GetDefaultDuplexMode()));
-    SetEnumProperty(env, obj, "<set>defaultDuplexMode", "L@ohos/print/print/PrintDuplexMode;:V", printDuplexModeEnum);
+    SetEnumProperty(env, obj, Builder::BuildSetterName("defaultDuplexMode").c_str(),
+        "L@ohos/print/print/PrintDuplexMode;:V", printDuplexModeEnum);
 
     ani_enum_item printQualityEnum = CreateEnumByIndex(env, "L@ohos/print/print/PrintQuality;",
                                                        static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
-    SetEnumProperty(env, obj, "<set>defaultPrintQuality", "C{@ohos.print.print.PrintQuality}:", printQualityEnum);
+    SetEnumProperty(env, obj, Builder::BuildSetterName("defaultPrintQuality").c_str(),
+        "C{@ohos.print.print.PrintQuality}:", printQualityEnum);
 
     ani_enum_item orientationModeEnum = CreateEnumByIndex(env, "@ohos.print.print.PrintOrientationMode",
                                                           static_cast<int32_t>(preferences.GetDefaultPrintQuality()));
-    SetEnumProperty(env, obj, "<set>defaultOrientation", "C{@ohos.print.print.PrintOrientationMode}:",
-        orientationModeEnum);
+    SetEnumProperty(env, obj, Builder::BuildSetterName("defaultOrientation").c_str(),
+        "C{@ohos.print.print.PrintOrientationMode}:", orientationModeEnum);
 
     SetStringProperty(env, obj, PARAM_PREFERENCES_DEFAULT_MEDIA_TYPE, preferences.GetDefaultMediaType());
     SetStringProperty(env, obj, PARAM_PREFERENCES_DEFAULT_PAFESIZE_ID, preferences.GetDefaultPageSizeId());

@@ -97,6 +97,7 @@ ohos_shared_library("print_ani") {
     "ipc:ipc_core",
     "napi:ace_napi",
     "runtime_core:ani",
+    "runtime_core:ani_helpers",
     "runtime_core:libarkruntime",
     "samgr:samgr_proxy",
   ]
