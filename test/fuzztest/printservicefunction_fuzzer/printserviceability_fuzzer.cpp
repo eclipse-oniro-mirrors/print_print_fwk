@@ -132,6 +132,15 @@ void TestAddVendorPrinterToDiscovery(const uint8_t *data, size_t size, FuzzedDat
     PrintServiceAbility::GetInstance()->AddVendorPrinterToDiscovery(globalVendorName, printerInfo);
 }
 
+void TestAuthPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string userName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    const char* userPasswd = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH).c_str();
+    std::vector<char> userPasswdCstr(userPasswd, userPasswd + strlen(userPasswd) + 1);
+    PrintServiceAbility::GetInstance()->AuthPrintJob(jobId, userName, userPasswdCstr.data());
+}
+
 void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestChangeDefaultPrinterForDelete(data, size, dataProvider);
@@ -147,6 +156,7 @@ void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dat
     TestDeletePrinterFromUserData(data, size, dataProvider);
     TestNotifyAppDeletePrinter(data, size, dataProvider);
     TestAddVendorPrinterToDiscovery(data, size, dataProvider);
+    TestAuthPrintJob(data, size, dataProvider);
 }
 
 }  // namespace Print
