@@ -79,6 +79,8 @@ public:
         PrinterInfo &info) = 0;
     virtual std::vector<std::string> QueryAddedPrintersByIp(const std::string &printerIp) = 0;
     virtual bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) = 0;
+    virtual bool ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
+        const std::string &ppdName) = 0;
     virtual ConnectMethod GetConnectingMethod(const std::string &id) = 0;
     virtual int32_t DiscoverBackendPrinters(const std::string &vendorName, std::vector<PrinterInfo> &printers) = 0;
     virtual void AddPrintEvent(const std::string &vendorName, const std::string &printerId,

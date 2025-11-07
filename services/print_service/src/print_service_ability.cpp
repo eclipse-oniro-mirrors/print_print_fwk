@@ -4550,22 +4550,37 @@ void PrintServiceAbility::QueryPrinterPpds(const PrinterInfo &info, std::vector<
     PRINT_HILOGI("QueryPrinterPpds End.");
 }
  
-int32_t PrintServiceAbility::QueryPrinterInfoById(const std::string &printerId, PrinterInfo info,
-    std::vector<PpdInfo>ppds)
+int32_t PrintServiceAbility::QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds)
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
         return E_PRINT_NO_PERMISSION;
     }
-    PRINT_HILOGI("QueryPrinterInfoById Enter");
+    PRINT_HILOGI("QueryRecommendDriversById Enter");
     auto printerInfo = QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo == nullptr) {
         PRINT_HILOGW("printer not found in DiscoveredMap");
         return E_PRINT_INVALID_PRINTER;
     }
-    info = *printerInfo;
-    QueryPrinterPpds(info, ppds);
+    QueryPrinterPpds(*printerInfo, ppds);
+    return E_PRINT_NONE;
+}
+
+int32_t PrintServiceAbility::ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
+    const std::string &ppdName)
+{
+    ManualStart();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGI("ConnectPrinterByIdAndPpd Enter");
+    printSystemData_.ClearPrintEvents(printerId, CONNECT_PRINT_EVENT_TYPE);
+    if (!vendorManager.ConnectPrinterByIdAndPpd(printerId, protocol, ppdName)) {
+        PRINT_HILOGW("ConnectPrinterByIdAndPpd failed");
+        return E_PRINT_SERVER_FAILURE;
+    }
     return E_PRINT_NONE;
 }
 }  // namespace OHOS::Print

@@ -746,3 +746,26 @@ bool VendorManager::IsBsunidriverSupport(const PrinterInfo &printerInfo)
     }
     return false;
 }
+
+bool VendorManager::ConnectPrinterByIdAndPpd(const std::string &globalPrinterId, const std::string &protocol,
+    const std::string &ppdName)
+{
+    PRINT_HILOGI("ConnectPrinterByIdAndPpd Enter");
+    if (wlanGroupDriver == nullptr) {
+        PRINT_HILOGE("no driver to connect printer by ip");
+        return false;
+    }
+    std::string printerId = ExtractPrinterId(globalPrinterId);
+    if (printerId.empty()) {
+        PRINT_HILOGW("empty printer id");
+        return false;
+    }
+    SetConnectingPrinter(ID_AUTO, globalPrinterId);
+    connectingProtocol = protocol;
+    if (connectingProtocol.empty()) {
+        connectingProtocol = "auto";
+    }
+    PRINT_HILOGI("ppdName = %{public}s", ppdName.c_str());
+    connectingPpdName = ppdName;
+    return wlanGroupDriver->ConnectPrinterByIdAndPpd(printerId, ppdName);
+}

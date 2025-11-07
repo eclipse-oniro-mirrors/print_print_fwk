@@ -127,8 +127,9 @@ public:
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName);
     int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
-    int32_t QueryPrinterInfoById(const std::string &printerId, PrinterInfo printerInfo,
-        std::vector<PpdInfo> ppds);
+    int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds);
+    int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
+        const std::string &ppdName);
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);

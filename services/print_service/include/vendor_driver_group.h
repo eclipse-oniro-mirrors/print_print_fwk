@@ -43,6 +43,7 @@ public:
                                         const PrinterVendorStatus &status) = 0;
     virtual bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) = 0;
     virtual bool IsBsunidriverSupport(const PrinterInfo &printerInfo) = 0;
+    virtual bool ConnectPrinterByIdAndPpd(const std::string &printerIp, const std::string &ppdName) = 0;
 private:
 };
 }  // namespace Print

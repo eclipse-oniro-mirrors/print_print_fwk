@@ -129,8 +129,9 @@ public:
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName);
     int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
-    int32_t QueryPrinterInfoById(const std::string &printerIp, PrinterInfo info,
-        std::vector<PpdInfo>ppds);
+    int32_t QueryRecommendDriversById(const std::string &printerIp, std::vector<PpdInfo> &ppds);
+    int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
+        const std::string &ppdName);
 
 protected:
     void OnStart() override;

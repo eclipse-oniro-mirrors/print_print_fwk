@@ -565,3 +565,45 @@ bool VendorWlanGroup::OnPrinterCapabilityQueried(const std::string &vendorName, 
     }
     return true;
 }
+
+bool VendorWlanGroup::ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &ppdName)
+{
+    PRINT_HILOGI("ConnectPrinterByIdAndPpd enter.");
+    if (parentVendorManager == nullptr) {
+        PRINT_HILOGE("VendorManager is null.");
+        return false;
+    }
+    if (ppdName == BSUNI_PPD_NAME && IsBsunidriverSupport(printerId)) {
+        printerVendorGroupList_[printerId] = VENDOR_BSUNI_DRIVER;
+        auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
+        auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
+        if (bsuniDriver != nullptr && printerInfo != nullptr &&
+            bsuniDriver->OnQueryCapability(ExtractPrinterIdByPrinterInfo(*printerInfo), 0)) {
+            PRINT_HILOGI("on query capability on bsuni vendor seccess.");
+            return true;
+        }
+        RemoveGroupPrinterFromVendorGroupList(printerId);
+    } else if (ppdName == DEFAULT_PPD_NAME) {
+        printerVendorGroupList_[printerId] = VENDOR_IPP_EVERYWHERE;
+        auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
+        if (ippEverywhereDriver != nullptr && ippEverywhereDriver->OnQueryCapability(printerId, 0)) {
+            PRINT_HILOGI("on query capability on ipp everywhere success.");
+            return true;
+        }
+        parentVendorManager->AddPrintEvent(GetVendorName(), printerId, CONNECT_PRINT_EVENT_TYPE,
+            CONNECT_PRINT_EVENT_IPP_UNAVAILABLE);
+        RemoveGroupPrinterFromVendorGroupList(printerId);
+    } else if (ppdName == "auto") {
+        return OnQueryCapability(printerId, 0);
+    } else {
+        printerVendorGroupList_[printerId] = VENDOR_PPD_DRIVER;
+        auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
+        if (printerInfo != nullptr && TryConnectByPpdDriver(*printerInfo)) {
+            PRINT_HILOGI("Connect by ppdDriver success.");
+            return true;
+        }
+        RemoveGroupPrinterFromVendorGroupList(printerId);
+    }
+    PRINT_HILOGE("ConnectPrinterByIdAndPpd Failed.");
+    return false;
+}

@@ -96,7 +96,8 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIPANDPPD] =
         &PrintServiceStub::OnConnectPrinterByIpAndPpd;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_SAVEPDFFILEJOB] = &PrintServiceStub::OnSavePdfFileJob;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERINFOBYID] = &PrintServiceStub::OnQueryPrinterInfoById;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYRECOMMENDDRVIERSBYID] = &PrintServiceStub::OnQueryRecommendDriversById;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIDANDPPD] = &PrintServiceStub::OnConnectPrinterByIdAndPpd;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -986,13 +987,12 @@ bool PrintServiceStub::OnSavePdfFileJob(MessageParcel &data, MessageParcel &repl
     return ret == E_PRINT_NONE;
 }
 
-bool PrintServiceStub::OnQueryPrinterInfoById(MessageParcel &data, MessageParcel &reply)
+bool PrintServiceStub::OnQueryRecommendDriversById(MessageParcel &data, MessageParcel &reply)
 {
-    PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoById in");
+    PRINT_HILOGI("PrintServiceStub::OnQueryRecommendDriversById in");
     std::string printerId = data.ReadString();
-    PrinterInfo info;
     std::vector<PpdInfo> ppdInfos;
-    int32_t ret = QueryPrinterInfoById(printerId, info, ppdInfos);
+    int32_t ret = QueryRecommendDriversById(printerId, ppdInfos);
     reply.WriteInt32(ret);
     if (ret == E_PRINT_NONE) {
         uint32_t size = static_cast<uint32_t>(ppdInfos.size());
@@ -1004,7 +1004,19 @@ bool PrintServiceStub::OnQueryPrinterInfoById(MessageParcel &data, MessageParcel
             }
         }
     }
-    PRINT_HILOGI("PrintServiceStub::OnQueryPrinterInfoById out");
+    PRINT_HILOGI("PrintServiceStub::OnQueryRecommendDriversById out");
+    return ret == E_PRINT_NONE;
+}
+ 
+bool PrintServiceStub::OnConnectPrinterByIdAndPpd(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnConnectPrinterByIdAndPpd in");
+    std::string printerId = data.ReadString();
+    std::string protocol = data.ReadString();
+    std::string ppdName = data.ReadString();
+    int32_t ret = ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
+    reply.WriteInt32(ret);
+    PRINT_HILOGI("PrintServiceStub::OnConnectPrinterByIdAndPpd out");
     return ret == E_PRINT_NONE;
 }
 } // namespace OHOS::Print

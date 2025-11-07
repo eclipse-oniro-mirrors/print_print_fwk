@@ -48,6 +48,7 @@ public:
                                 const PrinterVendorStatus &status) override;
     bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) override;
     bool IsBsunidriverSupport(const PrinterInfo &printerInfo) override;
+    bool ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &ppdName) override;
 
 private:
     bool IsBsunidriverSupport(const std::string &groupPrinterId);
