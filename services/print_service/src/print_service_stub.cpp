@@ -96,8 +96,10 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIPANDPPD] =
         &PrintServiceStub::OnConnectPrinterByIpAndPpd;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_SAVEPDFFILEJOB] = &PrintServiceStub::OnSavePdfFileJob;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYRECOMMENDDRVIERSBYID] = &PrintServiceStub::OnQueryRecommendDriversById;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIDANDPPD] = &PrintServiceStub::OnConnectPrinterByIdAndPpd;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYRECOMMENDDRVIERSBYID] =
+        &PrintServiceStub::OnQueryRecommendDriversById;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIDANDPPD] =
+        &PrintServiceStub::OnConnectPrinterByIdAndPpd;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(

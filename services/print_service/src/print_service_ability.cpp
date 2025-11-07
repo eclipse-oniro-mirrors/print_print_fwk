@@ -4529,7 +4529,7 @@ int32_t PrintServiceAbility::SavePdfFileJob(const std::string &jobId, uint32_t f
     return DelayedSingleton<PrintCupsClient>::GetInstance()->CopyJobOutputFile(jobId, fd, true);
 #endif // CUPS_ENABLE
     return E_PRINT_SERVER_FAILURE;
-} 
+}
 
 void PrintServiceAbility::QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds)
 {
