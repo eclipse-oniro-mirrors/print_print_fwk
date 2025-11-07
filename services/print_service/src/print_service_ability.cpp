@@ -1081,7 +1081,7 @@ std::shared_ptr<PrintJob> PrintServiceAbility::AddNativePrintJob(const std::stri
     return nativePrintJob;
 }
 
-bool isDisablePrint()
+bool PrintServiceAbility::IsDisablePrint()
 {
     bool isDisabled = false;
     OHOS::EDM::EnterpriseDeviceMgrProxy enterpriseDeviceMgrProxy;
@@ -1122,7 +1122,7 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     std::string param = nativePrintJob->ConvertToJsonString();
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
     // intercept print job
-    if (isDisablePrint() && printJob.GetPrinterId() != VIRTUAL_PRINTER_ID) {
+    if (IsDisablePrint() && printJob.GetPrinterId() != VIRTUAL_PRINTER_ID) {
         reportBannedEvent(printJob.GetOption());
         UpdatePrintJobState(printJob.GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
         CallStatusBar();
@@ -1139,9 +1139,8 @@ void PrintServiceAbility::reportBannedEvent(std::string option)
     if (!PrintJsonUtil::Parse(option, infoJson)) {
         PRINT_HILOGE("report banned event failed, option not accepted");
         return;
-    } else {
-        reportFileName = infoJson["jobName"].asString();
     }
+    reportFileName = infoJson["jobName"].asString();
     auto nowTime = std::chrono::system_clock::now();
     auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime.time_since_epoch()).count();
     std::stringstream ss;
@@ -1185,7 +1184,7 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     UpdateQueuedJobList(jobId, printJob);
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     // intercept print job
-    if (isDisablePrint() && jobInfo.GetPrinterId() != VIRTUAL_PRINTER_ID) {
+    if (IsDisablePrint() && jobInfo.GetPrinterId() != VIRTUAL_PRINTER_ID) {
         reportBannedEvent(jobInfo.GetOption());
         UpdatePrintJobState(jobInfo.GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
         CallStatusBar();
@@ -1237,7 +1236,7 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     UpdateQueuedJobList(printJob->GetJobId(), printJob);
     printerJobMap_[printJob->GetPrinterId()].insert(std::make_pair(jobId, true));
     // intercept print job
-    if (isDisablePrint() && printJob->GetPrinterId() != VIRTUAL_PRINTER_ID) {
+    if (IsDisablePrint() && printJob->GetPrinterId() != VIRTUAL_PRINTER_ID) {
         reportBannedEvent(printJob->GetOption());
         UpdatePrintJobState(jobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
         CallStatusBar();
