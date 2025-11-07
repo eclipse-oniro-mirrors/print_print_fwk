@@ -129,6 +129,7 @@ public:
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName);
     int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
+    void reportBannedEvent(std::string option);
 
 protected:
     void OnStart() override;

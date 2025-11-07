@@ -58,7 +58,9 @@
         "ace_engine",
         "libjpeg-turbo",
         "input",
-        "data_share"
+        "data_share",
+        "enterprise_device_management",
+        "security_guard"
       ],
       "third_party": [
         "zlib"
