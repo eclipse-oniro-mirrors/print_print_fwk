@@ -1123,7 +1123,7 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
     // intercept print job
     if (IsDisablePrint() && printJob.GetPrinterId() != VIRTUAL_PRINTER_ID) {
-        reportBannedEvent(printJob.GetOption());
+        ReportBannedEvent(printJob.GetOption());
         UpdatePrintJobState(printJob.GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
         CallStatusBar();
         return E_PRINT_BANNED;
@@ -1131,7 +1131,7 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     return StartPrintJobInternal(nativePrintJob);
 }
 
-void PrintServiceAbility::reportBannedEvent(std::string option)
+void PrintServiceAbility::ReportBannedEvent(std::string option)
 {
     PRINT_HILOGW("current print job has been banned by organization");
     Json::Value infoJson;
@@ -1185,7 +1185,7 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
     // intercept print job
     if (IsDisablePrint() && jobInfo.GetPrinterId() != VIRTUAL_PRINTER_ID) {
-        reportBannedEvent(jobInfo.GetOption());
+        ReportBannedEvent(jobInfo.GetOption());
         UpdatePrintJobState(jobInfo.GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
         CallStatusBar();
         return E_PRINT_BANNED;
@@ -1237,7 +1237,7 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     printerJobMap_[printJob->GetPrinterId()].insert(std::make_pair(jobId, true));
     // intercept print job
     if (IsDisablePrint() && printJob->GetPrinterId() != VIRTUAL_PRINTER_ID) {
-        reportBannedEvent(printJob->GetOption());
+        ReportBannedEvent(printJob->GetOption());
         UpdatePrintJobState(jobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
         CallStatusBar();
         return E_PRINT_BANNED;
