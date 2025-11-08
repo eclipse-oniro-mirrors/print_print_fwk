@@ -25,14 +25,6 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-class PrintCallerAppInfo {
-public:
-    int32_t pid_;
-    std::string bundleName_;
-    PrintCallerAppInfo(int32_t pid, std::string bundleName) : pid_(pid),
-        bundleName_(bundleName) {};
-};
-
 class PrintCounter {
 private:
     std::atomic<int> count_{0};
@@ -42,16 +34,12 @@ public:
         count_.fetch_add(1, std::memory_order_relaxed);
         Value();
     }
-    void Decrement()
+    void Decrement(int num = 1)
     {
-        int expected;
-        do {
-            expected = count_.load(std::memory_order_relaxed);
-            if (expected == 0) {
-                return;
-            }
-        } while (!count_.compare_exchange_weak(
-            expected, expected - 1, std::memory_order_relaxed, std::memory_order_relaxed));
+        int value = count_.load(std::memory_order_relaxed);
+        if (value > 0) {
+            count_.fetch_add(-num, std::memory_order_relaxed);
+        }
         Value();
     }
     int Value() const
@@ -62,14 +50,26 @@ public:
     }
 };
 
+class PrintCallerAppInfo {
+public:
+    int32_t pid_;
+    std::string bundleName_;
+    PrintCounter counter_;
+    PrintCallerAppInfo(int32_t pid, std::string bundleName) : pid_(pid),
+        bundleName_(bundleName), counter_() {
+    };
+};
+
 class PrintCallerAppMonitor {
 public:
     static PrintCallerAppMonitor& GetInstance();
     void AddCallerAppToMap();
     void RemoveCallerAppFromMap();
     void StartCallerAppMonitor(std::function<bool()> unloadTask);
-    void IncrementPrintCounter();
-    void DecrementPrintCounter();
+    void IncrementPrintCounter(const std::string &jobId);
+    void DecrementPrintCounter(const std::string &jobId);
+    void IncrementCallerAppCounter();
+    void RemovePrintJobFromMap(const std::string &jobId);
     bool IsAppAlive(std::shared_ptr<PrintCallerAppInfo> callerAppInfo);
 
 private:
@@ -80,9 +80,12 @@ private:
     sptr<AppExecFwk::IAppMgr> GetAppManager();
     std::vector<AppExecFwk::RunningProcessInfo> GetRunningProcessInformation(const std::string &bundleName);
     int32_t GetCurrentUserId();
+    bool CheckCallerAppInMap(int32_t callerPid, const std::string &bundleName);
 
     std::map<int32_t, std::shared_ptr<PrintCallerAppInfo>> callerMap_;
+    std::map<std::string, bool> printJobMap_;
     std::mutex callerMapMutex_;
+    std::mutex printJobMapMutex_;
     std::atomic<bool> isMonitoring_{false};
     PrintCounter counter_;
 };

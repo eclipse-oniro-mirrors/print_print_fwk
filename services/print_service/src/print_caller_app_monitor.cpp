@@ -56,18 +56,19 @@ void PrintCallerAppMonitor::AddCallerAppToMap()
             callerPid);
         if (processInfo.pid_ != 0 && !bundleName.empty() && callerPid == processInfo.pid_ &&
             processInfo.processName_.find(PRINT_EXTENSION_SUFFIX) == std::string::npos) {
-            {
+            if (!CheckCallerAppInMap(callerPid, bundleName)) {
                 auto callerAppInfo = std::make_shared<PrintCallerAppInfo>(callerPid, bundleName);
                 std::lock_guard<std::mutex> lock(callerMapMutex_);
                 callerMap_[callerPid] = callerAppInfo;
+                PRINT_HILOGI("add callerPid: %{public}d", callerPid);
             }
-            PRINT_HILOGI("add callerPid: %{public}d", callerPid);
         }
     }
 }
 
 void PrintCallerAppMonitor::RemoveCallerAppFromMap()
 {
+    PRINT_HILOGI("RemoveCallerAppFromMap enter");
     std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     std::lock_guard<std::mutex> lock(callerMapMutex_);
@@ -77,6 +78,7 @@ void PrintCallerAppMonitor::RemoveCallerAppFromMap()
         return;
     }
     if (iter->second->bundleName_ == bundleName) {
+        counter_.Decrement(iter->second->counter_.Value());
         callerMap_.erase(callerPid);
         PRINT_HILOGI("remove callerPid: %{public}d", callerPid);
     }
@@ -101,10 +103,13 @@ void PrintCallerAppMonitor::MonitorCallerApps(std::function<bool()> unloadTask)
                     PRINT_HILOGI("app still alive");
                     iter++;
                     continue;
-                } else {
-                    PRINT_HILOGI("app not alive, erase it");
-                    iter = callerMap_.erase(iter);
                 }
+                int value = iter->second->counter_.Value();
+                if (value) {
+                    counter_.Decrement(value);
+                }
+                PRINT_HILOGI("app not alive, erase it");
+                iter = callerMap_.erase(iter);
             }
             PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
 
@@ -184,13 +189,68 @@ int32_t PrintCallerAppMonitor::GetCurrentUserId()
     return userId;
 }
 
-void PrintCallerAppMonitor::IncrementPrintCounter()
+void PrintCallerAppMonitor::IncrementPrintCounter(const std::string &jobId)
 {
+    PRINT_HILOGI("IncrementPrintCounter enter");
+    if (!jobId.empty()) {
+        std::lock_guard<std::mutex> lock(printJobMapMutex_);
+        printJobMap_[jobId] = true;
+    }
+    std::lock_guard<std::mutex> lock(callerMapMutex_);
     counter_.Increment();
 }
 
-void PrintCallerAppMonitor::DecrementPrintCounter()
+void PrintCallerAppMonitor::DecrementPrintCounter(const std::string &jobId)
 {
+    PRINT_HILOGI("DecrementPrintCounter enter");
+    if (!jobId.empty()) {
+        std::lock_guard<std::mutex> lock(printJobMapMutex_);
+        auto jobIter = printJobMap_.find(jobId);
+        if (jobIter == printJobMap_.end() || jobIter->second == false) {
+            PRINT_HILOGE("skip this job");
+            return;
+        }
+        printJobMap_[jobId] = false;
+    }
+    std::lock_guard<std::mutex> lock(callerMapMutex_);
     counter_.Decrement();
+}
+
+void PrintCallerAppMonitor::IncrementCallerAppCounter()
+{
+    PRINT_HILOGI("IncrementCallerAppCounter enter");
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    std::lock_guard<std::mutex> lock(callerMapMutex_);
+    auto callerIter = callerMap_.find(callerPid);
+    if (callerIter == callerMap_.end() || callerIter->second == nullptr) {
+        PRINT_HILOGE("Invalid pid");
+        return;
+    }
+    callerIter->second->counter_.Increment();
+}
+
+void PrintCallerAppMonitor::RemovePrintJobFromMap(const std::string &jobId)
+{
+    if (!jobId.empty()) {
+        std::lock_guard<std::mutex> lock(printJobMapMutex_);
+        auto jobIter = printJobMap_.find(jobId);
+        if (jobIter != printJobMap_.end()) {
+            printJobMap_.erase(jobIter);
+        }
+    }
+}
+
+bool PrintCallerAppMonitor::CheckCallerAppInMap(int32_t callerPid, const std::string &bundleName)
+{
+    std::lock_guard<std::mutex> lock(callerMapMutex_);
+    auto iter = callerMap_.find(callerPid);
+    if (iter == callerMap_.end() || iter->second == nullptr) {
+        PRINT_HILOGW("not in caller map");
+        return false;
+    }
+    if (bundleName != iter->second->bundleName_) {
+        return false;
+    }
+    return true;
 }
 } // namespace OHOS::Print
