@@ -3011,6 +3011,7 @@ HWTEST_F(PrintServiceAbilityTest, RefreshEprinterErrorCapability_ShouldReturnNon
     info.GetCapability(caps);
     caps.GetSupportedColorMode(colorList);
     EXPECT_EQ(colorList.size(), 3);
+}
 
 HWTEST_F(PrintServiceAbilityTest, PrinterDisableTest, TestSize.Level1)
 {
