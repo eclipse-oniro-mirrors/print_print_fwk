@@ -130,7 +130,7 @@ public:
         const std::string &ppdName);
     int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
     void ReportBannedEvent(std::string option);
-    bool IsDisablePrint();
+    int32_t IsDisablePrint();
 
 protected:
     void OnStart() override;

@@ -1131,14 +1131,14 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     return StartPrintJobInternal(nativePrintJob);
 }
 
-void PrintServiceAbility::ReportBannedEvent(std::string option)
+int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
 {
     PRINT_HILOGW("current print job has been banned by organization");
     Json::Value infoJson;
     std::string reportFileName = "";
     if (!PrintJsonUtil::Parse(option, infoJson)) {
         PRINT_HILOGE("report banned event failed, option not accepted");
-        return;
+        return E_PRINT_INVALID_PARAMETER;
     }
     reportFileName = infoJson["jobName"].asString();
     auto nowTime = std::chrono::system_clock::now();
@@ -1155,6 +1155,7 @@ void PrintServiceAbility::ReportBannedEvent(std::string option)
     auto wrappedInfo = std::make_shared<OHOS::Security::SecurityGuard::EventInfo>(eventInfo);
     int32_t reportResult = nativeDataCollectKit.ReportSecurityInfo(wrappedInfo);
     PRINT_HILOGI("report security result: %{public}d", reportResult);
+    return reportResult;
 }
 
 int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
