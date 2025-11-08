@@ -3011,6 +3011,28 @@ HWTEST_F(PrintServiceAbilityTest, RefreshEprinterErrorCapability_ShouldReturnNon
     info.GetCapability(caps);
     caps.GetSupportedColorMode(colorList);
     EXPECT_EQ(colorList.size(), 3);
+
+HWTEST_F(PrintServiceAbilityTest, PrinterDisableTest, TestSize.Level1)
+{
+    PrintServiceAbility *printServiceAbility = new PrintServiceAbility(1, false);
+    EXPECT_EQ(printServiceAbility->IsDisablePrint(), false);
+    delete printServiceAbility;
+    printServiceAbility = nullptr;
+}
+
+HWTEST_F(PrintServiceAbilityTest, ReportBannedEventTest, TestSize.Level1)
+{
+    PrintServiceAbility *printServiceAbility = new PrintServiceAbility(1, false);
+    std::string emptyString = "";
+    EXPECT_EQ(printServiceAbility->ReportBannedEvent(emptyString), 401);
+    std::string jsonString =
+            "{\n"
+            "    \"key\": \"option\",\n"
+            "    \"value\": \"jobName\"\n"
+            "}";
+    EXPECT_EQ(printServiceAbility->ReportBannedEvent(jsonString), 0);
+    delete printServiceAbility;
+    printServiceAbility = nullptr;
 }
 
 }  // namespace OHOS::Print
