@@ -169,6 +169,38 @@ sptr<PrintServiceAbility> PrintServiceAbility::GetInstance()
     return instance_;
 }
 
+void PrintServiceAbility::RefreshEprinterErrorCapability()
+{
+    std::string eprinterId = "";
+    std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
+    for (auto &printerId : printerIdList) {
+        if (printerId.find(EPRINTID) != std::string::npos) {
+            eprinterId = printerId;
+        }
+    }
+    if (eprinterId.empty()) {
+        return;
+    }
+    PrinterInfo printerInfo;
+    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(eprinterId, printerInfo)) {
+        PRINT_HILOGE("QueryEprinterInfo fail.");
+        return;
+    }
+    PrinterCapability caps;
+    printerInfo.GetCapability(caps);
+    std::vector<uint32_t> colorList;
+    caps.GetSupportedColorMode(colorList);
+    if (std::find(colorList.begin(), colorList.end(), PRINT_COLOR_MODE_COLOR) != colorList.end()) {
+        return;
+    }
+    PRINT_HILOGW("Error eprint capability found.");
+    colorList = { PRINT_COLOR_MODE_MONOCHROME, PRINT_COLOR_MODE_COLOR };
+    caps.SetSupportedColorMode(colorList);
+    printerInfo.SetCapability(caps);
+    printSystemData_.InsertAddedPrinter(eprinterId, printerInfo);
+    printSystemData_.SavePrinterFile(eprinterId);
+}
+
 int32_t PrintServiceAbility::Init()
 {
     {
@@ -187,6 +219,7 @@ int32_t PrintServiceAbility::Init()
     UpdateIsEnterprise();
 #endif
     printSystemData_.Init();
+    RefreshEprinterErrorCapability();
     vendorManager.Init(GetInstance(), true);
 #ifdef CUPS_ENABLE
     int32_t initCupsRet = DelayedSingleton<PrintCupsClient>::GetInstance()->InitCupsResources();
@@ -4182,7 +4215,7 @@ void PrintServiceAbility::RefreshPrinterInfoByPpd()
         PrinterCapability printerCaps;
         std::string ppdName;
         QueryPPDInformation(printerInfo.GetPrinterMake(), ppdName);
-        if (ppdName.empty()) {
+        if (ppdName.empty() || printerId.find(EPRINTID) != std::string::npos) {
             RefreshPrinterPageSize(printerInfo);
             BuildPrinterPreference(printerInfo);
         } else {
