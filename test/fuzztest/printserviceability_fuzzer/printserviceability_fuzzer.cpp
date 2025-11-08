@@ -247,7 +247,7 @@ void TestIsDisablePrint(const uint8_t *data, size_t size, FuzzedDataProvider *da
     PrintServiceAbility::GetInstance()->IsDisablePrint();
 }
 
-void TestIsDisablePrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+void TestReportBannedEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->ReportBannedEvent(option);
