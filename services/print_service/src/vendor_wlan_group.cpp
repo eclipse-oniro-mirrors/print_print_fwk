@@ -262,7 +262,7 @@ bool VendorWlanGroup::ConvertGroupDriver(std::string &printerId, std::string &ve
 
 bool VendorWlanGroup::IsBsunidriverSupport(const std::string &groupPrinterId)
 {
-    PRINT_HILOGD("IsBsunidriverSupport enter");
+    PRINT_HILOGI("IsBsunidriverSupport enter");
     if (parentVendorManager == nullptr) {
         PRINT_HILOGE("VendorManager is null.");
         return false;
@@ -283,7 +283,7 @@ bool VendorWlanGroup::IsBsunidriverSupport(const PrinterInfo &printerInfo)
             supportValue = option["bsunidriverSupport"].asString();
         }
     }
-    PRINT_HILOGD("IsBsunidriverSupport bsunidriverSupport=%{public}s", supportValue.c_str());
+    PRINT_HILOGI("IsBsunidriverSupport bsunidriverSupport = %{public}s", supportValue.c_str());
     if (supportValue == "true") {
         return true;
     } else if (supportValue == "need_gs") {
@@ -297,7 +297,8 @@ void VendorWlanGroup::RemoveGroupPrinterFromVendorGroupList(const std::string &g
 {
     auto iter = printerVendorGroupList_.find(groupPrinterId);
     if (iter != printerVendorGroupList_.end()) {
-        PRINT_HILOGD("remove printer from vendor group list");
+        PRINT_HILOGI("[Printer: %{public}s] remove printer from vendor group list",
+            PrintUtils::AnonymizePrinterId(groupPrinterId).c_str());
         printerVendorGroupList_.erase(groupPrinterId);
     }
 }
@@ -328,7 +329,7 @@ bool VendorWlanGroup::TryConnectByPpdDriver(const PrinterInfo &printerInfo)
     std::string connectingPpdName = parentVendorManager->GetConnectingPpdName();
     std::string ppdName;
     if (connectingPpdName == DEFAULT_PPD_NAME) {
-        PRINT_HILOGD("not ppd driver");
+        PRINT_HILOGI("not ppd driver");
         return false;
     } else if (connectingPpdName == "auto") {
         ppdDriver->OnPrinterDiscovered(GetVendorName(), info);
@@ -490,7 +491,8 @@ bool VendorWlanGroup::MonitorStatusByBsuniDriver(const std::string &groupPrinter
             }
             auto printerId = VendorManager::ExtractPrinterId(globalPrinterId);
             if (printerId != groupPrinterId && IsStatusMonitoring(printerId)) {
-                PRINT_HILOGI("monitor needed by other printer: %{private}s", printerId.c_str());
+                PRINT_HILOGI("monitor needed by other printer: %{public}s",
+                    PrintUtils::AnonymizePrinterId(printerId).c_str());
                 return false;
             }
         }

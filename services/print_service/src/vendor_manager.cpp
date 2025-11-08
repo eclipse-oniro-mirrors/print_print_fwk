@@ -180,7 +180,7 @@ bool VendorManager::ConnectPrinter(const std::string &globalPrinterId)
         PRINT_HILOGW("vendorDriver is null");
         return false;
     }
-    PRINT_HILOGD("OnQueryCapability: %{public}s", printerId.c_str());
+    PRINT_HILOGI("[Printer: %{public}s] OnQueryCapability", PrintUtils::AnonymizePrinterId(printerId).c_str());
     return vendorDriver->OnQueryCapability(printerId, 0);
 }
 
@@ -211,7 +211,7 @@ bool VendorManager::QueryPrinterInfo(const std::string &globalPrinterId, int tim
         PRINT_HILOGW("vendorDriver is null");
         return false;
     }
-    PRINT_HILOGD("OnQueryCapability: %{public}s", printerId.c_str());
+    PRINT_HILOGI("[Printer: %{public}s] OnQueryCapability", PrintUtils::AnonymizePrinterId(printerId).c_str());
     vendorDriver->OnQueryCapability(printerId, timeout);
     PRINT_HILOGI("QueryPrinterInfo quit");
     return true;
@@ -370,7 +370,7 @@ bool VendorManager::OnPrinterPpdQueried(
     }
     std::string globalVendorName = GetGlobalVendorName(vendorName);
     std::string globalPrinterId = GetGlobalPrinterId(globalVendorName, printerId);
-    PRINT_HILOGD("global printer id %{public}s", globalPrinterId.c_str());
+    PRINT_HILOGI("[Printer: %{public}s]", PrintUtils::AnonymizePrinterId(globalPrinterId).c_str());
     if (!IsConnectingPrinter(globalPrinterId, "")) {
         PRINT_HILOGW("not connecting");
         return false;

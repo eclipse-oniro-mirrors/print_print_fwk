@@ -98,6 +98,8 @@ public:
 
     void Dump() const;
 
+    void DumpInfo() const;
+
     Json::Value ConvertToJson();
 
     void ConvertJsonToPrinterPreferences(Json::Value &preferencesJson);
