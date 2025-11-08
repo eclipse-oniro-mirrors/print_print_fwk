@@ -76,6 +76,8 @@ _external_deps = [
   "samgr:samgr_proxy",
   "usb_manager:usbsrv_client",
   "wifi:wifi_sdk",
+  "enterprise_device_management:edmservice_kits",
+  "security_guard:libsg_collect_sdk"
 ]
 
 _public_configs = [ ":print_service_config" ]
