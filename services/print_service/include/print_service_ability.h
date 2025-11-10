@@ -322,6 +322,7 @@ public:
 #endif  // ENTERPRISE_ENABLE
 
 #ifdef EDM_SERVICE_ENABLE
+public:
     int32_t ReportBannedEvent(std::string option);
     bool IsDisablePrint();
 #endif // EDM_SERVICE_ENABLE
