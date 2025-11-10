@@ -752,7 +752,7 @@ bool VendorManager::ConnectPrinterByIdAndPpd(const std::string &globalPrinterId,
 {
     PRINT_HILOGI("ConnectPrinterByIdAndPpd Enter");
     if (wlanGroupDriver == nullptr) {
-        PRINT_HILOGE("no driver to connect printer by ip");
+        PRINT_HILOGE("no driver to connect printer by id");
         return false;
     }
     std::string printerId = ExtractPrinterId(globalPrinterId);
