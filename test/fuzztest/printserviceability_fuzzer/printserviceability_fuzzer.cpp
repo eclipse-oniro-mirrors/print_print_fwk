@@ -221,6 +221,21 @@ void TestOnQueryCallBackEvent(const uint8_t *data, size_t size, FuzzedDataProvid
     PrintServiceAbility::GetInstance()->OnQueryCallBackEvent(info);
 }
 
+void TestQueryRecommendDriversById(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::vector<PpdInfo> ppds;
+    PrintServiceAbility::GetInstance()->QueryRecommendDriversById(printerId, ppds);
+}
+
+void TestConnectPrinterByIdAndPpd(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string protocol = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
+}
+
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestOn(data, size, dataProvider);
@@ -240,6 +255,8 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestQueryPrinterInfoByIp(data, size, dataProvider);
     TestConnectPrinterByIpAndPpd(data, size, dataProvider);
     TestOnQueryCallBackEvent(data, size, dataProvider);
+    TestQueryRecommendDriversById(data, size, dataProvider);
+    TestConnectPrinterByIdAndPpd(data, size, dataProvider);
 }
 
 void TestIsDisablePrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

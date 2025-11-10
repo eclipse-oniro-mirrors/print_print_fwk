@@ -1655,5 +1655,43 @@ HWTEST_F(PrintServiceStubTest, SavePdfFileJob_ShouldReturnTrue, TestSize.Level0)
     ON_CALL(*stub, SavePdfFileJob).WillByDefault(Return(E_PRINT_NONE));
     EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
 }
+
+HWTEST_F(PrintServiceStubTest, OnQueryRecommendDriversById_ShouldReturnTrue, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_QUERYRECOMMENDDRVIERSBYID);
+
+    std::string testId = "test";
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    data.WriteString(testId);
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, QueryRecommendDriversById).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
+
+HWTEST_F(PrintServiceStubTest, OnConnectPrinterByIdAndPpd_ShouldReturnTrue, TestSize.Level0)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    uint32_t code = static_cast<uint32_t>(CMD_QUERYRECOMMENDDRVIERSBYID);
+
+    std::string testId = "test";
+    std::string protocol = "ipp";
+    std::string ppdName = "test.ppd";
+    EXPECT_TRUE(data.WriteInterfaceToken(IPrintCallback::GetDescriptor()));
+    data.WriteString(testId);
+    data.WriteString(protocol);
+    data.WriteString(ppdName);
+
+    auto stub = std::make_shared<MockPrintService>();
+    EXPECT_NE(stub, nullptr);
+    ON_CALL(*stub, ConnectPrinterByIdAndPpd).WillByDefault(Return(E_PRINT_NONE));
+    EXPECT_TRUE(static_cast<bool>(stub->OnRemoteRequest(code, data, reply, option)));
+}
 }  // namespace Print
 }  // namespace OHOS
