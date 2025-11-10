@@ -985,11 +985,6 @@ int32_t ScanServiceAbility::AddScanner(const std::string &uniqueId, const std::s
         SCAN_HILOGE("discoverMode is a invalid parameter.");
         return E_SCAN_INVALID_PARAMETER;
     }
-    ScanSystemData &scanData = ScanSystemData::GetInstance();
-    if (scanData.IsContainScanner(discoverMode + uniqueId)) {
-        SCAN_HILOGE("The scanner has already been added");
-        return E_SCAN_NONE;
-    }
     auto addScannerExe = [uniqueId, discoverMode, this]() {
         if (discoverMode == ScannerDiscoveryMode::USB_MODE) {
             AddUsbScanner(uniqueId, discoverMode);
@@ -1017,9 +1012,13 @@ void ScanServiceAbility::AddNetScanner(const std::string& uniqueId, const std::s
         SCAN_HILOGE("not found net scanner in map");
         return;
     }
+    if (scanData.IsContainScanner(discoverMode + uniqueId)) {
+        SCAN_HILOGE("The net scanner has already been added");
+        return;
+    }
     scanData.InsertScannerInfo(discoverMode + uniqueId, info);
     if (!scanData.SaveScannerMap()) {
-        SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
+        SCAN_HILOGE("ScanServiceAbility AddNetScanner SaveScannerMap fail");
         return;
     }
     SendDeviceInfo(info, SCAN_DEVICE_ADD);
@@ -1035,9 +1034,13 @@ void ScanServiceAbility::AddUsbScanner(const std::string& uniqueId, const std::s
         SCAN_HILOGE("AddUsbScanner fail, the scanner was not found in the discovery list");
         return;
     }
+    if (scanData.IsContainScanner(discoverMode + uniqueId)) {
+        SCAN_HILOGE("The usb scanner has already been added");
+        return;
+    }
     scanData.InsertScannerInfo(discoverMode + uniqueId, info);
     if (!scanData.SaveScannerMap()) {
-        SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
+        SCAN_HILOGE("ScanServiceAbility AddUsbScanner SaveScannerMap fail");
         return;
     }
     SendDeviceInfo(info, SCAN_DEVICE_ADD);
