@@ -1081,6 +1081,7 @@ std::shared_ptr<PrintJob> PrintServiceAbility::AddNativePrintJob(const std::stri
     return nativePrintJob;
 }
 
+#ifdef EDM_SERVICE_ENABLE
 bool PrintServiceAbility::IsDisablePrint()
 {
     bool isDisabled = false;
@@ -1089,6 +1090,7 @@ bool PrintServiceAbility::IsDisablePrint()
     PRINT_HILOGI("edm service result: %{public}d", isDisabled);
     return isDisabled;
 }
+#endif // EDM_SERVICE_ENABLE
 
 int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
 {
@@ -1121,16 +1123,18 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     PRINT_HILOGE("ingressPackage is %{public}s", ingressPackage.c_str());
     std::string param = nativePrintJob->ConvertToJsonString();
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
-    // intercept print job
+#ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint() && printJob.GetPrinterId() != VIRTUAL_PRINTER_ID) {
         ReportBannedEvent(printJob.GetOption());
         UpdatePrintJobState(printJob.GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
         CallStatusBar();
         return E_PRINT_BANNED;
     }
+#endif // EDM_SERVICE_ENABLE
     return StartPrintJobInternal(nativePrintJob);
 }
 
+#ifdef EDM_SERVICE_ENABLE
 int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
 {
     PRINT_HILOGW("current print job has been banned by organization");
@@ -1157,6 +1161,7 @@ int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
     PRINT_HILOGI("report security result: %{public}d", reportResult);
     return reportResult;
 }
+#endif // EDM_SERVICE_ENABLE
 
 int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
 {
@@ -1184,13 +1189,14 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     printJob->SetJobState(PRINT_JOB_QUEUED);
     UpdateQueuedJobList(jobId, printJob);
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-    // intercept print job
+#ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint() && jobInfo.GetPrinterId() != VIRTUAL_PRINTER_ID) {
         ReportBannedEvent(jobInfo.GetOption());
         UpdatePrintJobState(jobInfo.GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
         CallStatusBar();
         return E_PRINT_BANNED;
     }
+#endif // EDM_SERVICE_ENABLE
     return StartPrintJobInternal(printJob);
 }
 
@@ -1236,13 +1242,14 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     AddToPrintJobList(printJob->GetJobId(), printJob);
     UpdateQueuedJobList(printJob->GetJobId(), printJob);
     printerJobMap_[printJob->GetPrinterId()].insert(std::make_pair(jobId, true));
-    // intercept print job
+#ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint() && printJob->GetPrinterId() != VIRTUAL_PRINTER_ID) {
         ReportBannedEvent(printJob->GetOption());
         UpdatePrintJobState(jobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
         CallStatusBar();
         return E_PRINT_BANNED;
     }
+#endif // EDM_SERVICE_ENABLE
     ret = StartPrintJobInternal(printJob);
     if (ret == E_PRINT_NONE) {
         PRINT_HILOGI("RestartPrintJob success, oldJobId: %{public}s, newJobId: %{public}s",

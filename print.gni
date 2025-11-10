@@ -30,4 +30,5 @@ debug_enable = false
 
 declare_args() {
   print_fwk_feature_enterprise = false
+  print_fwk_feature_edm_service = false
 }

@@ -129,8 +129,6 @@ public:
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName);
     int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
-    int32_t ReportBannedEvent(std::string option);
-    bool IsDisablePrint();
 
 protected:
     void OnStart() override;
@@ -322,6 +320,12 @@ public:
     bool IsEnterprise();
     bool RefreshPrinterStatusOnSwitchUser();
 #endif  // ENTERPRISE_ENABLE
+
+#ifdef EDM_SERVICE_ENABLE
+    int32_t ReportBannedEvent(std::string option);
+    bool IsDisablePrint();
+#endif // EDM_SERVICE_ENABLE
+
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_SYSTEM_ABILITY_H

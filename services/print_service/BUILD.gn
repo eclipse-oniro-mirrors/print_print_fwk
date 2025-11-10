@@ -152,6 +152,10 @@ ohos_shared_library("print_service") {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
   }
 
+  if (print_fwk_feature_edm_service) {
+    cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
+  }
+
   if (build_variant == "user") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
   }
