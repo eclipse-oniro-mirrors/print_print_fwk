@@ -2961,13 +2961,13 @@ HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnListOfKeys_WhenMultiEle
 
 HWTEST_F(PrintServiceAbilityTest, PrinterDisableTest, TestSize.Level1)
 {
-    auto service = std::make::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     EXPECT_EQ(service->IsDisablePrint(), false);
 }
 
 HWTEST_F(PrintServiceAbilityTest, ReportBannedEventTest, TestSize.Level1)
 {
-    auto service = std::make::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string emptyString = "";
     EXPECT_EQ(service->ReportBannedEvent(emptyString), 401);
     std::string jsonString =
@@ -2976,8 +2976,6 @@ HWTEST_F(PrintServiceAbilityTest, ReportBannedEventTest, TestSize.Level1)
             "    \"value\": \"jobName\"\n"
             "}";
     EXPECT_EQ(service->ReportBannedEvent(jsonString), 0);
-    delete printServiceAbility;
-    printServiceAbility = nullptr;
 }
 
 }  // namespace OHOS::Print
