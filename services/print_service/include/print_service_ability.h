@@ -325,6 +325,7 @@ public:
 public:
     int32_t ReportBannedEvent(std::string option);
     bool IsDisablePrint();
+    void ReportEventAndUpdateJobState(std::string option, std::string jobId);
 #endif // EDM_SERVICE_ENABLE
 
 };

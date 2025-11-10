@@ -54,9 +54,11 @@
 #include "bundle_mgr_client.h"
 #include "bundle_info.h"
 #include "print_caller_app_monitor.h"
+#ifdef EDM_SERVICE_ENABLE
 #include "enterprise_device_mgr_proxy.h"
 #include "sg_collect_client.h"
 #include "event_info.h"
+#endif // EDM_SERVICE_ENABLE
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -1125,14 +1127,21 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
 #ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint() && printJob.GetPrinterId() != VIRTUAL_PRINTER_ID) {
-        ReportBannedEvent(printJob.GetOption());
-        UpdatePrintJobState(printJob.GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
-        CallStatusBar();
+        ReportEventAndUpdateJobState(printJob.GetOption(), printJob.GetJobId());
         return E_PRINT_BANNED;
     }
 #endif // EDM_SERVICE_ENABLE
     return StartPrintJobInternal(nativePrintJob);
 }
+
+#ifdef EDM_SERVICE_ENABLE
+void PrintServiceAbility::ReportEventAndUpdateJobState(std::string option, std::string jobId)
+{
+    ReportBannedEvent(option);
+    UpdatePrintJobState(jobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
+    CallStatusBar();
+}
+#endif // EDM_SERVICE_ENABLE
 
 #ifdef EDM_SERVICE_ENABLE
 int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
@@ -1191,9 +1200,7 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
 #ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint() && jobInfo.GetPrinterId() != VIRTUAL_PRINTER_ID) {
-        ReportBannedEvent(jobInfo.GetOption());
-        UpdatePrintJobState(jobInfo.GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
-        CallStatusBar();
+        ReportEventAndUpdateJobState(jobInfo.GetOption(), jobInfo.GetJobId());
         return E_PRINT_BANNED;
     }
 #endif // EDM_SERVICE_ENABLE
@@ -1244,9 +1251,7 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     printerJobMap_[printJob->GetPrinterId()].insert(std::make_pair(jobId, true));
 #ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint() && printJob->GetPrinterId() != VIRTUAL_PRINTER_ID) {
-        ReportBannedEvent(printJob->GetOption());
-        UpdatePrintJobState(jobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
-        CallStatusBar();
+        ReportEventAndUpdateJobState(printJob->GetOption(), jobId);
         return E_PRINT_BANNED;
     }
 #endif // EDM_SERVICE_ENABLE
