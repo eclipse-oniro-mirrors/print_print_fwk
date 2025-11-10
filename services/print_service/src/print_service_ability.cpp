@@ -54,6 +54,9 @@
 #include "bundle_mgr_client.h"
 #include "bundle_info.h"
 #include "print_caller_app_monitor.h"
+#include "enterprise_device_mgr_proxy.h"
+#include "sg_collect_client.h"
+#include "event_info.h"
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -135,6 +138,10 @@ static const std::vector<std::string> PREINSTALLED_DRIVER_PRINTER = {};
 static bool g_publishState = false;
 
 const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(PrintServiceAbility::GetInstance().GetRefPtr());
+const int32_t JOB_BANNED_EVENTID = 0x02E000001;
+const std::string JOB_BANNED_VERSION = "1.0";
+const int32_t JOB_BANNED_POLICY_CODE = 1021;
+const std::string VIRTUAL_PRINTER_ID = "fwk.driver.ppd:Virtual PDF Printer";
 
 std::mutex PrintServiceAbility::instanceLock_;
 sptr<PrintServiceAbility> PrintServiceAbility::instance_;
@@ -1074,6 +1081,15 @@ std::shared_ptr<PrintJob> PrintServiceAbility::AddNativePrintJob(const std::stri
     return nativePrintJob;
 }
 
+bool PrintServiceAbility::IsDisablePrint()
+{
+    bool isDisabled = false;
+    OHOS::EDM::EnterpriseDeviceMgrProxy enterpriseDeviceMgrProxy;
+    enterpriseDeviceMgrProxy.IsPolicyDisabled(NULL, JOB_BANNED_POLICY_CODE, isDisabled);
+    PRINT_HILOGI("edm service result: %{public}d", isDisabled);
+    return isDisabled;
+}
+
 int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
 {
     PRINT_HILOGI("StartNativePrintJob start.");
@@ -1105,7 +1121,41 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     PRINT_HILOGE("ingressPackage is %{public}s", ingressPackage.c_str());
     std::string param = nativePrintJob->ConvertToJsonString();
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
+    // intercept print job
+    if (IsDisablePrint() && printJob.GetPrinterId() != VIRTUAL_PRINTER_ID) {
+        ReportBannedEvent(printJob.GetOption());
+        UpdatePrintJobState(printJob.GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
+        CallStatusBar();
+        return E_PRINT_BANNED;
+    }
     return StartPrintJobInternal(nativePrintJob);
+}
+
+int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
+{
+    PRINT_HILOGW("current print job has been banned by organization");
+    Json::Value infoJson;
+    std::string reportFileName = "";
+    if (!PrintJsonUtil::Parse(option, infoJson)) {
+        PRINT_HILOGE("report banned event failed, option not accepted");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    reportFileName = infoJson["jobName"].asString();
+    auto nowTime = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime.time_since_epoch()).count();
+    std::stringstream ss;
+    ss << timestamp;
+    Json::Value contentJson;
+    contentJson["bundlename"] = SPOOLER_BUNDLE_NAME;
+    contentJson["filePath"] = reportFileName;
+    contentJson["happenTime"] = ss.str();
+    std::string content = PrintJsonUtil::WriteString(contentJson);
+    OHOS::Security::SecurityGuard::EventInfo eventInfo(JOB_BANNED_EVENTID, JOB_BANNED_VERSION, content);
+    OHOS::Security::SecurityGuard::NativeDataCollectKit nativeDataCollectKit;
+    auto wrappedInfo = std::make_shared<OHOS::Security::SecurityGuard::EventInfo>(eventInfo);
+    int32_t reportResult = nativeDataCollectKit.ReportSecurityInfo(wrappedInfo);
+    PRINT_HILOGI("report security result: %{public}d", reportResult);
+    return reportResult;
 }
 
 int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
@@ -1134,6 +1184,13 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     printJob->SetJobState(PRINT_JOB_QUEUED);
     UpdateQueuedJobList(jobId, printJob);
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
+    // intercept print job
+    if (IsDisablePrint() && jobInfo.GetPrinterId() != VIRTUAL_PRINTER_ID) {
+        ReportBannedEvent(jobInfo.GetOption());
+        UpdatePrintJobState(jobInfo.GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
+        CallStatusBar();
+        return E_PRINT_BANNED;
+    }
     return StartPrintJobInternal(printJob);
 }
 
@@ -1179,6 +1236,13 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     AddToPrintJobList(printJob->GetJobId(), printJob);
     UpdateQueuedJobList(printJob->GetJobId(), printJob);
     printerJobMap_[printJob->GetPrinterId()].insert(std::make_pair(jobId, true));
+    // intercept print job
+    if (IsDisablePrint() && printJob->GetPrinterId() != VIRTUAL_PRINTER_ID) {
+        ReportBannedEvent(printJob->GetOption());
+        UpdatePrintJobState(jobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
+        CallStatusBar();
+        return E_PRINT_BANNED;
+    }
     ret = StartPrintJobInternal(printJob);
     if (ret == E_PRINT_NONE) {
         PRINT_HILOGI("RestartPrintJob success, oldJobId: %{public}s, newJobId: %{public}s",

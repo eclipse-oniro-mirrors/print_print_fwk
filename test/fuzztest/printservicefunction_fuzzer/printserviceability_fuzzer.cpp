@@ -132,6 +132,38 @@ void TestAddVendorPrinterToDiscovery(const uint8_t *data, size_t size, FuzzedDat
     PrintServiceAbility::GetInstance()->AddVendorPrinterToDiscovery(globalVendorName, printerInfo);
 }
 
+void TestAuthPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string userName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    const char* userPasswd = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH).c_str();
+    std::vector<char> userPasswdCstr(userPasswd, userPasswd + strlen(userPasswd) + 1);
+    PrintServiceAbility::GetInstance()->AuthPrintJob(jobId, userName, userPasswdCstr.data());
+}
+
+void TestAnalyzePrintEvents(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string detail;
+    PrintServiceAbility::GetInstance()->AnalyzePrintEvents(printerId, type, detail);
+}
+
+void TestAddPrintEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string type = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    int32_t code = dataProvider->ConsumeIntegralInRange<int32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->AddPrintEvent(printerId, type, code);
+}
+
+void TestSavePdfFileJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    uint32_t fd = dataProvider->ConsumeIntegralInRange<uint32_t>(0, MAX_SET_NUMBER);
+    PrintServiceAbility::GetInstance()->SavePdfFileJob(jobId, fd);
+}
+
 void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestChangeDefaultPrinterForDelete(data, size, dataProvider);
@@ -147,6 +179,10 @@ void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dat
     TestDeletePrinterFromUserData(data, size, dataProvider);
     TestNotifyAppDeletePrinter(data, size, dataProvider);
     TestAddVendorPrinterToDiscovery(data, size, dataProvider);
+    TestAuthPrintJob(data, size, dataProvider);
+    TestAnalyzePrintEvents(data, size, dataProvider);
+    TestAddPrintEvent(data, size, dataProvider);
+    TestSavePdfFileJob(data, size, dataProvider);
 }
 
 }  // namespace Print

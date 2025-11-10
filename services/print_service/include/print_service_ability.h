@@ -132,6 +132,8 @@ public:
     int32_t QueryRecommendDriversById(const std::string &printerIp, std::vector<PpdInfo> &ppds);
     int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
         const std::string &ppdName);
+    int32_t ReportBannedEvent(std::string option);
+    bool IsDisablePrint();
 
 protected:
     void OnStart() override;

@@ -190,6 +190,37 @@ void TestSendExtensionEvent(const uint8_t *data, size_t size, FuzzedDataProvider
     PrintServiceAbility::GetInstance()->UpdatePrintUserMap();
 }
 
+void TestQueryAllPrinterPpds(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::vector<PpdInfo> ppdInfos;
+    PrintServiceAbility::GetInstance()->QueryAllPrinterPpds(ppdInfos);
+}
+
+
+void TestQueryPrinterInfoByIp(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerIp = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->QueryPrinterInfoByIp(printerIp);
+}
+
+void TestConnectPrinterByIpAndPpd(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerIp = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string protocol = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName);
+}
+
+void TestOnQueryCallBackEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string make = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterInfo info;
+    info.SetPrinterMake(make);
+    info.SetOption(option);
+    PrintServiceAbility::GetInstance()->OnQueryCallBackEvent(info);
+}
+
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestOn(data, size, dataProvider);
@@ -205,6 +236,21 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestCancelUserPrintJobs(data, size, dataProvider);
     TestBlockUserPrintJobs(data, size, dataProvider);
     TestSendExtensionEvent(data, size, dataProvider);
+    TestQueryAllPrinterPpds(data, size, dataProvider);
+    TestQueryPrinterInfoByIp(data, size, dataProvider);
+    TestConnectPrinterByIpAndPpd(data, size, dataProvider);
+    TestOnQueryCallBackEvent(data, size, dataProvider);
+}
+
+void TestIsDisablePrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrintServiceAbility::GetInstance()->IsDisablePrint();
+}
+
+void TestReportBannedEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->ReportBannedEvent(option);
 }
 
 }  // namespace Print

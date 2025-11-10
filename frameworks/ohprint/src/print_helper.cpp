@@ -633,7 +633,16 @@ void SetOptionInPrintJob(const Print_PrintJob &nativePrintJob, PrintJob &printJo
     jsonOptions["printQuality"] = quality;
     jsonOptions["documentFormat"] = GetDocumentFormatString(nativePrintJob.documentFormat);
     jsonOptions["isAutoRotate"] = nativePrintJob.orientationMode == ORIENTATION_MODE_NONE ? true : false;
-    if (nativePrintJob.advancedOptions != nullptr) {
+
+    Json::Value jsonAdvanceOptions;
+    if (nativePrintJob.advancedOptions && PrintJsonUtil::Parse(std::string(nativePrintJob.advancedOptions),
+        jsonAdvanceOptions)) {
+        if (jsonAdvanceOptions.isMember("isReverse") && jsonAdvanceOptions["isReverse"].isBool()) {
+            jsonOptions["isReverse"] = jsonAdvanceOptions["isReverse"];
+        }
+        if (jsonAdvanceOptions.isMember("isCollate") && jsonAdvanceOptions["isCollate"].isBool()) {
+            jsonOptions["isCollate"] = jsonAdvanceOptions["isCollate"];
+        }
         jsonOptions["cupsOptions"] = std::string(nativePrintJob.advancedOptions);
     }
     std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);

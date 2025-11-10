@@ -216,7 +216,7 @@ bool PrintUtils::ExtractIpv4(const std::string &str, std::string &ip, size_t &st
     std::smatch match;
     if (std::regex_search(str, match, ipRegex)) {
         ip = match[0];
-        startPos = match.position();
+        startPos = static_cast<size_t>(match.position());
         return true;
     }
     return false;
@@ -228,7 +228,7 @@ bool PrintUtils::ExtractIpv6(const std::string &str, std::string &ip, size_t &st
     std::smatch match;
     if (std::regex_search(str, match, ipRegex)) {
         ip = match[0];
-        startPos = match.position();
+        startPos = static_cast<size_t>(match.position());
         return true;
     }
     return false;
@@ -249,6 +249,9 @@ std::string PrintUtils::AnonymizeIpv4(const std::string &ip)
 std::string PrintUtils::AnonymizeIpv6(const std::string &ip)
 {
     size_t firstColon = ip.find(':');
+    if (firstColon == std::string::npos) {
+        return ip;
+    }
     size_t secondColon = ip.find(':', firstColon + 1);
     if (secondColon == std::string::npos) {
         return ip;
@@ -271,6 +274,9 @@ std::string PrintUtils::AnonymizeIpv6(const std::string &ip)
 std::string PrintUtils::AnonymizeUUid(const std::string &uuid)
 {
     size_t pos = uuid.find_last_of('-');
+    if (pos == std::string::npos) {
+        return uuid;
+    }
     std::string result = uuid.substr(0, pos + 1) + "x";
     return result;
 }
