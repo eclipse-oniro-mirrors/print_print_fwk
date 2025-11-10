@@ -242,6 +242,15 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds)
+    {
+        return E_PRINT_NONE;
+    }
+    int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
+        const std::string &ppdName)
+    {
+        return E_PRINT_NONE;
+    }
     int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd)
     {
         return E_PRINT_NONE;

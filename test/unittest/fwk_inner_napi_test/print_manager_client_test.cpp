@@ -2783,5 +2783,47 @@ HWTEST_F(PrintManagerClientTest, AnalyzePrintEvents_ShouldReturnNoPermission_Whe
     int32_t ret = PrintManagerClient::GetInstance()->AnalyzePrintEvents(printerId, "type", detail);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
+
+HWTEST_F(PrintManagerClientTest, QueryRecommendDriversById_LoadServerFailed, TestSize.Level1)
+{
+    std::string printerId = "testId";
+    std::vector<PpdInfo> ppdList;
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance()->QueryRecommendDriversById(printerId, ppdList);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_TRUE(ppdList.empty());
+}
+ 
+HWTEST_F(PrintManagerClientTest, QueryRecommendDriversById_GetPrintServiceProxyFail, TestSize.Level1)
+{
+    std::string printerId = "testId";
+    std::vector<PpdInfo> ppdList;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    int32_t ret = PrintManagerClient::GetInstance()->QueryRecommendDriversById(printerId, ppdList);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_TRUE(ppdList.empty());
+}
+ 
+HWTEST_F(PrintManagerClientTest, ConnectPrinterByIdAndPpd_LoadServerFailed, TestSize.Level1)
+{
+    std::string printerId = "testId";
+    std::string protocol = "testprot";
+    std::string ppdName = "test.ppd";
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+ 
+HWTEST_F(PrintManagerClientTest, ConnectPrinterByIdAndPpd_GetPrintServiceProxyFail, TestSize.Level1)
+{
+    std::string printerId = "testId";
+    std::string protocol = "testprot";
+    std::string ppdName = "test.ppd";
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
 }  // namespace Print
 }  // namespace OHOS

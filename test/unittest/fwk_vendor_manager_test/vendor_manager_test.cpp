@@ -430,5 +430,48 @@ HWTEST_F(VendorManagerTest, IsBsuniDriverSupport_test, TestSize.Level2)
     vendorManager.wlanGroupDriver = nullptr;
     EXPECT_FALSE(vendorManager.IsBsunidriverSupport(info));
 }
+
+HWTEST_F(VendorManagerTest, ConnectPrinterByIdAndPpd_test, TestSize.Level2)
+{
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorIppEverywhere = std::make_shared<VendorIppEveryWhere>();
+    ASSERT_NE(vendorIppEverywhere, nullptr);
+    EXPECT_TRUE(vendorManager.LoadVendorDriver(vendorIppEverywhere));
+    ThreadSyncWait syncWait;
+    std::string vendorName = vendorIppEverywhere->GetVendorName();
+    std::string globalVendorName = VendorManager::GetGlobalVendorName(vendorName);
+    std::string printerId = PRINTER_TEST_IP;
+    std::string globalPrinterId = VendorManager::GetGlobalPrinterId(globalVendorName, printerId);
+    std::string ppdName = DEFAULT_PPD_NAME;
+    std::string protocol = "ipp";
+    vendorManager.StartDiscovery();
+    syncWait.Wait(WAIT_TIME_MS);
+    vendorManager.StopDiscovery();
+    syncWait.Wait(WAIT_TIME_MS);
+    vendorManager.StartStatusMonitor();
+    syncWait.Wait(WAIT_TIME_MS);
+    vendorManager.MonitorPrinterStatus(globalPrinterId, true);
+    vendorManager.MonitorPrinterStatus(globalPrinterId, true);
+    syncWait.Wait(WAIT_TIME_MS);
+    EXPECT_CALL(*mock, QueryPrinterCapabilityByUri(_, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock, QueryPrinterStatusByUri(_, _)).WillRepeatedly(Return(true));
+    EXPECT_FALSE(vendorManager.ConnectPrinterByIdAndPpd(printerId, protocol, ppdName));
+    protocol.clear();
+    EXPECT_FALSE(vendorManager.ConnectPrinterByIdAndPpd(printerId, protocol, ppdName));
+    printerId = "testId:";
+    EXPECT_FALSE(vendorManager.ConnectPrinterByIdAndPpd(printerId, protocol, ppdName));
+    vendorManager.wlanGroupDriver = nullptr;
+    EXPECT_FALSE(vendorManager.ConnectPrinterByIdAndPpd(printerId, protocol, ppdName));
+    vendorManager.UpdateAllPrinterStatus();
+    vendorManager.MonitorPrinterStatus(globalPrinterId, false);
+    vendorManager.MonitorPrinterStatus(globalPrinterId, false);
+    syncWait.Wait(WAIT_TIME_MS);
+    vendorManager.StopStatusMonitor();
+    syncWait.Wait(WAIT_TIME_MS);
+    vendorManager.UnloadVendorDriver(vendorName);
+    vendorManager.UnInit();
+}
 }  // namespace Print
 }  // namespace OHOS
