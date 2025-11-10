@@ -577,6 +577,11 @@ const std::string &PrintCupsClient::GetCurCupsRootDir()
     return CUPS_ROOT_DIR;
 }
 
+std::string PrintCupsClient::GetCurCupsModelDir()
+{
+    return GetCurCupsRootDir() + "/datadir/model/";
+}
+
 const std::string &PrintCupsClient::GetCurCupsdControlParam()
 {
 #ifdef ENTERPRISE_ENABLE
@@ -2963,4 +2968,167 @@ uint32_t PrintCupsClient::GetPrintCupsJobId(const std::string &jobId)
     }
     return 0;
 }
+
+int32_t PrintCupsClient::CheckPrintJobConflicts(const std::string &ppdName, const PrintJob &jobInfo,
+    const std::string &changedType, std::vector<std::string>& conflictTypes)
+{
+    std::unique_ptr<JobParameters> jobParams(BuildJobParameters(jobInfo, ""));
+    if (jobParams == nullptr) {
+        PRINT_HILOGE("Convert PrintJob to JobParameters failed");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+
+    std::string ppdFilePath = GetCurCupsModelDir() + ppdName;
+    ppd_file_t *ppd = ppdOpenFile(ppdFilePath.c_str());
+    if (ppd == nullptr) {
+        PRINT_HILOGE("Open ppd file failed! Path=%{private}s", ppdFilePath.c_str());
+        return E_PRINT_FILE_IO;
+    }
+
+    StdStringMap cupsOptinosMap;
+    ppdMarkDefaults(ppd);
+    BuildCupsOptionParamsByPrintJob(jobInfo, *jobParams, cupsOptinosMap);
+    CheckOptionConflicts(ppd, cupsOptinosMap, changedType, conflictTypes);
+    DumpCupsConflicts(cupsOptinosMap, changedType, conflictTypes);
+
+    ppdClose(ppd);
+    return 0;
+}
+
+int32_t PrintCupsClient::CheckPreferencesConflicts(const std::string &ppdName, const PrinterPreferences &preferences,
+    const std::string &changedType, std::vector<std::string>& conflictTypes)
+{
+    std::string ppdFilePath = GetCurCupsModelDir() + ppdName;
+    ppd_file_t *ppd = ppdOpenFile(ppdFilePath.c_str());
+    if (ppd == nullptr) {
+        PRINT_HILOGE("Open ppd file failed! Path=%{private}s", ppdFilePath.c_str());
+        return E_PRINT_FILE_IO;
+    }
+
+    StdStringMap cupsOptinosMap;
+    ppdMarkDefaults(ppd);
+    BuildCupsOptionParamsByPreferences(preferences, cupsOptinosMap);
+    CheckOptionConflicts(ppd, cupsOptinosMap, changedType, conflictTypes);
+    DumpCupsConflicts(cupsOptinosMap, changedType, conflictTypes);
+
+    ppdClose(ppd);
+    return E_PRINT_NONE;
+}
+
+int32_t PrintCupsClient::CheckOptionConflicts(ppd_file_t *ppd, const StdStringMap &mapParams,
+    const std::string& typeChanged, std::vector<std::string>& conflictTypes)
+{
+    const StdStringMap::value_type *changedOption = nullptr;
+    for (auto &param : mapParams) {
+        if (param.first != typeChanged) {
+            MarkPpdOption(ppd, param.first, param.second);
+        } else {
+            changedOption = &param;
+        }
+    }
+
+    if (changedOption == nullptr) {
+        PRINT_HILOGE("Invalid changed type? %{public}s", typeChanged.c_str());
+        conflictTypes.clear();
+        return 0;
+    }
+
+    return CheckPpdConflicts(ppd, changedOption->first, changedOption->second, conflictTypes);
+}
+
+void PrintCupsClient::BuildCupsOptionParamsByPreferences(
+    const PrinterPreferences &preferences, StdStringMap &mapParams)
+{
+    if (preferences.HasDefaultPageSizeId()) {
+        mapParams[PRINT_PARAM_TYPE_PAGE_SIZE] = preferences.GetDefaultPageSizeId();
+    }
+
+    if (preferences.HasDefaultDuplexMode()) {
+        mapParams[PRINT_PARAM_TYPE_DUPLEX_MODE] = GetDulpexString(preferences.GetDefaultDuplexMode());
+    }
+
+    if (preferences.HasDefaultPrintQuality()) {
+        mapParams[PRINT_PARAM_TYPE_QUALITY] = std::to_string(preferences.GetDefaultPrintQuality());
+    }
+
+    if (preferences.HasDefaultColorMode()) {
+        mapParams[PRINT_PARAM_TYPE_COLOR_MODE] = GetColorString(preferences.GetDefaultColorMode());
+    }
+
+    if (preferences.HasDefaultMediaType()) {
+        mapParams[PRINT_PARAM_TYPE_MEDIA_TYPE] = preferences.GetDefaultMediaType();
+    }
+
+    if (preferences.HasDefaultCollate()) {
+        mapParams[PRINT_PARAM_TYPE_DELIVERY_ORDER] =
+            preferences.GetDefaultCollate() ? PRINT_PARAM_VAL_TRUE : PRINT_PARAM_VAL_FALSE;
+    }
+
+    if (preferences.HasOption()) {
+        Json::Value jsonAdvOption;
+        std::istringstream iss(preferences.GetOption());
+        if (PrintJsonUtil::ParseFromStream(iss, jsonAdvOption)) {
+            BuildCupsOptionParamsByAdvJson(jsonAdvOption, mapParams);
+        } else {
+            PRINT_HILOGE("Option can not parse to json object");
+        }
+    }
+}
+
+void PrintCupsClient::BuildCupsOptionParamsByPrintJob(const PrintJob &printJob,
+    const JobParameters &jobParams, StdStringMap &mapParams)
+{
+    PrintPageSize pageSize;
+    printJob.GetPageSize(pageSize);
+    mapParams[PRINT_PARAM_TYPE_PAGE_SIZE] = pageSize.GetId();
+    mapParams[PRINT_PARAM_TYPE_DUPLEX_MODE] = jobParams.duplex;
+    mapParams[PRINT_PARAM_TYPE_QUALITY] = jobParams.printQuality;
+    mapParams[PRINT_PARAM_TYPE_COLOR_MODE] = jobParams.color;
+    mapParams[PRINT_PARAM_TYPE_MEDIA_TYPE] = jobParams.mediaType;
+    BuildCupsOptionParamsByAdvJson(jobParams.advancedOpsJson, mapParams);
+}
+
+void PrintCupsClient::BuildCupsOptionParamsByAdvJson(const Json::Value &jsonAdvOpt, StdStringMap &mapParams)
+{
+    if (!jsonAdvOpt.isObject()) {
+        PRINT_HILOGE("Advance option json is not object");
+        return;
+    }
+
+    auto itEnd = jsonAdvOpt.end();
+    for (auto it = jsonAdvOpt.begin(); it != itEnd; ++it) {
+        if (it->isConvertibleTo(Json::stringValue)) {
+            mapParams[it.name()] = it->asString();
+        }
+    }
+}
+
+void PrintCupsClient::DumpCupsConflicts(const StdStringMap &mapParams,
+    const std::string& typeChanged, const std::vector<std::string>& conflictTypes)
+{
+    std::string strLog = "Params:";
+    for (auto &param : mapParams) {
+        strLog += '{';
+        strLog += param.first;
+        strLog += '=';
+        strLog += param.second;
+        strLog += "} ";
+    }
+
+    strLog += "TypeChanged:";
+    strLog += typeChanged;
+    if (!conflictTypes.empty()) {
+        strLog += " Conflicts:[";
+        for (auto& type : conflictTypes) {
+            strLog += type;
+            strLog += ',';
+        }
+        strLog.back() = ']';
+    } else {
+        strLog += " Conflict:None";
+    }
+
+    PRINT_HILOGD("%{public}s", strLog.c_str());
+}
+
 }  // namespace OHOS::Print

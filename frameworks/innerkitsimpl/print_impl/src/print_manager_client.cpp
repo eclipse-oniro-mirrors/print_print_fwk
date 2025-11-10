@@ -458,6 +458,33 @@ int32_t PrintManagerClient::UpdatePrinterInSystem(const PrinterInfo &printerInfo
     return ret;
 }
 
+int32_t PrintManagerClient::CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
+    const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGD("PrintManagerClient CheckPreferencesConflicts start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->CheckPreferencesConflicts(
+            printerId, changedType, printerPreference, conflictingOptions);
+        PRINT_HILOGD("PrintManagerClient CheckPreferencesConflicts out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::CheckPrintJobConflicts(const std::string &changedType,
+    const PrintJob &printJob, std::vector<std::string> &conflictingOptions)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGD("PrintManagerClient CheckPrintJobConflicts start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->CheckPrintJobConflicts(changedType, printJob, conflictingOptions);
+        PRINT_HILOGD("PrintManagerClient CheckPrintJobConflicts out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::AnalyzePrintEvents(const std::string &printerId, const std::string &type,
     std::string &detail)
 {

@@ -77,6 +77,15 @@ enum EXTENSION_ID_TYPE {
     TYPE_UNLOAD,
     TYPE_NON_EXIST,
 };
+
+class MockPrintServiceAbility final : public PrintServiceAbility {
+public:
+    MockPrintServiceAbility(int32_t systemAbilityId, bool runOnCreate)
+        : PrintServiceAbility(systemAbilityId, runOnCreate) {}
+    MOCK_METHOD2(QueryPrinterInfoByPrinterId, int32_t(const std::string &printerId, PrinterInfo &info));
+    MOCK_METHOD2(QueryPPDInformation, bool(const std::string &makeModel, std::string &ppdName));
+};
+
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
 class PrintServiceAbilityTest : public testing::Test {
 public:
@@ -2980,6 +2989,91 @@ HWTEST_F(PrintServiceAbilityTest, ReportBannedEventTest, TestSize.Level1)
     EXPECT_EQ(printServiceAbility->ReportBannedEvent(jsonString), 0);
     delete printServiceAbility;
     printServiceAbility = nullptr;
+}
+
+HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPrinterId, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    std::string printerId = GetInvalidPrinterId();;
+    PrinterPreferences printerPreference;
+    std::vector<std::string> conflictingOptions;
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    int32_t ret = service->CheckPreferencesConflicts(
+        printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
+    EXPECT_NE(ret, E_PRINT_NONE);
+    EXPECT_TRUE(conflictingOptions.empty());
+#endif
+}
+
+HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPpdName, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    std::string printerId = GetDefaultPrinterId();;
+    PrinterPreferences printerPreference;
+    std::vector<std::string> conflictingOptions;
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(_, _))
+        .WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(*service, QueryPPDInformation(_, _))
+        .WillOnce(Return(false))
+        .WillOnce([](const std::string &makeModel, std::string &ppdName) {
+            ppdName = "TestNone.ppd";
+            return true;
+        });
+
+    int32_t ret = service->CheckPreferencesConflicts(
+        printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PRINTER);
+    ret = service->CheckPreferencesConflicts(
+        printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_FILE_IO);
+#endif
+}
+
+HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_InvalidPrinterId, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    PrintJob testPrinterJob;
+    std::vector<std::string> conflictingOptions;
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    testPrinterJob.SetPrinterId(GetInvalidPrinterId());
+    int32_t ret = service->CheckPrintJobConflicts(
+        PRINT_PARAM_TYPE_PAGE_SIZE, testPrinterJob, conflictingOptions);
+    EXPECT_NE(ret, E_PRINT_NONE);
+    EXPECT_TRUE(conflictingOptions.empty());
+#endif
+}
+
+HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_InvalidPpdName, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    PrintJob testPrinterJob;
+    std::vector<std::string> conflictingOptions;
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(_, _))
+        .WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(*service, QueryPPDInformation(_, _))
+        .WillOnce(Return(false))
+        .WillOnce([](const std::string &makeModel, std::string &ppdName) {
+            ppdName = "TestNone.ppd";
+            return true;
+        });
+
+    int32_t ret = service->CheckPrintJobConflicts(
+        PRINT_PARAM_TYPE_PAGE_SIZE, testPrinterJob, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PRINTER);
+    ret = service->CheckPrintJobConflicts(
+        PRINT_PARAM_TYPE_PAGE_SIZE, testPrinterJob, conflictingOptions);
+    EXPECT_NE(ret, E_PRINT_NONE);
+#endif
 }
 
 }  // namespace OHOS::Print

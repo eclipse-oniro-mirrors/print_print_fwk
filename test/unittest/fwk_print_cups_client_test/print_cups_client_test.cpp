@@ -2315,5 +2315,111 @@ HWTEST_F(PrintCupsClientTest, FillTwoOptions_When_VIRTUAL_PRINTER, TestSize.Leve
     delete jobParams;
     delete options;
 }
+
+HWTEST_F(PrintCupsClientTest, CheckPreferencesConflicts_InvalidPpdName_Test, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    PrinterPreferences preferences;
+    std::string ppdName = "test_ppdName";
+    std::vector<std::string> conflictTypes;
+
+    int32_t ret = printCupsClient.CheckPreferencesConflicts(ppdName, preferences, "", conflictTypes);
+    EXPECT_EQ(ret, E_PRINT_FILE_IO);
+    EXPECT_TRUE(conflictTypes.empty());
+}
+
+HWTEST_F(PrintCupsClientTest, CheckPrintJobConflicts_InvalidPpdName_Test, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    PrintJob printJob;
+    std::string ppdName = "test_ppdName";
+    std::vector<std::string> conflictTypes;
+
+    int32_t ret = printCupsClient.CheckPrintJobConflicts(ppdName, printJob, "", conflictTypes);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+    EXPECT_TRUE(conflictTypes.empty());
+
+    printJob.SetOption(JOB_OPTIONS);
+    ret = printCupsClient.CheckPrintJobConflicts(ppdName, printJob, "", conflictTypes);
+    EXPECT_EQ(ret, E_PRINT_FILE_IO);
+    EXPECT_TRUE(conflictTypes.empty());
+}
+
+HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByPreferences_Test, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    PrinterPreferences preferences;
+    std::map<std::string, std::string> mapParams;
+
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    EXPECT_TRUE(mapParams.empty());
+
+    preferences.SetDefaultPageSizeId(PAGE_SIZE_ID_ISO_A4);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_PAGE_SIZE) != mapParams.end());
+
+    preferences.SetDefaultDuplexMode(DUPLEX_MODE_NONE);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_DUPLEX_MODE) != mapParams.end());
+
+    preferences.SetDefaultPrintQuality(PRINT_QUALITY_NORMAL);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_QUALITY) != mapParams.end());
+
+    preferences.SetDefaultColorMode(PRINT_COLOR_MODE_MONOCHROME);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_COLOR_MODE) != mapParams.end());
+
+    preferences.SetDefaultMediaType(CUPS_MEDIA_TYPE_PLAIN);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_MEDIA_TYPE) != mapParams.end());
+
+    preferences.SetDefaultCollate(true);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    EXPECT_TRUE(mapParams.find(PRINT_PARAM_TYPE_DELIVERY_ORDER) != mapParams.end());
+
+    mapParams.clear();
+    preferences.Reset();
+    preferences.SetOption("");
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    EXPECT_TRUE(mapParams.empty());
+
+    preferences.SetOption(JOB_OPTIONS);
+    printCupsClient.BuildCupsOptionParamsByPreferences(preferences, mapParams);
+    EXPECT_FALSE(mapParams.empty());
+}
+
+HWTEST_F(PrintCupsClientTest, BuildCupsOptionParamsByPrintJob_Test, TestSize.Level1)
+{
+    PrintCupsClient printCupsClient;
+    PrintJob jobInfo;
+    JobParameters jobParams;
+    std::map<std::string, std::string> mapParams;
+    printCupsClient.BuildCupsOptionParamsByPrintJob(jobInfo, jobParams, mapParams);
+    EXPECT_FALSE(mapParams.empty());
+}
+
+HWTEST_F(PrintCupsClientTest, CheckOptionConflicts_Test, TestSize.Level1)
+{
+    std::map<std::string, std::string> mapParams;
+    std::vector<std::string> conflictTypes;
+    PrintCupsClient printCupsClient;
+
+    int32_t ret = printCupsClient.CheckOptionConflicts(nullptr, mapParams, PRINT_PARAM_TYPE_PAGE_SIZE, conflictTypes);
+    EXPECT_EQ(ret, 0);
+
+    mapParams.emplace(PRINT_PARAM_TYPE_PAGE_SIZE, PAGE_SIZE_ID_ISO_A4);
+    ret = printCupsClient.CheckOptionConflicts(nullptr, mapParams, PRINT_PARAM_TYPE_PAGE_SIZE, conflictTypes);
+    EXPECT_EQ(ret, 0);
+
+    printCupsClient.DumpCupsConflicts(mapParams, PRINT_PARAM_TYPE_PAGE_SIZE, conflictTypes);
+    conflictTypes.emplace_back(PRINT_PARAM_TYPE_PAGE_SIZE);
+    printCupsClient.DumpCupsConflicts(mapParams, PRINT_PARAM_TYPE_PAGE_SIZE, conflictTypes);
+
+    mapParams.emplace(PRINT_PARAM_TYPE_QUALITY, "Normal");
+    ret = printCupsClient.CheckOptionConflicts(nullptr, mapParams, PRINT_PARAM_TYPE_PAGE_SIZE, conflictTypes);
+    EXPECT_EQ(ret, 0);
+}
+
 }  // namespace Print
 }  // namespace OHOS

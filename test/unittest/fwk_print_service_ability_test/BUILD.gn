@@ -83,6 +83,15 @@ ohos_unittest("fwk_print_service_ability_test") {
     "selinux_adapter:librestorecon",
     "usb_manager:usbsrv_client",
   ]
+
+  if (cups_enable) {
+    cflags_cc += [ "-DCUPS_ENABLE" ]
+    external_deps += [
+      "openssl:libssl_shared",
+      "cups:cups",
+      "cups-filters:cupsfilters",
+    ]
+  }
 }
 
 group("unittest") {

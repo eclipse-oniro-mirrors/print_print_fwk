@@ -96,6 +96,9 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIPANDPPD] =
         &PrintServiceStub::OnConnectPrinterByIpAndPpd;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_SAVEPDFFILEJOB] = &PrintServiceStub::OnSavePdfFileJob;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CHECKPREFERENCESCONFLICTS] =
+        &PrintServiceStub::OnCheckPreferencesConflicts;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CHECKPRINTJOBCONFLICTS] = &PrintServiceStub::OnCheckPrintJobConflicts;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -984,4 +987,44 @@ bool PrintServiceStub::OnSavePdfFileJob(MessageParcel &data, MessageParcel &repl
     PRINT_HILOGI("PrintServiceStub::OnSavePdfFileJob out");
     return ret == E_PRINT_NONE;
 }
+
+bool PrintServiceStub::OnCheckPreferencesConflicts(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnCheckPreferencesConflicts in");
+    std::string printerId = data.ReadString();
+    std::string changedType = data.ReadString();
+    auto preferencesPtr = PrinterPreferences::Unmarshalling(data);
+    if (preferencesPtr == nullptr) {
+        PRINT_HILOGE("Failed to unmarshall printerPreferences");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+    std::vector<std::string> conflictingOptions;
+    int32_t ret = CheckPreferencesConflicts(printerId, changedType, *preferencesPtr, conflictingOptions);
+    reply.WriteInt32(ret);
+    reply.WriteStringVector(conflictingOptions);
+
+    PRINT_HILOGI("PrintServiceStub::OnCheckPreferencesConflicts out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnCheckPrintJobConflicts(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnCheckPrintJobConflicts in");
+    std::string changedType = data.ReadString();
+    auto printJobPtr = PrintJob::Unmarshalling(data);
+    if (printJobPtr == nullptr) {
+        PRINT_HILOGE("Failed to unmarshall printJob");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+    std::vector<std::string> conflictingOptions;
+    int32_t ret = CheckPrintJobConflicts(changedType, *printJobPtr, conflictingOptions);
+    reply.WriteInt32(ret);
+    reply.WriteStringVector(conflictingOptions);
+
+    PRINT_HILOGI("PrintServiceStub::OnCheckPrintJobConflicts out");
+    return ret == E_PRINT_NONE;
+}
+
 } // namespace OHOS::Print

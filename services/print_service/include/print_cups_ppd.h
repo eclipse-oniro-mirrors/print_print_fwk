@@ -24,6 +24,10 @@
 namespace OHOS::Print {
 int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const std::string &ppdFilePath);
 
+int32_t MarkPpdOption(ppd_file_t *ppd, const std::string &type, const std::string &val);
+int32_t CheckPpdConflicts(ppd_file_t *ppd, const std::string &type, const std::string &val,
+    std::vector<std::string>& conflictTypes);
+
 const int ADVANCE_OPTION_MAXLENGTH = 100;
 }
 #endif // PRINT_CUPS_PPD_H

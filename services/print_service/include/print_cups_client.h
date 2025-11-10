@@ -167,6 +167,10 @@ public:
     bool QueryPpdInfoMap(const std::string &ppdFilePath, std::unordered_map<std::string, std::string> &keyValues,
         PpdInfo &info);
     int32_t CopyJobOutputFile(const std::string &jobId, uint32_t fd, bool cleanAfterCopied);
+    int32_t CheckPrintJobConflicts(const std::string &ppdName, const PrintJob &jobInfo,
+        const std::string &changedType, std::vector<std::string>& conflictTypes);
+    int32_t CheckPreferencesConflicts(const std::string &ppdName, const PrinterPreferences &preferences,
+        const std::string &changedType, std::vector<std::string>& conflictTypes);
 
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
@@ -223,6 +227,7 @@ private:
     bool IsIpAddress(const char* host);
     static int FillAdvancedOptions(JobParameters *jobParams, int num_options, cups_option_t **options);
     const std::string& GetCurCupsRootDir();
+    std::string GetCurCupsModelDir();
     const std::string& GetCurCupsdControlParam();
     bool CheckUsbPrinterOnline(const std::string &printerId);
     int32_t HandleSystemAuthInfo(const std::string &jobId, const std::string &printerUri,
@@ -230,6 +235,16 @@ private:
     void AddPrintCupsJobId(const std::string &jobId, uint32_t cupsJobId);
     void RemovePrintCupsJobId(const std::string &jobId);
     uint32_t GetPrintCupsJobId(const std::string &jobId);
+
+    using StdStringMap = std::map<std::string, std::string>;
+    int32_t CheckOptionConflicts(ppd_file_t *ppd, const StdStringMap &mapParams, const std::string& typeChanged,
+        std::vector<std::string>& conflictTypes);
+    void BuildCupsOptionParamsByPreferences(const PrinterPreferences &preferences, StdStringMap &mapParams);
+    void BuildCupsOptionParamsByPrintJob(const PrintJob &jobInfo,
+        const JobParameters &jobParams, StdStringMap &mapParams);
+    void BuildCupsOptionParamsByAdvJson(const Json::Value &jsonAdvOpt, StdStringMap &mapParams);
+    void DumpCupsConflicts(const StdStringMap &mapParams, const std::string& typeChanged,
+        const std::vector<std::string>& conflictTypes);
 
 private:
     bool toCups_ = true;
