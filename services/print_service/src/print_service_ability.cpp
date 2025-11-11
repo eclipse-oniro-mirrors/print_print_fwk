@@ -4388,7 +4388,7 @@ bool PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
 }
 #endif  // ENTERPRISE_ENABLE
 
-bool PrintServiceAbility::CheckPrintConstraint(std::string option)
+bool PrintServiceAbility::CheckPrintConstraint(std::string option, std::string jobId)
 {
     bool unablePrint = false;
     int userId = GetCurrentUserId();
