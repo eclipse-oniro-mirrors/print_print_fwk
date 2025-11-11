@@ -1105,6 +1105,7 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     }
     if (CheckPrintConstraint()) {
         PRINT_HILOGE("user is not allow print job");
+        ReportBannedEvent(printJob.GetOption());
         return E_PRINT_NO_PERMISSION;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -1182,6 +1183,7 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     }
     if (CheckPrintConstraint()) {
         PRINT_HILOGE("user is not allow print job");
+        ReportBannedEvent(jobInfo.GetOption());
         return E_PRINT_NO_PERMISSION;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -1215,10 +1217,6 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    if (CheckPrintConstraint()) {
-        PRINT_HILOGE("user is not allow print job");
-        return E_PRINT_NO_PERMISSION;
-    }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 
     // is restratable printJob & get jobinfo
@@ -1230,6 +1228,11 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
             PRINT_HILOGE("Invalid job id.");
             return ret;
         }
+    }
+    if (CheckPrintConstraint()) {
+        PRINT_HILOGE("user is not allow print job");
+        ReportBannedEvent(printJob->GetOption());
+        return E_PRINT_NO_PERMISSION;
     }
 
     // reopen fd from cache
