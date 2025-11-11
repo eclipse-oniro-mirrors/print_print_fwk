@@ -1103,13 +1103,6 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    if (CheckPrintConstraint()) {
-        PRINT_HILOGE("user is not allow print job");
-#ifdef EDM_SERVICE_ENABLE
-    ReportBannedEvent(printJob.GetOption());
-#endif // EDM_SERVICE_ENABLE
-        return E_PRINT_NO_PERMISSION;
-    }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!UpdatePrintJobOptionByPrinterId(printJob)) {
         PRINT_HILOGW("cannot update printer name/uri");
@@ -1128,6 +1121,10 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     PRINT_HILOGE("ingressPackage is %{public}s", ingressPackage.c_str());
     std::string param = nativePrintJob->ConvertToJsonString();
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
+    if (CheckPrintConstraint(printJob.GetOption(), printJob.GetJobId())) {
+        PRINT_HILOGE("user is not allow print job");
+        return E_PRINT_NO_PERMISSION;
+    }
 #ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint() && printJob.GetPrinterId() != VIRTUAL_PRINTER_ID) {
         ReportEventAndUpdateJobState(printJob.GetOption(), printJob.GetJobId());
@@ -1183,13 +1180,6 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
-    if (CheckPrintConstraint()) {
-        PRINT_HILOGE("user is not allow print job");
-#ifdef EDM_SERVICE_ENABLE
-    ReportBannedEvent(jobInfo.GetOption());
-#endif // EDM_SERVICE_ENABLE
-        return E_PRINT_NO_PERMISSION;
-    }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!CheckPrintJob(jobInfo)) {
         PRINT_HILOGW("check printJob unavailable");
@@ -1204,6 +1194,10 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     printJob->SetJobState(PRINT_JOB_QUEUED);
     UpdateQueuedJobList(jobId, printJob);
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
+    if (CheckPrintConstraint(jobInfo.GetOption(), jobInfo.GetJobId())) {
+        PRINT_HILOGE("user is not allow print job");
+        return E_PRINT_NO_PERMISSION;
+    }
 #ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint() && jobInfo.GetPrinterId() != VIRTUAL_PRINTER_ID) {
         ReportEventAndUpdateJobState(jobInfo.GetOption(), jobInfo.GetJobId());
@@ -1233,13 +1227,6 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
             return ret;
         }
     }
-    if (CheckPrintConstraint()) {
-        PRINT_HILOGE("user is not allow print job");
-#ifdef EDM_SERVICE_ENABLE
-    ReportBannedEvent(printJob->GetOption());
-#endif // EDM_SERVICE_ENABLE
-        return E_PRINT_NO_PERMISSION;
-    }
 
     // reopen fd from cache
     std::vector<uint32_t> fdList;
@@ -1258,6 +1245,10 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     AddToPrintJobList(printJob->GetJobId(), printJob);
     UpdateQueuedJobList(printJob->GetJobId(), printJob);
     printerJobMap_[printJob->GetPrinterId()].insert(std::make_pair(jobId, true));
+    if (CheckPrintConstraint(printJob->GetOption(), jobId)) {
+        PRINT_HILOGE("user is not allow print job");
+        return E_PRINT_NO_PERMISSION;
+    }
 #ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint() && printJob->GetPrinterId() != VIRTUAL_PRINTER_ID) {
         ReportEventAndUpdateJobState(printJob->GetOption(), jobId);
@@ -4397,16 +4388,21 @@ bool PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
 }
 #endif  // ENTERPRISE_ENABLE
 
-bool PrintServiceAbility::CheckPrintConstraint()
+bool PrintServiceAbility::CheckPrintConstraint(std::string option)
 {
-    bool isEnabled = false;
+    bool unablePrint = false;
     int userId = GetCurrentUserId();
-    auto ret = AccountSA::OsAccountManager::CheckOsAccountConstraintEnabled(userId, PRINT_CONSTRAINT, isEnabled);
+    auto ret = AccountSA::OsAccountManager::CheckOsAccountConstraintEnabled(userId, PRINT_CONSTRAINT, unablePrint);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("CheckOsAccountConstarintEnabled error = %{public}d.", ret);
     }
-    PRINT_HILOGD("print constraint for user %{public}d is %{public}d.", userId, isEnabled);
-    return isEnabled;
+    PRINT_HILOGD("print constraint for user %{public}d is %{public}d.", userId, unablePrint);
+#ifdef EDM_SERVICE_ENABLE
+    if (unablePrint) {
+        ReportEventAndUpdateJobState(option, jobId);
+    }
+#endif // EDM_SERVICE_ENABLE
+    return unablePrint;
 }
 
 bool PrintServiceAbility::IsAppAlive(const std::string &bundleName, int32_t pid)

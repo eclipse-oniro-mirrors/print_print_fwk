@@ -219,7 +219,7 @@ private:
     void RefreshPrinterPageSize(PrinterInfo &printerInfo);
     int32_t BlockPrintJob(const std::string &jobId);
     void BlockUserPrintJobs(const int32_t userId);
-    bool CheckPrintConstraint();
+    bool CheckPrintConstraint(std::string option, std::string jobId);
     bool IsAppAlive(const std::string &bundleName, int32_t pid);
     void DiscoveryCallerAppsMonitor();
     void StartDiscoveryCallerMonitorThread();
