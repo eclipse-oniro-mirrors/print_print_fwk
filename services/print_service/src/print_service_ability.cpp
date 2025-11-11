@@ -1105,7 +1105,9 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     }
     if (CheckPrintConstraint()) {
         PRINT_HILOGE("user is not allow print job");
-        ReportBannedEvent(printJob.GetOption());
+#ifdef EDM_SERVICE_ENABLE
+    ReportBannedEvent(printJob.GetOption());
+#endif // EDM_SERVICE_ENABLE
         return E_PRINT_NO_PERMISSION;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -1183,7 +1185,9 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     }
     if (CheckPrintConstraint()) {
         PRINT_HILOGE("user is not allow print job");
-        ReportBannedEvent(jobInfo.GetOption());
+#ifdef EDM_SERVICE_ENABLE
+    ReportBannedEvent(jobInfo.GetOption());
+#endif // EDM_SERVICE_ENABLE
         return E_PRINT_NO_PERMISSION;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -1231,7 +1235,9 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     }
     if (CheckPrintConstraint()) {
         PRINT_HILOGE("user is not allow print job");
-        ReportBannedEvent(printJob->GetOption());
+#ifdef EDM_SERVICE_ENABLE
+    ReportBannedEvent(printJob->GetOption());
+#endif // EDM_SERVICE_ENABLE
         return E_PRINT_NO_PERMISSION;
     }
 
