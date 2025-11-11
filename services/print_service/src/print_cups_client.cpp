@@ -141,6 +141,7 @@ static const std::string JOB_STATE_REASON_JOB_HOLD = "job-hold-until-specified";
 static const std::string DEFAULT_JOB_NAME = "test";
 static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string USB_PRINTER = "usb";
+static const std::string NOT_BACKEND_PRINTER = "ipp,ipps,lpd,socket,usb,http,bsUniBackend";
 static const std::string SERIAL = "serial=";
 static const std::string PRINTER_ID_USB_PREFIX = "USB";
 static const std::string PRINTER_MAKE_UNKNOWN = "Unknown";
@@ -2611,7 +2612,7 @@ int32_t PrintCupsClient::DiscoverBackendPrinters(std::vector<PrinterInfo> &print
 {
     int longStatus = 0;
     const char *include_schemes = CUPS_INCLUDE_ALL;
-    const char *exclude_schemes = CUPS_EXCLUDE_NONE;
+    const char *exclude_schemes = NOT_BACKEND_PRINTER.c_str();
     int timeout = CUPS_TIMEOUT_DEFAULT;
     PRINT_HILOGD("DiscoverBackendPrinters cupsGetDevices");
     ClearBackendPrinters();

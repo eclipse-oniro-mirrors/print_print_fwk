@@ -71,7 +71,7 @@ const uint32_t QUERY_CUPS_ALIVE_MAX_RETRY_TIMES = 50;
 const uint32_t ENTER_LOW_POWER_INTERVAL = 90000;
 const uint32_t UNREGISTER_CALLBACK_INTERVAL = 5000;
 const uint32_t CHECK_CALLER_APP_INTERVAL = 60;
-const uint32_t CONNECT_PLUGIN_PRINT_TIMEOUT = 5;
+const uint32_t CONNECT_PLUGIN_PRINT_TIMEOUT = 5000;
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -2884,7 +2884,7 @@ int32_t PrintServiceAbility::CallStatusBar()
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_UID, callerUid);
     want.SetParam(AAFwk::Want::PARAM_RESV_CALLER_PID, callerPid);
     want.SetParam(CALLER_PKG_NAME, callerPkg);
-    if (!StartExtensionAbility(want)) {
+    if (!StartPluginPrintExtAbility(want)) {
         PRINT_HILOGE("Failed to start PluginPrintIconExtAbility");
         return E_PRINT_SERVER_FAILURE;
     }
@@ -2915,7 +2915,7 @@ bool PrintServiceAbility::StartPluginPrintExtAbility(const AAFwk::Want &want)
             return;
         }
         if (!helper_->CheckPluginPrintConnected()) {
-            PRINT_HILOGE("can't connect extension ability, cancel all prnitJob.");
+            PRINT_HILOGE("can't connect extension ability, cancel all printJob.");
             std::vector<std::string> jobIdlListToCancel;
             for (const auto& jobIt : queuedJobList_) {
                 jobIdlListToCancel.push_back(jobIt.second->GetJobId());
