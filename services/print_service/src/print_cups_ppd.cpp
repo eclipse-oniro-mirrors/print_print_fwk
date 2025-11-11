@@ -152,6 +152,10 @@ void ParsePageSizeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerC
     // find default media size
     if (sizeOption && sizeOption->defchoice) {
         pwg_size_t *pwgSize = _ppdCacheGetSize(ppdCache, sizeOption->defchoice);
+        if (pwgSize == nullptr) {
+            PRINT_HILOGE("Failed to get default page size, pwgSize is nullptr.");
+            return;
+        }
         PRINT_HILOGI("Default page size: %{public}s, defchoice : %{public}s", pwgSize->map.ppd, sizeOption->defchoice);
         std::string defaultPageSizeId;
         if (!ConvertPageSizeId(pwgSize->map.pwg, defaultPageSizeId)) {
