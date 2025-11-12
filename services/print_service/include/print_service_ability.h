@@ -327,7 +327,6 @@ public:
     bool IsDisablePrint();
     void ReportEventAndUpdateJobState(std::string option, std::string jobId);
 #endif // EDM_SERVICE_ENABLE
-
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_SYSTEM_ABILITY_H
