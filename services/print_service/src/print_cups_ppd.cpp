@@ -108,13 +108,14 @@ void GetAdvanceOptionsFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
     printerCaps.SetPrinterAttrNameAndValue("advanceDefault", PrintJsonUtil::WriteString(advanceDefaultJs).c_str());
 }
 
-void findDefaultPageSize(_ppd_cache_t *ppdCache, ppd_option_t *sizeOption, PrinterCapability &printerCaps) {
+void findDefaultPageSize(_ppd_cache_t *ppdCache, ppd_option_t *sizeOption, PrinterCapability &printerCaps)
+{
     // find default media size
     if (sizeOption && sizeOption->defchoice) {
         pwg_size_t *pwgSize = _ppdCacheGetSize(ppdCache, sizeOption->defchoice);
         if (pwgSize == nullptr) {
             PRINT_HILOGE("Failed to get default page size, pwgSize is nullptr.");
-            return; 
+            return;
         }
         PRINT_HILOGI("Default page size: %{public}s, defchoice : %{public}s", pwgSize->map.ppd, sizeOption->defchoice);
         std::string defaultPageSizeId;
@@ -162,7 +163,7 @@ void ParsePageSizeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerC
         mediaSizeMapDefaultLanguage[pwgSize.map.pwg] = sizeChoice->text;
         mediaSizeMapCNLanguage[pwgSize.map.pwg] = GetCNFromPpdAttr(ppd, "PageSize",
             sizeChoice->choice, sizeChoice->text);
-    } 
+    }
     mediaSizeMap["default"] = mediaSizeMapDefaultLanguage;
     mediaSizeMap["zh_CN"] = mediaSizeMapCNLanguage;
     printerCaps.SetSupportedPageSize(supportedPageSizes);
