@@ -162,7 +162,7 @@ void ParsePageSizeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerC
         mediaSizeMapDefaultLanguage[pwgSize.map.pwg] = sizeChoice->text;
         mediaSizeMapCNLanguage[pwgSize.map.pwg] = GetCNFromPpdAttr(ppd, "PageSize",
             sizeChoice->choice, sizeChoice->text);
-    } 
+    }
     mediaSizeMap["default"] = mediaSizeMapDefaultLanguage;
     mediaSizeMap["zh_CN"] = mediaSizeMapCNLanguage;
     printerCaps.SetSupportedPageSize(supportedPageSizes);
