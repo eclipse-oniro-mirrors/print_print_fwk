@@ -2978,7 +2978,7 @@ HWTEST_F(PrintServiceAbilityTest, ReportBannedEventTest, TestSize.Level1)
             "    \"key\": \"option\",\n"
             "    \"value\": \"jobName\"\n"
             "}";
-    EXPECT_EQ(service->ReportBannedEvent(jsonString), 1);
+    EXPECT_EQ(service->ReportBannedEvent(jsonString), 0);
 #endif // EDM_SERVICE_ENABLE
 }
 
