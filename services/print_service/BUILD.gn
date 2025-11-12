@@ -76,8 +76,6 @@ _external_deps = [
   "samgr:samgr_proxy",
   "usb_manager:usbsrv_client",
   "wifi:wifi_sdk",
-  "enterprise_device_management:edmservice_kits",
-  "security_guard:libsg_collect_sdk"
 ]
 
 _public_configs = [ ":print_service_config" ]
@@ -152,6 +150,10 @@ ohos_shared_library("print_service") {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
   }
 
+  if (print_fwk_feature_edm_service) {
+    cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
+  }
+
   if (build_variant == "user") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
   }
@@ -194,6 +196,14 @@ ohos_static_library("print_service_test") {
 
   if (build_variant == "user") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
+  }
+
+  if (print_fwk_feature_edm_service) {
+    cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
+    _external_deps += [
+      "enterprise_device_management:edmservice_kits",
+      "security_guard:libsg_collect_sdk"
+    ]
   }
 
   subsystem_name = "print"

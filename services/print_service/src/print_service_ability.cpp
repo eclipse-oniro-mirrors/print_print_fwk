@@ -54,9 +54,11 @@
 #include "bundle_mgr_client.h"
 #include "bundle_info.h"
 #include "print_caller_app_monitor.h"
+#ifdef EDM_SERVICE_ENABLE
 #include "enterprise_device_mgr_proxy.h"
 #include "sg_collect_client.h"
 #include "event_info.h"
+#endif // EDM_SERVICE_ENABLE
 
 namespace OHOS::Print {
 using namespace OHOS::HiviewDFX;
@@ -1114,6 +1116,7 @@ std::shared_ptr<PrintJob> PrintServiceAbility::AddNativePrintJob(const std::stri
     return nativePrintJob;
 }
 
+#ifdef EDM_SERVICE_ENABLE
 bool PrintServiceAbility::IsDisablePrint()
 {
     bool isDisabled = false;
@@ -1122,6 +1125,7 @@ bool PrintServiceAbility::IsDisablePrint()
     PRINT_HILOGI("edm service result: %{public}d", isDisabled);
     return isDisabled;
 }
+#endif // EDM_SERVICE_ENABLE
 
 int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
 {
@@ -1130,10 +1134,6 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
-        return E_PRINT_NO_PERMISSION;
-    }
-    if (CheckPrintConstraint()) {
-        PRINT_HILOGE("user is not allow print job");
         return E_PRINT_NO_PERMISSION;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -1154,16 +1154,29 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     PRINT_HILOGE("ingressPackage is %{public}s", ingressPackage.c_str());
     std::string param = nativePrintJob->ConvertToJsonString();
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
-    // intercept print job
+    if (CheckPrintConstraint(printJob.GetOption(), printJob.GetJobId())) {
+        PRINT_HILOGE("user is not allow print job");
+        return E_PRINT_NO_PERMISSION;
+    }
+#ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint() && printJob.GetPrinterId() != VIRTUAL_PRINTER_ID) {
-        ReportBannedEvent(printJob.GetOption());
-        UpdatePrintJobState(printJob.GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
-        CallStatusBar();
+        ReportEventAndUpdateJobState(printJob.GetOption(), printJob.GetJobId());
         return E_PRINT_BANNED;
     }
+#endif // EDM_SERVICE_ENABLE
     return StartPrintJobInternal(nativePrintJob);
 }
 
+#ifdef EDM_SERVICE_ENABLE
+void PrintServiceAbility::ReportEventAndUpdateJobState(std::string option, std::string jobId)
+{
+    ReportBannedEvent(option);
+    UpdatePrintJobState(jobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
+    CallStatusBar();
+}
+#endif // EDM_SERVICE_ENABLE
+
+#ifdef EDM_SERVICE_ENABLE
 int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
 {
     PRINT_HILOGW("current print job has been banned by organization");
@@ -1190,6 +1203,7 @@ int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
     PRINT_HILOGI("report security result: %{public}d", reportResult);
     return reportResult;
 }
+#endif // EDM_SERVICE_ENABLE
 
 int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
 {
@@ -1197,10 +1211,6 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
-        return E_PRINT_NO_PERMISSION;
-    }
-    if (CheckPrintConstraint()) {
-        PRINT_HILOGE("user is not allow print job");
         return E_PRINT_NO_PERMISSION;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -1217,13 +1227,16 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     printJob->SetJobState(PRINT_JOB_QUEUED);
     UpdateQueuedJobList(jobId, printJob);
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-    // intercept print job
+    if (CheckPrintConstraint(jobInfo.GetOption(), jobInfo.GetJobId())) {
+        PRINT_HILOGE("user is not allow print job");
+        return E_PRINT_NO_PERMISSION;
+    }
+#ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint() && jobInfo.GetPrinterId() != VIRTUAL_PRINTER_ID) {
-        ReportBannedEvent(jobInfo.GetOption());
-        UpdatePrintJobState(jobInfo.GetJobId(), PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
-        CallStatusBar();
+        ReportEventAndUpdateJobState(jobInfo.GetOption(), jobInfo.GetJobId());
         return E_PRINT_BANNED;
     }
+#endif // EDM_SERVICE_ENABLE
     return StartPrintJobInternal(printJob);
 }
 
@@ -1233,10 +1246,6 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
-        return E_PRINT_NO_PERMISSION;
-    }
-    if (CheckPrintConstraint()) {
-        PRINT_HILOGE("user is not allow print job");
         return E_PRINT_NO_PERMISSION;
     }
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -1269,13 +1278,16 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     AddToPrintJobList(printJob->GetJobId(), printJob);
     UpdateQueuedJobList(printJob->GetJobId(), printJob);
     printerJobMap_[printJob->GetPrinterId()].insert(std::make_pair(jobId, true));
-    // intercept print job
+    if (CheckPrintConstraint(printJob->GetOption(), jobId)) {
+        PRINT_HILOGE("user is not allow print job");
+        return E_PRINT_NO_PERMISSION;
+    }
+#ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint() && printJob->GetPrinterId() != VIRTUAL_PRINTER_ID) {
-        ReportBannedEvent(printJob->GetOption());
-        UpdatePrintJobState(jobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_BANNED);
-        CallStatusBar();
+        ReportEventAndUpdateJobState(printJob->GetOption(), jobId);
         return E_PRINT_BANNED;
     }
+#endif // EDM_SERVICE_ENABLE
     ret = StartPrintJobInternal(printJob);
     if (ret == E_PRINT_NONE) {
         PRINT_HILOGI("[Job Id: %{public}s] RestartPrintJob success, oldJobId: %{public}s",
@@ -4414,16 +4426,21 @@ bool PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
 }
 #endif  // ENTERPRISE_ENABLE
 
-bool PrintServiceAbility::CheckPrintConstraint()
+bool PrintServiceAbility::CheckPrintConstraint(std::string option, std::string jobId)
 {
-    bool isEnabled = false;
+    bool unablePrint = false;
     int userId = GetCurrentUserId();
-    auto ret = AccountSA::OsAccountManager::CheckOsAccountConstraintEnabled(userId, PRINT_CONSTRAINT, isEnabled);
+    auto ret = AccountSA::OsAccountManager::CheckOsAccountConstraintEnabled(userId, PRINT_CONSTRAINT, unablePrint);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("CheckOsAccountConstarintEnabled error = %{public}d.", ret);
     }
-    PRINT_HILOGD("print constraint for user %{public}d is %{public}d.", userId, isEnabled);
-    return isEnabled;
+    PRINT_HILOGD("print constraint for user %{public}d is %{public}d.", userId, unablePrint);
+#ifdef EDM_SERVICE_ENABLE
+    if (unablePrint) {
+        ReportEventAndUpdateJobState(option, jobId);
+    }
+#endif // EDM_SERVICE_ENABLE
+    return unablePrint;
 }
 
 bool PrintServiceAbility::IsAppAlive(const std::string &bundleName, int32_t pid)

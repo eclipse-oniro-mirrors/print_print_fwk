@@ -244,13 +244,17 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
 
 void TestIsDisablePrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
+#ifdef EDM_SERVICE_ENABLE
     PrintServiceAbility::GetInstance()->IsDisablePrint();
+#endif // EDM_SERVICE_ENABLE
 }
 
 void TestReportBannedEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
+#ifdef EDM_SERVICE_ENABLE
     std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->ReportBannedEvent(option);
+#endif // EDM_SERVICE_ENABLE
 }
 
 }  // namespace Print

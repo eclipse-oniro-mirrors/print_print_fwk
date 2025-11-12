@@ -3015,25 +3015,25 @@ HWTEST_F(PrintServiceAbilityTest, RefreshEprinterErrorCapability_ShouldReturnNon
 
 HWTEST_F(PrintServiceAbilityTest, PrinterDisableTest, TestSize.Level1)
 {
-    PrintServiceAbility *printServiceAbility = new PrintServiceAbility(1, false);
-    EXPECT_EQ(printServiceAbility->IsDisablePrint(), false);
-    delete printServiceAbility;
-    printServiceAbility = nullptr;
+#ifdef EDM_SERVICE_ENABLE
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->IsDisablePrint(), false);
+#endif // EDM_SERVICE_ENABLE
 }
 
 HWTEST_F(PrintServiceAbilityTest, ReportBannedEventTest, TestSize.Level1)
 {
-    PrintServiceAbility *printServiceAbility = new PrintServiceAbility(1, false);
+#ifdef EDM_SERVICE_ENABLE
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string emptyString = "";
-    EXPECT_EQ(printServiceAbility->ReportBannedEvent(emptyString), 401);
+    EXPECT_EQ(service->ReportBannedEvent(emptyString), 401);
     std::string jsonString =
             "{\n"
             "    \"key\": \"option\",\n"
             "    \"value\": \"jobName\"\n"
             "}";
-    EXPECT_EQ(printServiceAbility->ReportBannedEvent(jsonString), 0);
-    delete printServiceAbility;
-    printServiceAbility = nullptr;
+    EXPECT_EQ(service->ReportBannedEvent(jsonString), 0);
+#endif // EDM_SERVICE_ENABLE
 }
 
 }  // namespace OHOS::Print
