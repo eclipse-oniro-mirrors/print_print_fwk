@@ -108,7 +108,7 @@ void GetAdvanceOptionsFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
     printerCaps.SetPrinterAttrNameAndValue("advanceDefault", PrintJsonUtil::WriteString(advanceDefaultJs).c_str());
 }
 
-void findDefaultPageSize(_ppd_cache_t *ppdCache, ppd_option_t *sizeOption, PrinterCapability &printerCaps)
+void FindDefaultPageSize(_ppd_cache_t *ppdCache, ppd_option_t *sizeOption, PrinterCapability &printerCaps)
 {
     // find default media size
     if (sizeOption && sizeOption->defchoice) {
@@ -168,7 +168,7 @@ void ParsePageSizeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerC
     mediaSizeMap["zh_CN"] = mediaSizeMapCNLanguage;
     printerCaps.SetSupportedPageSize(supportedPageSizes);
     printerCaps.SetPrinterAttrNameAndValue("mediaSizeMap", PrintJsonUtil::WriteString(mediaSizeMap).c_str());
-    findDefaultPageSize(ppdCache, sizeOption, printerCaps);
+    FindDefaultPageSize(ppdCache, sizeOption, printerCaps);
 }
 
 void ParseDuplexModeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
