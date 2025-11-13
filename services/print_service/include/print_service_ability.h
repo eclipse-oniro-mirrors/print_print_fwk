@@ -304,10 +304,8 @@ private:
     bool isLowPowerMode_;
     VendorManager vendorManager;
 
-    std::map<int32_t, std::string> callerMap_;
     std::map<int32_t, std::string> discoveryCallerMap_;
     std::recursive_mutex discoveryMutex_;
-    bool unloadThread = false;
     bool discoveryCallerMonitorThread = false;
 
 #ifdef ENTERPRISE_ENABLE

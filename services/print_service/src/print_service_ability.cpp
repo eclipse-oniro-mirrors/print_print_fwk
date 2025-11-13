@@ -415,7 +415,8 @@ int32_t PrintServiceAbility::StartService()
         PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
         return E_PRINT_NO_PERMISSION;
     }
-    PrintCallerAppMonitor::GetInstance().IncrementPrintCounter();
+    PrintCallerAppMonitor::GetInstance().IncrementPrintCounter("");
+    PrintCallerAppMonitor::GetInstance().IncrementCallerAppCounter();
     int64_t callerTokenId = static_cast<int64_t>(IPCSkeleton::GetCallingTokenID());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto iter = printUserDataMap_.find(callerTokenId);
@@ -466,7 +467,7 @@ int32_t PrintServiceAbility::CallSpooler(
     AddToPrintJobList(taskId, printJob);
     SendPrintJobEvent(*printJob);
     securityGuardManager_.receiveBaseInfo(taskId, callerPkg, fileList);
-    PrintCallerAppMonitor::GetInstance().IncrementPrintCounter();
+    PrintCallerAppMonitor::GetInstance().IncrementPrintCounter(taskId);
     return E_PRINT_NONE;
 }
 
@@ -1878,6 +1879,7 @@ int32_t PrintServiceAbility::CheckAndSendQueuePrintJob(const std::string &jobId,
             ReportCompletedPrint(printerId);
         }
         SendQueuePrintJob(printerId);
+        PrintCallerAppMonitor::GetInstance().RemovePrintJobFromMap(jobId);
     }
     PRINT_HILOGD("CheckAndSendQueuePrintJob end.");
     return E_PRINT_NONE;
@@ -2098,14 +2100,14 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
                 AddToPrintJobList(jobId, printJob);
                 SendPrintJobEvent(*printJob);
             }
-            PrintCallerAppMonitor::GetInstance().IncrementPrintCounter();
+            PrintCallerAppMonitor::GetInstance().IncrementPrintCounter(jobId);
             break;
         case APPLICATION_CLOSED_FOR_STARTED:
-            PrintCallerAppMonitor::GetInstance().DecrementPrintCounter();
+            PrintCallerAppMonitor::GetInstance().DecrementPrintCounter(jobId);
             break;
         case APPLICATION_CLOSED_FOR_CANCELED:
             UnregisterPrintTaskCallback(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED);
-            PrintCallerAppMonitor::GetInstance().DecrementPrintCounter();
+            PrintCallerAppMonitor::GetInstance().DecrementPrintCounter(jobId);
             break;
         default:
             PRINT_HILOGW("unsupported event");
@@ -2116,9 +2118,12 @@ int32_t PrintServiceAbility::NotifyPrintServiceEvent(std::string &jobId, uint32_
 
 bool PrintServiceAbility::UnloadSystemAbility()
 {
-    if (!queuedJobList_.empty()) {
-        PRINT_HILOGE("There are still print jobs being executed.");
-        return false;
+    {
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+        if (!queuedJobList_.empty()) {
+            PRINT_HILOGE("There are still print jobs being executed.");
+            return false;
+        }
     }
     PRINT_HILOGI("unload task begin");
     NotifyAppJobQueueChanged(QUEUE_JOB_LIST_UNSUBSCRIBE);
@@ -2294,6 +2299,8 @@ int32_t PrintServiceAbility::RegisterPrinterCallback(const std::string &type, co
         PRINT_HILOGE("Invalid listener");
         return E_PRINT_INVALID_PARAMETER;
     }
+    PrintCallerAppMonitor::GetInstance().IncrementPrintCounter("");
+    PrintCallerAppMonitor::GetInstance().IncrementCallerAppCounter();
     int64_t callerTokenId = static_cast<int64_t>(IPCSkeleton::GetCallingTokenID());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto iter = printUserDataMap_.find(callerTokenId);
@@ -2302,7 +2309,6 @@ int32_t PrintServiceAbility::RegisterPrinterCallback(const std::string &type, co
         return E_PRINT_INVALID_TOKEN;
     }
     iter->second->RegisterPrinterCallback(type, listener);
-    PrintCallerAppMonitor::GetInstance().IncrementPrintCounter();
     PRINT_HILOGD("PrintServiceAbility::RegisterPrinterCallback end.");
     return E_PRINT_NONE;
 }
@@ -2313,6 +2319,7 @@ int32_t PrintServiceAbility::UnregisterPrinterCallback(const std::string &type)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+    PrintCallerAppMonitor::GetInstance().RemoveCallerAppFromMap();
     int64_t callerTokenId = static_cast<int64_t>(IPCSkeleton::GetCallingTokenID());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto iter = printUserDataMap_.find(callerTokenId);
@@ -2321,7 +2328,6 @@ int32_t PrintServiceAbility::UnregisterPrinterCallback(const std::string &type)
         return E_PRINT_INVALID_TOKEN;
     }
     iter->second->UnregisterPrinterCallback(type);
-    PrintCallerAppMonitor::GetInstance().RemoveCallerAppFromMap();
     PRINT_HILOGD("PrintServiceAbility::UnregisterPrinterCallback end.");
     return E_PRINT_NONE;
 }
@@ -2493,7 +2499,7 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
         PRINT_HILOGI("PrintServiceAbility::Off delete type=%{public}s object message.", eventType.c_str());
         registeredListeners_.erase(iter);
         if (PrintUtils::GetEventType(eventType) == PRINTER_CHANGE_EVENT_TYPE) {
-            PrintCallerAppMonitor::GetInstance().DecrementPrintCounter();
+            PrintCallerAppMonitor::GetInstance().DecrementPrintCounter("");
         }
         return E_PRINT_NONE;
     }
@@ -2787,14 +2793,14 @@ int32_t PrintServiceAbility::NotifyPrintService(const std::string &jobId, const 
     if (type == "0" || type == NOTIFY_INFO_SPOOLER_CLOSED_FOR_STARTED) {
         PRINT_HILOGI("[Job Id: %{public}s] Notify Spooler Closed for started", jobId.c_str());
         notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_STARTED);
-        PrintCallerAppMonitor::GetInstance().DecrementPrintCounter();
+        PrintCallerAppMonitor::GetInstance().DecrementPrintCounter(jobId);
         return E_PRINT_NONE;
     }
 
     if (type == NOTIFY_INFO_SPOOLER_CLOSED_FOR_CANCELLED) {
         PRINT_HILOGI("[Job Id: %{public}s] Notify Spooler Closed for canceled", jobId.c_str());
         notifyAdapterJobChanged(jobId, PRINT_JOB_SPOOLER_CLOSED, PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED);
-        PrintCallerAppMonitor::GetInstance().DecrementPrintCounter();
+        PrintCallerAppMonitor::GetInstance().DecrementPrintCounter(jobId);
         return E_PRINT_NONE;
     }
     return E_PRINT_INVALID_PARAMETER;
@@ -2933,8 +2939,11 @@ bool PrintServiceAbility::StartPluginPrintExtAbility(const AAFwk::Want &want)
         if (!helper_->CheckPluginPrintConnected()) {
             PRINT_HILOGE("can't connect extension ability, cancel all printJob.");
             std::vector<std::string> jobIdlListToCancel;
-            for (const auto& jobIt : queuedJobList_) {
-                jobIdlListToCancel.push_back(jobIt.second->GetJobId());
+            {
+                std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+                for (const auto& jobIt : queuedJobList_) {
+                    jobIdlListToCancel.push_back(jobIt.second->GetJobId());
+                }
             }
             for (const auto& jobId : jobIdlListToCancel) {
                 CancelPrintJob(jobId);
@@ -4049,7 +4058,7 @@ void PrintServiceAbility::HandlePrinterChangeRegister(const std::string &eventTy
         QueryAllExtension(extensionInfos);
         std::vector<std::string> extensionIds;
         StartDiscoverPrinter(extensionIds);
-        PrintCallerAppMonitor::GetInstance().IncrementPrintCounter();
+        PrintCallerAppMonitor::GetInstance().IncrementPrintCounter("");
     }
 }
 
