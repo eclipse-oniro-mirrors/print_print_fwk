@@ -4680,7 +4680,6 @@ void PrintServiceAbility::QueryPrinterPpds(const PrinterInfo &info, std::vector<
  
 int32_t PrintServiceAbility::QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds)
 {
-    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
         return E_PRINT_NO_PERMISSION;
@@ -4698,7 +4697,6 @@ int32_t PrintServiceAbility::QueryRecommendDriversById(const std::string &printe
 int32_t PrintServiceAbility::ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
     const std::string &ppdName)
 {
-    ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service, ErrorCode:[%{public}d]", E_PRINT_NO_PERMISSION);
         return E_PRINT_NO_PERMISSION;
