@@ -39,6 +39,168 @@ const std::vector<std::string> baseOptionStr = {
     "BRMonoColor"
 };
 
+using StdStringMultiMap = std::multimap<const std::string, const std::string>;
+static const StdStringMultiMap MMAP_CUPS_CHOICE_PAGE_SIZE = {
+    {PAGE_SIZE_ID_ISO_A0, "A0"},
+    {PAGE_SIZE_ID_ISO_A1, "A1"},
+    {PAGE_SIZE_ID_ISO_A2, "A2"},
+    {PAGE_SIZE_ID_ISO_A3, "A3"},
+    {PAGE_SIZE_ID_ISO_A4, "A4"},
+    {PAGE_SIZE_ID_ISO_A5, "A5"},
+    {PAGE_SIZE_ID_ISO_A6, "A6"},
+    {PAGE_SIZE_ID_ISO_A7, "A7"},
+    {PAGE_SIZE_ID_ISO_A8, "A8"},
+    {PAGE_SIZE_ID_ISO_A9, "A9"},
+    {PAGE_SIZE_ID_ISO_A10, "A10"},
+    {PAGE_SIZE_ID_ISO_B0, "ISOB0"},
+    {PAGE_SIZE_ID_ISO_B1, "ISOB1"},
+    {PAGE_SIZE_ID_ISO_B2, "ISOB2"},
+    {PAGE_SIZE_ID_ISO_B3, "ISOB3"},
+    {PAGE_SIZE_ID_ISO_B4, "ISOB4"},
+    {PAGE_SIZE_ID_ISO_B5, "ISOB5"},
+    {PAGE_SIZE_ID_ISO_B6, "ISOB6"},
+    {PAGE_SIZE_ID_ISO_B7, "ISOB7"},
+    {PAGE_SIZE_ID_ISO_B8, "ISOB8"},
+    {PAGE_SIZE_ID_ISO_B9, "ISOB9"},
+    {PAGE_SIZE_ID_ISO_B10, "ISOB10"},
+    {PAGE_SIZE_ID_ISO_C0, "EnvC0"},
+    {PAGE_SIZE_ID_ISO_C1, "EnvC1"},
+    {PAGE_SIZE_ID_ISO_C2, "EnvC2"},
+    {PAGE_SIZE_ID_ISO_C3, "EnvC3"},
+    {PAGE_SIZE_ID_ISO_C4, "EnvC4"},
+    {PAGE_SIZE_ID_ISO_C5, "EnvC5"},
+    {PAGE_SIZE_ID_ISO_C6, "EnvC6"},
+    {PAGE_SIZE_ID_ISO_C6, "Yougata2"},
+    {PAGE_SIZE_ID_ISO_C7, "Env7"},
+    {PAGE_SIZE_ID_ISO_C8, "Env8"},
+    {PAGE_SIZE_ID_ISO_C9, "EnvC9"},
+    {PAGE_SIZE_ID_ISO_C10, "EnvC10"},
+    {PAGE_SIZE_ID_ISO_DL, "EnvDL"},
+    {PAGE_SIZE_ID_JIS_B0, "B0"},
+    {PAGE_SIZE_ID_JIS_B1, "B1"},
+    {PAGE_SIZE_ID_JIS_B2, "B2"},
+    {PAGE_SIZE_ID_JIS_B3, "B3"},
+    {PAGE_SIZE_ID_JIS_B4, "B4"},
+    {PAGE_SIZE_ID_JIS_B5, "B5"},
+    {PAGE_SIZE_ID_JIS_B6, "B6"},
+    {PAGE_SIZE_ID_JIS_B7, "B7"},
+    {PAGE_SIZE_ID_JIS_B8, "B8"},
+    {PAGE_SIZE_ID_JIS_B9, "B9"},
+    {PAGE_SIZE_ID_JIS_B10, "B10"},
+    {PAGE_SIZE_ID_JIS_EXEC, "216x330mm"},
+    {PAGE_SIZE_ID_JPN_CHOU2, "EnvChou2"},
+    {PAGE_SIZE_ID_JPN_CHOU3, "EnvChou3"},
+    {PAGE_SIZE_ID_JPN_CHOU3, "Younaga3"},
+    {PAGE_SIZE_ID_JPN_CHOU3, "Nagagata3"},
+    {PAGE_SIZE_ID_JPN_CHOU4, "EnvChou40"},
+    {PAGE_SIZE_ID_JPN_HAGAKI, "Postcard"},
+    {PAGE_SIZE_ID_NA_FOOLSCAP, "Folio"},
+    {PAGE_SIZE_ID_NA_LEGAL, "Legal"},
+    {PAGE_SIZE_ID_NA_LETTER, "Letter"},
+    {PAGE_SIZE_ID_NA_EXECUTIVE, "Executive"},
+    {PAGE_SIZE_ID_PRC1, "EnvPRC1"},
+    {PAGE_SIZE_ID_PRC2, "EnvPRC2"},
+    {PAGE_SIZE_ID_PRC4, "EnvPRC4"},
+    {PAGE_SIZE_ID_PRC6, "EnvPRC6"},
+    {PAGE_SIZE_ID_PRC7, "EnvPRC7"},
+    {PAGE_SIZE_ID_PRC8, "EnvPRC8"},
+    {PAGE_SIZE_ID_PRC16, "PRC16K"},
+    {PAGE_SIZE_ID_ROC_16K, "roc16k"},
+    {PAGE_SIZE_ID_ROC_8K, "roc8k"},
+};
+
+static const StdStringMultiMap MMAP_CUPS_CHOICE_QUALITY = {
+    {CUPS_PRINT_QUALITY_DRAFT, "Draft"},
+    {CUPS_PRINT_QUALITY_DRAFT, "Fast"},
+    {CUPS_PRINT_QUALITY_NORMAL, "Normal"},
+    {CUPS_PRINT_QUALITY_HIGH, "High"},
+    {CUPS_PRINT_QUALITY_HIGH, "Best"},
+};
+
+static const StdStringMultiMap MMAP_CUPS_CHOICE_COLOR_MODEL = {
+    {CUPS_PRINT_COLOR_MODE_MONOCHROME, "Gray"},
+    {CUPS_PRINT_COLOR_MODE_MONOCHROME, "monochrome"},
+    {CUPS_PRINT_COLOR_MODE_COLOR, "RGB"},
+    {CUPS_PRINT_COLOR_MODE_COLOR, "CMYK"},
+    {CUPS_PRINT_COLOR_MODE_COLOR, "color"},
+};
+
+static const StdStringMultiMap MMAP_CUPS_CHOICE_DUPLEX = {
+    {CUPS_SIDES_ONE_SIDED, "None"},
+    {CUPS_SIDES_TWO_SIDED_PORTRAIT, "DuplexNoTumble"},
+    {CUPS_SIDES_TWO_SIDED_LANDSCAPE, "DuplexTumble"},
+};
+
+static const StdStringMultiMap MMAP_CUPS_CHOICE_MEDIA_TYPE = {
+    {CUPS_MEDIA_TYPE_ENVELOPE, "Envelope"},
+    {CUPS_MEDIA_TYPE_LABELS, "Label"},
+    {CUPS_MEDIA_TYPE_LABELS, "Labels"},
+    {CUPS_MEDIA_TYPE_LETTERHEAD, "Letterhead"},
+    {CUPS_MEDIA_TYPE_PHOTO, "photographic"},
+    {CUPS_MEDIA_TYPE_PHOTO_GLOSSY, "Glossy"},
+    {CUPS_MEDIA_TYPE_PHOTO_MATTE, "Matte"},
+    {CUPS_MEDIA_TYPE_PLAIN, "Plain"},
+    {CUPS_MEDIA_TYPE_PLAIN, "Stationery"},
+    {CUPS_MEDIA_TYPE_TRANSPARENCY, "Transparency"},
+    {"stationery-recycled", "Recycled"},
+    {"stationery-inkjet", "Inkjet"},
+    {"photographic-high-gloss", "HighGloss"},
+};
+
+static const StdStringMultiMap MMAP_CUPS_CHOICE_COLLATE = {
+    {PRINT_PARAM_VAL_TRUE, "True"},
+    {PRINT_PARAM_VAL_FALSE, "False"},
+};
+
+static const std::string PPD_OPT_NAME_PAGESIZE = "PageSize";
+static const std::string PPT_OPT_NAME_MEDIA_TYPE = "MediaType";
+static const std::string PPD_OPT_NAME_PRINTQUALITY = "cupsPrintQuality";
+static const std::string PPD_OPT_NAME_QUALITY = "Quality";
+static const std::string PPD_OPT_NAME_QUALITY_OUTPUT_MODE = "OutputMode";
+static const std::string PPD_OPT_NAME_COLOR_MODE = "ColorModel";
+static const std::string PPD_OPT_NAME_DUPLEX = "Duplex";
+static const std::string PPT_OPT_NAME_JCLDUPLEX = "JCLDuplex";
+static const std::string PPD_OPT_NAME_EFDUPLEX = "EFDuplex";
+static const std::string PPD_OPT_NAME_EFDUPLEXING = "EFDuplexing";
+static const std::string PPT_OPT_NAME_KD03DUPLEX = "KD03Duplex";
+static const std::string PPT_OPT_NAME_COLLATE = "Collate";
+
+struct CupsOptionInfo {
+    // Avoid redundant copy, must point to static variables.
+    const std::string &name;
+    const StdStringMultiMap &choiceMmap;
+};
+
+static const std::multimap<const std::string, const CupsOptionInfo> CUPS_PPD_FIELD_MMAP = {
+    {PRINT_PARAM_TYPE_PAGE_SIZE, {PPD_OPT_NAME_PAGESIZE, MMAP_CUPS_CHOICE_PAGE_SIZE}},
+    {PRINT_PARAM_TYPE_MEDIA_TYPE, {PPT_OPT_NAME_MEDIA_TYPE, MMAP_CUPS_CHOICE_MEDIA_TYPE}},
+    {PRINT_PARAM_TYPE_QUALITY, {PPD_OPT_NAME_PRINTQUALITY, MMAP_CUPS_CHOICE_QUALITY}},
+    {PRINT_PARAM_TYPE_QUALITY, {PPD_OPT_NAME_QUALITY, MMAP_CUPS_CHOICE_QUALITY}},
+    {PRINT_PARAM_TYPE_QUALITY, {PPD_OPT_NAME_QUALITY_OUTPUT_MODE, MMAP_CUPS_CHOICE_QUALITY}},
+    {PRINT_PARAM_TYPE_COLOR_MODE, {PPD_OPT_NAME_COLOR_MODE, MMAP_CUPS_CHOICE_COLOR_MODEL}},
+    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPD_OPT_NAME_DUPLEX, MMAP_CUPS_CHOICE_DUPLEX}},
+    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPT_OPT_NAME_JCLDUPLEX, MMAP_CUPS_CHOICE_DUPLEX}},
+    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPD_OPT_NAME_EFDUPLEX, MMAP_CUPS_CHOICE_DUPLEX}},
+    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPD_OPT_NAME_EFDUPLEXING, MMAP_CUPS_CHOICE_DUPLEX}},
+    {PRINT_PARAM_TYPE_DUPLEX_MODE, {PPT_OPT_NAME_KD03DUPLEX, MMAP_CUPS_CHOICE_DUPLEX}},
+    {PRINT_PARAM_TYPE_DELIVERY_ORDER, {PPT_OPT_NAME_COLLATE, MMAP_CUPS_CHOICE_COLLATE}},
+};
+
+static const std::map<const std::string, const std::string> MAP_CUPS_OPTNAME_TO_TYPE = {
+    {PPD_OPT_NAME_PAGESIZE, PRINT_PARAM_TYPE_PAGE_SIZE},
+    {PPT_OPT_NAME_MEDIA_TYPE, PRINT_PARAM_TYPE_MEDIA_TYPE},
+    {PPD_OPT_NAME_PRINTQUALITY, PRINT_PARAM_TYPE_QUALITY},
+    {PPD_OPT_NAME_QUALITY, PRINT_PARAM_TYPE_QUALITY},
+    {PPD_OPT_NAME_QUALITY_OUTPUT_MODE, PRINT_PARAM_TYPE_QUALITY},
+    {PPD_OPT_NAME_COLOR_MODE, PRINT_PARAM_TYPE_COLOR_MODE},
+    {PPD_OPT_NAME_DUPLEX, PRINT_PARAM_TYPE_DUPLEX_MODE},
+    {PPT_OPT_NAME_JCLDUPLEX, PRINT_PARAM_TYPE_DUPLEX_MODE},
+    {PPD_OPT_NAME_EFDUPLEX, PRINT_PARAM_TYPE_DUPLEX_MODE},
+    {PPD_OPT_NAME_EFDUPLEXING, PRINT_PARAM_TYPE_DUPLEX_MODE},
+    {PPT_OPT_NAME_KD03DUPLEX, PRINT_PARAM_TYPE_DUPLEX_MODE},
+    {PPT_OPT_NAME_COLLATE, PRINT_PARAM_TYPE_DELIVERY_ORDER},
+};
+
 const char *GetCNFromPpdAttr(ppd_file_t *ppd, const char *keyword, const char* choice, const char* defaultText)
 {
     ppd_attr_t *locattrCN = _ppdLocalizedAttr(ppd, keyword, choice, "zh_CN");
@@ -387,6 +549,89 @@ int32_t QueryPrinterCapabilityFromPPDFile(PrinterCapability &printerCaps, const 
 
     ppdClose(ppd);
     return E_PRINT_NONE;
+}
+
+bool ConvertOptionAndChoiceNameToPpd(ppd_file_t *ppd, const std::string &type, const std::string &val,
+    std::string &optName, std::string &choiceName)
+{
+    ppd_option_t *ppdOption = nullptr;
+    const CupsOptionInfo *optInf = nullptr;
+    auto optRange = CUPS_PPD_FIELD_MMAP.equal_range(type);
+    for (auto it = optRange.first; it != optRange.second; ++it) {
+        ppdOption = ppdFindOption(ppd, it->second.name.c_str());
+        if (ppdOption != nullptr) {
+            optInf = &it->second;
+            break;
+        }
+    }
+
+    if (ppdOption == nullptr) {
+        optName = type;
+        choiceName = val;
+        return false;
+    }
+
+    optName = optInf->name;
+    auto choiceRange = optInf->choiceMmap.equal_range(val);
+    for (auto it = choiceRange.first; it != choiceRange.second; ++it) {
+        ppd_choice_t *ppdChoice = ppdFindChoice(ppdOption, it->second.c_str());
+        if (ppdChoice != nullptr) {
+            choiceName = it->second;
+            return true;
+        }
+    }
+
+    if (PPD_OPT_NAME_PAGESIZE == ppdOption->keyword) {
+        // Convert Human-readable page size name to PPD name
+        for (int i = 0; i < ppdOption->num_choices; ++i) {
+            if (val == ppdOption->choices[i].text) {
+                choiceName = ppdOption->choices[i].choice;
+                return true;
+            }
+        }
+    }
+
+    choiceName = val;
+    return false;
+}
+
+int32_t MarkPpdOption(ppd_file_t *ppd, const std::string &type, const std::string &val)
+{
+    std::string optName;
+    std::string choiceName;
+    ConvertOptionAndChoiceNameToPpd(ppd, type, val, optName, choiceName);
+
+    return ppdMarkOption(ppd, optName.c_str(), choiceName.c_str());
+}
+
+int32_t CheckPpdConflicts(ppd_file_t *ppd, const std::string &type,
+    const std::string &val, std::vector<std::string>& conflictTypes)
+{
+    conflictTypes.clear();
+    std::string optName;
+    std::string choiceName;
+    ConvertOptionAndChoiceNameToPpd(ppd, type, val, optName, choiceName);
+
+    cups_option_t *conflictOptions = nullptr;
+    int32_t conflictsNum = cupsGetConflicts(ppd, optName.c_str(), choiceName.c_str(), &conflictOptions);
+    for (int32_t idx = 0; idx < conflictsNum; ++idx) {
+        if (optName == conflictOptions[idx].name) {
+            continue;
+        }
+
+        auto it = MAP_CUPS_OPTNAME_TO_TYPE.find(conflictOptions[idx].name);
+        if (it != MAP_CUPS_OPTNAME_TO_TYPE.end()) {
+            conflictTypes.emplace_back(it->second);
+        } else {
+            conflictTypes.emplace_back(conflictOptions[idx].name);
+        }
+    }
+
+    if (conflictOptions != nullptr) {
+        cupsFreeOptions(conflictsNum, conflictOptions);
+    }
+
+    return conflictsNum;
 }
 
 }

@@ -117,6 +117,11 @@ public:
     int32_t RemovePrinterFromDiscovery(const std::string &printerId) override;
     int32_t UpdatePrinterInSystem(const PrinterInfo &printerInfo) override;
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) override;
+    int32_t CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
+        const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) override;
+    int32_t CheckPrintJobConflicts(const std::string &changedType,
+        const PrintJob &printJob, std::vector<std::string> &conflictingOptions) override;
+
     void DelayEnterLowPowerMode();
     void ExitLowPowerMode();
     bool IsPrinterPpdUpdateRequired(const std::string &standardPrinterName, const std::string &ppdHashCode);
@@ -266,6 +271,7 @@ private:
         std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData);
     void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName);
     bool DeletePrintJobFromHistoryList(const std::string jobId);
+    int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

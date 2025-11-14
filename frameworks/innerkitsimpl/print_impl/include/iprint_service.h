@@ -96,6 +96,10 @@ public:
     virtual int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName) = 0;
     virtual int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd) = 0;
+    virtual int32_t CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
+        const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) = 0;
+    virtual int32_t CheckPrintJobConflicts(const std::string &changedType,
+        const PrintJob &printJob, std::vector<std::string> &conflictingOptions) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H
