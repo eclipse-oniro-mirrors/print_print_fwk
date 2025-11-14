@@ -465,7 +465,7 @@ bool VendorBsuniDriver::OnQueryProperties(const std::string &printerId, const st
         }
     }
     ReleaseStringList(propertyKeyList);
-    PRINT_HILOGD("OnQueryProperties quit");
+    PRINT_HILOGI("OnQueryProperties quit");
     return ret;
 }
 

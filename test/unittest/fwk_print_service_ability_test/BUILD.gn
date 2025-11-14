@@ -43,6 +43,10 @@ ohos_unittest("fwk_print_service_ability_test") {
   if (print_fwk_feature_enterprise) {
     cflags_cc += [ "-DENTERPRISE_ENABLE" ]
   }
+
+  if (print_fwk_feature_edm_service) {
+    cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
+  }
   
   deps = [
     "${print_path}/etc/init:printservice.rc",

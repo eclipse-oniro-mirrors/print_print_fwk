@@ -16,7 +16,8 @@
       "SystemCapability.Print.PrintFramework"
     ],
     "features": [
-      "print_fwk_feature_enterprise"
+      "print_fwk_feature_enterprise",
+      "print_fwk_feature_edm_service"
     ],
     "adapted_system_type": [
       "standard"

@@ -220,11 +220,12 @@ private:
     Json::Value ConvertModifiedPreferencesToJson(PrinterPreferences &preferences);
     int32_t ConnectUsbPrinter(const std::string &printerId);
     void RefreshPrinterInfoByPpd();
+    void RefreshEprinterErrorCapability();
     void CheckCupsServerAlive();
     void RefreshPrinterPageSize(PrinterInfo &printerInfo);
     int32_t BlockPrintJob(const std::string &jobId);
     void BlockUserPrintJobs(const int32_t userId);
-    bool CheckPrintConstraint();
+    bool CheckPrintConstraint(std::string option, std::string jobId);
     bool IsAppAlive(const std::string &bundleName, int32_t pid);
     void DiscoveryCallerAppsMonitor();
     void StartDiscoveryCallerMonitorThread();
@@ -309,10 +310,8 @@ private:
     bool isLowPowerMode_;
     VendorManager vendorManager;
 
-    std::map<int32_t, std::string> callerMap_;
     std::map<int32_t, std::string> discoveryCallerMap_;
     std::recursive_mutex discoveryMutex_;
-    bool unloadThread = false;
     bool discoveryCallerMonitorThread = false;
 
 #ifdef ENTERPRISE_ENABLE
@@ -326,6 +325,13 @@ public:
     bool IsEnterprise();
     bool RefreshPrinterStatusOnSwitchUser();
 #endif  // ENTERPRISE_ENABLE
+
+#ifdef EDM_SERVICE_ENABLE
+public:
+    int32_t ReportBannedEvent(std::string option);
+    bool IsDisablePrint();
+    void ReportEventAndUpdateJobState(std::string option, std::string jobId);
+#endif // EDM_SERVICE_ENABLE
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_SYSTEM_ABILITY_H

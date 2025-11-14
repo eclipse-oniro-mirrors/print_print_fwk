@@ -2978,27 +2978,81 @@ HWTEST_F(PrintServiceAbilityTest, GetKeyList_ShouldReturnListOfKeys_WhenMultiEle
     EXPECT_EQ(result.size(), 2);  // 2 elements matched
 }
 
+HWTEST_F(PrintServiceAbilityTest, RefreshEprinterErrorCapability_ShouldReturnReplaceColor_WhenEprint, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = EPRINTID;
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    PrinterCapability caps;
+    std::vector<uint32_t> colorList = { 0 };
+    caps.SetSupportedColorMode(colorList);
+    info.SetCapability(caps);
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, info);
+    service->RefreshEprinterErrorCapability();
+    info = *service->printSystemData_.addedPrinterMap_.Find(printerId);
+    info.GetCapability(caps);
+    caps.GetSupportedColorMode(colorList);
+    EXPECT_EQ(colorList.size(), 2);
+}
+
+HWTEST_F(PrintServiceAbilityTest, RefreshEprinterErrorCapability_ShouldReturnNone_WhenNoEprint, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = "123";
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    PrinterCapability caps;
+    std::vector<uint32_t> colorList = { 0 };
+    caps.SetSupportedColorMode(colorList);
+    info.SetCapability(caps);
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, info);
+    service->RefreshEprinterErrorCapability();
+    info = *service->printSystemData_.addedPrinterMap_.Find(printerId);
+    info.GetCapability(caps);
+    caps.GetSupportedColorMode(colorList);
+    EXPECT_EQ(colorList.size(), 1);
+}
+
+HWTEST_F(PrintServiceAbilityTest, RefreshEprinterErrorCapability_ShouldReturnNone_WhenEprintHasColor, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string printerId = EPRINTID;
+    PrinterInfo info;
+    info.SetPrinterId(printerId);
+    PrinterCapability caps;
+    std::vector<uint32_t> colorList = { 0, 1, 2 };
+    caps.SetSupportedColorMode(colorList);
+    info.SetCapability(caps);
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, info);
+    service->RefreshEprinterErrorCapability();
+    info = *service->printSystemData_.addedPrinterMap_.Find(printerId);
+    info.GetCapability(caps);
+    caps.GetSupportedColorMode(colorList);
+    EXPECT_EQ(colorList.size(), 3);
+}
+
 HWTEST_F(PrintServiceAbilityTest, PrinterDisableTest, TestSize.Level1)
 {
-    PrintServiceAbility *printServiceAbility = new PrintServiceAbility(1, false);
-    EXPECT_EQ(printServiceAbility->IsDisablePrint(), false);
-    delete printServiceAbility;
-    printServiceAbility = nullptr;
+#ifdef EDM_SERVICE_ENABLE
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->IsDisablePrint(), false);
+#endif // EDM_SERVICE_ENABLE
 }
 
 HWTEST_F(PrintServiceAbilityTest, ReportBannedEventTest, TestSize.Level1)
 {
-    PrintServiceAbility *printServiceAbility = new PrintServiceAbility(1, false);
+#ifdef EDM_SERVICE_ENABLE
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string emptyString = "";
-    EXPECT_EQ(printServiceAbility->ReportBannedEvent(emptyString), 401);
+    EXPECT_EQ(service->ReportBannedEvent(emptyString), 401);
     std::string jsonString =
             "{\n"
             "    \"key\": \"option\",\n"
             "    \"value\": \"jobName\"\n"
             "}";
-    EXPECT_EQ(printServiceAbility->ReportBannedEvent(jsonString), 0);
-    delete printServiceAbility;
-    printServiceAbility = nullptr;
+    EXPECT_EQ(service->ReportBannedEvent(jsonString), 0);
+#endif // EDM_SERVICE_ENABLE
 }
 
 }  // namespace OHOS::Print

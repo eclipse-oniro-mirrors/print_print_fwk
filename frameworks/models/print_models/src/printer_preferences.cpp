@@ -406,6 +406,40 @@ std::shared_ptr<PrinterPreferences> PrinterPreferences::Unmarshalling(Parcel &pa
 void PrinterPreferences::Dump() const
 {
     if (hasDefaultDuplexMode_) {
+        PRINT_HILOGD("defaultDuplexMode: %{public}d", defaultDuplexMode_);
+    }
+    if (hasDefaultPrintQuality_) {
+        PRINT_HILOGD("defaultPrintQuality: %{public}d", defaultPrintQuality_);
+    }
+    if (hasDefaultMediaType_) {
+        PRINT_HILOGD("defaultMediaType: %{public}s", defaultMediaType_.c_str());
+    }
+    if (hasDefaultPageSizeId_) {
+        PRINT_HILOGD("defaultPageSizeId: %{public}s", defaultPageSizeId_.c_str());
+    }
+    if (hasDefaultOrientation_) {
+        PRINT_HILOGD("defaultOrientation: %{public}d", defaultOrientation_);
+    }
+    if (hasDefaultColorMode_) {
+        PRINT_HILOGD("defaultColorMode: %{public}d", defaultColorMode_);
+    }
+    if (hasBorderless_) {
+        PRINT_HILOGD("borderless: %{public}d", borderless_);
+    }
+    if (hasDefaultCollate_) {
+        PRINT_HILOGD("defaultCollate: %{public}d", defaultCollate_);
+    }
+    if (hasDefaultReverse_) {
+        PRINT_HILOGD("defaultReverse: %{public}d", defaultReverse_);
+    }
+    if (hasOption_) {
+        PRINT_HILOGD("option: %{public}s", option_.c_str());
+    }
+}
+
+void PrinterPreferences::DumpInfo() const
+{
+    if (hasDefaultDuplexMode_) {
         PRINT_HILOGI("defaultDuplexMode: %{public}d", defaultDuplexMode_);
     }
     if (hasDefaultPrintQuality_) {

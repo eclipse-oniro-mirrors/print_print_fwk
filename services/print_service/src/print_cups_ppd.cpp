@@ -108,6 +108,26 @@ void GetAdvanceOptionsFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
     printerCaps.SetPrinterAttrNameAndValue("advanceDefault", PrintJsonUtil::WriteString(advanceDefaultJs).c_str());
 }
 
+void FindDefaultPageSize(_ppd_cache_t *ppdCache, ppd_option_t *sizeOption, PrinterCapability &printerCaps)
+{
+    // find default media size
+    if (sizeOption && sizeOption->defchoice) {
+        pwg_size_t *pwgSize = _ppdCacheGetSize(ppdCache, sizeOption->defchoice);
+        if (pwgSize == nullptr) {
+            PRINT_HILOGE("Failed to get default page size, pwgSize is nullptr.");
+            return;
+        }
+        PRINT_HILOGI("Default page size: %{public}s, defchoice : %{public}s", pwgSize->map.ppd, sizeOption->defchoice);
+        std::string defaultPageSizeId;
+        if (!ConvertPageSizeId(pwgSize->map.pwg, defaultPageSizeId)) {
+            defaultPageSizeId = std::string(pwgSize->map.ppd);
+        }
+        printerCaps.SetPrinterAttrNameAndValue("defaultPageSizeId", defaultPageSizeId.c_str());
+    } else {
+        PRINT_HILOGE("Default page size: None");
+    }
+}
+
 void ParsePageSizeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)
 {
     Json::Value mediaSizeMap;
@@ -148,19 +168,7 @@ void ParsePageSizeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerC
     mediaSizeMap["zh_CN"] = mediaSizeMapCNLanguage;
     printerCaps.SetSupportedPageSize(supportedPageSizes);
     printerCaps.SetPrinterAttrNameAndValue("mediaSizeMap", PrintJsonUtil::WriteString(mediaSizeMap).c_str());
-
-    // find default media size
-    if (sizeOption && sizeOption->defchoice) {
-        pwg_size_t *pwgSize = _ppdCacheGetSize(ppdCache, sizeOption->defchoice);
-        PRINT_HILOGI("Default page size: %{public}s, defchoice : %{public}s", pwgSize->map.ppd, sizeOption->defchoice);
-        std::string defaultPageSizeId;
-        if (!ConvertPageSizeId(pwgSize->map.pwg, defaultPageSizeId)) {
-            defaultPageSizeId = std::string(pwgSize->map.ppd);
-        }
-        printerCaps.SetPrinterAttrNameAndValue("defaultPageSizeId", defaultPageSizeId.c_str());
-    } else {
-        PRINT_HILOGE("Default page size: None");
-    }
+    FindDefaultPageSize(ppdCache, sizeOption, printerCaps);
 }
 
 void ParseDuplexModeAttributesFromPPD(ppd_file_t *ppd, PrinterCapability &printerCaps)

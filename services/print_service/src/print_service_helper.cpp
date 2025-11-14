@@ -166,6 +166,10 @@ bool PrintServiceHelper::DisconnectAbility()
 bool PrintServiceHelper::CheckPluginPrintConnected()
 {
     std::lock_guard<std::mutex> autoLock(connectionListLock_);
+    if (pluginPrintConnectionList_.empty()) {
+        PRINT_HILOGE("get ability connection from queue failed.");
+        return false;
+    }
     auto connection = pluginPrintConnectionList_.front();
     pluginPrintConnectionList_.pop();
     return connection->IsConnected();

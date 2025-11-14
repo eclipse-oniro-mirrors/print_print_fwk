@@ -101,6 +101,10 @@ ohos_fuzztest("PrintServiceAbilityFuzzTest") {
       "time_service:time_client",
     ]
   }
+
+  if (print_fwk_feature_edm_service) {
+    cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
+  }
 }
 
 ###############################################################################

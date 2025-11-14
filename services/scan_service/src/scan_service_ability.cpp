@@ -314,19 +314,9 @@ void ScanServiceAbility::SetScannerSerialNumberByTCP(ScanDeviceInfo &info)
         SCAN_HILOGE("cannot get device's ip");
         return;
     }
-    int32_t count = 0;
-    constexpr int32_t MAX_WAIT_COUNT = 5;
-    constexpr int32_t WAIT_TIME = 1;
-    ScanDeviceInfoTCP netScannerInfo;
-    bool findNetScannerInfoByIp = ScanMdnsService::GetInstance().FindNetScannerInfoByIp(ip, netScannerInfo);
-    do {
-        sleep(WAIT_TIME);
-        SCAN_HILOGW("wait a second");
-        findNetScannerInfoByIp = ScanMdnsService::GetInstance().FindNetScannerInfoByIp(ip, netScannerInfo);
-        count++;
-    } while (!findNetScannerInfoByIp && count < MAX_WAIT_COUNT);
     info.uniqueId = ip;
-    if (findNetScannerInfoByIp) {
+    ScanDeviceInfoTCP netScannerInfo;
+    if (ScanMdnsService::GetInstance().FindNetScannerInfoByIp(ip, netScannerInfo)) {
         info.uuid = netScannerInfo.uuid;
         info.deviceName = netScannerInfo.deviceName;
     } else {
@@ -507,11 +497,6 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
         return E_SCAN_NONE;
     }
     SaneStatus status = SaneManagerClient::GetInstance()->SaneOpen(scannerId);
-    if (status != SANE_STATUS_GOOD) {
-        SCAN_HILOGE("sane_open failed, ret: [%{public}u], retry one times", status);
-        status = SaneManagerClient::GetInstance()->SaneOpen(scannerId);
-    }
-
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneOpen failed, status: [%{public}u]", status);
         return ScanServiceUtils::ConvertErro(status);
@@ -985,11 +970,6 @@ int32_t ScanServiceAbility::AddScanner(const std::string &uniqueId, const std::s
         SCAN_HILOGE("discoverMode is a invalid parameter.");
         return E_SCAN_INVALID_PARAMETER;
     }
-    ScanSystemData &scanData = ScanSystemData::GetInstance();
-    if (scanData.IsContainScanner(discoverMode + uniqueId)) {
-        SCAN_HILOGE("The scanner has already been added");
-        return E_SCAN_NONE;
-    }
     auto addScannerExe = [uniqueId, discoverMode, this]() {
         if (discoverMode == ScannerDiscoveryMode::USB_MODE) {
             AddUsbScanner(uniqueId, discoverMode);
@@ -1017,9 +997,13 @@ void ScanServiceAbility::AddNetScanner(const std::string& uniqueId, const std::s
         SCAN_HILOGE("not found net scanner in map");
         return;
     }
+    if (scanData.IsContainScanner(discoverMode + uniqueId)) {
+        SCAN_HILOGE("The net scanner has already been added");
+        return;
+    }
     scanData.InsertScannerInfo(discoverMode + uniqueId, info);
     if (!scanData.SaveScannerMap()) {
-        SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
+        SCAN_HILOGE("ScanServiceAbility AddNetScanner SaveScannerMap fail");
         return;
     }
     SendDeviceInfo(info, SCAN_DEVICE_ADD);
@@ -1035,9 +1019,13 @@ void ScanServiceAbility::AddUsbScanner(const std::string& uniqueId, const std::s
         SCAN_HILOGE("AddUsbScanner fail, the scanner was not found in the discovery list");
         return;
     }
+    if (scanData.IsContainScanner(discoverMode + uniqueId)) {
+        SCAN_HILOGE("The usb scanner has already been added");
+        return;
+    }
     scanData.InsertScannerInfo(discoverMode + uniqueId, info);
     if (!scanData.SaveScannerMap()) {
-        SCAN_HILOGE("ScanServiceAbility AddScanner SaveScannerMap fail");
+        SCAN_HILOGE("ScanServiceAbility AddUsbScanner SaveScannerMap fail");
         return;
     }
     SendDeviceInfo(info, SCAN_DEVICE_ADD);

@@ -579,7 +579,7 @@ void PrinterInfo::DumpInfo() const
         PRINT_HILOGI("printerMake: %{public}s", printerMake_.c_str());
     }
     if (hasPreferences_) {
-        preferences_.Dump();
+        preferences_.DumpInfo();
     }
 }
 
