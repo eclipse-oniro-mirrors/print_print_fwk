@@ -60,6 +60,7 @@ void PrintUserData::SendPrinterEvent(const std::string &type, int event, const P
 
 void PrintUserData::AddToPrintJobList(const std::string jobId, const std::shared_ptr<PrintJob> &printjob)
 {
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     printJobList_.insert(std::make_pair(jobId, printjob));
 }
 
@@ -88,6 +89,7 @@ void PrintUserData::UpdateQueuedJobList(
 
 int32_t PrintUserData::QueryPrintJobById(const std::string &printJobId, PrintJob &printJob)
 {
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     if (printJobList_.empty()) {
         PRINT_HILOGE("printJobList is empty!");
         return E_PRINT_INVALID_PRINTJOB;
@@ -132,6 +134,7 @@ int32_t PrintUserData::QueryHistoryPrintJobById(const std::string &printJobId, P
 int32_t PrintUserData::QueryAllActivePrintJob(std::vector<PrintJob> &printJobs)
 {
     printJobs.clear();
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     for (auto iter : jobOrderList_) {
         PRINT_HILOGI("QueryAllActivePrintJob queuedJobList_ jobOrderId: %{public}s, jobId: %{public}s",
             iter.first.c_str(),
@@ -155,6 +158,7 @@ int32_t PrintUserData::QueryAllPrintJob(std::vector<std::string> printerIds, std
     PRINT_HILOGI("QueryAllPrintJob Start.");
     printJobs.clear();
     std::vector<std::string> jobIds;
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     for (auto iter : jobOrderList_) {
         auto jobIt = queuedJobList_.find(iter.second);
         if (jobIt == queuedJobList_.end()) {
