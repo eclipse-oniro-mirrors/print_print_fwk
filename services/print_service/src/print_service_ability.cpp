@@ -335,6 +335,13 @@ void PrintServiceAbility::CheckCupsServerAlive()
         std::this_thread::sleep_for(std::chrono::milliseconds(QUERY_CUPS_ALIVE_INTERVAL));
     }
     PRINT_HILOGI("retryCount: %{public}d", retryCount);
+
+    if (DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteExtraJobsFromCups()
+            == E_PRINT_NONE) {
+        PRINT_HILOGI("Delete extra jobs from cups success.");
+    } else {
+        PRINT_HILOGE("Delete extra jobs from cups failed.");
+    }
 #endif
 }
 

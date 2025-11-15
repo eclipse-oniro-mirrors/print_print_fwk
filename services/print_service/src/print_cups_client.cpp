@@ -3132,4 +3132,42 @@ void PrintCupsClient::DumpCupsConflicts(const StdStringMap &mapParams,
     PRINT_HILOGD("%{public}s", strLog.c_str());
 }
 
+int32_t PrintCupsClient::DeleteExtraJobsFromCups()
+{
+    http_t *http = nullptr;
+    ipp_t *request = nullptr;
+    ipp_t *response = nullptr;
+
+    ippSetPort(CUPS_SEVER_PORT);
+    http = httpConnect2(cupsServer(), ippPort(), nullptr, AF_UNSPEC,
+                        HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
+    if (http == nullptr) {
+        PRINT_HILOGE("cups server is not alive");
+        return E_PRINT_SERVER_FAILURE;
+    }
+
+    _cupsSetError(IPP_STATUS_OK, nullptr, 0);
+    request = ippNewRequest(IPP_CANCEL_JOBS);
+    if (request == nullptr) {
+        PRINT_HILOGE("Create IPP request failed");
+        httpClose(http);
+        return E_PRINT_SERVER_FAILURE;
+    }
+
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", nullptr, "ipp://localhost/");
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", nullptr, cupsUser());
+    
+    response = printAbility_->DoRequest(http, request, "/");
+    httpClose(http);
+    http = nullptr;
+
+    if (response == nullptr) {
+        PRINT_HILOGE("Failed to get response from CUPS");
+        return E_PRINT_SERVER_FAILURE;
+    }
+
+    ippDelete(response);
+    return E_PRINT_NONE;
+}
+
 }  // namespace OHOS::Print
