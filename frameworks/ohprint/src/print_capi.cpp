@@ -63,7 +63,7 @@ PrintState::PrintState(Print_OnJobStateChanged callback)
 void PrintState::onJobStateChanged(const std::string &jobId, uint32_t state)
 {
     if (jobStateChangedCb == nullptr) {
-        PRINT_HILOGE("OH_Print job state callback is null.")
+        PRINT_HILOGE("OH_Print job state callback is null.");
         return;
     }
     jobStateChangedCb(jobId.c_str(), state);
@@ -352,12 +352,12 @@ Print_ErrorCode OH_Print_StartPrintJobWithJobStateCallBack(const Print_PrintJob 
 
     PrintState *stateAdapter = new (std::nothrow) PrintState(jobStateChangedCb);
     if (stateAdapter == nullptr) {
-        PRINT_HILOGE("OH_Print start print state adapter is null.")
+        PRINT_HILOGE("OH_Print start print state adapter is null.");
         return PRINT_ERROR_GENERIC_FAILURE;
     }
     OHOS::sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(stateAdapter);
     if (callback == nullptr) {
-        PRINT_HILOGE("OH_Print start print callback is null.")
+        PRINT_HILOGE("OH_Print start print callback is null.");
         delete stateAdapter;
         return PRINT_ERROR_GENERIC_FAILURE;
     }
