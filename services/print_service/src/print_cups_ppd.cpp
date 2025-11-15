@@ -274,7 +274,7 @@ void FindDefaultPageSize(_ppd_cache_t *ppdCache, ppd_option_t *sizeOption, Print
 {
     // find default media size
     if (sizeOption && sizeOption->defchoice) {
-        pwg_size_t *pwgSize = _ppdCacheGetSize(ppdCache, sizeOption->defchoice);
+        pwg_size_t *pwgSize = _ppdCacheGetSize(ppdCache, sizeOption->defchoice, nullptr);
         if (pwgSize == nullptr) {
             PRINT_HILOGE("Failed to get default page size, pwgSize is nullptr.");
             return;
