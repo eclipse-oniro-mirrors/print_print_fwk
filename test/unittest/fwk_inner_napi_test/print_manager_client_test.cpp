@@ -2207,6 +2207,28 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0124_NeedRename, TestSiz
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
+HWTEST_F(PrintManagerClientTest, StartNativePrintJob_LoadServerFail, TestSize.Level1)
+{
+    std::string testPrintJobId = "jobId-123";
+    PrintJob testPrintJob;
+    testPrintJob.SetJobId("jobId-123");
+    sptr<IPrintCallback> testListener;
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, StartNativePrintJob_LoadServerSuccess, TestSize.Level1)
+{
+    std::string testPrintJobId = "jobId-123";
+    PrintJob testPrintJob;
+    testPrintJob.SetJobId("jobId-123");
+    sptr<IPrintCallback> testListener;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0125_NeedRename, TestSize.Level1)
 {
     std::string printJobName = "jobName-123";

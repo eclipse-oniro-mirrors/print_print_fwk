@@ -1142,7 +1142,12 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
         PRINT_HILOGW("cannot update printer name/uri");
         return E_PRINT_INVALID_PRINTER;
     }
-    std::string jobId = PrintUtils::GetPrintJobId();
+    std::string jobId = printJob.GetJobId();
+    if (!jobId.empty()) {
+        RegisterAdapterListener(jobId);
+    } else {
+        jobId = PrintUtils::GetPrintJobId();
+    }
     auto nativePrintJob = AddNativePrintJob(jobId, printJob);
     if (nativePrintJob == nullptr) {
         return E_PRINT_SERVER_FAILURE;
