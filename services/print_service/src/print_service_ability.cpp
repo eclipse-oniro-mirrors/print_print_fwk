@@ -3879,6 +3879,11 @@ bool PrintServiceAbility::OnVendorStatusUpdate(
         PRINT_HILOGD("cannot find added printer info");
         return false;
     }
+    bool isIppPrinter = strstr(printerInfo.GetUri().c_str(), "ipp") != nullptr;
+    if (!isIppPrinter && static_cast<PrinterStatus>(status.state) == PRINTER_UNAVAILABLE) {
+        PRINT_HILOGD("Non-ipp printer, state query may not be supported. Ignore state of shutdown.");
+        return true;
+    }
     printerInfo.SetPrinterStatus(static_cast<uint32_t>(status.state));
     SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
     SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
