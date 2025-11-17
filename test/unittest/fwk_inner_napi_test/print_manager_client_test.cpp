@@ -2825,5 +2825,25 @@ HWTEST_F(PrintManagerClientTest, ConnectPrinterByIdAndPpd_GetPrintServiceProxyFa
     int32_t ret = PrintManagerClient::GetInstance()->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
+
+HWTEST_F(PrintManagerClientTest, CheckPreferencesConflictsTest, TestSize.Level1)
+{
+    std::string printerId = "test";
+    PrinterPreferences printerPreference;
+    std::vector<std::string> conflictingOptions;
+    int32_t ret = PrintManagerClient::GetInstance()->CheckPreferencesConflicts(
+        printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, CheckPrintJobConflictsTest, TestSize.Level1)
+{
+    PrintJob printerJob;
+    std::vector<std::string> conflictingOptions;
+    int32_t ret = PrintManagerClient::GetInstance()->CheckPrintJobConflicts(
+        PRINT_PARAM_TYPE_PAGE_SIZE, printerJob, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
 }  // namespace Print
 }  // namespace OHOS

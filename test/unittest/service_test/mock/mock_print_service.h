@@ -301,6 +301,10 @@ public:
     MOCK_METHOD1(QueryPrinterInfoByIp, int32_t(const std::string &));
     MOCK_METHOD3(ConnectPrinterByIpAndPpd, int32_t(const std::string &, const std::string &, const std::string &));
     MOCK_METHOD2(SavePdfFileJob, int32_t(const std::string &, uint32_t));
+    MOCK_METHOD4(CheckPreferencesConflicts, int32_t(const std::string &printerId, const std::string &changedType,
+        const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions));
+    MOCK_METHOD3(CheckPrintJobConflicts, int32_t(const std::string &changedType,
+        const PrintJob &printJob, std::vector<std::string> &conflictingOptions));
 };
 }  // namespace Print
 }  // namespace OHOS

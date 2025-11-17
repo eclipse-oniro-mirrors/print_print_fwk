@@ -4709,4 +4709,65 @@ int32_t PrintServiceAbility::ConnectPrinterByIdAndPpd(const std::string &printer
     }
     return E_PRINT_NONE;
 }
+
+int32_t PrintServiceAbility::CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
+    const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions)
+{
+    PRINT_HILOGD("PrintServiceAbility CheckPreferencesConflicts in.");
+
+#ifdef CUPS_ENABLE
+    std::string ppdName;
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    int32_t ret = GetPpdNameByPrinterId(printerId, ppdName);
+    if (ret != E_PRINT_NONE) {
+        return ret;
+    }
+
+    return DelayedSingleton<PrintCupsClient>::GetInstance()->
+        CheckPreferencesConflicts(ppdName, printerPreference, changedType, conflictingOptions);
+#else
+    return E_PRINT_NONE;
+#endif
+}
+
+int32_t PrintServiceAbility::CheckPrintJobConflicts(const std::string &changedType,
+    const PrintJob &printJob, std::vector<std::string> &conflictingOptions)
+{
+    PRINT_HILOGD("PrintServiceAbility CheckPrintJobConflicts in.");
+
+#ifdef CUPS_ENABLE
+    std::string ppdName;
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    int32_t ret = GetPpdNameByPrinterId(printJob.GetPrinterId(), ppdName);
+    if (ret != E_PRINT_NONE) {
+        return ret;
+    }
+
+    PrintJob dupJob(printJob);
+    UpdatePrintJobOptionByPrinterId(dupJob);
+
+    return DelayedSingleton<PrintCupsClient>::GetInstance()->
+        CheckPrintJobConflicts(ppdName, dupJob, changedType, conflictingOptions);
+#else
+    return E_PRINT_NONE;
+#endif
+}
+
+int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName)
+{
+    PrinterInfo printerInfo;
+    int ret = QueryPrinterInfoByPrinterId(printerId, printerInfo);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("QueryPrinterInfo failed! Id=%{public}s", printerId.c_str());
+        return ret;
+    }
+
+    if (!QueryPPDInformation(printerInfo.GetPrinterMake(), ppdName)) {
+        PRINT_HILOGE("Query printer ppd info failed! Id=%{public}s", printerId.c_str());
+        return E_PRINT_INVALID_PRINTER;
+    }
+
+    return E_PRINT_NONE;
+}
+
 }  // namespace OHOS::Print

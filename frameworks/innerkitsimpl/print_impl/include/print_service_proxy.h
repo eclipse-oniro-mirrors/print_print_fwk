@@ -92,6 +92,10 @@ public:
     int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds) override;
     int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
         const std::string &ppdName) override;
+    int32_t CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
+        const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) override;
+    int32_t CheckPrintJobConflicts(const std::string &changedType,
+        const PrintJob &printJob, std::vector<std::string> &conflictingOptions) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);

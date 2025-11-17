@@ -130,6 +130,10 @@ public:
     int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds);
     int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
         const std::string &ppdName);
+    int32_t CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
+        const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions);
+    int32_t CheckPrintJobConflicts(const std::string &changedType,
+        const PrintJob &printJob, std::vector<std::string> &conflictingOptions);
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);

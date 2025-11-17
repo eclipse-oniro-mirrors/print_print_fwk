@@ -1009,5 +1009,117 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_AddRawPrinter_Success, Tes
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
+/**
++ * @tc.name: CheckPreferencesConflictsTest
++ * @tc.desc: Verify the CheckPreferencesConflicts function.
++ * @tc.type: FUNC
++ * @tc.require:
++ */
+HWTEST_F(PrintServiceProxyTest, CheckPreferencesConflictsTest, TestSize.Level1)
+{
+    std::string testPrinterId = "111";
+    std::string testChangedType = PRINT_PARAM_TYPE_PAGE_SIZE;
+    OHOS::Print::PrinterPreferences testPreferences;
+    testPreferences.SetDefaultDuplexMode(0);
+    testPreferences.SetDefaultPrintQuality(4);
+    testPreferences.SetDefaultMediaType("stationery");
+    testPreferences.SetDefaultPageSizeId(PAGE_SIZE_ID_ISO_A4);
+    testPreferences.SetDefaultOrientation(0);
+    testPreferences.SetBorderless(true);
+    testPreferences.SetDefaultColorMode(0);
+    testPreferences.SetDefaultCollate(true);
+    testPreferences.SetDefaultReverse(true);
+    testPreferences.SetOption("test");
+    std::vector<std::string> testConflictingOptions;
+
+    auto proxy = std::make_shared<PrintServiceProxy>(nullptr);
+    ASSERT_NE(proxy, nullptr);
+    int32_t ret = proxy->CheckPreferencesConflicts(
+        testPrinterId, testChangedType, testPreferences, testConflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    proxy.reset();
+
+    sptr<MockRemoteObject> obj = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(obj, nullptr);
+    proxy = std::make_shared<PrintServiceProxy>(obj);
+    ASSERT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    ASSERT_NE(service, nullptr);
+    EXPECT_CALL(*service, CheckPreferencesConflicts(_, _, _, _))
+        .Times(Exactly(1))
+        .WillOnce([&testPrinterId, &testChangedType, &testPreferences]
+                (const std::string &printerId, const std::string &changedType,
+                const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) {
+            EXPECT_EQ(testPrinterId, printerId);
+            EXPECT_EQ(testChangedType, changedType);
+            conflictingOptions.emplace_back(PRINT_PARAM_TYPE_PAGE_SIZE);
+            return E_PRINT_NONE;
+    });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _))
+        .WillOnce(Return(ERR_TRANSACTION_FAILED))
+        .WillOnce([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    ret = proxy->CheckPreferencesConflicts(testPrinterId, testChangedType, testPreferences, testConflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+
+    ret = proxy->CheckPreferencesConflicts(testPrinterId, testChangedType, testPreferences, testConflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    ASSERT_FALSE(testConflictingOptions.empty());
+    EXPECT_EQ(testConflictingOptions.front(), PRINT_PARAM_TYPE_PAGE_SIZE);
+}
+
+/**
+ * @tc.name: CheckPrintJobConflictsTest
+ * @tc.desc: Verify the CheckPrintJobConflicts function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, CheckPrintJobConflictsTest, TestSize.Level1)
+{
+    std::string testChangedType = PRINT_PARAM_TYPE_PAGE_SIZE;
+    PrintJob testPrintJob;
+    std::vector<std::string> testConflictingOptions;
+
+    auto proxy = std::make_shared<PrintServiceProxy>(nullptr);
+    ASSERT_NE(proxy, nullptr);
+    int32_t ret = proxy->CheckPrintJobConflicts(testChangedType, testPrintJob, testConflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    proxy.reset();
+
+    sptr<MockRemoteObject> obj = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(obj, nullptr);
+    proxy = std::make_shared<PrintServiceProxy>(obj);
+    ASSERT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    ASSERT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, CheckPrintJobConflicts(_, _, _))
+        .Times(Exactly(1))
+        .WillOnce([&testChangedType, &testPrintJob]
+            (const std::string &changedType, const PrintJob &printJob, std::vector<std::string> &conflictingOptions) {
+            EXPECT_EQ(testChangedType, changedType);
+            conflictingOptions.emplace_back(PRINT_PARAM_TYPE_PAGE_SIZE);
+            return E_PRINT_NONE;
+    });
+
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _))
+        .WillOnce(Return(ERR_TRANSACTION_FAILED))
+        .WillOnce([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    ret = proxy->CheckPrintJobConflicts(testChangedType, testPrintJob, testConflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+
+    ret = proxy->CheckPrintJobConflicts(testChangedType, testPrintJob, testConflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    ASSERT_FALSE(testConflictingOptions.empty());
+    EXPECT_EQ(testConflictingOptions.front(), PRINT_PARAM_TYPE_PAGE_SIZE);
+}
+
 }  // namespace Print
 }  // namespace OHOS

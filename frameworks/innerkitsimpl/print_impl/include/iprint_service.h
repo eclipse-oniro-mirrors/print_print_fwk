@@ -99,6 +99,10 @@ public:
     virtual int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds) = 0;
     virtual int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
         const std::string &ppdName) = 0;
+    virtual int32_t CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
+        const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) = 0;
+    virtual int32_t CheckPrintJobConflicts(const std::string &changedType,
+        const PrintJob &printJob, std::vector<std::string> &conflictingOptions) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

@@ -1417,4 +1417,68 @@ int32_t PrintServiceProxy::ConnectPrinterByIdAndPpd(const std::string &printerId
     PRINT_HILOGI("PrintServiceProxy ConnectPrinterByIdAndPpd out. ret = [%{public}d]", ret);
     return ret;
 }
+
+int32_t PrintServiceProxy::CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
+    const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions)
+{
+    PRINT_HILOGI("PrintServiceProxy CheckPreferencesConflicts started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(printerId);
+    data.WriteString(changedType);
+    printerPreference.Marshalling(data);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy CheckPreferencesConflicts remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_CHECKPREFERENCESCONFLICTS,
+        data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("CheckPreferencesConflicts failed, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+    ret = reply.ReadInt32();
+    reply.ReadStringVector(&conflictingOptions);
+    PRINT_HILOGD("CheckPreferencesConflicts conflictingOptions ret:%{public}d size:%{public}zu",
+        ret, conflictingOptions.size());
+    return ret;
+}
+
+int32_t PrintServiceProxy::CheckPrintJobConflicts(const std::string &changedType,
+    const PrintJob &printJob, std::vector<std::string> &conflictingOptions)
+{
+    PRINT_HILOGI("PrintServiceProxy CheckPrintJobConflicts started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(changedType);
+    printJob.Marshalling(data);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy CheckPrintJobConflicts remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_CHECKPRINTJOBCONFLICTS,
+        data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("CheckPrintJobConflicts failed, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    ret = reply.ReadInt32();
+    reply.ReadStringVector(&conflictingOptions);
+    PRINT_HILOGD("CheckPrintJobConflicts conflictingOptions ret:%{public}d size:%{public}zu",
+        ret, conflictingOptions.size());
+    return ret;
+}
+
 } // namespace OHOS::Print

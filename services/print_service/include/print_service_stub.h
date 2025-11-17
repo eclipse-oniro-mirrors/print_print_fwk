@@ -88,6 +88,8 @@ private:
     bool OnSavePdfFileJob(MessageParcel &data, MessageParcel &reply);
     bool OnQueryRecommendDriversById(MessageParcel &data, MessageParcel &reply);
     bool OnConnectPrinterByIdAndPpd(MessageParcel &data, MessageParcel &reply);
+    bool OnCheckPreferencesConflicts(MessageParcel &data, MessageParcel &reply);
+    bool OnCheckPrintJobConflicts(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

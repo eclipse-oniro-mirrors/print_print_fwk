@@ -66,6 +66,9 @@ public:
     static napi_value QueryRecommendDriversById(napi_env env, napi_callback_info info);
     static napi_value ConnectPrinterByIdAndPpd(napi_env env, napi_callback_info info);
     
+    static napi_value CheckPreferencesConflicts(napi_env env, napi_callback_info info);
+    static napi_value CheckPrintJobConflicts(napi_env env, napi_callback_info info);
+
 private:
     static bool IsSupportType(const std::string& type);
     static bool IsValidApplicationEvent(uint32_t event);
@@ -99,6 +102,8 @@ private:
         std::string userName = "";
         char *userPasswd = nullptr;
         std::vector<PpdInfo> allPpdInfos;
+        std::string changedType = "";
+        std::vector<std::string> conflictingOptions;
 
         InnerPrintContext() : Context(nullptr, nullptr) {};
         InnerPrintContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
