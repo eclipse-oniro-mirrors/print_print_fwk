@@ -498,6 +498,10 @@ int32_t ScanServiceAbility::OpenScanner(const std::string scannerId)
     }
     SaneStatus status = SaneManagerClient::GetInstance()->SaneOpen(scannerId);
     if (status != SANE_STATUS_GOOD) {
+        SCAN_HILOGE("sane_open failed, ret: [%{public}u], retry one times", status);
+        status = SaneManagerClient::GetInstance()->SaneOpen(scannerId);
+    }
+    if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneOpen failed, status: [%{public}u]", status);
         return ScanServiceUtils::ConvertErro(status);
     }
