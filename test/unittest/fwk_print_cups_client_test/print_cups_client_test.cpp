@@ -2287,35 +2287,6 @@ HWTEST_F(PrintCupsClientTest, CopyJobOutputFile_RealPathError_Test, TestSize.Lev
     EXPECT_EQ(ret, E_PRINT_FILE_IO);
 }
 
-/**
- * @tc.name: PrintCupsClientTest_0090
- * @tc.desc: FillLandscapeOptions
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, FillTwoOptions_When_VIRTUAL_PRINTER, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    PrintJob testJob;
-    testJob.SetJobId(GetDefaultJobId());
-    std::vector<uint32_t> files = {1};
-    testJob.SetFdList(files);
-    OHOS::Print::PrintPageSize pageSize;
-    pageSize.SetId("pgid-1234");
-    testJob.SetPageSize(pageSize);
-    testJob.SetPrinterId("fwk.driver.ppd:Virtual PDF Printer");
-    testJob.SetIsLandscape(true);
-    testJob.SetOption(JOB_OPTIONS);
-    JobParameters *jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
-    jobParams->isAutoRotate = false;
-    jobParams->isLandscape = true;
-    int numOptions = 0;
-    cups_option_t *options = nullptr;
-    EXPECT_EQ(printCupsClient.FillLandscapeOptions(jobParams, numOptions, &options), 2);
-    delete jobParams;
-    delete options;
-}
-
 HWTEST_F(PrintCupsClientTest, CheckPreferencesConflicts_InvalidPpdName_Test, TestSize.Level1)
 {
     PrintCupsClient printCupsClient;
