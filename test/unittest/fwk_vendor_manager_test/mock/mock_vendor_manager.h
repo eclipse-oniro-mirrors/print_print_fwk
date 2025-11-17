@@ -45,6 +45,7 @@ public:
     MOCK_METHOD2(SetQueryPrinter, void(ConnectMethod, const std::string &));
     MOCK_METHOD1(OnQueryCallBackEvent, bool(const PrinterInfo &));
     MOCK_METHOD3(ConnectPrinterByIpAndPpd, bool(const std::string &, const std::string &, const std::string &));
+    MOCK_METHOD3(ConnectPrinterByIdAndPpd, bool(const std::string &, const std::string &, const std::string &));
     MOCK_METHOD2(QueryPrinterStatusByUri, bool(const std::string &, PrinterStatus &));
     MOCK_METHOD2(
         QueryDiscoveredPrinterInfoById, std::shared_ptr<PrinterInfo>(const std::string &, const std::string &));

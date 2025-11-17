@@ -86,6 +86,8 @@ private:
     bool OnQueryPrinterInfoByIp(MessageParcel &data, MessageParcel &reply);
     bool OnConnectPrinterByIpAndPpd(MessageParcel &data, MessageParcel &reply);
     bool OnSavePdfFileJob(MessageParcel &data, MessageParcel &reply);
+    bool OnQueryRecommendDriversById(MessageParcel &data, MessageParcel &reply);
+    bool OnConnectPrinterByIdAndPpd(MessageParcel &data, MessageParcel &reply);
     bool OnCheckPreferencesConflicts(MessageParcel &data, MessageParcel &reply);
     bool OnCheckPrintJobConflicts(MessageParcel &data, MessageParcel &reply);
 

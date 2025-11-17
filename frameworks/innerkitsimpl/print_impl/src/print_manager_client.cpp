@@ -1088,4 +1088,27 @@ int32_t PrintManagerClient::SavePdfFileJob(const std::string &jobId, uint32_t fd
     }
     return ret;
 }
+
+int32_t PrintManagerClient::QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->QueryRecommendDriversById(printerId, ppds);
+        PRINT_HILOGD("PrintManagerClient QueryRecommendDriversById out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
+    const std::string &ppdName)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
+        PRINT_HILOGD("PrintManagerClient ConnectPrinterByIdAndPpd out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
 } // namespace OHOS::Print

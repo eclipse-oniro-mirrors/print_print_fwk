@@ -63,6 +63,9 @@ public:
     static napi_value QueryPrinterInfoByIp(napi_env env, napi_callback_info info);
     static napi_value ConnectPrinterByIpAndPpd(napi_env env, napi_callback_info info);
     static napi_value SavePdfFileJob(napi_env env, napi_callback_info info);
+    static napi_value QueryRecommendDriversById(napi_env env, napi_callback_info info);
+    static napi_value ConnectPrinterByIdAndPpd(napi_env env, napi_callback_info info);
+    
     static napi_value CheckPreferencesConflicts(napi_env env, napi_callback_info info);
     static napi_value CheckPrintJobConflicts(napi_env env, napi_callback_info info);
 

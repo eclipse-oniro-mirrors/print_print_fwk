@@ -134,6 +134,11 @@ public:
     int32_t ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
         const std::string &ppdName);
     int32_t SavePdfFileJob(const std::string &jobId, uint32_t fd);
+    int32_t QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds);
+    int32_t ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
+        const std::string &ppdName);
+    int32_t ReportBannedEvent(std::string option);
+    bool IsDisablePrint();
 
 protected:
     void OnStart() override;
@@ -271,6 +276,7 @@ private:
         std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData);
     void OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName);
     bool DeletePrintJobFromHistoryList(const std::string jobId);
+    void QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds);
     int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
 
 private:

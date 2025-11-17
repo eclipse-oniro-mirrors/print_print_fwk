@@ -106,6 +106,8 @@ public:
         PrinterInfo &info) override;
     std::vector<std::string> QueryAddedPrintersByIp(const std::string &printerIp) override;
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) override;
+    bool ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
+        const std::string &ppdName) override;
     std::shared_ptr<VendorDriverBase> FindDriverByPrinterId(const std::string &globalPrinterId);
     std::shared_ptr<VendorDriverBase> FindDriverByVendorName(const std::string &vendorName);
     int32_t DiscoverBackendPrinters(const std::string &vendorName, std::vector<PrinterInfo> &printers) override;

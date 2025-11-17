@@ -516,5 +516,20 @@ HWTEST_F(VendorWlanGroupTest, QueryPrinterSetTest, TestSize.Level1)
     vendorWlanGroup->SetQueryPrinter(method, testIp);
     EXPECT_FALSE(vendorWlanGroup->IsQueryingPrinter(testIp, uri));
 }
+
+HWTEST_F(VendorWlanGroupTest, ConnectPrinterByIdAndPpdTest, TestSize.Level1)
+{
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    std::string printerId = "testId";
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+    EXPECT_FALSE(vendorWlanGroup->ConnectPrinterByIdAndPpd(printerId, VENDOR_BSUNI_DRIVER));
+    EXPECT_FALSE(vendorWlanGroup->ConnectPrinterByIdAndPpd(printerId, DEFAULT_PPD_NAME));
+    EXPECT_FALSE(vendorWlanGroup->ConnectPrinterByIdAndPpd(printerId, "auto"));
+    EXPECT_FALSE(vendorWlanGroup->ConnectPrinterByIdAndPpd(printerId, "test.ppd"));
+    vendorWlanGroup->parentVendorManager = nullptr;
+    EXPECT_FALSE(vendorWlanGroup->ConnectPrinterByIdAndPpd(printerId, DEFAULT_PPD_NAME));
+}
 }  // namespace Print
 }  // namespace OHOS

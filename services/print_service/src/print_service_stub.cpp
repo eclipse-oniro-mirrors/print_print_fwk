@@ -96,6 +96,10 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIPANDPPD] =
         &PrintServiceStub::OnConnectPrinterByIpAndPpd;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_SAVEPDFFILEJOB] = &PrintServiceStub::OnSavePdfFileJob;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYRECOMMENDDRVIERSBYID] =
+        &PrintServiceStub::OnQueryRecommendDriversById;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIDANDPPD] =
+        &PrintServiceStub::OnConnectPrinterByIdAndPpd;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CHECKPREFERENCESCONFLICTS] =
         &PrintServiceStub::OnCheckPreferencesConflicts;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CHECKPRINTJOBCONFLICTS] = &PrintServiceStub::OnCheckPrintJobConflicts;
@@ -985,6 +989,39 @@ bool PrintServiceStub::OnSavePdfFileJob(MessageParcel &data, MessageParcel &repl
     }
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnSavePdfFileJob out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnQueryRecommendDriversById(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnQueryRecommendDriversById in");
+    std::string printerId = data.ReadString();
+    std::vector<PpdInfo> ppdInfos;
+    int32_t ret = QueryRecommendDriversById(printerId, ppdInfos);
+    reply.WriteInt32(ret);
+    if (ret == E_PRINT_NONE) {
+        uint32_t size = static_cast<uint32_t>(ppdInfos.size());
+        reply.WriteUint32(size);
+        for (uint32_t index = 0; index < size; ++index) {
+            if (!ppdInfos[index].Marshalling(reply)) {
+                PRINT_HILOGW("Marshalling ppd: %{public}s failed", ppdInfos[index].GetPpdName().c_str());
+                return false;
+            }
+        }
+    }
+    PRINT_HILOGI("PrintServiceStub::OnQueryRecommendDriversById out");
+    return ret == E_PRINT_NONE;
+}
+ 
+bool PrintServiceStub::OnConnectPrinterByIdAndPpd(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnConnectPrinterByIdAndPpd in");
+    std::string printerId = data.ReadString();
+    std::string protocol = data.ReadString();
+    std::string ppdName = data.ReadString();
+    int32_t ret = ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
+    reply.WriteInt32(ret);
+    PRINT_HILOGI("PrintServiceStub::OnConnectPrinterByIdAndPpd out");
     return ret == E_PRINT_NONE;
 }
 

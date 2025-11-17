@@ -40,6 +40,7 @@ public:
     MOCK_METHOD2(IsQueryingPrinter, bool(const std::string &, const std::string &));
     MOCK_METHOD2(SetQueryPrinter, void(ConnectMethod, const std::string &));
     MOCK_METHOD3(ConnectPrinterByIpAndPpd, bool(const std::string &, const std::string &, const std::string &));
+    MOCK_METHOD2(ConnectPrinterByIdAndPpd, bool(const std::string &, const std::string &));
     MOCK_METHOD4(
         OnPrinterPpdQueried, bool(const std::string &, const std::string &, const std::string &, const std::string &));
     MOCK_METHOD1(MonitorPrinterStatus, bool(const std::string &, bool));
