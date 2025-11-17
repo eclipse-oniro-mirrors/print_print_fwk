@@ -95,6 +95,11 @@ void StsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
 
 void StsPrintExtension::ResetEnv(ani_env* env)
 {
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
+        return;
+    }
+    
     env->DescribeError();
     env->ResetError();
 }
