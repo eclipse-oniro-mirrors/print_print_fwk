@@ -140,6 +140,8 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0004, TestSize.Level2)
     EXPECT_CALL(*mock, QueryPrinterCapabilityByUri(_, _)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, QueryPrinterStatusByUri(_, _)).WillRepeatedly(Return(true));
     EXPECT_TRUE(vendorManager.ConnectPrinterByIp(PRINTER_TEST_IP, "ipp"));
+    EXPECT_FALSE(vendorManager.ConnectPrinterByIdAndPpd(PRINTER_TEST_IP, "auto", "auto"));
+    EXPECT_FALSE(vendorManager.ConnectPrinterByIdAndPpd(globalPrinterId, "auto", "auto"));
     EXPECT_TRUE(vendorManager.QueryPrinterInfo(globalPrinterId, 0));
     vendorManager.UpdateAllPrinterStatus();
     vendorManager.MonitorPrinterStatus(globalPrinterId, false);
