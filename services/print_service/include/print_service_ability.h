@@ -139,6 +139,7 @@ public:
         const std::string &ppdName);
     int32_t ReportBannedEvent(std::string option);
     bool IsDisablePrint();
+    std::string getScheme(std::string &printerUri);
 
 protected:
     void OnStart() override;

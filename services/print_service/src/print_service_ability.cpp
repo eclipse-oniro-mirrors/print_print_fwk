@@ -527,7 +527,7 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
     vendorManager.SetConnectingPrinter(ID_AUTO, printerId);
     std::string extensionId = PrintUtils::GetExtensionId(printerId);
     if (!vendorManager.ExtractVendorName(extensionId).empty()) {
-        if (!vendorManager.ConnectPrinter(printerId)) {
+        if (!vendorManager.ConnectPrinterByIdAndPpd(printerId, "auto", "auto")) {
             PRINT_HILOGE("Vendor not found");
             return E_PRINT_SERVER_FAILURE;
         }
@@ -1632,9 +1632,17 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
 {
     PrinterInfo addedPrinter;
     if (printSystemData_.QueryAddedPrinterInfoByPrinterId(info->GetPrinterId(), addedPrinter)) {
-        std::string printerUri = info->GetUri();
-        if (!printerUri.empty() && printerUri != addedPrinter.GetUri()) {
-            PRINT_HILOGI("[Printer: %{public}s] CheckPrinterUriDifferent success", info->GetPrinterName().c_str());
+        std::string oldUri = addedPrinter.GetUri();
+        std::string protocol = getScheme(oldUri);
+        std::string printerUri = GetConnectUri(*info, protocol);
+        if (!printerUri.empty()) {
+            info->SetUri(printerUri);
+            if (printerUri != addedPrinter.GetUri()) {
+                PRINT_HILOGI("[Printer: %{public}s] CheckPrinterUriDifferent success", info->GetPrinterName().c_str());
+                return true;
+            }
+        } else {
+            PRINT_HILOGW("Protocol %{pubilc}s Closed!", protocol.c_str());
             return true;
         }
     }
@@ -4775,6 +4783,20 @@ int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId,
     }
 
     return E_PRINT_NONE;
+}
+
+std::string PrintServiceAbility::getScheme(std::string &printerUri)
+{
+    char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
+    char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
+    char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
+    char resource[HTTP_MAX_URI] = {0}; /* Resource portion of URI */
+    int port = 0; /* Port portion of URI */
+    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
+        host, sizeof(host), &port, resource, sizeof(resource));
+    std::string infoScheme;
+    infoScheme.assign(scheme);
+    return infoScheme;
 }
 
 }  // namespace OHOS::Print

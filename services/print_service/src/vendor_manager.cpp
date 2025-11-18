@@ -167,23 +167,6 @@ bool VendorManager::UnloadVendorDriver(const std::string &vendorName)
     return true;
 }
 
-bool VendorManager::ConnectPrinter(const std::string &globalPrinterId)
-{
-    PRINT_HILOGI("ConnectPrinter enter");
-    std::string printerId = ExtractPrinterId(globalPrinterId);
-    if (printerId.empty()) {
-        PRINT_HILOGW("empty printer id");
-        return false;
-    }
-    auto vendorDriver = FindDriverByPrinterId(globalPrinterId);
-    if (vendorDriver == nullptr) {
-        PRINT_HILOGW("vendorDriver is null");
-        return false;
-    }
-    PRINT_HILOGI("[Printer: %{public}s] OnQueryCapability", PrintUtils::AnonymizePrinterId(printerId).c_str());
-    return vendorDriver->OnQueryCapability(printerId, 0);
-}
-
 bool VendorManager::ConnectPrinterByIp(const std::string &printerIp, const std::string &protocol)
 {
     PRINT_HILOGI("ConnectPrinterByIp enter");

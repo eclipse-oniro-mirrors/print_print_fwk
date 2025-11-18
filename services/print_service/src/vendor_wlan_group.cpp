@@ -40,35 +40,12 @@ bool VendorWlanGroup::OnQueryCapability(const std::string &printerId, int timeou
         PRINT_HILOGE("VendorManager is null.");
         return false;
     }
-    printerVendorGroupList_[printerId] = VENDOR_PPD_DRIVER;
-    auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
-    PRINT_HILOGE("on query capability, printer name: %{public}s", printerInfo->GetPrinterName().c_str());
-    if (printerInfo != nullptr && TryConnectByPpdDriver(*printerInfo)) {
-        PRINT_HILOGI("Connect by ppdDriver success.");
+    if (ConnectByPpdDriver(printerId)) {
         return true;
-    }
-    RemoveGroupPrinterFromVendorGroupList(printerId);
-
-    if (IsBsunidriverSupport(printerId)) {
-        printerVendorGroupList_[printerId] = VENDOR_BSUNI_DRIVER;
-        auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
-        auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
-        if (bsuniDriver != nullptr && printerInfo != nullptr &&
-            bsuniDriver->OnQueryCapability(ExtractPrinterIdByPrinterInfo(*printerInfo), timeout)) {
-            PRINT_HILOGI("on query capability on bsuni vendor seccess.");
-            return true;
-        }
-        RemoveGroupPrinterFromVendorGroupList(printerId);
-    } else {
-        printerVendorGroupList_[printerId] = VENDOR_IPP_EVERYWHERE;
-        auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
-        if (ippEverywhereDriver != nullptr && ippEverywhereDriver->OnQueryCapability(printerId, 0)) {
-            PRINT_HILOGI("on query capability on ipp everywhere success.");
-            return true;
-        }
-        parentVendorManager->AddPrintEvent(GetVendorName(), printerId, CONNECT_PRINT_EVENT_TYPE,
-            CONNECT_PRINT_EVENT_IPP_UNAVAILABLE);
-        RemoveGroupPrinterFromVendorGroupList(printerId);
+    } else if (IsBsunidriverSupport(printerId) && ConnectByBsuni(printerId)) {
+        return true;
+    } else if (ConnectByIppEverywhere(printerId)) {
+        return true;
     }
     PRINT_HILOGE("no vendor can query capability.");
     return false;
@@ -81,20 +58,11 @@ bool VendorWlanGroup::OnQueryCapabilityByIp(const std::string &printerIp, const 
         PRINT_HILOGE("VendorManager is null.");
         return false;
     }
-    auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
-    printerVendorGroupList_[printerIp] = VENDOR_BSUNI_DRIVER;
-    if (bsuniDriver != nullptr && bsuniDriver->OnQueryCapabilityByIp(printerIp, protocol)) {
-        PRINT_HILOGI("on query capability by ip on bsuni vendor seccess.");
+    if (ConnectByBsuni(printerIp, protocol)) {
+        return true;
+    } else if (ConnectByIppEverywhere(printerIp, protocol)) {
         return true;
     }
-    RemoveGroupPrinterFromVendorGroupList(printerIp);
-    printerVendorGroupList_[printerIp] = VENDOR_IPP_EVERYWHERE;
-    auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
-    if (ippEverywhereDriver != nullptr && ippEverywhereDriver->OnQueryCapabilityByIp(printerIp, protocol)) {
-        PRINT_HILOGI("on query capability by ip on ipp everywhere seccess.");
-        return true;
-    }
-    RemoveGroupPrinterFromVendorGroupList(printerIp);
     PRINT_HILOGE("no vendor can query capability by ip.");
     return false;
 }
@@ -203,21 +171,10 @@ bool VendorWlanGroup::ConnectPrinterByIpAndPpd(const std::string &printerIp, con
     }
     if (ppdName == DEFAULT_PPD_NAME) {
         PRINT_HILOGI("Select IPP EveryWhere");
-        printerVendorGroupList_[printerIp] = VENDOR_IPP_EVERYWHERE;
-        auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
-        if (ippEverywhereDriver != nullptr && ippEverywhereDriver->OnQueryCapabilityByIp(printerIp, protocol)) {
-            PRINT_HILOGI("on query capability by ip on ipp everywhere success");
-            return true;
-        }
-        RemoveGroupPrinterFromVendorGroupList(printerIp);
+        return ConnectByIppEverywhere(printerIp, protocol);
     } else {
-        printerVendorGroupList_[printerIp] = VENDOR_BSUNI_DRIVER;
-        auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
-        if (bsuniDriver != nullptr && bsuniDriver->OnQueryCapabilityByIp(printerIp, protocol)) {
-            PRINT_HILOGI("on query capability by ip on bsuni vendor success");
-            return true;
-        }
-        RemoveGroupPrinterFromVendorGroupList(printerIp);
+        PRINT_HILOGI("Querying On Bsuni Driver");
+        return ConnectByBsuni(printerIp, protocol);
     }
     PRINT_HILOGE("no vendor can query capability by ip");
     return false;
@@ -575,37 +532,83 @@ bool VendorWlanGroup::ConnectPrinterByIdAndPpd(const std::string &printerId, con
         PRINT_HILOGE("VendorManager is null.");
         return false;
     }
-    if (ppdName == BSUNI_PPD_NAME && IsBsunidriverSupport(printerId)) {
-        printerVendorGroupList_[printerId] = VENDOR_BSUNI_DRIVER;
-        auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
-        auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
-        if (bsuniDriver != nullptr && printerInfo != nullptr &&
-            bsuniDriver->OnQueryCapability(ExtractPrinterIdByPrinterInfo(*printerInfo), 0)) {
-            PRINT_HILOGI("on query capability on bsuni vendor seccess.");
-            return true;
-        }
-        RemoveGroupPrinterFromVendorGroupList(printerId);
+    if (ppdName == BSUNI_PPD_NAME) {
+        PRINT_HILOGI("Select Bsuni Driver");
+        return IsBsunidriverSupport(printerId) && ConnectByBsuni(printerId);
     } else if (ppdName == DEFAULT_PPD_NAME) {
-        printerVendorGroupList_[printerId] = VENDOR_IPP_EVERYWHERE;
-        auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
-        if (ippEverywhereDriver != nullptr && ippEverywhereDriver->OnQueryCapability(printerId, 0)) {
-            PRINT_HILOGI("on query capability on ipp everywhere success.");
-            return true;
-        }
-        parentVendorManager->AddPrintEvent(GetVendorName(), printerId, CONNECT_PRINT_EVENT_TYPE,
-            CONNECT_PRINT_EVENT_IPP_UNAVAILABLE);
-        RemoveGroupPrinterFromVendorGroupList(printerId);
-    } else if (ppdName == "auto") {
+        PRINT_HILOGI("Select IPP EveryWhere");
+        return ConnectByIppEverywhere(printerId);
+    } else if (ppdName.empty() || ppdName == "auto") {
+        PRINT_HILOGI("Auto Connect");
         return OnQueryCapability(printerId, 0);
     } else {
-        printerVendorGroupList_[printerId] = VENDOR_PPD_DRIVER;
+        PRINT_HILOGI("Select PPD Driver");
+        return ConnectByPpdDriver(printerId);
+    }
+    PRINT_HILOGE("ConnectPrinterByIdAndPpd Failed.");
+    return false;
+}
+
+bool VendorWlanGroup::ConnectByBsuni(const std::string &printerId)
+{
+    printerVendorGroupList_[printerId] = VENDOR_BSUNI_DRIVER;
+    auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
+    auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
+    if (bsuniDriver != nullptr && printerInfo != nullptr &&
+        bsuniDriver->OnQueryCapability(ExtractPrinterIdByPrinterInfo(*printerInfo), 0)) {
+        PRINT_HILOGI("on query capability on bsuni vendor seccess.");
+        return true;
+    }
+    RemoveGroupPrinterFromVendorGroupList(printerId);
+    return false;
+}
+ 
+bool VendorWlanGroup::ConnectByIppEverywhere(const std::string &printerId)
+{
+    printerVendorGroupList_[printerId] = VENDOR_IPP_EVERYWHERE;
+    auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
+    if (ippEverywhereDriver != nullptr && ippEverywhereDriver->OnQueryCapability(printerId, 0)) {
+        PRINT_HILOGI("on query capability on ipp everywhere success.");
+        return true;
+    }
+    parentVendorManager->AddPrintEvent(GetVendorName(), printerId, CONNECT_PRINT_EVENT_TYPE,
+        CONNECT_PRINT_EVENT_IPP_UNAVAILABLE);
+    RemoveGroupPrinterFromVendorGroupList(printerId);
+    return false;
+}
+ 
+bool VendorWlanGroup::ConnectByPpdDriver(const std::string &printerId)
+{
+    printerVendorGroupList_[printerId] = VENDOR_PPD_DRIVER;
         auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
         if (printerInfo != nullptr && TryConnectByPpdDriver(*printerInfo)) {
             PRINT_HILOGI("Connect by ppdDriver success.");
             return true;
         }
-        RemoveGroupPrinterFromVendorGroupList(printerId);
+    RemoveGroupPrinterFromVendorGroupList(printerId);
+    return false;
+}
+ 
+bool VendorWlanGroup::ConnectByBsuni(const std::string &printerIp, const std::string protocol)
+{
+    auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
+    printerVendorGroupList_[printerIp] = VENDOR_BSUNI_DRIVER;
+    if (bsuniDriver != nullptr && bsuniDriver->OnQueryCapabilityByIp(printerIp, protocol)) {
+        PRINT_HILOGI("on query capability by ip on bsuni vendor seccess.");
+        return true;
     }
-    PRINT_HILOGE("ConnectPrinterByIdAndPpd Failed.");
+    RemoveGroupPrinterFromVendorGroupList(printerIp);
+    return false;
+}
+ 
+bool VendorWlanGroup::ConnectByIppEverywhere(const std::string &printerIp, const std::string protocol)
+{
+    printerVendorGroupList_[printerIp] = VENDOR_IPP_EVERYWHERE;
+    auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
+    if (ippEverywhereDriver != nullptr && ippEverywhereDriver->OnQueryCapabilityByIp(printerIp, protocol)) {
+        PRINT_HILOGI("on query capability by ip on ipp everywhere seccess.");
+        return true;
+    }
+    RemoveGroupPrinterFromVendorGroupList(printerIp);
     return false;
 }
