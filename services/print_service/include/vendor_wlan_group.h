@@ -67,8 +67,8 @@ private:
     bool ConnectByBsuni(const std::string &printerId);
     bool ConnectByIppEverywhere(const std::string &printerId);
     bool ConnectByPpdDriver(const std::string &printerId);
-    bool ConnectByBsuni(const std::string &printerIp, const std::string protocol);
-    bool ConnectByIppEverywhere(const std::string &printerIp, const std::string protocol);
+    bool ConnectByBsuni(const std::string &printerIp, const std::string &protocol);
+    bool ConnectByIppEverywhere(const std::string &printerIp, const std::string &protocol);
 
 private:
     VendorManager* parentVendorManager = nullptr;

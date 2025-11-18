@@ -1642,7 +1642,7 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
                 return true;
             }
         } else {
-            PRINT_HILOGW("Protocol %{pubilc}s Closed!", protocol.c_str());
+            PRINT_HILOGW("Protocol %{public}s Closed!", protocol.c_str());
             return true;
         }
     }

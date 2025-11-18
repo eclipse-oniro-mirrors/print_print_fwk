@@ -589,7 +589,7 @@ bool VendorWlanGroup::ConnectByPpdDriver(const std::string &printerId)
     return false;
 }
  
-bool VendorWlanGroup::ConnectByBsuni(const std::string &printerIp, const std::string protocol)
+bool VendorWlanGroup::ConnectByBsuni(const std::string &printerIp, const std::string &protocol)
 {
     auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
     printerVendorGroupList_[printerIp] = VENDOR_BSUNI_DRIVER;
@@ -601,7 +601,7 @@ bool VendorWlanGroup::ConnectByBsuni(const std::string &printerIp, const std::st
     return false;
 }
  
-bool VendorWlanGroup::ConnectByIppEverywhere(const std::string &printerIp, const std::string protocol)
+bool VendorWlanGroup::ConnectByIppEverywhere(const std::string &printerIp, const std::string &protocol)
 {
     printerVendorGroupList_[printerIp] = VENDOR_IPP_EVERYWHERE;
     auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
