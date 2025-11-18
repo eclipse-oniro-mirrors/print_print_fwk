@@ -204,6 +204,10 @@ ohos_static_library("print_service_test") {
 
   if (print_fwk_feature_edm_service) {
     cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
+    external_deps += [
+      "enterprise_device_management:edmservice_kits",
+      "security_guard:libsg_collect_sdk"
+    ]
   }
 
   subsystem_name = "print"
