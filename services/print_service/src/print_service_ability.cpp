@@ -1196,13 +1196,11 @@ int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
     }
     reportFileName = infoJson["jobName"].asString();
     auto nowTime = std::chrono::system_clock::now();
-    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime.time_since_epoch()).count();
-    std::stringstream ss;
-    ss << timestamp;
+    int64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime.time_since_epoch()).count();
     Json::Value contentJson;
     contentJson["bundlename"] = SPOOLER_BUNDLE_NAME;
     contentJson["filePath"] = reportFileName;
-    contentJson["happenTime"] = ss.str();
+    contentJson["happenTime"] = timestamp;
     std::string content = PrintJsonUtil::WriteString(contentJson);
     OHOS::Security::SecurityGuard::EventInfo eventInfo(JOB_BANNED_EVENTID, JOB_BANNED_VERSION, content);
     OHOS::Security::SecurityGuard::NativeDataCollectKit nativeDataCollectKit;
