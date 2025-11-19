@@ -172,6 +172,7 @@ public:
     int32_t CheckPreferencesConflicts(const std::string &ppdName, const PrinterPreferences &preferences,
         const std::string &changedType, std::vector<std::string>& conflictTypes);
     int32_t DeleteExtraJobsFromCups();
+    std::string getScheme(std::string &printerUri);
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
     void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);

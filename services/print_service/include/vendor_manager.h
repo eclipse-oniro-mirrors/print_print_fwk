@@ -68,7 +68,6 @@ public:
     void StopDiscovery();
     bool LoadVendorDriver(std::shared_ptr<VendorDriverBase> vendorDriver);
     bool UnloadVendorDriver(const std::string &vendorName);
-    bool ConnectPrinter(const std::string &globalPrinterId);
     bool ConnectPrinterByIp(const std::string &globalPrinterIp, const std::string &protocol);
     bool QueryPrinterInfo(const std::string &globalPrinterId, int timeout);
     int32_t AddPrinterToDiscovery(const std::string &vendorName, const PrinterInfo &printerInfo) override;

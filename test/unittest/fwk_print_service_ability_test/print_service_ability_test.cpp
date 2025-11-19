@@ -2832,6 +2832,8 @@ HWTEST_F(PrintServiceAbilityTest, QueryRecommendDriversByIdTest, TestSize.Level1
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "testId";
     std::vector<PpdInfo> ppds;
+    EXPECT_EQ(service->QueryRecommendDriversById(printerId, ppds), E_PRINT_NO_PERMISSION);
+    service->ManualStart();
     EXPECT_EQ(service->QueryRecommendDriversById(printerId, ppds), E_PRINT_INVALID_PRINTER);
 }
  
@@ -2841,6 +2843,8 @@ HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIdAndPpdTest, TestSize.Level1)
     std::string printerId = "testId";
     std::string protocol = "ipp";
     std::string ppdName = BSUNI_PPD_NAME;
+    EXPECT_EQ(service->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName), E_PRINT_NO_PERMISSION);
+    service->ManualStart();
     EXPECT_EQ(service->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName), E_PRINT_SERVER_FAILURE);
     printerId = "testId:";
     EXPECT_EQ(service->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName), E_PRINT_SERVER_FAILURE);
