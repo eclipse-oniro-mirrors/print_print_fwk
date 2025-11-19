@@ -1633,8 +1633,11 @@ bool PrintServiceAbility::CheckPrinterUriDifferent(const std::shared_ptr<Printer
     PrinterInfo addedPrinter;
     if (printSystemData_.QueryAddedPrinterInfoByPrinterId(info->GetPrinterId(), addedPrinter)) {
         std::string oldUri = addedPrinter.GetUri();
-        std::string protocol = getScheme(oldUri);
-        std::string printerUri = GetConnectUri(*info, protocol);
+        std::string protocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(oldUri);
+        std::string printerUri;
+        if (!protocol.empty()) {
+            printerUri = GetConnectUri(*info, protocol);
+        }
         if (!printerUri.empty()) {
             info->SetUri(printerUri);
             if (printerUri != addedPrinter.GetUri()) {
@@ -4783,20 +4786,6 @@ int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId,
     }
 
     return E_PRINT_NONE;
-}
-
-std::string PrintServiceAbility::getScheme(std::string &printerUri)
-{
-    char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
-    char username[HTTP_MAX_URI] = {0}; /* Username portion of URI */
-    char host[HTTP_MAX_URI] = {0}; /* Host portion of URI */
-    char resource[HTTP_MAX_URI] = {0}; /* Resource portion of URI */
-    int port = 0; /* Port portion of URI */
-    httpSeparateURI(HTTP_URI_CODING_ALL, printerUri.c_str(), scheme, sizeof(scheme), username, sizeof(username),
-        host, sizeof(host), &port, resource, sizeof(resource));
-    std::string infoScheme;
-    infoScheme.assign(scheme);
-    return infoScheme;
 }
 
 }  // namespace OHOS::Print
