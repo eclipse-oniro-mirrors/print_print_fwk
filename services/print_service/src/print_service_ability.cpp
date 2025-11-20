@@ -493,10 +493,12 @@ int32_t PrintServiceAbility::HandleExtensionConnectPrinter(const std::string &pr
             cbFunc->OnCallback(printerId);
         }
     };
-    if (helper_->IsSyncMode()) {
+    if (helper_ != nullptr && helper_->IsSyncMode()) {
         callback();
-    } else {
+    } else if (serviceHandler_ != nullptr) {
         serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
+    } else {
+        PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
     }
     PRINT_HILOGI("HandleExtensionConnectPrinter end");
     return E_PRINT_NONE;
@@ -574,10 +576,12 @@ int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId)
             cbFunc->OnCallback(printerId);
         }
     };
-    if (helper_->IsSyncMode()) {
+    if (helper_ != nullptr && helper_->IsSyncMode()) {
         callback();
-    } else {
+    } else if (serviceHandler_ != nullptr) {
         serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
+    } else {
+        PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
     }
     PRINT_HILOGI("DisconnectPrinter end");
     return E_PRINT_NONE;
@@ -1450,10 +1454,12 @@ void PrintServiceAbility::CancelPrintJobHandleCallback(
             PRINT_HILOGE("Callback function is null or callback failed.");
         }
     };
-    if (helper_->IsSyncMode()) {
+    if (helper_ != nullptr && helper_->IsSyncMode()) {
         callback();
-    } else {
+    } else if (serviceHandler_ != nullptr) {
         serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
+    } else {
+        PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
     }
 }
 
@@ -1618,10 +1624,12 @@ bool PrintServiceAbility::SendQueuePrintJob(const std::string &printerId)
             UpdatePrintJobState(jobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
         }
     };
-    if (helper_->IsSyncMode()) {
+    if (helper_ != nullptr && helper_->IsSyncMode()) {
         callback();
-    } else {
+    } else if (serviceHandler_ != nullptr) {
         serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
+    } else {
+        PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
     }
     return true;
 }
@@ -2079,10 +2087,12 @@ int32_t PrintServiceAbility::QueryPrinterCapability(const std::string &printerId
             cbFunc->OnCallback(printerId);
         }
     };
-    if (helper_->IsSyncMode()) {
+    if (helper_ != nullptr && helper_->IsSyncMode()) {
         callback();
-    } else {
+    } else if (serviceHandler_ != nullptr) {
         serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
+    } else {
+        PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
     }
     return E_PRINT_NONE;
 }
@@ -2228,10 +2238,12 @@ void PrintServiceAbility::StopDiscoveryInternal()
                 cbFunc->OnCallback();
             }
         };
-        if (helper_->IsSyncMode()) {
+        if (helper_ != nullptr && helper_->IsSyncMode()) {
             callback();
-        } else {
+        } else if (serviceHandler_ != nullptr) {
             serviceHandler_->PostTask(callback, 0);
+        } else {
+            PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
         }
     }
     PRINT_HILOGI("StopDiscoveryInternal end.");
@@ -3984,10 +3996,12 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
                 CallStatusBar();
             }
         };
-        if (helper_->IsSyncMode()) {
+        if (helper_ != nullptr && helper_->IsSyncMode()) {
             callback();
-        } else {
+        } else if (serviceHandler_ != nullptr) {
             serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
+        } else {
+            PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
         }
     } else {
 #ifdef CUPS_ENABLE
