@@ -136,8 +136,8 @@ void TestAuthPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *data
 {
     std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::string userName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    const char* userPasswd = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH).c_str();
-    std::vector<char> userPasswdCstr(userPasswd, userPasswd + strlen(userPasswd) + 1);
+    std::string userPasswd = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::vector<char> userPasswdCstr(userPasswd.begin(), userPasswd.end());
     PrintServiceAbility::GetInstance()->AuthPrintJob(jobId, userName, userPasswdCstr.data());
 }
 
