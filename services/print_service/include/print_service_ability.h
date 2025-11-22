@@ -278,6 +278,7 @@ private:
     bool DeletePrintJobFromHistoryList(const std::string jobId);
     void QueryPrinterPpds(const PrinterInfo &info, std::vector<PpdInfo> &ppds);
     int32_t GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName);
+    void OnPrinterLastPrint(PrinterInfo& printerInfo);
 
 private:
     PrintSecurityGuardManager securityGuardManager_;

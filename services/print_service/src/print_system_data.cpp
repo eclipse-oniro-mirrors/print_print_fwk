@@ -387,7 +387,7 @@ bool PrintSystemData::QueryAddedPrinterInfoByPrinterId(const std::string &printe
     return true;
 }
 
-void PrintSystemData::QueryPrinterInfoById(const std::string &printerId, PrinterInfo &printerInfo)
+bool PrintSystemData::QueryPrinterInfoById(const std::string &printerId, PrinterInfo &printerInfo)
 {
     if (QueryAddedPrinterInfoByPrinterId(printerId, printerInfo)) {
         Json::Value option;
@@ -396,9 +396,10 @@ void PrintSystemData::QueryPrinterInfoById(const std::string &printerId, Printer
         option["make"] = printerInfo.GetPrinterMake();
         option["alias"] = printerInfo.GetAlias();
         printerInfo.SetOption(PrintJsonUtil::WriteString(option));
-        printerInfo.Dump();
+        return true;
     } else {
         PRINT_HILOGE("query printer info failed.");
+        return false;
     }
 }
 
