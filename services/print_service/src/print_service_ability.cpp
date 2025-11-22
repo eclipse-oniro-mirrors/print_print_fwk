@@ -4750,7 +4750,7 @@ int32_t PrintServiceAbility::CheckPreferencesConflicts(const std::string &printe
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     int32_t ret = GetPpdNameByPrinterId(printerId, ppdName);
     if (ret != E_PRINT_NONE) {
-        return ret;
+        return ret == E_PRINT_INVALID_PRINTER ? E_PRINT_NONE : ret;
     }
 
     return DelayedSingleton<PrintCupsClient>::GetInstance()->
@@ -4770,7 +4770,7 @@ int32_t PrintServiceAbility::CheckPrintJobConflicts(const std::string &changedTy
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     int32_t ret = GetPpdNameByPrinterId(printJob.GetPrinterId(), ppdName);
     if (ret != E_PRINT_NONE) {
-        return ret;
+        return ret == E_PRINT_INVALID_PRINTER ? E_PRINT_NONE : ret;
     }
 
     PrintJob dupJob(printJob);
