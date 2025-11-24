@@ -39,6 +39,7 @@ public:
     MOCK_METHOD2(QueryPrinterCapabilityByUri, bool(const std::string &, PrinterCapability &));
     MOCK_METHOD0(GetConnectingPpdName, std::string());
     MOCK_METHOD0(GetConnectingProtocol, std::string());
+    MOCK_METHOD0(GetConnectingPrinter, std::string());
     MOCK_METHOD0(ClearConnectingPpdName, void());
     MOCK_METHOD0(ClearConnectingProtocol, void());
     MOCK_METHOD2(IsQueryingPrinter, bool(const std::string &, const std::string &));

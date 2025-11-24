@@ -488,7 +488,7 @@ bool UpdatePrinterInfoWithDiscovery(PrinterInfo &info, const Print_DiscoveryItem
         option["printerName"] = name;
         std::string uri = std::string(discoveryItem->printerUri);
         option["printerUri"] = uri;
-        option["recommend_protocol"] = getScheme(uri);
+        option["recommendProtocol"] = getScheme(uri);
         option["make"] = std::string(discoveryItem->makeAndModel);
         if (discoveryItem->printerUuid != nullptr) {
             option["printer-uuid"] = std::string(discoveryItem->printerUuid);

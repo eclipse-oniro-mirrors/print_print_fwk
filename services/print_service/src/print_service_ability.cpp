@@ -3679,8 +3679,6 @@ std::string PrintServiceAbility::GetConnectUri(PrinterInfo &printerInfo, std::st
     } else if (connectProtocol == "ipps") {
         if (PrintJsonUtil::IsMember(option, "ipps") && option["ipps"].isString()) {
             printerUri = option["ipps"].asString();
-        } else {
-            printerUri = "ipps://" + printerIp + ":443/ipp/print";
         }
     } else if (connectProtocol == "lpd") {
         if (PrintJsonUtil::IsMember(option, "lpd") && option["lpd"].isString()) {
