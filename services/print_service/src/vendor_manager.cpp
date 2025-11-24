@@ -548,6 +548,12 @@ std::string VendorManager::GetConnectingProtocol()
     return connectingProtocol;
 }
 
+std::string VendorManager::GetConnectingPrinter()
+{
+    std::lock_guard<std::mutex> lock(simpleObjectMutex);
+    return connectingPrinter;
+}
+
 void VendorManager::ClearConnectingPpdName()
 {
     PRINT_HILOGD("ClearconnectingPpdName");
