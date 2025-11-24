@@ -224,7 +224,7 @@ int32_t VendorBsuniDriver::OnCapabilityQueried(const Print_DiscoveryItem *printe
     auto printerInfo = ConvertVendorCapabilityToPrinterInfo(printer, capability, defaultValue);
     if (printerInfo == nullptr) {
         PRINT_HILOGW("printerInfo is null");
-        if(printer == nullptr || printer->printerId == nullptr) {
+        if (printer == nullptr || printer->printerId == nullptr) {
             return EXTENSION_INVALID_PARAMETER;
         }
         PrinterInfo info;
