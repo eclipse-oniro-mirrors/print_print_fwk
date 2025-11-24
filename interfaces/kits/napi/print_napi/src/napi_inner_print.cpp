@@ -1238,7 +1238,6 @@ napi_value NapiInnerPrint::QueryAllPrinterPpds(napi_env env, napi_callback_info 
         }
         uint32_t index = 0;
         for (auto &ppdInfo : context->allPpdInfos) {
-            PRINT_HILOGD("ppdName = %{public}s", ppdInfo.GetPpdName().c_str());
             status = napi_set_element(env, *result, index++, PpdInfoHelper::MakeJsSimpleObject(env, ppdInfo));
             if (status != napi_ok) {
                 return status;
@@ -1421,7 +1420,6 @@ napi_value NapiInnerPrint::QueryRecommendDriversById(napi_env env, napi_callback
         if (status != napi_ok) { return status; }
         uint32_t index = 0;
         for (auto &ppdInfo : context->allPpdInfos) {
-            PRINT_HILOGD("ppdName = %{public}s", ppdInfo.GetPpdName().c_str());
             status = napi_set_element(env, *result, index++, PpdInfoHelper::MakeJsSimpleObject(env, ppdInfo));
             if (status != napi_ok) { return status; }
         }
