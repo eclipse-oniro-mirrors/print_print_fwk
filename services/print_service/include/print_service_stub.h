@@ -94,6 +94,9 @@ private:
     bool OnGetPrinterDefaultPreferences(MessageParcel &data, MessageParcel &reply);
     bool OnGetSharedHosts(MessageParcel &data, MessageParcel &reply);
     bool OnAuthSmbDevice(MessageParcel &data, MessageParcel &reply);
+    bool OnRegisterWatermarkCallback(MessageParcel &data, MessageParcel &reply);
+    bool OnUnregisterWatermarkCallback(MessageParcel &data, MessageParcel &reply);
+    bool OnNotifyWatermarkComplete(MessageParcel &data, MessageParcel &reply);
 
 private:
     using PrintCmdHandler = bool (PrintServiceStub::*)(MessageParcel &, MessageParcel &);

@@ -1174,4 +1174,40 @@ int32_t PrintManagerClient::AuthSmbDevice(const PrintSharedHost &sharedHost, con
     return ret;
 }
 
+int32_t PrintManagerClient::RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback)
+{
+    PRINT_HILOGD("PrintManagerClient RegisterWatermarkCallback in");
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->RegisterWatermarkCallback(callback);
+        PRINT_HILOGD("PrintManagerClient RegisterWatermarkCallback out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::UnregisterWatermarkCallback()
+{
+    PRINT_HILOGD("PrintManagerClient UnregisterWatermarkCallback in");
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->UnregisterWatermarkCallback();
+        PRINT_HILOGD("PrintManagerClient UnregisterWatermarkCallback out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::NotifyWatermarkComplete(const std::string &jobId, int32_t result)
+{
+    PRINT_HILOGD("PrintManagerClient NotifyWatermarkComplete in, jobId=%{public}s, result=%{public}d",
+        jobId.c_str(), result);
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->NotifyWatermarkComplete(jobId, result);
+        PRINT_HILOGD("PrintManagerClient NotifyWatermarkComplete out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
 } // namespace OHOS::Print

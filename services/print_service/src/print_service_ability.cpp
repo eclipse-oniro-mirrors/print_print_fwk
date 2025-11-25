@@ -58,6 +58,9 @@
 #include "sg_collect_client.h"
 #include "event_info.h"
 #endif // EDM_SERVICE_ENABLE
+#ifdef WATERMARK_ENFORCING_ENABLE
+#include "watermark_manager.h"
+#endif // WATERMARK_ENFORCING_ENABLE
 #ifdef HAVE_SMB_PRINTER
 #include "smb_host_search_helper.h"
 #include "smb_printer_discoverer.h"
@@ -312,7 +315,7 @@ int32_t PrintServiceAbility::Init()
     vendorManager.Init(GetInstance(), true);
 #ifdef CUPS_ENABLE
     int32_t initCupsRet = DelayedSingleton<PrintCupsClient>::GetInstance()->InitCupsResources();
-    if (initCupsRet != ERR_OK) {
+    if (initCupsRet != E_PRINT_NONE) {
         return initCupsRet;
     }
 #endif
@@ -339,7 +342,7 @@ int32_t PrintServiceAbility::Init()
 #endif
     StartDiscoverPrinter();
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
-    return ERR_OK;
+    return E_PRINT_NONE;
 }
 
 void PrintServiceAbility::StartDiscoverPrinter()
@@ -443,7 +446,7 @@ void PrintServiceAbility::OnStart()
     }
     InitServiceHandler();
     int32_t ret = Init();
-    if (ret != ERR_OK) {
+    if (ret != E_PRINT_NONE) {
         auto callback = [=]() { Init(); };
         serviceHandler_->PostTask(callback, INIT_INTERVAL);
         PRINT_HILOGE("PrintServiceAbility Init failed. Try again 5s later");
@@ -2289,7 +2292,7 @@ bool PrintServiceAbility::UnloadSystemAbility()
         return false;
     }
     ret = samgrProxy->UnloadSystemAbility(PRINT_SERVICE_ID);
-    if (ret != ERR_OK) {
+    if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("unload print system ability failed");
         return false;
     }
@@ -2386,7 +2389,7 @@ void PrintServiceAbility::DelayEnterLowPowerMode()
             PRINT_HILOGW("Not need to enter low power mode");
             return;
         }
-        if (StopDiscoverPrinter() != ERR_OK) {
+        if (StopDiscoverPrinter() != E_PRINT_NONE) {
             PRINT_HILOGE("Stop discovery failed, enter low power mode failed.");
         }
         PRINT_HILOGI("Enter low power mode successfully.");
@@ -2417,7 +2420,7 @@ void PrintServiceAbility::ExitLowPowerMode()
     for (const auto &extensionInfo : extensionInfos) {
         extensionIds.emplace_back(extensionInfo.GetExtensionId());
     }
-    if (StartDiscoverPrinter(extensionIds) != ERR_OK) {
+    if (StartDiscoverPrinter(extensionIds) != E_PRINT_NONE) {
         PRINT_HILOGE("exit low power mode failed.");
         return;
     }
@@ -5356,4 +5359,56 @@ void PrintServiceAbility::TryStopSmbPrinterStatusMonitor()
     }
 }
 #endif // HAVE_SMB_PRINTER
+
+int32_t PrintServiceAbility::RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback)
+{
+    PRINT_HILOGD("PrintServiceAbility::RegisterWatermarkCallback start");
+    if (!CheckPermission(PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+
+#ifdef WATERMARK_ENFORCING_ENABLE
+    if (callback == nullptr) {
+        PRINT_HILOGE("callback is null");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+
+    return WatermarkManager::GetInstance().RegisterCallback(callback);
+#else
+    return E_PRINT_NONE;
+#endif // WATERMARK_ENFORCING_ENABLE
+}
+
+int32_t PrintServiceAbility::UnregisterWatermarkCallback()
+{
+    PRINT_HILOGD("PrintServiceAbility::UnregisterWatermarkCallback start");
+    if (!CheckPermission(PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+
+#ifdef WATERMARK_ENFORCING_ENABLE
+    return WatermarkManager::GetInstance().UnregisterCallback();
+#else
+    return E_PRINT_NONE;
+#endif // WATERMARK_ENFORCING_ENABLE
+}
+
+int32_t PrintServiceAbility::NotifyWatermarkComplete(const std::string &jobId, int32_t result)
+{
+    PRINT_HILOGD("PrintServiceAbility::NotifyWatermarkComplete jobId=%{public}s, result=%{public}d",
+        jobId.c_str(), result);
+
+    if (!CheckPermission(PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+
+#ifdef WATERMARK_ENFORCING_ENABLE
+    return WatermarkManager::GetInstance().NotifyComplete(jobId, result);
+#else
+    return E_PRINT_NONE;
+#endif // WATERMARK_ENFORCING_ENABLE
+}
 }  // namespace OHOS::Print
