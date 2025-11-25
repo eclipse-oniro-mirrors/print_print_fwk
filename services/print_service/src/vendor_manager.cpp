@@ -740,10 +740,6 @@ bool VendorManager::ConnectPrinterByIdAndPpd(const std::string &globalPrinterId,
     const std::string &ppdName)
 {
     PRINT_HILOGI("ConnectPrinterByIdAndPpd Enter");
-    if (wlanGroupDriver == nullptr) {
-        PRINT_HILOGE("no driver to connect printer by id");
-        return false;
-    }
     std::string printerId = ExtractPrinterId(globalPrinterId);
     if (printerId.empty()) {
         PRINT_HILOGW("empty printer id");
@@ -754,7 +750,21 @@ bool VendorManager::ConnectPrinterByIdAndPpd(const std::string &globalPrinterId,
     if (connectingProtocol.empty()) {
         connectingProtocol = "auto";
     }
-    PRINT_HILOGI("ppdName = %{public}s", ppdName.c_str());
     connectingPpdName = ppdName;
-    return wlanGroupDriver->ConnectPrinterByIdAndPpd(printerId, ppdName);
+    PRINT_HILOGI("[Printer: %{public}s] Connecting Printer", PrintUtils::AnonymizePrinterId(printerId).c_str());
+    std::string globalVendorName = ExtractGlobalVendorName(globalPrinterId);
+    std::string vendorName = ExtractVendorName(globalVendorName);
+    if (vendorName == VENDOR_WLAN_GROUP) {
+        if (wlanGroupDriver == nullptr) {
+            PRINT_HILOGE("no driver to connect printer by id");
+            return false;
+        }
+        return wlanGroupDriver->ConnectPrinterByIdAndPpd(printerId, ppdName);
+    }
+    auto vendorDriver = FindDriverByVendorName(vendorName);
+    if (vendorDriver == nullptr) {
+        PRINT_HILOGW("vendorDriver is null");
+        return false;
+    }
+    return vendorDriver->OnQueryCapability(printerId, 0);
 }
