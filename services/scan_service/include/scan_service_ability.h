@@ -70,6 +70,7 @@ public:
     void DisConnectUsbScanner(std::string serialNumber, std::string newDeviceId);
     void UpdateScannerId(const ScanDeviceInfoSync& usbSyncInfo);
     void NetScannerLossNotify(const ScanDeviceInfoSync& usbSyncInfo);
+    void NotifyEsclScannerFound(const ScanDeviceInfo& info);
 
 private:
     int32_t ActionSetAuto(const std::string &scannerId, const int32_t &optionIndex);
