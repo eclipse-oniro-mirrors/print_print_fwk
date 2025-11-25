@@ -427,6 +427,8 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo &info, std::vector<ScanD
 void ScanServiceAbility::SaneGetScanner()
 {
     scannerState_.store(SCANNER_SEARCHING);
+    ScanMdnsService::GetInstance().OnStopDiscoverService();
+    ScanMdnsService::GetInstance().OnStartDiscoverService();
     deviceInfos_.clear();
     SaneManagerClient::GetInstance()->SaneInit();
     std::vector<SaneDevice> deviceInfos;
@@ -461,21 +463,16 @@ int32_t ScanServiceAbility::GetScannerList()
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         return E_SCAN_NO_PERMISSION;
     }
-    if (scannerState_.load() == SCANNER_SEARCHING) {
-        SCAN_HILOGD("is searching");
-        return E_SCAN_NONE;
-    }
-    if (scannerState_.load() != SCANNER_READY) {
-        SCAN_HILOGW("is working");
+    if (scannerState_.load() == SCANNER_SCANING) {
+        SCAN_HILOGW("scannerState_ is busy");
         return E_SCAN_DEVICE_BUSY;
     }
-    SCAN_HILOGD("ScanServiceAbility GetScannerList start");
-    ScanMdnsService::GetInstance().OnStartDiscoverService();
+    SCAN_HILOGI("ScanServiceAbility GetScannerList start");
     auto exec_sane_getscaner = [=]() {
         SaneGetScanner();
     };
     serviceHandler_->PostTask(exec_sane_getscaner, ASYNC_CMD_DELAY);
-    SCAN_HILOGD("ScanServiceAbility GetScannerList end");
+    SCAN_HILOGI("ScanServiceAbility GetScannerList end");
     return E_SCAN_NONE;
 }
 
@@ -923,6 +920,24 @@ void ScanServiceAbility::NetScannerLossNotify(const ScanDeviceInfoSync& syncInfo
         return;
     }
     SendDeviceInfoSync(syncInfo, SCAN_DEVICE_SYNC);
+}
+
+void ScanServiceAbility::NotifyEsclScannerFound(const ScanDeviceInfo& info)
+{
+    if (scannerState_.load() == SCANNER_SEARCHING) {
+        SCAN_HILOGD("The manufacturer's driver is still under search");
+        return;
+    }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    SCAN_HILOGI("NotifyEsclScannerFound [%{private}s]", info.deviceId.c_str());
+    info.Dump();
+    for (auto [eventType, listener] : registeredListeners_) {
+        std::string type;
+        ScanServiceUtils::EncodeTaskEventId(eventType, type);
+        if (type == SCAN_DEVICE_FOUND && listener != nullptr) {
+            listener->OnCallback(info.GetDeviceState(), info);
+        }
+    }
 }
 
 bool ScanServiceAbility::CheckPermission(const std::string &permissionName)

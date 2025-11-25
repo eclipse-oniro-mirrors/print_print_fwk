@@ -142,6 +142,7 @@ bool ScanMdnsService::OnStopDiscoverService()
         discoveryCallBackPtr = nullptr;
     }
     discoveryCallBackPtrs_.clear();
+    ScannerDiscoverData::GetInstance().ClearEsclDevices();
     isListening_.store(false);
     cv_.notify_all();
     return true;
@@ -196,6 +197,9 @@ int32_t ScanMDnsResolveObserver::HandleResolveResult(const MDnsServiceInfo &info
     if (info.type == MDNS_TYPE_USCAN_TCP && EsclDriverManager::GenerateEsclScannerInfo(tcpInfo, scanInfo)) {
         scanInfo.deviceType = MDNS_TYPE_USCAN_TCP;
         ScannerDiscoverData::GetInstance().SetEsclDevice(scanInfo.uniqueId, scanInfo);
+        if (auto scanService = ScanServiceAbility::GetInstance()) {
+            scanService->NotifyEsclScannerFound(scanInfo);
+        }
     } else {
         tcpInfo.deviceType = MDNS_TYPE_SCANNER_TCP;
     }
