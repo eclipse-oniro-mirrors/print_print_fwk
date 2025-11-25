@@ -224,7 +224,12 @@ int32_t VendorBsuniDriver::OnCapabilityQueried(const Print_DiscoveryItem *printe
     auto printerInfo = ConvertVendorCapabilityToPrinterInfo(printer, capability, defaultValue);
     if (printerInfo == nullptr) {
         PRINT_HILOGW("printerInfo is null");
-        return EXTENSION_INVALID_PARAMETER;
+        if (printer == nullptr || printer->printerId == nullptr) {
+            return EXTENSION_INVALID_PARAMETER;
+        }
+        PrinterInfo info;
+        info.SetPrinterId(printer->printerId);
+        printerInfo = std::make_shared<PrinterInfo>(info);
     }
     auto driver = GetActiveInstance();
     if (!driver) {
@@ -565,16 +570,48 @@ void VendorBsuniDriver::OnStateQueried(std::shared_ptr<std::string> printerId, s
     }
 }
 
+std::string VendorBsuniDriver::CreateUriByIpAndProtocol(const std::string &ip, const std::string &protocol)
+{
+    if (protocol == "ipp") {
+        return "ipp://" + ip + ":631/ipp/print";
+    }
+    if (protocol == "lpd") {
+        return "lpd://" +ip + ":515";
+    }
+    if (protocol == "socket") {
+        return "socket://" + ip + ":9100";
+    }
+    return "";
+}
+
 void VendorBsuniDriver::OnPrinterCapabilityQueried(std::shared_ptr<PrinterInfo> printerInfo)
 {
     PRINT_HILOGD("OnPrinterCapabilityQueried enter");
-    if (printerInfo == nullptr) {
-        PRINT_HILOGW("printerInfo is null");
-        return;
-    }
     if (vendorManager == nullptr) {
         PRINT_HILOGW("vendorManager is null");
         return;
+    }
+    if (!printerInfo->HasUri()) {
+        PRINT_HILOGW("Building printerInfo!");
+        std::string connectProtocol = vendorManager->GetConnectingProtocol();
+        if (connectProtocol.empty() || connectProtocol == "auto") {
+            PRINT_HILOGW("Require Protocol!");
+            return;
+        }
+        std::string connectIp = vendorManager->GetConnectingPrinter();
+        if (connectIp.empty() || connectIp != printerInfo->GetPrinterId()) {
+            PRINT_HILOGW("Wrong printerIp!");
+            return;
+        }
+        printerInfo->SetPrinterId(connectIp);
+        printerInfo->SetPrinterName(connectIp);
+        std::string printerUri = CreateUriByIpAndProtocol(connectIp, connectProtocol);
+        if (printerUri.empty()) {
+            PRINT_HILOGW("create uri failed.");
+            return;
+        }
+        printerInfo->SetUri(printerUri);
+        PRINT_HILOGI("Building printerInfo Success!");
     }
     vendorManager->UpdatePrinterToDiscovery(GetVendorName(), *printerInfo);
     vendorManager->OnPrinterCapabilityQueried(GetVendorName(), *printerInfo);

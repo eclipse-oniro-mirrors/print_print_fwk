@@ -34,6 +34,7 @@ public:
     static int32_t OnCapabilityQueried(const Print_DiscoveryItem *printer, const Print_PrinterCapability *capability,
                                        const Print_DefaultValue *defaultValue);
     static int32_t OnPropertiesQueried(const char *printerId, const Print_PropertyList *propertyList);
+    static std::string CreateUriByIpAndProtocol(const std::string &ip, const std::string &protocol);
     VendorBsuniDriver();
     ~VendorBsuniDriver();
     bool Init(IPrinterVendorManager *manager) override;

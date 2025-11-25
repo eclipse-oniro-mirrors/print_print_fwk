@@ -89,6 +89,7 @@ public:
     void SetConnectingPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIP) override;
     void ClearConnectingPrinter() override;
     bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) override;
+    std::string GetConnectingPrinter() override;
     std::string GetConnectingPpdName() override;
     std::string GetConnectingProtocol() override;
     void ClearConnectingPpdName() override;
