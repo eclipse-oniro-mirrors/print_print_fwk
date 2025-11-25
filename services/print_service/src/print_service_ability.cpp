@@ -1323,6 +1323,16 @@ bool PrintServiceAbility::CheckPrintJob(PrintJob &jobInfo)
     return true;
 }
 
+void PrintServiceAbility::OnPrinterLastPrint(PrinterInfo& printerInfo)
+{
+    printerInfo.SetPrinterStatus(PRINTER_STATUS_BUSY);
+    printerInfo.SetPrinterName(
+        PrintUtil::RemoveUnderlineFromPrinterName(printerInfo.GetPrinterName()));
+    SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo, true);
+    SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
+    SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, printerInfo);
+}
+
 void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const std::shared_ptr<PrintJob> &printJob)
 {
     PRINT_HILOGI("[Job Id: %{public}s] enter UpdateQueuedJobList", jobId.c_str());
@@ -1357,12 +1367,14 @@ void PrintServiceAbility::UpdateQueuedJobList(const std::string &jobId, const st
     std::string printerId = printJob->GetPrinterId();
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printerId);
     if (printerInfo != nullptr) {
-        printerInfo->SetPrinterStatus(PRINTER_STATUS_BUSY);
-        printerInfo->SetPrinterName(PrintUtil::RemoveUnderlineFromPrinterName(printerInfo->GetPrinterName()));
         printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_BUSY);
-        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo, true);
-        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-        SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, *printerInfo);
+        OnPrinterLastPrint(*printerInfo);
+    } else {
+        PrinterInfo addedPrinterInfo;
+        if (printSystemData_.QueryPrinterInfoById(printerId, addedPrinterInfo)) {
+            printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_BUSY);
+            OnPrinterLastPrint(addedPrinterInfo);
+        }
     }
     SetLastUsedPrinter(printerId);
 }
@@ -3443,9 +3455,10 @@ void PrintServiceAbility::NotifyAppDeletePrinter(const std::string &printerId)
     std::string lastUsedPrinterId = userData->GetLastUsedPrinter();
     if (!lastUsedPrinterId.empty()) {
         PrinterInfo lastUsedPrinterInfo;
-        printSystemData_.QueryPrinterInfoById(lastUsedPrinterId, lastUsedPrinterInfo);
-        PRINT_HILOGI("NotifyAppDeletePrinter lastUsedPrinterId = %{private}s", lastUsedPrinterId.c_str());
-        SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, lastUsedPrinterInfo);
+        if (printSystemData_.QueryPrinterInfoById(lastUsedPrinterId, lastUsedPrinterInfo)) {
+            PRINT_HILOGI("NotifyAppDeletePrinter lastUsedPrinterId = %{private}s", lastUsedPrinterId.c_str());
+            SendPrinterEventChangeEvent(PRINTER_EVENT_LAST_USED_PRINTER_CHANGED, lastUsedPrinterInfo);
+        }
     }
 }
 
