@@ -57,6 +57,7 @@ public:
     static std::string AnonymizePrinterUri(const std::string &printerUri);
     static std::string AnonymizeIp(const std::string &ip);
     static std::string AnonymizeJobOption(const std::string &option);
+    static std::string AnonymizeJobName(const std::string &jobName);
 
     static void BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);
     static void BuildPrintAttributesParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want);

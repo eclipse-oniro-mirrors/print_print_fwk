@@ -1520,10 +1520,11 @@ bool PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, 
             UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_COMPLETED_FILE_CORRUPT);
             return false;
         }
+        std::string anonymizeJobName = PrintUtils::AnonymizeJobName(jobParams->jobName);
         status = cupsStartDocument(http,
             jobParams->printerName.c_str(),
             jobId,
-            jobParams->jobName.c_str(),
+            anonymizeJobName.c_str(),
             jobParams->documentFormat.c_str(),
             i == (num_files - 1));
         if (status == HTTP_STATUS_CONTINUE) {
