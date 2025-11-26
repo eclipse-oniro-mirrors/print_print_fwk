@@ -1644,12 +1644,17 @@ void PrintCupsClient::StartMonitor()
             jobMonitorList = jobMonitorList_;
         }
         for (auto monitorParams : jobMonitorList) {
-            if (!IfContinueToHandleJobState(monitorParams)) {
-                PRINT_HILOGI("delete a completed job");
-                std::lock_guard<std::mutex> lock(jobMonitorMutex_);
-                auto item = find(jobMonitorList_.begin(), jobMonitorList_.end(), monitorParams);
-                jobMonitorList_.erase(item);
+            if (IfContinueToHandleJobState(monitorParams)) {
+                continue;
             }
+            PRINT_HILOGI("delete a completed job");
+            std::lock_guard<std::mutex> lock(jobMonitorMutex_);
+            auto item = find(jobMonitorList_.begin(), jobMonitorList_.end(), monitorParams);
+            if (item == jobMonitorList_.end()) {
+                PRINT_HILOGW("completed job lost");
+                continue;
+            }
+            jobMonitorList_.erase(item);
         }
         uint64_t currentTime = GetNowTime();
         if (currentTime < lastUpdateTime + MONITOR_STEP_TIME_MS) {
