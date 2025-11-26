@@ -170,8 +170,8 @@ bool VendorManager::UnloadVendorDriver(const std::string &vendorName)
 bool VendorManager::ConnectPrinterByIp(const std::string &printerIp, const std::string &protocol)
 {
     PRINT_HILOGI("ConnectPrinterByIp enter");
-    if (printerIp.size() < IP_LENGTH_MIN) {
-        PRINT_HILOGW("ip length incorrect");
+    if (!IsValidIp(printerIp)) {
+        PRINT_HILOGW("InValid IP");
         return false;
     }
     if (wlanGroupDriver == nullptr) {
@@ -613,8 +613,8 @@ bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const
     const std::string &ppdName)
 {
     PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
-    if (printerIp.size() < IP_LENGTH_MIN) {
-        PRINT_HILOGW("ip length incorrect");
+    if (!IsValidIp(printerIp)) {
+        PRINT_HILOGW("InValid IP");
         return false;
     }
     if (wlanGroupDriver == nullptr) {
@@ -767,4 +767,12 @@ bool VendorManager::ConnectPrinterByIdAndPpd(const std::string &globalPrinterId,
         return false;
     }
     return vendorDriver->OnQueryCapability(printerId, 0);
+}
+
+bool VendorManager::IsValidIp(const std::string &ip)
+{
+    if (ip.empty()) {
+        return false;
+    }
+    return std::regex_match(ip, std::regex(PATTERN_IP));
 }

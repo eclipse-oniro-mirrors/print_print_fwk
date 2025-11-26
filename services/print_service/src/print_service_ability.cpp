@@ -3652,7 +3652,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
     return true;
 }
 
-std::string PrintServiceAbility::GetConnectUri(PrinterInfo &printerInfo, std::string connectProtocol)
+std::string PrintServiceAbility::GetConnectUri(PrinterInfo &printerInfo, std::string &connectProtocol)
 {
     std::string printerUri = printerInfo.GetUri();
     char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
