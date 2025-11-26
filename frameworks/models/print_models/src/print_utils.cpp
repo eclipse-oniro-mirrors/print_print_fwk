@@ -336,6 +336,15 @@ std::string PrintUtils::AnonymizeJobOption(const std::string &option)
     return anonymizeoption;
 }
 
+std::string PrintUtils::AnonymizeJobName(const std::string &jobName)
+{
+    size_t dotPos = jobName.find_last_of('.');
+    if (dotPos != std::string::npos) {
+        std::string extension = jobName.substr(dotPos);
+        return "xxx" + extension;
+    }
+    return "xxx";
+}
 void PrintUtils::BuildAdapterParam(const std::shared_ptr<AdapterParam> &adapterParam, AAFwk::Want &want)
 {
     want.SetParam(LAUNCH_PARAMETER_DOCUMENT_NAME, adapterParam->documentName);
