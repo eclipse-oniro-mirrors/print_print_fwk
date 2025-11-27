@@ -81,6 +81,10 @@ bool VendorManager::Init(sptr<PrintServiceAbility> sa, bool loadDefault)
 {
     PRINT_HILOGI("Init enter");
     printServiceAbility = sa;
+    if (printServiceAbility == nullptr) {
+        PRINT_HILOGE("printServiceAbility is nullptr");
+        return false;
+    }
     if (!loadDefault) {
         return true;
     }
@@ -89,6 +93,9 @@ bool VendorManager::Init(sptr<PrintServiceAbility> sa, bool loadDefault)
         PRINT_HILOGI("load already");
         return true;
     }
+#ifdef ENTERPRISE_ENABLE
+    isEnterprise_ = printServiceAbility->IsEnterpriseEnable() && printServiceAbility->IsEnterprise();
+#endif  // ENTERPRISE_ENABLE
     PRINT_HILOGI("load default vendor...");
     if (wlanGroupDriver != nullptr) {
         wlanGroupDriver->Init(this);
@@ -768,3 +775,29 @@ bool VendorManager::ConnectPrinterByIdAndPpd(const std::string &globalPrinterId,
     }
     return vendorDriver->OnQueryCapability(printerId, 0);
 }
+
+#ifdef ENTERPRISE_ENABLE
+void VendorManager::SwitchSpace()
+{
+    PRINT_HILOGI("SwitchSpace enter");
+    std::lock_guard<std::mutex> lock(vendorMapMutex);
+    for (auto const &pair : vendorMap) {
+        if (pair.second == nullptr) {
+            PRINT_HILOGW("vendor extension is null");
+            continue;
+        }
+        pair.second->OnSwitchSpace();
+    }
+    PRINT_HILOGI("SwitchSpace quit");
+}
+
+void VendorManager::UpdateIsEnterprise(bool isEnterprise)
+{
+    isEnterprise_ = isEnterprise;
+}
+
+bool VendorManager::IsEnterprise()
+{
+    return isEnterprise_;
+}
+#endif  // ENTERPRISE_ENABLE

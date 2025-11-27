@@ -23,7 +23,7 @@ namespace OHOS {
 namespace Print {
 class MockBsuniDriver {
 public:
-    MOCK_METHOD1(OnCreate, int32_t(const Print_ServiceAbility *));
+    MOCK_METHOD2(OnCreate, int32_t(const Print_ServiceAbility *, const char *cupsPath));
     MOCK_METHOD0(OnDestroy, int32_t());
     MOCK_METHOD0(OnStartDiscovery, int32_t());
     MOCK_METHOD0(OnStopDiscovery, int32_t());

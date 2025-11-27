@@ -87,6 +87,9 @@ public:
     virtual void AddPrintEvent(const std::string &vendorName, const std::string &printerId,
         const std::string &eventType, int32_t eventCode) = 0;
     virtual bool IsBsunidriverSupport(const PrinterInfo &printerInfo) = 0;
+#ifdef ENTERPRISE_ENABLE
+    virtual bool IsEnterprise() = 0;
+#endif  // ENTERPRISE_ENABLE
 };
 
 class VendorDriverBase {
@@ -108,7 +111,10 @@ public:
     virtual bool IsStatusMonitoring(const std::string &printerId);
     virtual bool QueryProperty(const std::string &printerId, const std::string &key, std::string &value);
     virtual void UpdateAllPrinterStatus();
-    
+#ifdef ENTERPRISE_ENABLE
+    virtual void OnSwitchSpace();
+#endif // ENTERPRISE_ENABLE
+     
     std::shared_ptr<PrinterVendorStatus> GetMonitorVendorStatus(const std::string &printerId);
     std::string GetGlobalVendorName();
     std::string GetGlobalPrinterId(const std::string &printerId);

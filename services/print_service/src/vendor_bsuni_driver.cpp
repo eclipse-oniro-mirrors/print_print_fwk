@@ -23,6 +23,11 @@ using namespace OHOS::Print;
 namespace {
 std::mutex g_instanceMutex;
 std::weak_ptr<VendorBsuniDriver> g_weakInstance;
+
+static const char* CUPS_ROOT_DIR = "/data/service/el1/public/print_service/cups";
+#ifdef ENTERPRISE_ENABLE
+static const char* CUPS_ENTERPRISE_ROOT_DIR = "/data/service/el1/public/print_service/cups_enterprise";
+#endif  // ENTERPRISE_ENABLE
 }  // namespace
 
 void VendorBsuniDriver::SetDriverWrapper(const std::shared_ptr<VendorBsuniDriver>& driver)
@@ -341,6 +346,10 @@ void VendorBsuniDriver::OnCreate()
         PRINT_HILOGW("vendorExtension is null");
         return;
     }
+    if (vendorManager == nullptr) {
+        PRINT_HILOGW("vendorManager is null");
+        return;
+    }
     if (vendorExtension->onCreate == nullptr) {
         PRINT_HILOGW("onCreate is null");
         return;
@@ -353,7 +362,17 @@ void VendorBsuniDriver::OnCreate()
     printServiceAbility.removePrinterFromCups = RemovePrinterFromCups;
     printServiceAbility.onCapabilityQueried = OnCapabilityQueried;
     printServiceAbility.onPropertiesQueried = OnPropertiesQueried;
-    int32_t result = vendorExtension->onCreate(&printServiceAbility);
+    
+#ifdef ENTERPRISE_ENABLE
+    if (vendorManager->IsEnterprise()) {
+        PRINT_HILOGI("vendorManager onCreate in enterprise");
+        int32_t result = vendorExtension->onCreate(&printServiceAbility, CUPS_ENTERPRISE_ROOT_DIR);
+        PRINT_HILOGI("OnCreate quit: %{public}d", result);
+        return;
+    }
+#endif  // ENTERPRISE_ENABLE
+    PRINT_HILOGI("vendorManager onCreate in user");
+    int32_t result = vendorExtension->onCreate(&printServiceAbility, CUPS_ROOT_DIR);
     PRINT_HILOGI("OnCreate quit: %{public}d", result);
 }
 void VendorBsuniDriver::OnDestroy()
@@ -618,3 +637,27 @@ void VendorBsuniDriver::OnPrinterCapabilityQueried(std::shared_ptr<PrinterInfo> 
     syncWait.Notify();
     PRINT_HILOGD("OnPrinterCapabilityQueried quit");
 }
+
+#ifdef ENTERPRISE_ENABLE
+void VendorBsuniDriver::OnSwitchSpace()
+{
+    PRINT_HILOGD("OnSwitchSpace enter");
+    if (vendorExtension == nullptr) {
+        PRINT_HILOGW("vendorExtension is null");
+        return;
+    }
+    if (vendorExtension->onSwitchSpace == nullptr) {
+        PRINT_HILOGW("onSwitchSpace is null");
+        return;
+    }
+    if (vendorManager->IsEnterprise()) {
+        PRINT_HILOGI("[] OnSwitchSpace in enterprise");
+        int32_t result = vendorExtension->onSwitchSpace(CUPS_ENTERPRISE_ROOT_DIR);
+        PRINT_HILOGI("onSwitchSpace quit: %{public}d", result);
+        return;
+    }
+    PRINT_HILOGI("[] OnSwitchSpace in user");
+    int32_t result = vendorExtension->onSwitchSpace(CUPS_ROOT_DIR);
+    PRINT_HILOGI("onSwitchSpace quit: %{public}d", result);
+}
+#endif // ENTERPRISE_ENABLE

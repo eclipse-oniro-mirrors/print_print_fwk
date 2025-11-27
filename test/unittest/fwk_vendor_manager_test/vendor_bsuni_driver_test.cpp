@@ -96,10 +96,10 @@ static void BuildDefaultValue(Print_DefaultValue &defaultValue)
 namespace OHOS {
 namespace Print {
 MockBsuniDriver *g_mockDriver = nullptr;
-int32_t OnCreateTest(const Print_ServiceAbility *context)
+int32_t OnCreateTest(const Print_ServiceAbility *context, const char *cupsPath)
 {
     if (g_mockDriver != nullptr) {
-        return g_mockDriver->OnCreate(context);
+        return g_mockDriver->OnCreate(context, cupsPath);
     }
     return 0;
 }
@@ -210,7 +210,7 @@ void VendorBsuniDriverTest::DoMockTest(MockTestFunc func)
         .onQueryProperties = OnQueryPropertiesTest};
     vendorDriver->vendorExtension = &vendorExtension;
     vendorDriver->vendorManager = &mockManager;
-    EXPECT_CALL(mockDriver, OnCreate(_)).Times(1).WillOnce(Return(0));
+    EXPECT_CALL(mockDriver, OnCreate(_, "")).Times(1).WillOnce(Return(0));
     EXPECT_CALL(mockDriver, OnDestroy()).Times(1).WillOnce(Return(0));
     vendorDriver->OnCreate();
     func(*vendorDriver, mockDriver, mockManager);

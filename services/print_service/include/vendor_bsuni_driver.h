@@ -47,6 +47,9 @@ public:
     bool OnQueryCapability(const std::string &printerId, int timeout) override;
     bool OnQueryCapabilityByIp(const std::string &printerIp, const std::string &protocol) override;
     bool OnQueryProperties(const std::string &printerId, const std::vector<std::string> &propertyKeys) override;
+#ifdef ENTERPRISE_ENABLE
+    void OnSwitchSpace() override;
+#endif // ENTERPRISE_ENABLE
 
 private:
     bool LoadDriverExtension();
