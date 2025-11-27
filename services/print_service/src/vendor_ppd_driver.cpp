@@ -18,6 +18,7 @@
 
 using namespace OHOS::Print;
 const int DISCOVERY_INTERVAL_MS = 5000;
+const bool NEED_DISCOVERY_PULLIG = false;
 
 VendorPpdDriver::VendorPpdDriver()
 {}
@@ -139,6 +140,10 @@ void VendorPpdDriver::OnStartDiscovery()
     PRINT_HILOGI("OnStartDiscovery enter");
     if (vendorManager == nullptr) {
         PRINT_HILOGW("OnStartDiscovery vendorManager is null.");
+        return;
+    }
+    if (!NEED_DISCOVERY_PULLIG) {
+        DiscoverBackendPrinters();
         return;
     }
     std::unique_lock<std::mutex> lock(discoveryStateChangeMutex_);
