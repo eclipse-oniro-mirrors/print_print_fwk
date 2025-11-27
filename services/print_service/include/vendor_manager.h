@@ -121,7 +121,6 @@ private:
     bool WaitNext();
     bool IsPrivatePpdDriver(const std::string &vendorName);
     bool IsWlanGroupDriver(const std::string &bothPrinterId);
-    bool IsValidIp(const std::string &ip);
 
 private:
     std::atomic<bool> defaultLoaded{false};

@@ -4044,6 +4044,10 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
         return E_PRINT_INVALID_PRINTER;
     }
     std::string ip = connectParamJson["ip"].asString();
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(ip.c_str())) {
+        PRINT_HILOGW("invalid ip");
+        return E_PRINT_INVALID_PRINTER;
+    }
     PRINT_HILOGI("ip: %{public}s", PrintUtils::AnonymizeIp(ip).c_str());
     std::string protocol = "auto";
     if (PrintJsonUtil::IsMember(connectParamJson, "protocol") && connectParamJson["protocol"].isString()) {
@@ -4661,6 +4665,10 @@ int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printer
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
+        PRINT_HILOGW("invalid ip");
+        return E_PRINT_INVALID_PRINTER;
+    }
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
     if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName)) {
         PRINT_HILOGW("ConnectPrinterByIpAndPpd failed");
