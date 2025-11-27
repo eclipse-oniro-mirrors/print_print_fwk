@@ -4549,10 +4549,9 @@ void PrintServiceAbility::RegisterSettingDataObserver()
         PRINT_HILOGE("Invalid user id.");
         return;
     }
-    std::shared_ptr<PrintServiceHelper> helper = helper_;
-    PrintSettingDataObserver::ObserverCallback observerCallback = [helper, userId]() {
+    PrintSettingDataObserver::ObserverCallback observerCallback = [this, userId]() {
         PRINT_HILOGI("observerCallback enter");
-        if (helper == nullptr) {
+        if (this->helper_ == nullptr) {
             PRINT_HILOGE("Invalid print service helper.");
             return;
         }
@@ -4563,7 +4562,7 @@ void PrintServiceAbility::RegisterSettingDataObserver()
         }
         PRINT_HILOGI("observerCallback pcmode value: %{public}s", value.c_str());
         if (value == "false") {
-            helper->DisconnectAbility();
+            this->helper_->DisconnectAbility();
             return;
         }
         if (isMonitoring_.load()) {
