@@ -241,6 +241,8 @@ private:
     void UpdatePpdForPreinstalledDriverPrinter();
     bool IsPreinstalledDriverPrinter(const std::string &printerName);
     void StartDiscoverPrinter();
+    void MonitorModeChange();
+    bool IsModeChangeEnd(std::string &lastChangeModeValue);
 
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;

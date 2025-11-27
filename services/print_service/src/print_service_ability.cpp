@@ -127,7 +127,7 @@ static const std::string DEVICE_TYPE = "PRINTER";
 static const std::string PRINT_CONSTRAINT = "constraint.print";
 
 static const std::string PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH = "const.window.support_window_pcmode_switch";
-static const std::string PARAMETER_CHANGE_MODE_ANIMATION_READY = "presist.sceneboard.changeModeAnimationReady";
+static const std::string PARAMETER_CHANGE_MODE_ANIMATION_READY = "persist.sceneboard.changeModeAnimationReady";
 static const std::string CHANGE_MODE_DEFAULT_VALUE = "-1";
 static const std::string WINDOW_PCMODE_SWITCH_STATUS = "window_pcmode_switch_status";
 
@@ -4593,7 +4593,7 @@ void PrintServiceAbility::MonitorModeChange()
     isMonitoring_.store(false);
 }
 
-void PrintServiceAbility::IsModeChangeEnd(std::string &lastChangeModeValue)
+bool PrintServiceAbility::IsModeChangeEnd(std::string &lastChangeModeValue)
 {
     std::string value = system::GetParameter(PARAMETER_CHANGE_MODE_ANIMATION_READY, CHANGE_MODE_DEFAULT_VALUE);
     PRINT_HILOGI("change mode value: %{public}s, last value: %{public}s", value.c_str(), lastChangeModeValue.c_str());
@@ -4603,7 +4603,6 @@ void PrintServiceAbility::IsModeChangeEnd(std::string &lastChangeModeValue)
     lastChangeModeValue = value;
     return false;
 }
-
 
 int32_t PrintServiceAbility::AuthPrintJob(const std::string &jobId, const std::string &userName,
     char *userPasswd)
