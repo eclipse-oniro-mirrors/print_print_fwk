@@ -1490,8 +1490,9 @@ bool PrintCupsClient::VerifyPrintJob(
     }
     num_options = FillJobOptions(jobParams, num_options, &options);
     cupsSetUser(jobParams->jobOriginatingUserName.c_str());
+    std::string anonymizeJobName = PrintUtils::AnonymizeJobName(jobParams->jobName);
     if ((jobId = static_cast<uint32_t>(cupsCreateJob(
-        http, jobParams->printerName.c_str(), jobParams->jobName.c_str(), num_options, options))) == 0) {
+        http, jobParams->printerName.c_str(), anonymizeJobName.c_str(), num_options, options))) == 0) {
         PRINT_HILOGE("[Job Id: %{public}s] Unable to cupsCreateJob: %{public}s",
             jobParams->serviceJobId.c_str(), cupsLastErrorString());
         jobParams->serviceAbility->UpdatePrintJobState(
