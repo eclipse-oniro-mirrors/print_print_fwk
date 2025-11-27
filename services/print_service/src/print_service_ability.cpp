@@ -74,6 +74,7 @@ const uint32_t ENTER_LOW_POWER_INTERVAL = 90000;
 const uint32_t UNREGISTER_CALLBACK_INTERVAL = 5000;
 const uint32_t CHECK_CALLER_APP_INTERVAL = 60;
 const uint32_t CONNECT_PLUGIN_PRINT_TIMEOUT = 5000;
+const uint32_t MONITOR_CHANGE_MODE_INTERVAL = 500;
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -126,6 +127,8 @@ static const std::string DEVICE_TYPE = "PRINTER";
 static const std::string PRINT_CONSTRAINT = "constraint.print";
 
 static const std::string PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH = "const.window.support_window_pcmode_switch";
+static const std::string PARAMETER_CHANGE_MODE_ANIMATION_READY = "presist.sceneboard.changeModeAnimationReady";
+static const std::string CHANGE_MODE_DEFAULT_VALUE = "-1";
 static const std::string WINDOW_PCMODE_SWITCH_STATUS = "window_pcmode_switch_status";
 
 #if ENTERPRISE_ENABLE
@@ -4561,7 +4564,15 @@ void PrintServiceAbility::RegisterSettingDataObserver()
         PRINT_HILOGI("observerCallback pcmode value: %{public}s", value.c_str());
         if (value == "false") {
             helper->DisconnectAbility();
+            return;
         }
+        if (isMonitoring_.load()) {
+            PRINT_HILOGW("The monitoring thread is running");
+            return;
+        }
+        isMonitoring_.store(true);
+        std::thread modeChangeThread([this] { this->MonitorModeChange(); });
+        modeChangeThread.detach();
     };
     PrintSettingDataHelper::GetInstance().RegisterSettingDataObserver(
         WINDOW_PCMODE_SWITCH_STATUS, observerCallback, userId, false);
@@ -4571,6 +4582,28 @@ bool PrintServiceAbility::IsPcModeSupported()
 {
     return system::GetParameter(PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH, "false") == "true";
 }
+
+void PrintServiceAbility::MonitorModeChange()
+{
+    std::string lastChangeModeValue = CHANGE_MODE_DEFAULT_VALUE;
+    while (!IsModeChangeEnd(lastChangeModeValue)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(MONITOR_CHANGE_MODE_INTERVAL));
+    }
+    NotifyCurrentUserChanged(-1);
+    isMonitoring_.store(false);
+}
+
+void PrintServiceAbility::IsModeChangeEnd(std::string &lastChangeModeValue)
+{
+    std::string value = system::GetParameter(PARAMETER_CHANGE_MODE_ANIMATION_READY, CHANGE_MODE_DEFAULT_VALUE);
+    PRINT_HILOGI("change mode value: %{public}s, last value: %{public}s", value.c_str(), lastChangeModeValue.c_str());
+    if (value == CHANGE_MODE_DEFAULT_VALUE && value != lastChangeModeValue) {
+        return true;
+    }
+    lastChangeModeValue = value;
+    return false;
+}
+
 
 int32_t PrintServiceAbility::AuthPrintJob(const std::string &jobId, const std::string &userName,
     char *userPasswd)

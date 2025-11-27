@@ -321,6 +321,8 @@ private:
     std::recursive_mutex discoveryMutex_;
     bool discoveryCallerMonitorThread = false;
 
+    std::atomic<bool> isMonitoring_{false};
+
 #ifdef ENTERPRISE_ENABLE
 private:
     std::atomic<bool> isEnterprise_ = false;
