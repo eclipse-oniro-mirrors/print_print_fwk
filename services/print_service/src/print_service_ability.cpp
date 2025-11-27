@@ -4642,6 +4642,10 @@ int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("QueryPrinterInfoByIp Enter");
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
+        PRINT_HILOGW("invalid ip");
+        return E_PRINT_INVALID_PRINTER;
+    }
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.ClearConnectingPrinter();
     vendorManager.ClearConnectingProtocol();
