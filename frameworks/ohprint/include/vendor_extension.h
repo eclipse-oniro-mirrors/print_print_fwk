@@ -96,7 +96,7 @@ typedef struct {
 } Print_ServiceAbility;
 
 typedef struct {
-    int32_t (*onCreate)(const Print_ServiceAbility *context);
+    int32_t (*onCreate)(const Print_ServiceAbility *context, const char *cupsPath);
     int32_t (*onDestroy)();
     int32_t (*onStartDiscovery)();
     int32_t (*onStopDiscovery)();
@@ -105,6 +105,8 @@ typedef struct {
     int32_t (*onQueryCapability)(const char *printerId);
     int32_t (*onQueryCapabilityByIp)(const char *printerIp, const char *protocol);
     int32_t (*onQueryProperties)(const char *printerId, const Print_StringList *propertyKeyList);
+    int32_t (*onSetProperty)(const char *key, const char *value);
+    int32_t (*onSwitchSpace)(const char *cupsPath);
 } Print_VendorExtension;
 
 Print_VendorExtension* GetPrintVendorExtension(void);

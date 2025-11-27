@@ -169,3 +169,7 @@ void VendorDriverBase::OnPrinterStateQueried(const std::string &printerId, Print
         PRINT_HILOGW("vendorStatus is null");
     }
 }
+
+#ifdef ENTERPRISE_ENABLE
+void VendorDriverBase::OnSwitchSpace() {}
+#endif // ENTERPRISE_ENABLE

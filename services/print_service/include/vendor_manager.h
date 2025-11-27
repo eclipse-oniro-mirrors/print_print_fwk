@@ -114,6 +114,11 @@ public:
     void AddPrintEvent(const std::string &vendorName, const std::string &printerId,
         const std::string &eventType, int32_t eventCode) override;
     bool IsBsunidriverSupport(const PrinterInfo &printerInfo) override;
+#ifdef ENTERPRISE_ENABLE
+    bool IsEnterprise() override;
+    void SwitchSpace();
+    void UpdateIsEnterprise(bool isEnterprise);
+#endif  // ENTERPRISE_ENABLE
 
 private:
     void StatusMonitorProcess();
@@ -140,6 +145,9 @@ private:
     std::string connectingProtocol;
     std::string connectingPpdName;
     std::mutex simpleObjectMutex;
+#ifdef ENTERPRISE_ENABLE
+    bool isEnterprise_ = false;
+#endif  // ENTERPRISE_ENABLE
 };
 }  // namespace Print
 }  // namespace OHOS
