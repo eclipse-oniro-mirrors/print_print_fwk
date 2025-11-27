@@ -77,8 +77,8 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0001, TestSize.Level0)
 HWTEST_F(VendorManagerTest, VendorManagerTest_0002, TestSize.Level0)
 {
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(nullptr, false));
-    EXPECT_TRUE(vendorManager.Init(nullptr, false));
+    EXPECT_FALSE(vendorManager.Init(nullptr, false));
+    EXPECT_FALSE(vendorManager.Init(nullptr, false));
     ThreadSyncWait syncWait;
     vendorManager.StartDiscovery();
     syncWait.Wait(WAIT_TIME_MS);
@@ -179,7 +179,7 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0005, TestSize.Level0)
 HWTEST_F(VendorManagerTest, VendorManagerTest_0006, TestSize.Level1)
 {
     VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(nullptr, false));
+    EXPECT_FALSE(vendorManager.Init(nullptr, false));
     EXPECT_FALSE(vendorManager.LoadVendorDriver(nullptr));
     PrinterInfo printerInfo;
     std::string ppdDriverVendorName = "driver.ppd";

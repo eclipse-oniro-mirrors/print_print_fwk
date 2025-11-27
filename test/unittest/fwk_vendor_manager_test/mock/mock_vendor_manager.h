@@ -57,6 +57,9 @@ public:
     MOCK_METHOD2(DiscoverBackendPrinters, int32_t(const std::string &, std::vector<PrinterInfo> &));
     MOCK_METHOD4(AddPrintEvent, void(const std::string &, const std::string &, const std::string &, int32_t));
     MOCK_METHOD1(IsBsunidriverSupport, bool(const PrinterInfo &));
+#ifdef ENTERPRISE_ENABLE
+    MOCK_METHOD0(IsEnterprise, bool());
+#endif  // ENTERPRISE_ENABLE
 };
 }  // namespace Print
 }  // namespace OHOS
