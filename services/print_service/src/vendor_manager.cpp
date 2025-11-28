@@ -177,10 +177,6 @@ bool VendorManager::UnloadVendorDriver(const std::string &vendorName)
 bool VendorManager::ConnectPrinterByIp(const std::string &printerIp, const std::string &protocol)
 {
     PRINT_HILOGI("ConnectPrinterByIp enter");
-    if (printerIp.size() < IP_LENGTH_MIN) {
-        PRINT_HILOGW("ip length incorrect");
-        return false;
-    }
     if (wlanGroupDriver == nullptr) {
         PRINT_HILOGE("no driver to connect printer by ip");
         return false;
@@ -620,10 +616,6 @@ bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const
     const std::string &ppdName)
 {
     PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
-    if (printerIp.size() < IP_LENGTH_MIN) {
-        PRINT_HILOGW("ip length incorrect");
-        return false;
-    }
     if (wlanGroupDriver == nullptr) {
         PRINT_HILOGE("no driver to connect printer by ip");
         return false;

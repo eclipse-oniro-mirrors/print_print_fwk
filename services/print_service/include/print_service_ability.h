@@ -269,7 +269,7 @@ private:
     std::string RenamePrinterWhenAdded(const PrinterInfo &info);
     void ReportPrinterIdle(const std::string &printerId);
     void UnregisterPrintTaskCallback(const std::string &jobId, const uint32_t state, const uint32_t subState);
-    std::string GetConnectUri(PrinterInfo &printerInfo, std::string connectProtocol);
+    std::string GetConnectUri(PrinterInfo &printerInfo, std::string &connectProtocol);
     bool DoAddPrinterToCups(
         std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData);
     bool DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
