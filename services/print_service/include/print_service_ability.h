@@ -241,6 +241,8 @@ private:
     void UpdatePpdForPreinstalledDriverPrinter();
     bool IsPreinstalledDriverPrinter(const std::string &printerName);
     void StartDiscoverPrinter();
+    void MonitorModeChange();
+    bool IsModeChangeEnd(std::string &lastChangeModeValue);
 
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
@@ -320,6 +322,8 @@ private:
     std::map<int32_t, std::string> discoveryCallerMap_;
     std::recursive_mutex discoveryMutex_;
     bool discoveryCallerMonitorThread = false;
+
+    std::atomic<bool> isMonitoring_{false};
 
 #ifdef ENTERPRISE_ENABLE
 private:
