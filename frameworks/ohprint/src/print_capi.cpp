@@ -60,7 +60,7 @@ PrintStateWrapper::PrintStateWrapper(Print_OnPrintJobStateChanged callback)
 
 void PrintStateWrapper::onJobStateChanged(const std::string &jobId, uint32_t state)
 {
-    if (jobStateChangedCb = nullptr) {
+    if (jobStateChangedCb == nullptr) {
         PRINT_HILOGE("OH_Print job state callback is null.");
         return;
     }
