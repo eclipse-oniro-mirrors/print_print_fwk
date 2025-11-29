@@ -20,6 +20,7 @@
 #include "print_preview_attribute_helper.h"
 #include "print_page_size_helper.h"
 #include "print_range_helper.h"
+#include "print_json_util.h"
 
 namespace OHOS::Print {
 static constexpr const char *PARAM_JOB_FDLIST = "fdList";
