@@ -40,7 +40,6 @@ public:
     static napi_value ConnectPrinter(napi_env env, napi_callback_info info);
     static napi_value DisconnectPrinter(napi_env env, napi_callback_info info);
     static napi_value StartPrintJob(napi_env env, napi_callback_info info);
-    static napi_value StartRawPrintJob(napi_env env, napi_callback_info info);
     static napi_value CancelPrintJob(napi_env env, napi_callback_info info);
     static napi_value RestartPrintJob(napi_env env, napi_callback_info info);
     static napi_value RequestPreview(napi_env env, napi_callback_info info);

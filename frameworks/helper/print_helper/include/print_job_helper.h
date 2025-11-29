@@ -25,7 +25,6 @@ public:
     static napi_value MakeJsObject(napi_env env, const PrintJob &job);
     static napi_value MakeJsSimpleObject(napi_env env, const PrintJob &job);
     static std::shared_ptr<PrintJob> BuildFromJs(napi_env env, napi_value jsValue);
-    static std::shared_ptr<PrintJob> BuildRawPrintJobFromJs(napi_env env, napi_value jsValue);
     static std::shared_ptr<PrintJob> BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::string jobId,
         uint32_t jobState, uint32_t subState, std::shared_ptr<PrintJob> &nativeObj);
 
@@ -36,9 +35,7 @@ private:
     static bool CreateMargin(napi_env env, napi_value &jsPrintJob, const PrintJob &job);
     static bool CreatePreview(napi_env env, napi_value &jsPrintJob, const PrintJob &job);
 
-    static void SetDefaultCapabilityInPrintJob(std::shared_ptr<PrintJob> &nativeObj);
     static bool ValidateProperty(napi_env env, napi_value object);
-    static bool ValidateRawPrintJobProperty(napi_env env, napi_value object);
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_JOB_HELPER_H

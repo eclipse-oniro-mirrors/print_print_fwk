@@ -32,7 +32,6 @@ static constexpr const char *FUNCTION_STOP_DISCOVERY = "stopDiscoverPrinter";
 static constexpr const char *FUNCTION_CONNECT_PRINT = "connectPrinter";
 static constexpr const char *FUNCTION_DISCONNECT_PRINT = "disconnectPrinter";
 static constexpr const char *FUNCTION_START_PRINT = "startPrintJob";
-static constexpr const char *FUNCTION_START_RAW_PRINT = "startRawPrintJob";
 static constexpr const char *FUNCTION_CANCEL_PRINT = "cancelPrintJob";
 static constexpr const char *FUNCTION_RESTART_PRINT = "restartPrintJob";
 static constexpr const char *FUNCTION_REQUEST_PREVIEW = "requestPrintPreview";
