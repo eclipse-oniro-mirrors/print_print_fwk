@@ -2268,6 +2268,7 @@ HWTEST_F(PrintCupsClientTest, GetPrintCupsJobId_ShouldReturnJobId_WhenJobIdExist
     EXPECT_EQ(printCupsClient.GetPrintCupsJobId(jobId), cupsJobId);
 }
 
+#ifdef VIRTUAL_PRINTER_ENABLE
 HWTEST_F(PrintCupsClientTest, CopyJobOutputFile_InvalidJobId_Test, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
@@ -2286,6 +2287,7 @@ HWTEST_F(PrintCupsClientTest, CopyJobOutputFile_RealPathError_Test, TestSize.Lev
     int32_t ret = printCupsClient.CopyJobOutputFile(jobId, fd, false);
     EXPECT_EQ(ret, E_PRINT_FILE_IO);
 }
+#endif
 
 HWTEST_F(PrintCupsClientTest, CheckPreferencesConflicts_InvalidPpdName_Test, TestSize.Level1)
 {

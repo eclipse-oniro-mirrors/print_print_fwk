@@ -405,7 +405,11 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_Sh
     EXPECT_EQ(service->UpdatePrinterInSystem(info), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->AnalyzePrintEvents(printerId, type, detail), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(service->AuthPrintJob(jobId, userName, userPassword), E_PRINT_NO_PERMISSION);
+#ifdef VIRTUAL_PRINTER_ENABLE
     EXPECT_EQ(service->SavePdfFileJob("job_id", 1), E_PRINT_NO_PERMISSION);
+#else
+    EXPECT_EQ(service->SavePdfFileJob("job_id", 1), E_PRINT_SERVER_FAILURE);
+#endif
 
     PrintServiceMockPermission::MockPermission();
     EXPECT_EQ(service->StartService(), E_PRINT_NONE);
@@ -414,7 +418,9 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTestPartThree_ErrorToken_Sh
     EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
     EXPECT_EQ(service->AnalyzePrintEvents(printerId, type, detail), E_PRINT_NONE);
     EXPECT_EQ(service->AuthPrintJob(jobId, userName, userPassword), E_PRINT_INVALID_PRINTJOB);
+#ifdef VIRTUAL_PRINTER_ENABLE
     EXPECT_EQ(service->SavePdfFileJob("job_id", 1), E_PRINT_INVALID_USERID);
+#endif
 }
 
 /**

@@ -146,7 +146,6 @@ const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(PrintServiceA
 const int32_t JOB_BANNED_EVENTID = 0x02E000001;
 const std::string JOB_BANNED_VERSION = "1.0";
 const int32_t JOB_BANNED_POLICY_CODE = 1021;
-const std::string VIRTUAL_PRINTER_ID = "fwk.driver.ppd:Virtual PDF Printer";
 
 std::mutex PrintServiceAbility::instanceLock_;
 sptr<PrintServiceAbility> PrintServiceAbility::instance_;
@@ -213,6 +212,58 @@ void PrintServiceAbility::RefreshEprinterErrorCapability()
     printSystemData_.SavePrinterFile(eprinterId);
 }
 
+#ifdef VIRTUAL_PRINTER_ENABLE
+bool PrintServiceAbility::RefreshVirtualPrinter()
+{
+    auto printCupsClient = DelayedSingleton<PrintCupsClient>::GetInstance();
+    if (printCupsClient == nullptr) {
+        PRINT_HILOGW("printCupsClient is null");
+        return false;
+    }
+    std::string printerId = VIRTUAL_PRINTER_ID;
+    std::string printerUri = VIRTUAL_PRINTER_SCHEME + "://";
+    std::string printerName = VIRTUAL_PRINTER_NAME;
+    std::string ppdName = VIRTUAL_PRINTER_PPD;
+    std::string ppdHashCode = printCupsClient->GetPpdHashCode(ppdName);
+    if (ppdHashCode.empty()) {
+        PRINT_HILOGW("The ppd of virtual printer is incorrect");
+        return false;
+    }
+    PrinterInfo printerInfo;
+    if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
+        printerInfo.GetPpdHashCode() == ppdHashCode) {
+        PRINT_HILOGI("virtual printer has added.");
+        printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
+        return true;
+    }
+    int32_t result = printCupsClient->AddPrinterToCupsWithSpecificPpd(printerUri, printerName, ppdName);
+    if (result != E_PRINT_NONE) {
+        PRINT_HILOGW("AddPrinterToCupsWithSpecificPpd error = %{public}d.", result);
+        return false;
+    }
+    PrinterCapability printerCaps;
+    result = printCupsClient->QueryPrinterCapabilityFromPPD(printerName, printerCaps, ppdName);
+    if (result != E_PRINT_NONE) {
+        PRINT_HILOGW("QueryPrinterCapabilityFromPPD error = %{public}d.", result);
+        std::string standardName = PrintUtil::StandardizePrinterName(printerName);
+        printCupsClient->DeleteCupsPrinter(standardName.c_str());
+        return false;
+    }
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterName(printerName);
+    printerInfo.SetUri(printerUri);
+    printerInfo.SetCapability(printerCaps);
+    printerInfo.SetPrinterStatus(PRINTER_STATUS_IDLE);
+    printerInfo.SetPpdHashCode(ppdHashCode);
+    PrinterPreferences preferences;
+    printSystemData_.BuildPrinterPreference(printerCaps, preferences);
+    printerInfo.SetPreferences(preferences);
+    printSystemData_.InsertAddedPrinter(printerId, printerInfo);
+    printSystemData_.SavePrinterFile(printerId);
+    return true;
+}
+#endif
+
 int32_t PrintServiceAbility::Init()
 {
     {
@@ -257,6 +308,9 @@ int32_t PrintServiceAbility::Init()
     if (!printSystemData_.CheckPrinterVersionFile()) {
         RefreshPrinterInfoByPpd();
     }
+#ifdef VIRTUAL_PRINTER_ENABLE
+    RefreshVirtualPrinter();
+#endif
     StartDiscoverPrinter();
     PRINT_HILOGI("state_ is %{public}d.Init PrintServiceAbility success.", static_cast<int>(state_));
     return ERR_OK;
@@ -1954,6 +2008,15 @@ void PrintServiceAbility::ReportPrinterIdle(const std::string &printerId)
             printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
             SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
             SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        } else {
+            PrinterInfo addedPrinterInfo;
+            if (!printSystemData_.QueryPrinterInfoById(printerId, addedPrinterInfo)) {
+                return;
+            }
+            addedPrinterInfo.SetPrinterStatus(PRINTER_STATUS_IDLE);
+            printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
+            SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, addedPrinterInfo);
+            SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, addedPrinterInfo);
         }
     }
 }
@@ -4729,6 +4792,7 @@ int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printer
 
 int32_t PrintServiceAbility::SavePdfFileJob(const std::string &jobId, uint32_t fd)
 {
+#ifdef VIRTUAL_PRINTER_ENABLE
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
@@ -4742,6 +4806,7 @@ int32_t PrintServiceAbility::SavePdfFileJob(const std::string &jobId, uint32_t f
 #ifdef CUPS_ENABLE
     return DelayedSingleton<PrintCupsClient>::GetInstance()->CopyJobOutputFile(jobId, fd, true);
 #endif // CUPS_ENABLE
+#endif
     return E_PRINT_SERVER_FAILURE;
 }
 

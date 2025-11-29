@@ -1859,6 +1859,7 @@ bool PrintCupsClient::AuthCupsPrintJob(const std::string &jobId, const std::stri
     return true;
 }
 
+#ifdef VIRTUAL_PRINTER_ENABLE
 int32_t PrintCupsClient::CopyJobOutputFile(const std::string &jobId, uint32_t fd, bool cleanAfterCopied)
 {
     uint32_t cupsJobId = GetPrintCupsJobId(jobId);
@@ -1903,6 +1904,7 @@ int32_t PrintCupsClient::CopyJobOutputFile(const std::string &jobId, uint32_t fd
     }
     return ret;
 }
+#endif
 
 bool PrintCupsClient::SpecialJobStatusCallback(std::shared_ptr<JobMonitorParam> monitorParams)
 {
@@ -2145,8 +2147,8 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
     bool isCustomizedExtension = !(PrintUtil::startsWith(printerId, SPOOLER_BUNDLE_NAME) ||
                                    PrintUtil::startsWith(printerId, VENDOR_MANAGER_PREFIX));
     bool isRawPrinter = PrintUtil::startsWith(printerId, RAW_PPD_DRIVER);
-    if (isRawPrinter) {
-        PRINT_HILOGI("printer is raw printer.");
+    if (isRawPrinter || printerId == VIRTUAL_PRINTER_ID) {
+        PRINT_HILOGI("printer is raw or virtual printer.");
         return true;
     }
     if ((isUsbPrinter || isCustomizedExtension || isVendorPrinter) && monitorParams->serviceAbility != nullptr) {

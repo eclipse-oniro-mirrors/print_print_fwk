@@ -17,7 +17,8 @@
     ],
     "features": [
       "print_fwk_feature_enterprise",
-      "print_fwk_feature_edm_service"
+      "print_fwk_feature_edm_service",
+      "print_fwk_feature_virtual_printer"
     ],
     "adapted_system_type": [
       "standard"
