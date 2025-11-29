@@ -3754,7 +3754,7 @@ bool PrintServiceAbility::DoAddPrinterToCupsEnable(const std::string &printerUri
     Json::Value optionJson;
     PrintJsonUtil::Parse(option, optionJson);
     if (ppdData.empty()) {
-        if (ppdName.empty()) {
+        if (ppdName.empty() || ppdName == DEFAULT_PPD_NAME) {
             if (!printerInfo->HasCapability() || !printerInfo->HasPrinterMake()) {
                 PRINT_HILOGW("empty capability or invalid printer maker");
                 return false;
