@@ -368,7 +368,7 @@ napi_value NapiInnerPrint::CheckPreferencesConflicts(napi_env env, napi_callback
 {
     PRINT_HILOGD("Enter CheckPreferencesConflicts---->");
     auto context = std::make_shared<InnerPrintContext>();
-    
+
     auto input = [context](
         napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
@@ -430,7 +430,7 @@ napi_value NapiInnerPrint::CheckPrintJobConflicts(napi_env env, napi_callback_in
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_object, "printJob is not an object", napi_string_expected);
         std::string changedType = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        auto printJobPtr = PrintJobHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ONE]);
+        auto printJobPtr = PrintJobHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ONE], false);
         if (printJobPtr == nullptr) {
             context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
             PRINT_HILOGE("printJob format error!");
@@ -1188,7 +1188,7 @@ napi_value NapiInnerPrint::AuthPrintJob(napi_env env, napi_callback_info info)
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "userPasswd is not a string", napi_string_expected);
         char *userPasswd = NapiPrintUtils::GetCharPtrFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
-        
+
         context->jobId = jobId;
         context->userName = userName;
         context->userPasswd = userPasswd;
