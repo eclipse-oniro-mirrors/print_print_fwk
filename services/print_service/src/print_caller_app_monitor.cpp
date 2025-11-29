@@ -90,34 +90,33 @@ void PrintCallerAppMonitor::MonitorCallerApps(std::function<bool()> unloadTask)
         PRINT_HILOGE("unloadTask is nullptr");
         return;
     }
+    std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
     PRINT_HILOGI("start monitor caller apps");
-    while (isMonitoring_.load()) {
-        std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
-        {
-            std::lock_guard<std::mutex> lock(callerMapMutex_);
-            for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
-                PRINT_HILOGI(
-                    "check caller process, pid: %{public}d, bundleName: %{public}s",
-                    iter->first, iter->second->bundleName_.c_str());
-                if (IsAppAlive(iter->second)) {
-                    PRINT_HILOGI("app still alive");
-                    iter++;
-                    continue;
-                }
-                int value = iter->second->counter_.Value();
-                if (value) {
-                    counter_.Decrement(value);
-                }
-                PRINT_HILOGI("app not alive, erase it");
-                iter = callerMap_.erase(iter);
+    do {
+        std::lock_guard<std::mutex> lock(callerMapMutex_);
+        for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
+            PRINT_HILOGI(
+                "check caller process, pid: %{public}d, bundleName: %{public}s",
+                iter->first, iter->second->bundleName_.c_str());
+            if (IsAppAlive(iter->second)) {
+                PRINT_HILOGI("app still alive");
+                iter++;
+                continue;
             }
-            PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
-
-            if ((callerMap_.empty() || counter_.Value() == 0) && unloadTask()) {
-                isMonitoring_.store(false);
+            int value = iter->second->counter_.Value();
+            if (value) {
+                counter_.Decrement(value);
             }
+            PRINT_HILOGI("app not alive, erase it");
+            iter = callerMap_.erase(iter);
         }
-    }
+        PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
+        std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
+
+        if ((callerMap_.empty() || counter_.Value() == 0) && unloadTask()) {
+            isMonitoring_.store(false);
+        }
+    } while (isMonitoring_.load());
 }
 
 sptr<AppExecFwk::IAppMgr> PrintCallerAppMonitor::GetAppManager()
