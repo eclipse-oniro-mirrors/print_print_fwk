@@ -131,6 +131,28 @@ bool PrintAniCallback::OnCallback(const PrinterInfo &info, const std::vector<Ppd
     return true;
 }
 
+bool PrintAniCallback::OnCallbackJobStateChanged(const std::string &jobId, const uint32_t &state)
+{
+    PRINT_HILOGI("[Job Id: %{public}s] PrintCallback OnCallbackJobStateChanged Notification in, state: %{public}d",
+                 jobId.c_str(), state);
+    if (aniVm_ == nullptr || aniCallback_ == nullptr) {
+        PRINT_HILOGE("aniVm_ or aniCallback_ is nullptr");
+        return false;
+    }
+    ani_env *env;
+    ani_options aniArgs { 0, nullptr };
+    auto status = aniVm_->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+    if (status != ANI_OK) {
+        status = aniVm_->GetEnv(ANI_VERSION_1, &env);
+        if (status != ANI_OK) {
+            PRINT_HILOGI("vm GetEnv, err: %{private}d", status);
+            return false;
+        }
+    }
+    aniVm_->DetachCurrentThread();
+    return true;
+}
+
 bool PrintAniCallback::OnCallbackAdapterLayout(const std::string &jobId,
     const PrintAttributes &oldAttrs, const PrintAttributes &newAttrs, uint32_t fd)
 {

@@ -1142,12 +1142,7 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
         PRINT_HILOGW("cannot update printer name/uri");
         return E_PRINT_INVALID_PRINTER;
     }
-    std::string jobId = printJob.GetJobId();
-    if (!jobId.empty()) {
-        RegisterAdapterListener(jobId);
-    } else {
-        jobId = PrintUtils::GetPrintJobId();
-    }
+    std::string jobId = printJob.GetJobId() != "" ? printJob.GetJobId() : PrintUtils::GetPrintJobId();
     auto nativePrintJob = AddNativePrintJob(jobId, printJob);
     if (nativePrintJob == nullptr) {
         return E_PRINT_SERVER_FAILURE;
@@ -2628,14 +2623,32 @@ int32_t PrintServiceAbility::SendPrinterEventChangeEvent(
 void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
 {
     PRINT_HILOGI("[Job Id: %{public}s] PrintServiceAbility::SendPrintJobEvent, state: %{public}d, subState: %{public}d",
-        jobInfo.GetJobId().c_str(),
-        jobInfo.GetJobState(),
-        jobInfo.GetSubState());
+        jobInfo.GetJobId().c_str(), jobInfo.GetJobState(), jobInfo.GetSubState());
+    std::string stateInfo = "";
+    uint32_t state = PRINT_PRINT_JOB_DEFAULT;
+    GetPrintJobStateInfo(jobInfo, stateInfo, state);
+    std::string jobId = jobInfo.GetJobId();
+    std::string eventType = PrintUtils::GetTaskEventId(jobId, PRINT_CALLBACK_JOBSTATE);
     for (auto eventIt : registeredListeners_) {
-        if (PrintUtils::GetEventType(eventIt.first) != PRINTJOB_EVENT_TYPE || eventIt.second == nullptr) {
+        if ((eventType.first != eventType && PrintUtils::GetEventType(eventIt.first) != PRINTJOB_EVENT_TYPE) ||
+            eventIt.second == nullptr) {
             continue;
         }
-        if (CheckUserIdInEventType(eventIt.first)) {
+        if (eventIt.first == eventType && state != PRINT_PRINT_JOB_DEFAULT) {
+            PRINT_HILOGI("[Job Id: %{public}s] OnCallbackJobStateChanged, state : %{public}s", jobId.c_str(), state);
+            eventIt.second->OnCallbackJobStateChanged(jobId, state);
+            if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
+                auto unregisterTask = [this, eventType, jobId]() {
+                    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+                    auto eventIt = registeredListeners_.find(eventType);
+                    if (eventIt != registeredListeners_.end() && eventIt->second !=nullptr) {
+                        PRINT_HILOGI("[Job Id: %{public}s] erase registeredListeners_", jobId.c_str());
+                        registeredListeners_.erase(eventType);
+                    }
+                };
+                serviceHandler->PostTask(unregisterTask, UNREGISTER_CALLBACK_INTERVAL);
+            }
+        } else if (CheckUserIdInEventType(eventIt.first)) {
             PrintJob callbackJobInfo = jobInfo;
             callbackJobInfo.SetFdList(std::vector<uint32_t>());  // State callback don't need fd.
             eventIt.second->OnCallback(jobInfo.GetJobState(), callbackJobInfo);
@@ -2651,32 +2664,38 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
             PRINT_HILOGD("receiveJobStateUpdate printer is empty");
         }
     }
-
-    std::string stateInfo = "";
-    if (jobInfo.GetJobState() == PRINT_JOB_BLOCKED) {
-        stateInfo = EVENT_BLOCK;
-    } else if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
-        switch (jobInfo.GetSubState()) {
-            case PRINT_JOB_COMPLETED_SUCCESS:
-                stateInfo = EVENT_SUCCESS;
-                break;
-
-            case PRINT_JOB_COMPLETED_FAILED:
-                stateInfo = EVENT_FAIL;
-                break;
-
-            case PRINT_JOB_COMPLETED_CANCELLED:
-                stateInfo = EVENT_CANCEL;
-                break;
-            default:
-                break;
-        }
-    }
     if (stateInfo != "") {
         std::string taskEvent = PrintUtils::GetTaskEventId(jobInfo.GetJobId(), stateInfo);
         auto taskEventIt = registeredListeners_.find(taskEvent);
         if (taskEventIt != registeredListeners_.end() && taskEventIt->second != nullptr) {
             taskEventIt->second->OnCallback();
+        }
+    }
+}
+
+void PrintServiceAbility::GetPrintJobStateInfo(const PrintJob &jobInfo, std::string& stateInfo, uint32_t &state)
+{
+    if (jobInfo.GetJobState() == PRINT_JOB_BLOCKED) {
+        stateInfo = EVENT_BLOCK;
+        state = PRINT_PRINT_JOB_BLOCK;
+    } else if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
+        switch (jobInfo.GetSubState()) {
+            case PRINT_JOB_COMPLETED_SUCCESS:
+                stateInfo = EVENT_SUCCESS;
+                state = PRINT_PRINT_JOB_SUCCEED;
+                break;
+
+            case PRINT_JOB_COMPLETED_FAILED:
+                stateInfo = EVENT_FAIL;
+                state = PRINT_PRINT_JOB_FAIL;
+                break;
+
+            case PRINT_JOB_COMPLETED_CANCELLED:
+                stateInfo = EVENT_CANCEL;
+                state = PRINT_PRINT_JOB_CANCEL;
+                break;
+            default:
+                break;
         }
     }
 }

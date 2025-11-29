@@ -35,6 +35,7 @@ ohos_shared_library("print_napi") {
     "${print_path}/frameworks/helper/print_helper/include",
     "${print_path}/frameworks/models/print_models/include",
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
+    "${print_path}/frameworks/ohprint/include",
   ]
   public_configs = [ ":print_interfaces_kits_napi_config" ]
 

@@ -49,6 +49,7 @@ ohos_shared_library("print_ani") {
     "${print_path}/frameworks/innerkitsimpl/print_impl/include",
     "${print_path}/frameworks/helper/print_ani_helper/include",
     "${print_path}/frameworks/ani_util/include",
+    "${print_path}/frameworks/ohprint/include",
   ]
   sources = [
     "src/print_ani.cpp",

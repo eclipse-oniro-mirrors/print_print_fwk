@@ -37,6 +37,7 @@ static constexpr const char *PARAM_JOB_DUPLEXMODE = "duplexMode";
 static constexpr const char *PARAM_JOB_MARGIN = "margin";
 static constexpr const char *PARAM_JOB_PREVIEW = "preview";
 static constexpr const char *PARAM_JOB_OPTION = "options";
+static constexpr uint32_t NUM_ONE = 1;
 
 napi_value PrintJobHelper::MakeJsSimpleObject(napi_env env, const PrintJob &job)
 {
@@ -146,6 +147,71 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value j
     return nativeObj;
 }
 
+std::shared_ptr<PrintJob> PrintJobHelper::BuildRawPrintJobFromJs(napi_env env, napi_value jsValue)
+{
+    auto nativeObj = std::make_shared<PrintJob>();
+
+    if (!ValidateProperty(env, jsValue)) {
+        PRINT_HILOGE("Invalid property of raw print job");
+        return nullptr;
+    }
+
+    napi_value jsFdList = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_FDLIST);
+    bool isFileArray = false;
+    napi_is_array(env, jsFdList, &isFileArray);
+    if (!isFileArray) {
+        PRINT_HILOGE("Invalid file list of print job");
+        return nullptr;
+    }
+    std::vector<uint32_t> printFdList;
+    uint32_t arrayReLength = 0;
+    napi_get_array_length(env, jsFdList, &arrayReLength);
+    for (uint32_t index = 0; index < arrayReLength; index++) {
+        napi_value filesValue;
+        napi_get_element(env, jsFdList, index, &filesValue);
+        uint32_t fd = NapiPrintUtils::GetUint32FromValue(env, filesValue);
+        PRINT_HILOGD("printJob_value fd %{public}d", fd);
+        printFdList.emplace_back(fd);
+    }
+    nativeObj->SetFdList(printFdList);
+
+    std::string printerId = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_PRINTERID);
+    nativeObj->SetPrinterId(printerId);
+
+    SetDefaultCapabilityInPrintJob(nativeObj);
+    nativeObj->Dump();
+    return nativeObj;
+}
+
+void PrintJobHelper::SetDefaultCapabilityInPrintJob(std::shared_ptr<PrintJob> &nativeObj)
+{
+    nativeObj->SetCopyNumber(NUM_ONE);
+    nativeObj->SetIsSequential(true);
+    nativeObj->SetIsLandscape(false);
+    nativeObj->SetColorMode(PRINT_COLOR_MODE_MONOCHROME);
+    nativeObj->SetDuplexMode(DUPLEX_MODE_NONE);
+
+    std::string pageSizeId = "ISO_A4";
+    PrintPageSize pageSize;
+    if (!PrintPageSize::FindPageSizeById(pageSizeId, pageSize)) {
+        PRINT_HILOGW("use custom native page size: %{public}s.", pageSizeId.c_str());
+        pageSize.SetId(pageSizeId);
+        pageSize.SetName(pageSizeId);
+    }
+    nativeObj->SetPageSize(pageSize);
+
+    PrintMargin margin;
+    margin.SetTop(0);
+    margin.SetRight(0);
+    margin.SetBottom(0);
+    margin.SetLeft(0);
+    nativeObj->SetMargin(margin);
+
+    Json::Value jsonOptions;
+    jsonOptions["documentFormat"] = "application/vnd.cups-raw";
+    std::string option = PrintJsonUtil::WriteStringUTF8(jsonOptions);
+    nativeObj->SetOption(option);
+}
 std::shared_ptr<PrintJob> PrintJobHelper::BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::string jobId,
     uint32_t jobState, uint32_t subState, std::shared_ptr<PrintJob> &nativeObj)
 {
@@ -273,4 +339,14 @@ bool PrintJobHelper::ValidateProperty(napi_env env, napi_value object)
     auto names = NapiPrintUtils::GetPropertyNames(env, object);
     return NapiPrintUtils::VerifyProperty(names, propertyList);
 }
+// bool PrintJobHelper::ValidateRawPrintJobProperty(napi_env env, napi_value object)
+// {
+//     std::map<std::string, PrintParamStatus> propertyList = {
+//         {PARAM_JOB_FDLIST, PRINT_PARAM_NOT_SET},
+//         {PARAM_JOB_PRINTERID, PRINT_PARAM_NOT_SET},
+//     };
+
+//     auto names = NapiPrintUtils::GetPropertyNames(env, object);
+//     return NapiPrintUtils::VerifyProperty(names, propertyList);
+// }
 }

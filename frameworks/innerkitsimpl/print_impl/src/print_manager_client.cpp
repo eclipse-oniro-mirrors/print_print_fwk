@@ -30,6 +30,7 @@
 #include "print_callback.h"
 #include "print_innerkit_modal_ui_callback.h"
 #include "print_util.h"
+#include "print_state.h"
 
 namespace OHOS::Print {
 
@@ -401,15 +402,15 @@ int32_t PrintManagerClient::StartNativePrintJob(PrintJob &printJob, const sptr<I
     PRINT_HILOGI("PrintManagerClient StartNativePrintJob with callback start.");
     int32_t ret = E_PRINT_RPC_FAILURE;
     if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->On("", PRINT_CALLBACK_ADAPTER, listener);
+        std::string jobId = PrintUtils::GetPrintJobId();
+        ret = printServiceProxy_->On(jobId, PRINT_CALLBACK_JOBSTATE, listener);
         PRINT_HILOGI("PrintManagerClient On out ret = [%{public}d].", ret);
         if (ret != E_PRINT_NONE) {
             return ret;
         }
-        std::string jobId = PrintUtils::GetPrintJobId();
         printJob.SetJobId(jobId);
         ret = printServiceProxy_->StartNativePrintJob(printJob);
-        PRINT_HILOGI("PrintManagerClient QueryPrinterProperties with callback out ret = [%{public}d].", ret);
+        PRINT_HILOGI("PrintManagerClient StartNativePrintJob with callback out ret = [%{public}d].", ret);
     }
     return ret;
 }

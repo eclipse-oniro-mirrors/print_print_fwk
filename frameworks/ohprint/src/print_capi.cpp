@@ -44,32 +44,6 @@ static Print_PrinterDiscoveryCallback g_printerDiscoverCallback = nullptr;
 static std::recursive_mutex g_printerChangeMutex;
 static Print_PrinterChangeCallback g_printerChangeCallback = nullptr;
 
-namespace {
-class PrintState : public PrintDocumentAdapter {
-public:
-    explicit PrintState(Print_OnJobStateChanged callback);
-
-    void onJobStateChanged(const std::string &jobId, uint32_t state) override;
-
-private:
-    Print_OnJobStateChanged jobStateChangedCb = nullptr;
-};
-
-PrintState::PrintState(Print_OnJobStateChanged callback)
-{
-    jobStateChangedCb = callback;
-}
-
-void PrintState::onJobStateChanged(const std::string &jobId, uint32_t state)
-{
-    if (jobStateChangedCb == nullptr) {
-        PRINT_HILOGE("OH_Print job state callback is null.");
-        return;
-    }
-    jobStateChangedCb(jobId.c_str(), state);
-}
-
-}
 static bool NativePrinterDiscoverFunction(uint32_t event, const PrinterInfo &info)
 {
     PRINT_HILOGD(
@@ -337,11 +311,15 @@ Print_ErrorCode OH_Print_StartPrintJob(const Print_PrintJob *printJob)
 }
 
 Print_ErrorCode OH_Print_StartPrintJobWithJobStateCallBack(const Print_PrintJob *printJob,
-    Print_OnJobStateChanged jobStateChangedCb)
+    Print_OnPrintJobStateChanged jobStateChangedCb)
 {
     if (printJob == nullptr) {
-        PRINT_HILOGI("printJob is null.");
+        PRINT_HILOGW("printJob is null.");
         return PRINT_ERROR_INVALID_PRINT_JOB;
+    }
+    if (jobStateChangedCb == nullptr) {
+        PRINT_HILOGW("jobStateChangedCb is null.");
+        return PRINT_ERROR_INVALID_PARAMETER;
     }
     PrintJob curPrintJob;
     int32_t ret = ConvertNativeJobToPrintJob(*printJob, curPrintJob);
