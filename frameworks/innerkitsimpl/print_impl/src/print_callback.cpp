@@ -21,16 +21,21 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintCallback::PrintCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref), adapter_(nullptr)
-{
-}
+PrintCallback::PrintCallback(napi_env env, napi_ref ref)
+    : env_(env), ref_(ref), adapter_(nullptr), printState_(nullptr) {}
 
-PrintCallback::PrintCallback(PrintDocumentAdapter* adapter) : env_(nullptr), ref_(nullptr), adapter_(adapter)
-{
-}
+PrintCallback::PrintCallback(PrintDocumentAdapter *adapter)
+    : env_(nullptr), ref_(nullptr), adapter_(adapter), printState_(nullptr) {}
+
+PrintCallback::PrintCallback(PrintState *printState)
+    : env_(nullptr), ref_(nullptr), adapter_(nullptr), printState_(printState) {}
 
 PrintCallback::~PrintCallback()
 {
+    if (printState_ = nullptr) {
+        delete printState_;
+        printState_ = nullptr;
+    }
     if (adapter_ != nullptr) {
         delete adapter_;
         adapter_ = nullptr;
@@ -301,6 +306,18 @@ bool PrintCallback::OnCallback(const PrinterInfo &info, const std::vector<PpdInf
                 NapiPrintUtils::CreatePpdInfoVectorUtf8(cbParam->env, cbParam->ppds);
             NapiCallFunction(cbParam, NapiPrintUtils::ARGC_TWO, callbackValues);
         });
+}
+
+bool PrintCallback::OnCallbackJobStateChanged(const std::string jobId, const uint32_t state)
+{
+    PRINT_HILOGI("PrintCallback OnCallbackJobStateChanged Notification in, jobId: %{public}s state:%{public}d",
+        jobId.c_str(), state);
+    if (printState_ != nullptr) {
+        PRINT_HILOGI("OnCallbackJobStateChanged run c++");
+        printState_->onJobStateChanged(jobId, state);
+        return true;
+    }
+    return false;
 }
 
 bool PrintCallback::OnCallbackAdapterLayout(

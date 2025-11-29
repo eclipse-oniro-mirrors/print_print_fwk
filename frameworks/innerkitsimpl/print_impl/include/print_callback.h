@@ -23,6 +23,7 @@
 #include "napi/native_node_api.h"
 #include "print_callback_stub.h"
 #include "iprint_adapter.h"
+#include "print_state.h"
 #include "print_manager_client.h"
 #include "ppd_info.h"
 
@@ -55,6 +56,7 @@ class PrintCallback : public PrintCallbackStub {
 public:
     PrintCallback(napi_env env, napi_ref ref);
     explicit PrintCallback(PrintDocumentAdapter *adapter); // This interface is invoked by other domains.
+    explicit PrintCallback(PrintState *printState_); // This interface is invoked by other domains.
     PrintCallback(){}; // This interface is invoked by ndk C++ Object
     ~PrintCallback();
     bool OnCallback() override;
@@ -62,6 +64,7 @@ public:
     bool OnCallback(uint32_t state, const PrintJob &info) override;
     bool OnCallback(const std::string &extensionId, const std::string &info) override;
     bool OnCallback(const PrinterInfo &info, const std::vector<PpdInfo> &ppds) override;
+    bool OnCallbackJobStateChanged(const std::string jobId, const uint32_t state) override;
     bool OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
         const PrintAttributes &newAttrs, uint32_t fd) override;
     bool OnCallbackAdapterJobStateChanged(const std::string jobId, const uint32_t state,
@@ -81,6 +84,7 @@ private:
     napi_ref ref_ = nullptr;
     std::mutex mutex_;
     PrintDocumentAdapter *adapter_ = nullptr;
+    PrintState *printState_ = nullptr;
     NativePrinterChangeCallback nativePrinterChange_cb = nullptr;
 };
 }  // namespace OHOS::Print

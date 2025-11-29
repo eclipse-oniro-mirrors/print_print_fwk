@@ -42,6 +42,10 @@ public:
     {
         return true;
     }
+    bool OnCallbackJobStateChanged(const std::string jobId, const uint32_t state) override
+    {
+        return true;
+    }
     bool OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
         const PrintAttributes &newAttrs, uint32_t fd) override
     {

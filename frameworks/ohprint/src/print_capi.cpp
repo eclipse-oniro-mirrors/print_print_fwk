@@ -337,11 +337,15 @@ Print_ErrorCode OH_Print_StartPrintJob(const Print_PrintJob *printJob)
 }
 
 Print_ErrorCode OH_Print_StartPrintJobWithJobStateCallBack(const Print_PrintJob *printJob,
-    Print_OnJobStateChanged jobStateChangedCb)
+    Print_OnPrintJobStateChanged jobStateChangedCb)
 {
     if (printJob == nullptr) {
-        PRINT_HILOGI("printJob is null.");
+        PRINT_HILOGW("printJob is null.");
         return PRINT_ERROR_INVALID_PRINT_JOB;
+    }
+    if (jobStateChangedCb == nullptr) {
+        PRINT_HILOGW("jobStateChangedCb is null.");
+        return PRINT_ERROR_INVALID_PARAMETER;
     }
     PrintJob curPrintJob;
     int32_t ret = ConvertNativeJobToPrintJob(*printJob, curPrintJob);

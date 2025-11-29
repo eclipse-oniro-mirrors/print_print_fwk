@@ -305,6 +305,31 @@ typedef enum {
 } Print_JobDocAdapterState;
 
 /**
+ * @brief Indicates the print job state.
+ *
+ * @since 23
+ */
+typedef enum {
+    /** Print job succeed. */
+    PRINT_PRINT_JOB_SUCCEED = 0,
+    /** Print job failed. */
+    PRINT_PRINT_JOB_FAIL = 1,
+    /** Print job cancel. */
+    PRINT_PRINT_JOB_CANCEL = 2,
+    /** Print job block. */
+    PRINT_PRINT_JOB_BLOCK = 3,
+} Print_PrintJobState;
+
+/**
+ * @brief Print job state callback.
+ *
+ * @param jobId The print job id of one print task.
+ * @param state The state of current print job.
+ * @since 23
+ */
+typedef void(*Print_OnPrintJobStateChanged)(const char *jobId, Print_PrintJobState state);
+
+/**
  * @brief Indicates printer capabilities.
  *
  * @since 12
@@ -669,7 +694,7 @@ Print_ErrorCode OH_Print_StartPrintJob(const Print_PrintJob *printJob);
  *
  * @permission {@code ohos.permission.PRINT}
  * @param printJob A pointer to a {@link Print_PrintJob} instance that specifies the information for the print job.
- * @param jobStateChangedCb The {@link Print_OnJobStateChanged} to be registered.
+ * @param jobStateChangedCb The {@link Print_OnPrintJobStateChanged} to be registered.
  * @return Returns {@link Print_ErrorCode#PRINT_ERROR_NONE} if the execution is successful.
  *         {@link PRINT_ERROR_NO_PERMISSION} The permission {@code ohos.permission.PRINT} is needed.
  *         {@link PRINT_ERROR_RPC_FAILURE} Unable to connect to the print service.
@@ -681,8 +706,8 @@ Print_ErrorCode OH_Print_StartPrintJob(const Print_PrintJob *printJob);
  * @syscap SystemCapability.Print.PrintFramework
  * @since 23
  */
-Print_ErrorCode OH_Print_StartPrintJobWithJobStateCallBack(const Print_PrintJob *printJob,
-    Print_OnJobStateChanged jobStateChangedCb);
+Print_ErrorCode OH_Print_StartPrintJobWithJobStateCallBack(
+    const Print_PrintJob *printJob, Print_OnPrintJobStateChanged jobStateChangedCb);
 
 /**
  * @brief This API registers the callback for printer changes.

@@ -81,6 +81,7 @@ ohos_shared_library("print_helper") {
     "ipc:ipc_core",
     "napi:ace_napi",
     "samgr:samgr_proxy",
+    "jsoncpp:jsoncpp",
   ]
 
   if (build_variant == "user") {

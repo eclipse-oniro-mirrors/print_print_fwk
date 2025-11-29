@@ -33,6 +33,7 @@ private:
     bool HandlePrintJobEvent(MessageParcel &data, MessageParcel &reply);
     bool HandleExtEvent(MessageParcel &data, MessageParcel &reply);
     bool HandleGetInfoEvent(MessageParcel &data, MessageParcel &reply);
+    bool HandlePrintJobStateChangedEvent(MessageParcel &data, MessageParcel &reply);
     bool HandlePrintAdapterJobEvent(MessageParcel &data, MessageParcel &reply);
     bool HandlePrintAdapterJobChangedEvent(MessageParcel &data, MessageParcel &reply);
     bool HandlePrintAdapterGetFileEvent(MessageParcel &data, MessageParcel &reply);
