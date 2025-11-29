@@ -2630,7 +2630,7 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     std::string jobId = jobInfo.GetJobId();
     std::string eventType = PrintUtils::GetTaskEventId(jobId, PRINT_CALLBACK_JOBSTATE);
     for (auto eventIt : registeredListeners_) {
-        if ((eventType.first != eventType && PrintUtils::GetEventType(eventIt.first) != PRINTJOB_EVENT_TYPE) ||
+        if ((eventIt.first != eventType && PrintUtils::GetEventType(eventIt.first) != PRINTJOB_EVENT_TYPE) ||
             eventIt.second == nullptr) {
             continue;
         }
@@ -2646,7 +2646,7 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
                         registeredListeners_.erase(eventType);
                     }
                 };
-                serviceHandler->PostTask(unregisterTask, UNREGISTER_CALLBACK_INTERVAL);
+                serviceHandler_->PostTask(unregisterTask, UNREGISTER_CALLBACK_INTERVAL);
             }
         } else if (CheckUserIdInEventType(eventIt.first)) {
             PrintJob callbackJobInfo = jobInfo;

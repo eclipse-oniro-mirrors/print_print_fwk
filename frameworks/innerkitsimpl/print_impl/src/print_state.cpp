@@ -14,21 +14,9 @@
  */
 
 #include "print_state.h"
-#include "print_log.h"
 
 namespace OHOS::Print {
-
-PrintState::PrintState(Print_OnPrintJobStateChanged callback)
-{
-    jobStateChangedCb_ = callback;
-}
-
 void PrintState::onJobStateChanged(const std::string &jobId, uint32_t state)
 {
-    if (jobStateChangedCb_ == nullptr) {
-        PRINT_HILOGE("PrintState jobStateChangedCb_ is null.");
-        return;
-    }
-    jobStateChangedCb_(jobId.c_str(), static_cast<Print_PrintJobState>(state));
 }
 }

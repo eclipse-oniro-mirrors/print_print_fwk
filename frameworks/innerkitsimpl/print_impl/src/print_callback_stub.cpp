@@ -130,7 +130,7 @@ bool PrintCallbackStub::HandlePrintJobStateChangedEvent(MessageParcel &data, Mes
     std::string jobId = data.ReadString();
     uint32_t state = data.ReadUint32();
 
-    PRINT_HILOGI("PrintCallbackStub HandlePrintJobStateChangedEvent jobId:%{public}s, state:%{public}d",
+    PRINT_HILOGI("[Job Id: %{public}s] PrintCallbackStub HandlePrintJobStateChangedEvent, state: %{public}d",
         jobId.c_str(), state);
     bool result = OnCallbackJobStateChanged(jobId, state);
     reply.WriteBool(result);

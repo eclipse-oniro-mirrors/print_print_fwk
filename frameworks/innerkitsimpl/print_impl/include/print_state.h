@@ -17,17 +17,12 @@
 #define PRINT_STATE_H
 
 #include <string>
-#include "ohprint.h"
 
 namespace OHOS::Print {
 class PrintState {
 public:
-    explicit PrintState(Print_OnPrintJobStateChanged callback);
-
-    void onJobStateChanged(const std::string &jobId, uint32_t state);
-    ~PrintState() {};
-private:
-    Print_OnPrintJobStateChanged jobStateChangedCb_ = nullptr;
+    virtual void onJobStateChanged(const std::string &jobId, uint32_t state);
+    virtual ~PrintState() {};
 };
 }
 #endif // PRINT_STATE_H
