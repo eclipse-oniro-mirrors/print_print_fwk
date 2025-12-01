@@ -23,7 +23,6 @@
 #include "napi/native_node_api.h"
 #include "print_callback_stub.h"
 #include "iprint_adapter.h"
-#include "print_state.h"
 #include "print_manager_client.h"
 #include "ppd_info.h"
 
