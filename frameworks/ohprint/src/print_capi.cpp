@@ -332,8 +332,8 @@ Print_ErrorCode OH_Print_StartPrintJobWithJobStateCallBack(const Print_PrintJob 
             PRINT_HILOGE("OH_Print job state callback is null.");
             return;
         }
-        jobStateChangedCb(job.c_str(), static_cast<::Print_PrintJobState>(state));
-    }
+        jobStateChangedCb(jobId.c_str(), static_cast<::Print_PrintJobState>(state));
+    };
     OHOS::sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(jobStateChangedfunction);
     if (callback == nullptr) {
         PRINT_HILOGE("OH_Print start print callback is null.");
