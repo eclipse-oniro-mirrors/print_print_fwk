@@ -4867,7 +4867,7 @@ int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId,
     return E_PRINT_NONE;
 }
 
-void PrintServiceAbility::UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<PrinterInfo> printerInfo)
+bool PrintServiceAbility::UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<PrinterInfo> printerInfo)
 {
     PrinterCapability printerCaps;
     printerInfo->GetCapability(printerCaps);
@@ -4875,11 +4875,11 @@ void PrintServiceAbility::UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<Print
     Json::Value optionJson;
     if (!PrintJsonUtil::Parse(optionStr, optionJson)) {
         PRINT_HILOGE("Failed to parse option JSON");
-        return;
+        return false;
     }
     if (!PrintJsonUtil::IsMember(optionJson, "cupsOptions") || !optionJson["cupsOptions"].isObject()) {
         PRINT_HILOGE("can not find cupsOptions");
-        return;
+        return false;
     }
     Json::Value cupsOptionsJson = optionJson["cupsOptions"];
     Json::Value advanceOptJson;
@@ -4900,18 +4900,19 @@ void PrintServiceAbility::UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<Print
             ParseSingleAdvanceOptJson(advanceOptIter->first, singleCapabilityArrayJson, singleAdvanceOptJson);
             advanceOptJson.append(singleAdvanceOptJson);
             advanceDefaultJson[advanceOptIter->first] = cupsOptionsJson[defaultStr];
-        } else {
-            PRINT_HILOGE("Advance option matching error");
         }
     }
-    if (!advanceOptJson.isNull()) {
-        cupsOptionsJson["advanceOptions"] = PrintJsonUtil::WriteStringUTF8(advanceOptJson);
-        cupsOptionsJson["advanceDefault"] = PrintJsonUtil::WriteStringUTF8(advanceDefaultJson);
-        optionJson["cupsOptions"] = cupsOptionsJson;
-        printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
-        printerInfo->SetCapability(printerCaps);
-        PRINT_HILOGI("update advanced options in capability succeed");
+    if (advanceOptJson.isNull()) {
+        PRINT_HILOGW("Advance options is null");
+        return false;
     }
+    cupsOptionsJson["advanceOptions"] = PrintJsonUtil::WriteStringUTF8(advanceOptJson);
+    cupsOptionsJson["advanceDefault"] = PrintJsonUtil::WriteStringUTF8(advanceDefaultJson);
+    optionJson["cupsOptions"] = cupsOptionsJson;
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo->SetCapability(printerCaps);
+    PRINT_HILOGI("update advanced options in capability succeed");
+    return true;
 }
 
 void PrintServiceAbility::ParseSingleAdvanceOptJson(const std::string &keyword, const Json::Value &singleOptArray,

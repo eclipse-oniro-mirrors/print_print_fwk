@@ -243,7 +243,7 @@ private:
     void StartDiscoverPrinter();
     void MonitorModeChange();
     bool IsModeChangeEnd(std::string &lastChangeModeValue);
-    void UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<PrinterInfo> printerInfo);
+    bool UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<PrinterInfo> printerInfo);
     void ParseSingleAdvanceOptJson(
         const std::string &keyword, const Json::Value &singleOptArray, Json::Value &singleAdvanceOptJson);
 
