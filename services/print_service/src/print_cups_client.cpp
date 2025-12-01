@@ -1208,6 +1208,9 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
         std::string keyStr = *key;
         if (jobParams->advancedOpsJson.isMember(keyStr) || jobParams->advancedOpsJson[keyStr].isString()) {
             std::string valueStr = jobParams->advancedOpsJson[keyStr].asString();
+            if (keyStr == CUPS_MEDIA_SOURCE) {
+                num_options = cupsAddOption("InputSlot", valueStr.c_str(), num_options, options);
+            }
             num_options = cupsAddOption(keyStr.c_str(), valueStr.c_str(), num_options, options);
         }
     }
