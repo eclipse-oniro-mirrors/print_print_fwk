@@ -1210,6 +1210,7 @@ int PrintCupsClient::FillAdvancedOptions(JobParameters *jobParams, int num_optio
             std::string valueStr = jobParams->advancedOpsJson[keyStr].asString();
             if (keyStr == CUPS_MEDIA_SOURCE) {
                 num_options = cupsAddOption("InputSlot", valueStr.c_str(), num_options, options);
+                continue;
             }
             num_options = cupsAddOption(keyStr.c_str(), valueStr.c_str(), num_options, options);
         }

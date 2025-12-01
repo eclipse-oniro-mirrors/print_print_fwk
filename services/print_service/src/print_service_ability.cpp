@@ -140,13 +140,13 @@ static const std::vector<std::string> PRINT_TASK_EVENT_LIST = {EVENT_BLOCK, EVEN
 
 static const std::vector<std::string> PREINSTALLED_DRIVER_PRINTER = {};
 
-static const std::string MEDIA_COURCE_ZH_CN = "纸张来源";
+static const std::string MEDIA_SOURCE_ZH_CN = "纸张来源";
 static const std::string CAPABILITY_KEYWORD_DELIMITER = "-";
 static const std::string SUPPORTED = "supported";
 static const std::string DEFAULT = "default";
 static const std::map<std::string, std::string> BSUNI_CAPABILITY_ADVANCE_OPTIONS = {
 #ifdef CUPS_ENABLE
-    {CUPS_MEDIA_SOURCE, MEDIA_COURCE_ZH_CN},
+    {CUPS_MEDIA_SOURCE, MEDIA_SOURCE_ZH_CN},
 #endif  // CUPS_ENABLE
 };
 
@@ -3801,75 +3801,6 @@ bool PrintServiceAbility::DoAddPrinterToCupsEnable(const std::string &printerUri
     return true;
 }
 
-void PrintServiceAbility::UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<PrinterInfo> printerInfo)
-{
-    PrinterCapability printerCaps;
-    printerInfo->GetCapability(printerCaps);
-    std::string optionStr = printerCaps.GetOption();
-    Json::Value optionJson;
-    if (!PrintJsonUtil::Parse(optionStr, optionJson)) {
-        PRINT_HILOGE("Failed to parse option JSON");
-        return;
-    }
-    if (!PrintJsonUtil::IsMember(optionJson, "cupsOptions") || !optionJson["cupsOptions"].isObject()) {
-        PRINT_HILOGE("can not find cupsOptions");
-        return;
-    }
-    Json::Value cupsOptionsJson = optionJson["cupsOptions"];
-    Json::Value advanceOptJson;
-    Json::Value advanceDefaultJson;
-    for (auto advanceOptIter = BSUNI_CAPABILITY_ADVANCE_OPTIONS.begin();
-        advanceOptIter != BSUNI_CAPABILITY_ADVANCE_OPTIONS.end(); advanceOptIter++) {
-        PRINT_HILOGI("find bsuni advances option");
-        std::string supportedStr = advanceOptIter->first + CAPABILITY_KEYWORD_DELIMITER + SUPPORTED;
-        std::string defaultStr = advanceOptIter->first + CAPABILITY_KEYWORD_DELIMITER + DEFAULT;
-        if (PrintJsonUtil::IsMember(cupsOptionsJson, supportedStr) && cupsOptionsJson[supportedStr].isString() &&
-            PrintJsonUtil::IsMember(cupsOptionsJson, defaultStr) && cupsOptionsJson[defaultStr].isString()) {
-            Json::Value singleCapabilityArrayJson;
-            if (!PrintJsonUtil::Parse(cupsOptionsJson[supportedStr].asString(), singleCapabilityArrayJson)) {
-                PRINT_HILOGE("Failed to parse option JSON");
-                continue;
-            }
-            Json::Value singleAdvanceOptJson;
-            ParseSingleAdvanceOptJson(advanceOptIter->first, singleCapabilityArrayJson, singleAdvanceOptJson);
-            advanceOptJson.append(singleAdvanceOptJson);
-            advanceDefaultJson[advanceOptIter->first] = cupsOptionsJson[defaultStr];
-        } else {
-            PRINT_HILOGE("Advance option matching error");
-        }
-    }
-    if (!advanceOptJson.isNUll()) {
-        cupsOptionsJson["advanceOptions"] = PrintJsonUtil::WriteStringUTF8(advanceOptJson);
-        cupsOptionsJson["advanceDefault"] = PrintJsonUtil::WriteStringUTF8(advanceDefaultJson);
-        optionJson["cupsOptions"] = cupsOptionsJson;
-        printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
-        printerInfo->SetCapability(printerCaps);
-        PRINT_HILOGI("update advanced options in capability succeed");
-    }
-}
-
-void PrintServiceAbility::ParseSingleAdvanceOptJson(const std::string &keyword, const Json::Value &singleOptArray,
-    Json::Value &singleAdvanceOptJson)
-{
-    Json::Value advanceChoiceJson;
-    Json::Value advanceChoiceJsonDefaultLanguage;
-    Json::Value advanceChoiceTextJson;
-    for (const auto &item: singleOptArray) {
-        advanceChoiceJsonDefaultLanguage[item.asString()] = item.asString();
-    }
-    advanceChoiceJson["default"] = advanceChoiceJsonDefaultLanguage;
-    advanceChoiceJson["zh_CN"] = advanceChoiceJsonDefaultLanguage;
-    advanceChoiceTextJson["default"] = keyword;
-    auto optIter = BSUNI_CAPABILITY_ADVANCE_OPTIONS.find(keyword);
-    if (optIter != BSUNI_CAPABILITY_ADVANCE_OPTIONS.end()) {
-        advanceChoiceTextJson["zh_CN"] = optIter->second;
-    }
-    singleAdvanceOptJson["choice"] = advanceChoiceJson;
-    singleAdvanceOptJson["keyword"] = keyword;
-    singleAdvanceOptJson["optionText"] = advanceChoiceTextJson;
-    singleAdvanceOptJson["uiType"] = 1;
-}
-
 void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName)
 {
     if (printerInfo == nullptr) {
@@ -4936,4 +4867,72 @@ int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId,
     return E_PRINT_NONE;
 }
 
+void PrintServiceAbility::UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<PrinterInfo> printerInfo)
+{
+    PrinterCapability printerCaps;
+    printerInfo->GetCapability(printerCaps);
+    std::string optionStr = printerCaps.GetOption();
+    Json::Value optionJson;
+    if (!PrintJsonUtil::Parse(optionStr, optionJson)) {
+        PRINT_HILOGE("Failed to parse option JSON");
+        return;
+    }
+    if (!PrintJsonUtil::IsMember(optionJson, "cupsOptions") || !optionJson["cupsOptions"].isObject()) {
+        PRINT_HILOGE("can not find cupsOptions");
+        return;
+    }
+    Json::Value cupsOptionsJson = optionJson["cupsOptions"];
+    Json::Value advanceOptJson;
+    Json::Value advanceDefaultJson;
+    for (auto advanceOptIter = BSUNI_CAPABILITY_ADVANCE_OPTIONS.begin();
+        advanceOptIter != BSUNI_CAPABILITY_ADVANCE_OPTIONS.end(); advanceOptIter++) {
+        PRINT_HILOGI("find bsuni advance option");
+        std::string supportedStr = advanceOptIter->first + CAPABILITY_KEYWORD_DELIMITER + SUPPORTED;
+        std::string defaultStr = advanceOptIter->first + CAPABILITY_KEYWORD_DELIMITER + DEFAULT;
+        if (PrintJsonUtil::IsMember(cupsOptionsJson, supportedStr) && cupsOptionsJson[supportedStr].isString() &&
+            PrintJsonUtil::IsMember(cupsOptionsJson, defaultStr) && cupsOptionsJson[defaultStr].isString()) {
+            Json::Value singleCapabilityArrayJson;
+            if (!PrintJsonUtil::Parse(cupsOptionsJson[supportedStr].asString(), singleCapabilityArrayJson)) {
+                PRINT_HILOGE("Failed to parse option JSON");
+                continue;
+            }
+            Json::Value singleAdvanceOptJson;
+            ParseSingleAdvanceOptJson(advanceOptIter->first, singleCapabilityArrayJson, singleAdvanceOptJson);
+            advanceOptJson.append(singleAdvanceOptJson);
+            advanceDefaultJson[advanceOptIter->first] = cupsOptionsJson[defaultStr];
+        } else {
+            PRINT_HILOGE("Advance option matching error");
+        }
+    }
+    if (!advanceOptJson.isNull()) {
+        cupsOptionsJson["advanceOptions"] = PrintJsonUtil::WriteStringUTF8(advanceOptJson);
+        cupsOptionsJson["advanceDefault"] = PrintJsonUtil::WriteStringUTF8(advanceDefaultJson);
+        optionJson["cupsOptions"] = cupsOptionsJson;
+        printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+        printerInfo->SetCapability(printerCaps);
+        PRINT_HILOGI("update advanced options in capability succeed");
+    }
+}
+
+void PrintServiceAbility::ParseSingleAdvanceOptJson(const std::string &keyword, const Json::Value &singleOptArray,
+    Json::Value &singleAdvanceOptJson)
+{
+    Json::Value advanceChoiceJson;
+    Json::Value advanceChoiceJsonDefaultLanguage;
+    Json::Value advanceOptionTextJson;
+    for (const auto &item: singleOptArray) {
+        advanceChoiceJsonDefaultLanguage[item.asString()] = item.asString();
+    }
+    advanceChoiceJson["default"] = advanceChoiceJsonDefaultLanguage;
+    advanceChoiceJson["zh_CN"] = advanceChoiceJsonDefaultLanguage;
+    advanceOptionTextJson["default"] = keyword;
+    auto optIter = BSUNI_CAPABILITY_ADVANCE_OPTIONS.find(keyword);
+    if (optIter != BSUNI_CAPABILITY_ADVANCE_OPTIONS.end()) {
+        advanceOptionTextJson["zh_CN"] = optIter->second;
+    }
+    singleAdvanceOptJson["choice"] = advanceChoiceJson;
+    singleAdvanceOptJson["keyword"] = keyword;
+    singleAdvanceOptJson["optionText"] = advanceOptionTextJson;
+    singleAdvanceOptJson["uiType"] = 1;
+}
 }  // namespace OHOS::Print
