@@ -44,31 +44,6 @@ static Print_PrinterDiscoveryCallback g_printerDiscoverCallback = nullptr;
 static std::recursive_mutex g_printerChangeMutex;
 static Print_PrinterChangeCallback g_printerChangeCallback = nullptr;
 
-namespace {
-class PrintStateWrapper : public PrintState {
-public:
-    explicit PrintStateWrapper(Print_OnPrintJobStateChanged callback);
-    void onJobStateChanged(const std::string &jobId, uint32_t state) override;
-private:
-    Print_OnPrintJobStateChanged jobStateChangedCb = nullptr;
-};
-
-PrintStateWrapper::PrintStateWrapper(Print_OnPrintJobStateChanged callback)
-{
-    jobStateChangedCb = callback;
-}
-
-void PrintStateWrapper::onJobStateChanged(const std::string &jobId, uint32_t state)
-{
-    if (jobStateChangedCb == nullptr) {
-        PRINT_HILOGE("OH_Print job state callback is null.");
-        return;
-    }
-    jobStateChangedCb(jobId.c_str(), static_cast<::Print_PrintJobState>(state));
-}
-
-}
-
 static bool NativePrinterDiscoverFunction(uint32_t event, const PrinterInfo &info)
 {
     PRINT_HILOGD(
@@ -352,16 +327,16 @@ Print_ErrorCode OH_Print_StartPrintJobWithJobStateCallBack(const Print_PrintJob 
         PRINT_HILOGW("ConvertNativeJobToPrintJob fail.");
         return PRINT_ERROR_INVALID_PRINT_JOB;
     }
-
-    auto *stateWrapper = new (std::nothrow) PrintStateWrapper(jobStateChangedCb);
-    if (stateWrapper == nullptr) {
-        PRINT_HILOGE("OH_Print start print state Wrapper is null.");
-        return PRINT_ERROR_GENERIC_FAILURE;
+    auto jobStateChangedfunction = [jobStateChangedCb](const std::string &jobId, uint32_t state) {
+        if (jobStateChangedCb == nullptr) {
+            PRINT_HILOGE("OH_Print job state callback is null.");
+            return;
+        }
+        jobStateChangedCb(job.c_str(), static_cast<::Print_PrintJobState>(state));
     }
-    OHOS::sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(stateWrapper);
+    OHOS::sptr<IPrintCallback> callback = new (std::nothrow) PrintCallback(jobStateChangedfunction);
     if (callback == nullptr) {
         PRINT_HILOGE("OH_Print start print callback is null.");
-        delete stateWrapper;
         return PRINT_ERROR_GENERIC_FAILURE;
     }
     ret = PrintManagerClient::GetInstance()->StartNativePrintJob(curPrintJob, callback);

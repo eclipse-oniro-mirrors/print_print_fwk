@@ -22,20 +22,16 @@
 
 namespace OHOS::Print {
 PrintCallback::PrintCallback(napi_env env, napi_ref ref)
-    : env_(env), ref_(ref), adapter_(nullptr), printState_(nullptr) {}
+    : env_(env), ref_(ref), adapter_(nullptr), jobStateChangedfunction_(nullptr) {}
 
 PrintCallback::PrintCallback(PrintDocumentAdapter *adapter)
-    : env_(nullptr), ref_(nullptr), adapter_(adapter), printState_(nullptr) {}
+    : env_(nullptr), ref_(nullptr), adapter_(adapter), jobStateChangedfunction_(nullptr) {}
 
-PrintCallback::PrintCallback(PrintState *printState)
-    : env_(nullptr), ref_(nullptr), adapter_(nullptr), printState_(printState) {}
+PrintCallback::PrintCallback(std::function<void(const std::string&, uint32_t)> jobStateChangedfunction)
+    : env_(nullptr), ref_(nullptr), adapter_(nullptr), jobStateChangedfunction_(jobStateChangedfunction) {}
 
 PrintCallback::~PrintCallback()
 {
-    if (printState_ != nullptr) {
-        delete printState_;
-        printState_ = nullptr;
-    }
     if (adapter_ != nullptr) {
         delete adapter_;
         adapter_ = nullptr;
@@ -310,11 +306,11 @@ bool PrintCallback::OnCallback(const PrinterInfo &info, const std::vector<PpdInf
 
 bool PrintCallback::OnCallbackJobStateChanged(const std::string &jobId, const uint32_t &state)
 {
-    PRINT_HILOGI("PrintCallback OnCallbackJobStateChanged Notification in, jobId: %{public}s state:%{public}d",
+    PRINT_HILOGI("[Job Id: %{public}s] PrintCallback OnCallbackJobStateChanged Notification in, state: %{public}d",
         jobId.c_str(), state);
-    if (printState_ != nullptr) {
+    if (jobStateChangedfunction_ != nullptr) {
         PRINT_HILOGI("OnCallbackJobStateChanged run c++");
-        printState_->onJobStateChanged(jobId, state);
+        jobStateChangedfunction_(jobId, state);
         return true;
     }
     return false;

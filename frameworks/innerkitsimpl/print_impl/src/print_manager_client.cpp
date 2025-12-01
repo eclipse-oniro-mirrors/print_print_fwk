@@ -30,7 +30,6 @@
 #include "print_callback.h"
 #include "print_innerkit_modal_ui_callback.h"
 #include "print_util.h"
-#include "print_state.h"
 
 namespace OHOS::Print {
 

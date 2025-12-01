@@ -2635,19 +2635,7 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
             continue;
         }
         if (eventIt.first == eventType && state != PRINT_PRINT_JOB_DEFAULT) {
-            PRINT_HILOGI("[Job Id: %{public}s] OnCallbackJobStateChanged, state : %{public}s", jobId.c_str(), state);
-            eventIt.second->OnCallbackJobStateChanged(jobId, state);
-            if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
-                auto unregisterTask = [this, eventType, jobId]() {
-                    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-                    auto eventIt = registeredListeners_.find(eventType);
-                    if (eventIt != registeredListeners_.end() && eventIt->second !=nullptr) {
-                        PRINT_HILOGI("[Job Id: %{public}s] erase registeredListeners_", jobId.c_str());
-                        registeredListeners_.erase(eventType);
-                    }
-                };
-                serviceHandler_->PostTask(unregisterTask, UNREGISTER_CALLBACK_INTERVAL);
-            }
+            HandleJobStateChanged(jobId, state, jobInfo, eventIt.second, eventType);
         } else if (CheckUserIdInEventType(eventIt.first)) {
             PrintJob callbackJobInfo = jobInfo;
             callbackJobInfo.SetFdList(std::vector<uint32_t>());  // State callback don't need fd.
@@ -2697,6 +2685,24 @@ void PrintServiceAbility::GetPrintJobStateInfo(const PrintJob &jobInfo, std::str
             default:
                 break;
         }
+    }
+}
+
+void PrintServiceAbility::HandleJobStateChanged(const std::string &jobId, const uint32_t state, const PrintJob &jobInfo,
+    sptr<IPrintCallback> &listener, const std::string &eventType)
+{
+    PRINT_HILOGI("[Job Id: %{public}s] HandleJobStateChanged, state: %{public}s", jobId.c_str(), state);
+    listener->OnCallbackJobStateChanged(jobId, state);
+    if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
+        auto unregisterTask = [this, eventType, jobId]() {
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+            auto eventIt = registeredListeners_.find(eventType);
+            if (eventIt != registeredListeners_.end() && eventIt->second !=nullptr) {
+                PRINT_HILOGI("[Job Id: %{public}s] erase registeredListeners_", jobId.c_str());
+                registeredListeners_.erase(eventType);
+            }
+        };
+        serviceHandler_->PostTask(unregisterTask, UNREGISTER_CALLBACK_INTERVAL);
     }
 }
 

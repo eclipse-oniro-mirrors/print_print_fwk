@@ -56,7 +56,7 @@ class PrintCallback : public PrintCallbackStub {
 public:
     PrintCallback(napi_env env, napi_ref ref);
     explicit PrintCallback(PrintDocumentAdapter *adapter); // This interface is invoked by other domains.
-    explicit PrintCallback(PrintState *printState_); // This interface is invoked by other domains.
+    explicit PrintCallback(std::function<void(const std::string&, uint32_t)> jobStateChangedfunction);
     PrintCallback(){}; // This interface is invoked by ndk C++ Object
     ~PrintCallback();
     bool OnCallback() override;
@@ -84,7 +84,7 @@ private:
     napi_ref ref_ = nullptr;
     std::mutex mutex_;
     PrintDocumentAdapter *adapter_ = nullptr;
-    PrintState *printState_ = nullptr;
+    std::function<void(const std::string&, uint32_t)> jobStateChangedfunction_ = nullptr;
     NativePrinterChangeCallback nativePrinterChange_cb = nullptr;
 };
 }  // namespace OHOS::Print

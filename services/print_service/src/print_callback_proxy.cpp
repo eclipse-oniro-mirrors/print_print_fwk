@@ -175,6 +175,7 @@ bool PrintCallbackProxy::OnCallbackJobStateChanged(const std::string &jobId, con
     PRINT_HILOGI("PrintCallbackProxy::OnCallbackJobStateChanged End");
     return true;
 }
+
 bool PrintCallbackProxy::OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
     const PrintAttributes &newAttrs, uint32_t fd)
 {
