@@ -103,7 +103,7 @@ private:
             auto item = buildFunction(env, jsItem);
             if (!item) {
                 PRINT_HILOGE("Failed to build item for property %{public}s", propertyName);
-                return false;
+                continue;
             }
             items.push_back(*item);
         }
