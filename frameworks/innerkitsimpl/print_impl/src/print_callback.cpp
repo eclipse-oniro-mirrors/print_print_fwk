@@ -25,7 +25,7 @@ PrintCallback::PrintCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref),
 {
 }
 
-PrintCallback::PrintCallback(PrintDocumentAdapter* adapter) : env_(nullptr), ref_(nullptr), adapter_(adapter)
+PrintCallback::PrintCallback(PrintDocumentAdapter *adapter) : env_(nullptr), ref_(nullptr), adapter_(adapter)
 {
 }
 
@@ -36,6 +36,8 @@ PrintCallback::~PrintCallback()
         adapter_ = nullptr;
     } else if (nativePrinterChange_cb != nullptr) {
         nativePrinterChange_cb = nullptr;
+    } else if (nativePrintJobChange_cb != nullptr) {
+        nativePrintJobChange_cb = nullptr;
     } else {
         std::lock_guard<std::mutex> autoLock(mutex_);
         Param *param = new (std::nothrow) Param;
@@ -249,6 +251,10 @@ bool PrintCallback::OnCallback(uint32_t state, const PrinterInfo &info)
 bool PrintCallback::OnCallback(uint32_t state, const PrintJob &info)
 {
     PRINT_HILOGI("PrintJob Notification in");
+    if (nativePrintJobChange_cb != nullptr) {
+        PRINT_HILOGI("OnCallback run c++");
+        return nativePrintJobChange_cb(info.GetJobId(), info);
+    }
     return OnBaseCallback(
         [state, info](CallbackParam* param) {
             param->state = state;

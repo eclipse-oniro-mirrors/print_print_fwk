@@ -25,6 +25,7 @@ namespace OHOS::Print {
 #define PRINT_MAX_PRINT_COUNT 1000
 #define PRINT_MAX_PPD_COUNT 4096
 #define PRINT_CALLBACK_ADAPTER "printCallback_adapter"
+#define PRINT_CALLBACK_JOBSTATE "printCallback_jobstate"
 #define PRINT_GET_FILE_CALLBACK_ADAPTER "getPrintFileCallback_adapter"
 
 #define PRINT_ASSERT_BASE(env, assertion, message, retVal)  \
@@ -98,6 +99,14 @@ enum PrinterState {
     PRINTER_DISCONNECTED = 4,   // printer has been disconnected
     PRINTER_RUNNING = 5,        // printer is working
     PRINTER_UNKNOWN = 6,        // unknown printer state
+};
+
+enum Print_PrintJobState {
+    PRINT_PRINT_JOB_SUCCEED = 0,  // print job succeed
+    PRINT_PRINT_JOB_FAIL = 1,     // print job fail
+    PRINT_PRINT_JOB_CANCEL = 2,   // print job cancel
+    PRINT_PRINT_JOB_BLOCK = 3,    // print job has been blocked
+    PRINT_PRINT_JOB_DEFAULT = 100,  // No-callback state
 };
 
 enum PrintJobState {

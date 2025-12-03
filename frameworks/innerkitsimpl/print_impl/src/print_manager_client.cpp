@@ -395,6 +395,25 @@ int32_t PrintManagerClient::StartNativePrintJob(PrintJob &printJob)
     return ret;
 }
 
+int32_t PrintManagerClient::StartNativePrintJob(PrintJob &printJob, const sptr<IPrintCallback> &listener)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    PRINT_HILOGI("PrintManagerClient StartNativePrintJob with callback start.");
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        std::string jobId = PrintUtils::GetPrintJobId();
+        ret = printServiceProxy_->On(jobId, PRINT_CALLBACK_JOBSTATE, listener);
+        PRINT_HILOGI("PrintManagerClient On out ret = [%{public}d].", ret);
+        if (ret != E_PRINT_NONE) {
+            return ret;
+        }
+        printJob.SetJobId(jobId);
+        ret = printServiceProxy_->StartNativePrintJob(printJob);
+        PRINT_HILOGI("PrintManagerClient StartNativePrintJob with callback out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
 int32_t PrintManagerClient::SetPrinterPreference(
     const std::string &printerId, const PrinterPreferences &printerPreference)
 {

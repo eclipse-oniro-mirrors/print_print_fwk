@@ -264,6 +264,9 @@ public:
     int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) override;
 
 private:
+    void GetPrintJobStateInfo(const PrintJob &jobInfo, std::string& stateInfo, uint32_t &state);
+    void HandleJobStateChanged(const std::string &jobId, const PrintJob &jobInfo,
+        const sptr<IPrintCallback> &listener, const std::string &eventType);
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
