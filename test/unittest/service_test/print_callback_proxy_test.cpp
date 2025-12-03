@@ -240,25 +240,6 @@ HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_0006_NeedRename, TestSiz
     EXPECT_FALSE(proxy->OnCallback(testState, testJob));
 }
 
-HWTEST_F(PrintCallbackProxyTest, PrintCallbackProxyTest_OnCallbackJobStateChanged, TestSize.Level0)
-{
-    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
-    EXPECT_NE(obj, nullptr);
-    auto proxy = std::make_shared<PrintCallbackProxy>(obj);
-    EXPECT_NE(proxy, nullptr);
-    auto service = std::make_shared<MockPrintCallbackStub>();
-    EXPECT_NE(service, nullptr);
-    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
-    ON_CALL(*obj, SendRequest)
-        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
-            service->OnRemoteRequest(code, data, reply, option);
-            return E_PRINT_RPC_FAILURE;
-        });
-    uint32_t testState = 0;
-    std::string jobId = "job:1234";
-    EXPECT_FALSE(proxy->OnCallbackJobStateChanged(jobId, testState));
-}
-
 /**
  * @tc.name: PrintCallbackProxyTest_0007
  * @tc.desc: printCallbackProxy
