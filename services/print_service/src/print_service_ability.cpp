@@ -2635,7 +2635,7 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
             continue;
         }
         if (eventIt.first == eventType && state != PRINT_PRINT_JOB_DEFAULT) {
-            HandleJobStateChanged(jobId, state, jobInfo, eventIt.second, eventType);
+            HandleJobStateChanged(jobId, jobInfo, eventIt.second, eventType);
         } else if (CheckUserIdInEventType(eventIt.first)) {
             PrintJob callbackJobInfo = jobInfo;
             callbackJobInfo.SetFdList(std::vector<uint32_t>());  // State callback don't need fd.
@@ -2647,13 +2647,13 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(jobInfo.GetPrinterId());
         if (printerInfo != nullptr) {
-            securityGuardManager_.receiveJobStateUpdate(jobInfo.GetJobId(), *printerInfo, jobInfo);
+            securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
         } else {
             PRINT_HILOGD("receiveJobStateUpdate printer is empty");
         }
     }
     if (stateInfo != "") {
-        std::string taskEvent = PrintUtils::GetTaskEventId(jobInfo.GetJobId(), stateInfo);
+        std::string taskEvent = PrintUtils::GetTaskEventId(jobId, stateInfo);
         auto taskEventIt = registeredListeners_.find(taskEvent);
         if (taskEventIt != registeredListeners_.end() && taskEventIt->second != nullptr) {
             taskEventIt->second->OnCallback();
@@ -2688,11 +2688,11 @@ void PrintServiceAbility::GetPrintJobStateInfo(const PrintJob &jobInfo, std::str
     }
 }
 
-void PrintServiceAbility::HandleJobStateChanged(const std::string &jobId, const uint32_t state, const PrintJob &jobInfo,
-    sptr<IPrintCallback> &listener, const std::string &eventType)
+void PrintServiceAbility::HandleJobStateChanged(const std::string &jobId, const PrintJob &jobInfo,
+    const sptr<IPrintCallback> &listener, const std::string &eventType)
 {
-    PRINT_HILOGI("[Job Id: %{public}s] HandleJobStateChanged, state: %{public}s", jobId.c_str(), state);
-    listener->OnCallbackJobStateChanged(jobId, state);
+    PRINT_HILOGI("[Job Id: %{public}s] HandleJobStateChanged", jobId.c_str());
+    listener->OnCallback(jobInfo.GetJobState(), jobInfo);
     if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
         auto unregisterTask = [this, eventType, jobId]() {
             std::lock_guard<std::recursive_mutex> lock(apiMutex_);

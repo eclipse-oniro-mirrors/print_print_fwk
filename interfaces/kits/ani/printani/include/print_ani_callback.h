@@ -35,7 +35,6 @@ public:
     bool OnCallback(uint32_t state, const PrintJob &info) override;
     bool OnCallback(const std::string &extensionId, const std::string &info) override;
     bool OnCallback(const PrinterInfo &info, const std::vector<PpdInfo> &ppds) override;
-    bool OnCallbackJobStateChanged(const std::string &jobId, const uint32_t &state) override;
     bool OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
         const PrintAttributes &newAttrs, uint32_t fd) override;
     bool OnCallbackAdapterJobStateChanged(const std::string jobId,

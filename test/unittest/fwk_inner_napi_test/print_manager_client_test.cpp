@@ -103,7 +103,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0002_NeedRename, TestSiz
 
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     PrintManagerClient::GetInstance()->ResetProxy();
-    EXPECT_EQ(PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId), E_PRINT_RPC_FAILURE);
+    EXPECT_EQ(PrintManagerClient::GetInstance()->StartPrint(
+                  testFileList, testFdList, testTaskId), E_PRINT_NO_PERMISSION);
 }
 
 /**
@@ -2211,19 +2212,30 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_LoadServerFail, TestSize.Le
 {
     std::string testPrintJobId = "jobId-123";
     PrintJob testPrintJob;
-    testPrintJob.SetJobId("jobId-123");
+    testPrintJob.SetJobId(testPrintJobId);
     sptr<IPrintCallback> testListener;
     PrintManagerClient::GetInstance()->LoadServerFail();
     int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
 HWTEST_F(PrintManagerClientTest, StartNativePrintJob_LoadServerSuccess, TestSize.Level1)
 {
     std::string testPrintJobId = "jobId-123";
     PrintJob testPrintJob;
-    testPrintJob.SetJobId("jobId-123");
+    testPrintJob.SetJobId(testPrintJobId);
     sptr<IPrintCallback> testListener;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+}
+
+HWTEST_F(PrintManagerClientTest, StartNativePrintJob_Success, TestSize.Level1)
+{
+    std::string testPrintJobId = "jobId-123";
+    PrintJob testPrintJob;
+    testPrintJob.SetJobId(testPrintJobId);
+    sptr<IPrintCallback> testListener = new (std::nothrow) DummyPrintCallbackStub();
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);

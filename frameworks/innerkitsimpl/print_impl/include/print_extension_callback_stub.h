@@ -17,7 +17,7 @@
 #define PRINT_EXTENSION_CALLBACK_STUB_H
 
 #include <memory>
-
+#include <functional>
 #include "iprint_extension_callback.h"
 #include "iremote_stub.h"
 #include "print_job.h"
@@ -30,6 +30,7 @@ using PrintJobCallback = bool (*)(const PrintJob&);
 using PrinterCallback = bool (*)(const std::string&);
 using PrinterCapabilityCallback = bool (*)(const std::string&, PrinterCapability&);
 using NativePrinterChangeCallback = bool (*)(uint32_t event, const OHOS::Print::PrinterInfo &info);
+using NativePrintJobChangeCallback = std::function<bool(const std::string&, const PrintJob&)>;
 
 class PrintExtensionCallbackStub : public IRemoteStub<IPrintExtensionCallback> {
 public:

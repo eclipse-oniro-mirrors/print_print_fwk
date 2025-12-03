@@ -27,7 +27,6 @@ PrintCallbackStub::PrintCallbackStub()
     cmdMap_[PRINT_CALLBACK_PRINT_JOB] = &PrintCallbackStub::HandlePrintJobEvent;
     cmdMap_[PRINT_CALLBACK_EXTINFO] = &PrintCallbackStub::HandleExtEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_QUERY_INFO] = &PrintCallbackStub::HandleGetInfoEvent;
-    cmdMap_[PRINT_CALLBACK_PRINT_JOB_STATE_CHANGED] = &PrintCallbackStub::HandlePrintJobStateChangedEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_JOB_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterJobEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_JOB_CHANGED_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterJobChangedEvent;
     cmdMap_[PRINT_CALLBACK_PRINT_GET_FILE_ADAPTER] = &PrintCallbackStub::HandlePrintAdapterGetFileEvent;
@@ -122,20 +121,6 @@ bool PrintCallbackStub::HandleGetInfoEvent(MessageParcel &data, MessageParcel &r
     bool result = OnCallback(*info, ppds);
     reply.WriteBool(result);
     return result;
-}
-
-bool PrintCallbackStub::HandlePrintJobStateChangedEvent(MessageParcel &data, MessageParcel &reply)
-{
-    PRINT_HILOGI("PrintCallbackStub HandlePrintJobStateChangedEvent start");
-    std::string jobId = data.ReadString();
-    uint32_t state = data.ReadUint32();
-
-    PRINT_HILOGI("[Job Id: %{public}s] PrintCallbackStub HandlePrintJobStateChangedEvent, state: %{public}d",
-        jobId.c_str(), state);
-    bool result = OnCallbackJobStateChanged(jobId, state);
-    reply.WriteBool(result);
-    PRINT_HILOGI("PrintCallbackStub HandlePrintJobStateChangedEvent end");
-    return true;
 }
 
 bool PrintCallbackStub::HandlePrintAdapterJobEvent(MessageParcel &data, MessageParcel &reply)

@@ -21,14 +21,13 @@
 #include "print_log.h"
 
 namespace OHOS::Print {
-PrintCallback::PrintCallback(napi_env env, napi_ref ref)
-    : env_(env), ref_(ref), adapter_(nullptr), jobStateChangedfunction_(nullptr) {}
+PrintCallback::PrintCallback(napi_env env, napi_ref ref) : env_(env), ref_(ref), adapter_(nullptr)
+{
+}
 
-PrintCallback::PrintCallback(PrintDocumentAdapter *adapter)
-    : env_(nullptr), ref_(nullptr), adapter_(adapter), jobStateChangedfunction_(nullptr) {}
-
-PrintCallback::PrintCallback(std::function<void(const std::string&, uint32_t)> jobStateChangedfunction)
-    : env_(nullptr), ref_(nullptr), adapter_(nullptr), jobStateChangedfunction_(jobStateChangedfunction) {}
+PrintCallback::PrintCallback(PrintDocumentAdapter *adapter) : env_(nullptr), ref_(nullptr), adapter_(adapter)
+{
+}
 
 PrintCallback::~PrintCallback()
 {
@@ -37,6 +36,8 @@ PrintCallback::~PrintCallback()
         adapter_ = nullptr;
     } else if (nativePrinterChange_cb != nullptr) {
         nativePrinterChange_cb = nullptr;
+    } else if (nativePrintJobChange_cb != nullptr) {
+        nativePrintJobChange_cb = nullptr;
     } else {
         std::lock_guard<std::mutex> autoLock(mutex_);
         Param *param = new (std::nothrow) Param;
@@ -250,6 +251,10 @@ bool PrintCallback::OnCallback(uint32_t state, const PrinterInfo &info)
 bool PrintCallback::OnCallback(uint32_t state, const PrintJob &info)
 {
     PRINT_HILOGI("PrintJob Notification in");
+    if (nativePrintJobChange_cb != nullptr) {
+        PRINT_HILOGI("OnCallback run c++");
+        return nativePrintJobChange_cb(info.GetJobId(), info);
+    }
     return OnBaseCallback(
         [state, info](CallbackParam* param) {
             param->state = state;
@@ -302,18 +307,6 @@ bool PrintCallback::OnCallback(const PrinterInfo &info, const std::vector<PpdInf
                 NapiPrintUtils::CreatePpdInfoVectorUtf8(cbParam->env, cbParam->ppds);
             NapiCallFunction(cbParam, NapiPrintUtils::ARGC_TWO, callbackValues);
         });
-}
-
-bool PrintCallback::OnCallbackJobStateChanged(const std::string &jobId, const uint32_t &state)
-{
-    PRINT_HILOGI("[Job Id: %{public}s] PrintCallback OnCallbackJobStateChanged Notification in, state: %{public}d",
-        jobId.c_str(), state);
-    if (jobStateChangedfunction_ != nullptr) {
-        PRINT_HILOGI("OnCallbackJobStateChanged run c++");
-        jobStateChangedfunction_(jobId, state);
-        return true;
-    }
-    return false;
 }
 
 bool PrintCallback::OnCallbackAdapterLayout(

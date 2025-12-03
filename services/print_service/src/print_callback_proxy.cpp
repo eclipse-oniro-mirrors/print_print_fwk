@@ -147,35 +147,6 @@ bool PrintCallbackProxy::OnCallback(const PrinterInfo &info, const std::vector<P
     return true;
 }
 
-bool PrintCallbackProxy::OnCallbackJobStateChanged(const std::string &jobId, const uint32_t &state)
-{
-    PRINT_HILOGI("PrintCallbackProxy::OnCallbackJobStateChanged Start");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
-
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        PRINT_HILOGE("write descriptor failed");
-        return false;
-    }
-
-    data.WriteString(jobId);
-    data.WriteUint32(state);
-
-    sptr<IRemoteObject> remote = Remote();
-    if (remote == nullptr) {
-        PRINT_HILOGE("SendRequest failed, error: remote is null");
-        return false;
-    }
-    int error = remote->SendRequest(PRINT_CALLBACK_PRINT_JOB_STATE_CHANGED, data, reply, option);
-    if (error != 0) {
-        PRINT_HILOGE("SendRequest failed, error %{public}d", error);
-        return false;
-    }
-    PRINT_HILOGI("PrintCallbackProxy::OnCallbackJobStateChanged End");
-    return true;
-}
-
 bool PrintCallbackProxy::OnCallbackAdapterLayout(const std::string &jobId, const PrintAttributes &oldAttrs,
     const PrintAttributes &newAttrs, uint32_t fd)
 {
