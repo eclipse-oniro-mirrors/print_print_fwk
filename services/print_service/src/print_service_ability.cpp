@@ -157,6 +157,7 @@ const int32_t JOB_BANNED_EVENTID = 0x02E000001;
 const std::string JOB_BANNED_VERSION = "1.0";
 const int32_t JOB_BANNED_POLICY_CODE = 1021;
 const std::string VIRTUAL_PRINTER_ID = "fwk.driver.ppd:Virtual PDF Printer";
+static const std::string EMD_QUERY_VERSION = "version_12";
 
 std::mutex PrintServiceAbility::instanceLock_;
 sptr<PrintServiceAbility> PrintServiceAbility::instance_;
@@ -1146,7 +1147,7 @@ bool PrintServiceAbility::IsDisablePrint()
 {
     bool isDisabled = false;
     OHOS::EDM::EnterpriseDeviceMgrProxy enterpriseDeviceMgrProxy;
-    enterpriseDeviceMgrProxy.IsPolicyDisabled(NULL, JOB_BANNED_POLICY_CODE, isDisabled);
+    enterpriseDeviceMgrProxy.IsPolicyDisabled(NULL, JOB_BANNED_POLICY_CODE, isDisabled, EMD_QUERY_VERSION);
     PRINT_HILOGI("edm service result: %{public}d", isDisabled);
     return isDisabled;
 }
