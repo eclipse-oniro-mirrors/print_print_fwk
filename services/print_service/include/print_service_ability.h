@@ -243,6 +243,9 @@ private:
     void StartDiscoverPrinter();
     void MonitorModeChange();
     bool IsModeChangeEnd(std::string &lastChangeModeValue);
+    bool UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<PrinterInfo> printerInfo);
+    void ParseSingleAdvanceOptJson(
+        const std::string &keyword, const Json::Value &singleOptArray, Json::Value &singleAdvanceOptJson);
 
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
