@@ -74,6 +74,7 @@ const uint32_t ENTER_LOW_POWER_INTERVAL = 90000;
 const uint32_t UNREGISTER_CALLBACK_INTERVAL = 5000;
 const uint32_t CHECK_CALLER_APP_INTERVAL = 60;
 const uint32_t CONNECT_PLUGIN_PRINT_TIMEOUT = 5000;
+const uint32_t MONITOR_CHANGE_MODE_INTERVAL = 500;
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -126,6 +127,8 @@ static const std::string DEVICE_TYPE = "PRINTER";
 static const std::string PRINT_CONSTRAINT = "constraint.print";
 
 static const std::string PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH = "const.window.support_window_pcmode_switch";
+static const std::string PARAMETER_CHANGE_MODE_ANIMATION_READY = "persist.sceneboard.changeModeAnimationReady";
+static const std::string CHANGE_MODE_DEFAULT_VALUE = "-1";
 static const std::string WINDOW_PCMODE_SWITCH_STATUS = "window_pcmode_switch_status";
 
 #if ENTERPRISE_ENABLE
@@ -137,6 +140,16 @@ static const std::vector<std::string> PRINT_TASK_EVENT_LIST = {EVENT_BLOCK, EVEN
 
 static const std::vector<std::string> PREINSTALLED_DRIVER_PRINTER = {};
 
+static const std::string MEDIA_SOURCE_ZH_CN = "纸张来源";
+static const std::string CAPABILITY_KEYWORD_DELIMITER = "-";
+static const std::string SUPPORTED = "supported";
+static const std::string DEFAULT = "default";
+static const std::map<std::string, std::string> BSUNI_CAPABILITY_ADVANCE_OPTIONS = {
+#ifdef CUPS_ENABLE
+    {CUPS_MEDIA_SOURCE, MEDIA_SOURCE_ZH_CN},
+#endif  // CUPS_ENABLE
+};
+
 static bool g_publishState = false;
 
 const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(PrintServiceAbility::GetInstance().GetRefPtr());
@@ -144,6 +157,7 @@ const int32_t JOB_BANNED_EVENTID = 0x02E000001;
 const std::string JOB_BANNED_VERSION = "1.0";
 const int32_t JOB_BANNED_POLICY_CODE = 1021;
 const std::string VIRTUAL_PRINTER_ID = "fwk.driver.ppd:Virtual PDF Printer";
+static const std::string EMD_QUERY_VERSION = "version_12";
 
 std::mutex PrintServiceAbility::instanceLock_;
 sptr<PrintServiceAbility> PrintServiceAbility::instance_;
@@ -1133,7 +1147,7 @@ bool PrintServiceAbility::IsDisablePrint()
 {
     bool isDisabled = false;
     OHOS::EDM::EnterpriseDeviceMgrProxy enterpriseDeviceMgrProxy;
-    enterpriseDeviceMgrProxy.IsPolicyDisabled(NULL, JOB_BANNED_POLICY_CODE, isDisabled);
+    enterpriseDeviceMgrProxy.IsPolicyDisabled(NULL, JOB_BANNED_POLICY_CODE, isDisabled, EMD_QUERY_VERSION);
     PRINT_HILOGI("edm service result: %{public}d", isDisabled);
     return isDisabled;
 }
@@ -1153,7 +1167,7 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
         PRINT_HILOGW("cannot update printer name/uri");
         return E_PRINT_INVALID_PRINTER;
     }
-    std::string jobId = PrintUtils::GetPrintJobId();
+    std::string jobId = printJob.GetJobId() != "" ? printJob.GetJobId() : PrintUtils::GetPrintJobId();
     auto nativePrintJob = AddNativePrintJob(jobId, printJob);
     if (nativePrintJob == nullptr) {
         return E_PRINT_SERVER_FAILURE;
@@ -2663,14 +2677,20 @@ int32_t PrintServiceAbility::SendPrinterEventChangeEvent(
 void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
 {
     PRINT_HILOGI("[Job Id: %{public}s] PrintServiceAbility::SendPrintJobEvent, state: %{public}d, subState: %{public}d",
-        jobInfo.GetJobId().c_str(),
-        jobInfo.GetJobState(),
-        jobInfo.GetSubState());
+        jobInfo.GetJobId().c_str(), jobInfo.GetJobState(), jobInfo.GetSubState());
+    std::string stateInfo = "";
+    uint32_t state = PRINT_PRINT_JOB_DEFAULT;
+    GetPrintJobStateInfo(jobInfo, stateInfo, state);
+    std::string jobId = jobInfo.GetJobId();
+    std::string eventType = PrintUtils::GetTaskEventId(jobId, PRINT_CALLBACK_JOBSTATE);
     for (auto eventIt : registeredListeners_) {
-        if (PrintUtils::GetEventType(eventIt.first) != PRINTJOB_EVENT_TYPE || eventIt.second == nullptr) {
+        if ((eventIt.first != eventType && PrintUtils::GetEventType(eventIt.first) != PRINTJOB_EVENT_TYPE) ||
+            eventIt.second == nullptr) {
             continue;
         }
-        if (CheckUserIdInEventType(eventIt.first)) {
+        if (eventIt.first == eventType && state != PRINT_PRINT_JOB_DEFAULT) {
+            HandleJobStateChanged(jobId, jobInfo, eventIt.second, eventType);
+        } else if (CheckUserIdInEventType(eventIt.first)) {
             PrintJob callbackJobInfo = jobInfo;
             callbackJobInfo.SetFdList(std::vector<uint32_t>());  // State callback don't need fd.
             eventIt.second->OnCallback(jobInfo.GetJobState(), callbackJobInfo);
@@ -2681,38 +2701,62 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
         auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(jobInfo.GetPrinterId());
         if (printerInfo != nullptr) {
-            securityGuardManager_.receiveJobStateUpdate(jobInfo.GetJobId(), *printerInfo, jobInfo);
+            securityGuardManager_.receiveJobStateUpdate(jobId, *printerInfo, jobInfo);
         } else {
             PRINT_HILOGD("receiveJobStateUpdate printer is empty");
         }
     }
+    if (stateInfo != "") {
+        std::string taskEvent = PrintUtils::GetTaskEventId(jobId, stateInfo);
+        auto taskEventIt = registeredListeners_.find(taskEvent);
+        if (taskEventIt != registeredListeners_.end() && taskEventIt->second != nullptr) {
+            taskEventIt->second->OnCallback();
+        }
+    }
+}
 
-    std::string stateInfo = "";
+void PrintServiceAbility::GetPrintJobStateInfo(const PrintJob &jobInfo, std::string& stateInfo, uint32_t &state)
+{
     if (jobInfo.GetJobState() == PRINT_JOB_BLOCKED) {
         stateInfo = EVENT_BLOCK;
+        state = PRINT_PRINT_JOB_BLOCK;
     } else if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
         switch (jobInfo.GetSubState()) {
             case PRINT_JOB_COMPLETED_SUCCESS:
                 stateInfo = EVENT_SUCCESS;
+                state = PRINT_PRINT_JOB_SUCCEED;
                 break;
 
             case PRINT_JOB_COMPLETED_FAILED:
                 stateInfo = EVENT_FAIL;
+                state = PRINT_PRINT_JOB_FAIL;
                 break;
 
             case PRINT_JOB_COMPLETED_CANCELLED:
                 stateInfo = EVENT_CANCEL;
+                state = PRINT_PRINT_JOB_CANCEL;
                 break;
             default:
                 break;
         }
     }
-    if (stateInfo != "") {
-        std::string taskEvent = PrintUtils::GetTaskEventId(jobInfo.GetJobId(), stateInfo);
-        auto taskEventIt = registeredListeners_.find(taskEvent);
-        if (taskEventIt != registeredListeners_.end() && taskEventIt->second != nullptr) {
-            taskEventIt->second->OnCallback();
-        }
+}
+
+void PrintServiceAbility::HandleJobStateChanged(const std::string &jobId, const PrintJob &jobInfo,
+    const sptr<IPrintCallback> &listener, const std::string &eventType)
+{
+    PRINT_HILOGI("[Job Id: %{public}s] HandleJobStateChanged", jobId.c_str());
+    listener->OnCallback(jobInfo.GetJobState(), jobInfo);
+    if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
+        auto unregisterTask = [this, eventType, jobId]() {
+            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+            auto eventIt = registeredListeners_.find(eventType);
+            if (eventIt != registeredListeners_.end() && eventIt->second !=nullptr) {
+                PRINT_HILOGI("[Job Id: %{public}s] erase registeredListeners_", jobId.c_str());
+                registeredListeners_.erase(eventType);
+            }
+        };
+        serviceHandler_->PostTask(unregisterTask, UNREGISTER_CALLBACK_INTERVAL);
     }
 }
 
@@ -3665,7 +3709,7 @@ bool PrintServiceAbility::AddVendorPrinterToCupsWithPpd(const std::string &globa
     return true;
 }
 
-std::string PrintServiceAbility::GetConnectUri(PrinterInfo &printerInfo, std::string connectProtocol)
+std::string PrintServiceAbility::GetConnectUri(PrinterInfo &printerInfo, std::string &connectProtocol)
 {
     std::string printerUri = printerInfo.GetUri();
     char scheme[HTTP_MAX_URI] = {0}; /* Method portion of URI */
@@ -3751,7 +3795,7 @@ bool PrintServiceAbility::DoAddPrinterToCupsEnable(const std::string &printerUri
     Json::Value optionJson;
     PrintJsonUtil::Parse(option, optionJson);
     if (ppdData.empty()) {
-        if (ppdName.empty()) {
+        if (ppdName.empty() || ppdName == DEFAULT_PPD_NAME) {
             if (!printerInfo->HasCapability() || !printerInfo->HasPrinterMake()) {
                 PRINT_HILOGW("empty capability or invalid printer maker");
                 return false;
@@ -3770,6 +3814,7 @@ bool PrintServiceAbility::DoAddPrinterToCupsEnable(const std::string &printerUri
         }
         optionJson["driver"] = "BSUNI";
         ret = printCupsClient->AddPrinterToCupsWithPpd(printerUri, printerName, ppdName, ppdData);
+        UpdateBsuniPrinterAdvanceOptions(printerInfo);
     }
     printerInfo->SetOption(PrintJsonUtil::WriteString(optionJson));
     if (ret != E_PRINT_NONE) {
@@ -4057,6 +4102,10 @@ int32_t PrintServiceAbility::TryConnectPrinterByIp(const std::string &params)
         return E_PRINT_INVALID_PRINTER;
     }
     std::string ip = connectParamJson["ip"].asString();
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(ip.c_str())) {
+        PRINT_HILOGW("invalid ip");
+        return E_PRINT_INVALID_PRINTER;
+    }
     PRINT_HILOGI("ip: %{public}s", PrintUtils::AnonymizeIp(ip).c_str());
     std::string protocol = "auto";
     if (PrintJsonUtil::IsMember(connectParamJson, "protocol") && connectParamJson["protocol"].isString()) {
@@ -4546,10 +4595,9 @@ void PrintServiceAbility::RegisterSettingDataObserver()
         PRINT_HILOGE("Invalid user id.");
         return;
     }
-    std::shared_ptr<PrintServiceHelper> helper = helper_;
-    PrintSettingDataObserver::ObserverCallback observerCallback = [helper, userId]() {
+    PrintSettingDataObserver::ObserverCallback observerCallback = [this, userId]() {
         PRINT_HILOGI("observerCallback enter");
-        if (helper == nullptr) {
+        if (this->helper_ == nullptr) {
             PRINT_HILOGE("Invalid print service helper.");
             return;
         }
@@ -4560,8 +4608,16 @@ void PrintServiceAbility::RegisterSettingDataObserver()
         }
         PRINT_HILOGI("observerCallback pcmode value: %{public}s", value.c_str());
         if (value == "false") {
-            helper->DisconnectAbility();
+            this->helper_->DisconnectAbility();
+            return;
         }
+        if (isMonitoring_.load()) {
+            PRINT_HILOGW("The monitoring thread is running");
+            return;
+        }
+        isMonitoring_.store(true);
+        std::thread modeChangeThread([this] { this->MonitorModeChange(); });
+        modeChangeThread.detach();
     };
     PrintSettingDataHelper::GetInstance().RegisterSettingDataObserver(
         WINDOW_PCMODE_SWITCH_STATUS, observerCallback, userId, false);
@@ -4570,6 +4626,27 @@ void PrintServiceAbility::RegisterSettingDataObserver()
 bool PrintServiceAbility::IsPcModeSupported()
 {
     return system::GetParameter(PARAMETER_SUPPORT_WINDOW_PCMODE_SWITCH, "false") == "true";
+}
+
+void PrintServiceAbility::MonitorModeChange()
+{
+    std::string lastChangeModeValue = CHANGE_MODE_DEFAULT_VALUE;
+    while (!IsModeChangeEnd(lastChangeModeValue)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(MONITOR_CHANGE_MODE_INTERVAL));
+    }
+    NotifyCurrentUserChanged(-1);
+    isMonitoring_.store(false);
+}
+
+bool PrintServiceAbility::IsModeChangeEnd(std::string &lastChangeModeValue)
+{
+    std::string value = system::GetParameter(PARAMETER_CHANGE_MODE_ANIMATION_READY, CHANGE_MODE_DEFAULT_VALUE);
+    PRINT_HILOGI("change mode value: %{public}s, last value: %{public}s", value.c_str(), lastChangeModeValue.c_str());
+    if (value == CHANGE_MODE_DEFAULT_VALUE && value != lastChangeModeValue) {
+        return true;
+    }
+    lastChangeModeValue = value;
+    return false;
 }
 
 int32_t PrintServiceAbility::AuthPrintJob(const std::string &jobId, const std::string &userName,
@@ -4653,6 +4730,10 @@ int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("QueryPrinterInfoByIp Enter");
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
+        PRINT_HILOGW("invalid ip");
+        return E_PRINT_INVALID_PRINTER;
+    }
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.ClearConnectingPrinter();
     vendorManager.ClearConnectingProtocol();
@@ -4676,6 +4757,10 @@ int32_t PrintServiceAbility::ConnectPrinterByIpAndPpd(const std::string &printer
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("ConnectPrinterByIpAndPpd Enter");
+    if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
+        PRINT_HILOGW("invalid ip");
+        return E_PRINT_INVALID_PRINTER;
+    }
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
     if (!vendorManager.ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName)) {
         PRINT_HILOGW("ConnectPrinterByIpAndPpd failed");
@@ -4813,4 +4898,73 @@ int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId,
     return E_PRINT_NONE;
 }
 
+bool PrintServiceAbility::UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<PrinterInfo> printerInfo)
+{
+    PrinterCapability printerCaps;
+    printerInfo->GetCapability(printerCaps);
+    std::string optionStr = printerCaps.GetOption();
+    Json::Value optionJson;
+    if (!PrintJsonUtil::Parse(optionStr, optionJson)) {
+        PRINT_HILOGE("Failed to parse option JSON");
+        return false;
+    }
+    if (!PrintJsonUtil::IsMember(optionJson, "cupsOptions") || !optionJson["cupsOptions"].isObject()) {
+        PRINT_HILOGE("can not find cupsOptions");
+        return false;
+    }
+    Json::Value cupsOptionsJson = optionJson["cupsOptions"];
+    Json::Value advanceOptJson;
+    Json::Value advanceDefaultJson;
+    for (auto advanceOptIter = BSUNI_CAPABILITY_ADVANCE_OPTIONS.begin();
+        advanceOptIter != BSUNI_CAPABILITY_ADVANCE_OPTIONS.end(); advanceOptIter++) {
+        PRINT_HILOGI("find bsuni advance option");
+        std::string supportedStr = advanceOptIter->first + CAPABILITY_KEYWORD_DELIMITER + SUPPORTED;
+        std::string defaultStr = advanceOptIter->first + CAPABILITY_KEYWORD_DELIMITER + DEFAULT;
+        if (PrintJsonUtil::IsMember(cupsOptionsJson, supportedStr) && cupsOptionsJson[supportedStr].isString() &&
+            PrintJsonUtil::IsMember(cupsOptionsJson, defaultStr) && cupsOptionsJson[defaultStr].isString()) {
+            Json::Value singleCapabilityArrayJson;
+            if (!PrintJsonUtil::Parse(cupsOptionsJson[supportedStr].asString(), singleCapabilityArrayJson)) {
+                PRINT_HILOGE("Failed to parse option JSON");
+                continue;
+            }
+            Json::Value singleAdvanceOptJson;
+            ParseSingleAdvanceOptJson(advanceOptIter->first, singleCapabilityArrayJson, singleAdvanceOptJson);
+            advanceOptJson.append(singleAdvanceOptJson);
+            advanceDefaultJson[advanceOptIter->first] = cupsOptionsJson[defaultStr];
+        }
+    }
+    if (advanceOptJson.isNull()) {
+        PRINT_HILOGW("Advance options is null");
+        return false;
+    }
+    cupsOptionsJson["advanceOptions"] = PrintJsonUtil::WriteStringUTF8(advanceOptJson);
+    cupsOptionsJson["advanceDefault"] = PrintJsonUtil::WriteStringUTF8(advanceDefaultJson);
+    optionJson["cupsOptions"] = cupsOptionsJson;
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo->SetCapability(printerCaps);
+    PRINT_HILOGI("update advanced options in capability succeed");
+    return true;
+}
+
+void PrintServiceAbility::ParseSingleAdvanceOptJson(const std::string &keyword, const Json::Value &singleOptArray,
+    Json::Value &singleAdvanceOptJson)
+{
+    Json::Value advanceChoiceJson;
+    Json::Value advanceChoiceJsonDefaultLanguage;
+    Json::Value advanceOptionTextJson;
+    for (const auto &item: singleOptArray) {
+        advanceChoiceJsonDefaultLanguage[item.asString()] = item.asString();
+    }
+    advanceChoiceJson["default"] = advanceChoiceJsonDefaultLanguage;
+    advanceChoiceJson["zh_CN"] = advanceChoiceJsonDefaultLanguage;
+    advanceOptionTextJson["default"] = keyword;
+    auto optIter = BSUNI_CAPABILITY_ADVANCE_OPTIONS.find(keyword);
+    if (optIter != BSUNI_CAPABILITY_ADVANCE_OPTIONS.end()) {
+        advanceOptionTextJson["zh_CN"] = optIter->second;
+    }
+    singleAdvanceOptJson["choice"] = advanceChoiceJson;
+    singleAdvanceOptJson["keyword"] = keyword;
+    singleAdvanceOptJson["optionText"] = advanceOptionTextJson;
+    singleAdvanceOptJson["uiType"] = 1;
+}
 }  // namespace OHOS::Print

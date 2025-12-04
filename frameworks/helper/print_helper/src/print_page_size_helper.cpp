@@ -62,7 +62,7 @@ std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJsEx(napi_env env, 
     PrintPageSize pageSize(id, name, width, height);
     PAGE_SIZE_ID ret = PrintPageSize::MatchPageSize(name);
     if (ret.empty() && cvtToPwgSize && !pageSize.ConvertToPwgStyle()) {
-        PRINT_HILOGE("pwgMedia build fail from JS!");
+        PRINT_HILOGE("pwgMedia build fail from JS: %{public}s.", id.c_str());
         return nullptr;
     }
     PRINT_HILOGI("Build Page Size success, id: %{public}s, name: %{public}s",

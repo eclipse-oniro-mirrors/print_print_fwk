@@ -73,6 +73,11 @@ public:
         nativePrinterChange_cb = cb;
     }
 
+    void SetNativePrintJobChangeCallback(NativePrintJobChangeCallback cb)
+    {
+        nativePrintJobChange_cb = cb;
+    }
+
 private:
     bool OnBaseCallback(std::function<void(CallbackParam*)> paramFun, std::function<void(CallbackParam*)> workCb);
 
@@ -82,6 +87,7 @@ private:
     std::mutex mutex_;
     PrintDocumentAdapter *adapter_ = nullptr;
     NativePrinterChangeCallback nativePrinterChange_cb = nullptr;
+    NativePrintJobChangeCallback nativePrintJobChange_cb = nullptr;
 };
 }  // namespace OHOS::Print
 #endif  // IPRINT_CALLBACK_H

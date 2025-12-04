@@ -241,6 +241,11 @@ private:
     void UpdatePpdForPreinstalledDriverPrinter();
     bool IsPreinstalledDriverPrinter(const std::string &printerName);
     void StartDiscoverPrinter();
+    void MonitorModeChange();
+    bool IsModeChangeEnd(std::string &lastChangeModeValue);
+    bool UpdateBsuniPrinterAdvanceOptions(std::shared_ptr<PrinterInfo> printerInfo);
+    void ParseSingleAdvanceOptJson(
+        const std::string &keyword, const Json::Value &singleOptArray, Json::Value &singleAdvanceOptJson);
 
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
@@ -262,6 +267,9 @@ public:
     int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) override;
 
 private:
+    void GetPrintJobStateInfo(const PrintJob &jobInfo, std::string& stateInfo, uint32_t &state);
+    void HandleJobStateChanged(const std::string &jobId, const PrintJob &jobInfo,
+        const sptr<IPrintCallback> &listener, const std::string &eventType);
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);
@@ -269,7 +277,7 @@ private:
     std::string RenamePrinterWhenAdded(const PrinterInfo &info);
     void ReportPrinterIdle(const std::string &printerId);
     void UnregisterPrintTaskCallback(const std::string &jobId, const uint32_t state, const uint32_t subState);
-    std::string GetConnectUri(PrinterInfo &printerInfo, std::string connectProtocol);
+    std::string GetConnectUri(PrinterInfo &printerInfo, std::string &connectProtocol);
     bool DoAddPrinterToCups(
         std::shared_ptr<PrinterInfo> printerInfo, const std::string &ppdName, const std::string &ppdData);
     bool DoAddPrinterToCupsEnable(const std::string &printerUri, const std::string &printerName,
@@ -320,6 +328,8 @@ private:
     std::map<int32_t, std::string> discoveryCallerMap_;
     std::recursive_mutex discoveryMutex_;
     bool discoveryCallerMonitorThread = false;
+
+    std::atomic<bool> isMonitoring_{false};
 
 #ifdef ENTERPRISE_ENABLE
 private:

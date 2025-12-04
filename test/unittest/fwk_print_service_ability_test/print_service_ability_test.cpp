@@ -2102,6 +2102,8 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0135_NeedRename, TestS
     std::string param = "{\"protocol\":\"ipp\"}";
     EXPECT_EQ(service->TryConnectPrinterByIp(param), E_PRINT_INVALID_PRINTER);
     param = "{\"protocol\":\"ipp\",\"ip\":\"a.b.c.d\"}";
+    EXPECT_EQ(service->TryConnectPrinterByIp(param), E_PRINT_INVALID_PRINTER);
+    param = "{\"protocol\":\"ipp\",\"ip\":\"1.1.1.1\"}";
     EXPECT_EQ(service->TryConnectPrinterByIp(param), E_PRINT_SERVER_FAILURE);
 }
 
@@ -2814,7 +2816,7 @@ HWTEST_F(PrintServiceAbilityTest, QueryInfoByIpTest, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string ip = "192.168.1.1";
     EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
-    EXPECT_EQ(service->QueryPrinterInfoByIp(""), E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(service->QueryPrinterInfoByIp(""), E_PRINT_INVALID_PRINTER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIpAndPpdTest, TestSize.Level1)
@@ -2824,7 +2826,7 @@ HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIpAndPpdTest, TestSize.Level1)
     std::string protocol = "ipp";
     std::string ppdName = BSUNI_PPD_NAME;
     EXPECT_EQ(service->ConnectPrinterByIpAndPpd(ip, protocol, ppdName), E_PRINT_NONE);
-    EXPECT_EQ(service->ConnectPrinterByIpAndPpd("1", protocol, ppdName), E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(service->ConnectPrinterByIpAndPpd("1", protocol, ppdName), E_PRINT_INVALID_PRINTER);
 }
 
 HWTEST_F(PrintServiceAbilityTest, QueryRecommendDriversByIdTest, TestSize.Level1)
@@ -3153,4 +3155,118 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_InvalidPpdName, TestSiz
 #endif
 }
 
+HWTEST_F(PrintServiceAbilityTest, UpdateBsuniPrinterAdvanceOptions_OptionFormatError_ReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    PrinterCapability printerCaps;
+    printerCaps.SetOption("test");
+    printerInfo->SetCapability(printerCaps);
+    EXPECT_EQ(service->UpdateBsuniPrinterAdvanceOptions(printerInfo), false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdateBsuniPrinterAdvanceOptions_NoCupsOptions_ReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    PrinterCapability printerCaps;
+    Json::Value optionJson;
+    optionJson["key"] = "value";
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo->SetCapability(printerCaps);
+    EXPECT_EQ(service->UpdateBsuniPrinterAdvanceOptions(printerInfo), false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdateBsuniPrinterAdvanceOptions_CupsOptionsFormatError_ReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    PrinterCapability printerCaps;
+    Json::Value optionJson;
+    optionJson["cupsOptions"] = "value";
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo->SetCapability(printerCaps);
+    EXPECT_EQ(service->UpdateBsuniPrinterAdvanceOptions(printerInfo), false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdateBsuniPrinterAdvanceOptions_NoSupportOption_ReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    PrinterCapability printerCaps;
+    Json::Value optionJson;
+    Json::Value cupsOptionsJson;
+    cupsOptionsJson["key"] = "value";
+    optionJson["cupsOptions"] = cupsOptionsJson;
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo->SetCapability(printerCaps);
+    EXPECT_EQ(service->UpdateBsuniPrinterAdvanceOptions(printerInfo), false);
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    UpdateBsuniPrinterAdvanceOptions_SupportOptionFormatError_ReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    PrinterCapability printerCaps;
+    Json::Value optionJson;
+    Json::Value cupsOptionsJson;
+    cupsOptionsJson["media-source-supported"] = 1;
+    optionJson["cupsOptions"] = cupsOptionsJson;
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo->SetCapability(printerCaps);
+    EXPECT_EQ(service->UpdateBsuniPrinterAdvanceOptions(printerInfo), false);
+}
+
+HWTEST_F(PrintServiceAbilityTest, UpdateBsuniPrinterAdvanceOptions_NoDefaultOption_ReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    PrinterCapability printerCaps;
+    Json::Value optionJson;
+    Json::Value cupsOptionsJson;
+    Json::Value supportedArrayJson;
+    supportedArrayJson.append("auto");
+    cupsOptionsJson["media-source-supported"] = PrintJsonUtil::WriteStringUTF8(supportedArrayJson);
+    optionJson["cupsOptions"] = cupsOptionsJson;
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo->SetCapability(printerCaps);
+    EXPECT_EQ(service->UpdateBsuniPrinterAdvanceOptions(printerInfo), false);
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    UpdateBsuniPrinterAdvanceOptions_DefaultOptionFormatError_ReturnFalse, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    PrinterCapability printerCaps;
+    Json::Value optionJson;
+    Json::Value cupsOptionsJson;
+    Json::Value supportedArrayJson;
+    supportedArrayJson.append("auto");
+    cupsOptionsJson["media-source-supported"] = PrintJsonUtil::WriteStringUTF8(supportedArrayJson);
+    cupsOptionsJson["media-source-default"] = 1;
+    optionJson["cupsOptions"] = cupsOptionsJson;
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo->SetCapability(printerCaps);
+    EXPECT_EQ(service->UpdateBsuniPrinterAdvanceOptions(printerInfo), false);
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    UpdateBsuniPrinterAdvanceOptions_CorrectAdvanceOption_ReturnTrue, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrinterInfo> printerInfo = std::make_shared<PrinterInfo>();
+    PrinterCapability printerCaps;
+    Json::Value optionJson;
+    Json::Value cupsOptionsJson;
+    Json::Value supportedArrayJson;
+    supportedArrayJson.append("auto");
+    cupsOptionsJson["media-source-supported"] = PrintJsonUtil::WriteStringUTF8(supportedArrayJson);
+    cupsOptionsJson["media-source-default"] = "auto";
+    optionJson["cupsOptions"] = cupsOptionsJson;
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo->SetCapability(printerCaps);
+    EXPECT_EQ(service->UpdateBsuniPrinterAdvanceOptions(printerInfo), true);
+}
 }  // namespace OHOS::Print

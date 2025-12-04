@@ -210,7 +210,7 @@ void VendorBsuniDriverTest::DoMockTest(MockTestFunc func)
         .onQueryProperties = OnQueryPropertiesTest};
     vendorDriver->vendorExtension = &vendorExtension;
     vendorDriver->vendorManager = &mockManager;
-    EXPECT_CALL(mockDriver, OnCreate(_, "")).Times(1).WillOnce(Return(0));
+    EXPECT_CALL(mockDriver, OnCreate(_, _)).Times(1).WillOnce(Return(0));
     EXPECT_CALL(mockDriver, OnDestroy()).Times(1).WillOnce(Return(0));
     vendorDriver->OnCreate();
     func(*vendorDriver, mockDriver, mockManager);

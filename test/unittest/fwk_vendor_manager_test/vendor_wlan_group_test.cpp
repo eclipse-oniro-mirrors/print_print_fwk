@@ -425,6 +425,13 @@ HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriContain
     EXPECT_EQ(expected, PrintUtils::ExtractHostFromUri(uri));
 }
 
+HWTEST_F(VendorWlanGroupTest, ExtractHostFromUri_ShouldReturnHost_WhenUriIsIPv6, TestSize.Level1)
+{
+    std::string uri = "aaa://[ipv6:addr]#fragment";
+    std::string expected = "ipv6:addr";
+    EXPECT_EQ(expected, PrintUtils::ExtractHostFromUri(uri));
+}
+
 HWTEST_F(VendorWlanGroupTest, MonitorStatusByBsuniDriver_ShouldReturnFalse_WhenVendorManagerIsNull, TestSize.Level1)
 {
     VendorWlanGroup group(nullptr);
