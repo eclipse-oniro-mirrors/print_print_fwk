@@ -96,7 +96,6 @@ public:
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) override;
     int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions) override;
-    int32_t GetPrinterDefaultPreferences(const std::string &printerId, PrinterPreferences &defaultPreferences) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);
