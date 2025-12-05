@@ -504,19 +504,6 @@ int32_t PrintManagerClient::CheckPrintJobConflicts(const std::string &changedTyp
     return ret;
 }
 
-int32_t PrintManagerClient::GetPrinterDefaultPreferences(
-    const std::string &printerId, PrinterPreferences &defaultPreferences)
-{
-    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
-    PRINT_HILOGD("PrintManagerClient GetPrinterDefaultPreferences start.");
-    int32_t ret = E_PRINT_RPC_FAILURE;
-    if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->GetPrinterDefaultPreferences(printerId, defaultPreferences);
-        PRINT_HILOGD("PrintManagerClient GetPrinterDefaultPreferences out ret = [%{public}d].", ret);
-    }
-    return ret;
-}
-
 int32_t PrintManagerClient::AnalyzePrintEvents(const std::string &printerId, const std::string &type,
     std::string &detail)
 {
