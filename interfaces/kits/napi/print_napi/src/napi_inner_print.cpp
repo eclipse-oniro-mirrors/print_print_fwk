@@ -463,40 +463,6 @@ napi_value NapiInnerPrint::CheckPrintJobConflicts(napi_env env, napi_callback_in
     return asyncCall.Call(env, exec);
 }
 
-napi_value NapiInnerPrint::GetPrinterDefaultPreferences(napi_env env, napi_callback_info info)
-{
-    PRINT_HILOGD("Enter GetPrinterDefaultPreferences---->");
-    auto context = std::make_shared<InnerPrintContext>();
-    auto input =
-        [context](
-            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
-        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
-        napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
-        std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
-        context->printerId = printerId;
-        return napi_ok;
-    };
-    auto output = [context](napi_env env, napi_value *result) -> napi_status {
-        PRINT_HILOGD("NapiInnerPrint::GetPrinterDefaultPreferences output enter.");
-        *result = PrinterPreferencesHelper::MakeJsObject(env, context->printerPreference);
-        return napi_ok;
-    };
-    auto exec = [context](PrintAsyncCall::Context *ctx) {
-        int32_t ret = PrintManagerClient::GetInstance()->GetPrinterDefaultPreferences(
-            context->printerId, context->printerPreference);
-        context->result = ret == E_PRINT_NONE;
-        if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("GetPrinterDefaultPreferences failed!");
-            context->SetErrorIndex(ret);
-        }
-    };
-    context->SetAction(std::move(input), std::move(output));
-    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
-    return asyncCall.Call(env, exec);
-}
-
 napi_value NapiInnerPrint::RequestPreview(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter ---->");
