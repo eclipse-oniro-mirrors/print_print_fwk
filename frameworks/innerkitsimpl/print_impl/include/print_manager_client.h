@@ -135,7 +135,6 @@ public:
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions);
     int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions);
-    int32_t GetPrinterDefaultPreferences(const std::string &printerId, PrinterPreferences &defaultPreferences);
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);
