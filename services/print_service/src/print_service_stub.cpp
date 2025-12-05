@@ -100,8 +100,6 @@ PrintServiceStub::PrintServiceStub()
         &PrintServiceStub::OnQueryRecommendDriversById;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CONNECTPRINTERBYIDANDPPD] =
         &PrintServiceStub::OnConnectPrinterByIdAndPpd;
-    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GETPRINTERDEFAULTPREFERENCES] =
-        &PrintServiceStub::OnGetPrinterDefaultPreferences;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CHECKPREFERENCESCONFLICTS] =
         &PrintServiceStub::OnCheckPreferencesConflicts;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CHECKPRINTJOBCONFLICTS] = &PrintServiceStub::OnCheckPrintJobConflicts;
@@ -1024,18 +1022,6 @@ bool PrintServiceStub::OnConnectPrinterByIdAndPpd(MessageParcel &data, MessagePa
     int32_t ret = ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
     reply.WriteInt32(ret);
     PRINT_HILOGI("PrintServiceStub::OnConnectPrinterByIdAndPpd out");
-    return ret == E_PRINT_NONE;
-}
-
-bool PrintServiceStub::OnGetPrinterDefaultPreferences(MessageParcel &data, MessageParcel &reply)
-{
-    PRINT_HILOGI("PrintServiceStub::OnGetPrinterDefaultPreferences in");
-    std::string printerId = data.ReadString();
-    PrinterPreferences defaultPreferences;
-    int32_t ret = GetPrinterDefaultPreferences(printerId, defaultPreferences);
-    reply.WriteInt32(ret);
-    defaultPreferences.Marshalling(reply);
-    PRINT_HILOGI("PrintServiceStub::OnGetPrinterDefaultPreferences out");
     return ret == E_PRINT_NONE;
 }
 
