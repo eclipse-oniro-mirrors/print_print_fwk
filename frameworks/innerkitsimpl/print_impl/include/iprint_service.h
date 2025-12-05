@@ -103,6 +103,8 @@ public:
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) = 0;
     virtual int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions) = 0;
+    virtual int32_t GetPrinterDefaultPreferences(const std::string &printerId,
+        PrinterPreferences &defaultPreferences) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

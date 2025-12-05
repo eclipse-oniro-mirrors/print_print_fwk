@@ -117,6 +117,7 @@ public:
     int32_t RemovePrinterFromDiscovery(const std::string &printerId) override;
     int32_t UpdatePrinterInSystem(const PrinterInfo &printerInfo) override;
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) override;
+    int32_t GetPrinterDefaultPreferences(const std::string &printerId, PrinterPreferences &defaultPreferences) override;
     int32_t CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) override;
     int32_t CheckPrintJobConflicts(const std::string &changedType,
