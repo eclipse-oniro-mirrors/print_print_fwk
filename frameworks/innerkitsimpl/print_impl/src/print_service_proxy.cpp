@@ -1418,41 +1418,6 @@ int32_t PrintServiceProxy::ConnectPrinterByIdAndPpd(const std::string &printerId
     return ret;
 }
 
-int32_t PrintServiceProxy::GetPrinterDefaultPreferences(
-    const std::string &printerId, PrinterPreferences &defaultPreferences)
-{
-    PRINT_HILOGI("PrintServiceProxy GetPrinterDefaultPreferences started.");
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    data.WriteInterfaceToken(GetDescriptor());
-    data.WriteString(printerId);
-
-    sptr<IRemoteObject> remote = Remote();
-    if (remote == nullptr) {
-        PRINT_HILOGE("PrintServiceProxy GetPrinterDefaultPreferences remote is null");
-        return E_PRINT_RPC_FAILURE;
-    }
-
-    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_GETPRINTERDEFAULTPREFERENCES,
-        data, reply, option);
-    if (ret != ERR_NONE) {
-        PRINT_HILOGE("GetPrinterDefaultPreferences failed, error code = %{public}d", ret);
-        return E_PRINT_RPC_FAILURE;
-    }
-
-    ret = GetResult(ret, reply);
-    auto preferencesPtr = PrinterPreferences::Unmarshalling(reply);
-    if (preferencesPtr == nullptr) {
-        PRINT_HILOGE("wrong preferences from data");
-        return E_PRINT_GENERIC_FAILURE;
-    }
-    defaultPreferences = *preferencesPtr;
-    PRINT_HILOGD("GetPrinterDefaultPreferences out.");
-    return ret;
-}
-
 int32_t PrintServiceProxy::CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
     const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions)
 {
