@@ -76,6 +76,7 @@ static const StdStringMultiMap MMAP_CUPS_CHOICE_PAGE_SIZE = {
     {PAGE_SIZE_ID_ISO_C9, "EnvC9"},
     {PAGE_SIZE_ID_ISO_C10, "EnvC10"},
     {PAGE_SIZE_ID_ISO_DL, "EnvDL"},
+    {PAGE_SIZE_ID_ISO_DL, "envelopdlp"},
     {PAGE_SIZE_ID_JIS_B0, "B0"},
     {PAGE_SIZE_ID_JIS_B1, "B1"},
     {PAGE_SIZE_ID_JIS_B2, "B2"},
@@ -95,6 +96,7 @@ static const StdStringMultiMap MMAP_CUPS_CHOICE_PAGE_SIZE = {
     {PAGE_SIZE_ID_JPN_CHOU4, "EnvChou40"},
     {PAGE_SIZE_ID_JPN_HAGAKI, "Postcard"},
     {PAGE_SIZE_ID_NA_FOOLSCAP, "Folio"},
+    {PAGE_SIZE_ID_NA_FOOLSCAP, "foolscap"},
     {PAGE_SIZE_ID_NA_LEGAL, "Legal"},
     {PAGE_SIZE_ID_NA_LETTER, "Letter"},
     {PAGE_SIZE_ID_NA_EXECUTIVE, "Executive"},
@@ -107,6 +109,10 @@ static const StdStringMultiMap MMAP_CUPS_CHOICE_PAGE_SIZE = {
     {PAGE_SIZE_ID_PRC16, "PRC16K"},
     {PAGE_SIZE_ID_ROC_16K, "roc16k"},
     {PAGE_SIZE_ID_ROC_8K, "roc8k"},
+    {PAGE_SIZE_ID_NA_INDEX_4X6, "4x6"},
+    {PAGE_SIZE_ID_NA_INDEX_5X7, "5x7in"},
+    {PAGE_SIZE_ID_NA_GOVT_LETTER, "8x10"},
+    {PAGE_SIZE_ID_OE_PHOTO_L, "l"},
 };
 
 static const StdStringMultiMap MMAP_CUPS_CHOICE_QUALITY = {
