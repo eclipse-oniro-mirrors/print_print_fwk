@@ -250,6 +250,7 @@ int32_t PrintServiceAbility::Init()
         return initCupsRet;
     }
 #endif
+    CheckCupsServerAlive();
     auto tmpState = state_;
     state_ = ServiceRunningState::STATE_RUNNING;
     if (!g_publishState) {
@@ -263,7 +264,6 @@ int32_t PrintServiceAbility::Init()
     PrintCallerAppMonitor::GetInstance().StartCallerAppMonitor([this]() {
         return this->UnloadSystemAbility();
     });
-    CheckCupsServerAlive();
     UpdatePpdForPreinstalledDriverPrinter();
     if (!printSystemData_.CheckPrinterVersionFile()) {
         RefreshPrinterInfoByPpd();
