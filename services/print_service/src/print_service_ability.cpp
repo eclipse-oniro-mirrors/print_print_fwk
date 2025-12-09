@@ -528,8 +528,6 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
     PRINT_HILOGI("[Printer: %{public}s] ConnectPrinter started", PrintUtils::AnonymizePrinterId(printerId).c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     vendorManager.ClearConnectingPrinter();
-    vendorManager.ClearConnectingProtocol();
-    vendorManager.ClearConnectingPpdName();
     std::string oldPrinterId = SPOOLER_BUNDLE_NAME + PRINTER_ID_DELIMITER + MDNS_PRINTER;
     if (printerId.find(oldPrinterId) != std::string::npos && printSystemData_.IsPrinterAdded(printerId)) {
         PRINT_HILOGI("old version printerId, check connected successfully");
@@ -622,8 +620,6 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
     PRINT_HILOGI("Add discovery caller, pid: %{public}d, bundleName: %{public}s", callerPid, bundleName.c_str());
 
     vendorManager.ClearConnectingPrinter();
-    vendorManager.ClearConnectingProtocol();
-    vendorManager.ClearConnectingPpdName();
     std::vector<std::string> printerIdList = printSystemData_.QueryAddedPrinterIdList();
     for (auto &printerId : printerIdList) {
         vendorManager.MonitorPrinterStatus(printerId, true);
@@ -3861,8 +3857,6 @@ void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> prin
     SetLastUsedPrinter(globalPrinterId);
     SendPrinterDiscoverEvent(PRINTER_CONNECTED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
-    vendorManager.ClearConnectingProtocol();
-    vendorManager.ClearConnectingPpdName();
     vendorManager.MonitorPrinterStatus(globalPrinterId, true);
 }
 
@@ -3939,8 +3933,6 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     SendPrinterEventChangeEvent(PRINTER_EVENT_ADDED, *printerInfo, true);
     SendPrinterChangeEvent(PRINTER_EVENT_ADDED, *printerInfo);
     vendorManager.ClearConnectingPrinter();
-    vendorManager.ClearConnectingProtocol();
-    vendorManager.ClearConnectingPpdName();
     vendorManager.MonitorPrinterStatus(globalPrinterId, true);
     printSystemData_.RemoveIpPrinterFromList(globalPrinterId);
     return true;
@@ -4712,6 +4704,10 @@ int32_t PrintServiceAbility::QueryAllPrinterPpds(std::vector<PpdInfo> &printerPp
 bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
 {
     PRINT_HILOGI("Start CallBack Printerinfo");
+    if (!vendorManager.GetConnectingPrinter().empty() && vendorManager.GetConnectingPrinter() == info.GetPrinterId()) {
+        PRINT_HILOGI("New Discovery Request, add in.");
+        printSystemData_.AddIpPrinterToDiscovery(std::make_shared<PrinterInfo>(info));
+    }
     std::vector<PpdInfo> ppdInfos;
     QueryPrinterPpds(info, ppdInfos);
     for (auto eventIt : registeredListeners_) {
@@ -4741,8 +4737,14 @@ int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
     }
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.ClearConnectingPrinter();
-    vendorManager.ClearConnectingProtocol();
-    vendorManager.ClearConnectingPpdName();
+    auto info = printSystemData_.QueryDiscoveredIpPrinter(printerIp);
+    if (info != nullptr && !info->IsExpired()) {
+        PRINT_HILOGI("IP queried recently, no need to update");
+        if (OnQueryCallBackEvent(*info)) {
+            return E_PRINT_NONE;
+        }
+        return E_PRINT_INVALID_PRINTER;
+    }
     vendorManager.SetQueryPrinter(IP_AUTO, printerIp);
     std::string protocol = "auto";
     if (!vendorManager.ConnectPrinterByIp(printerIp, protocol)) {

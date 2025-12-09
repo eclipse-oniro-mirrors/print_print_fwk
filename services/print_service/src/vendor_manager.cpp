@@ -537,6 +537,9 @@ void VendorManager::ClearConnectingPrinter()
     PRINT_HILOGD("ClearConnectingPrinter");
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     connectingState = ConnectState::STATE_NONE;
+    connectingPrinter.clear();
+    connectingPpdName.clear();
+    connectingProtocol.clear();
 }
 
 std::string VendorManager::GetConnectingPpdName()
@@ -555,20 +558,6 @@ std::string VendorManager::GetConnectingPrinter()
 {
     std::lock_guard<std::mutex> lock(simpleObjectMutex);
     return connectingPrinter;
-}
-
-void VendorManager::ClearConnectingPpdName()
-{
-    PRINT_HILOGD("ClearconnectingPpdName");
-    std::lock_guard<std::mutex> lock(simpleObjectMutex);
-    connectingPpdName.clear();
-}
-
-void VendorManager::ClearConnectingProtocol()
-{
-    PRINT_HILOGD("ClearconnectingProtocol");
-    std::lock_guard<std::mutex> lock(simpleObjectMutex);
-    connectingProtocol.clear();
 }
 
 bool VendorManager::IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri)
