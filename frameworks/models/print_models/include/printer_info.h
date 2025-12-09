@@ -203,7 +203,7 @@ private:
 
     std::string ppdHashCode_;
 
-    uint32_t timeStamp_;
+    uint64_t timeStamp_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_INFO_H

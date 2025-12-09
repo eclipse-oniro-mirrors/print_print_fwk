@@ -222,8 +222,8 @@ void PrinterInfo::SetPpdHashCode(const std::string &ppdHashCode)
 void PrinterInfo::SetCurrentTime()
 {
     auto duration = std::chrono::system_clock::now().time_since_epoch();
-    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    timeStamp_ = static_cast<std::uint64_t>(timestamp);
+    auto currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    timeStamp_ = static_cast<std::uint64_t>(currentTime);
 }
 
 const std::string &PrinterInfo::GetPrinterId() const
@@ -309,8 +309,8 @@ std::string PrinterInfo::GetPpdHashCode() const
 bool PrinterInfo::IsExpired() const
 {
     auto duration = std::chrono::system_clock::now().time_since_epoch();
-    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    return (timeStamp_ + UPDATE_TIME) < static_cast<std::uint64_t>(timestamp);
+    auto currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    return (timeStamp_ + UPDATE_TIME) < static_cast<std::uint64_t>(currentTime);
 }
 
 bool PrinterInfo::HasPrinterUuid() const

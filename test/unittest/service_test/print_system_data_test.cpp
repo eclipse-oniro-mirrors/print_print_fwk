@@ -1822,12 +1822,36 @@ HWTEST_F(PrintSystemDataTest, AnalyzePrintEvents_ShouldReturnEmptyString_WhenPri
     std::string result = systemData->AnalyzePrintEvents("printer2", "test_type");
     EXPECT_TRUE(result.empty());
 }
+
 HWTEST_F(PrintSystemDataTest, AnalyzePrintEvents_ShouldReturnJsonString_WhenPrinterIdFound, TestSize.Level1)
 {
     auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
     systemData->AddPrintEvent("printer1", "test_type", 123);
     std::string result = systemData->AnalyzePrintEvents("printer1", "test_type");
     EXPECT_FALSE(result.empty());
+}
+
+HWTEST_F(PrintSystemDataTest, AddIpPrinterToDiscovery, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    PrinterInfo info;
+    std::string ip = "192.168.1.1";
+    info.SetPrinterId(ip);
+    std::shared_ptr<IpPrinter> printer = systemData->QueryDiscoveredIpPrinter(ip);
+    EXPECT_EQ(printer, nullptr);
+    systemData->AddIpPrinterToDiscovery(std::make_shared<PrinterInfo>(info));
+    printer = systemData->QueryDiscoveredIpPrinterByIp(ip);
+    EXPECT_NE(printer, nullptr);
+    EXPECT_EQ(printer->GetPrinterInfo()->GetPrinterId(), ip);
+    info.SetPrinterName("printer");
+    systemData->AddIpPrinterToDiscovery(std::make_shared<PrinterInfo>(info));
+    printer = systemData->QueryDiscoveredIpPrinterByIp(ip);
+    EXPECT_NE(printer, nullptr);
+    EXPECT_EQ(printer->GetPrinterInfo()->GetPrinterId(), ip);
+    EXPECT_EQ(printer->GetPrinterInfo()->GetPrinterName(), "printer");
+    systemData->RemoveIpPrinterFromDiscovery(ip);
+    printer = systemData->QueryDiscoveredIpPrinter(ip);
+    EXPECT_EQ(printer, nullptr);
 }
 }  // namespace Print
 }  // namespace OHOS
