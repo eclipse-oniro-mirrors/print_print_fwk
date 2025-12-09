@@ -476,18 +476,24 @@ bool PrintPageSize::ConvertToPwgStyle()
 {
     pwg_media_t *pwgMedia = pwgMediaForSize(round(GetWidth() * ONE_HUNDRED / HUNDRED_OF_MILLIMETRE_TO_INCH),
         round(GetHeight() * ONE_HUNDRED / HUNDRED_OF_MILLIMETRE_TO_INCH));
-    if (pwgMedia && pwgMedia->ppd && pwgMedia->pwg) {
-        std::string ppdName(pwgMedia->ppd);
-        std::string pwgName(pwgMedia->pwg);
-        SetId(ppdName);
-        SetName(pwgName);
-        if (pwgName.find("custom_") != std::string::npos) {
-            ConvertToCustomStyle();
-        }
-        return true;
+    if (!pwgMedia || !pwgMedia->ppd || !pwgMedia->pwg) {
+        PRINT_HILOGE("pwgMedia Convert fail!");
+        return false;
     }
-    PRINT_HILOGE("pwgMedia Convert fail!");
-    return false;
+    std::string ppdName(pwgMedia->ppd);
+    std::string pwgName(pwgMedia->pwg);
+    SetId(ppdName);
+    SetName(pwgName);
+
+    PAGE_SIZE_ID matchId = MatchPageSize(pwgName);
+    if (!matchId.empty()) {
+        SetId(matchId);
+    }
+    
+    if (pwgName.find("custom_") != std::string::npos) {
+        ConvertToCustomStyle();
+    }
+    return true;
 }
 
 bool PrintPageSize::ConvertToCustomStyle()
