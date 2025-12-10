@@ -154,6 +154,10 @@ bool StsPrintExtension::CallObjectMethod(bool withResult, const char *name, cons
 
     auto env = etsRuntime_.GetAniEnv();
     ResetEnv(env);
+    if (env == nullptr) {
+        PRINT_HILOGE("env nullptr");
+        return false;
+    }
     ani_status status = ANI_OK;
     ani_method method = nullptr;
     if ((status = env->Class_FindMethod(etsObj_->aniCls, name, signature, &method)) != ANI_OK) {
