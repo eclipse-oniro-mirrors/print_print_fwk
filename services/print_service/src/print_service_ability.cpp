@@ -4720,6 +4720,7 @@ bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
         }
         eventIt.second->OnCallback(info, ppdInfos);
     }
+    vendorManager.ClearConnectingPrinter();
     return true;
 }
 
@@ -4734,6 +4735,10 @@ int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
     if (!DelayedSingleton<PrintCupsClient>::GetInstance()->IsIpAddress(printerIp.c_str())) {
         PRINT_HILOGW("invalid ip");
         return E_PRINT_INVALID_PRINTER;
+    }
+    if (!vendorManager.GetConnectingPrinter().empty() && vendorManager.GetConnectingPrinter() == printerIp) {
+        PRINT_HILOGW("IP is Querying, Do not send again");
+        return E_PRINT_NONE;
     }
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.ClearConnectingPrinter();

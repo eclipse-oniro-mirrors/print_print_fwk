@@ -2820,6 +2820,7 @@ HWTEST_F(PrintServiceAbilityTest, QueryInfoByIpTest, TestSize.Level1)
     PrinterInfo info;
     info.SetPrinterId(ip);
     service->vendorManager.SetConnectingPrinter(IP_AUTO, ip);
+    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
     service->OnQueryCallBackEvent(info);
     EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
 }
