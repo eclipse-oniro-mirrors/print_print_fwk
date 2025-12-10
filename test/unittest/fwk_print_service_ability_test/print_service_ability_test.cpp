@@ -2816,7 +2816,7 @@ HWTEST_F(PrintServiceAbilityTest, QueryInfoByIpTest, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string ip = "192.168.1.1";
     EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
-    EXPECT_EQ(service->QueryPrinterInfoByIp(""), E_PRINT_INVALID_PRINTER);    
+    EXPECT_EQ(service->QueryPrinterInfoByIp(""), E_PRINT_INVALID_PRINTER);
     PrinterInfo info;
     info.SetPrinterId(ip);
     service->vendorManager.SetConnectingPrinter(IP_AUTO, ip);
