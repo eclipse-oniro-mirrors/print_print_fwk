@@ -573,7 +573,7 @@ void PrinterInfo::DumpInfo() const
         capability_.DumpInfo();
     }
     if (hasUri_) {
-        PRINT_HILOGI("uri: %{public}s", PrintUtils::AnonymizePrinterUri(uri_).c_str());
+        PRINT_HILOGI("uri: %{public}s", uri_.c_str());
     }
     if (hasPrinterMake_) {
         PRINT_HILOGI("printerMake: %{public}s", printerMake_.c_str());

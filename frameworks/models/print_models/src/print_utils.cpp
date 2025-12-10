@@ -291,18 +291,15 @@ std::string PrintUtils::AnonymizePrinterId(const std::string &printerId)
 
 std::string PrintUtils::AnonymizePrinterUri(const std::string &printerUri)
 {
-    std::string ipv4;
+    std::string ip;
     size_t startPos;
     std::string result = printerUri;
-    if (ExtractIpv4(printerUri, ipv4, startPos)) {
-        std::string anonymizeIpv4 = AnonymizeIpv4(ipv4);
-        return result.replace(startPos, ipv4.length(), anonymizeIpv4);
-    }
-
-    std::string ipv6;
-    if (ExtractIpv6(printerUri, ipv6, startPos)) {
-        std::string anonymizeIpv6 = AnonymizeIpv6(ipv6);
-        return result.replace(startPos, ipv6.length(), anonymizeIpv6);
+    if (ExtractIpv4(printerUri, ip, startPos)) {
+        std::string anonymizeIpv4 = AnonymizeIpv4(ip);
+        return result.replace(startPos, ip.length(), anonymizeIpv4);
+    } else if (ExtractIpv6(printerUri, ip, startPos)) {
+        std::string anonymizeIpv6 = AnonymizeIpv6(ip);
+        return result.replace(startPos, ip.length(), anonymizeIpv6);
     }
     return result;
 }
@@ -319,21 +316,20 @@ std::string PrintUtils::AnonymizeIp(const std::string &ip)
 
 std::string PrintUtils::AnonymizeJobOption(const std::string &option)
 {
-    std::string anonymizeoption = option;
-    std::string ip;
-    size_t startPos;
-    if (ExtractIpv4(option, ip, startPos)) {
-        std::string anonymizeIpv4 = AnonymizeIpv4(ip);
-        anonymizeoption.replace(startPos, ip.length(), anonymizeIpv4);
-    } else if (ExtractIpv6(option, ip, startPos)) {
-        std::string anonymizeIpv6 = AnonymizeIpv6(ip);
-        anonymizeoption.replace(startPos, ip.length(), anonymizeIpv6);
+    Json::Value optionJson;
+    PrintJsonUtil::Parse(option, optionJson);
+    if (PrintJsonUtil::IsMember(optionJson, "jobName") && optionJson["jobName"].isString()) {
+        optionJson["jobName"] = AnonymizeJobName(optionJson["jobName"].asString());
     }
-
-    if (option.find_last_of('-') != std::string::npos) {
-        anonymizeoption = AnonymizeUUid(anonymizeoption);
+    if (PrintJsonUtil::IsMember(optionJson, "jobDesArr") && optionJson["jobDesArr"].isArray()) {
+        Json::Value jobDesArr = optionJson["jobDesArr"];
+        jobDesArr[0] = AnonymizeJobName(jobDesArr[0].asString());
+        optionJson["jobDesArr"] = jobDesArr;
     }
-    return anonymizeoption;
+    if (PrintJsonUtil::IsMember(optionJson, "printerId") && optionJson["printerId"].isString()) {
+        optionJson["printerId"] = AnonymizePrinterId(optionJson["printerId"].asString());
+    }
+    return PrintJsonUtil::WriteString(optionJson);
 }
 
 std::string PrintUtils::AnonymizeJobName(const std::string &jobName)
