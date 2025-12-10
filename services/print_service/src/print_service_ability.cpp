@@ -4745,10 +4745,10 @@ int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
     auto info = printSystemData_.QueryDiscoveredIpPrinter(printerIp);
     if (info != nullptr && !info->IsExpired()) {
         PRINT_HILOGI("IP queried recently, no need to update");
-        if (OnQueryCallBackEvent(*info)) {
-            return E_PRINT_NONE;
+        if (!OnQueryCallBackEvent(*info)) {
+            PRINT_HILOGW("OnQueryCallBackEvent failed");
         }
-        return E_PRINT_INVALID_PRINTER;
+        return E_PRINT_NONE;
     }
     vendorManager.SetQueryPrinter(IP_AUTO, printerIp);
     std::string protocol = "auto";
