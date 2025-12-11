@@ -1075,6 +1075,8 @@ int32_t PrintServiceAbility::SetPrinterPreference(const std::string &printerId, 
         return E_PRINT_INVALID_PRINTER;
     }
     SendPrinterEventChangeEvent(PRINTER_EVENT_INFO_CHANGED, printerInfo);
+    SendPrinterEventChangeEvent(PRINTER_EVENT_PREFERENCE_CHANGED, printerInfo);
+    SendPrinterChangeEvent(PRINTER_EVENT_PREFERENCE_CHANGED, printerInfo);
     PRINT_HILOGI("SetPrinterPreference end.");
     return E_PRINT_NONE;
 }
