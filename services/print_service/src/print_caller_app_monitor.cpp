@@ -90,9 +90,9 @@ void PrintCallerAppMonitor::MonitorCallerApps(std::function<bool()> unloadTask)
         PRINT_HILOGE("unloadTask is nullptr");
         return;
     }
+    std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
     PRINT_HILOGI("start monitor caller apps");
-    while (isMonitoring_.load()) {
-        std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
+    do {
         {
             std::lock_guard<std::mutex> lock(callerMapMutex_);
             for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
@@ -111,13 +111,17 @@ void PrintCallerAppMonitor::MonitorCallerApps(std::function<bool()> unloadTask)
                 PRINT_HILOGI("app not alive, erase it");
                 iter = callerMap_.erase(iter);
             }
-            PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
+        }
+        PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
+        std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
 
+        {
+            std::lock_guard<std::mutex> lock(callerMapMutex_);
             if ((callerMap_.empty() || counter_.Value() == 0) && unloadTask()) {
                 isMonitoring_.store(false);
             }
         }
-    }
+    } while (isMonitoring_.load());
 }
 
 sptr<AppExecFwk::IAppMgr> PrintCallerAppMonitor::GetAppManager()

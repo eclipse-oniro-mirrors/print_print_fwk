@@ -503,6 +503,12 @@ std::string PrintUtils::ExtractHostFromUri(const std::string &uri)
     if (atPos != std::string::npos) {
         startPos = atPos + 1;
     }
+    if (uri[startPos] == '[') {
+        size_t endBracketPos = uri.find(']', startPos);
+        if (endBracketPos != std::string::npos) {
+            return uri.substr(startPos + 1, endBracketPos - startPos - 1);
+        }
+    }
     size_t endPos = uri.find_first_of("/?#:", startPos);
     if (endPos == std::string::npos) {
         return uri.substr(startPos);

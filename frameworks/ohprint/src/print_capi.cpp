@@ -180,6 +180,29 @@ static void SetInitRawPrinterInfo(const std::string &printerId,
     info.SetCapability(cap);
 }
 
+void GetPrintJobState(const PrintJob &jobInfo,  uint32_t &state)
+{
+    if (jobInfo.GetJobState() == PRINT_JOB_BLOCKED) {
+        state = OHOS::Print::PRINT_PRINT_JOB_BLOCK;
+    } else if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
+        switch (jobInfo.GetSubState()) {
+            case PRINT_JOB_COMPLETED_SUCCESS:
+                state = OHOS::Print::PRINT_PRINT_JOB_SUCCEED;
+                break;
+
+            case PRINT_JOB_COMPLETED_FAILED:
+                state = OHOS::Print::PRINT_PRINT_JOB_FAIL;
+                break;
+
+            case PRINT_JOB_COMPLETED_CANCELLED:
+                state = OHOS::Print::PRINT_PRINT_JOB_CANCEL;
+                break;
+            default:
+                break;
+        }
+    }
+}
+
 // 初始化
 Print_ErrorCode OH_Print_Init()
 {
@@ -307,6 +330,48 @@ Print_ErrorCode OH_Print_StartPrintJob(const Print_PrintJob *printJob)
     }
     ret = PrintManagerClient::GetInstance()->StartNativePrintJob(curPrintJob);
     PRINT_HILOGI("StartNativePrintJob ret = [%{public}d]", ret);
+    return ConvertToNativeErrorCode(ret);
+}
+
+Print_ErrorCode OH_Print_StartPrintJobWithJobStateCallBack(const Print_PrintJob *printJob,
+    Print_OnPrintJobStateChanged jobStateChangedCb)
+{
+    if (printJob == nullptr) {
+        PRINT_HILOGW("printJob is null.");
+        return PRINT_ERROR_INVALID_PRINT_JOB;
+    }
+    if (jobStateChangedCb == nullptr) {
+        PRINT_HILOGW("jobStateChangedCb is null.");
+        return PRINT_ERROR_INVALID_PARAMETER;
+    }
+    PrintJob curPrintJob;
+    int32_t ret = ConvertNativeJobToPrintJob(*printJob, curPrintJob);
+    if (ret != 0) {
+        PRINT_HILOGW("ConvertNativeJobToPrintJob fail.");
+        return PRINT_ERROR_INVALID_PRINT_JOB;
+    }
+    auto NativePrintJobChangedFunc = [jobStateChangedCb](const std::string &jobId, const PrintJob& jobInfo) -> bool {
+        if (jobStateChangedCb == nullptr) {
+            PRINT_HILOGE("OH_Print job state callback is null.");
+            return false;
+        }
+        uint32_t state = PRINT_PRINT_JOB_DEFAULT;
+        GetPrintJobState(jobInfo, state);
+        if (state == PRINT_PRINT_JOB_DEFAULT) {
+            PRINT_HILOGE("OH_Print job state don't need callback.");
+            return false;
+        }
+        jobStateChangedCb(jobId.c_str(), static_cast<::Print_PrintJobState>(state));
+        return true;
+    };
+    OHOS::sptr<PrintCallback> callback = new (std::nothrow) PrintCallback;
+    if (callback == nullptr) {
+        PRINT_HILOGE("OH_Print start print callback is null.");
+        return PRINT_ERROR_GENERIC_FAILURE;
+    }
+    callback->SetNativePrintJobChangeCallback(NativePrintJobChangedFunc);
+    ret = PrintManagerClient::GetInstance()->StartNativePrintJob(curPrintJob, callback);
+    PRINT_HILOGI("StartNativePrintJob with callback ,ret = [%{public}d]", ret);
     return ConvertToNativeErrorCode(ret);
 }
 
