@@ -245,7 +245,7 @@ bool GetStdStringArray(ani_env *env, ani_object param, std::vector<std::string> 
     }
     ani_ref ref = nullptr;
     for (ani_size idx = 0; idx < size; idx++) {
-        if ((status = env->Array_Get_Ref(reinterpret_cast<ani_array_ref>(param), idx, &ref)) != ANI_OK) {
+        if ((status = env->Array_Get(reinterpret_cast<ani_array>(param), idx, &ref)) != ANI_OK) {
             PRINT_HILOGE("status: %{public}d, index: %{public}zu", status, idx);
             return false;
         }

@@ -137,7 +137,7 @@ bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std:
     }
 
     for (i = 0; i < size; i++) {
-        if ((status = env->Array_Get_Ref(reinterpret_cast<ani_array_ref>(obj), i, &ref)) != ANI_OK) {
+        if ((status = env->Array_Get(reinterpret_cast<ani_array>(obj), i, &ref)) != ANI_OK) {
             PRINT_HILOGE("status : %{public}d, index: %{public}zu", status, i);
             return false;
         }
