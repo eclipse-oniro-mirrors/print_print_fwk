@@ -256,7 +256,7 @@ bool SetIntArrayProperty(ani_env *env, ani_object param, const char *name,
     ani_method arrayCtor;
     ani_object arrayObj;
 
-    ani_status status = env->FindClass("escompat.Array", &arrayCls);
+    ani_status status = env->FindClass("std.core.Array", &arrayCls);
     if (status != ANI_OK) {
         PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
@@ -330,7 +330,7 @@ bool SetStringArrayProperty(ani_env *env, ani_object param, const char *name, co
     ani_method arrayCtor;
     ani_object arrayObj;
 
-    ani_status status = env->FindClass("escompat.Array", &arrayCls);
+    ani_status status = env->FindClass("std.core.Array", &arrayCls);
     if (status != ANI_OK) {
         PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;

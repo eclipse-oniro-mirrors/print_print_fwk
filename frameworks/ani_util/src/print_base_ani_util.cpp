@@ -89,7 +89,7 @@ ani_object CreateAniStringArray(ani_env *env, const std::vector<std::string>& st
     ani_method arrayCtor;
     ani_string aniStr = nullptr;
     ani_status status = ANI_ERROR;
-    constexpr const char *classArray = "escompat.Array";
+    constexpr const char *classArray = "std.core.Array";
     status = env->FindClass(classArray, &arrayCls);
     if (status != ANI_OK) {
         PRINT_HILOGE("status : %{public}d", status);
@@ -154,7 +154,7 @@ ani_object CreateEnumArray(ani_env *env, const std::string &enumDescriptor, std:
         return nullptr;
     }
     ani_class arrayCls = nullptr;
-    ani_status status = env->FindClass("escompat.Array", &arrayCls);
+    ani_status status = env->FindClass("std.core.Array", &arrayCls);
     if (status != ANI_OK) {
         PRINT_HILOGE("[ANI] find class fail");
         return nullptr;
