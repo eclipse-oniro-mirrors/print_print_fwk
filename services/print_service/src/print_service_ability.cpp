@@ -223,6 +223,14 @@ void PrintServiceAbility::RefreshEprinterErrorCapability()
     printSystemData_.SavePrinterFile(eprinterId);
 }
 
+void PrintServiceAbility::UpdatePrinterStatus(PrinterInfo &printerInfo, PrinterStatus printerStatus)
+{
+    printerInfo.SetPrinterStatus(printerStatus);
+    printSystemData_.UpdatePrinterStatus(printerInfo.GetPrinterId(), printerStatus);
+    SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
+    SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
+}
+
 #ifdef VIRTUAL_PRINTER_ENABLE
 bool PrintServiceAbility::RefreshVirtualPrinter()
 {
@@ -244,7 +252,7 @@ bool PrintServiceAbility::RefreshVirtualPrinter()
     if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
         printerInfo.GetPpdHashCode() == ppdHashCode) {
         PRINT_HILOGI("virtual printer has added.");
-        printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
+        UpdatePrinterStatus(printerInfo, PRINTER_STATUS_IDLE);
         return true;
     }
     int32_t result = printCupsClient->AddPrinterToCupsWithSpecificPpd(printerUri, printerName, ppdName);
@@ -271,6 +279,7 @@ bool PrintServiceAbility::RefreshVirtualPrinter()
     printerInfo.SetPreferences(preferences);
     printSystemData_.InsertAddedPrinter(printerId, printerInfo);
     printSystemData_.SavePrinterFile(printerId);
+    UpdatePrinterStatus(printerInfo, PRINTER_STATUS_IDLE);
     return true;
 }
 #endif
@@ -2015,19 +2024,13 @@ void PrintServiceAbility::ReportPrinterIdle(const std::string &printerId)
             printerInfo = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryUsbPrinterInfoByPrinterId(printerId);
         }
         if (printerInfo != nullptr) {
-            printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-            printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
-            SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-            SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+            UpdatePrinterStatus(*printerInfo, PRINTER_STATUS_IDLE);
         } else {
             PrinterInfo addedPrinterInfo;
             if (!printSystemData_.QueryPrinterInfoById(printerId, addedPrinterInfo)) {
                 return;
             }
-            addedPrinterInfo.SetPrinterStatus(PRINTER_STATUS_IDLE);
-            printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
-            SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, addedPrinterInfo);
-            SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, addedPrinterInfo);
+            UpdatePrinterStatus(addedPrinterInfo, PRINTER_STATUS_IDLE);
         }
     }
 }
@@ -3626,10 +3629,7 @@ int32_t PrintServiceAbility::AddSinglePrinterInfo(const PrinterInfo &info, const
                 printSystemData_.SavePrinterFile(infoPtr->GetPrinterId());
             }
         }
-        infoPtr->SetPrinterStatus(PRINTER_STATUS_IDLE);
-        printSystemData_.UpdatePrinterStatus(infoPtr->GetPrinterId(), PRINTER_STATUS_IDLE);
-        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *infoPtr);
-        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *infoPtr);
+        UpdatePrinterStatus(*infoPtr, PRINTER_STATUS_IDLE);
     }
 
     return E_PRINT_NONE;
@@ -3680,10 +3680,7 @@ bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)
     printSystemData_.RemovePrinterFromDiscovery(printerId);
 
     if (printSystemData_.IsPrinterAdded(printerId)) {
-        printerInfo->SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
-        printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_UNAVAILABLE);
-        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        UpdatePrinterStatus(*printerInfo, PRINTER_STATUS_UNAVAILABLE);
     }
     return true;
 }
@@ -3717,10 +3714,7 @@ bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalV
             printSystemData_.UpdatePrinterUri(printerInfo);
             printSystemData_.SavePrinterFile(printerInfo->GetPrinterId());
         }
-        printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
-        printSystemData_.UpdatePrinterStatus(printerInfo->GetPrinterId(), PRINTER_STATUS_IDLE);
-        SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
-        SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
+        UpdatePrinterStatus(*printerInfo, PRINTER_STATUS_IDLE);
     }
     return true;
 }
@@ -4591,6 +4585,11 @@ bool PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
     printSystemData_.Init();
     PrintCupsClient::GetInstance()->InitCupsResources();
     vendorManager.SwitchSpace();
+#ifdef VIRTUAL_PRINTER_ENABLE
+    if (PrintCupsClient::GetInstance()->IsCupsServerAlive()) {
+        RefreshVirtualPrinter();
+    }
+#endif
     return true;
 }
 #endif  // ENTERPRISE_ENABLE

@@ -226,6 +226,7 @@ private:
     int32_t ConnectUsbPrinter(const std::string &printerId);
     void RefreshPrinterInfoByPpd();
     void RefreshEprinterErrorCapability();
+    void UpdatePrinterStatus(PrinterInfo &printerInfo, PrinterStatus printerStatus);
 #ifdef VIRTUAL_PRINTER_ENABLE
     bool RefreshVirtualPrinter();
 #endif
