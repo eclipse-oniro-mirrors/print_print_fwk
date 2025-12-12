@@ -1050,7 +1050,7 @@ int32_t PrintServiceAbility::AddPrinterToCups(
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("[Printer: %{public}s] AddPrinterToCups start, printerUri: %{public}s, printerMake: %{public}s.",
-        printerName.c_str(), PrintUtils::AnonymizePrinterUri(printerUri).c_str(), printerMake.c_str());
+        printerName.c_str(), printerUri.c_str(), printerMake.c_str());
 #ifdef CUPS_ENABLE
     auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AddPrinterToCups(printerUri, printerName, printerMake);
     if (ret != E_PRINT_NONE) {
@@ -3834,7 +3834,7 @@ bool PrintServiceAbility::DoAddPrinterToCups(
         "[Printer: %{public}s] DoAddPrinterToCups start, printerMake: %{public}s, "
         "printerUri: %{public}s, ppdName: %{public}s",
         printerName.c_str(), printerInfo->GetPrinterMake().c_str(),
-        PrintUtils::AnonymizePrinterUri(printerUri).c_str(), ppdName.c_str());
+        printerUri.c_str(), ppdName.c_str());
 #ifdef CUPS_ENABLE
     if (!DoAddPrinterToCupsEnable(printerUri, printerName, printerInfo, ppdName, ppdData)) {
         return false;
