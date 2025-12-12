@@ -105,6 +105,10 @@ ohos_fuzztest("PrintServiceAbilityFuzzTest") {
   if (print_fwk_feature_edm_service) {
     cflags_cc += [ "-DEDM_SERVICE_ENABLE" ]
   }
+
+  if (print_fwk_feature_virtual_printer) {
+    cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
+  }
 }
 
 ###############################################################################

@@ -283,6 +283,10 @@ const std::string DEFAULT_MEDIA_TYPE = "stationery";
 const std::string DEFAULT_USER_NAME = "print";
 static const std::string P2P_PRINTER = "p2p";
 static const std::string EPRINTID = "ePrintID";
+const std::string VIRTUAL_PRINTER_ID = "fwk.driver.ppd:virtual.printer";
+const std::string VIRTUAL_PRINTER_SCHEME = "virtual-printer";
+const std::string VIRTUAL_PRINTER_NAME = "Virtual Printer";
+const std::string VIRTUAL_PRINTER_PPD = "virtual-printer.ppd";
 
 const std::string E_PRINT_MSG_NONE = "none";
 const std::string E_PRINT_MSG_NO_PERMISSION = "the application does not hace permission";

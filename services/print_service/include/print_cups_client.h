@@ -166,7 +166,9 @@ public:
     bool QueryInfoByPpdName(const std::string &fileName, PpdInfo &info);
     bool QueryPpdInfoMap(const std::string &ppdFilePath, std::unordered_map<std::string, std::string> &keyValues,
         PpdInfo &info);
+#ifdef VIRTUAL_PRINTER_ENABLE
     int32_t CopyJobOutputFile(const std::string &jobId, uint32_t fd, bool cleanAfterCopied);
+#endif
     int32_t CheckPrintJobConflicts(const std::string &ppdName, const PrintJob &jobInfo,
         const std::string &changedType, std::vector<std::string>& conflictTypes);
     int32_t CheckPreferencesConflicts(const std::string &ppdName, const PrinterPreferences &preferences,

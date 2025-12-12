@@ -158,6 +158,10 @@ ohos_shared_library("print_service") {
     ]
   }
 
+  if (print_fwk_feature_virtual_printer) {
+    cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
+  }
+
   if (build_variant == "user") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
   }
@@ -207,6 +211,10 @@ ohos_static_library("print_service_test") {
     external_deps += [
       "enterprise_device_management:edmservice_kits"
     ]
+  }
+
+  if (print_fwk_feature_virtual_printer) {
+    cflags_cc += [ "-DVIRTUAL_PRINTER_ENABLE" ]
   }
 
   subsystem_name = "print"

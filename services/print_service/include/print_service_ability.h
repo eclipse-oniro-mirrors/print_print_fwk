@@ -226,6 +226,9 @@ private:
     int32_t ConnectUsbPrinter(const std::string &printerId);
     void RefreshPrinterInfoByPpd();
     void RefreshEprinterErrorCapability();
+#ifdef VIRTUAL_PRINTER_ENABLE
+    bool RefreshVirtualPrinter();
+#endif
     void CheckCupsServerAlive();
     void RefreshPrinterPageSize(PrinterInfo &printerInfo);
     int32_t BlockPrintJob(const std::string &jobId);
