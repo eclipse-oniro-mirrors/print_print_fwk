@@ -225,7 +225,7 @@ ani_object StsPrintExtension::CreateStsPrintExtensionContext(ani_env *env,
     ani_status status = ANI_ERROR;
     ani_method method = nullptr;
     ani_object contextObj = nullptr;
-    if ((env->FindClass("C{PrintExtensionContext.PrintExtensionContext}", &cls)) != ANI_OK) {
+    if ((env->FindClass("PrintExtensionContext.PrintExtensionContext", &cls)) != ANI_OK) {
         PRINT_HILOGE("status: %{public}d", status);
         return nullptr;
     }

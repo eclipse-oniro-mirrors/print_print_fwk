@@ -71,7 +71,7 @@ ani_object AniPrintExtensionInfoHelper::CreatePrinterExtensionInfoArray(ani_env 
         SetStringProperty(env, infoObj, VENDOR_NAME_STR, infos[i].GetVendorName());
         SetIntProperty(env, infoObj, VENDOR_ICON_STR, infos[i].GetVendorIcon());
         SetStringProperty(env, infoObj, VERSION_STR, infos[i].GetVersion());
-        if (ANI_OK != env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, infoObj)) {
+        if (ANI_OK != env->Object_CallMethodByName_Void(arrayObj, "$_set", "iY:", i, infoObj)) {
             PRINT_HILOGE("Set Array Element Failed");
             return arrayObj;
         }
