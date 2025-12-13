@@ -1354,10 +1354,10 @@ int32_t PrintServiceProxy::QueryRecommendDriversById(const std::string &printerI
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
- 
+
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
- 
+
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         PRINT_HILOGE("PrintServiceProxy QueryRecommendDriversById remote is null");
@@ -1388,7 +1388,7 @@ int32_t PrintServiceProxy::QueryRecommendDriversById(const std::string &printerI
     PRINT_HILOGI("PrintServiceProxy QueryRecommendDriversById out. ret = [%{public}d]", ret);
     return ret;
 }
- 
+
 int32_t PrintServiceProxy::ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
     const std::string &ppdName)
 {
@@ -1396,12 +1396,12 @@ int32_t PrintServiceProxy::ConnectPrinterByIdAndPpd(const std::string &printerId
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
- 
+
     data.WriteInterfaceToken(GetDescriptor());
     data.WriteString(printerId);
     data.WriteString(protocol);
     data.WriteString(ppdName);
- 
+
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         PRINT_HILOGE("PrintServiceProxy ConnectPrinterByIdAndPpd remote is null");

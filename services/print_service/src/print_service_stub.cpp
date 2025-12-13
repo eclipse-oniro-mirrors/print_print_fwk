@@ -1012,7 +1012,7 @@ bool PrintServiceStub::OnQueryRecommendDriversById(MessageParcel &data, MessageP
     PRINT_HILOGI("PrintServiceStub::OnQueryRecommendDriversById out");
     return ret == E_PRINT_NONE;
 }
- 
+
 bool PrintServiceStub::OnConnectPrinterByIdAndPpd(MessageParcel &data, MessageParcel &reply)
 {
     PRINT_HILOGI("PrintServiceStub::OnConnectPrinterByIdAndPpd in");

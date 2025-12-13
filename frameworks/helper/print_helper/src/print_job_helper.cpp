@@ -94,7 +94,7 @@ napi_value PrintJobHelper::MakeJsObject(napi_env env, const PrintJob &job)
     return jsObj;
 }
 
-std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value jsValue)
+std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value jsValue, bool cvtToPwgSize)
 {
     auto nativeObj = std::make_shared<PrintJob>();
 
@@ -141,13 +141,13 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildFromJs(napi_env env, napi_value j
     nativeObj->SetColorMode(colorMode);
     nativeObj->SetDuplexMode(duplexMode);
 
-    BuildJsWorkerIsLegal(env, jsValue, jobId, jobState, subState, nativeObj);
+    BuildJsWorkerIsLegal(env, jsValue, jobId, jobState, subState, nativeObj, cvtToPwgSize);
     nativeObj->Dump();
     return nativeObj;
 }
 
 std::shared_ptr<PrintJob> PrintJobHelper::BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::string jobId,
-    uint32_t jobState, uint32_t subState, std::shared_ptr<PrintJob> &nativeObj)
+    uint32_t jobState, uint32_t subState, std::shared_ptr<PrintJob> &nativeObj, bool cvtToPwgSize)
 {
     if (jobState >= PRINT_JOB_UNKNOWN || subState > PRINT_JOB_BLOCKED_UNKNOWN) {
         PRINT_HILOGE("Invalid job state[%{public}d] or sub state [%{public}d]", jobState, subState);
@@ -163,7 +163,7 @@ std::shared_ptr<PrintJob> PrintJobHelper::BuildJsWorkerIsLegal(napi_env env, nap
     nativeObj->SetPageRange(*pageRangePtr);
 
     napi_value jsPageSize = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_PAGESIZE);
-    auto pageSizePtr = PrintPageSizeHelper::BuildFromJs(env, jsPageSize);
+    auto pageSizePtr = PrintPageSizeHelper::BuildFromJsEx(env, jsPageSize, cvtToPwgSize);
     if (pageSizePtr == nullptr) {
         PRINT_HILOGE("Failed to build print job object from js");
         return nullptr;

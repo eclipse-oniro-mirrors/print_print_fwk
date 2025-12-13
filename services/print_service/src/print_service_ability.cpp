@@ -4875,7 +4875,7 @@ void PrintServiceAbility::QueryPrinterPpds(const PrinterInfo &info, std::vector<
     }
     PRINT_HILOGI("QueryPrinterPpds End.");
 }
- 
+
 int32_t PrintServiceAbility::QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds)
 {
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {

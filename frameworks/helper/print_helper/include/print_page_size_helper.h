@@ -25,6 +25,7 @@ class PrintPageSizeHelper {
 public:
     static napi_value MakeJsObject(napi_env env, const PrintPageSize &pageSize);
     static std::shared_ptr<PrintPageSize> BuildFromJs(napi_env env, napi_value jsValue);
+    static std::shared_ptr<PrintPageSize> BuildFromJsEx(napi_env env, napi_value jsValue, bool cvtToPwgSize);
 
 private:
     static bool ValidateProperty(napi_env env, napi_value object);

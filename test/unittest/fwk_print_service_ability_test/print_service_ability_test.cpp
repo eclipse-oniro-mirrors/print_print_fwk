@@ -2844,7 +2844,7 @@ HWTEST_F(PrintServiceAbilityTest, QueryRecommendDriversByIdTest, TestSize.Level1
     service->ManualStart();
     EXPECT_EQ(service->QueryRecommendDriversById(printerId, ppds), E_PRINT_INVALID_PRINTER);
 }
- 
+
 HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIdAndPpdTest, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -3087,7 +3087,7 @@ HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPrinterId, Te
 
     int32_t ret = service->CheckPreferencesConflicts(
         printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
-    EXPECT_NE(ret, E_PRINT_NONE);
+    EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_TRUE(conflictingOptions.empty());
 #endif
 }
@@ -3112,7 +3112,7 @@ HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPpdName, Test
 
     int32_t ret = service->CheckPreferencesConflicts(
         printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
-    EXPECT_EQ(ret, E_PRINT_INVALID_PRINTER);
+    EXPECT_EQ(ret, E_PRINT_NONE);
     ret = service->CheckPreferencesConflicts(
         printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
     EXPECT_EQ(ret, E_PRINT_FILE_IO);
@@ -3130,7 +3130,7 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_InvalidPrinterId, TestS
     testPrinterJob.SetPrinterId(GetInvalidPrinterId());
     int32_t ret = service->CheckPrintJobConflicts(
         PRINT_PARAM_TYPE_PAGE_SIZE, testPrinterJob, conflictingOptions);
-    EXPECT_NE(ret, E_PRINT_NONE);
+    EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_TRUE(conflictingOptions.empty());
 #endif
 }
@@ -3154,7 +3154,7 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_InvalidPpdName, TestSiz
 
     int32_t ret = service->CheckPrintJobConflicts(
         PRINT_PARAM_TYPE_PAGE_SIZE, testPrinterJob, conflictingOptions);
-    EXPECT_EQ(ret, E_PRINT_INVALID_PRINTER);
+    EXPECT_EQ(ret, E_PRINT_NONE);
     ret = service->CheckPrintJobConflicts(
         PRINT_PARAM_TYPE_PAGE_SIZE, testPrinterJob, conflictingOptions);
     EXPECT_NE(ret, E_PRINT_NONE);

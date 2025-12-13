@@ -38,6 +38,11 @@ napi_value PrintPageSizeHelper::MakeJsObject(napi_env env, const PrintPageSize &
 
 std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJs(napi_env env, napi_value jsValue)
 {
+    return PrintPageSizeHelper::BuildFromJsEx(env, jsValue, true);
+}
+
+std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJsEx(napi_env env, napi_value jsValue, bool cvtToPwgSize)
+{
     auto nativeObj = std::make_shared<PrintPageSize>();
 
     if (!ValidateProperty(env, jsValue)) {
@@ -56,7 +61,7 @@ std::shared_ptr<PrintPageSize> PrintPageSizeHelper::BuildFromJs(napi_env env, na
     }
     PrintPageSize pageSize(id, name, width, height);
     PAGE_SIZE_ID ret = PrintPageSize::MatchPageSize(name);
-    if (ret.empty() && !pageSize.ConvertToPwgStyle()) {
+    if (ret.empty() && cvtToPwgSize && !pageSize.ConvertToPwgStyle()) {
         PRINT_HILOGE("pwgMedia build fail from JS: %{public}s.", id.c_str());
         return nullptr;
     }
