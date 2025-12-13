@@ -29,6 +29,8 @@ PrintBMSHelper::~PrintBMSHelper()
 
 void PrintBMSHelper::SetHelper(std::shared_ptr<PrintServiceHelper> &helper)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+    PRINT_HILOGI("SetHelper Enter");
     helper_ = helper;
     sptrBundleMgr_ = nullptr;
 }
