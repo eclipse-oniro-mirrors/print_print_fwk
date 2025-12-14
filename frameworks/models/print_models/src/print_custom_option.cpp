@@ -161,22 +161,26 @@ void PrintCustomOption::ReadFromParcel(Parcel &parcel)
     SetOptionResourceName(parcel.ReadString());
     hasValue_ = parcel.ReadBool();
     if (hasValue_) {
-        if (static_cast<ComponentType>(type_) == ComponentType::SWITCH) {
-            SetIsSelect(parcel.ReadBool());
-        } else if (static_cast<ComponentType>(type_) == ComponentType::MENU) {
-            PrintUtils::readListFromParcel<PrintMenuOption>(parcel, menuOption_,
-                [](Parcel& p) -> std::optional<PrintMenuOption> {
-                    auto ptr = PrintMenuOption::Unmarshalling(p);
-                    if (ptr) {
-                        return std::optional<PrintMenuOption>(*ptr);
-                    }
-                    return std::nullopt;
-                });
-        }
+        ReadValueFromParcel(parcel);
     }
     hasErrorResourceName_ = parcel.ReadBool();
     if (hasErrorResourceName_) {
         SetErrorResourceName(parcel.ReadString());
+    }
+}
+
+void PrintCustomOption::ReadValueFromParcel(Parcel &parcel) {
+    if (static_cast<ComponentType>(type_) == ComponentType::SWITCH) {
+        SetIsSelect(parcel.ReadBool());
+    } else if (static_cast<ComponentType>(type_) == ComponentType::MENU) {
+        PrintUtils::readListFromParcel<PrintMenuOption>(parcel, menuOption_,
+            [](Parcel& p) -> std::optional<PrintMenuOption> {
+                auto ptr = PrintMenuOption::Unmarshalling(p);
+                if (ptr) {
+                    return std::optional<PrintMenuOption>(*ptr);
+                }
+                return std::nullopt;
+            });
     }
 }
 

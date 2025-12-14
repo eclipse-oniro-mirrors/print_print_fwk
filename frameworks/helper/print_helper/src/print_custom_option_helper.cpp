@@ -46,7 +46,8 @@ napi_value PrintCustomOptionHelper::MakeJsObject(napi_env env, const PrintCustom
         }
     }
     if (customOption.HasErrorResourceName()) {
-        NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_CUSTOMOPTION_ERRORRESOURCENAME, customOption.GetErrorResourceName());
+        NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_CUSTOMOPTION_ERRORRESOURCENAME,
+            customOption.GetErrorResourceName());
     }
     return jsObj;
 }
@@ -63,7 +64,8 @@ std::shared_ptr<PrintCustomOption> PrintCustomOptionHelper::BuildFromJs(napi_env
     std::string jsOptionName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_CUSTOMOPTION_OPTIONNAME);
     uint32_t jsType = NapiPrintUtils::GetUint32Property(env, jsValue, PARAM_CUSTOMOPTION_TYPE);
     std::string jsBundleName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_CUSTOMOPTION_BUNDLENAME);
-    std::string jsOptionResourceName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_CUSTOMOPTION_OPTIONRESOURCENAME);
+    std::string jsOptionResourceName =
+        NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_CUSTOMOPTION_OPTIONRESOURCENAME);
     nativeObj->SetOptionName(jsOptionName);
     nativeObj->SetType(jsType);
     nativeObj->SetBundleName(jsBundleName);

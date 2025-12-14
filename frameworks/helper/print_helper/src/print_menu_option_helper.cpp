@@ -21,11 +21,12 @@
 namespace OHOS::Print {
 static constexpr const char *PARAM_MENU_OPTION_MENUITEMRESOURCENAME = "menuItemResourceName";
 static constexpr const char *PARAM_MENU_OPTION_ISSELECT = "isSelect";
-napi_value PrintMenuOptionHelper::MakeJsObject(napi_env env,  const PrintMenuOption &menuOption)
+napi_value PrintMenuOptionHelper::MakeJsObject(napi_env env, const PrintMenuOption &menuOption)
 {
     napi_value jsObj = nullptr;
     PRINT_CALL(env, napi_create_object(env, &jsObj));
-    NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_MENU_OPTION_MENUITEMRESOURCENAME, menuOption.GetMenuItemResourceName());
+    NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_MENU_OPTION_MENUITEMRESOURCENAME,
+        menuOption.GetMenuItemResourceName());
     NapiPrintUtils::SetBooleanProperty(env, jsObj, PARAM_MENU_OPTION_ISSELECT, menuOption.GetIsSelect());
     return jsObj;
 }
@@ -36,7 +37,8 @@ std::shared_ptr<PrintMenuOption> PrintMenuOptionHelper::BuildFromJs(napi_env env
 
     if (ValidateProperty(env, jsValue)) {
         nativeObj = std::make_shared<PrintMenuOption>();
-        std::string menuItemResourceName = NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_MENU_OPTION_MENUITEMRESOURCENAME);
+        std::string menuItemResourceName = NapiPrintUtils::GetStringPropertyUtf8(
+            env, jsValue, PARAM_MENU_OPTION_MENUITEMRESOURCENAME);
         bool isSelect = NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_MENU_OPTION_ISSELECT);
         if (nativeObj == nullptr) {
             PRINT_HILOGE("nativeObj is nullptr");

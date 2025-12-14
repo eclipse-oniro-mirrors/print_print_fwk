@@ -84,6 +84,8 @@ public:
 private:
     void ReadFromParcel(Parcel &parcel);
 
+    void ReadValueFromParcel(Parcel &parcel);
+
 private:
     std::string optionName_;
     uint32_t type_;
