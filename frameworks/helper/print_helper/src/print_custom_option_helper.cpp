@@ -77,9 +77,7 @@ std::shared_ptr<PrintCustomOption> PrintCustomOptionHelper::BuildFromJs(napi_env
                 nativeObj->SetMenuOption(menuOption);
             },
             PrintMenuOptionHelper::BuildFromJs);
-        }
-    } else if (static_cast<ComponentType>(jsType) == ComponentType::SWITCH) {
-        if (!CreateMenuOption(env, jsObj, customOption)) {
+        } else if (static_cast<ComponentType>(jsType) == ComponentType::SWITCH) {
             nativeObj->SetIsSelect(NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_CUSTOMOPTION_VALUE));
         }
     }
@@ -90,7 +88,7 @@ std::shared_ptr<PrintCustomOption> PrintCustomOptionHelper::BuildFromJs(napi_env
 }
 
 void PrintCustomOptionHelper::BuildJsWorkerIsLegal(napi_env env, napi_value jsValue,
-    std::shared_ptr<PrintAttributes> &nativeObj)
+    std::shared_ptr<PrintCustomOption> &nativeObj)
 {
     if (nativeObj == nullptr) {
         PRINT_HILOGE("nativeObj is nullptr");

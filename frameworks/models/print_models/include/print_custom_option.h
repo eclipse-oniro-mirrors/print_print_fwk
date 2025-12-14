@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef PRINT_CUSTOM_OPTION_H
 #define PRINT_CUSTOM_OPTION_H
 
@@ -40,19 +41,19 @@ public:
 
     void Reset();
 
-    [[nodiscard]] std::string &GetOptionName() const;
+    [[nodiscard]] const std::string &GetOptionName() const;
     
-    [[nodiscard]] uint32_t &GetType() const;
+    [[nodiscard]] const uint32_t &GetType() const;
     
-    [[nodiscard]] std::string &GetBundleName() const;
+    [[nodiscard]] const std::string &GetBundleName() const;
     
-    [[nodiscard]] std::string &GetOptionResourceName() const;
+    [[nodiscard]] const std::string &GetOptionResourceName() const;
     
     [[nodiscard]] bool HasValue() const;
 
     void GetMenuOption(std::vector<PrintMenuOption> &menuOption) const;
 
-    [[nodiscard]] bool HasIsSelect() const;
+    [[nodiscard]] bool GetIsSelect() const;
 
     [[nodiscard]] bool HasErrorResourceName() const;
 
@@ -76,7 +77,7 @@ public:
 
     static std::shared_ptr<PrintCustomOption> Unmarshalling(Parcel &parcel);
 
-    void Dump() const;
+    void Dump();
 
     Json::Value ConvertToJsonObject() const;
 
@@ -89,10 +90,10 @@ private:
     std::string bundleName_;
     std::string optionResourceName_;
     bool hasValue_;
-    std::vector<PrintMenuOption>& menuOption_;
+    std::vector<PrintMenuOption> menuOption_;
     bool isSelect_;
     bool hasErrorResourceName_;
-    std::string &errorResourceName_;
+    std::string errorResourceName_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINT_CUSTOM_OPTION_H

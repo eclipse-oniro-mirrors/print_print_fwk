@@ -144,7 +144,7 @@ void PrintAttributesHelper::BuildJsWorkerIsLegal(napi_env env, napi_value jsValu
     }
 
     napi_value jsCustomOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_CUSTOMOPTION);
-    if (jsOption != nullptr) {
+    if (jsCustomOption != nullptr) {
         NapiPrintUtils::ProcessJsArrayProperty<PrintCustomOption>(env, jsValue, PARAM_JOB_CUSTOMOPTION,
             [nativeObj](const std::vector<PrintCustomOption>& customOption) {
                 nativeObj->SetCustomOption(customOption);

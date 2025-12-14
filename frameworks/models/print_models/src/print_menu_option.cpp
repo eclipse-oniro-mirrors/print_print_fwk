@@ -41,8 +41,8 @@ PrintMenuOption::~PrintMenuOption()
 
 void PrintMenuOption::Reset()
 {
-    menuItemResourceName_ = "";
-    isSelect_ = false;
+    SetMenuItemResourceName("");
+    SetIsSelect(false);
 }
 
 const std::string &PrintMenuOption::GetMenuItemResourceName() const
@@ -94,7 +94,7 @@ void PrintMenuOption::Dump() const
 Json::Value PrintMenuOption::ConvertToJsonObject() const
 {
     Json::Value jsonObject;
-    jsonObject["menuItemResourceName_"] = menuItemResourceName_;
+    jsonObject["menuItemResourceName"] = menuItemResourceName_;
     jsonObject["isSelect"] = isSelect_;
     return jsonObject;
 }

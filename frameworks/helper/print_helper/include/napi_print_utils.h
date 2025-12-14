@@ -22,7 +22,10 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "print_constant.h"
+#include "print_log.h"
 #include "ppd_info_helper.h"
+
+#define MAX_ARRAY_LENGTH 128
 
 namespace OHOS::Print {
 class NapiPrintUtils {

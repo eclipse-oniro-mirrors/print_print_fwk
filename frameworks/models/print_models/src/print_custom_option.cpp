@@ -153,7 +153,7 @@ void PrintCustomOption::ReadFromParcel(Parcel &parcel)
 {
     if (parcel.GetReadableBytes() == 0) {
         PRINT_HILOGE("no data in parcel");
-        return false;
+        return;
     }
     SetOptionName(parcel.ReadString());
     SetType(parcel.ReadUint32());
@@ -209,7 +209,7 @@ std::shared_ptr<PrintCustomOption> PrintCustomOption::Unmarshalling(Parcel &parc
     return nativeObj;
 }
 
-void PrintCustomOption::Dump() const
+void PrintCustomOption::Dump()
 {
     PRINT_HILOGD("optionName_ = %{public}s", optionName_.c_str());
     PRINT_HILOGD("type_ = %{public}d", type_);

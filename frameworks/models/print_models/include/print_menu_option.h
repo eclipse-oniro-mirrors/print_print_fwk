@@ -12,12 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef PRINT_MENU_OPTION_H
 #define PRINT_MENU_OPTION_H
 
 #include <string>
-#include "parcel.h"
 #include <json/json.h>
+#include "parcel.h"
 
 namespace OHOS::Print {
 class PrintMenuOption final : public Parcelable {
@@ -32,7 +33,7 @@ public:
 
     void Reset();
 
-    [[nodiscard]] std::string &GetMenuItemResourceName() const;
+    [[nodiscard]] const std::string &GetMenuItemResourceName() const;
     
     [[nodiscard]] bool GetIsSelect() const;
     

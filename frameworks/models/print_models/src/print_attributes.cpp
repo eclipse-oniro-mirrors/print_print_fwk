@@ -54,7 +54,7 @@ PrintAttributes::PrintAttributes(const PrintAttributes &right)
     hasOption_ = right.hasOption_;
     option_ = right.option_;
     hasCustomOption_ = right.hasCustomOption_;
-    customOption_.assign(right.customOption.begin(), right.customOption_.end());
+    customOption_.assign(right.customOption_.begin(), right.customOption_.end());
 }
 
 PrintAttributes &PrintAttributes::operator=(const PrintAttributes &right)
@@ -226,14 +226,14 @@ void PrintAttributes::GetMargin(PrintMargin &margin) const
     margin = margin_;
 }
 
-void PrintAttributes::GetCustomOption(std::vector<PrintCustomOption> &customOption) const
-{
-    customOption.assign(customOption_.begin(), customOption_.end());
-}
-
 const std::string &PrintAttributes::GetOption() const
 {
     return option_;
+}
+
+void PrintAttributes::GetCustomOption(std::vector<PrintCustomOption> &customOption) const
+{
+    customOption.assign(customOption_.begin(), customOption_.end());
 }
 
 bool PrintAttributes::HasCopyNumber() const
