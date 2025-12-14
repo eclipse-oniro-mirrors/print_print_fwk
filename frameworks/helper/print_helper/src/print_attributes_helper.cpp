@@ -28,6 +28,7 @@ static constexpr const char *PARAM_JOB_COLORMODE = "colorMode";
 static constexpr const char *PARAM_JOB_DUPLEXMODE = "duplexMode";
 static constexpr const char *PARAM_JOB_MARGIN = "margin";
 static constexpr const char *PARAM_JOB_OPTION = "options";
+static constexpr const char *PARAM_JOB_CUSTOMOPTION = "customOption";
 
 napi_value PrintAttributesHelper::MakeJsObject(napi_env env, const PrintAttributes &attributes)
 {
@@ -59,6 +60,11 @@ napi_value PrintAttributesHelper::MakeJsObject(napi_env env, const PrintAttribut
 
     if (attributes.HasOption()) {
         NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_JOB_OPTION, attributes.GetOption());
+    }
+
+    if (!CreateCustomOption(env, jsObj, attributes)) {
+        PRINT_HILOGE("Failed to create customOption property of print job");
+        return nullptr;
     }
     return jsObj;
 }
@@ -136,6 +142,15 @@ void PrintAttributesHelper::BuildJsWorkerIsLegal(napi_env env, napi_value jsValu
     if (jsOption != nullptr) {
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION));
     }
+
+    napi_value jsCustomOption = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_JOB_CUSTOMOPTION);
+    if (jsOption != nullptr) {
+        NapiPrintUtils::ProcessJsArrayProperty<PrintCustomOption>(env, jsValue, PARAM_JOB_CUSTOMOPTION,
+            [nativeObj](const std::vector<PrintCustomOption>& customOption) {
+                nativeObj->SetCustomOption(customOption);
+            },
+            PrintCustomOptionHelper::BuildFromJs);
+    }
 }
 
 void PrintAttributesHelper::BuildFromJsPageSize(
@@ -190,6 +205,26 @@ bool PrintAttributesHelper::CreateMargin(napi_env env, napi_value &jsPrintAttrib
     return true;
 }
 
+bool PrintAttributesHelper::CreateCustomOption(napi_env env, napi_value &jsPrintAttributes,
+    const PrintAttributes &attributes)
+{
+    napi_value jsCustomOption = nullptr;
+    PRINT_CALL_BASE(env, napi_create_array(env, &jsCustomOption), false);
+    std::vector<PrintCustomOption> customOption;
+    attributes.GetCustomOption(customOption);
+    uint32_t arrLength = customOption.size();
+
+    for (uint32_t index = 0; index < arrLength; index++) {
+        napi_value value = PrintCustomOptionHelper::MakeJsObject(env, customOption[index]);
+        PRINT_CALL_BASE(env, napi_set_element(env, jsCustomOption, index, value), false);
+    }
+    PRINT_CALL_BASE(
+        env,
+        napi_set_named_property(env, jsPrintAttributes, PARAM_JOB_CUSTOMOPTION, jsCustomOption),
+        false);
+    return true;
+}
+
 bool PrintAttributesHelper::ValidateProperty(napi_env env, napi_value object)
 {
     std::map<std::string, PrintParamStatus> propertyList = {
@@ -203,6 +238,7 @@ bool PrintAttributesHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_JOB_DUPLEXMODE, PRINT_PARAM_OPT},
         {PARAM_JOB_MARGIN, PRINT_PARAM_OPT},
         {PARAM_JOB_OPTION, PRINT_PARAM_OPT},
+        {PARAM_JOB_CUSTOMOPTION, PRINT_PARAM_OPT},
     };
 
     auto names = NapiPrintUtils::GetPropertyNames(env, object);

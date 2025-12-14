@@ -437,6 +437,17 @@ Json::Value PrintUtils::CreateMarginJson(const PrintAttributes &attrParam)
     return marginJson;
 }
 
+Json::Value PrintUtils::GetCustomOptionForJson(const PrintAttributes &attrParam)
+{
+    Json::Value customOptionJson;
+    std::vector<PrintCustomOption> customOptionAttr;
+    attrParam.GetCustomOption(customOptionAttr);
+    for (const auto& item : customOptionAttr) {
+        customOptionJson.append(item.ConvertToJsonObject());
+    }
+    return customOptionJson;
+}
+
 void PrintUtils::ParseAttributesObjectParamForJson(const PrintAttributes &attrParam, Json::Value &attrJson)
 {
     if (attrParam.HasPageRange()) {
@@ -447,6 +458,9 @@ void PrintUtils::ParseAttributesObjectParamForJson(const PrintAttributes &attrPa
     }
     if (attrParam.HasMargin()) {
         attrJson["margin"] = CreateMarginJson(attrParam);
+    }
+    if (attrParam.HasCustomOption()) {
+        attrJson["customOption"] = GetCustomOptionForJson(attrParam);
     }
 }
 
