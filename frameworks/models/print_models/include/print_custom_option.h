@@ -42,13 +42,13 @@ public:
     void Reset();
 
     [[nodiscard]] const std::string &GetOptionName() const;
-    
+
     [[nodiscard]] const uint32_t &GetType() const;
     
     [[nodiscard]] const std::string &GetBundleName() const;
-    
+
     [[nodiscard]] const std::string &GetOptionResourceName() const;
-    
+
     [[nodiscard]] bool HasValue() const;
 
     void GetMenuOption(std::vector<PrintMenuOption> &menuOption) const;
@@ -58,19 +58,19 @@ public:
     [[nodiscard]] bool HasErrorResourceName() const;
 
     [[nodiscard]] const std::string &GetErrorResourceName() const;
-    
+
     void SetOptionName(const std::string &optionName);
-    
+
     void SetType(const uint32_t &type);
-    
+
     void SetBundleName(const std::string &bundleName);
-    
+
     void SetOptionResourceName(const std::string &optionResourceName);
-    
+
     void SetMenuOption(const std::vector<PrintMenuOption>& menuOption);
-    
+
     void SetIsSelect(const bool isSelect);
-    
+
     void SetErrorResourceName(const std::string &errorResourceName);
 
     virtual bool Marshalling(Parcel &parcel) const override;

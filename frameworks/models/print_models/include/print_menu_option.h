@@ -34,11 +34,11 @@ public:
     void Reset();
 
     [[nodiscard]] const std::string &GetMenuItemResourceName() const;
-    
+
     [[nodiscard]] bool GetIsSelect() const;
-    
+
     void SetMenuItemResourceName(const std::string &menuItemResourceName);
-    
+
     void SetIsSelect(const bool isSelect);
 
     virtual bool Marshalling(Parcel &parcel) const override;

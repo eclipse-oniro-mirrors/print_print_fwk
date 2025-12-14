@@ -26,7 +26,7 @@ static constexpr const char *PARAM_CUSTOMOPTION_BUNDLENAME = "bundleName";
 static constexpr const char *PARAM_CUSTOMOPTION_OPTIONRESOURCENAME = "optionResourceName";
 static constexpr const char *PARAM_CUSTOMOPTION_VALUE = "value";
 static constexpr const char *PARAM_CUSTOMOPTION_ERRORRESOURCENAME = "errorResourceName";
-napi_value PrintCustomOptionHelper::MakeJsObject(napi_env env,  const PrintCustomOption &customOption)
+napi_value PrintCustomOptionHelper::MakeJsObject(napi_env env, const PrintCustomOption &customOption)
 {
     napi_value jsObj = nullptr;
     PRINT_CALL(env, napi_create_object(env, &jsObj));
