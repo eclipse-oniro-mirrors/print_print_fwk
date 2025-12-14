@@ -169,7 +169,8 @@ void PrintCustomOption::ReadFromParcel(Parcel &parcel)
     }
 }
 
-void PrintCustomOption::ReadValueFromParcel(Parcel &parcel) {
+void PrintCustomOption::ReadValueFromParcel(Parcel &parcel)
+{
     if (static_cast<ComponentType>(type_) == ComponentType::SWITCH) {
         SetIsSelect(parcel.ReadBool());
     } else if (static_cast<ComponentType>(type_) == ComponentType::MENU) {
