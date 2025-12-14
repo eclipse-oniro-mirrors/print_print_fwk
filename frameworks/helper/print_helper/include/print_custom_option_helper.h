@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,6 @@ class PrintCustomOptionHelper {
 public:
     static napi_value MakeJsObject(napi_env env, const PrintCustomOption &customOption);
     static std::shared_ptr<PrintCustomOption> BuildFromJs(napi_env env, napi_value jsValue);
-    static void BuildJsWorkerIsLegal(napi_env env, napi_value jsValue, std::shared_ptr<PrintCustomOption> &nativeObj);
 
 private:
     static bool CreateMenuOption(napi_env env, napi_value &jsPrintCustomOption, const PrintCustomOption &customOption);

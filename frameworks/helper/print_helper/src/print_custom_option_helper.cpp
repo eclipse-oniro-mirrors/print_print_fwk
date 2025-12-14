@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -83,23 +83,12 @@ std::shared_ptr<PrintCustomOption> PrintCustomOptionHelper::BuildFromJs(napi_env
             nativeObj->SetIsSelect(NapiPrintUtils::GetBooleanProperty(env, jsValue, PARAM_CUSTOMOPTION_VALUE));
         }
     }
-
-    BuildJsWorkerIsLegal(env, jsValue, nativeObj);
-    PRINT_HILOGI("Build Print CustomOption succeed");
-    return nativeObj;
-}
-
-void PrintCustomOptionHelper::BuildJsWorkerIsLegal(napi_env env, napi_value jsValue,
-    std::shared_ptr<PrintCustomOption> &nativeObj)
-{
-    if (nativeObj == nullptr) {
-        PRINT_HILOGE("nativeObj is nullptr");
-        return;
-    }
     auto jsErrorResourceName = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_CUSTOMOPTION_ERRORRESOURCENAME);
     if (jsErrorResourceName != nullptr) {
         nativeObj->SetErrorResourceName(NapiPrintUtils::GetStringFromValueUtf8(env, jsErrorResourceName));
     }
+    PRINT_HILOGI("Build Print CustomOption succeed");
+    return nativeObj;
 }
 
 bool PrintCustomOptionHelper::CreateMenuOption(napi_env env, napi_value &jsPrintCustomOption,
