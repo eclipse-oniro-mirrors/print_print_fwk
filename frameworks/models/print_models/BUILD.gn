@@ -48,6 +48,8 @@ ohos_shared_library("print_models") {
     "src/print_extension_info.cpp",
     "src/print_job.cpp",
     "src/print_margin.cpp",
+    "src/print_menu_option.cpp",
+    "src/print_custom_option.cpp",
     "src/print_page_size.cpp",
     "src/print_preview_attribute.cpp",
     "src/print_range.cpp",
