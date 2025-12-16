@@ -317,14 +317,18 @@ std::string PrintUtils::AnonymizeIp(const std::string &ip)
 std::string PrintUtils::AnonymizeJobOption(const std::string &option)
 {
     Json::Value optionJson;
-    PrintJsonUtil::Parse(option, optionJson);
+    if (!PrintJsonUtil::Parse(option, optionJson)) {
+        return "";
+    }
     if (PrintJsonUtil::IsMember(optionJson, "jobName") && optionJson["jobName"].isString()) {
         optionJson["jobName"] = AnonymizeJobName(optionJson["jobName"].asString());
     }
     if (PrintJsonUtil::IsMember(optionJson, "jobDesArr") && optionJson["jobDesArr"].isArray()) {
         Json::Value jobDesArr = optionJson["jobDesArr"];
-        jobDesArr[0] = AnonymizeJobName(jobDesArr[0].asString());
-        optionJson["jobDesArr"] = jobDesArr;
+        if (jobDesArr.size() > 0) {
+            jobDesArr[0] = AnonymizeJobName(jobDesArr[0].asString());
+            optionJson["jobDesArr"] = jobDesArr;
+        }
     }
     if (PrintJsonUtil::IsMember(optionJson, "printerId") && optionJson["printerId"].isString()) {
         optionJson["printerId"] = AnonymizePrinterId(optionJson["printerId"].asString());
