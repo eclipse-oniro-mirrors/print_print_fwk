@@ -667,6 +667,9 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
 
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    // update extensionList_
+    std::vector<PrintExtensionInfo> newExtensionInfos;
+    QueryAllExtension(newExtensionInfos);
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
