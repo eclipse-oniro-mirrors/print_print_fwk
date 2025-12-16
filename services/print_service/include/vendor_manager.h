@@ -92,8 +92,6 @@ public:
     std::string GetConnectingPrinter() override;
     std::string GetConnectingPpdName() override;
     std::string GetConnectingProtocol() override;
-    void ClearConnectingPpdName() override;
-    void ClearConnectingProtocol() override;
     bool IsQueryingPrinter(const std::string &globalPrinterIdOrIp, const std::string &uri) override;
     void SetQueryPrinter(ConnectMethod method, const std::string &globalPrinterIdOrIp) override;
     bool OnQueryCallBackEvent(const PrinterInfo &info) override;

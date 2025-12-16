@@ -125,6 +125,8 @@ public:
 
     [[nodiscard]] std::string GetPpdHashCode() const;
 
+    bool IsExpired() const;
+
     virtual bool Marshalling(Parcel &parcel) const override;
 
     static std::shared_ptr<PrinterInfo> Unmarshalling(Parcel &parcel);
@@ -141,6 +143,8 @@ private:
     void MarshallingInnerProperty(Parcel &parcel) const;
 
     bool ValidateAll();
+
+    void SetCurrentTime();
 
 private:
     std::string printerId_;
@@ -198,6 +202,8 @@ private:
     bool isLastUsedPrinter_; // Deprecated, to be removed in a future version.
 
     std::string ppdHashCode_;
+
+    uint64_t timeStamp_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_INFO_H

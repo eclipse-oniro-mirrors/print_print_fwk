@@ -2823,6 +2823,11 @@ HWTEST_F(PrintServiceAbilityTest, QueryInfoByIpTest, TestSize.Level1)
     std::string ip = "192.168.1.1";
     EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
     EXPECT_EQ(service->QueryPrinterInfoByIp(""), E_PRINT_INVALID_PRINTER);
+    PrinterInfo info;
+    info.SetPrinterId(ip);
+    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
+    service->OnQueryCallBackEvent(info);
+    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIpAndPpdTest, TestSize.Level1)

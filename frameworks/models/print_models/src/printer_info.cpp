@@ -17,6 +17,11 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "print_utils.h"
+#include <chrono>
+
+namespace {
+    static const uint64_t UPDATE_TIME = 30000;
+}  // namespace
 
 namespace OHOS::Print {
 PrinterInfo::PrinterInfo()
@@ -49,6 +54,7 @@ PrinterInfo::PrinterInfo()
 {
     capability_.Reset();
     preferences_.Reset();
+    SetCurrentTime();
 }
 
 PrinterInfo::PrinterInfo(const PrinterInfo &right)
@@ -79,7 +85,8 @@ PrinterInfo::PrinterInfo(const PrinterInfo &right)
       isDefaultPrinter_(right.isDefaultPrinter_),
       hasIsLastUsedPrinter_(right.hasIsLastUsedPrinter_),
       isLastUsedPrinter_(right.isLastUsedPrinter_),
-      ppdHashCode_(right.ppdHashCode_)
+      ppdHashCode_(right.ppdHashCode_),
+      timeStamp_(right.timeStamp_)
 {
 }
 PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
@@ -113,6 +120,7 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         hasPrinterStatus_ = right.hasPrinterStatus_;
         printerStatus_ = right.printerStatus_;
         ppdHashCode_ = right.ppdHashCode_;
+        timeStamp_ = right.timeStamp_;
     }
     return *this;
 }
@@ -211,6 +219,13 @@ void PrinterInfo::SetPpdHashCode(const std::string &ppdHashCode)
     ppdHashCode_ = ppdHashCode;
 }
 
+void PrinterInfo::SetCurrentTime()
+{
+    auto duration = std::chrono::system_clock::now().time_since_epoch();
+    auto currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    timeStamp_ = static_cast<std::uint64_t>(currentTime);
+}
+
 const std::string &PrinterInfo::GetPrinterId() const
 {
     return printerId_;
@@ -289,6 +304,13 @@ std::string PrinterInfo::GetAlias() const
 std::string PrinterInfo::GetPpdHashCode() const
 {
     return ppdHashCode_;
+}
+
+bool PrinterInfo::IsExpired() const
+{
+    auto duration = std::chrono::system_clock::now().time_since_epoch();
+    auto currentTime = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    return (timeStamp_ + UPDATE_TIME) < static_cast<std::uint64_t>(currentTime);
 }
 
 bool PrinterInfo::HasPrinterUuid() const
