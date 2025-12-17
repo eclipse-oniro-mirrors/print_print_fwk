@@ -67,7 +67,6 @@ using namespace Security::AccessToken;
 const uint32_t MAX_JOBQUEUE_NUM = 512;
 const uint32_t ASYNC_CMD_DELAY = 10;
 const int64_t INIT_INTERVAL = 5000L;
-const int32_t UID_TRANSFORM_DIVISOR = 200000;
 const uint32_t QUERY_CUPS_ALIVE_INTERVAL = 10;
 const uint32_t QUERY_CUPS_ALIVE_MAX_RETRY_TIMES = 50;
 const uint32_t ENTER_LOW_POWER_INTERVAL = 90000;
