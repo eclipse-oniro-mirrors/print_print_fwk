@@ -166,6 +166,18 @@ ohos_shared_library("print_service") {
     cflags_cc += [ "-DIS_RELEASE_VERSION" ]
   }
 
+  if (print_fwk_feature_smb_printer) {
+      sources += [
+        "src/smb_host_search_helper.cpp",
+        "src/smb_printer_discoverer.cpp",
+        "src/smb_printer_state_monitor.cpp"
+      ]
+      cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
+      external_deps += [
+        "libsmb2:libsmb2_shared",
+      ]
+  }
+
   subsystem_name = "print"
   part_name = "print_fwk"
 }

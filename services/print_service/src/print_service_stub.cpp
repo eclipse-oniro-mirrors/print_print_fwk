@@ -103,6 +103,8 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CHECKPREFERENCESCONFLICTS] =
         &PrintServiceStub::OnCheckPreferencesConflicts;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_CHECKPRINTJOBCONFLICTS] = &PrintServiceStub::OnCheckPrintJobConflicts;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_SHAREDHOSTS] = &PrintServiceStub::OnGetSharedHosts;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_AUTH_SMB_DEVICE] = &PrintServiceStub::OnAuthSmbDevice;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -1061,6 +1063,72 @@ bool PrintServiceStub::OnCheckPrintJobConflicts(MessageParcel &data, MessageParc
     reply.WriteStringVector(conflictingOptions);
 
     PRINT_HILOGI("PrintServiceStub::OnCheckPrintJobConflicts out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnGetSharedHosts(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnGetSharedHosts in");
+    std::vector<PrintSharedHost> sharedHosts;
+    int32_t ret = GetSharedHosts(sharedHosts);
+    reply.WriteInt32(ret);
+    if (ret == E_PRINT_NONE) {
+        reply.WriteInt32(static_cast<int32_t>(sharedHosts.size()));
+        for (auto sharedHost : sharedHosts) {
+            if (!sharedHost.Marshalling(reply)) {
+                PRINT_HILOGW("Marshalling sharedHost fail");
+                return false;
+            }
+        }
+    }
+    PRINT_HILOGI("PrintServiceStub::OnGetSharedHosts out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnAuthSmbDevice(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnAuthSmbDevice in");
+
+    auto sharedHostPtr = PrintSharedHost::Unmarshalling(data);
+    if (sharedHostPtr == nullptr) {
+        PRINT_HILOGE("Failed to unmarshall PrintSharedHost");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+
+    std::string userName = data.ReadString();
+    char* userPasswd = nullptr;
+    if (!userName.empty()) {
+        const uint8_t *outData = data.ReadBuffer(MAX_AUTH_LENGTH_SIZE);
+        userPasswd = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE]{};
+        if (userPasswd == nullptr) {
+            PRINT_HILOGE("Allocate Password fail.");
+            return false;
+        }
+        auto memcpyRet = memcpy_s(userPasswd, MAX_AUTH_LENGTH_SIZE, outData, MAX_AUTH_LENGTH_SIZE);
+        if (memcpyRet != E_PRINT_NONE) {
+            PrintUtil::SafeDeleteAuthInfo(userPasswd);
+            PRINT_HILOGE("memcpy_s failed, errorCode:[%{public}d]", memcpyRet);
+            return false;
+        }
+    }
+    std::vector<PrinterInfo> printerInfos;
+    int32_t ret = AuthSmbDevice(*sharedHostPtr, userName, userPasswd, printerInfos);
+    if (userPasswd) {
+        PrintUtil::SafeDeleteAuthInfo(userPasswd);
+    }
+    reply.WriteInt32(ret);
+    if (ret == E_PRINT_NONE) {
+        reply.WriteInt32(static_cast<int32_t>(printerInfos.size()));
+        for (const auto& printerInfo : printerInfos) {
+            printerInfo.Dump();
+            if (!printerInfo.Marshalling(reply)) {
+                PRINT_HILOGW("Marshalling printerInfo fail");
+                return false;
+            }
+        }
+    }
+    PRINT_HILOGD("PrintServiceStub::OnAuthSmbDevice out");
     return ret == E_PRINT_NONE;
 }
 

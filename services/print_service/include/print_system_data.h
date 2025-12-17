@@ -20,6 +20,7 @@
 #include <map>
 #include <vector>
 #include <json/json.h>
+#include <optional>
 #include "printer_info.h"
 #include "printer_capability.h"
 #include "print_constant.h"
@@ -75,6 +76,9 @@ public:
     void AddPrintEvent(const std::string &printerId, const std::string &type, int32_t code);
     void ClearPrintEvents(const std::string &printerId, const std::string &type);
     std::string AnalyzePrintEvents(const std::string &printerId, const std::string &type);
+    void SetSmbPrinterInDiscoverList(const std::string& ip, std::vector<PrinterInfo>& infos);
+    std::optional<PrinterInfo> FindInfoInSmbPrinterDiscoverList(const std::string &printerId);
+    void GetSmbAddedPrinterListFromSystemData(std::vector<PrinterInfo> &printerInfoList);
 
 private:
     bool ParsePrinterListJsonV1(Json::Value& jsonObject);
@@ -172,8 +176,10 @@ private:
 #endif // ENTERPRISE_ENABLE
     std::map<std::string, std::shared_ptr<PrinterInfo>> discoveredPrinterInfoList_;
     std::map<std::string, std::shared_ptr<PrinterInfo>> connectingIpPrinterInfoList_;
+    std::map<std::string, std::vector<PrinterInfo>> discoveredSmbPrinterInfoList_;
     std::mutex discoveredListMutex;
     std::mutex connectingIpPrinterListMutex;
+    std::mutex smbPrinterListMutex;
     const uint32_t MAX_PRINTER_SIZE = 1000;
     PrintMapSafe<PrintEventContainer> printEventMap_;
     PrintMapSafe<PrinterInfo> discoveredIpPrinterInfoList_;

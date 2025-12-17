@@ -1481,4 +1481,88 @@ int32_t PrintServiceProxy::CheckPrintJobConflicts(const std::string &changedType
     return ret;
 }
 
+int32_t PrintServiceProxy::GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts)
+{
+    PRINT_HILOGI("PrintServiceProxy GetSharedHosts started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy GetSharedHosts remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_GET_SHAREDHOSTS,
+        data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("GetSharedHosts failed, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+    ret = GetResult(ret, reply);
+    if (ret == ERR_NONE) {
+        int32_t len = reply.ReadInt32();
+        if (len > PRINT_MAX_PRINT_COUNT) {
+            PRINT_HILOGE("len is out of range.");
+            return E_PRINT_INVALID_PARAMETER;
+        }
+        for (int32_t i = 0; i < len; ++i) {
+            auto sharedHostPtr = PrintSharedHost::Unmarshalling(reply);
+            if (sharedHostPtr == nullptr) {
+                PRINT_HILOGE("wrong sharedHost from data.");
+                return E_PRINT_GENERIC_FAILURE;
+            }
+            sharedHosts.emplace_back(*sharedHostPtr);
+        }
+    }
+    return ret;
+}
+
+int32_t PrintServiceProxy::AuthSmbDevice(const PrintSharedHost &sharedHost, const std::string &userName,
+    char *userPasswd, std::vector<PrinterInfo>& printerInfos)
+{
+    PRINT_HILOGI("PrintServiceProxy AuthSmbDevice started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    sharedHost.Marshalling(data);
+    data.WriteString(userName);
+    if (userPasswd) {
+        data.WriteBuffer(static_cast<void*>(userPasswd), MAX_AUTH_LENGTH_SIZE);
+    }
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy AuthSmbDevice remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_AUTH_SMB_DEVICE, data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("AuthSmbDevice failed, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+    ret = GetResult(ret, reply);
+    if (ret == ERR_NONE) {
+        uint32_t len = reply.ReadInt32();
+        if (len > PRINT_MAX_PRINT_COUNT) {
+            PRINT_HILOGE("len is out of range.");
+            return E_PRINT_INVALID_PARAMETER;
+        }
+        for (uint32_t i = 0; i < len; ++i) {
+            auto printerInfoPtr = PrinterInfo::Unmarshalling(reply);
+            if (printerInfoPtr == nullptr) {
+                PRINT_HILOGE("wrong printerInfo from data.");
+                return E_PRINT_GENERIC_FAILURE;
+            }
+            printerInfos.emplace_back(*printerInfoPtr);
+        }
+    }
+    PRINT_HILOGI("PrintServiceProxy AuthSmbDevice out. ret = [%{public}d]", ret);
+    return ret;
+}
+
 } // namespace OHOS::Print

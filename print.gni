@@ -32,4 +32,5 @@ declare_args() {
   print_fwk_feature_enterprise = false
   print_fwk_feature_edm_service = false
   print_fwk_feature_virtual_printer = false
+  print_fwk_feature_smb_printer = false
 }

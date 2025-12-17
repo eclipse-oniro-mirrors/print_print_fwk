@@ -96,6 +96,9 @@ public:
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) override;
     int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions) override;
+    int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts) override;
+    int32_t AuthSmbDevice(const PrintSharedHost &sharedHost, const std::string &userName, char *userPasswd,
+        std::vector<PrinterInfo>& printerInfos) override;
 
 private:
     int32_t GetResult(int retCode, MessageParcel &reply);

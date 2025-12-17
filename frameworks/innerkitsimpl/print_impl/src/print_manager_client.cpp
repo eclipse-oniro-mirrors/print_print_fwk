@@ -1130,4 +1130,31 @@ int32_t PrintManagerClient::ConnectPrinterByIdAndPpd(const std::string &printerI
     }
     return ret;
 }
+
+int32_t PrintManagerClient::GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->GetSharedHosts(sharedHosts);
+        PRINT_HILOGD("PrintManagerClient GetSharedHosts out ret = [%{public}d].", ret);
+    }
+    return ret;
+}
+
+int32_t PrintManagerClient::AuthSmbDevice(const PrintSharedHost &sharedHost, const std::string &userName,
+    char *userPasswd, std::vector<PrinterInfo>& printerInfos)
+{
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
+        PRINT_HILOGD("PrintManagerClient AuthSmbDevice out ret = [%{public}d].", ret);
+    }
+    if (userPasswd) {
+        PrintUtil::SafeDeleteAuthInfo(userPasswd);
+    }
+    return ret;
+}
+
 } // namespace OHOS::Print

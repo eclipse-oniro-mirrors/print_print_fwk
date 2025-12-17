@@ -32,6 +32,7 @@
 #include "printer_preferences.h"
 #include "refbase.h"
 #include "ppd_info.h"
+#include "print_shared_host.h"
 #ifdef PDFIUM_ENABLE
 #include "fpdfview.h"
 #endif // PDFIUM_ENABLE
@@ -135,6 +136,9 @@ public:
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions);
     int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions);
+    int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts);
+    int32_t AuthSmbDevice(const PrintSharedHost &sharedHost, const std::string &userName,
+        char *userPasswd, std::vector<PrinterInfo>& printerInfos);
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);
