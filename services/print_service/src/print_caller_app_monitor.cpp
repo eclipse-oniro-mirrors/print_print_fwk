@@ -166,7 +166,7 @@ std::vector<AppExecFwk::RunningProcessInfo> PrintCallerAppMonitor::GetRunningPro
 bool PrintCallerAppMonitor::IsAppAlive(std::shared_ptr<PrintCallerAppInfo> callerAppInfo)
 {
     std::vector<AppExecFwk::RunningProcessInfo> processInfos =
-        GetRunningProcessInformation(callerAppInfo->bundleName_, callerAppInfo->userId);
+        GetRunningProcessInformation(callerAppInfo->bundleName_, callerAppInfo->userId_);
     for (auto &processInfo : processInfos) {
         PRINT_HILOGD("processName: %{public}s, pid: %{public}d", processInfo.processName_.c_str(), processInfo.pid_);
         if (processInfo.pid_ == callerAppInfo->pid_ &&
