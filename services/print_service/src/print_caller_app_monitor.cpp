@@ -22,6 +22,7 @@
 
 #include "print_caller_app_monitor.h"
 #include "print_bms_helper.h"
+#include "print_constant.h"
 
 namespace OHOS::Print {
 static constexpr uint32_t CHECK_CALLER_APP_INTERVAL = 60;
@@ -46,9 +47,14 @@ void PrintCallerAppMonitor::StartCallerAppMonitor(std::function<bool()> unloadTa
 
 void PrintCallerAppMonitor::AddCallerAppToMap()
 {
+    int32_t userId = GetCurrentUserId();
+    if (userId == AppExecFwk::Constants::INVALID_USERID) {
+        PRINT_HILOGE("Invalid user id.");
+        return;
+    }
     std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(bundleName, userId);
     int32_t callerPid = IPCSkeleton::GetCallingPid();
-    std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(bundleName);
     for (auto &processInfo : processInfos) {
         PRINT_HILOGD("processName: %{public}s, processId: %{public}d, callerPid: %{public}d",
             processInfo.processName_.c_str(),
@@ -57,7 +63,7 @@ void PrintCallerAppMonitor::AddCallerAppToMap()
         if (processInfo.pid_ != 0 && !bundleName.empty() && callerPid == processInfo.pid_ &&
             processInfo.processName_.find(PRINT_EXTENSION_SUFFIX) == std::string::npos) {
             if (!CheckCallerAppInMap(callerPid, bundleName)) {
-                auto callerAppInfo = std::make_shared<PrintCallerAppInfo>(callerPid, bundleName);
+                auto callerAppInfo = std::make_shared<PrintCallerAppInfo>(callerPid, userId, bundleName);
                 std::lock_guard<std::mutex> lock(callerMapMutex_);
                 callerMap_[callerPid] = callerAppInfo;
                 PRINT_HILOGI("add callerPid: %{public}d", callerPid);
@@ -140,17 +146,12 @@ sptr<AppExecFwk::IAppMgr> PrintCallerAppMonitor::GetAppManager()
 }
 
 std::vector<AppExecFwk::RunningProcessInfo> PrintCallerAppMonitor::GetRunningProcessInformation(
-    const std::string &bundleName)
+    const std::string &bundleName, int32_t userId)
 {
     std::vector<AppExecFwk::RunningProcessInfo> processInfos;
     auto appManager = GetAppManager();
     if (appManager == nullptr) {
         PRINT_HILOGE("appManager is nullptr");
-        return processInfos;
-    }
-    int32_t userId = GetCurrentUserId();
-    if (userId == AppExecFwk::Constants::INVALID_USERID) {
-        PRINT_HILOGE("Invalid user id.");
         return processInfos;
     }
     int32_t ret = appManager->GetRunningProcessInformation(bundleName, userId, processInfos);
@@ -163,7 +164,8 @@ std::vector<AppExecFwk::RunningProcessInfo> PrintCallerAppMonitor::GetRunningPro
 
 bool PrintCallerAppMonitor::IsAppAlive(std::shared_ptr<PrintCallerAppInfo> callerAppInfo)
 {
-    std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(callerAppInfo->bundleName_);
+    std::vector<AppExecFwk::RunningProcessInfo> processInfos =
+        GetRunningProcessInformation(callerAppInfo->bundleName_, callerAppInfo->userId_);
     for (auto &processInfo : processInfos) {
         PRINT_HILOGD("processName: %{public}s, pid: %{public}d", processInfo.processName_.c_str(), processInfo.pid_);
         if (processInfo.pid_ == callerAppInfo->pid_ &&

@@ -53,9 +53,13 @@ public:
 class PrintCallerAppInfo {
 public:
     int32_t pid_;
+    int32_t userId_;
     std::string bundleName_;
     PrintCounter counter_;
     PrintCallerAppInfo(int32_t pid, std::string bundleName) : pid_(pid),
+        bundleName_(bundleName), counter_() {
+    };
+    PrintCallerAppInfo(int32_t pid, int32_t userId, std::string bundleName) : pid_(pid), userId_(userId),
         bundleName_(bundleName), counter_() {
     };
 };
@@ -78,7 +82,8 @@ private:
 
     void MonitorCallerApps(std::function<bool()> unloadTask);
     sptr<AppExecFwk::IAppMgr> GetAppManager();
-    std::vector<AppExecFwk::RunningProcessInfo> GetRunningProcessInformation(const std::string &bundleName);
+    std::vector<AppExecFwk::RunningProcessInfo> GetRunningProcessInformation(
+        const std::string &bundleName, int32_t userId);
     int32_t GetCurrentUserId();
     bool CheckCallerAppInMap(int32_t callerPid, const std::string &bundleName);
 
