@@ -310,7 +310,6 @@ const std::string CONNECT_PRINT_EVENT_TYPE = "Event_Connect_Printer";
 const int32_t CONNECT_PRINT_EVENT_IPP_UNAVAILABLE = 24300201;
 
 const int32_t INVALID_USER_ID = -1;
-const int32_t UID_TRANSFORM_DIVISOR = 200000;
 
 const std::string PRINT_PARAM_TYPE_PAGE_SIZE = "defaultPageSizeId";
 const std::string PRINT_PARAM_TYPE_QUALITY = "defaultPrintQuality";

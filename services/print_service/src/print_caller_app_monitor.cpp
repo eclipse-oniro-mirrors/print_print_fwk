@@ -63,8 +63,7 @@ void PrintCallerAppMonitor::AddCallerAppToMap()
         if (processInfo.pid_ != 0 && !bundleName.empty() && callerPid == processInfo.pid_ &&
             processInfo.processName_.find(PRINT_EXTENSION_SUFFIX) == std::string::npos) {
             if (!CheckCallerAppInMap(callerPid, bundleName)) {
-                auto callerAppInfo = std::make_shared<PrintCallerAppInfo>(
-                    callerPid, processInfo.uid_ / UID_TRANSFORM_DIVISOR, bundleName);
+                auto callerAppInfo = std::make_shared<PrintCallerAppInfo>(callerPid, userId, bundleName);
                 std::lock_guard<std::mutex> lock(callerMapMutex_);
                 callerMap_[callerPid] = callerAppInfo;
                 PRINT_HILOGI("add callerPid: %{public}d", callerPid);
