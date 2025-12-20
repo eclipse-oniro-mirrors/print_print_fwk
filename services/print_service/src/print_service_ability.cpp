@@ -4740,15 +4740,14 @@ int32_t PrintServiceAbility::AuthPrintJob(const std::string &jobId, const std::s
     } else {
         printJob = jobIt->second;
     }
-
-    auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(printJob->GetPrinterId());
-    if (printerInfo == nullptr) {
+    PrinterInfo printerInfo;
+    if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(printJob->GetPrinterId(), printerInfo)) {
         PRINT_HILOGE("can not find the printer");
         return E_PRINT_INVALID_PRINTER;
     }
 #ifdef CUPS_ENABLE
     bool ret = DelayedSingleton<PrintCupsClient>::GetInstance()->AuthCupsPrintJob(printJob->GetJobId(),
-        printerInfo->GetUri(), userName, userPasswd);
+        printerInfo.GetUri(), userName, userPasswd);
 #endif // CUPS_ENABLE
     return E_PRINT_NONE;
 }
