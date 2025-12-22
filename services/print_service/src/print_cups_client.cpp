@@ -1491,9 +1491,8 @@ bool PrintCupsClient::VerifyPrintJob(
     }
     num_options = FillJobOptions(jobParams, num_options, &options);
     cupsSetUser(jobParams->jobOriginatingUserName.c_str());
-    std::string anonymizeJobName = PrintUtils::AnonymizeJobName(jobParams->jobName);
     if ((jobId = static_cast<uint32_t>(cupsCreateJob(
-        http, jobParams->printerName.c_str(), anonymizeJobName.c_str(), num_options, options))) == 0) {
+        http, jobParams->printerName.c_str(), jobParams->jobName.c_str(), num_options, options))) == 0) {
         PRINT_HILOGE("[Job Id: %{public}s] Unable to cupsCreateJob: %{public}s",
             jobParams->serviceJobId.c_str(), cupsLastErrorString());
         jobParams->serviceAbility->UpdatePrintJobState(
@@ -1522,11 +1521,10 @@ bool PrintCupsClient::HandleFiles(JobParameters *jobParams, uint32_t num_files, 
             UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_COMPLETED_FILE_CORRUPT);
             return false;
         }
-        std::string anonymizeJobName = PrintUtils::AnonymizeJobName(jobParams->jobName);
         status = cupsStartDocument(http,
             jobParams->printerName.c_str(),
             jobId,
-            anonymizeJobName.c_str(),
+            jobParams->jobName.c_str(),
             jobParams->documentFormat.c_str(),
             i == (num_files - 1));
         if (status == HTTP_STATUS_CONTINUE) {
