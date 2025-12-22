@@ -305,6 +305,9 @@ public:
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions));
     MOCK_METHOD3(CheckPrintJobConflicts, int32_t(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions));
+    MOCK_METHOD1(GetSharedHosts, int32_t(std::vector<PrintSharedHost> &sharedHosts));
+    MOCK_METHOD4(AuthSmbDevice, int32_t(const PrintSharedHost& sharedHost, const std::string &userName,
+        char *userPasswd, std::vector<PrinterInfo>& printerInfos));
 };
 }  // namespace Print
 }  // namespace OHOS

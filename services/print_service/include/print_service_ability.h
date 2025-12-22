@@ -121,6 +121,9 @@ public:
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) override;
     int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions) override;
+    int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts) override;
+    int32_t AuthSmbDevice(const PrintSharedHost& sharedHost, const std::string &userName, char *userPasswd,
+        std::vector<PrinterInfo>& printerInfos) override;
 
     void DelayEnterLowPowerMode();
     void ExitLowPowerMode();
@@ -209,6 +212,8 @@ private:
     bool RemoveSinglePrinterInfo(const std::string &printerId);
     void HandlePrinterStateChangeRegister(const std::string &eventType);
     void HandlePrinterChangeRegister(const std::string &eventType);
+    void TryStartSmbPrinterStatusMonitor();
+    void TryStopSmbPrinterStatusMonitor();
     bool UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri);
     int32_t HandleExtensionConnectPrinter(const std::string &printerId);
     bool CheckUserIdInEventType(const std::string &type);
@@ -224,6 +229,7 @@ private:
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
     Json::Value ConvertModifiedPreferencesToJson(PrinterPreferences &preferences);
     int32_t ConnectUsbPrinter(const std::string &printerId);
+    int32_t ConnectSmbPrinter(PrinterInfo& printerInfo);
     void RefreshPrinterInfoByPpd();
     void RefreshEprinterErrorCapability();
 #ifdef VIRTUAL_PRINTER_ENABLE

@@ -27,6 +27,7 @@
 #include "printer_info.h"
 #include "iprint_ipc_interface_code.h"
 #include "ppd_info.h"
+#include "print_shared_host.h"
 
 namespace OHOS::Print {
 class IPrintService : public IRemoteBroker {
@@ -103,6 +104,9 @@ public:
         const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions) = 0;
     virtual int32_t CheckPrintJobConflicts(const std::string &changedType,
         const PrintJob &printJob, std::vector<std::string> &conflictingOptions) = 0;
+    virtual int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts) = 0;
+    virtual int32_t AuthSmbDevice(const PrintSharedHost& sharedHost, const std::string &userName,
+        char *userPasswd, std::vector<PrinterInfo>& printerInfos) = 0;
 };
 } // namespace OHOS::Print
 #endif // PRINT_SERVICE_INTERFACE_H

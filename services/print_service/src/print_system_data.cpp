@@ -1355,5 +1355,43 @@ std::string PrintSystemData::AnalyzePrintEvents(const std::string &printerId, co
     return printEventContainer->AnalyzeEventCodes(type);
 }
 
+void PrintSystemData::SetSmbPrinterInDiscoverList(const std::string& ip, std::vector<PrinterInfo>& infos)
+{
+    std::lock_guard<std::mutex> lock(smbPrinterListMutex);
+    discoveredSmbPrinterInfoList_[ip] = infos;
+}
+
+std::optional<PrinterInfo> PrintSystemData::FindInfoInSmbPrinterDiscoverList(const std::string &printerId)
+{
+    std::lock_guard<std::mutex> lock(smbPrinterListMutex);
+    for (const auto& [ip, infos] : discoveredSmbPrinterInfoList_) {
+        if (printerId.find(ip) == std::string::npos) {
+            continue;
+        }
+        for (const auto& info : infos) {
+            if (info.GetPrinterId() == printerId) {
+                return info;
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+void PrintSystemData::GetSmbAddedPrinterListFromSystemData(std::vector<PrinterInfo> &printerInfoList)
+{
+    std::vector<std::string> addedPrinterList = QueryAddedPrinterIdList();
+    for (auto printerId : addedPrinterList) {
+        auto info = GetAddedPrinterMap().Find(printerId);
+        if (info == nullptr) {
+            continue;
+        }
+        if (info->GetPrinterId().find("smb") != std::string::npos) {
+            printerInfoList.push_back(*info);
+            continue;
+        }
+    }
+    return;
+}
+
 }  // namespace Print
 }  // namespace OHOS

@@ -63,6 +63,7 @@ ohos_shared_library("print_helper") {
     "src/ppd_info_helper.cpp",
     "src/print_menu_option_helper.cpp",
     "src/print_custom_option_helper.cpp",
+    "src/print_shared_host_helper.cpp",
   ]
   deps = [ "${print_path}/frameworks/models/print_models:print_models" ]
 

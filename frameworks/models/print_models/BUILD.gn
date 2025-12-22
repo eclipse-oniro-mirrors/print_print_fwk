@@ -59,6 +59,7 @@ ohos_shared_library("print_models") {
     "src/printer_info.cpp",
     "src/printer_preferences.cpp",
     "src/ppd_info.cpp",
+    "src/print_shared_host.cpp",
   ]
 
   external_deps = [

@@ -28,6 +28,7 @@
 #include "printer_preferences_helper.h"
 #include "ppd_info_helper.h"
 #include "print_util.h"
+#include "print_shared_host_helper.h"
 
 namespace OHOS::Print {
 const std::string PRINTER_EVENT_TYPE = "printerStateChange";
@@ -166,9 +167,9 @@ napi_value NapiInnerPrint::ConnectPrinter(napi_env env, napi_callback_info info)
         [context](
             napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
         PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
-        napi_valuetype valuetype;
-        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
+        napi_valuetype valueType;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "printerId is not a string", napi_string_expected);
         std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         PRINT_HILOGD("printerId : %{private}s", printerId.c_str());
         context->printerId = printerId;
@@ -1493,6 +1494,149 @@ napi_value NapiInnerPrint::ConnectPrinterByIdAndPpd(napi_env env, napi_callback_
     return asyncCall.Call(env, exec);
 }
 
+napi_value NapiInnerPrint::GetSharedHosts(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter GetSharedHosts---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        PRINT_HILOGD("ouput enter---->");
+        napi_status status = napi_create_array(env, result);
+        uint32_t index = 0;
+        for (auto sharedHost : context->sharedHosts) {
+            status = napi_set_element(env, *result, index++, PrintSharedHostHelper::MakeJsObject(env, sharedHost));
+            if (status != napi_ok) {
+                PRINT_HILOGE("napi_set_element failed");
+                break;
+            }
+        }
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        int32_t ret = PrintManagerClient::GetInstance()->GetSharedHosts(context->sharedHosts);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to get sharedHosts");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
+napi_value NapiInnerPrint::AuthSmbDeviceAsGuest(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter AuthSmbDeviceAsGuest---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+        auto sharedHostPtr = PrintSharedHostHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        if (sharedHostPtr == nullptr) {
+            PRINT_HILOGE("Parse sharedHost type error!");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        context->sharedHost = *sharedHostPtr;
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        PRINT_HILOGD("ouput enter---->");
+        napi_status status = napi_create_array(env, result);
+        uint32_t index = 0;
+        for (const auto& printerInfo : context->printerInfos) {
+            status = napi_set_element(env, *result, index++, PrinterInfoHelper::MakeJsObject(env, printerInfo));
+            if (status != napi_ok) {
+                PRINT_HILOGE("napi_set_element failed");
+                break;
+            }
+        }
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+            PRINT_HILOGE("Non-system applications use system APIS!");
+            context->result = false;
+            context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+            return;
+        }
+        int32_t ret = PrintManagerClient::GetInstance()->AuthSmbDevice(context->sharedHost,
+            context->userName, context->userPasswd, context->printerInfos);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to get sharedHosts");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
+napi_value NapiInnerPrint::AuthSmbDeviceAsRegisteredUser(napi_env env, napi_callback_info info)
+{
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input = [context](
+        napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_THREE, " should 3 parameter!", napi_invalid_arg);
+        auto sharedHostPtr = PrintSharedHostHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        if (sharedHostPtr == nullptr) {
+            PRINT_HILOGE("Parse sharedHost type error!");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        context->sharedHost = *sharedHostPtr;
+        napi_valuetype valueType;
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "userName is not a string", napi_string_expected);
+        context->userName = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
+        PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valueType), napi_invalid_arg);
+        PRINT_ASSERT_BASE(env, valueType == napi_string, "userPasswd is not a string", napi_string_expected);
+        context->userPasswd = NapiPrintUtils::GetCharPtrFromValueUtf8(env, argv[NapiPrintUtils::INDEX_TWO]);
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_create_array(env, result);
+        uint32_t index = 0;
+        for (auto printerInfo : context->printerInfos) {
+            status = napi_set_element(env, *result, index++, PrinterInfoHelper::MakeJsObject(env, printerInfo));
+            if (status != napi_ok) {
+                PRINT_HILOGE("napi_set_element failed");
+                break;
+            }
+        }
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        if (!CheckCallerIsSystemApp(context)) {
+            return;
+        }
+        int32_t ret = PrintManagerClient::GetInstance()->AuthSmbDevice(context->sharedHost,
+            context->userName, context->userPasswd, context->printerInfos);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to get sharedHosts");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 bool NapiInnerPrint::IsSupportType(const std::string &type)
 {
     if (type == PRINTER_EVENT_TYPE || type == PRINTJOB_EVENT_TYPE || type == EXTINFO_EVENT_TYPE ||
@@ -1526,5 +1670,20 @@ void NapiInnerPrint::NapiThrowError(napi_env env, const int32_t errCode)
         NapiPrintUtils::CreateStringUtf8(env, NapiPrintUtils::GetPrintErrorMsg(errCode)),
         &result);
     napi_throw(env, result);
+}
+
+bool NapiInnerPrint::CheckCallerIsSystemApp(std::shared_ptr<InnerPrintContext> context)
+{
+    if (!context) {
+        PRINT_HILOGE("context is null");
+        return false;
+    }
+    if (!NapiPrintUtils::CheckCallerIsSystemApp()) {
+        PRINT_HILOGE("Non-system applications use system APIS!");
+        context->result = false;
+        context->SetErrorIndex(E_PRINT_ILLEGAL_USE_OF_SYSTEM_API);
+        return false;
+    }
+    return true;
 }
 }  // namespace OHOS::Print

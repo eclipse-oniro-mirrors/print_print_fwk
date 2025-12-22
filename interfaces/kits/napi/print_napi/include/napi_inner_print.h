@@ -30,6 +30,7 @@
 #include "print_constant.h"
 #include "printer_preferences.h"
 #include "ppd_info.h"
+#include "print_shared_host.h"
 
 namespace OHOS::Print {
 class NapiInnerPrint {
@@ -67,13 +68,15 @@ public:
     static napi_value ConnectPrinterByIdAndPpd(napi_env env, napi_callback_info info);
     static napi_value CheckPreferencesConflicts(napi_env env, napi_callback_info info);
     static napi_value CheckPrintJobConflicts(napi_env env, napi_callback_info info);
+    static napi_value GetSharedHosts(napi_env env, napi_callback_info info);
+    static napi_value AuthSmbDeviceAsGuest(napi_env env, napi_callback_info info);
+    static napi_value AuthSmbDeviceAsRegisteredUser(napi_env env, napi_callback_info info);
 
 private:
     static bool IsSupportType(const std::string& type);
     static bool IsValidApplicationEvent(uint32_t event);
     static bool IsValidDefaultPrinterType(uint32_t type);
     static void NapiThrowError(napi_env env, int32_t errCode);
-    static bool CheckCallerIsSystemApp();
 
 private:
     struct InnerPrintContext : public PrintAsyncCall::Context {
@@ -103,11 +106,15 @@ private:
         std::vector<PpdInfo> allPpdInfos;
         std::string changedType = "";
         std::vector<std::string> conflictingOptions;
+        PrintSharedHost sharedHost;
+        std::vector<PrintSharedHost> sharedHosts;
+        std::vector<PrinterInfo> printerInfos;
 
         InnerPrintContext() : Context(nullptr, nullptr) {};
         InnerPrintContext(InputAction input, OutputAction output) : Context(std::move(input), std::move(output)) {};
         virtual ~InnerPrintContext() {};
     };
+    static bool CheckCallerIsSystemApp(std::shared_ptr<InnerPrintContext> context);
 };
 }  // namespace OHOS::Print
 #endif  // NAPI_INNER_PRINT_H
