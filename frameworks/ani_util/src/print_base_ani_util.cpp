@@ -89,7 +89,7 @@ ani_object CreateAniStringArray(ani_env *env, const std::vector<std::string>& st
     ani_method arrayCtor;
     ani_string aniStr = nullptr;
     ani_status status = ANI_ERROR;
-    constexpr const char *classArray = "escompat.Array";
+    constexpr const char *classArray = "std.core.Array";
     status = env->FindClass(classArray, &arrayCls);
     if (status != ANI_OK) {
         PRINT_HILOGE("status : %{public}d", status);
@@ -116,7 +116,7 @@ ani_object CreateAniStringArray(ani_env *env, const std::vector<std::string>& st
             PRINT_HILOGE("status : %{public}d", status);
             return nullptr;
         }
-        constexpr const char *SET_OBJECT_VOID_SIGNATURE = "iC{std.core.Object}:";
+        constexpr const char *SET_OBJECT_VOID_SIGNATURE = "iY:";
         status = env->Object_CallMethodByName_Void(arrayObj, "$_set", SET_OBJECT_VOID_SIGNATURE, i, aniStr);
         if (status != ANI_OK) {
             PRINT_HILOGE("status : %{public}d", status);
@@ -154,7 +154,7 @@ ani_object CreateEnumArray(ani_env *env, const std::string &enumDescriptor, std:
         return nullptr;
     }
     ani_class arrayCls = nullptr;
-    ani_status status = env->FindClass("escompat.Array", &arrayCls);
+    ani_status status = env->FindClass("std.core.Array", &arrayCls);
     if (status != ANI_OK) {
         PRINT_HILOGE("[ANI] find class fail");
         return nullptr;
@@ -175,7 +175,7 @@ ani_object CreateEnumArray(ani_env *env, const std::string &enumDescriptor, std:
 
     for (size_t i = 0; i < enumIndexArray.size(); i++) {
         ani_enum_item item = CreateEnumByIndex(env, enumDescriptor, enumIndexArray[i]);
-        if (ANI_OK != env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, item)) {
+        if (ANI_OK != env->Object_CallMethodByName_Void(arrayObj, "$_set", "iY:", i, item)) {
             PRINT_HILOGE("Set Array item Failed");
             return nullptr;
         }
@@ -245,7 +245,7 @@ bool GetStdStringArray(ani_env *env, ani_object param, std::vector<std::string> 
     }
     ani_ref ref = nullptr;
     for (ani_size idx = 0; idx < size; idx++) {
-        if ((status = env->Array_Get_Ref(reinterpret_cast<ani_array_ref>(param), idx, &ref)) != ANI_OK) {
+        if ((status = env->Array_Get(reinterpret_cast<ani_array>(param), idx, &ref)) != ANI_OK) {
             PRINT_HILOGE("status: %{public}d, index: %{public}zu", status, idx);
             return false;
         }

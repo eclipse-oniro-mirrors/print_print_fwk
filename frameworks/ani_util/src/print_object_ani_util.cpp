@@ -90,7 +90,7 @@ bool GetStringArrayProperty(ani_env *env, ani_object param, const char *name, st
     for (int i = 0; i < static_cast<int>(length); i++) {
         ani_ref stringEntryRef;
         status = env->Object_CallMethodByName_Ref(reinterpret_cast<ani_object>(arrayObj),
-            "$_get", "i:C{std.core.Object}", &stringEntryRef, (ani_int)i);
+            "$_get", "i:Y", &stringEntryRef, (ani_int)i);
         if (status != ANI_OK) {
             PRINT_HILOGE("status: %{public}d, index: %{public}d, name : %{public}s", status, i, name);
             return false;
@@ -137,7 +137,7 @@ bool GetEnumArrayProperty(ani_env *env, ani_object param, const char *name, std:
     }
 
     for (i = 0; i < size; i++) {
-        if ((status = env->Array_Get_Ref(reinterpret_cast<ani_array_ref>(obj), i, &ref)) != ANI_OK) {
+        if ((status = env->Array_Get(reinterpret_cast<ani_array>(obj), i, &ref)) != ANI_OK) {
             PRINT_HILOGE("status : %{public}d, index: %{public}zu", status, i);
             return false;
         }
@@ -256,7 +256,7 @@ bool SetIntArrayProperty(ani_env *env, ani_object param, const char *name,
     ani_method arrayCtor;
     ani_object arrayObj;
 
-    ani_status status = env->FindClass("escompat.Array", &arrayCls);
+    ani_status status = env->FindClass("std.core.Array", &arrayCls);
     if (status != ANI_OK) {
         PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
@@ -275,7 +275,7 @@ bool SetIntArrayProperty(ani_env *env, ani_object param, const char *name,
     }
 
     for (size_t i = 0; i < values.size(); i++) {
-        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ii:V", i, values[i]);
+        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ii:", i, values[i]);
         if (status != ANI_OK) {
             PRINT_HILOGE("status : %{public}d, name : %{public}s", status, name);
             return false;
@@ -330,7 +330,7 @@ bool SetStringArrayProperty(ani_env *env, ani_object param, const char *name, co
     ani_method arrayCtor;
     ani_object arrayObj;
 
-    ani_status status = env->FindClass("escompat.Array", &arrayCls);
+    ani_status status = env->FindClass("std.core.Array", &arrayCls);
     if (status != ANI_OK) {
         PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
         return false;
@@ -356,7 +356,7 @@ bool SetStringArrayProperty(ani_env *env, ani_object param, const char *name, co
             return false;
         }
 
-        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, aniString);
+        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iY:", i, aniString);
         if (status != ANI_OK) {
             PRINT_HILOGE("status: %{public}d, name : %{public}s", status, name);
             return false;
