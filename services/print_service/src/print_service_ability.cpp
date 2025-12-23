@@ -3356,6 +3356,7 @@ void PrintServiceAbility::ChangeDefaultPrinterForDelete(
 
 std::shared_ptr<PrintUserData> PrintServiceAbility::GetUserDataByUserId(int32_t userId)
 {
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto iter = printUserMap_.find(userId);
     if (iter == printUserMap_.end()) {
         PRINT_HILOGE("Current user is not added, add it.");
