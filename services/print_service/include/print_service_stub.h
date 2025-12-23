@@ -90,6 +90,7 @@ private:
     bool OnConnectPrinterByIdAndPpd(MessageParcel &data, MessageParcel &reply);
     bool OnCheckPreferencesConflicts(MessageParcel &data, MessageParcel &reply);
     bool OnCheckPrintJobConflicts(MessageParcel &data, MessageParcel &reply);
+    bool OnGetPrinterDefaultPreferences(MessageParcel &data, MessageParcel &reply);
     bool OnGetSharedHosts(MessageParcel &data, MessageParcel &reply);
     bool OnAuthSmbDevice(MessageParcel &data, MessageParcel &reply);
 

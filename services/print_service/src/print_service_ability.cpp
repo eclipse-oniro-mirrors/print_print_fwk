@@ -4979,6 +4979,36 @@ int32_t PrintServiceAbility::CheckPrintJobConflicts(const std::string &changedTy
 #endif
 }
 
+int32_t PrintServiceAbility::GetPrinterDefaultPreferences(
+    const std::string &printerId, PrinterPreferences &defaultPreferences)
+{
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+    PRINT_HILOGD("PrintServiceAbility GetPrinterDefaultPreferences in.");
+
+#ifdef CUPS_ENABLE
+    std::string ppdName;
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    int32_t ret = GetPpdNameByPrinterId(printerId, ppdName);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("GetPpdNameByPrinterId failed! ret=%{public}d", ret);
+        return ret;
+    }
+
+    PrinterCapability printerCaps;
+    ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityFromPPD("", printerCaps, ppdName);
+    if (ret != E_PRINT_NONE) {
+        PRINT_HILOGE("QueryPrinterCapabilityFromPPD failed! ret=%{public}d", ret);
+        return E_PRINT_NONE;
+    }
+    return printSystemData_.BuildPrinterPreference(printerCaps, defaultPreferences);
+#else
+    return E_PRINT_NONE;
+#endif
+}
+
 int32_t PrintServiceAbility::GetPpdNameByPrinterId(const std::string& printerId, std::string& ppdName)
 {
     PrinterInfo printerInfo;

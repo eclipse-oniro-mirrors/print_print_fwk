@@ -77,6 +77,7 @@ static constexpr const char *FUNCTION_QUERY_RECOMMAND_DRIVERS_BY_ID = "queryReco
 static constexpr const char *FUNCTION_CONNECT_PRINTER_BY_ID_AND_PPD = "connectPrinterByIdAndPpd";
 static constexpr const char *FUNCTION_CHECK_PREFERENCES_CONFLICTS = "checkPreferencesConflicts";
 static constexpr const char *FUNCTION_CHECK_PRINTJOB_CONFLICTS = "checkPrintJobConflicts";
+static constexpr const char *FUNCTION_GET_PRINTER_DEFAULT_PREFERENCES = "getPrinterDefaultPreferences";
 static constexpr const char *FUNCTION_GET_SHARED_HOST = "getSharedHosts";
 static constexpr const char *AUTH_SMB_DEVICE_AS_GUEST = "authSmbDeviceAsGuest";
 static constexpr const char *AUTH_SMB_DEVICE_AS_REGISTERED_USER = "authSmbDeviceAsRegisteredUser";
@@ -480,6 +481,7 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_CONNECT_PRINTER_BY_ID_AND_PPD, NapiInnerPrint::ConnectPrinterByIdAndPpd),
         PRINT_NAPI_METHOD(FUNCTION_CHECK_PREFERENCES_CONFLICTS, NapiInnerPrint::CheckPreferencesConflicts),
         PRINT_NAPI_METHOD(FUNCTION_CHECK_PRINTJOB_CONFLICTS, NapiInnerPrint::CheckPrintJobConflicts),
+        PRINT_NAPI_METHOD(FUNCTION_GET_PRINTER_DEFAULT_PREFERENCES, NapiInnerPrint::GetPrinterDefaultPreferences),
         PRINT_NAPI_METHOD(FUNCTION_GET_SHARED_HOST, NapiInnerPrint::GetSharedHosts),
         PRINT_NAPI_METHOD(AUTH_SMB_DEVICE_AS_GUEST, NapiInnerPrint::AuthSmbDeviceAsGuest),
         PRINT_NAPI_METHOD(AUTH_SMB_DEVICE_AS_REGISTERED_USER, NapiInnerPrint::AuthSmbDeviceAsRegisteredUser),
