@@ -5001,7 +5001,7 @@ int32_t PrintServiceAbility::GetPrinterDefaultPreferences(
     ret = DelayedSingleton<PrintCupsClient>::GetInstance()->QueryPrinterCapabilityFromPPD("", printerCaps, ppdName);
     if (ret != E_PRINT_NONE) {
         PRINT_HILOGE("QueryPrinterCapabilityFromPPD failed! ret=%{public}d", ret);
-        return E_PRINT_NONE;
+        return ret;
     }
     return printSystemData_.BuildPrinterPreference(printerCaps, defaultPreferences);
 #else
