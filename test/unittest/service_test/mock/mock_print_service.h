@@ -308,6 +308,8 @@ public:
     MOCK_METHOD1(GetSharedHosts, int32_t(std::vector<PrintSharedHost> &sharedHosts));
     MOCK_METHOD4(AuthSmbDevice, int32_t(const PrintSharedHost& sharedHost, const std::string &userName,
         char *userPasswd, std::vector<PrinterInfo>& printerInfos));
+    MOCK_METHOD2(GetPrinterDefaultPreferences, int32_t(const std::string &printerId,
+        PrinterPreferences &defaultPreferences));
 };
 }  // namespace Print
 }  // namespace OHOS
