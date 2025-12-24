@@ -71,7 +71,7 @@ void TestQueryAddedPrinter(const uint8_t *data, size_t size, FuzzedDataProvider 
     std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     std::vector<std::string> printerNameList;
     printerNameList.push_back(printerName);
-    PrintServiceAbility::GetInstance()->QueryRawAddedPrinter(printerNameList);
+    PrintServiceAbility::GetInstance()->QueryAddedPrinter(printerNameList);
 }
 
 void TestQueryRawAddedPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -80,7 +80,7 @@ void TestQueryRawAddedPrinter(const uint8_t *data, size_t size, FuzzedDataProvid
     std::vector<std::string> printerNameList;
     printerNameList.push_back(printerName);
 
-    PrintServiceAbility::GetInstance()->QueryAddedPrinter(printerNameList);
+    PrintServiceAbility::GetInstance()->QueryRawAddedPrinter(printerNameList);
 }
 
 void TestQueryPrinterProperties(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -135,6 +135,7 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestSetPrinterPreference(data, size, dataProvider);
     TestSetDefaultPrinter(data, size, dataProvider);
     TestDeletePrinterFromCups(data, size, dataProvider);
+    TestQueryRawAddedPrinter(data, size, dataProvider);
 }
 
 }  // namespace Print

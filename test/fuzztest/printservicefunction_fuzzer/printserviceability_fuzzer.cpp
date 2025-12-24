@@ -165,6 +165,66 @@ void TestSavePdfFileJob(const uint8_t *data, size_t size, FuzzedDataProvider *da
     PrintServiceAbility::GetInstance()->SavePdfFileJob(jobId, fd);
 }
 
+void TestQueryAllPrinterPpds(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::vector<PpdInfo> ppdInfos;
+    PrintServiceAbility::GetInstance()->QueryAllPrinterPpds(ppdInfos);
+}
+
+
+void TestQueryPrinterInfoByIp(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerIp = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->QueryPrinterInfoByIp(printerIp);
+}
+
+void TestConnectPrinterByIpAndPpd(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerIp = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string protocol = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName);
+}
+
+void TestQueryRecommendDriversById(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::vector<PpdInfo> ppds;
+    PrintServiceAbility::GetInstance()->QueryRecommendDriversById(printerId, ppds);
+}
+
+void TestQueryPrinterCapabilityByUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterCapability printerCaps;
+    PrintServiceAbility::GetInstance()->SetHelper(nullptr);
+    PrintServiceAbility::GetInstance()->QueryPrinterCapabilityByUri(printerUri, printerId, printerCaps);
+}
+
+void TestUpdateBsuniPrinterAdvanceOptions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    auto printerInfo = std::make_shared<PrinterInfo>() ;
+    printerInfo->SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo->SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo->SetDescription(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+
+    PrinterCapability printerCaps;
+
+    Json::Value optionJson;
+    Json::Value cupsOptionJson;
+    Json::Value mediaSourceSupportJson;
+
+    mediaSourceSupportJson.append(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    cupsOptionJson["media-source-supported"] = mediaSourceSupportJson;
+    cupsOptionJson["media-source-default"] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    optionJson["cupsOptions"] = cupsOptionJson;
+
+    printerCaps.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    printerInfo->SetCapability(printerCaps);
+    PrintServiceAbility::GetInstance()->UpdateBsuniPrinterAdvanceOptions(printerInfo);
+}
+
 void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestChangeDefaultPrinterForDelete(data, size, dataProvider);
@@ -184,6 +244,12 @@ void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dat
     TestAnalyzePrintEvents(data, size, dataProvider);
     TestAddPrintEvent(data, size, dataProvider);
     TestSavePdfFileJob(data, size, dataProvider);
+    TestQueryAllPrinterPpds(data, size, dataProvider);
+    TestQueryPrinterInfoByIp(data, size, dataProvider);
+    TestConnectPrinterByIpAndPpd(data, size, dataProvider);
+    TestQueryRecommendDriversById(data, size, dataProvider);
+    TestQueryPrinterCapabilityByUri(data, size, dataProvider);
+    TestUpdateBsuniPrinterAdvanceOptions(data, size, dataProvider);
 }
 
 }  // namespace Print
