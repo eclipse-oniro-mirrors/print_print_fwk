@@ -1070,7 +1070,6 @@ void PrintCupsClient::JobSentCallback()
 {
     PRINT_HILOGI("Previous job send success, start next job");
     if (currentJob_ != nullptr) {
-        PrintServiceAbility::GetInstance()->FlushCacheFileToUserData(currentJob_->serviceJobId);
         delete currentJob_;
         currentJob_ = nullptr;
     }
