@@ -39,8 +39,7 @@ static const int32_t DEFAULT_TIMEOUT = 0;
 
 void TestWlanGroupDiscoverPrinterActions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    VendorManager vendorManager;
-    vendorManager.Init(PrintServiceAbility::GetInstance());
+    VendorManager &vendorManager = PrintServiceAbility::GetInstance()->vendorManager;
     auto vendorWlanGroup = std::static_pointer_cast<VendorWlanGroup>(vendorManager.wlanGroupDriver);
 
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -56,18 +55,11 @@ void TestWlanGroupDiscoverPrinterActions(const uint8_t *data, size_t size, Fuzze
     printerInfo.SetUri(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
     vendorWlanGroup->OnUpdatePrinterToDiscovery(DEFAULT_VENDOR_NAME, printerInfo);
     vendorWlanGroup->OnPrinterRemoved(DEFAULT_VENDOR_NAME, printerId);
-    
-    vendorWlanGroup->vendorManager = nullptr;
-    vendorWlanGroup->parentVendorManager = nullptr;
-    vendorWlanGroup->OnPrinterDiscovered(DEFAULT_VENDOR_NAME, printerInfo);
-    vendorWlanGroup->OnUpdatePrinterToDiscovery(DEFAULT_VENDOR_NAME, printerInfo);
-    vendorWlanGroup->OnPrinterRemoved(DEFAULT_VENDOR_NAME, printerId);
 }
 
 void TestWlanGroupConnectPrinterActions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    VendorManager vendorManager;
-    vendorManager.Init(PrintServiceAbility::GetInstance());
+    VendorManager &vendorManager = PrintServiceAbility::GetInstance()->vendorManager;
     auto vendorWlanGroup = std::static_pointer_cast<VendorWlanGroup>(vendorManager.wlanGroupDriver);
 
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -85,20 +77,10 @@ void TestWlanGroupConnectPrinterActions(const uint8_t *data, size_t size, Fuzzed
     vendorWlanGroup->IsConnectingPrinter(printerId, printerUri);
     // OnQueryCapability has some problem on fuzzFwk when call successfully.
     vendorWlanGroup->OnQueryCapabilityByIp(printerUri, DEFAULT_PROTOCOL);
-
-    vendorWlanGroup->vendorManager = nullptr;
-    vendorWlanGroup->parentVendorManager = nullptr;
-    vendorWlanGroup->SetConnectingPrinter(METHOD_DEFAULT, printerId);
-    vendorWlanGroup->IsGroupDriver(printerId);
-    vendorWlanGroup->IsConnectingPrinter(printerId, printerUri);
-    vendorWlanGroup->OnQueryCapability(printerId, DEFAULT_TIMEOUT);
-    vendorWlanGroup->OnQueryCapabilityByIp(printerUri, DEFAULT_PROTOCOL);
 }
-
 void TestWlanGroupOtherFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    VendorManager vendorManager;
-    vendorManager.Init(PrintServiceAbility::GetInstance());
+    VendorManager &vendorManager = PrintServiceAbility::GetInstance()->vendorManager;
     auto vendorWlanGroup = std::static_pointer_cast<VendorWlanGroup>(vendorManager.wlanGroupDriver);
 
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
@@ -132,10 +114,32 @@ void TestWlanGroupOtherFunction(const uint8_t *data, size_t size, FuzzedDataProv
     vendorWlanGroup->ExtractPrinterIdByPrinterInfo(printerInfo);
 }
 
+void TestWlanGroupWithoutVendorManager(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(nullptr);
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterInfo printerInfo;
+    printerInfo.SetPrinterId(printerId);
+    printerInfo.SetPrinterName(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::string printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    printerInfo.SetUri(printerUri);
+    printerInfo.SetPrinterMake(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerInfo.SetOption(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+
+    vendorWlanGroup->OnPrinterDiscovered(DEFAULT_VENDOR_NAME, printerInfo);
+    vendorWlanGroup->OnUpdatePrinterToDiscovery(DEFAULT_VENDOR_NAME, printerInfo);
+    vendorWlanGroup->OnPrinterRemoved(DEFAULT_VENDOR_NAME, printerId);
+
+    vendorWlanGroup->SetConnectingPrinter(METHOD_DEFAULT, printerId);
+    vendorWlanGroup->IsGroupDriver(printerId);
+    vendorWlanGroup->IsConnectingPrinter(printerId, printerUri);
+    vendorWlanGroup->OnQueryCapability(printerId, DEFAULT_TIMEOUT);
+    vendorWlanGroup->OnQueryCapabilityByIp(printerUri, DEFAULT_PROTOCOL);
+}
+
 void TestPpdDriverConnectPrinterActions(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    VendorManager vendorManager;
-    vendorManager.Init(PrintServiceAbility::GetInstance());
+    VendorManager &vendorManager = PrintServiceAbility::GetInstance()->vendorManager;
     auto vendorWlanGroup = std::static_pointer_cast<VendorWlanGroup>(vendorManager.wlanGroupDriver);
     auto vendorPpdDriver = vendorManager.FindDriverByVendorName(VENDOR_PPD_DRIVER);
     if (vendorPpdDriver == nullptr) {
@@ -163,8 +167,7 @@ void TestPpdDriverConnectPrinterActions(const uint8_t *data, size_t size, Fuzzed
 
 void TestPpdDriverOtherFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    VendorManager vendorManager;
-    vendorManager.Init(PrintServiceAbility::GetInstance());
+    VendorManager &vendorManager = PrintServiceAbility::GetInstance()->vendorManager;
     auto vendorWlanGroup = std::static_pointer_cast<VendorWlanGroup>(vendorManager.wlanGroupDriver);
     auto vendorPpdDriver = std::make_shared<VendorPpdDriver>();
     vendorPpdDriver->Init(&vendorManager);
@@ -196,6 +199,7 @@ void TestVendorWlanGroup(const uint8_t *data, size_t size, FuzzedDataProvider *d
     TestWlanGroupDiscoverPrinterActions(data, size, dataProvider);
     TestWlanGroupConnectPrinterActions(data, size, dataProvider);
     TestWlanGroupOtherFunction(data, size, dataProvider);
+    TestWlanGroupWithoutVendorManager(data, size, dataProvider);
 }
 
 void TestVendorPpdDriver(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -221,6 +225,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     FuzzedDataProvider dataProvider(data, size);
     OHOS::Print::PrintServiceAbilityMockPermission::MockPermission();
+    OHOS::Print::PrintServiceAbility::GetInstance()->vendorManager.Init(
+        OHOS::Print::PrintServiceAbility::GetInstance());
     OHOS::Print::TestVendorWlanGroup(data, size, &dataProvider);
     OHOS::Print::TestVendorPpdDriver(data, size, &dataProvider);
     return 0;
