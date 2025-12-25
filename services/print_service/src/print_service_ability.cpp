@@ -1319,12 +1319,6 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
 
 int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
 {
-#ifdef EDM_SERVICE_ENABLE
-    if (IsDisablePrint()) {
-        ReportEventAndUpdateJobState(printJob.GetOption(), printJob->GetJobId());
-        return E_PRINT_BANNED;
-    }
-#endif // EDM_SERVICE_ENABLE
     startPrintTime_ = std::chrono::high_resolution_clock::now();
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
@@ -1343,6 +1337,13 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
             return ret;
         }
     }
+
+#ifdef EDM_SERVICE_ENABLE
+    if (IsDisablePrint()) {
+        ReportEventAndUpdateJobState(printJob.GetOption(), printJob->GetJobId());
+        return E_PRINT_BANNED;
+    }
+#endif // EDM_SERVICE_ENABLE
 
     // reopen fd from cache
     std::vector<uint32_t> fdList;
