@@ -81,6 +81,7 @@ const uint32_t UNREGISTER_CALLBACK_INTERVAL = 5000;
 const uint32_t CHECK_CALLER_APP_INTERVAL = 60;
 const uint32_t CONNECT_PLUGIN_PRINT_TIMEOUT = 5000;
 const uint32_t MONITOR_CHANGE_MODE_INTERVAL = 500;
+const int32_t MAX_LISTENERS_COUNT = 1000;
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -586,10 +587,12 @@ int32_t PrintServiceAbility::ConnectPrinter(const std::string &printerId)
         PRINT_HILOGE("no permission to access print service");
         return E_PRINT_NO_PERMISSION;
     }
+#ifdef HAVE_SMB_PRINTER
     if (auto smbPrinterInfo = printSystemData_.FindInfoInSmbPrinterDiscoverList(printerId)) {
         PRINT_HILOGI("connect smb printer");
         return ConnectSmbPrinter(*smbPrinterInfo);
     }
+#endif // HAVE_SMB_PRINTER
     PRINT_HILOGI("[Printer: %{public}s] ConnectPrinter started", PrintUtils::AnonymizePrinterId(printerId).c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     vendorManager.ClearConnectingPrinter();
@@ -2567,7 +2570,6 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
     }
     PRINT_HILOGI("PrintServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    constexpr int32_t MAX_LISTENERS_COUNT = 1000;
     if (registeredListeners_.size() > MAX_LISTENERS_COUNT) {
         PRINT_HILOGE("Exceeded the maximum number of registration.");
         return E_PRINT_GENERIC_FAILURE;
@@ -2580,7 +2582,9 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
     }
     HandlePrinterStateChangeRegister(eventType);
     HandlePrinterChangeRegister(eventType);
+#ifdef HAVE_SMB_PRINTER
     TryStartSmbPrinterStatusMonitor();
+#endif // HAVE_SMB_PRINTER
     return E_PRINT_NONE;
 }
 
@@ -2622,7 +2626,9 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
         }
     }
     PRINT_HILOGI("PrintServiceAbility::Off has already delete type=%{public}s delete.", eventType.c_str());
+#ifdef HAVE_SMB_PRINTER
     TryStopSmbPrinterStatusMonitor();
+#endif // HAVE_SMB_PRINTER
     return E_PRINT_NONE;
 }
 
@@ -5114,9 +5120,9 @@ int32_t PrintServiceAbility::AuthSmbDevice(const PrintSharedHost& sharedHost, co
     return E_PRINT_NONE;
 }
 
+#ifdef HAVE_SMB_PRINTER
 int32_t PrintServiceAbility::ConnectSmbPrinter(PrinterInfo& printerInfo)
 {
-#ifdef HAVE_SMB_PRINTER
     if (!printerInfo.HasPrinterMake()) {
         PRINT_HILOGE("can not find printer make");
         return E_PRINT_INVALID_PRINTER;
@@ -5148,13 +5154,11 @@ int32_t PrintServiceAbility::ConnectSmbPrinter(PrinterInfo& printerInfo)
     SmbPrinterStateMonitor::GetInstance().SetSmbPrinterInMonitorList(printerInfo);
     SmbPrinterStateMonitor::GetInstance().TryStartSmbPrinterStatusMonitor(printerInfo);
     PRINT_HILOGI("ConnectSmbPrinter end");
-#endif // HAVE_SMB_PRINTER
     return E_PRINT_NONE;
 }
 
 void PrintServiceAbility::TryStartSmbPrinterStatusMonitor()
 {
-#ifdef HAVE_SMB_PRINTER
     PRINT_HILOGI("begin TryStartSmbPrinterStatusMonitor");
     bool hasPrinterChangeListener = false;
     {
@@ -5180,17 +5184,17 @@ void PrintServiceAbility::TryStartSmbPrinterStatusMonitor()
         }
         auto notifyPrinterStateChanged = [this] (const PrinterInfo& printerInfo) {
             PRINT_HILOGI("begin smbNotify printerStateChange");
+            printSystemData_.UpdatePrinterStatus(printerInfo.GetPrinterId(),
+                static_cast<PrinterStatus>(printerInfo.GetPrinterStatus()));
             this->SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, printerInfo);
         };
         SmbPrinterStateMonitor::GetInstance().StartSmbPrinterStatusMonitor(notifyPrinterStateChanged);
     }
     PRINT_HILOGI("end TryStartSmbPrinterStatusMonitor");
-#endif // HAVE_SMB_PRINTER
 }
 
 void PrintServiceAbility::TryStopSmbPrinterStatusMonitor()
 {
-#ifdef HAVE_SMB_PRINTER
     bool hasPrinterChangeListener = false;
     {
         std::lock_guard<std::recursive_mutex> lock(apiMutex_);
@@ -5206,6 +5210,6 @@ void PrintServiceAbility::TryStopSmbPrinterStatusMonitor()
     if (!hasPrinterChangeListener || printerInfoList.empty()) {
         SmbPrinterStateMonitor::GetInstance().StopSmbPrinterStatusMonitor();
     }
-#endif // HAVE_SMB_PRINTER
 }
+#endif // HAVE_SMB_PRINTER
 }  // namespace OHOS::Print

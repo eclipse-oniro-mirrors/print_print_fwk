@@ -168,6 +168,7 @@
       "//base/print/print_fwk/test/unittest/service_test:print_service_test",
       "//base/print/print_fwk/test/unittest/extension_test:print_ext_test",
       "//base/print/print_fwk/test/unittest/fwk_vendor_manager_test:fwk_vendor_manager_test",
+      "//base/print/print_fwk/test/unittest/fwk_print_smb_printer_test:fwk_print_smb_printer_test",
       "//base/print/print_fwk/test/fuzztest:fuzztest"
     ]
     },

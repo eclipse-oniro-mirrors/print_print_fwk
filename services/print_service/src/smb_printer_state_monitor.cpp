@@ -20,13 +20,6 @@
 
 namespace OHOS::Print {
 constexpr int32_t CHECK_HOST_ALIVE_INTERVAL = 2;
-
-enum class SmbPrinterStateMonitor::HostStatus {
-    ALIVE,
-    DEAD,
-    UNKNOWN
-};
-
 SmbPrinterStateMonitor::~SmbPrinterStateMonitor()
 {
     if (isMonitoring_.load()) {
@@ -81,42 +74,42 @@ void SmbPrinterStateMonitor::MonitorSmbPrinters(std::function<void(const Printer
     }
     SmbHostSearchHelper helper;
     do {
-        std::unordered_map<std::string, PrinterInfo> localCopy;
+        std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>> localCopy;
         {
             std::lock_guard<std::mutex> lock(monitorSmbPrintersLock_);
             localCopy = monitorSmbPrinters_;
         }
         std::unordered_set<std::string> uniqueIps;
-        for (const auto& [id, smbPrinterInfo] : localCopy) {
-            std::string ip = SmbPrinterDiscoverer::ParseIpFromSmbPrinterId(smbPrinterInfo.GetPrinterId());
+        for (const auto& [id, localSmbPrinterPair] : localCopy) {
+            std::string ip = SmbPrinterDiscoverer::ParseIpFromSmbPrinterId(localSmbPrinterPair.first.GetPrinterId());
             uniqueIps.insert(ip);
         }
         std::unordered_map<std::string, HostStatus> hostStatusMap;
         for (const auto& ip : uniqueIps) {
             hostStatusMap[ip] = helper.TestSmbHostAlive(ip) ? HostStatus::ALIVE : HostStatus::DEAD;
         }
-        std::vector<PrinterInfo> notifyPrinters;
-        for (auto& [id, smbPrinterInfo] : localCopy) {
-            std::string ip = SmbPrinterDiscoverer::ParseIpFromSmbPrinterId(smbPrinterInfo.GetPrinterId());
-            auto it = hostStatusMap.find(ip);
-            if (it == hostStatusMap.end()) {
+        std::vector<std::pair<PrinterInfo, HostStatus>> notifyPrinters;
+        for (auto& [id, localSmbPrinterPair] : localCopy) {
+            std::string ip = SmbPrinterDiscoverer::ParseIpFromSmbPrinterId(id);
+            auto testHostStatusResult = hostStatusMap.find(ip);
+            if (testHostStatusResult == hostStatusMap.end()) {
                 continue;
             }
-            PrinterStatus newStatus = (it->second == HostStatus::ALIVE)
-                ? PrinterStatus::PRINTER_STATUS_IDLE : PrinterStatus::PRINTER_STATUS_UNAVAILABLE;
-            if (smbPrinterInfo.GetPrinterState() == static_cast<uint32_t>(newStatus)) {
+            if (localSmbPrinterPair.second == testHostStatusResult->second) {
                 continue;
             }
-            smbPrinterInfo.SetPrinterStatus(newStatus);
-            notifyPrinters.push_back(smbPrinterInfo);
+            uint32_t newPrinterStatus = testHostStatusResult->second == HostStatus::ALIVE ?
+                PrinterStatus::PRINTER_STATUS_IDLE : PrinterStatus::PRINTER_STATUS_UNAVAILABLE;
+            localSmbPrinterPair.first.SetPrinterStatus(newPrinterStatus);
+            notifyPrinters.push_back({localSmbPrinterPair.first, testHostStatusResult->second});
         }
         {
             std::lock_guard<std::mutex> lock(monitorSmbPrintersLock_);
-            for (const auto& notifyPrinter : notifyPrinters) {
-                auto it = monitorSmbPrinters_.find(notifyPrinter.GetPrinterId());
+            for (const auto& notifyPrinterPair : notifyPrinters) {
+                auto it = monitorSmbPrinters_.find(notifyPrinterPair.first.GetPrinterId());
                 if (it != monitorSmbPrinters_.end()) {
-                    it->second.SetPrinterStatus(notifyPrinter.GetPrinterStatus());
-                    notify(it->second);
+                    it->second = notifyPrinterPair;
+                    notify(notifyPrinterPair.first);
                 }
             }
         }
@@ -132,7 +125,11 @@ void SmbPrinterStateMonitor::SetSmbPrinterInMonitorList(const PrinterInfo& info)
         PRINT_HILOGE("is not smb printer");
         return;
     }
-    monitorSmbPrinters_[id] = info;
+    HostStatus hostStatus = HostStatus::DEAD;
+    if (info.GetPrinterStatus() != PrinterStatus::PRINTER_STATUS_UNAVAILABLE) {
+        hostStatus = HostStatus::ALIVE;
+    }
+    monitorSmbPrinters_[id] = {info, hostStatus};
 }
 
 void SmbPrinterStateMonitor::EraseSmbPrinterInMonitorListById(const std::string& printerId)

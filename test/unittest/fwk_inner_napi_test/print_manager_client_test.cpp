@@ -29,6 +29,7 @@
 #include "mock_remote_object.h"
 #include "mock_print_callback_stub.h"
 #include "mock_print_manager_client.h"
+#include "print_shared_host.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -2886,5 +2887,22 @@ HWTEST_F(PrintManagerClientTest, GetPrinterDefaultPreferences, TestSize.Level1)
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
+
+HWTEST_F(PrintManagerClientTest, GetSharedHosts_Test, TestSize.Level1)
+{
+    std::vector<PrintSharedHost> sharedHosts;
+    PrintManagerClient::GetInstance()->GetSharedHosts(sharedHosts);
+    EXPECT_TRUE(sharedHosts.empty());
+}
+ 
+HWTEST_F(PrintManagerClientTest, AuthSmbDevice_Test, TestSize.Level1)
+{
+    PrintSharedHost sharedHost;
+    std::string userName;
+    char *userPasswd = nullptr;
+    std::vector<PrinterInfo> printerInfos;
+    PrintManagerClient::GetInstance()->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
+    EXPECT_TRUE(printerInfos.empty());
+}
 }  // namespace Print
 }  // namespace OHOS

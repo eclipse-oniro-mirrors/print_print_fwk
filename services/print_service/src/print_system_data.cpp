@@ -1341,6 +1341,7 @@ std::string PrintSystemData::AnalyzePrintEvents(const std::string &printerId, co
     return printEventContainer->AnalyzeEventCodes(type);
 }
 
+#ifdef HAVE_SMB_PRINTER
 void PrintSystemData::SetSmbPrinterInDiscoverList(const std::string& ip, std::vector<PrinterInfo>& infos)
 {
     std::lock_guard<std::mutex> lock(smbPrinterListMutex);
@@ -1378,6 +1379,6 @@ void PrintSystemData::GetSmbAddedPrinterListFromSystemData(std::vector<PrinterIn
     }
     return;
 }
-
+#endif // HAVE_SMB_PRINTER
 }  // namespace Print
 }  // namespace OHOS

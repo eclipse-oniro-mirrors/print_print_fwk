@@ -22,7 +22,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <cstring>
@@ -50,7 +49,6 @@ namespace {
     constexpr uint32_t MASK_32 = 0xFFFFFFFF;
     constexpr int32_t DEFAULT_TIMER_INTERVAL = 1000;
     constexpr int32_t INVALID_SOCKET_FD = -1;
-    constexpr int32_t QUESTION_NAME_SIZE = 34;
     constexpr int32_t NAME_FIELD_SIZE = 16;
     constexpr int32_t INDEX_2 = 2;
     constexpr int32_t ENCODED_NAME_SIZE = 32;
@@ -64,61 +62,6 @@ namespace {
 }
 
 namespace OHOS::Print {
-class SmbHostSearchHelper::HostList {
-public:
-    bool Contains(uint32_t ip) const;
-    
-    void Add(uint32_t ip);
-    
-    std::vector<PrintSharedHost> GetPrintSharedHost() const;
-
-private:
-    std::unordered_map<uint32_t, std::string> responsedHosts_;
-};
-
-class SmbHostSearchHelper::NetworkIpRange {
-public:
-    NetworkIpRange(const std::string& start, const std::string& end);
-    static std::unique_ptr<NetworkIpRange> CreateFromLocalNetwork();
-    
-    bool Next(struct in_addr* nextAddr);
-    
-private:
-    static bool GetLocalIPAndMask(std::string& ipStr, std::string& netmaskStr);
-    static std::pair<std::string, std::string> CalculateSubnetRange(const std::string& ipStr,
-        const std::string& netmaskStr);
-    struct in_addr start_;
-    struct in_addr end_;
-    struct in_addr current_;
-};
-
-class SmbHostSearchHelper::HighResTimer {
-public:
-    HighResTimer(int32_t intervalUs = DEFAULT_TIMER_INTERVAL);
-    
-    bool CanSend();
-    
-    void UpdateSendTime();
-
-private:
-    void SetInterval(int32_t intervalUs);
-
-    timespec lastSendTime_;
-    int64_t sendIntervalNs_;
-};
-
-struct NbnameRequest {
-    uint16_t transactionId;
-    uint16_t flags;
-    uint16_t questionCount;
-    uint16_t answerCount;
-    uint16_t nameServiceCount;
-    uint16_t additionalRecordCount;
-    char questionName[QUESTION_NAME_SIZE];
-    uint16_t questionType;
-    uint16_t questionClass;
-};
-
 struct Nbname {
     char name[NAME_FIELD_SIZE];
     unsigned char type;
@@ -127,7 +70,7 @@ struct Nbname {
 
 SmbHostSearchHelper::SmbHostSearchHelper(): sock_(INVALID_SOCKET_FD),
     ipRange_(NetworkIpRange::CreateFromLocalNetwork()),
-    timer_(std::make_unique<HighResTimer>()),
+    timer_(std::make_unique<HighResTimer>(DEFAULT_TIMER_INTERVAL)),
     scannedHosts_(std::make_unique<HostList>()),
     recvBuffer_(SOCKET_BUFFER_SIZE)
 {
@@ -250,7 +193,7 @@ bool SmbHostSearchHelper::HandleSend()
     }
     struct in_addr nextAddr;
     if (ipRange_->Next(&nextAddr)) {
-        uint32_t ip = ntohl(nextAddr.s_addr);
+        uint32_t ip = nextAddr.s_addr;
         if (!scannedHosts_->Contains(ip)) {
             if (SendQuery(nextAddr)) {
                 timer_->UpdateSendTime();
@@ -274,7 +217,7 @@ bool SmbHostSearchHelper::HandleReceive()
         PRINT_HILOGE("recvfrom failed: %{private}s", strerror(errno));
         return false;
     }
-    uint32_t ip = ntohl(destAddr.sin_addr.s_addr);
+    uint32_t ip = destAddr.sin_addr.s_addr;
     std::string hostName = GetFileServerName();
     if (!hostName.empty() && !scannedHosts_->Contains(ip)) {
         scannedHosts_->Add(ip, hostName);
@@ -488,7 +431,7 @@ std::vector<PrintSharedHost> SmbHostSearchHelper::HostList::GetPrintSharedHost()
     for (auto& [ip, name] : responsedHosts_) {
         PrintSharedHost host;
         struct in_addr addr;
-        addr.s_addr = htonl(ip);
+        addr.s_addr = ip;
         std::string ipStr = inet_ntoa(addr);
         host.SetIp(ipStr);
         host.SetShareName(name);

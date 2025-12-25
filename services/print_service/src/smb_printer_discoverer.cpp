@@ -248,7 +248,7 @@ std::string SmbPrinterDiscoverer::ReplaceSpacesInPrinterUri(const std::string& i
 
 std::string SmbPrinterDiscoverer::CreatePrinterId(const std::string& ip, const std::string& name)
 {
-    return std::string("smb") + SEPARATOR + ip + SEPARATOR + name + SEPARATOR;
+    return std::string("smb") + SEPARATOR + ip + SEPARATOR + name;
 }
 
 std::string SmbPrinterDiscoverer::ParseIpFromSmbPrinterId(const std::string& printerId)

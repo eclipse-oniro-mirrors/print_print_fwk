@@ -3318,4 +3318,24 @@ HWTEST_F(PrintServiceAbilityTest,
     printerInfo->SetCapability(printerCaps);
     EXPECT_EQ(service->UpdateBsuniPrinterAdvanceOptions(printerInfo), true);
 }
+
+HWTEST_F(PrintServiceAbilityTest,
+    GetSharedHosts_Test, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::vector<PrintSharedHost> sharedHosts;
+    EXPECT_EQ(service->GetSharedHosts(sharedHosts), E_PRINT_NONE);
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    AuthSmbDevice_Test, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrintSharedHost sharedHost;
+    std::string userName;
+    char *userPasswd = nullptr;
+    std::vector<PrinterInfo> printerInfos;
+    service->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
+    EXPECT_EQ(printerInfos.empty(), true);
+}
 }  // namespace OHOS::Print
