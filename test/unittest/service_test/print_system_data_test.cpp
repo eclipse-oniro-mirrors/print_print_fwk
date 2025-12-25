@@ -1830,23 +1830,5 @@ HWTEST_F(PrintSystemDataTest, AnalyzePrintEvents_ShouldReturnJsonString_WhenPrin
     std::string result = systemData->AnalyzePrintEvents("printer1", "test_type");
     EXPECT_FALSE(result.empty());
 }
-
-HWTEST_F(PrintSystemDataTest, DiscoveredIpPrinterMapTest, TestSize.Level1)
-{
-    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
-    std::string ip = "192.168.1.1";
-    PrinterInfo info;
-    info.SetPrinterId(ip);
-    EXPECT_EQ(systemData->QueryDiscoveredIpPrinter(ip), nullptr);
-    systemData->AddIpPrinterToDiscovery(std::make_shared<PrinterInfo>(info));
-    auto printer = systemData->QueryDiscoveredIpPrinter(ip);
-    EXPECT_NE(printer, nullptr);
-    EXPECT_EQ(printer->GetPrinterId(), ip);
-    info.SetPrinterName("test");
-    systemData->AddIpPrinterToDiscovery(std::make_shared<PrinterInfo>(info));
-    printer = systemData->QueryDiscoveredIpPrinter(ip);
-    EXPECT_NE(printer, nullptr);
-    EXPECT_EQ(printer->GetPrinterName(), "test");
-}
 }  // namespace Print
 }  // namespace OHOS

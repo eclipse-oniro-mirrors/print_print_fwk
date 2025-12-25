@@ -65,8 +65,6 @@ public:
     std::map<std::string, std::shared_ptr<PrinterInfo>> GetDiscoveredPrinterInfo();
     size_t GetDiscoveredPrinterCount();
     void ClearDiscoveredPrinterList();
-    void AddIpPrinterToDiscovery(const std::shared_ptr<PrinterInfo> printerInfo);
-    std::shared_ptr<PrinterInfo> QueryDiscoveredIpPrinter(const std::string &printerIp);
     void AddIpPrinterToList(std::shared_ptr<PrinterInfo> printerInfo);
     void RemoveIpPrinterFromList(const std::string &printerId);
     std::shared_ptr<PrinterInfo> QueryIpPrinterInfoById(const std::string &printerId);
@@ -182,7 +180,6 @@ private:
     std::mutex smbPrinterListMutex;
     const uint32_t MAX_PRINTER_SIZE = 1000;
     PrintMapSafe<PrintEventContainer> printEventMap_;
-    PrintMapSafe<PrinterInfo> discoveredIpPrinterInfoList_;
 };
 
 }  // namespace Print
