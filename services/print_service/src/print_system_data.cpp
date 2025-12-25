@@ -1058,20 +1058,6 @@ void PrintSystemData::ClearDiscoveredPrinterList()
     discoveredPrinterInfoList_.clear();
 }
 
-void PrintSystemData::AddIpPrinterToDiscovery(const std::shared_ptr<PrinterInfo> printerInfo)
-{
-    auto info = discoveredIpPrinterInfoList_.Find(printerInfo->GetPrinterId());
-    if (info != nullptr) {
-        discoveredIpPrinterInfoList_.Remove(printerInfo->GetPrinterId());
-    }
-    discoveredIpPrinterInfoList_.Insert(printerInfo->GetPrinterId(), printerInfo);
-}
-
-std::shared_ptr<PrinterInfo> PrintSystemData::QueryDiscoveredIpPrinter(const std::string &printerIp)
-{
-    return discoveredIpPrinterInfoList_.Find(printerIp);
-}
-
 std::map<std::string, std::shared_ptr<PrinterInfo>> PrintSystemData::GetDiscoveredPrinterInfo()
 {
     std::lock_guard<std::mutex> lock(discoveredListMutex);

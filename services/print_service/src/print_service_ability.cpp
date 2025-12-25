@@ -4788,10 +4788,6 @@ int32_t PrintServiceAbility::QueryAllPrinterPpds(std::vector<PpdInfo> &printerPp
 bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
 {
     PRINT_HILOGI("Start CallBack Printerinfo");
-    if (!vendorManager.GetConnectingPrinter().empty() && vendorManager.GetConnectingPrinter() == info.GetPrinterId()) {
-        PRINT_HILOGI("New Discovery Request, add in.");
-        printSystemData_.AddIpPrinterToDiscovery(std::make_shared<PrinterInfo>(info));
-    }
     std::vector<PpdInfo> ppdInfos;
     QueryPrinterPpds(info, ppdInfos);
     for (auto eventIt : registeredListeners_) {
@@ -4826,14 +4822,6 @@ int32_t PrintServiceAbility::QueryPrinterInfoByIp(const std::string &printerIp)
     }
     printSystemData_.ClearPrintEvents(printerIp, CONNECT_PRINT_EVENT_TYPE);
     vendorManager.ClearConnectingPrinter();
-    auto info = printSystemData_.QueryDiscoveredIpPrinter(printerIp);
-    if (info != nullptr && !info->IsExpired()) {
-        PRINT_HILOGI("IP queried recently, no need to update");
-        if (!OnQueryCallBackEvent(*info)) {
-            PRINT_HILOGW("OnQueryCallBackEvent failed");
-        }
-        return E_PRINT_NONE;
-    }
     vendorManager.SetQueryPrinter(IP_AUTO, printerIp);
     std::string protocol = "auto";
     if (!vendorManager.ConnectPrinterByIp(printerIp, protocol)) {
