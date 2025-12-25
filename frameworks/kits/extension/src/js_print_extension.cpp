@@ -70,6 +70,7 @@ void JsPrintExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
     PRINT_HILOGI("JsPrintExtension begin Init");
     PrintExtension::Init(record, application, handler, token);
 
+    HandleScope handleScope(jsRuntime_);
     if (!InitExtensionObj(jsRuntime_)) {
         PRINT_HILOGE("Failed to init extension object");
         return;
