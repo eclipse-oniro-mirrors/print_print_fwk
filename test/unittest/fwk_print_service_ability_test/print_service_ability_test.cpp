@@ -3200,7 +3200,7 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterDefaultPreferences_InvalidPrinterId,
     int32_t ret = service->GetPrinterDefaultPreferences(printerId, defaultPreferences);
     EXPECT_NE(ret, E_PRINT_NONE);
     ret = service->GetPrinterDefaultPreferences(printerId, defaultPreferences);
-    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_NE(ret, E_PRINT_NONE);
 #endif
 }
 
