@@ -1121,5 +1121,49 @@ HWTEST_F(PrintServiceProxyTest, CheckPrintJobConflictsTest, TestSize.Level1)
     EXPECT_EQ(testConflictingOptions.front(), PRINT_PARAM_TYPE_PAGE_SIZE);
 }
 
+/**
+ * @tc.name: GetPrinterDefaultPreferencesTest
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, GetPrinterDefaultPreferencesTest, TestSize.Level1)
+{
+    std::string testPrinterId = "111";
+    OHOS::Print::PrinterPreferences testDefaultPreferences;
+
+    auto proxy = std::make_shared<PrintServiceProxy>(nullptr);
+    ASSERT_NE(proxy, nullptr);
+    int32_t ret = proxy->GetPrinterDefaultPreferences(testPrinterId, testDefaultPreferences);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+    proxy.reset();
+
+    sptr<MockRemoteObject> obj = sptr<MockRemoteObject>::MakeSptr();
+    ASSERT_NE(obj, nullptr);
+    proxy = std::make_shared<PrintServiceProxy>(obj);
+    ASSERT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    ASSERT_NE(service, nullptr);
+    EXPECT_CALL(*service, GetPrinterDefaultPreferences(_, _))
+        .Times(Exactly(1))
+        .WillOnce([&testPrinterId, &testDefaultPreferences]
+            (const std::string &printerId, const PrinterPreferences &defaultPreferences) {
+            EXPECT_EQ(testPrinterId, printerId);
+            return E_PRINT_NONE;
+    });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _))
+        .WillOnce(Return(ERR_TRANSACTION_FAILED))
+        .WillOnce([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    ret = proxy->GetPrinterDefaultPreferences(testPrinterId, testDefaultPreferences);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+
+    ret = proxy->GetPrinterDefaultPreferences(testPrinterId, testDefaultPreferences);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
 }  // namespace Print
 }  // namespace OHOS

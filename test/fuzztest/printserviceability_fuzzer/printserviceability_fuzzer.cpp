@@ -236,6 +236,13 @@ void TestConnectPrinterByIdAndPpd(const uint8_t *data, size_t size, FuzzedDataPr
     PrintServiceAbility::GetInstance()->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
 }
 
+void TestGetPrinterDefaultPreferences(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterPreferences defaultPreferences;
+    PrintServiceAbility::GetInstance()->GetPrinterDefaultPreferences(printerId, defaultPreferences);
+}
+
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestOn(data, size, dataProvider);
@@ -257,6 +264,7 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestOnQueryCallBackEvent(data, size, dataProvider);
     TestQueryRecommendDriversById(data, size, dataProvider);
     TestConnectPrinterByIdAndPpd(data, size, dataProvider);
+    TestGetPrinterDefaultPreferences(data, size, dataProvider);
 }
 
 void TestIsDisablePrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

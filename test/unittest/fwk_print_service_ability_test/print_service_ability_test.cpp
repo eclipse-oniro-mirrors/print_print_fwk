@@ -3166,6 +3166,44 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_InvalidPpdName, TestSiz
 #endif
 }
 
+HWTEST_F(PrintServiceAbilityTest, GetPrinterDefaultPreferences_NoPermission, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    std::string printerId = GetInvalidPrinterId();;
+    PrinterPreferences defaultPreferences;
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    int32_t ret = service->GetPrinterDefaultPreferences(printerId, defaultPreferences);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+#endif
+}
+
+HWTEST_F(PrintServiceAbilityTest, GetPrinterDefaultPreferences_InvalidPrinterId, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    PrintServiceMockPermission::MockPermission();
+    auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    std::shared_ptr<PrintServiceHelper> helper = std::make_shared<PrintServiceHelper>();
+    service->helper_ = helper;
+
+    EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(_, _))
+        .WillRepeatedly(Return(E_PRINT_NONE));
+    EXPECT_CALL(*service, QueryPPDInformation(_, _))
+        .WillOnce(Return(false))
+        .WillOnce([](const std::string &makeModel, std::string &ppdName) {
+            ppdName = "TestNone.ppd";
+            return true;
+        });
+    std::string printerId = GetDefaultPrinterId();
+    PrinterPreferences defaultPreferences;
+    int32_t ret = service->GetPrinterDefaultPreferences(printerId, defaultPreferences);
+    EXPECT_NE(ret, E_PRINT_NONE);
+    ret = service->GetPrinterDefaultPreferences(printerId, defaultPreferences);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+#endif
+}
+
 HWTEST_F(PrintServiceAbilityTest, UpdateBsuniPrinterAdvanceOptions_OptionFormatError_ReturnFalse, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
