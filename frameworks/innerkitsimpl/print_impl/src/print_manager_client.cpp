@@ -1065,36 +1065,27 @@ int32_t PrintManagerClient::AuthPrintJob(const std::string &jobId, const std::st
 
 int32_t PrintManagerClient::QueryAllPrinterPpds(std::vector<PpdInfo> &infos)
 {
-    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
-    int32_t ret = E_PRINT_RPC_FAILURE;
-    if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->QueryAllPrinterPpds(infos);
-        PRINT_HILOGD("PrintManagerClient QueryAllPrinterPpds out ret = [%{public}d].", ret);
-    }
-    return ret;
+    auto func = [&infos](sptr<IPrintService> serviceProxy) {
+        return serviceProxy->QueryAllPrinterPpds(infos);
+    };
+    return CALL_COMMON_CLIENT(func);
 }
 
 int32_t PrintManagerClient::QueryPrinterInfoByIp(const std::string &printerIp)
 {
-    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
-    int32_t ret = E_PRINT_RPC_FAILURE;
-    if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->QueryPrinterInfoByIp(printerIp);
-        PRINT_HILOGD("PrintManagerClient QueryPrinterInfoByIp out ret = [%{public}d].", ret);
-    }
-    return ret;
+    auto func = [&printerIp](sptr<IPrintService> serviceProxy) {
+        return serviceProxy->QueryPrinterInfoByIp(printerIp);
+    };
+    return CALL_COMMON_CLIENT(func);
 }
 
 int32_t PrintManagerClient::ConnectPrinterByIpAndPpd(const std::string &printerIp, const std::string &protocol,
     const std::string &ppdName)
 {
-    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
-    int32_t ret = E_PRINT_RPC_FAILURE;
-    if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName);
-        PRINT_HILOGD("PrintManagerClient ConnectPrinterByIpAndPpd out ret = [%{public}d].", ret);
-    }
-    return ret;
+    auto func = [&printerIp, &protocol, &ppdName](sptr<IPrintService> serviceProxy) {
+        return serviceProxy->ConnectPrinterByIpAndPpd(printerIp, protocol, ppdName);
+    };
+    return CALL_COMMON_CLIENT(func);
 }
 
 int32_t PrintManagerClient::SavePdfFileJob(const std::string &jobId, uint32_t fd)
@@ -1110,25 +1101,19 @@ int32_t PrintManagerClient::SavePdfFileJob(const std::string &jobId, uint32_t fd
 
 int32_t PrintManagerClient::QueryRecommendDriversById(const std::string &printerId, std::vector<PpdInfo> &ppds)
 {
-    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
-    int32_t ret = E_PRINT_RPC_FAILURE;
-    if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->QueryRecommendDriversById(printerId, ppds);
-        PRINT_HILOGD("PrintManagerClient QueryRecommendDriversById out ret = [%{public}d].", ret);
-    }
-    return ret;
+    auto func = [&printerId, &ppds](sptr<IPrintService> serviceProxy) {
+        return serviceProxy->QueryRecommendDriversById(printerId, ppds);
+    };
+    return CALL_COMMON_CLIENT(func);
 }
 
 int32_t PrintManagerClient::ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
     const std::string &ppdName)
 {
-    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
-    int32_t ret = E_PRINT_RPC_FAILURE;
-    if (LoadServer() && GetPrintServiceProxy()) {
-        ret = printServiceProxy_->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
-        PRINT_HILOGD("PrintManagerClient ConnectPrinterByIdAndPpd out ret = [%{public}d].", ret);
-    }
-    return ret;
+    auto func = [&printerId, &protocol, &ppdName](sptr<IPrintService> serviceProxy) {
+        return serviceProxy->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName);
+    };
+    return CALL_COMMON_CLIENT(func);
 }
 
 int32_t PrintManagerClient::GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts)

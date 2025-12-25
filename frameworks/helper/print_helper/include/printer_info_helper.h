@@ -28,6 +28,7 @@ public:
 
 private:
     static bool ValidateProperty(napi_env env, napi_value object);
+    static void MakeJsInnerProperty(napi_env env, const PrinterInfo &info, napi_value &jsObj);
     static bool BuildLocalClassInfoFromJs(napi_env env, napi_value jsValue, std::shared_ptr<PrinterInfo> nativeObj);
 };
 }  // namespace OHOS::Print

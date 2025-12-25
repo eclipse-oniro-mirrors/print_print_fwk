@@ -16,21 +16,59 @@
 #include "print_constant.h"
 #include "print_log.h"
 #include "ppd_info.h"
+#include "print_json_util.h"
 
 namespace OHOS::Print {
+PpdInfo::PpdInfo()
+    : hasManufacturer_(false),
+      hasNickName_(false),
+      hasPpdName_(false),
+      manufacturer_(""),
+      nickName_(""),
+      ppdName_("")
+{
+}
+ 
+PpdInfo::PpdInfo(const PpdInfo &right)
+    : hasManufacturer_(right.hasManufacturer_),
+      hasNickName_(right.hasNickName_),
+      hasPpdName_(right.hasPpdName_),
+      manufacturer_(right.manufacturer_),
+      nickName_(right.nickName_),
+      ppdName_(right.ppdName_)
+{
+}
+ 
+PpdInfo &PpdInfo::operator=(const PpdInfo &right)
+{
+    if (this != &right) {
+        hasManufacturer_ = right.hasManufacturer_;
+        hasNickName_ = right.hasNickName_;
+        hasPpdName_ = right.hasPpdName_;
+        manufacturer_ = right.manufacturer_;
+        nickName_ = right.nickName_;
+        ppdName_ = right.ppdName_;
+    }
+    return *this;
+}
+ 
+PpdInfo::~PpdInfo() {}
 
 void PpdInfo::SetManufacturer(const std::string &manufacturer)
 {
+    hasManufacturer_ = true;
     manufacturer_ = manufacturer;
 }
 
 void PpdInfo::SetNickName(const std::string &nickName)
 {
+    hasNickName_ = true;
     nickName_ = nickName;
 }
 
 void PpdInfo::SetPpdName(const std::string &ppdName)
 {
+    hasPpdName_ = true;
     ppdName_ = ppdName;
 }
 
@@ -109,4 +147,63 @@ std::shared_ptr<PpdInfo> PpdInfo::Unmarshalling(Parcel &parcel)
     return nativeObj;
 }
 
+void PpdInfo::Reset()
+{
+    hasManufacturer_ = false;
+    hasNickName_ = false;
+    hasPpdName_ = false;
+    manufacturer_.clear();
+    nickName_.clear();
+    ppdName_.clear();
+}
+
+Json::Value PpdInfo::ConvertToJson() const
+{
+    Json::Value ppdInfoJson;
+    if (hasManufacturer_) {
+        ppdInfoJson["manufacturer"] = manufacturer_;
+    }
+    if (hasNickName_) {
+        ppdInfoJson["nickName"] = nickName_;
+    }
+    if (hasPpdName_) {
+        ppdInfoJson["ppdName"] = ppdName_;
+    }
+    return ppdInfoJson;
+}
+
+bool PpdInfo::ConvertFromJson(Json::Value &driverJson)
+{
+    if (!PrintJsonUtil::IsMember(driverJson, "manufacturer") || !driverJson["manufacturer"].isString()) {
+        PRINT_HILOGW("can not find manufacturer");
+        return false;
+    }
+    if (!PrintJsonUtil::IsMember(driverJson, "nickName") || !driverJson["nickName"].isString()) {
+        PRINT_HILOGW("can not find nickName");
+        return false;
+    }
+    if (!PrintJsonUtil::IsMember(driverJson, "ppdName") || !driverJson["ppdName"].isString()) {
+        PRINT_HILOGW("can not find ppdName");
+        return false;
+    }
+
+    SetManufacturer(driverJson["manufacturer"].asString());
+    SetNickName(driverJson["nickName"].asString());
+    SetPpdName(driverJson["ppdName"].asString());
+
+    return true;
+}
+
+void PpdInfo::Dump() const
+{
+    if (hasManufacturer_) {
+        PRINT_HILOGD("manufacturer: %{public}s", manufacturer_.c_str());
+    }
+    if (hasNickName_) {
+        PRINT_HILOGD("nickName: %{public}s", nickName_.c_str());
+    }
+    if (hasPpdName_) {
+        PRINT_HILOGD("ppdName: %{public}s", ppdName_.c_str());
+    }
+}
 }  // namespace OHOS::Print

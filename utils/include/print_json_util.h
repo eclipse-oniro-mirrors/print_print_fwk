@@ -30,6 +30,7 @@ public:
     static bool ParseFromStream(Json::IStream &ifs, Json::Value &jsonObject);
     static std::string WriteString(const Json::Value &jsonObject);
     static std::string WriteStringUTF8(const Json::Value &jsonObject);
+    static bool FindJsonStringMember(const Json::Value &object, const std::string &member, std::string &result);
 };
 
 /*
@@ -85,6 +86,17 @@ inline std::string PrintJsonUtil::WriteStringUTF8(const Json::Value &jsonObject)
     wBuilder["indentation"] = "";
     wBuilder["emitUTF8"] = true;
     return Json::writeString(wBuilder, jsonObject);
+}
+
+inline bool PrintJsonUtil::FindJsonStringMember(const Json::Value &object, const std::string &member,
+    std::string &result)
+{
+    if (!PrintJsonUtil::IsMember(object, member) || !object[member].isString()) {
+        PRINT_HILOGW("can not find %{public}s", member.c_str());
+        return false;
+    }
+    result = object[member].asString();
+    return true;
 }
 }
 

@@ -18,12 +18,19 @@
 #define TDD_ENABLE 1
 
 #include "parcel.h"
-#include "printer_capability.h"
-#include "printer_preferences.h"
+#include <json/json.h>
 
 namespace OHOS::Print {
 class PpdInfo final : public Parcelable {
 public:
+    explicit PpdInfo();
+
+    PpdInfo(const PpdInfo &right);
+
+    PpdInfo &operator=(const PpdInfo &right);
+
+    virtual ~PpdInfo();
+
     void SetManufacturer(const std::string &manufacturer);
 
     void SetNickName(const std::string &nickName);
@@ -44,10 +51,25 @@ public:
 
     static std::shared_ptr<PpdInfo> Unmarshalling(Parcel &parcel);
 
+    void Reset();
+
+    Json::Value ConvertToJson() const;
+
+    bool ConvertFromJson(Json::Value &driverJson);
+
+    void Dump() const;
+
 private:
+    bool hasManufacturer_;
+ 
+    bool hasNickName_;
+ 
+    bool hasPpdName_;
 
     std::string manufacturer_;
+
     std::string nickName_;
+
     std::string ppdName_;
 };
 }  // namespace OHOS::Print
