@@ -75,6 +75,7 @@ public:
     void IncrementCallerAppCounter();
     void RemovePrintJobFromMap(const std::string &jobId);
     bool IsAppAlive(std::shared_ptr<PrintCallerAppInfo> callerAppInfo);
+    bool IsProcessForeground(const pid_t pid);
 
 private:
     PrintCallerAppMonitor() = default;
@@ -86,6 +87,7 @@ private:
         const std::string &bundleName, int32_t userId);
     int32_t GetCurrentUserId();
     bool CheckCallerAppInMap(int32_t callerPid, const std::string &bundleName);
+    bool GetRunningProcessInfoByPid(const pid_t pid, AppExecFwk::RunningProcessInfo &processInfo);
 
     std::map<int32_t, std::shared_ptr<PrintCallerAppInfo>> callerMap_;
     std::map<std::string, bool> printJobMap_;
@@ -93,6 +95,7 @@ private:
     std::mutex printJobMapMutex_;
     std::atomic<bool> isMonitoring_{false};
     PrintCounter counter_;
+    std::atomic<bool> delayUnload_{false};
 };
 
 } // namespace OHOS::Print

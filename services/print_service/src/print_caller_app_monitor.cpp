@@ -55,6 +55,9 @@ void PrintCallerAppMonitor::AddCallerAppToMap()
     std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     std::vector<AppExecFwk::RunningProcessInfo> processInfos = GetRunningProcessInformation(bundleName, userId);
     int32_t callerPid = IPCSkeleton::GetCallingPid();
+    if (IsProcessForeground(callerPid)) {
+        delayUnload_.store(true);
+    }
     for (auto &processInfo : processInfos) {
         PRINT_HILOGD("processName: %{public}s, processId: %{public}d, callerPid: %{public}d",
             processInfo.processName_.c_str(),
@@ -121,6 +124,12 @@ void PrintCallerAppMonitor::MonitorCallerApps(std::function<bool()> unloadTask)
         PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
 
+        if (delayUnload_.load()) {
+            PRINT_HILOGW("delay unload print SA");
+            delayUnload_.store(false);
+            continue;
+        }
+
         {
             std::lock_guard<std::mutex> lock(callerMapMutex_);
             if ((callerMap_.empty() || counter_.Value() == 0) && unloadTask()) {
@@ -160,6 +169,40 @@ std::vector<AppExecFwk::RunningProcessInfo> PrintCallerAppMonitor::GetRunningPro
         return processInfos;
     }
     return processInfos;
+}
+
+bool PrintCallerAppMonitor::GetRunningProcessInfoByPid(const pid_t pid, AppExecFwk::RunningProcessInfo &processInfo)
+{
+    auto appManager = GetAppManager();
+    if (appManager == nullptr) {
+        PRINT_HILOGE("appManager is nullptr");
+        return false;
+    }
+    int32_t ret = appManager->GetRunningProcessInfoByPid(pid, processInfo);
+    if (ret != ERR_OK) {
+        PRINT_HILOGE("GetRunningProcessInfoByPid fail");
+        return false;
+    }
+    return true;
+}
+
+bool PrintCallerAppMonitor::IsProcessForeground(const pid_t pid)
+{
+    PRINT_HILOGI("pid: %{public}d", pid);
+    AppExecFwk::RunningProcessInfo processInfo;
+    if (!GetRunningProcessInfoByPid(pid, processInfo)) {
+        PRINT_HILOGE("GetRunningProcessInfoByPid fail");
+        return false;
+    }
+    AppExecFwk::AppProcessState state = processInfo.state_;
+    PRINT_HILOGI("pid: %{public}d, state: %{public}d", pid, state);
+    if (state < AppExecFwk::AppProcessState::APP_STATE_FOREGROUND ||
+        state > AppExecFwk::AppProcessState::APP_STATE_BACKGROUND) {
+        PRINT_HILOGW("Process background");
+        return false;
+    }
+    PRINT_HILOGD("Process foreground");
+    return true;
 }
 
 bool PrintCallerAppMonitor::IsAppAlive(std::shared_ptr<PrintCallerAppInfo> callerAppInfo)

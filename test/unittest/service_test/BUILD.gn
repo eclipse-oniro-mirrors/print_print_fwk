@@ -38,6 +38,7 @@ ohos_unittest("print_service_test") {
   sources = [
     "print_bms_death_recipient_test.cpp",
     "print_cups_attribute_test.cpp",
+    "print_caller_app_monitor_test.cpp",
     "print_security_guard_info_test.cpp",
     "print_security_guard_manager_test.cpp",
     "print_service_converter_test.cpp",
