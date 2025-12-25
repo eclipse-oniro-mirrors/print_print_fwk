@@ -1249,12 +1249,6 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
         PRINT_HILOGE("user is not allow print job");
         return E_PRINT_NO_PERMISSION;
     }
-#ifdef EDM_SERVICE_ENABLE
-    if (IsDisablePrint() && printJob.GetPrinterId() != VIRTUAL_PRINTER_ID) {
-        ReportEventAndUpdateJobState(printJob.GetOption(), printJob.GetJobId());
-        return E_PRINT_BANNED;
-    }
-#endif // EDM_SERVICE_ENABLE
     return StartPrintJobInternal(nativePrintJob);
 }
 
@@ -1320,12 +1314,6 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
         PRINT_HILOGE("user is not allow print job");
         return E_PRINT_NO_PERMISSION;
     }
-#ifdef EDM_SERVICE_ENABLE
-    if (IsDisablePrint() && jobInfo.GetPrinterId() != VIRTUAL_PRINTER_ID) {
-        ReportEventAndUpdateJobState(jobInfo.GetOption(), jobInfo.GetJobId());
-        return E_PRINT_BANNED;
-    }
-#endif // EDM_SERVICE_ENABLE
     return StartPrintJobInternal(printJob);
 }
 
@@ -1350,6 +1338,13 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
         }
     }
 
+#ifdef EDM_SERVICE_ENABLE
+    if (IsDisablePrint()) {
+        ReportEventAndUpdateJobState(printJob->GetOption(), printJob->GetJobId());
+        return E_PRINT_BANNED;
+    }
+#endif // EDM_SERVICE_ENABLE
+
     // reopen fd from cache
     std::vector<uint32_t> fdList;
     OpenCacheFileFd(jobId, fdList);
@@ -1371,12 +1366,6 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
         PRINT_HILOGE("user is not allow print job");
         return E_PRINT_NO_PERMISSION;
     }
-#ifdef EDM_SERVICE_ENABLE
-    if (IsDisablePrint() && printJob->GetPrinterId() != VIRTUAL_PRINTER_ID) {
-        ReportEventAndUpdateJobState(printJob->GetOption(), jobId);
-        return E_PRINT_BANNED;
-    }
-#endif // EDM_SERVICE_ENABLE
     ret = StartPrintJobInternal(printJob);
     if (ret == E_PRINT_NONE) {
         PRINT_HILOGI("[Job Id: %{public}s] RestartPrintJob success, oldJobId: %{public}s",
@@ -4116,15 +4105,21 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     }
     PRINT_HILOGI("StartPrintJobInternal, option: %{public}s",
         PrintUtils::AnonymizeJobOption(printJob->GetOption()).c_str());
+    if (!FlushCacheFileToUserData(printJob->GetJobId())) {
+        PRINT_HILOGW("Flush cache file failed");
+    }
+#ifdef EDM_SERVICE_ENABLE
+    if (IsDisablePrint()) {
+        ReportEventAndUpdateJobState(printJob->GetOption(), printJob->GetJobId());
+        return E_PRINT_BANNED;
+    }
+#endif // EDM_SERVICE_ENABLE
     if (isEprint(printJob->GetPrinterId())) {
         auto extensionId = PrintUtils::GetExtensionId(printJob->GetPrinterId());
         std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
         auto cbIter = extCallbackMap_.find(cid);
         if (cbIter == extCallbackMap_.end()) {
             return E_PRINT_SERVER_FAILURE;
-        }
-        if (!FlushCacheFileToUserData(printJob->GetJobId())) {
-            PRINT_HILOGW("Flush cache file failed");
         }
         auto cbFunc = cbIter->second;
         auto callback = [=]() {
