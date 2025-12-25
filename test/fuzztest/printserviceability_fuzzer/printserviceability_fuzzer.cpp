@@ -241,6 +241,61 @@ void TestGetPrinterDefaultPreferences(const uint8_t *data, size_t size, FuzzedDa
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrinterPreferences defaultPreferences;
     PrintServiceAbility::GetInstance()->GetPrinterDefaultPreferences(printerId, defaultPreferences);
+
+void TestCheckPreferencesConflicts(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string changedType = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrinterPreferences printerPreference;
+    printerPreference.SetDefaultDuplexMode(dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER));
+    printerPreference.SetDefaultPrintQuality(dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER));
+    printerPreference.SetDefaultOrientation(dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER));
+    printerPreference.SetDefaultColorMode(dataProvider->ConsumeIntegralInRange<int>(0, MAX_SET_NUMBER));
+    printerPreference.SetDefaultMediaType(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerPreference.SetDefaultPageSizeId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerPreference.SetOption(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printerPreference.SetBorderless(dataProvider->ConsumeBool());
+    printerPreference.SetDefaultCollate(dataProvider->ConsumeBool());
+    printerPreference.SetDefaultReverse(dataProvider->ConsumeBool());
+    std::vector<std::string> conflictingOptions;
+    PrintServiceAbility::GetInstance()->CheckPreferencesConflicts(
+        printerId, changedType, printerPreference, conflictingOptions);
+}
+
+void TestCheckPrintJobConflicts(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string changedType = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintJob printJob;
+    printJob.SetJobId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::vector<uint32_t> files = {0};
+    printJob.SetFdList(files);
+    OHOS::Print::PrintPageSize pageSize;
+    pageSize.SetId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    printJob.SetPageSize(pageSize);
+    printJob.SetPrinterId(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::vector<std::string> conflictingOptions;
+    PrintServiceAbility::GetInstance()->CheckPrintJobConflicts(changedType, printJob, conflictingOptions);
+}
+
+void TestGetPpdNameByPrinterId(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdName;
+    PrintServiceAbility::GetInstance()->GetPpdNameByPrinterId(printerId, ppdName);
+}
+
+void TestIsPrinterPpdUpdateRequired(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string standardPrinterName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string ppdHashCode = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->IsPrinterPpdUpdateRequired(standardPrinterName, ppdHashCode);
+}
+
+void TestCheckPrintConstraint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->CheckPrintConstraint(option, jobId);
 }
 
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
@@ -265,6 +320,11 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestQueryRecommendDriversById(data, size, dataProvider);
     TestConnectPrinterByIdAndPpd(data, size, dataProvider);
     TestGetPrinterDefaultPreferences(data, size, dataProvider);
+    TestCheckPreferencesConflicts(data, size, dataProvider);
+    TestCheckPrintJobConflicts(data, size, dataProvider);
+    TestGetPpdNameByPrinterId(data, size, dataProvider);
+    TestIsPrinterPpdUpdateRequired(data, size, dataProvider);
+    TestCheckPrintConstraint(data, size, dataProvider);
 }
 
 void TestIsDisablePrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
