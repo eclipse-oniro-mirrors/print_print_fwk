@@ -1340,7 +1340,7 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
 
 #ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint()) {
-        ReportEventAndUpdateJobState(printJob.GetOption(), printJob->GetJobId());
+        ReportEventAndUpdateJobState(printJob->GetOption(), printJob->GetJobId());
         return E_PRINT_BANNED;
     }
 #endif // EDM_SERVICE_ENABLE
@@ -4110,7 +4110,7 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     }
 #ifdef EDM_SERVICE_ENABLE
     if (IsDisablePrint()) {
-        ReportEventAndUpdateJobState(printJob.GetOption(), printJob->GetJobId());
+        ReportEventAndUpdateJobState(printJob->GetOption(), printJob->GetJobId());
         return E_PRINT_BANNED;
     }
 #endif // EDM_SERVICE_ENABLE
