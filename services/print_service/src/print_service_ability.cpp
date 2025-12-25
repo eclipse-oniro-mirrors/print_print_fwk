@@ -4105,6 +4105,7 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     PRINT_HILOGI("StartPrintJobInternal, option: %{public}s",
         PrintUtils::AnonymizeJobOption(printJob->GetOption()).c_str());
     if (!FlushCacheFileToUserData(printJob->GetJobId())) {
+
         PRINT_HILOGW("Flush cache file failed");
     }
 #ifdef EDM_SERVICE_ENABLE
