@@ -241,6 +241,7 @@ void TestGetPrinterDefaultPreferences(const uint8_t *data, size_t size, FuzzedDa
     std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrinterPreferences defaultPreferences;
     PrintServiceAbility::GetInstance()->GetPrinterDefaultPreferences(printerId, defaultPreferences);
+}
 
 void TestCheckPreferencesConflicts(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
