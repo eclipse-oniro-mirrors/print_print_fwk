@@ -64,6 +64,11 @@ public:
     };
 };
 
+class PrintCallerAppMonitorBase {
+public:
+    virtual bool IsProcessForeground(const pid_t pid) = 0;
+    virtual bool GetRunningProcessInfoByPid(const pid_t pid, AppExecFwk::RunningProcessInfo &processInfo) = 0;
+};
 class PrintCallerAppMonitor {
 public:
     static PrintCallerAppMonitor& GetInstance();
@@ -75,7 +80,8 @@ public:
     void IncrementCallerAppCounter();
     void RemovePrintJobFromMap(const std::string &jobId);
     bool IsAppAlive(std::shared_ptr<PrintCallerAppInfo> callerAppInfo);
-    bool IsProcessForeground(const pid_t pid);
+    bool IsProcessForeground(const pid_t pid) override;
+    bool GetRunningProcessInfoByPid(const pid_t pid, AppExecFwk::RunningProcessInfo &processInfo) override;
 
 private:
     PrintCallerAppMonitor() = default;
@@ -87,7 +93,6 @@ private:
         const std::string &bundleName, int32_t userId);
     int32_t GetCurrentUserId();
     bool CheckCallerAppInMap(int32_t callerPid, const std::string &bundleName);
-    bool GetRunningProcessInfoByPid(const pid_t pid, AppExecFwk::RunningProcessInfo &processInfo);
 
     std::map<int32_t, std::shared_ptr<PrintCallerAppInfo>> callerMap_;
     std::map<std::string, bool> printJobMap_;

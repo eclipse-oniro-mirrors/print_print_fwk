@@ -143,5 +143,99 @@ HWTEST_F(PrintCallerAppMonitorTest, CheckCallerAppInMap_matchCallerAppInfoInMap_
     printCallerAppMonitor.callerMap_[callerPid] = callerAppInfo;
     EXPECT_EQ(printCallerAppMonitor.CheckCallerAppInMap(callerPid, bundleName), true);
 }
+
+HWTEST_F(PrintCallerAppMonitorTest,
+    AddCallerAppToMap_MockIsProcessForegroundReturnTrue_delayUnloadIsTrue, TestSize.Level1)
+{
+    auto mockPtr = std::make_shared<MockPrintCallerAppMonitor>();
+    EXPECT_CALL(*mockPtr, IsProcessForeground(_))
+        .WillRepeatedly(Return(true));
+    mockPtr->delayUnload_.store(false);
+    mockPtr->AddCallerAppToMap();
+    EXPECT_EQ(mockPtr->delayUnload_.load(), true);
+}
+
+HWTEST_F(PrintCallerAppMonitorTest,
+    AddCallerAppToMap_MockIsProcessForegroundReturnFalse_delayUnloadIsFalse, TestSize.Level1)
+{
+    auto mockPtr = std::make_shared<MockPrintCallerAppMonitor>();
+    EXPECT_CALL(*mockPtr, IsProcessForeground(_))
+        .WillRepeatedly(Return(false));
+    mockPtr->delayUnload_.store(false);
+    mockPtr->AddCallerAppToMap();
+    EXPECT_EQ(mockPtr->delayUnload_.load(), false);
+}
+
+HWTEST_F(PrintCallerAppMonitorTest, IsProcessForeground_AppStateReady_delayUnloadIsFalse, TestSize.Level1)
+{
+    auto mockPtr = std::make_shared<MockPrintCallerAppMonitor>();
+    AppExecFwk::RunningProcessInfo processInfo;
+    processInfo.state_ = AppExecFwk::AppProcessState::APP_STATE_READY;
+    EXPECT_CALL(*mockPtr, GetRunningProcessInfoByPid(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(processInfo), Return(true)));
+    EXPECT_CALL(*mockPtr, IsProcessForeground(_))
+        .WillOnce([mockPtr](const pid_t pid) {
+            AppExecFwk::RunningProcessInfo processInfo;
+            if (!mockPtr->GetRunningProcessInfoByPid(pid, processInfo)) {
+                return false;
+            }
+            AppExecFwk::AppProcessState state = processInfo.state_;
+            if (state < AppExecFwk::AppProcessState::APP_STATE_FOREGROUND ||
+                state > AppExecFwk::AppProcessState::APP_STATE_BACKGROUND) {
+                return false;
+            }
+            return true;
+        });
+    pid_t pid = 9999;
+    EXPECT_EQ(mockPtr->IsProcessForeground(pid), false);
+}
+
+HWTEST_F(PrintCallerAppMonitorTest, IsProcessForeground_AppStateEnd_delayUnloadIsFalse, TestSize.Level1)
+{
+    auto mockPtr = std::make_shared<MockPrintCallerAppMonitor>();
+    AppExecFwk::RunningProcessInfo processInfo;
+    processInfo.state_ = AppExecFwk::AppProcessState::APP_STATE_END;
+    EXPECT_CALL(*mockPtr, GetRunningProcessInfoByPid(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(processInfo), Return(true)));
+    EXPECT_CALL(*mockPtr, IsProcessForeground(_))
+        .WillOnce([mockPtr](const pid_t pid) {
+            AppExecFwk::RunningProcessInfo processInfo;
+            if (!mockPtr->GetRunningProcessInfoByPid(pid, processInfo)) {
+                return false;
+            }
+            AppExecFwk::AppProcessState state = processInfo.state_;
+            if (state < AppExecFwk::AppProcessState::APP_STATE_FOREGROUND ||
+                state > AppExecFwk::AppProcessState::APP_STATE_BACKGROUND) {
+                return false;
+            }
+            return true;
+        });
+    pid_t pid = 9999;
+    EXPECT_EQ(mockPtr->IsProcessForeground(pid), false);
+}
+
+HWTEST_F(PrintCallerAppMonitorTest, IsProcessForeground_AppStateForeground_delayUnloadIsFalse, TestSize.Level1)
+{
+    auto mockPtr = std::make_shared<MockPrintCallerAppMonitor>();
+    AppExecFwk::RunningProcessInfo processInfo;
+    processInfo.state_ = AppExecFwk::AppProcessState::APP_STATE_FOREGROUND;
+    EXPECT_CALL(*mockPtr, GetRunningProcessInfoByPid(_, _))
+        .WillOnce(DoAll(SetArgReferee<1>(processInfo), Return(true)));
+    EXPECT_CALL(*mockPtr, IsProcessForeground(_))
+        .WillOnce([mockPtr](const pid_t pid) {
+            AppExecFwk::RunningProcessInfo processInfo;
+            if (!mockPtr->GetRunningProcessInfoByPid(pid, processInfo)) {
+                return false;
+            }
+            AppExecFwk::AppProcessState state = processInfo.state_;
+            if (state < AppExecFwk::AppProcessState::APP_STATE_FOREGROUND ||
+                state > AppExecFwk::AppProcessState::APP_STATE_BACKGROUND) {
+                return false;
+            }
+            return true;
+        });
+    pid_t pid = 9999;
+    EXPECT_EQ(mockPtr->IsProcessForeground(pid), true);
+}
 }  // namespace Print
 }  // namespace OHOS
