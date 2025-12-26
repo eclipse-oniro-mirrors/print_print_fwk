@@ -176,6 +176,7 @@ public:
     int32_t DeleteExtraJobsFromCups();
     std::string getScheme(std::string &printerUri);
     bool IsIpAddress(const char* host);
+    bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
 private:
     bool HandleFiles(JobParameters *jobParams, uint32_t num_files, http_t *http, uint32_t jobId);
     void StartCupsJob(JobParameters *jobParams, CallbackFunc callback);
@@ -220,7 +221,6 @@ private:
     std::string GetMedieSize(const PrintJob &jobInfo);
     std::string GetDulpexString(uint32_t duplexCode);
     void DumpJobParameters(JobParameters* jobParams);
-    bool IsPrinterExist(const char *printerUri, const char *standardPrinterName, const char *ppdName);
 
     void ParsePPDInfo(ipp_t *response, std::vector<std::string> &ppds);
     ipp_t *QueryPrinterAttributesByUri(const std::string &printerUri, const std::string &nic, int num,
