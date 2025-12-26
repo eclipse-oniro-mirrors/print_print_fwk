@@ -240,6 +240,7 @@ bool PrintServiceAbility::RefreshVirtualPrinter()
     std::string printerId = VIRTUAL_PRINTER_ID;
     std::string printerUri = VIRTUAL_PRINTER_SCHEME + "://";
     std::string printerName = VIRTUAL_PRINTER_NAME;
+    std::string standardName = PrintUtil::StandardizePrinterName(printerName);
     std::string ppdName = VIRTUAL_PRINTER_PPD;
     std::string ppdHashCode = printCupsClient->GetPpdHashCode(ppdName);
     if (ppdHashCode.empty()) {
@@ -248,7 +249,8 @@ bool PrintServiceAbility::RefreshVirtualPrinter()
     }
     PrinterInfo printerInfo;
     if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
-        printerInfo.GetPpdHashCode() == ppdHashCode) {
+        printerInfo.GetPpdHashCode() == ppdHashCode &&
+        printCupsClient->IsPrinterExist(printerUri.c_str(), standardName.c_str(), ppdName.c_str())) {
         PRINT_HILOGI("virtual printer has added.");
         printSystemData_.UpdatePrinterStatus(printerId, PRINTER_STATUS_IDLE);
         return true;
@@ -262,7 +264,6 @@ bool PrintServiceAbility::RefreshVirtualPrinter()
     result = printCupsClient->QueryPrinterCapabilityFromPPD(printerName, printerCaps, ppdName);
     if (result != E_PRINT_NONE) {
         PRINT_HILOGW("QueryPrinterCapabilityFromPPD error = %{public}d.", result);
-        std::string standardName = PrintUtil::StandardizePrinterName(printerName);
         printCupsClient->DeleteCupsPrinter(standardName.c_str());
         return false;
     }
