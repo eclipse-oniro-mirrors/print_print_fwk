@@ -713,6 +713,10 @@ int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IP
         config.isProhibitBack = true;
         auto printUiContent = static_cast<OHOS::Ace::UIContent *>(uiContent);
         auto callback = std::make_shared<PrintInnerkitModalUICallback>(printUiContent);
+        if (callback == nullptr) {
+            PRINT_HILOGE("create callback failed.");
+            return E_PRINT_SERVER_FAILURE;
+        }
         OHOS::Ace::ModalUIExtensionCallbacks extensionCallbacks = {
             [callback](int32_t releaseCode) { callback->OnRelease(releaseCode); },
             [callback](int32_t resultCode, const OHOS::AAFwk::Want& result) {
@@ -725,9 +729,7 @@ int32_t PrintManagerClient::Print(const std::string &printJobName, const sptr<IP
         };
         int32_t sessionId = printUiContent->CreateModalUIExtension(want, extensionCallbacks, config);
         PRINT_HILOGI("StartUIExtensionAbility sessionId %{public}d", sessionId);
-        if (callback != nullptr) {
-            callback->SetSessionId(sessionId);
-        }
+        callback->SetSessionId(sessionId);
     }
 
     auto func = [printJobName, listener, printAttributes, &taskId](sptr<IPrintService> serviceProxy) {

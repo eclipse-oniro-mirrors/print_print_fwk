@@ -293,6 +293,7 @@ public:
     MOCK_METHOD1(DeletePrinterFromCups, int32_t(const std::string &));
     MOCK_METHOD1(DiscoverUsbPrinters, int32_t(std::vector<PrinterInfo> &));
     MOCK_METHOD1(AddPrinterToDiscovery, int32_t(const PrinterInfo &));
+    MOCK_METHOD3(PrintByAdapter, int32_t(const std::string, const PrintAttributes &, std::string &));
     MOCK_METHOD1(UpdatePrinterInDiscovery, int32_t(const PrinterInfo &));
     MOCK_METHOD1(RemovePrinterFromDiscovery, int32_t(const std::string &));
     MOCK_METHOD1(UpdatePrinterInSystem, int32_t(const PrinterInfo &));

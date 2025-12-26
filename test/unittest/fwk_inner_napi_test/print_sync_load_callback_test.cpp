@@ -48,6 +48,23 @@ void PrintSyncLoadCallbackTest::TearDown(void)
 {}
 
 /**
+ * @tc.name: PrintSyncLoadCallbackTest_with_printSAid
+ * @tc.desc: Verify the capability function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintSyncLoadCallbackTest, PrintSyncLoadCallbackTest_with_printSAid, TestSize.Level1)
+{
+    OHOS::Print::PrintSyncLoadCallback printSyncLoadCallback;
+    int32_t systemAbilityId = PRINT_SERVICE_ID;
+    const sptr<IRemoteObject> remoteObject;
+    printSyncLoadCallback.OnLoadSystemAbilityFail(systemAbilityId);
+    EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, false);
+    printSyncLoadCallback.OnLoadSystemAbilitySuccess(systemAbilityId, remoteObject);
+    EXPECT_EQ(PrintManagerClient::GetInstance()->ready_, true);
+}
+
+/**
  * @tc.name: PrintSyncLoadCallbackTest_0001
  * @tc.desc: Verify the capability function.
  * @tc.type: FUNC

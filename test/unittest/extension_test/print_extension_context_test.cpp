@@ -100,5 +100,22 @@ HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_0007, TestSize.Lev
     PrintExtensionContext printExtensionContext;
     EXPECT_EQ(printExtensionContext.GetAbilityInfoType(), AppExecFwk::AbilityType::UNKNOWN);
 }
+
+HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_ConnectAbility, TestSize.Level0)
+{
+    AAFwk::Want want;
+    sptr<AbilityConnectCallback> connectCallback = nullptr;
+    PrintExtensionContext printExtensionContext;
+    EXPECT_EQ(printExtensionContext.ConnectAbility(want, connectCallback), ERR_OK);
+}
+
+HWTEST_F(PrintExtensionContextTest, PrintExtensionContextTest_ConnectAbilityWithAccount, TestSize.Level0)
+{
+    AAFwk::Want want;
+    int accountId = 0;
+    sptr<AbilityConnectCallback> connectCallback = nullptr;
+    PrintExtensionContext printExtensionContext;
+    EXPECT_EQ(printExtensionContext.ConnectAbilityWithAccount(want, accountId, connectCallback), ERR_OK);
+}
 }  // namespace AbilityRuntime
 }  // namespace OHOS
