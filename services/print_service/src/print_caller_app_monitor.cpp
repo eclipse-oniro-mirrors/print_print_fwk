@@ -195,7 +195,7 @@ bool PrintCallerAppMonitor::IsProcessForeground(const pid_t pid)
         return false;
     }
     AppExecFwk::AppProcessState state = processInfo.state_;
-    PRINT_HILOGI("pid: %{public}d, state: %{public}d", pid, state);
+    PRINT_HILOGI("state: %{public}d", state);
     if (state < AppExecFwk::AppProcessState::APP_STATE_FOREGROUND ||
         state > AppExecFwk::AppProcessState::APP_STATE_BACKGROUND) {
         PRINT_HILOGW("Process background");

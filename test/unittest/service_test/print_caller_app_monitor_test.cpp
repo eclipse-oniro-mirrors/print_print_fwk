@@ -22,9 +22,11 @@
 #undef private
 #include "print_log.h"
 #include "print_constant.h"
+#include "mock_print_caller_app_monitor.h"
 
 #include "ipc_skeleton.h"
 
+using namespace testing;
 using namespace testing::ext;
 
 namespace OHOS {
@@ -186,7 +188,7 @@ HWTEST_F(PrintCallerAppMonitorTest, IsProcessForeground_AppStateReady_delayUnloa
             }
             return true;
         });
-    pid_t pid = 9999;
+    int32_t pid = 9999;
     EXPECT_EQ(mockPtr->IsProcessForeground(pid), false);
 }
 
@@ -210,7 +212,7 @@ HWTEST_F(PrintCallerAppMonitorTest, IsProcessForeground_AppStateEnd_delayUnloadI
             }
             return true;
         });
-    pid_t pid = 9999;
+    int32_t pid = 9999;
     EXPECT_EQ(mockPtr->IsProcessForeground(pid), false);
 }
 
@@ -234,7 +236,7 @@ HWTEST_F(PrintCallerAppMonitorTest, IsProcessForeground_AppStateForeground_delay
             }
             return true;
         });
-    pid_t pid = 9999;
+    int32_t pid = 9999;
     EXPECT_EQ(mockPtr->IsProcessForeground(pid), true);
 }
 }  // namespace Print

@@ -69,7 +69,8 @@ public:
     virtual bool IsProcessForeground(const pid_t pid) = 0;
     virtual bool GetRunningProcessInfoByPid(const pid_t pid, AppExecFwk::RunningProcessInfo &processInfo) = 0;
 };
-class PrintCallerAppMonitor {
+
+class PrintCallerAppMonitor : public PrintCallerAppMonitorBase {
 public:
     static PrintCallerAppMonitor& GetInstance();
     void AddCallerAppToMap();
