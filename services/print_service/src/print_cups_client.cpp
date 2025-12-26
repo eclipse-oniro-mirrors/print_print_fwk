@@ -627,10 +627,6 @@ int32_t PrintCupsClient::InitCupsResources()
 void PrintCupsClient::StopCupsdService()
 {
     PRINT_HILOGI("StopCupsdService enter");
-    if (!IsCupsServerAlive()) {
-        PRINT_HILOGI("The cupsd process is not started, no need stop.");
-        return;
-    }
     PRINT_HILOGI("The cupsd process is started, stop it now.");
     int result = SetParameter(CUPSD_CONTROL_PARAM.c_str(), "false");
     if (result) {
@@ -647,11 +643,6 @@ void PrintCupsClient::StopCupsdService()
 void PrintCupsClient::StopCupsdEnterpriseService()
 {
     PRINT_HILOGI("StopCupsdEnterpriseService enter");
-    if (!IsCupsServerAlive()) {
-        PRINT_HILOGI("The cupsd process is not started, no need stop.");
-        return;
-    }
-
     PRINT_HILOGI("The cupsd_enterprise process is started, stop it now.");
     int result = SetParameter(CUPSD_ENTERPRISE_CONTROL_PARAM.c_str(), "false");
     if (result) {
