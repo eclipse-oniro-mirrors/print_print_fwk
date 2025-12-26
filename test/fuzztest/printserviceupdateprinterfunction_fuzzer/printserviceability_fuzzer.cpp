@@ -146,6 +146,7 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestUpdateExtensionInfo(data, size, dataProvider);
     TestRequestPreview(data, size, dataProvider);
     TestQueryPrinterCapability(data, size, dataProvider);
+    TestAddRawPrinter(data, size, dataProvider);
 }
 
 }  // namespace Print
