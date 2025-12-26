@@ -170,72 +170,33 @@ HWTEST_F(PrintCallerAppMonitorTest,
 
 HWTEST_F(PrintCallerAppMonitorTest, IsProcessForeground_AppStateReady_delayUnloadIsFalse, TestSize.Level1)
 {
-    auto mockPtr = std::make_shared<MockPrintCallerAppMonitor>();
+    auto mockPtr = std::make_shared<MockGetRunningProcessInfoByPid>();
     AppExecFwk::RunningProcessInfo processInfo;
     processInfo.state_ = AppExecFwk::AppProcessState::APP_STATE_READY;
     EXPECT_CALL(*mockPtr, GetRunningProcessInfoByPid(_, _))
         .WillOnce(DoAll(SetArgReferee<1>(processInfo), Return(true)));
-    EXPECT_CALL(*mockPtr, IsProcessForeground(_))
-        .WillOnce([mockPtr](const pid_t pid) {
-            AppExecFwk::RunningProcessInfo processInfo;
-            if (!mockPtr->GetRunningProcessInfoByPid(pid, processInfo)) {
-                return false;
-            }
-            AppExecFwk::AppProcessState state = processInfo.state_;
-            if (state < AppExecFwk::AppProcessState::APP_STATE_FOREGROUND ||
-                state > AppExecFwk::AppProcessState::APP_STATE_BACKGROUND) {
-                return false;
-            }
-            return true;
-        });
     int32_t pid = 9999;
     EXPECT_EQ(mockPtr->IsProcessForeground(pid), false);
 }
 
 HWTEST_F(PrintCallerAppMonitorTest, IsProcessForeground_AppStateEnd_delayUnloadIsFalse, TestSize.Level1)
 {
-    auto mockPtr = std::make_shared<MockPrintCallerAppMonitor>();
+    auto mockPtr = std::make_shared<MockGetRunningProcessInfoByPid>();
     AppExecFwk::RunningProcessInfo processInfo;
     processInfo.state_ = AppExecFwk::AppProcessState::APP_STATE_END;
     EXPECT_CALL(*mockPtr, GetRunningProcessInfoByPid(_, _))
         .WillOnce(DoAll(SetArgReferee<1>(processInfo), Return(true)));
-    EXPECT_CALL(*mockPtr, IsProcessForeground(_))
-        .WillOnce([mockPtr](const pid_t pid) {
-            AppExecFwk::RunningProcessInfo processInfo;
-            if (!mockPtr->GetRunningProcessInfoByPid(pid, processInfo)) {
-                return false;
-            }
-            AppExecFwk::AppProcessState state = processInfo.state_;
-            if (state < AppExecFwk::AppProcessState::APP_STATE_FOREGROUND ||
-                state > AppExecFwk::AppProcessState::APP_STATE_BACKGROUND) {
-                return false;
-            }
-            return true;
-        });
     int32_t pid = 9999;
     EXPECT_EQ(mockPtr->IsProcessForeground(pid), false);
 }
 
 HWTEST_F(PrintCallerAppMonitorTest, IsProcessForeground_AppStateForeground_delayUnloadIsFalse, TestSize.Level1)
 {
-    auto mockPtr = std::make_shared<MockPrintCallerAppMonitor>();
+    auto mockPtr = std::make_shared<MockGetRunningProcessInfoByPid>();
     AppExecFwk::RunningProcessInfo processInfo;
     processInfo.state_ = AppExecFwk::AppProcessState::APP_STATE_FOREGROUND;
     EXPECT_CALL(*mockPtr, GetRunningProcessInfoByPid(_, _))
         .WillOnce(DoAll(SetArgReferee<1>(processInfo), Return(true)));
-    EXPECT_CALL(*mockPtr, IsProcessForeground(_))
-        .WillOnce([mockPtr](const pid_t pid) {
-            AppExecFwk::RunningProcessInfo processInfo;
-            if (!mockPtr->GetRunningProcessInfoByPid(pid, processInfo)) {
-                return false;
-            }
-            AppExecFwk::AppProcessState state = processInfo.state_;
-            if (state < AppExecFwk::AppProcessState::APP_STATE_FOREGROUND ||
-                state > AppExecFwk::AppProcessState::APP_STATE_BACKGROUND) {
-                return false;
-            }
-            return true;
-        });
     int32_t pid = 9999;
     EXPECT_EQ(mockPtr->IsProcessForeground(pid), true);
 }

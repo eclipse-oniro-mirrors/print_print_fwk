@@ -24,6 +24,10 @@ namespace Print {
 class MockPrintCallerAppMonitor final : public PrintCallerAppMonitor {
 public:
     MOCK_METHOD1(IsProcessForeground, bool(const pid_t));
+};
+
+class MockGetRunningProcessInfoByPid final : public PrintCallerAppMonitor {
+public:
     MOCK_METHOD2(GetRunningProcessInfoByPid, bool(const pid_t, AppExecFwk::RunningProcessInfo &));
 };
 }  // namespace Print
