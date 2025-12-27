@@ -104,6 +104,8 @@ void PrintSystemData::ConvertInnerJsonToPrinterInfo(Json::Value &object, Printer
     }
     if (PrintJsonUtil::IsMember(object, "printerStatus") && object["printerStatus"].isInt()) {
         info.SetPrinterStatus(static_cast<PrinterStatus>(object["printerStatus"].asInt()));
+    } else if (info.GetPrinterId() == VIRTUAL_PRINTER_ID) {
+        info.SetPrinterStatus(PRINTER_STATUS_IDLE);
     }
     if (PrintJsonUtil::IsMember(object, "preferences") && object["preferences"].isObject()) {
         PrinterPreferences preference;
@@ -357,7 +359,7 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     printerJson["preferences"] = preference.ConvertToJson();
     std::string jsonString = PrintJsonUtil::WriteString(printerJson);
     size_t jsonLength = jsonString.length();
-    size_t writeLength = fwrite(jsonString.c_str(), strlen(jsonString.c_str()), 1, file);
+    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
     int fcloseResult = fclose(file);
     if (fcloseResult != 0) {
         PRINT_HILOGE("Close File Failure.");
