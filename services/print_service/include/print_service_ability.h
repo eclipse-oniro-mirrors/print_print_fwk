@@ -213,8 +213,11 @@ private:
     bool RemoveSinglePrinterInfo(const std::string &printerId);
     void HandlePrinterStateChangeRegister(const std::string &eventType);
     void HandlePrinterChangeRegister(const std::string &eventType);
+#ifdef HAVE_SMB_PRINTER
     void TryStartSmbPrinterStatusMonitor();
     void TryStopSmbPrinterStatusMonitor();
+    int32_t ConnectSmbPrinter(PrinterInfo& printerInfo);
+#endif // HAVE_SMB_PRINTER
     bool UpdateAddedPrinterInCups(const std::string &printerId, const std::string &printerUri);
     int32_t HandleExtensionConnectPrinter(const std::string &printerId);
     bool CheckUserIdInEventType(const std::string &type);
@@ -230,7 +233,6 @@ private:
     void UpdatePageSizeNameWithPrinterInfo(PrinterInfo &printerInfo, PrintPageSize &pageSize);
     Json::Value ConvertModifiedPreferencesToJson(PrinterPreferences &preferences);
     int32_t ConnectUsbPrinter(const std::string &printerId);
-    int32_t ConnectSmbPrinter(PrinterInfo& printerInfo);
     void RefreshPrinterInfoByPpd();
     void RefreshEprinterErrorCapability();
 #ifdef VIRTUAL_PRINTER_ENABLE

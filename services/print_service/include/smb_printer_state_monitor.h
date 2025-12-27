@@ -34,13 +34,16 @@ public:
     void EraseSmbPrinterInMonitorListById(const std::string& printerId);
 
 private:
-    enum class HostStatus;
+    enum class HostStatus {
+        ALIVE,
+        DEAD
+    };
 
     SmbPrinterStateMonitor() = default;
     ~SmbPrinterStateMonitor();
     void MonitorSmbPrinters(std::function<void(const PrinterInfo& printerInfo)> notify);
 
-    std::unordered_map<std::string, PrinterInfo> monitorSmbPrinters_;
+    std::unordered_map<std::string, std::pair<PrinterInfo, HostStatus>> monitorSmbPrinters_;
     std::mutex monitorSmbPrintersLock_;
     std::atomic<bool> isMonitoring_{false};
     std::thread monitorThread_;

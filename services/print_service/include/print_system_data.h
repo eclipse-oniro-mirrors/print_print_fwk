@@ -74,9 +74,11 @@ public:
     void AddPrintEvent(const std::string &printerId, const std::string &type, int32_t code);
     void ClearPrintEvents(const std::string &printerId, const std::string &type);
     std::string AnalyzePrintEvents(const std::string &printerId, const std::string &type);
+#ifdef HAVE_SMB_PRINTER
     void SetSmbPrinterInDiscoverList(const std::string& ip, std::vector<PrinterInfo>& infos);
     std::optional<PrinterInfo> FindInfoInSmbPrinterDiscoverList(const std::string &printerId);
     void GetSmbAddedPrinterListFromSystemData(std::vector<PrinterInfo> &printerInfoList);
+#endif // HAVE_SMB_PRINTER
 
 private:
     bool ParsePrinterListJsonV1(Json::Value& jsonObject);

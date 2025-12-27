@@ -16,8 +16,11 @@
 #ifndef SMB_HOST_SEARCH
 #define SMB_HOST_SEARCH
 
+#include <arpa/inet.h>
 #include "print_shared_host.h"
 namespace OHOS::Print {
+const int32_t QUESTION_NAME_SIZE = 34;
+
 class SmbHostSearchHelper {
 public:
     SmbHostSearchHelper();
@@ -27,10 +30,54 @@ public:
     bool TestSmbHostAlive(const std::string& ip, int32_t timeoutMs = 1000);
 
 private:
-    class HighResTimer;
-    class NetworkIpRange;
-    class HostList;
-    struct NbHostInfo;
+    class HighResTimer {
+    public:
+        HighResTimer(int32_t intervalUs);
+        bool CanSend();
+        void UpdateSendTime();
+
+    private:
+        void SetInterval(int32_t intervalUs);
+        timespec lastSendTime_;
+        int64_t sendIntervalNs_;
+    };
+
+    class NetworkIpRange {
+    public:
+        NetworkIpRange(const std::string& start, const std::string& end);
+        static std::unique_ptr<NetworkIpRange> CreateFromLocalNetwork();
+        
+        bool Next(struct in_addr* nextAddr);
+        
+    private:
+        static bool GetLocalIPAndMask(std::string& ipStr, std::string& netmaskStr);
+        static std::pair<std::string, std::string> CalculateSubnetRange(const std::string& ipStr,
+            const std::string& netmaskStr);
+        struct in_addr start_;
+        struct in_addr end_;
+        struct in_addr current_;
+    };
+
+    class HostList {
+    public:
+        bool Contains(uint32_t ip) const;
+        void Add(uint32_t ip, const std::string& name);
+        std::vector<PrintSharedHost> GetPrintSharedHost() const;
+    private:
+        std::unordered_map<uint32_t, std::string> responsedHosts_;
+    };
+
+    struct NbnameRequest {
+        uint16_t transactionId;
+        uint16_t flags;
+        uint16_t questionCount;
+        uint16_t answerCount;
+        uint16_t nameServiceCount;
+        uint16_t additionalRecordCount;
+        char questionName[QUESTION_NAME_SIZE];
+        uint16_t questionType;
+        uint16_t questionClass;
+    };
 
     bool InitializeSock();
     void SetTimeval(timeval &timeout, const long &tvSec, const long &tvUsec);

@@ -2141,10 +2141,12 @@ bool PrintCupsClient::CheckPrinterOnline(std::shared_ptr<JobMonitorParam> monito
         PRINT_HILOGI("printer is raw or virtual printer.");
         return true;
     }
+#ifdef HAVE_SMB_PRINTER
     if (PrintUtil::startsWith(printerId, "smb")) {
         PRINT_HILOGI("printer is smb printer.");
         return true;
     }
+#endif // HAVE_SMB_PRINTER
     if ((isUsbPrinter || isCustomizedExtension || isVendorPrinter) && monitorParams->serviceAbility != nullptr) {
         if ((isUsbPrinter && CheckUsbPrinterOnline(printerId)) ||
             monitorParams->serviceAbility->QueryDiscoveredPrinterInfoById(printerId) != nullptr) {
