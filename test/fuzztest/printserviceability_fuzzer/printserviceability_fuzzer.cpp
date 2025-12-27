@@ -340,6 +340,10 @@ void TestReportBannedEvent(const uint8_t *data, size_t size, FuzzedDataProvider 
 #ifdef EDM_SERVICE_ENABLE
     std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrintServiceAbility::GetInstance()->ReportBannedEvent(option);
+    Json::Value optionJson;
+    optionJson["jobName"] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    option = PrintJsonUtil::WriteStringUTF8(optionJson);
+    PrintServiceAbility::GetInstance()->ReportBannedEvent(option);
 #endif // EDM_SERVICE_ENABLE
 }
 
