@@ -148,7 +148,7 @@ public:
 
 class MockRuntimeJS : public Runtime {
 public:
-    const int DEFAULT_LANGUAGE = 0;
+    const int DEFAULT_LANGUAGE = static_cast<int>(Language::JS);
     MockRuntimeJS() = default;
     ~MockRuntimeJS() = default;
 
@@ -269,6 +269,13 @@ public:
 
 public:
     Language language;
+};
+
+class MockRuntimeETS : public MockRuntime {
+public:
+    const int DEFAULT_LANGUAGE = static_cast<int>(Language::ETS);
+    MockRuntimeETS() = default;
+    ~MockRuntimeETS() = default;
 };
 }  // namespace AbilityRuntime
 }  // namespace OHOS

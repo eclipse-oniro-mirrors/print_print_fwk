@@ -950,6 +950,153 @@ HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_0033_NeedRename, TestSize.
     proxy->UpdatePrinterInSystem(testInfo1);
 }
 
+/**
+ * @tc.name: PrintServiceProxyTest_UpdatePrintJobStateForNormalApp
+ * @tc.desc: Verify the UpdatePrintJobStateForNormalApp function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_UpdatePrintJobStateForNormalApp, TestSize.Level0)
+{
+    std::string testJobId = "printId-123";
+    uint32_t testState = 1;
+    uint32_t testSubState = 1;
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, UpdatePrintJobStateForNormalApp(_, _, _))
+        .Times(Exactly(1))
+        .WillOnce([&testJobId, &testState, &testSubState](const std::string &jobId, uint32_t state, uint32_t subState) {
+            EXPECT_EQ(testJobId, jobId);
+            EXPECT_EQ(testState, state);
+            EXPECT_EQ(testSubState, subState);
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    proxy->UpdatePrintJobStateForNormalApp(testJobId, testState, testSubState);
+}
+
+/**
+ * @tc.name: PrintServiceProxyTest_QueryAllPrintJob
+ * @tc.desc: Verify the QueryAllPrintJob function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_QueryAllPrintJob, TestSize.Level1)
+{
+    std::vector<PrintJob> testPrintJobs = {};
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, QueryAllPrintJob(_))
+        .Times(Exactly(1))
+        .WillOnce([&testPrintJobs](std::vector<PrintJob> &printJobs) {
+            EXPECT_EQ(testPrintJobs.size(), printJobs.size());
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    proxy->QueryAllPrintJob(testPrintJobs);
+}
+
+/**
+ * @tc.name: PrintServiceProxyTest_PrintByAdapter
+ * @tc.desc: Verify the PrintByAdapter function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_PrintByAdapter, TestSize.Level1)
+{
+    std::string testPrintJobName = "printJobName-123";
+    PrintAttributes testAttr;
+    std::string testTaskId = "taskId-123";
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, PrintByAdapter(_, _, _))
+        .Times(Exactly(1))
+        .WillOnce([&testPrintJobName, &testTaskId]
+        (const std::string printJobName, const PrintAttributes &printAttributes, std::string &taskId) {
+            EXPECT_EQ(testPrintJobName, printJobName);
+            EXPECT_EQ(testTaskId, taskId);
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    proxy->PrintByAdapter(testPrintJobName, testAttr, testTaskId);
+}
+
+/**
+ * @tc.name: PrintServiceProxyTest_AuthPrintJob
+ * @tc.desc: Verify the AuthPrintJob function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_AuthPrintJob_with_nullptr, TestSize.Level1)
+{
+    std::string testJobId = "printId-123";
+    std::string testUserName = "userName-123";
+    char* testUserPasswd = nullptr;
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    proxy->AuthPrintJob(testJobId, testUserName, testUserPasswd);
+}
+
+/**
+ * @tc.name: PrintServiceProxyTest_SavePdfFileJob
+ * @tc.desc: Verify the SavePdfFileJob function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, PrintServiceProxyTest_SavePdfFileJob, TestSize.Level1)
+{
+    std::string testJobId = "printId-123";
+    uint32_t testFd = 1;
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, SavePdfFileJob(_, _))
+        .Times(Exactly(1))
+        .WillOnce([&testJobId, &testFd] (const std::string &jobId, uint32_t fd) {
+            EXPECT_EQ(testJobId, jobId);
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    proxy->SavePdfFileJob(testJobId, testFd);
+}
+
 HWTEST_F(PrintServiceProxyTest, QueryAllPrinterPpdsTest, TestSize.Level1)
 {
     std::vector<PpdInfo> testPpds;

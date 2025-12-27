@@ -25,6 +25,7 @@
 #include "print_log.h"
 #include "print_sync_load_callback.h"
 #include "system_ability_definition.h"
+#include "mock_uicontent.h"
 #include "mock_print_service.h"
 #include "mock_remote_object.h"
 #include "mock_print_callback_stub.h"
@@ -2286,6 +2287,27 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0128_NeedRename, TestSiz
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
+/**
+ * @tc.name: PrintManagerClientTest_Print_with_contextToken
+ * @tc.desc: Print
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_Print_with_contextToken, TestSize.Level1)
+{
+    std::string printJobName = "jobName-123";
+    sptr<IPrintCallback> testListener;
+    PrintAttributes testPrintAttributes;
+    std::string taskId = "";
+    OHOS::Ace::UIContent* contextToken = new OHOS::Ace::MockUIContent();
+    ASSERT_NE(contextToken, nullptr);
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    int32_t ret =
+        PrintManagerClient::GetInstance()->Print(printJobName, testListener, testPrintAttributes, taskId, contextToken);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    delete contextToken;
+}
+
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0129_NeedRename, TestSize.Level1)
 {
     std::string jobId = "1";
@@ -2329,6 +2351,8 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0133_NeedRename, TestSiz
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     int32_t ret = PrintManagerClient::GetInstance()->Init();
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    ret = PrintManagerClient::GetInstance()->Release();
+    EXPECT_EQ(ret, E_PRINT_NONE);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0134_NeedRename, TestSize.Level1)
@@ -2741,6 +2765,70 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_AddRawPrinter_RpcCallSuc
     EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
+}
+
+/**
+ * @tc.name: QueryAllPrintJob_LoadServerFailed
+ * @tc.desc: QueryAllPrintJob
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, QueryAllPrintJob_LoadServerFailed, TestSize.Level1)
+{
+    std::vector<PrintJob> historyPrintJobs;
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(historyPrintJobs);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: QueryAllPrintJob_LoadServerFailed
+ * @tc.desc: QueryAllPrintJob
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, QueryAllPrintJob_GetPrintServiceProxyFail, TestSize.Level1)
+{
+    std::vector<PrintJob> historyPrintJobs;
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    int32_t ret = PrintManagerClient::GetInstance()->QueryAllPrintJob(historyPrintJobs);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: UpdatePrintJobStateForNormalApp_LoadServerFailed
+ * @tc.desc: UpdatePrintJobStateForNormalApp
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, UpdatePrintJobStateForNormalApp_LoadServerFailed, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerFail();
+    std::string testJobId = "printId-123";
+    uint32_t testState = 1;
+    uint32_t testSubState = 1;
+    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(testJobId,
+        testState, testSubState);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: UpdatePrintJobStateForNormalApp_GetPrintServiceProxyFail
+ * @tc.desc: UpdatePrintJobStateForNormalApp
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintManagerClientTest, UpdatePrintJobStateForNormalApp_GetPrintServiceProxyFail, TestSize.Level1)
+{
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    PrintManagerClient::GetInstance()->ResetProxy();
+    std::string testJobId = "printId-123";
+    uint32_t testState = 1;
+    uint32_t testSubState = 1;
+    int32_t ret = PrintManagerClient::GetInstance()->UpdatePrintJobStateForNormalApp(testJobId,
+        testState, testSubState);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 /**

@@ -79,5 +79,23 @@ HWTEST_F(PrintExtensionTest, PrintExtensionTest_0004, TestSize.Level0)
     context = printExtension->CreateAndInitContext(record, application, handler, token);
     EXPECT_NE(context, nullptr);
 }
+
+HWTEST_F(PrintExtensionTest, PrintExtensionTest_Create_EtsRuntime, TestSize.Level0)
+{
+    std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntimeETS>();
+    EXPECT_NE(PrintExtension::Create(runtime), nullptr);
+}
+
+HWTEST_F(PrintExtensionTest, PrintExtensionTest_Init, TestSize.Level0)
+{
+    std::unique_ptr<Runtime> runtime = std::make_unique<MockRuntime>();
+    std::shared_ptr<AbilityLocalRecord> record = nullptr;
+    std::shared_ptr<OHOSApplication> application = nullptr;
+    std::shared_ptr<AbilityHandler> handler = nullptr;
+    sptr<IRemoteObject> token = nullptr;
+    PrintExtension *printExtension = PrintExtension::Create(runtime);
+    EXPECT_NE(printExtension, nullptr);
+    printExtension->Init(record, application, handler, token);
+}
 }  // namespace AbilityRuntime
 }  // namespace OHOS
