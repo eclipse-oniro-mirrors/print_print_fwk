@@ -120,6 +120,7 @@ private:
     void SaveJsonFile(const std::string &fileName, const std::string &jsonString);
     PrintMapSafe<PrinterInfo>& GetAddedPrinterMap();
     const std::string& GetPrintersPath();
+    void PraseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, Json::Value &printerJson);
 
     template<typename T>
     bool ProcessJsonToCapabilityList(Json::Value &capsJson,

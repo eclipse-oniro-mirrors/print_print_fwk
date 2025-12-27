@@ -1830,5 +1830,24 @@ HWTEST_F(PrintSystemDataTest, AnalyzePrintEvents_ShouldReturnJsonString_WhenPrin
     std::string result = systemData->AnalyzePrintEvents("printer1", "test_type");
     EXPECT_FALSE(result.empty());
 }
+
+HWTEST_F(PrintSystemDataTest, ConvertJsonToPrinterInfoTest, TestSize.Level1)
+{
+    auto systemData = std::make_shared<OHOS::Print::PrintSystemData>();
+    Json::Value object;
+    object["id"] = "id";
+    object["name"] = "name";
+    object["uri"] = "uri";
+    EXPECT_FALSE(systemData->ConvertJsonToPrinterInfo(object));
+    object["maker"] = "maker";
+    EXPECT_FALSE(systemData->ConvertJsonToPrinterInfo(object));
+    object["selectedDriver"] = "selectedDriver";
+    EXPECT_FALSE(systemData->ConvertJsonToPrinterInfo(object));
+    PpdInfo ppd;
+    ppd.SetPpdInfo("TestManu", "TestNick", "Test.ppd");
+    object["selectedDriver"] = ppd.ConvertToJson();
+    EXPECT_TRUE(object["selectedDriver"].isObject());
+    EXPECT_FALSE(systemData->ConvertJsonToPrinterInfo(object));
+}
 }  // namespace Print
 }  // namespace OHOS

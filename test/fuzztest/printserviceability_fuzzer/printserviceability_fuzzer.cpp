@@ -299,6 +299,17 @@ void TestCheckPrintConstraint(const uint8_t *data, size_t size, FuzzedDataProvid
     PrintServiceAbility::GetInstance()->CheckPrintConstraint(option, jobId);
 }
 
+void TestGetConnectUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    PrinterInfo info;
+    std::string uri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string protocol = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    info.SetUri(uri);
+    info.SetOption(option);
+    PrintServiceAbility::GetInstance()->GetConnectUri(info, protocol);
+}
+
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestOn(data, size, dataProvider);
@@ -326,6 +337,7 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestGetPpdNameByPrinterId(data, size, dataProvider);
     TestIsPrinterPpdUpdateRequired(data, size, dataProvider);
     TestCheckPrintConstraint(data, size, dataProvider);
+    TestGetConnectUri(data, size, dataProvider);
 }
 
 void TestIsDisablePrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

@@ -18,6 +18,7 @@
 #include "print_constant.h"
 #include "printer_capability_helper.h"
 #include "printer_preferences_helper.h"
+#include "ppd_info_helper.h"
 #include "print_log.h"
 
 namespace OHOS::Print {
@@ -35,6 +36,8 @@ static constexpr const char *PARAM_INFO_PRINTER_MAKE = "printerMake";
 static constexpr const char *PARAM_INFO_URI = "uri";
 static constexpr const char *PARAM_INFO_PRINTER_PREFERENCES = "preferences";
 static constexpr const char *PARAM_INFO_ALIAS = "alias";
+static constexpr const char *PARAM_INFO_PROTOCOL = "selectedProtocol";
+static constexpr const char *PARAM_INFO_DRIVER = "selectedDriver";
 
 napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info)
 {
@@ -74,6 +77,19 @@ napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info
         PRINT_CALL(env, napi_set_named_property(env, jsObj, PARAM_INFO_PRINTER_PREFERENCES, jsPreferences));
     }
 
+    MakeJsInnerProperty(env, info, jsObj);
+
+    if (info.HasSelectedDriver()) {
+        PpdInfo ppdInfo;
+        info.GetSelectedDriver(ppdInfo);
+        napi_value jsPpdInfo = PpdInfoHelper::MakeJsSimpleObject(env, ppdInfo);
+        PRINT_CALL(env, napi_set_named_property(env, jsObj, PARAM_INFO_DRIVER, jsPpdInfo));
+    }
+    return jsObj;
+}
+ 
+void PrinterInfoHelper::MakeJsInnerProperty(napi_env env, const PrinterInfo &info, napi_value &jsObj)
+{
     if (info.HasAlias()) {
         NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_ALIAS, info.GetAlias());
     }
@@ -93,7 +109,10 @@ napi_value PrinterInfoHelper::MakeJsObject(napi_env env, const PrinterInfo &info
     if (info.HasPrinterStatus()) {
         NapiPrintUtils::SetUint32Property(env, jsObj, PARAM_INFO_PRINTER_STATUS, info.GetPrinterStatus());
     }
-    return jsObj;
+
+    if (info.HasSelectedProtocol()) {
+        NapiPrintUtils::SetStringPropertyUtf8(env, jsObj, PARAM_INFO_PROTOCOL, info.GetSelectedProtocol());
+    }
 }
 
 std::shared_ptr<PrinterInfo> PrinterInfoHelper::BuildFromJs(napi_env env, napi_value jsValue)
@@ -145,6 +164,11 @@ std::shared_ptr<PrinterInfo> PrinterInfoHelper::BuildFromJs(napi_env env, napi_v
         nativeObj->SetOption(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_JOB_OPTION));
     }
 
+    auto jsProtocol = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_PROTOCOL);
+    if (jsProtocol != nullptr) {
+        nativeObj->SetSelectedProtocol(NapiPrintUtils::GetStringPropertyUtf8(env, jsValue, PARAM_INFO_PROTOCOL));
+    }
+
     if (!BuildLocalClassInfoFromJs(env, jsValue, nativeObj)) {
         return nullptr;
     }
@@ -173,6 +197,16 @@ bool PrinterInfoHelper::BuildLocalClassInfoFromJs(
         }
         nativeObj->SetPreferences(*preferencesPtr);
     }
+
+    auto jsDriver = NapiPrintUtils::GetNamedProperty(env, jsValue, PARAM_INFO_DRIVER);
+    if (jsDriver != nullptr) {
+        auto driverPtr = PpdInfoHelper::BuildFromJs(env, jsDriver);
+        if (driverPtr == nullptr) {
+            PRINT_HILOGE("Failed to build driver object from js");
+            return false;
+        }
+        nativeObj->SetSelectedDriver(*driverPtr);
+    }
     return true;
 }
 
@@ -191,6 +225,8 @@ bool PrinterInfoHelper::ValidateProperty(napi_env env, napi_value object)
         {PARAM_INFO_PRINTER_STATUS, PRINT_PARAM_OPT},
         {PARAM_INFO_PRINTER_PREFERENCES, PRINT_PARAM_OPT},
         {PARAM_INFO_ALIAS, PRINT_PARAM_OPT},
+        {PARAM_INFO_PROTOCOL, PRINT_PARAM_OPT},
+        {PARAM_INFO_DRIVER, PRINT_PARAM_OPT},
         {PARAM_INFO_IS_DAFAULT_PRINTER, PRINT_PARAM_OPT},
         {PARAM_INFO_IS_LAST_USED_PRINTER, PRINT_PARAM_OPT},
     };

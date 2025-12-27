@@ -24,6 +24,9 @@
 #include "print_util.h"
 #include "print_constant.h"
 #include "print_service_ability.h"
+#ifdef CUPS_ENABLE
+#include "print_cups_client.h"
+#endif  // CUPS_ENABLE
 
 namespace OHOS {
 namespace Print {
@@ -51,30 +54,28 @@ bool PrintSystemData::ParsePrinterListJsonV1(Json::Value &jsonObject)
 
 bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
 {
-    if (!PrintJsonUtil::IsMember(object, "id") || !object["id"].isString()) {
-        PRINT_HILOGW("can not find id");
-        return false;
+    std::string id;
+    if (!PrintJsonUtil::FindJsonStringMember(object, "id", id)) {return false;}
+    std::string name;
+    if (!PrintJsonUtil::FindJsonStringMember(object, "name", name)) {return false;}
+    std::string uri;
+    if (!PrintJsonUtil::FindJsonStringMember(object, "uri", uri)) {return false;}
+    std::string selectedProtocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri);
+    if (selectedProtocol.empty()) {return false;}
+    std::string maker;
+    if (!PrintJsonUtil::FindJsonStringMember(object, "maker", maker)) {return false;}
+    PpdInfo selectedDriver;
+    if (!PrintJsonUtil::IsMember(object, "selectedDriver") || !object["selectedDriver"].isObject()) {
+        PRINT_HILOGW("old version file, cannot find selectedDriver");
+        selectedDriver.SetPpdInfo("auto", "auto", "auto");
+    } else {
+        Json::Value driverJson = object["selectedDriver"];
+        if (!selectedDriver.ConvertFromJson(driverJson)) {
+            PRINT_HILOGW("convert json to selectedDriver failed");
+            return false;
+        }
     }
-    std::string id = object["id"].asString();
-    if (!PrintJsonUtil::IsMember(object, "name") || !object["name"].isString()) {
-        PRINT_HILOGW("can not find name");
-        return false;
-    }
-    std::string name = object["name"].asString();
-    if (!PrintJsonUtil::IsMember(object, "uri") || !object["uri"].isString()) {
-        PRINT_HILOGW("can not find uri");
-        return false;
-    }
-    std::string uri = object["uri"].asString();
-    if (!PrintJsonUtil::IsMember(object, "maker") || !object["maker"].isString()) {
-        PRINT_HILOGW("can not find maker");
-        return false;
-    }
-    std::string maker = object["maker"].asString();
-    if (!PrintJsonUtil::IsMember(object, "capability") || !object["capability"].isObject()) {
-        PRINT_HILOGW("can not find capability");
-        return false;
-    }
+    selectedDriver.Dump();
     PrinterCapability printerCapability;
     Json::Value capsJson = object["capability"];
     if (!ConvertJsonToPrinterCapability(capsJson, printerCapability)) {
@@ -86,7 +87,9 @@ bool PrintSystemData::ConvertJsonToPrinterInfo(Json::Value &object)
     info.SetPrinterId(id);
     info.SetPrinterName(name);
     info.SetUri(uri);
+    info.SetSelectedProtocol(selectedProtocol);
     info.SetPrinterMake(maker);
+    info.SetSelectedDriver(selectedDriver);
     info.SetCapability(printerCapability);
     if (PrintJsonUtil::IsMember(object, "ppdHashCode") && object["ppdHashCode"].isString()) {
         std::string ppdHashCode = object["ppdHashCode"].asString();
@@ -321,6 +324,34 @@ void PrintSystemData::DeleteFile(const std::filesystem::path &path)
     }
 }
 
+void PrintSystemData::PraseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, Json::Value &printerJson)
+{
+    printerJson["id"] = info->GetPrinterId();
+    printerJson["name"] = info->GetPrinterName();
+    printerJson["uri"] = info->GetUri();
+    printerJson["maker"] = info->GetPrinterMake();
+    printerJson["alias"] = info->GetAlias();
+    printerJson["ppdHashCode"] = info->GetPpdHashCode();
+    if (QueryIpPrinterInfoById(info->GetPrinterId()) != nullptr) {
+        printerJson["printerStatus"] = info->GetPrinterStatus();
+    }
+    Json::Value capsJson;
+    PrinterCapability capability;
+    info->GetCapability(capability);
+    ConvertPrinterCapabilityToJson(capability, capsJson);
+    PrinterPreferences preference;
+    info->GetPreferences(preference);
+    PpdInfo ppdInfo;
+    if (info->HasSelectedDriver()) {
+        info->GetSelectedDriver(ppdInfo);
+    } else {
+        ppdInfo.SetPpdInfo("auto", "auto", "auto");
+    }
+    printerJson["capability"] = capsJson;
+    printerJson["preferences"] = preference.ConvertToJson();
+    printerJson["selectedDriver"] = ppdInfo.ConvertToJson();
+}
+
 void PrintSystemData::SavePrinterFile(const std::string &printerId)
 {
     auto info = GetAddedPrinterMap().Find(printerId);
@@ -340,23 +371,7 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
         return;
     }
     Json::Value printerJson;
-    printerJson["id"] = printerId;
-    printerJson["name"] = info->GetPrinterName();
-    printerJson["uri"] = info->GetUri();
-    printerJson["maker"] = info->GetPrinterMake();
-    printerJson["alias"] = info->GetAlias();
-    printerJson["ppdHashCode"] = info->GetPpdHashCode();
-    if (QueryIpPrinterInfoById(printerId) != nullptr) {
-        printerJson["printerStatus"] = info->GetPrinterStatus();
-    }
-    Json::Value capsJson;
-    PrinterCapability capability;
-    info->GetCapability(capability);
-    PrinterPreferences preference;
-    info->GetPreferences(preference);
-    ConvertPrinterCapabilityToJson(capability, capsJson);
-    printerJson["capability"] = capsJson;
-    printerJson["preferences"] = preference.ConvertToJson();
+    PraseInfoToPrinterJson(info, printerJson);
     std::string jsonString = PrintJsonUtil::WriteString(printerJson);
     size_t jsonLength = jsonString.length();
     size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
@@ -450,7 +465,9 @@ void PrintSystemData::UpdatePrinterUri(const std::shared_ptr<PrinterInfo> &print
 {
     auto info = GetAddedPrinterMap().Find(printerInfo->GetPrinterId());
     if (info != nullptr) {
-        info->SetUri(printerInfo->GetUri());
+        std::string uri = printerInfo->GetUri();
+        info->SetUri(uri);
+        info->SetSelectedProtocol(DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(uri));
         PRINT_HILOGI("UpdatePrinterUri success");
     }
 }

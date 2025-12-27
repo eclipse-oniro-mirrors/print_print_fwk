@@ -45,10 +45,14 @@ PrinterInfo::PrinterInfo()
       isDefaultPrinter_(false),
       hasIsLastUsedPrinter_(false),
       isLastUsedPrinter_(false),
-      ppdHashCode_("")
+      ppdHashCode_(""),
+      hasSelectedDriver_(false),
+      hasSelectedProtocol_(false),
+      selectedProtocol_("")
 {
     capability_.Reset();
     preferences_.Reset();
+    selectedDriver_.Reset();
 }
 
 PrinterInfo::PrinterInfo(const PrinterInfo &right)
@@ -79,7 +83,11 @@ PrinterInfo::PrinterInfo(const PrinterInfo &right)
       isDefaultPrinter_(right.isDefaultPrinter_),
       hasIsLastUsedPrinter_(right.hasIsLastUsedPrinter_),
       isLastUsedPrinter_(right.isLastUsedPrinter_),
-      ppdHashCode_(right.ppdHashCode_)
+      ppdHashCode_(right.ppdHashCode_),
+      hasSelectedDriver_(right.hasSelectedDriver_),
+      selectedDriver_(right.selectedDriver_),
+      hasSelectedProtocol_(right.hasSelectedProtocol_),
+      selectedProtocol_(right.selectedProtocol_)
 {
 }
 PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
@@ -113,6 +121,10 @@ PrinterInfo &PrinterInfo::operator=(const PrinterInfo &right)
         hasPrinterStatus_ = right.hasPrinterStatus_;
         printerStatus_ = right.printerStatus_;
         ppdHashCode_ = right.ppdHashCode_;
+        hasSelectedDriver_ = right.hasSelectedDriver_;
+        selectedDriver_ = right.selectedDriver_;
+        hasSelectedProtocol_ = right.hasSelectedProtocol_;
+        selectedProtocol_ = right.selectedProtocol_;
     }
     return *this;
 }
@@ -341,6 +353,39 @@ uint32_t PrinterInfo::GetPrinterStatus() const
     return printerStatus_;
 }
 
+void PrinterInfo::SetSelectedDriver(const PpdInfo &selectedDriver)
+{
+    hasSelectedDriver_ = true;
+    selectedDriver_ = selectedDriver;
+}
+
+bool PrinterInfo::HasSelectedDriver() const
+{
+    return hasSelectedDriver_;
+}
+
+void PrinterInfo::GetSelectedDriver(PpdInfo &ppdInfo) const
+{
+    ppdInfo = selectedDriver_;
+}
+
+void PrinterInfo::SetSelectedProtocol(const std::string &selectedProtocol)
+{
+    hasSelectedProtocol_ = true;
+    selectedProtocol_ = selectedProtocol;
+}
+
+bool PrinterInfo::HasSelectedProtocol() const
+{
+    return hasSelectedProtocol_;
+}
+
+std::string PrinterInfo::GetSelectedProtocol() const
+{
+    return selectedProtocol_;
+}
+
+
 bool PrinterInfo::ReadFromParcel(Parcel &parcel)
 {
     PrinterInfo right;
@@ -398,6 +443,21 @@ bool PrinterInfo::ReadFromParcel(Parcel &parcel)
 
 bool PrinterInfo::ReadInnerPropertyFromParcel(PrinterInfo& right, Parcel& parcel)
 {
+    right.hasSelectedDriver_ = parcel.ReadBool();
+    if (right.hasSelectedDriver_) {
+        auto ppdInfo = PpdInfo::Unmarshalling(parcel);
+        if (ppdInfo == nullptr) {
+            PRINT_HILOGE("failed to build ppdInfo from printer info");
+            return false;
+        }
+        right.SetSelectedDriver(*ppdInfo);
+    }
+
+    right.hasSelectedProtocol_ = parcel.ReadBool();
+    if (right.hasSelectedProtocol_) {
+        right.SetSelectedProtocol(parcel.ReadString());
+    }
+
     right.hasPrinterUuid_ = parcel.ReadBool();
     if (right.hasPrinterUuid_) {
         right.SetPrinterUuid(parcel.ReadString());
@@ -472,11 +532,6 @@ bool PrinterInfo::Marshalling(Parcel &parcel) const
         parcel.WriteString(GetPrinterMake());
     }
 
-    parcel.WriteBool(hasPrinterUuid_);
-    if (hasPrinterUuid_) {
-        parcel.WriteString(GetPrinterUuid());
-    }
-
     MarshallingInnerProperty(parcel);
 
     return true;
@@ -484,6 +539,21 @@ bool PrinterInfo::Marshalling(Parcel &parcel) const
 
 void PrinterInfo::MarshallingInnerProperty(Parcel &parcel) const
 {
+    parcel.WriteBool(hasSelectedDriver_);
+    if (hasSelectedDriver_) {
+        selectedDriver_.Marshalling(parcel);
+    }
+
+    parcel.WriteBool(hasSelectedProtocol_);
+    if (hasSelectedProtocol_) {
+        parcel.WriteString(GetSelectedProtocol());
+    }
+
+    parcel.WriteBool(hasPrinterUuid_);
+    if (hasPrinterUuid_) {
+        parcel.WriteString(GetPrinterUuid());
+    }
+
     parcel.WriteBool(hasPreferences_);
     if (hasPreferences_) {
         preferences_.Marshalling(parcel);
@@ -559,6 +629,12 @@ void PrinterInfo::Dump() const
     }
     if (hasIsLastUsedPrinter_) {
         PRINT_HILOGD("isLastUsedPrinter: %{public}d", isLastUsedPrinter_);
+    }
+    if (hasSelectedDriver_) {
+        selectedDriver_.Dump();
+    }
+    if (hasSelectedProtocol_) {
+        PRINT_HILOGD("selectedProtocol: %{public}s", selectedProtocol_.c_str());
     }
 }
 

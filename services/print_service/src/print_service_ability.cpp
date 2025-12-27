@@ -3849,6 +3849,20 @@ bool PrintServiceAbility::DoAddPrinterToCups(
     }
 #endif  // CUPS_ENABLE
     printerInfo->SetPrinterName(printerName);
+    PpdInfo ppdInfo;
+    if (ppdName == BSUNI_PPD_NAME) {
+        ppdInfo.SetPpdInfo("Generic", "System Default Driver", BSUNI_PPD_NAME);
+    } else if (ppdName == DEFAULT_PPD_NAME) {
+        ppdInfo.SetPpdInfo("Generic", "IPP Everywhere", DEFAULT_PPD_NAME);
+    } else if (!DelayedSingleton<PrintCupsClient>::GetInstance()->QueryInfoByPpdName(ppdName, ppdInfo)) {
+        PRINT_HILOGW("cannot Find PPDFile, Reset to auto");
+        ppdInfo.SetPpdInfo("auto", "auto", ppdName);
+    }
+    printerInfo->SetSelectedDriver(ppdInfo);
+    std::string protocol = DelayedSingleton<PrintCupsClient>::GetInstance()->getScheme(printerUri);
+    if (!protocol.empty()) {
+        printerInfo->SetSelectedProtocol(protocol);
+    }
     return true;
 }
 

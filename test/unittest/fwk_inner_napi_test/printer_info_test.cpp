@@ -369,6 +369,20 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0022_NeedRename, TestSize.Level2)
     EXPECT_EQ(true, info.Marshalling(parcel));
 }
 
+HWTEST_F(PrinterInfoTest, PrinterInfoTest_SetAndMarshalling_DriverAndProtocol, TestSize.Level2)
+{
+    OHOS::Print::PrinterInfo info;
+    PpdInfo ppdInfo;
+    ppdInfo.SetPpdInfo("testmanu", "testnick", "test.ppd");
+    info.SetPrinterId("001");
+    info.SetPrinterName("OpenHarmony");
+    info.SetPrinterState(0);
+    info.SetSelectedDriver(ppdInfo);
+    info.SetSelectedProtocol("ipp");
+    Parcel parcel;
+    EXPECT_EQ(true, info.Marshalling(parcel));
+}
+
 /**
  * @tc.name: PrinterInfoTest_0023
  * @tc.desc: Verify settings and obtain marshalling function.
@@ -451,9 +465,15 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0027_NeedRename, TestSize.Level2)
     info.SetPrinterState(0);
     info.SetPrinterIcon(0);
     info.SetDescription("test");
+    info.SetSelectedProtocol("ipp");
+    PpdInfo ppd;
+    ppd.SetPpdInfo("TestManu", "TestNick", "Test.ppd");
+    info.SetSelectedDriver(ppd);
     info.Dump();
     Parcel parcel;
     EXPECT_EQ(true, info.Marshalling(parcel));
+    auto result = OHOS::Print::PrinterInfo::Unmarshalling(parcel);
+    EXPECT_NE(nullptr, result);
 }
 }  // namespace Print
 }  // namespace OHOS

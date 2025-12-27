@@ -19,6 +19,7 @@
 #include "parcel.h"
 #include "printer_capability.h"
 #include "printer_preferences.h"
+#include "ppd_info.h"
 
 namespace OHOS::Print {
 class PrinterInfo final : public Parcelable {
@@ -49,8 +50,6 @@ public:
 
     void SetPrinterUuid(const std::string &printerUuid);
 
-    void SetProtocol(const std::string &protocol);
-
     void SetOption(const std::string &option);
 
     void SetIsDefaultPrinter(bool isDefaultPrinter);
@@ -64,6 +63,10 @@ public:
     void SetAlias(const std::string &alias);
 
     void SetPpdHashCode(const std::string &ppdHashCode);
+
+    void SetSelectedDriver(const PpdInfo &selectedDriver);
+
+    void SetSelectedProtocol(const std::string &selectedProtocol);
 
     [[nodiscard]] const std::string &GetPrinterId() const;
 
@@ -124,6 +127,14 @@ public:
     [[nodiscard]] std::string GetAlias() const;
 
     [[nodiscard]] std::string GetPpdHashCode() const;
+
+    [[nodiscard]] bool HasSelectedDriver() const;
+
+    void GetSelectedDriver(PpdInfo &ppdInfo) const;
+
+    [[nodiscard]] bool HasSelectedProtocol() const;
+
+    [[nodiscard]] std::string GetSelectedProtocol() const;
 
     virtual bool Marshalling(Parcel &parcel) const override;
 
@@ -198,6 +209,14 @@ private:
     bool isLastUsedPrinter_; // Deprecated, to be removed in a future version.
 
     std::string ppdHashCode_;
+
+    bool hasSelectedDriver_;
+
+    PpdInfo selectedDriver_;
+
+    bool hasSelectedProtocol_;
+
+    std::string selectedProtocol_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_INFO_H
