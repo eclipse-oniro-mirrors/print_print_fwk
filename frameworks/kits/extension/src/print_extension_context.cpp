@@ -27,11 +27,7 @@ int PrintExtensionContext::ILLEGAL_REQUEST_CODE(-1);
 ErrCode PrintExtensionContext::StartAbility(const AAFwk::Want &want) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    auto client = AAFwk::AbilityManagerClient::GetInstance();
-    if (client == nullptr) {
-        PRINT_HILOGE("client is nullptr.");
-        return ERR_NO_INIT;
-    }
+    CHECK_AND_GET_CLIENT(client, AAFwk::AbilityManagerClient, ERR_NO_INIT);
     ErrCode err = client->StartAbility(want, token_, ILLEGAL_REQUEST_CODE);
     PRINT_HILOGD("%{public}s. End calling StartAbility. ret=%{public}d", __func__, err);
     if (err != ERR_OK) {
@@ -43,11 +39,7 @@ ErrCode PrintExtensionContext::StartAbility(const AAFwk::Want &want) const
 ErrCode PrintExtensionContext::StartAbility(const AAFwk::Want &want, const AAFwk::StartOptions &startOptions) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    auto client = AAFwk::AbilityManagerClient::GetInstance();
-    if (client == nullptr) {
-        PRINT_HILOGE("client is nullptr.");
-        return ERR_NO_INIT;
-    }
+    CHECK_AND_GET_CLIENT(client, AAFwk::AbilityManagerClient, ERR_NO_INIT);
     ErrCode err = client->StartAbility(want, startOptions, token_, ILLEGAL_REQUEST_CODE);
     PRINT_HILOGD("%{public}s. End calling StartAbility. ret=%{public}d", __func__, err);
     if (err != ERR_OK) {
@@ -69,11 +61,7 @@ ErrCode PrintExtensionContext::StartAbilityWithAccount(const AAFwk::Want &want, 
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
     PRINT_HILOGD("%{private}d accountId:", accountId);
-    auto client = AAFwk::AbilityManagerClient::GetInstance();
-    if (client == nullptr) {
-        PRINT_HILOGE("client is nullptr.");
-        return ERR_NO_INIT;
-    }
+    CHECK_AND_GET_CLIENT(client, AAFwk::AbilityManagerClient, ERR_NO_INIT);
     ErrCode err = client->StartAbility(want, token_, ILLEGAL_REQUEST_CODE, accountId);
     PRINT_HILOGD("%{public}s. End calling StartAbilityWithAccount. ret=%{public}d", __func__, err);
     if (err != ERR_OK) {
@@ -86,11 +74,7 @@ ErrCode PrintExtensionContext::StartAbilityWithAccount(
     const AAFwk::Want &want, int accountId, const AAFwk::StartOptions &startOptions) const
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    auto client = AAFwk::AbilityManagerClient::GetInstance();
-    if (client == nullptr) {
-        PRINT_HILOGE("client is nullptr.");
-        return ERR_NO_INIT;
-    }
+    CHECK_AND_GET_CLIENT(client, AAFwk::AbilityManagerClient, ERR_NO_INIT);
     ErrCode err = client->StartAbility(want, startOptions, token_, ILLEGAL_REQUEST_CODE, accountId);
     PRINT_HILOGD("%{public}s. End calling StartAbilityWithAccount. ret=%{public}d", __func__, err);
     if (err != ERR_OK) {
@@ -123,11 +107,7 @@ ErrCode PrintExtensionContext::DisconnectAbility(
 ErrCode PrintExtensionContext::TerminateAbility()
 {
     PRINT_HILOGD("%{public}s begin.", __func__);
-    auto client = AAFwk::AbilityManagerClient::GetInstance();
-    if (client == nullptr) {
-        PRINT_HILOGE("client is nullptr.");
-        return ERR_NO_INIT;
-    }
+    CHECK_AND_GET_CLIENT(client, AAFwk::AbilityManagerClient, ERR_NO_INIT);
     ErrCode err = client->TerminateAbility(token_, -1, nullptr);
     if (err != ERR_OK) {
         PRINT_HILOGE("PrintExtensionContext::TerminateAbility is failed %{public}d", err);
