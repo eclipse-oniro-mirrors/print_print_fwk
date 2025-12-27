@@ -64,6 +64,7 @@ static const std::string PRINTER_EVENT_TYPE = "printerStateChange";
 static const std::string PRINTJOB_EVENT_TYPE = "jobStateChange";
 static const std::string EXTINFO_EVENT_TYPE = "extInfoChange";
 static const std::string PRINT_ADAPTER_EVENT_TYPE = "printCallback_adapter";
+static const std::string PRINT_CALLBACK_JOB_STATE_TYPE = "printCallback_jobstate";
 static const std::string EVENT_CANCEL = "cancel";
 const uint32_t MAX_JOBQUEUE_NUM = 512;
 static constexpr uint32_t ISO_A4_WIDTH = 8268;
@@ -1398,6 +1399,25 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0079_NeedRename, TestS
     EXPECT_EQ(ret, E_PRINT_INVALID_PRINTER);
 }
 
+HWTEST_F(PrintServiceAbilityTest, StartNativePrintJob_Is_JobId_Empty, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    service->ManualStart();
+    std::string printerId = "123";
+    PrintJob printJob;
+    Json::Value opsJson;
+    opsJson["key"] = "value";
+    printJob.SetPrinterId(printerId);
+    printJob.SetOption(PrintJsonUtil::WriteString(opsJson));
+    auto printer = std::make_shared<PrinterInfo>();
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printer);
+    auto ret = service->StartNativePrintJob(printJob);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+    printJob.SetJobId("jobId");
+    ret = service->StartNativePrintJob(printJob);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0080_NeedRename, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
@@ -1632,6 +1652,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0097_NeedRename, TestS
     jobInfo.SetSubState(PRINT_JOB_COMPLETED_CANCELLED);
     std::string taskEvent = PrintUtils::GetTaskEventId(jobInfo.GetJobId(), EVENT_CANCEL);
     service->registeredListeners_[taskEvent] = listener;
+    service->SendPrintJobEvent(jobInfo);
+    taskEvent = PrintUtils::GetTaskEventId(jobInfo.GetJobId(), PRINT_CALLBACK_JOB_STATE_TYPE);
+    service->registeredListeners_[taskEvent] = listener;
+    jobInfo.SetJobState(PRINT_JOB_BLOCKED);
     service->SendPrintJobEvent(jobInfo);
 }
 

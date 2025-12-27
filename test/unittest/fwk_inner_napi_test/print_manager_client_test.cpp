@@ -2229,7 +2229,7 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_LoadServerSuccess, TestSize
     EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
 }
 
-HWTEST_F(PrintManagerClientTest, StartNativePrintJob_Success, TestSize.Level1)
+HWTEST_F(PrintManagerClientTest, StartNativePrintJob_NO_PERMISSION, TestSize.Level1)
 {
     std::string testPrintJobId = "jobId-123";
     PrintJob testPrintJob;
@@ -2238,6 +2238,39 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_Success, TestSize.Level1)
     PrintManagerClient::GetInstance()->LoadServerSuccess();
     int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
+
+HWTEST_F(PrintManagerClientTest, StartNativePrintJob_Success, TestSize.Level1)
+{
+    std::string testPrintJobId = "jobId-123";
+    PrintJob testPrintJob;
+    testPrintJob.SetJobId(testPrintJobId);
+    sptr<IPrintCallback> testListener = new (std::nothrow) DummyPrintCallbackStub();
+
+    PrintManagerClient::GetInstance()->LoadServerSuccess();
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+    EXPECT_CALL(*service, On(_, _, _)).WillOnce(Return(E_PRINT_NONE));
+    sptr<MockRemoteObject> obj = new (std::nothrow) MockRemoteObject();
+    sptr<IRemoteObject::DeathRecipient> dr = nullptr;
+    EXPECT_NE(obj, nullptr);
+    EXPECT_CALL(*obj, IsProxyObject()).WillRepeatedly(Return(true));
+    EXPECT_CALL(*obj, RemoveDeathRecipient(_)).WillRepeatedly(Return(true));
+    EXPECT_CALL(*obj, AddDeathRecipient(_)).WillRepeatedly([&dr](const sptr<IRemoteObject::DeathRecipient> &recipient) {
+        dr = recipient;
+        return true;
+    });
+    PrintManagerClient::GetInstance()->SetProxy(obj);
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(2);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+    int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_NE(dr, nullptr);
+    dr->OnRemoteDied(obj);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0125_NeedRename, TestSize.Level1)
