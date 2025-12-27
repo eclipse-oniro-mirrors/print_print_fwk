@@ -1757,24 +1757,24 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
         return false;
     }
     PRINT_HILOGI("JOB %{public}d: %{public}s (%{public}s), PRINTER: %{public}s\n",
-        monitorParams->cupsJobId,
-        ippEnumString("job-state", (int)monitorParams->job_state),
-        monitorParams->job_state_reasons,
-        monitorParams->job_printer_state_reasons);
-
+        monitorParams->cupsJobId, ippEnumString("job-state", (int)monitorParams->job_state),
+        monitorParams->job_state_reasons, monitorParams->job_printer_state_reasons);
     if (monitorParams->job_state == IPP_JOB_PROCESSING) {
-        if (!monitorParams->isBlock) {
-            PRINT_HILOGI("job is running");
-            monitorParams->serviceAbility->UpdatePrintJobState(
-                monitorParams->serviceJobId, PRINT_JOB_RUNNING, monitorParams->substate);
+        if (monitorParams->isCanceled) {
+            PRINT_HILOGI("Job canceled by user, waiting for CUPS job cancellation to complete");
             return true;
         }
-        PRINT_HILOGI("job is blocked");
+        if (monitorParams->isBlock) {
+            PRINT_HILOGI("job is blocked");
+            monitorParams->serviceAbility->UpdatePrintJobState(
+                monitorParams->serviceJobId, PRINT_JOB_BLOCKED, monitorParams->substate);
+            return true;
+        }
+        PRINT_HILOGI("job is running");
         monitorParams->serviceAbility->UpdatePrintJobState(
-            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, monitorParams->substate);
+            monitorParams->serviceJobId, PRINT_JOB_RUNNING, monitorParams->substate);
         return true;
     }
-
     if (monitorParams->job_state == IPP_JOB_HELD) {
         if (monitorParams->job_state_reasons == JOB_STATE_REASON_AUTHENTICATION) {
             monitorParams->serviceAbility->UpdatePrintJobState(
@@ -1782,7 +1782,6 @@ bool PrintCupsClient::JobStatusCallback(std::shared_ptr<JobMonitorParam> monitor
             return true;
         }
     }
-
     if (monitorParams->job_state == IPP_JOB_PENDING || monitorParams->job_state == IPP_JOB_HELD) {
         PRINT_HILOGI("job is queued");
         if (monitorParams->job_state_reasons == JOB_STATE_REASON_PRINTER_STOP) {
