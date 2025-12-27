@@ -29,7 +29,7 @@ ErrCode PrintExtensionContext::StartAbility(const AAFwk::Want &want) const
     PRINT_HILOGD("%{public}s begin.", __func__);
     auto client = AAFwk::AbilityManagerClient::GetInstance();
     if (client == nullptr) {
-        IMSA_HILOGE("client is nullptr.");
+        PRINT_HILOGE("client is nullptr.");
         return ERR_NO_INIT;
     }
     ErrCode err = client->StartAbility(want, token_, ILLEGAL_REQUEST_CODE);
@@ -45,7 +45,7 @@ ErrCode PrintExtensionContext::StartAbility(const AAFwk::Want &want, const AAFwk
     PRINT_HILOGD("%{public}s begin.", __func__);
     auto client = AAFwk::AbilityManagerClient::GetInstance();
     if (client == nullptr) {
-        IMSA_HILOGE("client is nullptr.");
+        PRINT_HILOGE("client is nullptr.");
         return ERR_NO_INIT;
     }
     ErrCode err = client->StartAbility(want, startOptions, token_, ILLEGAL_REQUEST_CODE);
@@ -71,7 +71,7 @@ ErrCode PrintExtensionContext::StartAbilityWithAccount(const AAFwk::Want &want, 
     PRINT_HILOGD("%{private}d accountId:", accountId);
     auto client = AAFwk::AbilityManagerClient::GetInstance();
     if (client == nullptr) {
-        IMSA_HILOGE("client is nullptr.");
+        PRINT_HILOGE("client is nullptr.");
         return ERR_NO_INIT;
     }
     ErrCode err = client->StartAbility(want, token_, ILLEGAL_REQUEST_CODE, accountId);
@@ -88,7 +88,7 @@ ErrCode PrintExtensionContext::StartAbilityWithAccount(
     PRINT_HILOGD("%{public}s begin.", __func__);
     auto client = AAFwk::AbilityManagerClient::GetInstance();
     if (client == nullptr) {
-        IMSA_HILOGE("client is nullptr.");
+        PRINT_HILOGE("client is nullptr.");
         return ERR_NO_INIT;
     }
     ErrCode err = client->StartAbility(want, startOptions, token_, ILLEGAL_REQUEST_CODE, accountId);
@@ -125,7 +125,7 @@ ErrCode PrintExtensionContext::TerminateAbility()
     PRINT_HILOGD("%{public}s begin.", __func__);
     auto client = AAFwk::AbilityManagerClient::GetInstance();
     if (client == nullptr) {
-        IMSA_HILOGE("client is nullptr.");
+        PRINT_HILOGE("client is nullptr.");
         return ERR_NO_INIT;
     }
     ErrCode err = client->TerminateAbility(token_, -1, nullptr);
