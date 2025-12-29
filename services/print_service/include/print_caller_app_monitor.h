@@ -64,7 +64,13 @@ public:
     };
 };
 
-class PrintCallerAppMonitor {
+class PrintCallerAppMonitorBase {
+public:
+    virtual bool IsProcessForeground(const pid_t pid) = 0;
+    virtual bool GetRunningProcessInfoByPid(const pid_t pid, AppExecFwk::RunningProcessInfo &processInfo) = 0;
+};
+
+class PrintCallerAppMonitor : public PrintCallerAppMonitorBase {
 public:
     static PrintCallerAppMonitor& GetInstance();
     void AddCallerAppToMap();
@@ -75,6 +81,8 @@ public:
     void IncrementCallerAppCounter();
     void RemovePrintJobFromMap(const std::string &jobId);
     bool IsAppAlive(std::shared_ptr<PrintCallerAppInfo> callerAppInfo);
+    bool IsProcessForeground(const pid_t pid) override;
+    bool GetRunningProcessInfoByPid(const pid_t pid, AppExecFwk::RunningProcessInfo &processInfo) override;
 
 private:
     PrintCallerAppMonitor() = default;
@@ -93,6 +101,7 @@ private:
     std::mutex printJobMapMutex_;
     std::atomic<bool> isMonitoring_{false};
     PrintCounter counter_;
+    std::atomic<bool> delayUnload_{false};
 };
 
 } // namespace OHOS::Print
