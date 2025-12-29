@@ -217,7 +217,9 @@ HWTEST_F(PrintCustomOptionTest, PrintCustomOptionTest_0013, TestSize.Level1)
 {
     OHOS::Print::PrintCustomOption customOption = GetDefaultPrintCustomOption();
     std::vector<PrintMenuOption> menuOption;
-    menuOption.SetMenuItemResourceName("menuItemResourceName");
+    PrintMenuOption testMenuOption;
+    testMenuOption.SetMenuItemResourceName("menuItemResourceName");
+    menuOption.emplace_back(testMenuOption);
     customOption.SetMenuOption(menuOption);
     customOption.SetErrorResourceName("errorResourceName");
     Parcel parcel;
@@ -269,7 +271,9 @@ HWTEST_F(PrintCustomOptionTest, PrintCustomOptionTest_0016, TestSize.Level1)
 {
     OHOS::Print::PrintCustomOption customOption = GetDefaultPrintCustomOption();
     std::vector<PrintMenuOption> menuOption;
-    menuOption.SetMenuItemResourceName("menuItemResourceName");
+    PrintMenuOption testMenuOption;
+    testMenuOption.SetMenuItemResourceName("menuItemResourceName");
+    menuOption.emplace_back(testMenuOption);
     customOption.SetMenuOption(menuOption);
     Parcel parcel;
     EXPECT_TRUE(customOption.Marshalling(parcel));
