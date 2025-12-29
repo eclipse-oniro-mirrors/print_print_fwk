@@ -225,6 +225,37 @@ void TestUpdateBsuniPrinterAdvanceOptions(const uint8_t *data, size_t size, Fuzz
     PrintServiceAbility::GetInstance()->UpdateBsuniPrinterAdvanceOptions(printerInfo);
 }
 
+void TestParseSingleAdvanceOptJson(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    Json::Value singleAdvanceOptJson;
+    Json::Value singleOptArray;
+    singleOptArray.append(dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH));
+    std::string keyword = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->ParseSingleAdvanceOptJson(keyword, singleOptArray, singleAdvanceOptJson);
+}
+ 
+void TestBlockPrintJob(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::string jobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->BlockPrintJob(jobId);
+}
+
+void TestGetConnectUri(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+    std::vector<std::string> protocols = {"ipp", "ipps", "lpd", "socket"};
+    PrinterInfo printerInfo;
+    std::string uri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    printerInfo.SetUri(uri);
+    Json::Value optionJson;
+ 
+    std::string optionProtocol = protocols[dataProvider->ConsumeIntegralInRange<uint32_t>(0, protocols.size() - 1)];
+    optionJson[optionProtocol] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string optionStr = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    printerInfo.SetOption(PrintJsonUtil::WriteStringUTF8(optionJson));
+    std::string connectProtocol = protocols[dataProvider->ConsumeIntegralInRange<uint32_t>(0, protocols.size() - 1)];
+    std::string result = PrintServiceAbility::GetInstance()->GetConnectUri(printerInfo, connectProtocol);
+}
+
 void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestChangeDefaultPrinterForDelete(data, size, dataProvider);
@@ -250,6 +281,9 @@ void TestPrintFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dat
     TestQueryRecommendDriversById(data, size, dataProvider);
     TestQueryPrinterCapabilityByUri(data, size, dataProvider);
     TestUpdateBsuniPrinterAdvanceOptions(data, size, dataProvider);
+    TestParseSingleAdvanceOptJson(data, size, dataProvider);
+    TestBlockPrintJob(data, size, dataProvider);
+    TestGetConnectUri(data, size, dataProvider);
 }
 
 }  // namespace Print

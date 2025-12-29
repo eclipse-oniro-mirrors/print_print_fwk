@@ -58,13 +58,15 @@ void TestQueryVendorPrinterInfo(const uint8_t *data, size_t size, FuzzedDataProv
 
 void TestHandlePrinterStateChangeRegister(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    std::string eventType = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::vector<std::string> eventTypes = {"printerChange", "printerStateChange"};
+    std::string eventType = eventTypes[dataProvider->ConsumeIntegralInRange<uint32_t>(0, eventTypes.size() - 1)];
     PrintServiceAbility::GetInstance()->HandlePrinterStateChangeRegister(eventType);
 }
-
+ 
 void TestHandlePrinterChangeRegister(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    std::string eventType = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::vector<std::string> eventTypes = {"printerChange", "printerDiscover"};
+    std::string eventType = eventTypes[dataProvider->ConsumeIntegralInRange<uint32_t>(0, eventTypes.size() - 1)];
     PrintServiceAbility::GetInstance()->HandlePrinterChangeRegister(eventType);
 }
 

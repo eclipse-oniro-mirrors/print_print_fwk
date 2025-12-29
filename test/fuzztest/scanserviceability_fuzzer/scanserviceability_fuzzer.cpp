@@ -220,11 +220,11 @@ namespace Scan {
         ScanServiceAbility::GetInstance()->ServiceInit();
         ScanServiceAbility::GetInstance()->InitServiceHandler();
         ScanServiceAbility::GetInstance()->OnStart();
-        ScanServiceAbility::GetInstance()->OnStop();
         ScanServiceAbility::GetInstance()->ManualStart();
         ScanServiceAbility::GetInstance()->SaneGetScanner();
         ScanServiceAbility::GetInstance()->GetScannerList();
         ScanServiceAbility::GetInstance()->ExitScan();
+        ScanServiceAbility::GetInstance()->OnStop();
     }
 
     void TestNotPublicFunction(const uint8_t* data, size_t size, FuzzedDataProvider* dataProvider)
