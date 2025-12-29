@@ -70,10 +70,10 @@ namespace OHOS::Print {
         (ptr) = nullptr; \
     }
 
-#define PRINT_CHECK_NULL_AND_RETURN(ptr, retVal)     \
+#define PRINT_CHECK_NULL_AND_RETURN(ptr, retVal)        \
     if ((ptr) == nullptr) {                             \
         PRINT_HILOGE("%{public}s is nullptr.", (#ptr)); \
-        return (retVal);                               \
+        return (retVal);                                \
     }
 
 enum PrintErrorCode {
