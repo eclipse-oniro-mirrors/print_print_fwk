@@ -70,11 +70,10 @@ namespace OHOS::Print {
         (ptr) = nullptr; \
     }
 
-#define CHECK_AND_GET_CLIENT(clientVar, interface, errCode) \
-    auto clientVar = interface::GetInstance();              \
-    if (clientVar == nullptr) {                             \
-        PRINT_HILOGE("%s is nullptr.", #clientVar);         \
-        return errCode;                                     \
+#define PRINT_CHECK_NULL_AND_RETURN(ptr, returnVal) \
+    if ((ptr) == nullptr) {                         \
+        PRINT_HILOGE("%s is nullptr.", (#ptr));     \
+        return returnVal;                           \
     }
 
 enum PrintErrorCode {
