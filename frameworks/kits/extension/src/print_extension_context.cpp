@@ -18,6 +18,7 @@
 #include "ability_connection.h"
 #include "ability_manager_client.h"
 #include "print_log.h"
+#include "print_constant.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
