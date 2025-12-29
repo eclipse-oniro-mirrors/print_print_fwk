@@ -108,7 +108,7 @@ int32_t ScanTask::WriteJpegHeader(ScanParameters &parm, const UINT16& dpi)
     SCAN_HILOGD("width:[%{public}d],height:[%{public}d],dpi:[%{public}d]", width, height, dpi);
     jpeg_set_quality(&cinfo_, JPEG_QUALITY_SEVENTY_FIVE, TRUE);
     jpeg_start_compress(&cinfo_, TRUE);
-    if (sizeof(JSAMPLE) == 0 || OHOS::Scan::MAX_BUFLEN / sizeof(JSAMPLE) < parm.GetBytesPerLine()) {
+    if (OHOS::Scan::MAX_BUFLEN / sizeof(JSAMPLE) < parm.GetBytesPerLine()) {
         SCAN_HILOGE("create jpeg buff failed, invalid param");
         return E_SCAN_GENERIC_FAILURE;
     }
