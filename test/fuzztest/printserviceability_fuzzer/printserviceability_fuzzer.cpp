@@ -328,6 +328,8 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestQueryAllPrinterPpds(data, size, dataProvider);
     TestQueryPrinterInfoByIp(data, size, dataProvider);
     TestConnectPrinterByIpAndPpd(data, size, dataProvider);
+    TestIsDisablePrint(data, size, dataProvider);
+    TestReportBannedEvent(data, size, dataProvider);
     TestOnQueryCallBackEvent(data, size, dataProvider);
     TestQueryRecommendDriversById(data, size, dataProvider);
     TestConnectPrinterByIdAndPpd(data, size, dataProvider);

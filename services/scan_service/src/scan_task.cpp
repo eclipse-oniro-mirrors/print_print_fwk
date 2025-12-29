@@ -108,6 +108,10 @@ int32_t ScanTask::WriteJpegHeader(ScanParameters &parm, const UINT16& dpi)
     SCAN_HILOGD("width:[%{public}d],height:[%{public}d],dpi:[%{public}d]", width, height, dpi);
     jpeg_set_quality(&cinfo_, JPEG_QUALITY_SEVENTY_FIVE, TRUE);
     jpeg_start_compress(&cinfo_, TRUE);
+    if (sizeof(JSAMPLE) == 0 || OHOS::SCAN::MAX_BUFLEN / sizeof(JSAMPLE) < parm.GetBytesPerLine()) {
+        SCAN_HILOGE("create jpeg buff failed, invalid param");
+        return E_SCAN_GENERIC_FAILURE;
+    }
     jpegbuf_ = new (std::nothrow) JSAMPLE[parm.GetBytesPerLine() / sizeof(JSAMPLE)]{};
     if (jpegbuf_ == nullptr) {
         SCAN_HILOGE("jpegbuf new fail");
@@ -136,6 +140,10 @@ int32_t ScanTask::WritePicData(int32_t& jpegrow, std::vector<uint8_t>& dataBuffe
             left -= parm.GetBytesPerLine() - jpegrow;
             jpegrow = 0;
             continue;
+        }
+        if (OHOS::SCAN::MAX_BUFLEN / BYTE_BITS < parm.GetBytesPerLine()) {
+            SCAN_HILOGE("create jpeg image bytes, bytesPerLine_ is too big");
+            return E_SCAN_INVALID_PARAMETER;
         }
         int32_t jpegImageBytes = parm.GetBytesPerLine() * BYTE_BITS;
         if (jpegImageBytes < 0 || jpegImageBytes > MAX_BUFLEN) {
