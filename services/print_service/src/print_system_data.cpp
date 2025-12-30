@@ -372,7 +372,7 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     PraseInfoToPrinterJson(info, printerJson);
     std::string jsonString = PrintJsonUtil::WriteString(printerJson);
     size_t jsonLength = jsonString.length();
-    size_t writeLength = fwrite(jsonString.c_str(), strlen(jsonString.c_str()), 1, file);
+    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
     int fcloseResult = fclose(file);
     if (fcloseResult != 0) {
         PRINT_HILOGE("Close File Failure.");
@@ -1358,6 +1358,7 @@ std::string PrintSystemData::AnalyzePrintEvents(const std::string &printerId, co
     return printEventContainer->AnalyzeEventCodes(type);
 }
 
+#ifdef HAVE_SMB_PRINTER
 void PrintSystemData::SetSmbPrinterInDiscoverList(const std::string& ip, std::vector<PrinterInfo>& infos)
 {
     std::lock_guard<std::mutex> lock(smbPrinterListMutex);
@@ -1395,6 +1396,6 @@ void PrintSystemData::GetSmbAddedPrinterListFromSystemData(std::vector<PrinterIn
     }
     return;
 }
-
+#endif // HAVE_SMB_PRINTER
 }  // namespace Print
 }  // namespace OHOS
