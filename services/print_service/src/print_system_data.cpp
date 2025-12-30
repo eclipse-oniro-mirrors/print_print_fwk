@@ -371,7 +371,7 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
         return;
     }
     Json::Value printerJson;
-    PraseInfoToPrinterJson(info, printerJson);
+    ParseInfoToPrinterJson(info, printerJson);
     std::string jsonString = PrintJsonUtil::WriteString(printerJson);
     size_t jsonLength = jsonString.length();
     size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
