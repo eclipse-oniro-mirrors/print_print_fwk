@@ -107,8 +107,8 @@ void PrintSystemData::ConvertInnerJsonToPrinterInfo(Json::Value &object, Printer
     }
     if (PrintJsonUtil::IsMember(object, "printerStatus") && object["printerStatus"].isInt()) {
         info.SetPrinterStatus(static_cast<PrinterStatus>(object["printerStatus"].asInt()));
-    } else if (info.GetPrinterId() == VIRTUAL_PRINTER_ID) { 
-         info.SetPrinterStatus(PRINTER_STATUS_IDLE); 
+    } else if (info.GetPrinterId() == VIRTUAL_PRINTER_ID) {
+        info.SetPrinterStatus(PRINTER_STATUS_IDLE);
     }
     if (PrintJsonUtil::IsMember(object, "preferences") && object["preferences"].isObject()) {
         PrinterPreferences preference;
