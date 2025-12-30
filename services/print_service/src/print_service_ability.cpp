@@ -3801,8 +3801,6 @@ std::string PrintServiceAbility::GetConnectUri(PrinterInfo &printerInfo, std::st
     if (connectProtocol == "ipp") {
         if (PrintJsonUtil::IsMember(option, "ipp") &&option["ipp"].isString()) {
             printerUri = option["ipp"].asString();
-        } else {
-            printerUri = "ipp://" + printerIp + ":631/ipp/print";
         }
     } else if (connectProtocol == "ipps") {
         if (PrintJsonUtil::IsMember(option, "ipps") && option["ipps"].isString()) {
@@ -3811,14 +3809,10 @@ std::string PrintServiceAbility::GetConnectUri(PrinterInfo &printerInfo, std::st
     } else if (connectProtocol == "lpd") {
         if (PrintJsonUtil::IsMember(option, "lpd") && option["lpd"].isString()) {
             printerUri = option["lpd"].asString();
-        } else {
-            printerUri = "lpd://" +printerIp + ":515";
         }
     } else if (connectProtocol == "socket") {
         if (PrintJsonUtil::IsMember(option, "socket") && option["socket"].isString()) {
             printerUri = option["socket"].asString();
-        } else {
-            printerUri = "socket://" + printerIp + ":9100";
         }
     }
     return printerUri;

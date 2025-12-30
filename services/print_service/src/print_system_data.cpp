@@ -107,8 +107,6 @@ void PrintSystemData::ConvertInnerJsonToPrinterInfo(Json::Value &object, Printer
     }
     if (PrintJsonUtil::IsMember(object, "printerStatus") && object["printerStatus"].isInt()) {
         info.SetPrinterStatus(static_cast<PrinterStatus>(object["printerStatus"].asInt()));
-    } else if (info.GetPrinterId() == VIRTUAL_PRINTER_ID) {
-        info.SetPrinterStatus(PRINTER_STATUS_IDLE);
     }
     if (PrintJsonUtil::IsMember(object, "preferences") && object["preferences"].isObject()) {
         PrinterPreferences preference;
@@ -324,7 +322,7 @@ void PrintSystemData::DeleteFile(const std::filesystem::path &path)
     }
 }
 
-void PrintSystemData::PraseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, Json::Value &printerJson)
+void PrintSystemData::ParseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, Json::Value &printerJson)
 {
     printerJson["id"] = info->GetPrinterId();
     printerJson["name"] = info->GetPrinterName();
@@ -374,7 +372,7 @@ void PrintSystemData::SavePrinterFile(const std::string &printerId)
     PraseInfoToPrinterJson(info, printerJson);
     std::string jsonString = PrintJsonUtil::WriteString(printerJson);
     size_t jsonLength = jsonString.length();
-    size_t writeLength = fwrite(jsonString.c_str(), 1, strlen(jsonString.c_str()), file);
+    size_t writeLength = fwrite(jsonString.c_str(), strlen(jsonString.c_str()), 1, file);
     int fcloseResult = fclose(file);
     if (fcloseResult != 0) {
         PRINT_HILOGE("Close File Failure.");
@@ -1360,7 +1358,6 @@ std::string PrintSystemData::AnalyzePrintEvents(const std::string &printerId, co
     return printEventContainer->AnalyzeEventCodes(type);
 }
 
-#ifdef HAVE_SMB_PRINTER
 void PrintSystemData::SetSmbPrinterInDiscoverList(const std::string& ip, std::vector<PrinterInfo>& infos)
 {
     std::lock_guard<std::mutex> lock(smbPrinterListMutex);
@@ -1398,6 +1395,6 @@ void PrintSystemData::GetSmbAddedPrinterListFromSystemData(std::vector<PrinterIn
     }
     return;
 }
-#endif // HAVE_SMB_PRINTER
+
 }  // namespace Print
 }  // namespace OHOS
