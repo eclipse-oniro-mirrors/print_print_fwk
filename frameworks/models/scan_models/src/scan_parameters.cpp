@@ -142,13 +142,13 @@ bool ScanParameters::Marshalling(Parcel &parcel) const
 
 bool ScanParameters::Validate() const
 {
-    if (GetBytesLine() < 0 || GetPixelPerLine() < 0 || GetLines() < 0 || GetDepth() < 0) {
-        SCAN_HILOGE("ScanParameter value < 0");
+    if (GetBytesPerLine() < 0 || GetPixelsPerLine() < 0 || GetLines() < 0 || GetDepth() < 0) {
+        SCAN_HILOGE("ScanParameters value < 0");
         return false;
     }
 
-    if (OHOS::Scan::MAX_BUFLEN / BYTES_BITS > GetPixelPerLine()) {
-        SCAN_HILOGE("ScanParameter is over max buf length");
+    if (OHOS::Scan::MAX_BUFLEN / BYTES_BITS > GetBytesPerLine() || GetBytesPerLine > OHOS::Scan::MAX_BUFLEN) {
+        SCAN_HILOGE("ScanParameters is over max buf length");
         return false;
     }
     return true;
@@ -158,13 +158,12 @@ std::shared_ptr<ScanParameters> ScanParameters::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<ScanParameters>();
     if (!nativeObj) {
-        SCAN_HILOGE("ScanParameter allocate error");
+        SCAN_HILOGE("ScanParameters allocate error.");
         return nullptr;
-        nativeObj->ReadFromParcel(parcel);
     }
     nativeObj->ReadFromParcel(parcel);
     if (!nativeObj->Validate()) {
-        SCAN_HILOGE("ScanParameter is not valid");
+        SCAN_HILOGE("ScanParameters is not valid.");
         return nullptr;
     }
     return nativeObj;
