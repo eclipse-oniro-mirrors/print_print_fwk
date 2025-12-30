@@ -147,8 +147,8 @@ bool ScanParameters::Validate() const
         return false;
     }
 
-    if (OHOS::Scan::MAX_BUFLEN / BYTE_BITS > GetBytesPerLine() ||
-        GetBytesPerLine() > OHOS::Scan::MAX_BUFLEN) {
+    int64_t data = GetBytesPerLine() * BYTE_BITS;
+    if (data < 0 || data > OHOS::SCAN::MAX_BUFLEN) {
         SCAN_HILOGE("ScanParameters is over max buflen.");
         return false;
     }
