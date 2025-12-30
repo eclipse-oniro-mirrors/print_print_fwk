@@ -310,6 +310,25 @@ void TestGetConnectUri(const uint8_t *data, size_t size, FuzzedDataProvider *dat
     PrintServiceAbility::GetInstance()->GetConnectUri(info, protocol);
 }
 
+void TestIsDisablePrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+#ifdef EDM_SERVICE_ENABLE
+    PrintServiceAbility::GetInstance()->IsDisablePrint();
+#endif // EDM_SERVICE_ENABLE
+}
+
+void TestReportBannedEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
+{
+#ifdef EDM_SERVICE_ENABLE
+    std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    PrintServiceAbility::GetInstance()->ReportBannedEvent(option);
+    Json::Value optionJson;
+    optionJson["jobName"] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    option = PrintJsonUtil::WriteStringUTF8(optionJson);
+    PrintServiceAbility::GetInstance()->ReportBannedEvent(option);
+#endif // EDM_SERVICE_ENABLE
+}
+
 void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     TestOn(data, size, dataProvider);
@@ -328,6 +347,8 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestQueryAllPrinterPpds(data, size, dataProvider);
     TestQueryPrinterInfoByIp(data, size, dataProvider);
     TestConnectPrinterByIpAndPpd(data, size, dataProvider);
+    TestIsDisablePrint(data, size, dataProvider);
+    TestReportBannedEvent(data, size, dataProvider);
     TestOnQueryCallBackEvent(data, size, dataProvider);
     TestQueryRecommendDriversById(data, size, dataProvider);
     TestConnectPrinterByIdAndPpd(data, size, dataProvider);
@@ -338,25 +359,6 @@ void TestAllFunction(const uint8_t *data, size_t size, FuzzedDataProvider *dataP
     TestIsPrinterPpdUpdateRequired(data, size, dataProvider);
     TestCheckPrintConstraint(data, size, dataProvider);
     TestGetConnectUri(data, size, dataProvider);
-}
-
-void TestIsDisablePrint(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-#ifdef EDM_SERVICE_ENABLE
-    PrintServiceAbility::GetInstance()->IsDisablePrint();
-#endif // EDM_SERVICE_ENABLE
-}
-
-void TestReportBannedEvent(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-#ifdef EDM_SERVICE_ENABLE
-    std::string option = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintServiceAbility::GetInstance()->ReportBannedEvent(option);
-    Json::Value optionJson;
-    optionJson["jobName"] = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    option = PrintJsonUtil::WriteStringUTF8(optionJson);
-    PrintServiceAbility::GetInstance()->ReportBannedEvent(option);
-#endif // EDM_SERVICE_ENABLE
 }
 
 }  // namespace Print
