@@ -1334,8 +1334,8 @@ void PrintSystemData::AddPrintEvent(const std::string &printerId, const std::str
     }
     auto printEventContainer = printEventMap_.Find(printerId);
     if (printEventContainer == nullptr) {
-        PrintEventContainer eventContainer(printerId);
-        eventContainer.AddEventCode(type, code);
+        auto eventContainer = std::make_shared<PrintEventContainer>(printerId);
+        eventContainer->AddEventCode(type, code);
         printEventMap_.Insert(printerId, eventContainer);
     } else {
         printEventContainer->AddEventCode(type, code);

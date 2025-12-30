@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <mutex.h>
 
 namespace OHOS::Print {
 class PrintEventContainer {
@@ -28,8 +29,9 @@ public:
     void ClearEventType(const std::string &type);
     std::string AnalyzeEventCodes(const std::string &type);
 private:
-    std::string printerId;
-    std::map<std::string, std::shared_ptr<std::vector<int32_t>>> eventTypeMap;
+    std::mutex eventTypeMapMutex_;
+    std::string printerId_;
+    std::map<std::string, std::shared_ptr<std::vector<int32_t>>> eventTypeMap_;
 };
 } // namespace OHOS::Print
 #endif // PRINT_EVENT_CONTAINER_H

@@ -17,15 +17,16 @@
 #include "print_json_util.h"
 
 namespace OHOS::Print {
-PrintEventContainer::PrintEventContainer(const std::string &id) : printerId(id) {}
+PrintEventContainer::PrintEventContainer(const std::string &id) : printerId_(id) {}
 
 void PrintEventContainer::AddEventCode(const std::string &type, int32_t code)
 {
-    auto iter = eventTypeMap.find(type);
-    if (iter == eventTypeMap.end() || iter->second == nullptr) {
+    std::lock_guard<std::mutex> lock(eventTypeMapMutex_);
+    auto iter = eventTypeMap_.find(type);
+    if (iter == eventTypeMap_.end() || iter->second == nullptr) {
         std::shared_ptr<std::vector<int32_t>> events = std::make_shared<std::vector<int32_t>>();
         events->push_back(code);
-        eventTypeMap[type] = events;
+        eventTypeMap_[type] = events;
     } else {
         iter->second->push_back(code);
     }
@@ -33,20 +34,22 @@ void PrintEventContainer::AddEventCode(const std::string &type, int32_t code)
 
 void PrintEventContainer::ClearEventType(const std::string &type)
 {
-    auto iter = eventTypeMap.find(type);
-    if (iter != eventTypeMap.end() && iter->second != nullptr) {
+    std::lock_guard<std::mutex> lock(eventTypeMapMutex_);
+    auto iter = eventTypeMap_.find(type);
+    if (iter != eventTypeMap_.end() && iter->second != nullptr) {
         iter->second->clear();
     }
 }
 
 std::string PrintEventContainer::AnalyzeEventCodes(const std::string &type)
 {
+    std::lock_guard<std::mutex> lock(eventTypeMapMutex_);
     Json::Value json;
-    json["printerId"] = printerId;
+    json["printerId"] = printerId_;
     json["type"] = type;
     int32_t code = 0;
-    auto iter = eventTypeMap.find(type);
-    if (iter != eventTypeMap.end()) {
+    auto iter = eventTypeMap_.find(type);
+    if (iter != eventTypeMap_.end()) {
         auto events = iter->second;
         if (events != nullptr && !events->empty()) {
             code = events->front();
