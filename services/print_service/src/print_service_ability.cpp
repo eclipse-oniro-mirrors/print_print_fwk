@@ -90,6 +90,7 @@ const uint32_t SERIAL_LENGTH = 6;
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
 static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.ohos.hwprintext";
+static const std::string PRINT_AND_SCAN_SETTINGS = "com.ohos.spooler:sys/commonUI";
 static const std::string SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
@@ -4240,7 +4241,14 @@ void PrintServiceAbility::HandlePrinterChangeRegister(const std::string &eventTy
         QueryAllExtension(extensionInfos);
         std::vector<std::string> extensionIds;
         StartDiscoverPrinter(extensionIds);
-        PrintCallerAppMonitor::GetInstance().IncrementPrintCounter("");
+
+        int32_t callerPid = IPCSkeleton::GetCallingPid();
+        AppExecFwk::RunningProcessInfo processInfo;
+        PrintCallerAppMonitor::GetInstance().GetRunningProcessInfoByPid(callerPid, processInfo);
+        if (processInfo.processName_ == PRINT_AND_SCAN_SETTINGS) {
+            PRINT_HILOGD("increment the count of the print and scan settings");
+            PrintCallerAppMonitor::GetInstance().IncrementPrintCounter("");
+        }
     }
 }
 
