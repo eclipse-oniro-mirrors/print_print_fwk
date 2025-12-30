@@ -250,11 +250,13 @@ int32_t PrintUserData::SetDefaultPrinter(const std::string &printerId, uint32_t 
 
 std::string PrintUserData::GetDefaultPrinter()
 {
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     return defaultPrinterId_;
 }
 
 bool PrintUserData::CheckIfUseLastUsedPrinterForDefault()
 {
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     PRINT_HILOGI("useLastUsedPrinterForDefault_: %{public}d", useLastUsedPrinterForDefault_);
     return useLastUsedPrinterForDefault_;
 }
@@ -262,6 +264,7 @@ bool PrintUserData::CheckIfUseLastUsedPrinterForDefault()
 void PrintUserData::DeletePrinter(const std::string &printerId)
 {
     DeletePrinterFromUsedPrinterList(printerId);
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     if (!strcmp(lastUsedPrinterId_.c_str(), printerId.c_str())) {
         std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
         if (usedPrinterList_.size()) {
@@ -362,6 +365,7 @@ bool PrintUserData::ConvertJsonToUsedPrinterList(Json::Value &userData)
         PRINT_HILOGE("usedPrinterList size is illegal");
         return false;
     }
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     for (uint32_t i = 0; i < jsonSize; i++) {
         if (!usedPrinterListJson[i].isString()) {
             PRINT_HILOGW("usedPrinterListJson item is not string");
