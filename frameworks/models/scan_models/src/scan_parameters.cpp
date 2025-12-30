@@ -15,6 +15,7 @@
 
 #include "scan_parameters.h"
 #include "scan_log.h"
+#include "sane_info.h"
 
 namespace OHOS::Scan {
 ScanParameters::ScanParameters() : format_(SCAN_FRAME_GRAY),
@@ -139,11 +140,32 @@ bool ScanParameters::Marshalling(Parcel &parcel) const
     return true;
 }
 
+bool ScanParameters::Validate() const
+{
+    if (GetBytesLine() < 0 || GetPixelPerLine() < 0 || GetLines() < 0 || GetDepth() < 0) {
+        SCAN_HILOGE("ScanParameter value < 0");
+        return false;
+    }
+
+    if (OHOS::Scan::MAX_BUFLEN / BYTES_BITS > GetPixelPerLine()) {
+        SCAN_HILOGE("ScanParameter is over max buf length");
+        return false;
+    }
+    return true;
+}
+
 std::shared_ptr<ScanParameters> ScanParameters::Unmarshalling(Parcel &parcel)
 {
     auto nativeObj = std::make_shared<ScanParameters>();
-    if (nativeObj) {
+    if (!nativeObj) {
+        SCAN_HILOGE("ScanParameter allocate error");
+        return nullptr;
         nativeObj->ReadFromParcel(parcel);
+    }
+    nativeObj->ReadFromParcel(parcel);
+    if (!nativeObj->Validate()) {
+        SCAN_HILOGE("ScanParameter is not valid");
+        return nullptr;
     }
     return nativeObj;
 }

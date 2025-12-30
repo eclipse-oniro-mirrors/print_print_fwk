@@ -141,10 +141,6 @@ int32_t ScanTask::WritePicData(int32_t& jpegrow, std::vector<uint8_t>& dataBuffe
             jpegrow = 0;
             continue;
         }
-        if (OHOS::Scan::MAX_BUFLEN / BYTE_BITS < parm.GetBytesPerLine()) {
-            SCAN_HILOGE("create jpeg image bytes, bytesPerLine_ is too big");
-            return E_SCAN_INVALID_PARAMETER;
-        }
         int32_t jpegImageBytes = parm.GetBytesPerLine() * BYTE_BITS;
         if (jpegImageBytes < 0 || jpegImageBytes > MAX_BUFLEN) {
             SCAN_HILOGE("nultiplication would overflow");
