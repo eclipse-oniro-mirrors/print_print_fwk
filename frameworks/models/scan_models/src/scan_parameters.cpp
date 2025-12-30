@@ -147,8 +147,9 @@ bool ScanParameters::Validate() const
         return false;
     }
 
-    if (OHOS::Scan::MAX_BUFLEN / BYTES_BITS > GetBytesPerLine() || GetBytesPerLine > OHOS::Scan::MAX_BUFLEN) {
-        SCAN_HILOGE("ScanParameters is over max buf length");
+    if (OHOS::Scan::MAX_BUFLEN / BYTE_BITS > GetBytesPerLine() ||
+        GetBytesPerLine() > OHOS::Scan::MAX_BUFLEN) {
+        SCAN_HILOGE("ScanParameters is over max buflen.");
         return false;
     }
     return true;
