@@ -1284,7 +1284,7 @@ int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
         PRINT_HILOGE("report banned event failed, option not accepted");
         return E_PRINT_INVALID_PARAMETER;
     }
-    if (infoJson["jobName"].isString()) {
+    if (PrintJsonUtil::IsMember(infoJson, "jobName") && infoJson["jobName"].isString()) {
         reportFileName = infoJson["jobName"].asString();
     } else {
         PRINT_HILOGE("get report file name failed");
