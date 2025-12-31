@@ -231,7 +231,7 @@ void LogDiscoveryItem(const Print_DiscoveryItem *discoveryItem)
         PRINT_HILOGD("description: %{public}s", discoveryItem->description);
     }
     if (discoveryItem->location != nullptr) {
-        PRINT_HILOGD("location: %{public}s", discoveryItem->location);
+        PRINT_HILOGD("location: %{private}s", discoveryItem->location);
     }
     if (discoveryItem->makeAndModel != nullptr) {
         PRINT_HILOGD("makeAndModel: %{public}s", discoveryItem->makeAndModel);

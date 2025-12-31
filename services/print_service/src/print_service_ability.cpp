@@ -1284,7 +1284,11 @@ int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
         PRINT_HILOGE("report banned event failed, option not accepted");
         return E_PRINT_INVALID_PARAMETER;
     }
-    reportFileName = infoJson["jobName"].asString();
+    if (infoJson["jobName"].isString();) {
+        reportFileName = infoJson["jobName"].asString();
+    } else {
+        PRINT_HILOGE("get report file name failed");
+    }
     auto nowTime = std::chrono::system_clock::now();
     int64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime.time_since_epoch()).count();
     Json::Value contentJson;

@@ -56,7 +56,7 @@ public:
     int32_t userId_;
     std::string bundleName_;
     PrintCounter counter_;
-    PrintCallerAppInfo(int32_t pid, std::string bundleName) : pid_(pid),
+    PrintCallerAppInfo(int32_t pid, std::string bundleName) : pid_(pid), userId_(-1),
         bundleName_(bundleName), counter_() {
     };
     PrintCallerAppInfo(int32_t pid, int32_t userId, std::string bundleName) : pid_(pid), userId_(userId),

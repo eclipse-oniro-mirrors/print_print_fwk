@@ -1582,7 +1582,7 @@ int32_t PrintServiceProxy::AuthSmbDevice(const PrintSharedHost &sharedHost, cons
     }
     ret = GetResult(ret, reply);
     if (ret == ERR_NONE) {
-        uint32_t len = reply.ReadInt32();
+        uint32_t len = reply.ReadUint32();
         if (len > PRINT_MAX_PRINT_COUNT) {
             PRINT_HILOGE("len is out of range.");
             return E_PRINT_INVALID_PARAMETER;

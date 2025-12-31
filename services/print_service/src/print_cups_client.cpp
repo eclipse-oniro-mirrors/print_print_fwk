@@ -2428,7 +2428,7 @@ void PrintCupsClient::DumpJobParameters(JobParameters *jobParams)
     PRINT_HILOGI("jobParams->duplex: %{public}s", jobParams->duplex.c_str());
     PRINT_HILOGI("jobParams->printQuality: %{public}s", jobParams->printQuality.c_str());
     PRINT_HILOGI("jobParams->jobName: %{public}s", PrintUtils::AnonymizeJobName(jobParams->jobName).c_str());
-    PRINT_HILOGI("jobParams->jobOriginatingUserName: %{public}s", jobParams->jobOriginatingUserName.c_str());
+    PRINT_HILOGI("jobParams->jobOriginatingUserName: %{private}s", jobParams->jobOriginatingUserName.c_str());
     PRINT_HILOGI("jobParams->printerId: %{public}s", PrintUtils::AnonymizePrinterId(jobParams->printerId).c_str());
     PRINT_HILOGI("jobParams->printerName: %{public}s", jobParams->printerName.c_str());
     PRINT_HILOGI("jobParams->printerUri: %{public}s", jobParams->printerUri.c_str());
