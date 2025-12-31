@@ -4077,6 +4077,12 @@ bool PrintServiceAbility::QueryPrinterStatusByUri(const std::string &uri, Printe
 
 int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::string> &extensionIds)
 {
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB) &&
+        !PrintCallerAppMonitor::GetInstance().IsProcessForeground(callerPid)) {
+        PRINT_HILOGE("no permission to start extension");
+        return E_PRINT_NO_PERMISSION;
+    }
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> abilityList;
     for (auto const &extensionId : extensionIds) {
         if (extensionList_.find(extensionId) != extensionList_.end()) {

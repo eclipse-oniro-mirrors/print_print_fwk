@@ -482,15 +482,6 @@ napi_value CreateJsPrintExtensionContext(napi_env engine,
 
     // make handler
     handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
-    const char *moduleName = "JsPrintExtensionContext";
-    BindNativeFunction(engine, object, "startAbility", moduleName, JsPrintExtensionContext::StartAbility);
-    BindNativeFunction(engine, object, "terminateSelf", moduleName, JsPrintExtensionContext::TerminateAbility);
-    BindNativeFunction(engine, object, "connectAbility", moduleName, JsPrintExtensionContext::ConnectAbility);
-    BindNativeFunction(engine, object, "disconnectAbility", moduleName, JsPrintExtensionContext::DisconnectAbility);
-    BindNativeFunction(
-        engine, object, "startAbilityWithAccount", moduleName, JsPrintExtensionContext::StartAbilityWithAccount);
-    BindNativeFunction(
-        engine, object, "connectAbilityWithAccount", moduleName, JsPrintExtensionContext::ConnectAbilityWithAccount);
     if (context) {
         PRINT_HILOGD("Set ExtensionAbilityInfo Property");
         auto abilityInfo = context->GetAbilityInfo();
