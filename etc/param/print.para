@@ -13,4 +13,5 @@
 
 print.cupsd.ready=false
 print.libbsUniDiscovery.so.path=/system/lib64/libbsUniDiscovery.so
+print.libsmb2.so.path=/system/lib64/libsmb2.z.so
 print.cupsd_enterprise.ready=false

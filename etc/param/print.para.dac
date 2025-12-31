@@ -13,4 +13,5 @@
 
 print.cupsd.ready = print:print:0775
 print.libbsUniDiscovery.so.path = print:print:0775
+print.libsmb2.so.path = print:print:0775
 print.cupsd_enterprise.ready = print:print:0775

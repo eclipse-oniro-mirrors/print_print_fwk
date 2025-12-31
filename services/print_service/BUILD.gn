@@ -170,12 +170,10 @@ ohos_shared_library("print_service") {
       sources += [
         "src/smb_host_search_helper.cpp",
         "src/smb_printer_discoverer.cpp",
-        "src/smb_printer_state_monitor.cpp"
+        "src/smb_printer_state_monitor.cpp",
+        "src/smb_library.cpp"
       ]
       cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
-      external_deps += [
-        "libsmb2:libsmb2_shared",
-      ]
   }
 
   subsystem_name = "print"
@@ -233,12 +231,10 @@ ohos_static_library("print_service_test") {
       sources += [
         "src/smb_host_search_helper.cpp",
         "src/smb_printer_discoverer.cpp",
-        "src/smb_printer_state_monitor.cpp"
+        "src/smb_printer_state_monitor.cpp",
+        "src/smb_library.cpp"
       ]
       cflags_cc += [ "-DHAVE_SMB_PRINTER" ]
-      external_deps += [
-        "libsmb2:libsmb2_shared",
-      ]
   }
   subsystem_name = "print"
   part_name = "print_fwk"
