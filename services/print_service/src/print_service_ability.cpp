@@ -2626,7 +2626,7 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
         PRINT_HILOGI("PrintServiceAbility::Off delete type=%{public}s object message.", eventType.c_str());
         registeredListeners_.erase(iter);
         if (PrintUtils::GetEventType(eventType) == PRINTER_CHANGE_EVENT_TYPE) {
-            PrintCallerAppMonitor::GetInstance().DecrementPrintCounter("");
+            DecrementPrintCounterByPcSettings();
         }
     }
     PRINT_HILOGI("PrintServiceAbility::Off has already delete type=%{public}s delete.", eventType.c_str());
@@ -4242,13 +4242,37 @@ void PrintServiceAbility::HandlePrinterChangeRegister(const std::string &eventTy
         std::vector<std::string> extensionIds;
         StartDiscoverPrinter(extensionIds);
 
-        int32_t callerPid = IPCSkeleton::GetCallingPid();
-        AppExecFwk::RunningProcessInfo processInfo;
-        PrintCallerAppMonitor::GetInstance().GetRunningProcessInfoByPid(callerPid, processInfo);
-        if (processInfo.processName_ == PRINT_AND_SCAN_SETTINGS) {
-            PRINT_HILOGD("increment the count of the print and scan settings");
-            PrintCallerAppMonitor::GetInstance().IncrementPrintCounter("");
-        }
+        IncrementPrintCounterByPcSettings();
+    }
+}
+
+void PrintServiceAbility::IncrementPrintCounterByPcSettings()
+{
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    AppExecFwk::RunningProcessInfo processInfo;
+    if (!GetRunningProcessInfoByPid(callerPid, processInfo)) {
+        PRINT_HILOGE("GetRunningProcessInfoByPid fail");
+        return;
+    }
+    if (processInfo.processName_ == PRINT_AND_SCAN_SETTINGS) {
+        PRINT_HILOGD("increment the count of the print and scan settings");
+        // counter_ in PrintCallerAppMonitor is incremented when entering print and scan settings.
+        PrintCallerAppMonitor::GetInstance().IncrementPrintCounter("");
+    }
+}
+
+void PrintServiceAbility::DecrementPrintCounterByPcSettings()
+{
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    AppExecFwk::RunningProcessInfo processInfo;
+    if (!GetRunningProcessInfoByPid(callerPid, processInfo)) {
+        PRINT_HILOGE("GetRunningProcessInfoByPid fail");
+        return;
+    }
+    if (processInfo.processName_ == PRINT_AND_SCAN_SETTINGS) {
+        PRINT_HILOGD("increment the count of the print and scan settings");
+        // counter_ in PrintCallerAppMonitor is decremented when leaving print and scan settings.
+        PrintCallerAppMonitor::GetInstance().DecrementPrintCounter("");
     }
 }
 
