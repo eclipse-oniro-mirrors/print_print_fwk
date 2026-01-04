@@ -1288,6 +1288,7 @@ int32_t PrintServiceAbility::ReportBannedEvent(std::string option)
         reportFileName = infoJson["jobName"].asString();
     } else {
         PRINT_HILOGE("get report file name failed");
+        reportFileName = "";
     }
     auto nowTime = std::chrono::system_clock::now();
     int64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime.time_since_epoch()).count();
