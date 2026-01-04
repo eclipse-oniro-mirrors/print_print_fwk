@@ -84,7 +84,6 @@ ohos_unittest("fwk_print_smb_printer_test") {
       "cJSON:cjson",
       "cups:cups",
       "cups-filters:cupsfilters",
-      "libsmb2:libsmb2_shared",
     ]
   }
 }

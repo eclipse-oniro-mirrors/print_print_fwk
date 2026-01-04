@@ -18,12 +18,9 @@
 #include <string>
 #include <vector>
 #include <cstring>
-#include "smb2/smb2.h"
-#include "smb2/libsmb2.h"
-#include "smb2/smb2-errors.h"
-#include "smb2/libsmb2-raw.h"
 #include "printer_info.h"
 #include "print_shared_host.h"
+#include "smb_library.h"
 
 namespace OHOS::Print {
 class SmbPrinterDiscoverer {
@@ -34,7 +31,6 @@ public:
         char *userPasswd, std::vector<PrinterInfo> &infos);
     static std::string ParseIpFromSmbPrinterId(const std::string& printerId);
     static bool IsSmbPrinterId(const std::string& printerId);
-    
 private:
     int32_t SetCredentials(const std::string &userName, char *userPasswd);
     void ShareEnumCallback(struct smb2_context* smb2, int32_t status, void* command_data);
@@ -49,6 +45,7 @@ private:
     std::vector<PrinterShareInfo> printers_;
     std::string userName_;
     std::atomic<bool> isFinished_{ false };
+    std::shared_ptr<SmbLibrary> smbLib_;
 };
 }  // namespace OHOS::Print
 #endif  // SMB_PRINTER_MANAGER

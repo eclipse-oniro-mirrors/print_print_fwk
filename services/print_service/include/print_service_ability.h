@@ -39,7 +39,9 @@
 #include "singleton.h"
 #include "app_mgr_client.h"
 #include "ppd_info.h"
-
+#ifdef HAVE_SMB_PRINTER
+#include "smb_library.h"
+#endif // HAVE_SMB_PRINTER
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 class IKeyguardStateCallback;
