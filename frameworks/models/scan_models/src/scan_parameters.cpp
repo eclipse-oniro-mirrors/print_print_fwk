@@ -142,8 +142,8 @@ bool ScanParameters::Marshalling(Parcel &parcel) const
 
 bool ScanParameters::Validate() const
 {
-    if (GetBytesPerLine() < 0 || GetPixelsPerLine() < 0 || GetLines() < 0 || GetDepth() < 0) {
-        SCAN_HILOGE("ScanParameters value < 0");
+    if (GetBytesPerLine() <= 0 || GetPixelsPerLine() <= 0 || GetLines() <= 0 || GetDepth() <= 0) {
+        SCAN_HILOGE("ScanParameters value <= 0");
         return false;
     }
 

@@ -325,9 +325,12 @@ std::string PrintUtils::AnonymizeJobOption(const std::string &option)
     }
     if (PrintJsonUtil::IsMember(optionJson, "jobDesArr") && optionJson["jobDesArr"].isArray()) {
         Json::Value jobDesArr = optionJson["jobDesArr"];
-        if (jobDesArr.size() > 0) {
+        if (jobDesArr.size() > 0 && jobDesArr[0].isString()) {
             jobDesArr[0] = AnonymizeJobName(jobDesArr[0].asString());
             optionJson["jobDesArr"] = jobDesArr;
+        } else {
+            PRINT_HILOGE("get jobDesArr info failed");
+            optionJson["jobDesArr"] = "";
         }
     }
     if (PrintJsonUtil::IsMember(optionJson, "printerId") && optionJson["printerId"].isString()) {
