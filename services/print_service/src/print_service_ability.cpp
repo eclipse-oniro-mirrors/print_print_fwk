@@ -4078,7 +4078,7 @@ bool PrintServiceAbility::QueryPrinterStatusByUri(const std::string &uri, Printe
 int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::string> &extensionIds)
 {
     int32_t callerPid = IPCSkeleton::GetCallingPid();
-    // Only the foreground process or a process with PERMISSION_NAME_PRINT_JOB permission can start extensions.
+    // 只允许前台进程拉起拓展，防止恶意后台进程调用
     if (!CheckPermission(PERMISSION_NAME_PRINT_JOB) &&
         !PrintCallerAppMonitor::GetInstance().IsProcessForeground(callerPid)) {
         PRINT_HILOGW("no permission to start extension");
