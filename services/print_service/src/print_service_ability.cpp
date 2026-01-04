@@ -4256,7 +4256,7 @@ void PrintServiceAbility::IncrementPrintCounterByPcSettings()
     }
     if (processInfo.processName_ == PRINT_AND_SCAN_SETTINGS) {
         PRINT_HILOGD("increment the count of the print and scan settings");
-        // counter_ in PrintCallerAppMonitor is incremented when entering print and scan settings.
+        // 进入设置里的打印机和扫描仪页面时会注册printerChange回调，同时增加打印页面计数
         PrintCallerAppMonitor::GetInstance().IncrementPrintCounter("");
     }
 }
@@ -4271,7 +4271,7 @@ void PrintServiceAbility::DecrementPrintCounterByPcSettings()
     }
     if (processInfo.processName_ == PRINT_AND_SCAN_SETTINGS) {
         PRINT_HILOGD("decrement the count of the print and scan settings");
-        // counter_ in PrintCallerAppMonitor is decremented when leaving print and scan settings.
+        // 退出设置里的打印机和扫描仪页面时会取消注册printerChange回调，同时减少打印页面计数
         PrintCallerAppMonitor::GetInstance().DecrementPrintCounter("");
     }
 }
