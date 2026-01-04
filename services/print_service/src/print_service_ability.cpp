@@ -4250,7 +4250,7 @@ void PrintServiceAbility::IncrementPrintCounterByPcSettings()
 {
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     AppExecFwk::RunningProcessInfo processInfo;
-    if (!GetRunningProcessInfoByPid(callerPid, processInfo)) {
+    if (!PrintCallerAppMonitor::GetInstance().GetRunningProcessInfoByPid(callerPid, processInfo)) {
         PRINT_HILOGE("GetRunningProcessInfoByPid fail");
         return;
     }
@@ -4265,12 +4265,12 @@ void PrintServiceAbility::DecrementPrintCounterByPcSettings()
 {
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     AppExecFwk::RunningProcessInfo processInfo;
-    if (!GetRunningProcessInfoByPid(callerPid, processInfo)) {
+    if (!PrintCallerAppMonitor::GetInstance().GetRunningProcessInfoByPid(callerPid, processInfo)) {
         PRINT_HILOGE("GetRunningProcessInfoByPid fail");
         return;
     }
     if (processInfo.processName_ == PRINT_AND_SCAN_SETTINGS) {
-        PRINT_HILOGD("increment the count of the print and scan settings");
+        PRINT_HILOGD("decrement the count of the print and scan settings");
         // counter_ in PrintCallerAppMonitor is decremented when leaving print and scan settings.
         PrintCallerAppMonitor::GetInstance().DecrementPrintCounter("");
     }
