@@ -314,5 +314,37 @@ HWTEST_F(PrintAttributesTest, PrintAttributesTest_0015, TestSize.Level1)
     EXPECT_FALSE(printAttributes.ReadFromParcel(parcel));
 }
 
+/**
+ * @tc.name: PrintAttributesTest_0016
+ * @tc.desc: Verify settings and obtain CustomOption function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintAttributesTest, PrintAttributesTest_0016, TestSize.Level1)
+{
+    OHOS::Print::PrintAttributes printAttributes;
+    std::vector<PrintCustomOption> customOption, getCustomOption;
+    PrintCustomOption testCustomOption;
+    testCustomOption.SetType(1);
+    customOption.emplace_back(testCustomOption);
+    printAttributes.SetCustomOption(customOption);
+    printAttributes.GetCustomOption(getCustomOption);
+    EXPECT_EQ(customOption.size(), getCustomOption.size());
+}
+
+/**
+ * @tc.name: PrintAttributesTest_0017
+ * @tc.desc: Verify settings and obtain hasCustomOption function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintAttributesTest, PrintAttributesTest_0017, TestSize.Level1)
+{
+    OHOS::Print::PrintAttributes printAttributes;
+    std::vector<PrintCustomOption> customOption;
+    printAttributes.SetCustomOption(customOption);
+    EXPECT_EQ(true, printAttributes.HasCustomOption());
+}
+
 }  // namespace Print
 }  // namespace OHOS
