@@ -90,6 +90,7 @@ const uint32_t SERIAL_LENGTH = 6;
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string SPOOLER_PACKAGE_NAME = "com.ohos.spooler";
 static const std::string PRINT_EXTENSION_BUNDLE_NAME = "com.ohos.hwprintext";
+static const std::string PRINT_AND_SCAN_SETTINGS = "com.ohos.spooler:sys/commonUI";
 static const std::string SPOOLER_ABILITY_NAME = "MainAbility";
 static const std::string LAUNCH_PARAMETER_DOCUMENT_NAME = "documentName";
 static const std::string LAUNCH_PARAMETER_JOB_ID = "jobId";
@@ -2624,7 +2625,7 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
         PRINT_HILOGI("PrintServiceAbility::Off delete type=%{public}s object message.", eventType.c_str());
         registeredListeners_.erase(iter);
         if (PrintUtils::GetEventType(eventType) == PRINTER_CHANGE_EVENT_TYPE) {
-            PrintCallerAppMonitor::GetInstance().DecrementPrintCounter("");
+            DecrementPrintCounterByPcSettings();
         }
     }
     PRINT_HILOGI("PrintServiceAbility::Off has already delete type=%{public}s delete.", eventType.c_str());
@@ -4241,7 +4242,38 @@ void PrintServiceAbility::HandlePrinterChangeRegister(const std::string &eventTy
         QueryAllExtension(extensionInfos);
         std::vector<std::string> extensionIds;
         StartDiscoverPrinter(extensionIds);
+
+        IncrementPrintCounterByPcSettings();
+    }
+}
+
+void PrintServiceAbility::IncrementPrintCounterByPcSettings()
+{
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    AppExecFwk::RunningProcessInfo processInfo;
+    if (!PrintCallerAppMonitor::GetInstance().GetRunningProcessInfoByPid(callerPid, processInfo)) {
+        PRINT_HILOGE("GetRunningProcessInfoByPid fail");
+        return;
+    }
+    if (processInfo.processName_ == PRINT_AND_SCAN_SETTINGS) {
+        PRINT_HILOGD("increment the count of the print and scan settings");
+        // 进入设置里的打印机和扫描仪页面时会注册printerChange回调，同时增加打印页面计数
         PrintCallerAppMonitor::GetInstance().IncrementPrintCounter("");
+    }
+}
+
+void PrintServiceAbility::DecrementPrintCounterByPcSettings()
+{
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    AppExecFwk::RunningProcessInfo processInfo;
+    if (!PrintCallerAppMonitor::GetInstance().GetRunningProcessInfoByPid(callerPid, processInfo)) {
+        PRINT_HILOGE("GetRunningProcessInfoByPid fail");
+        return;
+    }
+    if (processInfo.processName_ == PRINT_AND_SCAN_SETTINGS) {
+        PRINT_HILOGD("decrement the count of the print and scan settings");
+        // 退出设置里的打印机和扫描仪页面时会取消注册printerChange回调，同时减少打印页面计数
+        PrintCallerAppMonitor::GetInstance().DecrementPrintCounter("");
     }
 }
 
