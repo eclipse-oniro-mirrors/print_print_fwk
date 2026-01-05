@@ -169,9 +169,8 @@ int32_t PrintUtils::OpenFile(const std::string &filePath)
     return fd;
 }
 
-bool PrintUtils::IsPathValid(const std::string &filePath)
+bool PrintUtils::IsPathValid(const std::string &path)
 {
-    auto path = filePath.substr(0, filePath.rfind('/'));
     char resolvedPath[PATH_MAX] = {0};
     if (path.length() >= PATH_MAX || realpath(path.c_str(), resolvedPath) == nullptr ||
         strncmp(resolvedPath, path.c_str(), path.length()) != 0) {

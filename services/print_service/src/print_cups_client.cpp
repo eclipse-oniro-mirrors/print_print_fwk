@@ -1262,47 +1262,6 @@ int32_t PrintCupsClient::SetDefaultPrinter(const std::string &printerName)
     return E_PRINT_NONE;
 }
 
-ppd_file_t *PrintCupsClient::GetPPDFile(const std::string &printerName)
-{
-    if (!IsCupsServerAlive()) {
-        PRINT_HILOGI("The cupsd process is not started, start it now.");
-        int32_t ret = StartCupsdService();
-        if (ret != 0) {
-            PRINT_HILOGE("The cupsd process start fail.");
-            return nullptr;
-        }
-    }
-    if (printerName.find("../") == 0) {
-        PRINT_HILOGE("GetPPDFile printerName is out of fileDir");
-        return nullptr;
-    }
-    ppd_file_t *ppd = 0;
-    std::string fileDir = GetCurCupsRootDir() + "/datadir/model/";
-    std::string pName = printerName;
-    std::string filePath = fileDir + pName + ".ppd";
-    PRINT_HILOGI("GetPPDFile started filePath %{private}s", filePath.c_str());
-    char realPath[PATH_MAX] = {};
-    if (realpath(filePath.c_str(), realPath) == nullptr) {
-        PRINT_HILOGE("The realPidFile is null, errno: %{public}s", std::to_string(errno).c_str());
-        return nullptr;
-    }
-    int fd;
-    if ((fd = open(realPath, O_RDWR)) < 0) {
-        PRINT_HILOGE("Open ppdFile error!");
-        return nullptr;
-    }
-    fdsan_exchange_owner_tag(fd, 0, PRINT_LOG_DOMAIN);
-    PRINT_HILOGI("GetPPDFile %{public}d", fd);
-    ppd = ppdOpenFd(fd);
-    fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
-    if (ppd == nullptr) {
-        PRINT_HILOGE("ppdfile open is nullptr");
-    } else {
-        PRINT_HILOGI("GetPPDFile groups: %{public}d, pagesize_num: %{public}d", ppd->num_groups, ppd->num_sizes);
-    }
-    return ppd;
-}
-
 int32_t PrintCupsClient::QueryPrinterAttrList(
     const std::string &printerName, const std::vector<std::string> &keyList, std::vector<std::string> &valueList)
 {
