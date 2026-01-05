@@ -631,35 +631,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0028_NeedRename, TestSize.Leve
 }
 
 /**
- * @tc.name: PrintCupsClientTest_0030
- * @tc.desc: GetPPDFile
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0030_NeedRename, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    std::string printerName = "testPrinterName";
-    printCupsClient.StopCupsdService();
-    ppd_file_t *ppd = printCupsClient.GetPPDFile(printerName);
-    EXPECT_EQ(ppd, nullptr);
-}
-
-/**
- * @tc.name: PrintCupsClientTest_0031
- * @tc.desc: GetPPDFile
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0031_NeedRename, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    std::string printerName = "testPrinterName";
-    EXPECT_EQ(printCupsClient.StartCupsdService(), E_PRINT_NONE);
-    printCupsClient.GetPPDFile(printerName);
-}
-
-/**
  * @tc.name: PrintCupsClientTest_0032
  * @tc.desc: QueryPrinterAttrList
  * @tc.type: FUNC

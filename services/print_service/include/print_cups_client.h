@@ -144,7 +144,6 @@ public:
     void InterruptCupsJob(std::string serviceJobId);
 
     int32_t QueryAddedPrinterList(std::vector<std::string> &printerName);
-    ppd_file_t* GetPPDFile(const std::string &printerName);
     int32_t GetAllPPDFile(std::vector<PpdInfo> &ppdInfos);
     int32_t SetDefaultPrinter(const std::string &printerName);
 

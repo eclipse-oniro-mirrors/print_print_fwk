@@ -117,13 +117,6 @@ void TestQueryAddedPrinterList(const uint8_t *data, size_t size, FuzzedDataProvi
     PrintCupsClient::GetInstance()->QueryAddedPrinterList(printerName);
 }
 
-void TestGetPPDFile(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    PrintCupsClient::GetInstance()->InitCupsResources();
-    std::string printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    PrintCupsClient::GetInstance()->GetPPDFile(printerName);
-}
-
 void TestSetDefaultPrinter(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     PrintCupsClient::GetInstance()->InitCupsResources();
@@ -398,7 +391,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::Print::TestAddCupsPrintJob(data, size, &dataProvider);
     OHOS::Print::TestCancelCupsJob(data, size, &dataProvider);
     OHOS::Print::TestQueryAddedPrinterList(data, size, &dataProvider);
-    OHOS::Print::TestGetPPDFile(data, size, &dataProvider);
     OHOS::Print::TestSetDefaultPrinter(data, size, &dataProvider);
     OHOS::Print::TestQueryPrinterAttrList(data, size, &dataProvider);
     OHOS::Print::TestQueryPrinterInfoByPrinterId(data, size, &dataProvider);
