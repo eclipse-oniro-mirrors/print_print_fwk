@@ -134,6 +134,7 @@ private:
     std::thread statusMonitorThread;
     bool statusMonitorOn = false;
     std::mutex statusMonitorMutex;
+    std::mutex apiMutex;
     std::condition_variable statusMonitorCondition;
     ConnectState connectingState = ConnectState::STATE_NONE;
     std::string connectingPrinterId;
