@@ -19,6 +19,7 @@
 #undef private
 #include "print_constant.h"
 #include "print_log.h"
+#include "fstream"
 #include "mock/mock_print_cups_wrapper.h"
 #include "print_json_util.h"
 
@@ -707,7 +708,10 @@ HWTEST_F(PrintCupsWrapperTest, QueryPrinterCapabilityFromPPD_PpdNameNotEmpty_Ret
     std::string printerName = "testPrinterName";
     std::string ppdName = "testPpdName";
     PrinterCapability printerCap;
+    std::string ppdFilePath = printCupsClient.GetCurCupsRootDir() + "/datadir/model/" + ppdName;
+    std::ofstream testPpdFile(ppdFilePath.c_str(), std::ios::out);
     EXPECT_EQ(printCupsClient.QueryPrinterCapabilityFromPPD(printerName, printerCap, ppdName), E_PRINT_FILE_IO);
+    testPpdFile.close();
 }
 }  // namespace Print
 }  // namespace OHOS
