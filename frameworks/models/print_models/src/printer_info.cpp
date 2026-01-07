@@ -659,4 +659,20 @@ void PrinterInfo::DumpInfo() const
     }
 }
 
+void PrinterInfo::SetOptionField(const std::string &key, const std::string &value)
+{
+    if (key.empty()) {
+        return;
+    }
+    Json::Value optionJson(Json::objectValue);
+    if (HasOption()) {
+        std::string option = GetOption();
+        PrintJsonUtil::Parse(option, optionJson);
+    }
+    if (optionJson.isObject()) {
+        optionJson[key] = value;
+    }
+    SetOption(PrintJsonUtil::WriteString(optionJson));
+}
+
 }  // namespace OHOS::Print
