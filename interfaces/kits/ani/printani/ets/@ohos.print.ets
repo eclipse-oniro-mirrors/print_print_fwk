@@ -637,12 +637,12 @@ export default namespace print {
 
     export function print(files: Array<string>): Promise<PrintTask> {
         let p:Promise<PrintTask> =
-            new Promise<PrintTask>((resolve: (data: PrintTask | undefined)=>void, reject:(err: BusinessError)=>void):void => {
+            new Promise<PrintTask>((resolve: (data: PrintTask)=>void, reject:(err: BusinessError)=>void):void => {
             let myCall = new AsyncCallbackWrapper<PrintTask>((err: BusinessError<void> | null, data: PrintTask | undefined)=>{
-                if (err === null || err.code == 0) {
+                if ((err === null || err.code == 0) && data !== undefined) {
                     resolve(data);
                 } else {
-                    reject(err);
+                    reject(err as BusinessError);
                 }
             });
             taskpool.execute((): void => {
@@ -661,12 +661,12 @@ export default namespace print {
 
     export function print(files: Array<string>, context: Context): Promise<PrintTask> {
         let p:Promise<PrintTask> =
-            new Promise<PrintTask>((resolve: (data: PrintTask | undefined)=>void, reject:(err: BusinessError)=>void):void => {
+            new Promise<PrintTask>((resolve: (data: PrintTask)=>void, reject:(err: BusinessError<void>)=>void):void => {
             let myCall = new AsyncCallbackWrapper<PrintTask>((err: BusinessError<void> | null, data: PrintTask | undefined)=>{
-                if (err === null || err.code == 0) {
+                if ((err === null || err.code == 0) && data !== undefined) {
                     resolve(data);
                 } else {
-                    reject(err);
+                    reject(err as BusinessError);
                 }
             });
             taskpool.execute((): void => {
@@ -679,12 +679,12 @@ export default namespace print {
     export function print(jobName: string, printAdapter: PrintDocumentAdapter, printAttributes: PrintAttributes,
     context: Context): Promise<PrintTask> {
         let p:Promise<PrintTask> =
-            new Promise<PrintTask>((resolve: (data: PrintTask | undefined)=>void, reject:(err: BusinessError)=>void):void => {
+            new Promise<PrintTask>((resolve: (data: PrintTask)=>void, reject:(err: BusinessError<void>)=>void):void => {
             let myCall = new AsyncCallbackWrapper<PrintTask>((err: BusinessError<void> | null, data: PrintTask | undefined)=>{
-                if (err === null || err.code == 0) {
+                if ((err === null || err.code == 0) && data !== undefined) {
                     resolve(data);
                 } else {
-                    reject(err);
+                    reject(err as BusinessError);
                 }
             });
             taskpool.execute((): void => {
@@ -709,12 +709,12 @@ export default namespace print {
 
     export function queryAllPrinterExtensionInfos(): Promise<Array<PrinterExtensionInfo>> {
         let p:Promise<Array<PrinterExtensionInfo>> =
-            new Promise<Array<PrinterExtensionInfo>>((resolve: (data: Array<PrinterExtensionInfo> | undefined)=>void, reject:(err: BusinessError)=>void):void => {
+            new Promise<Array<PrinterExtensionInfo>>((resolve: (data: Array<PrinterExtensionInfo>)=>void, reject:(err: BusinessError<void>)=>void):void => {
             let myCall = new AsyncCallbackArrayWrapper<PrinterExtensionInfo>((err: BusinessError<void> | null, data: Array<PrinterExtensionInfo> | undefined)=>{
-                if (err === null || err.code == 0) {
+                if ((err === null || err.code == 0) && data !== undefined) {
                     resolve(data);
                 } else {
-                    reject(err);
+                    reject(err as BusinessError);
                 }
             });
             taskpool.execute((): void => {
@@ -887,12 +887,12 @@ export default namespace print {
     }
 
     export function requestPrintPreview(jobInfo: PrintJob): Promise<int> {
-        return new Promise<int>((resolve: (data:int | undefined)=>void, reject:(err: BusinessError)=>void):void => {
-            let myCall = new AsyncCallbackWrapper<int>((err, data) => {
-                if (err === null || err.code == 0) {
+        return new Promise<int>((resolve: (data:int)=>void, reject:(err: BusinessError<void>)=>void):void => {
+            let myCall = new AsyncCallbackWrapper<int>((err : BusinessError<void> | null, data : int | undefined) => {
+                if ((err === null || err.code == 0) && data !== undefined) {
                     resolve(data);
                 } else {
-                    reject(err);
+                    reject(err as BusinessError);
                 }
             });
             taskpool.execute((): void => {
@@ -1162,12 +1162,12 @@ export default namespace print {
     }
 
     export function queryPrintJobList(): Promise<Array<PrintJob>> {
-        return new Promise<Array<PrintJob>>((resolve: (data: Array<PrintJob> | undefined)=>void, reject:(err: BusinessError<void> | null)=>void): void => {
+        return new Promise<Array<PrintJob>>((resolve: (data: Array<PrintJob>)=>void, reject:(err: BusinessError<void>)=>void): void => {
             let myCall = new AsyncCallbackArrayWrapper<PrintJob>((err : BusinessError<void> | null, data : Array<PrintJob>|undefined) => {
-                if (err === null || err.code == 0) {
+                if ((err === null || err.code == 0) && data !== undefined) {
                     resolve(data);
                 } else {
-                    reject(err);
+                    reject(err as BusinessError);
                 }
             });
             taskpool.execute((): void => {
@@ -1184,12 +1184,12 @@ export default namespace print {
     }
 
     export function queryPrintJobById(jobId: string): Promise<PrintJob> {
-        return new Promise<PrintJob>((resolve: (data: PrintJob | undefined)=>void, reject:(err: BusinessError<void> | null)=>void): void => {
+        return new Promise<PrintJob>((resolve: (data: PrintJob)=>void, reject:(err: BusinessError<void>)=>void): void => {
             let myCall = new AsyncCallbackWrapper<PrintJob>((err : BusinessError<void> | null, data : PrintJob|undefined) => {
-                if (err === null || err.code == 0) {
+                if ((err === null || err.code == 0) && data !== undefined) {
                     resolve(data);
                 } else {
-                    reject(err);
+                    reject(err as BusinessError);
                 }
             });
             taskpool.execute((): void => {
@@ -1255,12 +1255,12 @@ export default namespace print {
     }
 
     export function getAddedPrinters(): Promise<Array<string>> {
-        return new Promise<Array<string>>((resolve: (data: Array<string> | undefined)=>void, reject:(err: BusinessError<void> | null)=>void): void => {
+        return new Promise<Array<string>>((resolve: (data: Array<string>)=>void, reject:(err: BusinessError<void>)=>void): void => {
             let myCall = new AsyncCallbackArrayWrapper<string>((err : BusinessError<void> | null, data : Array<string> | undefined) => {
-                if (err === null || err.code == 0) {
+                if ((err === null || err.code == 0) && data !== undefined) {
                     resolve(data);
                 } else {
-                    reject(err);
+                    reject(err as BusinessError);
                 }
             });
             taskpool.execute((): void => {
@@ -1270,12 +1270,12 @@ export default namespace print {
     }
 
     export function getPrinterInfoById(printerId: string): Promise<PrinterInfo> {
-        return new Promise<PrinterInfo>((resolve: (data: PrinterInfo | undefined)=>void, reject:(err: BusinessError<void> | null)=>void): void => {
+        return new Promise<PrinterInfo>((resolve: (data: PrinterInfo)=>void, reject:(err: BusinessError<void>)=>void): void => {
             let myCall = new AsyncCallbackWrapper<PrinterInfo>((err : BusinessError<void> | null, data : PrinterInfo | undefined) => {
-                if (err === null || err.code == 0) {
+                if ((err === null || err.code == 0) && data !== undefined) {
                     resolve(data);
                 } else {
-                    reject(err);
+                    reject(err as BusinessError);
                 }
             });
             taskpool.execute((): void => {
@@ -1345,12 +1345,12 @@ export default namespace print {
     }
 
     export function getPrinterInformationById(printerId: string): Promise<PrinterInformation> {
-        return new Promise<PrinterInformation>((resolve: (data: PrinterInformation | undefined)=>void, reject:(err: BusinessError<void> | null)=>void): void => {
+        return new Promise<PrinterInformation>((resolve: (data: PrinterInformation)=>void, reject:(err: BusinessError<void>)=>void): void => {
             let myCall = new AsyncCallbackWrapper<PrinterInformation>((err : BusinessError<void> | null, data : PrinterInformation | undefined) => {
-                if (err === null || err.code == 0) {
+                if ((err === null || err.code == 0) && data !== undefined) {
                     resolve(data);
                 } else {
-                    reject(err);
+                    reject(err as BusinessError);
                 }
             });
             taskpool.execute((): void => {
