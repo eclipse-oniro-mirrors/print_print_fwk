@@ -687,6 +687,7 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
 
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
+    int32_t userId = GetCurrentUserId();
     // update extensionList_
     std::vector<PrintExtensionInfo> newExtensionInfos;
     QueryAllExtension(newExtensionInfos);
