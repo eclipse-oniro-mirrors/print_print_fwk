@@ -3364,18 +3364,30 @@ HWTEST_F(PrintServiceAbilityTest,
 }
 
 HWTEST_F(PrintServiceAbilityTest,
-    ReportPrinterIdle_Test, TestSize.Level1)
+    ReportPrinterIdle_PrinterBusy, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string id = "test";
-    service->ReportPrinterIdle(id);
-    PrinterInfo info;
+    PrinterInfo info, printer;
     info.SetPrinterId(id);
     info.SetPrinterStatus(PRINTER_STATUS_BUSY);
     service->printSystemData_.InsertAddedPrinter(id, info);
     service->ReportPrinterIdle(id);
+    service->printSystemData_.QueryAddedPrinterInfoByPrinterId(id, printer);
+    EXPECT_EQ(printer.GetPrinterStatus(), PRINTER_STATUS_IDLE);
+}
+
+HWTEST_F(PrintServiceAbilityTest,
+    ReportPrinterIdle_Unavailable, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string id = "test";
+    PrinterInfo info, printer;
+    info.SetPrinterId(id);
     info.SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
     service->printSystemData_.InsertAddedPrinter(id, info);
     service->ReportPrinterIdle(id);
+    service->printSystemData_.QueryAddedPrinterInfoByPrinterId(id, printer);
+    EXPECT_EQ(printer.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
 }
 }  // namespace OHOS::Print
