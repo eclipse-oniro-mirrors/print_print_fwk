@@ -48,6 +48,15 @@ public:
         PRINT_HILOGI("PrintCounter value: %{public}d", value);
         return value;
     }
+    PrintCounter() = default;
+    PrintCounter(const PrintCounter &right) : count_(right.count_.load(std::memory_order_relaxed)) {}
+    PrintCounter& operator=(const PrintCounter &right) {
+        if (this != &right) {
+            count_.store(right.count_.load(std::memory_order_relaxed), std::memory_order_relaxed);
+        }
+        return *this;
+    }
+    ~PrintCounter() = default;
 };
 
 class PrintCallerAppInfo {
@@ -56,12 +65,26 @@ public:
     int32_t userId_;
     std::string bundleName_;
     PrintCounter counter_;
-    PrintCallerAppInfo(int32_t pid, std::string bundleName) : pid_(pid), userId_(-1),
-        bundleName_(bundleName), counter_() {
-    };
     PrintCallerAppInfo(int32_t pid, int32_t userId, std::string bundleName) : pid_(pid), userId_(userId),
         bundleName_(bundleName), counter_() {
     };
+    PrintCallerAppInfo(const PrintCallerAppInfo &right)
+    : pid_(right.pid_), 
+      userId_(right.userId_), 
+      bundleName_(right.bundleName_), 
+      counter_(right.counter_)
+    {
+    }
+    PrintCallerAppInfo& operator=(const PrintCallerAppInfo &right) {
+        if (this != &right) {
+            pid_ = right.pid_;
+            userId_ = right.userId_;
+            bundleName_ = right.bundleName_;
+            counter_ = right.counter_;
+        }
+        return *this;
+    }
+    ~PrintCallerAppInfo() = default;
 };
 
 class PrintCallerAppMonitorBase {

@@ -53,7 +53,6 @@
 #include "parameters.h"
 #include "bundle_mgr_client.h"
 #include "bundle_info.h"
-#include "print_caller_app_monitor.h"
 #ifdef EDM_SERVICE_ENABLE
 #include "enterprise_device_mgr_proxy.h"
 #include "sg_collect_client.h"
@@ -696,7 +695,8 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
     std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
     StartDiscoveryCallerMonitorThread();
 
-    discoveryCallerMap_.insert(std::make_pair(callerPid, bundleName));
+    PrintCallerAppInfo appInfo(callerPid, userId, bundleName);
+    discoveryCallerMap_.insert(std::make_pair(callerPid, appInfo));
     PRINT_HILOGI("Add discovery caller, pid: %{public}d, bundleName: %{public}s", callerPid, bundleName.c_str());
 
     vendorManager.ClearConnectingPrinter();
@@ -753,7 +753,7 @@ int32_t PrintServiceAbility::StopDiscoverPrinter()
     auto iter = discoveryCallerMap_.find(callerPid);
     if (iter != discoveryCallerMap_.end()) {
         PRINT_HILOGI("Remove discovery caller, pid: %{public}d, bundleName: %{public}s",
-                     callerPid, iter->second.c_str());
+                     callerPid, iter->second.bundleName_.c_str());
         discoveryCallerMap_.erase(iter);
     }
     PRINT_HILOGI("discoveryCallerMap size: %{public}lu", discoveryCallerMap_.size());
@@ -2296,8 +2296,8 @@ void PrintServiceAbility::DiscoveryCallerAppsMonitor()
         for (auto iter = discoveryCallerMap_.begin(); iter != discoveryCallerMap_.end();) {
             PRINT_HILOGI(
                 "check discovery caller process, pid: %{public}d, bundleName: %{public}s",
-                iter->first, iter->second.c_str());
-            if (IsAppAlive(iter->second, iter->first)) {
+                iter->first, iter->second.bundleName_.c_str());
+            if (IsAppAlive(iter->second)) {
                 PRINT_HILOGI("discovery caller app still alive");
                 ++iter;
             } else {
@@ -4680,10 +4680,9 @@ bool PrintServiceAbility::CheckPrintConstraint(std::string option, std::string j
     return unablePrint;
 }
 
-bool PrintServiceAbility::IsAppAlive(const std::string &bundleName, int32_t pid)
+bool PrintServiceAbility::IsAppAlive(const PrintCallerAppInfo &appInfo)
 {
-    auto callerAppInfo = std::make_shared<PrintCallerAppInfo>(pid, bundleName);
-    return PrintCallerAppMonitor::GetInstance().IsAppAlive(callerAppInfo);
+    return PrintCallerAppMonitor::GetInstance().IsAppAlive(std::make_shared<PrintCallerAppInfo>(appInfo));
 }
 
 bool PrintServiceAbility::IsPrinterPpdUpdateRequired(

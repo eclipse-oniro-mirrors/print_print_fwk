@@ -42,6 +42,7 @@
 #ifdef HAVE_SMB_PRINTER
 #include "smb_library.h"
 #endif // HAVE_SMB_PRINTER
+#include "print_caller_app_monitor.h"
 namespace OHOS::Print {
 enum class ServiceRunningState { STATE_NOT_START, STATE_RUNNING };
 class IKeyguardStateCallback;
@@ -246,7 +247,7 @@ private:
     int32_t BlockPrintJob(const std::string &jobId);
     void BlockUserPrintJobs(const int32_t userId);
     bool CheckPrintConstraint(std::string option, std::string jobId);
-    bool IsAppAlive(const std::string &bundleName, int32_t pid);
+    bool IsAppAlive(const PrintCallerAppInfo &appInfo);
     void DiscoveryCallerAppsMonitor();
     void StartDiscoveryCallerMonitorThread();
     void StopDiscoveryInternal();
@@ -342,7 +343,7 @@ private:
     bool isLowPowerMode_;
     VendorManager vendorManager;
 
-    std::map<int32_t, std::string> discoveryCallerMap_;
+    std::map<int32_t, PrintCallerAppInfo> discoveryCallerMap_;
     std::recursive_mutex discoveryMutex_;
     bool discoveryCallerMonitorThread = false;
 
