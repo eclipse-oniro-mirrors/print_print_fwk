@@ -3362,4 +3362,20 @@ HWTEST_F(PrintServiceAbilityTest,
     service->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
     EXPECT_EQ(printerInfos.empty(), true);
 }
+
+HWTEST_F(PrintServiceAbilityTest,
+    ReportPrinterIdle_Test, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string id = "test";
+    service->ReportPrinterIdle(id);
+    PrinterInfo info;
+    info.SetPrinterId(id);
+    info.SetPrinterStatus(PRINTER_STATUS_BUSY);
+    service->printSystemData_.InsertAddedPrinter(id, info);
+    service->ReportPrinterIdle(id);
+    info.SetPrinterStatus(PRINTER_STATUS_UNAVAILABLE);
+    service->printSystemData_.InsertAddedPrinter(id, info);
+    service->ReportPrinterIdle(id);
+}
 }  // namespace OHOS::Print
