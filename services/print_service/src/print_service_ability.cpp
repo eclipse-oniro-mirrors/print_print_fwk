@@ -2038,7 +2038,9 @@ void PrintServiceAbility::ReportPrinterIdle(const std::string &printerId)
             if (!printSystemData_.QueryPrinterInfoById(printerId, addedPrinterInfo)) {
                 return;
             }
-            UpdatePrinterStatus(addedPrinterInfo, PRINTER_STATUS_IDLE);
+            if (addedPrinterInfo.GetPrinterStatus() == PRINTER_STATUS_BUSY) {
+                UpdatePrinterStatus(addedPrinterInfo, PRINTER_STATUS_IDLE);
+            }
         }
     }
 }
