@@ -3390,4 +3390,14 @@ HWTEST_F(PrintServiceAbilityTest,
     service->printSystemData_.QueryAddedPrinterInfoByPrinterId(id, printer);
     EXPECT_EQ(printer.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
 }
+
+HWTEST_F(PrintServiceAbilityTest,
+    DiscoveryCallerAppsMonitor_AppNotAlive, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    PrintCallerAppInfo appInfo(9999, -1, "testBundleName");
+    service->discoveryCallerMap_.insert(std::make_pair(9999, appInfo));
+    service->DiscoveryCallerAppsMonitor();
+    EXPECT_EQ(service->discoveryCallerMap_.size(), 0);
+}
 }  // namespace OHOS::Print
