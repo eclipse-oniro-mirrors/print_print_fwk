@@ -1300,10 +1300,10 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0067_NeedRename, TestSize.Leve
     EXPECT_EQ(jobParams->jobName, optionJson["jobName"].asString());
     EXPECT_EQ(jobParams->mediaType, optionJson["mediaType"].asString());
 
-    optionJson["printQuality"] = 1;
+    optionJson["printQuality"] = 3;
     testJob.SetOption(PrintJsonUtil::WriteString(optionJson));
     jobParams = printCupsClient.BuildJobParameters(testJob, JOB_USER_NAME);
-    EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_NORMAL);
+    EXPECT_EQ(jobParams->printQuality, CUPS_PRINT_QUALITY_DRAFT);
 
     EXPECT_EQ(jobParams->isAutoRotate, true);  // default true
     optionJson["isAutoRotate"] = false;

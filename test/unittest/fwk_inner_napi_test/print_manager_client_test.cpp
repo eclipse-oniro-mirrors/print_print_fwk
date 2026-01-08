@@ -2270,7 +2270,7 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_Success, TestSize.Level1)
             return E_PRINT_NONE;
         });
     int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
-    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+    EXPECT_EQ(ret, E_PRINT_NONE);
     EXPECT_NE(dr, nullptr);
     dr->OnRemoteDied(obj);
 }
