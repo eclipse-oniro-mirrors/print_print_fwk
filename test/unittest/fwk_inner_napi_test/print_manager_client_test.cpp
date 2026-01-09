@@ -2266,7 +2266,7 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_Success, TestSize.Level1)
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(2);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
-            service->OnRemoteRequest(code, data, reply, option);9
+            service->OnRemoteRequest(code, data, reply, option);
             return E_PRINT_NONE;
         });
     int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
