@@ -2859,7 +2859,7 @@ HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIpAndPpdTest, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string ip = "192.168.1.1";
     std::string protocol = "ipp";
-    std::string ppdName = BSUNI_PPD_NAME;
+    std::string ppdName = "test.ppd";
     EXPECT_EQ(service->ConnectPrinterByIpAndPpd(ip, protocol, ppdName), E_PRINT_NONE);
     EXPECT_EQ(service->ConnectPrinterByIpAndPpd("1", protocol, ppdName), E_PRINT_INVALID_PRINTER);
 }
@@ -2879,7 +2879,7 @@ HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIdAndPpdTest, TestSize.Level1)
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerId = "testId";
     std::string protocol = "ipp";
-    std::string ppdName = BSUNI_PPD_NAME;
+    std::string ppdName = "test.ppd";
     EXPECT_EQ(service->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName), E_PRINT_NO_PERMISSION);
     service->ManualStart();
     EXPECT_EQ(service->ConnectPrinterByIdAndPpd(printerId, protocol, ppdName), E_PRINT_SERVER_FAILURE);
@@ -3396,8 +3396,25 @@ HWTEST_F(PrintServiceAbilityTest,
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     PrintCallerAppInfo appInfo(9999, -1, "testBundleName");
-    service->discoveryCallerMap_.insert(std::make_pair(9999, appInfo));
-    service->DiscoveryCallerAppsMonitor();
-    EXPECT_EQ(service->discoveryCallerMap_.size(), 0);
+    {
+        std::lock_guard<std::recursive_mutex> lock(service->discoveryMutex_);
+        service->discoveryCallerMap_.insert({9999, appInfo});
+    }
+    EXPECT_FALSE(service->IsAppAlive(appInfo));
+    service->StartDiscoveryCallerMonitorThread();
+
+    const auto startTime = std::chrono::steady_clock::now();
+    while (true) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(service->discoveryMutex_);
+            auto info = service->discoveryCallerMap_.find(9999);
+            if (info == service->discoveryCallerMap_.end()) break;
+        }
+        
+        if (std::chrono::steady_clock::now() - startTime > std::chrono::seconds(100)) {
+            FAIL() << "Timeout waiting for map to clear";
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
 }
 }  // namespace OHOS::Print
