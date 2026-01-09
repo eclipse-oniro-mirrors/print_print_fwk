@@ -2266,7 +2266,7 @@ HWTEST_F(PrintManagerClientTest, StartNativePrintJob_Success, TestSize.Level1)
     EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(2);
     ON_CALL(*obj, SendRequest)
         .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
-            service->OnRemoteRequest(code, data, reply, option);
+            service->OnRemoteRequest(code, data, reply, option);9
             return E_PRINT_NONE;
         });
     int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(testPrintJob, testListener);
@@ -2346,7 +2346,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0129_NeedRename, TestSiz
 {
     std::string jobId = "1";
     PrintAttributes testPrintAttributes;
-    uint32_t fd = 0;
+    uint32_t fd = 789;
     PrintManagerClient::GetInstance()->LoadServerFail();
     int32_t ret = PrintManagerClient::GetInstance()->StartGetPrintFile(jobId, testPrintAttributes, fd);
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
