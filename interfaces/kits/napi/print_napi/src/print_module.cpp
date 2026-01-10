@@ -31,7 +31,8 @@ static constexpr const char *FUNCTION_START_DISCOVERY = "startDiscoverPrinter";
 static constexpr const char *FUNCTION_STOP_DISCOVERY = "stopDiscoverPrinter";
 static constexpr const char *FUNCTION_CONNECT_PRINT = "connectPrinter";
 static constexpr const char *FUNCTION_DISCONNECT_PRINT = "disconnectPrinter";
-static constexpr const char *FUNCTION_START_PRINT = "startPrintJob";
+static constexpr const char *FUNCTION_START_PRINT_JOB = "startPrintJob";
+static constexpr const char *FUNCTION_START_PRINT = "startPrint";
 static constexpr const char *FUNCTION_CANCEL_PRINT = "cancelPrintJob";
 static constexpr const char *FUNCTION_RESTART_PRINT = "restartPrintJob";
 static constexpr const char *FUNCTION_REQUEST_PREVIEW = "requestPrintPreview";
@@ -435,7 +436,8 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_METHOD(FUNCTION_STOP_DISCOVERY, NapiInnerPrint::StopDiscovery),
         PRINT_NAPI_METHOD(FUNCTION_CONNECT_PRINT, NapiInnerPrint::ConnectPrinter),
         PRINT_NAPI_METHOD(FUNCTION_DISCONNECT_PRINT, NapiInnerPrint::DisconnectPrinter),
-        PRINT_NAPI_METHOD(FUNCTION_START_PRINT, NapiInnerPrint::StartPrintJob),
+        PRINT_NAPI_METHOD(FUNCTION_START_PRINT_JOB, NapiInnerPrint::StartPrintJob),
+        PRINT_NAPI_METHOD(FUNCTION_START_PRINT, NapiInnerPrint::StartPrint),
         PRINT_NAPI_METHOD(FUNCTION_CANCEL_PRINT, NapiInnerPrint::CancelPrintJob),
         PRINT_NAPI_METHOD(FUNCTION_RESTART_PRINT, NapiInnerPrint::RestartPrintJob),
         PRINT_NAPI_METHOD(FUNCTION_REQUEST_PREVIEW, NapiInnerPrint::RequestPreview),

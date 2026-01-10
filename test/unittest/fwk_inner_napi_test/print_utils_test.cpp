@@ -20,6 +20,7 @@
 #undef private
 #include "print_constant.h"
 #include "print_extension_callback_stub.h"
+#include "print_job.h"
 #include "print_log.h"
 #include "print_sync_load_callback.h"
 #include "system_ability_definition.h"
@@ -526,5 +527,142 @@ HWTEST_F(PrintUtilsTest, IsUsbPrinter_IncludeUSBString_ReturnTrue, TestSize.Leve
     bool result = PrintUtils::IsUsbPrinter(printerId);
     EXPECT_EQ(result, true);
 }
+
+/**
+ * @tc.name: ConvertParamsToPrintJob_Test
+ * @tc.desc: Verify the ConvertParamsToPrintJob function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, ConvertParamsToPrintJob_Test, TestSize.Level2)
+{
+    PrintJobParams params;
+    auto result = PrintUtils::ConvertParamsToPrintJob(params);
+    params.printerId = "printerId";
+    EXPECT_EQ(result, nullptr);
+    params.docFlavor = 1;
+    params.binaryData = (uint8_t*)"text data";
+    params.dataLength = 0;
+    result = PrintUtils::ConvertParamsToPrintJob(params);
+    EXPECT_EQ(result, nullptr);
+
+    params.dataLength = 10;
+    result = PrintUtils::ConvertParamsToPrintJob(params);
+    EXPECT_EQ(result, nullptr);
+
+    params.docFlavor = 0;
+    params.printFdList = std::vector<uint32_t>();
+    result = PrintUtils::ConvertParamsToPrintJob(params);
+    EXPECT_EQ(result, nullptr);
+
+    params.printFdList.emplace_back(0);
+    result = PrintUtils::ConvertParamsToPrintJob(params);
+    EXPECT_NE(result, nullptr);
+
+    params.hasMargin = true;
+    params.hasPreview = true;
+    params.isSequential = 0;
+    result = PrintUtils::ConvertParamsToPrintJob(params);
+    EXPECT_NE(result, nullptr);
+}
+
+/**
+ * @tc.name: GetDocumentFormatToString_Test
+ * @tc.desc: Verify the GetDocumentFormatToString function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, GetDocumentFormatToString_Test, TestSize.Level2)
+{
+    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(0), "application/octet-stream");
+    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(1), "image/jpeg");
+    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(2), "application/pdf");
+    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(3), "application/postscript");
+    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(4), "text/plain");
+    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(5), "application/vnd.cups-raw");
+    EXPECT_EQ(PrintUtils::GetDocumentFormatToString(6), "application/octet-stream");
+}
+
+/**
+ * @tc.name: CreateTempFileWithData_Test
+ * @tc.desc: Verify the CreateTempFileWithData function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, CreateTempFileWithData_Test, TestSize.Level2)
+{
+    void *data = (uint8_t*)"test data";
+    size_t length = 10;
+    std::string tmpPath;
+    int fd = PrintUtils::CreateTempFileWithData(data, length, tmpPath);
+    EXPECT_EQ(fd, -1);
+}
+
+/**
+ * @tc.name: GenerateTempFilePath_Test
+ * @tc.desc: Verify the GenerateTempFilePath function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, GenerateTempFilePath_Test, TestSize.Level2)
+{
+    const std::string testDir = "/tmp/test_files";
+    std::string result = PrintUtils::GenerateTempFilePath(testDir);
+    EXPECT_TRUE(result.find(testDir) == 0);
+    EXPECT_TRUE(result.find("/job_") != std::string::npos);
+    result = PrintUtils::GenerateTempFilePath("");
+    EXPECT_TRUE(result.find("/job_") == 0);
+}
+
+/**
+ * @tc.name: SetOptionInPrintJob_Test
+ * @tc.desc: Verify the SetOptionInPrintJob function.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUtilsTest, SetOptionInPrintJob_Test, TestSize.Level2)
+{
+    PrintJobParams params;
+    auto printJob = std::make_shared<PrintJob>();
+
+    params.jobName = "test_job";
+    params.docFlavor = 0;
+    params.documentFormat = 0;
+    params.printQuality = 0;
+    params.mediaType = "stationery";
+    params.isBorderless = 0;
+    params.isAutoRotate = 0;
+    params.isReverse = 0;
+    params.isCollate = 0;
+    params.cupsOptions = "test_cupsOptions";
+
+    PrintUtils::SetOptionInPrintJob(params, printJob);
+    std::string option = printJob->GetOption();
+    Json::Value json;
+    Json::Reader reader;
+    ASSERT_TRUE(reader.parse(option, json));
+    EXPECT_TRUE(json.isMember("jobName"));
+    EXPECT_TRUE(json.isMember("jobDesArr"));
+    EXPECT_TRUE(json.isMember("isDocument"));
+    EXPECT_TRUE(json.isMember("printQuality"));
+    EXPECT_TRUE(json.isMember("mediaType"));
+    EXPECT_TRUE(json.isMember("borderless"));
+    EXPECT_TRUE(json.isMember("isAutoRotate"));
+    EXPECT_TRUE(json.isMember("isReverse"));
+    EXPECT_TRUE(json.isMember("isCollate"));
+    EXPECT_TRUE(json.isMember("cupsOptions"));
+
+    EXPECT_EQ(json["jobName"].asString(), "test_job");
+    EXPECT_EQ(json["jobDesArr"].size(), 3);
+    EXPECT_EQ(json["isDocument"].asBool(), true);
+    EXPECT_EQ(json["printQuality"].asInt(), 4);
+    EXPECT_EQ(json["mediaType"].asString(), "stationery");
+    EXPECT_EQ(json["borderless"].asBool(), false);
+    EXPECT_EQ(json["isAutoRotate"].asBool(), false);
+    EXPECT_EQ(json["isReverse"].asBool(), false);
+    EXPECT_EQ(json["isCollate"].asBool(), false);
+    EXPECT_EQ(json["cupsOptions"].asString(), "test_cupsOptions");
+}
+
 }  // namespace Print
 }  // namespace OHOS
