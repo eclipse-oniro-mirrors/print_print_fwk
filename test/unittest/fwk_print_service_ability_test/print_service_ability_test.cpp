@@ -3402,7 +3402,7 @@ HWTEST_F(PrintServiceAbilityTest,
     }
     EXPECT_FALSE(service->IsAppAlive(appInfo));
     std::vector<std::string> extensionIds;
-    EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_NONE);
+    EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_INVALID_EXTENSION);
 
     const auto startTime = std::chrono::steady_clock::now();
     while (true) {
