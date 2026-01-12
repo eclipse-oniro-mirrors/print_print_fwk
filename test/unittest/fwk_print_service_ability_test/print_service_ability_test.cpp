@@ -3228,6 +3228,13 @@ HWTEST_F(PrintServiceAbilityTest, GetPrinterDefaultPreferences_InvalidPrinterId,
 #endif
 }
 
+HWTEST_F(PrintServiceAbilityTest, CheckStartExtensionPermission, TestSize.Level1)
+{
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+    EXPECT_EQ(service->CheckStartExtensionPermission(), false);
+}
+
 HWTEST_F(PrintServiceAbilityTest, UpdateBsuniPrinterAdvanceOptions_OptionFormatError_ReturnFalse, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
