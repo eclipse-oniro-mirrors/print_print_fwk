@@ -37,7 +37,6 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
-    void TearDown();
 };
 
 void PrintServiceHelperTest::SetUpTestCase(void)
@@ -51,9 +50,6 @@ void PrintServiceHelperTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("PrintServiceHelperTest_%{public}d", ++testNo);
 }
-
-void PrintServiceHelperTest::TearDown(void)
-{}
 
 /**
  * @tc.name: PrintServiceHelperTest_0002

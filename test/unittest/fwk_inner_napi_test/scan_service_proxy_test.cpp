@@ -21,20 +21,12 @@ class ScanServiceProxyTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void ScanServiceProxyTest::SetUpTestCase(void)
 {}
 
 void ScanServiceProxyTest::TearDownTestCase(void)
-{}
-
-void ScanServiceProxyTest::SetUp(void)
-{}
-
-void ScanServiceProxyTest::TearDown(void)
 {}
 
 }  // namespace Scan

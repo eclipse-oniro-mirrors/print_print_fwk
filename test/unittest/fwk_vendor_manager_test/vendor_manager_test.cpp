@@ -39,7 +39,6 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
-    void TearDown();
 };
 
 void VendorManagerTest::SetUpTestCase(void)
@@ -53,9 +52,6 @@ void VendorManagerTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("VendorManagerTest_%{public}d", ++testNo);
 }
-
-void VendorManagerTest::TearDown(void)
-{}
 
 HWTEST_F(VendorManagerTest, VendorManagerTest_0001, TestSize.Level0)
 {

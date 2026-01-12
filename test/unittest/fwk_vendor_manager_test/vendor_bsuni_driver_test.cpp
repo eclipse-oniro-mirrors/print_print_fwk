@@ -166,7 +166,6 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
-    void TearDown();
     void DoMockTest(MockTestFunc func);
 };
 
@@ -181,9 +180,6 @@ void VendorBsuniDriverTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("VendorBsuniDriverTest_%{public}d", ++testNo);
 }
-
-void VendorBsuniDriverTest::TearDown(void)
-{}
 
 void VendorBsuniDriverTest::DoMockTest(MockTestFunc func)
 {

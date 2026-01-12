@@ -26,20 +26,12 @@ class PrinterCapabilityTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrinterCapabilityTest::SetUpTestCase(void)
 {}
 
 void PrinterCapabilityTest::TearDownTestCase(void)
-{}
-
-void PrinterCapabilityTest::SetUp(void)
-{}
-
-void PrinterCapabilityTest::TearDown(void)
 {}
 
 /**

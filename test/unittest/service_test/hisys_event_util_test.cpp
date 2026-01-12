@@ -27,20 +27,12 @@ class HisysEventUtilTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void HisysEventUtilTest::SetUpTestCase(void)
 {}
 
 void HisysEventUtilTest::TearDownTestCase(void)
-{}
-
-void HisysEventUtilTest::SetUp(void)
-{}
-
-void HisysEventUtilTest::TearDown(void)
 {}
 
 /**

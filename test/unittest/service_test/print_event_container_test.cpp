@@ -28,8 +28,7 @@ class PrintEventContainerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
+    void SetUp() const;
 };
 
 void PrintEventContainerTest::SetUpTestCase(void)
@@ -38,14 +37,11 @@ void PrintEventContainerTest::SetUpTestCase(void)
 void PrintEventContainerTest::TearDownTestCase(void)
 {}
 
-void PrintEventContainerTest::SetUp(void)
+void PrintEventContainerTest::SetUp(void) const
 {
     static int32_t testNo = 0;
     PRINT_HILOGI("PrintEventContainerTest_%{public}d", ++testNo);
 }
-
-void PrintEventContainerTest::TearDown(void)
-{}
 
 HWTEST_F(PrintEventContainerTest, PrintEventContainerTest_Constructor_Test, TestSize.Level0)
 {

@@ -35,7 +35,6 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
-    void TearDown();
 };
 
 void OperatonQueueTest::SetUpTestCase(void)
@@ -49,9 +48,6 @@ void OperatonQueueTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("OperatonQueueTest_%{public}d", ++testNo);
 }
-
-void OperatonQueueTest::TearDown(void)
-{}
 
 HWTEST_F(OperatonQueueTest, OperatonQueueTest_0001, TestSize.Level1)
 {

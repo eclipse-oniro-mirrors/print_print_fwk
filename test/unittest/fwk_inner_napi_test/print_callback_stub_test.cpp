@@ -28,20 +28,12 @@ class PrintCallbackStubTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrintCallbackStubTest::SetUpTestCase(void)
 {}
 
 void PrintCallbackStubTest::TearDownTestCase(void)
-{}
-
-void PrintCallbackStubTest::SetUp(void)
-{}
-
-void PrintCallbackStubTest::TearDown(void)
 {}
 
 /**

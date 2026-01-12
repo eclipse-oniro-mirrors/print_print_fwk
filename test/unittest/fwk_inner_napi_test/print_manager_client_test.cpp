@@ -41,8 +41,6 @@ class PrintManagerClientTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
     void CallRemoteObject(const std::shared_ptr<MockPrintService> service, const sptr<MockRemoteObject> &obj,
         sptr<IRemoteObject::DeathRecipient> &dr);
 };
@@ -51,12 +49,6 @@ void PrintManagerClientTest::SetUpTestCase(void)
 {}
 
 void PrintManagerClientTest::TearDownTestCase(void)
-{}
-
-void PrintManagerClientTest::SetUp(void)
-{}
-
-void PrintManagerClientTest::TearDown(void)
 {}
 
 void PrintManagerClientTest::CallRemoteObject(const std::shared_ptr<MockPrintService> service,

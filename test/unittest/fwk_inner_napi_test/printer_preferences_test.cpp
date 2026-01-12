@@ -25,20 +25,12 @@ class PrinterPreferencesTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrinterPreferencesTest::SetUpTestCase(void)
 {}
 
 void PrinterPreferencesTest::TearDownTestCase(void)
-{}
-
-void PrinterPreferencesTest::SetUp(void)
-{}
-
-void PrinterPreferencesTest::TearDown(void)
 {}
 
 HWTEST_F(PrinterPreferencesTest, PrinterPreferencesTest_0001_NeedRename, TestSize.Level2)

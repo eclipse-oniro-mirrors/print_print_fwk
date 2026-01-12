@@ -28,20 +28,12 @@ class PrintSecurityGuardManagerTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrintSecurityGuardManagerTest::SetUpTestCase(void)
 {}
 
 void PrintSecurityGuardManagerTest::TearDownTestCase(void)
-{}
-
-void PrintSecurityGuardManagerTest::SetUp(void)
-{}
-
-void PrintSecurityGuardManagerTest::TearDown(void)
 {}
 
 /**

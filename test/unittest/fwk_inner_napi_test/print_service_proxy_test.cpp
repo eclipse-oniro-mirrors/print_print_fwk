@@ -35,20 +35,12 @@ class PrintServiceProxyTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrintServiceProxyTest::SetUpTestCase(void)
 {}
 
 void PrintServiceProxyTest::TearDownTestCase(void)
-{}
-
-void PrintServiceProxyTest::SetUp(void)
-{}
-
-void PrintServiceProxyTest::TearDown(void)
 {}
 
 /**

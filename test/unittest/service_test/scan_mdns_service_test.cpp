@@ -23,20 +23,12 @@ class ScanMdnsServiceTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void ScanMdnsServiceTest::SetUpTestCase(void)
 {}
 
 void ScanMdnsServiceTest::TearDownTestCase(void)
-{}
-
-void ScanMdnsServiceTest::SetUp(void)
-{}
-
-void ScanMdnsServiceTest::TearDown(void)
 {}
 
 /**

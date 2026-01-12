@@ -28,20 +28,12 @@ class PrintRangeTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrintRangeTest::SetUpTestCase(void)
 {}
 
 void PrintRangeTest::TearDownTestCase(void)
-{}
-
-void PrintRangeTest::SetUp(void)
-{}
-
-void PrintRangeTest::TearDown(void)
 {}
 
 /**

@@ -21,20 +21,12 @@ class ScanModuleTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void ScanModuleTest::SetUpTestCase(void)
 {}
 
 void ScanModuleTest::TearDownTestCase(void)
-{}
-
-void ScanModuleTest::SetUp(void)
-{}
-
-void ScanModuleTest::TearDown(void)
 {}
 
 }  // namespace Scan
