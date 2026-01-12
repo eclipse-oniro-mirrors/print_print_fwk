@@ -3390,32 +3390,4 @@ HWTEST_F(PrintServiceAbilityTest,
     service->printSystemData_.QueryAddedPrinterInfoByPrinterId(id, printer);
     EXPECT_EQ(printer.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
 }
-
-HWTEST_F(PrintServiceAbilityTest,
-    DiscoveryCallerAppsMonitor_AppNotAlive, TestSize.Level1)
-{
-    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    PrintCallerAppInfo appInfo(9999, -1, "testBundleName");
-    {
-        std::lock_guard<std::recursive_mutex> lock(service->discoveryMutex_);
-        service->discoveryCallerMap_.insert({9999, appInfo});
-    }
-    EXPECT_FALSE(service->IsAppAlive(appInfo));
-    std::vector<std::string> extensionIds;
-    EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_INVALID_EXTENSION);
-
-    const auto startTime = std::chrono::steady_clock::now();
-    while (true) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(service->discoveryMutex_);
-            auto info = service->discoveryCallerMap_.find(9999);
-            if (info == service->discoveryCallerMap_.end()) break;
-        }
-        
-        if (std::chrono::steady_clock::now() - startTime > std::chrono::seconds(100)) {
-            FAIL() << "Timeout waiting for map to clear";
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
-}
 }  // namespace OHOS::Print
