@@ -688,6 +688,11 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
     int32_t callerPid = IPCSkeleton::GetCallingPid();
     std::string bundleName = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     int32_t userId = GetCurrentUserId();
+    if (userId == INVALID_USER_ID) {
+        PRINT_HILOGE("Invalid user id.");
+        return E_PRINT_INVALID_USERID;
+    }
+
     // update extensionList_
     std::vector<PrintExtensionInfo> newExtensionInfos;
     QueryAllExtension(newExtensionInfos);
