@@ -34,7 +34,6 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
-    void TearDown();
 };
 
 void PrintSystemDataTest::SetUpTestCase(void)
@@ -48,9 +47,6 @@ void PrintSystemDataTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("PrintSystemDataTest_%{public}d", ++testNo);
 }
-
-void PrintSystemDataTest::TearDown(void)
-{}
 
 HWTEST_F(PrintSystemDataTest, PrintSystemDataTest_0002_NeedRename, TestSize.Level1)
 {

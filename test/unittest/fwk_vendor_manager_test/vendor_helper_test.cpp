@@ -45,7 +45,6 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
-    void TearDown();
 };
 
 void VendorHelperTest::SetUpTestCase(void)
@@ -59,9 +58,6 @@ void VendorHelperTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("VendorHelperTest_%{public}d", ++testNo);
 }
-
-void VendorHelperTest::TearDown(void)
-{}
 
 static void BuildDiscoveryItem(Print_DiscoveryItem &discoveryItem)
 {

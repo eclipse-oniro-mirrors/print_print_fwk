@@ -26,20 +26,12 @@ class PrintResolutionTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrintResolutionTest::SetUpTestCase(void)
 {}
 
 void PrintResolutionTest::TearDownTestCase(void)
-{}
-
-void PrintResolutionTest::SetUp(void)
-{}
-
-void PrintResolutionTest::TearDown(void)
 {}
 
 /**

@@ -37,7 +37,6 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
-    void TearDown();
 };
 
 void PrintUserDataTest::SetUpTestCase(void)
@@ -51,9 +50,6 @@ void PrintUserDataTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("PrintUserDataTest_%{public}d", ++testNo);
 }
-
-void PrintUserDataTest::TearDown(void)
-{}
 
 /**
  * @tc.name: PrintServiceStubTest_0001

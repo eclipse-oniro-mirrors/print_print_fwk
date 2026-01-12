@@ -30,20 +30,12 @@ class PrintServiceStubTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrintServiceStubTest::SetUpTestCase(void)
 {}
 
 void PrintServiceStubTest::TearDownTestCase(void)
-{}
-
-void PrintServiceStubTest::SetUp(void)
-{}
-
-void PrintServiceStubTest::TearDown(void)
 {}
 
 /**

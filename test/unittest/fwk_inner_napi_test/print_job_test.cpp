@@ -35,20 +35,12 @@ class PrintJobTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrintJobTest::SetUpTestCase(void)
 {}
 
 void PrintJobTest::TearDownTestCase(void)
-{}
-
-void PrintJobTest::SetUp(void)
-{}
-
-void PrintJobTest::TearDown(void)
 {}
 
 /**

@@ -22,7 +22,6 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
-    void TearDown();
     std::shared_ptr<ScanManagerClient> smgPtr;
 };
 
@@ -37,9 +36,6 @@ void ScanManagerClientTest::SetUp(void)
     smgPtr = std::make_shared<ScanManagerClient>();
     EXPECT_NE(smgPtr, nullptr);
 }
-
-void ScanManagerClientTest::TearDown(void)
-{}
 
 /**
  * @tc.name: ScanManagerClientTest_0001

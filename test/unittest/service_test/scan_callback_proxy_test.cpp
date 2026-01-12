@@ -21,18 +21,10 @@ class ScanCallbackProxyTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void ScanCallbackProxyTest::SetUpTestCase(void)
 {}
 
 void ScanCallbackProxyTest::TearDownTestCase(void)
-{}
-
-void ScanCallbackProxyTest::SetUp(void)
-{}
-
-void ScanCallbackProxyTest::TearDown(void)
 {}

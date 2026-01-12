@@ -39,7 +39,6 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
-    void TearDown();
 };
 
 void VendorWlanGroupTest::SetUpTestCase(void)
@@ -53,9 +52,6 @@ void VendorWlanGroupTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("VendorWlanGroupTest_%{public}d", ++testNo);
 }
-
-void VendorWlanGroupTest::TearDown(void)
-{}
 
 HWTEST_F(VendorWlanGroupTest, VendorWlanGroupTest_0001_NeedRename, TestSize.Level1)
 {

@@ -28,20 +28,12 @@ class PrintExtensionCallbackProxyTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrintExtensionCallbackProxyTest::SetUpTestCase(void)
 {}
 
 void PrintExtensionCallbackProxyTest::TearDownTestCase(void)
-{}
-
-void PrintExtensionCallbackProxyTest::SetUp(void)
-{}
-
-void PrintExtensionCallbackProxyTest::TearDown(void)
 {}
 
 /**

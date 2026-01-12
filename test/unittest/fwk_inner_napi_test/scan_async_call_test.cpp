@@ -29,20 +29,12 @@ class ScanAsyncCallTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void ScanAsyncCallTest::SetUpTestCase(void)
 {}
 
 void ScanAsyncCallTest::TearDownTestCase(void)
-{}
-
-void ScanAsyncCallTest::SetUp(void)
-{}
-
-void ScanAsyncCallTest::TearDown(void)
 {}
 
 /**

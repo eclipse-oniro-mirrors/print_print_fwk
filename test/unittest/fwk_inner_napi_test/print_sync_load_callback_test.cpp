@@ -31,20 +31,12 @@ class PrintSyncLoadCallbackTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrintSyncLoadCallbackTest::SetUpTestCase(void)
 {}
 
 void PrintSyncLoadCallbackTest::TearDownTestCase(void)
-{}
-
-void PrintSyncLoadCallbackTest::SetUp(void)
-{}
-
-void PrintSyncLoadCallbackTest::TearDown(void)
 {}
 
 /**

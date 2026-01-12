@@ -35,7 +35,6 @@ public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
     void SetUp();
-    void TearDown();
 };
 
 void VendorPpdDriverTest::SetUpTestCase(void)
@@ -49,9 +48,6 @@ void VendorPpdDriverTest::SetUp(void)
     static int32_t testNo = 0;
     PRINT_HILOGI("VendorPpdDriverTest_%{public}d", ++testNo);
 }
-
-void VendorPpdDriverTest::TearDown(void)
-{}
 
 HWTEST_F(VendorPpdDriverTest, GetVendorName_ShouldReturnVendorName_WhenCalled, TestSize.Level0)
 {

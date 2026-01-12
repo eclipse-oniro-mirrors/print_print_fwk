@@ -26,20 +26,12 @@ class PrintSecurityGuardInfoTest : public testing::Test {
 public:
     static void SetUpTestCase(void);
     static void TearDownTestCase(void);
-    void SetUp();
-    void TearDown();
 };
 
 void PrintSecurityGuardInfoTest::SetUpTestCase(void)
 {}
 
 void PrintSecurityGuardInfoTest::TearDownTestCase(void)
-{}
-
-void PrintSecurityGuardInfoTest::SetUp(void)
-{}
-
-void PrintSecurityGuardInfoTest::TearDown(void)
 {}
 
 HWTEST_F(PrintSecurityGuardInfoTest, PrintSecurityGuardInfoTest_0001_NeedRename, TestSize.Level1)
