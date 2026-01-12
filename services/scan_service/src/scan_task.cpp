@@ -83,6 +83,7 @@ int32_t ScanTask::WriteJpegHeader(ScanParameters &parm, const UINT16& dpi)
     int32_t height = parm.GetLines();
     cinfo_.err = jpeg_std_error(&jerr_);
     cinfo_.err->error_exit = &ScanTask::JpegErrorExit;
+    cinfo_.client_data = this;
     jpeg_create_compress(&cinfo_);
     isJpegWriteSuccess_ = true;
     jpeg_stdio_dest(&cinfo_, ofp_);
@@ -137,12 +138,12 @@ int32_t ScanTask::WritePicData(int32_t& jpegrow, std::vector<uint8_t>& dataBuffe
             jpegrow = 0;
             continue;
         }
-        int32_t jpegImageBytes = parm.GetBytesPerLine() * BYTE_BITS;
+        int64_t jpegImageBytes = static_cast<int64_t>(parm.GetBytesPerLine()) * BYTE_BITS;
         if (jpegImageBytes < 0 || jpegImageBytes > MAX_BUFLEN) {
             SCAN_HILOGE("nultiplication would overflow");
             return E_SCAN_GENERIC_FAILURE;
         }
-        std::vector<JSAMPLE> buf8(jpegImageBytes);
+        std::vector<JSAMPLE> buf8(static_cast<int32_t>(jpegImageBytes));
         for (int32_t col1 = 0; col1 < parm.GetBytesPerLine(); col1++) {
             for (int32_t col8 = 0; col8 < BYTE_BITS; col8++) {
                 buf8[col1 * BYTE_BITS + col8] = jpegbuf_[col1] & (1 << (BYTE_BITS - col8 - BIT)) ? 0 : 0xff;
