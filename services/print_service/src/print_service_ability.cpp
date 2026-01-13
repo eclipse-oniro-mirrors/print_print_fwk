@@ -4652,10 +4652,9 @@ bool PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
     printSystemData_.Init();
     PrintCupsClient::GetInstance()->InitCupsResources();
     vendorManager.SwitchSpace();
+    CheckCupsServerAlive();
 #ifdef VIRTUAL_PRINTER_ENABLE
-    if (PrintCupsClient::GetInstance()->IsCupsServerAlive()) {
-        RefreshVirtualPrinter();
-    }
+    RefreshVirtualPrinter();
 #endif
     return true;
 }
