@@ -410,6 +410,7 @@ std::shared_ptr<VendorDriverBase> VendorManager::FindDriverByVendorName(const st
 void VendorManager::StartStatusMonitor()
 {
     PRINT_HILOGI("StartStatusMonitor Enter");
+    std::lock_guard<std::mutex> lock(apiMutex);
     {
         std::unique_lock<std::mutex> lock(statusMonitorMutex);
         if (statusMonitorOn) {
@@ -426,6 +427,7 @@ void VendorManager::StartStatusMonitor()
 void VendorManager::StopStatusMonitor()
 {
     PRINT_HILOGI("StopStatusMonitor Enter");
+    std::lock_guard<std::mutex> lock(apiMutex);
     {
         std::unique_lock<std::mutex> lock(statusMonitorMutex);
         statusMonitorOn = false;
