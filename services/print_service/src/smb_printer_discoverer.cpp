@@ -21,6 +21,7 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <sstream>
+#include <iomanip>
 #include "print_log.h"
 #include "print_util.h"
 #include "print_constant.h"
@@ -35,6 +36,8 @@ static constexpr int32_t PRINTER_TYPE = 3;
 static const char* URL_SPACE_ENCODING  = "%20";
 static constexpr uint16_t SMB2_NEGOTIATE_SIGNING_ENABLED = 0x0001;
 static constexpr int SHARE_INFO_1 = 1;
+static constexpr int FIELD_WIDTH = 2;
+static constexpr char PERCENT_SYMBOL = '%';
 
 struct SmbPrinterDiscoverer::PrinterShareInfo {
     std::string name;
@@ -226,7 +229,7 @@ void SmbPrinterDiscoverer::GeneratePrinterInfos(const std::string& ip, std::vect
         char uri[MAX_URI_LENGTH] = {0};
         std::string shareName = printer.name;
         if (sprintf_s(uri, sizeof(uri), "smb://%s/%s",
-            ip.c_str(), ReplaceSpacesInPrinterUri(printer.name).c_str()) < 0) {
+            ip.c_str(), UrlEncode(printer.name).c_str()) < 0) {
             PRINT_HILOGW("GeneratePrinterInfos sprintf_s fail");
             continue;
         }
@@ -238,17 +241,21 @@ void SmbPrinterDiscoverer::GeneratePrinterInfos(const std::string& ip, std::vect
     }
 }
 
-std::string SmbPrinterDiscoverer::ReplaceSpacesInPrinterUri(const std::string& input)
+std::string SmbPrinterDiscoverer::UrlEncode(const std::string& str)
 {
-    std::ostringstream oss;
-    for (char c : input) {
-        if (c == ' ') {
-            oss << URL_SPACE_ENCODING;
-        } else {
-            oss << c;
+    std::ostringstream escaped;
+    escaped.fill('0');
+    escaped << std::hex << std::uppercase;
+
+    for (char c : str) {
+        if (isalnum(static_cast<unsigned char>(c)) || c == '.' || c == '/' || c == ':') {
+            escaped << c;
+            continue;
         }
+        escaped << PERCENT_SYMBOL << std::setw(FIELD_WIDTH) << static_cast<int>(static_cast<unsigned char>(c));
     }
-    return oss.str();
+
+    return escaped.str();
 }
 
 std::string SmbPrinterDiscoverer::CreatePrinterId(const std::string& ip, const std::string& name)
