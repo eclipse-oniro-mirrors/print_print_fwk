@@ -144,6 +144,8 @@ public:
 
     void DumpInfo() const;
 
+    void SetOptionField(const std::string &key, const std::string &value);
+
 private:
     bool ReadFromParcel(Parcel &parcel);
 

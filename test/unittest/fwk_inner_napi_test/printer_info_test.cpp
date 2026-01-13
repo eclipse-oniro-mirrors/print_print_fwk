@@ -467,5 +467,34 @@ HWTEST_F(PrinterInfoTest, PrinterInfoTest_0027_NeedRename, TestSize.Level2)
     auto result = OHOS::Print::PrinterInfo::Unmarshalling(parcel);
     EXPECT_NE(nullptr, result);
 }
+
+HWTEST_F(PrinterInfoTest, SetOptionField_ShouldHaveOption_WhenKeyNotEmpty, TestSize.Level0)
+{
+    OHOS::Print::PrinterInfo info;
+    std::string key = "test key";
+    std::string value = "test value";
+    info.SetOptionField(key, value);
+    EXPECT_TRUE(info.HasOption());
+}
+
+HWTEST_F(PrinterInfoTest, SetOptionField_ShouldNotHaveOption_WhenKeyEmpty, TestSize.Level0)
+{
+    OHOS::Print::PrinterInfo info;
+    std::string key = "";
+    std::string value = "test value";
+    info.SetOptionField(key, value);
+    EXPECT_FALSE(info.HasOption());
+}
+
+HWTEST_F(PrinterInfoTest, SetOptionField_ShouldHaveOption_WhenAddOption, TestSize.Level1)
+{
+    OHOS::Print::PrinterInfo info;
+    std::string key = "test key";
+    std::string value = "test value";
+    info.SetOptionField(key, value);
+    value = "test value 2";
+    info.SetOptionField(key, value);
+    EXPECT_TRUE(info.HasOption());
+}
 }  // namespace Print
 }  // namespace OHOS
