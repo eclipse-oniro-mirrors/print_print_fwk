@@ -70,9 +70,9 @@ public:
         bundleName_(bundleName), counter_() {
     };
     PrintCallerAppInfo(const PrintCallerAppInfo &right)
-        : pid_(right.pid_), 
-        userId_(right.userId_), 
-        bundleName_(right.bundleName_), 
+        : pid_(right.pid_),
+        userId_(right.userId_),
+        bundleName_(right.bundleName_),
         counter_(right.counter_)
     {
     }
