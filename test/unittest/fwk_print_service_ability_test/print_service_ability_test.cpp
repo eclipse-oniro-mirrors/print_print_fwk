@@ -47,7 +47,16 @@
 using namespace testing;
 using namespace testing::ext;
 
-namespace OHOS::Print {
+namespace OHOS {
+
+uint32_t uid_ = 0;
+
+pid_t IPCSkeleton::GetCallingUid()
+{
+    return uid_;
+}
+
+namespace Print {
 using namespace std;
 using namespace OHOS::HiviewDFX;
 using namespace Security::AccessToken;
@@ -85,6 +94,11 @@ public:
         : PrintServiceAbility(systemAbilityId, runOnCreate) {}
     MOCK_METHOD2(QueryPrinterInfoByPrinterId, int32_t(const std::string &printerId, PrinterInfo &info));
     MOCK_METHOD2(QueryPPDInformation, bool(const std::string &makeModel, std::string &ppdName));
+};
+
+class MockPrintServiceHelper final : public PrintServiceHelper {
+public:
+    MOCK_METHOD1(QueryAccounts, bool(std::vector<int> &accountList));
 };
 
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
@@ -3390,4 +3404,22 @@ HWTEST_F(PrintServiceAbilityTest,
     service->printSystemData_.QueryAddedPrinterInfoByPrinterId(id, printer);
     EXPECT_EQ(printer.GetPrinterStatus(), PRINTER_STATUS_UNAVAILABLE);
 }
-}  // namespace OHOS::Print
+
+HWTEST_F(PrintServiceAbilityTest,
+    StartDiscoverPrinter_createUserIdFailed, TestSize.Level1)
+{
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+
+    auto helper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*helper, QueryAccounts(_))
+        .WillRepeatedly(Return(false));
+    service->SetHelper(helper);
+
+    EXPECT_EQ(service->GetCurrentUserId(), INVALID_USER_ID);
+    
+    std::vector<std::string> extensionIds;
+    EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_INVALID_USERID);
+}
+}  // namespace Print
+}  // namespace OHOS
