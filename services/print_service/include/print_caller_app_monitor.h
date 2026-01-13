@@ -50,7 +50,8 @@ public:
     }
     PrintCounter() = default;
     PrintCounter(const PrintCounter &right) : count_(right.count_.load(std::memory_order_relaxed)) {}
-    PrintCounter& operator=(const PrintCounter &right) {
+    PrintCounter& operator=(const PrintCounter &right)
+    {
         if (this != &right) {
             count_.store(right.count_.load(std::memory_order_relaxed), std::memory_order_relaxed);
         }
@@ -69,13 +70,14 @@ public:
         bundleName_(bundleName), counter_() {
     };
     PrintCallerAppInfo(const PrintCallerAppInfo &right)
-    : pid_(right.pid_), 
-      userId_(right.userId_), 
-      bundleName_(right.bundleName_), 
-      counter_(right.counter_)
+        : pid_(right.pid_), 
+        userId_(right.userId_), 
+        bundleName_(right.bundleName_), 
+        counter_(right.counter_)
     {
     }
-    PrintCallerAppInfo& operator=(const PrintCallerAppInfo &right) {
+    PrintCallerAppInfo& operator=(const PrintCallerAppInfo &right)
+    {
         if (this != &right) {
             pid_ = right.pid_;
             userId_ = right.userId_;
