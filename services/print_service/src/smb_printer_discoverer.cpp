@@ -41,15 +41,10 @@ struct SmbPrinterDiscoverer::PrinterShareInfo {
     std::string remark;
 };
 
-SmbPrinterDiscoverer::SmbPrinterDiscoverer() : smbCtx_(nullptr),
-    userPasswd_(nullptr), smbLib_(DelayedSingleton<SmbLibrary>::GetInstance())
+SmbPrinterDiscoverer::SmbPrinterDiscoverer() : smbCtx_(nullptr), smbLib_(DelayedSingleton<SmbLibrary>::GetInstance())
 {
     if (smbLib_) {
         smbCtx_ = smbLib_->CreateContext();
-    }
-    userPasswd_ = new (std::nothrow) char[MAX_AUTH_LENGTH_SIZE]{};
-    if (!userPasswd_) {
-        PRINT_HILOGE("allocate userPasswd_ mem fail");
     }
 }
 
@@ -61,10 +56,6 @@ SmbPrinterDiscoverer::~SmbPrinterDiscoverer()
         }
         smbCtx_ = nullptr;
     }
-    if (userPasswd_) {
-        PrintUtil::SafeDeleteAuthInfo(userPasswd_);
-        userPasswd_ = nullptr;
-    }
 }
 
 int32_t SmbPrinterDiscoverer::SetCredentials(const std::string &userName, char *userPasswd)
@@ -74,28 +65,16 @@ int32_t SmbPrinterDiscoverer::SetCredentials(const std::string &userName, char *
 
     if (userName.empty()) {
         PRINT_HILOGI("auth as guest");
-        return E_PRINT_NONE;
+        smbLib_->SetUser(smbCtx_, "guest");
+        smbLib_->SetPassword(smbCtx_, "");
+    } else {
+        PRINT_HILOGI("auth as registered user");
+        smbLib_->SetUser(smbCtx_, userName.c_str());
+        if (userPasswd) {
+            smbLib_->SetPassword(smbCtx_, userPasswd);
+        }
     }
-
-    if (!userPasswd) {
-        PRINT_HILOGE("userPasswd is null");
-        return E_PRINT_INVALID_PARAMETER;
-    }
-
-    if (!userPasswd_) {
-        PRINT_HILOGE("userPasswd_ is null");
-        return E_PRINT_SERVER_FAILURE;
-    }
-
-    smbLib_->SetUser(smbCtx_, userName.c_str());
-    smbLib_->SetPassword(smbCtx_, userPasswd);
     smbLib_->SetSecurityMode(smbCtx_, SMB2_NEGOTIATE_SIGNING_ENABLED);
-
-    auto memcpyRet = memcpy_s(userPasswd_, MAX_AUTH_LENGTH_SIZE, userPasswd, MAX_AUTH_LENGTH_SIZE);
-    if (memcpyRet != E_PRINT_NONE) {
-        PRINT_HILOGW("memcpy_s failed, errorCode:[%{public}d]", memcpyRet);
-    }
-    userName_ = userName;
     return E_PRINT_NONE;
 }
 
@@ -111,7 +90,6 @@ int32_t SmbPrinterDiscoverer::QuerySmbPrinters(const PrintSharedHost& sharedHost
         return ret;
     }
     smbLib_->SetTimeout(smbCtx_, SMB_CONNECT_TIMEOUT_MS);
-    const char* share = "print$";
     ret = smbLib_->ConnectShare(smbCtx_, sharedHost.GetIp().c_str(), "IPC$", nullptr);
     if (ret != 0) {
         PRINT_HILOGE("smb2_connect_share fail, ret = %{public}d, reason = %{public}s",
