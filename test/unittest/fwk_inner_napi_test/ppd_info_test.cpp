@@ -86,8 +86,6 @@ class PpdInfoCommon {
 public:
     static void SetUpTestCase(void){};
     static void TearDownTestCase(void){};
-    void SetUp(void){};
-    void TearDown(void){};
 };
  
 struct BuildPpdInfoParam {
@@ -99,9 +97,7 @@ struct BuildPpdInfoParam {
 class CheckPpdInfoTest : public PpdInfoCommon,
                         public testing::TestWithParam<BuildPpdInfoParam> {
 public:
-    using PpdInfoCommon::SetUp;
     using PpdInfoCommon::SetUpTestCase;
-    using PpdInfoCommon::TearDown;
     using PpdInfoCommon::TearDownTestCase;
 };
  
