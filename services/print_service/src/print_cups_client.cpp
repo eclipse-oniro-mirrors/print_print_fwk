@@ -1562,11 +1562,9 @@ void PrintCupsClient::BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monito
         return;
     }
     PrinterInfo addedPrinterInfo;
-    if (PrintServiceAbility::GetInstance()->QueryPrinterInfoByPrinterId(monitorParams->printerId, addedPrinterInfo) !=
-        E_PRINT_NONE) {
-        PRINT_HILOGW("[Job Id: %{public}s] printer make is empty, use default policy",
-            monitorParams->serviceJobId.c_str());
-        return;
+    if (!PrintServiceAbility::GetInstance()->QueryAddedPrinterInfoByPrinterId(
+        monitorParams->printerId, addedPrinterInfo)) {
+        PRINT_HILOGW("[Job Id: %{public}s] cannot find printer by printerId", monitorParams->serviceJobId.c_str());
     }
     auto policyPair = SPECIAL_PRINTER_POLICY.find(addedPrinterInfo.GetPrinterMake());
     if (policyPair == SPECIAL_PRINTER_POLICY.end()) {
