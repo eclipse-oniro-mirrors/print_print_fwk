@@ -121,6 +121,7 @@ const int HTTP_COMMON_CONST_VALUE_500 = 500;
 const int HTTP_COMMON_CONST_VALUE_100 = 100;
 const int HTTP_COMMON_CONST_VALUE_2 = 2;
 const int USB_DEVICEID_FIRSTID_LEN_3 = 3;
+const std::string PRINTER_SERVICE_SANE_TEMPORARY_PATH = "/data/service/el2/public/print_service/sane/tmp";
 
 enum ScanFrame  {
     SCAN_FRAME_GRAY = 0,  /* band covering human visual range */
