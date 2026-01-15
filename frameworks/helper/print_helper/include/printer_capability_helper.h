@@ -84,7 +84,7 @@ private:
         bool isArray = false;
         napi_is_array(env, jsArray, &isArray);
         if (!isArray) {
-            PRINT_HILOGE("the array length is over %{public}d, max allowed is %{public}d", length, MAX_ARRAY_LENGTH);
+            PRINT_HILOGE("Property %{public}s is not an array type", propertyName);
             return false;
         }
 
