@@ -275,6 +275,42 @@ napi_value NapiInnerPrint::StartPrintJob(napi_env env, napi_callback_info info)
     return asyncCall.Call(env, exec);
 }
 
+ napi_value NapiInnerPrint::StartPrint(napi_env env, napi_callback_info info)
+{
+    PRINT_HILOGD("Enter StartPrint---->");
+    auto context = std::make_shared<InnerPrintContext>();
+    auto input =
+        [context](
+            napi_env env, size_t argc, napi_value *argv, napi_value self, napi_callback_info info) -> napi_status {
+        PRINT_ASSERT_BASE(env, argc == NapiPrintUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
+        auto printJobPtr = PrintJobHelper::BuildPrintJobFromJs(env, argv[NapiPrintUtils::INDEX_ZERO]);
+        if (printJobPtr == nullptr) {
+            PRINT_HILOGE("ParseJob type error!");
+            context->SetErrorIndex(E_PRINT_INVALID_PARAMETER);
+            return napi_invalid_arg;
+        }
+        context->printJob = *printJobPtr;
+        return napi_ok;
+    };
+    auto output = [context](napi_env env, napi_value *result) -> napi_status {
+        napi_status status = napi_get_boolean(env, context->result, result);
+        PRINT_HILOGD("output ---- [%{public}s], status[%{public}d]", context->result ? "true" : "false", status);
+        return status;
+    };
+    auto exec = [context](PrintAsyncCall::Context *ctx) {
+        context->printJob.Dump();
+        int32_t ret = PrintManagerClient::GetInstance()->StartNativePrintJob(context->printJob);
+        context->result = ret == E_PRINT_NONE;
+        if (ret != E_PRINT_NONE) {
+            PRINT_HILOGE("Failed to start native print job");
+            context->SetErrorIndex(ret);
+        }
+    };
+    context->SetAction(std::move(input), std::move(output));
+    PrintAsyncCall asyncCall(env, info, std::dynamic_pointer_cast<PrintAsyncCall::Context>(context));
+    return asyncCall.Call(env, exec);
+}
+
 napi_value NapiInnerPrint::CancelPrintJob(napi_env env, napi_callback_info info)
 {
     PRINT_HILOGD("Enter CancelPrintJob---->");

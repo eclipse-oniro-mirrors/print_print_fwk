@@ -16,6 +16,10 @@
 #ifndef PRINT_UTILS_H
 #define PRINT_UTILS_H
 
+#include <application_context.h>
+#include <chrono>
+#include <fcntl.h>
+#include <fstream>
 #include <string>
 #include "want.h"
 #include "bundle_mgr_client.h"
@@ -24,6 +28,7 @@
 #include "json/json.h"
 #include <mutex>
 #include "print_json_util.h"
+#include "print_job.h"
 
 #include <print_attributes.h>
 
@@ -33,6 +38,36 @@ struct AdapterParam {
     bool isCheckFdList;
     PrintAttributes printAttributes;
     std::string jobId;
+};
+
+const int32_t PARAM_NOT_SET = -1;
+struct PrintJobParams {
+    std::string printerId;
+    std::string jobName;
+    uint32_t documentFormat;
+    uint32_t docFlavor;
+    uint32_t copyNumber;
+    bool isLandscape;
+    uint32_t colorMode;
+    uint32_t duplexMode;
+    PrintPageSize pageSize;
+    std::string jobId;
+    std::vector<uint32_t> printFdList;
+    void* binaryData;
+    size_t dataLength;
+    int32_t printQuality = PARAM_NOT_SET;
+    std::string mediaType;
+    int32_t isBorderless = PARAM_NOT_SET;
+    int32_t isAutoRotate = PARAM_NOT_SET;
+    int32_t isReverse = PARAM_NOT_SET;
+    int32_t isCollate = PARAM_NOT_SET;
+    PrintRange pageRange;
+    bool hasMargin = false;
+    PrintMargin margin;
+    bool hasPreview = false;
+    PrintPreviewAttribute preview;
+    int32_t isSequential = PARAM_NOT_SET;
+    std::string cupsOptions;
 };
 
 class PrintUtils {
@@ -70,6 +105,11 @@ public:
     static bool CheckUserIdInEventType(const std::string &type, int32_t callerUserId);
     static bool IsUsbPrinter(const std::string &printerId);
     static std::string ExtractHostFromUri(const std::string &uri);
+    static std::shared_ptr<PrintJob> ConvertParamsToPrintJob(const PrintJobParams &params);
+    static std::string GetDocumentFormatToString(uint32_t format);
+    static int CreateTempFileWithData(void* data, size_t length, std::string &tmpPath);
+    static std::string GenerateTempFilePath(const std::string &filesDir);
+    static void SetOptionInPrintJob(const PrintJobParams &params, std::shared_ptr<PrintJob> &nativeObj);
 
     template <typename T, typename ReadFunc>
     static bool readListFromParcel(Parcel &parcel, std::vector<T> &supportedList, const ReadFunc &readFunc)
