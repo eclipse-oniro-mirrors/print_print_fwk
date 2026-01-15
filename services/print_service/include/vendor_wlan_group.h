@@ -69,6 +69,7 @@ private:
     bool ConnectByPpdDriver(const std::string &printerId);
     bool ConnectByBsuni(const std::string &printerIp, const std::string &protocol);
     bool ConnectByIppEverywhere(const std::string &printerIp, const std::string &protocol);
+    void SetGroupPrinterFromVendorGroupList(const std::string &printerId, const std::string &vendorName);
 
 private:
     VendorManager* parentVendorManager = nullptr;
