@@ -91,7 +91,7 @@ private:
         uint32_t length = 0;
         napi_get_array_length(env, jsArray, &length);
         if (length > MAX_ARRAY_LENGTH) {
-            PRINT_HILOGE("the array length is over %{public}d", MAX_ARRAY_LENGTH);
+            PRINT_HILOGE("the array length is over %{public}d, max allowed is %{public}d", length, MAX_ARRAY_LENGTH);
             return false;
         }
         std::vector<T> items;
