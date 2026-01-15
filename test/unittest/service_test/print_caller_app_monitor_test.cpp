@@ -127,7 +127,7 @@ HWTEST_F(PrintCallerAppMonitorTest, CheckCallerAppInMap_pidInMapButBundleNotMatc
 {
     int32_t callerPid = 9999;
     std::string bundleName = "testBundleName";
-    std::shared_ptr<PrintCallerAppInfo> callerAppInfo = std::make_shared<PrintCallerAppInfo>(callerPid, "");
+    std::shared_ptr<PrintCallerAppInfo> callerAppInfo = std::make_shared<PrintCallerAppInfo>(callerPid, -1, "");
     printCallerAppMonitor.callerMap_[callerPid] = callerAppInfo;
     EXPECT_EQ(printCallerAppMonitor.CheckCallerAppInMap(callerPid, bundleName), false);
 }
@@ -136,7 +136,7 @@ HWTEST_F(PrintCallerAppMonitorTest, CheckCallerAppInMap_matchCallerAppInfoInMap_
 {
     int32_t callerPid = 9999;
     std::string bundleName = "testBundleName";
-    std::shared_ptr<PrintCallerAppInfo> callerAppInfo = std::make_shared<PrintCallerAppInfo>(callerPid, bundleName);
+    std::shared_ptr<PrintCallerAppInfo> callerAppInfo = std::make_shared<PrintCallerAppInfo>(callerPid, -1, bundleName);
     callerAppInfo->bundleName_ = bundleName;
     printCallerAppMonitor.callerMap_[callerPid] = callerAppInfo;
     EXPECT_EQ(printCallerAppMonitor.CheckCallerAppInMap(callerPid, bundleName), true);
