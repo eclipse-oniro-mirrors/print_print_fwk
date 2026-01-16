@@ -1058,9 +1058,14 @@ int32_t PrintManagerClient::Init()
 
 int32_t PrintManagerClient::Release()
 {
-    SetNativePrinterChangeCallback(PRINTER_DISCOVER_EVENT_TYPE, nullptr);
-    SetNativePrinterChangeCallback(PRINTER_CHANGE_EVENT_TYPE, nullptr);
-    return E_PRINT_NONE;
+    std::lock_guard<std::recursive_mutex> lock(proxyLock_);
+    int32_t ret = E_PRINT_RPC_FAILURE;
+    PRINT_HILOGI("PrintManagerClient Release start");
+    if (LoadServer() && GetPrintServiceProxy()) {
+        ret = printServiceProxy_->Release();
+    }
+    PRINT_HILOGI("PrintManagerClient Release out ret = [%{public}d].", ret);
+    return ret;
 }
 
 int32_t PrintManagerClient::AuthPrintJob(const std::string &jobId, const std::string &userName,

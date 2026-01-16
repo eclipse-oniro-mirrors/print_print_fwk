@@ -34,6 +34,7 @@ class IPrintService : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.Print.IPrintService");
     virtual int32_t StartService() = 0;
+    virtual int32_t Release() = 0;
     virtual int32_t StartPrint(const std::vector<std::string> &fileList,
         const std::vector<uint32_t> &fdList, std::string &taskId) = 0;
     virtual int32_t ConnectPrinter(const std::string &printerId) = 0;

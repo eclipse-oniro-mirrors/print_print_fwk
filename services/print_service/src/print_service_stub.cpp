@@ -65,6 +65,7 @@ PrintServiceStub::PrintServiceStub()
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_START_GET_FILE] = &PrintServiceStub::OnStartGetPrintFile;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_NOTIFY_PRINT_SERVICE] = &PrintServiceStub::OnNotifyPrintService;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_START_SERVICE] = &PrintServiceStub::OnStartService;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_RELEASE] = &PrintServiceStub::OnRelease;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_PRINTER_CB] = &PrintServiceStub::OnRegisterPrinterCallback;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UNREG_PRINTER_CB] = &PrintServiceStub::OnUnregisterPrinterCallback;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_QUERYPRINTERINFOBYPRINTERID] =
@@ -139,6 +140,18 @@ bool PrintServiceStub::OnStartService(MessageParcel &data, MessageParcel &reply)
         ret = StartService();
         reply.WriteInt32(ret);
         PRINT_HILOGI("nativePrint PrintServiceStub::OnStartService out:%{public}d", ret);
+    }
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnRelease(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGD("nativePrint PrintServiceStub::OnRelease in");
+    int32_t ret = E_PRINT_INVALID_PARAMETER;
+    if (data.ReadString() == "nativePrint") {
+        ret = Release();
+        reply.WriteInt32(ret);
+        PRINT_HILOGI("nativePrint PrintServiceStub::OnRelease out:%{public}d", ret);
     }
     return ret == E_PRINT_NONE;
 }

@@ -57,6 +57,26 @@ int32_t PrintServiceProxy::StartService()
     return ret;
 }
 
+int32_t PrintServiceProxy::Release()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    const std::string ndkInfo = "nativePrint";
+    data.WriteString(ndkInfo);
+    PRINT_HILOGI("nativePrint PrintServiceProxy Release started.");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy Release remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_RELEASE, data, reply, option);
+    ret = GetResult(ret, reply);
+    PRINT_HILOGD("PrintServiceProxy CMD_RELEASE ret = [%{public}d]", ret);
+    return ret;
+}
+
 int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
     const std::vector<uint32_t> &fdList, std::string &taskId)
 {

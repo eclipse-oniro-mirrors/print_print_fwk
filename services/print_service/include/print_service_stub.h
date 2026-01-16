@@ -28,6 +28,7 @@ public:
 
 private:
     bool OnStartService(MessageParcel &data, MessageParcel &reply);
+    bool OnRelease(MessageParcel &data, MessageParcel &reply);
     bool OnStartPrint(MessageParcel &data, MessageParcel &reply);
     bool OnEventOn(MessageParcel &data, MessageParcel &reply);
     bool OnEventOff(MessageParcel &data, MessageParcel &reply);
