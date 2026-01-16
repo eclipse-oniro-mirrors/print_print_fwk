@@ -2861,7 +2861,7 @@ HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIpAndPpdTest, TestSize.Level1)
     std::string protocol = "ipp";
     std::string ppdName = BSUNI_PPD_NAME;
     EXPECT_EQ(service->ConnectPrinterByIpAndPpd("1", protocol, ppdName), E_PRINT_INVALID_PRINTER);
-    ervice->VendorManager.wlanGroupDriver = nullptr;
+    service->vendorManager.wlanGroupDriver = nullptr;
     EXPECT_EQ(service->ConnectPrinterByIpAndPpd(ip, protocol, ppdName), E_PRINT_SERVER_FAILURE);
 }
 
