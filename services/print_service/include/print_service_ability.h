@@ -318,6 +318,7 @@ private:
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
     std::map<std::string, sptr<IPrintCallback>> adapterListenersByJobId_;
     std::map<std::string, sptr<IPrintExtensionCallback>> extCallbackMap_;
+    std::vector<std::pair<std::string, std::string>> startedExtAbilityInfos_;
 
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> extensionList_;
     std::map<std::string, PrintExtensionState> extensionStateList_;
