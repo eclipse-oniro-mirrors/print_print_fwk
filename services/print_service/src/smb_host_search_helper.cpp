@@ -96,7 +96,7 @@ bool SmbHostSearchHelper::InitializeSock()
     
     int32_t flags = fcntl(sock_, F_GETFL, 0);
     if (flags >= 0) {
-        fcntl(sock_, F_SETFL, flags | O_NONBLOCK);
+        fcntl(sock_, F_SETFL, static_cast<uint32_t>(flags) | O_NONBLOCK);
     }
     int32_t bufSize = SOCKET_BUFFER_SIZE;
     if (setsockopt(sock_, SOL_SOCKET, SO_RCVBUF, &bufSize, sizeof(bufSize)) < 0) {
@@ -236,7 +236,7 @@ void SmbHostSearchHelper::SetQuestionName(struct NbnameRequest &request)
     currentPos[0] = ENCODED_NAME_SIZE;
     currentPos++;
     for (int32_t i = 0; i < NAME_FIELD_SIZE; i++) {
-        int32_t currentChar = toupper(nameBuffer[i]);
+        uint32_t currentChar = toupper(nameBuffer[i]);
         currentPos[i * INDEX_2] = ((currentChar >> NIBBLE_SHIFT) & NIBBLE_MASK) + ENCODING_BASE;
         currentPos[(i * INDEX_2) + 1] = (currentChar & NIBBLE_MASK) + ENCODING_BASE;
     }
@@ -381,9 +381,8 @@ std::pair<std::string, std::string> SmbHostSearchHelper::NetworkIpRange::Calcula
 
 SmbHostSearchHelper::NetworkIpRange::NetworkIpRange(const std::string& start, const std::string& end)
 {
-    if (!inet_aton(start.c_str(), &start_) || !inet_aton(end.c_str(), &end_)) {
-        PRINT_HILOGE("Invalid IP address format");
-    }
+    inet_aton(start.c_str(), &start_);
+    inet_aton(end.c_str(), &end_);
     current_ = start_;
 }
 
@@ -483,7 +482,7 @@ std::string SmbHostSearchHelper::GetFileServerName()
 {
     int32_t offset = 0;
     char* buff = recvBuffer_.data();
-    int32_t buffsize = recvBuffer_.size();
+    int32_t buffsize = static_cast<int32_t>(recvBuffer_.size());
     if (buffsize < HEADER_SKIP_SIZE + 1) {
         PRINT_HILOGW("Head error");
         return "";
