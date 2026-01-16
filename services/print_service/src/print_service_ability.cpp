@@ -802,6 +802,15 @@ int32_t PrintServiceAbility::DestroyExtension()
             cbFunc->OnCallback();
         }
     }
+
+    AAFwk::Want want;
+    sptr<IRemoteObject> token;
+    for (const auto& [bundleName, abilityName] : startedExtAbilityInfos_) {
+        want.SetElementName(bundleName, abilityName);
+        AAFwk::AbilityManagerClient::GetInstance()->StopExtensionAbility(want, token);
+    }
+    startedExtAbilityInfos_.clear();
+
     PRINT_HILOGI("DestroyExtension end.");
     return E_PRINT_NONE;
 }
@@ -4119,6 +4128,7 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
             continue;
         }
         extensionStateList_[ability.second.bundleName] = PRINT_EXTENSION_LOADING;
+        startedExtAbilityInfos_.emplace_back(ability.second.bundleName, ability.second.name);
     }
     PRINT_HILOGI("StartDiscoverPrinter end.");
     return E_PRINT_NONE;
