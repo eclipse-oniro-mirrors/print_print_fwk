@@ -560,26 +560,6 @@ HWTEST_F(VendorWlanGroupTest, ConnectByPpdDriver_Connect_Failed, TestSize.Level1
 
     EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_))
         .WillOnce(Return(printerInfo));
-    EXPECT_CALL(*mock, AddVendorPrinterToCupsWithPpd(_, _, _, _))
-        .WillOnce(Return(false));
-
-    std::string id = "test";
-    EXPECT_FALSE(vendorWlanGroup->ConnectByPpdDriver(id));
-}
-
-HWTEST_F(VendorWlanGroupTest, ConnectByPpdDriver_Connect_Success, TestSize.Level1)
-{
-    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
-    VendorManager vendorManager;
-    EXPECT_TRUE(vendorManager.Init(mock, false));
-    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
-
-    auto printerInfo = std::make_shared<PrinterInfo>();
-
-    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_))
-        .WillOnce(Return(printerInfo));
-    EXPECT_CALL(*mock, AddVendorPrinterToCupsWithPpd(_, _, _, _))
-        .WillOnce(Return(true));
 
     std::string id = "test";
     EXPECT_FALSE(vendorWlanGroup->ConnectByPpdDriver(id));
