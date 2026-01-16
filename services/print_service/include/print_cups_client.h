@@ -207,6 +207,12 @@ private:
     bool QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> monitorParams);
     void BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monitorParams);
     void ParseStateReasons(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandleProcessingState(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandleHeldState(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandlePendingState(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandleJobIsQueued(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandleStoppedState(std::shared_ptr<JobMonitorParam> monitorParams);
+    bool HandleCompletedState(std::shared_ptr<JobMonitorParam> monitorParams);
 
     int32_t StartCupsdService();
     JobParameters *GetNextJob();

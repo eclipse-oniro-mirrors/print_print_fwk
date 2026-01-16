@@ -163,6 +163,7 @@ enum PrintJobSubState {
     PRINT_JOB_BLOCKED_INTERRUPT = 35, // print job interrupt
     PRINT_JOB_BLOCKED_AUTHENTICATION = 36,  // print job need authenticate.
     PRINT_JOB_BLOCKED_BANNED = 37,  // print job has been banned by organization.
+    PRINT_JOB_BLOCKED_SMB_PRINTER = 38,  // SMB print job transmission failed.
     PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE = 98, // Printer is stopped.
     PRINT_JOB_BLOCKED_UNKNOWN = 99,             // unknown issue
     PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 101, // For internal use only: Click Cancel
