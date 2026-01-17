@@ -156,6 +156,10 @@ public:
     {
         return E_PRINT_NONE;
     }
+    int32_t Release() override
+    {
+        return E_PRINT_NONE;
+    }
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override
     {
         return E_PRINT_NONE;

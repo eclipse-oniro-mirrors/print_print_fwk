@@ -3421,5 +3421,14 @@ HWTEST_F(PrintServiceAbilityTest,
     std::vector<std::string> extensionIds;
     EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_INVALID_USERID);
 }
+
+HWTEST_F(PrintServiceAbilityTest, OHReleaseTest, TestSize.Level1)
+{
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->Release(), E_PRINT_NO_PERMISSION);
+    service->ManualStart();
+    EXPECT_EQ(service->Release(), E_PRINT_NONE);
+}
 }  // namespace Print
 }  // namespace OHOS

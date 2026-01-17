@@ -2381,7 +2381,7 @@ HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0133_NeedRename, TestSiz
     int32_t ret = PrintManagerClient::GetInstance()->Init();
     EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
     ret = PrintManagerClient::GetInstance()->Release();
-    EXPECT_EQ(ret, E_PRINT_NONE);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_0134_NeedRename, TestSize.Level1)

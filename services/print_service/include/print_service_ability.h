@@ -57,6 +57,7 @@ public:
     ~PrintServiceAbility();
     static sptr<PrintServiceAbility> GetInstance();
     int32_t StartService() override;
+    int32_t Release() override;
     int32_t StartPrint(
         const std::vector<std::string> &fileList, const std::vector<uint32_t> &fdList, std::string &taskId) override;
     int32_t ConnectPrinter(const std::string &printerId) override;
