@@ -74,9 +74,9 @@ private:
 private:
     VendorManager* parentVendorManager = nullptr;
     std::map<std::string, std::string> printerVendorGroupList_;
-    std::mutex printerVendorGroupListMutex;
+    std::mutex printerVendorGroupListMutex_;
     std::map<std::string, std::string> groupPrinterIdMap_;
-    std::mutex groupPrinterIdMapMutex;
+    std::mutex groupPrinterIdMapMutex_;
     bool hasGs = false;
 };
 }  // namespace Print

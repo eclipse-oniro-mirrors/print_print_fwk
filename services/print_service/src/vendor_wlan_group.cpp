@@ -198,7 +198,7 @@ bool VendorWlanGroup::IsGroupDriver(const std::string &bothPrinterId)
         return true;
     }
     std::string printerId(VendorManager::ExtractPrinterId(bothPrinterId));
-    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex);
+    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex_);
     auto iter = printerVendorGroupList_.find(printerId);
     return (iter != printerVendorGroupList_.end() && !iter->second.empty());
 }
@@ -210,7 +210,7 @@ bool VendorWlanGroup::ConvertGroupDriver(std::string &printerId, std::string &ve
         printerId = GetGroupPrinterId(printerId);
         return false;
     }
-    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex);
+    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex_);
     auto iter = printerVendorGroupList_.find(printerId);
     if (iter != printerVendorGroupList_.end() && !iter->second.empty()) {
         vendorName = VENDOR_WLAN_GROUP;
@@ -254,7 +254,7 @@ bool VendorWlanGroup::IsBsunidriverSupport(const PrinterInfo &printerInfo)
 
 void VendorWlanGroup::RemoveGroupPrinterFromVendorGroupList(const std::string &groupPrinterId)
 {
-    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex);
+    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex_);
     auto iter = printerVendorGroupList_.find(groupPrinterId);
     if (iter != printerVendorGroupList_.end()) {
         PRINT_HILOGI("[Printer: %{public}s] remove printer from vendor group list",
@@ -265,7 +265,7 @@ void VendorWlanGroup::RemoveGroupPrinterFromVendorGroupList(const std::string &g
 
 std::string VendorWlanGroup::QueryVendorDriverByGroupPrinterId(const std::string &groupPrinterId)
 {
-    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex);
+    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex_);
     auto iter = printerVendorGroupList_.find(groupPrinterId);
     if (iter != printerVendorGroupList_.end()) {
         return iter->second;
@@ -318,7 +318,7 @@ std::string VendorWlanGroup::ConvertGroupGlobalPrinterId(const std::string &both
 
 std::string VendorWlanGroup::GetGroupPrinterId(const std::string &printerId)
 {
-    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex);
+    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex_);
     auto item = groupPrinterIdMap_.find(printerId);
     if (item != groupPrinterIdMap_.end() && !item->second.empty()) {
         return item->second;
@@ -343,7 +343,7 @@ bool VendorWlanGroup::CheckPrinterAddedByIp(const std::string &printerId)
 
 void VendorWlanGroup::UpdateGroupPrinter(const std::string &printerId, const std::string &groupPrinterId)
 {
-    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex);
+    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex_);
     auto retPair = groupPrinterIdMap_.try_emplace(printerId, groupPrinterId);
     if (retPair.second) {
         PRINT_HILOGI("add new groupPrinterId");
@@ -360,7 +360,7 @@ void VendorWlanGroup::UpdateGroupPrinter(const std::string &printerId, const std
 
 bool VendorWlanGroup::HasGroupPrinter(const std::string &printerId)
 {
-    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex);
+    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex_);
     auto item = groupPrinterIdMap_.find(printerId);
     if (item != groupPrinterIdMap_.end()) {
         return true;
@@ -370,7 +370,7 @@ bool VendorWlanGroup::HasGroupPrinter(const std::string &printerId)
 
 void VendorWlanGroup::RemovedGroupPrinter(const std::string &printerId)
 {
-    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex);
+    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex_);
     groupPrinterIdMap_.erase(printerId);
 }
 
@@ -619,6 +619,6 @@ bool VendorWlanGroup::ConnectByIppEverywhere(const std::string &printerIp, const
 
 void VendorWlanGroup::SetGroupPrinterFromVendorGroupList(const std::string &printerId, const std::string &vendorName)
 {
-    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex);
+    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex_);
     printerVendorGroupList_[printerId] = vendorName;
 }
