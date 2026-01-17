@@ -765,26 +765,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0043_NeedRename, TestSize.Leve
 }
 
 /**
- * @tc.name: PrintCupsClientTest_0047
- * @tc.desc: JobStatusCallback
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0047_NeedRename, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    printCupsClient.IsPrinterStopped(nullptr);
-    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID,
-        PRINTER_URI,
-        PRINTER_PRINTER_NAME,
-        PRINTER_PRINTER_ID,
-        nullptr);
-    EXPECT_FALSE(printCupsClient.IsPrinterStopped(param));
-}
-
-/**
  * @tc.name: PrintCupsClientTest_0048
  * @tc.desc: JobStatusCallback
  * @tc.type: FUNC
@@ -1003,31 +983,6 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0055_NeedRename, TestSize.Leve
     EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
     param->timesOfSameState = STATE_UPDATE_STEP;
     EXPECT_TRUE(printCupsClient.JobStatusCallback(param));
-}
-
-/**
- * @tc.name: PrintCupsClientTest_0056
- * @tc.desc: QueryJobState
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_0056_NeedRename, TestSize.Level1)
-{
-    OHOS::Print::PrintCupsClient printCupsClient;
-    printCupsClient.ParseStateReasons(nullptr);
-    auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
-        TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID,
-        PRINTER_URI,
-        PRINTER_PRINTER_NAME,
-        PRINTER_PRINTER_ID,
-        nullptr);
-    param->isPrinterStopped = false;
-    printCupsClient.ParseStateReasons(param);
-    EXPECT_EQ(param->substate, 0);
-    param->isPrinterStopped = true;
-    printCupsClient.ParseStateReasons(param);
-    EXPECT_EQ(param->substate, 99);
 }
 
 /**

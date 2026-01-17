@@ -1675,29 +1675,12 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
     if (!QueryJobState(monitorParams->http, monitorParams)) {
         return true;
     }
-    monitorParams->isPrinterStopped = IsPrinterStopped(monitorParams);
     ParseStateReasons(monitorParams);
     if (JobStatusCallback(monitorParams)) {
         PRINT_HILOGD("the job is processing");
         return true;
     }
     PRINT_HILOGI("the job is completed or canceled");
-    return false;
-}
-
-bool PrintCupsClient::IsPrinterStopped(std::shared_ptr<JobMonitorParam> monitorParams)
-{
-    if (monitorParams == nullptr) {
-        PRINT_HILOGE("monitor job state failed, monitorParams is nullptr");
-        return false;
-    }
-    PRINT_HILOGI("[Job Id: %{public}s] IsPrinterStopped start", monitorParams->serviceJobId.c_str());
-    PrinterStatus printerStatus = PRINTER_STATUS_BUSY;
-    bool isPrinterStatusAvailable = QueryPrinterStatusByUri(monitorParams->printerUri, printerStatus) == E_PRINT_NONE;
-    PRINT_HILOGD("is printer status available: %{public}d, state: %{public}d", isPrinterStatusAvailable, printerStatus);
-    if (isPrinterStatusAvailable && printerStatus == PRINTER_STATUS_UNAVAILABLE) {
-        return true;
-    }
     return false;
 }
 
@@ -1948,7 +1931,7 @@ void PrintCupsClient::ParseStateReasons(std::shared_ptr<JobMonitorParam> monitor
         PRINT_HILOGE("monitor job state failed, monitorParams is nullptr");
         return;
     }
-    monitorParams->isBlock = monitorParams->isPrinterStopped;
+    monitorParams->isBlock = false;
     monitorParams->substate = 0;
     int32_t index = 0;
     for (auto stateItem = FOLLOW_STATE_LIST.begin(); stateItem != FOLLOW_STATE_LIST.end(); stateItem++) {
