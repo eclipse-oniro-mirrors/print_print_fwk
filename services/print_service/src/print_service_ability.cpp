@@ -675,11 +675,27 @@ int32_t PrintServiceAbility::DisconnectPrinter(const std::string &printerId)
     return E_PRINT_NONE;
 }
 
+bool PrintServiceAbility::CheckStartExtensionPermission()
+{
+    int32_t callerPid = IPCSkeleton::GetCallingPid();
+    // 只允许前台进程或申请了ohos.permissionc.MANAGE_PRINT_JOB权限的进程（如SA）拉起拓展，防止恶意后台进程调用
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB) &&
+        !PrintCallerAppMonitor::GetInstance().IsProcessForeground(callerPid)) {
+        PRINT_HILOGW("no permission to start extension");
+        return false;
+    }
+    return true;
+}
+
 int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string> &extensionIds)
 {
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+
+    if (!CheckStartExtensionPermission()) {
         return E_PRINT_NO_PERMISSION;
     }
 
@@ -864,6 +880,10 @@ int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &
     ManualStart();
     if (!CheckPermission(PERMISSION_NAME_PRINT)) {
         PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
+
+    if (!CheckStartExtensionPermission()) {
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("QueryAllExtension start.");
@@ -4100,13 +4120,6 @@ bool PrintServiceAbility::QueryPrinterStatusByUri(const std::string &uri, Printe
 
 int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::string> &extensionIds)
 {
-    int32_t callerPid = IPCSkeleton::GetCallingPid();
-    // 只允许前台进程拉起拓展，防止恶意后台进程调用
-    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB) &&
-        !PrintCallerAppMonitor::GetInstance().IsProcessForeground(callerPid)) {
-        PRINT_HILOGW("no permission to start extension");
-        return E_PRINT_NONE;
-    }
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> abilityList;
     for (auto const &extensionId : extensionIds) {
         if (extensionList_.find(extensionId) != extensionList_.end()) {

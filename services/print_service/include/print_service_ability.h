@@ -265,6 +265,7 @@ private:
         const std::string &keyword, const Json::Value &singleOptArray, Json::Value &singleAdvanceOptJson);
     void IncrementPrintCounterByPcSettings();
     void DecrementPrintCounterByPcSettings();
+    bool CheckStartExtensionPermission();
 
 public:
     bool AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info) override;
