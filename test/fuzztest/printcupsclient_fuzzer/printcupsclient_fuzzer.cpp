@@ -291,22 +291,6 @@ void TestQueryJobState(const uint8_t *data, size_t size, FuzzedDataProvider *dat
     PrintCupsClient::GetInstance()->QueryJobState(monitorParams->http, monitorParams);
 }
 
-void TestIsPrinterStopped(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
-{
-    auto monitorParams = std::make_shared<JobMonitorParam>();
-    monitorParams->serviceAbility = PrintServiceAbility::GetInstance();
-    monitorParams->serviceJobId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    monitorParams->cupsJobId = dataProvider->ConsumeIntegralInRange<unsigned int>(0, MAX_SET_NUMBER);
-    monitorParams->printerUri = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    monitorParams->printerName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    monitorParams->printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string job_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_state_reasons.copy(monitorParams->job_state_reasons, job_state_reasons.length() + 1);
-    std::string job_printer_state_reasons = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    job_printer_state_reasons.copy(monitorParams->job_printer_state_reasons, job_printer_state_reasons.length() + 1);
-    PrintCupsClient::GetInstance()->IsPrinterStopped(monitorParams);
-}
-
 void TestBuildMonitorPolicy(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
     auto monitorParams = std::make_shared<JobMonitorParam>();
@@ -410,7 +394,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     OHOS::Print::TestJobStatusCallback(data, size, &dataProvider);
     OHOS::Print::TestIfContinueToHandleJobState(data, size, &dataProvider);
     OHOS::Print::TestQueryJobState(data, size, &dataProvider);
-    OHOS::Print::TestIsPrinterStopped(data, size, &dataProvider);
     OHOS::Print::TestBuildMonitorPolicy(data, size, &dataProvider);
     OHOS::Print::TestParseStateReasons(data, size, &dataProvider);
     OHOS::Print::TestGetBlockedAndUpdateSubstate(data, size, &dataProvider);
