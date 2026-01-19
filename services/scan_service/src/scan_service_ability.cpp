@@ -427,7 +427,6 @@ void ScanServiceAbility::AddFoundScanner(ScanDeviceInfo &info, std::vector<ScanD
 void ScanServiceAbility::SaneGetScanner()
 {
     scannerState_.store(SCANNER_SEARCHING);
-    ScanMdnsService::GetInstance().OnStopDiscoverService();
     ScanMdnsService::GetInstance().OnStartDiscoverService();
     deviceInfos_.clear();
     SaneManagerClient::GetInstance()->SaneInit();

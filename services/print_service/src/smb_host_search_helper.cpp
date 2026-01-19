@@ -471,7 +471,7 @@ bool SmbHostSearchHelper::TestSmbHostAlive(const std::string& ip, int32_t timeou
         PRINT_HILOGD("Timeout waiting for response from %{private}s", ip.c_str());
         return false;
     }
-    if (FD_ISSET(sock_, &readSet)) {
+    if (FD_ISSET(sock_, &readSet) && HandleReceive()) {
         PRINT_HILOGD("Reply received");
         return true;
     }

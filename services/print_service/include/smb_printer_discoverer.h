@@ -41,9 +41,7 @@ private:
 
     struct PrinterShareInfo;
     struct smb2_context* smbCtx_;
-    char* userPasswd_;
     std::vector<PrinterShareInfo> printers_;
-    std::string userName_;
     std::atomic<bool> isFinished_{ false };
     std::shared_ptr<SmbLibrary> smbLib_;
 };
