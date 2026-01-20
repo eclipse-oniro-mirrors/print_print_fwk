@@ -3348,7 +3348,7 @@ HWTEST_F(PrintServiceAbilityTest,
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::vector<PrintSharedHost> sharedHosts;
-    EXPECT_EQ(service->GetSharedHosts(sharedHosts), E_PRINT_NONE);
+    EXPECT_EQ(service->GetSharedHosts(sharedHosts), E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintServiceAbilityTest,
@@ -3359,7 +3359,7 @@ HWTEST_F(PrintServiceAbilityTest,
     std::string userName;
     char *userPasswd = nullptr;
     std::vector<PrinterInfo> printerInfos;
-    service->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
+    EXPECT_EQ(service->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(printerInfos.empty(), true);
 }
 
