@@ -96,7 +96,6 @@ bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want)
     while (retry++ < MAX_RETRY_TIMES) {
         if (AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, printAbilityConnection, -1) == 0) {
             PRINT_HILOGI("PrintServiceHelper::StartExtensionAbility ConnectAbility success");
-            printAbilityConnection_ = printAbilityConnection;
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
@@ -127,6 +126,8 @@ bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
     while (retry++ < MAX_RETRY_TIMES) {
         if (AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, printAbilityConnection, -1) == 0) {
             PRINT_HILOGI("PrintServiceHelper::StartPluginPrintExtAbility ConnectAbility success");
+            std::lock_guard<std::mutex> connectionLock(printAbilityConnectionLock_);
+            printAbilityConnection_ = printAbilityConnection;
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
@@ -147,11 +148,14 @@ bool PrintServiceHelper::DisconnectAbility()
     AAFwk::AbilityManagerClient::GetInstance()->Connect();
     uint32_t retry = 0;
     while (retry++ < MAX_RETRY_TIMES) {
-        if (printAbilityConnection_ != nullptr &&
-            AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(printAbilityConnection_) == 0) {
-            PRINT_HILOGI("PrintServiceHelper::DisconnectAbility success");
-            printAbilityConnection_ = nullptr;
-            break;
+        {
+            std::lock_guard<std::mutex> connectionLock(printAbilityConnectionLock_);
+            if (printAbilityConnection_ != nullptr &&
+                AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(printAbilityConnection_) == 0) {
+                PRINT_HILOGI("PrintServiceHelper::DisconnectAbility success");
+                printAbilityConnection_ = nullptr;
+                break;
+            }
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
         PRINT_HILOGE("PrintServiceHelper::DisconnectAbility %{public}d", retry);
