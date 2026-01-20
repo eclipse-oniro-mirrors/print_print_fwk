@@ -100,6 +100,7 @@ public:
     int32_t NotifyPrintService(const std::string &jobId, const std::string &type) override;
 
     int32_t QueryPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &info) override;
+    bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
 
     int32_t QueryAddedPrinter(std::vector<std::string> &printerNameList) override;
     int32_t QueryRawAddedPrinter(std::vector<std::string> &printerNameList) override;
@@ -252,7 +253,6 @@ private:
     void DiscoveryCallerAppsMonitor();
     void StartDiscoveryCallerMonitorThread();
     void StopDiscoveryInternal();
-    bool QueryAddedPrinterInfoByPrinterId(const std::string &printerId, PrinterInfo &printer);
     void RegisterSettingDataObserver();
     bool IsPcModeSupported();
     void UpdatePpdForPreinstalledDriverPrinter();
