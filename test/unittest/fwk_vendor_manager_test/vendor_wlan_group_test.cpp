@@ -534,5 +534,35 @@ HWTEST_F(VendorWlanGroupTest, ConnectPrinterByIdAndPpdTest, TestSize.Level1)
     vendorWlanGroup->parentVendorManager = nullptr;
     EXPECT_FALSE(vendorWlanGroup->ConnectPrinterByIdAndPpd(printerId, DEFAULT_PPD_NAME));
 }
+
+HWTEST_F(VendorWlanGroupTest, ConnectByPpdDriver_PrinterInfo_Empty, TestSize.Level1)
+{
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+
+    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_))
+        .WillOnce(Return(nullptr));
+
+    std::string id = "test";
+    EXPECT_FALSE(vendorWlanGroup->ConnectByPpdDriver(id));
+}
+
+HWTEST_F(VendorWlanGroupTest, ConnectByPpdDriver_Connect_Failed, TestSize.Level1)
+{
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+
+    auto printerInfo = std::make_shared<PrinterInfo>();
+
+    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_))
+        .WillOnce(Return(printerInfo));
+
+    std::string id = "test";
+    EXPECT_FALSE(vendorWlanGroup->ConnectByPpdDriver(id));
+}
 }  // namespace Print
 }  // namespace OHOS

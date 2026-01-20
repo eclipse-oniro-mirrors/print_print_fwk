@@ -482,7 +482,7 @@ ErrCode SaneServerManager::UnloadSystemAbility()
     }
     scannerHandleList_.clear();
     sane_exit();
-    const std::string dataTmpDir = "/data/service/el2/public/print_service/sane/tmp";
+    const std::string dataTmpDir = PRINTER_SERVICE_SANE_TEMPORARY_PATH;
     std::vector<std::string> files;
     GetDirFiles(dataTmpDir, files);
     for (const auto &file : files) {

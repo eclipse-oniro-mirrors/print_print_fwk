@@ -198,6 +198,7 @@ bool VendorWlanGroup::IsGroupDriver(const std::string &bothPrinterId)
         return true;
     }
     std::string printerId(VendorManager::ExtractPrinterId(bothPrinterId));
+    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex_);
     auto iter = printerVendorGroupList_.find(printerId);
     return (iter != printerVendorGroupList_.end() && !iter->second.empty());
 }
@@ -209,6 +210,7 @@ bool VendorWlanGroup::ConvertGroupDriver(std::string &printerId, std::string &ve
         printerId = GetGroupPrinterId(printerId);
         return false;
     }
+    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex_);
     auto iter = printerVendorGroupList_.find(printerId);
     if (iter != printerVendorGroupList_.end() && !iter->second.empty()) {
         vendorName = VENDOR_WLAN_GROUP;
@@ -252,6 +254,7 @@ bool VendorWlanGroup::IsBsunidriverSupport(const PrinterInfo &printerInfo)
 
 void VendorWlanGroup::RemoveGroupPrinterFromVendorGroupList(const std::string &groupPrinterId)
 {
+    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex_);
     auto iter = printerVendorGroupList_.find(groupPrinterId);
     if (iter != printerVendorGroupList_.end()) {
         PRINT_HILOGI("[Printer: %{public}s] remove printer from vendor group list",
@@ -262,6 +265,7 @@ void VendorWlanGroup::RemoveGroupPrinterFromVendorGroupList(const std::string &g
 
 std::string VendorWlanGroup::QueryVendorDriverByGroupPrinterId(const std::string &groupPrinterId)
 {
+    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex_);
     auto iter = printerVendorGroupList_.find(groupPrinterId);
     if (iter != printerVendorGroupList_.end()) {
         return iter->second;
@@ -314,7 +318,7 @@ std::string VendorWlanGroup::ConvertGroupGlobalPrinterId(const std::string &both
 
 std::string VendorWlanGroup::GetGroupPrinterId(const std::string &printerId)
 {
-    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex);
+    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex_);
     auto item = groupPrinterIdMap_.find(printerId);
     if (item != groupPrinterIdMap_.end() && !item->second.empty()) {
         return item->second;
@@ -339,7 +343,7 @@ bool VendorWlanGroup::CheckPrinterAddedByIp(const std::string &printerId)
 
 void VendorWlanGroup::UpdateGroupPrinter(const std::string &printerId, const std::string &groupPrinterId)
 {
-    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex);
+    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex_);
     auto retPair = groupPrinterIdMap_.try_emplace(printerId, groupPrinterId);
     if (retPair.second) {
         PRINT_HILOGI("add new groupPrinterId");
@@ -356,7 +360,7 @@ void VendorWlanGroup::UpdateGroupPrinter(const std::string &printerId, const std
 
 bool VendorWlanGroup::HasGroupPrinter(const std::string &printerId)
 {
-    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex);
+    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex_);
     auto item = groupPrinterIdMap_.find(printerId);
     if (item != groupPrinterIdMap_.end()) {
         return true;
@@ -366,7 +370,7 @@ bool VendorWlanGroup::HasGroupPrinter(const std::string &printerId)
 
 void VendorWlanGroup::RemovedGroupPrinter(const std::string &printerId)
 {
-    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex);
+    std::lock_guard<std::mutex> lock(groupPrinterIdMapMutex_);
     groupPrinterIdMap_.erase(printerId);
 }
 
@@ -493,13 +497,13 @@ bool VendorWlanGroup::OnPrinterCapabilityQueried(const std::string &vendorName, 
         auto method = GetConnectingMethod(printerId);
         PRINT_HILOGI("connecting method %{public}d", static_cast<int>(method));
         if (method == IP_AUTO) {
-            printerVendorGroupList_[printerId] = VENDOR_PPD_DRIVER;
+            SetGroupPrinterFromVendorGroupList(printerId, VENDOR_PPD_DRIVER);
             if (TryConnectByPpdDriver(printerInfo)) {
                 PRINT_HILOGI("Connect by ppdDriver success.");
                 return true;
             }
             RemoveGroupPrinterFromVendorGroupList(printerId);
-            printerVendorGroupList_[printerId] = vendorName;
+            SetGroupPrinterFromVendorGroupList(printerId, vendorName);
             if (!parentVendorManager->IsBsunidriverSupport(printerInfo)) {
                 PRINT_HILOGW("Bsuni Driver not support!");
                 return false;
@@ -551,7 +555,7 @@ bool VendorWlanGroup::ConnectPrinterByIdAndPpd(const std::string &printerId, con
 
 bool VendorWlanGroup::ConnectByBsuni(const std::string &printerId)
 {
-    printerVendorGroupList_[printerId] = VENDOR_BSUNI_DRIVER;
+    SetGroupPrinterFromVendorGroupList(printerId, VENDOR_BSUNI_DRIVER);
     auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
     auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
     if (bsuniDriver != nullptr && printerInfo != nullptr &&
@@ -565,7 +569,7 @@ bool VendorWlanGroup::ConnectByBsuni(const std::string &printerId)
  
 bool VendorWlanGroup::ConnectByIppEverywhere(const std::string &printerId)
 {
-    printerVendorGroupList_[printerId] = VENDOR_IPP_EVERYWHERE;
+    SetGroupPrinterFromVendorGroupList(printerId, VENDOR_IPP_EVERYWHERE);
     auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
     if (ippEverywhereDriver != nullptr && ippEverywhereDriver->OnQueryCapability(printerId, 0)) {
         PRINT_HILOGI("on query capability on ipp everywhere success.");
@@ -579,12 +583,12 @@ bool VendorWlanGroup::ConnectByIppEverywhere(const std::string &printerId)
  
 bool VendorWlanGroup::ConnectByPpdDriver(const std::string &printerId)
 {
-    printerVendorGroupList_[printerId] = VENDOR_PPD_DRIVER;
-        auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
-        if (printerInfo != nullptr && TryConnectByPpdDriver(*printerInfo)) {
-            PRINT_HILOGI("Connect by ppdDriver success.");
-            return true;
-        }
+    SetGroupPrinterFromVendorGroupList(printerId, VENDOR_PPD_DRIVER);
+    auto printerInfo = parentVendorManager->QueryDiscoveredPrinterInfoById(GetVendorName(), printerId);
+    if (printerInfo != nullptr && TryConnectByPpdDriver(*printerInfo)) {
+        PRINT_HILOGI("Connect by ppdDriver success.");
+        return true;
+    }
     RemoveGroupPrinterFromVendorGroupList(printerId);
     return false;
 }
@@ -592,7 +596,7 @@ bool VendorWlanGroup::ConnectByPpdDriver(const std::string &printerId)
 bool VendorWlanGroup::ConnectByBsuni(const std::string &printerIp, const std::string &protocol)
 {
     auto bsuniDriver = parentVendorManager->FindDriverByVendorName(VENDOR_BSUNI_DRIVER);
-    printerVendorGroupList_[printerIp] = VENDOR_BSUNI_DRIVER;
+    SetGroupPrinterFromVendorGroupList(printerIp, VENDOR_BSUNI_DRIVER);
     if (bsuniDriver != nullptr && bsuniDriver->OnQueryCapabilityByIp(printerIp, protocol)) {
         PRINT_HILOGI("on query capability by ip on bsuni vendor seccess.");
         return true;
@@ -603,7 +607,7 @@ bool VendorWlanGroup::ConnectByBsuni(const std::string &printerIp, const std::st
  
 bool VendorWlanGroup::ConnectByIppEverywhere(const std::string &printerIp, const std::string &protocol)
 {
-    printerVendorGroupList_[printerIp] = VENDOR_IPP_EVERYWHERE;
+    SetGroupPrinterFromVendorGroupList(printerIp, VENDOR_IPP_EVERYWHERE);
     auto ippEverywhereDriver = parentVendorManager->FindDriverByVendorName(VENDOR_IPP_EVERYWHERE);
     if (ippEverywhereDriver != nullptr && ippEverywhereDriver->OnQueryCapabilityByIp(printerIp, protocol)) {
         PRINT_HILOGI("on query capability by ip on ipp everywhere seccess.");
@@ -611,4 +615,10 @@ bool VendorWlanGroup::ConnectByIppEverywhere(const std::string &printerIp, const
     }
     RemoveGroupPrinterFromVendorGroupList(printerIp);
     return false;
+}
+
+void VendorWlanGroup::SetGroupPrinterFromVendorGroupList(const std::string &printerId, const std::string &vendorName)
+{
+    std::lock_guard<std::mutex> lock(printerVendorGroupListMutex_);
+    printerVendorGroupList_[printerId] = vendorName;
 }
