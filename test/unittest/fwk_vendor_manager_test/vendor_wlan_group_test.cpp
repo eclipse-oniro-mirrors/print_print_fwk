@@ -564,5 +564,49 @@ HWTEST_F(VendorWlanGroupTest, ConnectByPpdDriver_Connect_Failed, TestSize.Level1
     std::string id = "test";
     EXPECT_FALSE(vendorWlanGroup->ConnectByPpdDriver(id));
 }
+
+HWTEST_F(VendorWlanGroupTest, printerVendorGroupListMutexCheck, TestSize.Level1)
+{
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    VendorManager vendorManager;
+    EXPECT_TRUE(vendorManager.Init(mock, false));
+    auto vendorWlanGroup = std::make_shared<VendorWlanGroup>(&vendorManager);
+
+    const int thread_count = 10;
+    const int iterations = 1000;
+
+    std::vector<std::string> printerIds = {"PRINTER_001", "PRINTER_002", "PRINTER_003"};
+    std::vector<std::string> vendors = {"VENDOR_A", "VENDOR_B", "VENDOR_C"};
+
+    std::vector<std::thread> threads;
+    for (int i = 0; i < thread_count; ++i) {
+        threads.emplace_back([&vendorWlanGroup, &printerIds, &vendors, i, iterations]() {
+            for (int j = 0; j < iterations; ++j) {
+                std::string printerId = printerIds[i % 3];
+                std::string vendor = vendors[j % 3];
+                switch (rand() % 5) {
+                    case 0 : 
+                        vendorWlanGroup->SetGroupPrinterFromVendorGroupList(printerId, vendor);
+                        break;
+                    case 1 :
+                        vendorWlanGroup->RemoveGroupPrinterFromVendorGroupList(printerId);
+                        break;
+                    case 2 :
+                        vendorWlanGroup->QueryVendorDriverByGroupPrinterId(printerId);
+                        break;
+                    case 3 :
+                        vendorWlanGroup->ConvertGroupDriver(printerId, vendor);
+                        break;
+                    case 4 :
+                        vendorWlanGroup->IsGroupDriver(printerId);
+                }
+            }
+        });
+    }
+
+    for (auto& t : threads) {
+        t.join();
+    }
+}
 }  // namespace Print
 }  // namespace OHOS
