@@ -612,12 +612,15 @@ bool VendorManager::ConnectPrinterByIpAndPpd(const std::string &printerIp, const
         return false;
     }
     SetConnectingPrinter(IP_AUTO, printerIp);
-    connectingProtocol = protocol;
-    if (connectingProtocol.empty()) {
-        connectingProtocol = "auto";
+    {
+        std::lock_guard<std::mutex> lock(simpleObjectMutex);
+        connectingProtocol = protocol;
+        if (connectingProtocol.empty()) {
+            connectingProtocol = "auto";
+        }
+        connectingPpdName = ppdName;
     }
-    connectingPpdName = ppdName;
-    return wlanGroupDriver->ConnectPrinterByIpAndPpd(printerIp, connectingProtocol, ppdName);
+    return wlanGroupDriver->ConnectPrinterByIpAndPpd(printerIp, GetConnectingProtocol(), ppdName);
 }
 
 bool VendorManager::QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap)
@@ -736,11 +739,14 @@ bool VendorManager::ConnectPrinterByIdAndPpd(const std::string &globalPrinterId,
         return false;
     }
     SetConnectingPrinter(ID_AUTO, globalPrinterId);
-    connectingProtocol = protocol;
-    if (connectingProtocol.empty()) {
-        connectingProtocol = "auto";
+    {
+        std::lock_guard<std::mutex> lock(simpleObjectMutex);
+        connectingProtocol = protocol;
+        if (connectingProtocol.empty()) {
+            connectingProtocol = "auto";
+        }
+        connectingPpdName = ppdName;
     }
-    connectingPpdName = ppdName;
     PRINT_HILOGI("[Printer: %{public}s] Connecting Printer", PrintUtils::AnonymizePrinterId(printerId).c_str());
     std::string globalVendorName = ExtractGlobalVendorName(globalPrinterId);
     std::string vendorName = ExtractVendorName(globalVendorName);
