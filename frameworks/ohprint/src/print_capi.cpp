@@ -276,6 +276,8 @@ Print_ErrorCode OH_Print_StartPrinterDiscovery(Print_PrinterDiscoveryCallback ca
         std::lock_guard<std::recursive_mutex> lock(g_printerDiscoverMutex);
         g_printerDiscoverCallback = callback;
     }
+    PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(
+        PRINTER_DISCOVER_EVENT_TYPE, NativePrinterDiscoverFunction);
     std::vector<PrintExtensionInfo> extensionInfos;
     int32_t ret = PrintManagerClient::GetInstance()->QueryAllExtension(extensionInfos);
     PRINT_HILOGI("QueryAllExtension ret = [%{public}d]", ret);
@@ -285,8 +287,6 @@ Print_ErrorCode OH_Print_StartPrinterDiscovery(Print_PrinterDiscoveryCallback ca
             extensionIds.emplace_back(extensionInfo.GetExtensionId());
         }
         PRINT_HILOGI("extensionIds size = [%{public}zu]", extensionIds.size());
-        PrintManagerClient::GetInstance()->SetNativePrinterChangeCallback(
-            PRINTER_DISCOVER_EVENT_TYPE, NativePrinterDiscoverFunction);
         ret = PrintManagerClient::GetInstance()->StartDiscoverPrinter(extensionIds);
         PRINT_HILOGI("StartDiscoverPrinter ret = [%{public}d]", ret);
     }
