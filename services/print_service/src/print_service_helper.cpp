@@ -155,7 +155,7 @@ bool PrintServiceHelper::DisconnectAbility(ExtensionAbilityType extensionAbility
             hasSpecificConnectionType = false;
             std::queue<sptr<PrintAbilityConnection>> tempConnectionQueue;
             std::lock_guard<std::mutex> connectionLock(connectionListLock_);
-            while(!extensionAbilityConnectionList_.empty()) {
+            while (!extensionAbilityConnectionList_.empty()) {
                 auto front = extensionAbilityConnectionList_.front();
                 extensionAbilityConnectionList_.pop();
 
@@ -197,7 +197,7 @@ bool PrintServiceHelper::CheckPluginPrintConnected()
     {
         std::queue<sptr<PrintAbilityConnection>> tempConnectionQueue;
         std::lock_guard<std::mutex> connectionLock(connectionListLock_);
-        while(!extensionAbilityConnectionList_.empty()) {
+        while (!extensionAbilityConnectionList_.empty()) {
             auto front = extensionAbilityConnectionList_.front();
             extensionAbilityConnectionList_.pop();
             if (front == nullptr) {
