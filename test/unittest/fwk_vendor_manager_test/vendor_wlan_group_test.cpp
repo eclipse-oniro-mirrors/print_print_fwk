@@ -578,30 +578,32 @@ HWTEST_F(VendorWlanGroupTest, printerVendorGroupListMutexCheck, TestSize.Level1)
     std::vector<std::string> printerIds = {"PRINTER_001", "PRINTER_002", "PRINTER_003"};
     std::vector<std::string> vendors = {"VENDOR_A", "VENDOR_B", "VENDOR_C"};
 
+    auto func = [&vendorWlanGroup, &printerIds, &vendors, iterations](int i) {
+        for (int j = 0; j < iterations; ++j) {
+            std::string printerId = printerIds[i % 3];
+            std::string vendor = vendors[j % 3];
+            switch (rand() % 5) {
+                case 0:
+                    vendorWlanGroup->SetGroupPrinterFromVendorGroupList(printerId, vendor);
+                    break;
+                case 1:
+                    vendorWlanGroup->RemoveGroupPrinterFromVendorGroupList(printerId);
+                    break;
+                case 2:
+                    vendorWlanGroup->QueryVendorDriverByGroupPrinterId(printerId);
+                    break;
+                case 3:
+                    vendorWlanGroup->ConvertGroupDriver(printerId, vendor);
+                    break;
+                case 4:
+                    vendorWlanGroup->IsGroupDriver(printerId);
+            }
+        }
+    };
+
     std::vector<std::thread> threads;
     for (int i = 0; i < threadCount; ++i) {
-        threads.emplace_back([&vendorWlanGroup, &printerIds, &vendors, i, iterations]() {
-            for (int j = 0; j < iterations; ++j) {
-                std::string printerId = printerIds[i % 3];
-                std::string vendor = vendors[j % 3];
-                switch (rand() % 5) {
-                    case 0:
-                        vendorWlanGroup->SetGroupPrinterFromVendorGroupList(printerId, vendor);
-                        break;
-                    case 1:
-                        vendorWlanGroup->RemoveGroupPrinterFromVendorGroupList(printerId);
-                        break;
-                    case 2:
-                        vendorWlanGroup->QueryVendorDriverByGroupPrinterId(printerId);
-                        break;
-                    case 3:
-                        vendorWlanGroup->ConvertGroupDriver(printerId, vendor);
-                        break;
-                    case 4:
-                        vendorWlanGroup->IsGroupDriver(printerId);
-                }
-            }
-        });
+        threads.emplace_back(func, i);
     }
 
     for (auto& t : threads) {
