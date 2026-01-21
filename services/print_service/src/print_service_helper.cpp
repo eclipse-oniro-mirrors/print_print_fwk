@@ -126,7 +126,7 @@ bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
     while (retry++ < MAX_RETRY_TIMES) {
         if (AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, printAbilityConnection, -1) == 0) {
             PRINT_HILOGI("PrintServiceHelper::StartPluginPrintExtAbility ConnectAbility success");
-            std::lock_guard<std::mutex> connectionLock(printAbilityConnectionLock_);
+            std::lock_guard<std::mutex> connectionLock(connectionListLock_);
             printAbilityConnection_ = printAbilityConnection;
             break;
         }
@@ -149,7 +149,7 @@ bool PrintServiceHelper::DisconnectAbility()
     uint32_t retry = 0;
     while (retry++ < MAX_RETRY_TIMES) {
         {
-            std::lock_guard<std::mutex> connectionLock(printAbilityConnectionLock_);
+            std::lock_guard<std::mutex> connectionLock(connectionListLock_);
             if (printAbilityConnection_ != nullptr &&
                 AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(printAbilityConnection_) == 0) {
                 PRINT_HILOGI("PrintServiceHelper::DisconnectAbility success");

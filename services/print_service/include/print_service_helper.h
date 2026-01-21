@@ -79,7 +79,6 @@ private:
 private:
     std::shared_ptr<PrintEventSubscriber> userStatusListener;
     bool isSubscribeCommonEvent = false;
-    std::mutex printAbilityConnectionLock_;
     sptr<PrintAbilityConnection> printAbilityConnection_ = nullptr;
     static std::mutex connectionListLock_;
     std::queue<sptr<PrintAbilityConnection>> pluginPrintConnectionList_;
