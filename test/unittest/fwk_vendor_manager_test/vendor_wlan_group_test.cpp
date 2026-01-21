@@ -585,19 +585,19 @@ HWTEST_F(VendorWlanGroupTest, printerVendorGroupListMutexCheck, TestSize.Level1)
                 std::string printerId = printerIds[i % 3];
                 std::string vendor = vendors[j % 3];
                 switch (rand() % 5) {
-                    case 0 : 
+                    case 0: 
                         vendorWlanGroup->SetGroupPrinterFromVendorGroupList(printerId, vendor);
                         break;
-                    case 1 :
+                    case 1:
                         vendorWlanGroup->RemoveGroupPrinterFromVendorGroupList(printerId);
                         break;
-                    case 2 :
+                    case 2:
                         vendorWlanGroup->QueryVendorDriverByGroupPrinterId(printerId);
                         break;
-                    case 3 :
+                    case 3:
                         vendorWlanGroup->ConvertGroupDriver(printerId, vendor);
                         break;
-                    case 4 :
+                    case 4:
                         vendorWlanGroup->IsGroupDriver(printerId);
                 }
             }
