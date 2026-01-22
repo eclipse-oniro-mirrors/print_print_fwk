@@ -58,6 +58,7 @@ private:
     void ConvertSaneDescriptor(const SANE_Option_Descriptor* saneDesc, SaneOptionDescriptor& saneOptDes);
     std::map<std::string, SANE_Handle> scannerHandleList_;
     std::mutex scannerHandleListlock_;
+    std::mutex saneAPIlock_;
 };
 
 } // namespace  OHOS::Scan
