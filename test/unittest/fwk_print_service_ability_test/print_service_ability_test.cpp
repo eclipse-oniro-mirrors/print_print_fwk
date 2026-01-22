@@ -730,6 +730,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0028_NeedRename, TestS
     sptr<IPrintExtensionCallback> listener = nullptr;
     service->extCallbackMap_[cid] = listener;
     EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
+    std::string jobId = "job123";
+    auto printJob = std::make_shared<PrintJob>();
+    service->queuedJobList_.insert(std::make_pair(jobId, printJob));
+    EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0029_NeedRename, TestSize.Level1)

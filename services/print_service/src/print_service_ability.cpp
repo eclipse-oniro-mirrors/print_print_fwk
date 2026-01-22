@@ -758,8 +758,9 @@ int32_t PrintServiceAbility::StopDiscoverPrinter()
     }
     PRINT_HILOGI("discoveryCallerMap size: %{public}lu", discoveryCallerMap_.size());
 
-    if (!discoveryCallerMap_.empty()) {
-        PRINT_HILOGI("Other discovery caller processes still discovering, keep discovery running.");
+    if (!discoveryCallerMap_.empty() || !queuedJobList_.empty()) {
+        PRINT_HILOGI("Other discovery caller processes still discovering or job "
+                    "is in the queue, keep discovery running.");
         return E_PRINT_NONE;
     }
 
@@ -2307,8 +2308,8 @@ void PrintServiceAbility::DiscoveryCallerAppsMonitor()
         }
         PRINT_HILOGI("discoveryCallerMap size: %{public}lu", discoveryCallerMap_.size());
 
-        if (discoveryCallerMap_.empty()) {
-            PRINT_HILOGI("All discovery caller apps exited, stopping discovery");
+        if (discoveryCallerMap_.empty() && queuedJobList_.empty()) {
+            PRINT_HILOGI("All discovery caller apps exited or no job is in the queue, stopping discovery");
             StopDiscoveryInternal();
             discoveryCallerMonitorThread = false;
             running = false;
