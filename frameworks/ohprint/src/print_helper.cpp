@@ -437,6 +437,13 @@ int32_t ParseInfoOption(const std::string &infoOption, Print_PrinterInfo &native
         PRINT_HILOGW("infoOption can not parse to json object");
         return E_PRINT_INVALID_PARAMETER;
     }
+    if (!PrintJsonUtil::IsMember(infoJson, "printerUri") || !infoJson["printerUri"].isString() ||
+        !PrintJsonUtil::IsMember(infoJson, "make") || !infoJson["make"].isString()) {
+        PRINT_HILOGW("The infoJson does not have a necessary attribute.");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    nativePrinterInfo.makeAndModel = CopyString(infoJson["make"].asString());
+    nativePrinterInfo.printerUri = CopyString(infoJson["printerUri"].asString());
     if (!PrintJsonUtil::IsMember(infoJson, "cupsOptions")) {
         PRINT_HILOGW("The infoJson does not have a cupsOptions attribute.");
         return E_PRINT_NONE;
@@ -540,8 +547,12 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
         PRINT_HILOGW("infoOpt json object: %{public}s", infoOpt.c_str());
         ParseInfoOption(infoOpt, *nativePrinterInfo);
     }
-    nativePrinterInfo->makeAndModel = CopyString(info.GetPrinterMake());
-    nativePrinterInfo->printerUri = CopyString(info.GetUri());
+    if (!info.GetPrinterMake().empty()) {
+        nativePrinterInfo->makeAndModel = CopyString(info.GetPrinterMake());
+    }
+    if (!info.GetUri().empty()) {
+        nativePrinterInfo->printerUri = CopyString(info.GetUri());
+    }
     return nativePrinterInfo;
 }
 
