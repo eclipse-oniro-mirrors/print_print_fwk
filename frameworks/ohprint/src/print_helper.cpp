@@ -430,6 +430,22 @@ void ParseCupsOptions(const Json::Value &cupsOpt, Print_PrinterInfo &nativePrint
     nativePrinterInfo.capability.advancedCapability = CopyString((PrintJsonUtil::WriteString(advancedCapJson)).c_str());
 }
 
+int32_t ParseInfoOption(const std::string &infoOption, Print_PrinterInfo &nativePrinterInfo)
+{
+    Json::Value infoJson;
+    if (!PrintJsonUtil::Parse(infoOption, infoJson)) {
+        PRINT_HILOGW("infoOption can not parse to json object");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+    if (!PrintJsonUtil::IsMember(infoJson, "cupsOptions")) {
+        PRINT_HILOGW("The infoJson does not have a cupsOptions attribute.");
+        return E_PRINT_NONE;
+    }
+    Json::Value cupsOpt = infoJson["cupsOptions"];
+    ParseCupsOptions(cupsOpt, nativePrinterInfo);
+    return E_PRINT_NONE;
+}
+
 void ParsePrinterPreference(const PrinterInfo &info, Print_PrinterInfo &nativePrinterInfo)
 {
     if (!info.HasPreferences()) {
@@ -519,6 +535,11 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
     }
 
     ParsePrinterPreference(info, *nativePrinterInfo);
+    if (info.HasOption()) {
+        std::string infoOpt = info.GetOption();
+        PRINT_HILOGW("infoOpt json object: %{public}s", infoOpt.c_str());
+        ParseInfoOption(infoOpt, *nativePrinterInfo);
+    }
     nativePrinterInfo->makeAndModel = const_cast<char*>(info.GetPrinterMake().c_str());
     nativePrinterInfo->printerUri = const_cast<char*>(info.GetUri().c_str());
     return nativePrinterInfo;
