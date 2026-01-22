@@ -31,7 +31,7 @@ const std::string SCAN_DEVICE_DEL = "scanDeviceDel";
 
 napi_value NapiInnerScan::InitScan(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGD("Enter InitScan---->");
+    SCAN_HILOGI("Enter InitScan---->");
     auto context = std::make_shared<NapiScanContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
@@ -56,7 +56,7 @@ napi_value NapiInnerScan::InitScan(napi_env env, napi_callback_info info)
 
 napi_value NapiInnerScan::ExitScan(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGD("Enter ExitScan---->");
+    SCAN_HILOGI("Enter ExitScan---->");
     auto context = std::make_shared<NapiScanContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
@@ -81,7 +81,7 @@ napi_value NapiInnerScan::ExitScan(napi_env env, napi_callback_info info)
 
 napi_value NapiInnerScan::GetScannerList(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGD("Enter GetScannerList---->");
+    SCAN_HILOGI("Enter GetScannerList---->");
     auto context = std::make_shared<NapiScanContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_ZERO, " should 0 parameter!", napi_invalid_arg);
@@ -113,7 +113,7 @@ napi_value NapiInnerScan::GetScannerList(napi_env env, napi_callback_info info)
 
 napi_value NapiInnerScan::OpenScanner(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGD("start to OpenScanner");
+    SCAN_HILOGI("start to OpenScanner");
     auto context = std::make_shared<NapiScanContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
@@ -299,7 +299,7 @@ napi_value NapiInnerScan::GetScanOption(napi_env env, napi_callback_info info)
 
 napi_value NapiInnerScan::GetScanParameters(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGD("start to GetScanParameters");
+    SCAN_HILOGI("start to GetScanParameters");
     auto context = std::make_shared<NapiScanContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
@@ -332,7 +332,7 @@ napi_value NapiInnerScan::GetScanParameters(napi_env env, napi_callback_info inf
 
 napi_value NapiInnerScan::StartScan(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGD("start to StartScan");
+    SCAN_HILOGI("start to StartScan");
     auto context = std::make_shared<NapiScanContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
@@ -368,7 +368,7 @@ napi_value NapiInnerScan::StartScan(napi_env env, napi_callback_info info)
 
 napi_value NapiInnerScan::CancelScan(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGD("start to CancelScan");
+    SCAN_HILOGI("start to CancelScan");
     auto context = std::make_shared<NapiScanContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_ONE, " should 1 parameter!", napi_invalid_arg);
@@ -399,7 +399,7 @@ napi_value NapiInnerScan::CancelScan(napi_env env, napi_callback_info info)
 
 napi_value NapiInnerScan::On(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGD("Enter on---->");
+    SCAN_HILOGI("Enter on---->");
     size_t argc = NapiScanUtils::MAX_ARGC;
     napi_value argv[NapiScanUtils::MAX_ARGC] = { nullptr };
     if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok ||
@@ -506,7 +506,7 @@ napi_value NapiInnerScan::GetScanProgress(napi_env env, napi_callback_info info)
 
 napi_value NapiInnerScan::AddScanner(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGD("start to AddScanner");
+    SCAN_HILOGI("start to AddScanner");
     auto context = std::make_shared<NapiScanContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);
@@ -553,7 +553,7 @@ napi_value NapiInnerScan::AddScanner(napi_env env, napi_callback_info info)
 
 napi_value NapiInnerScan::DeleteScanner(napi_env env, napi_callback_info info)
 {
-    SCAN_HILOGD("start to DeleteScanner");
+    SCAN_HILOGI("start to DeleteScanner");
     auto context = std::make_shared<NapiScanContext>();
     auto input = [context](napi_env env, size_t argc, napi_value *argv, napi_value self) -> napi_status {
         SCAN_ASSERT_BASE(env, argc == NapiScanUtils::ARGC_TWO, " should 2 parameter!", napi_invalid_arg);

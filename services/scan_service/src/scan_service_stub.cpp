@@ -190,7 +190,7 @@ bool ScanServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply)
 {
     std::string taskId = data.ReadString();
     std::string type = data.ReadString();
-    SCAN_HILOGD("ScanServiceStub::OnEventOn type=%{public}s ", type.c_str());
+    SCAN_HILOGI("ScanServiceStub::OnEventOn type=%{public}s ", type.c_str());
     if (type.empty()) {
         SCAN_HILOGE("ScanServiceStub::OnEventOn type is null.");
         reply.WriteInt32(E_SCAN_RPC_FAILURE);
@@ -210,7 +210,7 @@ bool ScanServiceStub::OnEventOn(MessageParcel &data, MessageParcel &reply)
     }
     int32_t ret = On(taskId, type, listener);
     reply.WriteInt32(ret);
-    SCAN_HILOGD("ScanServiceStub::OnEventOn out");
+    SCAN_HILOGI("ScanServiceStub::OnEventOn out");
     return ret == E_SCAN_NONE;
 }
 
@@ -242,23 +242,23 @@ bool ScanServiceStub::OnGetScanProgress(MessageParcel &data, MessageParcel &repl
 
 bool ScanServiceStub::OnConnectScanner(MessageParcel &data, MessageParcel &reply)
 {
-    SCAN_HILOGD("ScanServiceStub::OnConnectScanner start");
+    SCAN_HILOGI("ScanServiceStub::OnConnectScanner start");
     std::string serialNumber = data.ReadString();
     std::string discoverMode = data.ReadString();
     int32_t ret = AddScanner(serialNumber, discoverMode);
     reply.WriteInt32(ret);
-    SCAN_HILOGD("ScanServiceStub::OnConnectScanner end");
+    SCAN_HILOGI("ScanServiceStub::OnConnectScanner end");
     return ret == E_SCAN_NONE;
 }
 
 bool ScanServiceStub::OnDisConnectScanner(MessageParcel &data, MessageParcel &reply)
 {
-    SCAN_HILOGD("ScanServiceStub::OnDisConnectScanner start");
+    SCAN_HILOGI("ScanServiceStub::OnDisConnectScanner start");
     std::string serialNumber = data.ReadString();
     std::string discoverMode = data.ReadString();
     int32_t ret = DeleteScanner(serialNumber, discoverMode);
     reply.WriteInt32(ret);
-    SCAN_HILOGD("ScanServiceStub::OnDisConnectScanner end");
+    SCAN_HILOGI("ScanServiceStub::OnDisConnectScanner end");
     return ret == E_SCAN_NONE;
 }
 

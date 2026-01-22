@@ -232,7 +232,7 @@ int32_t ScanMDnsResolveObserver::SyncSysDataAndNotifyScanService(ScanDeviceInfoT
 
 int32_t ScanMDnsDiscoveryObserver::HandleServiceLost(const MDnsServiceInfo &info, int32_t retCode)
 {
-    SCAN_HILOGD("Loss mdns service info, name = [%{private}s]", info.name.c_str());
+    SCAN_HILOGI("Loss mdns service info, name = [%{private}s]", info.name.c_str());
     sptr<ScanMDnsLossResolveObserver> callBack = new (std::nothrow) ScanMDnsLossResolveObserver(info);
     if (callBack == nullptr) {
         SCAN_HILOGE("callBack is a nullptr");
@@ -247,7 +247,7 @@ int32_t ScanMDnsDiscoveryObserver::HandleServiceLost(const MDnsServiceInfo &info
 
 int32_t ScanMDnsLossResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
 {
-    SCAN_HILOGD("mdnsloss name = [%{private}s], type = [%{private}s]", info.name.c_str(), info.type.c_str());
+    SCAN_HILOGI("mdnsloss name = [%{private}s], type = [%{private}s]", info.name.c_str(), info.type.c_str());
     auto& discoverData = ScannerDiscoverData::GetInstance();
     if (!discoverData.HasTcpDevice(info.addr) && !discoverData.HasEsclDevice(info.addr)) {
         SCAN_HILOGW("not found scanner in discover data");

@@ -64,22 +64,22 @@ SaneOptionDescriptor* SaneOptionDescriptor::Unmarshalling(Parcel &parcel)
 
 void SaneOptionDescriptor::Dump()
 {
-    SCAN_HILOGD("optionName_ = %{public}s", optionName_.c_str());
-    SCAN_HILOGD("optionTitle_ = %{public}s", optionTitle_.c_str());
-    SCAN_HILOGD("optionDesc_ = %{public}s", optionDesc_.c_str());
-    SCAN_HILOGD("optionType_ = %{public}d", optionType_);
-    SCAN_HILOGD("optionUnit_ = %{public}d", optionUnit_);
-    SCAN_HILOGD("optionSize_ = %{public}d", optionSize_);
-    SCAN_HILOGD("optionCap_ = %{public}d", optionCap_);
-    SCAN_HILOGD("optionConstraintType_ = %{public}d", optionConstraintType_);
+    SCAN_HILOGI("optionName_ = %{public}s", optionName_.c_str());
+    SCAN_HILOGI("optionTitle_ = %{public}s", optionTitle_.c_str());
+    SCAN_HILOGI("optionDesc_ = %{public}s", optionDesc_.c_str());
+    SCAN_HILOGI("optionType_ = %{public}d", optionType_);
+    SCAN_HILOGI("optionUnit_ = %{public}d", optionUnit_);
+    SCAN_HILOGI("optionSize_ = %{public}d", optionSize_);
+    SCAN_HILOGI("optionCap_ = %{public}d", optionCap_);
+    SCAN_HILOGI("optionConstraintType_ = %{public}d", optionConstraintType_);
     for (const auto& str : optionConstraintString_) {
-        SCAN_HILOGD("optionConstraintString_ = %{public}s", str.c_str());
+        SCAN_HILOGI("optionConstraintString_ = %{public}s", str.c_str());
     }
     for (const auto& number : optionConstraintNumber_) {
-        SCAN_HILOGD("optionConstraintNumber_ = %{public}d", number);
+        SCAN_HILOGI("optionConstraintNumber_ = %{public}d", number);
     }
-    SCAN_HILOGD("minValue_ = %{public}d", minValue_);
-    SCAN_HILOGD("maxValue_ = %{public}d", maxValue_);
-    SCAN_HILOGD("quantValue_ = %{public}d", quantValue_);
+    SCAN_HILOGI("minValue_ = %{public}d", minValue_);
+    SCAN_HILOGI("maxValue_ = %{public}d", maxValue_);
+    SCAN_HILOGI("quantValue_ = %{public}d", quantValue_);
 }
 }   // namespace OHOS::Scan

@@ -106,7 +106,7 @@ int32_t ScanTask::WriteJpegHeader(ScanParameters &parm, const UINT16& dpi)
     cinfo_.X_density = dpi;
     cinfo_.Y_density = dpi;
     cinfo_.write_JFIF_header = TRUE;
-    SCAN_HILOGD("width:[%{public}d],height:[%{public}d],dpi:[%{public}d]", width, height, dpi);
+    SCAN_HILOGI("width:[%{public}d],height:[%{public}d],dpi:[%{public}d]", width, height, dpi);
     jpeg_set_quality(&cinfo_, JPEG_QUALITY_SEVENTY_FIVE, TRUE);
     jpeg_start_compress(&cinfo_, TRUE);
     jpegbuf_ = new (std::nothrow) JSAMPLE[parm.GetBytesPerLine() / sizeof(JSAMPLE)]{};
