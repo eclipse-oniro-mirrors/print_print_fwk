@@ -247,7 +247,7 @@ int32_t ScanMDnsDiscoveryObserver::HandleServiceLost(const MDnsServiceInfo &info
 
 int32_t ScanMDnsLossResolveObserver::HandleResolveResult(const MDnsServiceInfo &info, int32_t retCode)
 {
-    SCAN_HILOGI("mdnsloss name = [%{private}s], type = [%{private}s]", info.name.c_str(), info.type.c_str());
+    SCAN_HILOGI("mdnsloss name = [%{public}s], type = [%{public}s]", info.name.c_str(), info.type.c_str());
     auto& discoverData = ScannerDiscoverData::GetInstance();
     if (!discoverData.HasTcpDevice(info.addr) && !discoverData.HasEsclDevice(info.addr)) {
         SCAN_HILOGW("not found scanner in discover data");
