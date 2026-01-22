@@ -690,6 +690,7 @@ bool PrintUserData::AddPrintJobToHistoryList(const std::string &printerId,
         PRINT_HILOGE("printJob is null.");
         return false;
     }
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     InitPrintHistoryJobList(printerId);
     auto& printerHistroyJobList = printHistoryJobList_[printerId];
     if (!printerHistroyJobList) {

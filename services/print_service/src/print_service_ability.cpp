@@ -1838,8 +1838,8 @@ int32_t PrintServiceAbility::UpdatePrinters(const std::vector<PrinterInfo> &prin
         return E_PRINT_NO_PERMISSION;
     }
 
-    PRINT_HILOGI("UpdatePrinters started. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
+    PRINT_HILOGI("UpdatePrinters started. Total size is %{public}zd", printSystemData_.GetDiscoveredPrinterCount());
 
     std::string extensionId = DelayedSingleton<PrintBMSHelper>::GetInstance()->QueryCallerBundleName();
     PRINT_HILOGD("extensionId = %{public}s", extensionId.c_str());

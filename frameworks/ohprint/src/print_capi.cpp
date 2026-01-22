@@ -48,10 +48,6 @@ static bool NativePrinterDiscoverFunction(uint32_t event, const PrinterInfo &inf
 {
     PRINT_HILOGD(
         "NativePrinterDiscoverFunction event: %{public}d, printerId: %{private}s", event, info.GetPrinterId().c_str());
-    if (g_printerDiscoverCallback == nullptr) {
-        PRINT_HILOGW("g_printerDiscoverCallback is null");
-        return false;
-    }
     Print_PrinterInfo *nativePrinterInfo = ConvertToNativePrinterInfo(info);
     if (nativePrinterInfo == nullptr) {
         PRINT_HILOGW("nativePrinterInfo is null.");
@@ -62,7 +58,8 @@ static bool NativePrinterDiscoverFunction(uint32_t event, const PrinterInfo &inf
         if (g_printerDiscoverCallback != nullptr) {
             g_printerDiscoverCallback(static_cast<Print_DiscoveryEvent>(event), nativePrinterInfo);
         } else {
-            PRINT_HILOGW("g_printerDiscoverCallback is null");
+            PRINT_HILOGE("g_printerDiscoverCallback is null");
+            return false;
         }
     }
     OH_Print_ReleasePrinterInfo(nativePrinterInfo);
@@ -74,10 +71,6 @@ static bool NativePrinterInfoFunction(uint32_t event, const PrinterInfo &info)
 {
     PRINT_HILOGD(
         "NativePrinterInfoFunction event: %{public}d, printerId: %{private}s", event, info.GetPrinterId().c_str());
-    if (g_printerChangeCallback == nullptr) {
-        PRINT_HILOGW("g_printerChangeCallback is null");
-        return false;
-    }
     Print_PrinterInfo *nativePrinterInfo = ConvertToNativePrinterInfo(info);
     if (nativePrinterInfo == nullptr) {
         PRINT_HILOGW("nativePrinterInfo is null.");
@@ -88,7 +81,8 @@ static bool NativePrinterInfoFunction(uint32_t event, const PrinterInfo &info)
         if (g_printerChangeCallback != nullptr) {
             g_printerChangeCallback(static_cast<Print_PrinterEvent>(event), nativePrinterInfo);
         } else {
-            PRINT_HILOGW("g_printerChangeCallback is null");
+            PRINT_HILOGE("g_printerChangeCallback is null");
+            return false;
         }
     }
     OH_Print_ReleasePrinterInfo(nativePrinterInfo);
