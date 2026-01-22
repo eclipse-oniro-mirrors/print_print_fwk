@@ -113,7 +113,7 @@ PrintServiceStub::PrintServiceStub()
 int32_t PrintServiceStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    PRINT_HILOGD("OnRemoteRequest started, code = %{public}d", code);
+    PRINT_HILOGD("OnRemoteRequest started, code = %{public}u", code);
     auto descriptorToken = data.ReadInterfaceToken();
     if (descriptorToken != GetDescriptor()) {
         PRINT_HILOGE("Remote descriptor not the same as local descriptor.");
@@ -173,7 +173,7 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     }
 
     if (data.ReadBool()) {
-        int32_t len = data.ReadInt32();
+        uint32_t len = data.ReadUint32();
         if (len > PRINT_MAX_PRINT_COUNT) {
             PRINT_HILOGE("len is out of range.");
             reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
@@ -183,7 +183,7 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
             int fdTemp = data.ReadFileDescriptor();
             if (fdTemp >= 0) {
                 uint32_t fd = static_cast<uint32_t>(fdTemp);
-                PRINT_HILOGD("fdList[%{public}d] = %{public}d", index, fd);
+                PRINT_HILOGD("fdList[%{public}d] = %{public}u", index, fd);
                 fdList.emplace_back(fd);
                 continue;
             }
@@ -307,7 +307,7 @@ bool PrintServiceStub::OnAddPrinters(MessageParcel &data, MessageParcel &reply)
         PRINT_HILOGE("read data len failed.");
         return false;
     }
-    PRINT_HILOGD("OnStartDiscoverPrinter len = %{public}d", len);
+    PRINT_HILOGD("OnStartDiscoverPrinter len = %{public}u", len);
 
     if (len > PRINT_MAX_PRINT_COUNT) {
         PRINT_HILOGE("len is out of range.");
@@ -441,7 +441,7 @@ bool PrintServiceStub::OnUpdatePrinters(MessageParcel &data, MessageParcel &repl
         PRINT_HILOGE("read data len failed.");
         return false;
     }
-    PRINT_HILOGD("OnUpdatePrinters len = %{public}d", len);
+    PRINT_HILOGD("OnUpdatePrinters len = %{public}u", len);
 
     if (len > PRINT_MAX_PRINT_COUNT) {
         PRINT_HILOGE("len is out of range.");
@@ -483,7 +483,7 @@ bool PrintServiceStub::OnUpdatePrintJobStateForNormalApp(MessageParcel &data, Me
     std::string jobId = data.ReadString();
     uint32_t state = data.ReadUint32();
     uint32_t subState = data.ReadUint32();
-    PRINT_HILOGD("jobId = %{public}s; state = %{public}d; subState = %{public}d",
+    PRINT_HILOGD("jobId = %{public}s; state = %{public}u; subState = %{public}u",
         jobId.c_str(), state, subState);
     int32_t ret = UpdatePrintJobStateForNormalApp(jobId, state, subState);
     reply.WriteInt32(ret);
@@ -498,8 +498,8 @@ bool PrintServiceStub::OnUpdatePrintJobStateOnlyForSystemApp(MessageParcel &data
     uint32_t state = data.ReadUint32();
     uint32_t subState = data.ReadUint32();
     PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp jobId = %{public}s", jobId.c_str());
-    PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp state = %{public}d", state);
-    PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp subState = %{public}d", subState);
+    PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp state = %{public}u", state);
+    PRINT_HILOGD("OnUpdatePrintJobStateOnlyForSystemApp subState = %{public}u", subState);
 
     int32_t ret = UpdatePrintJobStateOnlyForSystemApp(jobId, state, subState);
     reply.WriteInt32(ret);
@@ -624,7 +624,7 @@ bool PrintServiceStub::OnNotifyPrintServiceEvent(MessageParcel &data, MessagePar
     PRINT_HILOGI("PrintServiceStub::OnNotifyPrintServiceEvent in");
     std::string jobId = data.ReadString();
     uint32_t event = data.ReadUint32();
-    PRINT_HILOGD("OnNotifyPrintServiceEvent jobId = %{public}s, event = %{public}d", jobId.c_str(), event);
+    PRINT_HILOGD("OnNotifyPrintServiceEvent jobId = %{public}s, event = %{public}u", jobId.c_str(), event);
     int32_t ret = NotifyPrintServiceEvent(jobId, event);
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnNotifyPrintServiceEvent out");
