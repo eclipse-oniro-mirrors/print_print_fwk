@@ -190,7 +190,7 @@ int32_t ScanManagerClient::OpenScanner(const std::string scannerId)
 
 int32_t ScanManagerClient::CloseScanner(const std::string scannerId)
 {
-    SCAN_HILOGDI("ScanManagerClient CloseScanner start.");
+    SCAN_HILOGI("ScanManagerClient CloseScanner start.");
     if (scanServiceProxy_ == nullptr) {
         SCAN_HILOGW("Redo GetScanServiceProxy");
         scanServiceProxy_ = GetScanServiceProxy();
