@@ -1285,10 +1285,6 @@ int32_t PrintServiceAbility::StartNativePrintJob(PrintJob &printJob)
     PRINT_HILOGE("ingressPackage is %{public}s", ingressPackage.c_str());
     std::string param = nativePrintJob->ConvertToJsonString();
     HisysEventUtil::reportBehaviorEvent(ingressPackage, HisysEventUtil::SEND_TASK, param);
-    if (CheckPrintConstraint(printJob.GetOption(), printJob.GetJobId())) {
-        PRINT_HILOGE("user is not allow print job");
-        return E_PRINT_NO_PERMISSION;
-    }
     return StartPrintJobInternal(nativePrintJob);
 }
 
@@ -1354,10 +1350,6 @@ int32_t PrintServiceAbility::StartPrintJob(PrintJob &jobInfo)
     printJob->SetJobState(PRINT_JOB_QUEUED);
     UpdateQueuedJobList(jobId, printJob);
     printerJobMap_[printerId].insert(std::make_pair(jobId, true));
-    if (CheckPrintConstraint(jobInfo.GetOption(), jobInfo.GetJobId())) {
-        PRINT_HILOGE("user is not allow print job");
-        return E_PRINT_NO_PERMISSION;
-    }
     return StartPrintJobInternal(printJob);
 }
 
@@ -1406,10 +1398,6 @@ int32_t PrintServiceAbility::RestartPrintJob(const std::string &jobId)
     AddToPrintJobList(printJob->GetJobId(), printJob);
     UpdateQueuedJobList(printJob->GetJobId(), printJob);
     printerJobMap_[printJob->GetPrinterId()].insert(std::make_pair(jobId, true));
-    if (CheckPrintConstraint(printJob->GetOption(), jobId)) {
-        PRINT_HILOGE("user is not allow print job");
-        return E_PRINT_NO_PERMISSION;
-    }
     ret = StartPrintJobInternal(printJob);
     if (ret == E_PRINT_NONE) {
         PRINT_HILOGI("[Job Id: %{public}s] RestartPrintJob success, oldJobId: %{public}s",
@@ -4171,12 +4159,9 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     if (!FlushCacheFileToUserData(printJob->GetJobId())) {
         PRINT_HILOGW("Flush cache file failed");
     }
-#ifdef EDM_SERVICE_ENABLE
-    if (IsDisablePrint()) {
-        ReportEventAndUpdateJobState(printJob->GetOption(), printJob->GetJobId());
+    if (!CheckDeviceAndAccountPermission(printJob)) {
         return E_PRINT_BANNED;
     }
-#endif // EDM_SERVICE_ENABLE
     if (isEprint(printJob->GetPrinterId())) {
         auto extensionId = PrintUtils::GetExtensionId(printJob->GetPrinterId());
         std::string cid = PrintUtils::EncodeExtensionCid(extensionId, PRINT_EXTCB_START_PRINT);
@@ -4208,6 +4193,21 @@ int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJo
     }
     PRINT_HILOGI("StartNativePrintJob end.");
     return E_PRINT_NONE;
+}
+
+bool PrintServiceAbility::CheckDeviceAndAccountPermission(const std::shared_ptr<PrintJob> &printJob)
+{
+#ifdef EDM_SERVICE_ENABLE
+    if (IsDisablePrint()) {
+        ReportEventAndUpdateJobState(printJob->GetOption(), printJob->GetJobId());
+        return false;
+    }
+#endif // EDM_SERVICE_ENABLE
+    if (CheckPrintConstraint(printJob->GetOption(), printJob->GetJobId())) {
+        PRINT_HILOGE("user is not allow print job");
+        return false;
+    }
+    return true;
 }
 
 int32_t PrintServiceAbility::QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info)
