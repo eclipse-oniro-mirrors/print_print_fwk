@@ -84,7 +84,7 @@ private:
     std::shared_ptr<PrintEventSubscriber> userStatusListener;
     bool isSubscribeCommonEvent = false;
     static std::mutex connectionListLock_;
-    std::map<ExtensionAbilityType, std::list<sptr<PrintAbilityConnection>> extConnectionMap_;
+    std::map<ExtensionAbilityType, std::list<sptr<PrintAbilityConnection>>> extConnectionMap_;
 };
 }  // namespace OHOS
 #endif  // PRINT_SERVICE_HELPER_H
