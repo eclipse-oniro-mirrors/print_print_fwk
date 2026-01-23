@@ -180,7 +180,7 @@ bool PrintServiceHelper::CheckPluginPrintConnected()
     }
 
     for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end();) {
-        if (!(*connIt)->IsConnected()) {
+        if ((*connIt) != nullptr && !(*connIt)->IsConnected()) {
             pluginConnected = false;
             connIt = connectionListIt->second.erase(connIt);
         } else {
