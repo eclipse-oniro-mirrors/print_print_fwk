@@ -155,7 +155,7 @@ bool PrintServiceHelper::DisconnectAbility(ExtensionAbilityType extensionAbility
     }
 
     while (!connectionListIt->second.empty() && retry++ < MAX_RETRY_TIMES) {
-        for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end(); ) {
+        for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end();) {
             if (AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(*connIt) == 0) {
                 PRINT_HILOGI("PrintServiceHelper::DisconnectAbility success");
                 connIt = connectionListIt->second.erase(connIt);
@@ -179,7 +179,7 @@ bool PrintServiceHelper::CheckPluginPrintConnected()
         return false;
     }
 
-    for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end(); ) {
+    for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end();) {
         if (!(*connIt)->IsConnected()) {
             pluginConnected = false;
             connIt = connectionListIt->second.erase(connIt);
