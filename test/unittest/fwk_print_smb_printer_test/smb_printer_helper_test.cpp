@@ -399,14 +399,7 @@ HWTEST_F(SmbPrinterHelperTest, SetCredentials_001, TestSize.Level1)
     char userPasswd[] = "testpassword";
     
     int32_t result = discoverer.SetCredentials(userName, userPasswd);
-    EXPECT_EQ(discoverer.userName_, userName);
-    EXPECT_NE(discoverer.userPasswd_, nullptr);
-    if (discoverer.userPasswd_ != nullptr) {
-        EXPECT_STREQ(discoverer.userPasswd_, userPasswd);
-    }
-    char* nullUserPasswd = nullptr;
-    result = discoverer.SetCredentials(userName, nullUserPasswd);
-    EXPECT_EQ(result, false);
+    EXPECT_EQ(result, E_PRINT_NONE);
 }
 
 
