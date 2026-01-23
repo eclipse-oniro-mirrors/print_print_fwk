@@ -150,7 +150,7 @@ void ScanProgress::Dump() const
 {
     SCAN_HILOGI("ScanProgress Dump");
     SCAN_HILOGI("ScanProgress: progress = %{public}d", progress_);
-    SCAN_HILOGI("ScanProgress: fd = %{public}d", fd_);
+    SCAN_HILOGD("ScanProgress: fd = %{public}d", fd_);
     SCAN_HILOGI("ScanProgress: isFinal = %{public}d", isFinal_);
     SCAN_HILOGI("ScanProgress: pictureId = %{public}d", pictureId_);
     SCAN_HILOGI("ScanProgress: taskCode = %{public}d", taskCode_);
