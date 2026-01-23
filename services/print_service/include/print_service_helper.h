@@ -18,7 +18,7 @@
 
 #include <string>
 #include <atomic>
-#include <queue>
+#include <list>
 #include "ability_manager_client.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_client.h"
@@ -74,26 +74,17 @@ private:
     public:
         bool IsConnected() { return isConnected_.load(); }
         bool IsDisonnected() { return isConnected_.load(); }
-        void SetExtensionAbilityType(ExtensionAbilityType extensionAbilityType)
-        {
-            extensionAbilityType_ = extensionAbilityType;
-        }
-        ExtensionAbilityType GetExtensionAbilityType()
-        {
-            return extensionAbilityType_;
-        }
 
     private:
         std::atomic<bool> isConnected_ = false;
         std::atomic<bool> isDisonnected_ = false;
-        ExtensionAbilityType extensionAbilityType_;
     };
 
 private:
     std::shared_ptr<PrintEventSubscriber> userStatusListener;
     bool isSubscribeCommonEvent = false;
     static std::mutex connectionListLock_;
-    std::queue<sptr<PrintAbilityConnection>> extensionAbilityConnectionList_;
+    std::map<ExtensionAbilityType, std::list<sptr<PrintAbilityConnection>> extConnectionMap_;
 };
 }  // namespace OHOS
 #endif  // PRINT_SERVICE_HELPER_H

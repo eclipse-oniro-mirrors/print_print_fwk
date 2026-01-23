@@ -105,9 +105,8 @@ bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want)
         PRINT_HILOGE("PrintServiceHelper::StartExtensionAbility --> failed ");
         return false;
     }
-    printAbilityConnection->SetExtensionAbilityType(ExtensionAbilityType::PRINT_EXTENSION_ABILITY);
     std::lock_guard<std::mutex> autoLock(connectionListLock_);
-    extensionAbilityConnectionList_.push(printAbilityConnection);
+    extConnectionMap_[ExtensionAbilityType::PRINT_EXTENSION_ABILITY].push_back(printAbilityConnection);
     return true;
 }
 
@@ -138,9 +137,8 @@ bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
         PRINT_HILOGE("PrintServiceHelper::StartPluginPrintExtAbility --> failed ");
         return false;
     }
-    printAbilityConnection->SetExtensionAbilityType(ExtensionAbilityType::SERVICE_EXTENSION_ABILITY);
     std::lock_guard<std::mutex> autoLock(connectionListLock_);
-    extensionAbilityConnectionList_.push(printAbilityConnection);
+    extConnectionMap_[ExtensionAbilityType::SERVICE_EXTENSION_ABILITY].push_back(printAbilityConnection);
     return true;
 }
 
@@ -149,69 +147,45 @@ bool PrintServiceHelper::DisconnectAbility(ExtensionAbilityType extensionAbility
     PRINT_HILOGD("enter PrintServiceHelper::DisconnectAbility");
     AAFwk::AbilityManagerClient::GetInstance()->Connect();
     uint32_t retry = 0;
-    bool hasSpecificConnectionType = true;
-    while (hasSpecificConnectionType && retry++ < MAX_RETRY_TIMES) {
-        {
-            hasSpecificConnectionType = false;
-            std::queue<sptr<PrintAbilityConnection>> tempConnectionQueue;
-            std::lock_guard<std::mutex> connectionLock(connectionListLock_);
-            while (!extensionAbilityConnectionList_.empty()) {
-                auto front = extensionAbilityConnectionList_.front();
-                extensionAbilityConnectionList_.pop();
-
-                if (front == nullptr) {
-                    continue;
-                }
-
-                PRINT_HILOGI("extensionAbilityType: %{public}d", front->GetExtensionAbilityType());
-                if (front->GetExtensionAbilityType() != extensionAbilityType) {
-                    tempConnectionQueue.push(front);
-                    continue;
-                }
-                hasSpecificConnectionType = true;
-
-                if (AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(front) == 0) {
-                    PRINT_HILOGI("PrintServiceHelper::DisconnectAbility success");
-                    continue;
-                }
-
-                if (retry < MAX_RETRY_TIMES) {
-                    tempConnectionQueue.push(front);
-                }
-            }
-            extensionAbilityConnectionList_ = std::move(tempConnectionQueue);
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
-        PRINT_HILOGI("PrintServiceHelper::DisconnectAbility %{public}d", retry);
-    }
-    if (retry > MAX_RETRY_TIMES) {
-        PRINT_HILOGE("PrintServiceHelper::DisconnectAbility --> failed ");
+    std::lock_guard<std::mutex> connectionLock(connectionListLock_);
+    auto connectionListIt = extConnectionMap_.find(extensionAbilityType);
+    if (connectionListIt == extConnectionMap_.end() || connectionListIt->second.size() == 0) {
+        PRINT_HILOGW("cannot find connect list of this type");
         return false;
     }
+
+    while (!connectionListIt->second.empty() && retry++ < MAX_RETRY_TIMES) {
+        for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end(); ) {
+            if (AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(front) == 0) {
+                PRINT_HILOGI("PrintServiceHelper::DisconnectAbility success");
+                connIt = connectionListIt->second.erase(connIt);
+            } else {
+                ++connIt;
+            }
+        }
+    }
+
+    extConnectionMap_.erase(connectionListIt);
     return true;
 }
 
 bool PrintServiceHelper::CheckPluginPrintConnected()
 {
     bool pluginConnected = true;
-    {
-        std::queue<sptr<PrintAbilityConnection>> tempConnectionQueue;
-        std::lock_guard<std::mutex> connectionLock(connectionListLock_);
-        while (!extensionAbilityConnectionList_.empty()) {
-            auto front = extensionAbilityConnectionList_.front();
-            extensionAbilityConnectionList_.pop();
-            if (front == nullptr) {
-                continue;
-            }
-            PRINT_HILOGI("extensionAbilityType: %{public}d", front->GetExtensionAbilityType());
-            if (front->GetExtensionAbilityType() == ExtensionAbilityType::SERVICE_EXTENSION_ABILITY &&
-                !front->IsConnected()) {
-                pluginConnected = false;
-                continue;
-            }
-            tempConnectionQueue.push(front);
+    std::lock_guard<std::mutex> connectionLock(connectionListLock_);
+    auto connectionListIt = extConnectionMap_.find(ExtensionAbilityType::SERVICE_EXTENSION_ABILITY);
+    if (connectionListIt == extConnectionMap_.end() || connectionListIt->second.size() == 0) {
+        PRINT_HILOGW("cannot find connect list of this type");
+        return false;
+    }
+
+    for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end(); ) {
+        if (!connIt->IsConnected()) {
+            pluginConnected = false;
+            connIt = connectionListIt->second.erase(connIt);
+        } else {
+            ++connIt;
         }
-        extensionAbilityConnectionList_ = std::move(tempConnectionQueue);
     }
     return pluginConnected;
 }
