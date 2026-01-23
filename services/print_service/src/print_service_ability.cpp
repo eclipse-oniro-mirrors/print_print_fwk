@@ -5183,6 +5183,10 @@ void PrintServiceAbility::ParseSingleAdvanceOptJson(const std::string &keyword, 
 int32_t PrintServiceAbility::GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts)
 {
     PRINT_HILOGI("Enter GetSharedHosts");
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
 #ifdef HAVE_SMB_PRINTER
     SmbHostSearchHelper smbHostSearchHelper;
     auto hosts = smbHostSearchHelper.GetSharedHosts();
@@ -5198,6 +5202,10 @@ int32_t PrintServiceAbility::AuthSmbDevice(const PrintSharedHost& sharedHost, co
     char *userPasswd, std::vector<PrinterInfo>& printerInfos)
 {
     PRINT_HILOGI("Enter AuthSmbDevice");
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
 #ifdef HAVE_SMB_PRINTER
     sharedHost.Dump();
     SmbPrinterDiscoverer smbPrinterDiscoverer;
