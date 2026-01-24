@@ -726,6 +726,7 @@ int32_t PrintServiceAbility::StartDiscoverPrinter(const std::vector<std::string>
 bool PrintServiceAbility::DelayStartDiscovery(const std::string &extensionId)
 {
     PRINT_HILOGI("DelayStartDiscovery start, extensionId: %{public}s", extensionId.c_str());
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (extensionStateList_.find(extensionId) == extensionStateList_.end()) {
         PRINT_HILOGE("invalid extension id");
         return false;
@@ -1970,6 +1971,7 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
         return E_PRINT_NO_PERMISSION;
     }
 
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto eventIt = registeredListeners_.find(PRINT_GET_FILE_EVENT_TYPE);
     if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {
         PRINT_HILOGI("print job adapter file created subState[%{public}d]", subState);
@@ -2319,6 +2321,7 @@ void PrintServiceAbility::DiscoveryCallerAppsMonitor()
     bool running = true;
     while (running) {
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
+        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
         std::lock_guard<std::recursive_mutex> discoveryLock(discoveryMutex_);
 
         for (auto iter = discoveryCallerMap_.begin(); iter != discoveryCallerMap_.end();) {
@@ -2778,6 +2781,7 @@ int32_t PrintServiceAbility::SendPrinterEventChangeEvent(
     PRINT_HILOGD("[Printer: %{public}s] PrintServiceAbility::SendPrinterEventChangeEvent, printerEvent: %{public}d",
         info.GetPrinterId().c_str(),
         printerEvent);
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     for (auto eventIt : registeredListeners_) {
         if (PrintUtils::GetEventType(eventIt.first) != PRINTER_CHANGE_EVENT_TYPE || eventIt.second == nullptr) {
             continue;
@@ -3757,6 +3761,7 @@ bool PrintServiceAbility::RemoveSinglePrinterInfo(const std::string &printerId)
 
 bool PrintServiceAbility::AddVendorPrinterToDiscovery(const std::string &globalVendorName, const PrinterInfo &info)
 {
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, info.GetPrinterId());
     auto printerInfo = printSystemData_.QueryDiscoveredPrinterInfoById(globalPrinterId);
     if (printerInfo == nullptr) {
@@ -3819,6 +3824,7 @@ bool PrintServiceAbility::RemoveVendorPrinterFromDiscovery(
     const std::string &globalVendorName, const std::string &printerId)
 {
     PRINT_HILOGI("RemovePrinterFromDiscovery");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
     return RemoveSinglePrinterInfo(globalPrinterId);
 }
@@ -3978,6 +3984,7 @@ void PrintServiceAbility::OnPrinterAddedToCups(std::shared_ptr<PrinterInfo> prin
     printerInfo->SetPrinterStatus(PRINTER_STATUS_IDLE);
     std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
     printerInfo->SetPpdHashCode(ppdHashCode);
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (printSystemData_.IsPrinterAdded(globalPrinterId)) {
         SendPrinterEventChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
         SendPrinterChangeEvent(PRINTER_EVENT_STATE_CHANGED, *printerInfo);
@@ -4878,6 +4885,7 @@ bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
     PRINT_HILOGI("Start CallBack Printerinfo");
     std::vector<PpdInfo> ppdInfos;
     QueryPrinterPpds(info, ppdInfos);
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     for (auto eventIt : registeredListeners_) {
         if (PrintUtils::GetEventType(eventIt.first) != PRINT_QUERY_INFO_EVENT_TYPE) {
             continue;
@@ -5252,6 +5260,7 @@ int32_t PrintServiceAbility::ConnectSmbPrinter(PrinterInfo& printerInfo, const s
     printerInfo.SetCapability(printerCaps);
     std::string ppdHashCode = DelayedSingleton<PrintCupsClient>::GetInstance()->GetPpdHashCode(ppdName);
     printerInfo.SetPpdHashCode(ppdHashCode);
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     UpdatePrinterCapability(printerInfo.GetPrinterId(), printerInfo);
     printerInfo.SetPrinterState(PRINTER_UPDATE_CAP);
     SendPrinterEvent(printerInfo);
