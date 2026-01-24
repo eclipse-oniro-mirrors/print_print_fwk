@@ -3146,7 +3146,7 @@ bool PrintServiceAbility::StartPluginPrintExtAbility(const AAFwk::Want &want)
         PRINT_HILOGE("Invalid print service helper.");
         return false;
     }
-    PRINT_HILOGI("enter PrintServiceAbility::StartExtensionAbility");
+    PRINT_HILOGI("enter PrintServiceAbility::StartPluginPrintExtAbility");
     bool ret = helper_->StartPluginPrintExtAbility(want);
     auto timeoutCheck = [this]() {
         if (helper_ == nullptr) {
@@ -4785,7 +4785,7 @@ void PrintServiceAbility::RegisterSettingDataObserver()
         }
         PRINT_HILOGI("observerCallback pcmode value: %{public}s", value.c_str());
         if (value == "false") {
-            this->helper_->DisconnectAbility();
+            this->helper_->DisconnectAbility(ExtensionAbilityType::SERVICE_EXTENSION_ABILITY);
             return;
         }
         if (isMonitoring_.load()) {

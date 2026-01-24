@@ -18,7 +18,7 @@
 
 #include <string>
 #include <atomic>
-#include <queue>
+#include <list>
 #include "ability_manager_client.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_client.h"
@@ -28,6 +28,10 @@
 #include "print_event_subscriber.h"
 
 namespace OHOS::Print {
+enum class ExtensionAbilityType {
+    PRINT_EXTENSION_ABILITY = 0,
+    SERVICE_EXTENSION_ABILITY = 1
+};
 class PrintServiceHelper {
 public:
     virtual ~PrintServiceHelper();
@@ -42,7 +46,7 @@ public:
     virtual bool StartExtensionAbility(const AAFwk::Want &want);
     virtual bool StartPluginPrintExtAbility(const AAFwk::Want &want);
     virtual void PrintSubscribeCommonEvent();
-    virtual bool DisconnectAbility();
+    virtual bool DisconnectAbility(ExtensionAbilityType extensionAbilityType);
     virtual bool CheckPluginPrintConnected();
 
 private:
@@ -79,9 +83,8 @@ private:
 private:
     std::shared_ptr<PrintEventSubscriber> userStatusListener;
     bool isSubscribeCommonEvent = false;
-    sptr<PrintAbilityConnection> printAbilityConnection_ = nullptr;
     static std::mutex connectionListLock_;
-    std::queue<sptr<PrintAbilityConnection>> pluginPrintConnectionList_;
+    std::map<ExtensionAbilityType, std::list<sptr<PrintAbilityConnection>>> extConnectionMap_;
 };
 }  // namespace OHOS
 #endif  // PRINT_SERVICE_HELPER_H
