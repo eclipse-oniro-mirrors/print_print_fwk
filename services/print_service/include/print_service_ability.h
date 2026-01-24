@@ -274,8 +274,7 @@ public:
     bool AddVendorPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
         const std::string &ppdName, const std::string &ppdData) override;
     bool RemoveVendorPrinterFromCups(const std::string &vendorName, const std::string &printerId) override;
-    bool OnVendorStatusUpdate(
-        const std::string &globalVendorName, const std::string &printerId, const PrinterVendorStatus &status) override;
+    bool OnVendorStatusUpdate(const std::string &globalPrinterId, const PrinterVendorStatus &status) override;
     bool QueryPrinterCapabilityByUri(const std::string &uri, PrinterCapability &printerCap) override;
     bool QueryPrinterStatusByUri(const std::string &uri, PrinterStatus &status) override;
     std::shared_ptr<PrinterInfo> QueryDiscoveredPrinterInfoById(const std::string &printerId) override;
@@ -283,7 +282,7 @@ public:
     bool AddIpPrinterToSystemData(const std::string &globalVendorName, const PrinterInfo &info) override;
     bool AddIpPrinterToCupsWithPpd(const std::string &globalVendorName, const std::string &printerId,
         const std::string &ppdName, const std::string &ppdData) override;
-    std::vector<std::string> QueryAddedPrintersByIp(const std::string &printerIp) override;
+    std::vector<std::string> QueryAddedPrintersByOriginId(const std::string &originId) override;
     int32_t DiscoverBackendPrinters(std::vector<PrinterInfo> &printers) override;
 
 private:

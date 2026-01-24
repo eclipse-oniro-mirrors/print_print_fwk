@@ -56,6 +56,7 @@ public:
     virtual int32_t RemovePrinterFromCups(const std::string &vendorName, const std::string &printerId) = 0;
     virtual bool OnPrinterStatusChanged(const std::string &vendorName, const std::string &printerId,
                                         const PrinterVendorStatus &status) = 0;
+    virtual bool OnVendorStatusUpdate(const std::string &globalPrinterId, const PrinterVendorStatus &status) = 0;
     virtual bool OnPrinterCapabilityQueried(const std::string &vendorName, const PrinterInfo &printerInfo) = 0;
     virtual bool OnPrinterPpdQueried(const std::string &vendorName, const std::string &printerId,
                                      const std::string &ppdName, const std::string &ppdData) = 0;
@@ -76,7 +77,7 @@ public:
         const std::string &printerId) = 0;
     virtual int32_t QueryPrinterInfoByPrinterId(const std::string &vendorName, const std::string &printerId,
         PrinterInfo &info) = 0;
-    virtual std::vector<std::string> QueryAddedPrintersByIp(const std::string &printerIp) = 0;
+    virtual std::vector<std::string> QueryAddedPrintersByOriginId(const std::string &originId) = 0;
     virtual bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName) = 0;
     virtual bool ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
         const std::string &ppdName) = 0;

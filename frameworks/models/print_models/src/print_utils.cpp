@@ -34,7 +34,6 @@ static const std::string LAUNCH_PARAMETER_PRINT_ATTRIBUTE = "printAttributes";
 static const std::string PRINTER_ID_USB_PREFIX = "USB";
 
 static std::map<uint32_t, std::string> jobStateMap_;
-const std::string GLOBAL_ID_DELIMITER = ":";
 const std::string EXTENSION_CID_DELIMITER = ":";
 const std::string TASK_EVENT_DELIMITER = "-";
 const std::string USER_ID_DELIMITER = ":";

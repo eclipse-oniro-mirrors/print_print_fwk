@@ -221,7 +221,6 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0007, TestSize.Level2)
     EXPECT_CALL(*mock, QueryPrinterStatusByUri(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, QueryPrinterCapabilityByUri(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, AddVendorPrinterToCupsWithPpd(_, _, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*mock, OnVendorStatusUpdate(_, _, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, RemoveVendorPrinterFromCups(_, _)).WillOnce(Return(false)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mock, QueryPrinterInfoByPrinterId(_, _)).WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(*mock, QueryPPDInformation(_, _)).WillRepeatedly(Return(true));
@@ -238,7 +237,6 @@ HWTEST_F(VendorManagerTest, VendorManagerTest_0007, TestSize.Level2)
     EXPECT_FALSE(vendorManager.OnPrinterPpdQueried(vendorName, PRINTER_TEST_IP, ppdName, ppdData));
     EXPECT_TRUE(vendorManager.OnPrinterPpdQueried(vendorName, PRINTER_TEST_IP, ppdName, ppdData));
     PrinterVendorStatus vendorStatus;
-    EXPECT_FALSE(vendorManager.OnPrinterStatusChanged(vendorName, PRINTER_TEST_IP, vendorStatus));
     EXPECT_TRUE(vendorManager.OnPrinterStatusChanged(vendorName, PRINTER_TEST_IP, vendorStatus));
     EXPECT_EQ(vendorManager.RemovePrinterFromCups(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_CALLBACK_FAIL);
     EXPECT_EQ(vendorManager.RemovePrinterFromCups(vendorName, PRINTER_TEST_IP), EXTENSION_ERROR_NONE);

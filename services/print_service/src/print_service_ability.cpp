@@ -4074,17 +4074,14 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
     return true;
 }
 
-std::vector<std::string> PrintServiceAbility::QueryAddedPrintersByIp(const std::string &printerIp)
+std::vector<std::string> PrintServiceAbility::QueryAddedPrintersByOriginId(const std::string &originId)
 {
-    return printSystemData_.QueryAddedPrintersByIp(printerIp);
+    return printSystemData_.QueryAddedPrintersByOriginId(originId);
 }
 
-bool PrintServiceAbility::OnVendorStatusUpdate(
-    const std::string &globalVendorName, const std::string &printerId, const PrinterVendorStatus &status)
+bool PrintServiceAbility::OnVendorStatusUpdate(const std::string &globalPrinterId, const PrinterVendorStatus &status)
 {
     PRINT_HILOGD("OnVendorStatusUpdate state: %{public}d", static_cast<int32_t>(status.state));
-    auto globalPrinterId = PrintUtils::GetGlobalId(globalVendorName, printerId);
-    PRINT_HILOGD("[Printer: %{public}s] OnVendorStatusUpdate", globalPrinterId.c_str());
     printSystemData_.UpdatePrinterStatus(globalPrinterId, static_cast<PrinterStatus>(status.state));
     PrinterInfo printerInfo;
     if (!printSystemData_.QueryAddedPrinterInfoByPrinterId(globalPrinterId, printerInfo)) {

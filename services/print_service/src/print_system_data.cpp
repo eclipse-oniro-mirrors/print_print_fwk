@@ -116,6 +116,13 @@ void PrintSystemData::ConvertInnerJsonToPrinterInfo(Json::Value &object, Printer
         info.SetPreferences(preference);
         PRINT_HILOGI("convert json to printer preferences success");
     }
+    if (PrintJsonUtil::IsMember(object, "originId") && object["originId"].isString()) {
+        info.SetOriginId(object["originId"].asString());
+    } else if (PrintUtil::startsWith(info.GetPrinterId(), VENDOR_MANAGER_PREFIX + VENDOR_WLAN_GROUP +
+        GLOBAL_ID_DELIMITER)) {
+        std::string host = PrintUtils::ExtractHostFromUri(info.GetUri());
+        info.SetOriginId(VENDOR_MANAGER_PREFIX + VENDOR_BSUNI_DRIVER + GLOBAL_ID_DELIMITER + host);
+    }
 }
 
 bool PrintSystemData::Init()
@@ -350,6 +357,11 @@ void PrintSystemData::ParseInfoToPrinterJson(std::shared_ptr<PrinterInfo> info, 
     printerJson["capability"] = capsJson;
     printerJson["preferences"] = preference.ConvertToJson();
     printerJson["selectedDriver"] = ppdInfo.ConvertToJson();
+    if (info->HasOriginId()) {
+        printerJson["originId"] = info->GetOriginId();
+    } else {
+        PRINT_HILOGD("no originId");
+    }
 }
 
 void PrintSystemData::SavePrinterFile(const std::string &printerId)
@@ -1018,10 +1030,10 @@ std::vector<std::string> PrintSystemData::QueryAddedPrinterIdList()
     return GetAddedPrinterMap().GetKeyList();
 }
 
-std::vector<std::string> PrintSystemData::QueryAddedPrintersByIp(const std::string &printerIp)
+std::vector<std::string> PrintSystemData::QueryAddedPrintersByOriginId(const std::string &originId)
 {
-    return GetAddedPrinterMap().GetKeyList([this, printerIp](const PrinterInfo &printer) -> bool {
-        return PrintUtils::ExtractHostFromUri(printer.GetUri()) == printerIp;
+    return GetAddedPrinterMap().GetKeyList([this, originId](const PrinterInfo &printer) -> bool {
+        return printer.GetOriginId() == originId;
     });
 }
 

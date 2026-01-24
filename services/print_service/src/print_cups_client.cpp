@@ -147,7 +147,6 @@ static const std::string SERIAL = "serial=";
 static const std::string PRINTER_ID_USB_PREFIX = "USB";
 static const std::string PRINTER_MAKE_UNKNOWN = "Unknown";
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
-static const std::string VENDOR_MANAGER_PREFIX = "fwk.";
 static const std::string DEFAULT_POLICY = "default";
 #ifdef ENTERPRISE_ENABLE
 static const std::string CUPS_ENTERPRISE_ROOT_DIR = "/data/service/el1/public/print_service/cups_enterprise";

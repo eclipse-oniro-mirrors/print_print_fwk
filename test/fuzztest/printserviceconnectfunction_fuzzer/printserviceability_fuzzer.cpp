@@ -39,10 +39,9 @@ void TestRemoveVendorPrinterFromCups(const uint8_t *data, size_t size, FuzzedDat
 
 void TestOnVendorStatusUpdate(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)
 {
-    std::string globalVendorName = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
-    std::string printerId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
+    std::string globalPrinterId = dataProvider->ConsumeRandomLengthString(MAX_STRING_LENGTH);
     PrinterVendorStatus printerVendorStatus;
-    PrintServiceAbility::GetInstance()->OnVendorStatusUpdate(globalVendorName, printerId, printerVendorStatus);
+    PrintServiceAbility::GetInstance()->OnVendorStatusUpdate(globalPrinterId, printerVendorStatus);
 }
 
 void TestQueryVendorPrinterInfo(const uint8_t *data, size_t size, FuzzedDataProvider *dataProvider)

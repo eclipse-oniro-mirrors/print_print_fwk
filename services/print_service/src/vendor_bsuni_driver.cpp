@@ -503,6 +503,7 @@ void VendorBsuniDriver::OnDiscoveredPrinterAdd(std::shared_ptr<PrinterInfo> prin
         PRINT_HILOGW("vendorManager is null");
         return;
     }
+    printerInfo->SetOriginId(GetGlobalPrinterId(printerInfo->GetPrinterId()));
     vendorManager->AddPrinterToDiscovery(GetVendorName(), *printerInfo);
 }
 
@@ -529,6 +530,7 @@ void VendorBsuniDriver::OnCupsPrinterAdd(std::shared_ptr<PrinterInfo> printerInf
         PRINT_HILOGW("vendorManager is null");
         return;
     }
+    printerInfo->SetOriginId(GetGlobalPrinterId(printerInfo->GetPrinterId()));
     std::string vendorName = GetVendorName();
     if (vendorManager->UpdatePrinterToDiscovery(vendorName, *printerInfo) != EXTENSION_ERROR_NONE) {
         PRINT_HILOGW("update printer to discovery fail");
@@ -606,10 +608,15 @@ std::string VendorBsuniDriver::CreateUriByIpAndProtocol(const std::string &ip, c
 void VendorBsuniDriver::OnPrinterCapabilityQueried(std::shared_ptr<PrinterInfo> printerInfo)
 {
     PRINT_HILOGD("OnPrinterCapabilityQueried enter");
+    if (printerInfo == nullptr) {
+        PRINT_HILOGW("printerInfo is null");
+        return;
+    }
     if (vendorManager == nullptr) {
         PRINT_HILOGW("vendorManager is null");
         return;
     }
+    printerInfo->SetOriginId(GetGlobalPrinterId(printerInfo->GetPrinterId()));
     if (!printerInfo->HasUri()) {
         PRINT_HILOGW("Building printerInfo!");
         std::string connectProtocol = vendorManager->GetConnectingProtocol();

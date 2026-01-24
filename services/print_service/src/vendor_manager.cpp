@@ -26,8 +26,6 @@
 
 using namespace OHOS::Print;
 namespace {
-const std::string VENDOR_MANAGER_PREFIX = "fwk.";
-const std::string GLOBAL_ID_DELIMITER = ":";
 const int MONITOR_CHECK_INTERVAL_MS = 1000;
 const size_t IP_LENGTH_MIN = 7;
 }  // namespace
@@ -375,11 +373,16 @@ bool VendorManager::OnPrinterStatusChanged(
     if (vendorName == VENDOR_BSUNI_DRIVER && wlanGroupDriver != nullptr) {
         return wlanGroupDriver->OnPrinterStatusChanged(vendorName, printerId, status);
     }
-    std::string globalVendorName = GetGlobalVendorName(vendorName);
-    if (printServiceAbility != nullptr) {
-        return printServiceAbility->OnVendorStatusUpdate(globalVendorName, printerId, status);
-    }
     return true;
+}
+
+bool VendorManager::OnVendorStatusUpdate(const std::string &globalPrinterId, const PrinterVendorStatus &status)
+{
+    if (printServiceAbility == nullptr) {
+        PRINT_HILOGW("printServiceAbility is null");
+        return false;
+    }
+    return printServiceAbility->OnVendorStatusUpdate(globalPrinterId, status);
 }
 
 std::shared_ptr<VendorDriverBase> VendorManager::FindDriverByPrinterId(const std::string &globalPrinterId)
@@ -661,13 +664,13 @@ int32_t VendorManager::QueryPrinterInfoByPrinterId(
     return printServiceAbility->QueryPrinterInfoByPrinterId(globalPrinterId, info);
 }
 
-std::vector<std::string> VendorManager::QueryAddedPrintersByIp(const std::string &printerIp)
+std::vector<std::string> VendorManager::QueryAddedPrintersByOriginId(const std::string &originId)
 {
     if (printServiceAbility == nullptr) {
         PRINT_HILOGW("printServiceAbility is null");
         return std::vector<std::string>();
     }
-    return printServiceAbility->QueryAddedPrintersByIp(printerIp);
+    return printServiceAbility->QueryAddedPrintersByOriginId(originId);
 }
 
 bool VendorManager::QueryPPDInformation(const std::string &makeModel, std::string &ppdName)
