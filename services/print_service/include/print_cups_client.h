@@ -126,6 +126,7 @@ public:
     void StopCupsdEnterpriseService();
 #endif // ENTERPRISE_ENABLE
     bool IsCupsServerAlive();
+    void SetCupsClientEnv();
     bool QueryPPDInformation(const std::string &makeModel, std::string &ppdName);
     bool QueryAllPPDInformation(const std::string &makeModel, std::vector<PpdInfo> &ppdInfos);
     int32_t AddPrinterToCups(const std::string &printerUri, const std::string &printerName,

@@ -52,7 +52,6 @@ namespace OHOS::Print {
 using namespace std;
 
 const uint32_t THOUSAND_INCH = 1000;
-const uint32_t CUPS_SEVER_PORT = 1631;
 const uint32_t TIME_OUT = 2000;
 const uint32_t CONVERSION_UNIT = 2540;
 const uint32_t LONG_TIME_OUT = 3000;
@@ -144,6 +143,7 @@ static const std::string CUPSD_CONTROL_PARAM = "print.cupsd.ready";
 static const std::string USB_PRINTER = "usb";
 static const std::string NOT_BACKEND_PRINTER = "ipp,ipps,lpd,socket,usb,http,bsUniBackend";
 static const std::string SERIAL = "serial=";
+static const std::string CUPS_SOCKET_PATH = "/data/service/el1/public/print_service/cups/socket/cups.sock";
 static const std::string PRINTER_ID_USB_PREFIX = "USB";
 static const std::string PRINTER_MAKE_UNKNOWN = "Unknown";
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
@@ -152,6 +152,8 @@ static const std::string DEFAULT_POLICY = "default";
 #ifdef ENTERPRISE_ENABLE
 static const std::string CUPS_ENTERPRISE_ROOT_DIR = "/data/service/el1/public/print_service/cups_enterprise";
 static const std::string CUPSD_ENTERPRISE_CONTROL_PARAM = "print.cupsd_enterprise.ready";
+static const std::string CUPS_ENTERPRISE_SOCKET_PATH =
+    "/data/service/el1/public/print_service/cups_enterprise/socket/cups.sock";
 #endif  // ENTERPRISE_ENABLE
 
 static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST{
@@ -766,7 +768,6 @@ int32_t PrintCupsClient::AddPrinterToCupsWithSpecificPpd(
 
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
-    ippSetPort(CUPS_SEVER_PORT);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", standardName.c_str());
@@ -800,7 +801,6 @@ int32_t PrintCupsClient::AddPrinterToCupsWithPpd(const std::string &printerUri, 
         PRINT_HILOGI("add success, printer has added");
         return E_PRINT_NONE;
     }
-    ippSetPort(CUPS_SEVER_PORT);
     _cupsSetError(IPP_STATUS_OK, nullptr, 0);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     if (request == nullptr) {
@@ -1237,9 +1237,8 @@ int32_t PrintCupsClient::SetDefaultPrinter(const std::string &printerName)
         PRINT_HILOGW("printAbility_ is null");
         return E_PRINT_SERVER_FAILURE;
     }
-    ippSetPort(CUPS_SEVER_PORT);
     http = httpConnect2(
-        cupsServer(), ippPort(), nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
+        cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
     if (http == nullptr) {
         PRINT_HILOGE("cups server is not alive");
         return E_PRINT_SERVER_FAILURE;
@@ -1526,8 +1525,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
         return;
     }
     http_t *monitorHttp = nullptr;
-    ippSetPort(CUPS_SEVER_PORT);
-    monitorHttp = httpConnect2(cupsServer(), ippPort(), nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1,
+    monitorHttp = httpConnect2(cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1,
         LONG_TIME_OUT, nullptr);
     if (monitorHttp == nullptr) {
         return;
@@ -1586,7 +1584,6 @@ void PrintCupsClient::BuildMonitorPolicy(std::shared_ptr<JobMonitorParam> monito
 void PrintCupsClient::StartMonitor()
 {
     PRINT_HILOGI("state monitor start");
-    ippSetPort(CUPS_SEVER_PORT);
     std::vector<std::shared_ptr<JobMonitorParam>> jobMonitorList;
     while (!jobMonitorList_.empty()) {
         uint64_t lastUpdateTime = GetNowTime();
@@ -1830,7 +1827,7 @@ bool PrintCupsClient::AuthCupsPrintJob(const std::string &jobId, const std::stri
     ipp_t *request = NULL;
     ipp_t *response = NULL;
     http = httpConnect2(
-        cupsServer(), ippPort(), nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
+        cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
     if (!http) {
         PRINT_HILOGE("Printer authenticate http fail.");
         return false;
@@ -2179,7 +2176,6 @@ bool PrintCupsClient::ModifyCupsPrinterUri(const std::string &printerName, const
 
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
-    ippSetPort(CUPS_SEVER_PORT);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", printerName.c_str());
@@ -2456,15 +2452,28 @@ std::string PrintCupsClient::GetColorString(uint32_t colorCode)
 bool PrintCupsClient::IsCupsServerAlive()
 {
     http_t *http = nullptr;
-    ippSetPort(CUPS_SEVER_PORT);
+    SetCupsClientEnv();
     http = httpConnect2(
-        cupsServer(), ippPort(), nullptr, AF_UNSPEC, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
+        cupsServer(), 0, nullptr, AF_LOCAL, HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
     if (http == nullptr) {
         PRINT_HILOGE("cups server is not alive");
         return false;
     }
     httpClose(http);
     return true;
+}
+
+void PrintCupsClient::SetCupsClientEnv()
+{
+    ippSetPort(0);
+#ifdef ENTERPRISE_ENABLE
+    if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&
+        PrintServiceAbility::GetInstance()->IsEnterprise()) {
+        setenv("CUPS_SERVER", CUPS_ENTERPRISE_SOCKET_PATH.c_str(), 1);
+        return;
+    }
+#endif  // ENTERPRISE_ENABLE
+    setenv("CUPS_SERVER", CUPS_SOCKET_PATH.c_str(), 1);
 }
 
 /**
@@ -2747,7 +2756,6 @@ bool PrintCupsClient::ModifyCupsPrinterPpd(const std::string &printerName, const
 
     ipp_t *request = nullptr;
     char uri[HTTP_MAX_URI] = {0};
-    ippSetPort(CUPS_SEVER_PORT);
     request = ippNewRequest(IPP_OP_CUPS_ADD_MODIFY_PRINTER);
     httpAssembleURIf(
         HTTP_URI_CODING_ALL, uri, sizeof(uri), "ipp", nullptr, "localhost", 0, "/printers/%s", printerName.c_str());
@@ -3116,8 +3124,7 @@ int32_t PrintCupsClient::DeleteExtraJobsFromCups()
     ipp_t *request = nullptr;
     ipp_t *response = nullptr;
 
-    ippSetPort(CUPS_SEVER_PORT);
-    http = httpConnect2(cupsServer(), ippPort(), nullptr, AF_UNSPEC,
+    http = httpConnect2(cupsServer(), 0, nullptr, AF_LOCAL,
                         HTTP_ENCRYPTION_IF_REQUESTED, 1, LONG_TIME_OUT, nullptr);
     if (http == nullptr) {
         PRINT_HILOGE("cups server is not alive");

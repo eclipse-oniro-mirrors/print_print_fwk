@@ -86,11 +86,19 @@ ohos_prebuilt_etc("cups_service_enterprise.cfg") {
   subsystem_name = "print"
 }
 
+ohos_prebuilt_etc("cupsd_enterprise.conf") {
+  source = "cupsd_enterprise.conf"
+  relative_install_dir = "cups"
+  part_name = "print_fwk"
+  subsystem_name = "print"
+}
+
 group("enterprise_cfgs") {
   if (print_fwk_feature_enterprise) {
     deps = [
       ":cups_enterprise-files.conf",
-      ":cups_service_enterprise.cfg"
+      ":cups_service_enterprise.cfg",
+      ":cupsd_enterprise.conf"
     ]
   }
 }
