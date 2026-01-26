@@ -317,7 +317,7 @@ void PrintUserData::ParseUserDataFromJson(Json::Value &jsonObject)
         PRINT_HILOGW("can not find print_user_data");
         return;
     }
-    PRINT_HILOGI("userId_: %{public}d", userId_);
+    PRINT_HILOGI("userId_: %{private}d", userId_);
     std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     Json::Value userDataList = jsonObject["print_user_data"];
     if (!PrintJsonUtil::IsMember(userDataList, std::to_string(userId_)) ||
@@ -374,7 +374,7 @@ bool PrintUserData::ConvertJsonToUsedPrinterList(Json::Value &userData)
         usedPrinterList_.push_back(usedPrinterListJson[i].asString());
     }
     uint32_t size = usedPrinterList_.size();
-    PRINT_HILOGI("usedPrinterList_ size: %{public}d", size);
+    PRINT_HILOGI("usedPrinterList_ size: %{public}u", size);
     for (auto it = usedPrinterList_.begin(); it != usedPrinterList_.end(); ++it) {
         PRINT_HILOGD("printerId in usedPrinterList_: %{private}s", it->c_str());
     }
@@ -591,7 +591,7 @@ bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
                 continue;
             }
             if (std::remove(cachePath) != 0) {
-                PRINT_HILOGW("error deleting file %{public}s err: %{public}s", cachePath, strerror(errno));
+                PRINT_HILOGW("error deleting file %{private}s err: %{public}s", cachePath, strerror(errno));
             }
         }
     }

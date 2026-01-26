@@ -42,7 +42,7 @@ bool PrintServiceHelper::CheckPermission(const std::string &name)
     AccessTokenID tokenId = IPCSkeleton::GetCallingTokenID();
     TypeATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(tokenId);
     if (tokenType == TOKEN_INVALID) {
-        PRINT_HILOGE("invalid token id %{public}d", tokenId);
+        PRINT_HILOGE("invalid token id %{private}d", tokenId);
         return false;
     }
     int result = AccessTokenKit::VerifyAccessToken(tokenId, name);
@@ -67,7 +67,7 @@ bool PrintServiceHelper::StartAbility(const AAFwk::Want &want)
         if (!ret) {
             break;
         } else {
-            PRINT_HILOGE("PrintServiceHelper::StartAbility failed, err is %{public}d, retry is %{public}d", ret, retry);
+            PRINT_HILOGE("PrintServiceHelper::StartAbility failed, err is %{public}d, retry is %{public}u", ret, retry);
             std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
         }
     }
@@ -99,7 +99,7 @@ bool PrintServiceHelper::StartExtensionAbility(const AAFwk::Want &want)
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
-        PRINT_HILOGE("PrintServiceHelper::StartExtensionAbility %{public}d", retry);
+        PRINT_HILOGE("PrintServiceHelper::StartExtensionAbility %{public}u", retry);
     }
     if (retry > MAX_RETRY_TIMES) {
         PRINT_HILOGE("PrintServiceHelper::StartExtensionAbility --> failed ");
@@ -131,7 +131,7 @@ bool PrintServiceHelper::StartPluginPrintExtAbility(const AAFwk::Want &want)
             break;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(START_ABILITY_INTERVAL));
-        PRINT_HILOGE("PrintServiceHelper::StartPluginPrintExtAbility %{public}d", retry);
+        PRINT_HILOGE("PrintServiceHelper::StartPluginPrintExtAbility %{public}u", retry);
     }
     if (retry > MAX_RETRY_TIMES) {
         PRINT_HILOGE("PrintServiceHelper::StartPluginPrintExtAbility --> failed ");

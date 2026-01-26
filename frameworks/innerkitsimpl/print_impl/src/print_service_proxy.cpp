@@ -96,7 +96,7 @@ int32_t PrintServiceProxy::StartPrint(const std::vector<std::string> &fileList,
 
     data.WriteBool(fdList.size() > 0);
     if (!fdList.empty()) {
-        data.WriteInt32(fdList.size());
+        data.WriteUint32(fdList.size());
         for (auto fd : fdList) {
             data.WriteFileDescriptor(fd);
         }
