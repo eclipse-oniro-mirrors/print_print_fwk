@@ -170,7 +170,10 @@ static const std::map<std::string, PrintJobSubState> FOLLOW_STATE_LIST{
 };
 
 static const std::map<std::string, map<std::string, StatePolicy>> SPECIAL_PRINTER_POLICY{
-    {"default", {{PRINTER_STATE_MEDIA_EMPTY, STATE_POLICY_BLOCK}, {PRINTER_STATE_MEDIA_JAM, STATE_POLICY_BLOCK}}},
+    {"default", {{PRINTER_STATE_MEDIA_EMPTY, STATE_POLICY_BLOCK},
+                {PRINTER_STATE_MEDIA_JAM, STATE_POLICY_BLOCK},
+                {PRINTER_STATE_DOOR_EMPTY, STATE_POLICY_BLOCK},
+                {PRINTER_STATE_COVER_OPEN, STATE_POLICY_BLOCK}}},
 };
 
 std::mutex jobMutex;
