@@ -105,8 +105,8 @@ std::shared_ptr<ScanRange> ScanRange::Unmarshalling(Parcel &parcel)
 
 void ScanRange::Dump() const
 {
-    SCAN_HILOGI("MinValue = %{public}d", minValue_);
-    SCAN_HILOGI("MaxValue = %{public}d", maxValue_);
-    SCAN_HILOGI("QuantValue = %{public}d", quantValue_);
+    SCAN_HILOGD("MinValue = %{public}d", minValue_);
+    SCAN_HILOGD("MaxValue = %{public}d", maxValue_);
+    SCAN_HILOGD("QuantValue = %{public}d", quantValue_);
 }
 } // namespace OHOS::Scan

@@ -148,12 +148,12 @@ std::shared_ptr<ScanProgress> ScanProgress::Unmarshalling(Parcel &parcel)
 
 void ScanProgress::Dump() const
 {
-    SCAN_HILOGI("ScanProgress Dump");
-    SCAN_HILOGI("ScanProgress: progress = %{public}d", progress_);
+    SCAN_HILOGD("ScanProgress Dump");
+    SCAN_HILOGD("ScanProgress: progress = %{public}d", progress_);
     SCAN_HILOGD("ScanProgress: fd = %{public}d", fd_);
-    SCAN_HILOGI("ScanProgress: isFinal = %{public}d", isFinal_);
-    SCAN_HILOGI("ScanProgress: pictureId = %{public}d", pictureId_);
-    SCAN_HILOGI("ScanProgress: taskCode = %{public}d", taskCode_);
+    SCAN_HILOGD("ScanProgress: isFinal = %{public}d", isFinal_);
+    SCAN_HILOGD("ScanProgress: pictureId = %{public}d", pictureId_);
+    SCAN_HILOGD("ScanProgress: taskCode = %{public}d", taskCode_);
 }
 
 } // namespace OHOS::Scan

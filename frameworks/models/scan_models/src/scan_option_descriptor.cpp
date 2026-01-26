@@ -211,18 +211,18 @@ std::shared_ptr<ScanOptionDescriptor> ScanOptionDescriptor::Unmarshalling(Parcel
 
 void ScanOptionDescriptor::Dump()
 {
-    SCAN_HILOGI("optionName = %{public}s", optionName_.c_str());
-    SCAN_HILOGI("optionTitle = %{public}s", optionTitle_.c_str());
-    SCAN_HILOGI("optionDesc = %{public}s", optionDesc_.c_str());
-    SCAN_HILOGI("optionType = %{public}d", optionType_);
-    SCAN_HILOGI("optionUnit = %{public}d", optionUnit_);
+    SCAN_HILOGD("optionName = %{public}s", optionName_.c_str());
+    SCAN_HILOGD("optionTitle = %{public}s", optionTitle_.c_str());
+    SCAN_HILOGD("optionDesc = %{public}s", optionDesc_.c_str());
+    SCAN_HILOGD("optionType = %{public}d", optionType_);
+    SCAN_HILOGD("optionUnit = %{public}d", optionUnit_);
 
-    SCAN_HILOGI("optionConstraintType = %{public}d", optionConstraintType_);
+    SCAN_HILOGD("optionConstraintType = %{public}d", optionConstraintType_);
     for (const auto& str : optionConstraintString_) {
-        SCAN_HILOGI("str = %{public}s", str.c_str());
+        SCAN_HILOGD("str = %{public}s", str.c_str());
     }
     for (const auto& number : optionConstraintNumber_) {
-        SCAN_HILOGI("number = %{public}d", number);
+        SCAN_HILOGD("number = %{public}d", number);
     }
     optionConstraintRange_.Dump();
 }
