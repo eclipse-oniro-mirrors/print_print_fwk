@@ -813,13 +813,7 @@ int32_t PrintServiceAbility::DestroyExtension()
         }
     }
 
-    AAFwk::Want want;
-    sptr<IRemoteObject> token;
-    for (const auto& [bundleName, abilityName] : startedExtAbilityInfos_) {
-        want.SetElementName(bundleName, abilityName);
-        AAFwk::AbilityManagerClient::GetInstance()->StopExtensionAbility(want, token);
-    }
-    startedExtAbilityInfos_.clear();
+    helper_->DisconnectAbility(ExtensionAbilityType::PRINT_EXTENSION_ABILITY);
 
     PRINT_HILOGI("DestroyExtension end.");
     return E_PRINT_NONE;
@@ -2439,7 +2433,33 @@ void PrintServiceAbility::ExitLowPowerMode()
         PRINT_HILOGE("exit low power mode failed.");
         return;
     }
+
+    ReStartAllDiscovery();
     PRINT_HILOGI("exit low power mode successfully");
+}
+
+void PrintServiceAbility::ReStartAllDiscovery()
+{
+    PRINT_HILOGI("ReStart Discovery for loaded extension");
+    bool syncMode = helper_ != nullptr && helper_->IsSyncMode();
+    if (!syncMode && serviceHandler_ == nullptr) {
+        PRINT_HILOGE("serviceHandler is nullptr, can not post task");
+        return;
+    }
+
+    for (const auto& [extid, extState] : extensionStateList_) {
+        if (extState != PRINT_EXTENSION_LOADED) {
+            continue;
+        }
+
+        if (syncMode) {
+            DelayStartDiscovery({extid});
+        } else {
+            serviceHandler_->PostTask([this, id = extid]() {
+                DelayStartDiscovery(id);
+                }, ASYNC_CMD_DELAY);
+        }
+    }
 }
 
 bool PrintServiceAbility::CheckPermission(const std::string &permissionName)
@@ -4157,12 +4177,11 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
     for (auto ability : abilityList) {
         AAFwk::Want want;
         want.SetElementName(ability.second.bundleName, ability.second.name);
-        if (!StartAbility(want) || !StartExtensionAbility(want)) {
+        if (!StartExtensionAbility(want)) {
             PRINT_HILOGE("Failed to load extension %{public}s", ability.second.name.c_str());
             continue;
         }
         extensionStateList_[ability.second.bundleName] = PRINT_EXTENSION_LOADING;
-        startedExtAbilityInfos_.emplace_back(ability.second.bundleName, ability.second.name);
     }
     PRINT_HILOGI("StartDiscoverPrinter end.");
     return E_PRINT_NONE;
