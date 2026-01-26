@@ -20,7 +20,6 @@
 namespace OHOS::Print {
 static constexpr int32_t INVALID_EVENT = -1;
 const char* LIB_SMB2_SO_PATH = "print.libsmb2.so.path";
-constexpr int32_t BUFFER_SIZE = 96;
 SmbLibrary::SmbLibrary() :smbLibHandle_(nullptr), smb2_init_context_(nullptr), smb2_destroy_context_(nullptr),
     smb2_connect_share_(nullptr), smb2_disconnect_share_(nullptr), smb2_set_user_(nullptr),
     smb2_set_password_(nullptr), smb2_set_domain_(nullptr), smb2_get_error_(nullptr),
@@ -40,9 +39,14 @@ bool SmbLibrary::InitializeLibrary()
     if (smbLibHandle_ != nullptr) {
         return true;
     }
-    char value[BUFFER_SIZE] = {0};
-    GetParameter(LIB_SMB2_SO_PATH, "", value, BUFFER_SIZE - 1);
-    smbLibHandle_ = dlopen(value, RTLD_LAZY);
+    char value[PATH_MAX] = {0};
+    GetParameter(LIB_SMB2_SO_PATH, "", value, PATH_MAX - 1);
+    char realValue[PATH_MAX] = {};
+    if (realpath(value, realValue) == nullptr) {
+        PRINT_HILOGE("The realSmbLibFile is null, errno:%{public}d", errno);
+        return false;
+    }
+    smbLibHandle_ = dlopen(realValue, RTLD_LAZY);
     if (!smbLibHandle_) {
         PRINT_HILOGE("Failed to load SMB library: %s", dlerror());
         return false;

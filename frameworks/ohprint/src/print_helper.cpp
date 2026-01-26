@@ -547,6 +547,8 @@ Print_PrinterInfo *ConvertToNativePrinterInfo(const PrinterInfo &info)
         PRINT_HILOGW("infoOpt json object: %{public}s", infoOpt.c_str());
         ParseInfoOption(infoOpt, *nativePrinterInfo);
     }
+    nativePrinterInfo->makeAndModel = CopyString(info.GetPrinterMake());
+    nativePrinterInfo->printerUri = CopyString(info.GetUri());
     return nativePrinterInfo;
 }
 

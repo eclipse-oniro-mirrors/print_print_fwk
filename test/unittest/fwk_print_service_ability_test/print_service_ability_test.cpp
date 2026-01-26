@@ -744,6 +744,10 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0028_NeedRename, TestS
     sptr<IPrintExtensionCallback> listener = nullptr;
     service->extCallbackMap_[cid] = listener;
     EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
+    std::string jobId = "job123";
+    auto printJob = std::make_shared<PrintJob>();
+    service->queuedJobList_.insert(std::make_pair(jobId, printJob));
+    EXPECT_EQ(service->StopDiscoverPrinter(), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0029_NeedRename, TestSize.Level1)
@@ -3370,7 +3374,7 @@ HWTEST_F(PrintServiceAbilityTest,
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::vector<PrintSharedHost> sharedHosts;
-    EXPECT_EQ(service->GetSharedHosts(sharedHosts), E_PRINT_NONE);
+    EXPECT_EQ(service->GetSharedHosts(sharedHosts), E_PRINT_NO_PERMISSION);
 }
 
 HWTEST_F(PrintServiceAbilityTest,
@@ -3381,7 +3385,7 @@ HWTEST_F(PrintServiceAbilityTest,
     std::string userName;
     char *userPasswd = nullptr;
     std::vector<PrinterInfo> printerInfos;
-    service->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
+    EXPECT_EQ(service->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos), E_PRINT_NO_PERMISSION);
     EXPECT_EQ(printerInfos.empty(), true);
 }
 

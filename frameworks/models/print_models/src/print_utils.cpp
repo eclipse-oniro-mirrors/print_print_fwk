@@ -615,6 +615,9 @@ int PrintUtils::CreateTempFileWithData(void* data, size_t length, std::string &t
     }
 
     tmpPath = GenerateTempFilePath(filesDir);
+    if (!IsPathValid(tmpPath)) {
+        return -1;
+    }
     std::ofstream tempFile(tmpPath, std::ios::binary);
     if (!tempFile) {
         PRINT_HILOGE("Failed to create temporary file.");
@@ -628,7 +631,7 @@ int PrintUtils::CreateTempFileWithData(void* data, size_t length, std::string &t
     }
     tempFile.close();
 
-    int fd = open(tmpPath.c_str(), O_RDONLY);
+    int fd = OpenFile(tmpPath);
     if (fd == -1) {
         PRINT_HILOGE("Failed to open temp file.");
         std::remove(tmpPath.c_str());
