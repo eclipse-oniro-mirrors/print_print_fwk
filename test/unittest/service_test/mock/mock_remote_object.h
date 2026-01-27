@@ -13,25 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef MOCK_PRINT_CALLBACK_PROXY_H
-#define MOCK_PRINT_CALLBACK_PROXY_H
+#ifndef MOCK_REMOTE_OBJECT_H
+#define MOCK_REMOTE_OBJECT_H
 
 #include <gmock/gmock.h>
-#include "print_callback_proxy.h"
+
+#include "iremote_object.h"
 
 namespace OHOS {
 namespace Print {
-class MockPrintCallbackProxy final : public PrintCallbackProxy {
+class MockRemoteObject final : public IRemoteObject {
 public:
-    MockPrintCallbackProxy() : PrintCallbackProxy(nullptr)
+    MockRemoteObject() : IRemoteObject(u"")
     {}
-    MOCK_METHOD0(OnCallback, bool());
-    MOCK_METHOD2(OnCallback, bool(uint32_t, const PrinterInfo &));
-    MOCK_METHOD2(OnCallback, bool(uint32_t, const PrintJob &));
-    MOCK_METHOD2(OnCallback, bool(const PrinterInfo &, const std::vector<PpdInfo> &));
-    MOCK_METHOD2(OnCallback, bool(const std::string &, const std::string &));
-    MOCK_METHOD0(AsObject, sptr<IRemoteObject>());
+    MOCK_METHOD0(GetObjectRefCount, int32_t());
+    MOCK_CONST_METHOD0(IsProxyObject, bool());
+    MOCK_METHOD4(SendRequest, int(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option));
+    MOCK_METHOD1(AddDeathRecipient, bool(const sptr<DeathRecipient> &recipient));
+    MOCK_METHOD1(RemoveDeathRecipient, bool(const sptr<DeathRecipient> &recipient));
+    MOCK_METHOD2(Dump, int(int fd, const std::vector<std::u16string> &args));
 };
 }  // namespace Print
 }  // namespace OHOS
-#endif  // MOCK_PRINT_CALLBACK_PROXY_H
+#endif  // MOCK_REMOTE_OBJECT_H

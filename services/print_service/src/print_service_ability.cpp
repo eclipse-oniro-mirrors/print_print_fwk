@@ -53,6 +53,7 @@
 #include "parameters.h"
 #include "bundle_mgr_client.h"
 #include "bundle_info.h"
+#include "event_listener_mgr.h"
 #ifdef EDM_SERVICE_ENABLE
 #include "enterprise_device_mgr_proxy.h"
 #include "sg_collect_client.h"
@@ -80,7 +81,6 @@ const uint32_t UNREGISTER_CALLBACK_INTERVAL = 5000;
 const uint32_t CHECK_CALLER_APP_INTERVAL = 60;
 const uint32_t CONNECT_PLUGIN_PRINT_TIMEOUT = 5000;
 const uint32_t MONITOR_CHANGE_MODE_INTERVAL = 500;
-const int32_t MAX_LISTENERS_COUNT = 1000;
 
 const uint32_t INDEX_ZERO = 0;
 const uint32_t INDEX_THREE = 3;
@@ -1972,8 +1972,8 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
     }
 
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    auto eventIt = registeredListeners_.find(PRINT_GET_FILE_EVENT_TYPE);
-    if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {
+    auto listener = DelayedSingleton<EventListenerMgr>::GetInstance()->FindEventListener(PRINT_GET_FILE_EVENT_TYPE);
+    if (listener != nullptr) {
         PRINT_HILOGI("print job adapter file created subState[%{public}d]", subState);
         uint32_t fileCompletedState = subState;
         if (subState == PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS) {
@@ -1981,7 +1981,7 @@ int32_t PrintServiceAbility::AdapterGetFileCallBack(const std::string &jobId, ui
         } else if (subState == PRINT_JOB_CREATE_FILE_COMPLETED_FAILED) {
             fileCompletedState = PRINT_FILE_CREATED_FAIL;
         }
-        eventIt->second->OnCallbackAdapterGetFile(fileCompletedState);
+        listener->OnCallbackAdapterGetFile(fileCompletedState);
     }
     return E_PRINT_NONE;
 }
@@ -2631,15 +2631,9 @@ int32_t PrintServiceAbility::On(const std::string taskId, const std::string &typ
     }
     PRINT_HILOGI("PrintServiceAbility::On started. type=%{public}s", eventType.c_str());
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    if (registeredListeners_.size() > MAX_LISTENERS_COUNT) {
-        PRINT_HILOGE("Exceeded the maximum number of registration.");
+    if (!DelayedSingleton<EventListenerMgr>::GetInstance()->RegisterEventListener(eventType, listener)) {
+        PRINT_HILOGE("RegisterEventListener fail.");
         return E_PRINT_GENERIC_FAILURE;
-    }
-    if (registeredListeners_.find(eventType) == registeredListeners_.end()) {
-        registeredListeners_.insert(std::make_pair(eventType, listener));
-    } else {
-        PRINT_HILOGD("PrintServiceAbility::On Replace listener.");
-        registeredListeners_[eventType] = listener;
     }
     HandlePrinterStateChangeRegister(eventType);
     HandlePrinterChangeRegister(eventType);
@@ -2678,15 +2672,12 @@ int32_t PrintServiceAbility::Off(const std::string taskId, const std::string &ty
 
     PRINT_HILOGI("PrintServiceAbility::Off started.");
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    auto iter = registeredListeners_.find(eventType);
-    if (iter != registeredListeners_.end()) {
-        PRINT_HILOGI("PrintServiceAbility::Off delete type=%{public}s object message.", eventType.c_str());
-        registeredListeners_.erase(iter);
+    if (DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterEventListener(eventType)) {
         if (PrintUtils::GetEventType(eventType) == PRINTER_CHANGE_EVENT_TYPE) {
             DecrementPrintCounterByPcSettings();
         }
+        PRINT_HILOGI("PrintServiceAbility::Off has already delete type=%{public}s delete.", eventType.c_str());
     }
-    PRINT_HILOGI("PrintServiceAbility::Off has already delete type=%{public}s delete.", eventType.c_str());
 #ifdef HAVE_SMB_PRINTER
     TryStopSmbPrinterStatusMonitor();
 #endif // HAVE_SMB_PRINTER
@@ -2746,31 +2737,33 @@ void PrintServiceAbility::SendPrinterEvent(const PrinterInfo &info, const std::s
     PRINT_HILOGD("[Printer: %{private}s] PrintServiceAbility::SendPrinterEvent type, %{public}d",
         info.GetPrinterId().c_str(),
         info.GetPrinterState());
-    for (auto eventIt : registeredListeners_) {
-        if (PrintUtils::GetEventType(eventIt.first) != PRINTER_EVENT_TYPE) {
-            continue;
+    auto registeredListeners = DelayedSingleton<EventListenerMgr>::GetInstance()->FindEventListeners(
+        [](const std::string &type) -> bool {
+            return PrintUtils::GetEventType(type) == PRINTER_EVENT_TYPE;
+        });
+    if (registeredListeners.empty()) {
+        return;
+    }
+    PRINT_HILOGI("PrintServiceAbility::SendPrinterEvent find PRINTER_EVENT_TYPE");
+    if (!userId.empty()) {
+        AppExecFwk::BundleInfo bundleInfo;
+        AppExecFwk::BundleMgrClient bundleMgrClient;
+        std::string bundleName = PrintUtils::GetBundleName(info.GetPrinterId());
+        int32_t userIdNum = 0;
+        if (!PrintUtil::ConvertToInt(userId, userIdNum)) {
+            PRINT_HILOGW("userId [%{private}s] ConvertToInt fail", userId.c_str());
+            return;
         }
-        if (eventIt.second == nullptr) {
-            PRINT_HILOGW("eventIt.second is nullptr");
-            continue;
+        if (!bundleMgrClient.GetBundleInfo(bundleName, AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT,
+            bundleInfo, userIdNum)) {
+            PRINT_HILOGW("user [%{private}s] has not installed [%{private}s]", userId.c_str(), bundleName.c_str());
+            return;
         }
-        if (!userId.empty()) {
-            AppExecFwk::BundleInfo bundleInfo;
-            AppExecFwk::BundleMgrClient bundleMgrClient;
-            std::string bundleName = PrintUtils::GetBundleName(info.GetPrinterId());
-            int32_t userIdNum = 0;
-            if (!PrintUtil::ConvertToInt(userId, userIdNum)) {
-                PRINT_HILOGW("userId [%{private}s] ConvertToInt fail", userId.c_str());
-                continue;
-            }
-            if (!bundleMgrClient.GetBundleInfo(bundleName, AppExecFwk::BundleFlag::GET_BUNDLE_DEFAULT,
-                bundleInfo, userIdNum)) {
-                PRINT_HILOGW("user [%{private}s] has not installed [%{private}s]", userId.c_str(), bundleName.c_str());
-                continue;
-            }
+    }
+    for (auto &listener : registeredListeners) {
+        if (listener != nullptr) {
+            listener->OnCallback(info.GetPrinterState(), info);
         }
-        PRINT_HILOGI("PrintServiceAbility::SendPrinterEvent find PRINTER_EVENT_TYPE");
-        eventIt.second->OnCallback(info.GetPrinterState(), info);
     }
 }
 
@@ -2782,25 +2775,31 @@ int32_t PrintServiceAbility::SendPrinterEventChangeEvent(
         info.GetPrinterId().c_str(),
         printerEvent);
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    for (auto eventIt : registeredListeners_) {
-        if (PrintUtils::GetEventType(eventIt.first) != PRINTER_CHANGE_EVENT_TYPE || eventIt.second == nullptr) {
+    auto eventTypes = DelayedSingleton<EventListenerMgr>::GetInstance()->FindEventTypes(
+        [](const std::string &type) -> bool {
+            return PrintUtils::GetEventType(type) == PRINTER_CHANGE_EVENT_TYPE;
+        });
+    for (auto &eventTypeItem : eventTypes) {
+        auto listener = DelayedSingleton<EventListenerMgr>::GetInstance()->FindEventListener(eventTypeItem);
+        if (listener == nullptr) {
+            PRINT_HILOGW("listener is empty, eventType = %{public}s", eventTypeItem.c_str());
             continue;
         }
-        PRINT_HILOGD("PrintServiceAbility::SendPrinterEventChangeEvent eventType = %{public}s", eventIt.first.c_str());
-        if (isSignalUser && CheckUserIdInEventType(eventIt.first)) {
+        PRINT_HILOGD("PrintServiceAbility::SendPrinterEventChangeEvent eventType = %{public}s", eventTypeItem.c_str());
+        if (isSignalUser && CheckUserIdInEventType(eventTypeItem)) {
             PRINT_HILOGI("PrintServiceAbility::SendPrinterEventChangeEvent update info for a signal user");
             PrinterInfo newInfo(info);
             newInfo.SetIsLastUsedPrinter(true);
-            eventIt.second->OnCallback(printerEvent, newInfo);
+            listener->OnCallback(printerEvent, newInfo);
             num++;
         } else if (printerEvent == PRINTER_EVENT_LAST_USED_PRINTER_CHANGED) {
-            if (CheckUserIdInEventType(eventIt.first)) {
+            if (CheckUserIdInEventType(eventTypeItem)) {
                 PRINT_HILOGI("PrintServiceAbility::SendPrinterEventChangeEvent last used printer event");
-                eventIt.second->OnCallback(printerEvent, info);
+                listener->OnCallback(printerEvent, info);
                 num++;
             }
         } else {
-            eventIt.second->OnCallback(printerEvent, info);
+            listener->OnCallback(printerEvent, info);
             num++;
         }
     }
@@ -2816,17 +2815,22 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     GetPrintJobStateInfo(jobInfo, stateInfo, state);
     std::string jobId = jobInfo.GetJobId();
     std::string eventType = PrintUtils::GetTaskEventId(jobId, PRINT_CALLBACK_JOBSTATE);
-    for (auto eventIt : registeredListeners_) {
-        if ((eventIt.first != eventType && PrintUtils::GetEventType(eventIt.first) != PRINTJOB_EVENT_TYPE) ||
-            eventIt.second == nullptr) {
+    auto eventTypes = DelayedSingleton<EventListenerMgr>::GetInstance()->FindEventTypes(
+        [eventType](const std::string &type) -> bool {
+            return type == eventType || PrintUtils::GetEventType(type) == PRINTJOB_EVENT_TYPE;
+        });
+    for (auto &eventTypeItem : eventTypes) {
+        auto listener = DelayedSingleton<EventListenerMgr>::GetInstance()->FindEventListener(eventTypeItem);
+        if (listener == nullptr) {
+            PRINT_HILOGW("listener is empty, eventType = %{public}s", eventTypeItem.c_str());
             continue;
         }
-        if (eventIt.first == eventType && state != PRINT_PRINT_JOB_DEFAULT) {
-            HandleJobStateChanged(jobId, jobInfo, eventIt.second, eventType);
-        } else if (CheckUserIdInEventType(eventIt.first)) {
+        if (eventTypeItem == eventType && state != PRINT_PRINT_JOB_DEFAULT) {
+            HandleJobStateChanged(jobId, jobInfo, listener, eventType);
+        } else if (CheckUserIdInEventType(eventTypeItem)) {
             PrintJob callbackJobInfo = jobInfo;
             callbackJobInfo.SetFdList(std::vector<uint32_t>());  // State callback don't need fd.
-            eventIt.second->OnCallback(jobInfo.GetJobState(), callbackJobInfo);
+            listener->OnCallback(jobInfo.GetJobState(), callbackJobInfo);
         }
     }
 
@@ -2841,9 +2845,9 @@ void PrintServiceAbility::SendPrintJobEvent(const PrintJob &jobInfo)
     }
     if (stateInfo != "") {
         std::string taskEvent = PrintUtils::GetTaskEventId(jobId, stateInfo);
-        auto taskEventIt = registeredListeners_.find(taskEvent);
-        if (taskEventIt != registeredListeners_.end() && taskEventIt->second != nullptr) {
-            taskEventIt->second->OnCallback();
+        auto eventListener = DelayedSingleton<EventListenerMgr>::GetInstance()->FindEventListener(taskEvent);
+        if (eventListener != nullptr) {
+            eventListener->OnCallback();
         }
     }
 }
@@ -2882,11 +2886,8 @@ void PrintServiceAbility::HandleJobStateChanged(const std::string &jobId, const 
     listener->OnCallback(jobInfo.GetJobState(), jobInfo);
     if (jobInfo.GetJobState() == PRINT_JOB_COMPLETED) {
         auto unregisterTask = [this, eventType, jobId]() {
-            std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-            auto eventIt = registeredListeners_.find(eventType);
-            if (eventIt != registeredListeners_.end() && eventIt->second !=nullptr) {
+            if (DelayedSingleton<EventListenerMgr>::GetInstance()->UnRegisterEventListener(eventType)) {
                 PRINT_HILOGI("[Job Id: %{public}s] erase registeredListeners_", jobId.c_str());
-                registeredListeners_.erase(eventType);
             }
         };
         serviceHandler_->PostTask(unregisterTask, UNREGISTER_CALLBACK_INTERVAL);
@@ -2897,9 +2898,9 @@ int32_t PrintServiceAbility::SendExtensionEvent(const std::string &extensionId, 
 {
     int32_t num = 0;
     PRINT_HILOGD("PrintServiceAbility::SendExtensionEvent type %{public}s", extInfo.c_str());
-    auto eventIt = registeredListeners_.find(EXTINFO_EVENT_TYPE);
-    if (eventIt != registeredListeners_.end() && eventIt->second != nullptr) {
-        eventIt->second->OnCallback(extensionId, extInfo);
+    auto listener = DelayedSingleton<EventListenerMgr>::GetInstance()->FindEventListener(EXTINFO_EVENT_TYPE);
+    if (listener != nullptr) {
+        listener->OnCallback(extensionId, extInfo);
         num++;
     }
     return num;
@@ -3320,10 +3321,10 @@ void PrintServiceAbility::RegisterAdapterListener(const std::string &jobId)
 {
     std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGD("[Job Id: %{public}s] RegisterAdapterListener for", jobId.c_str());
-    auto eventIt = registeredListeners_.find(PRINT_ADAPTER_EVENT_TYPE);
-    if (eventIt != registeredListeners_.end()) {
+    auto listener = DelayedSingleton<EventListenerMgr>::GetInstance()->FindEventListener(PRINT_ADAPTER_EVENT_TYPE);
+    if (listener != nullptr) {
         PRINT_HILOGI("[Job Id: %{public}s] adapterListenersByJobId_ set adapterListenersByJobId_", jobId.c_str());
-        adapterListenersByJobId_.insert(std::make_pair(jobId, eventIt->second));
+        adapterListenersByJobId_.insert(std::make_pair(jobId, listener));
     }
 }
 
@@ -4885,16 +4886,14 @@ bool PrintServiceAbility::OnQueryCallBackEvent(const PrinterInfo &info)
     PRINT_HILOGI("Start CallBack Printerinfo");
     std::vector<PpdInfo> ppdInfos;
     QueryPrinterPpds(info, ppdInfos);
-    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-    for (auto eventIt : registeredListeners_) {
-        if (PrintUtils::GetEventType(eventIt.first) != PRINT_QUERY_INFO_EVENT_TYPE) {
-            continue;
+    auto registeredListeners = DelayedSingleton<EventListenerMgr>::GetInstance()->FindEventListeners(
+        [](const std::string &type) -> bool {
+            return PrintUtils::GetEventType(type) == PRINT_QUERY_INFO_EVENT_TYPE;
+        });
+    for (auto &listener : registeredListeners) {
+        if (listener != nullptr) {
+            listener->OnCallback(info, ppdInfos);
         }
-        if (eventIt.second == nullptr) {
-            PRINT_HILOGD("eventIt.second is nullptr");
-            continue;
-        }
-        eventIt.second->OnCallback(info, ppdInfos);
     }
     vendorManager.ClearConnectingPrinter();
     return true;
@@ -5275,19 +5274,13 @@ int32_t PrintServiceAbility::ConnectSmbPrinter(PrinterInfo& printerInfo, const s
 void PrintServiceAbility::TryStartSmbPrinterStatusMonitor()
 {
     PRINT_HILOGI("begin TryStartSmbPrinterStatusMonitor");
-    bool hasPrinterChangeListener = false;
-    {
-        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-        for (auto& [registeredType, callback] : registeredListeners_) {
-            if (PrintUtils::GetEventType(registeredType) == PRINTER_CHANGE_EVENT_TYPE) {
-                hasPrinterChangeListener = true;
-                break;
-            }
-        }
-    }
+    auto registeredListeners = DelayedSingleton<EventListenerMgr>::GetInstance()->FindEventListeners(
+        [](const std::string &type) -> bool {
+            return PrintUtils::GetEventType(type) == PRINTER_CHANGE_EVENT_TYPE;
+        });
     std::vector<PrinterInfo> printerInfoList;
     printSystemData_.GetSmbAddedPrinterListFromSystemData(printerInfoList);
-    if (hasPrinterChangeListener && !printerInfoList.empty()) {
+    if (!registeredListeners.empty() && !printerInfoList.empty()) {
         std::vector<PrinterInfo> printerInfoList;
         printSystemData_.GetSmbAddedPrinterListFromSystemData(printerInfoList);
         if (printerInfoList.empty()) {
@@ -5310,19 +5303,13 @@ void PrintServiceAbility::TryStartSmbPrinterStatusMonitor()
 
 void PrintServiceAbility::TryStopSmbPrinterStatusMonitor()
 {
-    bool hasPrinterChangeListener = false;
-    {
-        std::lock_guard<std::recursive_mutex> lock(apiMutex_);
-        for (auto& [registeredType, callback] : registeredListeners_) {
-            if (PrintUtils::GetEventType(registeredType) == PRINTER_CHANGE_EVENT_TYPE) {
-                hasPrinterChangeListener = true;
-                break;
-            }
-        }
-    }
+    auto registeredListeners = DelayedSingleton<EventListenerMgr>::GetInstance()->FindEventListeners(
+        [](const std::string &type) -> bool {
+            return PrintUtils::GetEventType(type) == PRINTER_CHANGE_EVENT_TYPE;
+        });
     std::vector<PrinterInfo> printerInfoList;
     printSystemData_.GetSmbAddedPrinterListFromSystemData(printerInfoList);
-    if (!hasPrinterChangeListener || printerInfoList.empty()) {
+    if (registeredListeners.empty() || printerInfoList.empty()) {
         SmbPrinterStateMonitor::GetInstance().StopSmbPrinterStatusMonitor();
     }
 }
