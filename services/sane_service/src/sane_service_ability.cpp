@@ -96,7 +96,10 @@ ErrCode SaneServerManager::SaneExit()
         SCAN_HILOGE("no permission to access sane_service");
         return SANE_STATUS_NO_PERMISSION;
     }
-    sane_exit();
+    {
+        std::lock_guard<std::mutex> autoLock(saneAPIlock_);
+        sane_exit();
+    }
     SCAN_HILOGI("SaneExit end");
     return ERR_OK;
 }
@@ -114,7 +117,11 @@ ErrCode SaneServerManager::SaneOpen(const std::string &scannerId, int32_t &statu
         return ERR_OK;
     }
     SANE_Handle handle = nullptr;
-    SANE_Status saneStatus = sane_open(scannerId.c_str(), &handle);
+    SANE_Status saneStatus = ::SANE_STATUS_GOOD;
+    {
+        std::lock_guard<std::mutex> autoLock(saneAPIlock_);
+        saneStatus = sane_open(scannerId.c_str(), &handle);
+    }
     if (saneStatus != ::SANE_STATUS_GOOD) {
         status = static_cast<int32_t>(saneStatus);
         SCAN_HILOGE("sane_open error, ret = [%{public}d]", status);
@@ -292,7 +299,11 @@ ErrCode SaneServerManager::SaneGetDevices(std::vector<SaneDevice> &deviceInfos, 
         return SANE_STATUS_NO_PERMISSION;
     }
     const SANE_Device **deviceList = nullptr;
-    SANE_Status saneStatus = sane_get_devices(&deviceList, SANE_FALSE);
+    SANE_Status saneStatus = ::SANE_STATUS_GOOD;
+    {
+        std::lock_guard<std::mutex> autoLock(saneAPIlock_);
+        saneStatus = sane_get_devices(&deviceList, SANE_FALSE);
+    }
     if (saneStatus != ::SANE_STATUS_GOOD) {
         status = static_cast<int32_t>(saneStatus);
         SCAN_HILOGE("sane_get_devices error, ret = [%{public}d]", status);
@@ -481,7 +492,10 @@ ErrCode SaneServerManager::UnloadSystemAbility()
         sane_close(scanner.second);
     }
     scannerHandleList_.clear();
-    sane_exit();
+    {
+        std::lock_guard<std::mutex> autoLock(saneAPIlock_);
+        sane_exit();
+    }
     const std::string dataTmpDir = PRINTER_SERVICE_SANE_TEMPORARY_PATH;
     std::vector<std::string> files;
     GetDirFiles(dataTmpDir, files);
