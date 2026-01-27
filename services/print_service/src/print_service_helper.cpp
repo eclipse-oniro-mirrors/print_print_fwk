@@ -154,7 +154,11 @@ bool PrintServiceHelper::DisconnectAbility(ExtensionAbilityType extensionAbility
         return false;
     }
 
-    while (!connectionListIt->second.empty() && retry++ < MAX_RETRY_TIMES) {
+    while (!connectionListIt->second.empty()) {
+        if (retry++ >= MAX_RETRY_TIMES) {
+            PRINT_HILOGW("PrintServiceHelper::DisconnectAbility --> failed ");
+            break;
+        }
         for (auto connIt = connectionListIt->second.begin(); connIt != connectionListIt->second.end();) {
             if (AAFwk::AbilityManagerClient::GetInstance()->DisconnectAbility(*connIt) == 0) {
                 PRINT_HILOGI("PrintServiceHelper::DisconnectAbility success");

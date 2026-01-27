@@ -224,7 +224,7 @@ napi_value NapiInnerPrint::DisconnectPrinter(napi_env env, napi_callback_info in
         int32_t ret = PrintManagerClient::GetInstance()->DisconnectPrinter(context->printerId);
         context->result = ret == E_PRINT_NONE;
         if (ret != E_PRINT_NONE) {
-            PRINT_HILOGE("Failed to connect the printer");
+            PRINT_HILOGE("Failed to disconnect the printer");
             context->SetErrorIndex(ret);
         }
     };
@@ -415,7 +415,7 @@ napi_value NapiInnerPrint::CheckPreferencesConflicts(napi_env env, napi_callback
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "changedType is not a string", napi_string_expected);
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_TWO], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_object, "printerPreference is not an object", napi_string_expected);
+        PRINT_ASSERT_BASE(env, valuetype == napi_object, "printerPreference is not an object", napi_object_expected);
         std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         PRINT_HILOGI("NapiInnerPrint, printerId = %{public}s", printerId.c_str());
         std::string changedType = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ONE]);
@@ -465,7 +465,7 @@ napi_value NapiInnerPrint::CheckPrintJobConflicts(napi_env env, napi_callback_in
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ZERO], &valuetype), napi_invalid_arg);
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "changedType is not a string", napi_string_expected);
         PRINT_CALL_BASE(env, napi_typeof(env, argv[NapiPrintUtils::INDEX_ONE], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_object, "printJob is not an object", napi_string_expected);
+        PRINT_ASSERT_BASE(env, valuetype == napi_object, "printJob is not an object", napi_object_expected);
         std::string changedType = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         auto printJobPtr = PrintJobHelper::BuildFromJs(env, argv[NapiPrintUtils::INDEX_ONE], false);
         if (printJobPtr == nullptr) {
@@ -1726,7 +1726,7 @@ bool NapiInnerPrint::IsValidApplicationEvent(uint32_t event)
 
 bool NapiInnerPrint::IsValidDefaultPrinterType(uint32_t type)
 {
-    if (type >= DEFAULT_PRINTER_TYPE_SETTED_BY_USER && type <= DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER) {
+    if (type >= DEFAULT_PRINTER_TYPE_SET_BY_USER && type <= DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER) {
         return true;
     }
     return false;

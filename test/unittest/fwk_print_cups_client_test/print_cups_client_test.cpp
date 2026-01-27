@@ -2116,8 +2116,6 @@ HWTEST_F(PrintCupsClientTest, UpdateJobParameterByOption_NoValueSet_Returndefaul
 HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_HandleSystemAuthInfo, TestSize.Level1)
 {
     OHOS::Print::PrintCupsClient printCupsClient;
-    std::string userName = "userName";
-    char userPassword[] = "userPassword";
     auto param = std::make_shared<JobMonitorParam>(PrintServiceAbility::GetInstance(),
         TEST_SERVICE_JOB_ID,
         TEST_CUPS_JOB_ID,
@@ -2126,10 +2124,8 @@ HWTEST_F(PrintCupsClientTest, PrintCupsClientTest_HandleSystemAuthInfo, TestSize
         PRINTER_PRINTER_ID,
         nullptr);
     printCupsClient.jobMonitorList_ = std::vector<std::shared_ptr<JobMonitorParam>>(1, param);
-    EXPECT_EQ(printCupsClient.HandleSystemAuthInfo("invalidId",
-        PRINTER_URI, userName, userPassword), E_PRINT_INVALID_PRINTJOB);
-    EXPECT_EQ(printCupsClient.HandleSystemAuthInfo(TEST_SERVICE_JOB_ID, PRINTER_URI, userName, userPassword),
-        TEST_CUPS_JOB_ID);
+    EXPECT_EQ(printCupsClient.HandleSystemAuthInfo("invalidId"), E_PRINT_INVALID_PRINTJOB);
+    EXPECT_EQ(printCupsClient.HandleSystemAuthInfo(TEST_SERVICE_JOB_ID), TEST_CUPS_JOB_ID);
 }
 
 /**

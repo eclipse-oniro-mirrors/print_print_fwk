@@ -51,7 +51,7 @@ bool PrintBMSHelper::QueryExtensionInfos(std::vector<AppExecFwk::ExtensionAbilit
     }
 
     for (auto userId : osAccountIds) {
-        PRINT_HILOGI("active userId = %{public}d", userId);
+        PRINT_HILOGD("active userId = %{private}d", userId);
         helper_->QueryExtension(sptrBundleMgr_, userId, extensionInfos);
     }
     return true;
@@ -66,7 +66,7 @@ std::string PrintBMSHelper::QueryCallerBundleName()
     int32_t callerUid = IPCSkeleton::GetCallingUid();
     std::string bundleName = "";
     helper_->QueryNameForUid(sptrBundleMgr_, callerUid, bundleName);
-    PRINT_HILOGD("callerUid = %{public}d, bundleName = %{public}s", callerUid, bundleName.c_str());
+    PRINT_HILOGD("callerUid = %{private}d, bundleName = %{private}s", callerUid, bundleName.c_str());
     return bundleName;
 }
 

@@ -280,7 +280,7 @@ enum PrinterEvent {
 };
 
 enum DefaultPrinterType {
-    DEFAULT_PRINTER_TYPE_SETTED_BY_USER = 0,
+    DEFAULT_PRINTER_TYPE_SET_BY_USER = 0,
     DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER = 1,
 };
 
