@@ -19,6 +19,10 @@ namespace OHOS::Print {
 
 ani_object CreateInt(ani_env *env, ani_int value)
 {
+    if (env == nullptr) {
+        PRINT_HILOGE("null env");
+        return nullptr;
+    }
     ani_class cls;
     ani_status status = ANI_ERROR;
     if ((status = env->FindClass("std.core.Int", &cls)) != ANI_OK) {

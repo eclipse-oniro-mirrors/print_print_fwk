@@ -18,7 +18,6 @@
 
 #include <memory>
 #include <mutex>
-#include <uv.h>
 #include <vector>
 #include <functional>
 #include "napi/native_api.h"
@@ -26,7 +25,6 @@
 
 namespace OHOS {
 namespace AbilityRuntime {
-class JsRuntime;
 struct WorkParam {
     napi_env env;
     std::string funcName;
@@ -34,52 +32,12 @@ struct WorkParam {
     Print::PrintJob job;
     WorkParam(napi_env env, std::string funcName) : env(env), funcName(funcName) {}
 };
-class JsPrintCallback : public std::enable_shared_from_this<JsPrintCallback> {
+
+class JsPrintCallback {
 public:
-    explicit JsPrintCallback(JsRuntime &jsRutime);
+    JsPrintCallback() = default;
     ~JsPrintCallback() = default;
     static bool Call(napi_env env, WorkParam *param, std::function<void(WorkParam*)> workCb);
-    napi_value Exec(napi_value jsObj, const std::string &name, napi_value const *argv = nullptr, size_t argc = 0,
-        bool isSync = true);
-
-private:
-    uv_loop_s *GetJsLoop(JsRuntime &jsRuntime);
-    uv_work_t* BuildJsWorker(napi_value jsObj, const std::string &name,
-        napi_value const *argv, size_t argc, bool isSync);
-    int UvQueueWork(uv_loop_s* loop, uv_work_t* worker);
-
-private:
-    struct JsWorkParam {
-        std::shared_ptr<JsPrintCallback> self;
-        napi_env nativeEngine;
-        napi_value jsObj;
-        napi_value jsMethod;
-        napi_value const *argv;
-        size_t argc;
-        napi_value jsResult;
-        bool isSync;
-        bool isCompleted;
-        JsWorkParam()
-        {
-            self = nullptr;
-            nativeEngine = nullptr;
-            jsObj = nullptr;
-            jsMethod = nullptr;
-            argv = nullptr;
-            argc = 0;
-            jsResult = nullptr;
-            isSync = false;
-            isCompleted = false;
-        }
-    };
-
-    JsRuntime &jsRuntime_;
-
-    JsPrintCallback::JsWorkParam jsParam_;
-
-    std::mutex conditionMutex_;
-    std::condition_variable syncCon_;
-    static constexpr int SYNC_TIME_OUT = 1000;
 };
 } // namespace AbilityRuntime
 } // namespace OHOS
