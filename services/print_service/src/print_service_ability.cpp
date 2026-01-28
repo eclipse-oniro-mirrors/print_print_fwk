@@ -3347,6 +3347,16 @@ int32_t PrintServiceAbility::DeletePrinterFromCups(const std::string &printerNam
     NotifyAppDeletePrinter(printerId);
     printSystemData_.DeleteAddedPrinter(printerId, printerName);
     RemoveSinglePrinterInfo(printerId);
+    auto it = printerJobMap_.find(printerId);
+    if (it != printerJobMap_.end() && !it->second.empty()) {
+        std::vector<std::string> jobIdListToCancel;
+        for (const auto &pair : it->second) {
+            jobIdListToCancel.push_back(pair.first);
+        }
+        for (auto jobId : jobIdListToCancel) {
+            CancelPrintJob(jobId);
+        }
+    }
 #ifdef HAVE_SMB_PRINTER
     if (SmbPrinterDiscoverer::IsSmbPrinterId(printerId)) {
         SmbPrinterStateMonitor::GetInstance().EraseSmbPrinterInMonitorListById(printerId);
