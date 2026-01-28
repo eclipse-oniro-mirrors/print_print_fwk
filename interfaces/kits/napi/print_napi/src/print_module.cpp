@@ -204,6 +204,36 @@ static napi_value NapiCreateQualityEnum(napi_env env)
     return object;
 }
 
+static napi_value NapiCreateDocumentFormatEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
+    SetEnumProperty(env, object, "DOCUMENT_FORMAT_AUTO", static_cast<int32_t>(PRINT_DOCUMENT_FORMAT_AUTO));
+    SetEnumProperty(env, object, "DOCUMENT_FORMAT_JPEG", static_cast<int32_t>(PRINT_DOCUMENT_FORMAT_JPEG));
+    SetEnumProperty(env, object, "DOCUMENT_FORMAT_PDF", static_cast<int32_t>(PRINT_DOCUMENT_FORMAT_PDF));
+    SetEnumProperty(env, object, "DOCUMENT_FORMAT_POSTSCRIPT", static_cast<int32_t>(PRINT_DOCUMENT_FORMAT_POSTSCRIPT));
+    SetEnumProperty(env, object, "DOCUMENT_FORMAT_TEXT", static_cast<int32_t>(PRINT_DOCUMENT_FORMAT_TEXT));
+    SetEnumProperty(env, object, "DOCUMENT_FORMAT_RAW", static_cast<int32_t>(PRINT_DOCUMENT_FORMAT_RAW));
+    return object;
+}
+
+static napi_value NapiCreateDocFlavorEnum(napi_env env)
+{
+    napi_value object = nullptr;
+    napi_status status = napi_create_object(env, &object);
+    if (status != napi_ok) {
+        PRINT_HILOGE("Failed to create object");
+        return nullptr;
+    }
+    SetEnumProperty(env, object, "FILE_DESCRIPTOR", static_cast<int32_t>(PRINT_FILE_DESCRIPTOR));
+    SetEnumProperty(env, object, "BYTES", static_cast<int32_t>(PRINT_BYTES));
+    return object;
+}
+
 static napi_value NapiCreateOrientationEnum(napi_env env)
 {
     napi_value object = nullptr;
@@ -417,6 +447,8 @@ static napi_value Init(napi_env env, napi_value exports)
         PRINT_NAPI_PROPERTY("PrintColorMode", NapiCreateColorModeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintDuplexMode", NapiCreateDuplexModeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintQuality", NapiCreateQualityEnum(env)),
+        PRINT_NAPI_PROPERTY("PrintDocumentFormat", NapiCreateDocumentFormatEnum(env)),
+        PRINT_NAPI_PROPERTY("DocFlavor", NapiCreateDocFlavorEnum(env)),
         PRINT_NAPI_PROPERTY("PrintOrientationMode", NapiCreateOrientationEnum(env)),
         PRINT_NAPI_PROPERTY("PrintPageType", NapiCreatePageTypeEnum(env)),
         PRINT_NAPI_PROPERTY("PrintDocumentAdapterState", NapiCreateDocumentAdapterStateEnum(env)),
