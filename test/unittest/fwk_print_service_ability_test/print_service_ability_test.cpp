@@ -2862,14 +2862,15 @@ HWTEST_F(PrintServiceAbilityTest, OnQueryCallBackTest, TestSize.Level1)
 HWTEST_F(PrintServiceAbilityTest, QueryInfoByIpTest, TestSize.Level1)
 {
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
-    std::string ip = "192.168.1.1";
-    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
+    service->vendorManager.wlanGroupDriver = nullptr;
     EXPECT_EQ(service->QueryPrinterInfoByIp(""), E_PRINT_INVALID_PRINTER);
+    std::string ip = "192.168.1.1";
+    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_SERVER_FAILURE);
+    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
     PrinterInfo info;
     info.SetPrinterId(ip);
-    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
     service->OnQueryCallBackEvent(info);
-    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_NONE);
+    EXPECT_EQ(service->QueryPrinterInfoByIp(ip), E_PRINT_SERVER_FAILURE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, ConnectPrinterByIpAndPpdTest, TestSize.Level1)
