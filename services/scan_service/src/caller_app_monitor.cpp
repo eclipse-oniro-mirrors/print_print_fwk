@@ -77,11 +77,11 @@ void CallerAppMonitor::MonitorCallerAppIsRunnig(std::function<void()> unloadTask
             std::lock_guard<std::mutex> autoLock(callerMapMutex_);
             for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
                 if (IsAppAlive(iter->second)) {
-                    SCAN_HILOGD("app still alive");
+                    SCAN_HILOGI("app still alive");
                     iter++;
                     continue;
                 } else {
-                    SCAN_HILOGD("app not alive");
+                    SCAN_HILOGI("app not alive");
                     iter = callerMap_.erase(iter);
                 }
             }
@@ -102,7 +102,7 @@ bool CallerAppMonitor::IsAppAlive(std::shared_ptr<CallerAppInfo> info)
     }
     AppExecFwk::AppMgrClient appMgrClient;
     AppExecFwk::RunningProcessInfo runningInfo;
-    SCAN_HILOGD("Check app alive: bundleName=%{private}s, pid=%{public}d", info->bundleName_.c_str(), info->pid_);
+    SCAN_HILOGI("Check app alive: bundleName=%{private}s, pid=%{public}d", info->bundleName_.c_str(), info->pid_);
     int32_t ret = appMgrClient.GetRunningProcessInfoByPid(info->pid_, runningInfo);
     if (ret != E_SCAN_NONE) {
         SCAN_HILOGW("GetRunningProcessInfoByPid fail, ret = %{public}d", ret);

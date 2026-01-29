@@ -22,7 +22,7 @@ ScanCallbackProxy::ScanCallbackProxy(const sptr<IRemoteObject> &impl) : IRemoteP
 
 bool ScanCallbackProxy::OnCallback(uint32_t state, const ScanDeviceInfo &info)
 {
-    SCAN_HILOGD("ScanCallbackProxy::OnCallback Start");
+    SCAN_HILOGI("ScanCallbackProxy::OnCallback Start");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -47,7 +47,7 @@ bool ScanCallbackProxy::OnCallback(uint32_t state, const ScanDeviceInfo &info)
         return false;
     }
 
-    SCAN_HILOGD("ScanCallbackProxy::OnCallback End");
+    SCAN_HILOGI("ScanCallbackProxy::OnCallback End");
     return true;
 }
 

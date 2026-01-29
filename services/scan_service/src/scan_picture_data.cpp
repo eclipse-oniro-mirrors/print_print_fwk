@@ -82,7 +82,7 @@ int32_t ScanPictureData::GetPictureProgressInQueue(ScanProgress& scanProgress, i
     }
     auto progress = prog.GetScanProgress();
     if (progress == SCAN_PROGRESS_100) {
-        SCAN_HILOGD("get scan picture successfully!");
+        SCAN_HILOGI("get scan picture successfully!");
         scanProgress = prog;
         int32_t fd = open(scanProgress.GetImageRealPath().c_str(), O_RDONLY);
         fdsan_exchange_owner_tag(fd, 0, SCAN_LOG_DOMAIN);

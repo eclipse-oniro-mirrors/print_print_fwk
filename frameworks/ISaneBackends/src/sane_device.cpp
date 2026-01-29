@@ -44,7 +44,7 @@ SaneDevice* SaneDevice::Unmarshalling(Parcel &parcel)
 
 void SaneDevice::Dump()
 {
-    SCAN_HILOGD("SaneDevice:[%{private}s] [%{private}s] [%{private}s] [%{private}s]",
+    SCAN_HILOGI("SaneDevice:[%{private}s] [%{public}s] [%{public}s] [%{public}s]",
         name_.c_str(), vendor_.c_str(), model_.c_str(), type_.c_str());
 }
 }   // namespace OHOS::Scan
