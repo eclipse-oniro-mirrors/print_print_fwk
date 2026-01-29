@@ -21,10 +21,11 @@
 
 namespace OHOS {
 namespace Print {
-class MockVendorPpdDriver {
+class MockVendorPpdDriver : public VendorPpdDriver {
 public:
     MOCK_METHOD2(OnQueryCapability, bool(const std::string &, int));
     MOCK_METHOD2(OnQueryProperties, bool(const std::string &, const std::vector<std::string> &));
+    MOCK_METHOD3(QueryProperty, bool(const std::string &, const std::string &, std::string &));
 };
 }  // namespace Print
 }  // namespace OHOS
