@@ -343,16 +343,20 @@ PrintCupsClient::~PrintCupsClient()
         delete printAbility_;
         printAbility_ = nullptr;
     }
-    for (auto jobItem : jobQueue_) {
-        if (jobItem != nullptr) {
-            delete jobItem;
-            jobItem = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(jobMutex);
+        for (auto jobItem : jobQueue_) {
+            if (jobItem != nullptr) {
+                delete jobItem;
+                jobItem = nullptr;
+            }
+        }
+        if (currentJob_ != nullptr) {
+            delete currentJob_;
+            currentJob_ = nullptr;
         }
     }
-    if (currentJob_ != nullptr) {
-        delete currentJob_;
-        currentJob_ = nullptr;
-    }
+    std::lock_guard<std::mutex> lock(jobMonitorMutex_);
     jobMonitorList_.clear();
 }
 
@@ -1037,12 +1041,12 @@ JobParameters *PrintCupsClient::GetNextJob()
             return currentJob_;
         }
         lastJob = jobQueue_.back();
+        PRINT_HILOGI("a active job is sending, job len: %{public}zd", jobQueue_.size());
     }
     if (lastJob != nullptr) {
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(
             lastJob->serviceJobId, PRINT_JOB_QUEUED, PRINT_JOB_BLOCKED_UNKNOWN);
     }
-    PRINT_HILOGI("a active job is sending, job len: %{public}zd", jobQueue_.size());
     return nullptr;
 }
 
@@ -1523,7 +1527,7 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
         PRINT_HILOGW("[Job Id: %{public}s] ResumePrinter fail", jobParams->serviceJobId.c_str());
     }
     uint32_t num_files = jobParams->fdList.size();
-    PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}d", num_files);
+    PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}u", num_files);
     if (jobParams->isCanceled || !HandleFiles(jobParams, num_files, http, jobId)) {
         callback();
         return;
@@ -1629,7 +1633,7 @@ void PrintCupsClient::UpdatePrintJobStateInJobParams(JobParameters *jobParams, u
 
 bool PrintCupsClient::IfContinueToHandleJobState(std::shared_ptr<JobMonitorParam> monitorParams)
 {
-    if (monitorParams == nullptr) {
+    if (monitorParams == nullptr || monitorParams->serviceAbility == nullptr) {
         PRINT_HILOGE("monitor job state failed, monitorParams is nullptr");
         return false;
     }
@@ -1803,8 +1807,7 @@ bool PrintCupsClient::HandleJobIsQueued(std::shared_ptr<JobMonitorParam> monitor
     return true;
 }
 
-int32_t PrintCupsClient::HandleSystemAuthInfo(const std::string &jobId, const std::string &printerUri,
-    const std::string &userName, char *userPasswd)
+int32_t PrintCupsClient::HandleSystemAuthInfo(const std::string &jobId)
 {
     std::lock_guard<std::mutex> lock(jobMonitorMutex_);
     auto item = std::find_if(jobMonitorList_.begin(), jobMonitorList_.end(),
@@ -1824,7 +1827,7 @@ bool PrintCupsClient::AuthCupsPrintJob(const std::string &jobId, const std::stri
     const std::string &userName, char *userPasswd)
 {
     PRINT_HILOGI("[Job Id: %{public}s] AuthCupsPrintJob start", jobId.c_str());
-    int32_t cupsJobId = HandleSystemAuthInfo(jobId, printerUri, userName, userPasswd);
+    int32_t cupsJobId = HandleSystemAuthInfo(jobId);
     if (cupsJobId == E_PRINT_INVALID_PRINTJOB) {
         PRINT_HILOGE("invalid auth print job!");
         return false;
@@ -1943,7 +1946,7 @@ void PrintCupsClient::ParseStateReasons(std::shared_ptr<JobMonitorParam> monitor
     if (monitorParams->isBlock && monitorParams->substate == 0) {
         monitorParams->substate = GetNewSubstate(monitorParams->substate, PRINT_JOB_BLOCKED_UNKNOWN);
     }
-    PRINT_HILOGI("state reasons parse result: isblocked(%{public}d), substate(%{public}d)",
+    PRINT_HILOGI("state reasons parse result: isblocked(%{public}d), substate(%{public}u)",
         monitorParams->isBlock,
         monitorParams->substate);
 }
@@ -1982,7 +1985,7 @@ bool PrintCupsClient::GetBlockedAndUpdateSubstate(std::shared_ptr<JobMonitorPara
 
 uint32_t PrintCupsClient::GetNewSubstate(uint32_t substate, PrintJobSubState singleSubstate)
 {
-    PRINT_HILOGD("add new substate(%{public}d) to substate(%{public}d)", singleSubstate, substate);
+    PRINT_HILOGD("add new substate(%{public}d) to substate(%{public}u)", singleSubstate, substate);
     return substate * NUMBER_FOR_SPLICING_SUBSTATE + singleSubstate;
 }
 
@@ -2203,21 +2206,27 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
 {
     PRINT_HILOGI("[Job Id: %{public}s] CancelCupsJob(): Enter", serviceJobId.c_str());
     int jobIndex = -1;
-    for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
-        PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
-        if (jobQueue_[index]->serviceJobId == serviceJobId) {
-            jobIndex = index;
-            break;
+    {
+        std::lock_guard<std::mutex> lock(jobMutex);
+        for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
+            PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
+            if (jobQueue_[index]->serviceJobId == serviceJobId) {
+                jobIndex = index;
+                break;
+            }
         }
     }
     PRINT_HILOGI("jobIndex: %{public}d", jobIndex);
     if (jobIndex >= 0) {
         PRINT_HILOGI("job in queue, delete");
-        JobParameters *erasedJob = jobQueue_.at(jobIndex);
-        if (erasedJob != nullptr) {
-            delete erasedJob;
+        {
+            std::lock_guard<std::mutex> lock(jobMutex);
+            JobParameters *erasedJob = jobQueue_.at(jobIndex);
+            if (erasedJob != nullptr) {
+                delete erasedJob;
+            }
+            jobQueue_.erase(jobQueue_.begin() + jobIndex);
         }
-        jobQueue_.erase(jobQueue_.begin() + jobIndex);
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(
             serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
     } else {
@@ -2246,21 +2255,27 @@ void PrintCupsClient::InterruptCupsJob(std::string serviceJobId)
 {
     PRINT_HILOGI("[Job Id: %{public}s] InterruptCupsJob(): Enter", serviceJobId.c_str());
     int jobIndex = -1;
-    for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
-        PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
-        if (jobQueue_[index]->serviceJobId == serviceJobId) {
-            jobIndex = index;
-            break;
+    {
+        std::lock_guard<std::mutex> lock(jobMutex);
+        for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
+            PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
+            if (jobQueue_[index]->serviceJobId == serviceJobId) {
+                jobIndex = index;
+                break;
+            }
         }
     }
     PRINT_HILOGI("jobIndex: %{public}d", jobIndex);
     if (jobIndex >= 0) {
         PRINT_HILOGI("job in queue, delete");
-        JobParameters *erasedJob = jobQueue_.at(jobIndex);
-        if (erasedJob != nullptr) {
-            delete erasedJob;
+        {
+            std::lock_guard<std::mutex> lock(jobMutex);
+            JobParameters *erasedJob = jobQueue_.at(jobIndex);
+            if (erasedJob != nullptr) {
+                delete erasedJob;
+            }
+            jobQueue_.erase(jobQueue_.begin() + jobIndex);
         }
-        jobQueue_.erase(jobQueue_.begin() + jobIndex);
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(
             serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_INTERRUPT);
     } else {

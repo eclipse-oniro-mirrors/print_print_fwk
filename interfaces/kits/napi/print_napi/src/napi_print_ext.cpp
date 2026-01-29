@@ -194,7 +194,7 @@ napi_value NapiPrintExt::UpdatePrinterState(napi_env env, napi_callback_info inf
         PRINT_ASSERT_BASE(env, valuetype == napi_string, "printerId is not a string", napi_string_expected);
 
         PRINT_CALL_BASE(env, napi_typeof(env, argv[1], &valuetype), napi_invalid_arg);
-        PRINT_ASSERT_BASE(env, valuetype == napi_number, "printerStateis not a number", napi_number_expected);
+        PRINT_ASSERT_BASE(env, valuetype == napi_number, "printerState is not a number", napi_number_expected);
 
         std::string printerId = NapiPrintUtils::GetStringFromValueUtf8(env, argv[NapiPrintUtils::INDEX_ZERO]);
         PRINT_HILOGD("printerId : %{public}s", printerId.c_str());
@@ -489,11 +489,19 @@ napi_value NapiPrintExt::DiscoverUsbPrinters(napi_env env, napi_callback_info in
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGD("ouput enter---->");
         napi_status status = napi_create_array(env, result);
+        if (status != napi_ok) {
+            PRINT_HILOGE("Failed to create array");
+            return status;
+        }
         uint32_t index = 0;
         for (auto info : context->printerInfos) {
-            PRINT_HILOGD("PrinterId = %{public}s", info.GetPrinterId().c_str());
-            PRINT_HILOGD("PrinterName = %{private}s", info.GetPrinterName().c_str());
+            PRINT_HILOGD("PrinterId = %{private}s, PrinterName = %{private}s",
+                info.GetPrinterId().c_str(), info.GetPrinterName().c_str());
             status = napi_set_element(env, *result, index++, PrinterInfoHelper::MakeJsObject(env, info));
+            if (status != napi_ok) {
+                PRINT_HILOGE("Failed to set array element");
+                return status;
+            }
         }
         return napi_ok;
     };

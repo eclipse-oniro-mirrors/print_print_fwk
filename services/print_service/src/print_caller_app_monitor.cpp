@@ -105,6 +105,10 @@ void PrintCallerAppMonitor::MonitorCallerApps(std::function<bool()> unloadTask)
         {
             std::lock_guard<std::mutex> lock(callerMapMutex_);
             for (auto iter = callerMap_.begin(); iter != callerMap_.end();) {
+                if (iter->second == nullptr) {
+                    iter = callerMap_.erase(iter);
+                    continue;
+                }
                 PRINT_HILOGI(
                     "check caller process, pid: %{public}d, bundleName: %{public}s",
                     iter->first, iter->second->bundleName_.c_str());
@@ -120,8 +124,8 @@ void PrintCallerAppMonitor::MonitorCallerApps(std::function<bool()> unloadTask)
                 PRINT_HILOGI("app not alive, erase it");
                 iter = callerMap_.erase(iter);
             }
+            PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
         }
-        PRINT_HILOGI("callerMap size: %{public}lu", callerMap_.size());
         std::this_thread::sleep_for(std::chrono::seconds(CHECK_CALLER_APP_INTERVAL));
 
         if (delayUnload_.load()) {
@@ -234,7 +238,7 @@ int32_t PrintCallerAppMonitor::GetCurrentUserId()
             userId = userIds[0];
         }
     }
-    PRINT_HILOGD("Current userId = %{public}d.", userId);
+    PRINT_HILOGD("Current userId = %{private}d.", userId);
     return userId;
 }
 

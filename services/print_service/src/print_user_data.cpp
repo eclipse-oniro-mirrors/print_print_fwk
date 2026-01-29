@@ -230,7 +230,7 @@ int32_t PrintUserData::SetDefaultPrinter(const std::string &printerId, uint32_t 
     PRINT_HILOGI("begin SetDefaultPrinter");
     PRINT_HILOGD("printerId: %{private}s", printerId.c_str());
     PRINT_HILOGI("type: %{public}d", type);
-    if (type == DEFAULT_PRINTER_TYPE_SETTED_BY_USER) {
+    if (type == DEFAULT_PRINTER_TYPE_SET_BY_USER) {
         defaultPrinterId_ = printerId;
         useLastUsedPrinterForDefault_ = false;
     } else if (type == DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER || type == DELETE_DEFAULT_PRINTER) {

@@ -236,8 +236,7 @@ private:
     std::string GetCurCupsModelDir();
     const std::string& GetCurCupsdControlParam();
     bool CheckUsbPrinterOnline(const std::string &printerId);
-    int32_t HandleSystemAuthInfo(const std::string &jobId, const std::string &printerUri,
-        const std::string &userName, char *userPasswd);
+    int32_t HandleSystemAuthInfo(const std::string &jobId);
     void AddPrintCupsJobId(const std::string &jobId, uint32_t cupsJobId);
     void RemovePrintCupsJobId(const std::string &jobId);
     uint32_t GetPrintCupsJobId(const std::string &jobId);
