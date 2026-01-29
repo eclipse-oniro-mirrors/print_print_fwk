@@ -161,6 +161,7 @@ private:
     bool StartAbility(const AAFwk::Want &want);
     PrintExtensionInfo ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo);
     bool DelayStartDiscovery(const std::string &extensionId);
+    void ReStartAllDiscovery();
     int32_t SendPrinterDiscoverEvent(int event, const PrinterInfo &info);
     int32_t SendPrinterChangeEvent(int event, const PrinterInfo &info);
     void SendPrinterEvent(const PrinterInfo &info, const std::string userId = "");
@@ -321,7 +322,6 @@ private:
     std::map<std::string, sptr<IPrintCallback>> registeredListeners_;
     std::map<std::string, sptr<IPrintCallback>> adapterListenersByJobId_;
     std::map<std::string, sptr<IPrintExtensionCallback>> extCallbackMap_;
-    std::vector<std::pair<std::string, std::string>> startedExtAbilityInfos_;
 
     std::map<std::string, AppExecFwk::ExtensionAbilityInfo> extensionList_;
     std::map<std::string, PrintExtensionState> extensionStateList_;
