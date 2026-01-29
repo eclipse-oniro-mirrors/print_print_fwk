@@ -489,10 +489,14 @@ napi_value NapiPrintExt::DiscoverUsbPrinters(napi_env env, napi_callback_info in
     auto output = [context](napi_env env, napi_value *result) -> napi_status {
         PRINT_HILOGD("ouput enter---->");
         napi_status status = napi_create_array(env, result);
+        if (status != napi_ok) {
+            PRINT_HILOGE("Failed to create array");
+            return status;
+        }
         uint32_t index = 0;
         for (auto info : context->printerInfos) {
-            PRINT_HILOGD("PrinterId = %{public}s", info.GetPrinterId().c_str());
-            PRINT_HILOGD("PrinterName = %{private}s", info.GetPrinterName().c_str());
+            PRINT_HILOGD("PrinterId = %{private}s, PrinterName = %{private}s",
+                info.GetPrinterId().c_str(), info.GetPrinterName().c_str());
             status = napi_set_element(env, *result, index++, PrinterInfoHelper::MakeJsObject(env, info));
             if (status != napi_ok) {
                 PRINT_HILOGE("Failed to set array element");
