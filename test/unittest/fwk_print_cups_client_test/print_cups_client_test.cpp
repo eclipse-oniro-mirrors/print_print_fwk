@@ -2439,35 +2439,6 @@ HWTEST_F(PrintCupsClientTest, TestHandleCompletedState, TestSize.Level1)
 
 HWTEST_F(PrintCupsClientTest, TestQueryJobStateAndCallback, TestSize.Level1)
 {
-    const std::string IPPOVERUSB_PRINTER = "1:IPP-";
-    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
-    auto param = std::make_shared<JobMonitorParam>(
-        mock,
-        TEST_SERVICE_JOB_ID,
-        TEST_CUPS_JOB_ID,
-        PRINTER_URI,
-        IPPOVERUSB_PRINTER,
-        IPPOVERUSB_PRINTER,
-        nullptr
-    );
-    param->isBlock = false;
-
-    PrinterInfo info;
-    info.SetPrinterId(IPPOVERUSB_PRINTER);
-
-    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_))
-        .WillOnce(Return(std::make_shared<PrinterInfo>(info)))
-        .WillOnce(Return(nullptr))
-        .WillOnce(Return(std::make_shared<PrinterInfo>(info)));
-
-    PrintCupsClient printCupsClient;
-    EXPECT_TRUE(printCupsClient.QueryJobStateAndCallback(param));
-    EXPECT_TRUE(printCupsClient.QueryJobStateAndCallback(param));
-    EXPECT_TRUE(printCupsClient.QueryJobStateAndCallback(param));
-}
-
-HWTEST_F(PrintCupsClientTest, TestQueryJobStateAndCallback, TestSize.Level1)
-{
     const std::string IPPOVERUSB_PRINTER = PRINTER_PRINTER_ID + ":IPP-" + PRINTER_URI;
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     auto param = std::make_shared<JobMonitorParam>(
