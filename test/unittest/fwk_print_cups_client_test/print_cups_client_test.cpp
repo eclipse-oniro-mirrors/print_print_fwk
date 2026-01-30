@@ -2439,21 +2439,21 @@ HWTEST_F(PrintCupsClientTest, TestHandleCompletedState, TestSize.Level1)
 
 HWTEST_F(PrintCupsClientTest, TestQueryJobStateAndCallback, TestSize.Level1)
 {
-    const std::string IPPOVERUSB_PRINTER = PRINTER_PRINTER_ID + ":IPP-" + PRINTER_URI;
+    const std::string ippOverUsbPrinter = PRINTER_PRINTER_ID + ":IPP-" + PRINTER_URI;
     sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
     auto param = std::make_shared<JobMonitorParam>(
         mock,
         TEST_SERVICE_JOB_ID,
         TEST_CUPS_JOB_ID,
         PRINTER_URI,
-        IPPOVERUSB_PRINTER,
-        IPPOVERUSB_PRINTER,
+        ippOverUsbPrinter,
+        ippOverUsbPrinter,
         nullptr
     );
     param->isBlock = false;
 
     PrinterInfo info;
-    info.SetPrinterId(IPPOVERUSB_PRINTER);
+    info.SetPrinterId(ippOverUsbPrinter);
 
     EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_))
         .WillOnce(Return(std::make_shared<PrinterInfo>(info)))

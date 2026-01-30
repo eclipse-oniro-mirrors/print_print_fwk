@@ -22,16 +22,19 @@
 namespace OHOS {
 namespace Print {
 
-    uint32_t fd_ = 1;
+    uint32_t httpFd_ = 1;
 
-    extern "C" {
-        int httpGetFd(http_t *http) {
-            return fd_;
+    extern "C"
+    {
+        int httpGetFd(http_t *http)
+        {
+            return httpFd_;
         }
     }
 
-    void SetFdReturnValue(uint32_t value) {
-        fd_ = value;
+    void SetFdReturnValue(uint32_t value)
+    {
+        httpFd_ = value;
     }
 }
 }
