@@ -87,6 +87,7 @@ struct JobMonitorParam {
     std::string jobOriginatingUserName;
     bool isCanceled = false;
     bool isInterrupt = false;
+    bool isIPPOverUsbOffline = false;
 
     JobMonitorParam() {}
     JobMonitorParam(PrintServiceAbility *serviceAbility, std::string serviceJobId, int cupsJobId,

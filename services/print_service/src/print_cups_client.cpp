@@ -1668,8 +1668,18 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
             PRINT_HILOGE("[Job Id: %{public}s] serviceAbility is null", monitorParams->serviceJobId.c_str());
             return false;
         }
+        if (monitorParams->printerId.find(IPPOVERUSB_PREFIX) != std::string::npos) {
+            PRINT_HILOGW("IPPOverUsb Printer Disconnect");
+            monitorParams->isIPPOverUsbOffline = true;
+        }
         monitorParams->serviceAbility->UpdatePrintJobState(
             monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_OFFLINE);
+        return true;
+    }
+    if (monitorParams->isIPPOverUsbOffline) {
+        PRINT_HILOGW("IPPOverUsb Printer, Print Failed");
+        monitorParams->serviceAbility->UpdatePrintJobState(
+            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE);
         return true;
     }
     if (monitorParams->isFirstQueryState) {
