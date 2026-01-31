@@ -30,6 +30,7 @@ public:
         int32_t(const std::string &, const std::string &, const std::string &, const std::string &));
     MOCK_METHOD2(RemovePrinterFromCups, int32_t(const std::string &, const std::string &));
     MOCK_METHOD3(OnPrinterStatusChanged, bool(const std::string &, const std::string &, const PrinterVendorStatus &));
+    MOCK_METHOD2(OnVendorStatusUpdate, bool(const std::string &, const PrinterVendorStatus &));
     MOCK_METHOD2(OnPrinterCapabilityQueried, bool(const std::string &, const PrinterInfo &));
     MOCK_METHOD4(
         OnPrinterPpdQueried, bool(const std::string &, const std::string &, const std::string &, const std::string &));
@@ -49,7 +50,7 @@ public:
     MOCK_METHOD2(
         QueryDiscoveredPrinterInfoById, std::shared_ptr<PrinterInfo>(const std::string &, const std::string &));
     MOCK_METHOD3(QueryPrinterInfoByPrinterId, int32_t(const std::string &, const std::string &, PrinterInfo &));
-    MOCK_METHOD1(QueryAddedPrintersByIp, std::vector<std::string>(const std::string &));
+    MOCK_METHOD1(QueryAddedPrintersByOriginId, std::vector<std::string>(const std::string &));
     MOCK_METHOD2(QueryPPDInformation, bool(const std::string &, std::string &));
     MOCK_METHOD1(GetConnectingMethod, ConnectMethod(const std::string &));
     MOCK_METHOD2(DiscoverBackendPrinters, int32_t(const std::string &, std::vector<PrinterInfo> &));

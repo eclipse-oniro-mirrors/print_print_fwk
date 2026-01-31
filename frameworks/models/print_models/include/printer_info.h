@@ -68,6 +68,8 @@ public:
 
     void SetSelectedProtocol(const std::string &selectedProtocol);
 
+    void SetOriginId(const std::string &originId);
+
     [[nodiscard]] const std::string &GetPrinterId() const;
 
     [[nodiscard]] const std::string &GetPrinterName() const;
@@ -136,6 +138,10 @@ public:
 
     [[nodiscard]] std::string GetSelectedProtocol() const;
 
+    [[nodiscard]] bool HasOriginId() const;
+
+    [[nodiscard]] std::string GetOriginId() const;
+
     virtual bool Marshalling(Parcel &parcel) const override;
 
     static std::shared_ptr<PrinterInfo> Unmarshalling(Parcel &parcel);
@@ -154,6 +160,8 @@ private:
     void MarshallingInnerProperty(Parcel &parcel) const;
 
     bool ValidateAll();
+
+    void DumpInnerInfo() const;
 
 private:
     std::string printerId_;
@@ -219,6 +227,10 @@ private:
     bool hasSelectedProtocol_;
 
     std::string selectedProtocol_;
+
+    bool hasOriginId_;
+
+    std::string originId_;
 };
 }  // namespace OHOS::Print
 #endif  // PRINTER_INFO_H
