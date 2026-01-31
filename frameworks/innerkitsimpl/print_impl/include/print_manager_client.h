@@ -154,6 +154,7 @@ private:
     sptr<PrintSaDeathRecipient> deathRecipient_;
 
     std::map<std::string, sptr<PrintExtensionCallbackStub>> extCallbackMap_;
+    std::mutex extCallbackMutex_;
 
     std::mutex loadMutex_;
     std::mutex conditionMutex_;

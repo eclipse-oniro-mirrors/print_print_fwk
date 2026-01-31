@@ -507,10 +507,10 @@ bool VendorManager::IsConnectingPrinter(const std::string &globalPrinterIdOrIp, 
     if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER) != std::string::npos && wlanGroupDriver != nullptr) {
         return wlanGroupDriver->IsConnectingPrinter(globalPrinterIdOrIp, uri);
     }
+    std::lock_guard<std::mutex> lock(simpleObjectMutex);
     PRINT_HILOGI("IsConnectingPrinter globalPrinterIdOrIp: %{private}s, connectingPrinter: %{private}s",
         globalPrinterIdOrIp.c_str(),
         connectingPrinter.c_str());
-    std::lock_guard<std::mutex> lock(simpleObjectMutex);
     if (connectingState == STATE_CONNECTING && !connectingPrinter.empty()) {
         if (connectingMethod == ID_AUTO) {
             return globalPrinterIdOrIp == connectingPrinter;
@@ -570,9 +570,9 @@ bool VendorManager::IsQueryingPrinter(const std::string &globalPrinterIdOrIp, co
     if (globalPrinterIdOrIp.find(VENDOR_BSUNI_DRIVER) != std::string::npos && wlanGroupDriver != nullptr) {
         return wlanGroupDriver->IsQueryingPrinter(globalPrinterIdOrIp, uri);
     }
+    std::lock_guard<std::mutex> lock(simpleObjectMutex);
     PRINT_HILOGI("IsQueryingPrinter globalPrinterIdOrIp:%{private}s, connectingPrinter:%{private}s",
         globalPrinterIdOrIp.c_str(), connectingPrinter.c_str());
-    std::lock_guard<std::mutex> lock(simpleObjectMutex);
     if (connectingState == STATE_QUERYING && !connectingPrinter.empty()) {
         if (connectingMethod == ID_AUTO) {
             return globalPrinterIdOrIp == connectingPrinter;

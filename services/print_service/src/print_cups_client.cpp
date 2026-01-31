@@ -1068,9 +1068,12 @@ void PrintCupsClient::StartNextJob()
 void PrintCupsClient::JobSentCallback()
 {
     PRINT_HILOGI("Previous job send success, start next job");
-    if (currentJob_ != nullptr) {
-        delete currentJob_;
-        currentJob_ = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(jobMutex);
+        if (currentJob_ != nullptr) {
+            delete currentJob_;
+            currentJob_ = nullptr;
+        }
     }
     StartNextJob();
 }
@@ -1592,7 +1595,8 @@ void PrintCupsClient::StartMonitor()
 {
     PRINT_HILOGI("state monitor start");
     std::vector<std::shared_ptr<JobMonitorParam>> jobMonitorList;
-    while (!jobMonitorList_.empty()) {
+    bool isMonitor = true;
+    while (isMonitor) {
         uint64_t lastUpdateTime = GetNowTime();
         {
             std::lock_guard<std::mutex> lock(jobMonitorMutex_);
@@ -1615,6 +1619,8 @@ void PrintCupsClient::StartMonitor()
         if (currentTime < lastUpdateTime + MONITOR_STEP_TIME_MS) {
             std::this_thread::sleep_for(std::chrono::milliseconds(lastUpdateTime + MONITOR_STEP_TIME_MS - currentTime));
         }
+        std::lock_guard<std::mutex> lock(jobMonitorMutex_);
+        isMonitor = !jobMonitorList_.empty();
     }
     PRINT_HILOGI("jobMonitorList is empty, exit monitor");
 }
@@ -2212,27 +2218,23 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
 {
     PRINT_HILOGI("[Job Id: %{public}s] CancelCupsJob(): Enter", serviceJobId.c_str());
     int jobIndex = -1;
-    {
-        std::lock_guard<std::mutex> lock(jobMutex);
-        for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
-            PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
-            if (jobQueue_[index]->serviceJobId == serviceJobId) {
-                jobIndex = index;
-                break;
-            }
+    std::unique_lock<std::mutex> jobLock(jobMutex);
+    for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
+        PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
+        if (jobQueue_[index]->serviceJobId == serviceJobId) {
+            jobIndex = index;
+            break;
         }
     }
     PRINT_HILOGI("jobIndex: %{public}d", jobIndex);
     if (jobIndex >= 0) {
         PRINT_HILOGI("job in queue, delete");
-        {
-            std::lock_guard<std::mutex> lock(jobMutex);
-            JobParameters *erasedJob = jobQueue_.at(jobIndex);
-            if (erasedJob != nullptr) {
-                delete erasedJob;
-            }
-            jobQueue_.erase(jobQueue_.begin() + jobIndex);
+        JobParameters *erasedJob = jobQueue_.at(jobIndex);
+        if (erasedJob != nullptr) {
+            delete erasedJob;
         }
+        jobQueue_.erase(jobQueue_.begin() + jobIndex);
+        jobLock.unlock(); // jobMutex
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(
             serviceJobId, PRINT_JOB_COMPLETED, PRINT_JOB_COMPLETED_CANCELLED);
     } else {
@@ -2240,6 +2242,7 @@ void PrintCupsClient::CancelCupsJob(std::string serviceJobId)
         if (currentJob_ != nullptr && currentJob_->serviceJobId == serviceJobId) {
             currentJob_->isCanceled = true;
         }
+        jobLock.unlock(); // jobMutex
         std::lock_guard<std::mutex> lock(jobMonitorMutex_);
         auto cmp = [serviceJobId](std::shared_ptr<JobMonitorParam> monitorParams) {
             return (monitorParams != nullptr && monitorParams->serviceJobId == serviceJobId);
@@ -2261,27 +2264,23 @@ void PrintCupsClient::InterruptCupsJob(std::string serviceJobId)
 {
     PRINT_HILOGI("[Job Id: %{public}s] InterruptCupsJob(): Enter", serviceJobId.c_str());
     int jobIndex = -1;
-    {
-        std::lock_guard<std::mutex> lock(jobMutex);
-        for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
-            PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
-            if (jobQueue_[index]->serviceJobId == serviceJobId) {
-                jobIndex = index;
-                break;
-            }
+    std::unique_lock<std::mutex> jobLock(jobMutex);
+    for (int index = 0; index < static_cast<int>(jobQueue_.size()); index++) {
+        PRINT_HILOGD("jobQueue_[index]->serviceJobId: %{public}s", jobQueue_[index]->serviceJobId.c_str());
+        if (jobQueue_[index]->serviceJobId == serviceJobId) {
+            jobIndex = index;
+            break;
         }
     }
     PRINT_HILOGI("jobIndex: %{public}d", jobIndex);
     if (jobIndex >= 0) {
         PRINT_HILOGI("job in queue, delete");
-        {
-            std::lock_guard<std::mutex> lock(jobMutex);
-            JobParameters *erasedJob = jobQueue_.at(jobIndex);
-            if (erasedJob != nullptr) {
-                delete erasedJob;
-            }
-            jobQueue_.erase(jobQueue_.begin() + jobIndex);
+        JobParameters *erasedJob = jobQueue_.at(jobIndex);
+        if (erasedJob != nullptr) {
+            delete erasedJob;
         }
+        jobQueue_.erase(jobQueue_.begin() + jobIndex);
+        jobLock.unlock(); // jobMutex
         PrintServiceAbility::GetInstance()->UpdatePrintJobState(
             serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_INTERRUPT);
     } else {
@@ -2289,6 +2288,7 @@ void PrintCupsClient::InterruptCupsJob(std::string serviceJobId)
         if (currentJob_ != nullptr && currentJob_->serviceJobId == serviceJobId) {
             currentJob_->isCanceled = true;
         }
+        jobLock.unlock(); // jobMutex
         std::lock_guard<std::mutex> lock(jobMonitorMutex_);
         auto cmp = [serviceJobId](std::shared_ptr<JobMonitorParam> monitorParams) {
             return (monitorParams != nullptr && monitorParams->serviceJobId == serviceJobId);

@@ -664,6 +664,7 @@ std::string PrintUserData::ObtainUserCacheDirectory()
 int32_t PrintUserData::QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob)
 {
     PRINT_HILOGI("QueryQueuedPrintJobById Start.");
+    std::lock_guard<std::recursive_mutex> lock(userDataMutex_);
     if (queuedJobList_.empty()) {
         PRINT_HILOGE("printJobList is empty!");
         return E_PRINT_INVALID_PRINTJOB;

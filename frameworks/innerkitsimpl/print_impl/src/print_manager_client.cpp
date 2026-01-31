@@ -821,16 +821,19 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
     }
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
     std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
-    auto it = extCallbackMap_.find(extensionCID);
-    if (it == extCallbackMap_.end()) {
-        callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-        if (callbackStub != nullptr) {
+    {
+        std::lock_guard<std::mutex> lock(extCallbackMutex_);
+        auto it = extCallbackMap_.find(extensionCID);
+        if (it == extCallbackMap_.end()) {
+            callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
+            if (callbackStub != nullptr) {
+                callbackStub->SetExtCallback(cb);
+                extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
+            }
+        } else {
+            callbackStub = it->second;
             callbackStub->SetExtCallback(cb);
-            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         }
-    } else {
-        callbackStub = it->second;
-        callbackStub->SetExtCallback(cb);
     }
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     int32_t ret = E_PRINT_RPC_FAILURE;
@@ -852,16 +855,19 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
 
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
     std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
-    auto it = extCallbackMap_.find(extensionCID);
-    if (it == extCallbackMap_.end()) {
-        callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-        if (callbackStub != nullptr) {
+    {
+        std::lock_guard<std::mutex> lock(extCallbackMutex_);
+        auto it = extCallbackMap_.find(extensionCID);
+        if (it == extCallbackMap_.end()) {
+            callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
+            if (callbackStub != nullptr) {
+                callbackStub->SetPrintJobCallback(cb);
+                extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
+            }
+        } else {
+            callbackStub = it->second;
             callbackStub->SetPrintJobCallback(cb);
-            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         }
-    } else {
-        callbackStub = it->second;
-        callbackStub->SetPrintJobCallback(cb);
     }
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     int32_t ret = E_PRINT_RPC_FAILURE;
@@ -883,16 +889,19 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
 
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
     std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
-    auto it = extCallbackMap_.find(extensionCID);
-    if (it == extCallbackMap_.end()) {
-        callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-        if (callbackStub != nullptr) {
+    {
+        std::lock_guard<std::mutex> lock(extCallbackMutex_);
+        auto it = extCallbackMap_.find(extensionCID);
+        if (it == extCallbackMap_.end()) {
+            callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
+            if (callbackStub != nullptr) {
+                callbackStub->SetCapabilityCallback(cb);
+                extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
+            }
+        } else {
+            callbackStub = it->second;
             callbackStub->SetCapabilityCallback(cb);
-            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         }
-    } else {
-        callbackStub = it->second;
-        callbackStub->SetCapabilityCallback(cb);
     }
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     int32_t ret = E_PRINT_RPC_FAILURE;
@@ -914,16 +923,19 @@ int32_t PrintManagerClient::RegisterExtCallback(const std::string &extensionId,
 
     sptr<PrintExtensionCallbackStub> callbackStub = nullptr;
     std::string extensionCID = PrintUtils::EncodeExtensionCid(extensionId, callbackId);
-    auto it = extCallbackMap_.find(extensionCID);
-    if (it == extCallbackMap_.end()) {
-        callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
-        if (callbackStub != nullptr) {
+    {
+        std::lock_guard<std::mutex> lock(extCallbackMutex_);
+        auto it = extCallbackMap_.find(extensionCID);
+        if (it == extCallbackMap_.end()) {
+            callbackStub = new (std::nothrow) PrintExtensionCallbackStub;
+            if (callbackStub != nullptr) {
+                callbackStub->SetPrinterCallback(cb);
+                extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
+            }
+        } else {
+            callbackStub = it->second;
             callbackStub->SetPrinterCallback(cb);
-            extCallbackMap_.insert(std::make_pair(extensionCID, callbackStub));
         }
-    } else {
-        callbackStub = it->second;
-        callbackStub->SetPrinterCallback(cb);
     }
     std::lock_guard<std::recursive_mutex> lock(proxyLock_);
     int32_t ret = E_PRINT_RPC_FAILURE;
