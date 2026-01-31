@@ -142,7 +142,8 @@ int32_t SmbPrinterDiscoverer::SmbEventLoop()
         };
         int32_t ret = poll(&pfd, 1, SMB_CONNECT_TIMEOUT_MS);
         if (ret > 0) {
-            if (ret = smbLib_->Service(smbCtx_, pfd.revents) < 0) {
+            ret = smbLib_->Service(smbCtx_, pfd.revents);
+            if (ret < 0) {
                 const char* errorReason = smbLib_->GetSmbError(smbCtx_);
                 PRINT_HILOGE("smb2_share_enum_async fail, ret = %{public}d, reason = %{public}s",
                     ret, errorReason ? errorReason : "null");

@@ -255,6 +255,7 @@ bool PrintServiceAbility::RefreshVirtualPrinter()
         PRINT_HILOGW("The ppd of virtual printer is incorrect");
         return false;
     }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PrinterInfo printerInfo;
     if (printSystemData_.QueryAddedPrinterInfoByPrinterId(printerId, printerInfo) &&
         printerInfo.GetPpdHashCode() == ppdHashCode &&
@@ -281,9 +282,7 @@ bool PrintServiceAbility::RefreshVirtualPrinter()
     printerInfo.SetCapability(printerCaps);
     printerInfo.SetPrinterStatus(PRINTER_STATUS_IDLE);
     printerInfo.SetPpdHashCode(ppdHashCode);
-    PrinterPreferences preferences;
-    printSystemData_.BuildPrinterPreference(printerCaps, preferences);
-    printerInfo.SetPreferences(preferences);
+    BuildPrinterPreference(printerInfo);
     printSystemData_.InsertAddedPrinter(printerId, printerInfo);
     printSystemData_.SavePrinterFile(printerId);
     UpdatePrinterStatus(printerInfo, PRINTER_STATUS_IDLE);
@@ -1659,6 +1658,7 @@ void PrintServiceAbility::BlockUserPrintJobs(const int32_t userId)
 void PrintServiceAbility::NotifyCurrentUserChanged(const int32_t userId)
 {
     PRINT_HILOGD("NotifyAppCurrentUserChanged begin");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (userId == INVALID_USER_ID) {
         currentUserId_ = GetCurrentUserId();
     } else {
@@ -4032,6 +4032,7 @@ bool PrintServiceAbility::RemoveVendorPrinterFromCups(const std::string &globalV
         PRINT_HILOGW("cannot find printer");
         return false;
     }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 #ifdef CUPS_ENABLE
     std::string standardName = PrintUtil::StandardizePrinterName(printer.GetPrinterName());
     auto ret = DelayedSingleton<PrintCupsClient>::GetInstance()->DeleteCupsPrinter(standardName.c_str());
@@ -4079,6 +4080,7 @@ bool PrintServiceAbility::AddIpPrinterToCupsWithPpd(const std::string &globalVen
         PRINT_HILOGW("printerInfo is null");
         return false;
     }
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     if (!DoAddPrinterToCups(printerInfo, ppdName, ppdData)) {
         PRINT_HILOGW("AddPrinterToCups fail.");
         return false;
@@ -4107,6 +4109,7 @@ std::vector<std::string> PrintServiceAbility::QueryAddedPrintersByOriginId(const
 
 bool PrintServiceAbility::OnVendorStatusUpdate(const std::string &globalPrinterId, const PrinterVendorStatus &status)
 {
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
     PRINT_HILOGD("OnVendorStatusUpdate state: %{public}d", static_cast<int32_t>(status.state));
     printSystemData_.UpdatePrinterStatus(globalPrinterId, static_cast<PrinterStatus>(status.state));
     PrinterInfo printerInfo;
@@ -4710,8 +4713,7 @@ bool PrintServiceAbility::RefreshPrinterStatusOnSwitchUser()
         PRINT_HILOGW("IsEnterpriseEnable false.");
         return false;
     }
-
-    PRINT_HILOGD("RefreshPrinterStatusOnSwitchUser");
+    PRINT_HILOGI("RefreshPrinterStatusOnSwitchUser Enter");
     BlockUserPrintJobs(lastUserId_);
     UpdateIsEnterprise();
     vendorManager.UpdateIsEnterprise(isEnterprise_);
@@ -5038,6 +5040,7 @@ int32_t PrintServiceAbility::ConnectPrinterByIdAndPpd(const std::string &printer
         return E_PRINT_NO_PERMISSION;
     }
     PRINT_HILOGI("ConnectPrinterByIdAndPpd Enter");
+    std::lock_guard<std::recursive_mutex> lock(apiMutex_);
 #ifdef HAVE_SMB_PRINTER
     if (auto smbPrinterInfo = printSystemData_.FindInfoInSmbPrinterDiscoverList(printerId)) {
         PRINT_HILOGI("connect smb printer");

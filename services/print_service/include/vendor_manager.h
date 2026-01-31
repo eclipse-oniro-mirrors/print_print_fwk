@@ -137,7 +137,6 @@ private:
     std::mutex apiMutex;
     std::condition_variable statusMonitorCondition;
     ConnectState connectingState = ConnectState::STATE_NONE;
-    std::string connectingPrinterId;
     bool isConnecting = false;
     ConnectMethod connectingMethod = ID_AUTO;
     std::string connectingPrinter;

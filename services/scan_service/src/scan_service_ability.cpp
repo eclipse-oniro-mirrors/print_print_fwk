@@ -428,17 +428,16 @@ void ScanServiceAbility::SaneGetScanner()
 {
     scannerState_.store(SCANNER_SEARCHING);
     ScanMdnsService::GetInstance().OnStartDiscoverService();
-    deviceInfos_.clear();
     SaneManagerClient::GetInstance()->SaneInit();
-    std::vector<SaneDevice> deviceInfos;
-    SaneStatus status = SaneManagerClient::GetInstance()->SaneGetDevices(deviceInfos);
+    std::vector<SaneDevice> saneDeviceInfos;
+    SaneStatus status = SaneManagerClient::GetInstance()->SaneGetDevices(saneDeviceInfos);
     if (status != SANE_STATUS_GOOD) {
         SCAN_HILOGE("SaneGetDevices failed, ret: [%{public}u]", status);
         scannerState_.store(SCANNER_READY);
         return;
     }
     std::vector<ScanDeviceInfo> scanDeviceInfos;
-    for (const auto &device : deviceInfos) {
+    for (const auto &device : saneDeviceInfos) {
         ScanDeviceInfo info;
         info.deviceId = device.name_;
         info.manufacturer = device.vendor_;
@@ -450,9 +449,8 @@ void ScanServiceAbility::SaneGetScanner()
     EsclDriverManager::AddEsclScannerInfo(scanDeviceInfos);
     for (auto& scanDeviceInfo : scanDeviceInfos) {
         SendDeviceInfo(scanDeviceInfo, SCAN_DEVICE_FOUND);
-        deviceInfos_.emplace_back(scanDeviceInfo);
     }
-    SendDeviceList(deviceInfos_, GET_SCANNER_DEVICE_LIST);
+    SendDeviceList(scanDeviceInfos, GET_SCANNER_DEVICE_LIST);
     scannerState_.store(SCANNER_READY);
 }
 
