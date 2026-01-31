@@ -148,6 +148,7 @@ static const std::string PRINTER_ID_USB_PREFIX = "USB";
 static const std::string PRINTER_MAKE_UNKNOWN = "Unknown";
 static const std::string SPOOLER_BUNDLE_NAME = "com.ohos.spooler";
 static const std::string DEFAULT_POLICY = "default";
+static const std::string IPPOVERUSB_PREFIX = ":IPP-";
 #ifdef ENTERPRISE_ENABLE
 static const std::string CUPS_ENTERPRISE_ROOT_DIR = "/data/service/el1/public/print_service/cups_enterprise";
 static const std::string CUPSD_ENTERPRISE_CONTROL_PARAM = "print.cupsd_enterprise.ready";
@@ -1664,8 +1665,18 @@ bool PrintCupsClient::QueryJobStateAndCallback(std::shared_ptr<JobMonitorParam> 
             PRINT_HILOGE("[Job Id: %{public}s] serviceAbility is null", monitorParams->serviceJobId.c_str());
             return false;
         }
+        if (monitorParams->printerId.find(IPPOVERUSB_PREFIX) != std::string::npos) {
+            PRINT_HILOGW("IPPOverUsb Printer Disconnect");
+            monitorParams->isIPPOverUsbOffline = true;
+        }
         monitorParams->serviceAbility->UpdatePrintJobState(
             monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_OFFLINE);
+        return true;
+    }
+    if (monitorParams->isIPPOverUsbOffline) {
+        PRINT_HILOGW("IPPOverUsb Printer, Print Failed");
+        monitorParams->serviceAbility->UpdatePrintJobState(
+            monitorParams->serviceJobId, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE);
         return true;
     }
     if (monitorParams->isFirstQueryState) {

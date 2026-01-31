@@ -25,7 +25,10 @@
 #define private public
 #include "print_service_ability.h"
 #undef private
+#include "mock/mock_print_service_ability.h"
+#include "mock/mock_print_cups_client.h"
 
+using namespace testing;
 using namespace testing::ext;
 
 namespace OHOS {
@@ -2432,6 +2435,38 @@ HWTEST_F(PrintCupsClientTest, TestHandleCompletedState, TestSize.Level1)
     param->timesOfSameState = 10;
     ret = printCupsClient.HandleCompletedState(param);
     EXPECT_FALSE(ret);
+}
+
+HWTEST_F(PrintCupsClientTest, TestQueryJobStateAndCallback, TestSize.Level1)
+{
+    const std::string ippOverUsbPrinter = PRINTER_PRINTER_ID + ":IPP-" + PRINTER_URI;
+    sptr<MockPrintServiceAbility> mock = new MockPrintServiceAbility();
+    auto param = std::make_shared<JobMonitorParam>(
+        mock,
+        TEST_SERVICE_JOB_ID,
+        TEST_CUPS_JOB_ID,
+        PRINTER_URI,
+        ippOverUsbPrinter,
+        ippOverUsbPrinter,
+        nullptr
+    );
+    param->isBlock = false;
+
+    PrinterInfo info;
+    info.SetPrinterId(ippOverUsbPrinter);
+
+    EXPECT_CALL(*mock, QueryDiscoveredPrinterInfoById(_))
+        .WillOnce(Return(std::make_shared<PrinterInfo>(info)))
+        .WillOnce(Return(nullptr))
+        .WillOnce(Return(std::make_shared<PrinterInfo>(info)));
+
+    PrintCupsClient printCupsClient;
+    EXPECT_TRUE(printCupsClient.QueryJobStateAndCallback(param));
+    EXPECT_FALSE(param->isIPPOverUsbOffline);
+    EXPECT_TRUE(printCupsClient.QueryJobStateAndCallback(param));
+    EXPECT_TRUE(param->isIPPOverUsbOffline);
+    EXPECT_TRUE(printCupsClient.QueryJobStateAndCallback(param));
+    EXPECT_TRUE(param->isIPPOverUsbOffline);
 }
 }  // namespace Print
 }  // namespace OHOS
