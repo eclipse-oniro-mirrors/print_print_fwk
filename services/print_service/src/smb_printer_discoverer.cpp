@@ -95,9 +95,10 @@ int32_t SmbPrinterDiscoverer::QuerySmbPrinters(const PrintSharedHost& sharedHost
     smbLib_->SetTimeout(smbCtx_, SMB_CONNECT_TIMEOUT_MS);
     ret = smbLib_->ConnectShare(smbCtx_, sharedHost.GetIp().c_str(), "IPC$", nullptr);
     if (ret != 0) {
+        const char* errorReason = smbLib_->GetSmbError(smbCtx_);
         PRINT_HILOGE("smb2_connect_share fail, ret = %{public}d, reason = %{public}s",
-            ret, smbLib_->GetSmbError(smbCtx_));
-        return E_PRINT_INVALID_TOKEN;
+            ret, errorReason ? errorReason : "null");
+        return ParseSmbErrorCode(errorReason ? errorReason : "null");
     }
     if (smbLib_->ShareEnumAsync(smbCtx_, SHARE_INFO_1,
         [](struct smb2_context* smb2, int32_t status, void* commandData, void* privateData) {
@@ -108,8 +109,9 @@ int32_t SmbPrinterDiscoverer::QuerySmbPrinters(const PrintSharedHost& sharedHost
             auto* self = static_cast<SmbPrinterDiscoverer*>(privateData);
             self->ShareEnumCallback(smb2, status, commandData);
         }, this) != 0) {
+        const char* errorReason = smbLib_->GetSmbError(smbCtx_);
         PRINT_HILOGE("smb2_share_enum_async fail, ret = %{public}d, reason = %{public}s",
-            ret, smbLib_->GetSmbError(smbCtx_));
+            ret, errorReason ? errorReason : "null");
         smbLib_->DisconnectShare(smbCtx_);
         return {};
     }
@@ -141,8 +143,9 @@ int32_t SmbPrinterDiscoverer::SmbEventLoop()
         int32_t ret = poll(&pfd, 1, SMB_CONNECT_TIMEOUT_MS);
         if (ret > 0) {
             if (ret = smbLib_->Service(smbCtx_, pfd.revents) < 0) {
+                const char* errorReason = smbLib_->GetSmbError(smbCtx_);
                 PRINT_HILOGE("smb2_share_enum_async fail, ret = %{public}d, reason = %{public}s",
-                    ret, smbLib_->GetSmbError(smbCtx_));
+                    ret, errorReason ? errorReason : "null");
                 return E_PRINT_SERVER_FAILURE;
             }
         } else if (ret == 0) {
@@ -262,5 +265,18 @@ std::string SmbPrinterDiscoverer::ParseIpFromSmbPrinterId(const std::string& pri
 bool SmbPrinterDiscoverer::IsSmbPrinterId(const std::string& printerId)
 {
     return printerId.find("smb") != std::string::npos;
+}
+
+int32_t SmbPrinterDiscoverer::ParseSmbErrorCode(const std::string& errorReason)
+{
+    if (errorReason.find("STATUS_LOGON_FAILURE") != std::string::npos) {
+        return E_PRINT_INVALID_TOKEN;
+    } else if (errorReason.find("signature") != std::string::npos) {
+        return E_PRINT_INVALID_TOKEN;
+    } else if (errorReason.find("SMB2_STATUS_ACCOUNT_LOCKED_OUT") != std::string::npos) {
+        return E_PRINT_WINDOWS_LOGIN_LOCKOUT;
+    } else {
+        return E_PRINT_WINDOWS_CONNECTION_FAILURE;
+    }
 }
 }  // namespace OHOS::Print
