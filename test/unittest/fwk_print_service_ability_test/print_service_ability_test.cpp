@@ -1834,6 +1834,15 @@ HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0109_NeedRename, TestS
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
     std::string printerName = "pixlab_0759";
     EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NONE);
+    std::string printerId = "1234";
+    std::string jobId = "job1234";
+    service->printerJobMap_[printerId].insert(std::make_pair(jobId, true));
+    auto printerInfo = std::make_shared<PrinterInfo>();
+    printerInfo->SetPrinterName(printerName);
+    service->printSystemData_.addedPrinterMap_.Insert(printerId, printerInfo);
+    EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NONE);
+    service->printerJobMap_[printerId].clear();
+    EXPECT_EQ(service->DeletePrinterFromCups(printerName), E_PRINT_NONE);
 }
 
 HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_0111_NeedRename, TestSize.Level1)
