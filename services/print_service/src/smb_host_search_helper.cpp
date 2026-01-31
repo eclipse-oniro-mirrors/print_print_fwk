@@ -236,7 +236,7 @@ void SmbHostSearchHelper::SetQuestionName(struct NbnameRequest &request)
     currentPos[0] = ENCODED_NAME_SIZE;
     currentPos++;
     for (int32_t i = 0; i < NAME_FIELD_SIZE; i++) {
-        uint32_t currentChar = toupper(nameBuffer[i]);
+        uint32_t currentChar = static_cast<uint32_t>(toupper(nameBuffer[i]));
         currentPos[i * INDEX_2] = ((currentChar >> NIBBLE_SHIFT) & NIBBLE_MASK) + ENCODING_BASE;
         currentPos[(i * INDEX_2) + 1] = (currentChar & NIBBLE_MASK) + ENCODING_BASE;
     }
