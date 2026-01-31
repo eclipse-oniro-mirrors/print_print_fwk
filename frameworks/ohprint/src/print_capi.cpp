@@ -59,6 +59,8 @@ static bool NativePrinterDiscoverFunction(uint32_t event, const PrinterInfo &inf
             g_printerDiscoverCallback(static_cast<Print_DiscoveryEvent>(event), nativePrinterInfo);
         } else {
             PRINT_HILOGE("g_printerDiscoverCallback is null");
+            OH_Print_ReleasePrinterInfo(nativePrinterInfo);
+            nativePrinterInfo = nullptr;
             return false;
         }
     }
@@ -82,6 +84,8 @@ static bool NativePrinterInfoFunction(uint32_t event, const PrinterInfo &info)
             g_printerChangeCallback(static_cast<Print_PrinterEvent>(event), nativePrinterInfo);
         } else {
             PRINT_HILOGE("g_printerChangeCallback is null");
+            OH_Print_ReleasePrinterInfo(nativePrinterInfo);
+            nativePrinterInfo = nullptr;
             return false;
         }
     }

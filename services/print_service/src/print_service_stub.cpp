@@ -179,11 +179,11 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
             reply.WriteInt32(E_PRINT_INVALID_PARAMETER);
             return false;
         }
-        for (int32_t index = 0; index < len; index++) {
+        for (uint32_t index = 0; index < len; index++) {
             int fdTemp = data.ReadFileDescriptor();
             if (fdTemp >= 0) {
                 uint32_t fd = static_cast<uint32_t>(fdTemp);
-                PRINT_HILOGD("fdList[%{public}d] = %{public}u", index, fd);
+                PRINT_HILOGD("fdList[%{public}u] = %{public}u", index, fd);
                 fdList.emplace_back(fd);
                 continue;
             }
