@@ -2524,12 +2524,14 @@ bool PrintCupsClient::IsPrinterExist(const char *printerUri, const char *standar
         const char *deviceUri = cupsGetOption("device-uri", dest->num_options, dest->options);
         if (deviceUri == nullptr) {
             PRINT_HILOGD("deviceUri is null");
+            printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
             return false;
         }
         PRINT_HILOGD("deviceUri = %{private}s", deviceUri);
         const char *makeModel = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
         if (makeModel == nullptr) {
             PRINT_HILOGD("makeModel is null");
+            printAbility_->FreeDests(FREE_ONE_PRINTER, dest);
             return false;
         }
         PRINT_HILOGD("makeModel = %{private}s", makeModel);
@@ -2817,6 +2819,7 @@ bool PrintCupsClient::QueryAllPPDInformation(const std::string &makeModel, std::
     if (ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_TEXT, "ppd-make-and-model",
         nullptr, makeModel.c_str()) == nullptr) {
         PRINT_HILOGW("attr is null");
+        printAbility_->FreeRequest(request);
         return false;
     }
     PRINT_HILOGD("CUPS_GET_PPDS start.");
@@ -2924,7 +2927,7 @@ bool PrintCupsClient::QueryPpdInfoMap(const std::string &ppdFilePath,
     const std::string targetKeys[] = {"Manufacturer", "ShortNickName", "NickName", "ModelName"};
     std::string line;
     while (std::getline(file, line)) {
-        if (line.empty() || line[0] != '*' || line[1] == '%') {
+        if (line.length() < INDEX_TWO || line[0] != '*' || line[1] == '%') {
             continue;
         }
         size_t colonPos = line.find(':');
