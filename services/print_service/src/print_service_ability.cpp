@@ -4320,7 +4320,11 @@ void PrintServiceAbility::HandlePrinterStateChangeRegister(const std::string &ev
 void PrintServiceAbility::HandlePrinterChangeRegister(const std::string &eventType)
 {
     if (PrintUtils::GetEventType(eventType) == PRINTER_CHANGE_EVENT_TYPE) {
-        PRINT_HILOGD("begin HandlePrinterChangeRegister");
+        PRINT_HILOGD("begin HandlePrinterChangeRegister, StartDiscoverPrinter");
+        std::vector<PrintExtensionInfo> extensionInfos;
+        QueryAllExtension(extensionInfos);
+        std::vector<std::string> extensionIds;
+        StartDiscoverPrinter(extensionIds);
         IncrementPrintCounterByPcSettings();
     }
 }
