@@ -2493,6 +2493,7 @@ bool PrintCupsClient::IsCupsServerAlive()
 
 void PrintCupsClient::SetCupsClientEnv()
 {
+    std::lock_guard<std::mutex> lock(envMutex_);
     ippSetPort(0);
 #ifdef ENTERPRISE_ENABLE
     if (PrintServiceAbility::GetInstance()->IsEnterpriseEnable() &&

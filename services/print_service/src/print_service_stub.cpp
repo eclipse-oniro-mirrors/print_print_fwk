@@ -198,6 +198,11 @@ bool PrintServiceStub::OnStartPrint(MessageParcel &data, MessageParcel &reply)
     }
     std::string taskId = data.ReadString();
     int32_t ret = StartPrint(fileList, fdList, taskId);
+    if (ret != E_PRINT_NONE) {
+        for (auto fd : fdList) {
+            fdsan_close_with_tag(fd, PRINT_LOG_DOMAIN);
+        }
+    }
     reply.WriteInt32(ret);
     PRINT_HILOGD("PrintServiceStub::OnStartPrint out");
     return ret == E_PRINT_NONE;
