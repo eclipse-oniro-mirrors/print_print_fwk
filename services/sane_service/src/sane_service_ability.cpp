@@ -27,7 +27,10 @@
 namespace OHOS {
 namespace Scan {
 
+namespace {
+const int32_t VALUE_BUFFER_LEN = 1024;
 constexpr int32_t SANE_SERVICE_ID = 3709;
+} //namespace
 
 REGISTER_SYSTEM_ABILITY_BY_ID(SaneServerManager, SANE_SERVICE_ID, true);
 
@@ -393,10 +396,13 @@ SaneStatus SaneServerManager::GetControlOption(
         saneStatus = sane_control_option(handle, option, ::SANE_ACTION_GET_VALUE, &value, nullptr);
         outParam.valueNumber_ = value;
     } else if (valueType == SCAN_VALUE_STR) {
-        std::string value;
-        value.resize(controlParam.valueSize_ + 1);
-        saneStatus = sane_control_option(handle, option, ::SANE_ACTION_GET_VALUE, &value.front(), nullptr);
-        outParam.valueStr_ = value;
+        if (controlParam.valueSize_ > VALUE_BUFFER_LEN || controlParam.valueSize_ < 0) {
+            SCAN_HILOGE("invalid valueSize");
+            return SANE_STATUS_INVAL;
+        }
+        std::vector<char> value(controlParam.valueSize_ + 1, 0);
+        saneStatus = sane_control_option(handle, option, ::SANE_ACTION_GET_VALUE, value.data(), nullptr);
+        outParam.valueStr_ = std::string(value.data());
     } else if (valueType == SCAN_VALUE_BOOL) {
         int32_t value = 0;
         saneStatus = sane_control_option(handle, option, ::SANE_ACTION_GET_VALUE, &value, nullptr);
@@ -424,7 +430,7 @@ SaneStatus SaneServerManager::SetControlOption(
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
     if (valueType == SCAN_VALUE_STR) {
         std::string value = controlParam.valueStr_;
-        saneStatus = sane_control_option(handle, option, action, const_cast<char *>(&value.front()), &info);
+        saneStatus = sane_control_option(handle, option, action, value.data(), &info);
         SCAN_HILOGI("SetControlOption, value = [%{public}s]", value.c_str());
     } else {
         int32_t value = controlParam.valueNumber_;
