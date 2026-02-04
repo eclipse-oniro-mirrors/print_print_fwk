@@ -3020,5 +3020,15 @@ HWTEST_F(PrintManagerClientTest, AuthSmbDevice_Test, TestSize.Level1)
     PrintManagerClient::GetInstance()->AuthSmbDevice(sharedHost, userName, userPasswd, printerInfos);
     EXPECT_TRUE(printerInfos.empty());
 }
+
+HWTEST_F(PrintManagerClientTest, PrintManagerClientTest_StartPrint_noPermission, TestSize.Level0)
+{
+    std::vector<std::string> testFileList = {
+        "file://data/print/a.png", "file://data/print/b.png", "file://data/print/c.png"};
+    std::vector<uint32_t> testFdList = {1, 2};
+    std::string testTaskId = "2";
+    int32_t ret = PrintManagerClient::GetInstance()->StartPrint(testFileList, testFdList, testTaskId);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+}
 }  // namespace Print
 }  // namespace OHOS

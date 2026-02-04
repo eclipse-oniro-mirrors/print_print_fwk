@@ -180,6 +180,7 @@ bool StsPrintExtension::CallObjectMethod(bool withResult, const char *name, cons
     va_start(args, signature);
     if ((status = env->Object_CallMethod_Void_V(etsObj_->aniObj, method, args)) != ANI_OK) {
         PRINT_HILOGE("status: %{public}d", status);
+        va_end(args);
         etsRuntime_.HandleUncaughtError();
         return false;
     }
