@@ -23,6 +23,7 @@
 #include "sane/saneopts.h"
 #include "sane_service_ability.h"
 #include "sane_device.h"
+#include "safe_sane_api.h"
 
 namespace OHOS {
 namespace Scan {
@@ -86,7 +87,7 @@ ErrCode SaneServerManager::SaneInit(int32_t &status)
         return SANE_STATUS_NO_PERMISSION;
     }
     int32_t scanVersion = 0;
-    SANE_Status saneStatus = sane_init(&scanVersion, nullptr);
+    SANE_Status saneStatus = SafeSANEAPI::GetInstance().SaneInit(&scanVersion, nullptr);
     status = static_cast<int32_t>(saneStatus);
     SCAN_HILOGI("sane_init successfully, version [%{public}d]", scanVersion);
     return ERR_OK;
@@ -99,10 +100,7 @@ ErrCode SaneServerManager::SaneExit()
         SCAN_HILOGE("no permission to access sane_service");
         return SANE_STATUS_NO_PERMISSION;
     }
-    {
-        std::lock_guard<std::mutex> autoLock(saneAPIlock_);
-        sane_exit();
-    }
+    SafeSANEAPI::GetInstance().SaneExit();
     SCAN_HILOGI("SaneExit end");
     return ERR_OK;
 }
@@ -121,10 +119,7 @@ ErrCode SaneServerManager::SaneOpen(const std::string &scannerId, int32_t &statu
     }
     SANE_Handle handle = nullptr;
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
-    {
-        std::lock_guard<std::mutex> autoLock(saneAPIlock_);
-        saneStatus = sane_open(scannerId.c_str(), &handle);
-    }
+    saneStatus = SafeSANEAPI::GetInstance().SaneOpen(scannerId.c_str(), &handle);
     if (saneStatus != ::SANE_STATUS_GOOD) {
         status = static_cast<int32_t>(saneStatus);
         SCAN_HILOGE("sane_open error, ret = [%{public}d]", status);
@@ -150,7 +145,7 @@ ErrCode SaneServerManager::SaneClose(const std::string &scannerId)
     std::lock_guard<std::mutex> autoLock(scannerHandleListlock_);
     auto it = scannerHandleList_.find(scannerId);
     if (it != scannerHandleList_.end()) {
-        sane_close(it->second);
+        SafeSANEAPI::GetInstance().SaneClose(it->second);
         scannerHandleList_.erase(it);
     }
     SCAN_HILOGI("SaneClose end");
@@ -170,7 +165,7 @@ ErrCode SaneServerManager::SaneStart(const std::string &scannerId, int32_t &stat
         status = SANE_STATUS_INVAL;
         return ERR_OK;
     }
-    SANE_Status saneStatus = sane_start(handle);
+    SANE_Status saneStatus = SafeSANEAPI::GetInstance().SaneStart(handle);
     status = static_cast<int32_t>(saneStatus);
     SCAN_HILOGI("sane_start end, ret = [%{public}d]", status);
     return ERR_OK;
@@ -188,7 +183,7 @@ ErrCode SaneServerManager::SaneCancel(const std::string &scannerId)
         SCAN_HILOGE("handle is a nullptr");
         return ERR_OK;
     }
-    sane_cancel(handle);
+    SafeSANEAPI::GetInstance().SaneCancel(handle);
     SCAN_HILOGI("sane_cancel end");
     return ERR_OK;
 }
@@ -208,7 +203,7 @@ ErrCode SaneServerManager::SaneGetOptionDescriptor(
         return ERR_OK;
     }
     SCAN_HILOGI("saneOption %{public}d", saneOption);
-    const SANE_Option_Descriptor *saneDesc = sane_get_option_descriptor(handle, saneOption);
+    const SANE_Option_Descriptor *saneDesc = SafeSANEAPI::GetInstance().SaneGetOptionDescriptor(handle, saneOption);
     if (saneDesc == nullptr) {
         SCAN_HILOGE("saneDesc is a nullptr");
         status = SANE_STATUS_INVAL;
@@ -277,7 +272,7 @@ ErrCode SaneServerManager::SaneGetParameters(const std::string &scannerId, SaneP
         return ERR_OK;
     }
     SANE_Parameters params;
-    SANE_Status saneStatus = sane_get_parameters(handle, &params);
+    SANE_Status saneStatus = SafeSANEAPI::GetInstance().SaneGetParameters(handle, &params);
     if (saneStatus != ::SANE_STATUS_GOOD) {
         status = static_cast<int32_t>(saneStatus);
         SCAN_HILOGE("sane_get_parameters error, ret = [%{public}d]", status);
@@ -303,10 +298,7 @@ ErrCode SaneServerManager::SaneGetDevices(std::vector<SaneDevice> &deviceInfos, 
     }
     const SANE_Device **deviceList = nullptr;
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
-    {
-        std::lock_guard<std::mutex> autoLock(saneAPIlock_);
-        saneStatus = sane_get_devices(&deviceList, SANE_FALSE);
-    }
+    saneStatus = SafeSANEAPI::GetInstance().SaneGetDevices(&deviceList, SANE_FALSE);
     if (saneStatus != ::SANE_STATUS_GOOD) {
         status = static_cast<int32_t>(saneStatus);
         SCAN_HILOGE("sane_get_devices error, ret = [%{public}d]", status);
@@ -351,7 +343,8 @@ ErrCode SaneServerManager::SaneControlOption(
     SANE_Int option = controlParam.option_;
     SANE_Action action = static_cast<SANE_Action>(controlParam.action_);
     if (controlParam.action_ == SANE_ACTION_SET_AUTO) {
-        SANE_Status saneStatus = sane_control_option(handle, option, action, nullptr, nullptr);
+        SANE_Status saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, action, nullptr,
+            nullptr);
         if (saneStatus != ::SANE_STATUS_GOOD) {
             status = static_cast<int32_t>(saneStatus);
             SCAN_HILOGE("sane_control_option error, ret = [%{public}d]", status);
@@ -393,7 +386,8 @@ SaneStatus SaneServerManager::GetControlOption(
     SCAN_HILOGI("valueSize_ = [%{public}d], valueType = [%{public}u]", controlParam.valueSize_, valueType);
     if (valueType == SCAN_VALUE_NUM) {
         int32_t value = 0;
-        saneStatus = sane_control_option(handle, option, ::SANE_ACTION_GET_VALUE, &value, nullptr);
+        saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, ::SANE_ACTION_GET_VALUE,
+            &value, nullptr);
         outParam.valueNumber_ = value;
     } else if (valueType == SCAN_VALUE_STR) {
         if (controlParam.valueSize_ > VALUE_BUFFER_LEN || controlParam.valueSize_ < 0) {
@@ -401,11 +395,13 @@ SaneStatus SaneServerManager::GetControlOption(
             return SANE_STATUS_INVAL;
         }
         std::vector<char> value(controlParam.valueSize_ + 1, 0);
-        saneStatus = sane_control_option(handle, option, ::SANE_ACTION_GET_VALUE, value.data(), nullptr);
+        saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, ::SANE_ACTION_GET_VALUE,
+            value.data(), nullptr);
         outParam.valueStr_ = std::string(value.data());
     } else if (valueType == SCAN_VALUE_BOOL) {
         int32_t value = 0;
-        saneStatus = sane_control_option(handle, option, ::SANE_ACTION_GET_VALUE, &value, nullptr);
+        saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, ::SANE_ACTION_GET_VALUE,
+            &value, nullptr);
         outParam.valueBool_ = value > 0 ? true : false;
     }
     if (saneStatus != ::SANE_STATUS_GOOD) {
@@ -430,11 +426,11 @@ SaneStatus SaneServerManager::SetControlOption(
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
     if (valueType == SCAN_VALUE_STR) {
         std::string value = controlParam.valueStr_;
-        saneStatus = sane_control_option(handle, option, action, value.data(), &info);
+        saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, action, value.data(), &info);
         SCAN_HILOGI("SetControlOption, value = [%{public}s]", value.c_str());
     } else {
         int32_t value = controlParam.valueNumber_;
-        saneStatus = sane_control_option(handle, option, action, &value, &info);
+        saneStatus = SafeSANEAPI::GetInstance().SaneControlOption(handle, option, action, &value, &info);
         SCAN_HILOGI("SetControlOption, value = [%{public}d]", value);
     }
     if (saneStatus != ::SANE_STATUS_GOOD) {
@@ -468,7 +464,7 @@ ErrCode SaneServerManager::SaneRead(
     std::vector<SANE_Byte> valueBuffer(buflen);
     SANE_Status saneStatus = ::SANE_STATUS_GOOD;
     do {
-        saneStatus = sane_read(handle, valueBuffer.data(), buflen, &curReadSize);
+        saneStatus = SafeSANEAPI::GetInstance().SaneRead(handle, valueBuffer.data(), buflen, &curReadSize);
     } while (saneStatus == ::SANE_STATUS_GOOD && curReadSize == zero);
     status = static_cast<int32_t>(saneStatus);
     if (saneStatus != ::SANE_STATUS_GOOD && saneStatus != ::SANE_STATUS_EOF) {
@@ -494,14 +490,11 @@ ErrCode SaneServerManager::UnloadSystemAbility()
     }
     std::lock_guard<std::mutex> autoLock(scannerHandleListlock_);
     for (const auto &scanner : scannerHandleList_) {
-        sane_cancel(scanner.second);
-        sane_close(scanner.second);
+        SafeSANEAPI::GetInstance().SaneCancel(scanner.second);
+        SafeSANEAPI::GetInstance().SaneClose(scanner.second);
     }
     scannerHandleList_.clear();
-    {
-        std::lock_guard<std::mutex> autoLock(saneAPIlock_);
-        sane_exit();
-    }
+    SafeSANEAPI::GetInstance().SaneExit();
     const std::string dataTmpDir = PRINTER_SERVICE_SANE_TEMPORARY_PATH;
     std::vector<std::string> files;
     GetDirFiles(dataTmpDir, files);
