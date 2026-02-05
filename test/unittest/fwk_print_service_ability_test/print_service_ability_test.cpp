@@ -99,6 +99,7 @@ public:
 class MockPrintServiceHelper final : public PrintServiceHelper {
 public:
     MOCK_METHOD1(QueryAccounts, bool(std::vector<int> &accountList));
+    MOCK_METHOD1(CheckPermission, bool(const std::string &name));
 };
 
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
@@ -3134,6 +3135,21 @@ HWTEST_F(PrintServiceAbilityTest, ReportBannedEventTest, TestSize.Level1)
 #endif // EDM_SERVICE_ENABLE
 }
 
+HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_NoPermission, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    std::string printerId = GetDefaultPrinterId();;
+    PrinterPreferences printerPreference;
+    std::vector<std::string> conflictingOptions;
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    int32_t ret = service->CheckPreferencesConflicts(
+        printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+#endif
+}
+
 HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPrinterId, TestSize.Level1)
 {
 #ifdef CUPS_ENABLE
@@ -3142,6 +3158,11 @@ HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPrinterId, Te
     std::vector<std::string> conflictingOptions;
     auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
+
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
 
     int32_t ret = service->CheckPreferencesConflicts(
         printerId, PRINT_PARAM_TYPE_PAGE_SIZE, printerPreference, conflictingOptions);
@@ -3159,6 +3180,10 @@ HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPpdName, Test
     auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
 
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
     EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(_, _))
         .WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(*service, QueryPPDInformation(_, _))
@@ -3177,6 +3202,21 @@ HWTEST_F(PrintServiceAbilityTest, CheckPreferencesConflicts_InvalidPpdName, Test
 #endif
 }
 
+HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_NoPermission, TestSize.Level1)
+{
+#ifdef CUPS_ENABLE
+    PrintJob testPrinterJob;
+    std::vector<std::string> conflictingOptions;
+    auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
+    ASSERT_NE(service, nullptr);
+
+    testPrinterJob.SetPrinterId(GetInvalidPrinterId());
+    int32_t ret = service->CheckPrintJobConflicts(
+        PRINT_PARAM_TYPE_PAGE_SIZE, testPrinterJob, conflictingOptions);
+    EXPECT_EQ(ret, E_PRINT_NO_PERMISSION);
+#endif
+}
+
 HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_InvalidPrinterId, TestSize.Level1)
 {
 #ifdef CUPS_ENABLE
@@ -3184,6 +3224,11 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_InvalidPrinterId, TestS
     std::vector<std::string> conflictingOptions;
     auto service = sptr<PrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
+
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
 
     testPrinterJob.SetPrinterId(GetInvalidPrinterId());
     int32_t ret = service->CheckPrintJobConflicts(
@@ -3201,6 +3246,10 @@ HWTEST_F(PrintServiceAbilityTest, CheckPrintJobConflicts_InvalidPpdName, TestSiz
     auto service = sptr<MockPrintServiceAbility>::MakeSptr(PRINT_SERVICE_ID, true);
     ASSERT_NE(service, nullptr);
 
+    auto mockHelper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*mockHelper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
+    service->SetHelper(mockHelper);
     EXPECT_CALL(*service, QueryPrinterInfoByPrinterId(_, _))
         .WillRepeatedly(Return(E_PRINT_NONE));
     EXPECT_CALL(*service, QueryPPDInformation(_, _))
@@ -3434,6 +3483,8 @@ HWTEST_F(PrintServiceAbilityTest,
     auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
 
     auto helper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*helper, CheckPermission(_))
+        .WillRepeatedly(Return(true));
     EXPECT_CALL(*helper, QueryAccounts(_))
         .WillRepeatedly(Return(false));
     service->SetHelper(helper);

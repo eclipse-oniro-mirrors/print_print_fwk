@@ -5059,6 +5059,10 @@ int32_t PrintServiceAbility::ConnectPrinterByIdAndPpd(const std::string &printer
 int32_t PrintServiceAbility::CheckPreferencesConflicts(const std::string &printerId, const std::string &changedType,
     const PrinterPreferences &printerPreference, std::vector<std::string> &conflictingOptions)
 {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
     PRINT_HILOGD("PrintServiceAbility CheckPreferencesConflicts in.");
 
 #ifdef CUPS_ENABLE
@@ -5079,6 +5083,10 @@ int32_t PrintServiceAbility::CheckPreferencesConflicts(const std::string &printe
 int32_t PrintServiceAbility::CheckPrintJobConflicts(const std::string &changedType,
     const PrintJob &printJob, std::vector<std::string> &conflictingOptions)
 {
+    if (!CheckPermission(PERMISSION_NAME_PRINT_JOB)) {
+        PRINT_HILOGE("no permission to access print service");
+        return E_PRINT_NO_PERMISSION;
+    }
     PRINT_HILOGD("PrintServiceAbility CheckPrintJobConflicts in.");
 
 #ifdef CUPS_ENABLE
