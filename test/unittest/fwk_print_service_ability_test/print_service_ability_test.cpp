@@ -101,6 +101,7 @@ public:
 class MockPrintServiceHelper final : public PrintServiceHelper {
 public:
     MOCK_METHOD1(QueryAccounts, bool(std::vector<int> &accountList));
+    MOCK_METHOD0(IsSyncMode, bool());
 };
 
 REGISTER_SYSTEM_ABILITY_BY_ID(PrintServiceAbility, PRINT_SERVICE_ID, true);
@@ -3444,6 +3445,29 @@ HWTEST_F(PrintServiceAbilityTest,
     
     std::vector<std::string> extensionIds;
     EXPECT_EQ(service->StartDiscoverPrinter(extensionIds), E_PRINT_INVALID_USERID);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PostDiscoveryTaskTest_with_nullptr, TestSize.Level1)
+{
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string extensionId = "";
+    service->helper_ = nullptr;
+    service->PostDiscoveryTask(extensionId);
+    EXPECT_EQ(service->helper_, nullptr);
+}
+
+HWTEST_F(PrintServiceAbilityTest, PostDiscoveryTaskTest_with_syncMode, TestSize.Level1)
+{
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    std::string extensionId = "";
+    auto helper = std::make_shared<MockPrintServiceHelper>();
+    EXPECT_CALL(*helper, IsSyncMode())
+        .WillRepeatedly(Return(true));
+    service->SetHelper(helper);
+    service->PostDiscoveryTask(extensionId);
+    EXPECT_NE(service->helper_, nullptr);
 }
 
 HWTEST_F(PrintServiceAbilityTest, OHReleaseTest, TestSize.Level1)
