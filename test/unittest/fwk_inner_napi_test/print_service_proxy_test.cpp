@@ -25,6 +25,7 @@
 #include "mock_remote_object.h"
 #include "mock_print_service.h"
 #include "mock_print_callback_stub.h"
+#include "mock_watermark_callback_stub.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -1301,6 +1302,275 @@ HWTEST_F(PrintServiceProxyTest, GetPrinterDefaultPreferencesTest, TestSize.Level
     EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
 
     ret = proxy->GetPrinterDefaultPreferences(testPrinterId, testDefaultPreferences);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: RegisterWatermarkCallback_NullCallback
+ * @tc.desc: Verify RegisterWatermarkCallback returns error when callback is null.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, RegisterWatermarkCallback_NullCallback, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+
+    int32_t ret = proxy->RegisterWatermarkCallback(nullptr);
+    EXPECT_EQ(ret, E_PRINT_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: RegisterWatermarkCallback_RemoteNull
+ * @tc.desc: Verify RegisterWatermarkCallback returns error when remote is null.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, RegisterWatermarkCallback_RemoteNull, TestSize.Level1)
+{
+    auto proxy = std::make_shared<PrintServiceProxy>(nullptr);
+    EXPECT_NE(proxy, nullptr);
+
+    sptr<MockWatermarkCallbackStub> callback = new MockWatermarkCallbackStub();
+    EXPECT_NE(callback, nullptr);
+
+    int32_t ret = proxy->RegisterWatermarkCallback(callback);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: RegisterWatermarkCallback_Success
+ * @tc.desc: Verify RegisterWatermarkCallback function works correctly.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, RegisterWatermarkCallback_Success, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    sptr<MockWatermarkCallbackStub> callback = new MockWatermarkCallbackStub();
+    EXPECT_NE(callback, nullptr);
+
+    EXPECT_CALL(*service, RegisterWatermarkCallback(_))
+        .Times(Exactly(1))
+        .WillOnce([](const sptr<IWatermarkCallback> &cb) {
+            EXPECT_NE(cb, nullptr);
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    int32_t ret = proxy->RegisterWatermarkCallback(callback);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: RegisterWatermarkCallback_RpcFailure
+ * @tc.desc: Verify RegisterWatermarkCallback returns RPC failure when SendRequest fails.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, RegisterWatermarkCallback_RpcFailure, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+
+    sptr<MockWatermarkCallbackStub> callback = new MockWatermarkCallbackStub();
+    EXPECT_NE(callback, nullptr);
+
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _))
+        .Times(1)
+        .WillOnce(Return(ERR_TRANSACTION_FAILED));
+
+    int32_t ret = proxy->RegisterWatermarkCallback(callback);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: UnregisterWatermarkCallback_RemoteNull
+ * @tc.desc: Verify UnregisterWatermarkCallback returns error when remote is null.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, UnregisterWatermarkCallback_RemoteNull, TestSize.Level1)
+{
+    auto proxy = std::make_shared<PrintServiceProxy>(nullptr);
+    EXPECT_NE(proxy, nullptr);
+
+    int32_t ret = proxy->UnregisterWatermarkCallback();
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: UnregisterWatermarkCallback_Success
+ * @tc.desc: Verify UnregisterWatermarkCallback function works correctly.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, UnregisterWatermarkCallback_Success, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, UnregisterWatermarkCallback())
+        .Times(Exactly(1))
+        .WillOnce([]() {
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    int32_t ret = proxy->UnregisterWatermarkCallback();
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: UnregisterWatermarkCallback_RpcFailure
+ * @tc.desc: Verify UnregisterWatermarkCallback returns RPC failure when SendRequest fails.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, UnregisterWatermarkCallback_RpcFailure, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _))
+        .Times(1)
+        .WillOnce(Return(ERR_TRANSACTION_FAILED));
+
+    int32_t ret = proxy->UnregisterWatermarkCallback();
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: NotifyWatermarkComplete_RemoteNull
+ * @tc.desc: Verify NotifyWatermarkComplete returns error when remote is null.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, NotifyWatermarkComplete_RemoteNull, TestSize.Level1)
+{
+    auto proxy = std::make_shared<PrintServiceProxy>(nullptr);
+    EXPECT_NE(proxy, nullptr);
+
+    int32_t ret = proxy->NotifyWatermarkComplete("jobId-123", 0);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: NotifyWatermarkComplete_Success
+ * @tc.desc: Verify NotifyWatermarkComplete function works correctly.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, NotifyWatermarkComplete_Success, TestSize.Level1)
+{
+    std::string testJobId = "jobId-123";
+    int32_t testResult = 0;
+
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, NotifyWatermarkComplete(_, _))
+        .Times(Exactly(1))
+        .WillOnce([&testJobId, &testResult](const std::string &jobId, int32_t result) {
+            EXPECT_EQ(testJobId, jobId);
+            EXPECT_EQ(testResult, result);
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    int32_t ret = proxy->NotifyWatermarkComplete(testJobId, testResult);
+    EXPECT_EQ(ret, E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: NotifyWatermarkComplete_RpcFailure
+ * @tc.desc: Verify NotifyWatermarkComplete returns RPC failure when SendRequest fails.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, NotifyWatermarkComplete_RpcFailure, TestSize.Level1)
+{
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _))
+        .Times(1)
+        .WillOnce(Return(ERR_TRANSACTION_FAILED));
+
+    int32_t ret = proxy->NotifyWatermarkComplete("jobId-123", 0);
+    EXPECT_EQ(ret, E_PRINT_RPC_FAILURE);
+}
+
+/**
+ * @tc.name: NotifyWatermarkComplete_WithFailureResult
+ * @tc.desc: Verify NotifyWatermarkComplete with failure result works correctly.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintServiceProxyTest, NotifyWatermarkComplete_WithFailureResult, TestSize.Level1)
+{
+    std::string testJobId = "jobId-456";
+    int32_t testResult = -1;
+
+    sptr<MockRemoteObject> obj = new MockRemoteObject();
+    EXPECT_NE(obj, nullptr);
+    auto proxy = std::make_shared<PrintServiceProxy>(obj);
+    EXPECT_NE(proxy, nullptr);
+    auto service = std::make_shared<MockPrintService>();
+    EXPECT_NE(service, nullptr);
+
+    EXPECT_CALL(*service, NotifyWatermarkComplete(_, _))
+        .Times(Exactly(1))
+        .WillOnce([&testJobId, &testResult](const std::string &jobId, int32_t result) {
+            EXPECT_EQ(testJobId, jobId);
+            EXPECT_EQ(testResult, result);
+            return E_PRINT_NONE;
+        });
+    EXPECT_CALL(*obj, SendRequest(_, _, _, _)).Times(1);
+    ON_CALL(*obj, SendRequest)
+        .WillByDefault([&service](uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) {
+            service->OnRemoteRequest(code, data, reply, option);
+            return E_PRINT_NONE;
+        });
+
+    int32_t ret = proxy->NotifyWatermarkComplete(testJobId, testResult);
     EXPECT_EQ(ret, E_PRINT_NONE);
 }
 

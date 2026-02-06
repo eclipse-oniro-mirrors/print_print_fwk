@@ -16,6 +16,7 @@
 #include "print_service_stub.h"
 #include "ipc_skeleton.h"
 #include "iprint_service.h"
+#include "iwatermark_callback.h"
 #include "message_parcel.h"
 #include "print_constant.h"
 #include "print_extension_info.h"
@@ -108,6 +109,12 @@ PrintServiceStub::PrintServiceStub()
         &PrintServiceStub::OnGetPrinterDefaultPreferences;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_GET_SHAREDHOSTS] = &PrintServiceStub::OnGetSharedHosts;
     cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_AUTH_SMB_DEVICE] = &PrintServiceStub::OnAuthSmbDevice;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_REG_WATERMARK_CB] =
+        &PrintServiceStub::OnRegisterWatermarkCallback;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_UNREG_WATERMARK_CB] =
+        &PrintServiceStub::OnUnregisterWatermarkCallback;
+    cmdMap_[OHOS::Print::IPrintInterfaceCode::CMD_NOTIFY_WATERMARK_COMPLETE] =
+        &PrintServiceStub::OnNotifyWatermarkComplete;
 }
 
 int32_t PrintServiceStub::OnRemoteRequest(
@@ -1161,6 +1168,47 @@ bool PrintServiceStub::OnAuthSmbDevice(MessageParcel &data, MessageParcel &reply
         }
     }
     PRINT_HILOGD("PrintServiceStub::OnAuthSmbDevice out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnRegisterWatermarkCallback(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnRegisterWatermarkCallback in");
+    auto remoteObject = data.ReadRemoteObject();
+    if (remoteObject == nullptr) {
+        PRINT_HILOGE("Failed to read remote object");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+    sptr<IWatermarkCallback> callback = iface_cast<IWatermarkCallback>(remoteObject);
+    if (callback == nullptr) {
+        PRINT_HILOGE("Failed to cast to IWatermarkCallback");
+        reply.WriteInt32(E_PRINT_RPC_FAILURE);
+        return false;
+    }
+    int32_t ret = RegisterWatermarkCallback(callback);
+    reply.WriteInt32(ret);
+    PRINT_HILOGI("PrintServiceStub::OnRegisterWatermarkCallback out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnUnregisterWatermarkCallback(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnUnregisterWatermarkCallback in");
+    int32_t ret = UnregisterWatermarkCallback();
+    reply.WriteInt32(ret);
+    PRINT_HILOGI("PrintServiceStub::OnUnregisterWatermarkCallback out");
+    return ret == E_PRINT_NONE;
+}
+
+bool PrintServiceStub::OnNotifyWatermarkComplete(MessageParcel &data, MessageParcel &reply)
+{
+    PRINT_HILOGI("PrintServiceStub::OnNotifyWatermarkComplete in");
+    std::string jobId = data.ReadString();
+    int32_t result = data.ReadInt32();
+    int32_t ret = NotifyWatermarkComplete(jobId, result);
+    reply.WriteInt32(ret);
+    PRINT_HILOGI("PrintServiceStub::OnNotifyWatermarkComplete out");
     return ret == E_PRINT_NONE;
 }
 

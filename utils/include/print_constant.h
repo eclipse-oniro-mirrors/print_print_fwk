@@ -166,6 +166,7 @@ enum PrintJobSubState {
     PRINT_JOB_BLOCKED_AUTHENTICATION = 36,  // print job need authenticate.
     PRINT_JOB_BLOCKED_BANNED = 37,  // print job has been banned by organization.
     PRINT_JOB_BLOCKED_SMB_PRINTER = 38,  // SMB print job transmission failed.
+    PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED = 39, // print job restricted by security policy.
     PRINT_JOB_BLOCKED_PRINTER_UNAVAILABLE = 98, // Printer is stopped.
     PRINT_JOB_BLOCKED_UNKNOWN = 99,             // unknown issue
     PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 101, // For internal use only: Click Cancel
@@ -286,10 +287,16 @@ enum DefaultPrinterType {
     DEFAULT_PRINTER_TYPE_LAST_USED_PRINTER = 1,
 };
 
+enum WatermarkHandleResult {
+    WATERMARK_HANDLE_SUCCESS = 0,  // Processing completed successfully
+    WATERMARK_HANDLE_FAILURE = 1,  // Processing failed
+};
+
 const std::string PRINTER_DISCOVER_EVENT_TYPE = "printerDiscover";
 const std::string PRINTER_CHANGE_EVENT_TYPE = "printerChange";
 static const std::string PERMISSION_NAME_PRINT = "ohos.permission.PRINT";
 static const std::string PERMISSION_NAME_PRINT_JOB = "ohos.permission.MANAGE_PRINT_JOB";
+static const std::string PERMISSION_NAME_ENTERPRISE_MANAGE_PRINT = "ohos.permission.ENTERPRISE_MANAGE_PRINT";
 const std::string PRINTER_SERVICE_FILE_PATH = "/data/service/el2/public/print_service";
 const std::string PRINTER_SERVICE_PRINTERS_PATH = "/data/service/el2/public/print_service/printers";
 const std::string PRINTER_SERVICE_PRINTERS_ENTERPRISE_PATH =

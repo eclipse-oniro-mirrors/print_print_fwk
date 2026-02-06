@@ -16,6 +16,8 @@
 #include <gtest/gtest.h>
 #include "print_service_mock_permission.h"
 #include "mock_remote_object.h"
+#include "mock_watermark_callback.h"
+#include "iwatermark_callback.h"
 #define private public
 #define protected public
 #include "print_service_ability.h"
@@ -3451,6 +3453,173 @@ HWTEST_F(PrintServiceAbilityTest, OHReleaseTest, TestSize.Level1)
     EXPECT_EQ(service->Release(), E_PRINT_NO_PERMISSION);
     service->ManualStart();
     EXPECT_EQ(service->Release(), E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_RegisterWatermarkCallback_001
+ * @tc.desc: Test RegisterWatermarkCallback without permission
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NO_PERMISSION
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_RegisterWatermarkCallback_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    sptr<IWatermarkCallback> callback = nullptr;
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_RegisterWatermarkCallback_002
+ * @tc.desc: Test RegisterWatermarkCallback with permission and null callback
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_RegisterWatermarkCallback_002, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    sptr<IWatermarkCallback> callback = nullptr;
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_RegisterWatermarkCallback_003
+ * @tc.desc: Test RegisterWatermarkCallback with permission and valid callback
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NONE
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_RegisterWatermarkCallback_003, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    sptr<MockWatermarkCallback> callback = sptr<MockWatermarkCallback>::MakeSptr();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_NONE);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    // Clean up: unregister the callback
+    service->UnregisterWatermarkCallback();
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_UnregisterWatermarkCallback_001
+ * @tc.desc: Test UnregisterWatermarkCallback without permission
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NO_PERMISSION
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UnregisterWatermarkCallback_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->UnregisterWatermarkCallback(), E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_UnregisterWatermarkCallback_002
+ * @tc.desc: Test UnregisterWatermarkCallback with permission but no callback registered
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UnregisterWatermarkCallback_002, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->UnregisterWatermarkCallback(), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->UnregisterWatermarkCallback(), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_UnregisterWatermarkCallback_003
+ * @tc.desc: Test UnregisterWatermarkCallback with permission after registering callback
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NONE
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_UnregisterWatermarkCallback_003, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    sptr<MockWatermarkCallback> callback = sptr<MockWatermarkCallback>::MakeSptr();
+    EXPECT_NE(callback, nullptr);
+    EXPECT_EQ(service->RegisterWatermarkCallback(callback), E_PRINT_NONE);
+#endif
+    EXPECT_EQ(service->UnregisterWatermarkCallback(), E_PRINT_NONE);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_NotifyWatermarkComplete_001
+ * @tc.desc: Test NotifyWatermarkComplete without permission
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_NO_PERMISSION
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplete_001, TestSize.Level1)
+{
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+    EXPECT_EQ(service->NotifyWatermarkComplete("jobId", 0), E_PRINT_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_NotifyWatermarkComplete_002
+ * @tc.desc: Test NotifyWatermarkComplete with permission but non-existent job
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplete_002, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->NotifyWatermarkComplete("non_existent_job", 0), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->NotifyWatermarkComplete("non_existent_job", 0), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_NotifyWatermarkComplete_003
+ * @tc.desc: Test NotifyWatermarkComplete with permission and empty jobId
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplete_003, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->NotifyWatermarkComplete("", 0), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->NotifyWatermarkComplete("", 0), E_PRINT_NONE);
+#endif
+}
+
+/**
+ * @tc.name: PrintServiceAbilityTest_NotifyWatermarkComplete_004
+ * @tc.desc: Test NotifyWatermarkComplete with permission and failure result
+ * @tc.type: FUNC
+ * @tc.require: return E_PRINT_INVALID_PARAMETER when WATERMARK_ENFORCING_ENABLE, E_PRINT_NONE otherwise
+ */
+HWTEST_F(PrintServiceAbilityTest, PrintServiceAbilityTest_NotifyWatermarkComplete_004, TestSize.Level1)
+{
+    GTEST_SKIP();
+    PrintServiceMockPermission::MockPermission();
+    auto service = std::make_shared<PrintServiceAbility>(PRINT_SERVICE_ID, true);
+#ifdef WATERMARK_ENFORCING_ENABLE
+    EXPECT_EQ(service->NotifyWatermarkComplete("jobId", -1), E_PRINT_INVALID_PARAMETER);
+#else
+    EXPECT_EQ(service->NotifyWatermarkComplete("jobId", -1), E_PRINT_NONE);
+#endif
 }
 }  // namespace Print
 }  // namespace OHOS

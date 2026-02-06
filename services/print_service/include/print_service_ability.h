@@ -148,6 +148,9 @@ public:
         const std::string &ppdName);
     int32_t ReportBannedEvent(std::string option);
     bool IsDisablePrint();
+    int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback) override;
+    int32_t UnregisterWatermarkCallback() override;
+    int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result) override;
 
 protected:
     void OnStart() override;
