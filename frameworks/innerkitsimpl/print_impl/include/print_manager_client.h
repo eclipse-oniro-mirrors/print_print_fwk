@@ -22,6 +22,7 @@
 
 #include "want.h"
 #include "iprint_callback.h"
+#include "iwatermark_callback.h"
 #include "iprint_service.h"
 #include "iremote_object.h"
 #include "print_extension_callback_stub.h"
@@ -140,6 +141,9 @@ public:
     int32_t GetSharedHosts(std::vector<PrintSharedHost> &sharedHosts);
     int32_t AuthSmbDevice(const PrintSharedHost &sharedHost, const std::string &userName,
         char *userPasswd, std::vector<PrinterInfo>& printerInfos);
+    int32_t RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback);
+    int32_t UnregisterWatermarkCallback();
+    int32_t NotifyWatermarkComplete(const std::string &jobId, int32_t result);
 
 private:
     void SetWantParam(AAFwk::Want &want, std::string &taskId);

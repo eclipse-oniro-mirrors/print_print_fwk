@@ -47,6 +47,9 @@
 #include "print_service_converter.h"
 #include "print_cups_attribute.h"
 #include "print_cups_ppd.h"
+#ifdef WATERMARK_ENFORCING_ENABLE
+#include "watermark_manager.h"
+#endif // WATERMARK_ENFORCING_ENABLE
 
 namespace OHOS::Print {
 using namespace std;
@@ -1528,6 +1531,20 @@ void PrintCupsClient::StartCupsJob(JobParameters *jobParams, CallbackFunc callba
     if (!ResumePrinter(jobParams->printerName)) {
         PRINT_HILOGW("[Job Id: %{public}s] ResumePrinter fail", jobParams->serviceJobId.c_str());
     }
+
+    // Process watermark before sending files to printer
+#ifdef WATERMARK_ENFORCING_ENABLE
+    int32_t watermarkRet = WatermarkManager::GetInstance().ProcessWatermarkForFiles(
+        jobParams->serviceJobId, jobParams->fdList);
+    if (watermarkRet != E_PRINT_NONE) {
+        PRINT_HILOGE("ProcessWatermarkForFiles failed, ret: %{public}d, jobId: %{public}s.",
+            watermarkRet, jobParams->serviceJobId.c_str());
+        UpdatePrintJobStateInJobParams(jobParams, PRINT_JOB_BLOCKED, PRINT_JOB_BLOCKED_SECURITY_POLICY_RESTRICTED);
+        callback();
+        return;
+    }
+#endif // WATERMARK_ENFORCING_ENABLE
+
     uint32_t num_files = jobParams->fdList.size();
     PRINT_HILOGD("StartCupsJob fill job options, num_files: %{public}u", num_files);
     if (jobParams->isCanceled || !HandleFiles(jobParams, num_files, http, jobId)) {

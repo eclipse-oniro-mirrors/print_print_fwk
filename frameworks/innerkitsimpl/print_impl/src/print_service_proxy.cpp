@@ -1409,6 +1409,7 @@ int32_t PrintServiceProxy::QueryRecommendDriversById(const std::string &printerI
     return ret;
 }
 
+
 int32_t PrintServiceProxy::ConnectPrinterByIdAndPpd(const std::string &printerId, const std::string &protocol,
     const std::string &ppdName)
 {
@@ -1620,4 +1621,91 @@ int32_t PrintServiceProxy::AuthSmbDevice(const PrintSharedHost &sharedHost, cons
     return ret;
 }
 
+
+int32_t PrintServiceProxy::RegisterWatermarkCallback(const sptr<IWatermarkCallback> &callback)
+{
+    PRINT_HILOGI("PrintServiceProxy RegisterWatermarkCallback started.");
+    if (callback == nullptr) {
+        PRINT_HILOGE("callback is nullptr");
+        return E_PRINT_INVALID_PARAMETER;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteRemoteObject(callback->AsObject().GetRefPtr());
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy RegisterWatermarkCallback remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_REG_WATERMARK_CB,
+        data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("RegisterWatermarkCallback Failed, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+    ret = GetResult(ret, reply);
+    PRINT_HILOGI("PrintServiceProxy RegisterWatermarkCallback out. ret = [%{public}d]", ret);
+    return ret;
+}
+
+int32_t PrintServiceProxy::UnregisterWatermarkCallback()
+{
+    PRINT_HILOGI("PrintServiceProxy UnregisterWatermarkCallback started.");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy UnregisterWatermarkCallback remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_UNREG_WATERMARK_CB,
+        data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("UnregisterWatermarkCallback Failed, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+    ret = GetResult(ret, reply);
+    PRINT_HILOGI("PrintServiceProxy UnregisterWatermarkCallback out. ret = [%{public}d]", ret);
+    return ret;
+}
+
+int32_t PrintServiceProxy::NotifyWatermarkComplete(const std::string &jobId, int32_t result)
+{
+    PRINT_HILOGI("PrintServiceProxy NotifyWatermarkComplete started. jobId=%{public}s, result=%{public}d",
+        jobId.c_str(), result);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteString(jobId);
+    data.WriteInt32(result);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        PRINT_HILOGE("PrintServiceProxy NotifyWatermarkComplete remote is null");
+        return E_PRINT_RPC_FAILURE;
+    }
+
+    int32_t ret = remote->SendRequest(OHOS::Print::IPrintInterfaceCode::CMD_NOTIFY_WATERMARK_COMPLETE,
+        data, reply, option);
+    if (ret != ERR_NONE) {
+        PRINT_HILOGE("NotifyWatermarkComplete Failed, error code = %{public}d", ret);
+        return E_PRINT_RPC_FAILURE;
+    }
+    ret = GetResult(ret, reply);
+    PRINT_HILOGI("PrintServiceProxy NotifyWatermarkComplete out. ret = [%{public}d]", ret);
+    return ret;
+}
 } // namespace OHOS::Print

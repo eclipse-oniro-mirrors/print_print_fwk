@@ -58,6 +58,8 @@ ohos_shared_library("print_client") {
     "src/print_sa_death_recipient.cpp",
     "src/print_service_proxy.cpp",
     "src/print_sync_load_callback.cpp",
+    "src/watermark_callback.cpp",
+    "src/watermark_callback_stub.cpp",
   ]
 
   deps = [

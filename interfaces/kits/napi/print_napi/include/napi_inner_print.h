@@ -73,6 +73,9 @@ public:
     static napi_value GetSharedHosts(napi_env env, napi_callback_info info);
     static napi_value AuthSmbDeviceAsGuest(napi_env env, napi_callback_info info);
     static napi_value AuthSmbDeviceAsRegisteredUser(napi_env env, napi_callback_info info);
+    static napi_value RegisterWatermarkCallback(napi_env env, napi_callback_info info);
+    static napi_value UnregisterWatermarkCallback(napi_env env, napi_callback_info info);
+    static napi_value NotifyWatermarkComplete(napi_env env, napi_callback_info info);
 
 private:
     static bool IsSupportType(const std::string& type);
