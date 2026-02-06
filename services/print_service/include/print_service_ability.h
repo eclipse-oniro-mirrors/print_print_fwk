@@ -164,7 +164,6 @@ private:
     bool StartAbility(const AAFwk::Want &want);
     PrintExtensionInfo ConvertToPrintExtensionInfo(const AppExecFwk::ExtensionAbilityInfo &extInfo);
     bool DelayStartDiscovery(const std::string &extensionId);
-    void ReStartAllDiscovery();
     int32_t SendPrinterDiscoverEvent(int event, const PrinterInfo &info);
     int32_t SendPrinterChangeEvent(int event, const PrinterInfo &info);
     void SendPrinterEvent(const PrinterInfo &info, const std::string userId = "");
@@ -294,6 +293,7 @@ private:
     void HandleJobStateChanged(const std::string &jobId, const PrintJob &jobInfo,
         const sptr<IPrintCallback> &listener, const std::string &eventType);
     int32_t StartExtensionDiscovery(const std::vector<std::string> &extensionIds);
+    void PostDiscoveryTask(const std::string &extensionId);
     int32_t StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob);
     bool CheckDeviceAndAccountPermission(const std::shared_ptr<PrintJob> &printJob);
     int32_t QueryVendorPrinterInfo(const std::string &globalPrinterId, PrinterInfo &info);

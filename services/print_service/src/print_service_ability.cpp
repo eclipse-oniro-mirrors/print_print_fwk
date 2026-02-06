@@ -886,7 +886,6 @@ int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &
     }
 
     extensionList_.clear();
-    extensionStateList_.clear();
     for (auto extInfo : extensionInfo) {
         PRINT_HILOGD("bundleName = %{public}s", extInfo.bundleName.c_str());
         PRINT_HILOGD("moduleName = %{public}s", extInfo.moduleName.c_str());
@@ -894,7 +893,9 @@ int32_t PrintServiceAbility::QueryAllExtension(std::vector<PrintExtensionInfo> &
         PrintExtensionInfo printExtInfo = ConvertToPrintExtensionInfo(extInfo);
         extensionInfos.emplace_back(printExtInfo);
         extensionList_.insert(std::make_pair(printExtInfo.GetExtensionId(), extInfo));
-        extensionStateList_.insert(std::make_pair(printExtInfo.GetExtensionId(), PRINT_EXTENSION_UNLOAD));
+        if (extensionStateList_.find(printExtInfo.GetExtensionId()) == extensionStateList_.end()) {
+            extensionStateList_.insert(std::make_pair(printExtInfo.GetExtensionId(), PRINT_EXTENSION_UNLOAD));
+        }
     }
     PRINT_HILOGI("QueryAllExtension end.");
     return E_PRINT_NONE;
@@ -2343,7 +2344,6 @@ void PrintServiceAbility::StopDiscoveryInternal()
         if (extension.second < PRINT_EXTENSION_LOADING) {
             continue;
         }
-        extension.second = PRINT_EXTENSION_UNLOAD;
         std::string cid = PrintUtils::EncodeExtensionCid(extension.first, PRINT_EXTCB_STOP_DISCOVERY);
         if (extCallbackMap_.find(cid) == extCallbackMap_.end()) {
             PRINT_HILOGE("StopDiscoveryInternal Not Register, BUT State is LOADED");
@@ -2424,33 +2424,7 @@ void PrintServiceAbility::ExitLowPowerMode()
         PRINT_HILOGE("exit low power mode failed.");
         return;
     }
-
-    ReStartAllDiscovery();
     PRINT_HILOGI("exit low power mode successfully");
-}
-
-void PrintServiceAbility::ReStartAllDiscovery()
-{
-    PRINT_HILOGI("ReStart Discovery for loaded extension");
-    bool syncMode = helper_ != nullptr && helper_->IsSyncMode();
-    if (!syncMode && serviceHandler_ == nullptr) {
-        PRINT_HILOGE("serviceHandler is nullptr, can not post task");
-        return;
-    }
-
-    for (const auto& [extid, extState] : extensionStateList_) {
-        if (extState != PRINT_EXTENSION_LOADED) {
-            continue;
-        }
-
-        if (syncMode) {
-            DelayStartDiscovery({extid});
-        } else {
-            serviceHandler_->PostTask([this, id = extid]() {
-                DelayStartDiscovery(id);
-                }, ASYNC_CMD_DELAY);
-        }
-    }
 }
 
 bool PrintServiceAbility::CheckPermission(const std::string &permissionName)
@@ -2594,16 +2568,7 @@ int32_t PrintServiceAbility::LoadExtSuccess(const std::string &extensionId)
         return E_PRINT_INVALID_EXTENSION;
     }
     it->second = PRINT_EXTENSION_LOADED;
-
-    PRINT_HILOGD("Auto Stat Printer Discovery");
-    auto callback = [=]() { DelayStartDiscovery(extensionId); };
-    if (helper_ != nullptr && helper_->IsSyncMode()) {
-        callback();
-    } else if (serviceHandler_ != nullptr) {
-        serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
-    } else {
-        PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
-    }
+    PostDiscoveryTask(extensionId);
     PRINT_HILOGD("PrintServiceAbility::LoadExtSuccess end.");
     return E_PRINT_NONE;
 }
@@ -4158,24 +4123,26 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
             abilityList.insert(std::make_pair(extensionId, extensionList_[extensionId]));
         }
     }
-
     if (abilityList.empty() && extensionIds.size() > 0) {
         PRINT_HILOGW("No valid extension found");
         return E_PRINT_INVALID_EXTENSION;
     }
-
     if (extensionIds.empty()) {
         for (auto extension : extensionList_) {
             abilityList.insert(std::make_pair(extension.first, extension.second));
         }
     }
-
     if (abilityList.empty()) {
         PRINT_HILOGW("No extension found");
         return E_PRINT_INVALID_EXTENSION;
     }
-
     for (auto ability : abilityList) {
+        std::string extId = ability.second.bundleName;
+        auto extState = extensionStateList_.find(extId);
+        if (extState != extensionStateList_.end() && extState->second == PRINT_EXTENSION_LOADED) {
+            PostDiscoveryTask(extId);
+            continue;
+        }
         AAFwk::Want want;
         want.SetElementName(ability.second.bundleName, ability.second.name);
         if (!StartExtensionAbility(want)) {
@@ -4186,6 +4153,19 @@ int32_t PrintServiceAbility::StartExtensionDiscovery(const std::vector<std::stri
     }
     PRINT_HILOGI("StartDiscoverPrinter end.");
     return E_PRINT_NONE;
+}
+
+void PrintServiceAbility::PostDiscoveryTask(const std::string &extensionId)
+{
+    PRINT_HILOGI("PostDiscoveryTask Enter");
+    auto callback = [this, extensionId]() { DelayStartDiscovery(extensionId); };
+    if (helper_ != nullptr && helper_->IsSyncMode()) {
+        callback();
+    } else if (serviceHandler_ != nullptr) {
+        serviceHandler_->PostTask(callback, ASYNC_CMD_DELAY);
+    } else {
+        PRINT_HILOGW("serviceHandler_ is nullptr, cannot post task");
+    }
 }
 
 int32_t PrintServiceAbility::StartPrintJobInternal(const std::shared_ptr<PrintJob> &printJob)
