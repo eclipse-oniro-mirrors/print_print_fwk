@@ -4484,14 +4484,14 @@ bool PrintServiceAbility::DeleteCacheFileFromUserData(const std::string &jobId)
     return userData->DeleteCacheFileFromUserData(jobId);
 }
 
-bool PrintServiceAbility::OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList)
+bool PrintServiceAbility::OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode)
 {
     auto userData = GetUserDataByJobId(jobId);
     if (userData == nullptr) {
         PRINT_HILOGE("get userDate failed");
         return false;
     }
-    return userData->OpenCacheFileFd(jobId, fdList);
+    return userData->OpenCacheFileFd(jobId, fdList, openMode);
 }
 
 int32_t PrintServiceAbility::QueryQueuedPrintJobById(const std::string &printJobId, PrintJob &printJob)

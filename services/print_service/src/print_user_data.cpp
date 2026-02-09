@@ -599,7 +599,7 @@ bool PrintUserData::DeleteCacheFileFromUserData(const std::string &jobId)
     return true;
 }
 
-bool PrintUserData::OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList)
+bool PrintUserData::OpenCacheFileFd(const std::string &jobId, std::vector<uint32_t> &fdList, int32_t openMode)
 {
     PRINT_HILOGI("OpenCacheFileFd Start.");
     fdList.clear();
@@ -639,7 +639,7 @@ bool PrintUserData::OpenCacheFileFd(const std::string &jobId, std::vector<uint32
             ret = false;
             break;
         }
-        int32_t fd = open(cachePath, O_RDONLY);
+        int32_t fd = open(cachePath, openMode);
         if (fd < 0) {
             PRINT_HILOGE("open file failed, errno:%{public}s", std::to_string(errno).c_str());
             ret = false;

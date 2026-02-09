@@ -14,6 +14,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <fcntl.h>
 #include <vector>
 #include <string>
 #include <map>
@@ -1108,6 +1109,80 @@ HWTEST_F(PrintUserDataTest, ParseJsonObjectToMargin_CorrectValue_HasTopReturnTru
     jsonObject["bottom_"] = 1;
     PrintMargin margin = userData->ParseJsonObjectToMargin(jsonObject);
     EXPECT_EQ(margin.HasTop(), true);
+}
+
+/**
+ * @tc.name: OpenCacheFileFd_NoQueuedJob_ReturnsFalse
+ * @tc.desc: Test OpenCacheFileFd returns false when job not in queued list
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUserDataTest, OpenCacheFileFd_NoQueuedJob_ReturnsFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string jobId = "test_job_id";
+    std::vector<uint32_t> fdList;
+    bool result = userData->OpenCacheFileFd(jobId, fdList);
+    EXPECT_FALSE(result);
+    EXPECT_TRUE(fdList.empty());
+}
+
+/**
+ * @tc.name: OpenCacheFileFd_EmptyFdList_ReturnsFalse
+ * @tc.desc: Test OpenCacheFileFd returns false when job has empty fd list
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUserDataTest, OpenCacheFileFd_EmptyFdList_ReturnsFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string jobId = "test_job_id";
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetFdList({});
+    userData->queuedJobList_[jobId] = printJob;
+
+    std::vector<uint32_t> fdList;
+    bool result = userData->OpenCacheFileFd(jobId, fdList);
+    EXPECT_FALSE(result);
+    EXPECT_TRUE(fdList.empty());
+}
+
+/**
+ * @tc.name: OpenCacheFileFd_WithOpenModeRdWr_ReturnsFalse
+ * @tc.desc: Test OpenCacheFileFd with O_RDWR mode returns false when cache files not exist
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUserDataTest, OpenCacheFileFd_WithOpenModeRdWr_ReturnsFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string jobId = "test_job_id_rdwr";
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetFdList({1});
+    userData->queuedJobList_[jobId] = printJob;
+
+    std::vector<uint32_t> fdList;
+    bool result = userData->OpenCacheFileFd(jobId, fdList, O_RDWR);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.name: OpenCacheFileFd_WithDefaultOpenMode_ReturnsFalse
+ * @tc.desc: Test OpenCacheFileFd with default O_RDONLY mode returns false when cache files not exist
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(PrintUserDataTest, OpenCacheFileFd_WithDefaultOpenMode_ReturnsFalse, TestSize.Level1)
+{
+    auto userData = std::make_shared<OHOS::Print::PrintUserData>();
+    std::string jobId = "test_job_id_rdonly";
+    auto printJob = std::make_shared<PrintJob>();
+    printJob->SetFdList({1});
+    userData->queuedJobList_[jobId] = printJob;
+
+    std::vector<uint32_t> fdList;
+    bool result = userData->OpenCacheFileFd(jobId, fdList, O_RDONLY);
+    EXPECT_FALSE(result);
 }
 }  // namespace Print
 }  // namespace OHOS
