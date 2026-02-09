@@ -33,6 +33,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <cctype>
+#include <iconv.h>
 #include <sys/time.h>
 #include "print_log.h"
 #include "smb_host_search_helper.h"
@@ -59,6 +60,7 @@ namespace {
     constexpr uint8_t FILE_SHARE_SERVER_TYPE = 0x20;
     constexpr int32_t NAME_ENTRY_SIZE = 18;
     constexpr int32_t HEADER_SKIP_SIZE = 56;
+    constexpr size_t GBK_TO_UTF8_MAX_EXPANSION = 3;
 }
 
 namespace OHOS::Print {
@@ -512,9 +514,49 @@ std::string SmbHostSearchHelper::GetFileServerName()
                 PRINT_HILOGE("memcpy_s failed");
                 return "";
             }
-            return std::string(encodedName);
+            std::string gbkInput = std::string(encodedName);
+            std::string utf8Output;
+            return EncodingConverter::GbkToUtf8Iconv(gbkInput, utf8Output) ? utf8Output : gbkInput;
         }
     }
     return "";
+}
+
+bool SmbHostSearchHelper::EncodingConverter::GbkToUtf8Iconv(const std::string& gbkInput, std::string& utf8Output)
+{
+    if (gbkInput.empty()) {
+        utf8Output.clear();
+        return true;
+    }
+    
+    iconv_t cd = iconv_open("UTF-8", "GBK");
+    if (cd == (iconv_t)-1) {
+        PRINT_HILOGE("iconv_open fail, errno = %d", errno);
+        return false;
+    }
+
+    bool success = false;
+    size_t inBytesLeft = gbkInput.size();
+    size_t outBufferSize = gbkInput.size() * GBK_TO_UTF8_MAX_EXPANSION + 1;
+    std::string buffer(outBufferSize, '\0');
+    
+    char* inBuf = const_cast<char*>(gbkInput.data());
+    char* outBuf = &buffer[0];
+    size_t outBytesLeft = outBufferSize - 1;
+    
+    size_t result = iconv(cd, (char**)&inBuf, &inBytesLeft, &outBuf, &outBytesLeft);
+    if (result != 0) {
+        PRINT_HILOGE("iconv conversion failed, errno = %d", errno);
+        success = false;
+    } else {
+        if (iconv(cd, NULL, NULL, &outBuf, &outBytesLeft) == (size_t)(-1)) {
+            PRINT_HILOGW("The converter failed to refresh, errno = %d", errno);
+        }
+        size_t bytesConverted = outBufferSize - 1 - outBytesLeft;
+        utf8Output.assign(buffer.data(), bytesConverted);
+        success = true;
+    }
+    iconv_close(cd);
+    return success;
 }
 }
